@@ -76,6 +76,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDrRuntimeProbeTransferCases, UmiDrRuntimeProbe,
     umi_dr_runtime_probe_archive_encode, umi_dr_runtime_probe_archive_decode,
     UmiDrRuntimeProbeTransferEqual, UmiDrRuntimeProbeTransferTails, UmiDrRuntimeProbeTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDrRuntimeProbeTransferCasesWithWorkspace, UmiDrRuntimeProbe,
+    umi_dr_runtime_probe_archive_encode, umi_dr_runtime_probe_archive_decode_with_workspace, UmiDrRuntimeProbeTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrRuntimeProbeConditionalArchiveCases, UmiDrRuntimeProbe,
     umi_dr_runtime_probe_archive_encode, umi_dr_runtime_probe_archive_decode_if_unchanged,
@@ -85,6 +90,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrRuntimeProbeConditionalArchiveCases, UmiDrRunt
 int main(void) {
     UmiDrRuntimeProbe value; umi_dr_runtime_probe_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"host") == UMI_STATUS_OK); value.memory_mb=16384U; CHECK(umi_dr_runtime_probe_valid(&value));
     if (UmiDrRuntimeProbeTransferCases(&value) != 0) return 1;
+    if (UmiDrRuntimeProbeTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDrRuntimeProbeConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_runtime_probe_fingerprint(&value) != 0U);
     return 0;

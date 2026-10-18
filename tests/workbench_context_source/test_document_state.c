@@ -169,6 +169,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextSourceDocumentStateTransferCases, Umi
     umi_workbench_context_source_document_state_archive_encode, umi_workbench_context_source_document_state_archive_decode,
     UmiWorkbenchContextSourceDocumentStateTransferEqual, UmiWorkbenchContextSourceDocumentStateTransferTails, UmiWorkbenchContextSourceDocumentStateTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextSourceDocumentStateTransferCasesWithWorkspace, UmiWorkbenchContextSourceDocumentState,
+    umi_workbench_context_source_document_state_archive_encode, umi_workbench_context_source_document_state_archive_decode_with_workspace, UmiWorkbenchContextSourceDocumentStateTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextSourceDocumentStateConditionalArchiveCases, UmiWorkbenchContextSourceDocumentState,
     umi_workbench_context_source_document_state_archive_encode, umi_workbench_context_source_document_state_archive_decode_if_unchanged,
@@ -208,6 +213,7 @@ int main(void)
     assert(umi_workbench_context_source_document_state_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextSourceDocumentStateTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceDocumentStateTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextSourceDocumentStateConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextSourceDocumentStateReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextSourceDocumentStateMutationGuards(&record) != 0) return 1;

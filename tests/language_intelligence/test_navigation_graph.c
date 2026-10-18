@@ -105,6 +105,11 @@ UMI_TEST_VALUE_TRANSFER(UmiLanguageIntelligenceNavigationGraphEdgeTransferCases,
     umi_language_intelligence_navigation_graph_edge_archive_encode, umi_language_intelligence_navigation_graph_edge_archive_decode,
     UmiLanguageIntelligenceNavigationGraphEdgeTransferEqual, UmiLanguageIntelligenceNavigationGraphEdgeTransferTails, UmiLanguageIntelligenceNavigationGraphEdgeTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiLanguageIntelligenceNavigationGraphEdgeTransferCasesWithWorkspace, UmiLanguageIntelligenceNavigationGraphEdge,
+    umi_language_intelligence_navigation_graph_edge_archive_encode, umi_language_intelligence_navigation_graph_edge_archive_decode_with_workspace, UmiLanguageIntelligenceNavigationGraphEdgeTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiLanguageIntelligenceNavigationGraphEdgeConditionalArchiveCases, UmiLanguageIntelligenceNavigationGraphEdge,
     umi_language_intelligence_navigation_graph_edge_archive_encode, umi_language_intelligence_navigation_graph_edge_archive_decode_if_unchanged,
@@ -118,6 +123,7 @@ int main(void)
     CHECK(umi_language_intelligence_navigation_graph_edge_set(&edge, "caller", "callee", "calls", 1U) == UMI_STATUS_OK);
     CHECK(umi_language_intelligence_navigation_graph_edge_validate(&edge) == UMI_STATUS_OK);
     if (UmiLanguageIntelligenceNavigationGraphEdgeTransferCases(&edge) != 0) return 1;
+    if (UmiLanguageIntelligenceNavigationGraphEdgeTransferCasesWithWorkspace(&edge) != 0) return 1;
     if (UmiLanguageIntelligenceNavigationGraphEdgeConditionalArchiveCases(&edge) != 0) return 1;
 
     CHECK(umi_language_intelligence_navigation_graph_edge_matches_source(&edge, "caller") != 0);

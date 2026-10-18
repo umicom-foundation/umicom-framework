@@ -123,6 +123,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCounterpartyTransferCases, UmiCounterparty,
     umi_counterparty_archive_encode, umi_counterparty_archive_decode,
     UmiCounterpartyTransferEqual, UmiCounterpartyTransferTails, UmiCounterpartyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCounterpartyTransferCasesWithWorkspace, UmiCounterparty,
+    umi_counterparty_archive_encode, umi_counterparty_archive_decode_with_workspace, UmiCounterpartyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCounterpartyConditionalArchiveCases, UmiCounterparty,
     umi_counterparty_archive_encode, umi_counterparty_archive_decode_if_unchanged,
@@ -133,6 +138,7 @@ int main(void)
 {
     UmiCounterparty x; CHECK(umi_counterparty_init(&x,"ID","Name","PARENT","CODE")==UMI_STATUS_OK); CHECK(umi_counterparty_is_valid(&x));
     if (UmiCounterpartyTransferCases(&x) != 0) return 1;
+    if (UmiCounterpartyTransferCasesWithWorkspace(&x) != 0) return 1;
     if (UmiCounterpartyConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;

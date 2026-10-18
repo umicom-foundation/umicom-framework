@@ -112,6 +112,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDiagnosticSourceSummaryTransferCases, UmiDiagnosticSo
     umi_diagnostic_source_summary_archive_encode, umi_diagnostic_source_summary_archive_decode,
     UmiDiagnosticSourceSummaryTransferEqual, UmiDiagnosticSourceSummaryTransferTails, UmiDiagnosticSourceSummaryTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDiagnosticSourceSummaryTransferCasesWithWorkspace, UmiDiagnosticSourceSummary,
+    umi_diagnostic_source_summary_archive_encode, umi_diagnostic_source_summary_archive_decode_with_workspace, UmiDiagnosticSourceSummaryTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDiagnosticSourceSummaryConditionalArchiveCases, UmiDiagnosticSourceSummary,
     umi_diagnostic_source_summary_archive_encode, umi_diagnostic_source_summary_archive_decode_if_unchanged,
@@ -138,5 +143,6 @@ int main(void){UmiDiagnosticSourceSummary m;assert(umi_diagnostic_source_summary
         umi_diagnostic_source_summary_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
     assert(umi_diagnostic_source_summary_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_diagnostic_source_summary_valid(&m));
     if (UmiDiagnosticSourceSummaryTransferCases(&m) != 0) return 1;
+    if (UmiDiagnosticSourceSummaryTransferCasesWithWorkspace(&m) != 0) return 1;
     if (UmiDiagnosticSourceSummaryConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

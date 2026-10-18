@@ -51,6 +51,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveBatchUpdateTransferCases, UmiUiReactiveBatc
     umi_ui_reactive_batch_update_archive_encode, umi_ui_reactive_batch_update_archive_decode,
     UmiUiReactiveBatchUpdateTransferEqual, UmiUiReactiveBatchUpdateTransferTails, UmiUiReactiveBatchUpdateTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveBatchUpdateTransferCasesWithWorkspace, UmiUiReactiveBatchUpdate,
+    umi_ui_reactive_batch_update_archive_encode, umi_ui_reactive_batch_update_archive_decode_with_workspace, UmiUiReactiveBatchUpdateTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveBatchUpdateConditionalArchiveCases, UmiUiReactiveBatchUpdate,
     umi_ui_reactive_batch_update_archive_encode, umi_ui_reactive_batch_update_archive_decode_if_unchanged,
@@ -66,5 +71,6 @@ int main(void) { UmiUiReactiveBatchUpdate item; umi_ui_reactive_batch_update_ini
     populated.end_revision = (uint64_t)4;
     populated.committed = true;
     if (UmiUiReactiveBatchUpdateTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveBatchUpdateTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveBatchUpdateConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_batch_update_valid(&item) ? 0 : 1; }

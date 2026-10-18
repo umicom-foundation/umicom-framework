@@ -144,6 +144,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataSchemaForeignKeyTransferCases, UmiDataSchemaForei
     umi_data_schema_foreign_key_archive_encode, umi_data_schema_foreign_key_archive_decode,
     UmiDataSchemaForeignKeyTransferEqual, UmiDataSchemaForeignKeyTransferTails, UmiDataSchemaForeignKeyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataSchemaForeignKeyTransferCasesWithWorkspace, UmiDataSchemaForeignKey,
+    umi_data_schema_foreign_key_archive_encode, umi_data_schema_foreign_key_archive_decode_with_workspace, UmiDataSchemaForeignKeyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataSchemaForeignKeyConditionalArchiveCases, UmiDataSchemaForeignKey,
     umi_data_schema_foreign_key_archive_encode, umi_data_schema_foreign_key_archive_decode_if_unchanged,
@@ -233,6 +238,7 @@ int main(void) {
     UmiDataSchemaForeignKey item;
     CHECK(umi_data_schema_foreign_key_init(&item,"fk.order.customer","orders","customer_id","customers","id") == UMI_STATUS_OK);
     if (UmiDataSchemaForeignKeyTransferCases(&item) != 0) return 1;
+    if (UmiDataSchemaForeignKeyTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiDataSchemaForeignKeyConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(strcmp(item.target_table,"customers")==0);

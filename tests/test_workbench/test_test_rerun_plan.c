@@ -112,6 +112,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTestRerunPlanTransferCases, UmiTestRerunPlan,
     umi_test_rerun_plan_archive_encode, umi_test_rerun_plan_archive_decode,
     UmiTestRerunPlanTransferEqual, UmiTestRerunPlanTransferTails, UmiTestRerunPlanTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTestRerunPlanTransferCasesWithWorkspace, UmiTestRerunPlan,
+    umi_test_rerun_plan_archive_encode, umi_test_rerun_plan_archive_decode_with_workspace, UmiTestRerunPlanTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestRerunPlanConditionalArchiveCases, UmiTestRerunPlan,
     umi_test_rerun_plan_archive_encode, umi_test_rerun_plan_archive_decode_if_unchanged,
@@ -138,5 +143,6 @@ int main(void){UmiTestRerunPlan m;assert(umi_test_rerun_plan_init(&m,"test_rerun
         umi_test_rerun_plan_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
     assert(umi_test_rerun_plan_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_rerun_plan_valid(&m));
     if (UmiTestRerunPlanTransferCases(&m) != 0) return 1;
+    if (UmiTestRerunPlanTransferCasesWithWorkspace(&m) != 0) return 1;
     if (UmiTestRerunPlanConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

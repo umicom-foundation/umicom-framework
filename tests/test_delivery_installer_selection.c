@@ -13,6 +13,8 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #include "umicom/delivery/installer_selection.h"
 
 #include <assert.h>

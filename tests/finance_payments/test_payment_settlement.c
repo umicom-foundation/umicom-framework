@@ -103,6 +103,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPaymentsPaymentSettlementTransferCases, UmiPaymentsPa
     umi_payments_payment_settlement_archive_encode, umi_payments_payment_settlement_archive_decode,
     UmiPaymentsPaymentSettlementTransferEqual, UmiPaymentsPaymentSettlementTransferTails, UmiPaymentsPaymentSettlementTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPaymentsPaymentSettlementTransferCasesWithWorkspace, UmiPaymentsPaymentSettlement,
+    umi_payments_payment_settlement_archive_encode, umi_payments_payment_settlement_archive_decode_with_workspace, UmiPaymentsPaymentSettlementTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPaymentsPaymentSettlementConditionalArchiveCases, UmiPaymentsPaymentSettlement,
     umi_payments_payment_settlement_archive_encode, umi_payments_payment_settlement_archive_decode_if_unchanged,
@@ -116,6 +121,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if(!umi_payments_payment_settlement_valid(&v)) return 2;
     if (UmiPaymentsPaymentSettlementTransferCases(&v) != 0) return 1;
+    if (UmiPaymentsPaymentSettlementTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiPaymentsPaymentSettlementConditionalArchiveCases(&v) != 0) return 1;
 
     return 0;

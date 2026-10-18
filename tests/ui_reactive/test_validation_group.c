@@ -51,6 +51,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveValidationGroupTransferCases, UmiUiReactive
     umi_ui_reactive_validation_group_archive_encode, umi_ui_reactive_validation_group_archive_decode,
     UmiUiReactiveValidationGroupTransferEqual, UmiUiReactiveValidationGroupTransferTails, UmiUiReactiveValidationGroupTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveValidationGroupTransferCasesWithWorkspace, UmiUiReactiveValidationGroup,
+    umi_ui_reactive_validation_group_archive_encode, umi_ui_reactive_validation_group_archive_decode_with_workspace, UmiUiReactiveValidationGroupTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveValidationGroupConditionalArchiveCases, UmiUiReactiveValidationGroup,
     umi_ui_reactive_validation_group_archive_encode, umi_ui_reactive_validation_group_archive_decode_if_unchanged,
@@ -66,5 +71,6 @@ int main(void) { UmiUiReactiveValidationGroup item; umi_ui_reactive_validation_g
     populated.warnings = (size_t)4;
     populated.blocking = true;
     if (UmiUiReactiveValidationGroupTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveValidationGroupTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveValidationGroupConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_validation_group_valid(&item) ? 0 : 1; }

@@ -188,6 +188,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionProviderLatencyRecordTransferCases,
     umi_workbench_selection_provider_latency_record_archive_encode, umi_workbench_selection_provider_latency_record_archive_decode,
     UmiWorkbenchSelectionProviderLatencyRecordTransferEqual, UmiWorkbenchSelectionProviderLatencyRecordTransferTails, UmiWorkbenchSelectionProviderLatencyRecordTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchSelectionProviderLatencyRecordTransferCasesWithWorkspace, UmiWorkbenchSelectionProviderLatencyRecord,
+    umi_workbench_selection_provider_latency_record_archive_encode, umi_workbench_selection_provider_latency_record_archive_decode_with_workspace, UmiWorkbenchSelectionProviderLatencyRecordTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchSelectionProviderLatencyRecordConditionalArchiveCases, UmiWorkbenchSelectionProviderLatencyRecord,
     umi_workbench_selection_provider_latency_record_archive_encode, umi_workbench_selection_provider_latency_record_archive_decode_if_unchanged,
@@ -228,6 +233,7 @@ int main(void)
     assert(umi_workbench_selection_provider_latency_record_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionProviderLatencyRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionProviderLatencyRecordTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchSelectionProviderLatencyRecordConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchSelectionProviderLatencyRecordReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchSelectionProviderLatencyRecordMutationGuards(&record) != 0) return 1;

@@ -15,8 +15,13 @@
  * undefining NDEBUG is supported by C and restores its active definition.
  * This header is test-only; production targets keep their configured policy.
  * New fixtures should prefer explicit checked setup calls for required work. */
+/* The suite-wide fixture policy replaces this archive-specific definition.
+ * Retain the previous definition for review of the original setup contract. */
+#if 0
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
 #include <assert.h>
+#endif
+#include "../support/assertions.h"
 #endif

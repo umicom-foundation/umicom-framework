@@ -82,6 +82,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCtAbiDescriptorTransferCases, UmiCtAbiDescriptor,
     umi_ct_abi_descriptor_archive_encode, umi_ct_abi_descriptor_archive_decode,
     UmiCtAbiDescriptorTransferEqual, UmiCtAbiDescriptorTransferTails, UmiCtAbiDescriptorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCtAbiDescriptorTransferCasesWithWorkspace, UmiCtAbiDescriptor,
+    umi_ct_abi_descriptor_archive_encode, umi_ct_abi_descriptor_archive_decode_with_workspace, UmiCtAbiDescriptorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtAbiDescriptorConditionalArchiveCases, UmiCtAbiDescriptor,
     umi_ct_abi_descriptor_archive_encode, umi_ct_abi_descriptor_archive_decode_if_unchanged,
@@ -90,5 +95,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtAbiDescriptorConditionalArchiveCases, UmiCtAbi
 
 int main(void){UmiCtAbiDescriptor d={"lp64d",UMI_CT_DATA_LP64,UMI_CT_CALL_RISCV,64U,16U,128U,true};CHECK(umi_ct_abi_descriptor_validate(&d)==UMI_STATUS_OK);
     if (UmiCtAbiDescriptorTransferCases(&d) != 0) return 1;
+    if (UmiCtAbiDescriptorTransferCasesWithWorkspace(&d) != 0) return 1;
     if (UmiCtAbiDescriptorConditionalArchiveCases(&d) != 0) return 1;
 d.pointer_bits=32U;CHECK(umi_ct_abi_descriptor_validate(&d)==UMI_STATUS_INVALID_STATE);return 0;}

@@ -127,6 +127,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCommodityDescriptorTransferCases, UmiCommodityDescrip
     umi_commodity_commodity_descriptor_archive_encode, umi_commodity_commodity_descriptor_archive_decode,
     UmiCommodityDescriptorTransferEqual, UmiCommodityDescriptorTransferTails, UmiCommodityDescriptorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCommodityDescriptorTransferCasesWithWorkspace, UmiCommodityDescriptor,
+    umi_commodity_commodity_descriptor_archive_encode, umi_commodity_commodity_descriptor_archive_decode_with_workspace, UmiCommodityDescriptorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCommodityDescriptorConditionalArchiveCases, UmiCommodityDescriptor,
     umi_commodity_commodity_descriptor_archive_encode, umi_commodity_commodity_descriptor_archive_decode_if_unchanged,
@@ -140,6 +145,7 @@ int main(void)
     CHECK(umi_commodity_commodity_descriptor_init(&value, "CMD-WTI", "West Texas Intermediate", "WTI", UMI_COMMODITY_KIND_ENERGY, &currency, true) == UMI_STATUS_OK);
     CHECK(umi_commodity_commodity_descriptor_valid(&value));
     if (UmiCommodityDescriptorTransferCases(&value) != 0) return 1;
+    if (UmiCommodityDescriptorTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiCommodityDescriptorConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(value.physical_delivery);

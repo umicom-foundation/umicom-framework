@@ -91,6 +91,11 @@ function(umicom_attach_public_contract_fingerprint target header_root)
         UMICOM_PUBLIC_CONTRACT_FINGERPRINT
         "${_umicom_public_contract_fingerprint}")
 
+    # Export the complete identity for independent installed-SDK checks.
+    # The existing short compile definition continues to invalidate objects.
+    set_property(TARGET "${target}" APPEND PROPERTY EXPORT_PROPERTIES
+        UMICOM_PUBLIC_CONTRACT_FINGERPRINT)
+
     message(STATUS
         "Umicom public contract fingerprint: ${_umicom_public_contract_fingerprint_short}")
 endfunction()

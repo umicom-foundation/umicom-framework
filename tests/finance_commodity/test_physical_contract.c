@@ -166,6 +166,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCommodityPhysicalContractTransferCases, UmiCommodityP
     umi_commodity_physical_contract_archive_encode, umi_commodity_physical_contract_archive_decode,
     UmiCommodityPhysicalContractTransferEqual, UmiCommodityPhysicalContractTransferTails, UmiCommodityPhysicalContractTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCommodityPhysicalContractTransferCasesWithWorkspace, UmiCommodityPhysicalContract,
+    umi_commodity_physical_contract_archive_encode, umi_commodity_physical_contract_archive_decode_with_workspace, UmiCommodityPhysicalContractTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCommodityPhysicalContractConditionalArchiveCases, UmiCommodityPhysicalContract,
     umi_commodity_physical_contract_archive_encode, umi_commodity_physical_contract_archive_decode_if_unchanged,
@@ -181,6 +186,7 @@ int main(void)
     CHECK(umi_commodity_physical_contract_init(&value, "CTR-1", "CMD-WTI", &buyer, &seller, 1000, 0, "BBL", &currency, 7500, 1000, 2000) == UMI_STATUS_OK);
     CHECK(umi_commodity_physical_contract_valid(&value));
     if (UmiCommodityPhysicalContractTransferCases(&value) != 0) return 1;
+    if (UmiCommodityPhysicalContractTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiCommodityPhysicalContractConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

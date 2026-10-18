@@ -59,6 +59,11 @@ UMI_TEST_VALUE_TRANSFER(UmiScheduleRuleTransferCases, UmiScheduleRule,
     umi_schedule_rule_archive_encode, umi_schedule_rule_archive_decode,
     UmiScheduleRuleTransferEqual, UmiScheduleRuleTransferTails, UmiScheduleRuleTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiScheduleRuleTransferCasesWithWorkspace, UmiScheduleRule,
+    umi_schedule_rule_archive_encode, umi_schedule_rule_archive_decode_with_workspace, UmiScheduleRuleTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiScheduleRuleConditionalArchiveCases, UmiScheduleRule,
     umi_schedule_rule_archive_encode, umi_schedule_rule_archive_decode_if_unchanged,
@@ -69,6 +74,7 @@ int main(void)
 {
     UmiScheduleRule r={(UmiFinancialDate){2026,1U,1U},(UmiFinancialDate){2027,1U,1U},{3U,UMI_TENOR_MONTHS},UMI_BUSINESS_DAY_FOLLOWING}; CHECK(umi_schedule_rule_is_valid(&r));
     if (UmiScheduleRuleTransferCases(&r) != 0) return 1;
+    if (UmiScheduleRuleTransferCasesWithWorkspace(&r) != 0) return 1;
     if (UmiScheduleRuleConditionalArchiveCases(&r) != 0) return 1;
 
     return 0;

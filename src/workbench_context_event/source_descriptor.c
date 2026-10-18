@@ -366,6 +366,12 @@ static UmiStatus UmiWorkbenchContextEventSourceDescriptorArchiveValidate(const U
 UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_context_event_source_descriptor_archive_encode, umi_workbench_context_event_source_descriptor_archive_decode,
     UmiWorkbenchContextEventSourceDescriptor, UmiWorkbenchContextEventSourceDescriptorArchiveSchema, UmiWorkbenchContextEventSourceDescriptorArchiveBound, UmiWorkbenchContextEventSourceDescriptorArchiveWrite, UmiWorkbenchContextEventSourceDescriptorArchiveRead, UmiWorkbenchContextEventSourceDescriptorArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_workbench_context_event_source_descriptor_archive_decode_with_workspace, UmiWorkbenchContextEventSourceDescriptor,
+    UmiWorkbenchContextEventSourceDescriptorArchiveSchema, UmiWorkbenchContextEventSourceDescriptorArchiveBound, UmiWorkbenchContextEventSourceDescriptorArchiveRead, UmiWorkbenchContextEventSourceDescriptorArchiveValidate)
+
 /* A delayed source descriptor draft must name the revision it reviewed.
  * Domain validation remains with this value owner; the shared guard publishes
  * all fields together without emitting events or changing any external service. */

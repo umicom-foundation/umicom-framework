@@ -147,6 +147,11 @@ UMI_TEST_VALUE_TRANSFER(UmiInstallerPlanTransferCases, UmiInstallerPlan,
     umi_installer_plan_archive_encode, umi_installer_plan_archive_decode,
     UmiInstallerPlanTransferEqual, UmiInstallerPlanTransferTails, UmiInstallerPlanTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiInstallerPlanTransferCasesWithWorkspace, UmiInstallerPlan,
+    umi_installer_plan_archive_encode, umi_installer_plan_archive_decode_with_workspace, UmiInstallerPlanTransferEqual)
+
 #include "value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiInstallerPlanConditionalArchiveCases, UmiInstallerPlan,
     umi_installer_plan_archive_encode, umi_installer_plan_archive_decode_if_unchanged,
@@ -243,6 +248,7 @@ int main(void)
            UMI_STATUS_OK);
     assert(umi_installer_plan_validate(&windows) == UMI_STATUS_OK);
     if (UmiInstallerPlanTransferCases(&windows) != 0) return 1;
+    if (UmiInstallerPlanTransferCasesWithWorkspace(&windows) != 0) return 1;
     if (UmiInstallerPlanConditionalArchiveCases(&windows) != 0) return 1;
 
     assert(strcmp(umi_installer_plan_generator(&windows), "NSIS") == 0);

@@ -345,6 +345,12 @@ static UmiStatus ArchiveValidate(const UmiProductInstallationSnapshot *value)
 UMI_DEFINE_VALUE_ARCHIVE(umi_product_installation_state_snapshot_archive_encode, umi_product_installation_state_snapshot_archive_decode,
     UmiProductInstallationSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_product_installation_state_snapshot_archive_decode_with_workspace, UmiProductInstallationSnapshot,
+    ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)
+
 /* Restoring this complete collection reuses its existing reviewed replacement
  * rules. Decoding a saved value alone never changes a live registry. */
 UMI_DEFINE_REGISTRY_ARCHIVE(umi_product_installation_state_registry_archive_encode, umi_product_installation_state_registry_archive_restore,

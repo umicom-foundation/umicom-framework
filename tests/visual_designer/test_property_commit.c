@@ -121,6 +121,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRadPropertyCommitTransferCases, UmiRadPropertyCommit,
     umi_rad_property_commit_archive_encode, umi_rad_property_commit_archive_decode,
     UmiRadPropertyCommitTransferEqual, UmiRadPropertyCommitTransferTails, UmiRadPropertyCommitTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRadPropertyCommitTransferCasesWithWorkspace, UmiRadPropertyCommit,
+    umi_rad_property_commit_archive_encode, umi_rad_property_commit_archive_decode_with_workspace, UmiRadPropertyCommitTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadPropertyCommitConditionalArchiveCases, UmiRadPropertyCommit,
     umi_rad_property_commit_archive_encode, umi_rad_property_commit_archive_decode_if_unchanged,
@@ -129,5 +134,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadPropertyCommitConditionalArchiveCases, UmiRad
 
 int main(void){UmiRadPropertyCommit item;CHECK(umi_rad_property_commit_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_property_commit_is_valid(&item));
     if (UmiRadPropertyCommitTransferCases(&item) != 0) return 1;
+    if (UmiRadPropertyCommitTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiRadPropertyCommitConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

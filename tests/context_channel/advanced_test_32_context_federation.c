@@ -131,6 +131,11 @@ UMI_TEST_VALUE_TRANSFER(UmiContextFederationTransferCases, UmiContextFederation,
     umi_context_federation_archive_encode, umi_context_federation_archive_decode,
     UmiContextFederationTransferEqual, UmiContextFederationTransferTails, UmiContextFederationTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiContextFederationTransferCasesWithWorkspace, UmiContextFederation,
+    umi_context_federation_archive_encode, umi_context_federation_archive_decode_with_workspace, UmiContextFederationTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextFederationConditionalArchiveCases, UmiContextFederation,
     umi_context_federation_archive_encode, umi_context_federation_archive_decode_if_unchanged,
@@ -169,6 +174,7 @@ int main(void)
     assert(umi_context_federation_covers_sequence(&state,11U));
     assert(umi_context_federation_validate(&state) == UMI_STATUS_OK);
     if (UmiContextFederationTransferCases(&state) != 0) return 1;
+    if (UmiContextFederationTransferCasesWithWorkspace(&state) != 0) return 1;
     if (UmiContextFederationConditionalArchiveCases(&state) != 0) return 1;
 
     return 0;

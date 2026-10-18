@@ -51,6 +51,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRepositoryIndexStatusTransferCases, UmiRepositoryInde
     umi_repository_index_status_archive_encode, umi_repository_index_status_archive_decode,
     UmiRepositoryIndexStatusTransferEqual, UmiRepositoryIndexStatusTransferTails, UmiRepositoryIndexStatusTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRepositoryIndexStatusTransferCasesWithWorkspace, UmiRepositoryIndexStatus,
+    umi_repository_index_status_archive_encode, umi_repository_index_status_archive_decode_with_workspace, UmiRepositoryIndexStatusTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRepositoryIndexStatusConditionalArchiveCases, UmiRepositoryIndexStatus,
     umi_repository_index_status_archive_encode, umi_repository_index_status_archive_decode_if_unchanged,
@@ -59,5 +64,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRepositoryIndexStatusConditionalArchiveCases, Um
 
 int main(void){ UmiRepositoryIndexStatus s; umi_repository_index_status_init(&s); s.staged_paths=2U; s.staged_gitlinks=1U; assert(umi_repository_index_status_validate(&s)==UMI_STATUS_OK);
     if (UmiRepositoryIndexStatusTransferCases(&s) != 0) return 1;
+    if (UmiRepositoryIndexStatusTransferCasesWithWorkspace(&s) != 0) return 1;
     if (UmiRepositoryIndexStatusConditionalArchiveCases(&s) != 0) return 1;
  return 0; }

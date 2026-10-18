@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkGroupProfileTransferCases, UmiWor
     umi_workbench_context_link_group_profile_archive_encode, umi_workbench_context_link_group_profile_archive_decode,
     UmiWorkbenchContextLinkGroupProfileTransferEqual, UmiWorkbenchContextLinkGroupProfileTransferTails, UmiWorkbenchContextLinkGroupProfileTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextLinkGroupProfileTransferCasesWithWorkspace, UmiWorkbenchContextLinkGroupProfile,
+    umi_workbench_context_link_group_profile_archive_encode, umi_workbench_context_link_group_profile_archive_decode_with_workspace, UmiWorkbenchContextLinkGroupProfileTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkGroupProfileConditionalArchiveCases, UmiWorkbenchContextLinkGroupProfile,
     umi_workbench_context_link_group_profile_archive_encode, umi_workbench_context_link_group_profile_archive_decode_if_unchanged,
@@ -151,6 +156,7 @@ int main(void)
     umi_workbench_context_link_group_profile_init(&record, "group_profile-id");
     assert(umi_workbench_context_link_group_profile_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkGroupProfileTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkGroupProfileTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkGroupProfileConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkGroupProfileReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkGroupProfileMutationGuards(&record) != 0) return 1;

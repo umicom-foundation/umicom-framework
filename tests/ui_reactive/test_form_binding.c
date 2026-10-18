@@ -85,6 +85,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveFormBindingTransferCases, UmiUiReactiveForm
     umi_ui_reactive_form_binding_archive_encode, umi_ui_reactive_form_binding_archive_decode,
     UmiUiReactiveFormBindingTransferEqual, UmiUiReactiveFormBindingTransferTails, UmiUiReactiveFormBindingTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveFormBindingTransferCasesWithWorkspace, UmiUiReactiveFormBinding,
+    umi_ui_reactive_form_binding_archive_encode, umi_ui_reactive_form_binding_archive_decode_with_workspace, UmiUiReactiveFormBindingTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveFormBindingConditionalArchiveCases, UmiUiReactiveFormBinding,
     umi_ui_reactive_form_binding_archive_encode, umi_ui_reactive_form_binding_archive_decode_if_unchanged,
@@ -99,5 +104,6 @@ int main(void) { UmiUiReactiveFormBinding item; umi_ui_reactive_form_binding_ini
     (void)snprintf(populated.model_prefix, sizeof(populated.model_prefix), "field-1");
     populated.validate_before_commit = true;
     if (UmiUiReactiveFormBindingTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveFormBindingTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveFormBindingConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_form_binding_valid(&item) ? 0 : 1; }

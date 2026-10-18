@@ -89,6 +89,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTerminalRemoteTerminalProcessBindingTransferCases, Um
     umi_terminal_remote_terminal_process_binding_archive_encode, umi_terminal_remote_terminal_process_binding_archive_decode,
     UmiTerminalRemoteTerminalProcessBindingTransferEqual, UmiTerminalRemoteTerminalProcessBindingTransferTails, UmiTerminalRemoteTerminalProcessBindingTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTerminalRemoteTerminalProcessBindingTransferCasesWithWorkspace, UmiTerminalRemoteTerminalProcessBinding,
+    umi_terminal_remote_terminal_process_binding_archive_encode, umi_terminal_remote_terminal_process_binding_archive_decode_with_workspace, UmiTerminalRemoteTerminalProcessBindingTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTerminalRemoteTerminalProcessBindingConditionalArchiveCases, UmiTerminalRemoteTerminalProcessBinding,
     umi_terminal_remote_terminal_process_binding_archive_encode, umi_terminal_remote_terminal_process_binding_archive_decode_if_unchanged,
@@ -97,5 +102,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiTerminalRemoteTerminalProcessBindingConditionalA
 
 int main(void) { UmiTerminalRemoteTerminalProcessBinding v; umi_terminal_remote_terminal_process_binding_init(&v,"left","right"); /* Apply this operation only while the related capability or state is available. */ if(!umi_terminal_remote_terminal_process_binding_valid(&v)) return 1;
     if (UmiTerminalRemoteTerminalProcessBindingTransferCases(&v) != 0) return 1;
+    if (UmiTerminalRemoteTerminalProcessBindingTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTerminalRemoteTerminalProcessBindingConditionalArchiveCases(&v) != 0) return 1;
  /* Apply this operation only while the related capability or state is available. */ if(umi_terminal_remote_terminal_process_binding_fingerprint(&v)==0U) return 2; umi_terminal_remote_terminal_process_binding_init(&v,"same","same"); return umi_terminal_remote_terminal_process_binding_valid(&v)?3:0; }

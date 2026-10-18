@@ -90,6 +90,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDrApplicationVariantTransferCases, UmiDrApplicationVa
     umi_dr_application_variant_archive_encode, umi_dr_application_variant_archive_decode,
     UmiDrApplicationVariantTransferEqual, UmiDrApplicationVariantTransferTails, UmiDrApplicationVariantTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDrApplicationVariantTransferCasesWithWorkspace, UmiDrApplicationVariant,
+    umi_dr_application_variant_archive_encode, umi_dr_application_variant_archive_decode_with_workspace, UmiDrApplicationVariantTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrApplicationVariantConditionalArchiveCases, UmiDrApplicationVariant,
     umi_dr_application_variant_archive_encode, umi_dr_application_variant_archive_decode_if_unchanged,
@@ -99,6 +104,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrApplicationVariantConditionalArchiveCases, Umi
 int main(void) {
     UmiDrApplicationVariant value; umi_dr_application_variant_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"win-x64") == UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.entrypoint,sizeof(value.entrypoint),"bin/app.exe") == UMI_STATUS_OK); CHECK(umi_dr_application_variant_valid(&value));
     if (UmiDrApplicationVariantTransferCases(&value) != 0) return 1;
+    if (UmiDrApplicationVariantTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDrApplicationVariantConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_application_variant_fingerprint(&value) != 0U);
     return 0;

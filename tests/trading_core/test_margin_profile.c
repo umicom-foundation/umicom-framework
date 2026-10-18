@@ -50,6 +50,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTradingMarginProfileTransferCases, UmiTradingMarginPr
     umi_trading_margin_profile_archive_encode, umi_trading_margin_profile_archive_decode,
     UmiTradingMarginProfileTransferEqual, UmiTradingMarginProfileTransferTails, UmiTradingMarginProfileTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTradingMarginProfileTransferCasesWithWorkspace, UmiTradingMarginProfile,
+    umi_trading_margin_profile_archive_encode, umi_trading_margin_profile_archive_decode_with_workspace, UmiTradingMarginProfileTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTradingMarginProfileConditionalArchiveCases, UmiTradingMarginProfile,
     umi_trading_margin_profile_archive_encode, umi_trading_margin_profile_archive_decode_if_unchanged,
@@ -63,6 +68,7 @@ int main(void) {
      /* Apply this operation only while the related capability or state is available. */
      if(!umi_trading_margin_profile_valid(&v)) return 2;
     if (UmiTradingMarginProfileTransferCases(&v) != 0) return 1;
+    if (UmiTradingMarginProfileTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTradingMarginProfileConditionalArchiveCases(&v) != 0) return 1;
 
      return 0;

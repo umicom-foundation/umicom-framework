@@ -121,6 +121,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRadEventBindingTransferCases, UmiRadEventBinding,
     umi_rad_event_binding_archive_encode, umi_rad_event_binding_archive_decode,
     UmiRadEventBindingTransferEqual, UmiRadEventBindingTransferTails, UmiRadEventBindingTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRadEventBindingTransferCasesWithWorkspace, UmiRadEventBinding,
+    umi_rad_event_binding_archive_encode, umi_rad_event_binding_archive_decode_with_workspace, UmiRadEventBindingTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadEventBindingConditionalArchiveCases, UmiRadEventBinding,
     umi_rad_event_binding_archive_encode, umi_rad_event_binding_archive_decode_if_unchanged,
@@ -129,5 +134,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadEventBindingConditionalArchiveCases, UmiRadEv
 
 int main(void){UmiRadEventBinding item;CHECK(umi_rad_event_binding_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_event_binding_is_valid(&item));
     if (UmiRadEventBindingTransferCases(&item) != 0) return 1;
+    if (UmiRadEventBindingTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiRadEventBindingConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

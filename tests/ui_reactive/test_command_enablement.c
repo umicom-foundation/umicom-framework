@@ -67,6 +67,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveCommandEnablementTransferCases, UmiUiReacti
     umi_ui_reactive_command_enablement_archive_encode, umi_ui_reactive_command_enablement_archive_decode,
     UmiUiReactiveCommandEnablementTransferEqual, UmiUiReactiveCommandEnablementTransferTails, UmiUiReactiveCommandEnablementTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveCommandEnablementTransferCasesWithWorkspace, UmiUiReactiveCommandEnablement,
+    umi_ui_reactive_command_enablement_archive_encode, umi_ui_reactive_command_enablement_archive_decode_with_workspace, UmiUiReactiveCommandEnablementTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveCommandEnablementConditionalArchiveCases, UmiUiReactiveCommandEnablement,
     umi_ui_reactive_command_enablement_archive_encode, umi_ui_reactive_command_enablement_archive_decode_if_unchanged,
@@ -81,5 +86,6 @@ int main(void) { UmiUiReactiveCommandEnablement item; umi_ui_reactive_command_en
     populated.enabled = true;
     populated.evaluation_revision = (uint64_t)4;
     if (UmiUiReactiveCommandEnablementTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveCommandEnablementTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveCommandEnablementConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_command_enablement_valid(&item) ? 0 : 1; }

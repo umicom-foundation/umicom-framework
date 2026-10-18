@@ -108,6 +108,11 @@ UMI_TEST_VALUE_TRANSFER(UmiToolchainProbeReportTransferCases, UmiToolchainProbeR
     umi_toolchain_probe_report_archive_encode, umi_toolchain_probe_report_archive_decode,
     UmiToolchainProbeReportTransferEqual, UmiToolchainProbeReportTransferTails, UmiToolchainProbeReportTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiToolchainProbeReportTransferCasesWithWorkspace, UmiToolchainProbeReport,
+    umi_toolchain_probe_report_archive_encode, umi_toolchain_probe_report_archive_decode_with_workspace, UmiToolchainProbeReportTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiToolchainProbeReportConditionalArchiveCases, UmiToolchainProbeReport,
     umi_toolchain_probe_report_archive_encode, umi_toolchain_probe_report_archive_decode_if_unchanged,
@@ -116,5 +121,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiToolchainProbeReportConditionalArchiveCases, Umi
 
 int main(void){ UmiToolchainProbeReport r; umi_toolchain_probe_report_init(&r,UMI_TOOL_GIT); r.found=1; r.validated=1; strcpy(r.path,"git"); assert(umi_toolchain_probe_report_validate(&r)==UMI_STATUS_OK);
     if (UmiToolchainProbeReportTransferCases(&r) != 0) return 1;
+    if (UmiToolchainProbeReportTransferCasesWithWorkspace(&r) != 0) return 1;
     if (UmiToolchainProbeReportConditionalArchiveCases(&r) != 0) return 1;
  return 0; }

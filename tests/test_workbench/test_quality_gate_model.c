@@ -112,6 +112,11 @@ UMI_TEST_VALUE_TRANSFER(UmiQualityGateModelTransferCases, UmiQualityGateModel,
     umi_quality_gate_model_archive_encode, umi_quality_gate_model_archive_decode,
     UmiQualityGateModelTransferEqual, UmiQualityGateModelTransferTails, UmiQualityGateModelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiQualityGateModelTransferCasesWithWorkspace, UmiQualityGateModel,
+    umi_quality_gate_model_archive_encode, umi_quality_gate_model_archive_decode_with_workspace, UmiQualityGateModelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiQualityGateModelConditionalArchiveCases, UmiQualityGateModel,
     umi_quality_gate_model_archive_encode, umi_quality_gate_model_archive_decode_if_unchanged,
@@ -138,5 +143,6 @@ int main(void){UmiQualityGateModel m;assert(umi_quality_gate_model_init(&m,"qual
         umi_quality_gate_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
     assert(umi_quality_gate_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_quality_gate_model_valid(&m));
     if (UmiQualityGateModelTransferCases(&m) != 0) return 1;
+    if (UmiQualityGateModelTransferCasesWithWorkspace(&m) != 0) return 1;
     if (UmiQualityGateModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

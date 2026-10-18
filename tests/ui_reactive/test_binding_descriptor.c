@@ -104,6 +104,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveBindingDescriptorTransferCases, UmiUiReacti
     umi_ui_reactive_binding_descriptor_archive_encode, umi_ui_reactive_binding_descriptor_archive_decode,
     UmiUiReactiveBindingDescriptorTransferEqual, UmiUiReactiveBindingDescriptorTransferTails, UmiUiReactiveBindingDescriptorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveBindingDescriptorTransferCasesWithWorkspace, UmiUiReactiveBindingDescriptor,
+    umi_ui_reactive_binding_descriptor_archive_encode, umi_ui_reactive_binding_descriptor_archive_decode_with_workspace, UmiUiReactiveBindingDescriptorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveBindingDescriptorConditionalArchiveCases, UmiUiReactiveBindingDescriptor,
     umi_ui_reactive_binding_descriptor_archive_encode, umi_ui_reactive_binding_descriptor_archive_decode_if_unchanged,
@@ -119,5 +124,6 @@ int main(void) { UmiUiReactiveBindingDescriptor item; umi_ui_reactive_binding_de
     (void)snprintf(populated.target_path, sizeof(populated.target_path), "field-2");
     populated.enabled = true;
     if (UmiUiReactiveBindingDescriptorTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveBindingDescriptorTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveBindingDescriptorConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_binding_descriptor_valid(&item) ? 0 : 1; }

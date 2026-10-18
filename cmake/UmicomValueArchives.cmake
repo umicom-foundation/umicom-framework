@@ -66,3 +66,27 @@ if(BUILD_TESTING)
         umicom_register_validation_target(umicom-value-archive-callback-test)
     endif()
 endif()
+
+# Qualify explicit workspace ownership with a large record and the same public
+# installed-consumer source used by SDK integrators.
+if(BUILD_TESTING)
+    add_executable(umicom-archive-workspace-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/value_archive/test_workspace.c")
+    target_link_libraries(umicom-archive-workspace-test PRIVATE Umicom::base)
+    add_executable(umicom-archive-workspace-example
+        "${CMAKE_CURRENT_LIST_DIR}/../examples/value_archive/workspace.c")
+    target_link_libraries(umicom-archive-workspace-example PRIVATE Umicom::platform)
+    foreach(_target umicom-archive-workspace-test umicom-archive-workspace-example)
+        set_target_properties("${_target}" PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        umicom_apply_warnings("${_target}")
+        umicom_apply_sanitizers("${_target}")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target("${_target}")
+        endif()
+    endforeach()
+    add_test(NAME framework.value_archive.workspace.boundaries COMMAND umicom-archive-workspace-test)
+    add_test(NAME framework.value_archive.workspace.installed_source COMMAND umicom-archive-workspace-example)
+    set_tests_properties(framework.value_archive.workspace.boundaries
+        framework.value_archive.workspace.installed_source PROPERTIES
+        TIMEOUT 60 LABELS "framework;value-archive;workspace;regression")
+endif()

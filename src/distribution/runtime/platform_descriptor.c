@@ -94,6 +94,12 @@ static UmiStatus UmiDrPlatformDescriptorArchiveValidate(const UmiDrPlatformDescr
 UMI_DEFINE_VALUE_ARCHIVE(umi_dr_platform_descriptor_archive_encode, umi_dr_platform_descriptor_archive_decode,
     UmiDrPlatformDescriptor, UmiDrPlatformDescriptorArchiveSchema, UmiDrPlatformDescriptorArchiveBound, UmiDrPlatformDescriptorArchiveWrite, UmiDrPlatformDescriptorArchiveRead, UmiDrPlatformDescriptorArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_dr_platform_descriptor_archive_decode_with_workspace, UmiDrPlatformDescriptor,
+    UmiDrPlatformDescriptorArchiveSchema, UmiDrPlatformDescriptorArchiveBound, UmiDrPlatformDescriptorArchiveRead, UmiDrPlatformDescriptorArchiveValidate)
+
 /* Restore this typed value only while its encoded state still matches the
  * caller's reviewed snapshot. The shared guard checks every encoded byte;
  * domain decoding and validation stay with this owner. */

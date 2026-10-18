@@ -50,6 +50,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAnalyticsBarChartTransferCases, UmiAnalyticsBarChart,
     umi_analytics_bar_chart_archive_encode, umi_analytics_bar_chart_archive_decode,
     UmiAnalyticsBarChartTransferEqual, UmiAnalyticsBarChartTransferTails, UmiAnalyticsBarChartTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAnalyticsBarChartTransferCasesWithWorkspace, UmiAnalyticsBarChart,
+    umi_analytics_bar_chart_archive_encode, umi_analytics_bar_chart_archive_decode_with_workspace, UmiAnalyticsBarChartTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAnalyticsBarChartConditionalArchiveCases, UmiAnalyticsBarChart,
     umi_analytics_bar_chart_archive_encode, umi_analytics_bar_chart_archive_decode_if_unchanged,
@@ -58,5 +63,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiAnalyticsBarChartConditionalArchiveCases, UmiAna
 
 int main(void){UmiAnalyticsBarChart item;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_analytics_bar_chart_init(&item)!=UMI_STATUS_OK)return 1;
     if (UmiAnalyticsBarChartTransferCases(&item) != 0) return 1;
+    if (UmiAnalyticsBarChartTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiAnalyticsBarChartConditionalArchiveCases(&item) != 0) return 1;
 return (umi_analytics_bar_chart_valid(&item))?0:2;}

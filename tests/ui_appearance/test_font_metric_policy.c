@@ -68,6 +68,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceFontMetricPolicyTransferCases, UmiAppearanc
     umi_appearance_font_metric_policy_archive_encode, umi_appearance_font_metric_policy_archive_decode,
     UmiAppearanceFontMetricPolicyTransferEqual, UmiAppearanceFontMetricPolicyTransferTails, UmiAppearanceFontMetricPolicyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAppearanceFontMetricPolicyTransferCasesWithWorkspace, UmiAppearanceFontMetricPolicy,
+    umi_appearance_font_metric_policy_archive_encode, umi_appearance_font_metric_policy_archive_decode_with_workspace, UmiAppearanceFontMetricPolicyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceFontMetricPolicyConditionalArchiveCases, UmiAppearanceFontMetricPolicy,
     umi_appearance_font_metric_policy_archive_encode, umi_appearance_font_metric_policy_archive_decode_if_unchanged,
@@ -81,6 +86,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_font_metric_policy_is_valid(&item)) return 2;
     if (UmiAppearanceFontMetricPolicyTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceFontMetricPolicyTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiAppearanceFontMetricPolicyConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;

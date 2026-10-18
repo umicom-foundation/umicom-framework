@@ -113,6 +113,11 @@ UMI_TEST_VALUE_TRANSFER(UmiProjectWorkspaceCmakeDependencyTransferCases, UmiProj
     umi_project_workspace_cmake_dependency_archive_encode, umi_project_workspace_cmake_dependency_archive_decode,
     UmiProjectWorkspaceCmakeDependencyTransferEqual, UmiProjectWorkspaceCmakeDependencyTransferTails, UmiProjectWorkspaceCmakeDependencyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiProjectWorkspaceCmakeDependencyTransferCasesWithWorkspace, UmiProjectWorkspaceCmakeDependency,
+    umi_project_workspace_cmake_dependency_archive_encode, umi_project_workspace_cmake_dependency_archive_decode_with_workspace, UmiProjectWorkspaceCmakeDependencyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiProjectWorkspaceCmakeDependencyConditionalArchiveCases, UmiProjectWorkspaceCmakeDependency,
     umi_project_workspace_cmake_dependency_archive_encode, umi_project_workspace_cmake_dependency_archive_decode_if_unchanged,
@@ -159,6 +164,7 @@ int main(void) {
     umi_project_workspace_cmake_dependency_set_metric(&a,7U);
     CHECK(umi_project_workspace_cmake_dependency_validate(&a)==UMI_STATUS_OK);
     if (UmiProjectWorkspaceCmakeDependencyTransferCases(&a) != 0) return 1;
+    if (UmiProjectWorkspaceCmakeDependencyTransferCasesWithWorkspace(&a) != 0) return 1;
     if (UmiProjectWorkspaceCmakeDependencyConditionalArchiveCases(&a) != 0) return 1;
 
     CHECK(a.metric==7U);

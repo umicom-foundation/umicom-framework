@@ -81,6 +81,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCtHardwareBusTransferCases, UmiCtHardwareBus,
     umi_ct_hardware_bus_archive_encode, umi_ct_hardware_bus_archive_decode,
     UmiCtHardwareBusTransferEqual, UmiCtHardwareBusTransferTails, UmiCtHardwareBusTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCtHardwareBusTransferCasesWithWorkspace, UmiCtHardwareBus,
+    umi_ct_hardware_bus_archive_encode, umi_ct_hardware_bus_archive_decode_with_workspace, UmiCtHardwareBusTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtHardwareBusConditionalArchiveCases, UmiCtHardwareBus,
     umi_ct_hardware_bus_archive_encode, umi_ct_hardware_bus_archive_decode_if_unchanged,
@@ -89,5 +94,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtHardwareBusConditionalArchiveCases, UmiCtHardw
 
 int main(void){UmiCtHardwareBus b={"virtio",UMI_CT_BUS_VIRTIO,true,true,true,64U};CHECK(umi_ct_hardware_bus_validate(&b)==UMI_STATUS_OK);
     if (UmiCtHardwareBusTransferCases(&b) != 0) return 1;
+    if (UmiCtHardwareBusTransferCasesWithWorkspace(&b) != 0) return 1;
     if (UmiCtHardwareBusConditionalArchiveCases(&b) != 0) return 1;
 b.address_bits=24U;CHECK(umi_ct_hardware_bus_validate(&b)==UMI_STATUS_INVALID_ARGUMENT);return 0;}

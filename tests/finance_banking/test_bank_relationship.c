@@ -102,6 +102,11 @@ UMI_TEST_VALUE_TRANSFER(UmiBankingBankRelationshipTransferCases, UmiBankingBankR
     umi_banking_bank_relationship_archive_encode, umi_banking_bank_relationship_archive_decode,
     UmiBankingBankRelationshipTransferEqual, UmiBankingBankRelationshipTransferTails, UmiBankingBankRelationshipTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiBankingBankRelationshipTransferCasesWithWorkspace, UmiBankingBankRelationship,
+    umi_banking_bank_relationship_archive_encode, umi_banking_bank_relationship_archive_decode_with_workspace, UmiBankingBankRelationshipTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiBankingBankRelationshipConditionalArchiveCases, UmiBankingBankRelationship,
     umi_banking_bank_relationship_archive_encode, umi_banking_bank_relationship_archive_decode_if_unchanged,
@@ -115,6 +120,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if(!umi_banking_bank_relationship_valid(&v)) return 2;
     if (UmiBankingBankRelationshipTransferCases(&v) != 0) return 1;
+    if (UmiBankingBankRelationshipTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiBankingBankRelationshipConditionalArchiveCases(&v) != 0) return 1;
 
     return 0;

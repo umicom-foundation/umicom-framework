@@ -92,6 +92,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricEndpointDescriptorTransferCases, UmiFabricEndpo
     umi_fabric_endpoint_descriptor_archive_encode, umi_fabric_endpoint_descriptor_archive_decode,
     UmiFabricEndpointDescriptorTransferEqual, UmiFabricEndpointDescriptorTransferTails, UmiFabricEndpointDescriptorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFabricEndpointDescriptorTransferCasesWithWorkspace, UmiFabricEndpointDescriptor,
+    umi_fabric_endpoint_descriptor_archive_encode, umi_fabric_endpoint_descriptor_archive_decode_with_workspace, UmiFabricEndpointDescriptorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricEndpointDescriptorConditionalArchiveCases, UmiFabricEndpointDescriptor,
     umi_fabric_endpoint_descriptor_archive_encode, umi_fabric_endpoint_descriptor_archive_decode_if_unchanged,
@@ -145,6 +150,7 @@ int main(void) {
     UmiFabricEndpointDescriptor item;
     CHECK(umi_fabric_endpoint_descriptor_init(&item,"e1","https://risk",UMI_FABRIC_PROTOCOL_HTTP,true,10U)==UMI_STATUS_OK);
     if (UmiFabricEndpointDescriptorTransferCases(&item) != 0) return 1;
+    if (UmiFabricEndpointDescriptorTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiFabricEndpointDescriptorConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.secure);

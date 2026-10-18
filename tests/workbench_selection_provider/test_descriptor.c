@@ -167,6 +167,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionProviderDescriptorTransferCases, Um
     umi_workbench_selection_provider_descriptor_archive_encode, umi_workbench_selection_provider_descriptor_archive_decode,
     UmiWorkbenchSelectionProviderDescriptorTransferEqual, UmiWorkbenchSelectionProviderDescriptorTransferTails, UmiWorkbenchSelectionProviderDescriptorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchSelectionProviderDescriptorTransferCasesWithWorkspace, UmiWorkbenchSelectionProviderDescriptor,
+    umi_workbench_selection_provider_descriptor_archive_encode, umi_workbench_selection_provider_descriptor_archive_decode_with_workspace, UmiWorkbenchSelectionProviderDescriptorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchSelectionProviderDescriptorConditionalArchiveCases, UmiWorkbenchSelectionProviderDescriptor,
     umi_workbench_selection_provider_descriptor_archive_encode, umi_workbench_selection_provider_descriptor_archive_decode_if_unchanged,
@@ -190,6 +195,7 @@ int main(void)
     assert(umi_workbench_selection_provider_descriptor_validate(
         &descriptor) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionProviderDescriptorTransferCases(&descriptor) != 0) return 1;
+    if (UmiWorkbenchSelectionProviderDescriptorTransferCasesWithWorkspace(&descriptor) != 0) return 1;
     if (UmiWorkbenchSelectionProviderDescriptorConditionalArchiveCases(&descriptor) != 0) return 1;
 
 

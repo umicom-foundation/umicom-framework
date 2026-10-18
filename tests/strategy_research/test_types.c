@@ -94,6 +94,11 @@ UMI_TEST_VALUE_TRANSFER(UmiStrategyResearchSnapshotTransferCases, UmiStrategyRes
     umi_strategy_research_snapshot_archive_encode, umi_strategy_research_snapshot_archive_decode,
     UmiStrategyResearchSnapshotTransferEqual, UmiStrategyResearchSnapshotTransferTails, UmiStrategyResearchSnapshotTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiStrategyResearchSnapshotTransferCasesWithWorkspace, UmiStrategyResearchSnapshot,
+    umi_strategy_research_snapshot_archive_encode, umi_strategy_research_snapshot_archive_decode_with_workspace, UmiStrategyResearchSnapshotTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiStrategyResearchSnapshotConditionalArchiveCases, UmiStrategyResearchSnapshot,
     umi_strategy_research_snapshot_archive_encode, umi_strategy_research_snapshot_archive_decode_if_unchanged,
@@ -115,6 +120,7 @@ int main(void)
     snapshot.ready = 1;
     assert(umi_strategy_research_snapshot_validate(&snapshot) == UMI_STATUS_OK);
     if (UmiStrategyResearchSnapshotTransferCases(&snapshot) != 0) return 1;
+    if (UmiStrategyResearchSnapshotTransferCasesWithWorkspace(&snapshot) != 0) return 1;
     if (UmiStrategyResearchSnapshotConditionalArchiveCases(&snapshot) != 0) return 1;
 
 

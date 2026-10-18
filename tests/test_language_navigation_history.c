@@ -14,6 +14,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Umicom Framework language navigation history test. Sammy Hegab, Umicom Foundation, MIT. */
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/language/navigation_history.h"

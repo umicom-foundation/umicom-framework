@@ -91,6 +91,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataQueryOrderTransferCases, UmiDataQueryOrder,
     umi_data_query_order_archive_encode, umi_data_query_order_archive_decode,
     UmiDataQueryOrderTransferEqual, UmiDataQueryOrderTransferTails, UmiDataQueryOrderTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataQueryOrderTransferCasesWithWorkspace, UmiDataQueryOrder,
+    umi_data_query_order_archive_encode, umi_data_query_order_archive_decode_with_workspace, UmiDataQueryOrderTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataQueryOrderConditionalArchiveCases, UmiDataQueryOrder,
     umi_data_query_order_archive_encode, umi_data_query_order_archive_decode_if_unchanged,
@@ -144,6 +149,7 @@ int main(void) {
     UmiDataQueryOrder item;
     CHECK(umi_data_query_order_init(&item,"o1","created_at",true) == UMI_STATUS_OK);
     if (UmiDataQueryOrderTransferCases(&item) != 0) return 1;
+    if (UmiDataQueryOrderTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiDataQueryOrderConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.descending);

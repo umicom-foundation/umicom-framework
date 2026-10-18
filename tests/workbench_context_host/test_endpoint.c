@@ -150,6 +150,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextHostEndpointTransferCases, UmiWorkben
     umi_workbench_context_host_endpoint_archive_encode, umi_workbench_context_host_endpoint_archive_decode,
     UmiWorkbenchContextHostEndpointTransferEqual, UmiWorkbenchContextHostEndpointTransferTails, UmiWorkbenchContextHostEndpointTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextHostEndpointTransferCasesWithWorkspace, UmiWorkbenchContextHostEndpoint,
+    umi_workbench_context_host_endpoint_archive_encode, umi_workbench_context_host_endpoint_archive_decode_with_workspace, UmiWorkbenchContextHostEndpointTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextHostEndpointConditionalArchiveCases, UmiWorkbenchContextHostEndpoint,
     umi_workbench_context_host_endpoint_archive_encode, umi_workbench_context_host_endpoint_archive_decode_if_unchanged,
@@ -173,6 +178,7 @@ int main(void)
         umi_workbench_context_host_kind_mask(UMI_CONTEXT_KIND_SELECTION);
     assert(umi_workbench_context_host_endpoint_validate(&endpoint) == UMI_STATUS_OK);
     if (UmiWorkbenchContextHostEndpointTransferCases(&endpoint) != 0) return 1;
+    if (UmiWorkbenchContextHostEndpointTransferCasesWithWorkspace(&endpoint) != 0) return 1;
     if (UmiWorkbenchContextHostEndpointConditionalArchiveCases(&endpoint) != 0) return 1;
 
     assert(umi_workbench_context_host_endpoint_accepts(

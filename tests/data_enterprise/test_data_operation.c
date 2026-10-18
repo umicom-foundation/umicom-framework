@@ -110,6 +110,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataOperationTransferCases, UmiDataOperation,
     umi_data_data_operation_archive_encode, umi_data_data_operation_archive_decode,
     UmiDataOperationTransferEqual, UmiDataOperationTransferTails, UmiDataOperationTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataOperationTransferCasesWithWorkspace, UmiDataOperation,
+    umi_data_data_operation_archive_encode, umi_data_data_operation_archive_decode_with_workspace, UmiDataOperationTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataOperationConditionalArchiveCases, UmiDataOperation,
     umi_data_data_operation_archive_encode, umi_data_data_operation_archive_decode_if_unchanged,
@@ -175,6 +180,7 @@ int main(void) {
     UmiDataOperation item;
     CHECK(umi_data_data_operation_init(&item,"op1","s1","query",10U,5U) == UMI_STATUS_OK);
     if (UmiDataOperationTransferCases(&item) != 0) return 1;
+    if (UmiDataOperationTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiDataOperationConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.cancellable);

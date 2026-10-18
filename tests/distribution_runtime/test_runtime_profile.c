@@ -76,6 +76,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDrRuntimeProfileTransferCases, UmiDrRuntimeProfile,
     umi_dr_runtime_profile_archive_encode, umi_dr_runtime_profile_archive_decode,
     UmiDrRuntimeProfileTransferEqual, UmiDrRuntimeProfileTransferTails, UmiDrRuntimeProfileTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDrRuntimeProfileTransferCasesWithWorkspace, UmiDrRuntimeProfile,
+    umi_dr_runtime_profile_archive_encode, umi_dr_runtime_profile_archive_decode_with_workspace, UmiDrRuntimeProfileTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrRuntimeProfileConditionalArchiveCases, UmiDrRuntimeProfile,
     umi_dr_runtime_profile_archive_encode, umi_dr_runtime_profile_archive_decode_if_unchanged,
@@ -85,6 +90,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrRuntimeProfileConditionalArchiveCases, UmiDrRu
 int main(void) {
     UmiDrRuntimeProfile value; umi_dr_runtime_profile_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"linux-x64") == UMI_STATUS_OK); CHECK(umi_dr_runtime_profile_valid(&value));
     if (UmiDrRuntimeProfileTransferCases(&value) != 0) return 1;
+    if (UmiDrRuntimeProfileTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDrRuntimeProfileConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_runtime_profile_fingerprint(&value) != 0U);
     return 0;

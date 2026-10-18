@@ -126,6 +126,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricTransformRuleTransferCases, UmiFabricTransformR
     umi_fabric_transform_rule_archive_encode, umi_fabric_transform_rule_archive_decode,
     UmiFabricTransformRuleTransferEqual, UmiFabricTransformRuleTransferTails, UmiFabricTransformRuleTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFabricTransformRuleTransferCasesWithWorkspace, UmiFabricTransformRule,
+    umi_fabric_transform_rule_archive_encode, umi_fabric_transform_rule_archive_decode_with_workspace, UmiFabricTransformRuleTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricTransformRuleConditionalArchiveCases, UmiFabricTransformRule,
     umi_fabric_transform_rule_archive_encode, umi_fabric_transform_rule_archive_decode_if_unchanged,
@@ -203,6 +208,7 @@ int main(void) {
     UmiFabricTransformRule item;
     CHECK(umi_fabric_transform_rule_init(&item,"t1","trade.price","risk.price","copy",true)==UMI_STATUS_OK);
     if (UmiFabricTransformRuleTransferCases(&item) != 0) return 1;
+    if (UmiFabricTransformRuleTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiFabricTransformRuleConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.required);

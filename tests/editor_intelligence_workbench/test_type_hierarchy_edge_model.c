@@ -131,6 +131,11 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorIntelTypeHierarchyEdgeModelTransferCases, UmiEd
     umi_editor_intel_type_hierarchy_edge_model_archive_encode, umi_editor_intel_type_hierarchy_edge_model_archive_decode,
     UmiEditorIntelTypeHierarchyEdgeModelTransferEqual, UmiEditorIntelTypeHierarchyEdgeModelTransferTails, UmiEditorIntelTypeHierarchyEdgeModelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiEditorIntelTypeHierarchyEdgeModelTransferCasesWithWorkspace, UmiEditorIntelTypeHierarchyEdgeModel,
+    umi_editor_intel_type_hierarchy_edge_model_archive_encode, umi_editor_intel_type_hierarchy_edge_model_archive_decode_with_workspace, UmiEditorIntelTypeHierarchyEdgeModelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelTypeHierarchyEdgeModelConditionalArchiveCases, UmiEditorIntelTypeHierarchyEdgeModel,
     umi_editor_intel_type_hierarchy_edge_model_archive_encode, umi_editor_intel_type_hierarchy_edge_model_archive_decode_if_unchanged,
@@ -149,5 +154,6 @@ int main(void){UmiEditorIntelTypeHierarchyEdgeModel model;UmiEditorIntelRange ra
         umi_editor_intel_type_hierarchy_edge_model_set_selected(&model,true));
     if(umi_editor_intel_type_hierarchy_edge_model_set_selected(&model,true)!=UMI_STATUS_OK)return 3;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_intel_type_hierarchy_edge_model_valid(&model)||model.value.score!=91U||!model.selected)return 4;
     if (UmiEditorIntelTypeHierarchyEdgeModelTransferCases(&model) != 0) return 1;
+    if (UmiEditorIntelTypeHierarchyEdgeModelTransferCasesWithWorkspace(&model) != 0) return 1;
     if (UmiEditorIntelTypeHierarchyEdgeModelConditionalArchiveCases(&model) != 0) return 1;
 return 0;}

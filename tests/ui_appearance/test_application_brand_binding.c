@@ -101,6 +101,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceApplicationBrandBindingTransferCases, UmiAp
     umi_appearance_application_brand_binding_archive_encode, umi_appearance_application_brand_binding_archive_decode,
     UmiAppearanceApplicationBrandBindingTransferEqual, UmiAppearanceApplicationBrandBindingTransferTails, UmiAppearanceApplicationBrandBindingTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAppearanceApplicationBrandBindingTransferCasesWithWorkspace, UmiAppearanceApplicationBrandBinding,
+    umi_appearance_application_brand_binding_archive_encode, umi_appearance_application_brand_binding_archive_decode_with_workspace, UmiAppearanceApplicationBrandBindingTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceApplicationBrandBindingConditionalArchiveCases, UmiAppearanceApplicationBrandBinding,
     umi_appearance_application_brand_binding_archive_encode, umi_appearance_application_brand_binding_archive_decode_if_unchanged,
@@ -114,6 +119,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_application_brand_binding_is_valid(&item)) return 2;
     if (UmiAppearanceApplicationBrandBindingTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceApplicationBrandBindingTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiAppearanceApplicationBrandBindingConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;

@@ -148,6 +148,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDeliveryManifestTransferCases, UmiDeliveryManifest,
     umi_delivery_manifest_archive_encode, umi_delivery_manifest_archive_decode,
     UmiDeliveryManifestTransferEqual, UmiDeliveryManifestTransferTails, UmiDeliveryManifestTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDeliveryManifestTransferCasesWithWorkspace, UmiDeliveryManifest,
+    umi_delivery_manifest_archive_encode, umi_delivery_manifest_archive_decode_with_workspace, UmiDeliveryManifestTransferEqual)
+
 #include "value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDeliveryManifestConditionalArchiveCases, UmiDeliveryManifest,
     umi_delivery_manifest_archive_encode, umi_delivery_manifest_archive_decode_if_unchanged,
@@ -241,6 +246,7 @@ int main(void) {
     assert(umi_delivery_manifest_init(&manifest, "studio", "r1", "0.14.0", UMI_RELEASE_DEVELOPMENT) == UMI_STATUS_OK);
     assert(umi_delivery_manifest_validate(&manifest) == UMI_STATUS_OK);
     if (UmiDeliveryManifestTransferCases(&manifest) != 0) return 1;
+    if (UmiDeliveryManifestTransferCasesWithWorkspace(&manifest) != 0) return 1;
     if (UmiDeliveryManifestConditionalArchiveCases(&manifest) != 0) return 1;
 
     umi_build_evidence_init(&evidence);

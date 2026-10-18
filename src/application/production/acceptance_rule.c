@@ -97,6 +97,12 @@ static UmiStatus UmiApplicationProductionAcceptanceRuleArchiveValidate(const Umi
 UMI_DEFINE_VALUE_ARCHIVE(umi_application_production_acceptance_rule_archive_encode, umi_application_production_acceptance_rule_archive_decode,
     UmiApplicationProductionAcceptanceRule, UmiApplicationProductionAcceptanceRuleArchiveSchema, UmiApplicationProductionAcceptanceRuleArchiveBound, UmiApplicationProductionAcceptanceRuleArchiveWrite, UmiApplicationProductionAcceptanceRuleArchiveRead, UmiApplicationProductionAcceptanceRuleArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_application_production_acceptance_rule_archive_decode_with_workspace, UmiApplicationProductionAcceptanceRule,
+    UmiApplicationProductionAcceptanceRuleArchiveSchema, UmiApplicationProductionAcceptanceRuleArchiveBound, UmiApplicationProductionAcceptanceRuleArchiveRead, UmiApplicationProductionAcceptanceRuleArchiveValidate)
+
 /* Restore this typed value only while its encoded state still matches the
  * caller's reviewed snapshot. The shared guard checks every encoded byte;
  * domain decoding and validation stay with this owner. */

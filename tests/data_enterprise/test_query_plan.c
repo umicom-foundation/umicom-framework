@@ -95,6 +95,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataQueryPlanTransferCases, UmiDataQueryPlan,
     umi_data_query_plan_archive_encode, umi_data_query_plan_archive_decode,
     UmiDataQueryPlanTransferEqual, UmiDataQueryPlanTransferTails, UmiDataQueryPlanTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataQueryPlanTransferCasesWithWorkspace, UmiDataQueryPlan,
+    umi_data_query_plan_archive_encode, umi_data_query_plan_archive_decode_with_workspace, UmiDataQueryPlanTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataQueryPlanConditionalArchiveCases, UmiDataQueryPlan,
     umi_data_query_plan_archive_encode, umi_data_query_plan_archive_decode_if_unchanged,
@@ -147,6 +152,7 @@ int main(void) {
 
     UmiDataQueryPlan p; CHECK(umi_data_query_plan_init(&p,"q1","orders")==UMI_STATUS_OK); CHECK(umi_data_query_plan_shape(&p,2U,4U,1U,1U,100U)==UMI_STATUS_OK); CHECK(umi_data_query_plan_validate(&p)==UMI_STATUS_OK);
     if (UmiDataQueryPlanTransferCases(&p) != 0) return 1;
+    if (UmiDataQueryPlanTransferCasesWithWorkspace(&p) != 0) return 1;
     if (UmiDataQueryPlanConditionalArchiveCases(&p) != 0) return 1;
 
     return 0;

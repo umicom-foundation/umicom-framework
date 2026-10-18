@@ -59,6 +59,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAiDeveloperPreferencesTransferCases, UmiAiDeveloperPr
     umi_ai_developer_preferences_archive_encode, umi_ai_developer_preferences_archive_decode,
     UmiAiDeveloperPreferencesTransferEqual, UmiAiDeveloperPreferencesTransferTails, UmiAiDeveloperPreferencesTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAiDeveloperPreferencesTransferCasesWithWorkspace, UmiAiDeveloperPreferences,
+    umi_ai_developer_preferences_archive_encode, umi_ai_developer_preferences_archive_decode_with_workspace, UmiAiDeveloperPreferencesTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAiDeveloperPreferencesConditionalArchiveCases, UmiAiDeveloperPreferences,
     umi_ai_developer_preferences_archive_encode, umi_ai_developer_preferences_archive_decode_if_unchanged,
@@ -76,6 +81,7 @@ int main(void)
     assert(umi_ai_developer_preferences_validate(
         &preferences) == UMI_STATUS_OK);
     if (UmiAiDeveloperPreferencesTransferCases(&preferences) != 0) return 1;
+    if (UmiAiDeveloperPreferencesTransferCasesWithWorkspace(&preferences) != 0) return 1;
     if (UmiAiDeveloperPreferencesConditionalArchiveCases(&preferences) != 0) return 1;
 
 

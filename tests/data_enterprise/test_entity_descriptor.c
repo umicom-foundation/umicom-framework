@@ -109,6 +109,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataEntityDescriptorTransferCases, UmiDataEntityDescr
     umi_data_entity_descriptor_archive_encode, umi_data_entity_descriptor_archive_decode,
     UmiDataEntityDescriptorTransferEqual, UmiDataEntityDescriptorTransferTails, UmiDataEntityDescriptorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataEntityDescriptorTransferCasesWithWorkspace, UmiDataEntityDescriptor,
+    umi_data_entity_descriptor_archive_encode, umi_data_entity_descriptor_archive_decode_with_workspace, UmiDataEntityDescriptorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataEntityDescriptorConditionalArchiveCases, UmiDataEntityDescriptor,
     umi_data_entity_descriptor_archive_encode, umi_data_entity_descriptor_archive_decode_if_unchanged,
@@ -174,6 +179,7 @@ int main(void) {
     UmiDataEntityDescriptor item;
     CHECK(umi_data_entity_descriptor_init(&item,"Order","orders","id") == UMI_STATUS_OK);
     if (UmiDataEntityDescriptorTransferCases(&item) != 0) return 1;
+    if (UmiDataEntityDescriptorTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiDataEntityDescriptorConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(strcmp(item.table_id,"orders")==0);

@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkAccessibilityNodeTransferCases, U
     umi_workbench_context_link_accessibility_node_archive_encode, umi_workbench_context_link_accessibility_node_archive_decode,
     UmiWorkbenchContextLinkAccessibilityNodeTransferEqual, UmiWorkbenchContextLinkAccessibilityNodeTransferTails, UmiWorkbenchContextLinkAccessibilityNodeTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextLinkAccessibilityNodeTransferCasesWithWorkspace, UmiWorkbenchContextLinkAccessibilityNode,
+    umi_workbench_context_link_accessibility_node_archive_encode, umi_workbench_context_link_accessibility_node_archive_decode_with_workspace, UmiWorkbenchContextLinkAccessibilityNodeTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkAccessibilityNodeConditionalArchiveCases, UmiWorkbenchContextLinkAccessibilityNode,
     umi_workbench_context_link_accessibility_node_archive_encode, umi_workbench_context_link_accessibility_node_archive_decode_if_unchanged,
@@ -151,6 +156,7 @@ int main(void)
     umi_workbench_context_link_accessibility_node_init(&record, "accessibility_node-id");
     assert(umi_workbench_context_link_accessibility_node_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkAccessibilityNodeTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkAccessibilityNodeTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkAccessibilityNodeConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkAccessibilityNodeReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkAccessibilityNodeMutationGuards(&record) != 0) return 1;

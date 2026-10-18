@@ -109,6 +109,11 @@ UMI_TEST_VALUE_TRANSFER(UmiSettlementInstructionTransferCases, UmiSettlementInst
     umi_settlement_instruction_archive_encode, umi_settlement_instruction_archive_decode,
     UmiSettlementInstructionTransferEqual, UmiSettlementInstructionTransferTails, UmiSettlementInstructionTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiSettlementInstructionTransferCasesWithWorkspace, UmiSettlementInstruction,
+    umi_settlement_instruction_archive_encode, umi_settlement_instruction_archive_decode_with_workspace, UmiSettlementInstructionTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiSettlementInstructionConditionalArchiveCases, UmiSettlementInstruction,
     umi_settlement_instruction_archive_encode, umi_settlement_instruction_archive_decode_if_unchanged,
@@ -119,6 +124,7 @@ int main(void)
 {
     UmiSettlementInstruction x; CHECK(umi_settlement_instruction_init(&x,"ID","Name","PARENT",(UmiFinancialDate){2026,8U,25U},1U)==UMI_STATUS_OK); CHECK(umi_settlement_instruction_is_valid(&x));
     if (UmiSettlementInstructionTransferCases(&x) != 0) return 1;
+    if (UmiSettlementInstructionTransferCasesWithWorkspace(&x) != 0) return 1;
     if (UmiSettlementInstructionConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;

@@ -54,6 +54,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFcDockingContractTransferCases, UmiFcDockingContract,
     umi_fc_docking_contract_archive_encode, umi_fc_docking_contract_archive_decode,
     UmiFcDockingContractTransferEqual, UmiFcDockingContractTransferTails, UmiFcDockingContractTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFcDockingContractTransferCasesWithWorkspace, UmiFcDockingContract,
+    umi_fc_docking_contract_archive_encode, umi_fc_docking_contract_archive_decode_with_workspace, UmiFcDockingContractTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFcDockingContractConditionalArchiveCases, UmiFcDockingContract,
     umi_fc_docking_contract_archive_encode, umi_fc_docking_contract_archive_decode_if_unchanged,
@@ -63,6 +68,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiFcDockingContractConditionalArchiveCases, UmiFcD
 int main(void) {
     UmiFcDockingContract x={3U,31U,true}; CHECK(umi_fc_docking_contract_validate(&x));
     if (UmiFcDockingContractTransferCases(&x) != 0) return 1;
+    if (UmiFcDockingContractTransferCasesWithWorkspace(&x) != 0) return 1;
     if (UmiFcDockingContractConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;

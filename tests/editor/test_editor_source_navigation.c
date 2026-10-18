@@ -155,6 +155,11 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorSourceLocationTransferCases, UmiEditorSourceLoc
     umi_editor_source_location_archive_encode, umi_editor_source_location_archive_decode,
     UmiEditorSourceLocationTransferEqual, UmiEditorSourceLocationTransferTails, UmiEditorSourceLocationTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiEditorSourceLocationTransferCasesWithWorkspace, UmiEditorSourceLocation,
+    umi_editor_source_location_archive_encode, umi_editor_source_location_archive_decode_with_workspace, UmiEditorSourceLocationTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorSourceLocationConditionalArchiveCases, UmiEditorSourceLocation,
     umi_editor_source_location_archive_encode, umi_editor_source_location_archive_decode_if_unchanged,
@@ -174,6 +179,7 @@ int main(void)
 
     assert(umi_editor_source_location_validate(&first) == UMI_STATUS_OK);
     if (UmiEditorSourceLocationTransferCases(&first) != 0) return 1;
+    if (UmiEditorSourceLocationTransferCasesWithWorkspace(&first) != 0) return 1;
     if (UmiEditorSourceLocationConditionalArchiveCases(&first) != 0) return 1;
 
     assert(umi_editor_source_location_format(&first,

@@ -18,6 +18,8 @@
  * trading contract are visible immediately.
  */
 
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "../support/assertions.h"
 #include <assert.h>
 #include "test_trading_common.h"
 /* Verify that watchlist identity and price-alert lifecycle remain deterministic. */

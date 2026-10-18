@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkEventTransferCases, UmiWorkbenchC
     umi_workbench_context_link_event_archive_encode, umi_workbench_context_link_event_archive_decode,
     UmiWorkbenchContextLinkEventTransferEqual, UmiWorkbenchContextLinkEventTransferTails, UmiWorkbenchContextLinkEventTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextLinkEventTransferCasesWithWorkspace, UmiWorkbenchContextLinkEvent,
+    umi_workbench_context_link_event_archive_encode, umi_workbench_context_link_event_archive_decode_with_workspace, UmiWorkbenchContextLinkEventTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkEventConditionalArchiveCases, UmiWorkbenchContextLinkEvent,
     umi_workbench_context_link_event_archive_encode, umi_workbench_context_link_event_archive_decode_if_unchanged,
@@ -151,6 +156,7 @@ int main(void)
     umi_workbench_context_link_event_init(&record, "event-id");
     assert(umi_workbench_context_link_event_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkEventTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkEventTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkEventConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkEventReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkEventMutationGuards(&record) != 0) return 1;

@@ -50,6 +50,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAnalyticsLinearGaugeTransferCases, UmiAnalyticsLinear
     umi_analytics_linear_gauge_archive_encode, umi_analytics_linear_gauge_archive_decode,
     UmiAnalyticsLinearGaugeTransferEqual, UmiAnalyticsLinearGaugeTransferTails, UmiAnalyticsLinearGaugeTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAnalyticsLinearGaugeTransferCasesWithWorkspace, UmiAnalyticsLinearGauge,
+    umi_analytics_linear_gauge_archive_encode, umi_analytics_linear_gauge_archive_decode_with_workspace, UmiAnalyticsLinearGaugeTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAnalyticsLinearGaugeConditionalArchiveCases, UmiAnalyticsLinearGauge,
     umi_analytics_linear_gauge_archive_encode, umi_analytics_linear_gauge_archive_decode_if_unchanged,
@@ -58,5 +63,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiAnalyticsLinearGaugeConditionalArchiveCases, Umi
 
 int main(void){UmiAnalyticsLinearGauge item;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_analytics_linear_gauge_init(&item)!=UMI_STATUS_OK)return 1;
     if (UmiAnalyticsLinearGaugeTransferCases(&item) != 0) return 1;
+    if (UmiAnalyticsLinearGaugeTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiAnalyticsLinearGaugeConditionalArchiveCases(&item) != 0) return 1;
 return (umi_analytics_linear_gauge_valid(&item))?0:2;}

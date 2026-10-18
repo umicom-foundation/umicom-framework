@@ -169,6 +169,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextSourceDebugLocationTransferCases, Umi
     umi_workbench_context_source_debug_location_archive_encode, umi_workbench_context_source_debug_location_archive_decode,
     UmiWorkbenchContextSourceDebugLocationTransferEqual, UmiWorkbenchContextSourceDebugLocationTransferTails, UmiWorkbenchContextSourceDebugLocationTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextSourceDebugLocationTransferCasesWithWorkspace, UmiWorkbenchContextSourceDebugLocation,
+    umi_workbench_context_source_debug_location_archive_encode, umi_workbench_context_source_debug_location_archive_decode_with_workspace, UmiWorkbenchContextSourceDebugLocationTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextSourceDebugLocationConditionalArchiveCases, UmiWorkbenchContextSourceDebugLocation,
     umi_workbench_context_source_debug_location_archive_encode, umi_workbench_context_source_debug_location_archive_decode_if_unchanged,
@@ -208,6 +213,7 @@ int main(void)
     assert(umi_workbench_context_source_debug_location_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextSourceDebugLocationTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceDebugLocationTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextSourceDebugLocationConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextSourceDebugLocationReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextSourceDebugLocationMutationGuards(&record) != 0) return 1;

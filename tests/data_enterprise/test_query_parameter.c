@@ -109,6 +109,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataQueryParameterTransferCases, UmiDataQueryParamete
     umi_data_query_parameter_archive_encode, umi_data_query_parameter_archive_decode,
     UmiDataQueryParameterTransferEqual, UmiDataQueryParameterTransferTails, UmiDataQueryParameterTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataQueryParameterTransferCasesWithWorkspace, UmiDataQueryParameter,
+    umi_data_query_parameter_archive_encode, umi_data_query_parameter_archive_decode_with_workspace, UmiDataQueryParameterTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataQueryParameterConditionalArchiveCases, UmiDataQueryParameter,
     umi_data_query_parameter_archive_encode, umi_data_query_parameter_archive_decode_if_unchanged,
@@ -174,6 +179,7 @@ int main(void) {
     UmiDataQueryParameter item;
     CHECK(umi_data_query_parameter_init(&item,"p1","status",UMI_DATA_VALUE_TEXT,"OPEN",false) == UMI_STATUS_OK);
     if (UmiDataQueryParameterTransferCases(&item) != 0) return 1;
+    if (UmiDataQueryParameterTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiDataQueryParameterConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(strcmp(item.value,"OPEN")==0);

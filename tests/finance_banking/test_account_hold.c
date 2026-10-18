@@ -85,6 +85,11 @@ UMI_TEST_VALUE_TRANSFER(UmiBankingAccountHoldTransferCases, UmiBankingAccountHol
     umi_banking_account_hold_archive_encode, umi_banking_account_hold_archive_decode,
     UmiBankingAccountHoldTransferEqual, UmiBankingAccountHoldTransferTails, UmiBankingAccountHoldTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiBankingAccountHoldTransferCasesWithWorkspace, UmiBankingAccountHold,
+    umi_banking_account_hold_archive_encode, umi_banking_account_hold_archive_decode_with_workspace, UmiBankingAccountHoldTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiBankingAccountHoldConditionalArchiveCases, UmiBankingAccountHold,
     umi_banking_account_hold_archive_encode, umi_banking_account_hold_archive_decode_if_unchanged,
@@ -98,6 +103,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if(!umi_banking_account_hold_valid(&v)) return 2;
     if (UmiBankingAccountHoldTransferCases(&v) != 0) return 1;
+    if (UmiBankingAccountHoldTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiBankingAccountHoldConditionalArchiveCases(&v) != 0) return 1;
 
     return 0;

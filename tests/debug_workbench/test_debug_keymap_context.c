@@ -59,6 +59,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDebugWorkbenchDebugKeymapContextTransferCases, UmiDeb
     umi_debug_workbench_debug_keymap_context_archive_encode, umi_debug_workbench_debug_keymap_context_archive_decode,
     UmiDebugWorkbenchDebugKeymapContextTransferEqual, UmiDebugWorkbenchDebugKeymapContextTransferTails, UmiDebugWorkbenchDebugKeymapContextTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDebugWorkbenchDebugKeymapContextTransferCasesWithWorkspace, UmiDebugWorkbenchDebugKeymapContext,
+    umi_debug_workbench_debug_keymap_context_archive_encode, umi_debug_workbench_debug_keymap_context_archive_decode_with_workspace, UmiDebugWorkbenchDebugKeymapContextTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDebugWorkbenchDebugKeymapContextConditionalArchiveCases, UmiDebugWorkbenchDebugKeymapContext,
     umi_debug_workbench_debug_keymap_context_archive_encode, umi_debug_workbench_debug_keymap_context_archive_decode_if_unchanged,
@@ -84,6 +89,7 @@ int main(void)
     UMI_TEST_CHECK(umi_debug_workbench_debug_keymap_context_set_primary(&model, UMI_DEBUG_WORKBENCH_COMMAND_STEP_OVER) == UMI_STATUS_OK);
     UMI_TEST_CHECK(umi_debug_workbench_debug_keymap_context_valid(&model));
     if (UmiDebugWorkbenchDebugKeymapContextTransferCases(&model) != 0) return 1;
+    if (UmiDebugWorkbenchDebugKeymapContextTransferCasesWithWorkspace(&model) != 0) return 1;
     if (UmiDebugWorkbenchDebugKeymapContextConditionalArchiveCases(&model) != 0) return 1;
 
     return 0;

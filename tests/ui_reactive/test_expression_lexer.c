@@ -67,6 +67,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveExpressionLexerTransferCases, UmiUiReactive
     umi_ui_reactive_expression_lexer_archive_encode, umi_ui_reactive_expression_lexer_archive_decode,
     UmiUiReactiveExpressionLexerTransferEqual, UmiUiReactiveExpressionLexerTransferTails, UmiUiReactiveExpressionLexerTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveExpressionLexerTransferCasesWithWorkspace, UmiUiReactiveExpressionLexer,
+    umi_ui_reactive_expression_lexer_archive_encode, umi_ui_reactive_expression_lexer_archive_decode_with_workspace, UmiUiReactiveExpressionLexerTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveExpressionLexerConditionalArchiveCases, UmiUiReactiveExpressionLexer,
     umi_ui_reactive_expression_lexer_archive_encode, umi_ui_reactive_expression_lexer_archive_decode_if_unchanged,
@@ -81,5 +86,6 @@ int main(void) { UmiUiReactiveExpressionLexer item; umi_ui_reactive_expression_l
     populated.offset = (size_t)3;
     populated.token_count = (size_t)4;
     if (UmiUiReactiveExpressionLexerTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveExpressionLexerTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveExpressionLexerConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_expression_lexer_valid(&item) ? 0 : 1; }

@@ -92,6 +92,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricDeadLetterPolicyTransferCases, UmiFabricDeadLet
     umi_fabric_dead_letter_policy_archive_encode, umi_fabric_dead_letter_policy_archive_decode,
     UmiFabricDeadLetterPolicyTransferEqual, UmiFabricDeadLetterPolicyTransferTails, UmiFabricDeadLetterPolicyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFabricDeadLetterPolicyTransferCasesWithWorkspace, UmiFabricDeadLetterPolicy,
+    umi_fabric_dead_letter_policy_archive_encode, umi_fabric_dead_letter_policy_archive_decode_with_workspace, UmiFabricDeadLetterPolicyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricDeadLetterPolicyConditionalArchiveCases, UmiFabricDeadLetterPolicy,
     umi_fabric_dead_letter_policy_archive_encode, umi_fabric_dead_letter_policy_archive_decode_if_unchanged,
@@ -145,6 +150,7 @@ int main(void) {
     UmiFabricDeadLetterPolicy item;
     CHECK(umi_fabric_dead_letter_policy_init(&item,"dlq","topic://dead",3U,60000U,false)==UMI_STATUS_OK);
     if (UmiFabricDeadLetterPolicyTransferCases(&item) != 0) return 1;
+    if (UmiFabricDeadLetterPolicyTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiFabricDeadLetterPolicyConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.after_attempts==3U);

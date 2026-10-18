@@ -52,6 +52,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveStateGraphTransferCases, UmiUiReactiveState
     umi_ui_reactive_state_graph_archive_encode, umi_ui_reactive_state_graph_archive_decode,
     UmiUiReactiveStateGraphTransferEqual, UmiUiReactiveStateGraphTransferTails, UmiUiReactiveStateGraphTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveStateGraphTransferCasesWithWorkspace, UmiUiReactiveStateGraph,
+    umi_ui_reactive_state_graph_archive_encode, umi_ui_reactive_state_graph_archive_decode_with_workspace, UmiUiReactiveStateGraphTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveStateGraphConditionalArchiveCases, UmiUiReactiveStateGraph,
     umi_ui_reactive_state_graph_archive_encode, umi_ui_reactive_state_graph_archive_decode_if_unchanged,
@@ -68,5 +73,6 @@ int main(void) { UmiUiReactiveStateGraph item; umi_ui_reactive_state_graph_init(
     populated.acyclic = true;
     populated.revision = (uint64_t)6;
     if (UmiUiReactiveStateGraphTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveStateGraphTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveStateGraphConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_state_graph_valid(&item) ? 0 : 1; }

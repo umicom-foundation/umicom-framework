@@ -138,6 +138,12 @@ static UmiStatus UmiEditorIntelSemanticSearchItemArchiveValidate(const UmiEditor
 UMI_DEFINE_VALUE_ARCHIVE(umi_editor_intel_semantic_search_item_archive_encode, umi_editor_intel_semantic_search_item_archive_decode,
     UmiEditorIntelSemanticSearchItem, UmiEditorIntelSemanticSearchItemArchiveSchema, UmiEditorIntelSemanticSearchItemArchiveBound, UmiEditorIntelSemanticSearchItemArchiveWrite, UmiEditorIntelSemanticSearchItemArchiveRead, UmiEditorIntelSemanticSearchItemArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_editor_intel_semantic_search_item_archive_decode_with_workspace, UmiEditorIntelSemanticSearchItem,
+    UmiEditorIntelSemanticSearchItemArchiveSchema, UmiEditorIntelSemanticSearchItemArchiveBound, UmiEditorIntelSemanticSearchItemArchiveRead, UmiEditorIntelSemanticSearchItemArchiveValidate)
+
 /* Guard restoration with the previously reviewed encoded value. Domain field
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_editor_intel_semantic_search_item_archive_decode_if_unchanged, umi_editor_intel_semantic_search_item_archive_encode,

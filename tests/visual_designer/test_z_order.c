@@ -67,6 +67,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRadZOrderTransferCases, UmiRadZOrder,
     umi_rad_z_order_archive_encode, umi_rad_z_order_archive_decode,
     UmiRadZOrderTransferEqual, UmiRadZOrderTransferTails, UmiRadZOrderTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRadZOrderTransferCasesWithWorkspace, UmiRadZOrder,
+    umi_rad_z_order_archive_encode, umi_rad_z_order_archive_decode_with_workspace, UmiRadZOrderTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadZOrderConditionalArchiveCases, UmiRadZOrder,
     umi_rad_z_order_archive_encode, umi_rad_z_order_archive_decode_if_unchanged,
@@ -75,5 +80,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadZOrderConditionalArchiveCases, UmiRadZOrder,
 
 int main(void){UmiRadZOrder item;CHECK(umi_rad_z_order_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_z_order_is_valid(&item));
     if (UmiRadZOrderTransferCases(&item) != 0) return 1;
+    if (UmiRadZOrderTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiRadZOrderConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

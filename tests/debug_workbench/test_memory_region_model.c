@@ -140,6 +140,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDebugWorkbenchMemoryRegionModelTransferCases, UmiDebu
     umi_debug_workbench_memory_region_model_archive_encode, umi_debug_workbench_memory_region_model_archive_decode,
     UmiDebugWorkbenchMemoryRegionModelTransferEqual, UmiDebugWorkbenchMemoryRegionModelTransferTails, UmiDebugWorkbenchMemoryRegionModelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDebugWorkbenchMemoryRegionModelTransferCasesWithWorkspace, UmiDebugWorkbenchMemoryRegionModel,
+    umi_debug_workbench_memory_region_model_archive_encode, umi_debug_workbench_memory_region_model_archive_decode_with_workspace, UmiDebugWorkbenchMemoryRegionModelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDebugWorkbenchMemoryRegionModelConditionalArchiveCases, UmiDebugWorkbenchMemoryRegionModel,
     umi_debug_workbench_memory_region_model_archive_encode, umi_debug_workbench_memory_region_model_archive_decode_if_unchanged,
@@ -164,6 +169,7 @@ int main(void)
     UMI_TEST_CHECK(umi_debug_workbench_memory_region_model_set_follow_execution(&model, true) == UMI_STATUS_OK);
     UMI_TEST_CHECK(umi_debug_workbench_memory_region_model_valid(&model));
     if (UmiDebugWorkbenchMemoryRegionModelTransferCases(&model) != 0) return 1;
+    if (UmiDebugWorkbenchMemoryRegionModelTransferCasesWithWorkspace(&model) != 0) return 1;
     if (UmiDebugWorkbenchMemoryRegionModelConditionalArchiveCases(&model) != 0) return 1;
 
     return 0;

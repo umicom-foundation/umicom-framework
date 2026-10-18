@@ -18,6 +18,8 @@
  * The test providers are deterministic and never use a network. They prove the
  * orchestration contract without requiring credentials or external services.
  */
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>

@@ -122,6 +122,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTestPlatformProductValidationProfileTransferCases, Um
     umi_test_platform_product_validation_profile_archive_encode, umi_test_platform_product_validation_profile_archive_decode,
     UmiTestPlatformProductValidationProfileTransferEqual, UmiTestPlatformProductValidationProfileTransferTails, UmiTestPlatformProductValidationProfileTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTestPlatformProductValidationProfileTransferCasesWithWorkspace, UmiTestPlatformProductValidationProfile,
+    umi_test_platform_product_validation_profile_archive_encode, umi_test_platform_product_validation_profile_archive_decode_with_workspace, UmiTestPlatformProductValidationProfileTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestPlatformProductValidationProfileConditionalArchiveCases, UmiTestPlatformProductValidationProfile,
     umi_test_platform_product_validation_profile_archive_encode, umi_test_platform_product_validation_profile_archive_decode_if_unchanged,
@@ -136,6 +141,7 @@ int main(void) {
     assert(umi_test_platform_product_validation_profile_validate(&profile) ==
         UMI_STATUS_OK);
     if (UmiTestPlatformProductValidationProfileTransferCases(&profile) != 0) return 1;
+    if (UmiTestPlatformProductValidationProfileTransferCasesWithWorkspace(&profile) != 0) return 1;
     if (UmiTestPlatformProductValidationProfileConditionalArchiveCases(&profile) != 0) return 1;
 
     assert(strcmp(profile.preset, "windows-ucrt64-all-debug") == 0);

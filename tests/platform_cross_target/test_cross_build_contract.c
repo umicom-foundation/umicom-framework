@@ -159,6 +159,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCtCrossBuildContractTransferCases, UmiCtCrossBuildCon
     umi_ct_cross_build_contract_archive_encode, umi_ct_cross_build_contract_archive_decode,
     UmiCtCrossBuildContractTransferEqual, UmiCtCrossBuildContractTransferTails, UmiCtCrossBuildContractTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCtCrossBuildContractTransferCasesWithWorkspace, UmiCtCrossBuildContract,
+    umi_ct_cross_build_contract_archive_encode, umi_ct_cross_build_contract_archive_decode_with_workspace, UmiCtCrossBuildContractTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtCrossBuildContractConditionalArchiveCases, UmiCtCrossBuildContract,
     umi_ct_cross_build_contract_archive_encode, umi_ct_cross_build_contract_archive_decode_if_unchanged,
@@ -176,5 +181,6 @@ int main(void){UmiCtCrossBuildContract c={0};CHECK(umi_ct_copy(c.contract_id,siz
     c.target.structure_size = (uint32_t)sizeof(c.target);
     c.target.api_version = UMI_CT_API_VERSION;
     if (UmiCtCrossBuildContractTransferCases(&c) != 0) return 1;
+    if (UmiCtCrossBuildContractTransferCasesWithWorkspace(&c) != 0) return 1;
     if (UmiCtCrossBuildContractConditionalArchiveCases(&c) != 0) return 1;
 return 0;}

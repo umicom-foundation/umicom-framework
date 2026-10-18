@@ -51,6 +51,11 @@ UMI_TEST_VALUE_TRANSFER(UmiToolchainRequirementTransferCases, UmiToolchainRequir
     umi_toolchain_requirement_archive_encode, umi_toolchain_requirement_archive_decode,
     UmiToolchainRequirementTransferEqual, UmiToolchainRequirementTransferTails, UmiToolchainRequirementTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiToolchainRequirementTransferCasesWithWorkspace, UmiToolchainRequirement,
+    umi_toolchain_requirement_archive_encode, umi_toolchain_requirement_archive_decode_with_workspace, UmiToolchainRequirementTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiToolchainRequirementConditionalArchiveCases, UmiToolchainRequirement,
     umi_toolchain_requirement_archive_encode, umi_toolchain_requirement_archive_decode_if_unchanged,
@@ -59,5 +64,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiToolchainRequirementConditionalArchiveCases, Umi
 
 int main(void){ UmiToolchainRequirement r; umi_toolchain_requirement_init(&r, UMI_TOOL_GIT, 1); assert(umi_toolchain_requirement_validate(&r)==UMI_STATUS_OK);
     if (UmiToolchainRequirementTransferCases(&r) != 0) return 1;
+    if (UmiToolchainRequirementTransferCasesWithWorkspace(&r) != 0) return 1;
     if (UmiToolchainRequirementConditionalArchiveCases(&r) != 0) return 1;
  assert(r.required); return 0; }

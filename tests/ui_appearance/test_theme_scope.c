@@ -84,6 +84,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceThemeScopeTransferCases, UmiAppearanceTheme
     umi_appearance_theme_scope_archive_encode, umi_appearance_theme_scope_archive_decode,
     UmiAppearanceThemeScopeTransferEqual, UmiAppearanceThemeScopeTransferTails, UmiAppearanceThemeScopeTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAppearanceThemeScopeTransferCasesWithWorkspace, UmiAppearanceThemeScope,
+    umi_appearance_theme_scope_archive_encode, umi_appearance_theme_scope_archive_decode_with_workspace, UmiAppearanceThemeScopeTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceThemeScopeConditionalArchiveCases, UmiAppearanceThemeScope,
     umi_appearance_theme_scope_archive_encode, umi_appearance_theme_scope_archive_decode_if_unchanged,
@@ -97,6 +102,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_theme_scope_is_valid(&item)) return 2;
     if (UmiAppearanceThemeScopeTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceThemeScopeTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiAppearanceThemeScopeConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;

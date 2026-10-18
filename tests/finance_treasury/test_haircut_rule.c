@@ -66,6 +66,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryHaircutRuleTransferCases, UmiTreasuryHaircutR
     umi_treasury_haircut_rule_archive_encode, umi_treasury_haircut_rule_archive_decode,
     UmiTreasuryHaircutRuleTransferEqual, UmiTreasuryHaircutRuleTransferTails, UmiTreasuryHaircutRuleTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTreasuryHaircutRuleTransferCasesWithWorkspace, UmiTreasuryHaircutRule,
+    umi_treasury_haircut_rule_archive_encode, umi_treasury_haircut_rule_archive_decode_with_workspace, UmiTreasuryHaircutRuleTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryHaircutRuleConditionalArchiveCases, UmiTreasuryHaircutRule,
     umi_treasury_haircut_rule_archive_encode, umi_treasury_haircut_rule_archive_decode_if_unchanged,
@@ -77,6 +82,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_haircut_rule_init(&v, "hc", 250U) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryHaircutRuleTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryHaircutRuleTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTreasuryHaircutRuleConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */

@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkActivationPolicyTransferCases, Um
     umi_workbench_context_link_activation_policy_archive_encode, umi_workbench_context_link_activation_policy_archive_decode,
     UmiWorkbenchContextLinkActivationPolicyTransferEqual, UmiWorkbenchContextLinkActivationPolicyTransferTails, UmiWorkbenchContextLinkActivationPolicyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextLinkActivationPolicyTransferCasesWithWorkspace, UmiWorkbenchContextLinkActivationPolicy,
+    umi_workbench_context_link_activation_policy_archive_encode, umi_workbench_context_link_activation_policy_archive_decode_with_workspace, UmiWorkbenchContextLinkActivationPolicyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkActivationPolicyConditionalArchiveCases, UmiWorkbenchContextLinkActivationPolicy,
     umi_workbench_context_link_activation_policy_archive_encode, umi_workbench_context_link_activation_policy_archive_decode_if_unchanged,
@@ -151,6 +156,7 @@ int main(void)
     umi_workbench_context_link_activation_policy_init(&record, "activation_policy-id");
     assert(umi_workbench_context_link_activation_policy_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkActivationPolicyTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkActivationPolicyTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkActivationPolicyConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkActivationPolicyReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkActivationPolicyMutationGuards(&record) != 0) return 1;

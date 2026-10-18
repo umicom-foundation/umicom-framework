@@ -143,6 +143,11 @@ UMI_TEST_VALUE_TRANSFER(UmiNativeWebRenderContextTransferCases, UmiNativeWebRend
     umi_native_web_render_context_archive_encode, umi_native_web_render_context_archive_decode,
     UmiNativeWebRenderContextTransferEqual, UmiNativeWebRenderContextTransferTails, UmiNativeWebRenderContextTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiNativeWebRenderContextTransferCasesWithWorkspace, UmiNativeWebRenderContext,
+    umi_native_web_render_context_archive_encode, umi_native_web_render_context_archive_decode_with_workspace, UmiNativeWebRenderContextTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiNativeWebRenderContextConditionalArchiveCases, UmiNativeWebRenderContext,
     umi_native_web_render_context_archive_encode, umi_native_web_render_context_archive_decode_if_unchanged,
@@ -196,6 +201,7 @@ int main(void)
 
     UmiNativeWebRenderContext c; CHECK(umi_native_web_render_context_init(&c,"s1","/")==UMI_STATUS_OK); CHECK(umi_native_web_render_context_validate(&c)==UMI_STATUS_OK);
     if (UmiNativeWebRenderContextTransferCases(&c) != 0) return 1;
+    if (UmiNativeWebRenderContextTransferCasesWithWorkspace(&c) != 0) return 1;
     if (UmiNativeWebRenderContextConditionalArchiveCases(&c) != 0) return 1;
  CHECK(strcmp(c.locale,"en-GB")==0);
     return 0;

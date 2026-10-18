@@ -366,6 +366,12 @@ static UmiStatus UmiWorkbenchContextEventApplicationBindingArchiveValidate(const
 UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_context_event_application_binding_archive_encode, umi_workbench_context_event_application_binding_archive_decode,
     UmiWorkbenchContextEventApplicationBinding, UmiWorkbenchContextEventApplicationBindingArchiveSchema, UmiWorkbenchContextEventApplicationBindingArchiveBound, UmiWorkbenchContextEventApplicationBindingArchiveWrite, UmiWorkbenchContextEventApplicationBindingArchiveRead, UmiWorkbenchContextEventApplicationBindingArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_workbench_context_event_application_binding_archive_decode_with_workspace, UmiWorkbenchContextEventApplicationBinding,
+    UmiWorkbenchContextEventApplicationBindingArchiveSchema, UmiWorkbenchContextEventApplicationBindingArchiveBound, UmiWorkbenchContextEventApplicationBindingArchiveRead, UmiWorkbenchContextEventApplicationBindingArchiveValidate)
+
 /* A delayed application binding draft must name the revision it reviewed.
  * Domain validation remains with this value owner; the shared guard publishes
  * all fields together without emitting events or changing any external service. */

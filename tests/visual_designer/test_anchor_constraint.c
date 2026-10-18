@@ -53,6 +53,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRadAnchorConstraintTransferCases, UmiRadAnchorConstra
     umi_rad_anchor_constraint_archive_encode, umi_rad_anchor_constraint_archive_decode,
     UmiRadAnchorConstraintTransferEqual, UmiRadAnchorConstraintTransferTails, UmiRadAnchorConstraintTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRadAnchorConstraintTransferCasesWithWorkspace, UmiRadAnchorConstraint,
+    umi_rad_anchor_constraint_archive_encode, umi_rad_anchor_constraint_archive_decode_with_workspace, UmiRadAnchorConstraintTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadAnchorConstraintConditionalArchiveCases, UmiRadAnchorConstraint,
     umi_rad_anchor_constraint_archive_encode, umi_rad_anchor_constraint_archive_decode_if_unchanged,
@@ -61,5 +66,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadAnchorConstraintConditionalArchiveCases, UmiR
 
 int main(void){UmiRadAnchorConstraint item;CHECK(umi_rad_anchor_constraint_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_anchor_constraint_is_valid(&item));
     if (UmiRadAnchorConstraintTransferCases(&item) != 0) return 1;
+    if (UmiRadAnchorConstraintTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiRadAnchorConstraintConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

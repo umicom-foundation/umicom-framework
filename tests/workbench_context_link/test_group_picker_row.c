@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkGroupPickerRowTransferCases, UmiW
     umi_workbench_context_link_group_picker_row_archive_encode, umi_workbench_context_link_group_picker_row_archive_decode,
     UmiWorkbenchContextLinkGroupPickerRowTransferEqual, UmiWorkbenchContextLinkGroupPickerRowTransferTails, UmiWorkbenchContextLinkGroupPickerRowTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextLinkGroupPickerRowTransferCasesWithWorkspace, UmiWorkbenchContextLinkGroupPickerRow,
+    umi_workbench_context_link_group_picker_row_archive_encode, umi_workbench_context_link_group_picker_row_archive_decode_with_workspace, UmiWorkbenchContextLinkGroupPickerRowTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkGroupPickerRowConditionalArchiveCases, UmiWorkbenchContextLinkGroupPickerRow,
     umi_workbench_context_link_group_picker_row_archive_encode, umi_workbench_context_link_group_picker_row_archive_decode_if_unchanged,
@@ -151,6 +156,7 @@ int main(void)
     umi_workbench_context_link_group_picker_row_init(&record, "group_picker_row-id");
     assert(umi_workbench_context_link_group_picker_row_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkGroupPickerRowTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkGroupPickerRowTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkGroupPickerRowConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkGroupPickerRowReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkGroupPickerRowMutationGuards(&record) != 0) return 1;

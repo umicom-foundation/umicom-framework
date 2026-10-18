@@ -12,3 +12,10 @@ include(CTest)
 if(BUILD_TESTING)
     add_test(NAME portable-state-memory COMMAND umicom-portable-state)
 endif()
+
+# Use explicit staging storage without relying on the consuming thread stack.
+add_executable(umicom-workspace-import workspace.c)
+target_link_libraries(umicom-workspace-import PRIVATE Umicom::platform)
+if(BUILD_TESTING)
+    add_test(NAME workspace-import COMMAND umicom-workspace-import)
+endif()

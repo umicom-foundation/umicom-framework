@@ -97,6 +97,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPerformanceMemoryPressureTransferCases, UmiPerformanc
     umi_performance_memory_pressure_archive_encode, umi_performance_memory_pressure_archive_decode,
     UmiPerformanceMemoryPressureTransferEqual, UmiPerformanceMemoryPressureTransferTails, UmiPerformanceMemoryPressureTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPerformanceMemoryPressureTransferCasesWithWorkspace, UmiPerformanceMemoryPressure,
+    umi_performance_memory_pressure_archive_encode, umi_performance_memory_pressure_archive_decode_with_workspace, UmiPerformanceMemoryPressureTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPerformanceMemoryPressureConditionalArchiveCases, UmiPerformanceMemoryPressure,
     umi_performance_memory_pressure_archive_encode, umi_performance_memory_pressure_archive_decode_if_unchanged,
@@ -154,6 +159,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_performance_memory_pressure_validate(&left) != UMI_STATUS_OK) return 2;
     if (UmiPerformanceMemoryPressureTransferCases(&left) != 0) return 1;
+    if (UmiPerformanceMemoryPressureTransferCasesWithWorkspace(&left) != 0) return 1;
     if (UmiPerformanceMemoryPressureConditionalArchiveCases(&left) != 0) return 1;
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */

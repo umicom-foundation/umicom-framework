@@ -13,6 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "../support/assertions.h"
 #include <assert.h>
 #include "umicom/ai_developer_experience/views/patch_review.h"
 #include "umicom/ui/command_view.h"

@@ -129,6 +129,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCtCrossTargetSnapshotTransferCases, UmiCtCrossTargetS
     umi_ct_cross_target_snapshot_archive_encode, umi_ct_cross_target_snapshot_archive_decode,
     UmiCtCrossTargetSnapshotTransferEqual, UmiCtCrossTargetSnapshotTransferTails, UmiCtCrossTargetSnapshotTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCtCrossTargetSnapshotTransferCasesWithWorkspace, UmiCtCrossTargetSnapshot,
+    umi_ct_cross_target_snapshot_archive_encode, umi_ct_cross_target_snapshot_archive_decode_with_workspace, UmiCtCrossTargetSnapshotTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtCrossTargetSnapshotConditionalArchiveCases, UmiCtCrossTargetSnapshot,
     umi_ct_cross_target_snapshot_archive_encode, umi_ct_cross_target_snapshot_archive_decode_if_unchanged,
@@ -146,5 +151,6 @@ int main(void){UmiCtCrossTargetSnapshot s={0};s.target.architecture=UMI_CT_ARCH_
     s.target.structure_size = (uint32_t)sizeof(s.target);
     s.target.api_version = UMI_CT_API_VERSION;
     if (UmiCtCrossTargetSnapshotTransferCases(&s) != 0) return 1;
+    if (UmiCtCrossTargetSnapshotTransferCasesWithWorkspace(&s) != 0) return 1;
     if (UmiCtCrossTargetSnapshotConditionalArchiveCases(&s) != 0) return 1;
 s.health.health=UMI_CT_HEALTH_BLOCKED;CHECK(umi_ct_cross_target_snapshot_validate(&s)==UMI_STATUS_UNAVAILABLE);return 0;}

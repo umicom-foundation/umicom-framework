@@ -71,6 +71,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceAppearanceProfileTransferCases, UmiAppearan
     umi_appearance_profile_archive_encode, umi_appearance_profile_archive_decode,
     UmiAppearanceAppearanceProfileTransferEqual, UmiAppearanceAppearanceProfileTransferTails, UmiAppearanceAppearanceProfileTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAppearanceAppearanceProfileTransferCasesWithWorkspace, UmiAppearanceAppearanceProfile,
+    umi_appearance_profile_archive_encode, umi_appearance_profile_archive_decode_with_workspace, UmiAppearanceAppearanceProfileTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceAppearanceProfileConditionalArchiveCases, UmiAppearanceAppearanceProfile,
     umi_appearance_profile_archive_encode, umi_appearance_profile_archive_decode_if_unchanged,
@@ -84,6 +89,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_profile_is_valid(&item)) return 2;
     if (UmiAppearanceAppearanceProfileTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceAppearanceProfileTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiAppearanceAppearanceProfileConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;

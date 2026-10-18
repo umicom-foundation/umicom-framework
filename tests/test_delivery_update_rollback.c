@@ -77,6 +77,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRollbackPlanTransferCases, UmiRollbackPlan,
     umi_rollback_plan_archive_encode, umi_rollback_plan_archive_decode,
     UmiRollbackPlanTransferEqual, UmiRollbackPlanTransferTails, UmiRollbackPlanTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRollbackPlanTransferCasesWithWorkspace, UmiRollbackPlan,
+    umi_rollback_plan_archive_encode, umi_rollback_plan_archive_decode_with_workspace, UmiRollbackPlanTransferEqual)
+
 #include "value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRollbackPlanConditionalArchiveCases, UmiRollbackPlan,
     umi_rollback_plan_archive_encode, umi_rollback_plan_archive_decode_if_unchanged,
@@ -124,6 +129,7 @@ int main(void) {
     assert(umi_rollback_plan_approve(&rollback) == UMI_STATUS_OK);
     assert(umi_rollback_plan_valid(&rollback));
     if (UmiRollbackPlanTransferCases(&rollback) != 0) return 1;
+    if (UmiRollbackPlanTransferCasesWithWorkspace(&rollback) != 0) return 1;
     if (UmiRollbackPlanConditionalArchiveCases(&rollback) != 0) return 1;
 
     return 0;

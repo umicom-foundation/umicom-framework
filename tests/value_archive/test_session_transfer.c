@@ -12,6 +12,27 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+#include "workspace_cases.h"
+
+/* Session snapshots retain owned panel IDs. Compare active fields so unused
+ * array entries and padding are not mistaken for published session state. */
+static int SessionWorkspaceEqual(const UmiApplicationSessionSnapshot *left,
+    const UmiApplicationSessionSnapshot *right)
+{
+    if (left->structure_size != right->structure_size ||
+        strcmp(left->application_id, right->application_id) != 0 ||
+        strcmp(left->layout_id, right->layout_id) != 0 ||
+        left->active_panel_count != right->active_panel_count ||
+        left->layout_locked != right->layout_locked || left->revision != right->revision) return 0;
+    for (size_t i = 0U; i < left->active_panel_count; ++i)
+        if (strcmp(left->active_panel_ids[i], right->active_panel_ids[i]) != 0) return 0;
+    return 1;
+}
+UMI_TEST_VALUE_WORKSPACE(SessionWorkspaceCases, UmiApplicationSessionSnapshot,
+    umi_application_session_snapshot_archive_encode,
+    umi_application_session_snapshot_archive_decode_with_workspace, SessionWorkspaceEqual)
+
 #define CHECK(expression) do { if (!(expression)) { \
     fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, #expression); return 1; \
 } } while (0)
@@ -28,6 +49,7 @@ static int lifetime(void)
     UmiApplicationSessionSnapshot snapshot;
     CHECK(umi_application_session_init(experience(), &session) == UMI_STATUS_OK);
     CHECK(umi_application_session_snapshot_capture(&session, &snapshot) == UMI_STATUS_OK);
+    CHECK(SessionWorkspaceCases(&snapshot) == 0);
     CHECK(snapshot.active_panel_count > 0U);
     CHECK(umi_application_session_snapshot_restore(experience(), &snapshot, &restored) == UMI_STATUS_OK);
     for (size_t index = 0U; index < restored.active_panel_count; ++index) {

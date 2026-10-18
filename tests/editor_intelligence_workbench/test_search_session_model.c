@@ -70,6 +70,11 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorIntelSearchSessionModelTransferCases, UmiEditor
     umi_editor_intel_search_session_model_archive_encode, umi_editor_intel_search_session_model_archive_decode,
     UmiEditorIntelSearchSessionModelTransferEqual, UmiEditorIntelSearchSessionModelTransferTails, UmiEditorIntelSearchSessionModelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiEditorIntelSearchSessionModelTransferCasesWithWorkspace, UmiEditorIntelSearchSessionModel,
+    umi_editor_intel_search_session_model_archive_encode, umi_editor_intel_search_session_model_archive_decode_with_workspace, UmiEditorIntelSearchSessionModelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelSearchSessionModelConditionalArchiveCases, UmiEditorIntelSearchSessionModel,
     umi_editor_intel_search_session_model_archive_encode, umi_editor_intel_search_session_model_archive_decode_if_unchanged,
@@ -78,5 +83,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelSearchSessionModelConditionalArchiveC
 
 int main(void){UmiEditorIntelSearchSessionModel session;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_search_session_model_begin(&session,"session-1")!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_search_session_model_set_ready(&session,3U)!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_intel_search_session_model_valid(&session)||session.item_count!=3U)return 3;
     if (UmiEditorIntelSearchSessionModelTransferCases(&session) != 0) return 1;
+    if (UmiEditorIntelSearchSessionModelTransferCasesWithWorkspace(&session) != 0) return 1;
     if (UmiEditorIntelSearchSessionModelConditionalArchiveCases(&session) != 0) return 1;
 /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_search_session_model_cancel(&session)!=UMI_STATUS_OK||session.phase!=UMI_EDITOR_INTEL_PHASE_CANCELLED)return 4;return 0;}

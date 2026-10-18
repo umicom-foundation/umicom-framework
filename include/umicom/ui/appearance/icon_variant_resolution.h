@@ -53,6 +53,17 @@ UmiStatus umi_appearance_icon_variant_resolution_archive_encode(const UmiAppeara
 UmiStatus umi_appearance_icon_variant_resolution_archive_decode(const void *bytes, size_t byte_count,
     UmiAppearanceIconVariantResolution *value);
 
+/** Decode with caller-owned staging storage rather than a whole-record stack value.
+ * workspace and value must each point to a complete, correctly aligned
+ * UmiAppearanceIconVariantResolution object. Input bytes, scratch and destination must
+ * not overlap; overlap is INVALID_ARGUMENT. Every refusal leaves value
+ * unchanged. Scratch may be changed and must not be used as a live owner.
+ * This call allocates nothing and performs no I/O. Serialize access for
+ * the complete call; use the domain publication API to accept live state.
+ * See umicom/base/value_archive.h for format and workspace ownership. */
+UmiStatus umi_appearance_icon_variant_resolution_archive_decode_with_workspace(const void *bytes, size_t byte_count,
+    UmiAppearanceIconVariantResolution *workspace, UmiAppearanceIconVariantResolution *value);
+
 /** Decode only if value's encoded fields still match the expected snapshot.
  * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
  * Comparison ignores padding and unused text; decoded revisions remain archive

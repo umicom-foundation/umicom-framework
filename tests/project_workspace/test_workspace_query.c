@@ -105,6 +105,11 @@ UMI_TEST_VALUE_TRANSFER(UmiProjectWorkspaceWorkspaceQueryTransferCases, UmiProje
     umi_project_workspace_workspace_query_archive_encode, umi_project_workspace_workspace_query_archive_decode,
     UmiProjectWorkspaceWorkspaceQueryTransferEqual, UmiProjectWorkspaceWorkspaceQueryTransferTails, UmiProjectWorkspaceWorkspaceQueryTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiProjectWorkspaceWorkspaceQueryTransferCasesWithWorkspace, UmiProjectWorkspaceWorkspaceQuery,
+    umi_project_workspace_workspace_query_archive_encode, umi_project_workspace_workspace_query_archive_decode_with_workspace, UmiProjectWorkspaceWorkspaceQueryTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiProjectWorkspaceWorkspaceQueryConditionalArchiveCases, UmiProjectWorkspaceWorkspaceQuery,
     umi_project_workspace_workspace_query_archive_encode, umi_project_workspace_workspace_query_archive_decode_if_unchanged,
@@ -171,6 +176,7 @@ int main(void) {
     CHECK(umi_project_workspace_workspace_query_init(&v,"id","workspace.changed","{}") == UMI_STATUS_OK);
     CHECK(umi_project_workspace_workspace_query_validate(&v)==UMI_STATUS_OK);
     if (UmiProjectWorkspaceWorkspaceQueryTransferCases(&v) != 0) return 1;
+    if (UmiProjectWorkspaceWorkspaceQueryTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiProjectWorkspaceWorkspaceQueryConditionalArchiveCases(&v) != 0) return 1;
 
     return 0;

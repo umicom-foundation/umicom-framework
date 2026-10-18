@@ -97,6 +97,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPerformanceResourceBudgetTransferCases, UmiPerformanc
     umi_performance_resource_budget_archive_encode, umi_performance_resource_budget_archive_decode,
     UmiPerformanceResourceBudgetTransferEqual, UmiPerformanceResourceBudgetTransferTails, UmiPerformanceResourceBudgetTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPerformanceResourceBudgetTransferCasesWithWorkspace, UmiPerformanceResourceBudget,
+    umi_performance_resource_budget_archive_encode, umi_performance_resource_budget_archive_decode_with_workspace, UmiPerformanceResourceBudgetTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPerformanceResourceBudgetConditionalArchiveCases, UmiPerformanceResourceBudget,
     umi_performance_resource_budget_archive_encode, umi_performance_resource_budget_archive_decode_if_unchanged,
@@ -154,6 +159,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_performance_resource_budget_validate(&left) != UMI_STATUS_OK) return 2;
     if (UmiPerformanceResourceBudgetTransferCases(&left) != 0) return 1;
+    if (UmiPerformanceResourceBudgetTransferCasesWithWorkspace(&left) != 0) return 1;
     if (UmiPerformanceResourceBudgetConditionalArchiveCases(&left) != 0) return 1;
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */

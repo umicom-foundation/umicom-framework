@@ -133,6 +133,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPanelLayoutBindingTransferCases, UmiPanelLayoutBindin
     umi_panel_layout_binding_archive_encode, umi_panel_layout_binding_archive_decode,
     UmiPanelLayoutBindingTransferEqual, UmiPanelLayoutBindingTransferTails, UmiPanelLayoutBindingTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPanelLayoutBindingTransferCasesWithWorkspace, UmiPanelLayoutBinding,
+    umi_panel_layout_binding_archive_encode, umi_panel_layout_binding_archive_decode_with_workspace, UmiPanelLayoutBindingTransferEqual)
+
 #include "../conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPanelLayoutBindingConditionalArchiveCases, UmiPanelLayoutBinding,
     umi_panel_layout_binding_archive_encode, umi_panel_layout_binding_archive_decode_if_unchanged,
@@ -152,6 +157,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_panel_layout_binding_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiPanelLayoutBindingTransferCases(&value) != 0) return 1;
+    if (UmiPanelLayoutBindingTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiPanelLayoutBindingConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

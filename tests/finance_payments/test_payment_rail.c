@@ -86,6 +86,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPaymentsPaymentRailTransferCases, UmiPaymentsPaymentR
     umi_payments_payment_rail_archive_encode, umi_payments_payment_rail_archive_decode,
     UmiPaymentsPaymentRailTransferEqual, UmiPaymentsPaymentRailTransferTails, UmiPaymentsPaymentRailTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPaymentsPaymentRailTransferCasesWithWorkspace, UmiPaymentsPaymentRail,
+    umi_payments_payment_rail_archive_encode, umi_payments_payment_rail_archive_decode_with_workspace, UmiPaymentsPaymentRailTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPaymentsPaymentRailConditionalArchiveCases, UmiPaymentsPaymentRail,
     umi_payments_payment_rail_archive_encode, umi_payments_payment_rail_archive_decode_if_unchanged,
@@ -99,6 +104,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if(!umi_payments_payment_rail_valid(&v)) return 2;
     if (UmiPaymentsPaymentRailTransferCases(&v) != 0) return 1;
+    if (UmiPaymentsPaymentRailTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiPaymentsPaymentRailConditionalArchiveCases(&v) != 0) return 1;
 
     return 0;

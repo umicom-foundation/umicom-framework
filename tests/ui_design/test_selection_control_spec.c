@@ -57,6 +57,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDesignSelectionControlSpecTransferCases, UmiDesignSel
     umi_design_selection_control_spec_archive_encode, umi_design_selection_control_spec_archive_decode,
     UmiDesignSelectionControlSpecTransferEqual, UmiDesignSelectionControlSpecTransferTails, UmiDesignSelectionControlSpecTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDesignSelectionControlSpecTransferCasesWithWorkspace, UmiDesignSelectionControlSpec,
+    umi_design_selection_control_spec_archive_encode, umi_design_selection_control_spec_archive_decode_with_workspace, UmiDesignSelectionControlSpecTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignSelectionControlSpecConditionalArchiveCases, UmiDesignSelectionControlSpec,
     umi_design_selection_control_spec_archive_encode, umi_design_selection_control_spec_archive_decode_if_unchanged,
@@ -65,5 +70,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignSelectionControlSpecConditionalArchiveCase
 
 int main(void){UmiDesignSelectionControlSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_selection_control_spec_init(&s,UMI_UI_COMPONENT_CHECK_BUTTON,1,1,0)!=UMI_STATUS_OK)return 1;
     if (UmiDesignSelectionControlSpecTransferCases(&s) != 0) return 1;
+    if (UmiDesignSelectionControlSpecTransferCasesWithWorkspace(&s) != 0) return 1;
     if (UmiDesignSelectionControlSpecConditionalArchiveCases(&s) != 0) return 1;
 return s.selected?0:2;}

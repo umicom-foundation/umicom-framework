@@ -174,6 +174,12 @@ static UmiStatus UmiProjectWorkspaceWorkspaceHealthArchiveValidate(const UmiProj
 UMI_DEFINE_VALUE_ARCHIVE(umi_project_workspace_workspace_health_archive_encode, umi_project_workspace_workspace_health_archive_decode,
     UmiProjectWorkspaceWorkspaceHealth, UmiProjectWorkspaceWorkspaceHealthArchiveSchema, UmiProjectWorkspaceWorkspaceHealthArchiveBound, UmiProjectWorkspaceWorkspaceHealthArchiveWrite, UmiProjectWorkspaceWorkspaceHealthArchiveRead, UmiProjectWorkspaceWorkspaceHealthArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_project_workspace_workspace_health_archive_decode_with_workspace, UmiProjectWorkspaceWorkspaceHealth,
+    UmiProjectWorkspaceWorkspaceHealthArchiveSchema, UmiProjectWorkspaceWorkspaceHealthArchiveBound, UmiProjectWorkspaceWorkspaceHealthArchiveRead, UmiProjectWorkspaceWorkspaceHealthArchiveValidate)
+
 /* Restore this typed value only while its encoded state still matches the
  * caller's reviewed snapshot. The shared guard checks every encoded byte;
  * domain decoding and validation stay with this owner. */

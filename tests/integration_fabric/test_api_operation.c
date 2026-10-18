@@ -144,6 +144,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricApiOperationTransferCases, UmiFabricApiOperatio
     umi_fabric_api_operation_archive_encode, umi_fabric_api_operation_archive_decode,
     UmiFabricApiOperationTransferEqual, UmiFabricApiOperationTransferTails, UmiFabricApiOperationTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFabricApiOperationTransferCasesWithWorkspace, UmiFabricApiOperation,
+    umi_fabric_api_operation_archive_encode, umi_fabric_api_operation_archive_decode_with_workspace, UmiFabricApiOperationTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricApiOperationConditionalArchiveCases, UmiFabricApiOperation,
     umi_fabric_api_operation_archive_encode, umi_fabric_api_operation_archive_decode_if_unchanged,
@@ -233,6 +238,7 @@ int main(void) {
     UmiFabricApiOperation item;
     CHECK(umi_fabric_api_operation_init(&item,"get.order","GET","/orders/{id}","none","order",true)==UMI_STATUS_OK);
     if (UmiFabricApiOperationTransferCases(&item) != 0) return 1;
+    if (UmiFabricApiOperationTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiFabricApiOperationConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.idempotent);

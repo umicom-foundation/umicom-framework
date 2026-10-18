@@ -76,6 +76,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataConnectionSlotTransferCases, UmiDataConnectionSlo
     umi_data_connection_slot_archive_encode, umi_data_connection_slot_archive_decode,
     UmiDataConnectionSlotTransferEqual, UmiDataConnectionSlotTransferTails, UmiDataConnectionSlotTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataConnectionSlotTransferCasesWithWorkspace, UmiDataConnectionSlot,
+    umi_data_connection_slot_archive_encode, umi_data_connection_slot_archive_decode_with_workspace, UmiDataConnectionSlotTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataConnectionSlotConditionalArchiveCases, UmiDataConnectionSlot,
     umi_data_connection_slot_archive_encode, umi_data_connection_slot_archive_decode_if_unchanged,
@@ -117,6 +122,7 @@ int main(void) {
     UmiDataConnectionSlot item;
     CHECK(umi_data_connection_slot_init(&item,"slot1",100U) == UMI_STATUS_OK);
     if (UmiDataConnectionSlotTransferCases(&item) != 0) return 1;
+    if (UmiDataConnectionSlotTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiDataConnectionSlotConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.healthy && !item.leased);

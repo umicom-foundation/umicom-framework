@@ -91,6 +91,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDesignFormFieldSpecTransferCases, UmiDesignFormFieldS
     umi_design_form_field_spec_archive_encode, umi_design_form_field_spec_archive_decode,
     UmiDesignFormFieldSpecTransferEqual, UmiDesignFormFieldSpecTransferTails, UmiDesignFormFieldSpecTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDesignFormFieldSpecTransferCasesWithWorkspace, UmiDesignFormFieldSpec,
+    umi_design_form_field_spec_archive_encode, umi_design_form_field_spec_archive_decode_with_workspace, UmiDesignFormFieldSpecTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignFormFieldSpecConditionalArchiveCases, UmiDesignFormFieldSpec,
     umi_design_form_field_spec_archive_encode, umi_design_form_field_spec_archive_decode_if_unchanged,
@@ -99,5 +104,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignFormFieldSpecConditionalArchiveCases, UmiD
 
 int main(void){UmiDesignFormFieldSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_form_field_spec_init(&s,"Account","Required",1,UMI_UI_SEVERITY_INFORMATION)!=UMI_STATUS_OK)return 1;
     if (UmiDesignFormFieldSpecTransferCases(&s) != 0) return 1;
+    if (UmiDesignFormFieldSpecTransferCasesWithWorkspace(&s) != 0) return 1;
     if (UmiDesignFormFieldSpecConditionalArchiveCases(&s) != 0) return 1;
 return s.required?0:2;}

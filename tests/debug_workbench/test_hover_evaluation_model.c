@@ -138,6 +138,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDebugWorkbenchHoverEvaluationModelTransferCases, UmiD
     umi_debug_workbench_hover_evaluation_model_archive_encode, umi_debug_workbench_hover_evaluation_model_archive_decode,
     UmiDebugWorkbenchHoverEvaluationModelTransferEqual, UmiDebugWorkbenchHoverEvaluationModelTransferTails, UmiDebugWorkbenchHoverEvaluationModelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDebugWorkbenchHoverEvaluationModelTransferCasesWithWorkspace, UmiDebugWorkbenchHoverEvaluationModel,
+    umi_debug_workbench_hover_evaluation_model_archive_encode, umi_debug_workbench_hover_evaluation_model_archive_decode_with_workspace, UmiDebugWorkbenchHoverEvaluationModelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDebugWorkbenchHoverEvaluationModelConditionalArchiveCases, UmiDebugWorkbenchHoverEvaluationModel,
     umi_debug_workbench_hover_evaluation_model_archive_encode, umi_debug_workbench_hover_evaluation_model_archive_decode_if_unchanged,
@@ -172,6 +177,7 @@ int main(void)
     UMI_TEST_CHECK(!model.enabled);
     UMI_TEST_CHECK(umi_debug_workbench_hover_evaluation_model_valid(&model));
     if (UmiDebugWorkbenchHoverEvaluationModelTransferCases(&model) != 0) return 1;
+    if (UmiDebugWorkbenchHoverEvaluationModelTransferCasesWithWorkspace(&model) != 0) return 1;
     if (UmiDebugWorkbenchHoverEvaluationModelConditionalArchiveCases(&model) != 0) return 1;
 
     return 0;

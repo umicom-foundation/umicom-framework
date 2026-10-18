@@ -53,6 +53,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRadPreviewStateTransferCases, UmiRadPreviewState,
     umi_rad_preview_state_archive_encode, umi_rad_preview_state_archive_decode,
     UmiRadPreviewStateTransferEqual, UmiRadPreviewStateTransferTails, UmiRadPreviewStateTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRadPreviewStateTransferCasesWithWorkspace, UmiRadPreviewState,
+    umi_rad_preview_state_archive_encode, umi_rad_preview_state_archive_decode_with_workspace, UmiRadPreviewStateTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadPreviewStateConditionalArchiveCases, UmiRadPreviewState,
     umi_rad_preview_state_archive_encode, umi_rad_preview_state_archive_decode_if_unchanged,
@@ -61,5 +66,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadPreviewStateConditionalArchiveCases, UmiRadPr
 
 int main(void){UmiRadPreviewState item;CHECK(umi_rad_preview_state_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_preview_state_is_valid(&item));
     if (UmiRadPreviewStateTransferCases(&item) != 0) return 1;
+    if (UmiRadPreviewStateTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiRadPreviewStateConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

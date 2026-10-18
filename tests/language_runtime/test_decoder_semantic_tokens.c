@@ -13,6 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "../support/assertions.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/language_runtime/decoders/semantic_tokens.h"

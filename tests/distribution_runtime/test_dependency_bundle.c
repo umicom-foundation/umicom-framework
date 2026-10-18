@@ -90,6 +90,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDrDependencyBundleTransferCases, UmiDrDependencyBundl
     umi_dr_dependency_bundle_archive_encode, umi_dr_dependency_bundle_archive_decode,
     UmiDrDependencyBundleTransferEqual, UmiDrDependencyBundleTransferTails, UmiDrDependencyBundleTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDrDependencyBundleTransferCasesWithWorkspace, UmiDrDependencyBundle,
+    umi_dr_dependency_bundle_archive_encode, umi_dr_dependency_bundle_archive_decode_with_workspace, UmiDrDependencyBundleTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrDependencyBundleConditionalArchiveCases, UmiDrDependencyBundle,
     umi_dr_dependency_bundle_archive_encode, umi_dr_dependency_bundle_archive_decode_if_unchanged,
@@ -99,6 +104,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrDependencyBundleConditionalArchiveCases, UmiDr
 int main(void) {
     UmiDrDependencyBundle value; umi_dr_dependency_bundle_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"deps")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.application_id,sizeof(value.application_id),"app")==UMI_STATUS_OK); CHECK(umi_dr_dependency_bundle_valid(&value));
     if (UmiDrDependencyBundleTransferCases(&value) != 0) return 1;
+    if (UmiDrDependencyBundleTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDrDependencyBundleConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_dependency_bundle_fingerprint(&value) != 0U);
     return 0;

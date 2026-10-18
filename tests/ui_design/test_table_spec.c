@@ -59,6 +59,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDesignTableSpecTransferCases, UmiDesignTableSpec,
     umi_design_table_spec_archive_encode, umi_design_table_spec_archive_decode,
     UmiDesignTableSpecTransferEqual, UmiDesignTableSpecTransferTails, UmiDesignTableSpecTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDesignTableSpecTransferCasesWithWorkspace, UmiDesignTableSpec,
+    umi_design_table_spec_archive_encode, umi_design_table_spec_archive_decode_with_workspace, UmiDesignTableSpecTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignTableSpecConditionalArchiveCases, UmiDesignTableSpec,
     umi_design_table_spec_archive_encode, umi_design_table_spec_archive_decode_if_unchanged,
@@ -67,5 +72,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignTableSpecConditionalArchiveCases, UmiDesig
 
 int main(void){UmiDesignTableSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_table_spec_init(&s,12U,2U,UMI_DESIGN_DENSITY_COMPACT,1,1,1)!=UMI_STATUS_OK)return 1;
     if (UmiDesignTableSpecTransferCases(&s) != 0) return 1;
+    if (UmiDesignTableSpecTransferCasesWithWorkspace(&s) != 0) return 1;
     if (UmiDesignTableSpecConditionalArchiveCases(&s) != 0) return 1;
 return s.frozen_columns==2U?0:2;}

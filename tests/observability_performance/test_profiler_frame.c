@@ -97,6 +97,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPerformanceProfilerFrameTransferCases, UmiPerformance
     umi_performance_profiler_frame_archive_encode, umi_performance_profiler_frame_archive_decode,
     UmiPerformanceProfilerFrameTransferEqual, UmiPerformanceProfilerFrameTransferTails, UmiPerformanceProfilerFrameTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPerformanceProfilerFrameTransferCasesWithWorkspace, UmiPerformanceProfilerFrame,
+    umi_performance_profiler_frame_archive_encode, umi_performance_profiler_frame_archive_decode_with_workspace, UmiPerformanceProfilerFrameTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPerformanceProfilerFrameConditionalArchiveCases, UmiPerformanceProfilerFrame,
     umi_performance_profiler_frame_archive_encode, umi_performance_profiler_frame_archive_decode_if_unchanged,
@@ -154,6 +159,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_performance_profiler_frame_validate(&left) != UMI_STATUS_OK) return 2;
     if (UmiPerformanceProfilerFrameTransferCases(&left) != 0) return 1;
+    if (UmiPerformanceProfilerFrameTransferCasesWithWorkspace(&left) != 0) return 1;
     if (UmiPerformanceProfilerFrameConditionalArchiveCases(&left) != 0) return 1;
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */

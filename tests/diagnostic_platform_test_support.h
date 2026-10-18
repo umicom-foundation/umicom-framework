@@ -13,6 +13,8 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #ifndef UMICOM_TEST_DIAGNOSTIC_PLATFORM_SUPPORT_H
 #define UMICOM_TEST_DIAGNOSTIC_PLATFORM_SUPPORT_H
 

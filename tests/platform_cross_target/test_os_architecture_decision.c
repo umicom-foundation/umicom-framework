@@ -71,6 +71,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCtOsArchitectureDecisionTransferCases, UmiCtOsArchite
     umi_ct_umicom_os_architecture_decision_archive_encode, umi_ct_umicom_os_architecture_decision_archive_decode,
     UmiCtOsArchitectureDecisionTransferEqual, UmiCtOsArchitectureDecisionTransferTails, UmiCtOsArchitectureDecisionTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCtOsArchitectureDecisionTransferCasesWithWorkspace, UmiCtOsArchitectureDecision,
+    umi_ct_umicom_os_architecture_decision_archive_encode, umi_ct_umicom_os_architecture_decision_archive_decode_with_workspace, UmiCtOsArchitectureDecisionTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtOsArchitectureDecisionConditionalArchiveCases, UmiCtOsArchitectureDecision,
     umi_ct_umicom_os_architecture_decision_archive_encode, umi_ct_umicom_os_architecture_decision_archive_decode_if_unchanged,
@@ -90,6 +95,7 @@ int main(void)
     CHECK(umi_ct_umicom_os_architecture_decision_validate(&decision) ==
           UMI_STATUS_OK);
     if (UmiCtOsArchitectureDecisionTransferCases(&decision) != 0) return 1;
+    if (UmiCtOsArchitectureDecisionTransferCasesWithWorkspace(&decision) != 0) return 1;
     if (UmiCtOsArchitectureDecisionConditionalArchiveCases(&decision) != 0) return 1;
 
     CHECK(strcmp(umi_ct_os_foundation_text(

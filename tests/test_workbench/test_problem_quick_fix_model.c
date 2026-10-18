@@ -112,6 +112,11 @@ UMI_TEST_VALUE_TRANSFER(UmiProblemQuickFixModelTransferCases, UmiProblemQuickFix
     umi_problem_quick_fix_model_archive_encode, umi_problem_quick_fix_model_archive_decode,
     UmiProblemQuickFixModelTransferEqual, UmiProblemQuickFixModelTransferTails, UmiProblemQuickFixModelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiProblemQuickFixModelTransferCasesWithWorkspace, UmiProblemQuickFixModel,
+    umi_problem_quick_fix_model_archive_encode, umi_problem_quick_fix_model_archive_decode_with_workspace, UmiProblemQuickFixModelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiProblemQuickFixModelConditionalArchiveCases, UmiProblemQuickFixModel,
     umi_problem_quick_fix_model_archive_encode, umi_problem_quick_fix_model_archive_decode_if_unchanged,
@@ -138,5 +143,6 @@ int main(void){UmiProblemQuickFixModel m;assert(umi_problem_quick_fix_model_init
         umi_problem_quick_fix_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
     assert(umi_problem_quick_fix_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_problem_quick_fix_model_valid(&m));
     if (UmiProblemQuickFixModelTransferCases(&m) != 0) return 1;
+    if (UmiProblemQuickFixModelTransferCasesWithWorkspace(&m) != 0) return 1;
     if (UmiProblemQuickFixModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

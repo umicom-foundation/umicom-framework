@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkWorkspaceBridgeTransferCases, Umi
     umi_workbench_context_link_workspace_bridge_archive_encode, umi_workbench_context_link_workspace_bridge_archive_decode,
     UmiWorkbenchContextLinkWorkspaceBridgeTransferEqual, UmiWorkbenchContextLinkWorkspaceBridgeTransferTails, UmiWorkbenchContextLinkWorkspaceBridgeTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextLinkWorkspaceBridgeTransferCasesWithWorkspace, UmiWorkbenchContextLinkWorkspaceBridge,
+    umi_workbench_context_link_workspace_bridge_archive_encode, umi_workbench_context_link_workspace_bridge_archive_decode_with_workspace, UmiWorkbenchContextLinkWorkspaceBridgeTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkWorkspaceBridgeConditionalArchiveCases, UmiWorkbenchContextLinkWorkspaceBridge,
     umi_workbench_context_link_workspace_bridge_archive_encode, umi_workbench_context_link_workspace_bridge_archive_decode_if_unchanged,
@@ -151,6 +156,7 @@ int main(void)
     umi_workbench_context_link_workspace_bridge_init(&record, "workspace_bridge-id");
     assert(umi_workbench_context_link_workspace_bridge_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkWorkspaceBridgeTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkWorkspaceBridgeTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkWorkspaceBridgeConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkWorkspaceBridgeReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkWorkspaceBridgeMutationGuards(&record) != 0) return 1;

@@ -71,6 +71,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceAppearanceConformanceTransferCases, UmiAppe
     umi_appearance_conformance_archive_encode, umi_appearance_conformance_archive_decode,
     UmiAppearanceAppearanceConformanceTransferEqual, UmiAppearanceAppearanceConformanceTransferTails, UmiAppearanceAppearanceConformanceTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAppearanceAppearanceConformanceTransferCasesWithWorkspace, UmiAppearanceAppearanceConformance,
+    umi_appearance_conformance_archive_encode, umi_appearance_conformance_archive_decode_with_workspace, UmiAppearanceAppearanceConformanceTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceAppearanceConformanceConditionalArchiveCases, UmiAppearanceAppearanceConformance,
     umi_appearance_conformance_archive_encode, umi_appearance_conformance_archive_decode_if_unchanged,
@@ -84,6 +89,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_conformance_is_valid(&item)) return 2;
     if (UmiAppearanceAppearanceConformanceTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceAppearanceConformanceTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiAppearanceAppearanceConformanceConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;

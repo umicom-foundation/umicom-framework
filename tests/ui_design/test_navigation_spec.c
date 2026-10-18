@@ -57,6 +57,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDesignNavigationSpecTransferCases, UmiDesignNavigatio
     umi_design_navigation_spec_archive_encode, umi_design_navigation_spec_archive_decode,
     UmiDesignNavigationSpecTransferEqual, UmiDesignNavigationSpecTransferTails, UmiDesignNavigationSpecTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDesignNavigationSpecTransferCasesWithWorkspace, UmiDesignNavigationSpec,
+    umi_design_navigation_spec_archive_encode, umi_design_navigation_spec_archive_decode_with_workspace, UmiDesignNavigationSpecTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignNavigationSpecConditionalArchiveCases, UmiDesignNavigationSpec,
     umi_design_navigation_spec_archive_encode, umi_design_navigation_spec_archive_decode_if_unchanged,
@@ -65,5 +70,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignNavigationSpecConditionalArchiveCases, Umi
 
 int main(void){UmiDesignNavigationSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_navigation_spec_init(&s,UMI_UI_PLACEMENT_LEFT,7U,1,1)!=UMI_STATUS_OK)return 1;
     if (UmiDesignNavigationSpecTransferCases(&s) != 0) return 1;
+    if (UmiDesignNavigationSpecTransferCasesWithWorkspace(&s) != 0) return 1;
     if (UmiDesignNavigationSpecConditionalArchiveCases(&s) != 0) return 1;
 return s.item_count==7U?0:2;}

@@ -131,6 +131,11 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorIntelWorkspaceSymbolResultTransferCases, UmiEdi
     umi_editor_intel_workspace_symbol_result_archive_encode, umi_editor_intel_workspace_symbol_result_archive_decode,
     UmiEditorIntelWorkspaceSymbolResultTransferEqual, UmiEditorIntelWorkspaceSymbolResultTransferTails, UmiEditorIntelWorkspaceSymbolResultTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiEditorIntelWorkspaceSymbolResultTransferCasesWithWorkspace, UmiEditorIntelWorkspaceSymbolResult,
+    umi_editor_intel_workspace_symbol_result_archive_encode, umi_editor_intel_workspace_symbol_result_archive_decode_with_workspace, UmiEditorIntelWorkspaceSymbolResultTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelWorkspaceSymbolResultConditionalArchiveCases, UmiEditorIntelWorkspaceSymbolResult,
     umi_editor_intel_workspace_symbol_result_archive_encode, umi_editor_intel_workspace_symbol_result_archive_decode_if_unchanged,
@@ -149,5 +154,6 @@ int main(void){UmiEditorIntelWorkspaceSymbolResult model;UmiEditorIntelRange ran
         umi_editor_intel_workspace_symbol_result_set_selected(&model,true));
     if(umi_editor_intel_workspace_symbol_result_set_selected(&model,true)!=UMI_STATUS_OK)return 3;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_intel_workspace_symbol_result_valid(&model)||model.value.score!=91U||!model.selected)return 4;
     if (UmiEditorIntelWorkspaceSymbolResultTransferCases(&model) != 0) return 1;
+    if (UmiEditorIntelWorkspaceSymbolResultTransferCasesWithWorkspace(&model) != 0) return 1;
     if (UmiEditorIntelWorkspaceSymbolResultConditionalArchiveCases(&model) != 0) return 1;
 return 0;}

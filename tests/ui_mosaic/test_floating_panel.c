@@ -87,6 +87,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicFloatingPanelTransferCases, UmiUiMosaicFloati
     umi_ui_mosaic_floating_panel_archive_encode, umi_ui_mosaic_floating_panel_archive_decode,
     UmiUiMosaicFloatingPanelTransferEqual, UmiUiMosaicFloatingPanelTransferTails, UmiUiMosaicFloatingPanelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiMosaicFloatingPanelTransferCasesWithWorkspace, UmiUiMosaicFloatingPanel,
+    umi_ui_mosaic_floating_panel_archive_encode, umi_ui_mosaic_floating_panel_archive_decode_with_workspace, UmiUiMosaicFloatingPanelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicFloatingPanelConditionalArchiveCases, UmiUiMosaicFloatingPanel,
     umi_ui_mosaic_floating_panel_archive_encode, umi_ui_mosaic_floating_panel_archive_decode_if_unchanged,
@@ -100,6 +105,7 @@ int main(void) {
     value.item_count = 4U;
     CHECK(umi_ui_mosaic_floating_panel_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicFloatingPanelTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicFloatingPanelTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiUiMosaicFloatingPanelConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_floating_panel_touch(&value) == UMI_STATUS_OK);

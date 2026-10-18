@@ -84,6 +84,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveRequiredRuleTransferCases, UmiUiReactiveReq
     umi_ui_reactive_required_rule_archive_encode, umi_ui_reactive_required_rule_archive_decode,
     UmiUiReactiveRequiredRuleTransferEqual, UmiUiReactiveRequiredRuleTransferTails, UmiUiReactiveRequiredRuleTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveRequiredRuleTransferCasesWithWorkspace, UmiUiReactiveRequiredRule,
+    umi_ui_reactive_required_rule_archive_encode, umi_ui_reactive_required_rule_archive_decode_with_workspace, UmiUiReactiveRequiredRuleTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveRequiredRuleConditionalArchiveCases, UmiUiReactiveRequiredRule,
     umi_ui_reactive_required_rule_archive_encode, umi_ui_reactive_required_rule_archive_decode_if_unchanged,
@@ -98,5 +103,6 @@ int main(void) { UmiUiReactiveRequiredRule item; umi_ui_reactive_required_rule_i
     (void)snprintf(populated.expression, sizeof(populated.expression), "field-1");
     populated.required = true;
     if (UmiUiReactiveRequiredRuleTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveRequiredRuleTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveRequiredRuleConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_required_rule_valid(&item) ? 0 : 1; }

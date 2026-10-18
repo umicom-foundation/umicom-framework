@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkPermissionTransferCases, UmiWorkb
     umi_workbench_context_link_permission_archive_encode, umi_workbench_context_link_permission_archive_decode,
     UmiWorkbenchContextLinkPermissionTransferEqual, UmiWorkbenchContextLinkPermissionTransferTails, UmiWorkbenchContextLinkPermissionTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextLinkPermissionTransferCasesWithWorkspace, UmiWorkbenchContextLinkPermission,
+    umi_workbench_context_link_permission_archive_encode, umi_workbench_context_link_permission_archive_decode_with_workspace, UmiWorkbenchContextLinkPermissionTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkPermissionConditionalArchiveCases, UmiWorkbenchContextLinkPermission,
     umi_workbench_context_link_permission_archive_encode, umi_workbench_context_link_permission_archive_decode_if_unchanged,
@@ -151,6 +156,7 @@ int main(void)
     umi_workbench_context_link_permission_init(&record, "permission-id");
     assert(umi_workbench_context_link_permission_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkPermissionTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkPermissionTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkPermissionConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkPermissionReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkPermissionMutationGuards(&record) != 0) return 1;

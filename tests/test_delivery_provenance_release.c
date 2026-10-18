@@ -128,6 +128,11 @@ UMI_TEST_VALUE_TRANSFER(UmiProvenanceTransferCases, UmiProvenance,
     umi_provenance_archive_encode, umi_provenance_archive_decode,
     UmiProvenanceTransferEqual, UmiProvenanceTransferTails, UmiProvenanceTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiProvenanceTransferCasesWithWorkspace, UmiProvenance,
+    umi_provenance_archive_encode, umi_provenance_archive_decode_with_workspace, UmiProvenanceTransferEqual)
+
 #include "value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiProvenanceConditionalArchiveCases, UmiProvenance,
     umi_provenance_archive_encode, umi_provenance_archive_decode_if_unchanged,
@@ -196,6 +201,7 @@ int main(void) {
     assert(umi_provenance_init(&p, "abc", "builder", "debug") == UMI_STATUS_OK);
     assert(umi_provenance_validate(&p) == UMI_STATUS_OK);
     if (UmiProvenanceTransferCases(&p) != 0) return 1;
+    if (UmiProvenanceTransferCasesWithWorkspace(&p) != 0) return 1;
     if (UmiProvenanceConditionalArchiveCases(&p) != 0) return 1;
 
     assert(umi_delivery_manifest_init(&m, "studio", "rel", "0.14.0", UMI_RELEASE_BETA) == UMI_STATUS_OK);

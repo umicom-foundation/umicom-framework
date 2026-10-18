@@ -75,6 +75,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDebugWorkbenchDebugSessionStateModelTransferCases, Um
     umi_debug_workbench_debug_session_state_model_archive_encode, umi_debug_workbench_debug_session_state_model_archive_decode,
     UmiDebugWorkbenchDebugSessionStateModelTransferEqual, UmiDebugWorkbenchDebugSessionStateModelTransferTails, UmiDebugWorkbenchDebugSessionStateModelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDebugWorkbenchDebugSessionStateModelTransferCasesWithWorkspace, UmiDebugWorkbenchDebugSessionStateModel,
+    umi_debug_workbench_debug_session_state_model_archive_encode, umi_debug_workbench_debug_session_state_model_archive_decode_with_workspace, UmiDebugWorkbenchDebugSessionStateModelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDebugWorkbenchDebugSessionStateModelConditionalArchiveCases, UmiDebugWorkbenchDebugSessionStateModel,
     umi_debug_workbench_debug_session_state_model_archive_encode, umi_debug_workbench_debug_session_state_model_archive_decode_if_unchanged,
@@ -93,6 +98,7 @@ int main(void)
     UMI_TEST_CHECK(umi_debug_workbench_debug_session_state_model_transition(&model, UMI_DEBUG_WORKBENCH_SESSION_INITIALIZING) == UMI_STATUS_INVALID_STATE);
     UMI_TEST_CHECK(umi_debug_workbench_debug_session_state_model_valid(&model));
     if (UmiDebugWorkbenchDebugSessionStateModelTransferCases(&model) != 0) return 1;
+    if (UmiDebugWorkbenchDebugSessionStateModelTransferCasesWithWorkspace(&model) != 0) return 1;
     if (UmiDebugWorkbenchDebugSessionStateModelConditionalArchiveCases(&model) != 0) return 1;
 
     return 0;

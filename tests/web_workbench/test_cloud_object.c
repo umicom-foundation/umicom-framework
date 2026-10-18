@@ -141,6 +141,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWebWorkbenchCloudProfileTransferCases, UmiWebWorkbenc
     umi_web_workbench_cloud_profile_archive_encode, umi_web_workbench_cloud_profile_archive_decode,
     UmiWebWorkbenchCloudProfileTransferEqual, UmiWebWorkbenchCloudProfileTransferTails, UmiWebWorkbenchCloudProfileTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWebWorkbenchCloudProfileTransferCasesWithWorkspace, UmiWebWorkbenchCloudProfile,
+    umi_web_workbench_cloud_profile_archive_encode, umi_web_workbench_cloud_profile_archive_decode_with_workspace, UmiWebWorkbenchCloudProfileTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWebWorkbenchCloudProfileConditionalArchiveCases, UmiWebWorkbenchCloudProfile,
     umi_web_workbench_cloud_profile_archive_encode, umi_web_workbench_cloud_profile_archive_decode_if_unchanged,
@@ -160,6 +165,7 @@ int main(void)
         sizeof(profile.secret_reference), "secret://aws/dev") == UMI_STATUS_OK);
     assert(umi_web_workbench_cloud_profile_validate(&profile) == UMI_STATUS_OK);
     if (UmiWebWorkbenchCloudProfileTransferCases(&profile) != 0) return 1;
+    if (UmiWebWorkbenchCloudProfileTransferCasesWithWorkspace(&profile) != 0) return 1;
     if (UmiWebWorkbenchCloudProfileConditionalArchiveCases(&profile) != 0) return 1;
 
     umi_web_workbench_cloud_object_model_init(model, &profile);

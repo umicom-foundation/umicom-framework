@@ -70,6 +70,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRadBreakpointPreviewTransferCases, UmiRadBreakpointPr
     umi_rad_breakpoint_preview_archive_encode, umi_rad_breakpoint_preview_archive_decode,
     UmiRadBreakpointPreviewTransferEqual, UmiRadBreakpointPreviewTransferTails, UmiRadBreakpointPreviewTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRadBreakpointPreviewTransferCasesWithWorkspace, UmiRadBreakpointPreview,
+    umi_rad_breakpoint_preview_archive_encode, umi_rad_breakpoint_preview_archive_decode_with_workspace, UmiRadBreakpointPreviewTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadBreakpointPreviewConditionalArchiveCases, UmiRadBreakpointPreview,
     umi_rad_breakpoint_preview_archive_encode, umi_rad_breakpoint_preview_archive_decode_if_unchanged,
@@ -78,5 +83,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadBreakpointPreviewConditionalArchiveCases, Umi
 
 int main(void){UmiRadBreakpointPreview item;CHECK(umi_rad_breakpoint_preview_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_breakpoint_preview_is_valid(&item));
     if (UmiRadBreakpointPreviewTransferCases(&item) != 0) return 1;
+    if (UmiRadBreakpointPreviewTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiRadBreakpointPreviewConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

@@ -170,6 +170,11 @@ UMI_TEST_VALUE_TRANSFER(UmiOrderRequestTransferCases, UmiOrderRequest,
     umi_order_request_archive_encode, umi_order_request_archive_decode,
     UmiOrderRequestTransferEqual, UmiOrderRequestTransferTails, UmiOrderRequestTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiOrderRequestTransferCasesWithWorkspace, UmiOrderRequest,
+    umi_order_request_archive_encode, umi_order_request_archive_decode_with_workspace, UmiOrderRequestTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiOrderRequestConditionalArchiveCases, UmiOrderRequest,
     umi_order_request_archive_encode, umi_order_request_archive_decode_if_unchanged,
@@ -179,6 +184,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiOrderRequestConditionalArchiveCases, UmiOrderReq
 int main(void){
     UmiOrderRequest r=test_order_request();assert(umi_order_request_validate(&r)==UMI_STATUS_OK);
     if (UmiOrderRequestTransferCases(&r) != 0) return 1;
+    if (UmiOrderRequestTransferCasesWithWorkspace(&r) != 0) return 1;
     if (UmiOrderRequestConditionalArchiveCases(&r) != 0) return 1;
 
     assert(umi_order_transition_allowed(UMI_ORDER_NEW,UMI_ORDER_VALIDATED));

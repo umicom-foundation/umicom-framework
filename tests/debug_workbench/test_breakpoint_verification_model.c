@@ -138,6 +138,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDebugWorkbenchBreakpointVerificationModelTransferCase
     umi_debug_workbench_breakpoint_verification_model_archive_encode, umi_debug_workbench_breakpoint_verification_model_archive_decode,
     UmiDebugWorkbenchBreakpointVerificationModelTransferEqual, UmiDebugWorkbenchBreakpointVerificationModelTransferTails, UmiDebugWorkbenchBreakpointVerificationModelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDebugWorkbenchBreakpointVerificationModelTransferCasesWithWorkspace, UmiDebugWorkbenchBreakpointVerificationModel,
+    umi_debug_workbench_breakpoint_verification_model_archive_encode, umi_debug_workbench_breakpoint_verification_model_archive_decode_with_workspace, UmiDebugWorkbenchBreakpointVerificationModelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDebugWorkbenchBreakpointVerificationModelConditionalArchiveCases, UmiDebugWorkbenchBreakpointVerificationModel,
     umi_debug_workbench_breakpoint_verification_model_archive_encode, umi_debug_workbench_breakpoint_verification_model_archive_decode_if_unchanged,
@@ -172,6 +177,7 @@ int main(void)
     UMI_TEST_CHECK(!model.enabled);
     UMI_TEST_CHECK(umi_debug_workbench_breakpoint_verification_model_valid(&model));
     if (UmiDebugWorkbenchBreakpointVerificationModelTransferCases(&model) != 0) return 1;
+    if (UmiDebugWorkbenchBreakpointVerificationModelTransferCasesWithWorkspace(&model) != 0) return 1;
     if (UmiDebugWorkbenchBreakpointVerificationModelConditionalArchiveCases(&model) != 0) return 1;
 
     return 0;

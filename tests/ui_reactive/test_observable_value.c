@@ -71,6 +71,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveObservableValueTransferCases, UmiUiReactive
     umi_ui_reactive_observable_value_archive_encode, umi_ui_reactive_observable_value_archive_decode,
     UmiUiReactiveObservableValueTransferEqual, UmiUiReactiveObservableValueTransferTails, UmiUiReactiveObservableValueTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveObservableValueTransferCasesWithWorkspace, UmiUiReactiveObservableValue,
+    umi_ui_reactive_observable_value_archive_encode, umi_ui_reactive_observable_value_archive_decode_with_workspace, UmiUiReactiveObservableValueTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveObservableValueConditionalArchiveCases, UmiUiReactiveObservableValue,
     umi_ui_reactive_observable_value_archive_encode, umi_ui_reactive_observable_value_archive_decode_if_unchanged,
@@ -88,5 +93,6 @@ int main(void) { UmiUiReactiveObservableValue item; umi_ui_reactive_observable_v
     populated.revision = (uint64_t)7;
     populated.dirty = true;
     if (UmiUiReactiveObservableValueTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveObservableValueTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveObservableValueConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_observable_value_valid(&item) ? 0 : 1; }

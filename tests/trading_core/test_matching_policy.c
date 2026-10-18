@@ -50,6 +50,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTradingMatchingPolicyTransferCases, UmiTradingMatchin
     umi_trading_matching_policy_archive_encode, umi_trading_matching_policy_archive_decode,
     UmiTradingMatchingPolicyTransferEqual, UmiTradingMatchingPolicyTransferTails, UmiTradingMatchingPolicyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTradingMatchingPolicyTransferCasesWithWorkspace, UmiTradingMatchingPolicy,
+    umi_trading_matching_policy_archive_encode, umi_trading_matching_policy_archive_decode_with_workspace, UmiTradingMatchingPolicyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTradingMatchingPolicyConditionalArchiveCases, UmiTradingMatchingPolicy,
     umi_trading_matching_policy_archive_encode, umi_trading_matching_policy_archive_decode_if_unchanged,
@@ -63,6 +68,7 @@ int main(void) {
      /* Use the stable identifier comparison to choose the matching record or policy. */
      if(!umi_trading_matching_policy_valid(&v)) return 2;
     if (UmiTradingMatchingPolicyTransferCases(&v) != 0) return 1;
+    if (UmiTradingMatchingPolicyTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTradingMatchingPolicyConditionalArchiveCases(&v) != 0) return 1;
 
      return 0;

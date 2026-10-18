@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkSourceLocationBridgeTransferCases
     umi_workbench_context_link_source_location_bridge_archive_encode, umi_workbench_context_link_source_location_bridge_archive_decode,
     UmiWorkbenchContextLinkSourceLocationBridgeTransferEqual, UmiWorkbenchContextLinkSourceLocationBridgeTransferTails, UmiWorkbenchContextLinkSourceLocationBridgeTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextLinkSourceLocationBridgeTransferCasesWithWorkspace, UmiWorkbenchContextLinkSourceLocationBridge,
+    umi_workbench_context_link_source_location_bridge_archive_encode, umi_workbench_context_link_source_location_bridge_archive_decode_with_workspace, UmiWorkbenchContextLinkSourceLocationBridgeTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkSourceLocationBridgeConditionalArchiveCases, UmiWorkbenchContextLinkSourceLocationBridge,
     umi_workbench_context_link_source_location_bridge_archive_encode, umi_workbench_context_link_source_location_bridge_archive_decode_if_unchanged,
@@ -151,6 +156,7 @@ int main(void)
     umi_workbench_context_link_source_location_bridge_init(&record, "source_location_bridge-id");
     assert(umi_workbench_context_link_source_location_bridge_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkSourceLocationBridgeTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkSourceLocationBridgeTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkSourceLocationBridgeConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkSourceLocationBridgeReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkSourceLocationBridgeMutationGuards(&record) != 0) return 1;

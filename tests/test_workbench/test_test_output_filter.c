@@ -112,6 +112,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTestOutputFilterTransferCases, UmiTestOutputFilter,
     umi_test_output_filter_archive_encode, umi_test_output_filter_archive_decode,
     UmiTestOutputFilterTransferEqual, UmiTestOutputFilterTransferTails, UmiTestOutputFilterTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTestOutputFilterTransferCasesWithWorkspace, UmiTestOutputFilter,
+    umi_test_output_filter_archive_encode, umi_test_output_filter_archive_decode_with_workspace, UmiTestOutputFilterTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestOutputFilterConditionalArchiveCases, UmiTestOutputFilter,
     umi_test_output_filter_archive_encode, umi_test_output_filter_archive_decode_if_unchanged,
@@ -138,5 +143,6 @@ int main(void){UmiTestOutputFilter m;assert(umi_test_output_filter_init(&m,"test
         umi_test_output_filter_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
     assert(umi_test_output_filter_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_output_filter_valid(&m));
     if (UmiTestOutputFilterTransferCases(&m) != 0) return 1;
+    if (UmiTestOutputFilterTransferCasesWithWorkspace(&m) != 0) return 1;
     if (UmiTestOutputFilterConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

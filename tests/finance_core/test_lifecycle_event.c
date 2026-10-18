@@ -109,6 +109,11 @@ UMI_TEST_VALUE_TRANSFER(UmiLifecycleEventTransferCases, UmiLifecycleEvent,
     umi_lifecycle_event_archive_encode, umi_lifecycle_event_archive_decode,
     UmiLifecycleEventTransferEqual, UmiLifecycleEventTransferTails, UmiLifecycleEventTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiLifecycleEventTransferCasesWithWorkspace, UmiLifecycleEvent,
+    umi_lifecycle_event_archive_encode, umi_lifecycle_event_archive_decode_with_workspace, UmiLifecycleEventTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiLifecycleEventConditionalArchiveCases, UmiLifecycleEvent,
     umi_lifecycle_event_archive_encode, umi_lifecycle_event_archive_decode_if_unchanged,
@@ -119,6 +124,7 @@ int main(void)
 {
     UmiLifecycleEvent x; CHECK(umi_lifecycle_event_init(&x,"ID","Name","PARENT",(UmiFinancialDate){2026,8U,25U},1U)==UMI_STATUS_OK); CHECK(umi_lifecycle_event_is_valid(&x));
     if (UmiLifecycleEventTransferCases(&x) != 0) return 1;
+    if (UmiLifecycleEventTransferCasesWithWorkspace(&x) != 0) return 1;
     if (UmiLifecycleEventConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;

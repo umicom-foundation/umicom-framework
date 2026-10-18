@@ -120,6 +120,12 @@ static UmiStatus UmiDataBackupPlanArchiveValidate(const UmiDataBackupPlan *value
 UMI_DEFINE_VALUE_ARCHIVE(umi_data_backup_plan_archive_encode, umi_data_backup_plan_archive_decode,
     UmiDataBackupPlan, UmiDataBackupPlanArchiveSchema, UmiDataBackupPlanArchiveBound, UmiDataBackupPlanArchiveWrite, UmiDataBackupPlanArchiveRead, UmiDataBackupPlanArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_data_backup_plan_archive_decode_with_workspace, UmiDataBackupPlan,
+    UmiDataBackupPlanArchiveSchema, UmiDataBackupPlanArchiveBound, UmiDataBackupPlanArchiveRead, UmiDataBackupPlanArchiveValidate)
+
 /* Restore this typed value only while its encoded state still matches the
  * caller's reviewed snapshot. The shared guard checks every encoded byte;
  * domain decoding and validation stay with this owner. */

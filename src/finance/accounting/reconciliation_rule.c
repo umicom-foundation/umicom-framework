@@ -101,6 +101,12 @@ static UmiStatus UmiAccountingReconciliationRuleArchiveValidate(const UmiAccount
 UMI_DEFINE_VALUE_ARCHIVE(umi_accounting_reconciliation_rule_archive_encode, umi_accounting_reconciliation_rule_archive_decode,
     UmiAccountingReconciliationRule, UmiAccountingReconciliationRuleArchiveSchema, UmiAccountingReconciliationRuleArchiveBound, UmiAccountingReconciliationRuleArchiveWrite, UmiAccountingReconciliationRuleArchiveRead, UmiAccountingReconciliationRuleArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_accounting_reconciliation_rule_archive_decode_with_workspace, UmiAccountingReconciliationRule,
+    UmiAccountingReconciliationRuleArchiveSchema, UmiAccountingReconciliationRuleArchiveBound, UmiAccountingReconciliationRuleArchiveRead, UmiAccountingReconciliationRuleArchiveValidate)
+
 /* Restore this typed value only while its encoded state still matches the
  * caller's reviewed snapshot. The shared guard checks every encoded byte;
  * domain decoding and validation stay with this owner. */

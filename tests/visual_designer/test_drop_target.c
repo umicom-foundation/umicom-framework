@@ -89,6 +89,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRadDropTargetTransferCases, UmiRadDropTarget,
     umi_rad_drop_target_archive_encode, umi_rad_drop_target_archive_decode,
     UmiRadDropTargetTransferEqual, UmiRadDropTargetTransferTails, UmiRadDropTargetTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRadDropTargetTransferCasesWithWorkspace, UmiRadDropTarget,
+    umi_rad_drop_target_archive_encode, umi_rad_drop_target_archive_decode_with_workspace, UmiRadDropTargetTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadDropTargetConditionalArchiveCases, UmiRadDropTarget,
     umi_rad_drop_target_archive_encode, umi_rad_drop_target_archive_decode_if_unchanged,
@@ -97,5 +102,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadDropTargetConditionalArchiveCases, UmiRadDrop
 
 int main(void){UmiRadDropTarget item;CHECK(umi_rad_drop_target_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_drop_target_is_valid(&item));
     if (UmiRadDropTargetTransferCases(&item) != 0) return 1;
+    if (UmiRadDropTargetTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiRadDropTargetConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

@@ -90,6 +90,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUpdateChannelTransferCases, UmiUpdateChannel,
     umi_update_channel_archive_encode, umi_update_channel_archive_decode,
     UmiUpdateChannelTransferEqual, UmiUpdateChannelTransferTails, UmiUpdateChannelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUpdateChannelTransferCasesWithWorkspace, UmiUpdateChannel,
+    umi_update_channel_archive_encode, umi_update_channel_archive_decode_with_workspace, UmiUpdateChannelTransferEqual)
+
 #include "value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUpdateChannelConditionalArchiveCases, UmiUpdateChannel,
     umi_update_channel_archive_encode, umi_update_channel_archive_decode_if_unchanged,
@@ -161,6 +166,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUpgradePlanTransferCases, UmiUpgradePlan,
     umi_upgrade_plan_archive_encode, umi_upgrade_plan_archive_decode,
     UmiUpgradePlanTransferEqual, UmiUpgradePlanTransferTails, UmiUpgradePlanTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUpgradePlanTransferCasesWithWorkspace, UmiUpgradePlan,
+    umi_upgrade_plan_archive_encode, umi_upgrade_plan_archive_decode_with_workspace, UmiUpgradePlanTransferEqual)
+
 #include "value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUpgradePlanConditionalArchiveCases, UmiUpgradePlan,
     umi_upgrade_plan_archive_encode, umi_upgrade_plan_archive_decode_if_unchanged,
@@ -219,6 +229,7 @@ int main(void)
                UMI_RELEASE_STABLE, 25U) == UMI_STATUS_OK);
     assert(umi_update_channel_validate(&channel) == UMI_STATUS_OK);
     if (UmiUpdateChannelTransferCases(&channel) != 0) return 1;
+    if (UmiUpdateChannelTransferCasesWithWorkspace(&channel) != 0) return 1;
     if (UmiUpdateChannelConditionalArchiveCases(&channel) != 0) return 1;
 
     assert(umi_update_channel_offers(&channel, UMI_RELEASE_STABLE, 24U));
@@ -229,6 +240,7 @@ int main(void)
     assert(umi_upgrade_plan_authorise(&upgrade, 1) == UMI_STATUS_OK);
     assert(umi_upgrade_plan_validate(&upgrade) == UMI_STATUS_OK);
     if (UmiUpgradePlanTransferCases(&upgrade) != 0) return 1;
+    if (UmiUpgradePlanTransferCasesWithWorkspace(&upgrade) != 0) return 1;
     if (UmiUpgradePlanConditionalArchiveCases(&upgrade) != 0) return 1;
 
     assert(umi_upgrade_plan_rollback_generation(&upgrade) == 58U);

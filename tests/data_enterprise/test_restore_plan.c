@@ -93,6 +93,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataRestorePlanTransferCases, UmiDataRestorePlan,
     umi_data_restore_plan_archive_encode, umi_data_restore_plan_archive_decode,
     UmiDataRestorePlanTransferEqual, UmiDataRestorePlanTransferTails, UmiDataRestorePlanTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataRestorePlanTransferCasesWithWorkspace, UmiDataRestorePlan,
+    umi_data_restore_plan_archive_encode, umi_data_restore_plan_archive_decode_with_workspace, UmiDataRestorePlanTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataRestorePlanConditionalArchiveCases, UmiDataRestorePlan,
     umi_data_restore_plan_archive_encode, umi_data_restore_plan_archive_decode_if_unchanged,
@@ -146,6 +151,7 @@ int main(void) {
     UmiDataRestorePlan item;
     CHECK(umi_data_restore_plan_init(&item,"r1","b1",11U,true) == UMI_STATUS_OK);
     if (UmiDataRestorePlanTransferCases(&item) != 0) return 1;
+    if (UmiDataRestorePlanTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiDataRestorePlanConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.verify_only && item.preserve_existing);

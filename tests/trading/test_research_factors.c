@@ -17,6 +17,8 @@
  * This focused regression test uses deterministic values so changes to the trading contract are visible immediately.
  */
 
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "../support/assertions.h"
 #include <assert.h>
 #include <stdio.h>
 #include "umicom/trading/trading.h"

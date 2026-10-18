@@ -106,6 +106,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCtTargetProbeTransferCases, UmiCtTargetProbe,
     umi_ct_target_probe_archive_encode, umi_ct_target_probe_archive_decode,
     UmiCtTargetProbeTransferEqual, UmiCtTargetProbeTransferTails, UmiCtTargetProbeTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCtTargetProbeTransferCasesWithWorkspace, UmiCtTargetProbe,
+    umi_ct_target_probe_archive_encode, umi_ct_target_probe_archive_decode_with_workspace, UmiCtTargetProbeTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtTargetProbeConditionalArchiveCases, UmiCtTargetProbe,
     umi_ct_target_probe_archive_encode, umi_ct_target_probe_archive_decode_if_unchanged,
@@ -123,5 +128,6 @@ int main(void){UmiCtTargetProbe p={0};UmiCtTarget e={0};p.target.architecture=e.
     p.target.structure_size = (uint32_t)sizeof(p.target);
     p.target.api_version = UMI_CT_API_VERSION;
     if (UmiCtTargetProbeTransferCases(&p) != 0) return 1;
+    if (UmiCtTargetProbeTransferCasesWithWorkspace(&p) != 0) return 1;
     if (UmiCtTargetProbeConditionalArchiveCases(&p) != 0) return 1;
 CHECK(umi_ct_target_probe_score(&p,&e)==100U);return 0;}

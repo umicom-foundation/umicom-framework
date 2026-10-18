@@ -134,6 +134,11 @@ UMI_TEST_VALUE_TRANSFER(UmiContextDeliveryReceiptTransferCases, UmiContextDelive
     umi_context_delivery_receipt_archive_encode, umi_context_delivery_receipt_archive_decode,
     UmiContextDeliveryReceiptTransferEqual, UmiContextDeliveryReceiptTransferTails, UmiContextDeliveryReceiptTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiContextDeliveryReceiptTransferCasesWithWorkspace, UmiContextDeliveryReceipt,
+    umi_context_delivery_receipt_archive_encode, umi_context_delivery_receipt_archive_decode_with_workspace, UmiContextDeliveryReceiptTransferEqual)
+
 #include "../conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextDeliveryReceiptConditionalArchiveCases, UmiContextDeliveryReceipt,
     umi_context_delivery_receipt_archive_encode, umi_context_delivery_receipt_archive_decode_if_unchanged,
@@ -153,6 +158,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_context_delivery_receipt_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiContextDeliveryReceiptTransferCases(&value) != 0) return 1;
+    if (UmiContextDeliveryReceiptTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiContextDeliveryReceiptConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

@@ -208,4 +208,45 @@ UmiStatus Decode(const void *bytes, size_t byte_count, Record *value) \
     *value = staged; \
     return UMI_STATUS_OK; \
 }
+
+/* SDK consumers may have much smaller stacks than the aggregate application.
+ * Keep staging in caller-owned, correctly aligned record storage. Address
+ * distances follow the existing Framework overlap convention and avoid forming
+ * an end pointer that could overflow before a malformed request is refused. */
+static inline bool UmiArchiveStorageOverlaps(const void *left, size_t left_size,
+    const void *right, size_t right_size)
+{
+    if (left_size == 0U || right_size == 0U) return false;
+    uintptr_t a = (uintptr_t)left, b = (uintptr_t)right;
+    return a <= b ? b - a < left_size : a - b < right_size;
+}
+
+/* Workspace is scratch, never a live owner. Validate the complete envelope
+ * before clearing it, then run the same field reader and domain validator as
+ * the established decoder. Only the final copy may change the destination.
+ * This helper introduces no heap allocation or automatic whole-record value. */
+#define UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(Decode, Record, Schema, Bound, Read, Validate) \
+UmiStatus Decode(const void *bytes, size_t byte_count, Record *workspace, Record *value) \
+{ \
+    if (bytes == NULL || workspace == NULL || value == NULL) return UMI_STATUS_INVALID_ARGUMENT; \
+    if (byte_count > Bound()) return UMI_STATUS_PARSE_ERROR; \
+    if (UmiArchiveStorageOverlaps(workspace, sizeof(*workspace), value, sizeof(*value)) || \
+        UmiArchiveStorageOverlaps(bytes, byte_count, workspace, sizeof(*workspace)) || \
+        UmiArchiveStorageOverlaps(bytes, byte_count, value, sizeof(*value))) \
+        return UMI_STATUS_INVALID_ARGUMENT; \
+    UmiValueArchiveInfo info; \
+    UmiStatus status = umi_value_archive_inspect(bytes, byte_count, &info); \
+    if (status != UMI_STATUS_OK) return status; \
+    if (info.schema != Schema()) return UMI_STATUS_UNAVAILABLE; \
+    memset(workspace, 0, sizeof(*workspace)); \
+    UmiArchiveReader reader = {(const unsigned char *)bytes, byte_count, UMI_VALUE_ARCHIVE_HEADER_SIZE, UMI_STATUS_OK}; \
+    Read(&reader, workspace); \
+    if (reader.status != UMI_STATUS_OK) return reader.status; \
+    if (reader.offset != reader.size) return UMI_STATUS_PARSE_ERROR; \
+    status = Validate(workspace); \
+    if (status != UMI_STATUS_OK) return status; \
+    *value = *workspace; \
+    return UMI_STATUS_OK; \
+}
+
 #endif

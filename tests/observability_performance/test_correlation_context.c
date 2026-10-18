@@ -97,6 +97,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPerformanceCorrelationContextTransferCases, UmiPerfor
     umi_performance_correlation_context_archive_encode, umi_performance_correlation_context_archive_decode,
     UmiPerformanceCorrelationContextTransferEqual, UmiPerformanceCorrelationContextTransferTails, UmiPerformanceCorrelationContextTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPerformanceCorrelationContextTransferCasesWithWorkspace, UmiPerformanceCorrelationContext,
+    umi_performance_correlation_context_archive_encode, umi_performance_correlation_context_archive_decode_with_workspace, UmiPerformanceCorrelationContextTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPerformanceCorrelationContextConditionalArchiveCases, UmiPerformanceCorrelationContext,
     umi_performance_correlation_context_archive_encode, umi_performance_correlation_context_archive_decode_if_unchanged,
@@ -154,6 +159,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_performance_correlation_context_validate(&left) != UMI_STATUS_OK) return 2;
     if (UmiPerformanceCorrelationContextTransferCases(&left) != 0) return 1;
+    if (UmiPerformanceCorrelationContextTransferCasesWithWorkspace(&left) != 0) return 1;
     if (UmiPerformanceCorrelationContextConditionalArchiveCases(&left) != 0) return 1;
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */

@@ -93,6 +93,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPluginExtensionHostManifestEvidenceTransferCases, Umi
     umi_plugin_extension_host_manifest_evidence_archive_encode, umi_plugin_extension_host_manifest_evidence_archive_decode,
     UmiPluginExtensionHostManifestEvidenceTransferEqual, UmiPluginExtensionHostManifestEvidenceTransferTails, UmiPluginExtensionHostManifestEvidenceTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPluginExtensionHostManifestEvidenceTransferCasesWithWorkspace, UmiPluginExtensionHostManifestEvidence,
+    umi_plugin_extension_host_manifest_evidence_archive_encode, umi_plugin_extension_host_manifest_evidence_archive_decode_with_workspace, UmiPluginExtensionHostManifestEvidenceTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPluginExtensionHostManifestEvidenceConditionalArchiveCases, UmiPluginExtensionHostManifestEvidence,
     umi_plugin_extension_host_manifest_evidence_archive_encode, umi_plugin_extension_host_manifest_evidence_archive_decode_if_unchanged,
@@ -107,6 +112,7 @@ int main(void)
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_plugin_extension_host_manifest_evidence_validate(&value) != UMI_STATUS_OK) return 2;
     if (UmiPluginExtensionHostManifestEvidenceTransferCases(&value) != 0) return 1;
+    if (UmiPluginExtensionHostManifestEvidenceTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiPluginExtensionHostManifestEvidenceConditionalArchiveCases(&value) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */

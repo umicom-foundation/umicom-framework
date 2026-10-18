@@ -131,6 +131,11 @@ UMI_TEST_VALUE_TRANSFER(UmiContextSchemaCompatibilityTransferCases, UmiContextSc
     umi_context_schema_compatibility_archive_encode, umi_context_schema_compatibility_archive_decode,
     UmiContextSchemaCompatibilityTransferEqual, UmiContextSchemaCompatibilityTransferTails, UmiContextSchemaCompatibilityTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiContextSchemaCompatibilityTransferCasesWithWorkspace, UmiContextSchemaCompatibility,
+    umi_context_schema_compatibility_archive_encode, umi_context_schema_compatibility_archive_decode_with_workspace, UmiContextSchemaCompatibilityTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextSchemaCompatibilityConditionalArchiveCases, UmiContextSchemaCompatibility,
     umi_context_schema_compatibility_archive_encode, umi_context_schema_compatibility_archive_decode_if_unchanged,
@@ -169,6 +174,7 @@ int main(void)
     assert(umi_context_schema_compatibility_covers_sequence(&state,11U));
     assert(umi_context_schema_compatibility_validate(&state) == UMI_STATUS_OK);
     if (UmiContextSchemaCompatibilityTransferCases(&state) != 0) return 1;
+    if (UmiContextSchemaCompatibilityTransferCasesWithWorkspace(&state) != 0) return 1;
     if (UmiContextSchemaCompatibilityConditionalArchiveCases(&state) != 0) return 1;
 
     return 0;

@@ -93,6 +93,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDrInstallStateTransferCases, UmiDrInstallState,
     umi_dr_install_state_archive_encode, umi_dr_install_state_archive_decode,
     UmiDrInstallStateTransferEqual, UmiDrInstallStateTransferTails, UmiDrInstallStateTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDrInstallStateTransferCasesWithWorkspace, UmiDrInstallState,
+    umi_dr_install_state_archive_encode, umi_dr_install_state_archive_decode_with_workspace, UmiDrInstallStateTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrInstallStateConditionalArchiveCases, UmiDrInstallState,
     umi_dr_install_state_archive_encode, umi_dr_install_state_archive_decode_if_unchanged,
@@ -102,6 +107,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrInstallStateConditionalArchiveCases, UmiDrInst
 int main(void) {
     UmiDrInstallState value; umi_dr_install_state_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"inst")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.application_id,sizeof(value.application_id),"app")==UMI_STATUS_OK); value.channel=UMI_DR_CHANNEL_STABLE; value.scope=UMI_DR_SCOPE_USER; CHECK(umi_dr_install_state_valid(&value));
     if (UmiDrInstallStateTransferCases(&value) != 0) return 1;
+    if (UmiDrInstallStateTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDrInstallStateConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_install_state_fingerprint(&value) != 0U);
     return 0;

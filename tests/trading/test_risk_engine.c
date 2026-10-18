@@ -57,6 +57,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRiskLimitTransferCases, UmiRiskLimit,
     umi_risk_limit_archive_encode, umi_risk_limit_archive_decode,
     UmiRiskLimitTransferEqual, UmiRiskLimitTransferTails, UmiRiskLimitTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRiskLimitTransferCasesWithWorkspace, UmiRiskLimit,
+    umi_risk_limit_archive_encode, umi_risk_limit_archive_decode_with_workspace, UmiRiskLimitTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRiskLimitConditionalArchiveCases, UmiRiskLimit,
     umi_risk_limit_archive_encode, umi_risk_limit_archive_decode_if_unchanged,
@@ -66,6 +71,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRiskLimitConditionalArchiveCases, UmiRiskLimit,
 int main(void){
     UmiRiskLimit l={5,1000000,10,5000};assert(umi_risk_limit_valid(&l));
     if (UmiRiskLimitTransferCases(&l) != 0) return 1;
+    if (UmiRiskLimitTransferCasesWithWorkspace(&l) != 0) return 1;
     if (UmiRiskLimitConditionalArchiveCases(&l) != 0) return 1;
 UmiOrderRequest r=test_order_request();
     UmiRiskDecision d=umi_pretrade_risk_evaluate(&r,&l,0,0);assert(d.allowed);

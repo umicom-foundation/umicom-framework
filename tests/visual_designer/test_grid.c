@@ -52,6 +52,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRadDesignGridTransferCases, UmiRadDesignGrid,
     umi_rad_grid_archive_encode, umi_rad_grid_archive_decode,
     UmiRadDesignGridTransferEqual, UmiRadDesignGridTransferTails, UmiRadDesignGridTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRadDesignGridTransferCasesWithWorkspace, UmiRadDesignGrid,
+    umi_rad_grid_archive_encode, umi_rad_grid_archive_decode_with_workspace, UmiRadDesignGridTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadDesignGridConditionalArchiveCases, UmiRadDesignGrid,
     umi_rad_grid_archive_encode, umi_rad_grid_archive_decode_if_unchanged,
@@ -60,5 +65,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadDesignGridConditionalArchiveCases, UmiRadDesi
 
 int main(void){UmiRadDesignGrid item;CHECK(umi_rad_grid_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_grid_is_valid(&item));
     if (UmiRadDesignGridTransferCases(&item) != 0) return 1;
+    if (UmiRadDesignGridTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiRadDesignGridConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

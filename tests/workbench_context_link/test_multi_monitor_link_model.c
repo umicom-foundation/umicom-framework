@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkMultiMonitorLinkModelTransferCase
     umi_workbench_context_link_multi_monitor_link_model_archive_encode, umi_workbench_context_link_multi_monitor_link_model_archive_decode,
     UmiWorkbenchContextLinkMultiMonitorLinkModelTransferEqual, UmiWorkbenchContextLinkMultiMonitorLinkModelTransferTails, UmiWorkbenchContextLinkMultiMonitorLinkModelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextLinkMultiMonitorLinkModelTransferCasesWithWorkspace, UmiWorkbenchContextLinkMultiMonitorLinkModel,
+    umi_workbench_context_link_multi_monitor_link_model_archive_encode, umi_workbench_context_link_multi_monitor_link_model_archive_decode_with_workspace, UmiWorkbenchContextLinkMultiMonitorLinkModelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkMultiMonitorLinkModelConditionalArchiveCases, UmiWorkbenchContextLinkMultiMonitorLinkModel,
     umi_workbench_context_link_multi_monitor_link_model_archive_encode, umi_workbench_context_link_multi_monitor_link_model_archive_decode_if_unchanged,
@@ -151,6 +156,7 @@ int main(void)
     umi_workbench_context_link_multi_monitor_link_model_init(&record, "multi_monitor_link_model-id");
     assert(umi_workbench_context_link_multi_monitor_link_model_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkMultiMonitorLinkModelTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkMultiMonitorLinkModelTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkMultiMonitorLinkModelConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkMultiMonitorLinkModelReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkMultiMonitorLinkModelMutationGuards(&record) != 0) return 1;

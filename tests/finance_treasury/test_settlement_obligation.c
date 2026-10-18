@@ -68,6 +68,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasurySettlementObligationTransferCases, UmiTreasur
     umi_treasury_settlement_obligation_archive_encode, umi_treasury_settlement_obligation_archive_decode,
     UmiTreasurySettlementObligationTransferEqual, UmiTreasurySettlementObligationTransferTails, UmiTreasurySettlementObligationTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTreasurySettlementObligationTransferCasesWithWorkspace, UmiTreasurySettlementObligation,
+    umi_treasury_settlement_obligation_archive_encode, umi_treasury_settlement_obligation_archive_decode_with_workspace, UmiTreasurySettlementObligationTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasurySettlementObligationConditionalArchiveCases, UmiTreasurySettlementObligation,
     umi_treasury_settlement_obligation_archive_encode, umi_treasury_settlement_obligation_archive_decode_if_unchanged,
@@ -79,6 +84,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_settlement_obligation_init(&v, "settle-1", 1000, 50, UMI_TREASURY_SETTLEMENT_SETTLED) != UMI_STATUS_OK) return 1;
     if (UmiTreasurySettlementObligationTransferCases(&v) != 0) return 1;
+    if (UmiTreasurySettlementObligationTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTreasurySettlementObligationConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */

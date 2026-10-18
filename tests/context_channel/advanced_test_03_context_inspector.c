@@ -131,6 +131,11 @@ UMI_TEST_VALUE_TRANSFER(UmiContextInspectorTransferCases, UmiContextInspector,
     umi_context_inspector_archive_encode, umi_context_inspector_archive_decode,
     UmiContextInspectorTransferEqual, UmiContextInspectorTransferTails, UmiContextInspectorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiContextInspectorTransferCasesWithWorkspace, UmiContextInspector,
+    umi_context_inspector_archive_encode, umi_context_inspector_archive_decode_with_workspace, UmiContextInspectorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextInspectorConditionalArchiveCases, UmiContextInspector,
     umi_context_inspector_archive_encode, umi_context_inspector_archive_decode_if_unchanged,
@@ -169,6 +174,7 @@ int main(void)
     assert(umi_context_inspector_covers_sequence(&state,11U));
     assert(umi_context_inspector_validate(&state) == UMI_STATUS_OK);
     if (UmiContextInspectorTransferCases(&state) != 0) return 1;
+    if (UmiContextInspectorTransferCasesWithWorkspace(&state) != 0) return 1;
     if (UmiContextInspectorConditionalArchiveCases(&state) != 0) return 1;
 
     return 0;

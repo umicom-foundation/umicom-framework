@@ -138,6 +138,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDebugWorkbenchEvaluateExpressionModelTransferCases, U
     umi_debug_workbench_evaluate_expression_model_archive_encode, umi_debug_workbench_evaluate_expression_model_archive_decode,
     UmiDebugWorkbenchEvaluateExpressionModelTransferEqual, UmiDebugWorkbenchEvaluateExpressionModelTransferTails, UmiDebugWorkbenchEvaluateExpressionModelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDebugWorkbenchEvaluateExpressionModelTransferCasesWithWorkspace, UmiDebugWorkbenchEvaluateExpressionModel,
+    umi_debug_workbench_evaluate_expression_model_archive_encode, umi_debug_workbench_evaluate_expression_model_archive_decode_with_workspace, UmiDebugWorkbenchEvaluateExpressionModelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDebugWorkbenchEvaluateExpressionModelConditionalArchiveCases, UmiDebugWorkbenchEvaluateExpressionModel,
     umi_debug_workbench_evaluate_expression_model_archive_encode, umi_debug_workbench_evaluate_expression_model_archive_decode_if_unchanged,
@@ -172,6 +177,7 @@ int main(void)
     UMI_TEST_CHECK(!model.enabled);
     UMI_TEST_CHECK(umi_debug_workbench_evaluate_expression_model_valid(&model));
     if (UmiDebugWorkbenchEvaluateExpressionModelTransferCases(&model) != 0) return 1;
+    if (UmiDebugWorkbenchEvaluateExpressionModelTransferCasesWithWorkspace(&model) != 0) return 1;
     if (UmiDebugWorkbenchEvaluateExpressionModelConditionalArchiveCases(&model) != 0) return 1;
 
     return 0;

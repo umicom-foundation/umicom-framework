@@ -89,6 +89,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDrCacheLayoutTransferCases, UmiDrCacheLayout,
     umi_dr_cache_layout_archive_encode, umi_dr_cache_layout_archive_decode,
     UmiDrCacheLayoutTransferEqual, UmiDrCacheLayoutTransferTails, UmiDrCacheLayoutTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDrCacheLayoutTransferCasesWithWorkspace, UmiDrCacheLayout,
+    umi_dr_cache_layout_archive_encode, umi_dr_cache_layout_archive_decode_with_workspace, UmiDrCacheLayoutTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrCacheLayoutConditionalArchiveCases, UmiDrCacheLayout,
     umi_dr_cache_layout_archive_encode, umi_dr_cache_layout_archive_decode_if_unchanged,
@@ -98,6 +103,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrCacheLayoutConditionalArchiveCases, UmiDrCache
 int main(void) {
     UmiDrCacheLayout value; umi_dr_cache_layout_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"cache")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.namespace_id,sizeof(value.namespace_id),"studio")==UMI_STATUS_OK); value.max_bytes=1024U; CHECK(umi_dr_cache_layout_valid(&value));
     if (UmiDrCacheLayoutTransferCases(&value) != 0) return 1;
+    if (UmiDrCacheLayoutTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDrCacheLayoutConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_cache_layout_fingerprint(&value) != 0U);
     return 0;

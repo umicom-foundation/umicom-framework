@@ -128,6 +128,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCommodityInventoryLotTransferCases, UmiCommodityInven
     umi_commodity_inventory_lot_archive_encode, umi_commodity_inventory_lot_archive_decode,
     UmiCommodityInventoryLotTransferEqual, UmiCommodityInventoryLotTransferTails, UmiCommodityInventoryLotTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCommodityInventoryLotTransferCasesWithWorkspace, UmiCommodityInventoryLot,
+    umi_commodity_inventory_lot_archive_encode, umi_commodity_inventory_lot_archive_decode_with_workspace, UmiCommodityInventoryLotTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCommodityInventoryLotConditionalArchiveCases, UmiCommodityInventoryLot,
     umi_commodity_inventory_lot_archive_encode, umi_commodity_inventory_lot_archive_decode_if_unchanged,
@@ -140,6 +145,7 @@ int main(void)
     CHECK(umi_commodity_inventory_lot_init(&value, "LOT-1", "CMD-WTI", "FAC-1", 5000, 0, "BBL", 1000) == UMI_STATUS_OK);
     CHECK(umi_commodity_inventory_lot_valid(&value));
     if (UmiCommodityInventoryLotTransferCases(&value) != 0) return 1;
+    if (UmiCommodityInventoryLotTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiCommodityInventoryLotConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

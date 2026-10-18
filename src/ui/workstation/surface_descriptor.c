@@ -216,6 +216,12 @@ static UmiStatus UmiWsSurfaceDescriptorArchiveValidate(const UmiWsSurfaceDescrip
 UMI_DEFINE_VALUE_ARCHIVE(umi_ws_surface_descriptor_archive_encode, umi_ws_surface_descriptor_archive_decode,
     UmiWsSurfaceDescriptor, UmiWsSurfaceDescriptorArchiveSchema, UmiWsSurfaceDescriptorArchiveBound, UmiWsSurfaceDescriptorArchiveWrite, UmiWsSurfaceDescriptorArchiveRead, UmiWsSurfaceDescriptorArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_ws_surface_descriptor_archive_decode_with_workspace, UmiWsSurfaceDescriptor,
+    UmiWsSurfaceDescriptorArchiveSchema, UmiWsSurfaceDescriptorArchiveBound, UmiWsSurfaceDescriptorArchiveRead, UmiWsSurfaceDescriptorArchiveValidate)
+
 /* Guard restoration with the previously reviewed encoded value. Domain field
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ws_surface_descriptor_archive_decode_if_unchanged, umi_ws_surface_descriptor_archive_encode,

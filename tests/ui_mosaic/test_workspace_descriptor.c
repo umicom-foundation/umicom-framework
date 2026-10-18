@@ -104,6 +104,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicWorkspaceDescriptorTransferCases, UmiUiMosaic
     umi_ui_mosaic_workspace_descriptor_archive_encode, umi_ui_mosaic_workspace_descriptor_archive_decode,
     UmiUiMosaicWorkspaceDescriptorTransferEqual, UmiUiMosaicWorkspaceDescriptorTransferTails, UmiUiMosaicWorkspaceDescriptorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiMosaicWorkspaceDescriptorTransferCasesWithWorkspace, UmiUiMosaicWorkspaceDescriptor,
+    umi_ui_mosaic_workspace_descriptor_archive_encode, umi_ui_mosaic_workspace_descriptor_archive_decode_with_workspace, UmiUiMosaicWorkspaceDescriptorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicWorkspaceDescriptorConditionalArchiveCases, UmiUiMosaicWorkspaceDescriptor,
     umi_ui_mosaic_workspace_descriptor_archive_encode, umi_ui_mosaic_workspace_descriptor_archive_decode_if_unchanged,
@@ -116,6 +121,7 @@ int main(void) {
     CHECK(umi_ui_mosaic_workspace_descriptor_set(&value, "perspective.workspace_descriptor", "Workspace Descriptor", "layout.default", UMI_UI_MOSAIC_APP_TMS) == UMI_STATUS_OK);
     CHECK(umi_ui_mosaic_workspace_descriptor_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicWorkspaceDescriptorTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicWorkspaceDescriptorTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiUiMosaicWorkspaceDescriptorConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

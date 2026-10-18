@@ -88,6 +88,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAdaptiveManifestTransferCases, UmiAdaptiveManifest,
     umi_adaptive_manifest_archive_encode, umi_adaptive_manifest_archive_decode,
     UmiAdaptiveManifestTransferEqual, UmiAdaptiveManifestTransferTails, UmiAdaptiveManifestTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAdaptiveManifestTransferCasesWithWorkspace, UmiAdaptiveManifest,
+    umi_adaptive_manifest_archive_encode, umi_adaptive_manifest_archive_decode_with_workspace, UmiAdaptiveManifestTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAdaptiveManifestConditionalArchiveCases, UmiAdaptiveManifest,
     umi_adaptive_manifest_archive_encode, umi_adaptive_manifest_archive_decode_if_unchanged,
@@ -100,6 +105,7 @@ int main(void)
     CHECK(umi_adaptive_manifest_init(&manifest,"studio","studio.shell")==UMI_STATUS_OK);
     CHECK(umi_adaptive_manifest_valid(&manifest));
     if (UmiAdaptiveManifestTransferCases(&manifest) != 0) return 1;
+    if (UmiAdaptiveManifestTransferCasesWithWorkspace(&manifest) != 0) return 1;
     if (UmiAdaptiveManifestConditionalArchiveCases(&manifest) != 0) return 1;
 
     return 0;

@@ -69,6 +69,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceTextScalePolicyTransferCases, UmiAppearance
     umi_appearance_text_scale_policy_archive_encode, umi_appearance_text_scale_policy_archive_decode,
     UmiAppearanceTextScalePolicyTransferEqual, UmiAppearanceTextScalePolicyTransferTails, UmiAppearanceTextScalePolicyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAppearanceTextScalePolicyTransferCasesWithWorkspace, UmiAppearanceTextScalePolicy,
+    umi_appearance_text_scale_policy_archive_encode, umi_appearance_text_scale_policy_archive_decode_with_workspace, UmiAppearanceTextScalePolicyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceTextScalePolicyConditionalArchiveCases, UmiAppearanceTextScalePolicy,
     umi_appearance_text_scale_policy_archive_encode, umi_appearance_text_scale_policy_archive_decode_if_unchanged,
@@ -82,6 +87,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_text_scale_policy_is_valid(&item)) return 2;
     if (UmiAppearanceTextScalePolicyTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceTextScalePolicyTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiAppearanceTextScalePolicyConditionalArchiveCases(&item) != 0) return 1;
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */

@@ -113,6 +113,11 @@ UMI_TEST_VALUE_TRANSFER(UmiProjectWorkspaceNamedStateTransferCases, UmiProjectWo
     umi_project_workspace_named_state_archive_encode, umi_project_workspace_named_state_archive_decode,
     UmiProjectWorkspaceNamedStateTransferEqual, UmiProjectWorkspaceNamedStateTransferTails, UmiProjectWorkspaceNamedStateTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiProjectWorkspaceNamedStateTransferCasesWithWorkspace, UmiProjectWorkspaceNamedState,
+    umi_project_workspace_named_state_archive_encode, umi_project_workspace_named_state_archive_decode_with_workspace, UmiProjectWorkspaceNamedStateTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiProjectWorkspaceNamedStateConditionalArchiveCases, UmiProjectWorkspaceNamedState,
     umi_project_workspace_named_state_archive_encode, umi_project_workspace_named_state_archive_decode_if_unchanged,
@@ -161,6 +166,7 @@ int main(void) {
     CHECK(umi_project_workspace_named_state_set_name(&v,"Workspace")==UMI_STATUS_OK);
     CHECK(umi_project_workspace_named_state_validate(&v)==UMI_STATUS_OK);
     if (UmiProjectWorkspaceNamedStateTransferCases(&v) != 0) return 1;
+    if (UmiProjectWorkspaceNamedStateTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiProjectWorkspaceNamedStateConditionalArchiveCases(&v) != 0) return 1;
 
     CHECK(umi_project_workspace_named_state_same_identity(&v,&w));

@@ -87,6 +87,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicDockTargetModelTransferCases, UmiUiMosaicDock
     umi_ui_mosaic_dock_target_model_archive_encode, umi_ui_mosaic_dock_target_model_archive_decode,
     UmiUiMosaicDockTargetModelTransferEqual, UmiUiMosaicDockTargetModelTransferTails, UmiUiMosaicDockTargetModelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiMosaicDockTargetModelTransferCasesWithWorkspace, UmiUiMosaicDockTargetModel,
+    umi_ui_mosaic_dock_target_model_archive_encode, umi_ui_mosaic_dock_target_model_archive_decode_with_workspace, UmiUiMosaicDockTargetModelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicDockTargetModelConditionalArchiveCases, UmiUiMosaicDockTargetModel,
     umi_ui_mosaic_dock_target_model_archive_encode, umi_ui_mosaic_dock_target_model_archive_decode_if_unchanged,
@@ -99,6 +104,7 @@ int main(void) {
     CHECK(umi_ui_mosaic_dock_target_model_set(&value, "panel.source", "panel.target", UMI_UI_MOSAIC_DOCK_CENTRE) == UMI_STATUS_OK);
     CHECK(umi_ui_mosaic_dock_target_model_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicDockTargetModelTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicDockTargetModelTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiUiMosaicDockTargetModelConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_dock_target_model_is_centre(&value) == 1);

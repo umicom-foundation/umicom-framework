@@ -126,6 +126,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricConnectorBindingTransferCases, UmiFabricConnect
     umi_fabric_connector_binding_archive_encode, umi_fabric_connector_binding_archive_decode,
     UmiFabricConnectorBindingTransferEqual, UmiFabricConnectorBindingTransferTails, UmiFabricConnectorBindingTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFabricConnectorBindingTransferCasesWithWorkspace, UmiFabricConnectorBinding,
+    umi_fabric_connector_binding_archive_encode, umi_fabric_connector_binding_archive_decode_with_workspace, UmiFabricConnectorBindingTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricConnectorBindingConditionalArchiveCases, UmiFabricConnectorBinding,
     umi_fabric_connector_binding_archive_encode, umi_fabric_connector_binding_archive_decode_if_unchanged,
@@ -203,6 +208,7 @@ int main(void) {
     UmiFabricConnectorBinding item;
     CHECK(umi_fabric_connector_binding_init(&item,"b","ibkr","ep","secure")==UMI_STATUS_OK);
     if (UmiFabricConnectorBindingTransferCases(&item) != 0) return 1;
+    if (UmiFabricConnectorBindingTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiFabricConnectorBindingConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.enabled);

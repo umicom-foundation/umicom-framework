@@ -17,6 +17,8 @@
  * This test exercises the public contract rather than relying on private state,
  * making the behaviour useful as an executable example for new developers.
  */
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #include "umicom/umicom.h"
 #include <assert.h>
 #include <stdlib.h>

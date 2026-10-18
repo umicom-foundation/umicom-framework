@@ -166,6 +166,8 @@ static void ArchiveFillUnusedText(UmiTestRuntimeTestLabel *value)
 #define ARCHIVE_TYPE UmiTestRuntimeTestLabel
 #define ARCHIVE_ENCODE umi_test_runtime_test_label_archive_encode
 #define ARCHIVE_DECODE umi_test_runtime_test_label_archive_decode
+/* Use explicit caller-owned scratch for the same snapshot import contract. */
+#define ARCHIVE_WORKSPACE_DECODE umi_test_runtime_test_label_archive_decode_with_workspace
 /* Exercise guarded import through this domain's public snapshot codec. */
 #define ARCHIVE_CONDITIONAL_DECODE umi_test_runtime_test_label_archive_decode_if_unchanged
 #define ARCHIVE_EQUAL RecordDefaultsEqual

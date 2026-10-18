@@ -90,6 +90,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDrArchitectureDescriptorTransferCases, UmiDrArchitect
     umi_dr_architecture_descriptor_archive_encode, umi_dr_architecture_descriptor_archive_decode,
     UmiDrArchitectureDescriptorTransferEqual, UmiDrArchitectureDescriptorTransferTails, UmiDrArchitectureDescriptorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDrArchitectureDescriptorTransferCasesWithWorkspace, UmiDrArchitectureDescriptor,
+    umi_dr_architecture_descriptor_archive_encode, umi_dr_architecture_descriptor_archive_decode_with_workspace, UmiDrArchitectureDescriptorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrArchitectureDescriptorConditionalArchiveCases, UmiDrArchitectureDescriptor,
     umi_dr_architecture_descriptor_archive_encode, umi_dr_architecture_descriptor_archive_decode_if_unchanged,
@@ -99,6 +104,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrArchitectureDescriptorConditionalArchiveCases,
 int main(void) {
     UmiDrArchitectureDescriptor value; umi_dr_architecture_descriptor_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"x86_64") == UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.abi,sizeof(value.abi),"gnu") == UMI_STATUS_OK); CHECK(umi_dr_architecture_descriptor_valid(&value));
     if (UmiDrArchitectureDescriptorTransferCases(&value) != 0) return 1;
+    if (UmiDrArchitectureDescriptorTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDrArchitectureDescriptorConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_architecture_descriptor_fingerprint(&value) != 0U);
     return 0;

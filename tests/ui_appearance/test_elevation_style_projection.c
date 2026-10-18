@@ -102,6 +102,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceElevationStyleProjectionTransferCases, UmiA
     umi_appearance_elevation_style_projection_archive_encode, umi_appearance_elevation_style_projection_archive_decode,
     UmiAppearanceElevationStyleProjectionTransferEqual, UmiAppearanceElevationStyleProjectionTransferTails, UmiAppearanceElevationStyleProjectionTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAppearanceElevationStyleProjectionTransferCasesWithWorkspace, UmiAppearanceElevationStyleProjection,
+    umi_appearance_elevation_style_projection_archive_encode, umi_appearance_elevation_style_projection_archive_decode_with_workspace, UmiAppearanceElevationStyleProjectionTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceElevationStyleProjectionConditionalArchiveCases, UmiAppearanceElevationStyleProjection,
     umi_appearance_elevation_style_projection_archive_encode, umi_appearance_elevation_style_projection_archive_decode_if_unchanged,
@@ -115,6 +120,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_elevation_style_projection_is_valid(&item)) return 2;
     if (UmiAppearanceElevationStyleProjectionTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceElevationStyleProjectionTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiAppearanceElevationStyleProjectionConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;

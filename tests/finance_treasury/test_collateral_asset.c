@@ -68,6 +68,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryCollateralAssetTransferCases, UmiTreasuryColl
     umi_treasury_collateral_asset_archive_encode, umi_treasury_collateral_asset_archive_decode,
     UmiTreasuryCollateralAssetTransferEqual, UmiTreasuryCollateralAssetTransferTails, UmiTreasuryCollateralAssetTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTreasuryCollateralAssetTransferCasesWithWorkspace, UmiTreasuryCollateralAsset,
+    umi_treasury_collateral_asset_archive_encode, umi_treasury_collateral_asset_archive_decode_with_workspace, UmiTreasuryCollateralAssetTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryCollateralAssetConditionalArchiveCases, UmiTreasuryCollateralAsset,
     umi_treasury_collateral_asset_archive_encode, umi_treasury_collateral_asset_archive_decode_if_unchanged,
@@ -79,6 +84,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_collateral_asset_init(&v, "bond", UMI_TREASURY_COLLATERAL_SECURITY, 10, 100) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryCollateralAssetTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryCollateralAssetTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTreasuryCollateralAssetConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */

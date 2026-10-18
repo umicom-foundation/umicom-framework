@@ -74,6 +74,12 @@ static UmiStatus UmiUiReactiveUiStateServiceArchiveValidate(const UmiUiReactiveU
 UMI_DEFINE_VALUE_ARCHIVE(umi_ui_reactive_ui_state_service_archive_encode, umi_ui_reactive_ui_state_service_archive_decode,
     UmiUiReactiveUiStateService, UmiUiReactiveUiStateServiceArchiveSchema, UmiUiReactiveUiStateServiceArchiveBound, UmiUiReactiveUiStateServiceArchiveWrite, UmiUiReactiveUiStateServiceArchiveRead, UmiUiReactiveUiStateServiceArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_ui_reactive_ui_state_service_archive_decode_with_workspace, UmiUiReactiveUiStateService,
+    UmiUiReactiveUiStateServiceArchiveSchema, UmiUiReactiveUiStateServiceArchiveBound, UmiUiReactiveUiStateServiceArchiveRead, UmiUiReactiveUiStateServiceArchiveValidate)
+
 /* Guard restoration with the previously reviewed encoded value. Domain field
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_reactive_ui_state_service_archive_decode_if_unchanged, umi_ui_reactive_ui_state_service_archive_encode,

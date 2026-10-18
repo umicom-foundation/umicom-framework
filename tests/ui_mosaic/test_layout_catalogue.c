@@ -87,6 +87,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicLayoutCatalogueTransferCases, UmiUiMosaicLayo
     umi_ui_mosaic_layout_catalogue_archive_encode, umi_ui_mosaic_layout_catalogue_archive_decode,
     UmiUiMosaicLayoutCatalogueTransferEqual, UmiUiMosaicLayoutCatalogueTransferTails, UmiUiMosaicLayoutCatalogueTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiMosaicLayoutCatalogueTransferCasesWithWorkspace, UmiUiMosaicLayoutCatalogue,
+    umi_ui_mosaic_layout_catalogue_archive_encode, umi_ui_mosaic_layout_catalogue_archive_decode_with_workspace, UmiUiMosaicLayoutCatalogueTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicLayoutCatalogueConditionalArchiveCases, UmiUiMosaicLayoutCatalogue,
     umi_ui_mosaic_layout_catalogue_archive_encode, umi_ui_mosaic_layout_catalogue_archive_decode_if_unchanged,
@@ -100,6 +105,7 @@ int main(void) {
     value.item_count = 4U;
     CHECK(umi_ui_mosaic_layout_catalogue_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicLayoutCatalogueTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicLayoutCatalogueTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiUiMosaicLayoutCatalogueConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_layout_catalogue_touch(&value) == UMI_STATUS_OK);

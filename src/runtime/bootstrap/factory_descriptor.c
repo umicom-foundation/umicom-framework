@@ -116,6 +116,12 @@ static UmiStatus UmiBootstrapFactoryDescriptorArchiveValidate(const UmiBootstrap
 UMI_DEFINE_VALUE_ARCHIVE(umi_bootstrap_factory_descriptor_archive_encode, umi_bootstrap_factory_descriptor_archive_decode,
     UmiBootstrapFactoryDescriptor, UmiBootstrapFactoryDescriptorArchiveSchema, UmiBootstrapFactoryDescriptorArchiveBound, UmiBootstrapFactoryDescriptorArchiveWrite, UmiBootstrapFactoryDescriptorArchiveRead, UmiBootstrapFactoryDescriptorArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_bootstrap_factory_descriptor_archive_decode_with_workspace, UmiBootstrapFactoryDescriptor,
+    UmiBootstrapFactoryDescriptorArchiveSchema, UmiBootstrapFactoryDescriptorArchiveBound, UmiBootstrapFactoryDescriptorArchiveRead, UmiBootstrapFactoryDescriptorArchiveValidate)
+
 /* Restore this typed value only while its encoded state still matches the
  * caller's reviewed snapshot. The shared guard checks every encoded byte;
  * domain decoding and validation stay with this owner. */

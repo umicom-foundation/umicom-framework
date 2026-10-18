@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiBootstrapFactoryDescriptorTransferCases, UmiBootstrap
     umi_bootstrap_factory_descriptor_archive_encode, umi_bootstrap_factory_descriptor_archive_decode,
     UmiBootstrapFactoryDescriptorTransferEqual, UmiBootstrapFactoryDescriptorTransferTails, UmiBootstrapFactoryDescriptorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiBootstrapFactoryDescriptorTransferCasesWithWorkspace, UmiBootstrapFactoryDescriptor,
+    umi_bootstrap_factory_descriptor_archive_encode, umi_bootstrap_factory_descriptor_archive_decode_with_workspace, UmiBootstrapFactoryDescriptorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiBootstrapFactoryDescriptorConditionalArchiveCases, UmiBootstrapFactoryDescriptor,
     umi_bootstrap_factory_descriptor_archive_encode, umi_bootstrap_factory_descriptor_archive_decode_if_unchanged,
@@ -130,6 +135,7 @@ int main(void) {
     CHECK(umi_bootstrap_factory_descriptor_init(&d,"factory.alpha",&key,10)==UMI_STATUS_OK);
     CHECK(umi_bootstrap_factory_descriptor_valid(&d));
     if (UmiBootstrapFactoryDescriptorTransferCases(&d) != 0) return 1;
+    if (UmiBootstrapFactoryDescriptorTransferCasesWithWorkspace(&d) != 0) return 1;
     if (UmiBootstrapFactoryDescriptorConditionalArchiveCases(&d) != 0) return 1;
 
     return 0;

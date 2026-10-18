@@ -110,6 +110,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDrUpdateManifestTransferCases, UmiDrUpdateManifest,
     umi_dr_update_manifest_archive_encode, umi_dr_update_manifest_archive_decode,
     UmiDrUpdateManifestTransferEqual, UmiDrUpdateManifestTransferTails, UmiDrUpdateManifestTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDrUpdateManifestTransferCasesWithWorkspace, UmiDrUpdateManifest,
+    umi_dr_update_manifest_archive_encode, umi_dr_update_manifest_archive_decode_with_workspace, UmiDrUpdateManifestTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrUpdateManifestConditionalArchiveCases, UmiDrUpdateManifest,
     umi_dr_update_manifest_archive_encode, umi_dr_update_manifest_archive_decode_if_unchanged,
@@ -119,6 +124,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrUpdateManifestConditionalArchiveCases, UmiDrUp
 int main(void) {
     UmiDrUpdateManifest value; umi_dr_update_manifest_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"upd")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.application_id,sizeof(value.application_id),"app")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.package_digest,sizeof(value.package_digest),"d")==UMI_STATUS_OK); value.channel=UMI_DR_CHANNEL_STABLE; CHECK(umi_dr_update_manifest_valid(&value));
     if (UmiDrUpdateManifestTransferCases(&value) != 0) return 1;
+    if (UmiDrUpdateManifestTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDrUpdateManifestConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_update_manifest_fingerprint(&value) != 0U);
     return 0;

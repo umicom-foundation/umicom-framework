@@ -23,6 +23,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Draft validation prevents invalid text from mutating the document. */
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #include "umicom/umicom.h"
 #include <assert.h>
 #include <stdlib.h>

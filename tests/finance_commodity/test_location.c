@@ -107,6 +107,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCommodityLocationTransferCases, UmiCommodityLocation,
     umi_commodity_location_archive_encode, umi_commodity_location_archive_decode,
     UmiCommodityLocationTransferEqual, UmiCommodityLocationTransferTails, UmiCommodityLocationTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCommodityLocationTransferCasesWithWorkspace, UmiCommodityLocation,
+    umi_commodity_location_archive_encode, umi_commodity_location_archive_decode_with_workspace, UmiCommodityLocationTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCommodityLocationConditionalArchiveCases, UmiCommodityLocation,
     umi_commodity_location_archive_encode, umi_commodity_location_archive_decode_if_unchanged,
@@ -119,6 +124,7 @@ int main(void)
     CHECK(umi_commodity_location_init(&value, "LOC-CUSHING", "Cushing", "US") == UMI_STATUS_OK);
     CHECK(umi_commodity_location_valid(&value));
     if (UmiCommodityLocationTransferCases(&value) != 0) return 1;
+    if (UmiCommodityLocationTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiCommodityLocationConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

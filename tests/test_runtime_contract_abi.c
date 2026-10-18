@@ -13,6 +13,8 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #include "umicom/runtime/contract.h"
 
 #include <assert.h>

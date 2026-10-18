@@ -52,6 +52,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiEntRowHeightTransferCases, UmiUiEntRowHeight,
     umi_ui_ent_row_height_archive_encode, umi_ui_ent_row_height_archive_decode,
     UmiUiEntRowHeightTransferEqual, UmiUiEntRowHeightTransferTails, UmiUiEntRowHeightTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiEntRowHeightTransferCasesWithWorkspace, UmiUiEntRowHeight,
+    umi_ui_ent_row_height_archive_encode, umi_ui_ent_row_height_archive_decode_with_workspace, UmiUiEntRowHeightTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiEntRowHeightConditionalArchiveCases, UmiUiEntRowHeight,
     umi_ui_ent_row_height_archive_encode, umi_ui_ent_row_height_archive_decode_if_unchanged,
@@ -60,5 +65,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiEntRowHeightConditionalArchiveCases, UmiUiEntR
 
 int main(void){UmiUiEntRowHeight v;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_row_height_init(&v)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_ui_ent_row_height_validate(&v))return 9;
     if (UmiUiEntRowHeightTransferCases(&v) != 0) return 1;
+    if (UmiUiEntRowHeightTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiUiEntRowHeightConditionalArchiveCases(&v) != 0) return 1;
 puts("ok");return 0;}

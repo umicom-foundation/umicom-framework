@@ -133,6 +133,11 @@ UMI_TEST_VALUE_TRANSFER(UmiContextBookmarkTransferCases, UmiContextBookmark,
     umi_context_bookmark_archive_encode, umi_context_bookmark_archive_decode,
     UmiContextBookmarkTransferEqual, UmiContextBookmarkTransferTails, UmiContextBookmarkTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiContextBookmarkTransferCasesWithWorkspace, UmiContextBookmark,
+    umi_context_bookmark_archive_encode, umi_context_bookmark_archive_decode_with_workspace, UmiContextBookmarkTransferEqual)
+
 #include "../conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextBookmarkConditionalArchiveCases, UmiContextBookmark,
     umi_context_bookmark_archive_encode, umi_context_bookmark_archive_decode_if_unchanged,
@@ -153,6 +158,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_context_bookmark_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiContextBookmarkTransferCases(&value) != 0) return 1;
+    if (UmiContextBookmarkTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiContextBookmarkConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

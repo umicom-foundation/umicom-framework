@@ -85,6 +85,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAnalyticsDashboardFilterTransferCases, UmiAnalyticsDa
     umi_analytics_dashboard_filter_archive_encode, umi_analytics_dashboard_filter_archive_decode,
     UmiAnalyticsDashboardFilterTransferEqual, UmiAnalyticsDashboardFilterTransferTails, UmiAnalyticsDashboardFilterTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAnalyticsDashboardFilterTransferCasesWithWorkspace, UmiAnalyticsDashboardFilter,
+    umi_analytics_dashboard_filter_archive_encode, umi_analytics_dashboard_filter_archive_decode_with_workspace, UmiAnalyticsDashboardFilterTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAnalyticsDashboardFilterConditionalArchiveCases, UmiAnalyticsDashboardFilter,
     umi_analytics_dashboard_filter_archive_encode, umi_analytics_dashboard_filter_archive_decode_if_unchanged,
@@ -93,5 +98,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiAnalyticsDashboardFilterConditionalArchiveCases,
 
 int main(void){UmiAnalyticsDashboardFilter item;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_analytics_dashboard_filter_init(&item)!=UMI_STATUS_OK)return 1;
     if (UmiAnalyticsDashboardFilterTransferCases(&item) != 0) return 1;
+    if (UmiAnalyticsDashboardFilterTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiAnalyticsDashboardFilterConditionalArchiveCases(&item) != 0) return 1;
 return (umi_analytics_dashboard_filter_valid(&item))?0:2;}

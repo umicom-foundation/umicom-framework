@@ -105,6 +105,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFinancialPortfolioTransferCases, UmiFinancialPortfoli
     umi_portfolio_archive_encode, umi_portfolio_archive_decode,
     UmiFinancialPortfolioTransferEqual, UmiFinancialPortfolioTransferTails, UmiFinancialPortfolioTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFinancialPortfolioTransferCasesWithWorkspace, UmiFinancialPortfolio,
+    umi_portfolio_archive_encode, umi_portfolio_archive_decode_with_workspace, UmiFinancialPortfolioTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFinancialPortfolioConditionalArchiveCases, UmiFinancialPortfolio,
     umi_portfolio_archive_encode, umi_portfolio_archive_decode_if_unchanged,
@@ -115,6 +120,7 @@ int main(void)
 {
     UmiFinancialPortfolio x; CHECK(umi_portfolio_init(&x,"ID","Name","PARENT")==UMI_STATUS_OK); CHECK(umi_portfolio_is_valid(&x));
     if (UmiFinancialPortfolioTransferCases(&x) != 0) return 1;
+    if (UmiFinancialPortfolioTransferCasesWithWorkspace(&x) != 0) return 1;
     if (UmiFinancialPortfolioConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;

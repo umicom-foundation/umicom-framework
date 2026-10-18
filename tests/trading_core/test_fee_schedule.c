@@ -50,6 +50,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTradingFeeScheduleTransferCases, UmiTradingFeeSchedul
     umi_trading_fee_schedule_archive_encode, umi_trading_fee_schedule_archive_decode,
     UmiTradingFeeScheduleTransferEqual, UmiTradingFeeScheduleTransferTails, UmiTradingFeeScheduleTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTradingFeeScheduleTransferCasesWithWorkspace, UmiTradingFeeSchedule,
+    umi_trading_fee_schedule_archive_encode, umi_trading_fee_schedule_archive_decode_with_workspace, UmiTradingFeeScheduleTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTradingFeeScheduleConditionalArchiveCases, UmiTradingFeeSchedule,
     umi_trading_fee_schedule_archive_encode, umi_trading_fee_schedule_archive_decode_if_unchanged,
@@ -63,6 +68,7 @@ int main(void) {
      /* Apply this operation only while the related capability or state is available. */
      if(!umi_trading_fee_schedule_valid(&v)) return 2;
     if (UmiTradingFeeScheduleTransferCases(&v) != 0) return 1;
+    if (UmiTradingFeeScheduleTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTradingFeeScheduleConditionalArchiveCases(&v) != 0) return 1;
 
      return 0;

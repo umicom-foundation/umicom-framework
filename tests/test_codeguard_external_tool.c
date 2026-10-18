@@ -19,6 +19,8 @@
  * rules, analysis engines and reports so new developers can understand one
  * responsibility at a time and test it independently.
  */
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/codeguard/codeguard.h"

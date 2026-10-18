@@ -68,6 +68,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryPaymentObligationTransferCases, UmiTreasuryPa
     umi_treasury_payment_obligation_archive_encode, umi_treasury_payment_obligation_archive_decode,
     UmiTreasuryPaymentObligationTransferEqual, UmiTreasuryPaymentObligationTransferTails, UmiTreasuryPaymentObligationTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTreasuryPaymentObligationTransferCasesWithWorkspace, UmiTreasuryPaymentObligation,
+    umi_treasury_payment_obligation_archive_encode, umi_treasury_payment_obligation_archive_decode_with_workspace, UmiTreasuryPaymentObligationTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryPaymentObligationConditionalArchiveCases, UmiTreasuryPaymentObligation,
     umi_treasury_payment_obligation_archive_encode, umi_treasury_payment_obligation_archive_decode_if_unchanged,
@@ -79,6 +84,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_payment_obligation_init(&v, "pay-1", 1000, 900, 100) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryPaymentObligationTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryPaymentObligationTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTreasuryPaymentObligationConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */

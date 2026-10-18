@@ -98,6 +98,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPanelHostSlotTransferCases, UmiPanelHostSlot,
     umi_panel_host_slot_archive_encode, umi_panel_host_slot_archive_decode,
     UmiPanelHostSlotTransferEqual, UmiPanelHostSlotTransferTails, UmiPanelHostSlotTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPanelHostSlotTransferCasesWithWorkspace, UmiPanelHostSlot,
+    umi_panel_host_slot_archive_encode, umi_panel_host_slot_archive_decode_with_workspace, UmiPanelHostSlotTransferEqual)
+
 #include "../conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPanelHostSlotConditionalArchiveCases, UmiPanelHostSlot,
     umi_panel_host_slot_archive_encode, umi_panel_host_slot_archive_decode_if_unchanged,
@@ -116,6 +121,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_panel_host_slot_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiPanelHostSlotTransferCases(&value) != 0) return 1;
+    if (UmiPanelHostSlotTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiPanelHostSlotConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

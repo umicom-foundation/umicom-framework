@@ -83,6 +83,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveDependencyEdgeTransferCases, UmiUiReactiveD
     umi_ui_reactive_dependency_edge_archive_encode, umi_ui_reactive_dependency_edge_archive_decode,
     UmiUiReactiveDependencyEdgeTransferEqual, UmiUiReactiveDependencyEdgeTransferTails, UmiUiReactiveDependencyEdgeTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveDependencyEdgeTransferCasesWithWorkspace, UmiUiReactiveDependencyEdge,
+    umi_ui_reactive_dependency_edge_archive_encode, umi_ui_reactive_dependency_edge_archive_decode_with_workspace, UmiUiReactiveDependencyEdgeTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveDependencyEdgeConditionalArchiveCases, UmiUiReactiveDependencyEdge,
     umi_ui_reactive_dependency_edge_archive_encode, umi_ui_reactive_dependency_edge_archive_decode_if_unchanged,
@@ -96,5 +101,6 @@ int main(void) { UmiUiReactiveDependencyEdge item; umi_ui_reactive_dependency_ed
     (void)snprintf(populated.from_id, sizeof(populated.from_id), "field-0");
     (void)snprintf(populated.to_id, sizeof(populated.to_id), "field-1");
     if (UmiUiReactiveDependencyEdgeTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveDependencyEdgeTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveDependencyEdgeConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_dependency_edge_valid(&item) ? 0 : 1; }

@@ -17,6 +17,8 @@
  * Umicom Framework
  * File: tests/test_diagnostic_hub.c
  *---------------------------------------------------------------------------*/
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #include "umicom/diagnostics/hub.h"
 
 #include <assert.h>

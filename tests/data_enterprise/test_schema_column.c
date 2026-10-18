@@ -93,6 +93,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataSchemaColumnTransferCases, UmiDataSchemaColumn,
     umi_data_schema_column_archive_encode, umi_data_schema_column_archive_decode,
     UmiDataSchemaColumnTransferEqual, UmiDataSchemaColumnTransferTails, UmiDataSchemaColumnTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataSchemaColumnTransferCasesWithWorkspace, UmiDataSchemaColumn,
+    umi_data_schema_column_archive_encode, umi_data_schema_column_archive_decode_with_workspace, UmiDataSchemaColumnTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataSchemaColumnConditionalArchiveCases, UmiDataSchemaColumn,
     umi_data_schema_column_archive_encode, umi_data_schema_column_archive_decode_if_unchanged,
@@ -146,6 +151,7 @@ int main(void) {
     UmiDataSchemaColumn item;
     CHECK(umi_data_schema_column_init(&item,"order.id","id",UMI_DATA_VALUE_INTEGER,0U,false) == UMI_STATUS_OK);
     if (UmiDataSchemaColumnTransferCases(&item) != 0) return 1;
+    if (UmiDataSchemaColumnTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiDataSchemaColumnConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.nullable == false);

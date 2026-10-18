@@ -112,6 +112,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCoverageFunctionModelTransferCases, UmiCoverageFuncti
     umi_coverage_function_model_archive_encode, umi_coverage_function_model_archive_decode,
     UmiCoverageFunctionModelTransferEqual, UmiCoverageFunctionModelTransferTails, UmiCoverageFunctionModelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCoverageFunctionModelTransferCasesWithWorkspace, UmiCoverageFunctionModel,
+    umi_coverage_function_model_archive_encode, umi_coverage_function_model_archive_decode_with_workspace, UmiCoverageFunctionModelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCoverageFunctionModelConditionalArchiveCases, UmiCoverageFunctionModel,
     umi_coverage_function_model_archive_encode, umi_coverage_function_model_archive_decode_if_unchanged,
@@ -138,5 +143,6 @@ int main(void){UmiCoverageFunctionModel m;assert(umi_coverage_function_model_ini
         umi_coverage_function_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
     assert(umi_coverage_function_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_coverage_function_model_valid(&m));
     if (UmiCoverageFunctionModelTransferCases(&m) != 0) return 1;
+    if (UmiCoverageFunctionModelTransferCasesWithWorkspace(&m) != 0) return 1;
     if (UmiCoverageFunctionModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

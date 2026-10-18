@@ -58,6 +58,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRepositoryLockPolicyTransferCases, UmiRepositoryLockP
     umi_repository_lock_policy_archive_encode, umi_repository_lock_policy_archive_decode,
     UmiRepositoryLockPolicyTransferEqual, UmiRepositoryLockPolicyTransferTails, UmiRepositoryLockPolicyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRepositoryLockPolicyTransferCasesWithWorkspace, UmiRepositoryLockPolicy,
+    umi_repository_lock_policy_archive_encode, umi_repository_lock_policy_archive_decode_with_workspace, UmiRepositoryLockPolicyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRepositoryLockPolicyConditionalArchiveCases, UmiRepositoryLockPolicy,
     umi_repository_lock_policy_archive_encode, umi_repository_lock_policy_archive_decode_if_unchanged,
@@ -72,6 +77,7 @@ int main(void)
     assert(p.require_all_heads);
     assert(umi_repository_lock_policy_validate(&p) == UMI_STATUS_OK);
     if (UmiRepositoryLockPolicyTransferCases(&p) != 0) return 1;
+    if (UmiRepositoryLockPolicyTransferCasesWithWorkspace(&p) != 0) return 1;
     if (UmiRepositoryLockPolicyConditionalArchiveCases(&p) != 0) return 1;
 
     return 0;

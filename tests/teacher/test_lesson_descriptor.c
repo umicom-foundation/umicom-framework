@@ -90,6 +90,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTeacherLessonDescriptorTransferCases, UmiTeacherLesso
     umi_teacher_lesson_descriptor_archive_encode, umi_teacher_lesson_descriptor_archive_decode,
     UmiTeacherLessonDescriptorTransferEqual, UmiTeacherLessonDescriptorTransferTails, UmiTeacherLessonDescriptorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTeacherLessonDescriptorTransferCasesWithWorkspace, UmiTeacherLessonDescriptor,
+    umi_teacher_lesson_descriptor_archive_encode, umi_teacher_lesson_descriptor_archive_decode_with_workspace, UmiTeacherLessonDescriptorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTeacherLessonDescriptorConditionalArchiveCases, UmiTeacherLessonDescriptor,
     umi_teacher_lesson_descriptor_archive_encode, umi_teacher_lesson_descriptor_archive_decode_if_unchanged,
@@ -103,6 +108,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_teacher_lesson_descriptor_validate(&value) != UMI_STATUS_OK) return 2;
     if (UmiTeacherLessonDescriptorTransferCases(&value) != 0) return 1;
+    if (UmiTeacherLessonDescriptorTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiTeacherLessonDescriptorConditionalArchiveCases(&value) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */

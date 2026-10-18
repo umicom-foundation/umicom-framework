@@ -109,6 +109,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataSchemaIndexTransferCases, UmiDataSchemaIndex,
     umi_data_schema_index_archive_encode, umi_data_schema_index_archive_decode,
     UmiDataSchemaIndexTransferEqual, UmiDataSchemaIndexTransferTails, UmiDataSchemaIndexTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataSchemaIndexTransferCasesWithWorkspace, UmiDataSchemaIndex,
+    umi_data_schema_index_archive_encode, umi_data_schema_index_archive_decode_with_workspace, UmiDataSchemaIndexTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataSchemaIndexConditionalArchiveCases, UmiDataSchemaIndex,
     umi_data_schema_index_archive_encode, umi_data_schema_index_archive_decode_if_unchanged,
@@ -174,6 +179,7 @@ int main(void) {
     UmiDataSchemaIndex item;
     CHECK(umi_data_schema_index_init(&item,"orders.pk","orders","id",true) == UMI_STATUS_OK);
     if (UmiDataSchemaIndexTransferCases(&item) != 0) return 1;
+    if (UmiDataSchemaIndexTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiDataSchemaIndexConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.unique);

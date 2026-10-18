@@ -51,6 +51,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRadPanStateTransferCases, UmiRadPanState,
     umi_rad_pan_archive_encode, umi_rad_pan_archive_decode,
     UmiRadPanStateTransferEqual, UmiRadPanStateTransferTails, UmiRadPanStateTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRadPanStateTransferCasesWithWorkspace, UmiRadPanState,
+    umi_rad_pan_archive_encode, umi_rad_pan_archive_decode_with_workspace, UmiRadPanStateTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadPanStateConditionalArchiveCases, UmiRadPanState,
     umi_rad_pan_archive_encode, umi_rad_pan_archive_decode_if_unchanged,
@@ -59,5 +64,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadPanStateConditionalArchiveCases, UmiRadPanSta
 
 int main(void){UmiRadPanState item;CHECK(umi_rad_pan_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_pan_is_valid(&item));
     if (UmiRadPanStateTransferCases(&item) != 0) return 1;
+    if (UmiRadPanStateTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiRadPanStateConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

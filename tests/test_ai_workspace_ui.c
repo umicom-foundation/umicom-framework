@@ -17,6 +17,8 @@
  * This test proves applications can discover the common windows and render a
  * comparison without depending on a particular desktop toolkit.
  */
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>

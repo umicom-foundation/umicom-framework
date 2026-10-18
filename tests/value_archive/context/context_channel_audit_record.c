@@ -151,6 +151,11 @@ UMI_TEST_VALUE_TRANSFER(UmiContextAuditRecordTransferCases, UmiContextAuditRecor
     umi_context_audit_record_archive_encode, umi_context_audit_record_archive_decode,
     UmiContextAuditRecordTransferEqual, UmiContextAuditRecordTransferTails, UmiContextAuditRecordTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiContextAuditRecordTransferCasesWithWorkspace, UmiContextAuditRecord,
+    umi_context_audit_record_archive_encode, umi_context_audit_record_archive_decode_with_workspace, UmiContextAuditRecordTransferEqual)
+
 #include "../conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextAuditRecordConditionalArchiveCases, UmiContextAuditRecord,
     umi_context_audit_record_archive_encode, umi_context_audit_record_archive_decode_if_unchanged,
@@ -171,6 +176,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_context_audit_record_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiContextAuditRecordTransferCases(&value) != 0) return 1;
+    if (UmiContextAuditRecordTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiContextAuditRecordConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

@@ -85,6 +85,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveContextBindingTransferCases, UmiUiReactiveC
     umi_ui_reactive_context_binding_archive_encode, umi_ui_reactive_context_binding_archive_decode,
     UmiUiReactiveContextBindingTransferEqual, UmiUiReactiveContextBindingTransferTails, UmiUiReactiveContextBindingTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveContextBindingTransferCasesWithWorkspace, UmiUiReactiveContextBinding,
+    umi_ui_reactive_context_binding_archive_encode, umi_ui_reactive_context_binding_archive_decode_with_workspace, UmiUiReactiveContextBindingTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveContextBindingConditionalArchiveCases, UmiUiReactiveContextBinding,
     umi_ui_reactive_context_binding_archive_encode, umi_ui_reactive_context_binding_archive_decode_if_unchanged,
@@ -100,5 +105,6 @@ int main(void) { UmiUiReactiveContextBinding item; umi_ui_reactive_context_bindi
     populated.publish = true;
     populated.subscribe = true;
     if (UmiUiReactiveContextBindingTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveContextBindingTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveContextBindingConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_context_binding_valid(&item) ? 0 : 1; }

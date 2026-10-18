@@ -128,6 +128,12 @@ static UmiStatus UmiPromotionArchiveValidate(const UmiPromotion *value)
 UMI_DEFINE_VALUE_ARCHIVE(umi_promotion_direction_archive_encode, umi_promotion_direction_archive_decode,
     UmiPromotion, UmiPromotionArchiveSchema, UmiPromotionArchiveBound, UmiPromotionArchiveWrite, UmiPromotionArchiveRead, UmiPromotionArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_promotion_direction_archive_decode_with_workspace, UmiPromotion,
+    UmiPromotionArchiveSchema, UmiPromotionArchiveBound, UmiPromotionArchiveRead, UmiPromotionArchiveValidate)
+
 /* Guard restoration with the previously reviewed encoded value. Domain field
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_promotion_direction_archive_decode_if_unchanged, umi_promotion_direction_archive_encode,

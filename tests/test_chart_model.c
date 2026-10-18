@@ -21,6 +21,8 @@
  * model on their comparatively small default thread stack.
  */
 
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #include "umicom/umicom.h"
 
 #include <assert.h>

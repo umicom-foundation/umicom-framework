@@ -16,6 +16,8 @@
 /*
  * This focused test protects one public contract so future Framework changes cannot silently break SDK or product consumers.
  */
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #include <assert.h>
 #include "umicom/abi/abi.h"
 /*

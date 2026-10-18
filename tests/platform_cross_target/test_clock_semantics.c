@@ -63,6 +63,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCtClockSemanticsTransferCases, UmiCtClockSemantics,
     umi_ct_clock_semantics_archive_encode, umi_ct_clock_semantics_archive_decode,
     UmiCtClockSemanticsTransferEqual, UmiCtClockSemanticsTransferTails, UmiCtClockSemanticsTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCtClockSemanticsTransferCasesWithWorkspace, UmiCtClockSemantics,
+    umi_ct_clock_semantics_archive_encode, umi_ct_clock_semantics_archive_decode_with_workspace, UmiCtClockSemanticsTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtClockSemanticsConditionalArchiveCases, UmiCtClockSemantics,
     umi_ct_clock_semantics_archive_encode, umi_ct_clock_semantics_archive_decode_if_unchanged,
@@ -71,5 +76,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtClockSemanticsConditionalArchiveCases, UmiCtCl
 
 int main(void){UmiCtClockSemantics s={true,true,true,UINT64_C(1000000),1000U};CHECK(umi_ct_clock_semantics_validate(&s)==UMI_STATUS_OK);
     if (UmiCtClockSemanticsTransferCases(&s) != 0) return 1;
+    if (UmiCtClockSemanticsTransferCasesWithWorkspace(&s) != 0) return 1;
     if (UmiCtClockSemanticsConditionalArchiveCases(&s) != 0) return 1;
 CHECK(umi_ct_clock_ticks_to_ns(&s,1000U)==1000000U);return 0;}

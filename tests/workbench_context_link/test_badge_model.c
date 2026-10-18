@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkBadgeModelTransferCases, UmiWorkb
     umi_workbench_context_link_badge_model_archive_encode, umi_workbench_context_link_badge_model_archive_decode,
     UmiWorkbenchContextLinkBadgeModelTransferEqual, UmiWorkbenchContextLinkBadgeModelTransferTails, UmiWorkbenchContextLinkBadgeModelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextLinkBadgeModelTransferCasesWithWorkspace, UmiWorkbenchContextLinkBadgeModel,
+    umi_workbench_context_link_badge_model_archive_encode, umi_workbench_context_link_badge_model_archive_decode_with_workspace, UmiWorkbenchContextLinkBadgeModelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkBadgeModelConditionalArchiveCases, UmiWorkbenchContextLinkBadgeModel,
     umi_workbench_context_link_badge_model_archive_encode, umi_workbench_context_link_badge_model_archive_decode_if_unchanged,
@@ -151,6 +156,7 @@ int main(void)
     umi_workbench_context_link_badge_model_init(&record, "badge_model-id");
     assert(umi_workbench_context_link_badge_model_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkBadgeModelTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkBadgeModelTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkBadgeModelConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkBadgeModelReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkBadgeModelMutationGuards(&record) != 0) return 1;

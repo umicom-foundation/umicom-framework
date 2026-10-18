@@ -53,6 +53,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRadCanvasViewportTransferCases, UmiRadCanvasViewport,
     umi_rad_canvas_viewport_archive_encode, umi_rad_canvas_viewport_archive_decode,
     UmiRadCanvasViewportTransferEqual, UmiRadCanvasViewportTransferTails, UmiRadCanvasViewportTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRadCanvasViewportTransferCasesWithWorkspace, UmiRadCanvasViewport,
+    umi_rad_canvas_viewport_archive_encode, umi_rad_canvas_viewport_archive_decode_with_workspace, UmiRadCanvasViewportTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadCanvasViewportConditionalArchiveCases, UmiRadCanvasViewport,
     umi_rad_canvas_viewport_archive_encode, umi_rad_canvas_viewport_archive_decode_if_unchanged,
@@ -61,5 +66,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadCanvasViewportConditionalArchiveCases, UmiRad
 
 int main(void){UmiRadCanvasViewport item;CHECK(umi_rad_canvas_viewport_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_canvas_viewport_is_valid(&item));
     if (UmiRadCanvasViewportTransferCases(&item) != 0) return 1;
+    if (UmiRadCanvasViewportTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiRadCanvasViewportConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

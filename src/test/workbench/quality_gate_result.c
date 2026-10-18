@@ -138,6 +138,12 @@ static UmiStatus UmiQualityGateResultArchiveValidate(const UmiQualityGateResult 
 UMI_DEFINE_VALUE_ARCHIVE(umi_quality_gate_result_archive_encode, umi_quality_gate_result_archive_decode,
     UmiQualityGateResult, UmiQualityGateResultArchiveSchema, UmiQualityGateResultArchiveBound, UmiQualityGateResultArchiveWrite, UmiQualityGateResultArchiveRead, UmiQualityGateResultArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_quality_gate_result_archive_decode_with_workspace, UmiQualityGateResult,
+    UmiQualityGateResultArchiveSchema, UmiQualityGateResultArchiveBound, UmiQualityGateResultArchiveRead, UmiQualityGateResultArchiveValidate)
+
 /* Guard restoration with the previously reviewed encoded value. Domain field
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_quality_gate_result_archive_decode_if_unchanged, umi_quality_gate_result_archive_encode,

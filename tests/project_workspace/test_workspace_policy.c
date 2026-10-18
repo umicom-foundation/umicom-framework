@@ -113,6 +113,11 @@ UMI_TEST_VALUE_TRANSFER(UmiProjectWorkspaceWorkspacePolicyTransferCases, UmiProj
     umi_project_workspace_workspace_policy_archive_encode, umi_project_workspace_workspace_policy_archive_decode,
     UmiProjectWorkspaceWorkspacePolicyTransferEqual, UmiProjectWorkspaceWorkspacePolicyTransferTails, UmiProjectWorkspaceWorkspacePolicyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiProjectWorkspaceWorkspacePolicyTransferCasesWithWorkspace, UmiProjectWorkspaceWorkspacePolicy,
+    umi_project_workspace_workspace_policy_archive_encode, umi_project_workspace_workspace_policy_archive_decode_with_workspace, UmiProjectWorkspaceWorkspacePolicyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiProjectWorkspaceWorkspacePolicyConditionalArchiveCases, UmiProjectWorkspaceWorkspacePolicy,
     umi_project_workspace_workspace_policy_archive_encode, umi_project_workspace_workspace_policy_archive_decode_if_unchanged,
@@ -159,6 +164,7 @@ int main(void) {
     umi_project_workspace_workspace_policy_set_metric(&a,7U);
     CHECK(umi_project_workspace_workspace_policy_validate(&a)==UMI_STATUS_OK);
     if (UmiProjectWorkspaceWorkspacePolicyTransferCases(&a) != 0) return 1;
+    if (UmiProjectWorkspaceWorkspacePolicyTransferCasesWithWorkspace(&a) != 0) return 1;
     if (UmiProjectWorkspaceWorkspacePolicyConditionalArchiveCases(&a) != 0) return 1;
 
     CHECK(a.metric==7U);

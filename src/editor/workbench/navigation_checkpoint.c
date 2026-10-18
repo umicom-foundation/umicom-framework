@@ -74,6 +74,12 @@ static UmiStatus UmiEditorWbNavigationCheckpointArchiveValidate(const UmiEditorW
 UMI_DEFINE_VALUE_ARCHIVE(umi_editor_wb_navigation_checkpoint_archive_encode, umi_editor_wb_navigation_checkpoint_archive_decode,
     UmiEditorWbNavigationCheckpoint, UmiEditorWbNavigationCheckpointArchiveSchema, UmiEditorWbNavigationCheckpointArchiveBound, UmiEditorWbNavigationCheckpointArchiveWrite, UmiEditorWbNavigationCheckpointArchiveRead, UmiEditorWbNavigationCheckpointArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_editor_wb_navigation_checkpoint_archive_decode_with_workspace, UmiEditorWbNavigationCheckpoint,
+    UmiEditorWbNavigationCheckpointArchiveSchema, UmiEditorWbNavigationCheckpointArchiveBound, UmiEditorWbNavigationCheckpointArchiveRead, UmiEditorWbNavigationCheckpointArchiveValidate)
+
 /* Guard restoration with the previously reviewed encoded value. Domain field
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_editor_wb_navigation_checkpoint_archive_decode_if_unchanged, umi_editor_wb_navigation_checkpoint_archive_encode,

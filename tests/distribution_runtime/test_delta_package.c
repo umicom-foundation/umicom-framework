@@ -95,6 +95,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDrDeltaPackageTransferCases, UmiDrDeltaPackage,
     umi_dr_delta_package_archive_encode, umi_dr_delta_package_archive_decode,
     UmiDrDeltaPackageTransferEqual, UmiDrDeltaPackageTransferTails, UmiDrDeltaPackageTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDrDeltaPackageTransferCasesWithWorkspace, UmiDrDeltaPackage,
+    umi_dr_delta_package_archive_encode, umi_dr_delta_package_archive_decode_with_workspace, UmiDrDeltaPackageTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrDeltaPackageConditionalArchiveCases, UmiDrDeltaPackage,
     umi_dr_delta_package_archive_encode, umi_dr_delta_package_archive_decode_if_unchanged,
@@ -104,6 +109,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrDeltaPackageConditionalArchiveCases, UmiDrDelt
 int main(void) {
     UmiDrDeltaPackage value; umi_dr_delta_package_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"delta")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.digest,sizeof(value.digest),"d")==UMI_STATUS_OK); value.base_version=(UmiDrVersion){1,0,0}; value.target_version=(UmiDrVersion){1,1,0}; value.full_size=100U; value.delta_size=20U; CHECK(umi_dr_delta_package_valid(&value));
     if (UmiDrDeltaPackageTransferCases(&value) != 0) return 1;
+    if (UmiDrDeltaPackageTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDrDeltaPackageConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_delta_package_fingerprint(&value) != 0U);
     return 0;

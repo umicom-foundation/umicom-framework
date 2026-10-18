@@ -138,6 +138,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDebugWorkbenchDebugLaunchRequestTransferCases, UmiDeb
     umi_debug_workbench_debug_launch_request_archive_encode, umi_debug_workbench_debug_launch_request_archive_decode,
     UmiDebugWorkbenchDebugLaunchRequestTransferEqual, UmiDebugWorkbenchDebugLaunchRequestTransferTails, UmiDebugWorkbenchDebugLaunchRequestTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDebugWorkbenchDebugLaunchRequestTransferCasesWithWorkspace, UmiDebugWorkbenchDebugLaunchRequest,
+    umi_debug_workbench_debug_launch_request_archive_encode, umi_debug_workbench_debug_launch_request_archive_decode_with_workspace, UmiDebugWorkbenchDebugLaunchRequestTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDebugWorkbenchDebugLaunchRequestConditionalArchiveCases, UmiDebugWorkbenchDebugLaunchRequest,
     umi_debug_workbench_debug_launch_request_archive_encode, umi_debug_workbench_debug_launch_request_archive_decode_if_unchanged,
@@ -172,6 +177,7 @@ int main(void)
     UMI_TEST_CHECK(!model.enabled);
     UMI_TEST_CHECK(umi_debug_workbench_debug_launch_request_valid(&model));
     if (UmiDebugWorkbenchDebugLaunchRequestTransferCases(&model) != 0) return 1;
+    if (UmiDebugWorkbenchDebugLaunchRequestTransferCasesWithWorkspace(&model) != 0) return 1;
     if (UmiDebugWorkbenchDebugLaunchRequestConditionalArchiveCases(&model) != 0) return 1;
 
     return 0;

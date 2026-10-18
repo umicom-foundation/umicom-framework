@@ -14,6 +14,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Identity governance v2 | Sammy Hegab | Umicom Foundation | MIT */
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #include <assert.h>
 #include "security_governance_fixture.h"
 /*

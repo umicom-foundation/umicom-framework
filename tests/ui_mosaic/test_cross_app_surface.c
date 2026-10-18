@@ -90,6 +90,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicCrossAppSurfaceTransferCases, UmiUiMosaicCros
     umi_ui_mosaic_cross_app_surface_archive_encode, umi_ui_mosaic_cross_app_surface_archive_decode,
     UmiUiMosaicCrossAppSurfaceTransferEqual, UmiUiMosaicCrossAppSurfaceTransferTails, UmiUiMosaicCrossAppSurfaceTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiMosaicCrossAppSurfaceTransferCasesWithWorkspace, UmiUiMosaicCrossAppSurface,
+    umi_ui_mosaic_cross_app_surface_archive_encode, umi_ui_mosaic_cross_app_surface_archive_decode_with_workspace, UmiUiMosaicCrossAppSurfaceTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicCrossAppSurfaceConditionalArchiveCases, UmiUiMosaicCrossAppSurface,
     umi_ui_mosaic_cross_app_surface_archive_encode, umi_ui_mosaic_cross_app_surface_archive_decode_if_unchanged,
@@ -103,6 +108,7 @@ int main(void) {
     value.row_span = 2U; value.column_span = 3U;
     CHECK(umi_ui_mosaic_cross_app_surface_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicCrossAppSurfaceTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicCrossAppSurfaceTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiUiMosaicCrossAppSurfaceConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_cross_app_surface_area(&value) == 6U);

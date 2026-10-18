@@ -54,6 +54,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFcContextContractTransferCases, UmiFcContextContract,
     umi_fc_context_contract_archive_encode, umi_fc_context_contract_archive_decode,
     UmiFcContextContractTransferEqual, UmiFcContextContractTransferTails, UmiFcContextContractTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFcContextContractTransferCasesWithWorkspace, UmiFcContextContract,
+    umi_fc_context_contract_archive_encode, umi_fc_context_contract_archive_decode_with_workspace, UmiFcContextContractTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFcContextContractConditionalArchiveCases, UmiFcContextContract,
     umi_fc_context_contract_archive_encode, umi_fc_context_contract_archive_decode_if_unchanged,
@@ -63,6 +68,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiFcContextContractConditionalArchiveCases, UmiFcC
 int main(void) {
     UmiFcContextContract x={3U,true,true}; CHECK(umi_fc_context_contract_validate(&x));
     if (UmiFcContextContractTransferCases(&x) != 0) return 1;
+    if (UmiFcContextContractTransferCasesWithWorkspace(&x) != 0) return 1;
     if (UmiFcContextContractConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;

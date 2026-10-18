@@ -69,6 +69,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiEntSortDescriptorTransferCases, UmiUiEntSortDescrip
     umi_ui_ent_sort_descriptor_archive_encode, umi_ui_ent_sort_descriptor_archive_decode,
     UmiUiEntSortDescriptorTransferEqual, UmiUiEntSortDescriptorTransferTails, UmiUiEntSortDescriptorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiEntSortDescriptorTransferCasesWithWorkspace, UmiUiEntSortDescriptor,
+    umi_ui_ent_sort_descriptor_archive_encode, umi_ui_ent_sort_descriptor_archive_decode_with_workspace, UmiUiEntSortDescriptorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiEntSortDescriptorConditionalArchiveCases, UmiUiEntSortDescriptor,
     umi_ui_ent_sort_descriptor_archive_encode, umi_ui_ent_sort_descriptor_archive_decode_if_unchanged,
@@ -77,5 +82,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiEntSortDescriptorConditionalArchiveCases, UmiU
 
 int main(void){UmiUiEntSortDescriptor v;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_sort_descriptor_init(&v)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_copy_text(v.column_id,sizeof v.column_id,"id")!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_ui_ent_sort_descriptor_validate(&v))return 9;
     if (UmiUiEntSortDescriptorTransferCases(&v) != 0) return 1;
+    if (UmiUiEntSortDescriptorTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiUiEntSortDescriptorConditionalArchiveCases(&v) != 0) return 1;
 puts("ok");return 0;}

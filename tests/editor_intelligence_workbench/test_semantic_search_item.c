@@ -131,6 +131,11 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorIntelSemanticSearchItemTransferCases, UmiEditor
     umi_editor_intel_semantic_search_item_archive_encode, umi_editor_intel_semantic_search_item_archive_decode,
     UmiEditorIntelSemanticSearchItemTransferEqual, UmiEditorIntelSemanticSearchItemTransferTails, UmiEditorIntelSemanticSearchItemTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiEditorIntelSemanticSearchItemTransferCasesWithWorkspace, UmiEditorIntelSemanticSearchItem,
+    umi_editor_intel_semantic_search_item_archive_encode, umi_editor_intel_semantic_search_item_archive_decode_with_workspace, UmiEditorIntelSemanticSearchItemTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelSemanticSearchItemConditionalArchiveCases, UmiEditorIntelSemanticSearchItem,
     umi_editor_intel_semantic_search_item_archive_encode, umi_editor_intel_semantic_search_item_archive_decode_if_unchanged,
@@ -149,5 +154,6 @@ int main(void){UmiEditorIntelSemanticSearchItem model;UmiEditorIntelRange range=
         umi_editor_intel_semantic_search_item_set_selected(&model,true));
     if(umi_editor_intel_semantic_search_item_set_selected(&model,true)!=UMI_STATUS_OK)return 3;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_intel_semantic_search_item_valid(&model)||model.value.score!=91U||!model.selected)return 4;
     if (UmiEditorIntelSemanticSearchItemTransferCases(&model) != 0) return 1;
+    if (UmiEditorIntelSemanticSearchItemTransferCasesWithWorkspace(&model) != 0) return 1;
     if (UmiEditorIntelSemanticSearchItemConditionalArchiveCases(&model) != 0) return 1;
 return 0;}

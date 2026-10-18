@@ -104,6 +104,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicContextLinkGroupTransferCases, UmiUiMosaicCon
     umi_ui_mosaic_context_link_group_archive_encode, umi_ui_mosaic_context_link_group_archive_decode,
     UmiUiMosaicContextLinkGroupTransferEqual, UmiUiMosaicContextLinkGroupTransferTails, UmiUiMosaicContextLinkGroupTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiMosaicContextLinkGroupTransferCasesWithWorkspace, UmiUiMosaicContextLinkGroup,
+    umi_ui_mosaic_context_link_group_archive_encode, umi_ui_mosaic_context_link_group_archive_decode_with_workspace, UmiUiMosaicContextLinkGroupTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicContextLinkGroupConditionalArchiveCases, UmiUiMosaicContextLinkGroup,
     umi_ui_mosaic_context_link_group_archive_encode, umi_ui_mosaic_context_link_group_archive_decode_if_unchanged,
@@ -117,6 +122,7 @@ int main(void) {
     value.colour_index = 2U;
     CHECK(umi_ui_mosaic_context_link_group_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicContextLinkGroupTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicContextLinkGroupTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiUiMosaicContextLinkGroupConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

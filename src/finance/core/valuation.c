@@ -80,6 +80,12 @@ static UmiStatus UmiValuationArchiveValidate(const UmiValuation *value)
 UMI_DEFINE_VALUE_ARCHIVE(umi_valuation_archive_encode, umi_valuation_archive_decode,
     UmiValuation, UmiValuationArchiveSchema, UmiValuationArchiveBound, UmiValuationArchiveWrite, UmiValuationArchiveRead, UmiValuationArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_valuation_archive_decode_with_workspace, UmiValuation,
+    UmiValuationArchiveSchema, UmiValuationArchiveBound, UmiValuationArchiveRead, UmiValuationArchiveValidate)
+
 /* Restore this typed value only while its encoded state still matches the
  * caller's reviewed snapshot. The shared guard checks every encoded byte;
  * domain decoding and validation stay with this owner. */

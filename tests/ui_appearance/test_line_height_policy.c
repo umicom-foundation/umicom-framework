@@ -68,6 +68,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceLineHeightPolicyTransferCases, UmiAppearanc
     umi_appearance_line_height_policy_archive_encode, umi_appearance_line_height_policy_archive_decode,
     UmiAppearanceLineHeightPolicyTransferEqual, UmiAppearanceLineHeightPolicyTransferTails, UmiAppearanceLineHeightPolicyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAppearanceLineHeightPolicyTransferCasesWithWorkspace, UmiAppearanceLineHeightPolicy,
+    umi_appearance_line_height_policy_archive_encode, umi_appearance_line_height_policy_archive_decode_with_workspace, UmiAppearanceLineHeightPolicyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceLineHeightPolicyConditionalArchiveCases, UmiAppearanceLineHeightPolicy,
     umi_appearance_line_height_policy_archive_encode, umi_appearance_line_height_policy_archive_decode_if_unchanged,
@@ -81,6 +86,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_line_height_policy_is_valid(&item)) return 2;
     if (UmiAppearanceLineHeightPolicyTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceLineHeightPolicyTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiAppearanceLineHeightPolicyConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;

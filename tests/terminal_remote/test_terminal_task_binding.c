@@ -89,6 +89,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTerminalRemoteTerminalTaskBindingTransferCases, UmiTe
     umi_terminal_remote_terminal_task_binding_archive_encode, umi_terminal_remote_terminal_task_binding_archive_decode,
     UmiTerminalRemoteTerminalTaskBindingTransferEqual, UmiTerminalRemoteTerminalTaskBindingTransferTails, UmiTerminalRemoteTerminalTaskBindingTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTerminalRemoteTerminalTaskBindingTransferCasesWithWorkspace, UmiTerminalRemoteTerminalTaskBinding,
+    umi_terminal_remote_terminal_task_binding_archive_encode, umi_terminal_remote_terminal_task_binding_archive_decode_with_workspace, UmiTerminalRemoteTerminalTaskBindingTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTerminalRemoteTerminalTaskBindingConditionalArchiveCases, UmiTerminalRemoteTerminalTaskBinding,
     umi_terminal_remote_terminal_task_binding_archive_encode, umi_terminal_remote_terminal_task_binding_archive_decode_if_unchanged,
@@ -97,5 +102,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiTerminalRemoteTerminalTaskBindingConditionalArch
 
 int main(void) { UmiTerminalRemoteTerminalTaskBinding v; umi_terminal_remote_terminal_task_binding_init(&v,"left","right"); /* Apply this operation only while the related capability or state is available. */ if(!umi_terminal_remote_terminal_task_binding_valid(&v)) return 1;
     if (UmiTerminalRemoteTerminalTaskBindingTransferCases(&v) != 0) return 1;
+    if (UmiTerminalRemoteTerminalTaskBindingTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTerminalRemoteTerminalTaskBindingConditionalArchiveCases(&v) != 0) return 1;
  /* Apply this operation only while the related capability or state is available. */ if(umi_terminal_remote_terminal_task_binding_fingerprint(&v)==0U) return 2; umi_terminal_remote_terminal_task_binding_init(&v,"same","same"); return umi_terminal_remote_terminal_task_binding_valid(&v)?3:0; }

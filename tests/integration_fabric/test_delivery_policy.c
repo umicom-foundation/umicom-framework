@@ -75,6 +75,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricDeliveryPolicyTransferCases, UmiFabricDeliveryP
     umi_fabric_delivery_policy_archive_encode, umi_fabric_delivery_policy_archive_decode,
     UmiFabricDeliveryPolicyTransferEqual, UmiFabricDeliveryPolicyTransferTails, UmiFabricDeliveryPolicyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFabricDeliveryPolicyTransferCasesWithWorkspace, UmiFabricDeliveryPolicy,
+    umi_fabric_delivery_policy_archive_encode, umi_fabric_delivery_policy_archive_decode_with_workspace, UmiFabricDeliveryPolicyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricDeliveryPolicyConditionalArchiveCases, UmiFabricDeliveryPolicy,
     umi_fabric_delivery_policy_archive_encode, umi_fabric_delivery_policy_archive_decode_if_unchanged,
@@ -116,6 +121,7 @@ int main(void) {
     UmiFabricDeliveryPolicy item;
     CHECK(umi_fabric_delivery_policy_init(&item,"orders",UMI_FABRIC_DELIVERY_AT_LEAST_ONCE,3U,5000U,true)==UMI_STATUS_OK);
     if (UmiFabricDeliveryPolicyTransferCases(&item) != 0) return 1;
+    if (UmiFabricDeliveryPolicyTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiFabricDeliveryPolicyConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.durable);

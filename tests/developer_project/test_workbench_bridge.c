@@ -164,6 +164,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDeveloperWorkbenchProjectWizardTransferCases, UmiDeve
     umi_developer_workbench_project_wizard_archive_encode, umi_developer_workbench_project_wizard_archive_decode,
     UmiDeveloperWorkbenchProjectWizardTransferEqual, UmiDeveloperWorkbenchProjectWizardTransferTails, UmiDeveloperWorkbenchProjectWizardTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDeveloperWorkbenchProjectWizardTransferCasesWithWorkspace, UmiDeveloperWorkbenchProjectWizard,
+    umi_developer_workbench_project_wizard_archive_encode, umi_developer_workbench_project_wizard_archive_decode_with_workspace, UmiDeveloperWorkbenchProjectWizardTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDeveloperWorkbenchProjectWizardConditionalArchiveCases, UmiDeveloperWorkbenchProjectWizard,
     umi_developer_workbench_project_wizard_archive_encode, umi_developer_workbench_project_wizard_archive_decode_if_unchanged,
@@ -188,6 +193,7 @@ int main(void)
     assert(umi_developer_workbench_project_wizard_validate(&wizard) ==
            UMI_STATUS_OK);
     if (UmiDeveloperWorkbenchProjectWizardTransferCases(&wizard) != 0) return 1;
+    if (UmiDeveloperWorkbenchProjectWizardTransferCasesWithWorkspace(&wizard) != 0) return 1;
     if (UmiDeveloperWorkbenchProjectWizardConditionalArchiveCases(&wizard) != 0) return 1;
 
 

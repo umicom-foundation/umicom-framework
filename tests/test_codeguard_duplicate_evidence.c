@@ -14,6 +14,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Duplicate evidence v2 | Sammy Hegab | Umicom Foundation | MIT */
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #include <assert.h>
 #include "umicom/codeguard/duplicate_evidence.h"
 /*

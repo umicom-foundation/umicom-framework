@@ -67,6 +67,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryNostroAccountTransferCases, UmiTreasuryNostro
     umi_treasury_nostro_account_archive_encode, umi_treasury_nostro_account_archive_decode,
     UmiTreasuryNostroAccountTransferEqual, UmiTreasuryNostroAccountTransferTails, UmiTreasuryNostroAccountTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTreasuryNostroAccountTransferCasesWithWorkspace, UmiTreasuryNostroAccount,
+    umi_treasury_nostro_account_archive_encode, umi_treasury_nostro_account_archive_decode_with_workspace, UmiTreasuryNostroAccountTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryNostroAccountConditionalArchiveCases, UmiTreasuryNostroAccount,
     umi_treasury_nostro_account_archive_encode, umi_treasury_nostro_account_archive_decode_if_unchanged,
@@ -78,6 +83,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_nostro_account_init(&v, "nostro", 1000, 300) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryNostroAccountTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryNostroAccountTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTreasuryNostroAccountConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */

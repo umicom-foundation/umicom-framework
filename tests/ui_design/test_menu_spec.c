@@ -57,6 +57,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDesignMenuSpecTransferCases, UmiDesignMenuSpec,
     umi_design_menu_spec_archive_encode, umi_design_menu_spec_archive_decode,
     UmiDesignMenuSpecTransferEqual, UmiDesignMenuSpecTransferTails, UmiDesignMenuSpecTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDesignMenuSpecTransferCasesWithWorkspace, UmiDesignMenuSpec,
+    umi_design_menu_spec_archive_encode, umi_design_menu_spec_archive_decode_with_workspace, UmiDesignMenuSpecTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignMenuSpecConditionalArchiveCases, UmiDesignMenuSpec,
     umi_design_menu_spec_archive_encode, umi_design_menu_spec_archive_decode_if_unchanged,
@@ -65,5 +70,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignMenuSpecConditionalArchiveCases, UmiDesign
 
 int main(void){UmiDesignMenuSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_menu_spec_init(&s,12U,1,1,1)!=UMI_STATUS_OK)return 1;
     if (UmiDesignMenuSpecTransferCases(&s) != 0) return 1;
+    if (UmiDesignMenuSpecTransferCasesWithWorkspace(&s) != 0) return 1;
     if (UmiDesignMenuSpecConditionalArchiveCases(&s) != 0) return 1;
 return s.accelerators?0:2;}

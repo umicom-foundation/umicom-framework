@@ -87,6 +87,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicTabOrderTransferCases, UmiUiMosaicTabOrder,
     umi_ui_mosaic_tab_order_archive_encode, umi_ui_mosaic_tab_order_archive_decode,
     UmiUiMosaicTabOrderTransferEqual, UmiUiMosaicTabOrderTransferTails, UmiUiMosaicTabOrderTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiMosaicTabOrderTransferCasesWithWorkspace, UmiUiMosaicTabOrder,
+    umi_ui_mosaic_tab_order_archive_encode, umi_ui_mosaic_tab_order_archive_decode_with_workspace, UmiUiMosaicTabOrderTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicTabOrderConditionalArchiveCases, UmiUiMosaicTabOrder,
     umi_ui_mosaic_tab_order_archive_encode, umi_ui_mosaic_tab_order_archive_decode_if_unchanged,
@@ -100,6 +105,7 @@ int main(void) {
     value.item_count = 4U;
     CHECK(umi_ui_mosaic_tab_order_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicTabOrderTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicTabOrderTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiUiMosaicTabOrderConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_tab_order_touch(&value) == UMI_STATUS_OK);

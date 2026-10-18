@@ -69,6 +69,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPaymentsPaymentClearingTransferCases, UmiPaymentsPaym
     umi_payments_payment_clearing_archive_encode, umi_payments_payment_clearing_archive_decode,
     UmiPaymentsPaymentClearingTransferEqual, UmiPaymentsPaymentClearingTransferTails, UmiPaymentsPaymentClearingTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPaymentsPaymentClearingTransferCasesWithWorkspace, UmiPaymentsPaymentClearing,
+    umi_payments_payment_clearing_archive_encode, umi_payments_payment_clearing_archive_decode_with_workspace, UmiPaymentsPaymentClearingTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPaymentsPaymentClearingConditionalArchiveCases, UmiPaymentsPaymentClearing,
     umi_payments_payment_clearing_archive_encode, umi_payments_payment_clearing_archive_decode_if_unchanged,
@@ -82,6 +87,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if(!umi_payments_payment_clearing_valid(&v)) return 2;
     if (UmiPaymentsPaymentClearingTransferCases(&v) != 0) return 1;
+    if (UmiPaymentsPaymentClearingTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiPaymentsPaymentClearingConditionalArchiveCases(&v) != 0) return 1;
 
     return 0;

@@ -97,6 +97,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPerformanceGaugeTransferCases, UmiPerformanceGauge,
     umi_performance_gauge_archive_encode, umi_performance_gauge_archive_decode,
     UmiPerformanceGaugeTransferEqual, UmiPerformanceGaugeTransferTails, UmiPerformanceGaugeTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPerformanceGaugeTransferCasesWithWorkspace, UmiPerformanceGauge,
+    umi_performance_gauge_archive_encode, umi_performance_gauge_archive_decode_with_workspace, UmiPerformanceGaugeTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPerformanceGaugeConditionalArchiveCases, UmiPerformanceGauge,
     umi_performance_gauge_archive_encode, umi_performance_gauge_archive_decode_if_unchanged,
@@ -154,6 +159,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_performance_gauge_validate(&left) != UMI_STATUS_OK) return 2;
     if (UmiPerformanceGaugeTransferCases(&left) != 0) return 1;
+    if (UmiPerformanceGaugeTransferCasesWithWorkspace(&left) != 0) return 1;
     if (UmiPerformanceGaugeConditionalArchiveCases(&left) != 0) return 1;
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */

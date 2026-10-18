@@ -93,6 +93,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPluginExtensionHostSigningIdentityTransferCases, UmiP
     umi_plugin_extension_host_signing_identity_archive_encode, umi_plugin_extension_host_signing_identity_archive_decode,
     UmiPluginExtensionHostSigningIdentityTransferEqual, UmiPluginExtensionHostSigningIdentityTransferTails, UmiPluginExtensionHostSigningIdentityTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPluginExtensionHostSigningIdentityTransferCasesWithWorkspace, UmiPluginExtensionHostSigningIdentity,
+    umi_plugin_extension_host_signing_identity_archive_encode, umi_plugin_extension_host_signing_identity_archive_decode_with_workspace, UmiPluginExtensionHostSigningIdentityTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPluginExtensionHostSigningIdentityConditionalArchiveCases, UmiPluginExtensionHostSigningIdentity,
     umi_plugin_extension_host_signing_identity_archive_encode, umi_plugin_extension_host_signing_identity_archive_decode_if_unchanged,
@@ -107,6 +112,7 @@ int main(void)
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_plugin_extension_host_signing_identity_validate(&value) != UMI_STATUS_OK) return 2;
     if (UmiPluginExtensionHostSigningIdentityTransferCases(&value) != 0) return 1;
+    if (UmiPluginExtensionHostSigningIdentityTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiPluginExtensionHostSigningIdentityConditionalArchiveCases(&value) != 0) return 1;
 
     /* Use the stable identifier comparison to choose the matching record or policy. */

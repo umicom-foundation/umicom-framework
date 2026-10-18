@@ -76,6 +76,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataBackupManifestTransferCases, UmiDataBackupManifes
     umi_data_backup_manifest_archive_encode, umi_data_backup_manifest_archive_decode,
     UmiDataBackupManifestTransferEqual, UmiDataBackupManifestTransferTails, UmiDataBackupManifestTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataBackupManifestTransferCasesWithWorkspace, UmiDataBackupManifest,
+    umi_data_backup_manifest_archive_encode, umi_data_backup_manifest_archive_decode_with_workspace, UmiDataBackupManifestTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataBackupManifestConditionalArchiveCases, UmiDataBackupManifest,
     umi_data_backup_manifest_archive_encode, umi_data_backup_manifest_archive_decode_if_unchanged,
@@ -117,6 +122,7 @@ int main(void) {
     UmiDataBackupManifest item;
     CHECK(umi_data_backup_manifest_init(&item,"b1",10U,11U,22U,4096U) == UMI_STATUS_OK);
     if (UmiDataBackupManifestTransferCases(&item) != 0) return 1;
+    if (UmiDataBackupManifestTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiDataBackupManifestConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.complete);

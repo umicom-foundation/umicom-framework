@@ -131,6 +131,11 @@ UMI_TEST_VALUE_TRANSFER(UmiContextHistoryQueryTransferCases, UmiContextHistoryQu
     umi_context_history_query_archive_encode, umi_context_history_query_archive_decode,
     UmiContextHistoryQueryTransferEqual, UmiContextHistoryQueryTransferTails, UmiContextHistoryQueryTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiContextHistoryQueryTransferCasesWithWorkspace, UmiContextHistoryQuery,
+    umi_context_history_query_archive_encode, umi_context_history_query_archive_decode_with_workspace, UmiContextHistoryQueryTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextHistoryQueryConditionalArchiveCases, UmiContextHistoryQuery,
     umi_context_history_query_archive_encode, umi_context_history_query_archive_decode_if_unchanged,
@@ -169,6 +174,7 @@ int main(void)
     assert(umi_context_history_query_covers_sequence(&state,11U));
     assert(umi_context_history_query_validate(&state) == UMI_STATUS_OK);
     if (UmiContextHistoryQueryTransferCases(&state) != 0) return 1;
+    if (UmiContextHistoryQueryTransferCasesWithWorkspace(&state) != 0) return 1;
     if (UmiContextHistoryQueryConditionalArchiveCases(&state) != 0) return 1;
 
     return 0;

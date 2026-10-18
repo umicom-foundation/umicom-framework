@@ -234,6 +234,12 @@ UMI_DEFINE_VALUE_ARCHIVE(umi_application_session_snapshot_archive_encode,
     session_archive_schema, session_archive_bound, session_archive_write,
     session_archive_read, snapshot_shape)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_application_session_snapshot_archive_decode_with_workspace, UmiApplicationSessionSnapshot,
+    session_archive_schema, session_archive_bound, session_archive_read, snapshot_shape)
+
 /* These operations expose the same ownership rules to thin products. A
  * preview owns no widgets, processes or broker connection and makes no I/O. */
 UmiStatus umi_application_session_archive_capture(const UmiApplicationSession *session,

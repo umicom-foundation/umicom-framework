@@ -108,6 +108,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricSagaStepTransferCases, UmiFabricSagaStep,
     umi_fabric_saga_step_archive_encode, umi_fabric_saga_step_archive_decode,
     UmiFabricSagaStepTransferEqual, UmiFabricSagaStepTransferTails, UmiFabricSagaStepTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFabricSagaStepTransferCasesWithWorkspace, UmiFabricSagaStep,
+    umi_fabric_saga_step_archive_encode, umi_fabric_saga_step_archive_decode_with_workspace, UmiFabricSagaStepTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricSagaStepConditionalArchiveCases, UmiFabricSagaStep,
     umi_fabric_saga_step_archive_encode, umi_fabric_saga_step_archive_decode_if_unchanged,
@@ -173,6 +178,7 @@ int main(void) {
     UmiFabricSagaStep item;
     CHECK(umi_fabric_saga_step_init(&item,"reserve","reserve","release",true)==UMI_STATUS_OK);
     if (UmiFabricSagaStepTransferCases(&item) != 0) return 1;
+    if (UmiFabricSagaStepTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiFabricSagaStepConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.compensation_required);

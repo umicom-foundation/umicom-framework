@@ -112,6 +112,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTestRunProfileTransferCases, UmiTestRunProfile,
     umi_test_run_profile_archive_encode, umi_test_run_profile_archive_decode,
     UmiTestRunProfileTransferEqual, UmiTestRunProfileTransferTails, UmiTestRunProfileTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTestRunProfileTransferCasesWithWorkspace, UmiTestRunProfile,
+    umi_test_run_profile_archive_encode, umi_test_run_profile_archive_decode_with_workspace, UmiTestRunProfileTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestRunProfileConditionalArchiveCases, UmiTestRunProfile,
     umi_test_run_profile_archive_encode, umi_test_run_profile_archive_decode_if_unchanged,
@@ -138,5 +143,6 @@ int main(void){UmiTestRunProfile m;assert(umi_test_run_profile_init(&m,"test_run
         umi_test_run_profile_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
     assert(umi_test_run_profile_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_run_profile_valid(&m));
     if (UmiTestRunProfileTransferCases(&m) != 0) return 1;
+    if (UmiTestRunProfileTransferCasesWithWorkspace(&m) != 0) return 1;
     if (UmiTestRunProfileConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

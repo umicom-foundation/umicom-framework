@@ -111,6 +111,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricServiceInstanceTransferCases, UmiFabricServiceI
     umi_fabric_service_instance_archive_encode, umi_fabric_service_instance_archive_decode,
     UmiFabricServiceInstanceTransferEqual, UmiFabricServiceInstanceTransferTails, UmiFabricServiceInstanceTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFabricServiceInstanceTransferCasesWithWorkspace, UmiFabricServiceInstance,
+    umi_fabric_service_instance_archive_encode, umi_fabric_service_instance_archive_decode_with_workspace, UmiFabricServiceInstanceTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricServiceInstanceConditionalArchiveCases, UmiFabricServiceInstance,
     umi_fabric_service_instance_archive_encode, umi_fabric_service_instance_archive_decode_if_unchanged,
@@ -176,6 +181,7 @@ int main(void) {
     UmiFabricServiceInstance item;
     CHECK(umi_fabric_service_instance_init(&item,"risk.1","risk","ep.1",1U,10U)==UMI_STATUS_OK);
     if (UmiFabricServiceInstanceTransferCases(&item) != 0) return 1;
+    if (UmiFabricServiceInstanceTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiFabricServiceInstanceConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.healthy);

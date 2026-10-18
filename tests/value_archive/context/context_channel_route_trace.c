@@ -133,6 +133,11 @@ UMI_TEST_VALUE_TRANSFER(UmiContextRouteTraceTransferCases, UmiContextRouteTrace,
     umi_context_route_trace_archive_encode, umi_context_route_trace_archive_decode,
     UmiContextRouteTraceTransferEqual, UmiContextRouteTraceTransferTails, UmiContextRouteTraceTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiContextRouteTraceTransferCasesWithWorkspace, UmiContextRouteTrace,
+    umi_context_route_trace_archive_encode, umi_context_route_trace_archive_decode_with_workspace, UmiContextRouteTraceTransferEqual)
+
 #include "../conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextRouteTraceConditionalArchiveCases, UmiContextRouteTrace,
     umi_context_route_trace_archive_encode, umi_context_route_trace_archive_decode_if_unchanged,
@@ -152,6 +157,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_context_route_trace_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiContextRouteTraceTransferCases(&value) != 0) return 1;
+    if (UmiContextRouteTraceTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiContextRouteTraceConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

@@ -91,6 +91,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalFeeQuoteTransferCases, UmiDigitalFeeQuote,
     umi_digital_asset_fee_quote_archive_encode, umi_digital_asset_fee_quote_archive_decode,
     UmiDigitalFeeQuoteTransferEqual, UmiDigitalFeeQuoteTransferTails, UmiDigitalFeeQuoteTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDigitalFeeQuoteTransferCasesWithWorkspace, UmiDigitalFeeQuote,
+    umi_digital_asset_fee_quote_archive_encode, umi_digital_asset_fee_quote_archive_decode_with_workspace, UmiDigitalFeeQuoteTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalFeeQuoteConditionalArchiveCases, UmiDigitalFeeQuote,
     umi_digital_asset_fee_quote_archive_encode, umi_digital_asset_fee_quote_archive_decode_if_unchanged,
@@ -103,6 +108,7 @@ int main(void)
     CHECK(umi_digital_asset_fee_quote_init(&value, "BTC", 1200, 8, "BTC", 5000) == UMI_STATUS_OK);
     CHECK(umi_digital_asset_fee_quote_valid(&value));
     if (UmiDigitalFeeQuoteTransferCases(&value) != 0) return 1;
+    if (UmiDigitalFeeQuoteTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDigitalFeeQuoteConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

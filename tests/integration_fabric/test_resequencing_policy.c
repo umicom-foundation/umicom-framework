@@ -74,6 +74,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricResequencingPolicyTransferCases, UmiFabricReseq
     umi_fabric_resequencing_policy_archive_encode, umi_fabric_resequencing_policy_archive_decode,
     UmiFabricResequencingPolicyTransferEqual, UmiFabricResequencingPolicyTransferTails, UmiFabricResequencingPolicyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFabricResequencingPolicyTransferCasesWithWorkspace, UmiFabricResequencingPolicy,
+    umi_fabric_resequencing_policy_archive_encode, umi_fabric_resequencing_policy_archive_decode_with_workspace, UmiFabricResequencingPolicyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricResequencingPolicyConditionalArchiveCases, UmiFabricResequencingPolicy,
     umi_fabric_resequencing_policy_archive_encode, umi_fabric_resequencing_policy_archive_decode_if_unchanged,
@@ -115,6 +120,7 @@ int main(void) {
     UmiFabricResequencingPolicy item;
     CHECK(umi_fabric_resequencing_policy_init(&item,"seq",128U,500U,true)==UMI_STATUS_OK);
     if (UmiFabricResequencingPolicyTransferCases(&item) != 0) return 1;
+    if (UmiFabricResequencingPolicyTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiFabricResequencingPolicyConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.release_on_timeout);

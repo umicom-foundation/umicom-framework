@@ -115,6 +115,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPanelSessionTransferCases, UmiPanelSession,
     umi_panel_session_archive_encode, umi_panel_session_archive_decode,
     UmiPanelSessionTransferEqual, UmiPanelSessionTransferTails, UmiPanelSessionTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPanelSessionTransferCasesWithWorkspace, UmiPanelSession,
+    umi_panel_session_archive_encode, umi_panel_session_archive_decode_with_workspace, UmiPanelSessionTransferEqual)
+
 #include "../conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPanelSessionConditionalArchiveCases, UmiPanelSession,
     umi_panel_session_archive_encode, umi_panel_session_archive_decode_if_unchanged,
@@ -134,6 +139,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_panel_session_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiPanelSessionTransferCases(&value) != 0) return 1;
+    if (UmiPanelSessionTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiPanelSessionConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

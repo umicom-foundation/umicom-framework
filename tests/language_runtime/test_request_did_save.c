@@ -13,6 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "../support/assertions.h"
 #include "request_test_support.h"
 #include "umicom/language_runtime/requests/did_save.h"
 #include <assert.h>

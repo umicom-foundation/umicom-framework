@@ -188,6 +188,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionProviderContextBindingTransferCases
     umi_workbench_selection_provider_context_binding_archive_encode, umi_workbench_selection_provider_context_binding_archive_decode,
     UmiWorkbenchSelectionProviderContextBindingTransferEqual, UmiWorkbenchSelectionProviderContextBindingTransferTails, UmiWorkbenchSelectionProviderContextBindingTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchSelectionProviderContextBindingTransferCasesWithWorkspace, UmiWorkbenchSelectionProviderContextBinding,
+    umi_workbench_selection_provider_context_binding_archive_encode, umi_workbench_selection_provider_context_binding_archive_decode_with_workspace, UmiWorkbenchSelectionProviderContextBindingTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchSelectionProviderContextBindingConditionalArchiveCases, UmiWorkbenchSelectionProviderContextBinding,
     umi_workbench_selection_provider_context_binding_archive_encode, umi_workbench_selection_provider_context_binding_archive_decode_if_unchanged,
@@ -228,6 +233,7 @@ int main(void)
     assert(umi_workbench_selection_provider_context_binding_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionProviderContextBindingTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionProviderContextBindingTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchSelectionProviderContextBindingConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchSelectionProviderContextBindingReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchSelectionProviderContextBindingMutationGuards(&record) != 0) return 1;

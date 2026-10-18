@@ -74,6 +74,12 @@ static UmiStatus UmiAnalyticsHeatmapCellArchiveValidate(const UmiAnalyticsHeatma
 UMI_DEFINE_VALUE_ARCHIVE(umi_analytics_heatmap_cell_archive_encode, umi_analytics_heatmap_cell_archive_decode,
     UmiAnalyticsHeatmapCell, UmiAnalyticsHeatmapCellArchiveSchema, UmiAnalyticsHeatmapCellArchiveBound, UmiAnalyticsHeatmapCellArchiveWrite, UmiAnalyticsHeatmapCellArchiveRead, UmiAnalyticsHeatmapCellArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_analytics_heatmap_cell_archive_decode_with_workspace, UmiAnalyticsHeatmapCell,
+    UmiAnalyticsHeatmapCellArchiveSchema, UmiAnalyticsHeatmapCellArchiveBound, UmiAnalyticsHeatmapCellArchiveRead, UmiAnalyticsHeatmapCellArchiveValidate)
+
 /* Guard restoration with the previously reviewed encoded value. Domain field
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_analytics_heatmap_cell_archive_decode_if_unchanged, umi_analytics_heatmap_cell_archive_encode,

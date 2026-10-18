@@ -17,6 +17,8 @@
  * This small executable uses assertions so a failure points directly at one delivery contract.
  */
 
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #include <assert.h>
 #include "umicom/delivery/artifact_index.h"
 /*

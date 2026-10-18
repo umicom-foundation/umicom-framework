@@ -62,6 +62,11 @@ UMI_TEST_VALUE_TRANSFER(UmiVcsAdvancedDiffHunkTransferCases, UmiVcsAdvancedDiffH
     umi_vcs_advanced_diff_hunk_archive_encode, umi_vcs_advanced_diff_hunk_archive_decode,
     UmiVcsAdvancedDiffHunkTransferEqual, UmiVcsAdvancedDiffHunkTransferTails, UmiVcsAdvancedDiffHunkTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiVcsAdvancedDiffHunkTransferCasesWithWorkspace, UmiVcsAdvancedDiffHunk,
+    umi_vcs_advanced_diff_hunk_archive_encode, umi_vcs_advanced_diff_hunk_archive_decode_with_workspace, UmiVcsAdvancedDiffHunkTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiVcsAdvancedDiffHunkConditionalArchiveCases, UmiVcsAdvancedDiffHunk,
     umi_vcs_advanced_diff_hunk_archive_encode, umi_vcs_advanced_diff_hunk_archive_decode_if_unchanged,
@@ -79,6 +84,7 @@ int main(void)
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_vcs_advanced_diff_hunk_validate(&value) != UMI_STATUS_OK) return 2;
     if (UmiVcsAdvancedDiffHunkTransferCases(&value) != 0) return 1;
+    if (UmiVcsAdvancedDiffHunkTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiVcsAdvancedDiffHunkConditionalArchiveCases(&value) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */

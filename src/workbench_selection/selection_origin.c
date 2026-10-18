@@ -263,6 +263,12 @@ static UmiStatus UmiWorkbenchSelectionSelectionOriginArchiveValidate(const UmiWo
 UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_selection_selection_origin_archive_encode, umi_workbench_selection_selection_origin_archive_decode,
     UmiWorkbenchSelectionSelectionOrigin, UmiWorkbenchSelectionSelectionOriginArchiveSchema, UmiWorkbenchSelectionSelectionOriginArchiveBound, UmiWorkbenchSelectionSelectionOriginArchiveWrite, UmiWorkbenchSelectionSelectionOriginArchiveRead, UmiWorkbenchSelectionSelectionOriginArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_workbench_selection_selection_origin_archive_decode_with_workspace, UmiWorkbenchSelectionSelectionOrigin,
+    UmiWorkbenchSelectionSelectionOriginArchiveSchema, UmiWorkbenchSelectionSelectionOriginArchiveBound, UmiWorkbenchSelectionSelectionOriginArchiveRead, UmiWorkbenchSelectionSelectionOriginArchiveValidate)
+
 /* A delayed selection origin draft must name the revision it reviewed.
  * Domain validation remains with this value owner; the shared guard publishes
  * all fields together without emitting events or changing any external service. */

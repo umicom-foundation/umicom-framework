@@ -59,6 +59,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCommoditySnapshotTransferCases, UmiCommoditySnapshot,
     umi_commodity_commodity_snapshot_archive_encode, umi_commodity_commodity_snapshot_archive_decode,
     UmiCommoditySnapshotTransferEqual, UmiCommoditySnapshotTransferTails, UmiCommoditySnapshotTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCommoditySnapshotTransferCasesWithWorkspace, UmiCommoditySnapshot,
+    umi_commodity_commodity_snapshot_archive_encode, umi_commodity_commodity_snapshot_archive_decode_with_workspace, UmiCommoditySnapshotTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCommoditySnapshotConditionalArchiveCases, UmiCommoditySnapshot,
     umi_commodity_commodity_snapshot_archive_encode, umi_commodity_commodity_snapshot_archive_decode_if_unchanged,
@@ -71,6 +76,7 @@ int main(void)
     umi_commodity_commodity_snapshot_init(&snapshot, 1000);
     CHECK(umi_commodity_commodity_snapshot_valid(&snapshot));
     if (UmiCommoditySnapshotTransferCases(&snapshot) != 0) return 1;
+    if (UmiCommoditySnapshotTransferCasesWithWorkspace(&snapshot) != 0) return 1;
     if (UmiCommoditySnapshotConditionalArchiveCases(&snapshot) != 0) return 1;
 
     CHECK(snapshot.revision == 1U);

@@ -89,6 +89,12 @@ static UmiStatus UmiAppearanceThemeVariantArchiveValidate(const UmiAppearanceThe
 UMI_DEFINE_VALUE_ARCHIVE(umi_appearance_theme_variant_archive_encode, umi_appearance_theme_variant_archive_decode,
     UmiAppearanceThemeVariant, UmiAppearanceThemeVariantArchiveSchema, UmiAppearanceThemeVariantArchiveBound, UmiAppearanceThemeVariantArchiveWrite, UmiAppearanceThemeVariantArchiveRead, UmiAppearanceThemeVariantArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_appearance_theme_variant_archive_decode_with_workspace, UmiAppearanceThemeVariant,
+    UmiAppearanceThemeVariantArchiveSchema, UmiAppearanceThemeVariantArchiveBound, UmiAppearanceThemeVariantArchiveRead, UmiAppearanceThemeVariantArchiveValidate)
+
 /* Guard restoration with the previously reviewed encoded value. Domain field
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_appearance_theme_variant_archive_decode_if_unchanged, umi_appearance_theme_variant_archive_encode,

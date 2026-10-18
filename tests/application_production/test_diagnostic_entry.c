@@ -14,6 +14,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Umicom Framework application production test | diagnostic_entry | Sammy Hegab | Umicom Foundation | MIT */
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "../support/assertions.h"
 #include <assert.h>
 #include "test_fixture.h"
 /*

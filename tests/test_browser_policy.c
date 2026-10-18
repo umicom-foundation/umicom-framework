@@ -17,6 +17,8 @@
  * This small test exercises the public contract directly so a beginner can see the expected behaviour without starting a complete Umicom product.
  */
 
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #include "umicom/umicom.h"
 #include <assert.h>
 /*

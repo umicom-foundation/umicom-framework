@@ -108,6 +108,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataQueryProjectionTransferCases, UmiDataQueryProject
     umi_data_query_projection_archive_encode, umi_data_query_projection_archive_decode,
     UmiDataQueryProjectionTransferEqual, UmiDataQueryProjectionTransferTails, UmiDataQueryProjectionTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataQueryProjectionTransferCasesWithWorkspace, UmiDataQueryProjection,
+    umi_data_query_projection_archive_encode, umi_data_query_projection_archive_decode_with_workspace, UmiDataQueryProjectionTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataQueryProjectionConditionalArchiveCases, UmiDataQueryProjection,
     umi_data_query_projection_archive_encode, umi_data_query_projection_archive_decode_if_unchanged,
@@ -173,6 +178,7 @@ int main(void) {
     UmiDataQueryProjection item;
     CHECK(umi_data_query_projection_init(&item,"p1","orders.id","id") == UMI_STATUS_OK);
     if (UmiDataQueryProjectionTransferCases(&item) != 0) return 1;
+    if (UmiDataQueryProjectionTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiDataQueryProjectionConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(strcmp(item.alias,"id")==0);

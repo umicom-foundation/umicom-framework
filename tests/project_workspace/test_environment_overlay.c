@@ -113,6 +113,11 @@ UMI_TEST_VALUE_TRANSFER(UmiProjectWorkspaceEnvironmentOverlayTransferCases, UmiP
     umi_project_workspace_environment_overlay_archive_encode, umi_project_workspace_environment_overlay_archive_decode,
     UmiProjectWorkspaceEnvironmentOverlayTransferEqual, UmiProjectWorkspaceEnvironmentOverlayTransferTails, UmiProjectWorkspaceEnvironmentOverlayTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiProjectWorkspaceEnvironmentOverlayTransferCasesWithWorkspace, UmiProjectWorkspaceEnvironmentOverlay,
+    umi_project_workspace_environment_overlay_archive_encode, umi_project_workspace_environment_overlay_archive_decode_with_workspace, UmiProjectWorkspaceEnvironmentOverlayTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiProjectWorkspaceEnvironmentOverlayConditionalArchiveCases, UmiProjectWorkspaceEnvironmentOverlay,
     umi_project_workspace_environment_overlay_archive_encode, umi_project_workspace_environment_overlay_archive_decode_if_unchanged,
@@ -159,6 +164,7 @@ int main(void) {
     umi_project_workspace_environment_overlay_set_metric(&a,7U);
     CHECK(umi_project_workspace_environment_overlay_validate(&a)==UMI_STATUS_OK);
     if (UmiProjectWorkspaceEnvironmentOverlayTransferCases(&a) != 0) return 1;
+    if (UmiProjectWorkspaceEnvironmentOverlayTransferCasesWithWorkspace(&a) != 0) return 1;
     if (UmiProjectWorkspaceEnvironmentOverlayConditionalArchiveCases(&a) != 0) return 1;
 
     CHECK(a.metric==7U);

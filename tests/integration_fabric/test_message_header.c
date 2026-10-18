@@ -144,6 +144,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricMessageHeaderTransferCases, UmiFabricMessageHea
     umi_fabric_message_header_archive_encode, umi_fabric_message_header_archive_decode,
     UmiFabricMessageHeaderTransferEqual, UmiFabricMessageHeaderTransferTails, UmiFabricMessageHeaderTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFabricMessageHeaderTransferCasesWithWorkspace, UmiFabricMessageHeader,
+    umi_fabric_message_header_archive_encode, umi_fabric_message_header_archive_decode_with_workspace, UmiFabricMessageHeaderTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricMessageHeaderConditionalArchiveCases, UmiFabricMessageHeader,
     umi_fabric_message_header_archive_encode, umi_fabric_message_header_archive_decode_if_unchanged,
@@ -221,6 +226,7 @@ int main(void) {
     UmiFabricMessageHeader item;
     CHECK(umi_fabric_message_header_init(&item,"m1","c1","tenant","application/json",100U)==UMI_STATUS_OK);
     if (UmiFabricMessageHeaderTransferCases(&item) != 0) return 1;
+    if (UmiFabricMessageHeaderTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiFabricMessageHeaderConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(strcmp(item.correlation_id,"c1")==0);

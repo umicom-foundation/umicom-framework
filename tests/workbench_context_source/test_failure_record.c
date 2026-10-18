@@ -169,6 +169,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextSourceFailureRecordTransferCases, Umi
     umi_workbench_context_source_failure_record_archive_encode, umi_workbench_context_source_failure_record_archive_decode,
     UmiWorkbenchContextSourceFailureRecordTransferEqual, UmiWorkbenchContextSourceFailureRecordTransferTails, UmiWorkbenchContextSourceFailureRecordTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextSourceFailureRecordTransferCasesWithWorkspace, UmiWorkbenchContextSourceFailureRecord,
+    umi_workbench_context_source_failure_record_archive_encode, umi_workbench_context_source_failure_record_archive_decode_with_workspace, UmiWorkbenchContextSourceFailureRecordTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextSourceFailureRecordConditionalArchiveCases, UmiWorkbenchContextSourceFailureRecord,
     umi_workbench_context_source_failure_record_archive_encode, umi_workbench_context_source_failure_record_archive_decode_if_unchanged,
@@ -208,6 +213,7 @@ int main(void)
     assert(umi_workbench_context_source_failure_record_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextSourceFailureRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceFailureRecordTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextSourceFailureRecordConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextSourceFailureRecordReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextSourceFailureRecordMutationGuards(&record) != 0) return 1;

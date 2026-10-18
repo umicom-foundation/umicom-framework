@@ -107,6 +107,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDrResourceManifestTransferCases, UmiDrResourceManifes
     umi_dr_resource_manifest_archive_encode, umi_dr_resource_manifest_archive_decode,
     UmiDrResourceManifestTransferEqual, UmiDrResourceManifestTransferTails, UmiDrResourceManifestTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDrResourceManifestTransferCasesWithWorkspace, UmiDrResourceManifest,
+    umi_dr_resource_manifest_archive_encode, umi_dr_resource_manifest_archive_decode_with_workspace, UmiDrResourceManifestTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrResourceManifestConditionalArchiveCases, UmiDrResourceManifest,
     umi_dr_resource_manifest_archive_encode, umi_dr_resource_manifest_archive_decode_if_unchanged,
@@ -116,6 +121,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrResourceManifestConditionalArchiveCases, UmiDr
 int main(void) {
     UmiDrResourceManifest value; umi_dr_resource_manifest_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"base")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.digest,sizeof(value.digest),"d")==UMI_STATUS_OK); CHECK(umi_dr_resource_manifest_valid(&value));
     if (UmiDrResourceManifestTransferCases(&value) != 0) return 1;
+    if (UmiDrResourceManifestTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDrResourceManifestConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_resource_manifest_fingerprint(&value) != 0U);
     return 0;

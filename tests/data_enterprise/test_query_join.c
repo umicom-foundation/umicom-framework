@@ -126,6 +126,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataQueryJoinTransferCases, UmiDataQueryJoin,
     umi_data_query_join_archive_encode, umi_data_query_join_archive_decode,
     UmiDataQueryJoinTransferEqual, UmiDataQueryJoinTransferTails, UmiDataQueryJoinTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataQueryJoinTransferCasesWithWorkspace, UmiDataQueryJoin,
+    umi_data_query_join_archive_encode, umi_data_query_join_archive_decode_with_workspace, UmiDataQueryJoinTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataQueryJoinConditionalArchiveCases, UmiDataQueryJoin,
     umi_data_query_join_archive_encode, umi_data_query_join_archive_decode_if_unchanged,
@@ -203,6 +208,7 @@ int main(void) {
     UmiDataQueryJoin item;
     CHECK(umi_data_query_join_init(&item,"j1","orders","customers","orders.customer_id=customers.id",false) == UMI_STATUS_OK);
     if (UmiDataQueryJoinTransferCases(&item) != 0) return 1;
+    if (UmiDataQueryJoinTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiDataQueryJoinConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(!item.outer_join);

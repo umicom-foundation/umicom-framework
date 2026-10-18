@@ -90,6 +90,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalKeyReferenceTransferCases, UmiDigitalKeyRefere
     umi_digital_asset_key_reference_archive_encode, umi_digital_asset_key_reference_archive_decode,
     UmiDigitalKeyReferenceTransferEqual, UmiDigitalKeyReferenceTransferTails, UmiDigitalKeyReferenceTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDigitalKeyReferenceTransferCasesWithWorkspace, UmiDigitalKeyReference,
+    umi_digital_asset_key_reference_archive_encode, umi_digital_asset_key_reference_archive_decode_with_workspace, UmiDigitalKeyReferenceTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalKeyReferenceConditionalArchiveCases, UmiDigitalKeyReference,
     umi_digital_asset_key_reference_archive_encode, umi_digital_asset_key_reference_archive_decode_if_unchanged,
@@ -102,6 +107,7 @@ int main(void)
     CHECK(umi_digital_asset_key_reference_init(&value, "KEY-1", "hsm://slot/1", true) == UMI_STATUS_OK);
     CHECK(umi_digital_asset_key_reference_valid(&value));
     if (UmiDigitalKeyReferenceTransferCases(&value) != 0) return 1;
+    if (UmiDigitalKeyReferenceTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDigitalKeyReferenceConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(value.hardware_backed);

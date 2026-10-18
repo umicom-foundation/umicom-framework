@@ -52,6 +52,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRadSnapPolicyTransferCases, UmiRadSnapPolicy,
     umi_rad_snap_policy_archive_encode, umi_rad_snap_policy_archive_decode,
     UmiRadSnapPolicyTransferEqual, UmiRadSnapPolicyTransferTails, UmiRadSnapPolicyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRadSnapPolicyTransferCasesWithWorkspace, UmiRadSnapPolicy,
+    umi_rad_snap_policy_archive_encode, umi_rad_snap_policy_archive_decode_with_workspace, UmiRadSnapPolicyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadSnapPolicyConditionalArchiveCases, UmiRadSnapPolicy,
     umi_rad_snap_policy_archive_encode, umi_rad_snap_policy_archive_decode_if_unchanged,
@@ -60,5 +65,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadSnapPolicyConditionalArchiveCases, UmiRadSnap
 
 int main(void){UmiRadSnapPolicy item;CHECK(umi_rad_snap_policy_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_snap_policy_is_valid(&item));
     if (UmiRadSnapPolicyTransferCases(&item) != 0) return 1;
+    if (UmiRadSnapPolicyTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiRadSnapPolicyConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

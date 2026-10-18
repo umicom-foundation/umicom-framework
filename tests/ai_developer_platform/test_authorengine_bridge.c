@@ -88,6 +88,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAiDevAuthorengineBridgeTransferCases, UmiAiDevAuthore
     umi_ai_dev_authorengine_bridge_archive_encode, umi_ai_dev_authorengine_bridge_archive_decode,
     UmiAiDevAuthorengineBridgeTransferEqual, UmiAiDevAuthorengineBridgeTransferTails, UmiAiDevAuthorengineBridgeTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAiDevAuthorengineBridgeTransferCasesWithWorkspace, UmiAiDevAuthorengineBridge,
+    umi_ai_dev_authorengine_bridge_archive_encode, umi_ai_dev_authorengine_bridge_archive_decode_with_workspace, UmiAiDevAuthorengineBridgeTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAiDevAuthorengineBridgeConditionalArchiveCases, UmiAiDevAuthorengineBridge,
     umi_ai_dev_authorengine_bridge_archive_encode, umi_ai_dev_authorengine_bridge_archive_decode_if_unchanged,
@@ -107,6 +112,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ai_dev_authorengine_bridge_validate(&v) != UMI_STATUS_OK) return 2;
     if (UmiAiDevAuthorengineBridgeTransferCases(&v) != 0) return 1;
+    if (UmiAiDevAuthorengineBridgeTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiAiDevAuthorengineBridgeConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */

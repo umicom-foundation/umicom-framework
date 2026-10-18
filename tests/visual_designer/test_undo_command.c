@@ -120,6 +120,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRadUndoCommandTransferCases, UmiRadUndoCommand,
     umi_rad_undo_command_archive_encode, umi_rad_undo_command_archive_decode,
     UmiRadUndoCommandTransferEqual, UmiRadUndoCommandTransferTails, UmiRadUndoCommandTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRadUndoCommandTransferCasesWithWorkspace, UmiRadUndoCommand,
+    umi_rad_undo_command_archive_encode, umi_rad_undo_command_archive_decode_with_workspace, UmiRadUndoCommandTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadUndoCommandConditionalArchiveCases, UmiRadUndoCommand,
     umi_rad_undo_command_archive_encode, umi_rad_undo_command_archive_decode_if_unchanged,
@@ -128,5 +133,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadUndoCommandConditionalArchiveCases, UmiRadUnd
 
 int main(void){UmiRadUndoCommand item;CHECK(umi_rad_undo_command_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_undo_command_is_valid(&item));
     if (UmiRadUndoCommandTransferCases(&item) != 0) return 1;
+    if (UmiRadUndoCommandTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiRadUndoCommandConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

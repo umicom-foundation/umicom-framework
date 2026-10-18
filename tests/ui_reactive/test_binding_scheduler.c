@@ -50,6 +50,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveBindingSchedulerTransferCases, UmiUiReactiv
     umi_ui_reactive_binding_scheduler_archive_encode, umi_ui_reactive_binding_scheduler_archive_decode,
     UmiUiReactiveBindingSchedulerTransferEqual, UmiUiReactiveBindingSchedulerTransferTails, UmiUiReactiveBindingSchedulerTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveBindingSchedulerTransferCasesWithWorkspace, UmiUiReactiveBindingScheduler,
+    umi_ui_reactive_binding_scheduler_archive_encode, umi_ui_reactive_binding_scheduler_archive_decode_with_workspace, UmiUiReactiveBindingSchedulerTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveBindingSchedulerConditionalArchiveCases, UmiUiReactiveBindingScheduler,
     umi_ui_reactive_binding_scheduler_archive_encode, umi_ui_reactive_binding_scheduler_archive_decode_if_unchanged,
@@ -64,5 +69,6 @@ int main(void) { UmiUiReactiveBindingScheduler item; umi_ui_reactive_binding_sch
     populated.generation = (uint64_t)3;
     populated.suspended = true;
     if (UmiUiReactiveBindingSchedulerTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveBindingSchedulerTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveBindingSchedulerConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_binding_scheduler_valid(&item) ? 0 : 1; }

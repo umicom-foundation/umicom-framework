@@ -70,6 +70,11 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorWbPinnedEditorTransferCases, UmiEditorWbPinnedE
     umi_editor_wb_pinned_editor_archive_encode, umi_editor_wb_pinned_editor_archive_decode,
     UmiEditorWbPinnedEditorTransferEqual, UmiEditorWbPinnedEditorTransferTails, UmiEditorWbPinnedEditorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiEditorWbPinnedEditorTransferCasesWithWorkspace, UmiEditorWbPinnedEditor,
+    umi_editor_wb_pinned_editor_archive_encode, umi_editor_wb_pinned_editor_archive_decode_with_workspace, UmiEditorWbPinnedEditorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorWbPinnedEditorConditionalArchiveCases, UmiEditorWbPinnedEditor,
     umi_editor_wb_pinned_editor_archive_encode, umi_editor_wb_pinned_editor_archive_decode_if_unchanged,
@@ -82,5 +87,6 @@ int main(void){ UmiEditorWbPinnedEditor s; /* Preserve the original failure resu
         umi_editor_wb_pinned_editor_set(&s,true));
     if(umi_editor_wb_pinned_editor_set(&s,true)!=UMI_STATUS_OK)return 2; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_wb_pinned_editor_valid(&s)||!s.enabled)return 3;
     if (UmiEditorWbPinnedEditorTransferCases(&s) != 0) return 1;
+    if (UmiEditorWbPinnedEditorTransferCasesWithWorkspace(&s) != 0) return 1;
     if (UmiEditorWbPinnedEditorConditionalArchiveCases(&s) != 0) return 1;
  return 0; }

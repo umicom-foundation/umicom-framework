@@ -75,6 +75,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataStatementPlanTransferCases, UmiDataStatementPlan,
     umi_data_statement_plan_archive_encode, umi_data_statement_plan_archive_decode,
     UmiDataStatementPlanTransferEqual, UmiDataStatementPlanTransferTails, UmiDataStatementPlanTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataStatementPlanTransferCasesWithWorkspace, UmiDataStatementPlan,
+    umi_data_statement_plan_archive_encode, umi_data_statement_plan_archive_decode_with_workspace, UmiDataStatementPlanTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataStatementPlanConditionalArchiveCases, UmiDataStatementPlan,
     umi_data_statement_plan_archive_encode, umi_data_statement_plan_archive_decode_if_unchanged,
@@ -116,6 +121,7 @@ int main(void) {
     UmiDataStatementPlan item;
     CHECK(umi_data_statement_plan_init(&item,"stmt1",11U,22U,2U,true) == UMI_STATUS_OK);
     if (UmiDataStatementPlanTransferCases(&item) != 0) return 1;
+    if (UmiDataStatementPlanTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiDataStatementPlanConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.read_only);

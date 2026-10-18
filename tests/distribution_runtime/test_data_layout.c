@@ -106,6 +106,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDrDataLayoutTransferCases, UmiDrDataLayout,
     umi_dr_data_layout_archive_encode, umi_dr_data_layout_archive_decode,
     UmiDrDataLayoutTransferEqual, UmiDrDataLayoutTransferTails, UmiDrDataLayoutTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDrDataLayoutTransferCasesWithWorkspace, UmiDrDataLayout,
+    umi_dr_data_layout_archive_encode, umi_dr_data_layout_archive_decode_with_workspace, UmiDrDataLayoutTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrDataLayoutConditionalArchiveCases, UmiDrDataLayout,
     umi_dr_data_layout_archive_encode, umi_dr_data_layout_archive_decode_if_unchanged,
@@ -115,6 +120,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrDataLayoutConditionalArchiveCases, UmiDrDataLa
 int main(void) {
     UmiDrDataLayout value; umi_dr_data_layout_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"data")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.read_only_dir,sizeof(value.read_only_dir),"share")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.writable_dir,sizeof(value.writable_dir),"state")==UMI_STATUS_OK); CHECK(umi_dr_data_layout_valid(&value));
     if (UmiDrDataLayoutTransferCases(&value) != 0) return 1;
+    if (UmiDrDataLayoutTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDrDataLayoutConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_data_layout_fingerprint(&value) != 0U);
     return 0;

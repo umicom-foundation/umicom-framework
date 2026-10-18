@@ -76,6 +76,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricTransportProfileTransferCases, UmiFabricTranspo
     umi_fabric_transport_profile_archive_encode, umi_fabric_transport_profile_archive_decode,
     UmiFabricTransportProfileTransferEqual, UmiFabricTransportProfileTransferTails, UmiFabricTransportProfileTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFabricTransportProfileTransferCasesWithWorkspace, UmiFabricTransportProfile,
+    umi_fabric_transport_profile_archive_encode, umi_fabric_transport_profile_archive_decode_with_workspace, UmiFabricTransportProfileTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricTransportProfileConditionalArchiveCases, UmiFabricTransportProfile,
     umi_fabric_transport_profile_archive_encode, umi_fabric_transport_profile_archive_decode_if_unchanged,
@@ -117,6 +122,7 @@ int main(void) {
     UmiFabricTransportProfile item;
     CHECK(umi_fabric_transport_profile_init(&item,"secure",1048576U,1000U,5000U,true,true)==UMI_STATUS_OK);
     if (UmiFabricTransportProfileTransferCases(&item) != 0) return 1;
+    if (UmiFabricTransportProfileTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiFabricTransportProfileConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.tls_required);

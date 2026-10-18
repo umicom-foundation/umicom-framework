@@ -151,6 +151,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextEventLatencySampleTransferCases, UmiW
     umi_workbench_context_event_latency_sample_archive_encode, umi_workbench_context_event_latency_sample_archive_decode,
     UmiWorkbenchContextEventLatencySampleTransferEqual, UmiWorkbenchContextEventLatencySampleTransferTails, UmiWorkbenchContextEventLatencySampleTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextEventLatencySampleTransferCasesWithWorkspace, UmiWorkbenchContextEventLatencySample,
+    umi_workbench_context_event_latency_sample_archive_encode, umi_workbench_context_event_latency_sample_archive_decode_with_workspace, UmiWorkbenchContextEventLatencySampleTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextEventLatencySampleConditionalArchiveCases, UmiWorkbenchContextEventLatencySample,
     umi_workbench_context_event_latency_sample_archive_encode, umi_workbench_context_event_latency_sample_archive_decode_if_unchanged,
@@ -189,6 +194,7 @@ int main(void)
     assert(umi_workbench_context_event_latency_sample_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextEventLatencySampleTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextEventLatencySampleTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextEventLatencySampleConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextEventLatencySampleReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextEventLatencySampleMutationGuards(&record) != 0) return 1;

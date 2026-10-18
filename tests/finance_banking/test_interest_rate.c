@@ -67,6 +67,11 @@ UMI_TEST_VALUE_TRANSFER(UmiBankingInterestRateTransferCases, UmiBankingInterestR
     umi_banking_interest_rate_archive_encode, umi_banking_interest_rate_archive_decode,
     UmiBankingInterestRateTransferEqual, UmiBankingInterestRateTransferTails, UmiBankingInterestRateTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiBankingInterestRateTransferCasesWithWorkspace, UmiBankingInterestRate,
+    umi_banking_interest_rate_archive_encode, umi_banking_interest_rate_archive_decode_with_workspace, UmiBankingInterestRateTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiBankingInterestRateConditionalArchiveCases, UmiBankingInterestRate,
     umi_banking_interest_rate_archive_encode, umi_banking_interest_rate_archive_decode_if_unchanged,
@@ -80,6 +85,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if(!umi_banking_interest_rate_valid(&v)) return 2;
     if (UmiBankingInterestRateTransferCases(&v) != 0) return 1;
+    if (UmiBankingInterestRateTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiBankingInterestRateConditionalArchiveCases(&v) != 0) return 1;
 
     return 0;

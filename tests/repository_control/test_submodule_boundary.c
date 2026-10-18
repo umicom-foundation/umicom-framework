@@ -126,6 +126,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRepositorySubmoduleTransferCases, UmiRepositorySubmod
     umi_repository_submodule_archive_encode, umi_repository_submodule_archive_decode,
     UmiRepositorySubmoduleTransferEqual, UmiRepositorySubmoduleTransferTails, UmiRepositorySubmoduleTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRepositorySubmoduleTransferCasesWithWorkspace, UmiRepositorySubmodule,
+    umi_repository_submodule_archive_encode, umi_repository_submodule_archive_decode_with_workspace, UmiRepositorySubmoduleTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRepositorySubmoduleConditionalArchiveCases, UmiRepositorySubmodule,
     umi_repository_submodule_archive_encode, umi_repository_submodule_archive_decode_if_unchanged,
@@ -137,6 +142,7 @@ int main(void)
     UmiRepositorySubmodule s;
     assert(umi_repository_submodule_init(&s, "studio", "applications/studio", "", "", 0) == UMI_STATUS_OK);
     if (UmiRepositorySubmoduleTransferCases(&s) != 0) return 1;
+    if (UmiRepositorySubmoduleTransferCasesWithWorkspace(&s) != 0) return 1;
     if (UmiRepositorySubmoduleConditionalArchiveCases(&s) != 0) return 1;
 
     assert(s.branch[0] == '\0');

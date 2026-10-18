@@ -89,6 +89,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTerminalRemoteTerminalWorkspaceBindingTransferCases, 
     umi_terminal_remote_terminal_workspace_binding_archive_encode, umi_terminal_remote_terminal_workspace_binding_archive_decode,
     UmiTerminalRemoteTerminalWorkspaceBindingTransferEqual, UmiTerminalRemoteTerminalWorkspaceBindingTransferTails, UmiTerminalRemoteTerminalWorkspaceBindingTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTerminalRemoteTerminalWorkspaceBindingTransferCasesWithWorkspace, UmiTerminalRemoteTerminalWorkspaceBinding,
+    umi_terminal_remote_terminal_workspace_binding_archive_encode, umi_terminal_remote_terminal_workspace_binding_archive_decode_with_workspace, UmiTerminalRemoteTerminalWorkspaceBindingTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTerminalRemoteTerminalWorkspaceBindingConditionalArchiveCases, UmiTerminalRemoteTerminalWorkspaceBinding,
     umi_terminal_remote_terminal_workspace_binding_archive_encode, umi_terminal_remote_terminal_workspace_binding_archive_decode_if_unchanged,
@@ -97,5 +102,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiTerminalRemoteTerminalWorkspaceBindingConditiona
 
 int main(void) { UmiTerminalRemoteTerminalWorkspaceBinding v; umi_terminal_remote_terminal_workspace_binding_init(&v,"left","right"); /* Apply this operation only while the related capability or state is available. */ if(!umi_terminal_remote_terminal_workspace_binding_valid(&v)) return 1;
     if (UmiTerminalRemoteTerminalWorkspaceBindingTransferCases(&v) != 0) return 1;
+    if (UmiTerminalRemoteTerminalWorkspaceBindingTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTerminalRemoteTerminalWorkspaceBindingConditionalArchiveCases(&v) != 0) return 1;
  /* Apply this operation only while the related capability or state is available. */ if(umi_terminal_remote_terminal_workspace_binding_fingerprint(&v)==0U) return 2; umi_terminal_remote_terminal_workspace_binding_init(&v,"same","same"); return umi_terminal_remote_terminal_workspace_binding_valid(&v)?3:0; }

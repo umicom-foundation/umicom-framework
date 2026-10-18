@@ -93,6 +93,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataReplicaDescriptorTransferCases, UmiDataReplicaDes
     umi_data_replica_descriptor_archive_encode, umi_data_replica_descriptor_archive_decode,
     UmiDataReplicaDescriptorTransferEqual, UmiDataReplicaDescriptorTransferTails, UmiDataReplicaDescriptorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataReplicaDescriptorTransferCasesWithWorkspace, UmiDataReplicaDescriptor,
+    umi_data_replica_descriptor_archive_encode, umi_data_replica_descriptor_archive_decode_with_workspace, UmiDataReplicaDescriptorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataReplicaDescriptorConditionalArchiveCases, UmiDataReplicaDescriptor,
     umi_data_replica_descriptor_archive_encode, umi_data_replica_descriptor_archive_decode_if_unchanged,
@@ -146,6 +151,7 @@ int main(void) {
     UmiDataReplicaDescriptor item;
     CHECK(umi_data_replica_descriptor_init(&item,"r1","db://primary",1U,true) == UMI_STATUS_OK);
     if (UmiDataReplicaDescriptorTransferCases(&item) != 0) return 1;
+    if (UmiDataReplicaDescriptorTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiDataReplicaDescriptorConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.primary && item.writable);

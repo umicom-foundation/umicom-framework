@@ -104,6 +104,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicContextRouteTransferCases, UmiUiMosaicContext
     umi_ui_mosaic_context_route_archive_encode, umi_ui_mosaic_context_route_archive_decode,
     UmiUiMosaicContextRouteTransferEqual, UmiUiMosaicContextRouteTransferTails, UmiUiMosaicContextRouteTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiMosaicContextRouteTransferCasesWithWorkspace, UmiUiMosaicContextRoute,
+    umi_ui_mosaic_context_route_archive_encode, umi_ui_mosaic_context_route_archive_decode_with_workspace, UmiUiMosaicContextRouteTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicContextRouteConditionalArchiveCases, UmiUiMosaicContextRoute,
     umi_ui_mosaic_context_route_archive_encode, umi_ui_mosaic_context_route_archive_decode_if_unchanged,
@@ -117,6 +122,7 @@ int main(void) {
     value.colour_index = 2U;
     CHECK(umi_ui_mosaic_context_route_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicContextRouteTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicContextRouteTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiUiMosaicContextRouteConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

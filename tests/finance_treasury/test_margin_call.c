@@ -68,6 +68,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryMarginCallTransferCases, UmiTreasuryMarginCal
     umi_treasury_margin_call_archive_encode, umi_treasury_margin_call_archive_decode,
     UmiTreasuryMarginCallTransferEqual, UmiTreasuryMarginCallTransferTails, UmiTreasuryMarginCallTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTreasuryMarginCallTransferCasesWithWorkspace, UmiTreasuryMarginCall,
+    umi_treasury_margin_call_archive_encode, umi_treasury_margin_call_archive_decode_with_workspace, UmiTreasuryMarginCallTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryMarginCallConditionalArchiveCases, UmiTreasuryMarginCall,
     umi_treasury_margin_call_archive_encode, umi_treasury_margin_call_archive_decode_if_unchanged,
@@ -79,6 +84,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_margin_call_init(&v, "mc", 1000, 900, UMI_TREASURY_MARGIN_AGREED) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryMarginCallTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryMarginCallTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTreasuryMarginCallConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */

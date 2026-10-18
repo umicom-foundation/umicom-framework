@@ -104,6 +104,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicContextLinkColourTransferCases, UmiUiMosaicCo
     umi_ui_mosaic_context_link_colour_archive_encode, umi_ui_mosaic_context_link_colour_archive_decode,
     UmiUiMosaicContextLinkColourTransferEqual, UmiUiMosaicContextLinkColourTransferTails, UmiUiMosaicContextLinkColourTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiMosaicContextLinkColourTransferCasesWithWorkspace, UmiUiMosaicContextLinkColour,
+    umi_ui_mosaic_context_link_colour_archive_encode, umi_ui_mosaic_context_link_colour_archive_decode_with_workspace, UmiUiMosaicContextLinkColourTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicContextLinkColourConditionalArchiveCases, UmiUiMosaicContextLinkColour,
     umi_ui_mosaic_context_link_colour_archive_encode, umi_ui_mosaic_context_link_colour_archive_decode_if_unchanged,
@@ -117,6 +122,7 @@ int main(void) {
     value.colour_index = 2U;
     CHECK(umi_ui_mosaic_context_link_colour_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicContextLinkColourTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicContextLinkColourTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiUiMosaicContextLinkColourConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

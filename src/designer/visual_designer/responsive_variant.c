@@ -92,6 +92,12 @@ static UmiStatus UmiRadResponsiveVariantArchiveValidate(const UmiRadResponsiveVa
 UMI_DEFINE_VALUE_ARCHIVE(umi_rad_responsive_variant_archive_encode, umi_rad_responsive_variant_archive_decode,
     UmiRadResponsiveVariant, UmiRadResponsiveVariantArchiveSchema, UmiRadResponsiveVariantArchiveBound, UmiRadResponsiveVariantArchiveWrite, UmiRadResponsiveVariantArchiveRead, UmiRadResponsiveVariantArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_rad_responsive_variant_archive_decode_with_workspace, UmiRadResponsiveVariant,
+    UmiRadResponsiveVariantArchiveSchema, UmiRadResponsiveVariantArchiveBound, UmiRadResponsiveVariantArchiveRead, UmiRadResponsiveVariantArchiveValidate)
+
 /* Guard restoration with the previously reviewed encoded value. Domain field
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_rad_responsive_variant_archive_decode_if_unchanged, umi_rad_responsive_variant_archive_encode,

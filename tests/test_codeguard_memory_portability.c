@@ -14,6 +14,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Memory and portability v2 | Sammy Hegab | Umicom Foundation | MIT */
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #include <assert.h>
 #include "umicom/codeguard/memory_audit.h"
 #include "umicom/codeguard/portability_audit.h"

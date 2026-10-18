@@ -63,6 +63,17 @@ UmiStatus umi_application_session_snapshot_archive_encode(
 UmiStatus umi_application_session_snapshot_archive_decode(
     const void *bytes, size_t byte_count, UmiApplicationSessionSnapshot *out_snapshot);
 
+/** Decode with caller-owned staging storage rather than a whole-record stack value.
+ * workspace and value must each point to a complete, correctly aligned
+ * UmiApplicationSessionSnapshot object. Input bytes, scratch and destination must
+ * not overlap; overlap is INVALID_ARGUMENT. Every refusal leaves value
+ * unchanged. Scratch may be changed and must not be used as a live owner.
+ * This call allocates nothing and performs no I/O. Serialize access for
+ * the complete call; use the domain publication API to accept live state.
+ * See umicom/base/value_archive.h for format and workspace ownership. */
+UmiStatus umi_application_session_snapshot_archive_decode_with_workspace(const void *bytes, size_t byte_count,
+    UmiApplicationSessionSnapshot *workspace, UmiApplicationSessionSnapshot *value);
+
 /* Capture a live session or preview an archive against a product catalogue.
  * Catalogue memory must outlive every resulting session. The preview does not
  * open panels, run commands, create connections or access storage. */

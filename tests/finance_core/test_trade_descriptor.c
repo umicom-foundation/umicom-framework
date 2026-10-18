@@ -109,6 +109,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTradeDescriptorTransferCases, UmiTradeDescriptor,
     umi_trade_descriptor_archive_encode, umi_trade_descriptor_archive_decode,
     UmiTradeDescriptorTransferEqual, UmiTradeDescriptorTransferTails, UmiTradeDescriptorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTradeDescriptorTransferCasesWithWorkspace, UmiTradeDescriptor,
+    umi_trade_descriptor_archive_encode, umi_trade_descriptor_archive_decode_with_workspace, UmiTradeDescriptorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTradeDescriptorConditionalArchiveCases, UmiTradeDescriptor,
     umi_trade_descriptor_archive_encode, umi_trade_descriptor_archive_decode_if_unchanged,
@@ -119,6 +124,7 @@ int main(void)
 {
     UmiTradeDescriptor x; CHECK(umi_trade_descriptor_init(&x,"ID","Name","PARENT",(UmiFinancialDate){2026,8U,25U},1U)==UMI_STATUS_OK); CHECK(umi_trade_descriptor_is_valid(&x));
     if (UmiTradeDescriptorTransferCases(&x) != 0) return 1;
+    if (UmiTradeDescriptorTransferCasesWithWorkspace(&x) != 0) return 1;
     if (UmiTradeDescriptorConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;

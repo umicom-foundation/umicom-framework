@@ -13,6 +13,8 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "../support/assertions.h"
 #include "test_support.h"
 #include <assert.h>
 #include <string.h>

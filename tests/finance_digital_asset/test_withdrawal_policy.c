@@ -75,6 +75,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalWithdrawalPolicyTransferCases, UmiDigitalWithd
     umi_digital_asset_withdrawal_policy_archive_encode, umi_digital_asset_withdrawal_policy_archive_decode,
     UmiDigitalWithdrawalPolicyTransferEqual, UmiDigitalWithdrawalPolicyTransferTails, UmiDigitalWithdrawalPolicyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDigitalWithdrawalPolicyTransferCasesWithWorkspace, UmiDigitalWithdrawalPolicy,
+    umi_digital_asset_withdrawal_policy_archive_encode, umi_digital_asset_withdrawal_policy_archive_decode_with_workspace, UmiDigitalWithdrawalPolicyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalWithdrawalPolicyConditionalArchiveCases, UmiDigitalWithdrawalPolicy,
     umi_digital_asset_withdrawal_policy_archive_encode, umi_digital_asset_withdrawal_policy_archive_decode_if_unchanged,
@@ -87,6 +92,7 @@ int main(void)
     CHECK(umi_digital_asset_withdrawal_policy_init(&value, "CUST-1", 1000000, 100000, 8, true) == UMI_STATUS_OK);
     CHECK(umi_digital_asset_withdrawal_policy_valid(&value));
     if (UmiDigitalWithdrawalPolicyTransferCases(&value) != 0) return 1;
+    if (UmiDigitalWithdrawalPolicyTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDigitalWithdrawalPolicyConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

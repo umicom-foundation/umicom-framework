@@ -133,6 +133,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPanelContextBindingTransferCases, UmiPanelContextBind
     umi_panel_context_binding_archive_encode, umi_panel_context_binding_archive_decode,
     UmiPanelContextBindingTransferEqual, UmiPanelContextBindingTransferTails, UmiPanelContextBindingTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPanelContextBindingTransferCasesWithWorkspace, UmiPanelContextBinding,
+    umi_panel_context_binding_archive_encode, umi_panel_context_binding_archive_decode_with_workspace, UmiPanelContextBindingTransferEqual)
+
 #include "../conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPanelContextBindingConditionalArchiveCases, UmiPanelContextBinding,
     umi_panel_context_binding_archive_encode, umi_panel_context_binding_archive_decode_if_unchanged,
@@ -153,6 +158,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_panel_context_binding_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiPanelContextBindingTransferCases(&value) != 0) return 1;
+    if (UmiPanelContextBindingTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiPanelContextBindingConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

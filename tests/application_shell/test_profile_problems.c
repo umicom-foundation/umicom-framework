@@ -12,6 +12,8 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "../support/assertions.h"
 #include <assert.h>
 
 #include "umicom/application_shell/profiles/problems.h"

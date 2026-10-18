@@ -106,6 +106,11 @@ UMI_TEST_VALUE_TRANSFER(UmiLanguageIntelligenceProjectLanguageMapTransferCases, 
     umi_language_intelligence_project_language_map_archive_encode, umi_language_intelligence_project_language_map_archive_decode,
     UmiLanguageIntelligenceProjectLanguageMapTransferEqual, UmiLanguageIntelligenceProjectLanguageMapTransferTails, UmiLanguageIntelligenceProjectLanguageMapTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiLanguageIntelligenceProjectLanguageMapTransferCasesWithWorkspace, UmiLanguageIntelligenceProjectLanguageMap,
+    umi_language_intelligence_project_language_map_archive_encode, umi_language_intelligence_project_language_map_archive_decode_with_workspace, UmiLanguageIntelligenceProjectLanguageMapTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiLanguageIntelligenceProjectLanguageMapConditionalArchiveCases, UmiLanguageIntelligenceProjectLanguageMap,
     umi_language_intelligence_project_language_map_archive_encode, umi_language_intelligence_project_language_map_archive_decode_if_unchanged,
@@ -119,6 +124,7 @@ int main(void)
     CHECK(umi_language_intelligence_project_language_map_set(&mapping, "c", "clangd", "workspace") == UMI_STATUS_OK);
     CHECK(umi_language_intelligence_project_language_map_validate(&mapping) == UMI_STATUS_OK);
     if (UmiLanguageIntelligenceProjectLanguageMapTransferCases(&mapping) != 0) return 1;
+    if (UmiLanguageIntelligenceProjectLanguageMapTransferCasesWithWorkspace(&mapping) != 0) return 1;
     if (UmiLanguageIntelligenceProjectLanguageMapConditionalArchiveCases(&mapping) != 0) return 1;
 
     CHECK(umi_language_intelligence_project_language_map_matches(&mapping, "c", "workspace") != 0);

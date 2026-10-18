@@ -112,6 +112,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDiagnosticSeveritySummaryTransferCases, UmiDiagnostic
     umi_diagnostic_severity_summary_archive_encode, umi_diagnostic_severity_summary_archive_decode,
     UmiDiagnosticSeveritySummaryTransferEqual, UmiDiagnosticSeveritySummaryTransferTails, UmiDiagnosticSeveritySummaryTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDiagnosticSeveritySummaryTransferCasesWithWorkspace, UmiDiagnosticSeveritySummary,
+    umi_diagnostic_severity_summary_archive_encode, umi_diagnostic_severity_summary_archive_decode_with_workspace, UmiDiagnosticSeveritySummaryTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDiagnosticSeveritySummaryConditionalArchiveCases, UmiDiagnosticSeveritySummary,
     umi_diagnostic_severity_summary_archive_encode, umi_diagnostic_severity_summary_archive_decode_if_unchanged,
@@ -138,5 +143,6 @@ int main(void){UmiDiagnosticSeveritySummary m;assert(umi_diagnostic_severity_sum
         umi_diagnostic_severity_summary_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
     assert(umi_diagnostic_severity_summary_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_diagnostic_severity_summary_valid(&m));
     if (UmiDiagnosticSeveritySummaryTransferCases(&m) != 0) return 1;
+    if (UmiDiagnosticSeveritySummaryTransferCasesWithWorkspace(&m) != 0) return 1;
     if (UmiDiagnosticSeveritySummaryConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

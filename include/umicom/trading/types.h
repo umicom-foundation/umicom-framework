@@ -284,6 +284,17 @@ UmiStatus umi_replay_event_archive_encode(const UmiReplayEvent *value,
 UmiStatus umi_replay_event_archive_decode(const void *bytes, size_t byte_count,
     UmiReplayEvent *value);
 
+/** Decode with caller-owned staging storage rather than a whole-record stack value.
+ * workspace and value must each point to a complete, correctly aligned
+ * UmiReplayEvent object. Input bytes, scratch and destination must
+ * not overlap; overlap is INVALID_ARGUMENT. Every refusal leaves value
+ * unchanged. Scratch may be changed and must not be used as a live owner.
+ * This call allocates nothing and performs no I/O. Serialize access for
+ * the complete call; use the domain publication API to accept live state.
+ * See umicom/base/value_archive.h for format and workspace ownership. */
+UmiStatus umi_replay_event_archive_decode_with_workspace(const void *bytes, size_t byte_count,
+    UmiReplayEvent *workspace, UmiReplayEvent *value);
+
 /** Decode only if value's encoded fields still match the expected snapshot.
  * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
  * Comparison ignores padding and unused text; decoded revisions remain archive
@@ -304,6 +315,17 @@ UmiStatus umi_risk_limit_archive_encode(const UmiRiskLimit *value,
     void *bytes, size_t capacity, size_t *out_size);
 UmiStatus umi_risk_limit_archive_decode(const void *bytes, size_t byte_count,
     UmiRiskLimit *value);
+
+/** Decode with caller-owned staging storage rather than a whole-record stack value.
+ * workspace and value must each point to a complete, correctly aligned
+ * UmiRiskLimit object. Input bytes, scratch and destination must
+ * not overlap; overlap is INVALID_ARGUMENT. Every refusal leaves value
+ * unchanged. Scratch may be changed and must not be used as a live owner.
+ * This call allocates nothing and performs no I/O. Serialize access for
+ * the complete call; use the domain publication API to accept live state.
+ * See umicom/base/value_archive.h for format and workspace ownership. */
+UmiStatus umi_risk_limit_archive_decode_with_workspace(const void *bytes, size_t byte_count,
+    UmiRiskLimit *workspace, UmiRiskLimit *value);
 
 /** Decode only if value's encoded fields still match the expected snapshot.
  * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
@@ -326,6 +348,17 @@ UmiStatus umi_bar_archive_encode(const UmiBar *value,
 UmiStatus umi_bar_archive_decode(const void *bytes, size_t byte_count,
     UmiBar *value);
 
+/** Decode with caller-owned staging storage rather than a whole-record stack value.
+ * workspace and value must each point to a complete, correctly aligned
+ * UmiBar object. Input bytes, scratch and destination must
+ * not overlap; overlap is INVALID_ARGUMENT. Every refusal leaves value
+ * unchanged. Scratch may be changed and must not be used as a live owner.
+ * This call allocates nothing and performs no I/O. Serialize access for
+ * the complete call; use the domain publication API to accept live state.
+ * See umicom/base/value_archive.h for format and workspace ownership. */
+UmiStatus umi_bar_archive_decode_with_workspace(const void *bytes, size_t byte_count,
+    UmiBar *workspace, UmiBar *value);
+
 /** Decode only if value's encoded fields still match the expected snapshot.
  * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.
  * Comparison ignores padding and unused text; decoded revisions remain archive
@@ -346,6 +379,17 @@ UmiStatus umi_order_request_archive_encode(const UmiOrderRequest *value,
     void *bytes, size_t capacity, size_t *out_size);
 UmiStatus umi_order_request_archive_decode(const void *bytes, size_t byte_count,
     UmiOrderRequest *value);
+
+/** Decode with caller-owned staging storage rather than a whole-record stack value.
+ * workspace and value must each point to a complete, correctly aligned
+ * UmiOrderRequest object. Input bytes, scratch and destination must
+ * not overlap; overlap is INVALID_ARGUMENT. Every refusal leaves value
+ * unchanged. Scratch may be changed and must not be used as a live owner.
+ * This call allocates nothing and performs no I/O. Serialize access for
+ * the complete call; use the domain publication API to accept live state.
+ * See umicom/base/value_archive.h for format and workspace ownership. */
+UmiStatus umi_order_request_archive_decode_with_workspace(const void *bytes, size_t byte_count,
+    UmiOrderRequest *workspace, UmiOrderRequest *value);
 
 /** Decode only if value's encoded fields still match the expected snapshot.
  * INVALID_STATE reports a changed snapshot. Every failure leaves value intact.

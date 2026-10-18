@@ -133,6 +133,12 @@ static UmiStatus UmiVcsAdvancedDiffOptionsArchiveValidate(const UmiVcsAdvancedDi
 UMI_DEFINE_VALUE_ARCHIVE(umi_vcs_advanced_diff_options_archive_encode, umi_vcs_advanced_diff_options_archive_decode,
     UmiVcsAdvancedDiffOptions, UmiVcsAdvancedDiffOptionsArchiveSchema, UmiVcsAdvancedDiffOptionsArchiveBound, UmiVcsAdvancedDiffOptionsArchiveWrite, UmiVcsAdvancedDiffOptionsArchiveRead, UmiVcsAdvancedDiffOptionsArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_vcs_advanced_diff_options_archive_decode_with_workspace, UmiVcsAdvancedDiffOptions,
+    UmiVcsAdvancedDiffOptionsArchiveSchema, UmiVcsAdvancedDiffOptionsArchiveBound, UmiVcsAdvancedDiffOptionsArchiveRead, UmiVcsAdvancedDiffOptionsArchiveValidate)
+
 /* Guard restoration with the previously reviewed encoded value. Domain field
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_vcs_advanced_diff_options_archive_decode_if_unchanged, umi_vcs_advanced_diff_options_archive_encode,

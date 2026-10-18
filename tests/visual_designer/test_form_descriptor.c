@@ -120,6 +120,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRadFormDescriptorTransferCases, UmiRadFormDescriptor,
     umi_rad_form_descriptor_archive_encode, umi_rad_form_descriptor_archive_decode,
     UmiRadFormDescriptorTransferEqual, UmiRadFormDescriptorTransferTails, UmiRadFormDescriptorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRadFormDescriptorTransferCasesWithWorkspace, UmiRadFormDescriptor,
+    umi_rad_form_descriptor_archive_encode, umi_rad_form_descriptor_archive_decode_with_workspace, UmiRadFormDescriptorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadFormDescriptorConditionalArchiveCases, UmiRadFormDescriptor,
     umi_rad_form_descriptor_archive_encode, umi_rad_form_descriptor_archive_decode_if_unchanged,
@@ -128,5 +133,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadFormDescriptorConditionalArchiveCases, UmiRad
 
 int main(void){UmiRadFormDescriptor item;CHECK(umi_rad_form_descriptor_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_form_descriptor_is_valid(&item));
     if (UmiRadFormDescriptorTransferCases(&item) != 0) return 1;
+    if (UmiRadFormDescriptorTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiRadFormDescriptorConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

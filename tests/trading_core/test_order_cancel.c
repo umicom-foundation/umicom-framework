@@ -67,6 +67,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTradingOrderCancelTransferCases, UmiTradingOrderCance
     umi_trading_order_cancel_archive_encode, umi_trading_order_cancel_archive_decode,
     UmiTradingOrderCancelTransferEqual, UmiTradingOrderCancelTransferTails, UmiTradingOrderCancelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTradingOrderCancelTransferCasesWithWorkspace, UmiTradingOrderCancel,
+    umi_trading_order_cancel_archive_encode, umi_trading_order_cancel_archive_decode_with_workspace, UmiTradingOrderCancelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTradingOrderCancelConditionalArchiveCases, UmiTradingOrderCancel,
     umi_trading_order_cancel_archive_encode, umi_trading_order_cancel_archive_decode_if_unchanged,
@@ -83,6 +88,7 @@ int main(void) {
      /* Apply this operation only while the related capability or state is available. */
      if(!umi_trading_order_cancel_valid(&v)) return 2;
     if (UmiTradingOrderCancelTransferCases(&v) != 0) return 1;
+    if (UmiTradingOrderCancelTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTradingOrderCancelConditionalArchiveCases(&v) != 0) return 1;
 
      return 0;

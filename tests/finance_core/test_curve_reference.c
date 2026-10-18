@@ -105,6 +105,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCurveReferenceTransferCases, UmiCurveReference,
     umi_curve_reference_archive_encode, umi_curve_reference_archive_decode,
     UmiCurveReferenceTransferEqual, UmiCurveReferenceTransferTails, UmiCurveReferenceTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCurveReferenceTransferCasesWithWorkspace, UmiCurveReference,
+    umi_curve_reference_archive_encode, umi_curve_reference_archive_decode_with_workspace, UmiCurveReferenceTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCurveReferenceConditionalArchiveCases, UmiCurveReference,
     umi_curve_reference_archive_encode, umi_curve_reference_archive_decode_if_unchanged,
@@ -115,6 +120,7 @@ int main(void)
 {
     UmiCurveReference x; CHECK(umi_curve_reference_init(&x,"ID","Name","CODE")==UMI_STATUS_OK); CHECK(umi_curve_reference_is_valid(&x));
     if (UmiCurveReferenceTransferCases(&x) != 0) return 1;
+    if (UmiCurveReferenceTransferCasesWithWorkspace(&x) != 0) return 1;
     if (UmiCurveReferenceConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;

@@ -102,6 +102,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearancePaletteResolutionTransferCases, UmiAppearan
     umi_appearance_palette_resolution_archive_encode, umi_appearance_palette_resolution_archive_decode,
     UmiAppearancePaletteResolutionTransferEqual, UmiAppearancePaletteResolutionTransferTails, UmiAppearancePaletteResolutionTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAppearancePaletteResolutionTransferCasesWithWorkspace, UmiAppearancePaletteResolution,
+    umi_appearance_palette_resolution_archive_encode, umi_appearance_palette_resolution_archive_decode_with_workspace, UmiAppearancePaletteResolutionTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearancePaletteResolutionConditionalArchiveCases, UmiAppearancePaletteResolution,
     umi_appearance_palette_resolution_archive_encode, umi_appearance_palette_resolution_archive_decode_if_unchanged,
@@ -115,6 +120,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_palette_resolution_is_valid(&item)) return 2;
     if (UmiAppearancePaletteResolutionTransferCases(&item) != 0) return 1;
+    if (UmiAppearancePaletteResolutionTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiAppearancePaletteResolutionConditionalArchiveCases(&item) != 0) return 1;
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */

@@ -112,6 +112,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTestParallelismModelTransferCases, UmiTestParallelism
     umi_test_parallelism_model_archive_encode, umi_test_parallelism_model_archive_decode,
     UmiTestParallelismModelTransferEqual, UmiTestParallelismModelTransferTails, UmiTestParallelismModelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTestParallelismModelTransferCasesWithWorkspace, UmiTestParallelismModel,
+    umi_test_parallelism_model_archive_encode, umi_test_parallelism_model_archive_decode_with_workspace, UmiTestParallelismModelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestParallelismModelConditionalArchiveCases, UmiTestParallelismModel,
     umi_test_parallelism_model_archive_encode, umi_test_parallelism_model_archive_decode_if_unchanged,
@@ -138,5 +143,6 @@ int main(void){UmiTestParallelismModel m;assert(umi_test_parallelism_model_init(
         umi_test_parallelism_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
     assert(umi_test_parallelism_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_parallelism_model_valid(&m));
     if (UmiTestParallelismModelTransferCases(&m) != 0) return 1;
+    if (UmiTestParallelismModelTransferCasesWithWorkspace(&m) != 0) return 1;
     if (UmiTestParallelismModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

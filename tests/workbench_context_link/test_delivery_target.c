@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkDeliveryTargetTransferCases, UmiW
     umi_workbench_context_link_delivery_target_archive_encode, umi_workbench_context_link_delivery_target_archive_decode,
     UmiWorkbenchContextLinkDeliveryTargetTransferEqual, UmiWorkbenchContextLinkDeliveryTargetTransferTails, UmiWorkbenchContextLinkDeliveryTargetTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextLinkDeliveryTargetTransferCasesWithWorkspace, UmiWorkbenchContextLinkDeliveryTarget,
+    umi_workbench_context_link_delivery_target_archive_encode, umi_workbench_context_link_delivery_target_archive_decode_with_workspace, UmiWorkbenchContextLinkDeliveryTargetTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkDeliveryTargetConditionalArchiveCases, UmiWorkbenchContextLinkDeliveryTarget,
     umi_workbench_context_link_delivery_target_archive_encode, umi_workbench_context_link_delivery_target_archive_decode_if_unchanged,
@@ -151,6 +156,7 @@ int main(void)
     umi_workbench_context_link_delivery_target_init(&record, "delivery_target-id");
     assert(umi_workbench_context_link_delivery_target_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkDeliveryTargetTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkDeliveryTargetTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkDeliveryTargetConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkDeliveryTargetReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkDeliveryTargetMutationGuards(&record) != 0) return 1;

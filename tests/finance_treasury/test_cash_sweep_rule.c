@@ -67,6 +67,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryCashSweepRuleTransferCases, UmiTreasuryCashSw
     umi_treasury_cash_sweep_rule_archive_encode, umi_treasury_cash_sweep_rule_archive_decode,
     UmiTreasuryCashSweepRuleTransferEqual, UmiTreasuryCashSweepRuleTransferTails, UmiTreasuryCashSweepRuleTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTreasuryCashSweepRuleTransferCasesWithWorkspace, UmiTreasuryCashSweepRule,
+    umi_treasury_cash_sweep_rule_archive_encode, umi_treasury_cash_sweep_rule_archive_decode_with_workspace, UmiTreasuryCashSweepRuleTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryCashSweepRuleConditionalArchiveCases, UmiTreasuryCashSweepRule,
     umi_treasury_cash_sweep_rule_archive_encode, umi_treasury_cash_sweep_rule_archive_decode_if_unchanged,
@@ -78,6 +83,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_cash_sweep_rule_init(&v, "sweep-rule", 1000, 250) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryCashSweepRuleTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryCashSweepRuleTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTreasuryCashSweepRuleConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */

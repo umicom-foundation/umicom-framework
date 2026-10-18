@@ -71,6 +71,8 @@ static UmiStatus RestoreObserved(const void *bytes, size_t length,
 #define ARCHIVE_TYPE UmiTestRuntimeEnvironment
 #define ARCHIVE_ENCODE umi_test_runtime_environment_archive_encode
 #define ARCHIVE_DECODE umi_test_runtime_environment_archive_decode
+/* Use explicit caller-owned scratch for the same snapshot import contract. */
+#define ARCHIVE_WORKSPACE_DECODE umi_test_runtime_environment_archive_decode_with_workspace
 #define ARCHIVE_CONDITIONAL_DECODE RestoreObserved
 #define ARCHIVE_EQUAL SamplesEqual
 #include "record_cases.h"

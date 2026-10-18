@@ -14,6 +14,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Umicom Framework Tests | Package trust v2 | Sammy Hegab | Umicom Foundation | MIT */
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #include <assert.h>
 #include <stdio.h>
 #include "umicom/security/package_trust.h"

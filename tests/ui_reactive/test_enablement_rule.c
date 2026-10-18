@@ -84,6 +84,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveEnablementRuleTransferCases, UmiUiReactiveE
     umi_ui_reactive_enablement_rule_archive_encode, umi_ui_reactive_enablement_rule_archive_decode,
     UmiUiReactiveEnablementRuleTransferEqual, UmiUiReactiveEnablementRuleTransferTails, UmiUiReactiveEnablementRuleTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveEnablementRuleTransferCasesWithWorkspace, UmiUiReactiveEnablementRule,
+    umi_ui_reactive_enablement_rule_archive_encode, umi_ui_reactive_enablement_rule_archive_decode_with_workspace, UmiUiReactiveEnablementRuleTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveEnablementRuleConditionalArchiveCases, UmiUiReactiveEnablementRule,
     umi_ui_reactive_enablement_rule_archive_encode, umi_ui_reactive_enablement_rule_archive_decode_if_unchanged,
@@ -98,5 +103,6 @@ int main(void) { UmiUiReactiveEnablementRule item; umi_ui_reactive_enablement_ru
     (void)snprintf(populated.expression, sizeof(populated.expression), "field-1");
     populated.enabled = true;
     if (UmiUiReactiveEnablementRuleTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveEnablementRuleTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveEnablementRuleConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_enablement_rule_valid(&item) ? 0 : 1; }

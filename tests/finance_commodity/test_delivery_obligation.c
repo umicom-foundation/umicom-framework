@@ -110,6 +110,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCommodityDeliveryObligationTransferCases, UmiCommodit
     umi_commodity_delivery_obligation_archive_encode, umi_commodity_delivery_obligation_archive_decode,
     UmiCommodityDeliveryObligationTransferEqual, UmiCommodityDeliveryObligationTransferTails, UmiCommodityDeliveryObligationTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCommodityDeliveryObligationTransferCasesWithWorkspace, UmiCommodityDeliveryObligation,
+    umi_commodity_delivery_obligation_archive_encode, umi_commodity_delivery_obligation_archive_decode_with_workspace, UmiCommodityDeliveryObligationTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCommodityDeliveryObligationConditionalArchiveCases, UmiCommodityDeliveryObligation,
     umi_commodity_delivery_obligation_archive_encode, umi_commodity_delivery_obligation_archive_decode_if_unchanged,
@@ -122,6 +127,7 @@ int main(void)
     CHECK(umi_commodity_delivery_obligation_init(&value, "DEL-1", "CTR-1", 100, 0, "MT", 5000) == UMI_STATUS_OK);
     CHECK(umi_commodity_delivery_obligation_valid(&value));
     if (UmiCommodityDeliveryObligationTransferCases(&value) != 0) return 1;
+    if (UmiCommodityDeliveryObligationTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiCommodityDeliveryObligationConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

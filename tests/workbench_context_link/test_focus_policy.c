@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkFocusPolicyTransferCases, UmiWork
     umi_workbench_context_link_focus_policy_archive_encode, umi_workbench_context_link_focus_policy_archive_decode,
     UmiWorkbenchContextLinkFocusPolicyTransferEqual, UmiWorkbenchContextLinkFocusPolicyTransferTails, UmiWorkbenchContextLinkFocusPolicyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextLinkFocusPolicyTransferCasesWithWorkspace, UmiWorkbenchContextLinkFocusPolicy,
+    umi_workbench_context_link_focus_policy_archive_encode, umi_workbench_context_link_focus_policy_archive_decode_with_workspace, UmiWorkbenchContextLinkFocusPolicyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkFocusPolicyConditionalArchiveCases, UmiWorkbenchContextLinkFocusPolicy,
     umi_workbench_context_link_focus_policy_archive_encode, umi_workbench_context_link_focus_policy_archive_decode_if_unchanged,
@@ -151,6 +156,7 @@ int main(void)
     umi_workbench_context_link_focus_policy_init(&record, "focus_policy-id");
     assert(umi_workbench_context_link_focus_policy_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkFocusPolicyTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkFocusPolicyTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkFocusPolicyConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkFocusPolicyReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkFocusPolicyMutationGuards(&record) != 0) return 1;

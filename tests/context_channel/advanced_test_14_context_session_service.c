@@ -131,6 +131,11 @@ UMI_TEST_VALUE_TRANSFER(UmiContextSessionServiceTransferCases, UmiContextSession
     umi_context_session_service_archive_encode, umi_context_session_service_archive_decode,
     UmiContextSessionServiceTransferEqual, UmiContextSessionServiceTransferTails, UmiContextSessionServiceTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiContextSessionServiceTransferCasesWithWorkspace, UmiContextSessionService,
+    umi_context_session_service_archive_encode, umi_context_session_service_archive_decode_with_workspace, UmiContextSessionServiceTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextSessionServiceConditionalArchiveCases, UmiContextSessionService,
     umi_context_session_service_archive_encode, umi_context_session_service_archive_decode_if_unchanged,
@@ -169,6 +174,7 @@ int main(void)
     assert(umi_context_session_service_covers_sequence(&state,11U));
     assert(umi_context_session_service_validate(&state) == UMI_STATUS_OK);
     if (UmiContextSessionServiceTransferCases(&state) != 0) return 1;
+    if (UmiContextSessionServiceTransferCasesWithWorkspace(&state) != 0) return 1;
     if (UmiContextSessionServiceConditionalArchiveCases(&state) != 0) return 1;
 
     return 0;

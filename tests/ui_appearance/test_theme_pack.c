@@ -121,6 +121,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceThemePackTransferCases, UmiAppearanceThemeP
     umi_appearance_theme_pack_archive_encode, umi_appearance_theme_pack_archive_decode,
     UmiAppearanceThemePackTransferEqual, UmiAppearanceThemePackTransferTails, UmiAppearanceThemePackTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAppearanceThemePackTransferCasesWithWorkspace, UmiAppearanceThemePack,
+    umi_appearance_theme_pack_archive_encode, umi_appearance_theme_pack_archive_decode_with_workspace, UmiAppearanceThemePackTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceThemePackConditionalArchiveCases, UmiAppearanceThemePack,
     umi_appearance_theme_pack_archive_encode, umi_appearance_theme_pack_archive_decode_if_unchanged,
@@ -134,6 +139,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_theme_pack_is_valid(&item)) return 2;
     if (UmiAppearanceThemePackTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceThemePackTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiAppearanceThemePackConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;

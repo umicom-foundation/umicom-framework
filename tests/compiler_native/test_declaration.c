@@ -72,6 +72,11 @@ UMI_TEST_VALUE_TRANSFER(UmiNativeDeclarationTransferCases, UmiNativeDeclaration,
     umi_nc_declaration_archive_encode, umi_nc_declaration_archive_decode,
     UmiNativeDeclarationTransferEqual, UmiNativeDeclarationTransferTails, UmiNativeDeclarationTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiNativeDeclarationTransferCasesWithWorkspace, UmiNativeDeclaration,
+    umi_nc_declaration_archive_encode, umi_nc_declaration_archive_decode_with_workspace, UmiNativeDeclarationTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiNativeDeclarationConditionalArchiveCases, UmiNativeDeclaration,
     umi_nc_declaration_archive_encode, umi_nc_declaration_archive_decode_if_unchanged,
@@ -111,5 +116,6 @@ int main(void){
     if (UmiNativeDeclarationConstructionCases() != 0) return 1;
  UmiNativeDeclaration d;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_nc_declaration_init(&d,1U,UMI_NC_DECL_FUNCTION,"main",2U)!=UMI_STATUS_OK)return 1;d.definition=true;d.external_linkage=true;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_nc_declaration_validate(&d)!=UMI_STATUS_OK)return 2;
     if (UmiNativeDeclarationTransferCases(&d) != 0) return 1;
+    if (UmiNativeDeclarationTransferCasesWithWorkspace(&d) != 0) return 1;
     if (UmiNativeDeclarationConditionalArchiveCases(&d) != 0) return 1;
 return 0; }

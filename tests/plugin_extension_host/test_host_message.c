@@ -91,6 +91,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPluginExtensionHostHostMessageTransferCases, UmiPlugi
     umi_plugin_extension_host_host_message_archive_encode, umi_plugin_extension_host_host_message_archive_decode,
     UmiPluginExtensionHostHostMessageTransferEqual, UmiPluginExtensionHostHostMessageTransferTails, UmiPluginExtensionHostHostMessageTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPluginExtensionHostHostMessageTransferCasesWithWorkspace, UmiPluginExtensionHostHostMessage,
+    umi_plugin_extension_host_host_message_archive_encode, umi_plugin_extension_host_host_message_archive_decode_with_workspace, UmiPluginExtensionHostHostMessageTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPluginExtensionHostHostMessageConditionalArchiveCases, UmiPluginExtensionHostHostMessage,
     umi_plugin_extension_host_host_message_archive_encode, umi_plugin_extension_host_host_message_archive_decode_if_unchanged,
@@ -99,5 +104,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiPluginExtensionHostHostMessageConditionalArchive
 
 int main(void) { UmiPluginExtensionHostHostMessage m; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_plugin_extension_host_host_message_build(&m,1U,2U,3U,"s","hello")!=UMI_STATUS_OK) return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_plugin_extension_host_host_message_valid(&m)) return 2;
     if (UmiPluginExtensionHostHostMessageTransferCases(&m) != 0) return 1;
+    if (UmiPluginExtensionHostHostMessageTransferCasesWithWorkspace(&m) != 0) return 1;
     if (UmiPluginExtensionHostHostMessageConditionalArchiveCases(&m) != 0) return 1;
  m.sequence=4U; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_plugin_extension_host_host_message_valid(&m)) return 3; return 0; }

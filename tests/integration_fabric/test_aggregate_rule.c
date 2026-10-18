@@ -92,6 +92,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricAggregateRuleTransferCases, UmiFabricAggregateR
     umi_fabric_aggregate_rule_archive_encode, umi_fabric_aggregate_rule_archive_decode,
     UmiFabricAggregateRuleTransferEqual, UmiFabricAggregateRuleTransferTails, UmiFabricAggregateRuleTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFabricAggregateRuleTransferCasesWithWorkspace, UmiFabricAggregateRule,
+    umi_fabric_aggregate_rule_archive_encode, umi_fabric_aggregate_rule_archive_decode_with_workspace, UmiFabricAggregateRuleTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricAggregateRuleConditionalArchiveCases, UmiFabricAggregateRule,
     umi_fabric_aggregate_rule_archive_encode, umi_fabric_aggregate_rule_archive_decode_if_unchanged,
@@ -145,6 +150,7 @@ int main(void) {
     UmiFabricAggregateRule item;
     CHECK(umi_fabric_aggregate_rule_init(&item,"a","order_id",4U,1000U,false)==UMI_STATUS_OK);
     if (UmiFabricAggregateRuleTransferCases(&item) != 0) return 1;
+    if (UmiFabricAggregateRuleTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiFabricAggregateRuleConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.expected_count==4U);

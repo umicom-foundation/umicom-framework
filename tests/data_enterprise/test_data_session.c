@@ -93,6 +93,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataSessionTransferCases, UmiDataSession,
     umi_data_data_session_archive_encode, umi_data_data_session_archive_decode,
     UmiDataSessionTransferEqual, UmiDataSessionTransferTails, UmiDataSessionTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataSessionTransferCasesWithWorkspace, UmiDataSession,
+    umi_data_data_session_archive_encode, umi_data_data_session_archive_decode_with_workspace, UmiDataSessionTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataSessionConditionalArchiveCases, UmiDataSession,
     umi_data_data_session_archive_encode, umi_data_data_session_archive_decode_if_unchanged,
@@ -146,6 +151,7 @@ int main(void) {
     UmiDataSession item;
     CHECK(umi_data_data_session_init(&item,"s1","user",UMI_DATA_CONSISTENCY_SESSION,10U) == UMI_STATUS_OK);
     if (UmiDataSessionTransferCases(&item) != 0) return 1;
+    if (UmiDataSessionTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiDataSessionConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.last_activity==10U);

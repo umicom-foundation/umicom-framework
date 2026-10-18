@@ -52,6 +52,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFinancialPriceTransferCases, UmiFinancialPrice,
     umi_price_archive_encode, umi_price_archive_decode,
     UmiFinancialPriceTransferEqual, UmiFinancialPriceTransferTails, UmiFinancialPriceTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFinancialPriceTransferCasesWithWorkspace, UmiFinancialPrice,
+    umi_price_archive_encode, umi_price_archive_decode_with_workspace, UmiFinancialPriceTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFinancialPriceConditionalArchiveCases, UmiFinancialPrice,
     umi_price_archive_encode, umi_price_archive_decode_if_unchanged,
@@ -62,6 +67,7 @@ int main(void)
 {
     UmiFinancialPrice p; CHECK(umi_price_init(&p,101.25,2U)==UMI_STATUS_OK);
     if (UmiFinancialPriceTransferCases(&p) != 0) return 1;
+    if (UmiFinancialPriceTransferCasesWithWorkspace(&p) != 0) return 1;
     if (UmiFinancialPriceConditionalArchiveCases(&p) != 0) return 1;
 
     return 0;

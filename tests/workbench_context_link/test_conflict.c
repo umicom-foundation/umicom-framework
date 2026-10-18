@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkConflictTransferCases, UmiWorkben
     umi_workbench_context_link_conflict_archive_encode, umi_workbench_context_link_conflict_archive_decode,
     UmiWorkbenchContextLinkConflictTransferEqual, UmiWorkbenchContextLinkConflictTransferTails, UmiWorkbenchContextLinkConflictTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextLinkConflictTransferCasesWithWorkspace, UmiWorkbenchContextLinkConflict,
+    umi_workbench_context_link_conflict_archive_encode, umi_workbench_context_link_conflict_archive_decode_with_workspace, UmiWorkbenchContextLinkConflictTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkConflictConditionalArchiveCases, UmiWorkbenchContextLinkConflict,
     umi_workbench_context_link_conflict_archive_encode, umi_workbench_context_link_conflict_archive_decode_if_unchanged,
@@ -151,6 +156,7 @@ int main(void)
     umi_workbench_context_link_conflict_init(&record, "conflict-id");
     assert(umi_workbench_context_link_conflict_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkConflictTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkConflictTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkConflictConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkConflictReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkConflictMutationGuards(&record) != 0) return 1;

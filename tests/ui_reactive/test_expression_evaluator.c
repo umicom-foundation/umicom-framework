@@ -71,6 +71,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveExpressionEvaluatorTransferCases, UmiUiReac
     umi_ui_reactive_expression_evaluator_archive_encode, umi_ui_reactive_expression_evaluator_archive_decode,
     UmiUiReactiveExpressionEvaluatorTransferEqual, UmiUiReactiveExpressionEvaluatorTransferTails, UmiUiReactiveExpressionEvaluatorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveExpressionEvaluatorTransferCasesWithWorkspace, UmiUiReactiveExpressionEvaluator,
+    umi_ui_reactive_expression_evaluator_archive_encode, umi_ui_reactive_expression_evaluator_archive_decode_with_workspace, UmiUiReactiveExpressionEvaluatorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveExpressionEvaluatorConditionalArchiveCases, UmiUiReactiveExpressionEvaluator,
     umi_ui_reactive_expression_evaluator_archive_encode, umi_ui_reactive_expression_evaluator_archive_decode_if_unchanged,
@@ -88,5 +93,6 @@ int main(void) { UmiUiReactiveExpressionEvaluator item; umi_ui_reactive_expressi
     populated.instructions_executed = (size_t)7;
     populated.success = true;
     if (UmiUiReactiveExpressionEvaluatorTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveExpressionEvaluatorTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveExpressionEvaluatorConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_expression_evaluator_valid(&item) ? 0 : 1; }

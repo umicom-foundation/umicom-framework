@@ -106,6 +106,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFinancialWorkflowTransferCases, UmiFinancialWorkflow,
     umi_financial_workflow_archive_encode, umi_financial_workflow_archive_decode,
     UmiFinancialWorkflowTransferEqual, UmiFinancialWorkflowTransferTails, UmiFinancialWorkflowTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFinancialWorkflowTransferCasesWithWorkspace, UmiFinancialWorkflow,
+    umi_financial_workflow_archive_encode, umi_financial_workflow_archive_decode_with_workspace, UmiFinancialWorkflowTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFinancialWorkflowConditionalArchiveCases, UmiFinancialWorkflow,
     umi_financial_workflow_archive_encode, umi_financial_workflow_archive_decode_if_unchanged,
@@ -116,6 +121,7 @@ int main(void)
 {
     UmiFinancialWorkflow x; CHECK(umi_financial_workflow_init(&x,"ID","Name","PARENT",1U)==UMI_STATUS_OK); CHECK(umi_financial_workflow_is_valid(&x));
     if (UmiFinancialWorkflowTransferCases(&x) != 0) return 1;
+    if (UmiFinancialWorkflowTransferCasesWithWorkspace(&x) != 0) return 1;
     if (UmiFinancialWorkflowConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;

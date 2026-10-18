@@ -169,6 +169,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextSourceTriggerPolicyTransferCases, Umi
     umi_workbench_context_source_trigger_policy_archive_encode, umi_workbench_context_source_trigger_policy_archive_decode,
     UmiWorkbenchContextSourceTriggerPolicyTransferEqual, UmiWorkbenchContextSourceTriggerPolicyTransferTails, UmiWorkbenchContextSourceTriggerPolicyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextSourceTriggerPolicyTransferCasesWithWorkspace, UmiWorkbenchContextSourceTriggerPolicy,
+    umi_workbench_context_source_trigger_policy_archive_encode, umi_workbench_context_source_trigger_policy_archive_decode_with_workspace, UmiWorkbenchContextSourceTriggerPolicyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextSourceTriggerPolicyConditionalArchiveCases, UmiWorkbenchContextSourceTriggerPolicy,
     umi_workbench_context_source_trigger_policy_archive_encode, umi_workbench_context_source_trigger_policy_archive_decode_if_unchanged,
@@ -208,6 +213,7 @@ int main(void)
     assert(umi_workbench_context_source_trigger_policy_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextSourceTriggerPolicyTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextSourceTriggerPolicyTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextSourceTriggerPolicyConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextSourceTriggerPolicyReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextSourceTriggerPolicyMutationGuards(&record) != 0) return 1;

@@ -112,6 +112,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTestRunProgressTransferCases, UmiTestRunProgress,
     umi_test_run_progress_archive_encode, umi_test_run_progress_archive_decode,
     UmiTestRunProgressTransferEqual, UmiTestRunProgressTransferTails, UmiTestRunProgressTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTestRunProgressTransferCasesWithWorkspace, UmiTestRunProgress,
+    umi_test_run_progress_archive_encode, umi_test_run_progress_archive_decode_with_workspace, UmiTestRunProgressTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestRunProgressConditionalArchiveCases, UmiTestRunProgress,
     umi_test_run_progress_archive_encode, umi_test_run_progress_archive_decode_if_unchanged,
@@ -138,5 +143,6 @@ int main(void){UmiTestRunProgress m;assert(umi_test_run_progress_init(&m,"test_r
         umi_test_run_progress_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
     assert(umi_test_run_progress_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_run_progress_valid(&m));
     if (UmiTestRunProgressTransferCases(&m) != 0) return 1;
+    if (UmiTestRunProgressTransferCasesWithWorkspace(&m) != 0) return 1;
     if (UmiTestRunProgressConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

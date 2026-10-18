@@ -83,6 +83,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCtRiscvPlatformTransferCases, UmiCtRiscvPlatform,
     umi_ct_riscv_platform_archive_encode, umi_ct_riscv_platform_archive_decode,
     UmiCtRiscvPlatformTransferEqual, UmiCtRiscvPlatformTransferTails, UmiCtRiscvPlatformTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCtRiscvPlatformTransferCasesWithWorkspace, UmiCtRiscvPlatform,
+    umi_ct_riscv_platform_archive_encode, umi_ct_riscv_platform_archive_decode_with_workspace, UmiCtRiscvPlatformTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtRiscvPlatformConditionalArchiveCases, UmiCtRiscvPlatform,
     umi_ct_riscv_platform_archive_encode, umi_ct_riscv_platform_archive_decode_if_unchanged,
@@ -91,5 +96,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtRiscvPlatformConditionalArchiveCases, UmiCtRis
 
 int main(void){UmiCtRiscvPlatform p={"qemu.rv64",UMI_CT_RISCV_MACHINE_QEMU_VIRT,UINT64_C(512)*1024U*1024U,4U,true,true,true,true};CHECK(umi_ct_riscv_platform_validate(&p)==UMI_STATUS_OK);
     if (UmiCtRiscvPlatformTransferCases(&p) != 0) return 1;
+    if (UmiCtRiscvPlatformTransferCasesWithWorkspace(&p) != 0) return 1;
     if (UmiCtRiscvPlatformConditionalArchiveCases(&p) != 0) return 1;
 p.clint=false;CHECK(umi_ct_riscv_platform_validate(&p)==UMI_STATUS_INVALID_STATE);return 0;}

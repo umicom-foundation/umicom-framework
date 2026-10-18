@@ -107,6 +107,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataSchemaIdentifierTransferCases, UmiDataSchemaIdent
     umi_data_schema_identifier_archive_encode, umi_data_schema_identifier_archive_decode,
     UmiDataSchemaIdentifierTransferEqual, UmiDataSchemaIdentifierTransferTails, UmiDataSchemaIdentifierTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataSchemaIdentifierTransferCasesWithWorkspace, UmiDataSchemaIdentifier,
+    umi_data_schema_identifier_archive_encode, umi_data_schema_identifier_archive_decode_with_workspace, UmiDataSchemaIdentifierTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataSchemaIdentifierConditionalArchiveCases, UmiDataSchemaIdentifier,
     umi_data_schema_identifier_archive_encode, umi_data_schema_identifier_archive_decode_if_unchanged,
@@ -172,6 +177,7 @@ int main(void) {
     UmiDataSchemaIdentifier item;
     CHECK(umi_data_schema_identifier_init(&item, "main", "public", "orders") == UMI_STATUS_OK);
     if (UmiDataSchemaIdentifierTransferCases(&item) != 0) return 1;
+    if (UmiDataSchemaIdentifierTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiDataSchemaIdentifierConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(strcmp(item.name,"orders")==0);

@@ -68,6 +68,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveStateSnapshotTransferCases, UmiUiReactiveSt
     umi_ui_reactive_state_snapshot_archive_encode, umi_ui_reactive_state_snapshot_archive_decode,
     UmiUiReactiveStateSnapshotTransferEqual, UmiUiReactiveStateSnapshotTransferTails, UmiUiReactiveStateSnapshotTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveStateSnapshotTransferCasesWithWorkspace, UmiUiReactiveStateSnapshot,
+    umi_ui_reactive_state_snapshot_archive_encode, umi_ui_reactive_state_snapshot_archive_decode_with_workspace, UmiUiReactiveStateSnapshotTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveStateSnapshotConditionalArchiveCases, UmiUiReactiveStateSnapshot,
     umi_ui_reactive_state_snapshot_archive_encode, umi_ui_reactive_state_snapshot_archive_decode_if_unchanged,
@@ -83,5 +88,6 @@ int main(void) { UmiUiReactiveStateSnapshot item; umi_ui_reactive_state_snapshot
     populated.property_count = (size_t)4;
     populated.fingerprint = (uint64_t)5;
     if (UmiUiReactiveStateSnapshotTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveStateSnapshotTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveStateSnapshotConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_state_snapshot_valid(&item) ? 0 : 1; }

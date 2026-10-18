@@ -103,6 +103,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRadPageTemplateTransferCases, UmiRadPageTemplate,
     umi_rad_page_template_archive_encode, umi_rad_page_template_archive_decode,
     UmiRadPageTemplateTransferEqual, UmiRadPageTemplateTransferTails, UmiRadPageTemplateTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRadPageTemplateTransferCasesWithWorkspace, UmiRadPageTemplate,
+    umi_rad_page_template_archive_encode, umi_rad_page_template_archive_decode_with_workspace, UmiRadPageTemplateTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadPageTemplateConditionalArchiveCases, UmiRadPageTemplate,
     umi_rad_page_template_archive_encode, umi_rad_page_template_archive_decode_if_unchanged,
@@ -111,5 +116,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadPageTemplateConditionalArchiveCases, UmiRadPa
 
 int main(void){UmiRadPageTemplate item;CHECK(umi_rad_page_template_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_page_template_is_valid(&item));
     if (UmiRadPageTemplateTransferCases(&item) != 0) return 1;
+    if (UmiRadPageTemplateTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiRadPageTemplateConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

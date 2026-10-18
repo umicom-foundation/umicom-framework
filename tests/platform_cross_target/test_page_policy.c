@@ -62,6 +62,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCtPagePolicyTransferCases, UmiCtPagePolicy,
     umi_ct_page_policy_archive_encode, umi_ct_page_policy_archive_decode,
     UmiCtPagePolicyTransferEqual, UmiCtPagePolicyTransferTails, UmiCtPagePolicyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCtPagePolicyTransferCasesWithWorkspace, UmiCtPagePolicy,
+    umi_ct_page_policy_archive_encode, umi_ct_page_policy_archive_decode_with_workspace, UmiCtPagePolicyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtPagePolicyConditionalArchiveCases, UmiCtPagePolicy,
     umi_ct_page_policy_archive_encode, umi_ct_page_policy_archive_decode_if_unchanged,
@@ -70,5 +75,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtPagePolicyConditionalArchiveCases, UmiCtPagePo
 
 int main(void){UmiCtPagePolicy p={4096U,2097152U,true,true};CHECK(umi_ct_page_policy_validate(&p)==UMI_STATUS_OK);
     if (UmiCtPagePolicyTransferCases(&p) != 0) return 1;
+    if (UmiCtPagePolicyTransferCasesWithWorkspace(&p) != 0) return 1;
     if (UmiCtPagePolicyConditionalArchiveCases(&p) != 0) return 1;
 CHECK(umi_ct_page_align_up(&p,4097U)==8192U);CHECK(umi_ct_page_count(&p,8193U)==3U);return 0;}

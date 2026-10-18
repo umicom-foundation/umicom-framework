@@ -174,6 +174,12 @@ static UmiStatus UmiProjectWorkspaceProjectMigrationArchiveValidate(const UmiPro
 UMI_DEFINE_VALUE_ARCHIVE(umi_project_workspace_project_migration_archive_encode, umi_project_workspace_project_migration_archive_decode,
     UmiProjectWorkspaceProjectMigration, UmiProjectWorkspaceProjectMigrationArchiveSchema, UmiProjectWorkspaceProjectMigrationArchiveBound, UmiProjectWorkspaceProjectMigrationArchiveWrite, UmiProjectWorkspaceProjectMigrationArchiveRead, UmiProjectWorkspaceProjectMigrationArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_project_workspace_project_migration_archive_decode_with_workspace, UmiProjectWorkspaceProjectMigration,
+    UmiProjectWorkspaceProjectMigrationArchiveSchema, UmiProjectWorkspaceProjectMigrationArchiveBound, UmiProjectWorkspaceProjectMigrationArchiveRead, UmiProjectWorkspaceProjectMigrationArchiveValidate)
+
 /* Guard restoration with the previously reviewed encoded value. Domain field
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_project_workspace_project_migration_archive_decode_if_unchanged, umi_project_workspace_project_migration_archive_encode,

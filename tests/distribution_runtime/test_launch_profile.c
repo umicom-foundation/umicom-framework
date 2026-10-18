@@ -125,6 +125,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDrLaunchProfileTransferCases, UmiDrLaunchProfile,
     umi_dr_launch_profile_archive_encode, umi_dr_launch_profile_archive_decode,
     UmiDrLaunchProfileTransferEqual, UmiDrLaunchProfileTransferTails, UmiDrLaunchProfileTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDrLaunchProfileTransferCasesWithWorkspace, UmiDrLaunchProfile,
+    umi_dr_launch_profile_archive_encode, umi_dr_launch_profile_archive_decode_with_workspace, UmiDrLaunchProfileTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrLaunchProfileConditionalArchiveCases, UmiDrLaunchProfile,
     umi_dr_launch_profile_archive_encode, umi_dr_launch_profile_archive_decode_if_unchanged,
@@ -134,6 +139,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrLaunchProfileConditionalArchiveCases, UmiDrLau
 int main(void) {
     UmiDrLaunchProfile value; umi_dr_launch_profile_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"normal")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.launcher_id,sizeof(value.launcher_id),"default")==UMI_STATUS_OK); CHECK(umi_dr_launch_profile_valid(&value));
     if (UmiDrLaunchProfileTransferCases(&value) != 0) return 1;
+    if (UmiDrLaunchProfileTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDrLaunchProfileConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_launch_profile_fingerprint(&value) != 0U);
     return 0;

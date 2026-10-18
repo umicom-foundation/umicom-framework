@@ -131,6 +131,11 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorIntelRenameTargetModelTransferCases, UmiEditorI
     umi_editor_intel_rename_target_model_archive_encode, umi_editor_intel_rename_target_model_archive_decode,
     UmiEditorIntelRenameTargetModelTransferEqual, UmiEditorIntelRenameTargetModelTransferTails, UmiEditorIntelRenameTargetModelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiEditorIntelRenameTargetModelTransferCasesWithWorkspace, UmiEditorIntelRenameTargetModel,
+    umi_editor_intel_rename_target_model_archive_encode, umi_editor_intel_rename_target_model_archive_decode_with_workspace, UmiEditorIntelRenameTargetModelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelRenameTargetModelConditionalArchiveCases, UmiEditorIntelRenameTargetModel,
     umi_editor_intel_rename_target_model_archive_encode, umi_editor_intel_rename_target_model_archive_decode_if_unchanged,
@@ -149,5 +154,6 @@ int main(void){UmiEditorIntelRenameTargetModel model;UmiEditorIntelRange range={
         umi_editor_intel_rename_target_model_set_selected(&model,true));
     if(umi_editor_intel_rename_target_model_set_selected(&model,true)!=UMI_STATUS_OK)return 3;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_intel_rename_target_model_valid(&model)||model.value.score!=91U||!model.selected)return 4;
     if (UmiEditorIntelRenameTargetModelTransferCases(&model) != 0) return 1;
+    if (UmiEditorIntelRenameTargetModelTransferCasesWithWorkspace(&model) != 0) return 1;
     if (UmiEditorIntelRenameTargetModelConditionalArchiveCases(&model) != 0) return 1;
 return 0;}

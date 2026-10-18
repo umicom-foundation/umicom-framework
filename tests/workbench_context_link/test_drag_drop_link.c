@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkDragDropLinkTransferCases, UmiWor
     umi_workbench_context_link_drag_drop_link_archive_encode, umi_workbench_context_link_drag_drop_link_archive_decode,
     UmiWorkbenchContextLinkDragDropLinkTransferEqual, UmiWorkbenchContextLinkDragDropLinkTransferTails, UmiWorkbenchContextLinkDragDropLinkTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextLinkDragDropLinkTransferCasesWithWorkspace, UmiWorkbenchContextLinkDragDropLink,
+    umi_workbench_context_link_drag_drop_link_archive_encode, umi_workbench_context_link_drag_drop_link_archive_decode_with_workspace, UmiWorkbenchContextLinkDragDropLinkTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkDragDropLinkConditionalArchiveCases, UmiWorkbenchContextLinkDragDropLink,
     umi_workbench_context_link_drag_drop_link_archive_encode, umi_workbench_context_link_drag_drop_link_archive_decode_if_unchanged,
@@ -151,6 +156,7 @@ int main(void)
     umi_workbench_context_link_drag_drop_link_init(&record, "drag_drop_link-id");
     assert(umi_workbench_context_link_drag_drop_link_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkDragDropLinkTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkDragDropLinkTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkDragDropLinkConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkDragDropLinkReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkDragDropLinkMutationGuards(&record) != 0) return 1;

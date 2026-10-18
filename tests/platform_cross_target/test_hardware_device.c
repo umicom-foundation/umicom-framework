@@ -99,6 +99,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCtHardwareDeviceTransferCases, UmiCtHardwareDevice,
     umi_ct_hardware_device_archive_encode, umi_ct_hardware_device_archive_decode,
     UmiCtHardwareDeviceTransferEqual, UmiCtHardwareDeviceTransferTails, UmiCtHardwareDeviceTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCtHardwareDeviceTransferCasesWithWorkspace, UmiCtHardwareDevice,
+    umi_ct_hardware_device_archive_encode, umi_ct_hardware_device_archive_decode_with_workspace, UmiCtHardwareDeviceTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtHardwareDeviceConditionalArchiveCases, UmiCtHardwareDevice,
     umi_ct_hardware_device_archive_encode, umi_ct_hardware_device_archive_decode_if_unchanged,
@@ -107,5 +112,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtHardwareDeviceConditionalArchiveCases, UmiCtHa
 
 int main(void){UmiCtHardwareDevice d={"uart0","ns16550a",UMI_CT_DEVICE_OTHER,UINT64_C(0x10000000),0x100U,10U,true};CHECK(umi_ct_hardware_device_validate(&d)==UMI_STATUS_OK);
     if (UmiCtHardwareDeviceTransferCases(&d) != 0) return 1;
+    if (UmiCtHardwareDeviceTransferCasesWithWorkspace(&d) != 0) return 1;
     if (UmiCtHardwareDeviceConditionalArchiveCases(&d) != 0) return 1;
 return 0;}

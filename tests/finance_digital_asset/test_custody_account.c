@@ -108,6 +108,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalCustodyAccountTransferCases, UmiDigitalCustody
     umi_digital_asset_custody_account_archive_encode, umi_digital_asset_custody_account_archive_decode,
     UmiDigitalCustodyAccountTransferEqual, UmiDigitalCustodyAccountTransferTails, UmiDigitalCustodyAccountTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDigitalCustodyAccountTransferCasesWithWorkspace, UmiDigitalCustodyAccount,
+    umi_digital_asset_custody_account_archive_encode, umi_digital_asset_custody_account_archive_decode_with_workspace, UmiDigitalCustodyAccountTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalCustodyAccountConditionalArchiveCases, UmiDigitalCustodyAccount,
     umi_digital_asset_custody_account_archive_encode, umi_digital_asset_custody_account_archive_decode_if_unchanged,
@@ -121,6 +126,7 @@ int main(void)
     CHECK(umi_digital_asset_custody_account_init(&value, "CUST-1", &owner, "WALLET-1", true) == UMI_STATUS_OK);
     CHECK(umi_digital_asset_custody_account_valid(&value));
     if (UmiDigitalCustodyAccountTransferCases(&value) != 0) return 1;
+    if (UmiDigitalCustodyAccountTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDigitalCustodyAccountConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(value.segregated);

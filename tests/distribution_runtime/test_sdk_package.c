@@ -80,6 +80,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDrSdkPackageTransferCases, UmiDrSdkPackage,
     umi_dr_sdk_package_archive_encode, umi_dr_sdk_package_archive_decode,
     UmiDrSdkPackageTransferEqual, UmiDrSdkPackageTransferTails, UmiDrSdkPackageTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDrSdkPackageTransferCasesWithWorkspace, UmiDrSdkPackage,
+    umi_dr_sdk_package_archive_encode, umi_dr_sdk_package_archive_decode_with_workspace, UmiDrSdkPackageTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrSdkPackageConditionalArchiveCases, UmiDrSdkPackage,
     umi_dr_sdk_package_archive_encode, umi_dr_sdk_package_archive_decode_if_unchanged,
@@ -89,6 +94,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrSdkPackageConditionalArchiveCases, UmiDrSdkPac
 int main(void) {
     UmiDrSdkPackage value; umi_dr_sdk_package_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"sdk")==UMI_STATUS_OK); value.headers=true; value.maximum_abi=(UmiDrVersion){1,0,0}; CHECK(umi_dr_sdk_package_valid(&value));
     if (UmiDrSdkPackageTransferCases(&value) != 0) return 1;
+    if (UmiDrSdkPackageTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDrSdkPackageConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_sdk_package_fingerprint(&value) != 0U);
     return 0;

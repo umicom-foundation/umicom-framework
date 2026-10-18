@@ -121,6 +121,12 @@ static UmiStatus UmiCommodityInventoryLotArchiveValidate(const UmiCommodityInven
 UMI_DEFINE_VALUE_ARCHIVE(umi_commodity_inventory_lot_archive_encode, umi_commodity_inventory_lot_archive_decode,
     UmiCommodityInventoryLot, UmiCommodityInventoryLotArchiveSchema, UmiCommodityInventoryLotArchiveBound, UmiCommodityInventoryLotArchiveWrite, UmiCommodityInventoryLotArchiveRead, UmiCommodityInventoryLotArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_commodity_inventory_lot_archive_decode_with_workspace, UmiCommodityInventoryLot,
+    UmiCommodityInventoryLotArchiveSchema, UmiCommodityInventoryLotArchiveBound, UmiCommodityInventoryLotArchiveRead, UmiCommodityInventoryLotArchiveValidate)
+
 /* Restore this typed value only while its encoded state still matches the
  * caller's reviewed snapshot. The shared guard checks every encoded byte;
  * domain decoding and validation stay with this owner. */

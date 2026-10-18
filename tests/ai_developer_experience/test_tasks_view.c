@@ -13,6 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "../support/assertions.h"
 #include <assert.h>
 #include <stdio.h>
 #include "umicom/ai_developer_experience/views/tasks.h"

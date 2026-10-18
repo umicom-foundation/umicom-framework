@@ -77,6 +77,11 @@ UMI_TEST_VALUE_TRANSFER(UmiLanguageIntelligenceLinkedEditingTransferCases, UmiLa
     umi_language_intelligence_linked_editing_archive_encode, umi_language_intelligence_linked_editing_archive_decode,
     UmiLanguageIntelligenceLinkedEditingTransferEqual, UmiLanguageIntelligenceLinkedEditingTransferTails, UmiLanguageIntelligenceLinkedEditingTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiLanguageIntelligenceLinkedEditingTransferCasesWithWorkspace, UmiLanguageIntelligenceLinkedEditing,
+    umi_language_intelligence_linked_editing_archive_encode, umi_language_intelligence_linked_editing_archive_decode_with_workspace, UmiLanguageIntelligenceLinkedEditingTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiLanguageIntelligenceLinkedEditingConditionalArchiveCases, UmiLanguageIntelligenceLinkedEditing,
     umi_language_intelligence_linked_editing_archive_encode, umi_language_intelligence_linked_editing_archive_decode_if_unchanged,
@@ -94,6 +99,7 @@ int main(void)
     CHECK(umi_language_intelligence_linked_editing_set_ranges(&value, &primary, &parent) == UMI_STATUS_OK);
     CHECK(umi_language_intelligence_linked_editing_validate(&value) == UMI_STATUS_OK);
     if (UmiLanguageIntelligenceLinkedEditingTransferCases(&value) != 0) return 1;
+    if (UmiLanguageIntelligenceLinkedEditingTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiLanguageIntelligenceLinkedEditingConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_language_intelligence_linked_editing_is_nested(&value) != 0);

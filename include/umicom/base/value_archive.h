@@ -77,6 +77,25 @@ UmiStatus umi_value_archive_inspect(const void *bytes, size_t byte_count,
  *   draft, then use the relevant registry/owner API to publish live state. No
  *   network request, trade, provider connection or other command is executed.
  */
+
+/* Typed archive_decode_with_workspace operations give SDK callers explicit
+ * control of the candidate record storage:
+ * - Allocate two separate, correctly aligned objects of the declared record
+ *   type: a scratch workspace and the destination. A reusable heap allocation
+ *   lets a small-stack thread decode without an automatic whole-record copy.
+ * - Supply the same readable byte span accepted by the established decoder.
+ *   Input, scratch and destination may not overlap, including partial overlaps.
+ *   The supported flat-address hosts reject overlap with INVALID_ARGUMENT.
+ * - Scratch is temporary and may be overwritten even on failure. Never pass
+ *   a live owner, shared draft, or object containing owned resources as scratch.
+ *   The typed contract defines an inline value with no external ownership.
+ * - All failures preserve every destination byte. A successful call copies
+ *   validated fields into independent destination storage; scratch can then be
+ *   reused. The caller remains responsible for serializing all accesses.
+ * - No allocation, I/O or live publication is introduced by this API. It uses
+ *   the existing format, schema, reader and validator, with no migration. The
+ *   original decoder and conditional restore interfaces remain unchanged.
+ */
 #ifdef __cplusplus
 }
 #endif

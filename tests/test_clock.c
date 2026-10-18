@@ -17,6 +17,8 @@
  * Umicom Framework
  * File: tests/test_clock.c
  *---------------------------------------------------------------------------*/
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #include "umicom/platform/clock.h"
 
 #include <assert.h>

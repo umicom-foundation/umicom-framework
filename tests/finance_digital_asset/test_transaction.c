@@ -164,6 +164,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalAssetTransactionTransferCases, UmiDigitalAsset
     umi_digital_asset_transaction_archive_encode, umi_digital_asset_transaction_archive_decode,
     UmiDigitalAssetTransactionTransferEqual, UmiDigitalAssetTransactionTransferTails, UmiDigitalAssetTransactionTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDigitalAssetTransactionTransferCasesWithWorkspace, UmiDigitalAssetTransaction,
+    umi_digital_asset_transaction_archive_encode, umi_digital_asset_transaction_archive_decode_with_workspace, UmiDigitalAssetTransactionTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalAssetTransactionConditionalArchiveCases, UmiDigitalAssetTransaction,
     umi_digital_asset_transaction_archive_encode, umi_digital_asset_transaction_archive_decode_if_unchanged,
@@ -176,6 +181,7 @@ int main(void)
     CHECK(umi_digital_asset_transaction_init(&value, "TX-1", "BTC", "from", "to", 1000, 8, "BTC") == UMI_STATUS_OK);
     CHECK(umi_digital_asset_transaction_valid(&value));
     if (UmiDigitalAssetTransactionTransferCases(&value) != 0) return 1;
+    if (UmiDigitalAssetTransactionTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDigitalAssetTransactionConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

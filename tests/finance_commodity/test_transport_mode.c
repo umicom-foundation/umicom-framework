@@ -90,6 +90,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCommodityTransportModeTransferCases, UmiCommodityTran
     umi_commodity_transport_mode_archive_encode, umi_commodity_transport_mode_archive_decode,
     UmiCommodityTransportModeTransferEqual, UmiCommodityTransportModeTransferTails, UmiCommodityTransportModeTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCommodityTransportModeTransferCasesWithWorkspace, UmiCommodityTransportMode,
+    umi_commodity_transport_mode_archive_encode, umi_commodity_transport_mode_archive_decode_with_workspace, UmiCommodityTransportModeTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCommodityTransportModeConditionalArchiveCases, UmiCommodityTransportMode,
     umi_commodity_transport_mode_archive_encode, umi_commodity_transport_mode_archive_decode_if_unchanged,
@@ -102,6 +107,7 @@ int main(void)
     CHECK(umi_commodity_transport_mode_init(&value, "VESSEL", "Ocean vessel", true) == UMI_STATUS_OK);
     CHECK(umi_commodity_transport_mode_valid(&value));
     if (UmiCommodityTransportModeTransferCases(&value) != 0) return 1;
+    if (UmiCommodityTransportModeTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiCommodityTransportModeConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

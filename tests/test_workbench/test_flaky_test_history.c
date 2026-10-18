@@ -112,6 +112,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFlakyTestHistoryTransferCases, UmiFlakyTestHistory,
     umi_flaky_test_history_archive_encode, umi_flaky_test_history_archive_decode,
     UmiFlakyTestHistoryTransferEqual, UmiFlakyTestHistoryTransferTails, UmiFlakyTestHistoryTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFlakyTestHistoryTransferCasesWithWorkspace, UmiFlakyTestHistory,
+    umi_flaky_test_history_archive_encode, umi_flaky_test_history_archive_decode_with_workspace, UmiFlakyTestHistoryTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFlakyTestHistoryConditionalArchiveCases, UmiFlakyTestHistory,
     umi_flaky_test_history_archive_encode, umi_flaky_test_history_archive_decode_if_unchanged,
@@ -138,5 +143,6 @@ int main(void){UmiFlakyTestHistory m;assert(umi_flaky_test_history_init(&m,"flak
         umi_flaky_test_history_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
     assert(umi_flaky_test_history_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_flaky_test_history_valid(&m));
     if (UmiFlakyTestHistoryTransferCases(&m) != 0) return 1;
+    if (UmiFlakyTestHistoryTransferCasesWithWorkspace(&m) != 0) return 1;
     if (UmiFlakyTestHistoryConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

@@ -85,6 +85,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveValidationResultTransferCases, UmiUiReactiv
     umi_ui_reactive_validation_result_archive_encode, umi_ui_reactive_validation_result_archive_decode,
     UmiUiReactiveValidationResultTransferEqual, UmiUiReactiveValidationResultTransferTails, UmiUiReactiveValidationResultTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveValidationResultTransferCasesWithWorkspace, UmiUiReactiveValidationResult,
+    umi_ui_reactive_validation_result_archive_encode, umi_ui_reactive_validation_result_archive_decode_with_workspace, UmiUiReactiveValidationResultTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveValidationResultConditionalArchiveCases, UmiUiReactiveValidationResult,
     umi_ui_reactive_validation_result_archive_encode, umi_ui_reactive_validation_result_archive_decode_if_unchanged,
@@ -99,5 +104,6 @@ int main(void) { UmiUiReactiveValidationResult item; umi_ui_reactive_validation_
     populated.valid = true;
     (void)snprintf(populated.message, sizeof(populated.message), "field-3");
     if (UmiUiReactiveValidationResultTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveValidationResultTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveValidationResultConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_validation_result_valid(&item) ? 0 : 1; }

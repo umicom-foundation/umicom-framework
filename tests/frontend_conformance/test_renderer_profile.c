@@ -74,6 +74,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFcRendererProfileTransferCases, UmiFcRendererProfile,
     umi_fc_renderer_profile_archive_encode, umi_fc_renderer_profile_archive_decode,
     UmiFcRendererProfileTransferEqual, UmiFcRendererProfileTransferTails, UmiFcRendererProfileTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFcRendererProfileTransferCasesWithWorkspace, UmiFcRendererProfile,
+    umi_fc_renderer_profile_archive_encode, umi_fc_renderer_profile_archive_decode_with_workspace, UmiFcRendererProfileTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFcRendererProfileConditionalArchiveCases, UmiFcRendererProfile,
     umi_fc_renderer_profile_archive_encode, umi_fc_renderer_profile_archive_decode_if_unchanged,
@@ -83,6 +88,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiFcRendererProfileConditionalArchiveCases, UmiFcR
 int main(void) {
     UmiFcRendererProfile p; CHECK(umi_fc_renderer_profile_make("gtk4",UMI_FC_FRONTEND_GTK4,UINT64_C(7),1U,&p)==UMI_STATUS_OK); CHECK(p.kind==UMI_FC_FRONTEND_GTK4); CHECK(umi_fc_renderer_profile_validate(&p)==UMI_STATUS_OK);
     if (UmiFcRendererProfileTransferCases(&p) != 0) return 1;
+    if (UmiFcRendererProfileTransferCasesWithWorkspace(&p) != 0) return 1;
     if (UmiFcRendererProfileConditionalArchiveCases(&p) != 0) return 1;
 
     return 0;

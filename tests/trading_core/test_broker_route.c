@@ -86,6 +86,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTradingBrokerRouteTransferCases, UmiTradingBrokerRout
     umi_trading_broker_route_archive_encode, umi_trading_broker_route_archive_decode,
     UmiTradingBrokerRouteTransferEqual, UmiTradingBrokerRouteTransferTails, UmiTradingBrokerRouteTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTradingBrokerRouteTransferCasesWithWorkspace, UmiTradingBrokerRoute,
+    umi_trading_broker_route_archive_encode, umi_trading_broker_route_archive_decode_with_workspace, UmiTradingBrokerRouteTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTradingBrokerRouteConditionalArchiveCases, UmiTradingBrokerRoute,
     umi_trading_broker_route_archive_encode, umi_trading_broker_route_archive_decode_if_unchanged,
@@ -102,6 +107,7 @@ int main(void) {
      /* Preserve the original failure result so the caller can respond to the correct cause. */
      if(!umi_trading_broker_route_valid(&v)) return 2;
     if (UmiTradingBrokerRouteTransferCases(&v) != 0) return 1;
+    if (UmiTradingBrokerRouteTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTradingBrokerRouteConditionalArchiveCases(&v) != 0) return 1;
 
      return 0;

@@ -109,6 +109,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataResultMappingTransferCases, UmiDataResultMapping,
     umi_data_result_mapping_archive_encode, umi_data_result_mapping_archive_decode,
     UmiDataResultMappingTransferEqual, UmiDataResultMappingTransferTails, UmiDataResultMappingTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataResultMappingTransferCasesWithWorkspace, UmiDataResultMapping,
+    umi_data_result_mapping_archive_encode, umi_data_result_mapping_archive_decode_with_workspace, UmiDataResultMappingTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataResultMappingConditionalArchiveCases, UmiDataResultMapping,
     umi_data_result_mapping_archive_encode, umi_data_result_mapping_archive_decode_if_unchanged,
@@ -174,6 +179,7 @@ int main(void) {
     UmiDataResultMapping item;
     CHECK(umi_data_result_mapping_init(&item,"m1","Order","id",0U,UMI_DATA_VALUE_INTEGER) == UMI_STATUS_OK);
     if (UmiDataResultMappingTransferCases(&item) != 0) return 1;
+    if (UmiDataResultMappingTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiDataResultMappingConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.column_ordinal==0U);

@@ -78,6 +78,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPromotionTransferCases, UmiPromotion,
     umi_promotion_direction_archive_encode, umi_promotion_direction_archive_decode,
     UmiPromotionTransferEqual, UmiPromotionTransferTails, UmiPromotionTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPromotionTransferCasesWithWorkspace, UmiPromotion,
+    umi_promotion_direction_archive_encode, umi_promotion_direction_archive_decode_with_workspace, UmiPromotionTransferEqual)
+
 #include "value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPromotionConditionalArchiveCases, UmiPromotion,
     umi_promotion_direction_archive_encode, umi_promotion_direction_archive_decode_if_unchanged,
@@ -154,6 +159,7 @@ int main(void) {
     assert(umi_promotion_init(&promotion, "r", UMI_RELEASE_BETA, UMI_RELEASE_STABLE) == UMI_STATUS_OK);
     assert(umi_promotion_direction_valid(&promotion));
     if (UmiPromotionTransferCases(&promotion) != 0) return 1;
+    if (UmiPromotionTransferCasesWithWorkspace(&promotion) != 0) return 1;
     if (UmiPromotionConditionalArchiveCases(&promotion) != 0) return 1;
 
     umi_release_lock_init(&lock);

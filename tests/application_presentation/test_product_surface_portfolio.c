@@ -13,6 +13,8 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "../support/assertions.h"
 #include "umicom/application/component/recipe_catalogue.h"
 #include "umicom/application/presentation/product_surface.h"
 

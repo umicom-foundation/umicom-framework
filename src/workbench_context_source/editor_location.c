@@ -270,6 +270,12 @@ static UmiStatus UmiWorkbenchContextSourceEditorLocationArchiveValidate(const Um
 UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_context_source_editor_location_archive_encode, umi_workbench_context_source_editor_location_archive_decode,
     UmiWorkbenchContextSourceEditorLocation, UmiWorkbenchContextSourceEditorLocationArchiveSchema, UmiWorkbenchContextSourceEditorLocationArchiveBound, UmiWorkbenchContextSourceEditorLocationArchiveWrite, UmiWorkbenchContextSourceEditorLocationArchiveRead, UmiWorkbenchContextSourceEditorLocationArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_workbench_context_source_editor_location_archive_decode_with_workspace, UmiWorkbenchContextSourceEditorLocation,
+    UmiWorkbenchContextSourceEditorLocationArchiveSchema, UmiWorkbenchContextSourceEditorLocationArchiveBound, UmiWorkbenchContextSourceEditorLocationArchiveRead, UmiWorkbenchContextSourceEditorLocationArchiveValidate)
+
 /* A delayed editor location draft must name the revision it reviewed.
  * Domain validation remains with this value owner; the shared guard publishes
  * all fields together without emitting events or changing any external service. */

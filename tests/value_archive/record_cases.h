@@ -101,9 +101,20 @@ construction_cleanup:
 /* Expected values come from the domain's member comparator, not a second
  * decoder. Byte comparisons are used only for deterministic output or for
  * the same destination object after an operation promises not to touch it. */
+
+#ifdef ARCHIVE_WORKSPACE_DECODE
+#include "workspace_cases.h"
+/* Shared cases use the existing snapshot constructor and full public-field comparator. */
+UMI_TEST_VALUE_WORKSPACE(ArchiveWorkspaceCases, ARCHIVE_TYPE,
+    ARCHIVE_ENCODE, ARCHIVE_WORKSPACE_DECODE, ARCHIVE_EQUAL)
+#endif
+
 static int ArchiveRecordCases(void)
 {
     ARCHIVE_TYPE value = ArchiveSample(), output = ArchiveSample();
+#ifdef ARCHIVE_WORKSPACE_DECODE
+    if (ArchiveWorkspaceCases(&value) != 0) return 1;
+#endif
 #ifdef ARCHIVE_CONDITIONAL_DECODE
     if (ArchiveConditionalCases(&value) != 0 ||
         ArchiveConditionalRevisionCases(&value) != 0) return 1;

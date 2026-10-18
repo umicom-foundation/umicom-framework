@@ -115,6 +115,11 @@ UMI_TEST_VALUE_TRANSFER(UmiMediaContextTransferCases, UmiMediaContext,
     umi_media_context_archive_encode, umi_media_context_archive_decode,
     UmiMediaContextTransferEqual, UmiMediaContextTransferTails, UmiMediaContextTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiMediaContextTransferCasesWithWorkspace, UmiMediaContext,
+    umi_media_context_archive_encode, umi_media_context_archive_decode_with_workspace, UmiMediaContextTransferEqual)
+
 #include "../conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiMediaContextConditionalArchiveCases, UmiMediaContext,
     umi_media_context_archive_encode, umi_media_context_archive_decode_if_unchanged,
@@ -134,6 +139,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_media_context_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiMediaContextTransferCases(&value) != 0) return 1;
+    if (UmiMediaContextTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiMediaContextConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

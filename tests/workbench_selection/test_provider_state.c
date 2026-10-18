@@ -170,6 +170,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionProviderStateTransferCases, UmiWork
     umi_workbench_selection_provider_state_archive_encode, umi_workbench_selection_provider_state_archive_decode,
     UmiWorkbenchSelectionProviderStateTransferEqual, UmiWorkbenchSelectionProviderStateTransferTails, UmiWorkbenchSelectionProviderStateTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchSelectionProviderStateTransferCasesWithWorkspace, UmiWorkbenchSelectionProviderState,
+    umi_workbench_selection_provider_state_archive_encode, umi_workbench_selection_provider_state_archive_decode_with_workspace, UmiWorkbenchSelectionProviderStateTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchSelectionProviderStateConditionalArchiveCases, UmiWorkbenchSelectionProviderState,
     umi_workbench_selection_provider_state_archive_encode, umi_workbench_selection_provider_state_archive_decode_if_unchanged,
@@ -208,6 +213,7 @@ int main(void)
     assert(umi_workbench_selection_provider_state_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionProviderStateTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionProviderStateTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchSelectionProviderStateConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchSelectionProviderStateReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchSelectionProviderStateMutationGuards(&record) != 0) return 1;

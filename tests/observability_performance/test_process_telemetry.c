@@ -97,6 +97,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPerformanceProcessTelemetryTransferCases, UmiPerforma
     umi_performance_process_telemetry_archive_encode, umi_performance_process_telemetry_archive_decode,
     UmiPerformanceProcessTelemetryTransferEqual, UmiPerformanceProcessTelemetryTransferTails, UmiPerformanceProcessTelemetryTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPerformanceProcessTelemetryTransferCasesWithWorkspace, UmiPerformanceProcessTelemetry,
+    umi_performance_process_telemetry_archive_encode, umi_performance_process_telemetry_archive_decode_with_workspace, UmiPerformanceProcessTelemetryTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPerformanceProcessTelemetryConditionalArchiveCases, UmiPerformanceProcessTelemetry,
     umi_performance_process_telemetry_archive_encode, umi_performance_process_telemetry_archive_decode_if_unchanged,
@@ -154,6 +159,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_performance_process_telemetry_validate(&left) != UMI_STATUS_OK) return 2;
     if (UmiPerformanceProcessTelemetryTransferCases(&left) != 0) return 1;
+    if (UmiPerformanceProcessTelemetryTransferCasesWithWorkspace(&left) != 0) return 1;
     if (UmiPerformanceProcessTelemetryConditionalArchiveCases(&left) != 0) return 1;
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */

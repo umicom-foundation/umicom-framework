@@ -134,6 +134,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCrossApplicationPanelInstanceTransferCases, UmiCrossA
     umi_context_panel_instance_archive_encode, umi_context_panel_instance_archive_decode,
     UmiCrossApplicationPanelInstanceTransferEqual, UmiCrossApplicationPanelInstanceTransferTails, UmiCrossApplicationPanelInstanceTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCrossApplicationPanelInstanceTransferCasesWithWorkspace, UmiCrossApplicationPanelInstance,
+    umi_context_panel_instance_archive_encode, umi_context_panel_instance_archive_decode_with_workspace, UmiCrossApplicationPanelInstanceTransferEqual)
+
 #include "../conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCrossApplicationPanelInstanceConditionalArchiveCases, UmiCrossApplicationPanelInstance,
     umi_context_panel_instance_archive_encode, umi_context_panel_instance_archive_decode_if_unchanged,
@@ -155,6 +160,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_context_panel_instance_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiCrossApplicationPanelInstanceTransferCases(&value) != 0) return 1;
+    if (UmiCrossApplicationPanelInstanceTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiCrossApplicationPanelInstanceConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

@@ -97,6 +97,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPerformanceTraceFilterTransferCases, UmiPerformanceTr
     umi_performance_trace_filter_archive_encode, umi_performance_trace_filter_archive_decode,
     UmiPerformanceTraceFilterTransferEqual, UmiPerformanceTraceFilterTransferTails, UmiPerformanceTraceFilterTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPerformanceTraceFilterTransferCasesWithWorkspace, UmiPerformanceTraceFilter,
+    umi_performance_trace_filter_archive_encode, umi_performance_trace_filter_archive_decode_with_workspace, UmiPerformanceTraceFilterTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPerformanceTraceFilterConditionalArchiveCases, UmiPerformanceTraceFilter,
     umi_performance_trace_filter_archive_encode, umi_performance_trace_filter_archive_decode_if_unchanged,
@@ -154,6 +159,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_performance_trace_filter_validate(&left) != UMI_STATUS_OK) return 2;
     if (UmiPerformanceTraceFilterTransferCases(&left) != 0) return 1;
+    if (UmiPerformanceTraceFilterTransferCasesWithWorkspace(&left) != 0) return 1;
     if (UmiPerformanceTraceFilterConditionalArchiveCases(&left) != 0) return 1;
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */

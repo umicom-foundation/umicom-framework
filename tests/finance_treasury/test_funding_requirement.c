@@ -67,6 +67,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryFundingRequirementTransferCases, UmiTreasuryF
     umi_treasury_funding_requirement_archive_encode, umi_treasury_funding_requirement_archive_decode,
     UmiTreasuryFundingRequirementTransferEqual, UmiTreasuryFundingRequirementTransferTails, UmiTreasuryFundingRequirementTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTreasuryFundingRequirementTransferCasesWithWorkspace, UmiTreasuryFundingRequirement,
+    umi_treasury_funding_requirement_archive_encode, umi_treasury_funding_requirement_archive_decode_with_workspace, UmiTreasuryFundingRequirementTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryFundingRequirementConditionalArchiveCases, UmiTreasuryFundingRequirement,
     umi_treasury_funding_requirement_archive_encode, umi_treasury_funding_requirement_archive_decode_if_unchanged,
@@ -78,6 +83,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_funding_requirement_init(&v, "req", 1000, 725) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryFundingRequirementTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryFundingRequirementTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTreasuryFundingRequirementConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */

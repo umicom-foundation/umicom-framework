@@ -54,6 +54,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFcSelectionContractTransferCases, UmiFcSelectionContr
     umi_fc_selection_contract_archive_encode, umi_fc_selection_contract_archive_decode,
     UmiFcSelectionContractTransferEqual, UmiFcSelectionContractTransferTails, UmiFcSelectionContractTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFcSelectionContractTransferCasesWithWorkspace, UmiFcSelectionContract,
+    umi_fc_selection_contract_archive_encode, umi_fc_selection_contract_archive_decode_with_workspace, UmiFcSelectionContractTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFcSelectionContractConditionalArchiveCases, UmiFcSelectionContract,
     umi_fc_selection_contract_archive_encode, umi_fc_selection_contract_archive_decode_if_unchanged,
@@ -63,6 +68,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiFcSelectionContractConditionalArchiveCases, UmiF
 int main(void) {
     UmiFcSelectionContract x={3U,true,true}; CHECK(umi_fc_selection_contract_validate(&x));
     if (UmiFcSelectionContractTransferCases(&x) != 0) return 1;
+    if (UmiFcSelectionContractTransferCasesWithWorkspace(&x) != 0) return 1;
     if (UmiFcSelectionContractConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;

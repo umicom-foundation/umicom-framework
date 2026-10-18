@@ -52,6 +52,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRadFlexConstraintTransferCases, UmiRadFlexConstraint,
     umi_rad_flex_constraint_archive_encode, umi_rad_flex_constraint_archive_decode,
     UmiRadFlexConstraintTransferEqual, UmiRadFlexConstraintTransferTails, UmiRadFlexConstraintTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRadFlexConstraintTransferCasesWithWorkspace, UmiRadFlexConstraint,
+    umi_rad_flex_constraint_archive_encode, umi_rad_flex_constraint_archive_decode_with_workspace, UmiRadFlexConstraintTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadFlexConstraintConditionalArchiveCases, UmiRadFlexConstraint,
     umi_rad_flex_constraint_archive_encode, umi_rad_flex_constraint_archive_decode_if_unchanged,
@@ -60,5 +65,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadFlexConstraintConditionalArchiveCases, UmiRad
 
 int main(void){UmiRadFlexConstraint item;CHECK(umi_rad_flex_constraint_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_flex_constraint_is_valid(&item));
     if (UmiRadFlexConstraintTransferCases(&item) != 0) return 1;
+    if (UmiRadFlexConstraintTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiRadFlexConstraintConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

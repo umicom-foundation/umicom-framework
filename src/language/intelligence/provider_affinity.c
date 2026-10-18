@@ -174,6 +174,12 @@ static UmiStatus UmiLanguageIntelligenceProviderAffinityArchiveValidate(const Um
 UMI_DEFINE_VALUE_ARCHIVE(umi_language_intelligence_provider_affinity_archive_encode, umi_language_intelligence_provider_affinity_archive_decode,
     UmiLanguageIntelligenceProviderAffinity, UmiLanguageIntelligenceProviderAffinityArchiveSchema, UmiLanguageIntelligenceProviderAffinityArchiveBound, UmiLanguageIntelligenceProviderAffinityArchiveWrite, UmiLanguageIntelligenceProviderAffinityArchiveRead, UmiLanguageIntelligenceProviderAffinityArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_language_intelligence_provider_affinity_archive_decode_with_workspace, UmiLanguageIntelligenceProviderAffinity,
+    UmiLanguageIntelligenceProviderAffinityArchiveSchema, UmiLanguageIntelligenceProviderAffinityArchiveBound, UmiLanguageIntelligenceProviderAffinityArchiveRead, UmiLanguageIntelligenceProviderAffinityArchiveValidate)
+
 /* Guard restoration with the previously reviewed encoded value. Domain field
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_language_intelligence_provider_affinity_archive_decode_if_unchanged, umi_language_intelligence_provider_affinity_archive_encode,

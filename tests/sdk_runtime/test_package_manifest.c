@@ -233,6 +233,8 @@ static void ArchiveFillUnusedText(UmiSdkRuntimePackageManifest *value)
 #define ARCHIVE_TYPE UmiSdkRuntimePackageManifest
 #define ARCHIVE_ENCODE umi_sdk_runtime_package_manifest_archive_encode
 #define ARCHIVE_DECODE umi_sdk_runtime_package_manifest_archive_decode
+/* Use explicit caller-owned scratch for the same snapshot import contract. */
+#define ARCHIVE_WORKSPACE_DECODE umi_sdk_runtime_package_manifest_archive_decode_with_workspace
 /* Exercise guarded import through this domain's public snapshot codec. */
 #define ARCHIVE_CONDITIONAL_DECODE umi_sdk_runtime_package_manifest_archive_decode_if_unchanged
 #define ARCHIVE_EQUAL RecordDefaultsEqual

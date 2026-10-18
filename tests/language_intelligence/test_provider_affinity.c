@@ -106,6 +106,11 @@ UMI_TEST_VALUE_TRANSFER(UmiLanguageIntelligenceProviderAffinityTransferCases, Um
     umi_language_intelligence_provider_affinity_archive_encode, umi_language_intelligence_provider_affinity_archive_decode,
     UmiLanguageIntelligenceProviderAffinityTransferEqual, UmiLanguageIntelligenceProviderAffinityTransferTails, UmiLanguageIntelligenceProviderAffinityTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiLanguageIntelligenceProviderAffinityTransferCasesWithWorkspace, UmiLanguageIntelligenceProviderAffinity,
+    umi_language_intelligence_provider_affinity_archive_encode, umi_language_intelligence_provider_affinity_archive_decode_with_workspace, UmiLanguageIntelligenceProviderAffinityTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiLanguageIntelligenceProviderAffinityConditionalArchiveCases, UmiLanguageIntelligenceProviderAffinity,
     umi_language_intelligence_provider_affinity_archive_encode, umi_language_intelligence_provider_affinity_archive_decode_if_unchanged,
@@ -119,6 +124,7 @@ int main(void)
     CHECK(umi_language_intelligence_provider_affinity_set(&mapping, "c", "clangd", "workspace") == UMI_STATUS_OK);
     CHECK(umi_language_intelligence_provider_affinity_validate(&mapping) == UMI_STATUS_OK);
     if (UmiLanguageIntelligenceProviderAffinityTransferCases(&mapping) != 0) return 1;
+    if (UmiLanguageIntelligenceProviderAffinityTransferCasesWithWorkspace(&mapping) != 0) return 1;
     if (UmiLanguageIntelligenceProviderAffinityConditionalArchiveCases(&mapping) != 0) return 1;
 
     CHECK(umi_language_intelligence_provider_affinity_matches(&mapping, "c", "workspace") != 0);

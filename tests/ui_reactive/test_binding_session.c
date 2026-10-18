@@ -68,6 +68,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveBindingSessionTransferCases, UmiUiReactiveB
     umi_ui_reactive_binding_session_archive_encode, umi_ui_reactive_binding_session_archive_decode,
     UmiUiReactiveBindingSessionTransferEqual, UmiUiReactiveBindingSessionTransferTails, UmiUiReactiveBindingSessionTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveBindingSessionTransferCasesWithWorkspace, UmiUiReactiveBindingSession,
+    umi_ui_reactive_binding_session_archive_encode, umi_ui_reactive_binding_session_archive_decode_with_workspace, UmiUiReactiveBindingSessionTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveBindingSessionConditionalArchiveCases, UmiUiReactiveBindingSession,
     umi_ui_reactive_binding_session_archive_encode, umi_ui_reactive_binding_session_archive_decode_if_unchanged,
@@ -83,5 +88,6 @@ int main(void) { UmiUiReactiveBindingSession item; umi_ui_reactive_binding_sessi
     populated.revision = (uint64_t)4;
     populated.propagations = (size_t)5;
     if (UmiUiReactiveBindingSessionTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveBindingSessionTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveBindingSessionConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_binding_session_valid(&item) ? 0 : 1; }

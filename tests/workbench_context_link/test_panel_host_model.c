@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkPanelHostModelTransferCases, UmiW
     umi_workbench_context_link_panel_host_model_archive_encode, umi_workbench_context_link_panel_host_model_archive_decode,
     UmiWorkbenchContextLinkPanelHostModelTransferEqual, UmiWorkbenchContextLinkPanelHostModelTransferTails, UmiWorkbenchContextLinkPanelHostModelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextLinkPanelHostModelTransferCasesWithWorkspace, UmiWorkbenchContextLinkPanelHostModel,
+    umi_workbench_context_link_panel_host_model_archive_encode, umi_workbench_context_link_panel_host_model_archive_decode_with_workspace, UmiWorkbenchContextLinkPanelHostModelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkPanelHostModelConditionalArchiveCases, UmiWorkbenchContextLinkPanelHostModel,
     umi_workbench_context_link_panel_host_model_archive_encode, umi_workbench_context_link_panel_host_model_archive_decode_if_unchanged,
@@ -151,6 +156,7 @@ int main(void)
     umi_workbench_context_link_panel_host_model_init(&record, "panel_host_model-id");
     assert(umi_workbench_context_link_panel_host_model_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkPanelHostModelTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkPanelHostModelTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkPanelHostModelConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkPanelHostModelReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkPanelHostModelMutationGuards(&record) != 0) return 1;

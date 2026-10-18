@@ -52,6 +52,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRadResizeHandleTransferCases, UmiRadResizeHandle,
     umi_rad_resize_handle_archive_encode, umi_rad_resize_handle_archive_decode,
     UmiRadResizeHandleTransferEqual, UmiRadResizeHandleTransferTails, UmiRadResizeHandleTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRadResizeHandleTransferCasesWithWorkspace, UmiRadResizeHandle,
+    umi_rad_resize_handle_archive_encode, umi_rad_resize_handle_archive_decode_with_workspace, UmiRadResizeHandleTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadResizeHandleConditionalArchiveCases, UmiRadResizeHandle,
     umi_rad_resize_handle_archive_encode, umi_rad_resize_handle_archive_decode_if_unchanged,
@@ -60,5 +65,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadResizeHandleConditionalArchiveCases, UmiRadRe
 
 int main(void){UmiRadResizeHandle item;CHECK(umi_rad_resize_handle_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_resize_handle_is_valid(&item));
     if (UmiRadResizeHandleTransferCases(&item) != 0) return 1;
+    if (UmiRadResizeHandleTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiRadResizeHandleConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

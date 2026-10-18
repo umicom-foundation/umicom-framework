@@ -68,6 +68,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryLiquidityGapTransferCases, UmiTreasuryLiquidi
     umi_treasury_liquidity_gap_archive_encode, umi_treasury_liquidity_gap_archive_decode,
     UmiTreasuryLiquidityGapTransferEqual, UmiTreasuryLiquidityGapTransferTails, UmiTreasuryLiquidityGapTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTreasuryLiquidityGapTransferCasesWithWorkspace, UmiTreasuryLiquidityGap,
+    umi_treasury_liquidity_gap_archive_encode, umi_treasury_liquidity_gap_archive_decode_with_workspace, UmiTreasuryLiquidityGapTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryLiquidityGapConditionalArchiveCases, UmiTreasuryLiquidityGap,
     umi_treasury_liquidity_gap_archive_encode, umi_treasury_liquidity_gap_archive_decode_if_unchanged,
@@ -79,6 +84,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_liquidity_gap_init(&v, "gap", 30, 1000, 1300) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryLiquidityGapTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryLiquidityGapTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTreasuryLiquidityGapConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */

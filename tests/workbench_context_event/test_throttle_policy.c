@@ -151,6 +151,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextEventThrottlePolicyTransferCases, Umi
     umi_workbench_context_event_throttle_policy_archive_encode, umi_workbench_context_event_throttle_policy_archive_decode,
     UmiWorkbenchContextEventThrottlePolicyTransferEqual, UmiWorkbenchContextEventThrottlePolicyTransferTails, UmiWorkbenchContextEventThrottlePolicyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextEventThrottlePolicyTransferCasesWithWorkspace, UmiWorkbenchContextEventThrottlePolicy,
+    umi_workbench_context_event_throttle_policy_archive_encode, umi_workbench_context_event_throttle_policy_archive_decode_with_workspace, UmiWorkbenchContextEventThrottlePolicyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextEventThrottlePolicyConditionalArchiveCases, UmiWorkbenchContextEventThrottlePolicy,
     umi_workbench_context_event_throttle_policy_archive_encode, umi_workbench_context_event_throttle_policy_archive_decode_if_unchanged,
@@ -189,6 +194,7 @@ int main(void)
     assert(umi_workbench_context_event_throttle_policy_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextEventThrottlePolicyTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextEventThrottlePolicyTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextEventThrottlePolicyConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextEventThrottlePolicyReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextEventThrottlePolicyMutationGuards(&record) != 0) return 1;

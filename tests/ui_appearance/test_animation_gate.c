@@ -68,6 +68,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceAnimationGateTransferCases, UmiAppearanceAn
     umi_appearance_animation_gate_archive_encode, umi_appearance_animation_gate_archive_decode,
     UmiAppearanceAnimationGateTransferEqual, UmiAppearanceAnimationGateTransferTails, UmiAppearanceAnimationGateTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAppearanceAnimationGateTransferCasesWithWorkspace, UmiAppearanceAnimationGate,
+    umi_appearance_animation_gate_archive_encode, umi_appearance_animation_gate_archive_decode_with_workspace, UmiAppearanceAnimationGateTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceAnimationGateConditionalArchiveCases, UmiAppearanceAnimationGate,
     umi_appearance_animation_gate_archive_encode, umi_appearance_animation_gate_archive_decode_if_unchanged,
@@ -81,6 +86,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_animation_gate_is_valid(&item)) return 2;
     if (UmiAppearanceAnimationGateTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceAnimationGateTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiAppearanceAnimationGateConditionalArchiveCases(&item) != 0) return 1;
 
     item.reduced_motion=true; item.essential=false; umi_appearance_animation_gate_resolve(&item); /* Apply this operation only while the related capability or state is available. */ if(item.allowed) return 3;

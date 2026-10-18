@@ -84,6 +84,11 @@ UMI_TEST_VALUE_TRANSFER(UmiBankingCustomerSegmentTransferCases, UmiBankingCustom
     umi_banking_customer_segment_archive_encode, umi_banking_customer_segment_archive_decode,
     UmiBankingCustomerSegmentTransferEqual, UmiBankingCustomerSegmentTransferTails, UmiBankingCustomerSegmentTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiBankingCustomerSegmentTransferCasesWithWorkspace, UmiBankingCustomerSegment,
+    umi_banking_customer_segment_archive_encode, umi_banking_customer_segment_archive_decode_with_workspace, UmiBankingCustomerSegmentTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiBankingCustomerSegmentConditionalArchiveCases, UmiBankingCustomerSegment,
     umi_banking_customer_segment_archive_encode, umi_banking_customer_segment_archive_decode_if_unchanged,
@@ -97,6 +102,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if(!umi_banking_customer_segment_valid(&v)) return 2;
     if (UmiBankingCustomerSegmentTransferCases(&v) != 0) return 1;
+    if (UmiBankingCustomerSegmentTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiBankingCustomerSegmentConditionalArchiveCases(&v) != 0) return 1;
 
     return 0;

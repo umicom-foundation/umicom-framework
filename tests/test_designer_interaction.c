@@ -23,6 +23,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Command identifiers replace hidden widget callback pointers. */
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #include "umicom/umicom.h"
 #include <assert.h>
 #include <stdlib.h>

@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkMenuItemTransferCases, UmiWorkben
     umi_workbench_context_link_menu_item_archive_encode, umi_workbench_context_link_menu_item_archive_decode,
     UmiWorkbenchContextLinkMenuItemTransferEqual, UmiWorkbenchContextLinkMenuItemTransferTails, UmiWorkbenchContextLinkMenuItemTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextLinkMenuItemTransferCasesWithWorkspace, UmiWorkbenchContextLinkMenuItem,
+    umi_workbench_context_link_menu_item_archive_encode, umi_workbench_context_link_menu_item_archive_decode_with_workspace, UmiWorkbenchContextLinkMenuItemTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkMenuItemConditionalArchiveCases, UmiWorkbenchContextLinkMenuItem,
     umi_workbench_context_link_menu_item_archive_encode, umi_workbench_context_link_menu_item_archive_decode_if_unchanged,
@@ -151,6 +156,7 @@ int main(void)
     umi_workbench_context_link_menu_item_init(&record, "menu_item-id");
     assert(umi_workbench_context_link_menu_item_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkMenuItemTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkMenuItemTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkMenuItemConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkMenuItemReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkMenuItemMutationGuards(&record) != 0) return 1;

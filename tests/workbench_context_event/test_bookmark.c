@@ -151,6 +151,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextEventBookmarkTransferCases, UmiWorkbe
     umi_workbench_context_event_bookmark_archive_encode, umi_workbench_context_event_bookmark_archive_decode,
     UmiWorkbenchContextEventBookmarkTransferEqual, UmiWorkbenchContextEventBookmarkTransferTails, UmiWorkbenchContextEventBookmarkTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextEventBookmarkTransferCasesWithWorkspace, UmiWorkbenchContextEventBookmark,
+    umi_workbench_context_event_bookmark_archive_encode, umi_workbench_context_event_bookmark_archive_decode_with_workspace, UmiWorkbenchContextEventBookmarkTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextEventBookmarkConditionalArchiveCases, UmiWorkbenchContextEventBookmark,
     umi_workbench_context_event_bookmark_archive_encode, umi_workbench_context_event_bookmark_archive_decode_if_unchanged,
@@ -189,6 +194,7 @@ int main(void)
     assert(umi_workbench_context_event_bookmark_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextEventBookmarkTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextEventBookmarkTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextEventBookmarkConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextEventBookmarkReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextEventBookmarkMutationGuards(&record) != 0) return 1;

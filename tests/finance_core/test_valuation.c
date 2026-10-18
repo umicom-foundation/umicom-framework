@@ -92,6 +92,11 @@ UMI_TEST_VALUE_TRANSFER(UmiValuationTransferCases, UmiValuation,
     umi_valuation_archive_encode, umi_valuation_archive_decode,
     UmiValuationTransferEqual, UmiValuationTransferTails, UmiValuationTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiValuationTransferCasesWithWorkspace, UmiValuation,
+    umi_valuation_archive_encode, umi_valuation_archive_decode_with_workspace, UmiValuationTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiValuationConditionalArchiveCases, UmiValuation,
     umi_valuation_archive_encode, umi_valuation_archive_decode_if_unchanged,
@@ -102,6 +107,7 @@ int main(void)
 {
     UmiValuation x; UmiMoney m={10,2U,{{'U','S','D','\0'}}}; CHECK(umi_valuation_init(&x,"ID",m,(UmiFinancialDate){2026,8U,25U},1U)==UMI_STATUS_OK); CHECK(umi_valuation_is_valid(&x));
     if (UmiValuationTransferCases(&x) != 0) return 1;
+    if (UmiValuationTransferCasesWithWorkspace(&x) != 0) return 1;
     if (UmiValuationConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;

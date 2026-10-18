@@ -52,6 +52,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRepositoryRemoteStatusTransferCases, UmiRepositoryRem
     umi_repository_remote_status_archive_encode, umi_repository_remote_status_archive_decode,
     UmiRepositoryRemoteStatusTransferEqual, UmiRepositoryRemoteStatusTransferTails, UmiRepositoryRemoteStatusTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRepositoryRemoteStatusTransferCasesWithWorkspace, UmiRepositoryRemoteStatus,
+    umi_repository_remote_status_archive_encode, umi_repository_remote_status_archive_decode_with_workspace, UmiRepositoryRemoteStatusTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRepositoryRemoteStatusConditionalArchiveCases, UmiRepositoryRemoteStatus,
     umi_repository_remote_status_archive_encode, umi_repository_remote_status_archive_decode_if_unchanged,
@@ -60,5 +65,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRepositoryRemoteStatusConditionalArchiveCases, U
 
 int main(void){ UmiRepositoryRemoteStatus s; umi_repository_remote_status_init(&s); s.remote_count=1U; s.has_origin=1; assert(umi_repository_remote_status_validate(&s)==UMI_STATUS_OK);
     if (UmiRepositoryRemoteStatusTransferCases(&s) != 0) return 1;
+    if (UmiRepositoryRemoteStatusTransferCasesWithWorkspace(&s) != 0) return 1;
     if (UmiRepositoryRemoteStatusConditionalArchiveCases(&s) != 0) return 1;
  return 0; }

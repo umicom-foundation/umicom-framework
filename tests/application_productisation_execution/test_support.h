@@ -12,6 +12,8 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "../support/assertions.h"
 #ifndef UMICOM_TEST_PRODUCT_EXECUTION_SUPPORT_H
 #define UMICOM_TEST_PRODUCT_EXECUTION_SUPPORT_H
 #include <assert.h>

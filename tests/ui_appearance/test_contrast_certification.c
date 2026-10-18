@@ -68,6 +68,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceContrastCertificationTransferCases, UmiAppe
     umi_appearance_contrast_certification_archive_encode, umi_appearance_contrast_certification_archive_decode,
     UmiAppearanceContrastCertificationTransferEqual, UmiAppearanceContrastCertificationTransferTails, UmiAppearanceContrastCertificationTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAppearanceContrastCertificationTransferCasesWithWorkspace, UmiAppearanceContrastCertification,
+    umi_appearance_contrast_certification_archive_encode, umi_appearance_contrast_certification_archive_decode_with_workspace, UmiAppearanceContrastCertificationTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceContrastCertificationConditionalArchiveCases, UmiAppearanceContrastCertification,
     umi_appearance_contrast_certification_archive_encode, umi_appearance_contrast_certification_archive_decode_if_unchanged,
@@ -81,6 +86,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_contrast_certification_is_valid(&item)) return 2;
     if (UmiAppearanceContrastCertificationTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceContrastCertificationTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiAppearanceContrastCertificationConditionalArchiveCases(&item) != 0) return 1;
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */

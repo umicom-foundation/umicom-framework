@@ -141,6 +141,12 @@ static UmiStatus UmiWorkbenchContextHostGroupDefinitionArchiveValidate(const Umi
 UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_context_host_group_definition_archive_encode, umi_workbench_context_host_group_definition_archive_decode,
     UmiWorkbenchContextHostGroupDefinition, UmiWorkbenchContextHostGroupDefinitionArchiveSchema, UmiWorkbenchContextHostGroupDefinitionArchiveBound, UmiWorkbenchContextHostGroupDefinitionArchiveWrite, UmiWorkbenchContextHostGroupDefinitionArchiveRead, UmiWorkbenchContextHostGroupDefinitionArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_workbench_context_host_group_definition_archive_decode_with_workspace, UmiWorkbenchContextHostGroupDefinition,
+    UmiWorkbenchContextHostGroupDefinitionArchiveSchema, UmiWorkbenchContextHostGroupDefinitionArchiveBound, UmiWorkbenchContextHostGroupDefinitionArchiveRead, UmiWorkbenchContextHostGroupDefinitionArchiveValidate)
+
 /* Guard restoration with the previously reviewed encoded value. Domain field
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_workbench_context_host_group_definition_archive_decode_if_unchanged, umi_workbench_context_host_group_definition_archive_encode,

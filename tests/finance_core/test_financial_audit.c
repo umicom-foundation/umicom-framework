@@ -109,6 +109,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFinancialAuditRecordTransferCases, UmiFinancialAuditR
     umi_financial_audit_archive_encode, umi_financial_audit_archive_decode,
     UmiFinancialAuditRecordTransferEqual, UmiFinancialAuditRecordTransferTails, UmiFinancialAuditRecordTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFinancialAuditRecordTransferCasesWithWorkspace, UmiFinancialAuditRecord,
+    umi_financial_audit_archive_encode, umi_financial_audit_archive_decode_with_workspace, UmiFinancialAuditRecordTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFinancialAuditRecordConditionalArchiveCases, UmiFinancialAuditRecord,
     umi_financial_audit_archive_encode, umi_financial_audit_archive_decode_if_unchanged,
@@ -119,6 +124,7 @@ int main(void)
 {
     UmiFinancialAuditRecord x; CHECK(umi_financial_audit_init(&x,"ID","Name","PARENT",(UmiFinancialDate){2026,8U,25U},1U)==UMI_STATUS_OK); CHECK(umi_financial_audit_is_valid(&x));
     if (UmiFinancialAuditRecordTransferCases(&x) != 0) return 1;
+    if (UmiFinancialAuditRecordTransferCasesWithWorkspace(&x) != 0) return 1;
     if (UmiFinancialAuditRecordConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;

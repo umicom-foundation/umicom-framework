@@ -131,6 +131,11 @@ UMI_TEST_VALUE_TRANSFER(UmiContextValidatorTransferCases, UmiContextValidator,
     umi_context_validator_archive_encode, umi_context_validator_archive_decode,
     UmiContextValidatorTransferEqual, UmiContextValidatorTransferTails, UmiContextValidatorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiContextValidatorTransferCasesWithWorkspace, UmiContextValidator,
+    umi_context_validator_archive_encode, umi_context_validator_archive_decode_with_workspace, UmiContextValidatorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextValidatorConditionalArchiveCases, UmiContextValidator,
     umi_context_validator_archive_encode, umi_context_validator_archive_decode_if_unchanged,
@@ -169,6 +174,7 @@ int main(void)
     assert(umi_context_validator_covers_sequence(&state,11U));
     assert(umi_context_validator_validate(&state) == UMI_STATUS_OK);
     if (UmiContextValidatorTransferCases(&state) != 0) return 1;
+    if (UmiContextValidatorTransferCasesWithWorkspace(&state) != 0) return 1;
     if (UmiContextValidatorConditionalArchiveCases(&state) != 0) return 1;
 
     return 0;

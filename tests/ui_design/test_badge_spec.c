@@ -73,6 +73,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDesignBadgeSpecTransferCases, UmiDesignBadgeSpec,
     umi_design_badge_spec_archive_encode, umi_design_badge_spec_archive_decode,
     UmiDesignBadgeSpecTransferEqual, UmiDesignBadgeSpecTransferTails, UmiDesignBadgeSpecTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDesignBadgeSpecTransferCasesWithWorkspace, UmiDesignBadgeSpec,
+    umi_design_badge_spec_archive_encode, umi_design_badge_spec_archive_decode_with_workspace, UmiDesignBadgeSpecTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignBadgeSpecConditionalArchiveCases, UmiDesignBadgeSpec,
     umi_design_badge_spec_archive_encode, umi_design_badge_spec_archive_decode_if_unchanged,
@@ -81,5 +86,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignBadgeSpecConditionalArchiveCases, UmiDesig
 
 int main(void){UmiDesignBadgeSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_badge_spec_init(&s,"Ready",UMI_DESIGN_ROLE_SUCCESS,0)!=UMI_STATUS_OK)return 1;
     if (UmiDesignBadgeSpecTransferCases(&s) != 0) return 1;
+    if (UmiDesignBadgeSpecTransferCasesWithWorkspace(&s) != 0) return 1;
     if (UmiDesignBadgeSpecConditionalArchiveCases(&s) != 0) return 1;
 return s.text[0]=='R'?0:2;}

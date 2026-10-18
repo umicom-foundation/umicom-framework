@@ -67,6 +67,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryRiskLimitTransferCases, UmiTreasuryRiskLimit,
     umi_treasury_risk_limit_archive_encode, umi_treasury_risk_limit_archive_decode,
     UmiTreasuryRiskLimitTransferEqual, UmiTreasuryRiskLimitTransferTails, UmiTreasuryRiskLimitTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTreasuryRiskLimitTransferCasesWithWorkspace, UmiTreasuryRiskLimit,
+    umi_treasury_risk_limit_archive_encode, umi_treasury_risk_limit_archive_decode_with_workspace, UmiTreasuryRiskLimitTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryRiskLimitConditionalArchiveCases, UmiTreasuryRiskLimit,
     umi_treasury_risk_limit_archive_encode, umi_treasury_risk_limit_archive_decode_if_unchanged,
@@ -78,6 +83,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_risk_limit_init(&v, "limit", 1000, 800) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryRiskLimitTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryRiskLimitTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTreasuryRiskLimitConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */

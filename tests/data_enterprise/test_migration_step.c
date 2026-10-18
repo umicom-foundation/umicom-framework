@@ -92,6 +92,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataMigrationStepTransferCases, UmiDataMigrationStep,
     umi_data_migration_step_archive_encode, umi_data_migration_step_archive_decode,
     UmiDataMigrationStepTransferEqual, UmiDataMigrationStepTransferTails, UmiDataMigrationStepTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataMigrationStepTransferCasesWithWorkspace, UmiDataMigrationStep,
+    umi_data_migration_step_archive_encode, umi_data_migration_step_archive_decode_with_workspace, UmiDataMigrationStepTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataMigrationStepConditionalArchiveCases, UmiDataMigrationStep,
     umi_data_migration_step_archive_encode, umi_data_migration_step_archive_decode_if_unchanged,
@@ -145,6 +150,7 @@ int main(void) {
     UmiDataMigrationStep item;
     CHECK(umi_data_migration_step_init(&item,"m1","add orders status",1U,true,false) == UMI_STATUS_OK);
     if (UmiDataMigrationStepTransferCases(&item) != 0) return 1;
+    if (UmiDataMigrationStepTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiDataMigrationStepConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.reversible && !item.destructive);

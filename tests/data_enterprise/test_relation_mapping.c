@@ -127,6 +127,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataRelationMappingTransferCases, UmiDataRelationMapp
     umi_data_relation_mapping_archive_encode, umi_data_relation_mapping_archive_decode,
     UmiDataRelationMappingTransferEqual, UmiDataRelationMappingTransferTails, UmiDataRelationMappingTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataRelationMappingTransferCasesWithWorkspace, UmiDataRelationMapping,
+    umi_data_relation_mapping_archive_encode, umi_data_relation_mapping_archive_decode_with_workspace, UmiDataRelationMappingTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataRelationMappingConditionalArchiveCases, UmiDataRelationMapping,
     umi_data_relation_mapping_archive_encode, umi_data_relation_mapping_archive_decode_if_unchanged,
@@ -204,6 +209,7 @@ int main(void) {
     UmiDataRelationMapping item;
     CHECK(umi_data_relation_mapping_init(&item,"Order.customer","Order","Customer","customer_id",false) == UMI_STATUS_OK);
     if (UmiDataRelationMappingTransferCases(&item) != 0) return 1;
+    if (UmiDataRelationMappingTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiDataRelationMappingConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(!item.collection);

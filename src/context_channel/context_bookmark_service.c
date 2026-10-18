@@ -259,6 +259,12 @@ static UmiStatus UmiContextBookmarkServiceArchiveValidate(const UmiContextBookma
 UMI_DEFINE_VALUE_ARCHIVE(umi_context_bookmark_service_archive_encode, umi_context_bookmark_service_archive_decode,
     UmiContextBookmarkService, UmiContextBookmarkServiceArchiveSchema, UmiContextBookmarkServiceArchiveBound, UmiContextBookmarkServiceArchiveWrite, UmiContextBookmarkServiceArchiveRead, UmiContextBookmarkServiceArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_context_bookmark_service_archive_decode_with_workspace, UmiContextBookmarkService,
+    UmiContextBookmarkServiceArchiveSchema, UmiContextBookmarkServiceArchiveBound, UmiContextBookmarkServiceArchiveRead, UmiContextBookmarkServiceArchiveValidate)
+
 /* Restore this typed value only while its encoded state still matches the
  * caller's reviewed snapshot. The shared guard checks every encoded byte;
  * domain decoding and validation stay with this owner. */

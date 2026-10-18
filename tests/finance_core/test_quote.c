@@ -108,12 +108,18 @@ UMI_TEST_VALUE_TRANSFER(UmiQuoteTransferCases, UmiQuote,
     umi_quote_archive_encode, umi_quote_archive_decode,
     UmiQuoteTransferEqual, UmiQuoteTransferTails, UmiQuoteTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiQuoteTransferCasesWithWorkspace, UmiQuote,
+    umi_quote_archive_encode, umi_quote_archive_decode_with_workspace, UmiQuoteTransferEqual)
+
 int main(void)
 {
     UmiMarketDataKey k; UmiFinancialPrice p; UmiQuote q; CHECK(umi_market_data_key_init(&k,"K","Key","SRC",1U)==UMI_STATUS_OK); CHECK(umi_price_init(&p,1.0,2U)==UMI_STATUS_OK); CHECK(umi_quote_init(&q,&k,UMI_QUOTE_MID,p,1)==UMI_STATUS_OK);
     /* Verify the baseline Finance quote and every preserved archive boundary case. */
     CHECK(umi_quote_is_valid(&q));
     CHECK(UmiQuoteTransferCases(&q) == 0);
+    CHECK(UmiQuoteTransferCasesWithWorkspace(&q) == 0);
     /* Distinct non-default fields prove that every Finance field, rather than
      * Trading bid/ask bytes or object padding, survives the public codec. */
     q.key.state = UINT32_C(123);
@@ -123,5 +129,6 @@ int main(void)
     q.price.scale = 2U;
     q.timestamp = INT64_C(2147483648);
     CHECK(UmiQuoteTransferCases(&q) == 0);
+    CHECK(UmiQuoteTransferCasesWithWorkspace(&q) == 0);
     return 0;
 }

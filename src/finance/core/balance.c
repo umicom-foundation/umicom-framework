@@ -80,6 +80,12 @@ static UmiStatus UmiFinancialBalanceArchiveValidate(const UmiFinancialBalance *v
 UMI_DEFINE_VALUE_ARCHIVE(umi_balance_archive_encode, umi_balance_archive_decode,
     UmiFinancialBalance, UmiFinancialBalanceArchiveSchema, UmiFinancialBalanceArchiveBound, UmiFinancialBalanceArchiveWrite, UmiFinancialBalanceArchiveRead, UmiFinancialBalanceArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_balance_archive_decode_with_workspace, UmiFinancialBalance,
+    UmiFinancialBalanceArchiveSchema, UmiFinancialBalanceArchiveBound, UmiFinancialBalanceArchiveRead, UmiFinancialBalanceArchiveValidate)
+
 /* Restore this typed value only while its encoded state still matches the
  * caller's reviewed snapshot. The shared guard checks every encoded byte;
  * domain decoding and validation stay with this owner. */

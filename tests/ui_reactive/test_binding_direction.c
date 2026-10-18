@@ -50,6 +50,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveBindingDirectionPolicyTransferCases, UmiUiR
     umi_ui_reactive_binding_direction_archive_encode, umi_ui_reactive_binding_direction_archive_decode,
     UmiUiReactiveBindingDirectionPolicyTransferEqual, UmiUiReactiveBindingDirectionPolicyTransferTails, UmiUiReactiveBindingDirectionPolicyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveBindingDirectionPolicyTransferCasesWithWorkspace, UmiUiReactiveBindingDirectionPolicy,
+    umi_ui_reactive_binding_direction_archive_encode, umi_ui_reactive_binding_direction_archive_decode_with_workspace, UmiUiReactiveBindingDirectionPolicyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveBindingDirectionPolicyConditionalArchiveCases, UmiUiReactiveBindingDirectionPolicy,
     umi_ui_reactive_binding_direction_archive_encode, umi_ui_reactive_binding_direction_archive_decode_if_unchanged,
@@ -62,5 +67,6 @@ int main(void) { UmiUiReactiveBindingDirectionPolicy item; umi_ui_reactive_bindi
     UmiUiReactiveBindingDirectionPolicy populated = item;
     populated.propagate_initial = true;
     if (UmiUiReactiveBindingDirectionPolicyTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveBindingDirectionPolicyTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveBindingDirectionPolicyConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_binding_direction_valid(&item) ? 0 : 1; }

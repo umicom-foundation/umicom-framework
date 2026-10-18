@@ -108,6 +108,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPricingContextTransferCases, UmiPricingContext,
     umi_pricing_context_archive_encode, umi_pricing_context_archive_decode,
     UmiPricingContextTransferEqual, UmiPricingContextTransferTails, UmiPricingContextTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPricingContextTransferCasesWithWorkspace, UmiPricingContext,
+    umi_pricing_context_archive_encode, umi_pricing_context_archive_decode_with_workspace, UmiPricingContextTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPricingContextConditionalArchiveCases, UmiPricingContext,
     umi_pricing_context_archive_encode, umi_pricing_context_archive_decode_if_unchanged,
@@ -118,6 +123,7 @@ int main(void)
 {
     UmiPricingContext x; CHECK(umi_pricing_context_init(&x,"ID","Name","CODE",(UmiFinancialDate){2026,8U,25U})==UMI_STATUS_OK); CHECK(umi_pricing_context_is_valid(&x));
     if (UmiPricingContextTransferCases(&x) != 0) return 1;
+    if (UmiPricingContextTransferCasesWithWorkspace(&x) != 0) return 1;
     if (UmiPricingContextConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;

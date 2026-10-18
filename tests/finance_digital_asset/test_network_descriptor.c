@@ -91,6 +91,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalNetworkDescriptorTransferCases, UmiDigitalNetw
     umi_digital_asset_network_descriptor_archive_encode, umi_digital_asset_network_descriptor_archive_decode,
     UmiDigitalNetworkDescriptorTransferEqual, UmiDigitalNetworkDescriptorTransferTails, UmiDigitalNetworkDescriptorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDigitalNetworkDescriptorTransferCasesWithWorkspace, UmiDigitalNetworkDescriptor,
+    umi_digital_asset_network_descriptor_archive_encode, umi_digital_asset_network_descriptor_archive_decode_with_workspace, UmiDigitalNetworkDescriptorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalNetworkDescriptorConditionalArchiveCases, UmiDigitalNetworkDescriptor,
     umi_digital_asset_network_descriptor_archive_encode, umi_digital_asset_network_descriptor_archive_decode_if_unchanged,
@@ -103,6 +108,7 @@ int main(void)
     CHECK(umi_digital_asset_network_descriptor_init(&value, "BTC", "Bitcoin", UMI_DIGITAL_NETWORK_UTXO, 6U) == UMI_STATUS_OK);
     CHECK(umi_digital_asset_network_descriptor_valid(&value));
     if (UmiDigitalNetworkDescriptorTransferCases(&value) != 0) return 1;
+    if (UmiDigitalNetworkDescriptorTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDigitalNetworkDescriptorConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

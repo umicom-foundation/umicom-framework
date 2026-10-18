@@ -121,6 +121,12 @@ static UmiStatus UmiRepositoryDependencyArchiveValidate(const UmiRepositoryDepen
 UMI_DEFINE_VALUE_ARCHIVE(umi_repository_dependency_archive_encode, umi_repository_dependency_archive_decode,
     UmiRepositoryDependency, UmiRepositoryDependencyArchiveSchema, UmiRepositoryDependencyArchiveBound, UmiRepositoryDependencyArchiveWrite, UmiRepositoryDependencyArchiveRead, UmiRepositoryDependencyArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_repository_dependency_archive_decode_with_workspace, UmiRepositoryDependency,
+    UmiRepositoryDependencyArchiveSchema, UmiRepositoryDependencyArchiveBound, UmiRepositoryDependencyArchiveRead, UmiRepositoryDependencyArchiveValidate)
+
 /* Guard restoration with the previously reviewed encoded value. Domain field
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_repository_dependency_archive_decode_if_unchanged, umi_repository_dependency_archive_encode,

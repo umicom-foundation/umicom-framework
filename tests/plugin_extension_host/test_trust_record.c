@@ -93,6 +93,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPluginExtensionHostTrustRecordTransferCases, UmiPlugi
     umi_plugin_extension_host_trust_record_archive_encode, umi_plugin_extension_host_trust_record_archive_decode,
     UmiPluginExtensionHostTrustRecordTransferEqual, UmiPluginExtensionHostTrustRecordTransferTails, UmiPluginExtensionHostTrustRecordTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPluginExtensionHostTrustRecordTransferCasesWithWorkspace, UmiPluginExtensionHostTrustRecord,
+    umi_plugin_extension_host_trust_record_archive_encode, umi_plugin_extension_host_trust_record_archive_decode_with_workspace, UmiPluginExtensionHostTrustRecordTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPluginExtensionHostTrustRecordConditionalArchiveCases, UmiPluginExtensionHostTrustRecord,
     umi_plugin_extension_host_trust_record_archive_encode, umi_plugin_extension_host_trust_record_archive_decode_if_unchanged,
@@ -107,6 +112,7 @@ int main(void)
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_plugin_extension_host_trust_record_validate(&value) != UMI_STATUS_OK) return 2;
     if (UmiPluginExtensionHostTrustRecordTransferCases(&value) != 0) return 1;
+    if (UmiPluginExtensionHostTrustRecordTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiPluginExtensionHostTrustRecordConditionalArchiveCases(&value) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */

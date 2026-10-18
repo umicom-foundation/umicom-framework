@@ -87,6 +87,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicPanelRecentTransferCases, UmiUiMosaicPanelRec
     umi_ui_mosaic_panel_recent_archive_encode, umi_ui_mosaic_panel_recent_archive_decode,
     UmiUiMosaicPanelRecentTransferEqual, UmiUiMosaicPanelRecentTransferTails, UmiUiMosaicPanelRecentTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiMosaicPanelRecentTransferCasesWithWorkspace, UmiUiMosaicPanelRecent,
+    umi_ui_mosaic_panel_recent_archive_encode, umi_ui_mosaic_panel_recent_archive_decode_with_workspace, UmiUiMosaicPanelRecentTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicPanelRecentConditionalArchiveCases, UmiUiMosaicPanelRecent,
     umi_ui_mosaic_panel_recent_archive_encode, umi_ui_mosaic_panel_recent_archive_decode_if_unchanged,
@@ -101,6 +106,7 @@ int main(void) {
     value.priority = 10U;
     CHECK(umi_ui_mosaic_panel_recent_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicPanelRecentTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicPanelRecentTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiUiMosaicPanelRecentConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_panel_recent_rank(&value, 5U) == 16U);

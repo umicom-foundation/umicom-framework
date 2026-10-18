@@ -173,6 +173,12 @@ static UmiStatus UmiTeacherC23TrackArchiveValidate(const UmiTeacherC23Track *val
 UMI_DEFINE_VALUE_ARCHIVE(umi_teacher_c23_track_archive_encode, umi_teacher_c23_track_archive_decode,
     UmiTeacherC23Track, UmiTeacherC23TrackArchiveSchema, UmiTeacherC23TrackArchiveBound, UmiTeacherC23TrackArchiveWrite, UmiTeacherC23TrackArchiveRead, UmiTeacherC23TrackArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_teacher_c23_track_archive_decode_with_workspace, UmiTeacherC23Track,
+    UmiTeacherC23TrackArchiveSchema, UmiTeacherC23TrackArchiveBound, UmiTeacherC23TrackArchiveRead, UmiTeacherC23TrackArchiveValidate)
+
 /* Guard restoration with the previously reviewed encoded value. Domain field
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_teacher_c23_track_archive_decode_if_unchanged, umi_teacher_c23_track_archive_encode,

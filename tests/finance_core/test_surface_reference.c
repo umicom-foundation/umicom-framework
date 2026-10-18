@@ -105,6 +105,11 @@ UMI_TEST_VALUE_TRANSFER(UmiSurfaceReferenceTransferCases, UmiSurfaceReference,
     umi_surface_reference_archive_encode, umi_surface_reference_archive_decode,
     UmiSurfaceReferenceTransferEqual, UmiSurfaceReferenceTransferTails, UmiSurfaceReferenceTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiSurfaceReferenceTransferCasesWithWorkspace, UmiSurfaceReference,
+    umi_surface_reference_archive_encode, umi_surface_reference_archive_decode_with_workspace, UmiSurfaceReferenceTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiSurfaceReferenceConditionalArchiveCases, UmiSurfaceReference,
     umi_surface_reference_archive_encode, umi_surface_reference_archive_decode_if_unchanged,
@@ -115,6 +120,7 @@ int main(void)
 {
     UmiSurfaceReference x; CHECK(umi_surface_reference_init(&x,"ID","Name","CODE")==UMI_STATUS_OK); CHECK(umi_surface_reference_is_valid(&x));
     if (UmiSurfaceReferenceTransferCases(&x) != 0) return 1;
+    if (UmiSurfaceReferenceTransferCasesWithWorkspace(&x) != 0) return 1;
     if (UmiSurfaceReferenceConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;

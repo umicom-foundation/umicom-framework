@@ -14,6 +14,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* VCS provider v2 repository dispatch tests. Sammy Hegab, Umicom Foundation. MIT. */
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #include <assert.h>
 #include "vcs_fixture.h"
 /*

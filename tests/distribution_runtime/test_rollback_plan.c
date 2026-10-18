@@ -92,6 +92,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDrRollbackPlanTransferCases, UmiDrRollbackPlan,
     umi_dr_rollback_plan_archive_encode, umi_dr_rollback_plan_archive_decode,
     UmiDrRollbackPlanTransferEqual, UmiDrRollbackPlanTransferTails, UmiDrRollbackPlanTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDrRollbackPlanTransferCasesWithWorkspace, UmiDrRollbackPlan,
+    umi_dr_rollback_plan_archive_encode, umi_dr_rollback_plan_archive_decode_with_workspace, UmiDrRollbackPlanTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrRollbackPlanConditionalArchiveCases, UmiDrRollbackPlan,
     umi_dr_rollback_plan_archive_encode, umi_dr_rollback_plan_archive_decode_if_unchanged,
@@ -101,6 +106,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrRollbackPlanConditionalArchiveCases, UmiDrRoll
 int main(void) {
     UmiDrRollbackPlan value; umi_dr_rollback_plan_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"rb")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.checkpoint_id,sizeof(value.checkpoint_id),"cp")==UMI_STATUS_OK); value.verified=true; CHECK(umi_dr_rollback_plan_valid(&value));
     if (UmiDrRollbackPlanTransferCases(&value) != 0) return 1;
+    if (UmiDrRollbackPlanTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDrRollbackPlanConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_rollback_plan_fingerprint(&value) != 0U);
     return 0;

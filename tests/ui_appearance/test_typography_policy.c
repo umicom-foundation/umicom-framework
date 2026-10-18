@@ -69,6 +69,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceTypographyPolicyTransferCases, UmiAppearanc
     umi_appearance_typography_policy_archive_encode, umi_appearance_typography_policy_archive_decode,
     UmiAppearanceTypographyPolicyTransferEqual, UmiAppearanceTypographyPolicyTransferTails, UmiAppearanceTypographyPolicyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAppearanceTypographyPolicyTransferCasesWithWorkspace, UmiAppearanceTypographyPolicy,
+    umi_appearance_typography_policy_archive_encode, umi_appearance_typography_policy_archive_decode_with_workspace, UmiAppearanceTypographyPolicyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceTypographyPolicyConditionalArchiveCases, UmiAppearanceTypographyPolicy,
     umi_appearance_typography_policy_archive_encode, umi_appearance_typography_policy_archive_decode_if_unchanged,
@@ -82,6 +87,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_typography_policy_is_valid(&item)) return 2;
     if (UmiAppearanceTypographyPolicyTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceTypographyPolicyTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiAppearanceTypographyPolicyConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;

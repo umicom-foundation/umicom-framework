@@ -72,6 +72,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCommodityLossAllowanceTransferCases, UmiCommodityLoss
     umi_commodity_loss_allowance_archive_encode, umi_commodity_loss_allowance_archive_decode,
     UmiCommodityLossAllowanceTransferEqual, UmiCommodityLossAllowanceTransferTails, UmiCommodityLossAllowanceTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCommodityLossAllowanceTransferCasesWithWorkspace, UmiCommodityLossAllowance,
+    umi_commodity_loss_allowance_archive_encode, umi_commodity_loss_allowance_archive_decode_with_workspace, UmiCommodityLossAllowanceTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCommodityLossAllowanceConditionalArchiveCases, UmiCommodityLossAllowance,
     umi_commodity_loss_allowance_archive_encode, umi_commodity_loss_allowance_archive_decode_if_unchanged,
@@ -84,6 +89,7 @@ int main(void)
     CHECK(umi_commodity_loss_allowance_init(&value, "CTR-1", 25) == UMI_STATUS_OK);
     CHECK(umi_commodity_loss_allowance_valid(&value));
     if (UmiCommodityLossAllowanceTransferCases(&value) != 0) return 1;
+    if (UmiCommodityLossAllowanceTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiCommodityLossAllowanceConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

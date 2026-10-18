@@ -72,6 +72,12 @@ static UmiStatus UmiCurveReferenceArchiveValidate(const UmiCurveReference *value
 UMI_DEFINE_VALUE_ARCHIVE(umi_curve_reference_archive_encode, umi_curve_reference_archive_decode,
     UmiCurveReference, UmiCurveReferenceArchiveSchema, UmiCurveReferenceArchiveBound, UmiCurveReferenceArchiveWrite, UmiCurveReferenceArchiveRead, UmiCurveReferenceArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_curve_reference_archive_decode_with_workspace, UmiCurveReference,
+    UmiCurveReferenceArchiveSchema, UmiCurveReferenceArchiveBound, UmiCurveReferenceArchiveRead, UmiCurveReferenceArchiveValidate)
+
 /* Restore this typed value only while its encoded state still matches the
  * caller's reviewed snapshot. The shared guard checks every encoded byte;
  * domain decoding and validation stay with this owner. */

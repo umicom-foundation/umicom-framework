@@ -74,6 +74,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDesignAlertSpecTransferCases, UmiDesignAlertSpec,
     umi_design_alert_spec_archive_encode, umi_design_alert_spec_archive_decode,
     UmiDesignAlertSpecTransferEqual, UmiDesignAlertSpecTransferTails, UmiDesignAlertSpecTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDesignAlertSpecTransferCasesWithWorkspace, UmiDesignAlertSpec,
+    umi_design_alert_spec_archive_encode, umi_design_alert_spec_archive_decode_with_workspace, UmiDesignAlertSpecTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignAlertSpecConditionalArchiveCases, UmiDesignAlertSpec,
     umi_design_alert_spec_archive_encode, umi_design_alert_spec_archive_decode_if_unchanged,
@@ -82,5 +87,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignAlertSpecConditionalArchiveCases, UmiDesig
 
 int main(void){UmiDesignAlertSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_alert_spec_init(&s,UMI_UI_SEVERITY_WARNING,"Connection degraded",1,1)!=UMI_STATUS_OK)return 1;
     if (UmiDesignAlertSpecTransferCases(&s) != 0) return 1;
+    if (UmiDesignAlertSpecTransferCasesWithWorkspace(&s) != 0) return 1;
     if (UmiDesignAlertSpecConditionalArchiveCases(&s) != 0) return 1;
 return s.actionable?0:2;}

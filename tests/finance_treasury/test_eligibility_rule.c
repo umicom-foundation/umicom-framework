@@ -67,6 +67,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryEligibilityRuleTransferCases, UmiTreasuryElig
     umi_treasury_eligibility_rule_archive_encode, umi_treasury_eligibility_rule_archive_decode,
     UmiTreasuryEligibilityRuleTransferEqual, UmiTreasuryEligibilityRuleTransferTails, UmiTreasuryEligibilityRuleTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTreasuryEligibilityRuleTransferCasesWithWorkspace, UmiTreasuryEligibilityRule,
+    umi_treasury_eligibility_rule_archive_encode, umi_treasury_eligibility_rule_archive_decode_with_workspace, UmiTreasuryEligibilityRuleTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryEligibilityRuleConditionalArchiveCases, UmiTreasuryEligibilityRule,
     umi_treasury_eligibility_rule_archive_encode, umi_treasury_eligibility_rule_archive_decode_if_unchanged,
@@ -78,6 +83,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_eligibility_rule_init(&v, "elig", 100, 365U) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryEligibilityRuleTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryEligibilityRuleTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTreasuryEligibilityRuleConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */

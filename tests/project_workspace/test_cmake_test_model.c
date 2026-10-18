@@ -113,6 +113,11 @@ UMI_TEST_VALUE_TRANSFER(UmiProjectWorkspaceCmakeTestModelTransferCases, UmiProje
     umi_project_workspace_cmake_test_model_archive_encode, umi_project_workspace_cmake_test_model_archive_decode,
     UmiProjectWorkspaceCmakeTestModelTransferEqual, UmiProjectWorkspaceCmakeTestModelTransferTails, UmiProjectWorkspaceCmakeTestModelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiProjectWorkspaceCmakeTestModelTransferCasesWithWorkspace, UmiProjectWorkspaceCmakeTestModel,
+    umi_project_workspace_cmake_test_model_archive_encode, umi_project_workspace_cmake_test_model_archive_decode_with_workspace, UmiProjectWorkspaceCmakeTestModelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiProjectWorkspaceCmakeTestModelConditionalArchiveCases, UmiProjectWorkspaceCmakeTestModel,
     umi_project_workspace_cmake_test_model_archive_encode, umi_project_workspace_cmake_test_model_archive_decode_if_unchanged,
@@ -159,6 +164,7 @@ int main(void) {
     umi_project_workspace_cmake_test_model_set_metric(&a,7U);
     CHECK(umi_project_workspace_cmake_test_model_validate(&a)==UMI_STATUS_OK);
     if (UmiProjectWorkspaceCmakeTestModelTransferCases(&a) != 0) return 1;
+    if (UmiProjectWorkspaceCmakeTestModelTransferCasesWithWorkspace(&a) != 0) return 1;
     if (UmiProjectWorkspaceCmakeTestModelConditionalArchiveCases(&a) != 0) return 1;
 
     CHECK(a.metric==7U);

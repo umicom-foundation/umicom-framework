@@ -70,6 +70,11 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorIntelRefactorCheckpointTransferCases, UmiEditor
     umi_editor_intel_refactor_checkpoint_archive_encode, umi_editor_intel_refactor_checkpoint_archive_decode,
     UmiEditorIntelRefactorCheckpointTransferEqual, UmiEditorIntelRefactorCheckpointTransferTails, UmiEditorIntelRefactorCheckpointTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiEditorIntelRefactorCheckpointTransferCasesWithWorkspace, UmiEditorIntelRefactorCheckpoint,
+    umi_editor_intel_refactor_checkpoint_archive_encode, umi_editor_intel_refactor_checkpoint_archive_decode_with_workspace, UmiEditorIntelRefactorCheckpointTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelRefactorCheckpointConditionalArchiveCases, UmiEditorIntelRefactorCheckpoint,
     umi_editor_intel_refactor_checkpoint_archive_encode, umi_editor_intel_refactor_checkpoint_archive_decode_if_unchanged,
@@ -78,5 +83,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelRefactorCheckpointConditionalArchiveC
 
 int main(void){UmiEditorIntelRefactorCheckpoint transaction;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_checkpoint_begin(&transaction,"tx-1",2U)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_checkpoint_record_apply(&transaction)!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_checkpoint_record_apply(&transaction)!=UMI_STATUS_OK)return 3;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_checkpoint_commit(&transaction)!=UMI_STATUS_OK)return 4;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_intel_refactor_checkpoint_valid(&transaction)||transaction.phase!=UMI_EDITOR_INTEL_PHASE_COMMITTED)return 5;
     if (UmiEditorIntelRefactorCheckpointTransferCases(&transaction) != 0) return 1;
+    if (UmiEditorIntelRefactorCheckpointTransferCasesWithWorkspace(&transaction) != 0) return 1;
     if (UmiEditorIntelRefactorCheckpointConditionalArchiveCases(&transaction) != 0) return 1;
 return 0;}

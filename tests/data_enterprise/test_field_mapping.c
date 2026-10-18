@@ -127,6 +127,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataFieldMappingTransferCases, UmiDataFieldMapping,
     umi_data_field_mapping_archive_encode, umi_data_field_mapping_archive_decode,
     UmiDataFieldMappingTransferEqual, UmiDataFieldMappingTransferTails, UmiDataFieldMappingTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataFieldMappingTransferCasesWithWorkspace, UmiDataFieldMapping,
+    umi_data_field_mapping_archive_encode, umi_data_field_mapping_archive_decode_with_workspace, UmiDataFieldMappingTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataFieldMappingConditionalArchiveCases, UmiDataFieldMapping,
     umi_data_field_mapping_archive_encode, umi_data_field_mapping_archive_decode_if_unchanged,
@@ -204,6 +209,7 @@ int main(void) {
     UmiDataFieldMapping item;
     CHECK(umi_data_field_mapping_init(&item,"Order.id","Order","id","id",UMI_DATA_VALUE_INTEGER) == UMI_STATUS_OK);
     if (UmiDataFieldMappingTransferCases(&item) != 0) return 1;
+    if (UmiDataFieldMappingTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiDataFieldMappingConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.kind==UMI_DATA_VALUE_INTEGER);

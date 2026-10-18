@@ -348,6 +348,12 @@ static UmiStatus ArchiveValidate(const UmiTestPlatformResultSnapshot *value)
 UMI_DEFINE_VALUE_ARCHIVE(umi_test_platform_result_snapshot_archive_encode, umi_test_platform_result_snapshot_archive_decode,
     UmiTestPlatformResultSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_test_platform_result_snapshot_archive_decode_with_workspace, UmiTestPlatformResultSnapshot,
+    ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)
+
 /* Restoring this complete collection reuses its existing reviewed replacement
  * rules. Decoding a saved value alone never changes a live registry. */
 UMI_DEFINE_REGISTRY_ARCHIVE(umi_test_platform_result_registry_archive_encode, umi_test_platform_result_registry_archive_restore,

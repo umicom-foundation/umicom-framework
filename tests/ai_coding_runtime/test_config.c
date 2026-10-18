@@ -98,6 +98,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAiCodingRuntimeConfigTransferCases, UmiAiCodingRuntim
     umi_ai_coding_runtime_config_archive_encode, umi_ai_coding_runtime_config_archive_decode,
     UmiAiCodingRuntimeConfigTransferEqual, UmiAiCodingRuntimeConfigTransferTails, UmiAiCodingRuntimeConfigTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAiCodingRuntimeConfigTransferCasesWithWorkspace, UmiAiCodingRuntimeConfig,
+    umi_ai_coding_runtime_config_archive_encode, umi_ai_coding_runtime_config_archive_decode_with_workspace, UmiAiCodingRuntimeConfigTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAiCodingRuntimeConfigConditionalArchiveCases, UmiAiCodingRuntimeConfig,
     umi_ai_coding_runtime_config_archive_encode, umi_ai_coding_runtime_config_archive_decode_if_unchanged,
@@ -115,6 +120,7 @@ int main(void)
     (void)strcpy(config.model_id, "model");
     assert(umi_ai_coding_runtime_config_validate(&config) == UMI_STATUS_OK);
     if (UmiAiCodingRuntimeConfigTransferCases(&config) != 0) return 1;
+    if (UmiAiCodingRuntimeConfigTransferCasesWithWorkspace(&config) != 0) return 1;
     if (UmiAiCodingRuntimeConfigConditionalArchiveCases(&config) != 0) return 1;
 
 

@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkAccessPolicyTransferCases, UmiWor
     umi_workbench_context_link_access_policy_archive_encode, umi_workbench_context_link_access_policy_archive_decode,
     UmiWorkbenchContextLinkAccessPolicyTransferEqual, UmiWorkbenchContextLinkAccessPolicyTransferTails, UmiWorkbenchContextLinkAccessPolicyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextLinkAccessPolicyTransferCasesWithWorkspace, UmiWorkbenchContextLinkAccessPolicy,
+    umi_workbench_context_link_access_policy_archive_encode, umi_workbench_context_link_access_policy_archive_decode_with_workspace, UmiWorkbenchContextLinkAccessPolicyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkAccessPolicyConditionalArchiveCases, UmiWorkbenchContextLinkAccessPolicy,
     umi_workbench_context_link_access_policy_archive_encode, umi_workbench_context_link_access_policy_archive_decode_if_unchanged,
@@ -151,6 +156,7 @@ int main(void)
     umi_workbench_context_link_access_policy_init(&record, "access_policy-id");
     assert(umi_workbench_context_link_access_policy_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkAccessPolicyTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkAccessPolicyTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkAccessPolicyConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkAccessPolicyReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkAccessPolicyMutationGuards(&record) != 0) return 1;

@@ -52,6 +52,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiEntDataDeltaTransferCases, UmiUiEntDataDelta,
     umi_ui_ent_data_delta_archive_encode, umi_ui_ent_data_delta_archive_decode,
     UmiUiEntDataDeltaTransferEqual, UmiUiEntDataDeltaTransferTails, UmiUiEntDataDeltaTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiEntDataDeltaTransferCasesWithWorkspace, UmiUiEntDataDelta,
+    umi_ui_ent_data_delta_archive_encode, umi_ui_ent_data_delta_archive_decode_with_workspace, UmiUiEntDataDeltaTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiEntDataDeltaConditionalArchiveCases, UmiUiEntDataDelta,
     umi_ui_ent_data_delta_archive_encode, umi_ui_ent_data_delta_archive_decode_if_unchanged,
@@ -60,5 +65,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiEntDataDeltaConditionalArchiveCases, UmiUiEntD
 
 int main(void){UmiUiEntDataDelta d={UMI_UI_ENT_DELTA_UPDATE,{5U,2U},1U};/* Apply this operation only while the related capability or state is available. */ if(!umi_ui_ent_data_delta_validate(&d)||!umi_ui_ent_data_delta_touches(&d,6U)||umi_ui_ent_data_delta_touches(&d,7U))return 1;
     if (UmiUiEntDataDeltaTransferCases(&d) != 0) return 1;
+    if (UmiUiEntDataDeltaTransferCasesWithWorkspace(&d) != 0) return 1;
     if (UmiUiEntDataDeltaConditionalArchiveCases(&d) != 0) return 1;
 puts("ok");return 0;}

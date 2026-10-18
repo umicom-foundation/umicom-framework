@@ -91,6 +91,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricSplitRuleTransferCases, UmiFabricSplitRule,
     umi_fabric_split_rule_archive_encode, umi_fabric_split_rule_archive_decode,
     UmiFabricSplitRuleTransferEqual, UmiFabricSplitRuleTransferTails, UmiFabricSplitRuleTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFabricSplitRuleTransferCasesWithWorkspace, UmiFabricSplitRule,
+    umi_fabric_split_rule_archive_encode, umi_fabric_split_rule_archive_decode_with_workspace, UmiFabricSplitRuleTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricSplitRuleConditionalArchiveCases, UmiFabricSplitRule,
     umi_fabric_split_rule_archive_encode, umi_fabric_split_rule_archive_decode_if_unchanged,
@@ -144,6 +149,7 @@ int main(void) {
     UmiFabricSplitRule item;
     CHECK(umi_fabric_split_rule_init(&item,"s","items[*]",100U,true)==UMI_STATUS_OK);
     if (UmiFabricSplitRuleTransferCases(&item) != 0) return 1;
+    if (UmiFabricSplitRuleTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiFabricSplitRuleConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.maximum_parts==100U);

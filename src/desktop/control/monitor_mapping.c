@@ -334,6 +334,12 @@ static UmiStatus ArchiveValidate(const UmiDesktopMonitorMappingSnapshot *value)
 UMI_DEFINE_VALUE_ARCHIVE(umi_desktop_monitor_mapping_archive_encode, umi_desktop_monitor_mapping_archive_decode,
     UmiDesktopMonitorMappingSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_desktop_monitor_mapping_archive_decode_with_workspace, UmiDesktopMonitorMappingSnapshot,
+    ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)
+
 /* Guard snapshot import with the complete encoded value reviewed by the
  * caller. Imported metadata remains evidence; registry publication is separate. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_desktop_monitor_mapping_archive_decode_if_unchanged, umi_desktop_monitor_mapping_archive_encode,

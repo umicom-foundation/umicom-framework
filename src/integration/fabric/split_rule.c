@@ -117,6 +117,12 @@ static UmiStatus UmiFabricSplitRuleArchiveValidate(const UmiFabricSplitRule *val
 UMI_DEFINE_VALUE_ARCHIVE(umi_fabric_split_rule_archive_encode, umi_fabric_split_rule_archive_decode,
     UmiFabricSplitRule, UmiFabricSplitRuleArchiveSchema, UmiFabricSplitRuleArchiveBound, UmiFabricSplitRuleArchiveWrite, UmiFabricSplitRuleArchiveRead, UmiFabricSplitRuleArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_fabric_split_rule_archive_decode_with_workspace, UmiFabricSplitRule,
+    UmiFabricSplitRuleArchiveSchema, UmiFabricSplitRuleArchiveBound, UmiFabricSplitRuleArchiveRead, UmiFabricSplitRuleArchiveValidate)
+
 /* Restore this typed value only while its encoded state still matches the
  * caller's reviewed snapshot. The shared guard checks every encoded byte;
  * domain decoding and validation stay with this owner. */

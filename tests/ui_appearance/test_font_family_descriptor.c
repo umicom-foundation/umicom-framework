@@ -103,6 +103,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceFontFamilyDescriptorTransferCases, UmiAppea
     umi_appearance_font_family_descriptor_archive_encode, umi_appearance_font_family_descriptor_archive_decode,
     UmiAppearanceFontFamilyDescriptorTransferEqual, UmiAppearanceFontFamilyDescriptorTransferTails, UmiAppearanceFontFamilyDescriptorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAppearanceFontFamilyDescriptorTransferCasesWithWorkspace, UmiAppearanceFontFamilyDescriptor,
+    umi_appearance_font_family_descriptor_archive_encode, umi_appearance_font_family_descriptor_archive_decode_with_workspace, UmiAppearanceFontFamilyDescriptorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceFontFamilyDescriptorConditionalArchiveCases, UmiAppearanceFontFamilyDescriptor,
     umi_appearance_font_family_descriptor_archive_encode, umi_appearance_font_family_descriptor_archive_decode_if_unchanged,
@@ -116,6 +121,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_font_family_descriptor_is_valid(&item)) return 2;
     if (UmiAppearanceFontFamilyDescriptorTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceFontFamilyDescriptorTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiAppearanceFontFamilyDescriptorConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;

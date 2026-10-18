@@ -112,6 +112,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCoverageNavigationModelTransferCases, UmiCoverageNavi
     umi_coverage_navigation_model_archive_encode, umi_coverage_navigation_model_archive_decode,
     UmiCoverageNavigationModelTransferEqual, UmiCoverageNavigationModelTransferTails, UmiCoverageNavigationModelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCoverageNavigationModelTransferCasesWithWorkspace, UmiCoverageNavigationModel,
+    umi_coverage_navigation_model_archive_encode, umi_coverage_navigation_model_archive_decode_with_workspace, UmiCoverageNavigationModelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCoverageNavigationModelConditionalArchiveCases, UmiCoverageNavigationModel,
     umi_coverage_navigation_model_archive_encode, umi_coverage_navigation_model_archive_decode_if_unchanged,
@@ -138,5 +143,6 @@ int main(void){UmiCoverageNavigationModel m;assert(umi_coverage_navigation_model
         umi_coverage_navigation_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
     assert(umi_coverage_navigation_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_coverage_navigation_model_valid(&m));
     if (UmiCoverageNavigationModelTransferCases(&m) != 0) return 1;
+    if (UmiCoverageNavigationModelTransferCasesWithWorkspace(&m) != 0) return 1;
     if (UmiCoverageNavigationModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

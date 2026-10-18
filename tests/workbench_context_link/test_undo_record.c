@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkUndoRecordTransferCases, UmiWorkb
     umi_workbench_context_link_undo_record_archive_encode, umi_workbench_context_link_undo_record_archive_decode,
     UmiWorkbenchContextLinkUndoRecordTransferEqual, UmiWorkbenchContextLinkUndoRecordTransferTails, UmiWorkbenchContextLinkUndoRecordTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextLinkUndoRecordTransferCasesWithWorkspace, UmiWorkbenchContextLinkUndoRecord,
+    umi_workbench_context_link_undo_record_archive_encode, umi_workbench_context_link_undo_record_archive_decode_with_workspace, UmiWorkbenchContextLinkUndoRecordTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkUndoRecordConditionalArchiveCases, UmiWorkbenchContextLinkUndoRecord,
     umi_workbench_context_link_undo_record_archive_encode, umi_workbench_context_link_undo_record_archive_decode_if_unchanged,
@@ -151,6 +156,7 @@ int main(void)
     umi_workbench_context_link_undo_record_init(&record, "undo_record-id");
     assert(umi_workbench_context_link_undo_record_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkUndoRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkUndoRecordTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkUndoRecordConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkUndoRecordReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkUndoRecordMutationGuards(&record) != 0) return 1;

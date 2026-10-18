@@ -112,6 +112,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDiagnosticGroupModelTransferCases, UmiDiagnosticGroup
     umi_diagnostic_group_model_archive_encode, umi_diagnostic_group_model_archive_decode,
     UmiDiagnosticGroupModelTransferEqual, UmiDiagnosticGroupModelTransferTails, UmiDiagnosticGroupModelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDiagnosticGroupModelTransferCasesWithWorkspace, UmiDiagnosticGroupModel,
+    umi_diagnostic_group_model_archive_encode, umi_diagnostic_group_model_archive_decode_with_workspace, UmiDiagnosticGroupModelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDiagnosticGroupModelConditionalArchiveCases, UmiDiagnosticGroupModel,
     umi_diagnostic_group_model_archive_encode, umi_diagnostic_group_model_archive_decode_if_unchanged,
@@ -138,5 +143,6 @@ int main(void){UmiDiagnosticGroupModel m;assert(umi_diagnostic_group_model_init(
         umi_diagnostic_group_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
     assert(umi_diagnostic_group_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_diagnostic_group_model_valid(&m));
     if (UmiDiagnosticGroupModelTransferCases(&m) != 0) return 1;
+    if (UmiDiagnosticGroupModelTransferCasesWithWorkspace(&m) != 0) return 1;
     if (UmiDiagnosticGroupModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

@@ -70,6 +70,11 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorWbSessionSnapshotTransferCases, UmiEditorWbSess
     umi_editor_wb_session_snapshot_archive_encode, umi_editor_wb_session_snapshot_archive_decode,
     UmiEditorWbSessionSnapshotTransferEqual, UmiEditorWbSessionSnapshotTransferTails, UmiEditorWbSessionSnapshotTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiEditorWbSessionSnapshotTransferCasesWithWorkspace, UmiEditorWbSessionSnapshot,
+    umi_editor_wb_session_snapshot_archive_encode, umi_editor_wb_session_snapshot_archive_decode_with_workspace, UmiEditorWbSessionSnapshotTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorWbSessionSnapshotConditionalArchiveCases, UmiEditorWbSessionSnapshot,
     umi_editor_wb_session_snapshot_archive_encode, umi_editor_wb_session_snapshot_archive_decode_if_unchanged,
@@ -78,5 +83,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorWbSessionSnapshotConditionalArchiveCases, 
 
 int main(void){ UmiEditorWbSessionSnapshot s; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_session_snapshot_capture(&s,"active",5U,2U,9U)!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_wb_session_snapshot_valid(&s)||s.fingerprint==0U)return 2;
     if (UmiEditorWbSessionSnapshotTransferCases(&s) != 0) return 1;
+    if (UmiEditorWbSessionSnapshotTransferCasesWithWorkspace(&s) != 0) return 1;
     if (UmiEditorWbSessionSnapshotConditionalArchiveCases(&s) != 0) return 1;
  return 0; }

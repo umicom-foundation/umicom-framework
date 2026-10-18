@@ -76,6 +76,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataServerProfileTransferCases, UmiDataServerProfile,
     umi_data_data_server_profile_archive_encode, umi_data_data_server_profile_archive_decode,
     UmiDataServerProfileTransferEqual, UmiDataServerProfileTransferTails, UmiDataServerProfileTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataServerProfileTransferCasesWithWorkspace, UmiDataServerProfile,
+    umi_data_data_server_profile_archive_encode, umi_data_data_server_profile_archive_decode_with_workspace, UmiDataServerProfileTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataServerProfileConditionalArchiveCases, UmiDataServerProfile,
     umi_data_data_server_profile_archive_encode, umi_data_data_server_profile_archive_decode_if_unchanged,
@@ -117,6 +122,7 @@ int main(void) {
     UmiDataServerProfile item;
     CHECK(umi_data_data_server_profile_init(&item,"production",2U,16U,10000U) == UMI_STATUS_OK);
     if (UmiDataServerProfileTransferCases(&item) != 0) return 1;
+    if (UmiDataServerProfileTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiDataServerProfileConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.migrations_enabled);

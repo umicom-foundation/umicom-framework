@@ -106,6 +106,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDrSymbolPackageTransferCases, UmiDrSymbolPackage,
     umi_dr_symbol_package_archive_encode, umi_dr_symbol_package_archive_decode,
     UmiDrSymbolPackageTransferEqual, UmiDrSymbolPackageTransferTails, UmiDrSymbolPackageTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDrSymbolPackageTransferCasesWithWorkspace, UmiDrSymbolPackage,
+    umi_dr_symbol_package_archive_encode, umi_dr_symbol_package_archive_decode_with_workspace, UmiDrSymbolPackageTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrSymbolPackageConditionalArchiveCases, UmiDrSymbolPackage,
     umi_dr_symbol_package_archive_encode, umi_dr_symbol_package_archive_decode_if_unchanged,
@@ -115,6 +120,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrSymbolPackageConditionalArchiveCases, UmiDrSym
 int main(void) {
     UmiDrSymbolPackage value; umi_dr_symbol_package_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"sym")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.build_id,sizeof(value.build_id),"b")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.digest,sizeof(value.digest),"d")==UMI_STATUS_OK); CHECK(umi_dr_symbol_package_valid(&value));
     if (UmiDrSymbolPackageTransferCases(&value) != 0) return 1;
+    if (UmiDrSymbolPackageTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDrSymbolPackageConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_symbol_package_fingerprint(&value) != 0U);
     return 0;

@@ -125,6 +125,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalDepositAddressTransferCases, UmiDigitalDeposit
     umi_digital_asset_deposit_address_archive_encode, umi_digital_asset_deposit_address_archive_decode,
     UmiDigitalDepositAddressTransferEqual, UmiDigitalDepositAddressTransferTails, UmiDigitalDepositAddressTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDigitalDepositAddressTransferCasesWithWorkspace, UmiDigitalDepositAddress,
+    umi_digital_asset_deposit_address_archive_encode, umi_digital_asset_deposit_address_archive_decode_with_workspace, UmiDigitalDepositAddressTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalDepositAddressConditionalArchiveCases, UmiDigitalDepositAddress,
     umi_digital_asset_deposit_address_archive_encode, umi_digital_asset_deposit_address_archive_decode_if_unchanged,
@@ -137,6 +142,7 @@ int main(void)
     CHECK(umi_digital_asset_deposit_address_init(&value, "CUST-1", "ASSET-BTC", "BTC", "bc1qdeposit") == UMI_STATUS_OK);
     CHECK(umi_digital_asset_deposit_address_valid(&value));
     if (UmiDigitalDepositAddressTransferCases(&value) != 0) return 1;
+    if (UmiDigitalDepositAddressTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDigitalDepositAddressConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

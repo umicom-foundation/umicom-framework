@@ -89,6 +89,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalBlockReferenceTransferCases, UmiDigitalBlockRe
     umi_digital_asset_block_reference_archive_encode, umi_digital_asset_block_reference_archive_decode,
     UmiDigitalBlockReferenceTransferEqual, UmiDigitalBlockReferenceTransferTails, UmiDigitalBlockReferenceTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDigitalBlockReferenceTransferCasesWithWorkspace, UmiDigitalBlockReference,
+    umi_digital_asset_block_reference_archive_encode, umi_digital_asset_block_reference_archive_decode_with_workspace, UmiDigitalBlockReferenceTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalBlockReferenceConditionalArchiveCases, UmiDigitalBlockReference,
     umi_digital_asset_block_reference_archive_encode, umi_digital_asset_block_reference_archive_decode_if_unchanged,
@@ -101,6 +106,7 @@ int main(void)
     CHECK(umi_digital_asset_block_reference_init(&value, "BTC", 900000U, "000000abc") == UMI_STATUS_OK);
     CHECK(umi_digital_asset_block_reference_valid(&value));
     if (UmiDigitalBlockReferenceTransferCases(&value) != 0) return 1;
+    if (UmiDigitalBlockReferenceTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDigitalBlockReferenceConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

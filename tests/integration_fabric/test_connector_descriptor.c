@@ -92,6 +92,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricConnectorDescriptorTransferCases, UmiFabricConn
     umi_fabric_connector_descriptor_archive_encode, umi_fabric_connector_descriptor_archive_decode,
     UmiFabricConnectorDescriptorTransferEqual, UmiFabricConnectorDescriptorTransferTails, UmiFabricConnectorDescriptorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFabricConnectorDescriptorTransferCasesWithWorkspace, UmiFabricConnectorDescriptor,
+    umi_fabric_connector_descriptor_archive_encode, umi_fabric_connector_descriptor_archive_decode_with_workspace, UmiFabricConnectorDescriptorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricConnectorDescriptorConditionalArchiveCases, UmiFabricConnectorDescriptor,
     umi_fabric_connector_descriptor_archive_encode, umi_fabric_connector_descriptor_archive_decode_if_unchanged,
@@ -145,6 +150,7 @@ int main(void) {
     UmiFabricConnectorDescriptor item;
     CHECK(umi_fabric_connector_descriptor_init(&item,"ibkr","IBKR",UMI_FABRIC_PROTOCOL_TCP,7U,false)==UMI_STATUS_OK);
     if (UmiFabricConnectorDescriptorTransferCases(&item) != 0) return 1;
+    if (UmiFabricConnectorDescriptorTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiFabricConnectorDescriptorConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(strcmp(item.provider,"IBKR")==0);

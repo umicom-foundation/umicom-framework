@@ -97,6 +97,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPerformanceCrashSignatureTransferCases, UmiPerformanc
     umi_performance_crash_signature_archive_encode, umi_performance_crash_signature_archive_decode,
     UmiPerformanceCrashSignatureTransferEqual, UmiPerformanceCrashSignatureTransferTails, UmiPerformanceCrashSignatureTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPerformanceCrashSignatureTransferCasesWithWorkspace, UmiPerformanceCrashSignature,
+    umi_performance_crash_signature_archive_encode, umi_performance_crash_signature_archive_decode_with_workspace, UmiPerformanceCrashSignatureTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPerformanceCrashSignatureConditionalArchiveCases, UmiPerformanceCrashSignature,
     umi_performance_crash_signature_archive_encode, umi_performance_crash_signature_archive_decode_if_unchanged,
@@ -154,6 +159,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_performance_crash_signature_validate(&left) != UMI_STATUS_OK) return 2;
     if (UmiPerformanceCrashSignatureTransferCases(&left) != 0) return 1;
+    if (UmiPerformanceCrashSignatureTransferCasesWithWorkspace(&left) != 0) return 1;
     if (UmiPerformanceCrashSignatureConditionalArchiveCases(&left) != 0) return 1;
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */

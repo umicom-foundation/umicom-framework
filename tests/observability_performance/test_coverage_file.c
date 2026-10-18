@@ -97,6 +97,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPerformanceCoverageFileTransferCases, UmiPerformanceC
     umi_performance_coverage_file_archive_encode, umi_performance_coverage_file_archive_decode,
     UmiPerformanceCoverageFileTransferEqual, UmiPerformanceCoverageFileTransferTails, UmiPerformanceCoverageFileTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPerformanceCoverageFileTransferCasesWithWorkspace, UmiPerformanceCoverageFile,
+    umi_performance_coverage_file_archive_encode, umi_performance_coverage_file_archive_decode_with_workspace, UmiPerformanceCoverageFileTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPerformanceCoverageFileConditionalArchiveCases, UmiPerformanceCoverageFile,
     umi_performance_coverage_file_archive_encode, umi_performance_coverage_file_archive_decode_if_unchanged,
@@ -154,6 +159,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_performance_coverage_file_validate(&left) != UMI_STATUS_OK) return 2;
     if (UmiPerformanceCoverageFileTransferCases(&left) != 0) return 1;
+    if (UmiPerformanceCoverageFileTransferCasesWithWorkspace(&left) != 0) return 1;
     if (UmiPerformanceCoverageFileConditionalArchiveCases(&left) != 0) return 1;
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */

@@ -134,6 +134,11 @@ UMI_TEST_VALUE_TRANSFER(UmiBarTransferCases, UmiBar,
     umi_bar_archive_encode, umi_bar_archive_decode,
     UmiBarTransferEqual, UmiBarTransferTails, UmiBarTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiBarTransferCasesWithWorkspace, UmiBar,
+    umi_bar_archive_encode, umi_bar_archive_decode_with_workspace, UmiBarTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiBarConditionalArchiveCases, UmiBar,
     umi_bar_archive_encode, umi_bar_archive_decode_if_unchanged,
@@ -270,6 +275,7 @@ assert(umi_quote_mid(&q)==25001.0);assert(umi_quote_spread(&q)==2.0);
     UmiBar b={0};b.instrument=q.instrument;b.open=24990;b.high=25010;b.low=24980;b.close=25000;b.volume=100;b.start_time_ms=0;b.end_time_ms=1000;
     assert(umi_bar_valid(&b));
     if (UmiBarTransferCases(&b) != 0) return 1;
+    if (UmiBarTransferCasesWithWorkspace(&b) != 0) return 1;
     if (UmiBarConditionalArchiveCases(&b) != 0) return 1;
 assert(umi_bar_range(&b)==30.0);assert(umi_market_data_snapshot_aligned(&q,&b,0));
     assert(umi_market_data_quality_score(&q,1100,1000)>0.8);

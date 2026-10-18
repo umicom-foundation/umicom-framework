@@ -192,6 +192,12 @@ static UmiStatus UmiPerformanceAllocationSiteArchiveValidate(const UmiPerformanc
 UMI_DEFINE_VALUE_ARCHIVE(umi_performance_allocation_site_archive_encode, umi_performance_allocation_site_archive_decode,
     UmiPerformanceAllocationSite, UmiPerformanceAllocationSiteArchiveSchema, UmiPerformanceAllocationSiteArchiveBound, UmiPerformanceAllocationSiteArchiveWrite, UmiPerformanceAllocationSiteArchiveRead, UmiPerformanceAllocationSiteArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_performance_allocation_site_archive_decode_with_workspace, UmiPerformanceAllocationSite,
+    UmiPerformanceAllocationSiteArchiveSchema, UmiPerformanceAllocationSiteArchiveBound, UmiPerformanceAllocationSiteArchiveRead, UmiPerformanceAllocationSiteArchiveValidate)
+
 /* Guard restoration with the previously reviewed encoded value. Domain field
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_performance_allocation_site_archive_decode_if_unchanged, umi_performance_allocation_site_archive_encode,

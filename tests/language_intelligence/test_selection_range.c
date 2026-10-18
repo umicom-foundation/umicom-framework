@@ -77,6 +77,11 @@ UMI_TEST_VALUE_TRANSFER(UmiLanguageIntelligenceSelectionRangeTransferCases, UmiL
     umi_language_intelligence_selection_range_archive_encode, umi_language_intelligence_selection_range_archive_decode,
     UmiLanguageIntelligenceSelectionRangeTransferEqual, UmiLanguageIntelligenceSelectionRangeTransferTails, UmiLanguageIntelligenceSelectionRangeTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiLanguageIntelligenceSelectionRangeTransferCasesWithWorkspace, UmiLanguageIntelligenceSelectionRange,
+    umi_language_intelligence_selection_range_archive_encode, umi_language_intelligence_selection_range_archive_decode_with_workspace, UmiLanguageIntelligenceSelectionRangeTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiLanguageIntelligenceSelectionRangeConditionalArchiveCases, UmiLanguageIntelligenceSelectionRange,
     umi_language_intelligence_selection_range_archive_encode, umi_language_intelligence_selection_range_archive_decode_if_unchanged,
@@ -94,6 +99,7 @@ int main(void)
     CHECK(umi_language_intelligence_selection_range_set_ranges(&value, &primary, &parent) == UMI_STATUS_OK);
     CHECK(umi_language_intelligence_selection_range_validate(&value) == UMI_STATUS_OK);
     if (UmiLanguageIntelligenceSelectionRangeTransferCases(&value) != 0) return 1;
+    if (UmiLanguageIntelligenceSelectionRangeTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiLanguageIntelligenceSelectionRangeConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_language_intelligence_selection_range_is_nested(&value) != 0);

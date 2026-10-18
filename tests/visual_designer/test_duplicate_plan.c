@@ -104,6 +104,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRadDuplicatePlanTransferCases, UmiRadDuplicatePlan,
     umi_rad_duplicate_plan_archive_encode, umi_rad_duplicate_plan_archive_decode,
     UmiRadDuplicatePlanTransferEqual, UmiRadDuplicatePlanTransferTails, UmiRadDuplicatePlanTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRadDuplicatePlanTransferCasesWithWorkspace, UmiRadDuplicatePlan,
+    umi_rad_duplicate_plan_archive_encode, umi_rad_duplicate_plan_archive_decode_with_workspace, UmiRadDuplicatePlanTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadDuplicatePlanConditionalArchiveCases, UmiRadDuplicatePlan,
     umi_rad_duplicate_plan_archive_encode, umi_rad_duplicate_plan_archive_decode_if_unchanged,
@@ -112,5 +117,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadDuplicatePlanConditionalArchiveCases, UmiRadD
 
 int main(void){UmiRadDuplicatePlan item;CHECK(umi_rad_duplicate_plan_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_duplicate_plan_is_valid(&item));
     if (UmiRadDuplicatePlanTransferCases(&item) != 0) return 1;
+    if (UmiRadDuplicatePlanTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiRadDuplicatePlanConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

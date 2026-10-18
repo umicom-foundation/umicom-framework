@@ -49,6 +49,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveBuiltInConvertersTransferCases, UmiUiReacti
     umi_ui_reactive_built_in_converters_archive_encode, umi_ui_reactive_built_in_converters_archive_decode,
     UmiUiReactiveBuiltInConvertersTransferEqual, UmiUiReactiveBuiltInConvertersTransferTails, UmiUiReactiveBuiltInConvertersTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveBuiltInConvertersTransferCasesWithWorkspace, UmiUiReactiveBuiltInConverters,
+    umi_ui_reactive_built_in_converters_archive_encode, umi_ui_reactive_built_in_converters_archive_decode_with_workspace, UmiUiReactiveBuiltInConvertersTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveBuiltInConvertersConditionalArchiveCases, UmiUiReactiveBuiltInConverters,
     umi_ui_reactive_built_in_converters_archive_encode, umi_ui_reactive_built_in_converters_archive_decode_if_unchanged,
@@ -62,5 +67,6 @@ int main(void) { UmiUiReactiveBuiltInConverters item; umi_ui_reactive_built_in_c
     populated.allow_lossy_numeric = true;
     populated.trim_strings = true;
     if (UmiUiReactiveBuiltInConvertersTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveBuiltInConvertersTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveBuiltInConvertersConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_built_in_converters_valid(&item) ? 0 : 1; }

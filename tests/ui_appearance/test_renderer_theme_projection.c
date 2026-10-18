@@ -87,6 +87,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceRendererThemeProjectionTransferCases, UmiAp
     umi_appearance_renderer_theme_projection_archive_encode, umi_appearance_renderer_theme_projection_archive_decode,
     UmiAppearanceRendererThemeProjectionTransferEqual, UmiAppearanceRendererThemeProjectionTransferTails, UmiAppearanceRendererThemeProjectionTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAppearanceRendererThemeProjectionTransferCasesWithWorkspace, UmiAppearanceRendererThemeProjection,
+    umi_appearance_renderer_theme_projection_archive_encode, umi_appearance_renderer_theme_projection_archive_decode_with_workspace, UmiAppearanceRendererThemeProjectionTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceRendererThemeProjectionConditionalArchiveCases, UmiAppearanceRendererThemeProjection,
     umi_appearance_renderer_theme_projection_archive_encode, umi_appearance_renderer_theme_projection_archive_decode_if_unchanged,
@@ -100,6 +105,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_renderer_theme_projection_is_valid(&item)) return 2;
     if (UmiAppearanceRendererThemeProjectionTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceRendererThemeProjectionTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiAppearanceRendererThemeProjectionConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;

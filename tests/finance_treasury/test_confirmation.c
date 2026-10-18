@@ -85,6 +85,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryConfirmationTransferCases, UmiTreasuryConfirm
     umi_treasury_confirmation_archive_encode, umi_treasury_confirmation_archive_decode,
     UmiTreasuryConfirmationTransferEqual, UmiTreasuryConfirmationTransferTails, UmiTreasuryConfirmationTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTreasuryConfirmationTransferCasesWithWorkspace, UmiTreasuryConfirmation,
+    umi_treasury_confirmation_archive_encode, umi_treasury_confirmation_archive_decode_with_workspace, UmiTreasuryConfirmationTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryConfirmationConditionalArchiveCases, UmiTreasuryConfirmation,
     umi_treasury_confirmation_archive_encode, umi_treasury_confirmation_archive_decode_if_unchanged,
@@ -96,6 +101,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_confirmation_init(&v, "conf", "trade-1", true, true) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryConfirmationTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryConfirmationTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTreasuryConfirmationConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */

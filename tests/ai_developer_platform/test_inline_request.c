@@ -88,6 +88,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAiDevInlineRequestTransferCases, UmiAiDevInlineReques
     umi_ai_dev_inline_request_archive_encode, umi_ai_dev_inline_request_archive_decode,
     UmiAiDevInlineRequestTransferEqual, UmiAiDevInlineRequestTransferTails, UmiAiDevInlineRequestTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAiDevInlineRequestTransferCasesWithWorkspace, UmiAiDevInlineRequest,
+    umi_ai_dev_inline_request_archive_encode, umi_ai_dev_inline_request_archive_decode_with_workspace, UmiAiDevInlineRequestTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAiDevInlineRequestConditionalArchiveCases, UmiAiDevInlineRequest,
     umi_ai_dev_inline_request_archive_encode, umi_ai_dev_inline_request_archive_decode_if_unchanged,
@@ -107,6 +112,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_ai_dev_inline_request_validate(&v) != UMI_STATUS_OK) return 2;
     if (UmiAiDevInlineRequestTransferCases(&v) != 0) return 1;
+    if (UmiAiDevInlineRequestTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiAiDevInlineRequestConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */

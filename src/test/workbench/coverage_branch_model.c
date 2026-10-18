@@ -138,6 +138,12 @@ static UmiStatus UmiCoverageBranchModelArchiveValidate(const UmiCoverageBranchMo
 UMI_DEFINE_VALUE_ARCHIVE(umi_coverage_branch_model_archive_encode, umi_coverage_branch_model_archive_decode,
     UmiCoverageBranchModel, UmiCoverageBranchModelArchiveSchema, UmiCoverageBranchModelArchiveBound, UmiCoverageBranchModelArchiveWrite, UmiCoverageBranchModelArchiveRead, UmiCoverageBranchModelArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_coverage_branch_model_archive_decode_with_workspace, UmiCoverageBranchModel,
+    UmiCoverageBranchModelArchiveSchema, UmiCoverageBranchModelArchiveBound, UmiCoverageBranchModelArchiveRead, UmiCoverageBranchModelArchiveValidate)
+
 /* Guard restoration with the previously reviewed encoded value. Domain field
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_coverage_branch_model_archive_decode_if_unchanged, umi_coverage_branch_model_archive_encode,

@@ -70,6 +70,11 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorWbFocusModeTransferCases, UmiEditorWbFocusMode,
     umi_editor_wb_focus_mode_archive_encode, umi_editor_wb_focus_mode_archive_decode,
     UmiEditorWbFocusModeTransferEqual, UmiEditorWbFocusModeTransferTails, UmiEditorWbFocusModeTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiEditorWbFocusModeTransferCasesWithWorkspace, UmiEditorWbFocusMode,
+    umi_editor_wb_focus_mode_archive_encode, umi_editor_wb_focus_mode_archive_decode_with_workspace, UmiEditorWbFocusModeTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorWbFocusModeConditionalArchiveCases, UmiEditorWbFocusMode,
     umi_editor_wb_focus_mode_archive_encode, umi_editor_wb_focus_mode_archive_decode_if_unchanged,
@@ -82,5 +87,6 @@ int main(void){ UmiEditorWbFocusMode s; /* Preserve the original failure result 
         umi_editor_wb_focus_mode_set(&s,true));
     if(umi_editor_wb_focus_mode_set(&s,true)!=UMI_STATUS_OK)return 2; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_wb_focus_mode_valid(&s)||!s.enabled)return 3;
     if (UmiEditorWbFocusModeTransferCases(&s) != 0) return 1;
+    if (UmiEditorWbFocusModeTransferCasesWithWorkspace(&s) != 0) return 1;
     if (UmiEditorWbFocusModeConditionalArchiveCases(&s) != 0) return 1;
  return 0; }

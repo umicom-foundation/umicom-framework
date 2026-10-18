@@ -108,6 +108,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalAssetWalletTransferCases, UmiDigitalAssetWalle
     umi_digital_asset_wallet_archive_encode, umi_digital_asset_wallet_archive_decode,
     UmiDigitalAssetWalletTransferEqual, UmiDigitalAssetWalletTransferTails, UmiDigitalAssetWalletTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDigitalAssetWalletTransferCasesWithWorkspace, UmiDigitalAssetWallet,
+    umi_digital_asset_wallet_archive_encode, umi_digital_asset_wallet_archive_decode_with_workspace, UmiDigitalAssetWalletTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalAssetWalletConditionalArchiveCases, UmiDigitalAssetWallet,
     umi_digital_asset_wallet_archive_encode, umi_digital_asset_wallet_archive_decode_if_unchanged,
@@ -120,6 +125,7 @@ int main(void)
     CHECK(umi_digital_asset_wallet_init(&value, "WALLET-1", "Operations", "BTC", true) == UMI_STATUS_OK);
     CHECK(umi_digital_asset_wallet_valid(&value));
     if (UmiDigitalAssetWalletTransferCases(&value) != 0) return 1;
+    if (UmiDigitalAssetWalletTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDigitalAssetWalletConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

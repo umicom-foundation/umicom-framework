@@ -188,6 +188,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAiCodingRequestTransferCases, UmiAiCodingRequest,
     umi_ai_coding_request_archive_encode, umi_ai_coding_request_archive_decode,
     UmiAiCodingRequestTransferEqual, UmiAiCodingRequestTransferTails, UmiAiCodingRequestTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAiCodingRequestTransferCasesWithWorkspace, UmiAiCodingRequest,
+    umi_ai_coding_request_archive_encode, umi_ai_coding_request_archive_decode_with_workspace, UmiAiCodingRequestTransferEqual)
+
 #include "value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAiCodingRequestConditionalArchiveCases, UmiAiCodingRequest,
     umi_ai_coding_request_archive_encode, umi_ai_coding_request_archive_decode_if_unchanged,
@@ -210,6 +215,7 @@ int main(void)
 
     assert(umi_ai_coding_request_validate(&request) == UMI_STATUS_OK);
     if (UmiAiCodingRequestTransferCases(&request) != 0) return 1;
+    if (UmiAiCodingRequestTransferCasesWithWorkspace(&request) != 0) return 1;
     if (UmiAiCodingRequestConditionalArchiveCases(&request) != 0) return 1;
 
     assert(umi_ai_coding_path_is_safe_relative("src/app.c"));

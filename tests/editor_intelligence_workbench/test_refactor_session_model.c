@@ -70,6 +70,11 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorIntelRefactorSessionModelTransferCases, UmiEdit
     umi_editor_intel_refactor_session_model_archive_encode, umi_editor_intel_refactor_session_model_archive_decode,
     UmiEditorIntelRefactorSessionModelTransferEqual, UmiEditorIntelRefactorSessionModelTransferTails, UmiEditorIntelRefactorSessionModelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiEditorIntelRefactorSessionModelTransferCasesWithWorkspace, UmiEditorIntelRefactorSessionModel,
+    umi_editor_intel_refactor_session_model_archive_encode, umi_editor_intel_refactor_session_model_archive_decode_with_workspace, UmiEditorIntelRefactorSessionModelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelRefactorSessionModelConditionalArchiveCases, UmiEditorIntelRefactorSessionModel,
     umi_editor_intel_refactor_session_model_archive_encode, umi_editor_intel_refactor_session_model_archive_decode_if_unchanged,
@@ -78,5 +83,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelRefactorSessionModelConditionalArchiv
 
 int main(void){UmiEditorIntelRefactorSessionModel session;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_session_model_begin(&session,"session-1")!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_session_model_set_ready(&session,3U)!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_intel_refactor_session_model_valid(&session)||session.item_count!=3U)return 3;
     if (UmiEditorIntelRefactorSessionModelTransferCases(&session) != 0) return 1;
+    if (UmiEditorIntelRefactorSessionModelTransferCasesWithWorkspace(&session) != 0) return 1;
     if (UmiEditorIntelRefactorSessionModelConditionalArchiveCases(&session) != 0) return 1;
 /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_session_model_cancel(&session)!=UMI_STATUS_OK||session.phase!=UMI_EDITOR_INTEL_PHASE_CANCELLED)return 4;return 0;}

@@ -69,6 +69,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceKeyboardAccessPolicyTransferCases, UmiAppea
     umi_appearance_keyboard_access_policy_archive_encode, umi_appearance_keyboard_access_policy_archive_decode,
     UmiAppearanceKeyboardAccessPolicyTransferEqual, UmiAppearanceKeyboardAccessPolicyTransferTails, UmiAppearanceKeyboardAccessPolicyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAppearanceKeyboardAccessPolicyTransferCasesWithWorkspace, UmiAppearanceKeyboardAccessPolicy,
+    umi_appearance_keyboard_access_policy_archive_encode, umi_appearance_keyboard_access_policy_archive_decode_with_workspace, UmiAppearanceKeyboardAccessPolicyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceKeyboardAccessPolicyConditionalArchiveCases, UmiAppearanceKeyboardAccessPolicy,
     umi_appearance_keyboard_access_policy_archive_encode, umi_appearance_keyboard_access_policy_archive_decode_if_unchanged,
@@ -82,6 +87,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_keyboard_access_policy_is_valid(&item)) return 2;
     if (UmiAppearanceKeyboardAccessPolicyTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceKeyboardAccessPolicyTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiAppearanceKeyboardAccessPolicyConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;

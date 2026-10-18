@@ -90,6 +90,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTeacherAssessmentFeedbackTransferCases, UmiTeacherAss
     umi_teacher_assessment_feedback_archive_encode, umi_teacher_assessment_feedback_archive_decode,
     UmiTeacherAssessmentFeedbackTransferEqual, UmiTeacherAssessmentFeedbackTransferTails, UmiTeacherAssessmentFeedbackTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTeacherAssessmentFeedbackTransferCasesWithWorkspace, UmiTeacherAssessmentFeedback,
+    umi_teacher_assessment_feedback_archive_encode, umi_teacher_assessment_feedback_archive_decode_with_workspace, UmiTeacherAssessmentFeedbackTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTeacherAssessmentFeedbackConditionalArchiveCases, UmiTeacherAssessmentFeedback,
     umi_teacher_assessment_feedback_archive_encode, umi_teacher_assessment_feedback_archive_decode_if_unchanged,
@@ -103,6 +108,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_teacher_assessment_feedback_validate(&value) != UMI_STATUS_OK) return 2;
     if (UmiTeacherAssessmentFeedbackTransferCases(&value) != 0) return 1;
+    if (UmiTeacherAssessmentFeedbackTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiTeacherAssessmentFeedbackConditionalArchiveCases(&value) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */

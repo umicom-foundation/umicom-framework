@@ -13,6 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "../support/assertions.h"
 #ifndef UMICOM_APPLICATION_RUNTIME_TEST_FIXTURE_H
 #define UMICOM_APPLICATION_RUNTIME_TEST_FIXTURE_H
 

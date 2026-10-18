@@ -123,6 +123,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPanelIdentityTransferCases, UmiPanelIdentity,
     umi_panel_identity_archive_encode, umi_panel_identity_archive_decode,
     UmiPanelIdentityTransferEqual, UmiPanelIdentityTransferTails, UmiPanelIdentityTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPanelIdentityTransferCasesWithWorkspace, UmiPanelIdentity,
+    umi_panel_identity_archive_encode, umi_panel_identity_archive_decode_with_workspace, UmiPanelIdentityTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPanelIdentityConditionalArchiveCases, UmiPanelIdentity,
     umi_panel_identity_archive_encode, umi_panel_identity_archive_decode_if_unchanged,
@@ -138,6 +143,7 @@ int main(void)
     (void)umi_context_copy_text(identity.component_id,sizeof(identity.component_id),"component.test");
     assert(umi_panel_identity_valid(&identity));
     if (UmiPanelIdentityTransferCases(&identity) != 0) return 1;
+    if (UmiPanelIdentityTransferCasesWithWorkspace(&identity) != 0) return 1;
     if (UmiPanelIdentityConditionalArchiveCases(&identity) != 0) return 1;
 
     assert(strcmp(umi_panel_lifecycle_state_text(UMI_PANEL_VISIBLE),"visible")==0);

@@ -23,6 +23,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 /* Pointer details stay outside Framework; completed drops mutate semantic state. */
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #include "umicom/umicom.h"
 #include <assert.h>
 #include <stdlib.h>

@@ -70,6 +70,11 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorIntelRefactorTransactionStateTransferCases, Umi
     umi_editor_intel_refactor_transaction_state_archive_encode, umi_editor_intel_refactor_transaction_state_archive_decode,
     UmiEditorIntelRefactorTransactionStateTransferEqual, UmiEditorIntelRefactorTransactionStateTransferTails, UmiEditorIntelRefactorTransactionStateTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiEditorIntelRefactorTransactionStateTransferCasesWithWorkspace, UmiEditorIntelRefactorTransactionState,
+    umi_editor_intel_refactor_transaction_state_archive_encode, umi_editor_intel_refactor_transaction_state_archive_decode_with_workspace, UmiEditorIntelRefactorTransactionStateTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelRefactorTransactionStateConditionalArchiveCases, UmiEditorIntelRefactorTransactionState,
     umi_editor_intel_refactor_transaction_state_archive_encode, umi_editor_intel_refactor_transaction_state_archive_decode_if_unchanged,
@@ -78,5 +83,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelRefactorTransactionStateConditionalAr
 
 int main(void){UmiEditorIntelRefactorTransactionState transaction;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_transaction_state_begin(&transaction,"tx-1",2U)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_transaction_state_record_apply(&transaction)!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_transaction_state_record_apply(&transaction)!=UMI_STATUS_OK)return 3;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_refactor_transaction_state_commit(&transaction)!=UMI_STATUS_OK)return 4;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_intel_refactor_transaction_state_valid(&transaction)||transaction.phase!=UMI_EDITOR_INTEL_PHASE_COMMITTED)return 5;
     if (UmiEditorIntelRefactorTransactionStateTransferCases(&transaction) != 0) return 1;
+    if (UmiEditorIntelRefactorTransactionStateTransferCasesWithWorkspace(&transaction) != 0) return 1;
     if (UmiEditorIntelRefactorTransactionStateConditionalArchiveCases(&transaction) != 0) return 1;
 return 0;}

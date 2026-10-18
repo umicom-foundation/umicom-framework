@@ -93,6 +93,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionFieldTransferCases, UmiWorkbenchSel
     umi_workbench_selection_field_archive_encode, umi_workbench_selection_field_archive_decode,
     UmiWorkbenchSelectionFieldTransferEqual, UmiWorkbenchSelectionFieldTransferTails, UmiWorkbenchSelectionFieldTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchSelectionFieldTransferCasesWithWorkspace, UmiWorkbenchSelectionField,
+    umi_workbench_selection_field_archive_encode, umi_workbench_selection_field_archive_decode_with_workspace, UmiWorkbenchSelectionFieldTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchSelectionFieldConditionalArchiveCases, UmiWorkbenchSelectionField,
     umi_workbench_selection_field_archive_encode, umi_workbench_selection_field_archive_decode_if_unchanged,
@@ -108,6 +113,7 @@ int main(void)
     assert(umi_workbench_selection_field_validate(
         &field) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionFieldTransferCases(&field) != 0) return 1;
+    if (UmiWorkbenchSelectionFieldTransferCasesWithWorkspace(&field) != 0) return 1;
     if (UmiWorkbenchSelectionFieldConditionalArchiveCases(&field) != 0) return 1;
 
     assert(field.kind == UMI_WORKBENCH_SELECTION_VALUE_TEXT);

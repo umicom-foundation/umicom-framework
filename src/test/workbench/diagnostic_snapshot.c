@@ -44,6 +44,10 @@ UmiStatus umi_test_workbench_diagnostic_snapshot_init(
  * Exercise test workbench diagnostic snapshot set active and return a clear result when
  * the behaviour no longer matches its contract.
  */
+/* Explicit blocks distinguish argument validation from revision exhaustion.
+ * The earlier equivalent control flow is retained for review; callers still
+ * receive refusal before either the snapshot or its nested entry changes. */
+#if 0
 UmiStatus umi_test_workbench_diagnostic_snapshot_set_active(
     UmiTestWorkbenchDiagnosticSnapshot *model, bool active) {
   /*
@@ -64,10 +68,36 @@ UmiStatus umi_test_workbench_diagnostic_snapshot_set_active(
   model->value.revision++;
   return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_test_workbench_diagnostic_snapshot_set_active(
+    UmiTestWorkbenchDiagnosticSnapshot *model, bool active) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
+  if (model == NULL) {
+    return UMI_STATUS_INVALID_ARGUMENT;
+  }
+  /* A revision is a change token used by editors and reviewed snapshots.
+   * Refuse an exhausted token before changing either the owner or its nested value. */
+  if (model->generation == UINT64_MAX ||
+      model->value.revision == UINT64_MAX) {
+      return UMI_STATUS_CAPACITY_EXCEEDED;
+  }
+
+  model->active = active;
+  model->generation++;
+  model->value.revision++;
+  return UMI_STATUS_OK;
+}
 /*
  * Return the number of records represented by test workbench diagnostic snapshot set
  * without changing their state.
  */
+/* Explicit blocks distinguish argument validation from revision exhaustion.
+ * The earlier equivalent control flow is retained for review; callers still
+ * receive refusal before either the snapshot or its nested entry changes. */
+#if 0
 UmiStatus umi_test_workbench_diagnostic_snapshot_set_count(
     UmiTestWorkbenchDiagnosticSnapshot *model, uint32_t item_count) {
   /*
@@ -88,10 +118,36 @@ UmiStatus umi_test_workbench_diagnostic_snapshot_set_count(
   model->value.revision++;
   return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_test_workbench_diagnostic_snapshot_set_count(
+    UmiTestWorkbenchDiagnosticSnapshot *model, uint32_t item_count) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
+  if (model == NULL || item_count > UMI_TEST_WORKBENCH_MAX_ITEMS) {
+    return UMI_STATUS_INVALID_ARGUMENT;
+  }
+  /* A revision is a change token used by editors and reviewed snapshots.
+   * Refuse an exhausted token before changing either the owner or its nested value. */
+  if (model->generation == UINT64_MAX ||
+      model->value.revision == UINT64_MAX) {
+      return UMI_STATUS_CAPACITY_EXCEEDED;
+  }
+
+  model->item_count = item_count;
+  model->generation++;
+  model->value.revision++;
+  return UMI_STATUS_OK;
+}
 /*
  * Exercise test workbench diagnostic snapshot set state and return a clear result when the
  * behaviour no longer matches its contract.
  */
+/* Explicit blocks distinguish argument validation from revision exhaustion.
+ * The earlier equivalent control flow is retained for review; callers still
+ * receive refusal before either the snapshot or its nested entry changes. */
+#if 0
 UmiStatus umi_test_workbench_diagnostic_snapshot_set_state(
     UmiTestWorkbenchDiagnosticSnapshot *model, UmiTestWorkbenchState state) {
   UmiStatus s;
@@ -107,6 +163,30 @@ UmiStatus umi_test_workbench_diagnostic_snapshot_set_state(
         model->value.revision == UINT64_MAX) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+
+  s = umi_test_workbench_entry_set_state(&model->value, state);
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
+  if (s == UMI_STATUS_OK)
+    model->generation++;
+  return s;
+}
+#endif
+UmiStatus umi_test_workbench_diagnostic_snapshot_set_state(
+    UmiTestWorkbenchDiagnosticSnapshot *model, UmiTestWorkbenchState state) {
+  UmiStatus s;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
+  if (model == NULL) {
+    return UMI_STATUS_INVALID_ARGUMENT;
+  }
+  /* A revision is a change token used by editors and reviewed snapshots.
+   * Refuse an exhausted token before changing either the owner or its nested value. */
+  if (model->generation == UINT64_MAX ||
+      model->value.revision == UINT64_MAX) {
+      return UMI_STATUS_CAPACITY_EXCEEDED;
+  }
 
   s = umi_test_workbench_entry_set_state(&model->value, state);
   /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -194,6 +274,12 @@ static UmiStatus UmiTestWorkbenchDiagnosticSnapshotArchiveValidate(const UmiTest
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_test_workbench_diagnostic_snapshot_archive_encode, umi_test_workbench_diagnostic_snapshot_archive_decode,
     UmiTestWorkbenchDiagnosticSnapshot, UmiTestWorkbenchDiagnosticSnapshotArchiveSchema, UmiTestWorkbenchDiagnosticSnapshotArchiveBound, UmiTestWorkbenchDiagnosticSnapshotArchiveWrite, UmiTestWorkbenchDiagnosticSnapshotArchiveRead, UmiTestWorkbenchDiagnosticSnapshotArchiveValidate)
+
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_test_workbench_diagnostic_snapshot_archive_decode_with_workspace, UmiTestWorkbenchDiagnosticSnapshot,
+    UmiTestWorkbenchDiagnosticSnapshotArchiveSchema, UmiTestWorkbenchDiagnosticSnapshotArchiveBound, UmiTestWorkbenchDiagnosticSnapshotArchiveRead, UmiTestWorkbenchDiagnosticSnapshotArchiveValidate)
 
 /* Guard restoration with the previously reviewed encoded value. Domain field
  * decoding and validation remain here; the shared helper owns temporary memory. */

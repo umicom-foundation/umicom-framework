@@ -127,6 +127,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDataAuditEventTransferCases, UmiDataAuditEvent,
     umi_data_data_audit_event_archive_encode, umi_data_data_audit_event_archive_decode,
     UmiDataAuditEventTransferEqual, UmiDataAuditEventTransferTails, UmiDataAuditEventTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDataAuditEventTransferCasesWithWorkspace, UmiDataAuditEvent,
+    umi_data_data_audit_event_archive_encode, umi_data_data_audit_event_archive_decode_with_workspace, UmiDataAuditEventTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDataAuditEventConditionalArchiveCases, UmiDataAuditEvent,
     umi_data_data_audit_event_archive_encode, umi_data_data_audit_event_archive_decode_if_unchanged,
@@ -204,6 +209,7 @@ int main(void) {
     UmiDataAuditEvent item;
     CHECK(umi_data_data_audit_event_init(&item,"e1","op1","user","query",10U,UMI_STATUS_OK) == UMI_STATUS_OK);
     if (UmiDataAuditEventTransferCases(&item) != 0) return 1;
+    if (UmiDataAuditEventTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiDataAuditEventConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.outcome==UMI_STATUS_OK);

@@ -84,6 +84,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveSelectionBindingTransferCases, UmiUiReactiv
     umi_ui_reactive_selection_binding_archive_encode, umi_ui_reactive_selection_binding_archive_decode,
     UmiUiReactiveSelectionBindingTransferEqual, UmiUiReactiveSelectionBindingTransferTails, UmiUiReactiveSelectionBindingTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveSelectionBindingTransferCasesWithWorkspace, UmiUiReactiveSelectionBinding,
+    umi_ui_reactive_selection_binding_archive_encode, umi_ui_reactive_selection_binding_archive_decode_with_workspace, UmiUiReactiveSelectionBindingTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveSelectionBindingConditionalArchiveCases, UmiUiReactiveSelectionBinding,
     umi_ui_reactive_selection_binding_archive_encode, umi_ui_reactive_selection_binding_archive_decode_if_unchanged,
@@ -98,5 +103,6 @@ int main(void) { UmiUiReactiveSelectionBinding item; umi_ui_reactive_selection_b
     (void)snprintf(populated.selection_path, sizeof(populated.selection_path), "field-1");
     populated.two_way = true;
     if (UmiUiReactiveSelectionBindingTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveSelectionBindingTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveSelectionBindingConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_selection_binding_valid(&item) ? 0 : 1; }

@@ -89,3 +89,9 @@ static UmiStatus UmiQuoteArchiveValidate(const UmiQuote *value)
 }
 UMI_DEFINE_VALUE_ARCHIVE(umi_quote_archive_encode, umi_quote_archive_decode,
     UmiQuote, UmiQuoteArchiveSchema, UmiQuoteArchiveBound, UmiQuoteArchiveWrite, UmiQuoteArchiveRead, UmiQuoteArchiveValidate)
+
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_quote_archive_decode_with_workspace, UmiQuote,
+    UmiQuoteArchiveSchema, UmiQuoteArchiveBound, UmiQuoteArchiveRead, UmiQuoteArchiveValidate)

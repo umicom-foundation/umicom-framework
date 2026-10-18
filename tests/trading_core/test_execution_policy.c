@@ -50,6 +50,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTradingExecutionPolicyTransferCases, UmiTradingExecut
     umi_trading_execution_policy_archive_encode, umi_trading_execution_policy_archive_decode,
     UmiTradingExecutionPolicyTransferEqual, UmiTradingExecutionPolicyTransferTails, UmiTradingExecutionPolicyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTradingExecutionPolicyTransferCasesWithWorkspace, UmiTradingExecutionPolicy,
+    umi_trading_execution_policy_archive_encode, umi_trading_execution_policy_archive_decode_with_workspace, UmiTradingExecutionPolicyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTradingExecutionPolicyConditionalArchiveCases, UmiTradingExecutionPolicy,
     umi_trading_execution_policy_archive_encode, umi_trading_execution_policy_archive_decode_if_unchanged,
@@ -63,6 +68,7 @@ int main(void) {
      /* Apply this operation only while the related capability or state is available. */
      if(!umi_trading_execution_policy_valid(&v)) return 2;
     if (UmiTradingExecutionPolicyTransferCases(&v) != 0) return 1;
+    if (UmiTradingExecutionPolicyTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTradingExecutionPolicyConditionalArchiveCases(&v) != 0) return 1;
 
      return 0;

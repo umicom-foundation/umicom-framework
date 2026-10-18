@@ -67,6 +67,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasurySettlementRepairTransferCases, UmiTreasurySet
     umi_treasury_settlement_repair_archive_encode, umi_treasury_settlement_repair_archive_decode,
     UmiTreasurySettlementRepairTransferEqual, UmiTreasurySettlementRepairTransferTails, UmiTreasurySettlementRepairTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTreasurySettlementRepairTransferCasesWithWorkspace, UmiTreasurySettlementRepair,
+    umi_treasury_settlement_repair_archive_encode, umi_treasury_settlement_repair_archive_decode_with_workspace, UmiTreasurySettlementRepairTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasurySettlementRepairConditionalArchiveCases, UmiTreasurySettlementRepair,
     umi_treasury_settlement_repair_archive_encode, umi_treasury_settlement_repair_archive_decode_if_unchanged,
@@ -78,6 +83,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_settlement_repair_init(&v, "repair", 1U, 3U) != UMI_STATUS_OK) return 1;
     if (UmiTreasurySettlementRepairTransferCases(&v) != 0) return 1;
+    if (UmiTreasurySettlementRepairTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTreasurySettlementRepairConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this operation only while the related capability or state is available. */

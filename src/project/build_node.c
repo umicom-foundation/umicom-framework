@@ -322,6 +322,12 @@ static UmiStatus ArchiveValidate(const UmiProjectBuildNodeSnapshot *value)
 UMI_DEFINE_VALUE_ARCHIVE(umi_project_build_node_snapshot_archive_encode, umi_project_build_node_snapshot_archive_decode,
     UmiProjectBuildNodeSnapshot, ArchiveSchema, ArchiveBound, ArchiveWriteFields, ArchiveReadFields, ArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_project_build_node_snapshot_archive_decode_with_workspace, UmiProjectBuildNodeSnapshot,
+    ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)
+
 /* Restoring this complete collection reuses its existing reviewed replacement
  * rules. Decoding a saved value alone never changes a live registry. */
 UMI_DEFINE_REGISTRY_ARCHIVE(umi_project_build_node_registry_archive_encode, umi_project_build_node_registry_archive_restore,

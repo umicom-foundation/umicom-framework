@@ -127,6 +127,11 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorIntelEntryTransferCases, UmiEditorIntelEntry,
     umi_editor_intel_entry_archive_encode, umi_editor_intel_entry_archive_decode,
     UmiEditorIntelEntryTransferEqual, UmiEditorIntelEntryTransferTails, UmiEditorIntelEntryTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiEditorIntelEntryTransferCasesWithWorkspace, UmiEditorIntelEntry,
+    umi_editor_intel_entry_archive_encode, umi_editor_intel_entry_archive_decode_with_workspace, UmiEditorIntelEntryTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelEntryConditionalArchiveCases, UmiEditorIntelEntry,
     umi_editor_intel_entry_archive_encode, umi_editor_intel_entry_archive_decode_if_unchanged,
@@ -135,5 +140,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelEntryConditionalArchiveCases, UmiEdit
 
 int main(void){UmiEditorIntelEntry entry;UmiEditorIntelRange range={{5U,9U},{2U,1U}};/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_entry_init(&entry,"entry-1","main","src/main.c",range)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_intel_entry_valid(&entry))return 2;
     if (UmiEditorIntelEntryTransferCases(&entry) != 0) return 1;
+    if (UmiEditorIntelEntryTransferCasesWithWorkspace(&entry) != 0) return 1;
     if (UmiEditorIntelEntryConditionalArchiveCases(&entry) != 0) return 1;
 /* Preserve the original failure result so the caller can respond to the correct cause. */ if(entry.location.range.start.line!=2U||entry.location.range.end.line!=5U)return 3;return 0;}

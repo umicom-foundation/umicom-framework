@@ -169,6 +169,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionCausationRecordTransferCases, UmiWo
     umi_workbench_selection_causation_record_archive_encode, umi_workbench_selection_causation_record_archive_decode,
     UmiWorkbenchSelectionCausationRecordTransferEqual, UmiWorkbenchSelectionCausationRecordTransferTails, UmiWorkbenchSelectionCausationRecordTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchSelectionCausationRecordTransferCasesWithWorkspace, UmiWorkbenchSelectionCausationRecord,
+    umi_workbench_selection_causation_record_archive_encode, umi_workbench_selection_causation_record_archive_decode_with_workspace, UmiWorkbenchSelectionCausationRecordTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchSelectionCausationRecordConditionalArchiveCases, UmiWorkbenchSelectionCausationRecord,
     umi_workbench_selection_causation_record_archive_encode, umi_workbench_selection_causation_record_archive_decode_if_unchanged,
@@ -208,6 +213,7 @@ int main(void)
     assert(umi_workbench_selection_causation_record_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionCausationRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionCausationRecordTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchSelectionCausationRecordConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchSelectionCausationRecordReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchSelectionCausationRecordMutationGuards(&record) != 0) return 1;

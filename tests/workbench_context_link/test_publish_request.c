@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkPublishRequestTransferCases, UmiW
     umi_workbench_context_link_publish_request_archive_encode, umi_workbench_context_link_publish_request_archive_decode,
     UmiWorkbenchContextLinkPublishRequestTransferEqual, UmiWorkbenchContextLinkPublishRequestTransferTails, UmiWorkbenchContextLinkPublishRequestTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextLinkPublishRequestTransferCasesWithWorkspace, UmiWorkbenchContextLinkPublishRequest,
+    umi_workbench_context_link_publish_request_archive_encode, umi_workbench_context_link_publish_request_archive_decode_with_workspace, UmiWorkbenchContextLinkPublishRequestTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkPublishRequestConditionalArchiveCases, UmiWorkbenchContextLinkPublishRequest,
     umi_workbench_context_link_publish_request_archive_encode, umi_workbench_context_link_publish_request_archive_decode_if_unchanged,
@@ -151,6 +156,7 @@ int main(void)
     umi_workbench_context_link_publish_request_init(&record, "publish_request-id");
     assert(umi_workbench_context_link_publish_request_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkPublishRequestTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkPublishRequestTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkPublishRequestConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkPublishRequestReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkPublishRequestMutationGuards(&record) != 0) return 1;

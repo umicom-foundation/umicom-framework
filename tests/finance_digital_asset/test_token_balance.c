@@ -91,6 +91,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalTokenBalanceTransferCases, UmiDigitalTokenBala
     umi_digital_asset_token_balance_archive_encode, umi_digital_asset_token_balance_archive_decode,
     UmiDigitalTokenBalanceTransferEqual, UmiDigitalTokenBalanceTransferTails, UmiDigitalTokenBalanceTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDigitalTokenBalanceTransferCasesWithWorkspace, UmiDigitalTokenBalance,
+    umi_digital_asset_token_balance_archive_encode, umi_digital_asset_token_balance_archive_decode_with_workspace, UmiDigitalTokenBalanceTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalTokenBalanceConditionalArchiveCases, UmiDigitalTokenBalance,
     umi_digital_asset_token_balance_archive_encode, umi_digital_asset_token_balance_archive_decode_if_unchanged,
@@ -103,6 +108,7 @@ int main(void)
     CHECK(umi_digital_asset_token_balance_init(&value, "CUST-1", "ASSET-BTC", 100000000, 10000000, 8) == UMI_STATUS_OK);
     CHECK(umi_digital_asset_token_balance_valid(&value));
     if (UmiDigitalTokenBalanceTransferCases(&value) != 0) return 1;
+    if (UmiDigitalTokenBalanceTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDigitalTokenBalanceConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(value.available_units - value.reserved_units == 90000000);

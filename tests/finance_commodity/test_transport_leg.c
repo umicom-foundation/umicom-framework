@@ -109,6 +109,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCommodityTransportLegTransferCases, UmiCommodityTrans
     umi_commodity_transport_leg_archive_encode, umi_commodity_transport_leg_archive_decode,
     UmiCommodityTransportLegTransferEqual, UmiCommodityTransportLegTransferTails, UmiCommodityTransportLegTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCommodityTransportLegTransferCasesWithWorkspace, UmiCommodityTransportLeg,
+    umi_commodity_transport_leg_archive_encode, umi_commodity_transport_leg_archive_decode_with_workspace, UmiCommodityTransportLegTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCommodityTransportLegConditionalArchiveCases, UmiCommodityTransportLeg,
     umi_commodity_transport_leg_archive_encode, umi_commodity_transport_leg_archive_decode_if_unchanged,
@@ -121,6 +126,7 @@ int main(void)
     CHECK(umi_commodity_transport_leg_init(&value, "ROUTE-1", 1U, "LOC-A", "LOC-B", 1000, 2000) == UMI_STATUS_OK);
     CHECK(umi_commodity_transport_leg_valid(&value));
     if (UmiCommodityTransportLegTransferCases(&value) != 0) return 1;
+    if (UmiCommodityTransportLegTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiCommodityTransportLegConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

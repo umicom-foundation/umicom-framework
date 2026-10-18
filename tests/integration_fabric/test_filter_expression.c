@@ -107,6 +107,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricFilterExpressionTransferCases, UmiFabricFilterE
     umi_fabric_filter_expression_archive_encode, umi_fabric_filter_expression_archive_decode,
     UmiFabricFilterExpressionTransferEqual, UmiFabricFilterExpressionTransferTails, UmiFabricFilterExpressionTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFabricFilterExpressionTransferCasesWithWorkspace, UmiFabricFilterExpression,
+    umi_fabric_filter_expression_archive_encode, umi_fabric_filter_expression_archive_decode_with_workspace, UmiFabricFilterExpressionTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricFilterExpressionConditionalArchiveCases, UmiFabricFilterExpression,
     umi_fabric_filter_expression_archive_encode, umi_fabric_filter_expression_archive_decode_if_unchanged,
@@ -172,6 +177,7 @@ int main(void) {
     UmiFabricFilterExpression item;
     CHECK(umi_fabric_filter_expression_init(&item,"type","prefix","trade.")==UMI_STATUS_OK);
     if (UmiFabricFilterExpressionTransferCases(&item) != 0) return 1;
+    if (UmiFabricFilterExpressionTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiFabricFilterExpressionConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(strcmp(item.operation,"prefix")==0);

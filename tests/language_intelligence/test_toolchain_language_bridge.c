@@ -106,6 +106,11 @@ UMI_TEST_VALUE_TRANSFER(UmiLanguageIntelligenceToolchainLanguageBridgeTransferCa
     umi_language_intelligence_toolchain_language_bridge_archive_encode, umi_language_intelligence_toolchain_language_bridge_archive_decode,
     UmiLanguageIntelligenceToolchainLanguageBridgeTransferEqual, UmiLanguageIntelligenceToolchainLanguageBridgeTransferTails, UmiLanguageIntelligenceToolchainLanguageBridgeTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiLanguageIntelligenceToolchainLanguageBridgeTransferCasesWithWorkspace, UmiLanguageIntelligenceToolchainLanguageBridge,
+    umi_language_intelligence_toolchain_language_bridge_archive_encode, umi_language_intelligence_toolchain_language_bridge_archive_decode_with_workspace, UmiLanguageIntelligenceToolchainLanguageBridgeTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiLanguageIntelligenceToolchainLanguageBridgeConditionalArchiveCases, UmiLanguageIntelligenceToolchainLanguageBridge,
     umi_language_intelligence_toolchain_language_bridge_archive_encode, umi_language_intelligence_toolchain_language_bridge_archive_decode_if_unchanged,
@@ -119,6 +124,7 @@ int main(void)
     CHECK(umi_language_intelligence_toolchain_language_bridge_set(&mapping, "c", "clangd", "workspace") == UMI_STATUS_OK);
     CHECK(umi_language_intelligence_toolchain_language_bridge_validate(&mapping) == UMI_STATUS_OK);
     if (UmiLanguageIntelligenceToolchainLanguageBridgeTransferCases(&mapping) != 0) return 1;
+    if (UmiLanguageIntelligenceToolchainLanguageBridgeTransferCasesWithWorkspace(&mapping) != 0) return 1;
     if (UmiLanguageIntelligenceToolchainLanguageBridgeConditionalArchiveCases(&mapping) != 0) return 1;
 
     CHECK(umi_language_intelligence_toolchain_language_bridge_matches(&mapping, "c", "workspace") != 0);

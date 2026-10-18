@@ -6,6 +6,8 @@
  * LICENCE: MIT
  * Copyright (c) 2026 Umicom Foundation
  *---------------------------------------------------------------------------*/
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "../support/assertions.h"
 #include "umicom/healthcare/synthetic_registry.h"
 
 #include <assert.h>

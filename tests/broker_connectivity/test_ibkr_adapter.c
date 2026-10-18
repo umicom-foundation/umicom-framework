@@ -86,6 +86,11 @@ UMI_TEST_VALUE_TRANSFER(UmiIbkrAdapterConfigTransferCases, UmiIbkrAdapterConfig,
     umi_ibkr_adapter_config_archive_encode, umi_ibkr_adapter_config_archive_decode,
     UmiIbkrAdapterConfigTransferEqual, UmiIbkrAdapterConfigTransferTails, UmiIbkrAdapterConfigTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiIbkrAdapterConfigTransferCasesWithWorkspace, UmiIbkrAdapterConfig,
+    umi_ibkr_adapter_config_archive_encode, umi_ibkr_adapter_config_archive_decode_with_workspace, UmiIbkrAdapterConfigTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiIbkrAdapterConfigConditionalArchiveCases, UmiIbkrAdapterConfig,
     umi_ibkr_adapter_config_archive_encode, umi_ibkr_adapter_config_archive_decode_if_unchanged,
@@ -102,6 +107,7 @@ int main(void)
     umi_ibkr_adapter_config_init(&config);
     assert(umi_ibkr_adapter_config_validate(&config) == UMI_STATUS_OK);
     if (UmiIbkrAdapterConfigTransferCases(&config) != 0) return 1;
+    if (UmiIbkrAdapterConfigTransferCasesWithWorkspace(&config) != 0) return 1;
     if (UmiIbkrAdapterConfigConditionalArchiveCases(&config) != 0) return 1;
 
 

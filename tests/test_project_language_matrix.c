@@ -15,6 +15,8 @@
  *---------------------------------------------------------------------------*/
 /* Umicom Framework polyglot project language matrix regression test.
  * Created by Sammy Hegab, Umicom Foundation. Licence: MIT. */
+/* Required fixture setup and checks also execute in optimized builds. */
+#include "support/assertions.h"
 #include <assert.h>
 #include <string.h>
 

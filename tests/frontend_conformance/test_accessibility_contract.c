@@ -55,6 +55,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFcAccessibilityContractTransferCases, UmiFcAccessibil
     umi_fc_accessibility_contract_archive_encode, umi_fc_accessibility_contract_archive_decode,
     UmiFcAccessibilityContractTransferEqual, UmiFcAccessibilityContractTransferTails, UmiFcAccessibilityContractTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFcAccessibilityContractTransferCasesWithWorkspace, UmiFcAccessibilityContract,
+    umi_fc_accessibility_contract_archive_encode, umi_fc_accessibility_contract_archive_decode_with_workspace, UmiFcAccessibilityContractTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFcAccessibilityContractConditionalArchiveCases, UmiFcAccessibilityContract,
     umi_fc_accessibility_contract_archive_encode, umi_fc_accessibility_contract_archive_decode_if_unchanged,
@@ -64,6 +69,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiFcAccessibilityContractConditionalArchiveCases, 
 int main(void) {
     UmiFcAccessibilityContract x={1U,true,true,true}; CHECK(umi_fc_accessibility_contract_validate(&x));
     if (UmiFcAccessibilityContractTransferCases(&x) != 0) return 1;
+    if (UmiFcAccessibilityContractTransferCasesWithWorkspace(&x) != 0) return 1;
     if (UmiFcAccessibilityContractConditionalArchiveCases(&x) != 0) return 1;
 
     return 0;

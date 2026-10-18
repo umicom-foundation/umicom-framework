@@ -87,6 +87,11 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorWbEditorAppearanceTransferCases, UmiEditorWbEdi
     umi_editor_wb_editor_appearance_archive_encode, umi_editor_wb_editor_appearance_archive_decode,
     UmiEditorWbEditorAppearanceTransferEqual, UmiEditorWbEditorAppearanceTransferTails, UmiEditorWbEditorAppearanceTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiEditorWbEditorAppearanceTransferCasesWithWorkspace, UmiEditorWbEditorAppearance,
+    umi_editor_wb_editor_appearance_archive_encode, umi_editor_wb_editor_appearance_archive_decode_with_workspace, UmiEditorWbEditorAppearanceTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorWbEditorAppearanceConditionalArchiveCases, UmiEditorWbEditorAppearance,
     umi_editor_wb_editor_appearance_archive_encode, umi_editor_wb_editor_appearance_archive_decode_if_unchanged,
@@ -95,5 +100,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorWbEditorAppearanceConditionalArchiveCases,
 
 int main(void){ UmiEditorWbEditorAppearance s; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_editor_appearance_init(&s,"id","text")!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_editor_appearance_set_values(&s,3U,4U,true)!=UMI_STATUS_OK)return 2; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_wb_editor_appearance_valid(&s)||s.primary!=3U)return 3;
     if (UmiEditorWbEditorAppearanceTransferCases(&s) != 0) return 1;
+    if (UmiEditorWbEditorAppearanceTransferCasesWithWorkspace(&s) != 0) return 1;
     if (UmiEditorWbEditorAppearanceConditionalArchiveCases(&s) != 0) return 1;
  return 0; }

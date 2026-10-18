@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkNavigationEntryTransferCases, Umi
     umi_workbench_context_link_navigation_entry_archive_encode, umi_workbench_context_link_navigation_entry_archive_decode,
     UmiWorkbenchContextLinkNavigationEntryTransferEqual, UmiWorkbenchContextLinkNavigationEntryTransferTails, UmiWorkbenchContextLinkNavigationEntryTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextLinkNavigationEntryTransferCasesWithWorkspace, UmiWorkbenchContextLinkNavigationEntry,
+    umi_workbench_context_link_navigation_entry_archive_encode, umi_workbench_context_link_navigation_entry_archive_decode_with_workspace, UmiWorkbenchContextLinkNavigationEntryTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkNavigationEntryConditionalArchiveCases, UmiWorkbenchContextLinkNavigationEntry,
     umi_workbench_context_link_navigation_entry_archive_encode, umi_workbench_context_link_navigation_entry_archive_decode_if_unchanged,
@@ -151,6 +156,7 @@ int main(void)
     umi_workbench_context_link_navigation_entry_init(&record, "navigation_entry-id");
     assert(umi_workbench_context_link_navigation_entry_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkNavigationEntryTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkNavigationEntryTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkNavigationEntryConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkNavigationEntryReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkNavigationEntryMutationGuards(&record) != 0) return 1;

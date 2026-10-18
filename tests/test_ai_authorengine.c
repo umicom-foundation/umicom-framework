@@ -111,6 +111,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAiAuthorEngineConfigTransferCases, UmiAiAuthorEngineC
     umi_ai_authorengine_archive_encode, umi_ai_authorengine_archive_decode,
     UmiAiAuthorEngineConfigTransferEqual, UmiAiAuthorEngineConfigTransferTails, UmiAiAuthorEngineConfigTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAiAuthorEngineConfigTransferCasesWithWorkspace, UmiAiAuthorEngineConfig,
+    umi_ai_authorengine_archive_encode, umi_ai_authorengine_archive_decode_with_workspace, UmiAiAuthorEngineConfigTransferEqual)
+
 #include "value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAiAuthorEngineConfigConditionalArchiveCases, UmiAiAuthorEngineConfig,
     umi_ai_authorengine_archive_encode, umi_ai_authorengine_archive_decode_if_unchanged,
@@ -125,6 +130,7 @@ int main(void)
     (void)strcpy(config.provider, "local");
     assert(umi_ai_authorengine_validate(&config) == UMI_STATUS_OK);
     if (UmiAiAuthorEngineConfigTransferCases(&config) != 0) return 1;
+    if (UmiAiAuthorEngineConfigTransferCasesWithWorkspace(&config) != 0) return 1;
     if (UmiAiAuthorEngineConfigConditionalArchiveCases(&config) != 0) return 1;
 
     return 0;

@@ -31,6 +31,17 @@ UmiStatus status = umi_platform_bookmarks_registry_archive_encode(
 <li>Build the independent consumer:<pre><code>cmake --build build</code></pre></li>
 <li>Run the lesson's check:<pre><code>ctest --test-dir build --output-on-failure</code></pre></li></ol>
 <p>The expected console message is <code>Recovered bookmark: Notes project (file:///workspace/notes.c)</code>. This lesson demonstrates storage handoff and recovery into a new registry within one process. It uses no real project files and does not prove disk-crash recovery or installed-product readiness.</p>
+<h2>Decode using caller-owned working storage</h2>
+<p>A large value can need more temporary memory than a worker thread's stack provides. Every typed value decoder also has a <code>_with_workspace</code> form. You provide one complete record for temporary decoding and a separate record for the result. The decoder uses neither a whole-record stack temporary nor a heap allocation. The original decoder remains available and uses the same archive format.</p>
+<ol>
+<li>Choose the record type for the archive. Allocate or reserve two correctly aligned objects of that type. The workspace belongs exclusively to this operation; do not pass a live application record as temporary storage.</li>
+<li>Keep the encoded bytes readable throughout the call. Their storage, the workspace and the destination must not overlap, even partially. The overlap check follows Framework's supported flat-address host model.</li>
+<li>Call the typed <code>archive_decode_with_workspace</code> function and inspect its result. On success the destination owns an independent value. On every failure the destination is unchanged, while the workspace may contain incomplete data.</li>
+<li>Reuse or release the workspace after the call. Do not publish its contents. Synchronise concurrent access through the record's existing owner; this function supplies no locking or live-state publication.</li>
+</ol>
+<p>The installed <code>examples/value_archive/workspace.c</code> program uses a bookmark record to demonstrate allocation, successful decoding, scratch reuse and rejection of a damaged archive. It makes no changes to files or accounts. Build it with the same installed-SDK commands above, then run:</p>
+<pre><code>ctest --test-dir build -R workspace-import --output-on-failure --no-tests=error</code></pre>
+<p>The expected output from running <code>umicom-workspace-import</code> directly is <code>Decoded independent bookmark: Notes workspace</code>. A missing decoder symbol means the headers and libraries came from different SDK builds: install them together and configure a fresh consumer build directory. Do not add the Framework source checkout to the consumer's include or link paths to conceal the mismatch.</p>
 <h2>Understand refusals</h2>
 <table><thead><tr><th>Status</th><th>Meaning and next step</th></tr></thead><tbody>
 <tr><td>INVALID_ARGUMENT</td><td>Check pointers, buffer rules and the domain fields. No output value is published.</td></tr>

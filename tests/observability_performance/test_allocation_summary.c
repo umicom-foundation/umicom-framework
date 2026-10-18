@@ -97,6 +97,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPerformanceAllocationSummaryTransferCases, UmiPerform
     umi_performance_allocation_summary_archive_encode, umi_performance_allocation_summary_archive_decode,
     UmiPerformanceAllocationSummaryTransferEqual, UmiPerformanceAllocationSummaryTransferTails, UmiPerformanceAllocationSummaryTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPerformanceAllocationSummaryTransferCasesWithWorkspace, UmiPerformanceAllocationSummary,
+    umi_performance_allocation_summary_archive_encode, umi_performance_allocation_summary_archive_decode_with_workspace, UmiPerformanceAllocationSummaryTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPerformanceAllocationSummaryConditionalArchiveCases, UmiPerformanceAllocationSummary,
     umi_performance_allocation_summary_archive_encode, umi_performance_allocation_summary_archive_decode_if_unchanged,
@@ -154,6 +159,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_performance_allocation_summary_validate(&left) != UMI_STATUS_OK) return 2;
     if (UmiPerformanceAllocationSummaryTransferCases(&left) != 0) return 1;
+    if (UmiPerformanceAllocationSummaryTransferCasesWithWorkspace(&left) != 0) return 1;
     if (UmiPerformanceAllocationSummaryConditionalArchiveCases(&left) != 0) return 1;
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */

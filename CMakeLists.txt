@@ -5276,6 +5276,8 @@ install(FILES
     ${CMAKE_CURRENT_BINARY_DIR}/UmicomFrameworkConfigVersion.cmake
     cmake/UmicomApplicationBranding.cmake
     cmake/UmicomApplicationModules.cmake
+    cmake/UmicomRequireInstalledSdk.cmake
+    cmake/UmicomPublicContractFingerprint.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework
 )
 
@@ -5878,3 +5880,16 @@ include(cmake/UmicomSdkInspectionChecks.cmake)
 # The installed SDK includes the public workflow for diagnosing native startup failures.
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/docs/DIAGNOSTIC_FAILURES.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs" COMPONENT Framework)
+
+# Keep required fixture setup active in optimized qualification builds.
+include(cmake/UmicomTestAssertionChecks.cmake)
+
+# Installed qualification has no source-tree fallback or synthetic library at runtime.
+include(cmake/UmicomInstalledSdkContractChecks.cmake)
+install(DIRECTORY examples/sdk_qualification/
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/sdk_qualification
+    COMPONENT Framework)
+
+install(FILES docs/INSTALLED_SDK_QUALIFICATION.html
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs
+    COMPONENT Framework)

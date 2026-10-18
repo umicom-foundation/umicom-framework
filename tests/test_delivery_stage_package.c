@@ -112,6 +112,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPackageSpecTransferCases, UmiPackageSpec,
     umi_package_spec_archive_encode, umi_package_spec_archive_decode,
     UmiPackageSpecTransferEqual, UmiPackageSpecTransferTails, UmiPackageSpecTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPackageSpecTransferCasesWithWorkspace, UmiPackageSpec,
+    umi_package_spec_archive_encode, umi_package_spec_archive_decode_with_workspace, UmiPackageSpecTransferEqual)
+
 #include "value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPackageSpecConditionalArchiveCases, UmiPackageSpec,
     umi_package_spec_archive_encode, umi_package_spec_archive_decode_if_unchanged,
@@ -215,6 +220,7 @@ int main(void) {
     assert(stage.complete && stage.total_bytes == 100U);
     assert(umi_package_spec_init(&spec, "portable", UMI_PACKAGE_DIRECTORY, "stage/root", "dist/studio") == UMI_STATUS_OK);
     if (UmiPackageSpecTransferCases(&spec) != 0) return 1;
+    if (UmiPackageSpecTransferCasesWithWorkspace(&spec) != 0) return 1;
     if (UmiPackageSpecConditionalArchiveCases(&spec) != 0) return 1;
 
     assert(umi_directory_package_provider(&provider) == UMI_STATUS_OK);

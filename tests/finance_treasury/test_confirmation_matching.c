@@ -67,6 +67,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryConfirmationMatchingTransferCases, UmiTreasur
     umi_treasury_confirmation_matching_archive_encode, umi_treasury_confirmation_matching_archive_decode,
     UmiTreasuryConfirmationMatchingTransferEqual, UmiTreasuryConfirmationMatchingTransferTails, UmiTreasuryConfirmationMatchingTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTreasuryConfirmationMatchingTransferCasesWithWorkspace, UmiTreasuryConfirmationMatching,
+    umi_treasury_confirmation_matching_archive_encode, umi_treasury_confirmation_matching_archive_decode_with_workspace, UmiTreasuryConfirmationMatchingTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryConfirmationMatchingConditionalArchiveCases, UmiTreasuryConfirmationMatching,
     umi_treasury_confirmation_matching_archive_encode, umi_treasury_confirmation_matching_archive_decode_if_unchanged,
@@ -78,6 +83,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_confirmation_matching_init(&v, "match", 8U, 8U) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryConfirmationMatchingTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryConfirmationMatchingTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTreasuryConfirmationMatchingConditionalArchiveCases(&v) != 0) return 1;
 
     /* Use the stable identifier comparison to choose the matching record or policy. */

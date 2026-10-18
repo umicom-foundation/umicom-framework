@@ -73,6 +73,11 @@ UMI_TEST_VALUE_TRANSFER(UmiNativeSymbolTransferCases, UmiNativeSymbol,
     umi_nc_symbol_archive_encode, umi_nc_symbol_archive_decode,
     UmiNativeSymbolTransferEqual, UmiNativeSymbolTransferTails, UmiNativeSymbolTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiNativeSymbolTransferCasesWithWorkspace, UmiNativeSymbol,
+    umi_nc_symbol_archive_encode, umi_nc_symbol_archive_decode_with_workspace, UmiNativeSymbolTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiNativeSymbolConditionalArchiveCases, UmiNativeSymbol,
     umi_nc_symbol_archive_encode, umi_nc_symbol_archive_decode_if_unchanged,
@@ -112,5 +117,6 @@ int main(void){
     if (UmiNativeSymbolConstructionCases() != 0) return 1;
 UmiNativeSymbol s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_nc_symbol_init(&s,1U,UMI_NC_SYMBOL_VARIABLE,"x",2U,1U)!=UMI_STATUS_OK)return 1;s.defined=true;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_nc_symbol_validate(&s)!=UMI_STATUS_OK)return 2;
     if (UmiNativeSymbolTransferCases(&s) != 0) return 1;
+    if (UmiNativeSymbolTransferCasesWithWorkspace(&s) != 0) return 1;
     if (UmiNativeSymbolConditionalArchiveCases(&s) != 0) return 1;
 return 0;}

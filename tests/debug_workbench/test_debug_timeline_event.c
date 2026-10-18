@@ -138,6 +138,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDebugWorkbenchDebugTimelineEventTransferCases, UmiDeb
     umi_debug_workbench_debug_timeline_event_archive_encode, umi_debug_workbench_debug_timeline_event_archive_decode,
     UmiDebugWorkbenchDebugTimelineEventTransferEqual, UmiDebugWorkbenchDebugTimelineEventTransferTails, UmiDebugWorkbenchDebugTimelineEventTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDebugWorkbenchDebugTimelineEventTransferCasesWithWorkspace, UmiDebugWorkbenchDebugTimelineEvent,
+    umi_debug_workbench_debug_timeline_event_archive_encode, umi_debug_workbench_debug_timeline_event_archive_decode_with_workspace, UmiDebugWorkbenchDebugTimelineEventTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDebugWorkbenchDebugTimelineEventConditionalArchiveCases, UmiDebugWorkbenchDebugTimelineEvent,
     umi_debug_workbench_debug_timeline_event_archive_encode, umi_debug_workbench_debug_timeline_event_archive_decode_if_unchanged,
@@ -152,6 +157,7 @@ int main(void)
     UMI_TEST_CHECK(model.timestamp_ns == 1200U);
     UMI_TEST_CHECK(umi_debug_workbench_debug_timeline_event_valid(&model));
     if (UmiDebugWorkbenchDebugTimelineEventTransferCases(&model) != 0) return 1;
+    if (UmiDebugWorkbenchDebugTimelineEventTransferCasesWithWorkspace(&model) != 0) return 1;
     if (UmiDebugWorkbenchDebugTimelineEventConditionalArchiveCases(&model) != 0) return 1;
 
     return 0;

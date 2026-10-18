@@ -97,6 +97,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPerformanceHeapSnapshotTransferCases, UmiPerformanceH
     umi_performance_heap_snapshot_archive_encode, umi_performance_heap_snapshot_archive_decode,
     UmiPerformanceHeapSnapshotTransferEqual, UmiPerformanceHeapSnapshotTransferTails, UmiPerformanceHeapSnapshotTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPerformanceHeapSnapshotTransferCasesWithWorkspace, UmiPerformanceHeapSnapshot,
+    umi_performance_heap_snapshot_archive_encode, umi_performance_heap_snapshot_archive_decode_with_workspace, UmiPerformanceHeapSnapshotTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPerformanceHeapSnapshotConditionalArchiveCases, UmiPerformanceHeapSnapshot,
     umi_performance_heap_snapshot_archive_encode, umi_performance_heap_snapshot_archive_decode_if_unchanged,
@@ -154,6 +159,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_performance_heap_snapshot_validate(&left) != UMI_STATUS_OK) return 2;
     if (UmiPerformanceHeapSnapshotTransferCases(&left) != 0) return 1;
+    if (UmiPerformanceHeapSnapshotTransferCasesWithWorkspace(&left) != 0) return 1;
     if (UmiPerformanceHeapSnapshotConditionalArchiveCases(&left) != 0) return 1;
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */

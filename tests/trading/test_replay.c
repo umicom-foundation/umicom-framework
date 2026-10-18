@@ -92,6 +92,11 @@ UMI_TEST_VALUE_TRANSFER(UmiReplayEventTransferCases, UmiReplayEvent,
     umi_replay_event_archive_encode, umi_replay_event_archive_decode,
     UmiReplayEventTransferEqual, UmiReplayEventTransferTails, UmiReplayEventTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiReplayEventTransferCasesWithWorkspace, UmiReplayEvent,
+    umi_replay_event_archive_encode, umi_replay_event_archive_decode_with_workspace, UmiReplayEventTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiReplayEventConditionalArchiveCases, UmiReplayEvent,
     umi_replay_event_archive_encode, umi_replay_event_archive_decode_if_unchanged,
@@ -101,6 +106,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiReplayEventConditionalArchiveCases, UmiReplayEve
 int main(void){
     UmiReplayEvent e={1U,1000,{0},{0}};(void)snprintf(e.type,sizeof(e.type),"%s","tick");assert(umi_replay_event_valid(&e));
     if (UmiReplayEventTransferCases(&e) != 0) return 1;
+    if (UmiReplayEventTransferCasesWithWorkspace(&e) != 0) return 1;
     if (UmiReplayEventConditionalArchiveCases(&e) != 0) return 1;
 
     UmiReplayCursor c;umi_replay_cursor_init(&c,1U);assert(umi_replay_cursor_accept(&c,&e));assert(c.next_sequence==2U);

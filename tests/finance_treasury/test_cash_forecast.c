@@ -68,6 +68,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTreasuryCashForecastTransferCases, UmiTreasuryCashFor
     umi_treasury_cash_forecast_archive_encode, umi_treasury_cash_forecast_archive_decode,
     UmiTreasuryCashForecastTransferEqual, UmiTreasuryCashForecastTransferTails, UmiTreasuryCashForecastTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTreasuryCashForecastTransferCasesWithWorkspace, UmiTreasuryCashForecast,
+    umi_treasury_cash_forecast_archive_encode, umi_treasury_cash_forecast_archive_decode_with_workspace, UmiTreasuryCashForecastTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTreasuryCashForecastConditionalArchiveCases, UmiTreasuryCashForecast,
     umi_treasury_cash_forecast_archive_encode, umi_treasury_cash_forecast_archive_decode_if_unchanged,
@@ -79,6 +84,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_treasury_cash_forecast_init(&v, "fc-1", 1000, 900, 650) != UMI_STATUS_OK) return 1;
     if (UmiTreasuryCashForecastTransferCases(&v) != 0) return 1;
+    if (UmiTreasuryCashForecastTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTreasuryCashForecastConditionalArchiveCases(&v) != 0) return 1;
 
     /* Apply this branch only when its contract condition is satisfied. */

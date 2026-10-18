@@ -56,6 +56,11 @@ UMI_TEST_VALUE_TRANSFER(UmiApplicationProductionAcceptanceRuleTransferCases, Umi
     umi_application_production_acceptance_rule_archive_encode, umi_application_production_acceptance_rule_archive_decode,
     UmiApplicationProductionAcceptanceRuleTransferEqual, UmiApplicationProductionAcceptanceRuleTransferTails, UmiApplicationProductionAcceptanceRuleTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiApplicationProductionAcceptanceRuleTransferCasesWithWorkspace, UmiApplicationProductionAcceptanceRule,
+    umi_application_production_acceptance_rule_archive_encode, umi_application_production_acceptance_rule_archive_decode_with_workspace, UmiApplicationProductionAcceptanceRuleTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiApplicationProductionAcceptanceRuleConditionalArchiveCases, UmiApplicationProductionAcceptanceRule,
     umi_application_production_acceptance_rule_archive_encode, umi_application_production_acceptance_rule_archive_decode_if_unchanged,
@@ -66,6 +71,7 @@ int main(void) {
     UmiApplicationProductionAcceptanceRule rule = umi_application_production_acceptance_rule_default();
     assert(umi_application_production_acceptance_rule_validate(&rule) == UMI_STATUS_OK);
     if (UmiApplicationProductionAcceptanceRuleTransferCases(&rule) != 0) return 1;
+    if (UmiApplicationProductionAcceptanceRuleTransferCasesWithWorkspace(&rule) != 0) return 1;
     if (UmiApplicationProductionAcceptanceRuleConditionalArchiveCases(&rule) != 0) return 1;
 
     assert(rule.require_manifest && rule.require_evidence);

@@ -86,6 +86,11 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorWbEditorReopenTransferCases, UmiEditorWbEditorR
     umi_editor_wb_editor_reopen_archive_encode, umi_editor_wb_editor_reopen_archive_decode,
     UmiEditorWbEditorReopenTransferEqual, UmiEditorWbEditorReopenTransferTails, UmiEditorWbEditorReopenTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiEditorWbEditorReopenTransferCasesWithWorkspace, UmiEditorWbEditorReopen,
+    umi_editor_wb_editor_reopen_archive_encode, umi_editor_wb_editor_reopen_archive_decode_with_workspace, UmiEditorWbEditorReopenTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorWbEditorReopenConditionalArchiveCases, UmiEditorWbEditorReopen,
     umi_editor_wb_editor_reopen_archive_encode, umi_editor_wb_editor_reopen_archive_decode_if_unchanged,
@@ -94,5 +99,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorWbEditorReopenConditionalArchiveCases, Umi
 
 int main(void){ UmiEditorWbEditorReopen s; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_editor_reopen_init(&s,"a.c","main")!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_wb_editor_reopen_valid(&s))return 2;
     if (UmiEditorWbEditorReopenTransferCases(&s) != 0) return 1;
+    if (UmiEditorWbEditorReopenTransferCasesWithWorkspace(&s) != 0) return 1;
     if (UmiEditorWbEditorReopenConditionalArchiveCases(&s) != 0) return 1;
  return 0; }

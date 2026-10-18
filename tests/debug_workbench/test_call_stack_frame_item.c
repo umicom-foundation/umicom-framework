@@ -138,6 +138,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDebugWorkbenchCallStackFrameItemTransferCases, UmiDeb
     umi_debug_workbench_call_stack_frame_item_archive_encode, umi_debug_workbench_call_stack_frame_item_archive_decode,
     UmiDebugWorkbenchCallStackFrameItemTransferEqual, UmiDebugWorkbenchCallStackFrameItemTransferTails, UmiDebugWorkbenchCallStackFrameItemTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDebugWorkbenchCallStackFrameItemTransferCasesWithWorkspace, UmiDebugWorkbenchCallStackFrameItem,
+    umi_debug_workbench_call_stack_frame_item_archive_encode, umi_debug_workbench_call_stack_frame_item_archive_decode_with_workspace, UmiDebugWorkbenchCallStackFrameItemTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDebugWorkbenchCallStackFrameItemConditionalArchiveCases, UmiDebugWorkbenchCallStackFrameItem,
     umi_debug_workbench_call_stack_frame_item_archive_encode, umi_debug_workbench_call_stack_frame_item_archive_decode_if_unchanged,
@@ -172,6 +177,7 @@ int main(void)
     UMI_TEST_CHECK(!model.enabled);
     UMI_TEST_CHECK(umi_debug_workbench_call_stack_frame_item_valid(&model));
     if (UmiDebugWorkbenchCallStackFrameItemTransferCases(&model) != 0) return 1;
+    if (UmiDebugWorkbenchCallStackFrameItemTransferCasesWithWorkspace(&model) != 0) return 1;
     if (UmiDebugWorkbenchCallStackFrameItemConditionalArchiveCases(&model) != 0) return 1;
 
     return 0;

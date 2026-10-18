@@ -85,6 +85,11 @@ UMI_TEST_VALUE_TRANSFER(UmiBankingBankProductTransferCases, UmiBankingBankProduc
     umi_banking_bank_product_archive_encode, umi_banking_bank_product_archive_decode,
     UmiBankingBankProductTransferEqual, UmiBankingBankProductTransferTails, UmiBankingBankProductTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiBankingBankProductTransferCasesWithWorkspace, UmiBankingBankProduct,
+    umi_banking_bank_product_archive_encode, umi_banking_bank_product_archive_decode_with_workspace, UmiBankingBankProductTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiBankingBankProductConditionalArchiveCases, UmiBankingBankProduct,
     umi_banking_bank_product_archive_encode, umi_banking_bank_product_archive_decode_if_unchanged,
@@ -98,6 +103,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if(!umi_banking_bank_product_valid(&v)) return 2;
     if (UmiBankingBankProductTransferCases(&v) != 0) return 1;
+    if (UmiBankingBankProductTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiBankingBankProductConditionalArchiveCases(&v) != 0) return 1;
 
     return 0;

@@ -104,6 +104,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTradingVenueDescriptorTransferCases, UmiTradingVenueD
     umi_trading_venue_descriptor_archive_encode, umi_trading_venue_descriptor_archive_decode,
     UmiTradingVenueDescriptorTransferEqual, UmiTradingVenueDescriptorTransferTails, UmiTradingVenueDescriptorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTradingVenueDescriptorTransferCasesWithWorkspace, UmiTradingVenueDescriptor,
+    umi_trading_venue_descriptor_archive_encode, umi_trading_venue_descriptor_archive_decode_with_workspace, UmiTradingVenueDescriptorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTradingVenueDescriptorConditionalArchiveCases, UmiTradingVenueDescriptor,
     umi_trading_venue_descriptor_archive_encode, umi_trading_venue_descriptor_archive_decode_if_unchanged,
@@ -118,6 +123,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if(!umi_trading_venue_descriptor_valid(&v)||!v.supports_auctions)return 2;
     if (UmiTradingVenueDescriptorTransferCases(&v) != 0) return 1;
+    if (UmiTradingVenueDescriptorTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTradingVenueDescriptorConditionalArchiveCases(&v) != 0) return 1;
 
     return 0;

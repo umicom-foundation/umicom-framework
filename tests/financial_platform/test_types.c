@@ -92,6 +92,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFinancialPlatformSnapshotTransferCases, UmiFinancialP
     umi_financial_platform_snapshot_archive_encode, umi_financial_platform_snapshot_archive_decode,
     UmiFinancialPlatformSnapshotTransferEqual, UmiFinancialPlatformSnapshotTransferTails, UmiFinancialPlatformSnapshotTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFinancialPlatformSnapshotTransferCasesWithWorkspace, UmiFinancialPlatformSnapshot,
+    umi_financial_platform_snapshot_archive_encode, umi_financial_platform_snapshot_archive_decode_with_workspace, UmiFinancialPlatformSnapshotTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFinancialPlatformSnapshotConditionalArchiveCases, UmiFinancialPlatformSnapshot,
     umi_financial_platform_snapshot_archive_encode, umi_financial_platform_snapshot_archive_decode_if_unchanged,
@@ -113,6 +118,7 @@ int main(void)
     assert(umi_financial_platform_snapshot_validate(&snapshot) ==
            UMI_STATUS_OK);
     if (UmiFinancialPlatformSnapshotTransferCases(&snapshot) != 0) return 1;
+    if (UmiFinancialPlatformSnapshotTransferCasesWithWorkspace(&snapshot) != 0) return 1;
     if (UmiFinancialPlatformSnapshotConditionalArchiveCases(&snapshot) != 0) return 1;
 
 

@@ -112,6 +112,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTestQualityWorkbenchServiceTransferCases, UmiTestQual
     umi_test_quality_workbench_service_archive_encode, umi_test_quality_workbench_service_archive_decode,
     UmiTestQualityWorkbenchServiceTransferEqual, UmiTestQualityWorkbenchServiceTransferTails, UmiTestQualityWorkbenchServiceTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTestQualityWorkbenchServiceTransferCasesWithWorkspace, UmiTestQualityWorkbenchService,
+    umi_test_quality_workbench_service_archive_encode, umi_test_quality_workbench_service_archive_decode_with_workspace, UmiTestQualityWorkbenchServiceTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestQualityWorkbenchServiceConditionalArchiveCases, UmiTestQualityWorkbenchService,
     umi_test_quality_workbench_service_archive_encode, umi_test_quality_workbench_service_archive_decode_if_unchanged,
@@ -138,5 +143,6 @@ int main(void){UmiTestQualityWorkbenchService m;assert(umi_test_quality_workbenc
         umi_test_quality_workbench_service_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
     assert(umi_test_quality_workbench_service_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_quality_workbench_service_valid(&m));
     if (UmiTestQualityWorkbenchServiceTransferCases(&m) != 0) return 1;
+    if (UmiTestQualityWorkbenchServiceTransferCasesWithWorkspace(&m) != 0) return 1;
     if (UmiTestQualityWorkbenchServiceConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

@@ -113,6 +113,11 @@ UMI_TEST_VALUE_TRANSFER(UmiProjectWorkspaceWorkspaceTrustBridgeTransferCases, Um
     umi_project_workspace_workspace_trust_bridge_archive_encode, umi_project_workspace_workspace_trust_bridge_archive_decode,
     UmiProjectWorkspaceWorkspaceTrustBridgeTransferEqual, UmiProjectWorkspaceWorkspaceTrustBridgeTransferTails, UmiProjectWorkspaceWorkspaceTrustBridgeTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiProjectWorkspaceWorkspaceTrustBridgeTransferCasesWithWorkspace, UmiProjectWorkspaceWorkspaceTrustBridge,
+    umi_project_workspace_workspace_trust_bridge_archive_encode, umi_project_workspace_workspace_trust_bridge_archive_decode_with_workspace, UmiProjectWorkspaceWorkspaceTrustBridgeTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiProjectWorkspaceWorkspaceTrustBridgeConditionalArchiveCases, UmiProjectWorkspaceWorkspaceTrustBridge,
     umi_project_workspace_workspace_trust_bridge_archive_encode, umi_project_workspace_workspace_trust_bridge_archive_decode_if_unchanged,
@@ -159,6 +164,7 @@ int main(void) {
     umi_project_workspace_workspace_trust_bridge_set_metric(&a,7U);
     CHECK(umi_project_workspace_workspace_trust_bridge_validate(&a)==UMI_STATUS_OK);
     if (UmiProjectWorkspaceWorkspaceTrustBridgeTransferCases(&a) != 0) return 1;
+    if (UmiProjectWorkspaceWorkspaceTrustBridgeTransferCasesWithWorkspace(&a) != 0) return 1;
     if (UmiProjectWorkspaceWorkspaceTrustBridgeConditionalArchiveCases(&a) != 0) return 1;
 
     CHECK(a.metric==7U);

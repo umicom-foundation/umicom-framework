@@ -104,6 +104,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicPerspectiveCatalogueTransferCases, UmiUiMosai
     umi_ui_mosaic_perspective_catalogue_archive_encode, umi_ui_mosaic_perspective_catalogue_archive_decode,
     UmiUiMosaicPerspectiveCatalogueTransferEqual, UmiUiMosaicPerspectiveCatalogueTransferTails, UmiUiMosaicPerspectiveCatalogueTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiMosaicPerspectiveCatalogueTransferCasesWithWorkspace, UmiUiMosaicPerspectiveCatalogue,
+    umi_ui_mosaic_perspective_catalogue_archive_encode, umi_ui_mosaic_perspective_catalogue_archive_decode_with_workspace, UmiUiMosaicPerspectiveCatalogueTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicPerspectiveCatalogueConditionalArchiveCases, UmiUiMosaicPerspectiveCatalogue,
     umi_ui_mosaic_perspective_catalogue_archive_encode, umi_ui_mosaic_perspective_catalogue_archive_decode_if_unchanged,
@@ -116,6 +121,7 @@ int main(void) {
     CHECK(umi_ui_mosaic_perspective_catalogue_set(&value, "perspective.perspective_catalogue", "Perspective Catalogue", "layout.default", UMI_UI_MOSAIC_APP_TMS) == UMI_STATUS_OK);
     CHECK(umi_ui_mosaic_perspective_catalogue_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicPerspectiveCatalogueTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicPerspectiveCatalogueTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiUiMosaicPerspectiveCatalogueConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

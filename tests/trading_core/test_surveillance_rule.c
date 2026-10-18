@@ -50,6 +50,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTradingSurveillanceRuleTransferCases, UmiTradingSurve
     umi_trading_surveillance_rule_archive_encode, umi_trading_surveillance_rule_archive_decode,
     UmiTradingSurveillanceRuleTransferEqual, UmiTradingSurveillanceRuleTransferTails, UmiTradingSurveillanceRuleTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTradingSurveillanceRuleTransferCasesWithWorkspace, UmiTradingSurveillanceRule,
+    umi_trading_surveillance_rule_archive_encode, umi_trading_surveillance_rule_archive_decode_with_workspace, UmiTradingSurveillanceRuleTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTradingSurveillanceRuleConditionalArchiveCases, UmiTradingSurveillanceRule,
     umi_trading_surveillance_rule_archive_encode, umi_trading_surveillance_rule_archive_decode_if_unchanged,
@@ -63,6 +68,7 @@ int main(void) {
      /* Apply this operation only while the related capability or state is available. */
      if(!umi_trading_surveillance_rule_valid(&v)) return 2;
     if (UmiTradingSurveillanceRuleTransferCases(&v) != 0) return 1;
+    if (UmiTradingSurveillanceRuleTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTradingSurveillanceRuleConditionalArchiveCases(&v) != 0) return 1;
 
      return 0;

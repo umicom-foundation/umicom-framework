@@ -88,6 +88,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiMosaicDesignerDropPreviewTransferCases, UmiUiMosaic
     umi_ui_mosaic_designer_drop_preview_archive_encode, umi_ui_mosaic_designer_drop_preview_archive_decode,
     UmiUiMosaicDesignerDropPreviewTransferEqual, UmiUiMosaicDesignerDropPreviewTransferTails, UmiUiMosaicDesignerDropPreviewTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiMosaicDesignerDropPreviewTransferCasesWithWorkspace, UmiUiMosaicDesignerDropPreview,
+    umi_ui_mosaic_designer_drop_preview_archive_encode, umi_ui_mosaic_designer_drop_preview_archive_decode_with_workspace, UmiUiMosaicDesignerDropPreviewTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiMosaicDesignerDropPreviewConditionalArchiveCases, UmiUiMosaicDesignerDropPreview,
     umi_ui_mosaic_designer_drop_preview_archive_encode, umi_ui_mosaic_designer_drop_preview_archive_decode_if_unchanged,
@@ -100,6 +105,7 @@ int main(void) {
     CHECK(umi_ui_mosaic_designer_drop_preview_bind(&value, "workspace.main", "panel.active") == UMI_STATUS_OK);
     CHECK(umi_ui_mosaic_designer_drop_preview_validate(&value) == UMI_STATUS_OK);
     if (UmiUiMosaicDesignerDropPreviewTransferCases(&value) != 0) return 1;
+    if (UmiUiMosaicDesignerDropPreviewTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiUiMosaicDesignerDropPreviewConditionalArchiveCases(&value) != 0) return 1;
 
     CHECK(umi_ui_mosaic_designer_drop_preview_advance(&value) == UMI_STATUS_PERMISSION_DENIED);

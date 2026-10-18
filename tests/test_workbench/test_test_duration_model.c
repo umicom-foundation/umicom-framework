@@ -112,6 +112,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTestDurationModelTransferCases, UmiTestDurationModel,
     umi_test_duration_model_archive_encode, umi_test_duration_model_archive_decode,
     UmiTestDurationModelTransferEqual, UmiTestDurationModelTransferTails, UmiTestDurationModelTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTestDurationModelTransferCasesWithWorkspace, UmiTestDurationModel,
+    umi_test_duration_model_archive_encode, umi_test_duration_model_archive_decode_with_workspace, UmiTestDurationModelTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestDurationModelConditionalArchiveCases, UmiTestDurationModel,
     umi_test_duration_model_archive_encode, umi_test_duration_model_archive_decode_if_unchanged,
@@ -138,5 +143,6 @@ int main(void){UmiTestDurationModel m;assert(umi_test_duration_model_init(&m,"te
         umi_test_duration_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
     assert(umi_test_duration_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_duration_model_valid(&m));
     if (UmiTestDurationModelTransferCases(&m) != 0) return 1;
+    if (UmiTestDurationModelTransferCasesWithWorkspace(&m) != 0) return 1;
     if (UmiTestDurationModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

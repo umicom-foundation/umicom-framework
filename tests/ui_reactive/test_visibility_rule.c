@@ -84,6 +84,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveVisibilityRuleTransferCases, UmiUiReactiveV
     umi_ui_reactive_visibility_rule_archive_encode, umi_ui_reactive_visibility_rule_archive_decode,
     UmiUiReactiveVisibilityRuleTransferEqual, UmiUiReactiveVisibilityRuleTransferTails, UmiUiReactiveVisibilityRuleTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveVisibilityRuleTransferCasesWithWorkspace, UmiUiReactiveVisibilityRule,
+    umi_ui_reactive_visibility_rule_archive_encode, umi_ui_reactive_visibility_rule_archive_decode_with_workspace, UmiUiReactiveVisibilityRuleTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveVisibilityRuleConditionalArchiveCases, UmiUiReactiveVisibilityRule,
     umi_ui_reactive_visibility_rule_archive_encode, umi_ui_reactive_visibility_rule_archive_decode_if_unchanged,
@@ -98,5 +103,6 @@ int main(void) { UmiUiReactiveVisibilityRule item; umi_ui_reactive_visibility_ru
     (void)snprintf(populated.expression, sizeof(populated.expression), "field-1");
     populated.visible = true;
     if (UmiUiReactiveVisibilityRuleTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveVisibilityRuleTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveVisibilityRuleConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_visibility_rule_valid(&item) ? 0 : 1; }

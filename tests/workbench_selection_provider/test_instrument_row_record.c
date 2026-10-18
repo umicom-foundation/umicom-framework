@@ -188,6 +188,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchSelectionProviderInstrumentRowRecordTransfer
     umi_workbench_selection_provider_instrument_row_record_archive_encode, umi_workbench_selection_provider_instrument_row_record_archive_decode,
     UmiWorkbenchSelectionProviderInstrumentRowRecordTransferEqual, UmiWorkbenchSelectionProviderInstrumentRowRecordTransferTails, UmiWorkbenchSelectionProviderInstrumentRowRecordTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchSelectionProviderInstrumentRowRecordTransferCasesWithWorkspace, UmiWorkbenchSelectionProviderInstrumentRowRecord,
+    umi_workbench_selection_provider_instrument_row_record_archive_encode, umi_workbench_selection_provider_instrument_row_record_archive_decode_with_workspace, UmiWorkbenchSelectionProviderInstrumentRowRecordTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchSelectionProviderInstrumentRowRecordConditionalArchiveCases, UmiWorkbenchSelectionProviderInstrumentRowRecord,
     umi_workbench_selection_provider_instrument_row_record_archive_encode, umi_workbench_selection_provider_instrument_row_record_archive_decode_if_unchanged,
@@ -228,6 +233,7 @@ int main(void)
     assert(umi_workbench_selection_provider_instrument_row_record_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchSelectionProviderInstrumentRowRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchSelectionProviderInstrumentRowRecordTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchSelectionProviderInstrumentRowRecordConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchSelectionProviderInstrumentRowRecordReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchSelectionProviderInstrumentRowRecordMutationGuards(&record) != 0) return 1;

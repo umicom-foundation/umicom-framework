@@ -89,6 +89,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTerminalRemoteRemoteDebugBridgeTransferCases, UmiTerm
     umi_terminal_remote_remote_debug_bridge_archive_encode, umi_terminal_remote_remote_debug_bridge_archive_decode,
     UmiTerminalRemoteRemoteDebugBridgeTransferEqual, UmiTerminalRemoteRemoteDebugBridgeTransferTails, UmiTerminalRemoteRemoteDebugBridgeTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTerminalRemoteRemoteDebugBridgeTransferCasesWithWorkspace, UmiTerminalRemoteRemoteDebugBridge,
+    umi_terminal_remote_remote_debug_bridge_archive_encode, umi_terminal_remote_remote_debug_bridge_archive_decode_with_workspace, UmiTerminalRemoteRemoteDebugBridgeTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTerminalRemoteRemoteDebugBridgeConditionalArchiveCases, UmiTerminalRemoteRemoteDebugBridge,
     umi_terminal_remote_remote_debug_bridge_archive_encode, umi_terminal_remote_remote_debug_bridge_archive_decode_if_unchanged,
@@ -97,5 +102,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiTerminalRemoteRemoteDebugBridgeConditionalArchiv
 
 int main(void) { UmiTerminalRemoteRemoteDebugBridge v; umi_terminal_remote_remote_debug_bridge_init(&v,"left","right"); /* Apply this operation only while the related capability or state is available. */ if(!umi_terminal_remote_remote_debug_bridge_valid(&v)) return 1;
     if (UmiTerminalRemoteRemoteDebugBridgeTransferCases(&v) != 0) return 1;
+    if (UmiTerminalRemoteRemoteDebugBridgeTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTerminalRemoteRemoteDebugBridgeConditionalArchiveCases(&v) != 0) return 1;
  /* Apply this operation only while the related capability or state is available. */ if(umi_terminal_remote_remote_debug_bridge_fingerprint(&v)==0U) return 2; umi_terminal_remote_remote_debug_bridge_init(&v,"same","same"); return umi_terminal_remote_remote_debug_bridge_valid(&v)?3:0; }

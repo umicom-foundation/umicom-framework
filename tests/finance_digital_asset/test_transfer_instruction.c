@@ -128,6 +128,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalTransferInstructionTransferCases, UmiDigitalTr
     umi_digital_asset_transfer_instruction_archive_encode, umi_digital_asset_transfer_instruction_archive_decode,
     UmiDigitalTransferInstructionTransferEqual, UmiDigitalTransferInstructionTransferTails, UmiDigitalTransferInstructionTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDigitalTransferInstructionTransferCasesWithWorkspace, UmiDigitalTransferInstruction,
+    umi_digital_asset_transfer_instruction_archive_encode, umi_digital_asset_transfer_instruction_archive_decode_with_workspace, UmiDigitalTransferInstructionTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalTransferInstructionConditionalArchiveCases, UmiDigitalTransferInstruction,
     umi_digital_asset_transfer_instruction_archive_encode, umi_digital_asset_transfer_instruction_archive_decode_if_unchanged,
@@ -140,6 +145,7 @@ int main(void)
     CHECK(umi_digital_asset_transfer_instruction_init(&value, "XFER-1", "CUST-1", "bc1qdest", 500, 8, "BTC") == UMI_STATUS_OK);
     CHECK(umi_digital_asset_transfer_instruction_valid(&value));
     if (UmiDigitalTransferInstructionTransferCases(&value) != 0) return 1;
+    if (UmiDigitalTransferInstructionTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDigitalTransferInstructionConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

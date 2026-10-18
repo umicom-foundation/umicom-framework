@@ -64,6 +64,11 @@ UMI_TEST_VALUE_TRANSFER(UmiCtSchedulerProfileTransferCases, UmiCtSchedulerProfil
     umi_ct_scheduler_profile_archive_encode, umi_ct_scheduler_profile_archive_decode,
     UmiCtSchedulerProfileTransferEqual, UmiCtSchedulerProfileTransferTails, UmiCtSchedulerProfileTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiCtSchedulerProfileTransferCasesWithWorkspace, UmiCtSchedulerProfile,
+    umi_ct_scheduler_profile_archive_encode, umi_ct_scheduler_profile_archive_decode_with_workspace, UmiCtSchedulerProfileTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtSchedulerProfileConditionalArchiveCases, UmiCtSchedulerProfile,
     umi_ct_scheduler_profile_archive_encode, umi_ct_scheduler_profile_archive_decode_if_unchanged,
@@ -72,5 +77,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiCtSchedulerProfileConditionalArchiveCases, UmiCt
 
 int main(void){UmiCtSchedulerProfile p={UMI_CT_SCHED_PREEMPTIVE,4U,2000U,32U,true,true};CHECK(umi_ct_scheduler_profile_validate(&p)==UMI_STATUS_OK);
     if (UmiCtSchedulerProfileTransferCases(&p) != 0) return 1;
+    if (UmiCtSchedulerProfileTransferCasesWithWorkspace(&p) != 0) return 1;
     if (UmiCtSchedulerProfileConditionalArchiveCases(&p) != 0) return 1;
 p.timeslice_us=0U;CHECK(umi_ct_scheduler_profile_validate(&p)==UMI_STATUS_INVALID_STATE);return 0;}

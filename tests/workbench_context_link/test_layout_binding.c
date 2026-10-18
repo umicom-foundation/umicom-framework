@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkLayoutBindingTransferCases, UmiWo
     umi_workbench_context_link_layout_binding_archive_encode, umi_workbench_context_link_layout_binding_archive_decode,
     UmiWorkbenchContextLinkLayoutBindingTransferEqual, UmiWorkbenchContextLinkLayoutBindingTransferTails, UmiWorkbenchContextLinkLayoutBindingTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextLinkLayoutBindingTransferCasesWithWorkspace, UmiWorkbenchContextLinkLayoutBinding,
+    umi_workbench_context_link_layout_binding_archive_encode, umi_workbench_context_link_layout_binding_archive_decode_with_workspace, UmiWorkbenchContextLinkLayoutBindingTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkLayoutBindingConditionalArchiveCases, UmiWorkbenchContextLinkLayoutBinding,
     umi_workbench_context_link_layout_binding_archive_encode, umi_workbench_context_link_layout_binding_archive_decode_if_unchanged,
@@ -151,6 +156,7 @@ int main(void)
     umi_workbench_context_link_layout_binding_init(&record, "layout_binding-id");
     assert(umi_workbench_context_link_layout_binding_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkLayoutBindingTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkLayoutBindingTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkLayoutBindingConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkLayoutBindingReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkLayoutBindingMutationGuards(&record) != 0) return 1;

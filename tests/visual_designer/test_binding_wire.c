@@ -103,6 +103,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRadBindingWireTransferCases, UmiRadBindingWire,
     umi_rad_binding_wire_archive_encode, umi_rad_binding_wire_archive_decode,
     UmiRadBindingWireTransferEqual, UmiRadBindingWireTransferTails, UmiRadBindingWireTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRadBindingWireTransferCasesWithWorkspace, UmiRadBindingWire,
+    umi_rad_binding_wire_archive_encode, umi_rad_binding_wire_archive_decode_with_workspace, UmiRadBindingWireTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadBindingWireConditionalArchiveCases, UmiRadBindingWire,
     umi_rad_binding_wire_archive_encode, umi_rad_binding_wire_archive_decode_if_unchanged,
@@ -111,5 +116,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadBindingWireConditionalArchiveCases, UmiRadBin
 
 int main(void){UmiRadBindingWire item;CHECK(umi_rad_binding_wire_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_binding_wire_is_valid(&item));
     if (UmiRadBindingWireTransferCases(&item) != 0) return 1;
+    if (UmiRadBindingWireTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiRadBindingWireConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

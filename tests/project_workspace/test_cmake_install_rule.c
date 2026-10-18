@@ -113,6 +113,11 @@ UMI_TEST_VALUE_TRANSFER(UmiProjectWorkspaceCmakeInstallRuleTransferCases, UmiPro
     umi_project_workspace_cmake_install_rule_archive_encode, umi_project_workspace_cmake_install_rule_archive_decode,
     UmiProjectWorkspaceCmakeInstallRuleTransferEqual, UmiProjectWorkspaceCmakeInstallRuleTransferTails, UmiProjectWorkspaceCmakeInstallRuleTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiProjectWorkspaceCmakeInstallRuleTransferCasesWithWorkspace, UmiProjectWorkspaceCmakeInstallRule,
+    umi_project_workspace_cmake_install_rule_archive_encode, umi_project_workspace_cmake_install_rule_archive_decode_with_workspace, UmiProjectWorkspaceCmakeInstallRuleTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiProjectWorkspaceCmakeInstallRuleConditionalArchiveCases, UmiProjectWorkspaceCmakeInstallRule,
     umi_project_workspace_cmake_install_rule_archive_encode, umi_project_workspace_cmake_install_rule_archive_decode_if_unchanged,
@@ -159,6 +164,7 @@ int main(void) {
     umi_project_workspace_cmake_install_rule_set_metric(&a,7U);
     CHECK(umi_project_workspace_cmake_install_rule_validate(&a)==UMI_STATUS_OK);
     if (UmiProjectWorkspaceCmakeInstallRuleTransferCases(&a) != 0) return 1;
+    if (UmiProjectWorkspaceCmakeInstallRuleTransferCasesWithWorkspace(&a) != 0) return 1;
     if (UmiProjectWorkspaceCmakeInstallRuleConditionalArchiveCases(&a) != 0) return 1;
 
     CHECK(a.metric==7U);

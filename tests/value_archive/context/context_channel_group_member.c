@@ -115,6 +115,11 @@ UMI_TEST_VALUE_TRANSFER(UmiContextGroupMemberTransferCases, UmiContextGroupMembe
     umi_context_group_member_archive_encode, umi_context_group_member_archive_decode,
     UmiContextGroupMemberTransferEqual, UmiContextGroupMemberTransferTails, UmiContextGroupMemberTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiContextGroupMemberTransferCasesWithWorkspace, UmiContextGroupMember,
+    umi_context_group_member_archive_encode, umi_context_group_member_archive_decode_with_workspace, UmiContextGroupMemberTransferEqual)
+
 #include "../conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiContextGroupMemberConditionalArchiveCases, UmiContextGroupMember,
     umi_context_group_member_archive_encode, umi_context_group_member_archive_decode_if_unchanged,
@@ -133,6 +138,7 @@ int main(void)
     value.revision = (uint64_t)17U;
     if (umi_context_group_member_validate(&value) != UMI_STATUS_OK) return 1;
     if (UmiContextGroupMemberTransferCases(&value) != 0) return 1;
+    if (UmiContextGroupMemberTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiContextGroupMemberConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

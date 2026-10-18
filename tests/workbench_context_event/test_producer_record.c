@@ -151,6 +151,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextEventProducerRecordTransferCases, Umi
     umi_workbench_context_event_producer_record_archive_encode, umi_workbench_context_event_producer_record_archive_decode,
     UmiWorkbenchContextEventProducerRecordTransferEqual, UmiWorkbenchContextEventProducerRecordTransferTails, UmiWorkbenchContextEventProducerRecordTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextEventProducerRecordTransferCasesWithWorkspace, UmiWorkbenchContextEventProducerRecord,
+    umi_workbench_context_event_producer_record_archive_encode, umi_workbench_context_event_producer_record_archive_decode_with_workspace, UmiWorkbenchContextEventProducerRecordTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextEventProducerRecordConditionalArchiveCases, UmiWorkbenchContextEventProducerRecord,
     umi_workbench_context_event_producer_record_archive_encode, umi_workbench_context_event_producer_record_archive_decode_if_unchanged,
@@ -189,6 +194,7 @@ int main(void)
     assert(umi_workbench_context_event_producer_record_validate(
         &record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextEventProducerRecordTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextEventProducerRecordTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextEventProducerRecordConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextEventProducerRecordReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextEventProducerRecordMutationGuards(&record) != 0) return 1;

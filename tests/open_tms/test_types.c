@@ -91,6 +91,11 @@ UMI_TEST_VALUE_TRANSFER(UmiOpenTmsSnapshotTransferCases, UmiOpenTmsSnapshot,
     umi_open_tms_snapshot_archive_encode, umi_open_tms_snapshot_archive_decode,
     UmiOpenTmsSnapshotTransferEqual, UmiOpenTmsSnapshotTransferTails, UmiOpenTmsSnapshotTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiOpenTmsSnapshotTransferCasesWithWorkspace, UmiOpenTmsSnapshot,
+    umi_open_tms_snapshot_archive_encode, umi_open_tms_snapshot_archive_decode_with_workspace, UmiOpenTmsSnapshotTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiOpenTmsSnapshotConditionalArchiveCases, UmiOpenTmsSnapshot,
     umi_open_tms_snapshot_archive_encode, umi_open_tms_snapshot_archive_decode_if_unchanged,
@@ -105,6 +110,7 @@ int main(void)
     (void)strcpy(snapshot.id,"cash.forecast-net"); snapshot.score=75.0; snapshot.ready=1;
     assert(umi_open_tms_snapshot_validate(&snapshot)==UMI_STATUS_OK);
     if (UmiOpenTmsSnapshotTransferCases(&snapshot) != 0) return 1;
+    if (UmiOpenTmsSnapshotTransferCasesWithWorkspace(&snapshot) != 0) return 1;
     if (UmiOpenTmsSnapshotConditionalArchiveCases(&snapshot) != 0) return 1;
 
     snapshot.score=101.0;

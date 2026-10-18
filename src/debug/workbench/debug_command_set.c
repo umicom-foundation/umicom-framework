@@ -147,6 +147,12 @@ static UmiStatus UmiDebugWorkbenchDebugCommandSetArchiveValidate(const UmiDebugW
 UMI_DEFINE_VALUE_ARCHIVE(umi_debug_workbench_debug_command_set_archive_encode, umi_debug_workbench_debug_command_set_archive_decode,
     UmiDebugWorkbenchDebugCommandSet, UmiDebugWorkbenchDebugCommandSetArchiveSchema, UmiDebugWorkbenchDebugCommandSetArchiveBound, UmiDebugWorkbenchDebugCommandSetArchiveWrite, UmiDebugWorkbenchDebugCommandSetArchiveRead, UmiDebugWorkbenchDebugCommandSetArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_debug_workbench_debug_command_set_archive_decode_with_workspace, UmiDebugWorkbenchDebugCommandSet,
+    UmiDebugWorkbenchDebugCommandSetArchiveSchema, UmiDebugWorkbenchDebugCommandSetArchiveBound, UmiDebugWorkbenchDebugCommandSetArchiveRead, UmiDebugWorkbenchDebugCommandSetArchiveValidate)
+
 /* Restore this typed value only while its encoded state still matches the
  * caller's reviewed snapshot. The shared guard checks every encoded byte;
  * domain decoding and validation stay with this owner. */

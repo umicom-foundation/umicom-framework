@@ -92,6 +92,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDrRuntimeDependencyTransferCases, UmiDrRuntimeDepende
     umi_dr_runtime_dependency_archive_encode, umi_dr_runtime_dependency_archive_decode,
     UmiDrRuntimeDependencyTransferEqual, UmiDrRuntimeDependencyTransferTails, UmiDrRuntimeDependencyTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDrRuntimeDependencyTransferCasesWithWorkspace, UmiDrRuntimeDependency,
+    umi_dr_runtime_dependency_archive_encode, umi_dr_runtime_dependency_archive_decode_with_workspace, UmiDrRuntimeDependencyTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrRuntimeDependencyConditionalArchiveCases, UmiDrRuntimeDependency,
     umi_dr_runtime_dependency_archive_encode, umi_dr_runtime_dependency_archive_decode_if_unchanged,
@@ -101,6 +106,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrRuntimeDependencyConditionalArchiveCases, UmiD
 int main(void) {
     UmiDrRuntimeDependency value; umi_dr_runtime_dependency_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"libc")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.soname,sizeof(value.soname),"libc.so.6")==UMI_STATUS_OK); value.system_provided=true; CHECK(umi_dr_runtime_dependency_valid(&value));
     if (UmiDrRuntimeDependencyTransferCases(&value) != 0) return 1;
+    if (UmiDrRuntimeDependencyTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDrRuntimeDependencyConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_runtime_dependency_fingerprint(&value) != 0U);
     return 0;

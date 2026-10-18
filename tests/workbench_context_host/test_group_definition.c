@@ -92,6 +92,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextHostGroupDefinitionTransferCases, Umi
     umi_workbench_context_host_group_definition_archive_encode, umi_workbench_context_host_group_definition_archive_decode,
     UmiWorkbenchContextHostGroupDefinitionTransferEqual, UmiWorkbenchContextHostGroupDefinitionTransferTails, UmiWorkbenchContextHostGroupDefinitionTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextHostGroupDefinitionTransferCasesWithWorkspace, UmiWorkbenchContextHostGroupDefinition,
+    umi_workbench_context_host_group_definition_archive_encode, umi_workbench_context_host_group_definition_archive_decode_with_workspace, UmiWorkbenchContextHostGroupDefinitionTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextHostGroupDefinitionConditionalArchiveCases, UmiWorkbenchContextHostGroupDefinition,
     umi_workbench_context_host_group_definition_archive_encode, umi_workbench_context_host_group_definition_archive_decode_if_unchanged,
@@ -112,6 +117,7 @@ int main(void)
     assert(umi_workbench_context_host_group_definition_validate(
         &group) == UMI_STATUS_OK);
     if (UmiWorkbenchContextHostGroupDefinitionTransferCases(&group) != 0) return 1;
+    if (UmiWorkbenchContextHostGroupDefinitionTransferCasesWithWorkspace(&group) != 0) return 1;
     if (UmiWorkbenchContextHostGroupDefinitionConditionalArchiveCases(&group) != 0) return 1;
 
     group.group_id[0] = '\0';

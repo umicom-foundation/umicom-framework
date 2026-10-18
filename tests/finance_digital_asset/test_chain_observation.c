@@ -90,6 +90,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDigitalChainObservationTransferCases, UmiDigitalChain
     umi_digital_asset_chain_observation_archive_encode, umi_digital_asset_chain_observation_archive_decode,
     UmiDigitalChainObservationTransferEqual, UmiDigitalChainObservationTransferTails, UmiDigitalChainObservationTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDigitalChainObservationTransferCasesWithWorkspace, UmiDigitalChainObservation,
+    umi_digital_asset_chain_observation_archive_encode, umi_digital_asset_chain_observation_archive_decode_with_workspace, UmiDigitalChainObservationTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDigitalChainObservationConditionalArchiveCases, UmiDigitalChainObservation,
     umi_digital_asset_chain_observation_archive_encode, umi_digital_asset_chain_observation_archive_decode_if_unchanged,
@@ -102,6 +107,7 @@ int main(void)
     CHECK(umi_digital_asset_chain_observation_init(&value, "BTC", 900000U, "000000abc", 1000) == UMI_STATUS_OK);
     CHECK(umi_digital_asset_chain_observation_valid(&value));
     if (UmiDigitalChainObservationTransferCases(&value) != 0) return 1;
+    if (UmiDigitalChainObservationTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDigitalChainObservationConditionalArchiveCases(&value) != 0) return 1;
 
     return 0;

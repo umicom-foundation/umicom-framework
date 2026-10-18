@@ -72,6 +72,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRadResponsiveVariantTransferCases, UmiRadResponsiveVa
     umi_rad_responsive_variant_archive_encode, umi_rad_responsive_variant_archive_decode,
     UmiRadResponsiveVariantTransferEqual, UmiRadResponsiveVariantTransferTails, UmiRadResponsiveVariantTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRadResponsiveVariantTransferCasesWithWorkspace, UmiRadResponsiveVariant,
+    umi_rad_responsive_variant_archive_encode, umi_rad_responsive_variant_archive_decode_with_workspace, UmiRadResponsiveVariantTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadResponsiveVariantConditionalArchiveCases, UmiRadResponsiveVariant,
     umi_rad_responsive_variant_archive_encode, umi_rad_responsive_variant_archive_decode_if_unchanged,
@@ -80,5 +85,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadResponsiveVariantConditionalArchiveCases, Umi
 
 int main(void){UmiRadResponsiveVariant item;CHECK(umi_rad_responsive_variant_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_responsive_variant_is_valid(&item));
     if (UmiRadResponsiveVariantTransferCases(&item) != 0) return 1;
+    if (UmiRadResponsiveVariantTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiRadResponsiveVariantConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

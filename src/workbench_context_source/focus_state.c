@@ -270,6 +270,12 @@ static UmiStatus UmiWorkbenchContextSourceFocusStateArchiveValidate(const UmiWor
 UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_context_source_focus_state_archive_encode, umi_workbench_context_source_focus_state_archive_decode,
     UmiWorkbenchContextSourceFocusState, UmiWorkbenchContextSourceFocusStateArchiveSchema, UmiWorkbenchContextSourceFocusStateArchiveBound, UmiWorkbenchContextSourceFocusStateArchiveWrite, UmiWorkbenchContextSourceFocusStateArchiveRead, UmiWorkbenchContextSourceFocusStateArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_workbench_context_source_focus_state_archive_decode_with_workspace, UmiWorkbenchContextSourceFocusState,
+    UmiWorkbenchContextSourceFocusStateArchiveSchema, UmiWorkbenchContextSourceFocusStateArchiveBound, UmiWorkbenchContextSourceFocusStateArchiveRead, UmiWorkbenchContextSourceFocusStateArchiveValidate)
+
 /* A delayed focus state draft must name the revision it reviewed.
  * Domain validation remains with this value owner; the shared guard publishes
  * all fields together without emitting events or changing any external service. */

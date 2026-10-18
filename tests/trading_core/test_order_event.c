@@ -68,6 +68,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTradingOrderEventTransferCases, UmiTradingOrderEvent,
     umi_trading_order_event_archive_encode, umi_trading_order_event_archive_decode,
     UmiTradingOrderEventTransferEqual, UmiTradingOrderEventTransferTails, UmiTradingOrderEventTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTradingOrderEventTransferCasesWithWorkspace, UmiTradingOrderEvent,
+    umi_trading_order_event_archive_encode, umi_trading_order_event_archive_decode_with_workspace, UmiTradingOrderEventTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTradingOrderEventConditionalArchiveCases, UmiTradingOrderEvent,
     umi_trading_order_event_archive_encode, umi_trading_order_event_archive_decode_if_unchanged,
@@ -84,6 +89,7 @@ int main(void) {
      /* Apply this operation only while the related capability or state is available. */
      if(!umi_trading_order_event_valid(&v)) return 2;
     if (UmiTradingOrderEventTransferCases(&v) != 0) return 1;
+    if (UmiTradingOrderEventTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiTradingOrderEventConditionalArchiveCases(&v) != 0) return 1;
 
      return 0;

@@ -102,6 +102,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAppearanceSurfaceSemanticsTransferCases, UmiAppearanc
     umi_appearance_surface_semantics_archive_encode, umi_appearance_surface_semantics_archive_decode,
     UmiAppearanceSurfaceSemanticsTransferEqual, UmiAppearanceSurfaceSemanticsTransferTails, UmiAppearanceSurfaceSemanticsTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAppearanceSurfaceSemanticsTransferCasesWithWorkspace, UmiAppearanceSurfaceSemantics,
+    umi_appearance_surface_semantics_archive_encode, umi_appearance_surface_semantics_archive_decode_with_workspace, UmiAppearanceSurfaceSemanticsTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAppearanceSurfaceSemanticsConditionalArchiveCases, UmiAppearanceSurfaceSemantics,
     umi_appearance_surface_semantics_archive_encode, umi_appearance_surface_semantics_archive_decode_if_unchanged,
@@ -115,6 +120,7 @@ int main(void) {
     /* Apply this operation only while the related capability or state is available. */
     if (!umi_appearance_surface_semantics_is_valid(&item)) return 2;
     if (UmiAppearanceSurfaceSemanticsTransferCases(&item) != 0) return 1;
+    if (UmiAppearanceSurfaceSemanticsTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiAppearanceSurfaceSemanticsConditionalArchiveCases(&item) != 0) return 1;
 
     return 0;

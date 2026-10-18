@@ -57,6 +57,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDesignInspectorSpecTransferCases, UmiDesignInspectorS
     umi_design_inspector_spec_archive_encode, umi_design_inspector_spec_archive_decode,
     UmiDesignInspectorSpecTransferEqual, UmiDesignInspectorSpecTransferTails, UmiDesignInspectorSpecTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDesignInspectorSpecTransferCasesWithWorkspace, UmiDesignInspectorSpec,
+    umi_design_inspector_spec_archive_encode, umi_design_inspector_spec_archive_decode_with_workspace, UmiDesignInspectorSpecTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignInspectorSpecConditionalArchiveCases, UmiDesignInspectorSpec,
     umi_design_inspector_spec_archive_encode, umi_design_inspector_spec_archive_decode_if_unchanged,
@@ -65,5 +70,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDesignInspectorSpecConditionalArchiveCases, UmiD
 
 int main(void){UmiDesignInspectorSpec s;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_design_inspector_spec_init(&s,8U,250U,1,1)!=UMI_STATUS_OK)return 1;
     if (UmiDesignInspectorSpecTransferCases(&s) != 0) return 1;
+    if (UmiDesignInspectorSpecTransferCasesWithWorkspace(&s) != 0) return 1;
     if (UmiDesignInspectorSpecConditionalArchiveCases(&s) != 0) return 1;
 return s.searchable?0:2;}

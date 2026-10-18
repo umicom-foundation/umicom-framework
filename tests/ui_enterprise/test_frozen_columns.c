@@ -51,6 +51,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiEntFrozenColumnsTransferCases, UmiUiEntFrozenColumn
     umi_ui_ent_frozen_columns_archive_encode, umi_ui_ent_frozen_columns_archive_decode,
     UmiUiEntFrozenColumnsTransferEqual, UmiUiEntFrozenColumnsTransferTails, UmiUiEntFrozenColumnsTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiEntFrozenColumnsTransferCasesWithWorkspace, UmiUiEntFrozenColumns,
+    umi_ui_ent_frozen_columns_archive_encode, umi_ui_ent_frozen_columns_archive_decode_with_workspace, UmiUiEntFrozenColumnsTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiEntFrozenColumnsConditionalArchiveCases, UmiUiEntFrozenColumns,
     umi_ui_ent_frozen_columns_archive_encode, umi_ui_ent_frozen_columns_archive_decode_if_unchanged,
@@ -59,5 +64,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiEntFrozenColumnsConditionalArchiveCases, UmiUi
 
 int main(void){UmiUiEntFrozenColumns v;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_ui_ent_frozen_columns_init(&v)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_ui_ent_frozen_columns_validate(&v))return 9;
     if (UmiUiEntFrozenColumnsTransferCases(&v) != 0) return 1;
+    if (UmiUiEntFrozenColumnsTransferCasesWithWorkspace(&v) != 0) return 1;
     if (UmiUiEntFrozenColumnsConditionalArchiveCases(&v) != 0) return 1;
 puts("ok");return 0;}

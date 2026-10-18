@@ -68,6 +68,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveValidatorTransferCases, UmiUiReactiveValida
     umi_ui_reactive_validator_archive_encode, umi_ui_reactive_validator_archive_decode,
     UmiUiReactiveValidatorTransferEqual, UmiUiReactiveValidatorTransferTails, UmiUiReactiveValidatorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveValidatorTransferCasesWithWorkspace, UmiUiReactiveValidator,
+    umi_ui_reactive_validator_archive_encode, umi_ui_reactive_validator_archive_decode_with_workspace, UmiUiReactiveValidatorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveValidatorConditionalArchiveCases, UmiUiReactiveValidator,
     umi_ui_reactive_validator_archive_encode, umi_ui_reactive_validator_archive_decode_if_unchanged,
@@ -81,5 +86,6 @@ int main(void) { UmiUiReactiveValidator item; umi_ui_reactive_validator_init(&it
     (void)snprintf(populated.validator_id, sizeof(populated.validator_id), "field-0");
     populated.enabled = true;
     if (UmiUiReactiveValidatorTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveValidatorTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveValidatorConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_validator_valid(&item) ? 0 : 1; }

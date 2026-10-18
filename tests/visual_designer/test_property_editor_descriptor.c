@@ -104,6 +104,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRadPropertyEditorDescriptorTransferCases, UmiRadPrope
     umi_rad_property_editor_descriptor_archive_encode, umi_rad_property_editor_descriptor_archive_decode,
     UmiRadPropertyEditorDescriptorTransferEqual, UmiRadPropertyEditorDescriptorTransferTails, UmiRadPropertyEditorDescriptorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRadPropertyEditorDescriptorTransferCasesWithWorkspace, UmiRadPropertyEditorDescriptor,
+    umi_rad_property_editor_descriptor_archive_encode, umi_rad_property_editor_descriptor_archive_decode_with_workspace, UmiRadPropertyEditorDescriptorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadPropertyEditorDescriptorConditionalArchiveCases, UmiRadPropertyEditorDescriptor,
     umi_rad_property_editor_descriptor_archive_encode, umi_rad_property_editor_descriptor_archive_decode_if_unchanged,
@@ -112,5 +117,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadPropertyEditorDescriptorConditionalArchiveCas
 
 int main(void){UmiRadPropertyEditorDescriptor item;CHECK(umi_rad_property_editor_descriptor_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_property_editor_descriptor_is_valid(&item));
     if (UmiRadPropertyEditorDescriptorTransferCases(&item) != 0) return 1;
+    if (UmiRadPropertyEditorDescriptorTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiRadPropertyEditorDescriptorConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

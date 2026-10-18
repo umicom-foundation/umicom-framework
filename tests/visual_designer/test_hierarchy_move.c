@@ -103,6 +103,11 @@ UMI_TEST_VALUE_TRANSFER(UmiRadHierarchyMoveTransferCases, UmiRadHierarchyMove,
     umi_rad_hierarchy_move_archive_encode, umi_rad_hierarchy_move_archive_decode,
     UmiRadHierarchyMoveTransferEqual, UmiRadHierarchyMoveTransferTails, UmiRadHierarchyMoveTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiRadHierarchyMoveTransferCasesWithWorkspace, UmiRadHierarchyMove,
+    umi_rad_hierarchy_move_archive_encode, umi_rad_hierarchy_move_archive_decode_with_workspace, UmiRadHierarchyMoveTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadHierarchyMoveConditionalArchiveCases, UmiRadHierarchyMove,
     umi_rad_hierarchy_move_archive_encode, umi_rad_hierarchy_move_archive_decode_if_unchanged,
@@ -111,5 +116,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiRadHierarchyMoveConditionalArchiveCases, UmiRadH
 
 int main(void){UmiRadHierarchyMove item;CHECK(umi_rad_hierarchy_move_init(&item)==UMI_STATUS_OK);CHECK(umi_rad_hierarchy_move_is_valid(&item));
     if (UmiRadHierarchyMoveTransferCases(&item) != 0) return 1;
+    if (UmiRadHierarchyMoveTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiRadHierarchyMoveConditionalArchiveCases(&item) != 0) return 1;
 return 0;}

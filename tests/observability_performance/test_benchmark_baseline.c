@@ -97,6 +97,11 @@ UMI_TEST_VALUE_TRANSFER(UmiPerformanceBenchmarkBaselineTransferCases, UmiPerform
     umi_performance_benchmark_baseline_archive_encode, umi_performance_benchmark_baseline_archive_decode,
     UmiPerformanceBenchmarkBaselineTransferEqual, UmiPerformanceBenchmarkBaselineTransferTails, UmiPerformanceBenchmarkBaselineTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiPerformanceBenchmarkBaselineTransferCasesWithWorkspace, UmiPerformanceBenchmarkBaseline,
+    umi_performance_benchmark_baseline_archive_encode, umi_performance_benchmark_baseline_archive_decode_with_workspace, UmiPerformanceBenchmarkBaselineTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiPerformanceBenchmarkBaselineConditionalArchiveCases, UmiPerformanceBenchmarkBaseline,
     umi_performance_benchmark_baseline_archive_encode, umi_performance_benchmark_baseline_archive_decode_if_unchanged,
@@ -154,6 +159,7 @@ int main(void) {
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_performance_benchmark_baseline_validate(&left) != UMI_STATUS_OK) return 2;
     if (UmiPerformanceBenchmarkBaselineTransferCases(&left) != 0) return 1;
+    if (UmiPerformanceBenchmarkBaselineTransferCasesWithWorkspace(&left) != 0) return 1;
     if (UmiPerformanceBenchmarkBaselineConditionalArchiveCases(&left) != 0) return 1;
 
     /* Preserve the original failure result so the caller can respond to the correct cause. */

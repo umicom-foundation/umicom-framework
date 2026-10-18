@@ -106,6 +106,11 @@ UMI_TEST_VALUE_TRANSFER(UmiLanguageIntelligenceDocumentOwnershipTransferCases, U
     umi_language_intelligence_document_ownership_archive_encode, umi_language_intelligence_document_ownership_archive_decode,
     UmiLanguageIntelligenceDocumentOwnershipTransferEqual, UmiLanguageIntelligenceDocumentOwnershipTransferTails, UmiLanguageIntelligenceDocumentOwnershipTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiLanguageIntelligenceDocumentOwnershipTransferCasesWithWorkspace, UmiLanguageIntelligenceDocumentOwnership,
+    umi_language_intelligence_document_ownership_archive_encode, umi_language_intelligence_document_ownership_archive_decode_with_workspace, UmiLanguageIntelligenceDocumentOwnershipTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiLanguageIntelligenceDocumentOwnershipConditionalArchiveCases, UmiLanguageIntelligenceDocumentOwnership,
     umi_language_intelligence_document_ownership_archive_encode, umi_language_intelligence_document_ownership_archive_decode_if_unchanged,
@@ -119,6 +124,7 @@ int main(void)
     CHECK(umi_language_intelligence_document_ownership_set(&mapping, "c", "clangd", "workspace") == UMI_STATUS_OK);
     CHECK(umi_language_intelligence_document_ownership_validate(&mapping) == UMI_STATUS_OK);
     if (UmiLanguageIntelligenceDocumentOwnershipTransferCases(&mapping) != 0) return 1;
+    if (UmiLanguageIntelligenceDocumentOwnershipTransferCasesWithWorkspace(&mapping) != 0) return 1;
     if (UmiLanguageIntelligenceDocumentOwnershipConditionalArchiveCases(&mapping) != 0) return 1;
 
     CHECK(umi_language_intelligence_document_ownership_matches(&mapping, "c", "workspace") != 0);

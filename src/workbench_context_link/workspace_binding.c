@@ -335,6 +335,12 @@ static UmiStatus UmiWorkbenchContextLinkWorkspaceBindingArchiveValidate(const Um
 UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_context_link_workspace_binding_archive_encode, umi_workbench_context_link_workspace_binding_archive_decode,
     UmiWorkbenchContextLinkWorkspaceBinding, UmiWorkbenchContextLinkWorkspaceBindingArchiveSchema, UmiWorkbenchContextLinkWorkspaceBindingArchiveBound, UmiWorkbenchContextLinkWorkspaceBindingArchiveWrite, UmiWorkbenchContextLinkWorkspaceBindingArchiveRead, UmiWorkbenchContextLinkWorkspaceBindingArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_workbench_context_link_workspace_binding_archive_decode_with_workspace, UmiWorkbenchContextLinkWorkspaceBinding,
+    UmiWorkbenchContextLinkWorkspaceBindingArchiveSchema, UmiWorkbenchContextLinkWorkspaceBindingArchiveBound, UmiWorkbenchContextLinkWorkspaceBindingArchiveRead, UmiWorkbenchContextLinkWorkspaceBindingArchiveValidate)
+
 /* Reviewed drafts belong to one context identity. Validation remains with this
  * owner, and publication advances exactly once without dispatching UI events. */
 UMI_DEFINE_REVIEWED_IDENTITY_RECORD_EDIT(umi_workbench_context_link_workspace_binding_replace_if_current,

@@ -106,6 +106,12 @@ static UmiStatus UmiNativeWebRenderContextArchiveValidate(const UmiNativeWebRend
 UMI_DEFINE_VALUE_ARCHIVE(umi_native_web_render_context_archive_encode, umi_native_web_render_context_archive_decode,
     UmiNativeWebRenderContext, UmiNativeWebRenderContextArchiveSchema, UmiNativeWebRenderContextArchiveBound, UmiNativeWebRenderContextArchiveWrite, UmiNativeWebRenderContextArchiveRead, UmiNativeWebRenderContextArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_native_web_render_context_archive_decode_with_workspace, UmiNativeWebRenderContext,
+    UmiNativeWebRenderContextArchiveSchema, UmiNativeWebRenderContextArchiveBound, UmiNativeWebRenderContextArchiveRead, UmiNativeWebRenderContextArchiveValidate)
+
 /* Restore this typed value only while its encoded state still matches the
  * caller's reviewed snapshot. The shared guard checks every encoded byte;
  * domain decoding and validation stay with this owner. */

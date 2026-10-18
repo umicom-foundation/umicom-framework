@@ -51,6 +51,11 @@ UMI_TEST_VALUE_TRANSFER(UmiAnalyticsDataPointTransferCases, UmiAnalyticsDataPoin
     umi_analytics_data_point_archive_encode, umi_analytics_data_point_archive_decode,
     UmiAnalyticsDataPointTransferEqual, UmiAnalyticsDataPointTransferTails, UmiAnalyticsDataPointTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiAnalyticsDataPointTransferCasesWithWorkspace, UmiAnalyticsDataPoint,
+    umi_analytics_data_point_archive_encode, umi_analytics_data_point_archive_decode_with_workspace, UmiAnalyticsDataPointTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiAnalyticsDataPointConditionalArchiveCases, UmiAnalyticsDataPoint,
     umi_analytics_data_point_archive_encode, umi_analytics_data_point_archive_decode_if_unchanged,
@@ -59,5 +64,6 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiAnalyticsDataPointConditionalArchiveCases, UmiAn
 
 int main(void){UmiAnalyticsDataPoint p; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_analytics_data_point_init(&p,1.0,2.0)!=UMI_STATUS_OK)return 1;
     if (UmiAnalyticsDataPointTransferCases(&p) != 0) return 1;
+    if (UmiAnalyticsDataPointTransferCasesWithWorkspace(&p) != 0) return 1;
     if (UmiAnalyticsDataPointConditionalArchiveCases(&p) != 0) return 1;
  return p.y==2.0?0:2;}

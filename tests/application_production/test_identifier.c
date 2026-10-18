@@ -68,6 +68,11 @@ UMI_TEST_VALUE_TRANSFER(UmiApplicationProductionIdentifierTransferCases, UmiAppl
     umi_application_production_identifier_archive_encode, umi_application_production_identifier_archive_decode,
     UmiApplicationProductionIdentifierTransferEqual, UmiApplicationProductionIdentifierTransferTails, UmiApplicationProductionIdentifierTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiApplicationProductionIdentifierTransferCasesWithWorkspace, UmiApplicationProductionIdentifier,
+    umi_application_production_identifier_archive_encode, umi_application_production_identifier_archive_decode_with_workspace, UmiApplicationProductionIdentifierTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiApplicationProductionIdentifierConditionalArchiveCases, UmiApplicationProductionIdentifier,
     umi_application_production_identifier_archive_encode, umi_application_production_identifier_archive_decode_if_unchanged,
@@ -80,6 +85,7 @@ int main(void) {
     assert(umi_application_production_identifier_set(&b, "org.umicom.studio") == UMI_STATUS_OK);
     assert(umi_application_production_identifier_valid(&a));
     if (UmiApplicationProductionIdentifierTransferCases(&a) != 0) return 1;
+    if (UmiApplicationProductionIdentifierTransferCasesWithWorkspace(&a) != 0) return 1;
     if (UmiApplicationProductionIdentifierConditionalArchiveCases(&a) != 0) return 1;
 
     assert(umi_application_production_identifier_equal(&a, &b));

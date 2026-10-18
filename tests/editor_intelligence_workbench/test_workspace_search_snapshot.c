@@ -131,6 +131,11 @@ UMI_TEST_VALUE_TRANSFER(UmiEditorIntelWorkspaceSearchSnapshotTransferCases, UmiE
     umi_editor_intel_workspace_search_snapshot_archive_encode, umi_editor_intel_workspace_search_snapshot_archive_decode,
     UmiEditorIntelWorkspaceSearchSnapshotTransferEqual, UmiEditorIntelWorkspaceSearchSnapshotTransferTails, UmiEditorIntelWorkspaceSearchSnapshotTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiEditorIntelWorkspaceSearchSnapshotTransferCasesWithWorkspace, UmiEditorIntelWorkspaceSearchSnapshot,
+    umi_editor_intel_workspace_search_snapshot_archive_encode, umi_editor_intel_workspace_search_snapshot_archive_decode_with_workspace, UmiEditorIntelWorkspaceSearchSnapshotTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelWorkspaceSearchSnapshotConditionalArchiveCases, UmiEditorIntelWorkspaceSearchSnapshot,
     umi_editor_intel_workspace_search_snapshot_archive_encode, umi_editor_intel_workspace_search_snapshot_archive_decode_if_unchanged,
@@ -149,5 +154,6 @@ int main(void){UmiEditorIntelWorkspaceSearchSnapshot model;UmiEditorIntelRange r
         umi_editor_intel_workspace_search_snapshot_set_selected(&model,true));
     if(umi_editor_intel_workspace_search_snapshot_set_selected(&model,true)!=UMI_STATUS_OK)return 3;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_intel_workspace_search_snapshot_valid(&model)||model.value.score!=91U||!model.selected)return 4;
     if (UmiEditorIntelWorkspaceSearchSnapshotTransferCases(&model) != 0) return 1;
+    if (UmiEditorIntelWorkspaceSearchSnapshotTransferCasesWithWorkspace(&model) != 0) return 1;
     if (UmiEditorIntelWorkspaceSearchSnapshotConditionalArchiveCases(&model) != 0) return 1;
 return 0;}

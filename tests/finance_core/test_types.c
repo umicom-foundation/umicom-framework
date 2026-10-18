@@ -68,10 +68,16 @@ UMI_TEST_VALUE_TRANSFER(UmiFinancialIdTransferCases, UmiFinancialId,
     umi_financial_id_archive_encode, umi_financial_id_archive_decode,
     UmiFinancialIdTransferEqual, UmiFinancialIdTransferTails, UmiFinancialIdTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFinancialIdTransferCasesWithWorkspace, UmiFinancialId,
+    umi_financial_id_archive_encode, umi_financial_id_archive_decode_with_workspace, UmiFinancialIdTransferEqual)
+
 int main(void)
 {
     UmiFinancialId id= {0}; CHECK(umi_financial_id_assign(&id,"T1")==UMI_STATUS_OK); CHECK(umi_financial_id_is_valid(&id));
     if (UmiFinancialIdTransferCases(&id) != 0) return 1;
+    if (UmiFinancialIdTransferCasesWithWorkspace(&id) != 0) return 1;
  CHECK(umi_financial_date_is_valid((UmiFinancialDate){2028,2U,29U}));
     return 0;
 }

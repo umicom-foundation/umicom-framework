@@ -99,6 +99,11 @@ UMI_TEST_VALUE_TRANSFER(UmiBootstrapProviderDescriptorTransferCases, UmiBootstra
     umi_bootstrap_provider_descriptor_archive_encode, umi_bootstrap_provider_descriptor_archive_decode,
     UmiBootstrapProviderDescriptorTransferEqual, UmiBootstrapProviderDescriptorTransferTails, UmiBootstrapProviderDescriptorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiBootstrapProviderDescriptorTransferCasesWithWorkspace, UmiBootstrapProviderDescriptor,
+    umi_bootstrap_provider_descriptor_archive_encode, umi_bootstrap_provider_descriptor_archive_decode_with_workspace, UmiBootstrapProviderDescriptorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiBootstrapProviderDescriptorConditionalArchiveCases, UmiBootstrapProviderDescriptor,
     umi_bootstrap_provider_descriptor_archive_encode, umi_bootstrap_provider_descriptor_archive_decode_if_unchanged,
@@ -154,6 +159,7 @@ int main(void) {
     CHECK(umi_bootstrap_provider_descriptor_init(&d,"provider.alpha","module.alpha",5)==UMI_STATUS_OK);
     CHECK(umi_bootstrap_provider_descriptor_valid(&d));
     if (UmiBootstrapProviderDescriptorTransferCases(&d) != 0) return 1;
+    if (UmiBootstrapProviderDescriptorTransferCasesWithWorkspace(&d) != 0) return 1;
     if (UmiBootstrapProviderDescriptorConditionalArchiveCases(&d) != 0) return 1;
 
     return 0;

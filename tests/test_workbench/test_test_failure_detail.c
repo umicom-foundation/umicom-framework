@@ -112,6 +112,11 @@ UMI_TEST_VALUE_TRANSFER(UmiTestFailureDetailTransferCases, UmiTestFailureDetail,
     umi_test_failure_detail_archive_encode, umi_test_failure_detail_archive_decode,
     UmiTestFailureDetailTransferEqual, UmiTestFailureDetailTransferTails, UmiTestFailureDetailTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiTestFailureDetailTransferCasesWithWorkspace, UmiTestFailureDetail,
+    umi_test_failure_detail_archive_encode, umi_test_failure_detail_archive_decode_with_workspace, UmiTestFailureDetailTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestFailureDetailConditionalArchiveCases, UmiTestFailureDetail,
     umi_test_failure_detail_archive_encode, umi_test_failure_detail_archive_decode_if_unchanged,
@@ -138,5 +143,6 @@ int main(void){UmiTestFailureDetail m;assert(umi_test_failure_detail_init(&m,"te
         umi_test_failure_detail_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
     assert(umi_test_failure_detail_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_failure_detail_valid(&m));
     if (UmiTestFailureDetailTransferCases(&m) != 0) return 1;
+    if (UmiTestFailureDetailTransferCasesWithWorkspace(&m) != 0) return 1;
     if (UmiTestFailureDetailConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

@@ -127,6 +127,11 @@ UMI_TEST_VALUE_TRANSFER(UmiFabricRouteRuleTransferCases, UmiFabricRouteRule,
     umi_fabric_route_rule_archive_encode, umi_fabric_route_rule_archive_decode,
     UmiFabricRouteRuleTransferEqual, UmiFabricRouteRuleTransferTails, UmiFabricRouteRuleTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiFabricRouteRuleTransferCasesWithWorkspace, UmiFabricRouteRule,
+    umi_fabric_route_rule_archive_encode, umi_fabric_route_rule_archive_decode_with_workspace, UmiFabricRouteRuleTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiFabricRouteRuleConditionalArchiveCases, UmiFabricRouteRule,
     umi_fabric_route_rule_archive_encode, umi_fabric_route_rule_archive_decode_if_unchanged,
@@ -204,6 +209,7 @@ int main(void) {
     UmiFabricRouteRule item;
     CHECK(umi_fabric_route_rule_init(&item,"r1","trader.*","trade.*","risk",10U)==UMI_STATUS_OK);
     if (UmiFabricRouteRuleTransferCases(&item) != 0) return 1;
+    if (UmiFabricRouteRuleTransferCasesWithWorkspace(&item) != 0) return 1;
     if (UmiFabricRouteRuleConditionalArchiveCases(&item) != 0) return 1;
 
     CHECK(item.enabled);

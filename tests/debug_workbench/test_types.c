@@ -135,6 +135,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDebugWorkbenchEntryTransferCases, UmiDebugWorkbenchEn
     umi_debug_workbench_entry_archive_encode, umi_debug_workbench_entry_archive_decode,
     UmiDebugWorkbenchEntryTransferEqual, UmiDebugWorkbenchEntryTransferTails, UmiDebugWorkbenchEntryTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDebugWorkbenchEntryTransferCasesWithWorkspace, UmiDebugWorkbenchEntry,
+    umi_debug_workbench_entry_archive_encode, umi_debug_workbench_entry_archive_decode_with_workspace, UmiDebugWorkbenchEntryTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDebugWorkbenchEntryConditionalArchiveCases, UmiDebugWorkbenchEntry,
     umi_debug_workbench_entry_archive_encode, umi_debug_workbench_entry_archive_decode_if_unchanged,
@@ -148,6 +153,7 @@ int main(void)
     UMI_TEST_CHECK(umi_debug_workbench_entry_init(&entry, "session-1", "Session 1", "gdb-dap", "src/main.c", range) == UMI_STATUS_OK);
     UMI_TEST_CHECK(umi_debug_workbench_entry_valid(&entry));
     if (UmiDebugWorkbenchEntryTransferCases(&entry) != 0) return 1;
+    if (UmiDebugWorkbenchEntryTransferCasesWithWorkspace(&entry) != 0) return 1;
     if (UmiDebugWorkbenchEntryConditionalArchiveCases(&entry) != 0) return 1;
 
     UMI_TEST_CHECK(entry.location.range.start.line == 3U);

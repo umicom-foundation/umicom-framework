@@ -120,6 +120,11 @@ UMI_TEST_VALUE_TRANSFER(UmiBootstrapServiceDescriptorTransferCases, UmiBootstrap
     umi_bootstrap_service_descriptor_archive_encode, umi_bootstrap_service_descriptor_archive_decode,
     UmiBootstrapServiceDescriptorTransferEqual, UmiBootstrapServiceDescriptorTransferTails, UmiBootstrapServiceDescriptorTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiBootstrapServiceDescriptorTransferCasesWithWorkspace, UmiBootstrapServiceDescriptor,
+    umi_bootstrap_service_descriptor_archive_encode, umi_bootstrap_service_descriptor_archive_decode_with_workspace, UmiBootstrapServiceDescriptorTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiBootstrapServiceDescriptorConditionalArchiveCases, UmiBootstrapServiceDescriptor,
     umi_bootstrap_service_descriptor_archive_encode, umi_bootstrap_service_descriptor_archive_decode_if_unchanged,
@@ -164,6 +169,7 @@ int main(void) {
         UMI_BOOTSTRAP_SCOPE_APPLICATION, UMI_BOOTSTRAP_LIFETIME_EAGER, 10) == UMI_STATUS_OK);
     CHECK(umi_bootstrap_service_descriptor_valid(&d));
     if (UmiBootstrapServiceDescriptorTransferCases(&d) != 0) return 1;
+    if (UmiBootstrapServiceDescriptorTransferCasesWithWorkspace(&d) != 0) return 1;
     if (UmiBootstrapServiceDescriptorConditionalArchiveCases(&d) != 0) return 1;
 
     CHECK(d.enabled);

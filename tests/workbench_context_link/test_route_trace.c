@@ -117,6 +117,11 @@ UMI_TEST_VALUE_TRANSFER(UmiWorkbenchContextLinkRouteTraceTransferCases, UmiWorkb
     umi_workbench_context_link_route_trace_archive_encode, umi_workbench_context_link_route_trace_archive_decode,
     UmiWorkbenchContextLinkRouteTraceTransferEqual, UmiWorkbenchContextLinkRouteTraceTransferTails, UmiWorkbenchContextLinkRouteTraceTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiWorkbenchContextLinkRouteTraceTransferCasesWithWorkspace, UmiWorkbenchContextLinkRouteTrace,
+    umi_workbench_context_link_route_trace_archive_encode, umi_workbench_context_link_route_trace_archive_decode_with_workspace, UmiWorkbenchContextLinkRouteTraceTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiWorkbenchContextLinkRouteTraceConditionalArchiveCases, UmiWorkbenchContextLinkRouteTrace,
     umi_workbench_context_link_route_trace_archive_encode, umi_workbench_context_link_route_trace_archive_decode_if_unchanged,
@@ -151,6 +156,7 @@ int main(void)
     umi_workbench_context_link_route_trace_init(&record, "route_trace-id");
     assert(umi_workbench_context_link_route_trace_validate(&record) == UMI_STATUS_OK);
     if (UmiWorkbenchContextLinkRouteTraceTransferCases(&record) != 0) return 1;
+    if (UmiWorkbenchContextLinkRouteTraceTransferCasesWithWorkspace(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkRouteTraceConditionalArchiveCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkRouteTraceReviewedCases(&record) != 0) return 1;
     if (UmiWorkbenchContextLinkRouteTraceMutationGuards(&record) != 0) return 1;

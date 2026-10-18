@@ -84,6 +84,11 @@ UMI_TEST_VALUE_TRANSFER(UmiUiReactiveReadonlyRuleTransferCases, UmiUiReactiveRea
     umi_ui_reactive_readonly_rule_archive_encode, umi_ui_reactive_readonly_rule_archive_decode,
     UmiUiReactiveReadonlyRuleTransferEqual, UmiUiReactiveReadonlyRuleTransferTails, UmiUiReactiveReadonlyRuleTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiUiReactiveReadonlyRuleTransferCasesWithWorkspace, UmiUiReactiveReadonlyRule,
+    umi_ui_reactive_readonly_rule_archive_encode, umi_ui_reactive_readonly_rule_archive_decode_with_workspace, UmiUiReactiveReadonlyRuleTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiUiReactiveReadonlyRuleConditionalArchiveCases, UmiUiReactiveReadonlyRule,
     umi_ui_reactive_readonly_rule_archive_encode, umi_ui_reactive_readonly_rule_archive_decode_if_unchanged,
@@ -98,5 +103,6 @@ int main(void) { UmiUiReactiveReadonlyRule item; umi_ui_reactive_readonly_rule_i
     (void)snprintf(populated.expression, sizeof(populated.expression), "field-1");
     populated.read_only = true;
     if (UmiUiReactiveReadonlyRuleTransferCases(&populated) != 0) return 1;
+    if (UmiUiReactiveReadonlyRuleTransferCasesWithWorkspace(&populated) != 0) return 1;
     if (UmiUiReactiveReadonlyRuleConditionalArchiveCases(&populated) != 0) return 1;
  return umi_ui_reactive_readonly_rule_valid(&item) ? 0 : 1; }

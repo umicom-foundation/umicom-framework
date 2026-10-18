@@ -92,6 +92,11 @@ UMI_TEST_VALUE_TRANSFER(UmiDrComponentPackageTransferCases, UmiDrComponentPackag
     umi_dr_component_package_archive_encode, umi_dr_component_package_archive_decode,
     UmiDrComponentPackageTransferEqual, UmiDrComponentPackageTransferTails, UmiDrComponentPackageTransferMalformed)
 
+/* Exercise the caller-workspace API using this owner\'s real fixture and field comparator. */
+#include "../value_archive/workspace_cases.h"
+UMI_TEST_VALUE_WORKSPACE(UmiDrComponentPackageTransferCasesWithWorkspace, UmiDrComponentPackage,
+    umi_dr_component_package_archive_encode, umi_dr_component_package_archive_decode_with_workspace, UmiDrComponentPackageTransferEqual)
+
 #include "../value_archive/conditional_cases.h"
 UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrComponentPackageConditionalArchiveCases, UmiDrComponentPackage,
     umi_dr_component_package_archive_encode, umi_dr_component_package_archive_decode_if_unchanged,
@@ -101,6 +106,7 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDrComponentPackageConditionalArchiveCases, UmiDr
 int main(void) {
     UmiDrComponentPackage value; umi_dr_component_package_init(&value); CHECK(umi_dr_copy_text(value.id,sizeof(value.id),"component")==UMI_STATUS_OK); CHECK(umi_dr_copy_text(value.component_id,sizeof(value.component_id),"ai")==UMI_STATUS_OK); CHECK(umi_dr_component_package_valid(&value));
     if (UmiDrComponentPackageTransferCases(&value) != 0) return 1;
+    if (UmiDrComponentPackageTransferCasesWithWorkspace(&value) != 0) return 1;
     if (UmiDrComponentPackageConditionalArchiveCases(&value) != 0) return 1;
  CHECK(umi_dr_component_package_fingerprint(&value) != 0U);
     return 0;

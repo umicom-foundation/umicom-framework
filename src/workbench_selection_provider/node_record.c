@@ -295,6 +295,12 @@ static UmiStatus UmiWorkbenchSelectionProviderNodeRecordArchiveValidate(const Um
 UMI_DEFINE_VALUE_ARCHIVE(umi_workbench_selection_provider_node_record_archive_encode, umi_workbench_selection_provider_node_record_archive_decode,
     UmiWorkbenchSelectionProviderNodeRecord, UmiWorkbenchSelectionProviderNodeRecordArchiveSchema, UmiWorkbenchSelectionProviderNodeRecordArchiveBound, UmiWorkbenchSelectionProviderNodeRecordArchiveWrite, UmiWorkbenchSelectionProviderNodeRecordArchiveRead, UmiWorkbenchSelectionProviderNodeRecordArchiveValidate)
 
+/* SDK callers choose staging storage independently of their thread stack.
+ * Reuse this owner\'s exact schema, reader and validation before publishing
+ * a destination; decoded values remain data, never execution authority. */
+UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_workbench_selection_provider_node_record_archive_decode_with_workspace, UmiWorkbenchSelectionProviderNodeRecord,
+    UmiWorkbenchSelectionProviderNodeRecordArchiveSchema, UmiWorkbenchSelectionProviderNodeRecordArchiveBound, UmiWorkbenchSelectionProviderNodeRecordArchiveRead, UmiWorkbenchSelectionProviderNodeRecordArchiveValidate)
+
 /* A delayed node record draft must name the revision it reviewed.
  * Domain validation remains with this value owner; the shared guard publishes
  * all fields together without emitting events or changing any external service. */
