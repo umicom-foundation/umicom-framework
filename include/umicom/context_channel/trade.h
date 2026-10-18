@@ -50,31 +50,55 @@ UmiStatus umi_trade_context_copy(UmiTradeContext *destination, const UmiTradeCon
 /**
  * Provide the trade context set trade id operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_trade_context_set_trade_id(UmiTradeContext *context, const char *value);
 /**
  * Provide the trade context set source system operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_trade_context_set_source_system(UmiTradeContext *context, const char *value);
 /**
  * Provide the trade context set product type operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_trade_context_set_product_type(UmiTradeContext *context, const char *value);
 /**
  * Provide the trade context set book id operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_trade_context_set_book_id(UmiTradeContext *context, const char *value);
 /**
  * Provide the trade context set counterparty id operation used by this module and its
  * client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_trade_context_set_counterparty_id(UmiTradeContext *context, const char *value);
 /**
  * Provide the trade context set version operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_trade_context_set_version(UmiTradeContext *context, uint64_t value);
 /** Transfer this value using the portable format described in value_archive.h.

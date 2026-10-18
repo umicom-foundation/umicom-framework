@@ -36,13 +36,25 @@ UmiStatus umi_debug_workbench_debug_workspace_profile_init(UmiDebugWorkbenchDebu
  * this module and its client applications.
  */
 UmiStatus umi_debug_workbench_debug_workspace_profile_set_primary_view(UmiDebugWorkbenchDebugWorkspaceProfile *model, UmiDebugWorkbenchViewKind view)
-{ /* Protect caller-owned memory by checking that required state is available before it is used. */ if (model == NULL || view_bit(view) == 0U) return UMI_STATUS_INVALID_ARGUMENT; model->primary_view = view; model->revision++; return UMI_STATUS_OK; }
+{ /* Protect caller-owned memory by checking that required state is available before it is used. */ if (model == NULL || view_bit(view) == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (model->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+     model->primary_view = view; model->revision++; return UMI_STATUS_OK; }
 /*
  * Provide the debug workbench debug workspace profile set view visible operation used by
  * this module and its client applications.
  */
 UmiStatus umi_debug_workbench_debug_workspace_profile_set_view_visible(UmiDebugWorkbenchDebugWorkspaceProfile *model, UmiDebugWorkbenchViewKind view, bool visible)
-{ uint64_t bit; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT; bit = view_bit(view); /* Protect caller-owned memory by checking that required state is available before it is used. */ if (bit == 0U) return UMI_STATUS_INVALID_ARGUMENT; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (visible) model->visible_views |= bit; /* Use this fallback path when the earlier condition does not apply. */ else model->visible_views &= ~bit; model->revision++; return UMI_STATUS_OK; }
+{ uint64_t bit; /* Protect caller-owned memory by checking that required state is available before it is used. */ if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT; bit = view_bit(view); /* Protect caller-owned memory by checking that required state is available before it is used. */ if (bit == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (model->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+     /* Protect caller-owned memory by checking that required state is available before it is used. */ if (visible) model->visible_views |= bit; /* Use this fallback path when the earlier condition does not apply. */ else model->visible_views &= ~bit; model->revision++; return UMI_STATUS_OK; }
 /*
  * Provide the debug workbench debug workspace profile view visible operation used by this
  * module and its client applications.

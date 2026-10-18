@@ -44,6 +44,9 @@ if(TARGET umicom_ui_gtk4 OR UMICOM_GUI_RECORDING_NATIVE_TESTS)
         add_library(umicom-recording-native-check-support STATIC
             "${_framework}/adapters/gtk4/interaction_recording_gtk4.c"
             "${_framework}/adapters/gtk4/automation_gtk4.c")
+        # Logical lookup is a shared translation unit in full and standalone builds.
+        target_sources(umicom-recording-native-check-support PRIVATE
+            "${_framework}/adapters/gtk4/widget_lookup_gtk4.c")
         target_link_libraries(umicom-recording-native-check-support PUBLIC ${_recording_library} PkgConfig::RECORDING_GTK)
         set_target_properties(umicom-recording-native-check-support PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED ON)
         set(_native_library umicom-recording-native-check-support)

@@ -292,9 +292,15 @@ static int Allocation(CONTRACT_REGISTRY *registry)
 
 #include "snapshot_page_cases.h"
 #include "snapshot_archive_cases.h"
+#include "snapshot_clear_cases.h"
 
 static int Run(CONTRACT_REGISTRY *registry, const char *name)
 {
+    if (strcmp(name, "clear-current") == 0) return ClearCurrent(registry);
+    if (strcmp(name, "clear-stale") == 0) return ClearStale(registry);
+    if (strcmp(name, "clear-empty") == 0) return ClearEmpty(registry);
+    if (strcmp(name, "clear-refill") == 0) return ClearRefill(registry);
+    if (strcmp(name, "clear-pages") == 0) return ClearPageInvalidation(registry);
     if (strcmp(name, "archive-value") == 0) return ArchiveRecordCases();
     if (strcmp(name, "archive-collection") == 0) return ArchiveCollection(registry);
     if (strcmp(name, "archive-refused") == 0) return ArchiveCollectionRefused(registry);

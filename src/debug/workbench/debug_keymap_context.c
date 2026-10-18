@@ -54,6 +54,12 @@ UmiStatus umi_debug_workbench_debug_keymap_context_set_enabled(UmiDebugWorkbench
     bit = umi_debug_workbench_command_bit(command);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (bit == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (model->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     /* Apply this operation only while the related capability or state is available. */
     if (enabled) model->enabled_commands |= bit; /* Use this fallback path when the earlier condition does not apply. */ else model->enabled_commands &= ~bit;
     model->revision++;
@@ -81,6 +87,12 @@ UmiStatus umi_debug_workbench_debug_keymap_context_set_primary(UmiDebugWorkbench
      * used.
      */
     if (model == NULL || umi_debug_workbench_command_bit(command) == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (model->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     model->primary_command = command;
     model->revision++;
     return UMI_STATUS_OK;

@@ -94,7 +94,12 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiAiDevAuthorengineBridgeConditionalArchiveCases, 
     UmiAiDevAuthorengineBridgeTransferEqual, UmiAiDevAuthorengineBridgeTransferTails, UmiAiDevAuthorengineBridgeTransferMalformed)
 
 
+#include "../value_archive/ai_configuration_cases.h"
+UMI_TEST_AI_CONFIGURATION(UmiAiDevAuthorengineBridgeConfigurationCases, UmiAiDevAuthorengineBridge,
+    umi_ai_dev_authorengine_bridge_configure, umi_ai_dev_authorengine_bridge_validate)
+
 int main(void) {
+    if (UmiAiDevAuthorengineBridgeConfigurationCases() != 0) return 1;
     UmiAiDevAuthorengineBridge v;
     umi_ai_dev_authorengine_bridge_init(&v);
     /* Preserve the original failure result so the caller can respond to the correct cause. */

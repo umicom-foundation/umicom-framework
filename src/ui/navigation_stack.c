@@ -213,6 +213,10 @@ uint64_t umi_ui_navigation_stack_registry_revision(const UmiUiNavigationEntryReg
  */
 void umi_ui_navigation_stack_registry_clear(UmiUiNavigationEntryRegistry *registry)
 {
+    /* Keep the legacy entry point while refusing revision wraparound. A new
+     * caller needing a result should use clear_if_current with its review. */
+    if (registry != NULL && registry->revision == UINT64_MAX) return;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -316,3 +320,8 @@ UMI_DEFINE_REGISTRY_ARCHIVE(umi_ui_navigation_stack_registry_archive_encode, umi
  * caller. Imported metadata remains evidence; registry publication is separate. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_navigation_stack_snapshot_archive_decode_if_unchanged, umi_ui_navigation_stack_snapshot_archive_encode,
     UmiUiNavigationEntrySnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)
+
+/* Reviewed clearing belongs to this value owner. It preserves changes made
+ * since the caller inspected the collection and allocates no staging copy. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_CLEAR(umi_ui_navigation_stack_registry_clear_if_current,
+    UmiUiNavigationEntryRegistry, UMI_UI_NAVIGATION_STACK_CAPACITY)

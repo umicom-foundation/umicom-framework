@@ -18,6 +18,7 @@
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+#include "../value_archive/revision_cases.h"
 #include "umicom/test/workbench/diagnostic_severity_summary.h"
 #include <assert.h>
 /*
@@ -117,7 +118,25 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiDiagnosticSeveritySummaryConditionalArchiveCases
     UmiDiagnosticSeveritySummaryTransferEqual, UmiDiagnosticSeveritySummaryTransferTails, UmiDiagnosticSeveritySummaryTransferMalformed)
 
 
-int main(void){UmiDiagnosticSeveritySummary m;assert(umi_diagnostic_severity_summary_init(&m,"diagnostic_severity_summary","Diagnostic Severity Summary")==UMI_STATUS_OK);assert(umi_diagnostic_severity_summary_set_active(&m,true)==UMI_STATUS_OK);assert(umi_diagnostic_severity_summary_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_diagnostic_severity_summary_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_diagnostic_severity_summary_valid(&m));
+int main(void){UmiDiagnosticSeveritySummary m;assert(umi_diagnostic_severity_summary_init(&m,"diagnostic_severity_summary","Diagnostic Severity Summary")==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDiagnosticSeveritySummary, &m, generation,
+        umi_diagnostic_severity_summary_set_active(&m,true));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDiagnosticSeveritySummary, &m, value.revision,
+        umi_diagnostic_severity_summary_set_active(&m,true));
+    assert(umi_diagnostic_severity_summary_set_active(&m,true)==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDiagnosticSeveritySummary, &m, generation,
+        umi_diagnostic_severity_summary_set_count(&m,3U));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDiagnosticSeveritySummary, &m, value.revision,
+        umi_diagnostic_severity_summary_set_count(&m,3U));
+    assert(umi_diagnostic_severity_summary_set_count(&m,3U)==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDiagnosticSeveritySummary, &m, generation,
+        umi_diagnostic_severity_summary_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDiagnosticSeveritySummary, &m, value.revision,
+        umi_diagnostic_severity_summary_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
+    assert(umi_diagnostic_severity_summary_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_diagnostic_severity_summary_valid(&m));
     if (UmiDiagnosticSeveritySummaryTransferCases(&m) != 0) return 1;
     if (UmiDiagnosticSeveritySummaryConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

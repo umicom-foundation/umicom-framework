@@ -40,16 +40,28 @@ UmiStatus umi_test_tree_filter_init(UmiTestTreeFilter *model,const char *id,cons
 /**
  * Exercise test tree filter set active and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_tree_filter_set_active(UmiTestTreeFilter *model,bool active);
 /**
  * Return the number of records represented by test tree filter set without changing their
  * state.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_tree_filter_set_count(UmiTestTreeFilter *model,uint32_t item_count);
 /**
  * Exercise test tree filter set state and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_tree_filter_set_state(UmiTestTreeFilter *model,UmiTestWorkbenchState state);
 /**

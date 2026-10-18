@@ -45,6 +45,10 @@ void umi_context_search_init(UmiContextSearch *state);
 /**
  * Provide the context search set field operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_search_set_field(UmiContextSearch *state,size_t field_index,const char *value);
 /**
@@ -55,11 +59,19 @@ const char *umi_context_search_field(const UmiContextSearch *state,size_t field_
 /**
  * Provide the context search record success operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_search_record_success(UmiContextSearch *state,uint64_t sequence);
 /**
  * Provide the context search record failure operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, failure_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_search_record_failure(UmiContextSearch *state,UmiStatus status,uint64_t sequence);
 /**

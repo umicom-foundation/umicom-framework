@@ -45,6 +45,10 @@ void umi_context_backpressure_init(UmiContextBackpressure *state);
 /**
  * Provide the context backpressure set field operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_backpressure_set_field(UmiContextBackpressure *state,size_t field_index,const char *value);
 /**
@@ -55,11 +59,19 @@ const char *umi_context_backpressure_field(const UmiContextBackpressure *state,s
 /**
  * Provide the context backpressure record success operation used by this module and its
  * client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_backpressure_record_success(UmiContextBackpressure *state,uint64_t sequence);
 /**
  * Provide the context backpressure record failure operation used by this module and its
  * client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, failure_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_backpressure_record_failure(UmiContextBackpressure *state,UmiStatus status,uint64_t sequence);
 /**

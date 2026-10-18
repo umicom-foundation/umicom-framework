@@ -952,8 +952,27 @@ static UmiStatus launch_portfolio_application(
     if (mode == UMI_GTK4_WORKSTATION_APPLICATION_OPEN_STANDARD ||
         mode == UMI_GTK4_WORKSTATION_APPLICATION_OPEN_NEW_WINDOW) {
         UmiApplicationLaunchChoice choice;
+        /* The picker intentionally hides its host. An explicit New window
+         * for that host must still pass the same shared readiness check, using
+         * a temporary unfiltered selection without changing picker contents
+         * or bypassing the delegated host's final launch decision. */
+#if 0
         status = umi_application_launch_selection_find(
             header->application_selection, application->application_id, &choice);
+#endif
+        if (mode == UMI_GTK4_WORKSTATION_APPLICATION_OPEN_NEW_WINDOW &&
+            strcmp(application->application_id, header->state.application_id) == 0) {
+            UmiApplicationLaunchSelection *host_check = NULL;
+            status = umi_application_launch_selection_create_for_host(
+                header->application_runtime_catalogue, NULL, &host_check);
+            if (status == UMI_STATUS_OK)
+                status = umi_application_launch_selection_find(
+                    host_check, application->application_id, &choice);
+            umi_application_launch_selection_destroy(host_check);
+        } else {
+            status = umi_application_launch_selection_find(
+                header->application_selection, application->application_id, &choice);
+        }
         if (status != UMI_STATUS_OK) goto reported;
         if (!choice.eligible) {
             status = UMI_STATUS_UNAVAILABLE;

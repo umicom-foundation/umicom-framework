@@ -37,6 +37,10 @@ UmiStatus umi_editor_wb_focus_mode_init(UmiEditorWbFocusMode *state,const char *
 /**
  * Copy editor wb focus mode into module-owned storage so callers keep ownership of their
  * input values.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_editor_wb_focus_mode_set(UmiEditorWbFocusMode *state,bool enabled);
 /**

@@ -38,11 +38,19 @@ UmiStatus umi_editor_intel_rename_impact_item_init(UmiEditorIntelRenameImpactIte
 /**
  * Provide the editor intel rename impact item set score operation used by this module and
  * its client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: value.revision, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_editor_intel_rename_impact_item_set_score(UmiEditorIntelRenameImpactItem *model,uint32_t score);
 /**
  * Find editor intel rename impact item set while leaving the underlying catalogue or model
  * owned by this module.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_editor_intel_rename_impact_item_set_selected(UmiEditorIntelRenameImpactItem *model,bool selected);
 /**

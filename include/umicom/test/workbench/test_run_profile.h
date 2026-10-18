@@ -40,16 +40,28 @@ UmiStatus umi_test_run_profile_init(UmiTestRunProfile *model,const char *id,cons
 /**
  * Exercise test run profile set active and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_run_profile_set_active(UmiTestRunProfile *model,bool active);
 /**
  * Return the number of records represented by test run profile set without changing their
  * state.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_run_profile_set_count(UmiTestRunProfile *model,uint32_t item_count);
 /**
  * Exercise test run profile set state and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_run_profile_set_state(UmiTestRunProfile *model,UmiTestWorkbenchState state);
 /**

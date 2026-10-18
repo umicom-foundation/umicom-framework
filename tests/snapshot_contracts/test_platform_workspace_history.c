@@ -22,6 +22,8 @@
 #define CONTRACT_FIND umi_platform_workspace_history_registry_find
 #define CONTRACT_AT umi_platform_workspace_history_registry_at
 #define CONTRACT_COUNT umi_platform_workspace_history_registry_count
+/* Exercise allocation-free clearing through this actual public owner. */
+#define CONTRACT_CLEAR_CURRENT umi_platform_workspace_history_registry_clear_if_current
 #define CONTRACT_REVISION umi_platform_workspace_history_registry_revision
 
 /* Explicit test expectations refer to public member boundaries, including

@@ -52,6 +52,10 @@ void umi_developer_workbench_project_wizard_init(
 /**
  * Provide the developer workbench project wizard select preset operation used by this
  * module and its client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_developer_workbench_project_wizard_select_preset(
     UmiDeveloperWorkbenchProjectWizard *wizard,
@@ -60,6 +64,10 @@ UmiStatus umi_developer_workbench_project_wizard_select_preset(
 /**
  * Provide the developer workbench project wizard set identity operation used by this
  * module and its client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_developer_workbench_project_wizard_set_identity(
     UmiDeveloperWorkbenchProjectWizard *wizard,
@@ -71,6 +79,10 @@ UmiStatus umi_developer_workbench_project_wizard_set_identity(
 /**
  * Check that developer workbench project wizard satisfies its contract before another
  * service relies on it.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_developer_workbench_project_wizard_validate(
     UmiDeveloperWorkbenchProjectWizard *wizard);

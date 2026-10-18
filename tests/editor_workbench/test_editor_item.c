@@ -18,6 +18,7 @@
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+#include "../value_archive/revision_cases.h"
 #include "umicom/editor/workbench/editor_item.h"
 /*
  * Start this command or application, report setup failures, and return a process exit code
@@ -97,4 +98,8 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorWbEditorItemConditionalArchiveCases, UmiEd
 int main(void){ UmiEditorWbEditorItem x; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_editor_item_init(&x,"e1","a.c",UMI_EDITOR_WB_OPEN_PREVIEW)!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_wb_editor_item_valid(&x))return 2;
     if (UmiEditorWbEditorItemTransferCases(&x) != 0) return 1;
     if (UmiEditorWbEditorItemConditionalArchiveCases(&x) != 0) return 1;
- /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_editor_item_set_dirty(&x,true)!=UMI_STATUS_OK||!x.dirty)return 3; return 0; }
+ /* Preserve the original failure result so the caller can respond to the correct cause. */
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiEditorWbEditorItem, &x, revision,
+        umi_editor_wb_editor_item_set_dirty(&x,true));
+    if(umi_editor_wb_editor_item_set_dirty(&x,true)!=UMI_STATUS_OK||!x.dirty)return 3; return 0; }

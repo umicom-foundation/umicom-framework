@@ -94,7 +94,12 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiAiDevAgentGoalConditionalArchiveCases, UmiAiDevA
     UmiAiDevAgentGoalTransferEqual, UmiAiDevAgentGoalTransferTails, UmiAiDevAgentGoalTransferMalformed)
 
 
+#include "../value_archive/ai_configuration_cases.h"
+UMI_TEST_AI_CONFIGURATION(UmiAiDevAgentGoalConfigurationCases, UmiAiDevAgentGoal,
+    umi_ai_dev_agent_goal_configure, umi_ai_dev_agent_goal_validate)
+
 int main(void) {
+    if (UmiAiDevAgentGoalConfigurationCases() != 0) return 1;
     UmiAiDevAgentGoal v;
     umi_ai_dev_agent_goal_init(&v);
     /* Preserve the original failure result so the caller can respond to the correct cause. */

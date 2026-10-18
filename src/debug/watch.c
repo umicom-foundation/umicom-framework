@@ -217,6 +217,10 @@ uint64_t umi_debug_watch_registry_revision(const UmiDebugWatchRegistry *registry
  */
 void umi_debug_watch_registry_clear(UmiDebugWatchRegistry *registry)
 {
+    /* Keep the legacy entry point while refusing revision wraparound. A new
+     * caller needing a result should use clear_if_current with its review. */
+    if (registry != NULL && registry->revision == UINT64_MAX) return;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -365,3 +369,8 @@ UmiStatus UmiDebugWatchRegistryInvalidateValues(UmiDebugWatchRegistry *registry)
  * caller. Imported metadata remains evidence; registry publication is separate. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_debug_watch_snapshot_archive_decode_if_unchanged, umi_debug_watch_snapshot_archive_encode,
     UmiDebugWatchSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)
+
+/* Reviewed clearing belongs to this value owner. It preserves changes made
+ * since the caller inspected the collection and allocates no staging copy. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_CLEAR(umi_debug_watch_registry_clear_if_current,
+    UmiDebugWatchRegistry, UMI_DEBUG_WATCH_CAPACITY)

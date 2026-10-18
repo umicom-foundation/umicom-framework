@@ -18,6 +18,7 @@
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+#include "../value_archive/revision_cases.h"
 #include "umicom/test/workbench/workbench_types.h"
 #include <assert.h>
 /*
@@ -114,7 +115,15 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestWorkbenchEntryConditionalArchiveCases, UmiTe
     UmiTestWorkbenchEntryTransferEqual, UmiTestWorkbenchEntryTransferTails, UmiTestWorkbenchEntryTransferMalformed)
 
 
-int main(void){UmiTestWorkbenchEntry e;assert(umi_test_workbench_entry_init(&e,"root","All Tests")==UMI_STATUS_OK);assert(umi_test_workbench_entry_set_detail(&e,"workspace")==UMI_STATUS_OK);assert(umi_test_workbench_entry_set_state(&e,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_workbench_entry_valid(&e));
+int main(void){UmiTestWorkbenchEntry e;assert(umi_test_workbench_entry_init(&e,"root","All Tests")==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestWorkbenchEntry, &e, revision,
+        umi_test_workbench_entry_set_detail(&e,"workspace"));
+    assert(umi_test_workbench_entry_set_detail(&e,"workspace")==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestWorkbenchEntry, &e, revision,
+        umi_test_workbench_entry_set_state(&e,UMI_TEST_WORKBENCH_STATE_READY));
+    assert(umi_test_workbench_entry_set_state(&e,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_workbench_entry_valid(&e));
     if (UmiTestWorkbenchEntryTransferCases(&e) != 0) return 1;
     if (UmiTestWorkbenchEntryConditionalArchiveCases(&e) != 0) return 1;
 assert(e.revision==3U);return 0;}

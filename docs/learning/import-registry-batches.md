@@ -175,3 +175,51 @@ For complete replacement of one document's provider results, follow
 These are value-only registries: records contain fixed arrays and scalar values,
 not owned pointers or live resource handles. Other stores, including recent
 items and project file sets, retain their specialised interfaces and validation.
+
+## Clear a collection after reviewing it
+
+The same registries provide a `registry_clear_if_current` function. Use it when
+a user has reviewed a collection and chosen to remove all its rows. A revision
+is a change token: it tells you whether that specific registry has changed
+since the review. It is not a timestamp or a token from another registry.
+
+1. Capture the records with the registry's `capture` function and display the
+   copied records for review. Keep the returned `UmiSnapshotCapture.revision`.
+2. On the registry's owning thread, call `clear_if_current` with that revision.
+3. If the result is `UMI_STATUS_INVALID_STATE`, capture the new collection and
+   show it for review again. Do not silently retry with a newer revision.
+4. On success, refresh the view. A nonempty collection becomes empty and its
+   revision advances once. Clearing a current empty collection is a no-op.
+
+For bookmarks, the call is:
+
+```c
+UmiStatus status = umi_platform_bookmarks_registry_clear_if_current(
+    bookmarks, capture.revision);
+```
+
+A stale revision is refused even if the collection is empty. An exhausted
+revision returns `UMI_STATUS_CAPACITY_EXCEEDED` when there are rows to remove;
+the complete registry stays unchanged. A current empty collection can still
+return success at that limit because it needs no new revision. Existing
+legacy void clear functions remain available, but the checked interface lets
+your application distinguish these outcomes.
+
+The operation allocates no memory and invokes no callbacks. It clears only
+inline records: it does not delete files, stop services, cancel orders or
+erase copies already captured by callers. Cleared storage is not a secure
+erasure guarantee. Serialise access on the owner thread as for other registry
+operations; this API is not a cross-thread lock or a durable transaction.
+
+The existing `umicom-reviewed-bookmarks-lesson` example now exercises stale
+clear refusal, a successful reviewed clear, and an empty no-op. Build it with
+the installed-SDK commands above and run:
+
+```powershell
+& ".\build\umicom-reviewed-bookmarks-lesson.exe"
+```
+
+The final line should say that a stale clear was refused and the current
+collection was removed once. An unresolved `clear_if_current` linker symbol
+means the headers and installed library do not match; rebuild and reinstall
+the Framework SDK, then configure the consumer against that same installation.

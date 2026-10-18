@@ -230,6 +230,16 @@ UmiStatus umi_project_dependency_registry_archive_restore(UmiProjectDependencyRe
     uint64_t expected_revision, const void *bytes, size_t byte_count,
     UmiSnapshotBatchResult *out_result);
 
+/** Clear this value collection only when expected_revision still matches.
+ * A stale review returns INVALID_STATE without changing records or counters.
+ * A current empty collection succeeds without advancing its revision; a
+ * nonempty collection advances once and clears retained value storage.
+ * Revision exhaustion returns CAPACITY_EXCEEDED with the collection intact.
+ * No allocation, I/O or callbacks occur. Serialize access on the owning thread;
+ * this is an in-memory operation, not a durable save or secure memory erasure. */
+UmiStatus umi_project_dependency_registry_clear_if_current(UmiProjectDependencyRegistry *registry,
+    uint64_t expected_revision);
+
 #ifdef __cplusplus
 }
 #endif

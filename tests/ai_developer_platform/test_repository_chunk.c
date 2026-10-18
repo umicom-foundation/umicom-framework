@@ -94,7 +94,12 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiAiDevRepositoryChunkConditionalArchiveCases, Umi
     UmiAiDevRepositoryChunkTransferEqual, UmiAiDevRepositoryChunkTransferTails, UmiAiDevRepositoryChunkTransferMalformed)
 
 
+#include "../value_archive/ai_configuration_cases.h"
+UMI_TEST_AI_CONFIGURATION(UmiAiDevRepositoryChunkConfigurationCases, UmiAiDevRepositoryChunk,
+    umi_ai_dev_repository_chunk_configure, umi_ai_dev_repository_chunk_validate)
+
 int main(void) {
+    if (UmiAiDevRepositoryChunkConfigurationCases() != 0) return 1;
     UmiAiDevRepositoryChunk v;
     umi_ai_dev_repository_chunk_init(&v);
     /* Preserve the original failure result so the caller can respond to the correct cause. */

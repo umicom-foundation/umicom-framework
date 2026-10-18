@@ -217,6 +217,10 @@ uint64_t umi_source_control_change_registry_revision(const UmiSourceControlChang
  */
 void umi_source_control_change_registry_clear(UmiSourceControlChangeRegistry *registry)
 {
+    /* Keep the legacy entry point while refusing revision wraparound. A new
+     * caller needing a result should use clear_if_current with its review. */
+    if (registry != NULL && registry->revision == UINT64_MAX) return;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -322,3 +326,8 @@ UMI_DEFINE_REGISTRY_ARCHIVE(umi_source_control_change_registry_archive_encode, u
  * caller. Imported metadata remains evidence; registry publication is separate. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_source_control_change_snapshot_archive_decode_if_unchanged, umi_source_control_change_snapshot_archive_encode,
     UmiSourceControlChangeSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)
+
+/* Reviewed clearing belongs to this value owner. It preserves changes made
+ * since the caller inspected the collection and allocates no staging copy. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_CLEAR(umi_source_control_change_registry_clear_if_current,
+    UmiSourceControlChangeRegistry, UMI_SOURCE_CONTROL_CHANGE_CAPACITY)

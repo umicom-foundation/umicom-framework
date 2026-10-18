@@ -40,16 +40,28 @@ UmiStatus umi_test_result_snapshot_init(UmiTestResultSnapshot *model,const char 
 /**
  * Exercise test result snapshot set active and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_result_snapshot_set_active(UmiTestResultSnapshot *model,bool active);
 /**
  * Return the number of records represented by test result snapshot set without changing
  * their state.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_result_snapshot_set_count(UmiTestResultSnapshot *model,uint32_t item_count);
 /**
  * Exercise test result snapshot set state and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_result_snapshot_set_state(UmiTestResultSnapshot *model,UmiTestWorkbenchState state);
 /**

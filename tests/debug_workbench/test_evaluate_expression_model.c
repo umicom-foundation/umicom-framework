@@ -22,6 +22,7 @@
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+#include "../value_archive/revision_cases.h"
 #include "umicom/debug/workbench/evaluate_expression_model.h"
 #define UMI_TEST_CHECK(expression) do { if (!(expression)) return 1; } while (0)
 
@@ -148,8 +149,22 @@ int main(void)
     UmiDebugWorkbenchEvaluateExpressionModel model;
     UmiDebugWorkbenchRange range = {{4U, 2U}, {4U, 9U}};
     UMI_TEST_CHECK(umi_debug_workbench_evaluate_expression_model_init(&model, "evaluate_expression_model-1", "EvaluateExpressionModel", "debug-workbench", "src/example.c", range) == UMI_STATUS_OK);
+
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDebugWorkbenchEvaluateExpressionModel, &model, value.revision,
+        umi_debug_workbench_evaluate_expression_model_set_state(&model, 7U, 42U));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDebugWorkbenchEvaluateExpressionModel, &model, revision,
+        umi_debug_workbench_evaluate_expression_model_set_state(&model, 7U, 42U));
     UMI_TEST_CHECK(umi_debug_workbench_evaluate_expression_model_set_state(&model, 7U, 42U) == UMI_STATUS_OK);
+
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDebugWorkbenchEvaluateExpressionModel, &model, revision,
+        umi_debug_workbench_evaluate_expression_model_set_selected(&model, true));
     UMI_TEST_CHECK(umi_debug_workbench_evaluate_expression_model_set_selected(&model, true) == UMI_STATUS_OK);
+
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDebugWorkbenchEvaluateExpressionModel, &model, revision,
+        umi_debug_workbench_evaluate_expression_model_set_enabled(&model, false));
     UMI_TEST_CHECK(umi_debug_workbench_evaluate_expression_model_set_enabled(&model, false) == UMI_STATUS_OK);
     UMI_TEST_CHECK(model.value.state == 7U);
     UMI_TEST_CHECK(model.value.value == 42U);

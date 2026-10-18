@@ -7,7 +7,10 @@ foreach(_case IN ITEMS deferred immediate mixed repeated missing partial tests_o
         COMMAND "${CMAKE_COMMAND}"
         "-DCASE=${_case}"
         "-DFRAMEWORK=${_umi_composition_root}"
-        "-DPROBE_ROOT=${CMAKE_CURRENT_BINARY_DIR}/component-integration-checks"
+        # Long nested fixture paths can exhaust the Windows compiler dependency-file limit.
+        # The previous path is retained as a comment for source review.
+        # "-DPROBE_ROOT=${CMAKE_CURRENT_BINARY_DIR}/component-integration-checks"
+        "-DPROBE_ROOT=${CMAKE_BINARY_DIR}/ci"
         "-DHOST_GENERATOR=${CMAKE_GENERATOR}"
         "-DHOST_COMPILER=${CMAKE_C_COMPILER}"
         "-DHOST_TOOLCHAIN=${CMAKE_TOOLCHAIN_FILE}"

@@ -46,16 +46,28 @@ UmiStatus umi_debug_workbench_debug_launch_request_init(UmiDebugWorkbenchDebugLa
 /**
  * Provide the debug workbench debug launch request set state operation used by this module
  * and its client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: value.revision, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_debug_workbench_debug_launch_request_set_state(UmiDebugWorkbenchDebugLaunchRequest *model, uint32_t state, uint64_t value);
 /**
  * Find debug workbench debug launch request set while leaving the underlying catalogue or
  * model owned by this module.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_debug_workbench_debug_launch_request_set_selected(UmiDebugWorkbenchDebugLaunchRequest *model, bool selected);
 /**
  * Provide the debug workbench debug launch request set enabled operation used by this
  * module and its client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_debug_workbench_debug_launch_request_set_enabled(UmiDebugWorkbenchDebugLaunchRequest *model, bool enabled);
 /**

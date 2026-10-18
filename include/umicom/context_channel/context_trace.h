@@ -45,6 +45,10 @@ void umi_context_trace_init(UmiContextTrace *state);
 /**
  * Provide the context trace set field operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_trace_set_field(UmiContextTrace *state,size_t field_index,const char *value);
 /**
@@ -55,11 +59,19 @@ const char *umi_context_trace_field(const UmiContextTrace *state,size_t field_in
 /**
  * Provide the context trace record success operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_trace_record_success(UmiContextTrace *state,uint64_t sequence);
 /**
  * Provide the context trace record failure operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, failure_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_trace_record_failure(UmiContextTrace *state,UmiStatus status,uint64_t sequence);
 /**

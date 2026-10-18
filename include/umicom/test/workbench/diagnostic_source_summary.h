@@ -41,16 +41,28 @@ UmiStatus umi_diagnostic_source_summary_init(UmiDiagnosticSourceSummary *model,c
 /**
  * Exercise diagnostic source summary set active and return a clear result when the
  * behaviour no longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_diagnostic_source_summary_set_active(UmiDiagnosticSourceSummary *model,bool active);
 /**
  * Return the number of records represented by diagnostic source summary set without
  * changing their state.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_diagnostic_source_summary_set_count(UmiDiagnosticSourceSummary *model,uint32_t item_count);
 /**
  * Exercise diagnostic source summary set state and return a clear result when the
  * behaviour no longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_diagnostic_source_summary_set_state(UmiDiagnosticSourceSummary *model,UmiTestWorkbenchState state);
 /**

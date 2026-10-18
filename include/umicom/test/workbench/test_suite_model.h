@@ -40,16 +40,28 @@ UmiStatus umi_test_suite_model_init(UmiTestSuiteModel *model,const char *id,cons
 /**
  * Exercise test suite model set active and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_suite_model_set_active(UmiTestSuiteModel *model,bool active);
 /**
  * Return the number of records represented by test suite model set without changing their
  * state.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_suite_model_set_count(UmiTestSuiteModel *model,uint32_t item_count);
 /**
  * Exercise test suite model set state and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_suite_model_set_state(UmiTestSuiteModel *model,UmiTestWorkbenchState state);
 /**

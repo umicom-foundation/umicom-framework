@@ -40,16 +40,28 @@ UmiStatus umi_test_retry_policy_init(UmiTestRetryPolicy *model,const char *id,co
 /**
  * Exercise test retry policy set active and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_retry_policy_set_active(UmiTestRetryPolicy *model,bool active);
 /**
  * Return the number of records represented by test retry policy set without changing their
  * state.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_retry_policy_set_count(UmiTestRetryPolicy *model,uint32_t item_count);
 /**
  * Exercise test retry policy set state and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_retry_policy_set_state(UmiTestRetryPolicy *model,UmiTestWorkbenchState state);
 /**

@@ -45,6 +45,10 @@ void umi_context_profile_init(UmiContextProfile *state);
 /**
  * Provide the context profile set field operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_profile_set_field(UmiContextProfile *state,size_t field_index,const char *value);
 /**
@@ -55,11 +59,19 @@ const char *umi_context_profile_field(const UmiContextProfile *state,size_t fiel
 /**
  * Provide the context profile record success operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_profile_record_success(UmiContextProfile *state,uint64_t sequence);
 /**
  * Provide the context profile record failure operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, failure_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_profile_record_failure(UmiContextProfile *state,UmiStatus status,uint64_t sequence);
 /**

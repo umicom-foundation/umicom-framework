@@ -18,6 +18,7 @@
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+#include "../value_archive/revision_cases.h"
 #include "umicom/test/workbench/diagnostic_snapshot.h"
 #include <assert.h>
 /*
@@ -122,11 +123,31 @@ int main(void) {
   assert(umi_test_workbench_diagnostic_snapshot_init(
              &m, "diagnostic_snapshot", "Diagnostic Snapshot") ==
          UMI_STATUS_OK);
-  assert(umi_test_workbench_diagnostic_snapshot_set_active(&m, true) ==
+
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestWorkbenchDiagnosticSnapshot, &m, generation,
+        umi_test_workbench_diagnostic_snapshot_set_active(&m, true));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestWorkbenchDiagnosticSnapshot, &m, value.revision,
+        umi_test_workbench_diagnostic_snapshot_set_active(&m, true));
+    assert(umi_test_workbench_diagnostic_snapshot_set_active(&m, true) ==
          UMI_STATUS_OK);
-  assert(umi_test_workbench_diagnostic_snapshot_set_count(&m, 3U) ==
+
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestWorkbenchDiagnosticSnapshot, &m, generation,
+        umi_test_workbench_diagnostic_snapshot_set_count(&m, 3U));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestWorkbenchDiagnosticSnapshot, &m, value.revision,
+        umi_test_workbench_diagnostic_snapshot_set_count(&m, 3U));
+    assert(umi_test_workbench_diagnostic_snapshot_set_count(&m, 3U) ==
          UMI_STATUS_OK);
-  assert(umi_test_workbench_diagnostic_snapshot_set_state(
+
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestWorkbenchDiagnosticSnapshot, &m, generation,
+        umi_test_workbench_diagnostic_snapshot_set_state(
+             &m, UMI_TEST_WORKBENCH_STATE_READY));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestWorkbenchDiagnosticSnapshot, &m, value.revision,
+        umi_test_workbench_diagnostic_snapshot_set_state(
+             &m, UMI_TEST_WORKBENCH_STATE_READY));
+    assert(umi_test_workbench_diagnostic_snapshot_set_state(
              &m, UMI_TEST_WORKBENCH_STATE_READY) == UMI_STATUS_OK);
   assert(umi_test_workbench_diagnostic_snapshot_valid(&m));
     if (UmiTestWorkbenchDiagnosticSnapshotTransferCases(&m) != 0) return 1;

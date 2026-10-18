@@ -34,12 +34,24 @@ UmiStatus umi_test_workbench_entry_init(UmiTestWorkbenchEntry *entry,const char 
  * Exercise test workbench entry set detail and return a clear result when the behaviour no
  * longer matches its contract.
  */
-UmiStatus umi_test_workbench_entry_set_detail(UmiTestWorkbenchEntry *entry,const char *detail){UmiStatus s;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(entry==NULL)return UMI_STATUS_INVALID_ARGUMENT;s=umi_test_workbench_copy_text(entry->detail,sizeof entry->detail,detail!=NULL?detail:"");/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==UMI_STATUS_OK)entry->revision++;return s;}
+UmiStatus umi_test_workbench_entry_set_detail(UmiTestWorkbenchEntry *entry,const char *detail){UmiStatus s;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(entry==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (entry->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    s=umi_test_workbench_copy_text(entry->detail,sizeof entry->detail,detail!=NULL?detail:"");/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==UMI_STATUS_OK)entry->revision++;return s;}
 /*
  * Exercise test workbench entry set state and return a clear result when the behaviour no
  * longer matches its contract.
  */
-UmiStatus umi_test_workbench_entry_set_state(UmiTestWorkbenchEntry *entry,UmiTestWorkbenchState state){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(entry==NULL||state<UMI_TEST_WORKBENCH_STATE_IDLE||state>UMI_TEST_WORKBENCH_STATE_CANCELLED)return UMI_STATUS_INVALID_ARGUMENT;entry->state=state;entry->revision++;return UMI_STATUS_OK;}
+UmiStatus umi_test_workbench_entry_set_state(UmiTestWorkbenchEntry *entry,UmiTestWorkbenchState state){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(entry==NULL||state<UMI_TEST_WORKBENCH_STATE_IDLE||state>UMI_TEST_WORKBENCH_STATE_CANCELLED)return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (entry->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    entry->state=state;entry->revision++;return UMI_STATUS_OK;}
 /*
  * Check that test workbench entry satisfies its contract before another service relies on
  * it.

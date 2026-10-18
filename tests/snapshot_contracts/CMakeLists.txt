@@ -26,6 +26,13 @@ foreach(_contract IN LISTS _contracts)
     if(COMMAND umicom_register_validation_target)
         umicom_register_validation_target("${_target}")
     endif()
+    # A reviewed clear must preserve newer state and invalidate older pages.
+    foreach(_case clear-current clear-stale clear-empty clear-refill clear-pages)
+        set(_test "framework.snapshot_contracts.${_group}.${_name}.${_case}")
+        add_test(NAME "${_test}" COMMAND "${_target}" "${_case}")
+        set_tests_properties("${_test}" PROPERTIES TIMEOUT 30
+            LABELS "framework;snapshot-contracts;reviewed-clear;${_group};regression")
+    endforeach()
     # Archive checks call each actual public owner and compare complete fields.
     foreach(_case archive-value archive-collection archive-refused archive-empty)
         set(_test "framework.snapshot_contracts.${_group}.${_name}.${_case}")
@@ -261,4 +268,19 @@ set_tests_properties(framework.snapshot_contracts.safe-values-example PROPERTIES
     TIMEOUT 30 LABELS "framework;snapshot-contracts;record-integrity;example")
 if(COMMAND umicom_register_validation_target)
     umicom_register_validation_target(umicom-safe-values-example)
+endif()
+
+# Reach revision exhaustion directly in the shared value-only implementation.
+add_executable(umicom-snapshot-clear-boundaries-test test_clear_boundaries.c)
+set_target_properties(umicom-snapshot-clear-boundaries-test PROPERTIES
+    C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+target_link_libraries(umicom-snapshot-clear-boundaries-test PRIVATE Umicom::base)
+umicom_apply_warnings(umicom-snapshot-clear-boundaries-test)
+umicom_apply_sanitizers(umicom-snapshot-clear-boundaries-test)
+add_dependencies(umicom-snapshot-contract-checks umicom-snapshot-clear-boundaries-test)
+add_test(NAME framework.snapshot_contracts.clear.boundaries COMMAND umicom-snapshot-clear-boundaries-test)
+set_tests_properties(framework.snapshot_contracts.clear.boundaries PROPERTIES TIMEOUT 30
+    LABELS "framework;snapshot-contracts;reviewed-clear;regression")
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-snapshot-clear-boundaries-test)
 endif()

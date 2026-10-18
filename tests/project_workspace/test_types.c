@@ -18,6 +18,7 @@
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+#include "../value_archive/revision_cases.h"
 #include "umicom/project/workspace/types.h"
 #include "../value_archive/construction_cases.h"
 #include <string.h>
@@ -153,6 +154,10 @@ int main(void) {
     UmiProjectWorkspaceNamedState v,w;
     CHECK(umi_project_workspace_named_state_init(&v,"x")==UMI_STATUS_OK);
     CHECK(umi_project_workspace_named_state_init(&w,"x")==UMI_STATUS_OK);
+
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiProjectWorkspaceNamedState, &v, revision,
+        umi_project_workspace_named_state_set_name(&v,"Workspace"));
     CHECK(umi_project_workspace_named_state_set_name(&v,"Workspace")==UMI_STATUS_OK);
     CHECK(umi_project_workspace_named_state_validate(&v)==UMI_STATUS_OK);
     if (UmiProjectWorkspaceNamedStateTransferCases(&v) != 0) return 1;
@@ -160,5 +165,17 @@ int main(void) {
 
     CHECK(umi_project_workspace_named_state_same_identity(&v,&w));
     CHECK(strcmp(umi_project_workspace_state_text(v.state),"ready")==0);
+
+    /* Retain the payload and change token when the revision is exhausted. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiProjectWorkspaceNamedState, &v, revision,
+        umi_project_workspace_named_state_set_detail(&v, "Workspace details"));
+    CHECK(umi_project_workspace_named_state_set_detail(&v, "Workspace details") == UMI_STATUS_OK);
+    CHECK(strcmp(v.detail, "Workspace details") == 0);
+
+    /* Retain the payload and change token when the revision is exhausted. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiProjectWorkspaceNamedState, &v, revision,
+        umi_project_workspace_named_state_set_state(&v, UMI_PROJECT_WORKSPACE_READY));
+    CHECK(umi_project_workspace_named_state_set_state(&v, UMI_PROJECT_WORKSPACE_READY) == UMI_STATUS_OK);
+    CHECK(v.state == UMI_PROJECT_WORKSPACE_READY);
     return 0;
 }

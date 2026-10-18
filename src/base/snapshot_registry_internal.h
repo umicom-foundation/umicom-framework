@@ -328,4 +328,22 @@ UmiStatus Function(const Registry *registry, uint64_t expected_revision, \
     *out_page = page; \
     return UMI_STATUS_OK; \
 }
+/* Clearing a reviewed collection needs no temporary registry or allocation.
+ * Match the caller's observation before touching any row; a no-op on an empty
+ * owner does not consume a revision. Values contain no external resources,
+ * so zeroing their storage cannot invoke callbacks or release foreign owners. */
+#define UMI_DEFINE_SNAPSHOT_REGISTRY_CLEAR(Function, Registry, Capacity) \
+UmiStatus Function(Registry *registry, uint64_t expected_revision) \
+{ \
+    if (registry == NULL) return UMI_STATUS_INVALID_ARGUMENT; \
+    if (registry->count > (size_t)(Capacity)) return UMI_STATUS_INVALID_STATE; \
+    if (registry->revision != expected_revision) return UMI_STATUS_INVALID_STATE; \
+    if (registry->count == 0U) return UMI_STATUS_OK; \
+    if (registry->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED; \
+    memset(registry->items, 0, sizeof(registry->items)); \
+    registry->count = 0U; \
+    ++registry->revision; \
+    return UMI_STATUS_OK; \
+}
+
 #endif

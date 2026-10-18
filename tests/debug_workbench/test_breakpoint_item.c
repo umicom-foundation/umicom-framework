@@ -22,6 +22,7 @@
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+#include "../value_archive/revision_cases.h"
 #include "umicom/debug/workbench/breakpoint_item.h"
 #define UMI_TEST_CHECK(expression) do { if (!(expression)) return 1; } while (0)
 
@@ -150,12 +151,28 @@ int main(void)
     UmiDebugWorkbenchBreakpointItem model;
     UmiDebugWorkbenchRange range = {{10U, 1U}, {10U, 1U}};
     UMI_TEST_CHECK(umi_debug_workbench_breakpoint_item_init(&model, "bp-main", UMI_DEBUG_WORKBENCH_BREAKPOINT_SOURCE, "src/main.c", range) == UMI_STATUS_OK);
+
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDebugWorkbenchBreakpointItem, &model, revision,
+        umi_debug_workbench_breakpoint_item_set_verification(&model, true));
     UMI_TEST_CHECK(umi_debug_workbench_breakpoint_item_set_verification(&model, true) == UMI_STATUS_OK);
+
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDebugWorkbenchBreakpointItem, &model, hit_count,
+        umi_debug_workbench_breakpoint_item_record_hit(&model));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDebugWorkbenchBreakpointItem, &model, revision,
+        umi_debug_workbench_breakpoint_item_record_hit(&model));
     UMI_TEST_CHECK(umi_debug_workbench_breakpoint_item_record_hit(&model) == UMI_STATUS_OK);
     UMI_TEST_CHECK(model.verified && model.hit_count == 1U);
     UMI_TEST_CHECK(umi_debug_workbench_breakpoint_item_valid(&model));
     if (UmiDebugWorkbenchBreakpointItemTransferCases(&model) != 0) return 1;
     if (UmiDebugWorkbenchBreakpointItemConditionalArchiveCases(&model) != 0) return 1;
 
+
+    /* Retain the payload and change token when the revision is exhausted. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDebugWorkbenchBreakpointItem, &model, revision,
+        umi_debug_workbench_breakpoint_item_set_enabled(&model, false));
+    UMI_TEST_CHECK(umi_debug_workbench_breakpoint_item_set_enabled(&model, false) == UMI_STATUS_OK);
+    UMI_TEST_CHECK(!model.enabled);
     return 0;
 }

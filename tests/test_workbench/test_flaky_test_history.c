@@ -18,6 +18,7 @@
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+#include "../value_archive/revision_cases.h"
 #include "umicom/test/workbench/flaky_test_history.h"
 #include <assert.h>
 /*
@@ -117,7 +118,25 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiFlakyTestHistoryConditionalArchiveCases, UmiFlak
     UmiFlakyTestHistoryTransferEqual, UmiFlakyTestHistoryTransferTails, UmiFlakyTestHistoryTransferMalformed)
 
 
-int main(void){UmiFlakyTestHistory m;assert(umi_flaky_test_history_init(&m,"flaky_test_history","Flaky Test History")==UMI_STATUS_OK);assert(umi_flaky_test_history_set_active(&m,true)==UMI_STATUS_OK);assert(umi_flaky_test_history_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_flaky_test_history_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_flaky_test_history_valid(&m));
+int main(void){UmiFlakyTestHistory m;assert(umi_flaky_test_history_init(&m,"flaky_test_history","Flaky Test History")==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiFlakyTestHistory, &m, generation,
+        umi_flaky_test_history_set_active(&m,true));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiFlakyTestHistory, &m, value.revision,
+        umi_flaky_test_history_set_active(&m,true));
+    assert(umi_flaky_test_history_set_active(&m,true)==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiFlakyTestHistory, &m, generation,
+        umi_flaky_test_history_set_count(&m,3U));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiFlakyTestHistory, &m, value.revision,
+        umi_flaky_test_history_set_count(&m,3U));
+    assert(umi_flaky_test_history_set_count(&m,3U)==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiFlakyTestHistory, &m, generation,
+        umi_flaky_test_history_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiFlakyTestHistory, &m, value.revision,
+        umi_flaky_test_history_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
+    assert(umi_flaky_test_history_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_flaky_test_history_valid(&m));
     if (UmiFlakyTestHistoryTransferCases(&m) != 0) return 1;
     if (UmiFlakyTestHistoryConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

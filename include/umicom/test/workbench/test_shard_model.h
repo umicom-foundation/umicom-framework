@@ -40,16 +40,28 @@ UmiStatus umi_test_shard_model_init(UmiTestShardModel *model,const char *id,cons
 /**
  * Exercise test shard model set active and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_shard_model_set_active(UmiTestShardModel *model,bool active);
 /**
  * Return the number of records represented by test shard model set without changing their
  * state.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_shard_model_set_count(UmiTestShardModel *model,uint32_t item_count);
 /**
  * Exercise test shard model set state and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_shard_model_set_state(UmiTestShardModel *model,UmiTestWorkbenchState state);
 /**

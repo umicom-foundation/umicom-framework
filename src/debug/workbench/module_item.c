@@ -53,6 +53,13 @@ UmiStatus umi_debug_workbench_module_item_set_state(UmiDebugWorkbenchModuleItem 
      * used.
      */
     if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (model->value.revision == UINT64_MAX ||
+        model->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     model->value.state = state;
     model->value.value = value;
     model->value.revision++;
@@ -71,6 +78,12 @@ UmiStatus umi_debug_workbench_module_item_set_selected(UmiDebugWorkbenchModuleIt
      * used.
      */
     if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (model->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     model->selected = selected;
     model->revision++;
     return UMI_STATUS_OK;
@@ -87,6 +100,12 @@ UmiStatus umi_debug_workbench_module_item_set_enabled(UmiDebugWorkbenchModuleIte
      * used.
      */
     if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (model->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     model->enabled = enabled;
     model->revision++;
     return UMI_STATUS_OK;

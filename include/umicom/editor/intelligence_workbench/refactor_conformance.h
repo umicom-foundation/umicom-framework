@@ -38,11 +38,19 @@ UmiStatus umi_editor_intel_refactor_conformance_init(UmiEditorIntelRefactorConfo
 /**
  * Provide the editor intel refactor conformance set score operation used by this module
  * and its client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: value.revision, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_editor_intel_refactor_conformance_set_score(UmiEditorIntelRefactorConformance *model,uint32_t score);
 /**
  * Find editor intel refactor conformance set while leaving the underlying catalogue or
  * model owned by this module.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_editor_intel_refactor_conformance_set_selected(UmiEditorIntelRefactorConformance *model,bool selected);
 /**

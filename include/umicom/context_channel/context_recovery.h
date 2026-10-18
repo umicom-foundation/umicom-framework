@@ -45,6 +45,10 @@ void umi_context_recovery_init(UmiContextRecovery *state);
 /**
  * Provide the context recovery set field operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_recovery_set_field(UmiContextRecovery *state,size_t field_index,const char *value);
 /**
@@ -55,11 +59,19 @@ const char *umi_context_recovery_field(const UmiContextRecovery *state,size_t fi
 /**
  * Provide the context recovery record success operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_recovery_record_success(UmiContextRecovery *state,uint64_t sequence);
 /**
  * Provide the context recovery record failure operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, failure_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_recovery_record_failure(UmiContextRecovery *state,UmiStatus status,uint64_t sequence);
 /**

@@ -18,6 +18,7 @@
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+#include "../value_archive/revision_cases.h"
 #include "umicom/test/workbench/test_impact_model.h"
 #include <assert.h>
 /*
@@ -117,7 +118,25 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestImpactModelConditionalArchiveCases, UmiTestI
     UmiTestImpactModelTransferEqual, UmiTestImpactModelTransferTails, UmiTestImpactModelTransferMalformed)
 
 
-int main(void){UmiTestImpactModel m;assert(umi_test_impact_model_init(&m,"test_impact_model","Test Impact Model")==UMI_STATUS_OK);assert(umi_test_impact_model_set_active(&m,true)==UMI_STATUS_OK);assert(umi_test_impact_model_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_test_impact_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_impact_model_valid(&m));
+int main(void){UmiTestImpactModel m;assert(umi_test_impact_model_init(&m,"test_impact_model","Test Impact Model")==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestImpactModel, &m, generation,
+        umi_test_impact_model_set_active(&m,true));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestImpactModel, &m, value.revision,
+        umi_test_impact_model_set_active(&m,true));
+    assert(umi_test_impact_model_set_active(&m,true)==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestImpactModel, &m, generation,
+        umi_test_impact_model_set_count(&m,3U));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestImpactModel, &m, value.revision,
+        umi_test_impact_model_set_count(&m,3U));
+    assert(umi_test_impact_model_set_count(&m,3U)==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestImpactModel, &m, generation,
+        umi_test_impact_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestImpactModel, &m, value.revision,
+        umi_test_impact_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
+    assert(umi_test_impact_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_impact_model_valid(&m));
     if (UmiTestImpactModelTransferCases(&m) != 0) return 1;
     if (UmiTestImpactModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

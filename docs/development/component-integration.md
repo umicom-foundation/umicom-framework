@@ -92,12 +92,20 @@ regressions. The ten configuration cases create separate Release builds; those
 child builds are not silently presented as sanitizer-instrumented. Full-product
 sanitizer policy remains owned by the complete Framework configuration.
 
+<!-- The earlier dependency summary is retained as context for the expanded
+focused SDK. The current supported scope is described below.
 The focused host compiles canonical status, threading, quotes, market quality,
 broker mapping, backtest and hashing sources with the three actual components.
 It is not the full Framework library. The GTK adapters are not included in this
 headless qualification and their lifecycle, accessibility and native startup
 checks remain separate. No production runtime `.c` or public `.h` file changes
 in this delivery.
+-->
+The focused host compiles canonical status, threading, quotes, market quality,
+broker mapping, decimal arithmetic, order-policy, file-access, backtest and
+hashing sources with the three actual components. It is not the full Framework
+library. GTK adapters are outside this headless check; their lifecycle,
+accessibility and native startup checks remain separate.
 
 ## Complete C example
 
@@ -119,3 +127,29 @@ new operational trading application.
 - CMake deferred calls: <https://cmake.org/cmake/help/latest/command/cmake_language.html#deferring-calls>.
 - Source directories: <https://cmake.org/cmake/help/latest/command/add_subdirectory.html>.
 - List-file location: <https://cmake.org/cmake/help/latest/variable/CMAKE_CURRENT_LIST_DIR.html>.
+
+## Current focused SDK dependencies
+
+The probe also compiles the real decimal, full-quantity policy and liquidity
+watch implementations into its trading owner. These symbols are required by
+the broker tests and by installed clients. Supplying headers without their
+owner implementation would produce an unresolved-symbol linker error.
+
+The exact inventory includes full-quantity policy, plan, watch and preview
+cases, price-increment checks, chart bar-coverage checks and account-report
+checks. The partial host selects broker, full-quantity and price-increment
+tests; it still omits components whose canonical dependencies are unavailable.
+When adding a component test, update `expected-tests.txt` with its exact CTest
+name and verify its intended host, rather than accepting only a test count.
+
+The public C example also observes a local liquidity watch. It first supplies
+fresh fictional price and size values that meet the displayed rule, then
+advances the clock until the evidence is stale and expects the watch to return
+to waiting. The same source is used by the installed consumer, so missing
+transitive implementations cannot be concealed by a tests-disabled build.
+This watch opens no broker session and submits no order.
+
+If the nested check fails, read its retained configure, build and test logs in
+the reported probe directory. Fix the earliest failing stage before interpreting
+later missing-executable or inventory failures. Reconfigure the parent after
+changing test registration and keep testing enabled for qualification.

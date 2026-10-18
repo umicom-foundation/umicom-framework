@@ -47,19 +47,38 @@ UmiStatus umi_debug_workbench_breakpoint_item_init(UmiDebugWorkbenchBreakpointIt
  * module and its client applications.
  */
 UmiStatus umi_debug_workbench_breakpoint_item_set_verification(UmiDebugWorkbenchBreakpointItem *model, bool verified)
-{ /* Protect caller-owned memory by checking that required state is available before it is used. */ if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT; model->verified = verified; model->revision++; return UMI_STATUS_OK; }
+{ /* Protect caller-owned memory by checking that required state is available before it is used. */ if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (model->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+     model->verified = verified; model->revision++; return UMI_STATUS_OK; }
 /*
  * Provide the debug workbench breakpoint item record hit operation used by this module and
  * its client applications.
  */
 UmiStatus umi_debug_workbench_breakpoint_item_record_hit(UmiDebugWorkbenchBreakpointItem *model)
-{ /* Protect caller-owned memory by checking that required state is available before it is used. */ if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT; model->hit_count++; model->revision++; return UMI_STATUS_OK; }
+{ /* Protect caller-owned memory by checking that required state is available before it is used. */ if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Sequence and event counts must remain consistent with the revision.
+     * Refuse the entire observation before updating any caller-owned field. */
+    if (model->hit_count == UINT64_MAX ||
+        model->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+     model->hit_count++; model->revision++; return UMI_STATUS_OK; }
 /*
  * Provide the debug workbench breakpoint item set enabled operation used by this module
  * and its client applications.
  */
 UmiStatus umi_debug_workbench_breakpoint_item_set_enabled(UmiDebugWorkbenchBreakpointItem *model, bool enabled)
-{ /* Protect caller-owned memory by checking that required state is available before it is used. */ if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT; model->enabled = enabled; model->revision++; return UMI_STATUS_OK; }
+{ /* Protect caller-owned memory by checking that required state is available before it is used. */ if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (model->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+     model->enabled = enabled; model->revision++; return UMI_STATUS_OK; }
 /*
  * Check that debug workbench breakpoint item satisfies its contract before another service
  * relies on it.

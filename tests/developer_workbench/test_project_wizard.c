@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 
 #include "umicom/developer_workbench/project_wizard.h"
@@ -26,10 +27,25 @@ int main(void)
 
     umi_developer_workbench_project_wizard_init(&wizard);
 
+
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDeveloperWorkbenchProjectWizard, &wizard, revision,
+        umi_developer_workbench_project_wizard_select_preset(
+        &wizard,
+        "umicom.preset.developer-workbench"));
     assert(umi_developer_workbench_project_wizard_select_preset(
         &wizard,
         "umicom.preset.developer-workbench") == UMI_STATUS_OK);
 
+
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDeveloperWorkbenchProjectWizard, &wizard, revision,
+        umi_developer_workbench_project_wizard_set_identity(
+        &wizard,
+        "Example IDE",
+        "org.umicom.example-ide",
+        "umicom-example-ide",
+        "C:/work"));
     assert(umi_developer_workbench_project_wizard_set_identity(
         &wizard,
         "Example IDE",
@@ -37,6 +53,10 @@ int main(void)
         "umicom-example-ide",
         "C:/work") == UMI_STATUS_OK);
 
+
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDeveloperWorkbenchProjectWizard, &wizard, revision,
+        umi_developer_workbench_project_wizard_validate(&wizard));
     assert(umi_developer_workbench_project_wizard_validate(&wizard) ==
            UMI_STATUS_OK);
     assert(wizard.ready == 1);

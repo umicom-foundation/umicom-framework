@@ -53,6 +53,12 @@ if(NOT MODE STREQUAL "missing")
     target_sources(umicom_base PRIVATE "${FRAMEWORK}/src/base/value_archive.c")
     target_sources(umicom_base PRIVATE "${FRAMEWORK}/src/base/csv_document.c")
     target_sources(umicom_base PRIVATE "${FRAMEWORK}/src/base/sha256.c")
+    # The composed broker checks exercise the public order-policy and watch
+    # owners too. Link their real implementations in every non-missing host,
+    # including tests-disabled and installed-consumer configurations.
+    target_sources(umicom_trading PRIVATE
+        "${FRAMEWORK}/src/trading/fill_policy.c"
+        "${FRAMEWORK}/src/trading/fill_watch.c")
     target_sources(umicom_trading PRIVATE
         "${FRAMEWORK}/src/finance/decimal.c"
         "${FRAMEWORK}/src/finance/decimal_arithmetic.c"

@@ -217,6 +217,10 @@ uint64_t umi_debug_breakpoint_registry_revision(const UmiDebugBreakpointRegistry
  */
 void umi_debug_breakpoint_registry_clear(UmiDebugBreakpointRegistry *registry)
 {
+    /* Keep the legacy entry point while refusing revision wraparound. A new
+     * caller needing a result should use clear_if_current with its review. */
+    if (registry != NULL && registry->revision == UINT64_MAX) return;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -352,3 +356,8 @@ void UmiDebugBreakpointPublishSetup(UmiDebugBreakpointRegistry *owner,
  * caller. Imported metadata remains evidence; registry publication is separate. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_debug_breakpoint_snapshot_archive_decode_if_unchanged, umi_debug_breakpoint_snapshot_archive_encode,
     UmiDebugBreakpointSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)
+
+/* Reviewed clearing belongs to this value owner. It preserves changes made
+ * since the caller inspected the collection and allocates no staging copy. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_CLEAR(umi_debug_breakpoint_registry_clear_if_current,
+    UmiDebugBreakpointRegistry, UMI_DEBUG_BREAKPOINT_CAPACITY)

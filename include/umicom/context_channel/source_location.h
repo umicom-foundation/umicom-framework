@@ -51,31 +51,55 @@ UmiStatus umi_source_location_context_copy(UmiSourceLocationContext *destination
 /**
  * Provide the source location context set workspace id operation used by this module and
  * its client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_source_location_context_set_workspace_id(UmiSourceLocationContext *context, const char *value);
 /**
  * Provide the source location context set file path operation used by this module and its
  * client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_source_location_context_set_file_path(UmiSourceLocationContext *context, const char *value);
 /**
  * Provide the source location context set symbol operation used by this module and its
  * client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_source_location_context_set_symbol(UmiSourceLocationContext *context, const char *value);
 /**
  * Provide the source location context set line operation used by this module and its
  * client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_source_location_context_set_line(UmiSourceLocationContext *context, uint32_t value);
 /**
  * Provide the source location context set column operation used by this module and its
  * client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_source_location_context_set_column(UmiSourceLocationContext *context, uint32_t value);
 /**
  * Provide the source location context set selection length operation used by this module
  * and its client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_source_location_context_set_selection_length(UmiSourceLocationContext *context, uint32_t value);
 /** Transfer this value using the portable format described in value_archive.h.

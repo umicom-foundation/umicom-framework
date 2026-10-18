@@ -94,7 +94,12 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiAiDevInlineCandidateConditionalArchiveCases, Umi
     UmiAiDevInlineCandidateTransferEqual, UmiAiDevInlineCandidateTransferTails, UmiAiDevInlineCandidateTransferMalformed)
 
 
+#include "../value_archive/ai_configuration_cases.h"
+UMI_TEST_AI_CONFIGURATION(UmiAiDevInlineCandidateConfigurationCases, UmiAiDevInlineCandidate,
+    umi_ai_dev_inline_candidate_configure, umi_ai_dev_inline_candidate_validate)
+
 int main(void) {
+    if (UmiAiDevInlineCandidateConfigurationCases() != 0) return 1;
     UmiAiDevInlineCandidate v;
     umi_ai_dev_inline_candidate_init(&v);
     /* Preserve the original failure result so the caller can respond to the correct cause. */

@@ -45,6 +45,10 @@ void umi_context_panel_service_init(UmiContextPanelService *state);
 /**
  * Provide the context panel service set field operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_panel_service_set_field(UmiContextPanelService *state,size_t field_index,const char *value);
 /**
@@ -55,11 +59,19 @@ const char *umi_context_panel_service_field(const UmiContextPanelService *state,
 /**
  * Provide the context panel service record success operation used by this module and its
  * client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_panel_service_record_success(UmiContextPanelService *state,uint64_t sequence);
 /**
  * Provide the context panel service record failure operation used by this module and its
  * client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, failure_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_panel_service_record_failure(UmiContextPanelService *state,UmiStatus status,uint64_t sequence);
 /**

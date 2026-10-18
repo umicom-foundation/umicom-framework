@@ -45,6 +45,10 @@ void umi_context_session_service_init(UmiContextSessionService *state);
 /**
  * Provide the context session service set field operation used by this module and its
  * client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_session_service_set_field(UmiContextSessionService *state,size_t field_index,const char *value);
 /**
@@ -55,11 +59,19 @@ const char *umi_context_session_service_field(const UmiContextSessionService *st
 /**
  * Provide the context session service record success operation used by this module and its
  * client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_session_service_record_success(UmiContextSessionService *state,uint64_t sequence);
 /**
  * Provide the context session service record failure operation used by this module and its
  * client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, failure_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_session_service_record_failure(UmiContextSessionService *state,UmiStatus status,uint64_t sequence);
 /**

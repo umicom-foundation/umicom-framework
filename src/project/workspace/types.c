@@ -144,6 +144,12 @@ const char *name)
      * used.
      */
     if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (value->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     status = copy_text(value->name, sizeof(value->name), name);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) value->revision += 1U;
@@ -163,6 +169,12 @@ const char *detail)
      * used.
      */
     if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (value->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     status = copy_text(value->detail, sizeof(value->detail), detail);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) value->revision += 1U;
@@ -182,6 +194,12 @@ UmiProjectWorkspaceState state)
      */
     if (value == NULL || state < UMI_PROJECT_WORKSPACE_UNKNOWN || state > UMI_PROJECT_WORKSPACE_INVALID)
     return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (value->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     value->state = state;
     value->revision += 1U;
     return UMI_STATUS_OK;

@@ -45,6 +45,10 @@ void umi_context_import_init(UmiContextImport *state);
 /**
  * Provide the context import set field operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_import_set_field(UmiContextImport *state,size_t field_index,const char *value);
 /**
@@ -55,11 +59,19 @@ const char *umi_context_import_field(const UmiContextImport *state,size_t field_
 /**
  * Provide the context import record success operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_import_record_success(UmiContextImport *state,uint64_t sequence);
 /**
  * Provide the context import record failure operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, failure_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_import_record_failure(UmiContextImport *state,UmiStatus status,uint64_t sequence);
 /**

@@ -18,6 +18,7 @@
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+#include "../value_archive/revision_cases.h"
 #include "umicom/test/workbench/test_discovery_snapshot.h"
 #include <assert.h>
 /*
@@ -117,7 +118,25 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestDiscoverySnapshotConditionalArchiveCases, Um
     UmiTestDiscoverySnapshotTransferEqual, UmiTestDiscoverySnapshotTransferTails, UmiTestDiscoverySnapshotTransferMalformed)
 
 
-int main(void){UmiTestDiscoverySnapshot m;assert(umi_test_discovery_snapshot_init(&m,"test_discovery_snapshot","Test Discovery Snapshot")==UMI_STATUS_OK);assert(umi_test_discovery_snapshot_set_active(&m,true)==UMI_STATUS_OK);assert(umi_test_discovery_snapshot_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_test_discovery_snapshot_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_discovery_snapshot_valid(&m));
+int main(void){UmiTestDiscoverySnapshot m;assert(umi_test_discovery_snapshot_init(&m,"test_discovery_snapshot","Test Discovery Snapshot")==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestDiscoverySnapshot, &m, generation,
+        umi_test_discovery_snapshot_set_active(&m,true));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestDiscoverySnapshot, &m, value.revision,
+        umi_test_discovery_snapshot_set_active(&m,true));
+    assert(umi_test_discovery_snapshot_set_active(&m,true)==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestDiscoverySnapshot, &m, generation,
+        umi_test_discovery_snapshot_set_count(&m,3U));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestDiscoverySnapshot, &m, value.revision,
+        umi_test_discovery_snapshot_set_count(&m,3U));
+    assert(umi_test_discovery_snapshot_set_count(&m,3U)==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestDiscoverySnapshot, &m, generation,
+        umi_test_discovery_snapshot_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestDiscoverySnapshot, &m, value.revision,
+        umi_test_discovery_snapshot_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
+    assert(umi_test_discovery_snapshot_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_discovery_snapshot_valid(&m));
     if (UmiTestDiscoverySnapshotTransferCases(&m) != 0) return 1;
     if (UmiTestDiscoverySnapshotConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

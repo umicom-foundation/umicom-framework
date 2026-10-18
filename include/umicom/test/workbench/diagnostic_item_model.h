@@ -40,16 +40,28 @@ UmiStatus umi_diagnostic_item_model_init(UmiDiagnosticItemModel *model,const cha
 /**
  * Exercise diagnostic item model set active and return a clear result when the behaviour
  * no longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_diagnostic_item_model_set_active(UmiDiagnosticItemModel *model,bool active);
 /**
  * Return the number of records represented by diagnostic item model set without changing
  * their state.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_diagnostic_item_model_set_count(UmiDiagnosticItemModel *model,uint32_t item_count);
 /**
  * Exercise diagnostic item model set state and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_diagnostic_item_model_set_state(UmiDiagnosticItemModel *model,UmiTestWorkbenchState state);
 /**

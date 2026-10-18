@@ -94,7 +94,12 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiAiDevModelRuntimeBindingConditionalArchiveCases,
     UmiAiDevModelRuntimeBindingTransferEqual, UmiAiDevModelRuntimeBindingTransferTails, UmiAiDevModelRuntimeBindingTransferMalformed)
 
 
+#include "../value_archive/ai_configuration_cases.h"
+UMI_TEST_AI_CONFIGURATION(UmiAiDevModelRuntimeBindingConfigurationCases, UmiAiDevModelRuntimeBinding,
+    umi_ai_dev_model_runtime_binding_configure, umi_ai_dev_model_runtime_binding_validate)
+
 int main(void) {
+    if (UmiAiDevModelRuntimeBindingConfigurationCases() != 0) return 1;
     UmiAiDevModelRuntimeBinding v;
     umi_ai_dev_model_runtime_binding_init(&v);
     /* Preserve the original failure result so the caller can respond to the correct cause. */

@@ -40,18 +40,30 @@ UmiStatus umi_test_workbench_diagnostic_snapshot_init(
 /**
  * Exercise test workbench diagnostic snapshot set active and return a clear result when
  * the behaviour no longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_workbench_diagnostic_snapshot_set_active(
     UmiTestWorkbenchDiagnosticSnapshot *model, bool active);
 /**
  * Return the number of records represented by test workbench diagnostic snapshot set
  * without changing their state.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_workbench_diagnostic_snapshot_set_count(
     UmiTestWorkbenchDiagnosticSnapshot *model, uint32_t item_count);
 /**
  * Exercise test workbench diagnostic snapshot set state and return a clear result when the
  * behaviour no longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_workbench_diagnostic_snapshot_set_state(
     UmiTestWorkbenchDiagnosticSnapshot *model, UmiTestWorkbenchState state);

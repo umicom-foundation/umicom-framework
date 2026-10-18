@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../base/value_construction_internal.h"
 #include "../base/conditional_archive_internal.h"
 #include "umicom/ai/developer_platform/agent_goal.h"
 #include "../base/value_archive_internal.h"
@@ -64,6 +65,10 @@ void umi_ai_dev_agent_goal_init(UmiAiDevAgentGoal *value) {
  * Provide the ai dev agent goal configure operation used by this module and its client
  * applications.
  */
+/* Configuration used to initialise the destination before reading borrowed
+ * text, which erased inputs pointing into its own fields. The staged builder
+ * below replaces that publication order. Keep this implementation for review. */
+#if 0
 UmiStatus umi_ai_dev_agent_goal_configure(UmiAiDevAgentGoal *value, const char *id, const char *label, uint32_t priority, uint64_t flags) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -76,6 +81,29 @@ UmiStatus umi_ai_dev_agent_goal_configure(UmiAiDevAgentGoal *value, const char *
     value->priority = priority; value->flags = flags; value->revision = 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* Build only an unpublished inline value. The shared Framework constructor
+ * publishes it after all aliased inputs have been read, preserving domain defaults. */
+static UmiStatus UmiAiDevAgentGoalBuildConfigured(UmiAiDevAgentGoal *value, const char *id, const char *label, uint32_t priority, uint64_t flags) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (value == NULL || id == NULL || id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    umi_ai_dev_agent_goal_init(value);
+    umi_ai_dev_agent_goal_copy(value->id, sizeof(value->id), id);
+    umi_ai_dev_agent_goal_copy(value->label, sizeof(value->label), label);
+    value->priority = priority; value->flags = flags; value->revision = 1U;
+    return UMI_STATUS_OK;
+}
+
+/* Heap staging avoids large stack values and preserves the old destination
+ * on failure. This configuration initializes metadata; it starts no AI work. */
+UMI_DEFINE_STAGED_VALUE_INIT(umi_ai_dev_agent_goal_configure, UmiAiDevAgentGoal, value,
+    (UmiAiDevAgentGoal *value, const char *id, const char *label, uint32_t priority, uint64_t flags),
+    UmiAiDevAgentGoalBuildConfigured(candidate, id, label, priority, flags))
+
 /* Check that ai dev agent goal satisfies its contract before another service relies on it. */
 UmiStatus umi_ai_dev_agent_goal_validate(const UmiAiDevAgentGoal *value) {
     /* Fixed-size fields may come from a plug-in or restored state. Check

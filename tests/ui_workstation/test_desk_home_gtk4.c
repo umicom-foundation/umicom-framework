@@ -270,6 +270,10 @@ int main(void)
     CHECK(umi_gtk4_ws_shell_header_catalogue_set_selected(header, "org.umicom.studio", true) == UMI_STATUS_OK);
     CHECK(umi_gtk4_ws_shell_header_catalogue_dispatch(header, header_report) == UMI_STATUS_OK);
     CHECK(header_report->accepted_count == 1U && fixture.activations == 2U && fixture.starts == 1U);
+    /* The picker continues hiding its host even though the separate New
+     * window control can now reach that host's explicit refusal policy. */
+    CHECK(umi_gtk4_ws_shell_header_catalogue_set_selected(header,
+        "org.umicom.desktop", true) == UMI_STATUS_NOT_FOUND);
     control = find_id(umi_gtk4_ws_shell_header_widget(header), "workstation.application.new-window");
     CHECK(GTK_IS_BUTTON(control));
     g_signal_emit_by_name(control, "clicked");

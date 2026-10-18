@@ -18,6 +18,7 @@
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+#include "../value_archive/revision_cases.h"
 #include <assert.h>
 #include <string.h>
 #include "umicom/context_channel/context_history_query.h"
@@ -140,9 +141,27 @@ int main(void)
 {
     UmiContextHistoryQuery state;
     umi_context_history_query_init(&state);
+
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiContextHistoryQuery, &state, revision,
+        umi_context_history_query_set_field(&state,0U,"alpha"));
     assert(umi_context_history_query_set_field(&state,0U,"alpha") == UMI_STATUS_OK);
     assert(strcmp(umi_context_history_query_field(&state,0U),"alpha") == 0);
+
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiContextHistoryQuery, &state, item_count,
+        umi_context_history_query_record_success(&state,10U));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiContextHistoryQuery, &state, revision,
+        umi_context_history_query_record_success(&state,10U));
     assert(umi_context_history_query_record_success(&state,10U) == UMI_STATUS_OK);
+
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiContextHistoryQuery, &state, item_count,
+        umi_context_history_query_record_failure(&state,UMI_STATUS_TIMEOUT,11U));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiContextHistoryQuery, &state, failure_count,
+        umi_context_history_query_record_failure(&state,UMI_STATUS_TIMEOUT,11U));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiContextHistoryQuery, &state, revision,
+        umi_context_history_query_record_failure(&state,UMI_STATUS_TIMEOUT,11U));
     assert(umi_context_history_query_record_failure(&state,UMI_STATUS_TIMEOUT,11U) == UMI_STATUS_OK);
     assert(state.item_count == 2U);
     assert(state.failure_count == 1U);

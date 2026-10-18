@@ -40,16 +40,28 @@ UmiStatus umi_test_debug_plan_init(UmiTestDebugPlan *model,const char *id,const 
 /**
  * Exercise test debug plan set active and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_debug_plan_set_active(UmiTestDebugPlan *model,bool active);
 /**
  * Return the number of records represented by test debug plan set without changing their
  * state.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_debug_plan_set_count(UmiTestDebugPlan *model,uint32_t item_count);
 /**
  * Exercise test debug plan set state and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_debug_plan_set_state(UmiTestDebugPlan *model,UmiTestWorkbenchState state);
 /**

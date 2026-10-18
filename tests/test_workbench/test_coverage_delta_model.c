@@ -18,6 +18,7 @@
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+#include "../value_archive/revision_cases.h"
 #include "umicom/test/workbench/coverage_delta_model.h"
 #include <assert.h>
 /*
@@ -117,7 +118,25 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiCoverageDeltaModelConditionalArchiveCases, UmiCo
     UmiCoverageDeltaModelTransferEqual, UmiCoverageDeltaModelTransferTails, UmiCoverageDeltaModelTransferMalformed)
 
 
-int main(void){UmiCoverageDeltaModel m;assert(umi_coverage_delta_model_init(&m,"coverage_delta_model","Coverage Delta Model")==UMI_STATUS_OK);assert(umi_coverage_delta_model_set_active(&m,true)==UMI_STATUS_OK);assert(umi_coverage_delta_model_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_coverage_delta_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_coverage_delta_model_valid(&m));
+int main(void){UmiCoverageDeltaModel m;assert(umi_coverage_delta_model_init(&m,"coverage_delta_model","Coverage Delta Model")==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiCoverageDeltaModel, &m, generation,
+        umi_coverage_delta_model_set_active(&m,true));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiCoverageDeltaModel, &m, value.revision,
+        umi_coverage_delta_model_set_active(&m,true));
+    assert(umi_coverage_delta_model_set_active(&m,true)==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiCoverageDeltaModel, &m, generation,
+        umi_coverage_delta_model_set_count(&m,3U));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiCoverageDeltaModel, &m, value.revision,
+        umi_coverage_delta_model_set_count(&m,3U));
+    assert(umi_coverage_delta_model_set_count(&m,3U)==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiCoverageDeltaModel, &m, generation,
+        umi_coverage_delta_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiCoverageDeltaModel, &m, value.revision,
+        umi_coverage_delta_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
+    assert(umi_coverage_delta_model_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_coverage_delta_model_valid(&m));
     if (UmiCoverageDeltaModelTransferCases(&m) != 0) return 1;
     if (UmiCoverageDeltaModelConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

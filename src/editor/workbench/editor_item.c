@@ -26,7 +26,13 @@ UmiStatus umi_editor_wb_editor_item_init(UmiEditorWbEditorItem *item,const char 
  * Provide the editor wb editor item set dirty operation used by this module and its client
  * applications.
  */
-UmiStatus umi_editor_wb_editor_item_set_dirty(UmiEditorWbEditorItem *item,bool dirty){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(item==NULL)return UMI_STATUS_INVALID_ARGUMENT; item->dirty=dirty; item->revision++; return UMI_STATUS_OK;}
+UmiStatus umi_editor_wb_editor_item_set_dirty(UmiEditorWbEditorItem *item,bool dirty){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(item==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (item->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+     item->dirty=dirty; item->revision++; return UMI_STATUS_OK;}
 /*
  * Check that editor wb editor item satisfies its contract before another service relies on
  * it.

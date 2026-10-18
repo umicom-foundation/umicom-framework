@@ -90,6 +90,12 @@ UmiStatus umi_trade_context_set_trade_id(UmiTradeContext *context, const char *v
      * used.
      */
     if (context == NULL || value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (context->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     status = umi_context_copy_text(context->trade_id, sizeof(context->trade_id), value);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) context->revision += 1U;
@@ -107,6 +113,12 @@ UmiStatus umi_trade_context_set_source_system(UmiTradeContext *context, const ch
      * used.
      */
     if (context == NULL || value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (context->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     status = umi_context_copy_text(context->source_system, sizeof(context->source_system), value);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) context->revision += 1U;
@@ -124,6 +136,12 @@ UmiStatus umi_trade_context_set_product_type(UmiTradeContext *context, const cha
      * used.
      */
     if (context == NULL || value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (context->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     status = umi_context_copy_text(context->product_type, sizeof(context->product_type), value);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) context->revision += 1U;
@@ -141,6 +159,12 @@ UmiStatus umi_trade_context_set_book_id(UmiTradeContext *context, const char *va
      * used.
      */
     if (context == NULL || value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (context->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     status = umi_context_copy_text(context->book_id, sizeof(context->book_id), value);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) context->revision += 1U;
@@ -158,6 +182,12 @@ UmiStatus umi_trade_context_set_counterparty_id(UmiTradeContext *context, const 
      * used.
      */
     if (context == NULL || value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (context->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     status = umi_context_copy_text(context->counterparty_id, sizeof(context->counterparty_id), value);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) context->revision += 1U;
@@ -174,6 +204,12 @@ UmiStatus umi_trade_context_set_version(UmiTradeContext *context, uint64_t value
      * used.
      */
     if (context == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (context->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     context->version = value;
     context->revision += 1U;
     return UMI_STATUS_OK;

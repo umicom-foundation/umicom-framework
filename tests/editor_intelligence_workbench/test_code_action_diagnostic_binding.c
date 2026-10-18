@@ -18,6 +18,7 @@
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+#include "../value_archive/revision_cases.h"
 #include "umicom/editor/intelligence_workbench/code_action_diagnostic_binding.h"
 /*
  * Start this command or application, report setup failures, and return a process exit code
@@ -136,7 +137,17 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelCodeActionDiagnosticBindingConditiona
     UmiEditorIntelCodeActionDiagnosticBindingTransferEqual, UmiEditorIntelCodeActionDiagnosticBindingTransferTails, UmiEditorIntelCodeActionDiagnosticBindingTransferMalformed)
 
 
-int main(void){UmiEditorIntelCodeActionDiagnosticBinding model;UmiEditorIntelRange range={{3U,4U},{3U,12U}};/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_code_action_diagnostic_binding_init(&model,"model-1","item","src/main.c",range)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_code_action_diagnostic_binding_set_score(&model,91U)!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_code_action_diagnostic_binding_set_selected(&model,true)!=UMI_STATUS_OK)return 3;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_intel_code_action_diagnostic_binding_valid(&model)||model.value.score!=91U||!model.selected)return 4;
+int main(void){UmiEditorIntelCodeActionDiagnosticBinding model;UmiEditorIntelRange range={{3U,4U},{3U,12U}};/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_code_action_diagnostic_binding_init(&model,"model-1","item","src/main.c",range)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiEditorIntelCodeActionDiagnosticBinding, &model, value.revision,
+        umi_editor_intel_code_action_diagnostic_binding_set_score(&model,91U));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiEditorIntelCodeActionDiagnosticBinding, &model, revision,
+        umi_editor_intel_code_action_diagnostic_binding_set_score(&model,91U));
+    if(umi_editor_intel_code_action_diagnostic_binding_set_score(&model,91U)!=UMI_STATUS_OK)return 2;/* Preserve the original failure result so the caller can respond to the correct cause. */
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiEditorIntelCodeActionDiagnosticBinding, &model, revision,
+        umi_editor_intel_code_action_diagnostic_binding_set_selected(&model,true));
+    if(umi_editor_intel_code_action_diagnostic_binding_set_selected(&model,true)!=UMI_STATUS_OK)return 3;/* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_intel_code_action_diagnostic_binding_valid(&model)||model.value.score!=91U||!model.selected)return 4;
     if (UmiEditorIntelCodeActionDiagnosticBindingTransferCases(&model) != 0) return 1;
     if (UmiEditorIntelCodeActionDiagnosticBindingConditionalArchiveCases(&model) != 0) return 1;
 return 0;}

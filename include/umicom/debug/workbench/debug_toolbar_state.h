@@ -46,6 +46,10 @@ void umi_debug_workbench_debug_toolbar_state_init(UmiDebugWorkbenchDebugToolbarS
 /**
  * Provide the debug workbench debug toolbar state set enabled operation used by this
  * module and its client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_debug_workbench_debug_toolbar_state_set_enabled(UmiDebugWorkbenchDebugToolbarState *model, UmiDebugWorkbenchCommand command, bool enabled);
 /**
@@ -56,6 +60,10 @@ int umi_debug_workbench_debug_toolbar_state_is_enabled(const UmiDebugWorkbenchDe
 /**
  * Provide the debug workbench debug toolbar state set primary operation used by this
  * module and its client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_debug_workbench_debug_toolbar_state_set_primary(UmiDebugWorkbenchDebugToolbarState *model, UmiDebugWorkbenchCommand command);
 /**

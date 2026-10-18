@@ -16,6 +16,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "../base/value_construction_internal.h"
 #include "../base/conditional_archive_internal.h"
 #include "umicom/ai/developer_platform/review_request.h"
 #include "../base/value_archive_internal.h"
@@ -64,6 +65,10 @@ void umi_ai_dev_review_request_init(UmiAiDevReviewRequest *value) {
  * Provide the ai dev review request configure operation used by this module and its client
  * applications.
  */
+/* Configuration used to initialise the destination before reading borrowed
+ * text, which erased inputs pointing into its own fields. The staged builder
+ * below replaces that publication order. Keep this implementation for review. */
+#if 0
 UmiStatus umi_ai_dev_review_request_configure(UmiAiDevReviewRequest *value, const char *id, const char *label, uint32_t priority, uint64_t flags) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -76,6 +81,29 @@ UmiStatus umi_ai_dev_review_request_configure(UmiAiDevReviewRequest *value, cons
     value->priority = priority; value->flags = flags; value->revision = 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* Build only an unpublished inline value. The shared Framework constructor
+ * publishes it after all aliased inputs have been read, preserving domain defaults. */
+static UmiStatus UmiAiDevReviewRequestBuildConfigured(UmiAiDevReviewRequest *value, const char *id, const char *label, uint32_t priority, uint64_t flags) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (value == NULL || id == NULL || id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    umi_ai_dev_review_request_init(value);
+    umi_ai_dev_review_request_copy(value->id, sizeof(value->id), id);
+    umi_ai_dev_review_request_copy(value->label, sizeof(value->label), label);
+    value->priority = priority; value->flags = flags; value->revision = 1U;
+    return UMI_STATUS_OK;
+}
+
+/* Heap staging avoids large stack values and preserves the old destination
+ * on failure. This configuration initializes metadata; it starts no AI work. */
+UMI_DEFINE_STAGED_VALUE_INIT(umi_ai_dev_review_request_configure, UmiAiDevReviewRequest, value,
+    (UmiAiDevReviewRequest *value, const char *id, const char *label, uint32_t priority, uint64_t flags),
+    UmiAiDevReviewRequestBuildConfigured(candidate, id, label, priority, flags))
+
 /*
  * Check that ai dev review request satisfies its contract before another service relies on
  * it.

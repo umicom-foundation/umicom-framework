@@ -46,6 +46,10 @@ void umi_debug_workbench_debug_command_set_init(UmiDebugWorkbenchDebugCommandSet
 /**
  * Provide the debug workbench debug command set set enabled operation used by this module
  * and its client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_debug_workbench_debug_command_set_set_enabled(UmiDebugWorkbenchDebugCommandSet *model, UmiDebugWorkbenchCommand command, bool enabled);
 /**
@@ -56,6 +60,10 @@ int umi_debug_workbench_debug_command_set_is_enabled(const UmiDebugWorkbenchDebu
 /**
  * Provide the debug workbench debug command set set primary operation used by this module
  * and its client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_debug_workbench_debug_command_set_set_primary(UmiDebugWorkbenchDebugCommandSet *model, UmiDebugWorkbenchCommand command);
 /**

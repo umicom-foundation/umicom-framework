@@ -217,6 +217,10 @@ uint64_t umi_language_symbol_registry_revision(const UmiLanguageSymbolRegistry *
  */
 void umi_language_symbol_registry_clear(UmiLanguageSymbolRegistry *registry)
 {
+    /* Keep the legacy entry point while refusing revision wraparound. A new
+     * caller needing a result should use clear_if_current with its review. */
+    if (registry != NULL && registry->revision == UINT64_MAX) return;
+
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -333,3 +337,8 @@ UMI_DEFINE_REGISTRY_ARCHIVE(umi_language_symbol_registry_archive_encode, umi_lan
  * caller. Imported metadata remains evidence; registry publication is separate. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_language_symbol_snapshot_archive_decode_if_unchanged, umi_language_symbol_snapshot_archive_encode,
     UmiLanguageSymbolSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)
+
+/* Reviewed clearing belongs to this value owner. It preserves changes made
+ * since the caller inspected the collection and allocates no staging copy. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_CLEAR(umi_language_symbol_registry_clear_if_current,
+    UmiLanguageSymbolRegistry, UMI_LANGUAGE_SYMBOL_CAPACITY)

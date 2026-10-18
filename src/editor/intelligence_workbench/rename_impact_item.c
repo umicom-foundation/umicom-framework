@@ -31,12 +31,25 @@ UmiStatus umi_editor_intel_rename_impact_item_init(UmiEditorIntelRenameImpactIte
  * Provide the editor intel rename impact item set score operation used by this module and
  * its client applications.
  */
-UmiStatus umi_editor_intel_rename_impact_item_set_score(UmiEditorIntelRenameImpactItem *model,uint32_t score){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(model==NULL)return UMI_STATUS_INVALID_ARGUMENT;model->value.score=score;model->value.revision++;model->revision++;return UMI_STATUS_OK;}
+UmiStatus umi_editor_intel_rename_impact_item_set_score(UmiEditorIntelRenameImpactItem *model,uint32_t score){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(model==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (model->value.revision == UINT64_MAX ||
+        model->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    model->value.score=score;model->value.revision++;model->revision++;return UMI_STATUS_OK;}
 /*
  * Find editor intel rename impact item set while leaving the underlying catalogue or model
  * owned by this module.
  */
-UmiStatus umi_editor_intel_rename_impact_item_set_selected(UmiEditorIntelRenameImpactItem *model,bool selected){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(model==NULL)return UMI_STATUS_INVALID_ARGUMENT;model->selected=selected;model->revision++;return UMI_STATUS_OK;}
+UmiStatus umi_editor_intel_rename_impact_item_set_selected(UmiEditorIntelRenameImpactItem *model,bool selected){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(model==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (model->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    model->selected=selected;model->revision++;return UMI_STATUS_OK;}
 /*
  * Check that editor intel rename impact item satisfies its contract before another service
  * relies on it.

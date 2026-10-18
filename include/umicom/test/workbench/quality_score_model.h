@@ -40,16 +40,28 @@ UmiStatus umi_quality_score_model_init(UmiQualityScoreModel *model,const char *i
 /**
  * Exercise quality score model set active and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_quality_score_model_set_active(UmiQualityScoreModel *model,bool active);
 /**
  * Return the number of records represented by quality score model set without changing
  * their state.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_quality_score_model_set_count(UmiQualityScoreModel *model,uint32_t item_count);
 /**
  * Exercise quality score model set state and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_quality_score_model_set_state(UmiQualityScoreModel *model,UmiTestWorkbenchState state);
 /**

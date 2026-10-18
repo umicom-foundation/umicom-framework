@@ -45,6 +45,10 @@ void umi_context_validator_init(UmiContextValidator *state);
 /**
  * Provide the context validator set field operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_validator_set_field(UmiContextValidator *state,size_t field_index,const char *value);
 /**
@@ -55,11 +59,19 @@ const char *umi_context_validator_field(const UmiContextValidator *state,size_t 
 /**
  * Provide the context validator record success operation used by this module and its
  * client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_validator_record_success(UmiContextValidator *state,uint64_t sequence);
 /**
  * Provide the context validator record failure operation used by this module and its
  * client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, failure_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_validator_record_failure(UmiContextValidator *state,UmiStatus status,uint64_t sequence);
 /**

@@ -68,10 +68,25 @@ extern "C" {
 UmiStatus umi_project_workspace_named_state_init(UmiProjectWorkspaceNamedState *value,
     const char *id);
     UmiStatus umi_project_workspace_named_state_validate(const UmiProjectWorkspaceNamedState *value);
+    /** Set the named workspace value's name and advance its revision.
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
+ */
     UmiStatus umi_project_workspace_named_state_set_name(UmiProjectWorkspaceNamedState *value,
     const char *name);
+    /** Set the named workspace value's detail and advance its revision.
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
+ */
     UmiStatus umi_project_workspace_named_state_set_detail(UmiProjectWorkspaceNamedState *value,
     const char *detail);
+    /** Set the named workspace value's state and advance its revision.
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
+ */
     UmiStatus umi_project_workspace_named_state_set_state(UmiProjectWorkspaceNamedState *value,
     UmiProjectWorkspaceState state);
     bool umi_project_workspace_named_state_same_identity(const UmiProjectWorkspaceNamedState *left,

@@ -94,7 +94,12 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiAiDevReviewFindingConditionalArchiveCases, UmiAi
     UmiAiDevReviewFindingTransferEqual, UmiAiDevReviewFindingTransferTails, UmiAiDevReviewFindingTransferMalformed)
 
 
+#include "../value_archive/ai_configuration_cases.h"
+UMI_TEST_AI_CONFIGURATION(UmiAiDevReviewFindingConfigurationCases, UmiAiDevReviewFinding,
+    umi_ai_dev_review_finding_configure, umi_ai_dev_review_finding_validate)
+
 int main(void) {
+    if (UmiAiDevReviewFindingConfigurationCases() != 0) return 1;
     UmiAiDevReviewFinding v;
     umi_ai_dev_review_finding_init(&v);
     /* Preserve the original failure result so the caller can respond to the correct cause. */

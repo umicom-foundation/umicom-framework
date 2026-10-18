@@ -37,6 +37,10 @@ UmiStatus umi_editor_wb_editor_item_init(UmiEditorWbEditorItem *item,const char 
 /**
  * Provide the editor wb editor item set dirty operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_editor_wb_editor_item_set_dirty(UmiEditorWbEditorItem *item,bool dirty);
 /**

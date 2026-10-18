@@ -48,11 +48,19 @@ UmiStatus umi_debug_workbench_memory_region_model_init(UmiDebugWorkbenchMemoryRe
 /**
  * Provide the debug workbench memory region model set cursor operation used by this module
  * and its client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_debug_workbench_memory_region_model_set_cursor(UmiDebugWorkbenchMemoryRegionModel *model, uint64_t address);
 /**
  * Provide the debug workbench memory region model set follow execution operation used by
  * this module and its client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_debug_workbench_memory_region_model_set_follow_execution(UmiDebugWorkbenchMemoryRegionModel *model, bool follow);
 /**

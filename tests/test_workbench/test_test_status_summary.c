@@ -18,6 +18,7 @@
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+#include "../value_archive/revision_cases.h"
 #include "umicom/test/workbench/test_status_summary.h"
 #include <assert.h>
 /*
@@ -117,7 +118,25 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiTestStatusSummaryConditionalArchiveCases, UmiTes
     UmiTestStatusSummaryTransferEqual, UmiTestStatusSummaryTransferTails, UmiTestStatusSummaryTransferMalformed)
 
 
-int main(void){UmiTestStatusSummary m;assert(umi_test_status_summary_init(&m,"test_status_summary","Test Status Summary")==UMI_STATUS_OK);assert(umi_test_status_summary_set_active(&m,true)==UMI_STATUS_OK);assert(umi_test_status_summary_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_test_status_summary_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_status_summary_valid(&m));
+int main(void){UmiTestStatusSummary m;assert(umi_test_status_summary_init(&m,"test_status_summary","Test Status Summary")==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestStatusSummary, &m, generation,
+        umi_test_status_summary_set_active(&m,true));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestStatusSummary, &m, value.revision,
+        umi_test_status_summary_set_active(&m,true));
+    assert(umi_test_status_summary_set_active(&m,true)==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestStatusSummary, &m, generation,
+        umi_test_status_summary_set_count(&m,3U));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestStatusSummary, &m, value.revision,
+        umi_test_status_summary_set_count(&m,3U));
+    assert(umi_test_status_summary_set_count(&m,3U)==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestStatusSummary, &m, generation,
+        umi_test_status_summary_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiTestStatusSummary, &m, value.revision,
+        umi_test_status_summary_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
+    assert(umi_test_status_summary_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_test_status_summary_valid(&m));
     if (UmiTestStatusSummaryTransferCases(&m) != 0) return 1;
     if (UmiTestStatusSummaryConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

@@ -320,3 +320,8 @@ UMI_DEFINE_REGISTRY_ARCHIVE(umi_chart_extension_registry_archive_encode, umi_cha
  * caller. Imported metadata remains evidence; registry publication is separate. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_chart_extension_snapshot_archive_decode_if_unchanged, umi_chart_extension_snapshot_archive_encode,
     UmiChartExtensionSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)
+
+/* Reviewed clearing belongs to this value owner. It preserves changes made
+ * since the caller inspected the collection and allocates no staging copy. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_CLEAR(umi_chart_extension_registry_clear_if_current,
+    UmiChartExtensionRegistry, UMI_CHART_EXTENSION_CAPACITY)

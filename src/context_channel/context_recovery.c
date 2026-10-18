@@ -63,8 +63,14 @@ break;
 capacity = sizeof(state->checkpoint_id);
 break;
     default:return UMI_STATUS_NOT_FOUND;
-    
+
 }
+
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (state->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
     status=umi_context_copy_text(target,capacity,value);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if(status==UMI_STATUS_OK)state->revision+=1U;
@@ -88,7 +94,7 @@ const char *umi_context_recovery_field(const UmiContextRecovery *state,size_t fi
     case 2U: return state->context_id;
     case 3U: return state->checkpoint_id;
     default:return NULL;
-    
+
 }
 }
 /*
@@ -102,6 +108,13 @@ UmiStatus umi_context_recovery_record_success(UmiContextRecovery *state,uint64_t
      * used.
      */
     if(state==NULL||!state->enabled)return UMI_STATUS_INVALID_STATE;
+    /* Sequence and event counts must remain consistent with the revision.
+     * Refuse the entire observation before updating any caller-owned field. */
+    if (state->item_count == UINT64_MAX ||
+        state->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     /* Apply this branch only when its contract condition is satisfied. */
     if(state->item_count==0U)state->first_sequence=sequence;
     state->last_sequence=sequence;
@@ -121,6 +134,14 @@ UmiStatus umi_context_recovery_record_failure(UmiContextRecovery *state,UmiStatu
      * used.
      */
     if(state==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    /* Sequence and event counts must remain consistent with the revision.
+     * Refuse the entire observation before updating any caller-owned field. */
+    if (state->item_count == UINT64_MAX ||
+        state->failure_count == UINT64_MAX ||
+        state->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     /* Apply this branch only when its contract condition is satisfied. */
     if(state->item_count==0U)state->first_sequence=sequence;
     state->last_sequence=sequence;

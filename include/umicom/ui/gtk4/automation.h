@@ -100,6 +100,25 @@ void *umi_gtk4_automation_find_tagged_widget(
 void *umi_gtk4_automation_find_named_widget(
     void *native_root, const char *widget_name);
 
+/**
+ * @brief Expand sections and select pages containing one tagged control.
+ * @param native_root A live caller-owned GtkWidget on its GTK owning thread.
+ * @param automation_id The nonempty unique identifier to reveal.
+ * @return OK after selecting its logical route; NOT_FOUND or ALREADY_EXISTS
+ * for missing or ambiguous IDs, CAPACITY_EXCEEDED for oversized trees, or
+ * CANCELLED if a notification removes or replaces the captured control.
+ *
+ * Read-only lookup never changes layout; call this operation explicitly before
+ * a user-facing action inside collapsed expanders, stacks or notebook pages.
+ * It neither presents a window nor pumps GTK events, scrolls, focuses, enables
+ * controls or emits actions. Hidden controls remain hidden. Callers must still
+ * wait for mapping and check sensitivity. Notifications may close the view;
+ * reacquire the control after success rather than retaining a borrowed pointer.
+ * Partial page selection can remain after cancellation; no action is performed.
+ */
+UmiStatus umi_gtk4_automation_reveal_tagged_widget(
+    void *native_root, const char *automation_id);
+
 #ifdef __cplusplus
 }
 #endif

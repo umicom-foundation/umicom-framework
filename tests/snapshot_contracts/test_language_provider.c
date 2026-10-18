@@ -22,6 +22,8 @@
 #define CONTRACT_FIND umi_language_provider_registry_find
 #define CONTRACT_AT umi_language_provider_registry_at
 #define CONTRACT_COUNT umi_language_provider_registry_count
+/* Exercise allocation-free clearing through this actual public owner. */
+#define CONTRACT_CLEAR_CURRENT umi_language_provider_registry_clear_if_current
 #define CONTRACT_REVISION umi_language_provider_registry_revision
 
 /* Test each actual public field boundary, including optional provider text. */

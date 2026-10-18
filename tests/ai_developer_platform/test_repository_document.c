@@ -94,7 +94,12 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiAiDevRepositoryDocumentConditionalArchiveCases, 
     UmiAiDevRepositoryDocumentTransferEqual, UmiAiDevRepositoryDocumentTransferTails, UmiAiDevRepositoryDocumentTransferMalformed)
 
 
+#include "../value_archive/ai_configuration_cases.h"
+UMI_TEST_AI_CONFIGURATION(UmiAiDevRepositoryDocumentConfigurationCases, UmiAiDevRepositoryDocument,
+    umi_ai_dev_repository_document_configure, umi_ai_dev_repository_document_validate)
+
 int main(void) {
+    if (UmiAiDevRepositoryDocumentConfigurationCases() != 0) return 1;
     UmiAiDevRepositoryDocument v;
     umi_ai_dev_repository_document_init(&v);
     /* Preserve the original failure result so the caller can respond to the correct cause. */

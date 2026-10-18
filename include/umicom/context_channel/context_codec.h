@@ -45,6 +45,10 @@ void umi_context_codec_init(UmiContextCodec *state);
 /**
  * Provide the context codec set field operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_codec_set_field(UmiContextCodec *state,size_t field_index,const char *value);
 /**
@@ -55,11 +59,19 @@ const char *umi_context_codec_field(const UmiContextCodec *state,size_t field_in
 /**
  * Provide the context codec record success operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_codec_record_success(UmiContextCodec *state,uint64_t sequence);
 /**
  * Provide the context codec record failure operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, failure_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_codec_record_failure(UmiContextCodec *state,UmiStatus status,uint64_t sequence);
 /**

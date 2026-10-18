@@ -46,16 +46,28 @@ UmiStatus umi_debug_workbench_evaluate_expression_model_init(UmiDebugWorkbenchEv
 /**
  * Provide the debug workbench evaluate expression model set state operation used by this
  * module and its client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: value.revision, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_debug_workbench_evaluate_expression_model_set_state(UmiDebugWorkbenchEvaluateExpressionModel *model, uint32_t state, uint64_t value);
 /**
  * Find debug workbench evaluate expression model set while leaving the underlying
  * catalogue or model owned by this module.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_debug_workbench_evaluate_expression_model_set_selected(UmiDebugWorkbenchEvaluateExpressionModel *model, bool selected);
 /**
  * Provide the debug workbench evaluate expression model set enabled operation used by this
  * module and its client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_debug_workbench_evaluate_expression_model_set_enabled(UmiDebugWorkbenchEvaluateExpressionModel *model, bool enabled);
 /**

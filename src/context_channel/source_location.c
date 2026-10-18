@@ -87,6 +87,12 @@ UmiStatus umi_source_location_context_set_workspace_id(UmiSourceLocationContext 
      * used.
      */
     if (context == NULL || value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (context->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     status = umi_context_copy_text(context->workspace_id, sizeof(context->workspace_id), value);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) context->revision += 1U;
@@ -104,6 +110,12 @@ UmiStatus umi_source_location_context_set_file_path(UmiSourceLocationContext *co
      * used.
      */
     if (context == NULL || value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (context->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     status = umi_context_copy_text(context->file_path, sizeof(context->file_path), value);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) context->revision += 1U;
@@ -121,6 +133,12 @@ UmiStatus umi_source_location_context_set_symbol(UmiSourceLocationContext *conte
      * used.
      */
     if (context == NULL || value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (context->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     status = umi_context_copy_text(context->symbol, sizeof(context->symbol), value);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) context->revision += 1U;
@@ -137,6 +155,12 @@ UmiStatus umi_source_location_context_set_line(UmiSourceLocationContext *context
      * used.
      */
     if (context == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (context->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     context->line = value;
     context->revision += 1U;
     return UMI_STATUS_OK;
@@ -152,6 +176,12 @@ UmiStatus umi_source_location_context_set_column(UmiSourceLocationContext *conte
      * used.
      */
     if (context == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (context->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     context->column = value;
     context->revision += 1U;
     return UMI_STATUS_OK;
@@ -167,6 +197,12 @@ UmiStatus umi_source_location_context_set_selection_length(UmiSourceLocationCont
      * used.
      */
     if (context == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (context->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     context->selection_length = value;
     context->revision += 1U;
     return UMI_STATUS_OK;

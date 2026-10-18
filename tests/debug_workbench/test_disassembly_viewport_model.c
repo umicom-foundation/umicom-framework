@@ -22,6 +22,7 @@
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+#include "../value_archive/revision_cases.h"
 #include "umicom/debug/workbench/disassembly_viewport_model.h"
 #define UMI_TEST_CHECK(expression) do { if (!(expression)) return 1; } while (0)
 
@@ -151,7 +152,15 @@ int main(void)
     UMI_TEST_CHECK(umi_debug_workbench_disassembly_viewport_model_init(&model, "range-1", UINT64_C(0x1000), UINT64_C(256)) == UMI_STATUS_OK);
     UMI_TEST_CHECK(umi_debug_workbench_disassembly_viewport_model_contains(&model, UINT64_C(0x1080)));
     UMI_TEST_CHECK(!umi_debug_workbench_disassembly_viewport_model_contains(&model, UINT64_C(0x1200)));
+
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDebugWorkbenchDisassemblyViewportModel, &model, revision,
+        umi_debug_workbench_disassembly_viewport_model_set_cursor(&model, UINT64_C(0x10f0)));
     UMI_TEST_CHECK(umi_debug_workbench_disassembly_viewport_model_set_cursor(&model, UINT64_C(0x10f0)) == UMI_STATUS_OK);
+
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDebugWorkbenchDisassemblyViewportModel, &model, revision,
+        umi_debug_workbench_disassembly_viewport_model_set_follow_execution(&model, true));
     UMI_TEST_CHECK(umi_debug_workbench_disassembly_viewport_model_set_follow_execution(&model, true) == UMI_STATUS_OK);
     UMI_TEST_CHECK(umi_debug_workbench_disassembly_viewport_model_valid(&model));
     if (UmiDebugWorkbenchDisassemblyViewportModelTransferCases(&model) != 0) return 1;

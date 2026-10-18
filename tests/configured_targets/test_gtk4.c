@@ -11,6 +11,15 @@
 #include "fixture.h"
 #include <stdio.h>
 #include <string.h>
+/* CTest can terminate a stalled native call before CHECK reports a result.
+ * Flush phase names so a timeout identifies its last reached boundary without
+ * increasing the timeout or reporting an incomplete operation as successful. */
+static void TracePhase(const char *phase)
+{
+    fprintf(stderr, "Native fixture phase: %s\n", phase);
+    fflush(stderr);
+}
+
 #define CHECK(expression)                                                                                    \
     do                                                                                                       \
     {                                                                                                        \
@@ -130,6 +139,7 @@ int main(int argc, char **argv)
 {
     if (argc != 2)
         return 2;
+    TracePhase("GTK initialisation");
     if (!gtk_init_check())
         return 77;
     const char *mode = argv[1];
@@ -358,13 +368,16 @@ int main(int argc, char **argv)
         CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(target)), "notes") == 0);
         CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(program)), "original-program") == 0);
     }
+    TracePhase("configured target apply boundary");
     if (strcmp(mode, "apply") == 0)
     {
         g_signal_emit_by_name(probe.accept, "clicked");
+        TracePhase("configured target accepted");
         CHECK(probe.calls == 1U);
         CHECK(strstr(probe.profile.run_program, "notes.exe") != NULL);
     }
 cleanup:
+    TracePhase("configured target disposal");
     if (probe.picker != NULL)
         g_signal_handlers_disconnect_by_data(probe.picker, &probe);
     if (program != NULL)
@@ -376,6 +389,7 @@ cleanup:
         g_main_context_iteration(NULL, FALSE);
         g_usleep(1000U);
     }
+    TracePhase("worker retirement wait finished");
     int retired = rootWeak == NULL;
     if (!retired)
     {

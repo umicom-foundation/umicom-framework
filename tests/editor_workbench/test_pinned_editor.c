@@ -18,6 +18,7 @@
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+#include "../value_archive/revision_cases.h"
 #include "umicom/editor/workbench/pinned_editor.h"
 /*
  * Start this command or application, report setup failures, and return a process exit code
@@ -75,7 +76,11 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorWbPinnedEditorConditionalArchiveCases, Umi
     UmiEditorWbPinnedEditorTransferEqual, UmiEditorWbPinnedEditorTransferTails, UmiEditorWbPinnedEditorTransferMalformed)
 
 
-int main(void){ UmiEditorWbPinnedEditor s; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_pinned_editor_init(&s,"item",false)!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_pinned_editor_set(&s,true)!=UMI_STATUS_OK)return 2; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_wb_pinned_editor_valid(&s)||!s.enabled)return 3;
+int main(void){ UmiEditorWbPinnedEditor s; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_pinned_editor_init(&s,"item",false)!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiEditorWbPinnedEditor, &s, revision,
+        umi_editor_wb_pinned_editor_set(&s,true));
+    if(umi_editor_wb_pinned_editor_set(&s,true)!=UMI_STATUS_OK)return 2; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_wb_pinned_editor_valid(&s)||!s.enabled)return 3;
     if (UmiEditorWbPinnedEditorTransferCases(&s) != 0) return 1;
     if (UmiEditorWbPinnedEditorConditionalArchiveCases(&s) != 0) return 1;
  return 0; }

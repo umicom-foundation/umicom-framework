@@ -45,6 +45,10 @@ void umi_context_journal_init(UmiContextJournal *state);
 /**
  * Provide the context journal set field operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_journal_set_field(UmiContextJournal *state,size_t field_index,const char *value);
 /**
@@ -55,11 +59,19 @@ const char *umi_context_journal_field(const UmiContextJournal *state,size_t fiel
 /**
  * Provide the context journal record success operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_journal_record_success(UmiContextJournal *state,uint64_t sequence);
 /**
  * Provide the context journal record failure operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, failure_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_journal_record_failure(UmiContextJournal *state,UmiStatus status,uint64_t sequence);
 /**

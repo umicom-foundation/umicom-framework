@@ -37,6 +37,10 @@ UmiStatus umi_editor_wb_preview_editor_init(UmiEditorWbPreviewEditor *state,cons
 /**
  * Copy editor wb preview editor into module-owned storage so callers keep ownership of
  * their input values.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_editor_wb_preview_editor_set(UmiEditorWbPreviewEditor *state,bool enabled);
 /**

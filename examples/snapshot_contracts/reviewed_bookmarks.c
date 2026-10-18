@@ -45,6 +45,26 @@ static int ReviewBookmarks(UmiBookmarkRegistry *bookmarks)
     if (umi_platform_bookmarks_registry_find(bookmarks, "notes", &published) != UMI_STATUS_OK) return 1;
     if (strcmp(published.label, "Reviewed notes") != 0) return 1;
     puts("The newly reviewed proposal was published as one complete collection.");
+
+    /* Clearing is a reviewed publication too. Reusing the pre-replacement
+     * capture must not erase a collection that changed after that review. */
+    if (umi_platform_bookmarks_registry_clear_if_current(bookmarks, capture.revision) !=
+            UMI_STATUS_INVALID_STATE) return 1;
+    if (umi_platform_bookmarks_registry_count(bookmarks) != 1U) return 1;
+    if (umi_platform_bookmarks_registry_capture(bookmarks, proposed, 1U, &capture) !=
+            UMI_STATUS_OK) return 1;
+    if (strcmp(proposed[0].label, "Reviewed notes") != 0) return 1;
+    if (umi_platform_bookmarks_registry_clear_if_current(bookmarks, capture.revision) !=
+            UMI_STATUS_OK) return 1;
+    if (umi_platform_bookmarks_registry_count(bookmarks) != 0U ||
+        umi_platform_bookmarks_registry_revision(bookmarks) != capture.revision + 1U) return 1;
+    uint64_t empty_revision = umi_platform_bookmarks_registry_revision(bookmarks);
+    if (umi_platform_bookmarks_registry_clear_if_current(bookmarks, empty_revision) !=
+            UMI_STATUS_OK || umi_platform_bookmarks_registry_revision(bookmarks) != empty_revision) return 1;
+    /* Captured rows belong to the caller even after the registry is cleared. */
+    if (strcmp(proposed[0].label, "Reviewed notes") != 0) return 1;
+    puts("A stale clear was refused; a current clear removed the reviewed collection once.");
+
     return 0;
 }
 

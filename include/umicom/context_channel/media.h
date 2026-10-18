@@ -50,31 +50,55 @@ UmiStatus umi_media_context_copy(UmiMediaContext *destination, const UmiMediaCon
 /**
  * Provide the media context set asset id operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_media_context_set_asset_id(UmiMediaContext *context, const char *value);
 /**
  * Provide the media context set timeline id operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_media_context_set_timeline_id(UmiMediaContext *context, const char *value);
 /**
  * Provide the media context set track id operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_media_context_set_track_id(UmiMediaContext *context, const char *value);
 /**
  * Provide the media context set timecode ms operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_media_context_set_timecode_ms(UmiMediaContext *context, uint64_t value);
 /**
  * Provide the media context set duration ms operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_media_context_set_duration_ms(UmiMediaContext *context, uint64_t value);
 /**
  * Provide the media context set media type operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_media_context_set_media_type(UmiMediaContext *context, const char *value);
 /** Transfer this value using the portable format described in value_archive.h.

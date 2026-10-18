@@ -55,13 +55,25 @@ int umi_debug_workbench_disassembly_instruction_model_contains(const UmiDebugWor
  * this module and its client applications.
  */
 UmiStatus umi_debug_workbench_disassembly_instruction_model_set_cursor(UmiDebugWorkbenchDisassemblyInstructionModel *model, uint64_t address)
-{ /* Preserve the original failure result so the caller can respond to the correct cause. */ if (!umi_debug_workbench_disassembly_instruction_model_contains(model, address)) return UMI_STATUS_INVALID_ARGUMENT; model->cursor_address = address; model->revision++; return UMI_STATUS_OK; }
+{ /* Preserve the original failure result so the caller can respond to the correct cause. */ if (!umi_debug_workbench_disassembly_instruction_model_contains(model, address)) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (model->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+     model->cursor_address = address; model->revision++; return UMI_STATUS_OK; }
 /*
  * Provide the debug workbench disassembly instruction model set follow execution operation
  * used by this module and its client applications.
  */
 UmiStatus umi_debug_workbench_disassembly_instruction_model_set_follow_execution(UmiDebugWorkbenchDisassemblyInstructionModel *model, bool follow)
-{ /* Protect caller-owned memory by checking that required state is available before it is used. */ if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT; model->follow_execution = follow; model->revision++; return UMI_STATUS_OK; }
+{ /* Protect caller-owned memory by checking that required state is available before it is used. */ if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (model->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+     model->follow_execution = follow; model->revision++; return UMI_STATUS_OK; }
 /*
  * Check that debug workbench disassembly instruction model satisfies its contract before
  * another service relies on it.

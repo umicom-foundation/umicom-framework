@@ -16,6 +16,7 @@
 #include "umicom/trading/market_tape.h"
 #include "umicom/strategy_research/research_replay.h"
 #include "umicom/broker_connectivity/connection.h"
+#include "umicom/trading/fill_watch.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,6 +31,43 @@ static UmiStatus PracticeStrategy(const UmiResearchView *view, void *context,
     *target = view->observationIndex == 0U ? UMI_RESEARCH_LONG :
         view->observationIndex == 2U ? UMI_RESEARCH_FLAT : UMI_RESEARCH_HOLD;
     return UMI_STATUS_OK;
+}
+
+/* A local watch consumes independent price and size receipt times. Exercising
+ * it here also checks that installed consumers receive its transitive policy
+ * implementation; no order submission or provider session is involved. */
+static UmiStatus CheckLocalLiquidityWatch(void)
+{
+    const UmiFullQuantityPolicy policy = {
+        .mode = UMI_FULL_QUANTITY_WATCH_THEN_IMMEDIATE,
+        .side = UMI_SIDE_BUY, .waitingTimeInForce = UMI_TIF_DAY,
+        .quantity = {10, 0}, .limitPrice = {10050, 2},
+        .extraVisibleQuantity = {2, 0}, .maximumAgeMilliseconds = 1000U,
+        .maximumSkewMilliseconds = 100U
+    };
+    const UmiLiquidityObservation observation = {
+        .price = {10025, 2}, .visibleQuantity = {12, 0},
+        .priceReceivedAtMilliseconds = 1000U,
+        .sizeReceivedAtMilliseconds = 1050U, .available = true, .realtime = true
+    };
+    UmiFullQuantityWatch *watch = NULL;
+    UmiFullQuantityWatchSnapshot snapshot = {0};
+    UmiStatus status = UmiFullQuantityWatchCreate(&policy, 1000U, 5000U, &watch);
+    if (status == UMI_STATUS_OK)
+        status = UmiFullQuantityWatchObserve(watch, &observation, 1100U, &snapshot);
+    if (status == UMI_STATUS_OK &&
+        (snapshot.state != UMI_FILL_WATCH_MATCHED || !snapshot.newlyMatched))
+        status = UMI_STATUS_INTERNAL_ERROR;
+    /* Old data must return the watch to waiting even if its displayed size
+     * remains sufficient. This is an observation, not an execution promise. */
+    if (status == UMI_STATUS_OK)
+        status = UmiFullQuantityWatchObserve(watch, &observation, 2101U, &snapshot);
+    if (status == UMI_STATUS_OK &&
+        (snapshot.state != UMI_FILL_WATCH_WAITING || snapshot.newlyMatched ||
+         snapshot.review.assessment != UMI_LIQUIDITY_STALE))
+        status = UMI_STATUS_INTERNAL_ERROR;
+    UmiFullQuantityWatchDestroy(watch);
+    return status;
 }
 
 int main(void)
@@ -106,6 +144,8 @@ int main(void)
         status = UMI_STATUS_INTERNAL_ERROR;
         goto finished;
     }
+    status = CheckLocalLiquidityWatch();
+    if (status != UMI_STATUS_OK) goto finished;
     printf("WORKSHOP bar: open %.2f, high %.2f, low %.2f, close %.2f, volume %.0f\n",
         tapeView->bars[0].open, tapeView->bars[0].high, tapeView->bars[0].low,
         tapeView->bars[0].close, tapeView->bars[0].volume);

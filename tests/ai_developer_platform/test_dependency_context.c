@@ -94,7 +94,12 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiAiDevDependencyContextConditionalArchiveCases, U
     UmiAiDevDependencyContextTransferEqual, UmiAiDevDependencyContextTransferTails, UmiAiDevDependencyContextTransferMalformed)
 
 
+#include "../value_archive/ai_configuration_cases.h"
+UMI_TEST_AI_CONFIGURATION(UmiAiDevDependencyContextConfigurationCases, UmiAiDevDependencyContext,
+    umi_ai_dev_dependency_context_configure, umi_ai_dev_dependency_context_validate)
+
 int main(void) {
+    if (UmiAiDevDependencyContextConfigurationCases() != 0) return 1;
     UmiAiDevDependencyContext v;
     umi_ai_dev_dependency_context_init(&v);
     /* Preserve the original failure result so the caller can respond to the correct cause. */

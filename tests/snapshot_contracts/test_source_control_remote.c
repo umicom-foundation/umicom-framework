@@ -22,6 +22,8 @@
 #define CONTRACT_FIND umi_source_control_remote_registry_find
 #define CONTRACT_AT umi_source_control_remote_registry_at
 #define CONTRACT_COUNT umi_source_control_remote_registry_count
+/* Exercise allocation-free clearing through this actual public owner. */
+#define CONTRACT_CLEAR_CURRENT umi_source_control_remote_registry_clear_if_current
 #define CONTRACT_REVISION umi_source_control_remote_registry_revision
 
 /* Explicit test expectations refer to public member boundaries, including

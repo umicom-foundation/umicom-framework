@@ -50,6 +50,9 @@ if(TARGET umicom_ui_gtk4 OR UMICOM_GUI_CONTROL_NATIVE_TESTS)
         add_library(umicom-control-native-support STATIC
             "${_framework}/adapters/gtk4/automation_gtk4.c"
             "${_framework}/adapters/gtk4/interaction_recording_gtk4.c")
+        # Compile the logical-tree owner in the standalone fixture too.
+        target_sources(umicom-control-native-support PRIVATE
+            "${_framework}/adapters/gtk4/widget_lookup_gtk4.c")
         target_link_libraries(umicom-control-native-support PUBLIC ${_check_library} PkgConfig::CONTROL_GTK)
         set_target_properties(umicom-control-native-support PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED ON)
         if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
@@ -89,5 +92,19 @@ if(TARGET umicom-gui-control-native-tests)
         add_test(NAME framework.gui_control_checks.gtk4.${_case} COMMAND umicom-gui-selection-tree-tests ${_case})
         set_tests_properties(framework.gui_control_checks.gtk4.${_case} PROPERTIES
             TIMEOUT 20 SKIP_RETURN_CODE 77 LABELS "framework;gtk4;regression")
+    endforeach()
+endif()
+
+if(TARGET umicom-gui-control-native-tests)
+    add_executable(umicom-gui-reveal-tests test_reveal_gtk4.c)
+    target_link_libraries(umicom-gui-reveal-tests PRIVATE ${_native_library})
+    set_target_properties(umicom-gui-reveal-tests PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED ON)
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(umicom-gui-reveal-tests PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror)
+    endif()
+    foreach(_case nested notebook stack duplicate missing hidden disabled replaced invalid depth moved)
+        add_test(NAME framework.gui_control_checks.reveal.${_case} COMMAND umicom-gui-reveal-tests ${_case})
+        set_tests_properties(framework.gui_control_checks.reveal.${_case} PROPERTIES
+            TIMEOUT 20 SKIP_RETURN_CODE 77 LABELS "framework;gtk4;regression;logical-navigation")
     endforeach()
 endif()

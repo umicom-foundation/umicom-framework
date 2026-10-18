@@ -45,6 +45,10 @@ void umi_context_transport_init(UmiContextTransport *state);
 /**
  * Provide the context transport set field operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_transport_set_field(UmiContextTransport *state,size_t field_index,const char *value);
 /**
@@ -55,11 +59,19 @@ const char *umi_context_transport_field(const UmiContextTransport *state,size_t 
 /**
  * Provide the context transport record success operation used by this module and its
  * client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_transport_record_success(UmiContextTransport *state,uint64_t sequence);
 /**
  * Provide the context transport record failure operation used by this module and its
  * client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, failure_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_transport_record_failure(UmiContextTransport *state,UmiStatus status,uint64_t sequence);
 /**

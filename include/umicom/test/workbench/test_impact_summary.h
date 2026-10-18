@@ -40,16 +40,28 @@ UmiStatus umi_test_impact_summary_init(UmiTestImpactSummary *model,const char *i
 /**
  * Exercise test impact summary set active and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_impact_summary_set_active(UmiTestImpactSummary *model,bool active);
 /**
  * Return the number of records represented by test impact summary set without changing
  * their state.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_impact_summary_set_count(UmiTestImpactSummary *model,uint32_t item_count);
 /**
  * Exercise test impact summary set state and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_impact_summary_set_state(UmiTestImpactSummary *model,UmiTestWorkbenchState state);
 /**

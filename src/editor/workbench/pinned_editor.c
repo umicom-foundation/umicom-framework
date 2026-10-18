@@ -26,7 +26,13 @@ UmiStatus umi_editor_wb_pinned_editor_init(UmiEditorWbPinnedEditor *s,const char
  * Copy editor wb pinned editor into module-owned storage so callers keep ownership of
  * their input values.
  */
-UmiStatus umi_editor_wb_pinned_editor_set(UmiEditorWbPinnedEditor *s,bool enabled){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==NULL)return UMI_STATUS_INVALID_ARGUMENT;s->enabled=enabled;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(enabled)s->promoted=true;s->revision++;return UMI_STATUS_OK;}
+UmiStatus umi_editor_wb_pinned_editor_set(UmiEditorWbPinnedEditor *s,bool enabled){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (s->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    s->enabled=enabled;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(enabled)s->promoted=true;s->revision++;return UMI_STATUS_OK;}
 /*
  * Check that editor wb pinned editor satisfies its contract before another service relies
  * on it.

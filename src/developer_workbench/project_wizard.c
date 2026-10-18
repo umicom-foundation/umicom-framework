@@ -119,6 +119,12 @@ UmiStatus umi_developer_workbench_project_wizard_select_preset(
      */
     if (preset == NULL) return UMI_STATUS_NOT_FOUND;
 
+
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (wizard->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
     status = copy_text(
         wizard->preset_id, sizeof(wizard->preset_id), preset_id);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -148,6 +154,12 @@ UmiStatus umi_developer_workbench_project_wizard_set_identity(
      * used.
      */
     if (wizard == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (wizard->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
 
     status = copy_text(
         wizard->application_name,
@@ -208,6 +220,12 @@ UmiStatus umi_developer_workbench_project_wizard_validate(
      */
     if (wizard == NULL) return UMI_STATUS_INVALID_ARGUMENT;
 
+
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (wizard->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
     wizard->ready = 0;
 
     /* Apply this branch only when its contract condition is satisfied. */

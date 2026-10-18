@@ -12,6 +12,15 @@
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include <string.h>
+/* CTest can terminate a stalled native call before CHECK reports a result.
+ * Flush phase names so a timeout identifies its last reached boundary without
+ * increasing the timeout or reporting an incomplete operation as successful. */
+static void TracePhase(const char *phase)
+{
+    fprintf(stderr, "Native fixture phase: %s\n", phase);
+    fflush(stderr);
+}
+
 #define CHECK(c)                                                                                             \
     do                                                                                                       \
     {                                                                                                        \
@@ -133,6 +142,7 @@ int main(int argc, char **argv)
             known = 1;
     if (!known)
         return 2;
+    TracePhase("GTK initialisation");
     if (!gtk_init_check())
         return 77;
     int failed = 0;
@@ -151,6 +161,7 @@ int main(int argc, char **argv)
     char *text = NULL;
     size_t length = 0U;
     application = gtk_application_new("org.umicom.proposal.test", G_APPLICATION_NON_UNIQUE);
+    TracePhase("application registration");
     CHECK(g_application_register(G_APPLICATION(application), NULL, NULL));
     CHECK(umi_command_registry_create(&commands) == UMI_STATUS_OK);
     CHECK(umi_ui_workbench_create("test.proposal.native", commands, &workbench) == UMI_STATUS_OK);
@@ -170,6 +181,7 @@ int main(int argc, char **argv)
      * metadata edits so this fixture cannot restore the previous draft. */
     CHECK(umi_ui_document_view_model_find(views, view.view_id, &view) == UMI_STATUS_OK);
     CHECK(umi_gtk4_adapter_create(application, &adapter) == UMI_STATUS_OK);
+    TracePhase("adapter preparation");
     CHECK(umi_gtk4_adapter_prepare(adapter, shell) == UMI_STATUS_OK);
     CHECK(UmiGtk4AdapterBindDocumentEditing(adapter, documents, Complete, &result) == UMI_STATUS_OK);
     /* Native preparation may synchronize its initial view. Capture the intended
@@ -191,6 +203,7 @@ int main(int argc, char **argv)
         CHECK(dialog == NULL);
         goto inspect;
     }
+    TracePhase("proposal construction");
     CHECK(UmiGtk4AdapterReviewSelectedCode(adapter) == UMI_STATUS_OK);
     dialog = Review();
     CHECK(dialog != NULL && UmiGtk4AdapterDocumentProposalBusy(adapter));
@@ -249,6 +262,7 @@ int main(int argc, char **argv)
         CHECK(result.count == 0U);
         goto inspect;
     }
+    TracePhase("proposal preview");
     if (strcmp(name, "no-preview") != 0)
         g_signal_emit_by_name(preview, "clicked");
     if (strcmp(name, "private") == 0)
@@ -270,6 +284,7 @@ int main(int argc, char **argv)
     /* UpsertText copies its input; reload the owned preview before later
      * metadata edits so this fixture cannot restore the previous draft. */
     CHECK(umi_ui_document_view_model_find(views, view.view_id, &view) == UMI_STATUS_OK);
+    TracePhase("proposal apply");
     if (strcmp(name, "completion-unbind") == 0)
         result.detach = adapter;
     g_signal_emit_by_name(apply, "clicked");
@@ -280,12 +295,14 @@ int main(int argc, char **argv)
               !UmiGtk4AdapterDocumentProposalBusy(adapter));
         g_signal_emit_by_name(apply, "clicked");
         CHECK(result.count == 1U);
+        TracePhase("post-apply undo boundary");
         if (strcmp(name, "undo") == 0)
             CHECK(UmiDocumentCoordinatorUndo(documents, active.document_id) == UMI_STATUS_OK);
     }
     else
         CHECK(result.count == 0U);
 inspect:
+    TracePhase("document inspection");
     CHECK(UmiUiDocumentViewModelCopyText(views, active.view_id, &text, &length) == UMI_STATUS_OK);
     const char *expected = strcmp(name, "apply") == 0 || strcmp(name, "completion-unbind") == 0
                                ? "before new after"
@@ -294,6 +311,7 @@ inspect:
                                                          : "before old after";
     CHECK(length == strlen(expected) && strcmp(text, expected) == 0);
 cleanup:
+    TracePhase("native disposal");
     UmiUiDocumentViewModelFreeText(text);
     if (adapter != NULL)
         (void)UmiGtk4AdapterBindDocumentEditing(adapter, NULL, NULL, NULL);

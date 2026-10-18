@@ -45,6 +45,10 @@ void umi_context_filter_init(UmiContextFilter *state);
 /**
  * Provide the context filter set field operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_filter_set_field(UmiContextFilter *state,size_t field_index,const char *value);
 /**
@@ -55,11 +59,19 @@ const char *umi_context_filter_field(const UmiContextFilter *state,size_t field_
 /**
  * Provide the context filter record success operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_filter_record_success(UmiContextFilter *state,uint64_t sequence);
 /**
  * Provide the context filter record failure operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, failure_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_filter_record_failure(UmiContextFilter *state,UmiStatus status,uint64_t sequence);
 /**

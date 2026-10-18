@@ -18,6 +18,7 @@
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+#include "../value_archive/revision_cases.h"
 #include "umicom/test/workbench/quality_gate_result.h"
 #include <assert.h>
 /*
@@ -117,7 +118,25 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiQualityGateResultConditionalArchiveCases, UmiQua
     UmiQualityGateResultTransferEqual, UmiQualityGateResultTransferTails, UmiQualityGateResultTransferMalformed)
 
 
-int main(void){UmiQualityGateResult m;assert(umi_quality_gate_result_init(&m,"quality_gate_result","Quality Gate Result")==UMI_STATUS_OK);assert(umi_quality_gate_result_set_active(&m,true)==UMI_STATUS_OK);assert(umi_quality_gate_result_set_count(&m,3U)==UMI_STATUS_OK);assert(umi_quality_gate_result_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_quality_gate_result_valid(&m));
+int main(void){UmiQualityGateResult m;assert(umi_quality_gate_result_init(&m,"quality_gate_result","Quality Gate Result")==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiQualityGateResult, &m, generation,
+        umi_quality_gate_result_set_active(&m,true));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiQualityGateResult, &m, value.revision,
+        umi_quality_gate_result_set_active(&m,true));
+    assert(umi_quality_gate_result_set_active(&m,true)==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiQualityGateResult, &m, generation,
+        umi_quality_gate_result_set_count(&m,3U));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiQualityGateResult, &m, value.revision,
+        umi_quality_gate_result_set_count(&m,3U));
+    assert(umi_quality_gate_result_set_count(&m,3U)==UMI_STATUS_OK);
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiQualityGateResult, &m, generation,
+        umi_quality_gate_result_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiQualityGateResult, &m, value.revision,
+        umi_quality_gate_result_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY));
+    assert(umi_quality_gate_result_set_state(&m,UMI_TEST_WORKBENCH_STATE_READY)==UMI_STATUS_OK);assert(umi_quality_gate_result_valid(&m));
     if (UmiQualityGateResultTransferCases(&m) != 0) return 1;
     if (UmiQualityGateResultConditionalArchiveCases(&m) != 0) return 1;
 assert(m.active);assert(m.item_count==3U);return 0;}

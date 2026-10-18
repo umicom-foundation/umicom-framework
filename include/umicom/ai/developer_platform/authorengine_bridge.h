@@ -51,6 +51,13 @@ void umi_ai_dev_authorengine_bridge_init(UmiAiDevAuthorengineBridge *value);
 /**
  * Provide the ai dev authorengine bridge configure operation used by this module and its
  * client applications.
+ *
+ * Text inputs may refer to the destination's current inline fields. A temporary
+ * value is allocated and published only on success; invalid input or allocation
+ * failure leaves the destination unchanged. NULL label becomes empty and long
+ * text keeps the existing bounded-truncation behaviour. Successful configuration
+ * starts a new metadata value at revision 1; it is not a live-service update and
+ * grants no execution authority. Callers serialize access to the destination.
  */
 UmiStatus umi_ai_dev_authorengine_bridge_configure(UmiAiDevAuthorengineBridge *value, const char *id, const char *label, uint32_t priority, uint64_t flags);
 /**

@@ -87,6 +87,12 @@ UmiStatus umi_media_context_set_asset_id(UmiMediaContext *context, const char *v
      * used.
      */
     if (context == NULL || value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (context->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     status = umi_context_copy_text(context->asset_id, sizeof(context->asset_id), value);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) context->revision += 1U;
@@ -104,6 +110,12 @@ UmiStatus umi_media_context_set_timeline_id(UmiMediaContext *context, const char
      * used.
      */
     if (context == NULL || value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (context->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     status = umi_context_copy_text(context->timeline_id, sizeof(context->timeline_id), value);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) context->revision += 1U;
@@ -121,6 +133,12 @@ UmiStatus umi_media_context_set_track_id(UmiMediaContext *context, const char *v
      * used.
      */
     if (context == NULL || value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (context->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     status = umi_context_copy_text(context->track_id, sizeof(context->track_id), value);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) context->revision += 1U;
@@ -137,6 +155,12 @@ UmiStatus umi_media_context_set_timecode_ms(UmiMediaContext *context, uint64_t v
      * used.
      */
     if (context == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (context->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     context->timecode_ms = value;
     context->revision += 1U;
     return UMI_STATUS_OK;
@@ -152,6 +176,12 @@ UmiStatus umi_media_context_set_duration_ms(UmiMediaContext *context, uint64_t v
      * used.
      */
     if (context == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (context->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     context->duration_ms = value;
     context->revision += 1U;
     return UMI_STATUS_OK;
@@ -168,6 +198,12 @@ UmiStatus umi_media_context_set_media_type(UmiMediaContext *context, const char 
      * used.
      */
     if (context == NULL || value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is a change token used by editors and reviewed snapshots.
+     * Refuse an exhausted token before changing either the owner or its nested value. */
+    if (context->revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
     status = umi_context_copy_text(context->media_type, sizeof(context->media_type), value);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) context->revision += 1U;

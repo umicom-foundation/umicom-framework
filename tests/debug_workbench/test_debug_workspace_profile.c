@@ -22,6 +22,7 @@
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+#include "../value_archive/revision_cases.h"
 #include "umicom/debug/workbench/debug_workspace_profile.h"
 #define UMI_TEST_CHECK(expression) do { if (!(expression)) return 1; } while (0)
 
@@ -87,8 +88,16 @@ int main(void)
 {
     UmiDebugWorkbenchDebugWorkspaceProfile model;
     UMI_TEST_CHECK(umi_debug_workbench_debug_workspace_profile_init(&model, "workspace-main") == UMI_STATUS_OK);
+
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDebugWorkbenchDebugWorkspaceProfile, &model, revision,
+        umi_debug_workbench_debug_workspace_profile_set_view_visible(&model, UMI_DEBUG_WORKBENCH_VIEW_MEMORY, true));
     UMI_TEST_CHECK(umi_debug_workbench_debug_workspace_profile_set_view_visible(&model, UMI_DEBUG_WORKBENCH_VIEW_MEMORY, true) == UMI_STATUS_OK);
     UMI_TEST_CHECK(umi_debug_workbench_debug_workspace_profile_view_visible(&model, UMI_DEBUG_WORKBENCH_VIEW_MEMORY));
+
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDebugWorkbenchDebugWorkspaceProfile, &model, revision,
+        umi_debug_workbench_debug_workspace_profile_set_primary_view(&model, UMI_DEBUG_WORKBENCH_VIEW_CALL_STACK));
     UMI_TEST_CHECK(umi_debug_workbench_debug_workspace_profile_set_primary_view(&model, UMI_DEBUG_WORKBENCH_VIEW_CALL_STACK) == UMI_STATUS_OK);
     UMI_TEST_CHECK(umi_debug_workbench_debug_workspace_profile_valid(&model));
     if (UmiDebugWorkbenchDebugWorkspaceProfileTransferCases(&model) != 0) return 1;

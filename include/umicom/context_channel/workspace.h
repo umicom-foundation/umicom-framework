@@ -50,31 +50,55 @@ UmiStatus umi_workspace_context_copy(UmiWorkspaceContext *destination, const Umi
 /**
  * Provide the workspace context set workspace id operation used by this module and its
  * client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_workspace_context_set_workspace_id(UmiWorkspaceContext *context, const char *value);
 /**
  * Provide the workspace context set profile id operation used by this module and its
  * client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_workspace_context_set_profile_id(UmiWorkspaceContext *context, const char *value);
 /**
  * Provide the workspace context set root path operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_workspace_context_set_root_path(UmiWorkspaceContext *context, const char *value);
 /**
  * Provide the workspace context set perspective id operation used by this module and its
  * client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_workspace_context_set_perspective_id(UmiWorkspaceContext *context, const char *value);
 /**
  * Provide the workspace context set layout id operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_workspace_context_set_layout_id(UmiWorkspaceContext *context, const char *value);
 /**
  * Provide the workspace context set trusted operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_workspace_context_set_trusted(UmiWorkspaceContext *context, bool value);
 /** Transfer this value using the portable format described in value_archive.h.

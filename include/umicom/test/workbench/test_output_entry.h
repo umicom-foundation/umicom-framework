@@ -40,16 +40,28 @@ UmiStatus umi_test_output_entry_init(UmiTestOutputEntry *model,const char *id,co
 /**
  * Exercise test output entry set active and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_output_entry_set_active(UmiTestOutputEntry *model,bool active);
 /**
  * Return the number of records represented by test output entry set without changing their
  * state.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_output_entry_set_count(UmiTestOutputEntry *model,uint32_t item_count);
 /**
  * Exercise test output entry set state and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_output_entry_set_state(UmiTestOutputEntry *model,UmiTestWorkbenchState state);
 /**

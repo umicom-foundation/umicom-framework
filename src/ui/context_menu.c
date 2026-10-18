@@ -329,3 +329,8 @@ UMI_DEFINE_REGISTRY_ARCHIVE(umi_ui_context_menu_registry_archive_encode, umi_ui_
  * caller. Imported metadata remains evidence; registry publication is separate. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ui_context_menu_snapshot_archive_decode_if_unchanged, umi_ui_context_menu_snapshot_archive_encode,
     UmiUiContextMenuItemSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)
+
+/* Reviewed clearing belongs to this value owner. It preserves changes made
+ * since the caller inspected the collection and allocates no staging copy. */
+UMI_DEFINE_SNAPSHOT_REGISTRY_CLEAR(umi_ui_context_menu_registry_clear_if_current,
+    UmiUiContextMenuItemRegistry, UMI_UI_CONTEXT_MENU_CAPACITY)

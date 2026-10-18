@@ -45,6 +45,10 @@ void umi_context_replay_init(UmiContextReplay *state);
 /**
  * Provide the context replay set field operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_replay_set_field(UmiContextReplay *state,size_t field_index,const char *value);
 /**
@@ -55,11 +59,19 @@ const char *umi_context_replay_field(const UmiContextReplay *state,size_t field_
 /**
  * Provide the context replay record success operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_replay_record_success(UmiContextReplay *state,uint64_t sequence);
 /**
  * Provide the context replay record failure operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, failure_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_replay_record_failure(UmiContextReplay *state,UmiStatus status,uint64_t sequence);
 /**

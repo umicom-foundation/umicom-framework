@@ -22,6 +22,7 @@
 #ifdef NDEBUG
 #undef NDEBUG
 #endif
+#include "../value_archive/revision_cases.h"
 #include "umicom/debug/workbench/debug_command_set.h"
 #define UMI_TEST_CHECK(expression) do { if (!(expression)) return 1; } while (0)
 
@@ -68,10 +69,18 @@ int main(void)
 {
     UmiDebugWorkbenchDebugCommandSet model;
     umi_debug_workbench_debug_command_set_init(&model);
+
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDebugWorkbenchDebugCommandSet, &model, revision,
+        umi_debug_workbench_debug_command_set_set_enabled(&model, UMI_DEBUG_WORKBENCH_COMMAND_CONTINUE, true));
     UMI_TEST_CHECK(umi_debug_workbench_debug_command_set_set_enabled(&model, UMI_DEBUG_WORKBENCH_COMMAND_CONTINUE, true) == UMI_STATUS_OK);
     UMI_TEST_CHECK(umi_debug_workbench_debug_command_set_is_enabled(&model, UMI_DEBUG_WORKBENCH_COMMAND_CONTINUE));
     UMI_TEST_CHECK(umi_debug_workbench_debug_command_set_set_enabled(&model, UMI_DEBUG_WORKBENCH_COMMAND_CONTINUE, false) == UMI_STATUS_OK);
     UMI_TEST_CHECK(!umi_debug_workbench_debug_command_set_is_enabled(&model, UMI_DEBUG_WORKBENCH_COMMAND_CONTINUE));
+
+    /* Each counter must reject exhaustion before any part of this value changes. */
+    UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiDebugWorkbenchDebugCommandSet, &model, revision,
+        umi_debug_workbench_debug_command_set_set_primary(&model, UMI_DEBUG_WORKBENCH_COMMAND_STEP_OVER));
     UMI_TEST_CHECK(umi_debug_workbench_debug_command_set_set_primary(&model, UMI_DEBUG_WORKBENCH_COMMAND_STEP_OVER) == UMI_STATUS_OK);
     UMI_TEST_CHECK(umi_debug_workbench_debug_command_set_valid(&model));
     if (UmiDebugWorkbenchDebugCommandSetTransferCases(&model) != 0) return 1;

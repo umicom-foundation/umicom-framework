@@ -45,6 +45,10 @@ void umi_context_bookmark_service_init(UmiContextBookmarkService *state);
 /**
  * Provide the context bookmark service set field operation used by this module and its
  * client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_bookmark_service_set_field(UmiContextBookmarkService *state,size_t field_index,const char *value);
 /**
@@ -55,11 +59,19 @@ const char *umi_context_bookmark_service_field(const UmiContextBookmarkService *
 /**
  * Provide the context bookmark service record success operation used by this module and
  * its client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_bookmark_service_record_success(UmiContextBookmarkService *state,uint64_t sequence);
 /**
  * Provide the context bookmark service record failure operation used by this module and
  * its client applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, failure_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_bookmark_service_record_failure(UmiContextBookmarkService *state,UmiStatus status,uint64_t sequence);
 /**

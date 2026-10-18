@@ -45,6 +45,10 @@ void umi_context_sync_init(UmiContextSync *state);
 /**
  * Provide the context sync set field operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_sync_set_field(UmiContextSync *state,size_t field_index,const char *value);
 /**
@@ -55,11 +59,19 @@ const char *umi_context_sync_field(const UmiContextSync *state,size_t field_inde
 /**
  * Provide the context sync record success operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_sync_record_success(UmiContextSync *state,uint64_t sequence);
 /**
  * Provide the context sync record failure operation used by this module and its client
  * applications.
+ *
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: item_count, failure_count, revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_context_sync_record_failure(UmiContextSync *state,UmiStatus status,uint64_t sequence);
 /**

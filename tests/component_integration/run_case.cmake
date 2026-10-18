@@ -39,7 +39,22 @@ function(Execute step)
         ERROR_FILE "${RUN}/${step}.err.txt" TIMEOUT 180)
     if(NOT "${_status}" STREQUAL "0")
         file(READ "${RUN}/${step}.err.txt" _error LIMIT 4096)
+        # Ninja and compiler diagnostics commonly arrive on stdout. Retain the
+        # earlier stderr-only message, then show bounded tails from both streams.
+        #[[
         message(FATAL_ERROR "${step} failed (${_status}). Logs: ${RUN}\n${_error}")
+        ]]
+        set(_diagnostics "")
+        foreach(_stream IN ITEMS out err)
+            file(SIZE "${RUN}/${step}.${_stream}.txt" _bytes)
+            set(_offset 0)
+            if(_bytes GREATER 8192)
+                math(EXPR _offset "${_bytes}-8192")
+            endif()
+            file(READ "${RUN}/${step}.${_stream}.txt" _tail OFFSET ${_offset} LIMIT 8192)
+            string(APPEND _diagnostics "\n${_stream} tail (${_bytes} bytes total):\n${_tail}")
+        endforeach()
+        message(FATAL_ERROR "${step} failed (${_status}). Full logs: ${RUN}${_diagnostics}")
     endif()
 endfunction()
 # CMake renamed developer warnings to author warnings. Query the running
@@ -109,7 +124,13 @@ if(_mode STREQUAL "partial" AND NOT _name MATCHES "^framework[.]ibkr_connection[
 #[=[
 if(_mode STREQUAL "partial" AND NOT _name MATCHES "^framework[.]ibkr_")
 ]=]
+# The partial host supplies trading policy and decimal owners as well as
+# the broker and tape. Keep their exact inventory instead of treating those
+# tests as unexpected registrations. The earlier condition is retained.
+#[=[
 if(_mode STREQUAL "partial" AND NOT _name MATCHES "^framework[.](ibkr_|market_tape[.])")
+]=]
+if(_mode STREQUAL "partial" AND NOT _name MATCHES "^framework[.](ibkr_|market_tape[.]|full_quantity[.]|price_increment[.])")
                     continue()
                 endif()
                 if(_kind STREQUAL "COMMON" OR

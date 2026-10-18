@@ -94,7 +94,12 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiAiDevModelDescriptorConditionalArchiveCases, Umi
     UmiAiDevModelDescriptorTransferEqual, UmiAiDevModelDescriptorTransferTails, UmiAiDevModelDescriptorTransferMalformed)
 
 
+#include "../value_archive/ai_configuration_cases.h"
+UMI_TEST_AI_CONFIGURATION(UmiAiDevModelDescriptorConfigurationCases, UmiAiDevModelDescriptor,
+    umi_ai_dev_model_descriptor_configure, umi_ai_dev_model_descriptor_validate)
+
 int main(void) {
+    if (UmiAiDevModelDescriptorConfigurationCases() != 0) return 1;
     UmiAiDevModelDescriptor v;
     umi_ai_dev_model_descriptor_init(&v);
     /* Preserve the original failure result so the caller can respond to the correct cause. */

@@ -40,16 +40,28 @@ UmiStatus umi_test_run_session_init(UmiTestRunSession *model,const char *id,cons
 /**
  * Exercise test run session set active and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_run_session_set_active(UmiTestRunSession *model,bool active);
 /**
  * Return the number of records represented by test run session set without changing their
  * state.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_run_session_set_count(UmiTestRunSession *model,uint32_t item_count);
 /**
  * Exercise test run session set state and return a clear result when the behaviour no
  * longer matches its contract.
+
+ * @retval UMI_STATUS_CAPACITY_EXCEEDED A required counter is at UINT64_MAX.
+ * Checked fields: generation, value.revision. The complete value is unchanged on this refusal.
+ * The last representable value may be reached; counters never wrap to zero.
  */
 UmiStatus umi_test_run_session_set_state(UmiTestRunSession *model,UmiTestWorkbenchState state);
 /**
