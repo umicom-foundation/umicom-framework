@@ -1,5 +1,7 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 # Compose optional PNG decoding behind a stable C interface.
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 find_package(PNG QUIET)
 add_library(umicom_png_image STATIC "${CMAKE_CURRENT_LIST_DIR}/../src/media/png_image.c")

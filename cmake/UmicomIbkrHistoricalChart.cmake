@@ -1,6 +1,8 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 # Historical presentation depends on the existing chart module; the broker
 # transport itself stays usable by command-line and minimal native consumers.
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 if(NOT TARGET Umicom::chart)
     return()

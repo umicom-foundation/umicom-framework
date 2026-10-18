@@ -1,6 +1,8 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 # Model checks reuse canonical settings, security and complete JSON parsing.
 # Keep optional transport linkage explicit for both build and installed users.
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 include(GNUInstallDirs)
 set(_umicom_connection_check_root "${CMAKE_CURRENT_LIST_DIR}/..")

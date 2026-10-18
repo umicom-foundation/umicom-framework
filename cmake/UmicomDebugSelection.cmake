@@ -1,5 +1,7 @@
 # Debugger source navigation is a UI composition, keeping document ownership
 # out of the core debugger model and available to installed Framework consumers.
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 add_library(umicom_debug_ui STATIC "${CMAKE_CURRENT_LIST_DIR}/../src/debug_ui/navigation.c")
 add_library(Umicom::debug_ui ALIAS umicom_debug_ui)
 set_target_properties(umicom_debug_ui PROPERTIES EXPORT_NAME debug_ui)

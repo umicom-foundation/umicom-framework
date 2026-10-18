@@ -1,3 +1,9 @@
+/*
+ * File: tests/snapshot_contracts/test_clear_boundaries.c
+ * Purpose: Verify registry clearing at revision and capacity boundaries.
+ * Author and Organisation: Sammy Hegab, Umicom Foundation
+ * Licence: MIT
+ */
 /*-----------------------------------------------------------------------------
  * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * PURPOSE: Exercise unreachable-by-counting revision boundaries in the shared

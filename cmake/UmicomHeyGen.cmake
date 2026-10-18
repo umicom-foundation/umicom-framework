@@ -1,5 +1,7 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 # Avatar generation shares local credentials and the configured curl dependency.
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 include(GNUInstallDirs)
 set(_umicom_heygen_root "${CMAKE_CURRENT_LIST_DIR}/..")

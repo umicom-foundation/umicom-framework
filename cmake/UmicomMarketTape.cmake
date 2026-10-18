@@ -1,5 +1,7 @@
 # Umicom Foundation | Sammy Hegab | MIT
 # Shared tape semantics. The canonical trading vocabulary is not redefined.
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 include(GNUInstallDirs)
 if(NOT TARGET Umicom::trading OR NOT TARGET Umicom::platform)

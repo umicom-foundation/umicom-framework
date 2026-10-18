@@ -1,6 +1,8 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 # A toolkit-independent owner lets products share durable settings and guarded
 # credential acquisition without making storage or provider logic UI-specific.
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 include(GNUInstallDirs)
 set(_umicom_connections_root "${CMAKE_CURRENT_LIST_DIR}/..")

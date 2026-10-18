@@ -3,6 +3,8 @@
 # The release inspector is a native consumer of Setup Centre's canonical
 # inventory and checked I/O. Build descriptions do not parse PE files.
 #-----------------------------------------------------------------------------
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 include(GNUInstallDirs)
 if(NOT TARGET Umicom::setup_centre)

@@ -1,4 +1,6 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 include(GNUInstallDirs)
 get_filename_component(_umi_review_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)

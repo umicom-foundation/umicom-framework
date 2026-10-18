@@ -1,5 +1,7 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 # QMP and profiles have one owner. Presentation remains in a native adapter.
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 include(GNUInstallDirs)
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomProcessChannel.cmake")

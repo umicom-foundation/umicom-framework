@@ -5,6 +5,7 @@
  * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
+#include "review_failure_evidence.h"
 #include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/document_commands.h"
 #include "umicom/ui/gtk4/interaction_recording.h"
@@ -21,6 +22,16 @@
             goto cleanup;                                                                                    \
         }                                                                                                    \
     } while (0)
+/* Timeout output must retain the last native lifetime boundary, even when
+ * a close callback does not return. The scenario contains synthetic state. */
+static void TraceParentClose(const char *scenario, const char *phase)
+{
+    if (strcmp(scenario, "worker-parent-close") == 0) {
+        fprintf(stderr, "Workspace symbol close phase: %s\n", phase);
+        fflush(stderr);
+    }
+}
+
 typedef struct Completion
 {
     unsigned count;
@@ -100,6 +111,7 @@ static int ProgramMain(int argc, char **argv)
     if (argc != 3)
         return 2;
     const char *mode = argv[1];
+    TraceParentClose(mode, "scenario entered");
     const char *cases[] = {"open",
                            "read",
                            "private",
@@ -321,8 +333,11 @@ static int ProgramMain(int argc, char **argv)
     }
     if (strcmp(mode, "worker-parent-close") == 0)
     {
+        TraceParentClose(mode, "parent close requested");
         gtk_window_destroy(GTK_WINDOW(umi_gtk4_adapter_native_window(adapter)));
+        TraceParentClose(mode, "parent close returned; awaiting worker");
         CHECK(Wait(GTK_WIDGET(dialog)) && result.count == 0U);
+        TraceParentClose(mode, "worker completed");
         g_signal_emit_by_name(apply, "clicked");
         CHECK(result.count == 0U);
         goto inspect;
@@ -437,6 +452,8 @@ inspect:
                                                             : "pu";
     CHECK(length == strlen(expected) && strcmp(text, expected) == 0);
 cleanup:
+    TraceParentClose(mode, "cleanup entered");
+    if (failed) UmiTestReviewFailureEvidence(dialog, mode);
     UmiUiDocumentViewModelFreeText(text);
     if (adapter != NULL)
         (void)UmiGtk4AdapterBindDocumentEditing(adapter, NULL, NULL, NULL);
@@ -447,7 +464,9 @@ cleanup:
     }
     g_clear_object(&dialog);
     g_clear_object(&apply);
+    TraceParentClose(mode, "adapter teardown");
     umi_gtk4_adapter_destroy(adapter);
+    TraceParentClose(mode, "adapter retired");
     umi_document_coordinator_destroy(documents);
     umi_document_store_destroy(store);
     umi_ui_application_shell_destroy(shell);
@@ -455,6 +474,7 @@ cleanup:
     umi_command_registry_destroy(commands);
     g_clear_object(&application);
     g_free(directory);
+    TraceParentClose(mode, "cleanup completed");
     return failed;
 }
 #include "../native_process/utf8_entry.inc"

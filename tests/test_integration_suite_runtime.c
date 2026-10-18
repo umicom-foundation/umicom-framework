@@ -32,7 +32,14 @@
  * injected: this test never pretends to have opened an authenticated socket. */
 static int TestInstanceBoundReadiness(void)
 {
+    /* A bounded registry exceeds one MiB before other local objects. Keep
+     * this process-local fixture off the Windows stack; init still resets
+     * all entries before use. The old declaration is retained for review. */
+#if 0
     UmiIntegrationRegistry registry;
+#else
+    static UmiIntegrationRegistry registry;
+#endif
     UmiIntegrationApplication application;
     UmiIntegrationSuiteDefinition suite;
     UmiIntegrationSuiteRuntime runtime;
@@ -168,7 +175,14 @@ static int TestInstanceBoundReadiness(void)
  * to the operating system.
  */
 int main(void) {
+    /* A bounded registry exceeds one MiB before other local objects. Keep
+     * this process-local fixture off the Windows stack; init still resets
+     * all entries before use. The old declaration is retained for review. */
+#if 0
     UmiIntegrationRegistry r; UmiIntegrationApplication a;
+#else
+    static UmiIntegrationRegistry r; UmiIntegrationApplication a;
+#endif
     UmiIntegrationSuiteDefinition s; UmiIntegrationSuiteRuntime rt;
     UmiIntegrationSuiteRuntime unchanged;
     UmiIntegrationHealthSummary h;
@@ -358,7 +372,14 @@ int main(void) {
     /* An owning host updates its existing registry after reconciling real
      * process tokens. The suite projects those observations atomically. */
     {
+        /* A bounded registry exceeds one MiB before other local objects. Keep
+         * this process-local fixture off the Windows stack; init still resets
+         * all entries before use. The old declaration is retained for review. */
+#if 0
         UmiIntegrationRegistry sourceRegistry;
+#else
+        static UmiIntegrationRegistry sourceRegistry;
+#endif
         UmiIntegrationSuiteDefinition sourceSuite;
         UmiIntegrationSuiteRuntime projected;
         UmiIntegrationSuiteRuntime preserved;

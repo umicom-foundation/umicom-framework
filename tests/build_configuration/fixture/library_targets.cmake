@@ -102,3 +102,16 @@ else()
         endif()
     endforeach()
 endif()
+
+# An independently included module must load SDK registration itself and join
+# the aggregate exactly once. This also holds when ordinary tests are disabled.
+if(NOT TARGET umicom-sdk-libraries)
+    message(FATAL_ERROR "Independent component did not provide the SDK aggregate")
+endif()
+get_target_property(_sdk_dependencies umicom-sdk-libraries MANUALLY_ADDED_DEPENDENCIES)
+foreach(_sdk_owner IN ITEMS umicom_workspace_library_gtk4)
+    get_target_property(_sdk_registered "${_sdk_owner}" UMICOM_SDK_INSTALL_REGISTERED)
+    if(NOT _sdk_registered OR NOT _sdk_owner IN_LIST _sdk_dependencies)
+        message(FATAL_ERROR "Independent component is absent from the SDK: ${_sdk_owner}")
+    endif()
+endforeach()

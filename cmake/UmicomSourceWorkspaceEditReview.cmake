@@ -1,4 +1,6 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 # This composition depends on document ownership and language decoding. Neither
 # lower-level service acquires a dependency on the other or on a native toolkit.

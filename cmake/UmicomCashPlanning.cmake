@@ -1,6 +1,8 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 # Financial assumptions reuse checked money/date owners. JSON and file services
 # stay dependency-linked, with no product-specific financial implementation.
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 include(GNUInstallDirs)
 add_library(umicom_cash_planning STATIC

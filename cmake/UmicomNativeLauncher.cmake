@@ -3,6 +3,8 @@
 # Native C23 launcher-delivery capability. No Python, shell or code-generator
 # process is required to build or execute this target and its primary tests.
 #-----------------------------------------------------------------------------
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 include(GNUInstallDirs)
 set(_umi_native_root "${CMAKE_CURRENT_LIST_DIR}/..")

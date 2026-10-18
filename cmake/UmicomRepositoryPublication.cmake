@@ -48,3 +48,9 @@ endif()
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/guides/repository-publication.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/guides"
     COMPONENT Framework)
+
+# The allowed report destination must be outside all source checkouts.
+if(BUILD_TESTING)
+    set_tests_properties(framework.repository.publication.report_file PROPERTIES
+        UMICOM_TEST_OUTSIDE_REPOSITORY TRUE)
+endif()

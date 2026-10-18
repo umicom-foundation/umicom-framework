@@ -1,5 +1,7 @@
 # Umicom Foundation | Sammy Hegab | MIT
 # The adapter depends on toolkit-neutral market tape, never on Trader internals.
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 include(GNUInstallDirs)
 find_package(PkgConfig QUIET)

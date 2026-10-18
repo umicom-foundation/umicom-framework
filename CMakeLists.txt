@@ -1196,6 +1196,7 @@ add_library(umicom_testing STATIC
     src/testing/runner.c
     src/testing/report.c
     src/testing/ctest_adapter.c
+    src/testing/ctest_report_comparison.c
 )
 include(cmake/UmicomTestingSourceInputs.cmake)
 add_library(Umicom::testing ALIAS umicom_testing)
@@ -3586,6 +3587,9 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-debug-orchestration-tests framework.debug_orchestration tests/test_debug_orchestration.c)
     umicom_add_framework_test(umicom-source-control-service-platform-tests framework.source_control_service_platform tests/test_source_control_service_platform.c)
     umicom_add_framework_test(umicom-source-control-workspace-bridge-tests framework.source_control_workspace_bridge tests/test_source_control_workspace_bridge.c)
+    # Git discovers ancestor repositories: this fixture tests an unavailable workspace.
+    set_tests_properties(framework.source_control_workspace_bridge PROPERTIES
+        UMICOM_TEST_OUTSIDE_REPOSITORY TRUE)
     umicom_add_framework_test(umicom-test-platform-service-tests framework.test_platform_service tests/test_test_platform_service.c)
     # Batch 37 Test Platform v2: metadata discovery, filters, hierarchy,
     # operation control, retained history and tool-neutral artifact contracts.

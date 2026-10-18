@@ -8,6 +8,7 @@
 #include "cli.h"
 #include "umicom/platform/input_file.h"
 #include "umicom/testing/ctest_report.h"
+#include "umicom/testing/ctest_report_comparison.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -36,6 +37,82 @@ static void ReportText(const char *text)
     }
 }
 
+
+/* Each input is resolved before its bounded read and shared XML import.
+ * The CLI owns paths; the Framework comparison service only owns outcomes. */
+static UmiStatus ReportReadSaved(const char *file, UmiCtestReport **out)
+{
+    *out = NULL;
+    char current[UMI_PATH_CAPACITY], absolute[UMI_PATH_CAPACITY];
+    UmiStatus status = umi_path_is_absolute(file)
+        ? umi_path_copy(absolute, sizeof absolute, file)
+        : umi_fs_current_directory(current, sizeof current);
+    if (status == UMI_STATUS_OK && !umi_path_is_absolute(file))
+        status = umi_path_absolute(file, current, absolute, sizeof absolute);
+    unsigned char *bytes = NULL;
+    size_t size = 0U;
+    if (status == UMI_STATUS_OK)
+        status = UmiInputFileRead(absolute, UMI_CTEST_COLLECTION_MAX_BYTES, &bytes, &size);
+    if (status == UMI_STATUS_OK) status = UmiCtestReportImport((const char *)bytes, size, out);
+    UmiInputFileFree(bytes);
+    return status;
+}
+
+static const char *ReportChangeKind(UmiCtestReportChangeKind kind)
+{
+    switch (kind) {
+        case UMI_CTEST_CHANGE_ADDED: return "added";
+        case UMI_CTEST_CHANGE_REMOVED: return "removed";
+        case UMI_CTEST_CHANGE_RECOVERED: return "recovered";
+        case UMI_CTEST_CHANGE_REGRESSED: return "regressed";
+        case UMI_CTEST_CHANGE_OUTCOME: return "outcome changed";
+        default: return "unknown";
+    }
+}
+
+static int ReportCompareFiles(const char *before_file, const char *after_file)
+{
+    UmiCtestReport *before = NULL, *after = NULL;
+    UmiCtestReportComparison *comparison = NULL;
+    UmiStatus status = ReportReadSaved(before_file, &before);
+    if (status == UMI_STATUS_OK) status = ReportReadSaved(after_file, &after);
+    if (status == UMI_STATUS_OK) status = UmiCtestReportCompare(before, after, &comparison);
+    int exit_code = 2;
+    if (status == UMI_STATUS_OK) {
+        UmiCtestReportComparisonSummary summary;
+        status = UmiCtestReportComparisonReadSummary(comparison, &summary);
+        if (status == UMI_STATUS_OK) {
+            puts("Saved CTest comparison; this command did not run tests or verify source revisions.");
+            printf("Before: %zu | After: %zu | Unchanged outcomes: %zu\n"
+                   "Added: %zu | Removed: %zu | Recovered: %zu | Regressed: %zu | Other outcome changes: %zu\n",
+                summary.before_tests, summary.after_tests, summary.unchanged, summary.added,
+                summary.removed, summary.recovered, summary.regressed, summary.outcome_changed);
+            for (size_t index = 0U; index < summary.changed; ++index) {
+                const UmiCtestReportChange *change = UmiCtestReportComparisonAt(comparison, index);
+                UmiCtestReportEntry previous = {0}, current = {0};
+                previous.result.state = change->before; previous.disabled = change->before_disabled;
+                current.result.state = change->after; current.disabled = change->after_disabled;
+                printf("[%s] ", ReportChangeKind(change->kind));
+                ReportText(change->name);
+                printf(" : %s -> %s\n", change->before_present ? ReportOutcome(&previous) : "absent",
+                    change->after_present ? ReportOutcome(&current) : "absent");
+            }
+            if (summary.added != 0U || summary.removed != 0U)
+                puts("Test inventory changed. Removed tests are not verified repairs.");
+            bool passed = UmiCtestReportRequirePassed(after) == UMI_STATUS_OK;
+            puts(passed ? "The current saved report contains only passed tests."
+                        : "The current saved report is empty or contains non-passed tests.");
+            exit_code = passed && summary.added == 0U && summary.removed == 0U ? 0 : 1;
+        }
+    }
+    if (status != UMI_STATUS_OK)
+        fprintf(stderr, "Cannot compare saved CTest reports (status %d). Supply two complete JUnit XML files.\n", (int)status);
+    UmiCtestReportComparisonDestroy(comparison);
+    UmiCtestReportDestroy(after);
+    UmiCtestReportDestroy(before);
+    return exit_code;
+}
+
 int umi_cli_command_test_report(int argc, char **argv)
 {
     if (argc == 1 && (strcmp(argv[0], "--help") == 0 || strcmp(argv[0], "help") == 0)) {
@@ -44,8 +121,13 @@ int umi_cli_command_test_report(int argc, char **argv)
             "Default output lists non-passed tests. --all includes passed records.\n"
             "Create a fresh report with ctest --output-junit FILE --output-log LOG.\n"
             "Exit 0: saved nonempty report is all passed; 1: other outcomes; 2: input error.");
+        (void)puts("Comparison: umicom test-report --compare BEFORE_XML AFTER_XML\n"
+            "Comparison exit 0 requires unchanged test inventory and a nonempty all-passed current report.\n"
+            "Removed, skipped and disabled tests are not repaired tests.");
         return 0;
     }
+    if (argc == 3 && strcmp(argv[0], "--compare") == 0)
+        return ReportCompareFiles(argv[1], argv[2]);
     if (argc < 1 || argc > 2 || (argc == 2 && strcmp(argv[1], "--all") != 0)) {
         (void)fputs("Use umicom test-report CTEST_JUNIT_FILE [--all].\n", stderr);
         return 2;

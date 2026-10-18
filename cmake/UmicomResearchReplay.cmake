@@ -1,4 +1,6 @@
 # Umicom Foundation | Sammy Hegab | MIT
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 include(GNUInstallDirs)
 foreach(_dep IN ITEMS base trading trading_ui native_launcher)

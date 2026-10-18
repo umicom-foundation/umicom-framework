@@ -9,6 +9,8 @@
 # LICENCE: MIT
 # Copyright (c) 2026 Umicom Foundation
 #-----------------------------------------------------------------------------
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 include(GNUInstallDirs)
 

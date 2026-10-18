@@ -1,5 +1,7 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 # Shared image generation owns provider requests; native products compose its UI.
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 include(GNUInstallDirs)
 set(_umicom_seedream_root "${CMAKE_CURRENT_LIST_DIR}/..")

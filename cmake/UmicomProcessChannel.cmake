@@ -1,5 +1,7 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 # Native interactive child transport. Existing synchronous process APIs remain.
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 include(GNUInstallDirs)
 find_package(Threads REQUIRED)

@@ -16,7 +16,8 @@ set(_umicom_testing_inputs
     src/testing/ctest_report_files.inc
     src/testing/ctest_job.inc
     include/umicom/testing/ctest_job.h
-    include/umicom/testing/ctest_report.h)
+    include/umicom/testing/ctest_report.h
+    include/umicom/testing/ctest_report_comparison.h)
 foreach(_input IN LISTS _umicom_testing_inputs)
     set(_absolute "${CMAKE_CURRENT_LIST_DIR}/../${_input}")
     if(NOT EXISTS "${_absolute}" OR IS_DIRECTORY "${_absolute}")

@@ -3,6 +3,8 @@
 # C23-only installer core; native Windows GUI avoids requiring GTK to install GTK.
 # Existing runtime staging and the NSIS installer are retained unchanged.
 #-----------------------------------------------------------------------------
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 include(GNUInstallDirs)
 set(_umi_setup_root "${CMAKE_CURRENT_LIST_DIR}/..")

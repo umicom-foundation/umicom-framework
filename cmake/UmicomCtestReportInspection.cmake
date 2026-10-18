@@ -29,3 +29,31 @@ if(BUILD_TESTING AND TARGET umicom_testing)
 endif()
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/inspect-test-reports.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/learning" COMPONENT Learning)
+
+# Compare saved observations through the shared service; the CLI does not own
+# outcome policy. Each case uses its own directory to support parallel CTest.
+if(BUILD_TESTING AND TARGET umicom_testing)
+    add_executable(umicom-ctest-report-comparison-checks
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ctest_execution/test_report_comparison.c")
+    target_link_libraries(umicom-ctest-report-comparison-checks PRIVATE Umicom::testing)
+    umicom_apply_warnings(umicom-ctest-report-comparison-checks)
+    umicom_apply_sanitizers(umicom-ctest-report-comparison-checks)
+    foreach(scenario from-passed from-failed from-timeout from-skipped from-disabled from-not-run
+        inventory order-and-details names-and-ownership empty invalid large)
+        add_test(NAME "framework.ctest.report_comparison.${scenario}"
+            COMMAND umicom-ctest-report-comparison-checks "${scenario}")
+        set_tests_properties("framework.ctest.report_comparison.${scenario}" PROPERTIES TIMEOUT 45)
+    endforeach()
+    if(TARGET umicom)
+        foreach(scenario recovered unchanged-failure removed-failure added-pass regressed-skip
+            disabled-skip empty unicode control-name literal-name incomplete-before incomplete-after missing-before missing-after)
+            add_test(NAME "framework.ctest.report_comparison_cli.${scenario}"
+                COMMAND "${CMAKE_COMMAND}"
+                    "-DUMICOM_COMMAND=$<TARGET_FILE:umicom>"
+                    "-DCASE=${scenario}"
+                    "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/test-work/report-comparison-cli/${scenario}"
+                    -P "${CMAKE_CURRENT_LIST_DIR}/../tests/ctest_execution/check_report_comparison_cli.cmake")
+            set_tests_properties("framework.ctest.report_comparison_cli.${scenario}" PROPERTIES TIMEOUT 30)
+        endforeach()
+    endif()
+endif()

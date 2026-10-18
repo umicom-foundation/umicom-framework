@@ -20,6 +20,16 @@
         }                                                                                                    \
     } while (0)
 
+/* Flush phase evidence before native callbacks so a CTest timeout still
+ * identifies the last boundary reached. No fixture text or paths are logged. */
+static void TraceCancel(const char *scenario, const char *phase)
+{
+    if (strcmp(scenario, "cancel") == 0) {
+        fprintf(stderr, "Workspace cancel phase: %s\n", phase);
+        fflush(stderr);
+    }
+}
+
 typedef struct Completion
 {
     unsigned count;
@@ -166,6 +176,7 @@ int main(int argc, char **argv)
     if (argc != 2)
         return 2;
     const char *name = argv[1];
+    TraceCancel(name, "scenario entered");
     const char *cases[] = {"apply",
                            "no-review",
                            "partial-review",
@@ -274,7 +285,9 @@ int main(int argc, char **argv)
     }
     if (strcmp(name, "cancel") == 0)
     {
+        TraceCancel(name, "cancel requested");
         CHECK(UmiGtk4AdapterCancelReplacementReview(adapter) == UMI_STATUS_OK);
+        TraceCancel(name, "cancel returned");
         goto unchanged;
     }
     if (strcmp(name, "destroy") == 0 || strcmp(name, "retained-approval") == 0)
@@ -428,6 +441,7 @@ unchanged:
     CHECK(TextEquals(views, second.view_id, strcmp(name, "stale-last") == 0 ? "later" : "note second"));
     CHECK(result.count == 0U);
 cleanup:
+    TraceCancel(name, "cleanup entered");
     UmiSourceWorkspaceEditReviewDestroy(model);
     if (adapter != NULL)
         (void)UmiGtk4AdapterBindDocumentEditing(adapter, NULL, NULL, NULL);
@@ -436,12 +450,15 @@ cleanup:
     g_clear_object(&dialog);
     g_clear_object(&apply);
     g_clear_object(&approval);
+    TraceCancel(name, "adapter teardown");
     umi_gtk4_adapter_destroy(adapter);
+    TraceCancel(name, "adapter retired");
     umi_document_coordinator_destroy(documents);
     umi_document_store_destroy(store);
     umi_ui_application_shell_destroy(shell);
     umi_ui_workbench_destroy(workbench);
     umi_command_registry_destroy(commands);
     g_clear_object(&application);
+    TraceCancel(name, "cleanup completed");
     return failed;
 }

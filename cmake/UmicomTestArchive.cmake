@@ -1,5 +1,7 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 # Persistence is an optional link dependency, separate from basic CTest execution.
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 add_library(umicom_test_archive STATIC
     "${CMAKE_CURRENT_LIST_DIR}/../src/testing/archive_removal.c"

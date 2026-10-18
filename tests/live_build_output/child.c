@@ -12,6 +12,11 @@
 int main(int argc, char **argv)
 {
     if (argc != 2) return 2;
+    /* Deliberately quiet: the runner must still terminate and report timeout. */
+    if (strcmp(argv[1], "timeout-silent") == 0) {
+        umi_thread_sleep_ms(10000U);
+        return 6;
+    }
     (void)fputs("ready\n", stdout); (void)fflush(stdout);
     if (strcmp(argv[1], "unicode") == 0) {
         const char raw[] = {'c', 'a', 'f', '\xc3', '\xa9', '\0', 'x'};

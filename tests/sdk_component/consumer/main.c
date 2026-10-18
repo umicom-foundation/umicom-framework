@@ -1,3 +1,9 @@
+/*
+ * File: tests/sdk_component/consumer/main.c
+ * Purpose: Verify transitive linkage through an independently installed SDK.
+ * Author and Organisation: Sammy Hegab, Umicom Foundation
+ * Licence: MIT
+ */
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #include <sdk_fixture.h>
 

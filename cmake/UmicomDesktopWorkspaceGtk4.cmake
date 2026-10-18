@@ -1,4 +1,6 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 if(NOT TARGET Umicom::desktop_workspace)
     include("${CMAKE_CURRENT_LIST_DIR}/UmicomDesktopWorkspace.cmake")

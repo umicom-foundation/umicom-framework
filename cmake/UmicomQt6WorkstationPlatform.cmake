@@ -14,6 +14,8 @@
 # LICENCE:
 #   MIT
 #-----------------------------------------------------------------------------
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 
 option(UMICOM_BUILD_QT6_ADAPTER

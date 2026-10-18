@@ -24,6 +24,20 @@ $LASTEXITCODE</code></pre>
 <h2>3. Investigate incomplete evidence</h2>
 <p>A console excerpt that stops before the final summary cannot establish the whole suite result. Do not pass a text transcript to this command. Supply the XML produced with <code>--output-junit</code>. Missing closing tags, inconsistent totals and duplicate decoded test names are rejected. An interrupted run can leave no usable report; retain its console log and rerun qualification after fixing the cause.</p>
 <p>A structurally complete report may cover only a selected subset. Compare the intended test selection and recorded configuration before calling a product qualified. Do not merge unrelated runs by concatenating their XML.</p>
+<h2>4. Compare two saved runs</h2>
+<p>Use reports from the same intended configuration and test selection. Save the first as <code>before.xml</code> and the new completed run as <code>after.xml</code>; keep their original logs and revision records too.</p>
+<pre><code>&amp; ".\build\windows-ucrt64-all-debug\bin\umicom.exe" test-report --compare "C:\umicom\_local\logs\testing\before.xml" "C:\umicom\_local\logs\testing\after.xml"
+$LASTEXITCODE</code></pre>
+<p>The command matches exact test names after XML decoding and prints changed outcomes in name order. Different execution order, timings and diagnostic wording do not count as an outcome change. Neither input file is modified.</p>
+<table><thead><tr><th>Change</th><th>Meaning</th></tr></thead><tbody>
+<tr><td>Recovered</td><td>The same named test changed from a non-passed outcome to passed in the saved evidence.</td></tr>
+<tr><td>Regressed</td><td>A previously passed test now failed, timed out, was skipped, was disabled or did not run.</td></tr>
+<tr><td>Other outcome change</td><td>A non-passed test changed to another non-passed state. Disabled and runtime skipped are distinct.</td></tr>
+<tr><td>Added or removed</td><td>A test exists in only one report. A removed failure is not counted as a repair.</td></tr>
+</tbody></table>
+<p>Comparison exits with 0 only when both reports contain the same names and the current report is nonempty and entirely passed. It exits with 1 for changed inventory or non-passed current results, and 2 for invalid inputs. A deliberately added passing test still changes inventory: review the selection and results rather than treating exit 1 as a parser error.</p>
+<p>These are comparisons of observations. They cannot prove which source change caused an improvement, whether a renamed test is equivalent to an old one, or whether either report is current. Record that context separately. Reports from a headless build and a GTK build normally have different test inventories and should not be described as identical qualification.</p>
+<p>Applications can include <code>umicom/testing/ctest_report_comparison.h</code> and call <code>UmiCtestReportCompare</code> on two imported reports. The comparison owns its changed-name records, so both input reports may then be destroyed. Read counts with <code>UmiCtestReportComparisonReadSummary</code>, borrow each changed record with <code>UmiCtestReportComparisonAt</code>, and release the comparison with <code>UmiCtestReportComparisonDestroy</code>. This shared service reads no files and launches no process.</p>
 <h2>Supported format and limits</h2>
 <p>The importer accepts one CTest <code>testsuite</code> root, up to 100,000 unique testcase names, and at most 64 MiB of UTF-8 XML. Names must fit the Framework test-name limit of 255 UTF-8 bytes. Decoded XML attribute values are limited to 1023 bytes and outcome messages to 255 bytes. It validates declared totals when provided, XML nesting, outcomes and durations. External entities and document type declarations are refused. This is not a general importer for every vendor's JUnit dialect.</p>
 <p>Large output captured by tests can exceed the report byte limit. Select a smaller test group or limit diagnostic output at its source while retaining the full original logs. Do not remove failed records merely to make a report import.</p>

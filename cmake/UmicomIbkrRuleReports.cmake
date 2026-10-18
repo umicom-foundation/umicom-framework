@@ -1,6 +1,8 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 # Report import reuses the canonical complete JSON reader. Keep it separate from
 # the socket owner so minimal TWS transports do not acquire IDE dependencies.
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 if(NOT TARGET Umicom::developer)
     return()

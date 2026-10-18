@@ -14,6 +14,8 @@
 #   MIT
 #-----------------------------------------------------------------------------
 
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomTestWorkspace.cmake")
 set(UMICOM_TEST_RUNTIME_FRAMEWORK_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")

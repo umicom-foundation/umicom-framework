@@ -5,6 +5,8 @@
 # AUTHOR: Sammy Hegab, Umicom Foundation
 # LICENCE: MIT
 #-----------------------------------------------------------------------------
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeskFederationCore.cmake")
 set(_umi_desk_host_root "${CMAKE_CURRENT_LIST_DIR}/..")

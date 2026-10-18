@@ -1,5 +1,7 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 # This projection consumes existing semantic document types; no alternate schema.
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 include(GNUInstallDirs)
 get_filename_component(_umi_viewport_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)

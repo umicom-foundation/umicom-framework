@@ -22,7 +22,11 @@ if(BUILD_TESTING)
         set_tests_properties(framework.live_build_output.session.${case} PROPERTIES
             TIMEOUT 30 LABELS "framework;build;output;regression")
     endforeach()
+    # Retained registration order; quiet timeout adds the no-output boundary.
+    #[=[
     foreach(case live unicode failure cancel timeout legacy invalid)
+    ]=]
+    foreach(case live unicode failure cancel timeout timeout-silent legacy invalid)
         set(directory "${CMAKE_CURRENT_BINARY_DIR}/qualification/live-build-output/${case}")
         file(MAKE_DIRECTORY "${directory}")
         add_test(NAME framework.live_build_output.runner.${case} COMMAND umicom-live-build-runner-test "$<TARGET_FILE:umicom-live-build-child>" ${case})

@@ -1,5 +1,7 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 # Compose persistence separately from the toolkit-neutral chart model.
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 if(NOT TARGET Umicom::native_launcher)
     include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeLauncher.cmake")

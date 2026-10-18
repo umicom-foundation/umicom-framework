@@ -1,5 +1,7 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 # Share one pipe-console owner across desktop project hosts.
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomProcessChannel.cmake")
 add_library(umicom_program_console STATIC

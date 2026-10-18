@@ -5,6 +5,7 @@
  * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
+#include "review_failure_evidence.h"
 #include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/document_commands.h"
 #include "umicom/ui/gtk4/interaction_recording.h"
@@ -399,6 +400,7 @@ inspect:
                                                             : "pu";
     CHECK(length == strlen(expected) && strcmp(text, expected) == 0);
 cleanup:
+    if (failed) UmiTestReviewFailureEvidence(dialog, mode);
     UmiUiDocumentViewModelFreeText(text);
     if (adapter != NULL)
         (void)UmiGtk4AdapterBindDocumentEditing(adapter, NULL, NULL, NULL);

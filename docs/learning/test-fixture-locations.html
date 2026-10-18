@@ -51,9 +51,16 @@ It does not fall back to the user profile if the selected build is unwritable.</
 <p>This temporary internal report is separate from retained test fixtures and saved qualification
 reports. To keep a complete suite report for review, use CTest's explicit output options described in
 <a href="inspect-test-reports.html">Inspect saved test reports</a>.</p>
+<h2>Tests that require a directory outside Git</h2>
+<p>A repository-discovery test can accidentally discover your source checkout when its scratch files sit below the build directory. A publication-report privacy test must also use a destination outside every checkout. Those tests declare <code>UMICOM_TEST_OUTSIDE_REPOSITORY</code>; normal tests retain the usual work root.</p>
+<p>If the normal work root lies inside Git, Framework places these fixtures in <code>_local/test-work</code> beside the outermost checkout. For example, a build below <code>C:/umicom/Umicom-Applications/framework</code> uses <code>C:/umicom/_local/test-work</code>. Test names and build identities still separate each fixture. A normal work root already outside Git is reused.</p>
+<p>You can choose the location explicitly:</p>
+<pre><code>cmake --preset windows-ucrt64-all-debug -DUMICOM_TEST_EXTERNAL_WORK_ROOT=C:/Umicom-Test-Work/external</code></pre>
+<p>The external root must be outside Git checkouts, including submodules and worktrees represented by a <code>.git</code> file. Configuration rejects an explicit external root under a checkout. If the default parent is unwritable, choose an accessible external directory. No source files or Git metadata are moved.</p>
 <h2>Contributing a test</h2>
 <p>Use the process temporary-directory API for scratch work. CTest supplies TMPDIR, TEMP and TMP
 consistently, plus UMICOM_TEST_WORK_DIRECTORY for diagnostics. Keep unrelated environment settings.
+For tests that need to observe a non-repository location, set the CTest property <code>UMICOM_TEST_OUTSIDE_REPOSITORY TRUE</code>. This changes the fixture environment, not production repository detection.
 If a fixture deliberately tests a particular temporary-directory policy, give it an explicit test
 environment override; Framework will leave that policy alone.</p>
 <p>For GTK controls inside collapsed sections, lookup is read-only. Explicitly reveal the section

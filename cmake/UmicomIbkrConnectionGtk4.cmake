@@ -1,4 +1,6 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 find_package(PkgConfig QUIET)
 if(PkgConfig_FOUND)

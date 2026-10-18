@@ -12,6 +12,12 @@
 #include <string.h>
 #define CHECK(x) do { if (!(x)) { fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, #x); exit(1); } } while (0)
 typedef struct Probe { const char *name; UmiBuildResult *result; UmiCancellationToken *token; char bytes[1024]; size_t length; int acknowledged; } Probe;
+/* Timeout covers process startup as well as output. A quiet child is still a
+ * valid timeout; live/cancel cases separately require delivered bytes. */
+static int IsTimeoutCase(const char *name)
+{
+    return strcmp(name, "timeout") == 0 || strcmp(name, "timeout-silent") == 0;
+}
 static void Observe(const char *bytes, size_t length, void *context)
 {
     Probe *probe = context;
@@ -19,7 +25,12 @@ static void Observe(const char *bytes, size_t length, void *context)
     CHECK(length <= sizeof(probe->bytes) - probe->length);
     memcpy(probe->bytes + probe->length, bytes, length); probe->length += length;
     if (strcmp(probe->name, "cancel") == 0) umi_cancellation_token_request(probe->token);
+/* Retain the earlier timing assumption for review; the explicit timeout case
+ * now checks terminal status and exact captured evidence, including no output. */
+#if 0
     else if (strcmp(probe->name, "timeout") != 0 && !probe->acknowledged) {
+#endif
+    else if (!IsTimeoutCase(probe->name) && !probe->acknowledged) {
         FILE *file = fopen("stream-ack", "wb"); CHECK(file != NULL);
         CHECK(fclose(file) == 0); probe->acknowledged = 1;
     }
@@ -35,7 +46,12 @@ int main(int argc, char **argv)
     umi_build_profile_init(&config.profile);
     CHECK(strlen(argv[1]) < sizeof(config.profile.run_program)); strcpy(config.profile.run_program, argv[1]);
     (void)snprintf(config.profile.run_argument, sizeof(config.profile.run_argument), "%s", probe.name);
+/* Retain the earlier timing assumption for review; the explicit timeout case
+ * now checks terminal status and exact captured evidence, including no output. */
+#if 0
     config.profile.timeout_ms = strcmp(probe.name, "timeout") == 0 ? 250U : 4000U;
+#endif
+    config.profile.timeout_ms = IsTimeoutCase(probe.name) ? 250U : 4000U;
     config.cancellation = probe.token;
     CHECK(umi_build_runner_create(&config, &runner) == UMI_STATUS_OK);
     UmiStatus status;
@@ -46,11 +62,27 @@ int main(int argc, char **argv)
         status = strcmp(probe.name, "legacy") == 0 ? umi_build_runner_run(runner, UMI_BUILD_PHASE_RUN, result) :
             UmiBuildRunnerRunObserved(runner, UMI_BUILD_PHASE_RUN, Observe, &probe, result);
         if (strcmp(probe.name, "cancel") == 0) CHECK(status == UMI_STATUS_CANCELLED);
+/* Retain the earlier timing assumption for review; the explicit timeout case
+ * now checks terminal status and exact captured evidence, including no output. */
+#if 0
         else if (strcmp(probe.name, "timeout") == 0) CHECK(status == UMI_STATUS_TIMEOUT);
+#endif
+        else if (IsTimeoutCase(probe.name)) CHECK(status == UMI_STATUS_TIMEOUT);
         else if (strcmp(probe.name, "failure") == 0) CHECK(status != UMI_STATUS_OK && result->exit_code == 5);
         else CHECK(status == UMI_STATUS_OK);
         if (strcmp(probe.name, "legacy") == 0) CHECK(probe.length == 0U && strstr(result->output, "ready") != NULL);
+/* Retain the earlier timing assumption for review; the explicit timeout case
+ * now checks terminal status and exact captured evidence, including no output. */
+#if 0
         else CHECK(probe.length != 0U);
+#endif
+        else if (IsTimeoutCase(probe.name)) {
+            CHECK(result->state == UMI_BUILD_STATE_TIMED_OUT && result->status == UMI_STATUS_TIMEOUT);
+            CHECK(strlen(result->output) == probe.length);
+            CHECK(memcmp(result->output, probe.bytes, probe.length) == 0);
+            CHECK(!probe.acknowledged);
+            if (strcmp(probe.name, "timeout-silent") == 0) CHECK(probe.length == 0U);
+        } else CHECK(probe.length != 0U);
         if (strcmp(probe.name, "live") == 0 || strcmp(probe.name, "legacy") == 0) CHECK(result->diagnostics.count != 0U);
         if (strcmp(probe.name, "unicode") == 0) {
             const char expected[] = {'c', 'a', 'f', '\xc3', '\xa9', '\0', 'x'}; int found = 0;

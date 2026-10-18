@@ -3,6 +3,8 @@
 # Native image work reuses Framework process ownership, SHA-256 and boot reports.
 # The OS repository supplies build profiles, guest PID 1 and recovery policy.
 #-----------------------------------------------------------------------------
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
 include(GNUInstallDirs)
 find_package(Threads REQUIRED)

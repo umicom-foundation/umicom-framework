@@ -63,7 +63,19 @@ static int ProgramMain(int argc, char **argv)
     }
     UmiLanguageSignatureReport report;
     UmiLanguageSignatureCatalogue *preview = NULL;
+    /* Record the independent lifecycle statuses before asserting. An occasional
+     * transport/cleanup failure must not be misdiagnosed as UTF-16 conversion. */
+#if 0
     CHECK(UmiLanguageSignatureQueryNative(&profile, NULL, &request, cancel, &report, &preview) == expected);
+#endif
+    UmiStatus actual = UmiLanguageSignatureQueryNative(&profile, NULL, &request, cancel, &report, &preview);
+    if (actual != expected) {
+        fprintf(stderr, "Signature %s: actual=%d expected=%d started=%d initialized=%d opened=%d query=%d close=%d shutdown=%d\n",
+            mode, (int)actual, (int)expected, report.started, report.initialized,
+            report.document_opened, (int)report.query_status, (int)report.close_status,
+            (int)report.shutdown_status);
+    }
+    CHECK(actual == expected);
     if (expected == UMI_STATUS_OK)
     {
         size_t count = strcmp(mode, "empty") == 0 ? 0U : strcmp(mode, "overloads") == 0 ? 2U : 1U;

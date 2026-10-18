@@ -3,6 +3,8 @@
 # Retained for review: guarding before the availability check prevented a later
 # GTK-enabled consumer from retrying this module. The guard below records only
 # an inclusion that can actually create the provider.
+# This module also supports independent composition; own its SDK registration dependency.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 if(FALSE)
     include_guard(GLOBAL)
 endif()
