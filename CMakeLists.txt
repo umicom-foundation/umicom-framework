@@ -2266,6 +2266,7 @@ add_library(umicom_sdk STATIC
     src/sdk/package.c
     src/sdk/installed_metadata.c
     src/sdk/installation_inspection.c
+    src/sdk/artifact_inventory.c
     src/sdk/locator.c
     src/sdk/probe.c
     src/sdk/compatibility.c

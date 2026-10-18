@@ -83,3 +83,41 @@ foreach(_case normal derived_capacity prefix_capacity empty null)
     set_tests_properties("framework.sdk.installation.paths.${_case}" PROPERTIES
         TIMEOUT 15 LABELS "framework;sdk;regression")
 endforeach()
+
+# Artifact evidence supplements the stable base-SDK inspection API. It does not
+# execute imported targets or treat a file's presence as successful qualification.
+add_executable(umicom-sdk-artifact-inventory-tests
+    "${CMAKE_CURRENT_LIST_DIR}/../tests/sdk_installation/test_artifact_inventory.c")
+target_link_libraries(umicom-sdk-artifact-inventory-tests PRIVATE Umicom::sdk)
+umicom_apply_warnings(umicom-sdk-artifact-inventory-tests)
+umicom_apply_sanitizers(umicom-sdk-artifact-inventory-tests)
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-sdk-artifact-inventory-tests)
+endif()
+foreach(_case valid owned crlf truncated nul control duplicates shared-import paths grammar capacity record-limit invalid)
+    add_test(NAME "framework.sdk.artifacts.parse.${_case}"
+        COMMAND umicom-sdk-artifact-inventory-tests "${_case}")
+    set_tests_properties("framework.sdk.artifacts.parse.${_case}" PROPERTIES
+        TIMEOUT 20 LABELS "framework;sdk;parser;regression")
+endforeach()
+foreach(_case complete missing directory absent unicode)
+    add_test(NAME "framework.sdk.artifacts.observe.${_case}"
+        COMMAND "${CMAKE_COMMAND}"
+            "-DTEST_PROGRAM=$<TARGET_FILE:umicom-sdk-artifact-inventory-tests>"
+            "-DTEST_BINARY=${CMAKE_CURRENT_BINARY_DIR}/sdk-artifact-fixtures"
+            "-DCASE=${_case}"
+            -P "${CMAKE_CURRENT_LIST_DIR}/../tests/sdk_installation/check_artifacts.cmake")
+    set_tests_properties("framework.sdk.artifacts.observe.${_case}" PROPERTIES
+        TIMEOUT 30 LABELS "framework;sdk;filesystem;regression")
+endforeach()
+if(TARGET umicom)
+    foreach(_case complete missing directory absent unicode malformed relative unknown-option)
+        add_test(NAME "framework.sdk.artifacts.cli.${_case}"
+            COMMAND "${CMAKE_COMMAND}" "-DCLI_PROGRAM=$<TARGET_FILE:umicom>"
+                "-DTEST_BINARY=${CMAKE_CURRENT_BINARY_DIR}/sdk-artifact-cli-fixtures"
+                "-DCASE=${_case}"
+                -P "${CMAKE_CURRENT_LIST_DIR}/../tests/sdk_installation/check_artifacts.cmake")
+        set_tests_properties("framework.sdk.artifacts.cli.${_case}" PROPERTIES
+            TIMEOUT 30 LABELS "framework;sdk;cli;regression")
+    endforeach()
+endif()

@@ -16,3 +16,8 @@ endif()
 add_test(NAME sdk.component.consumer COMMAND sdk_consumer)
 set_tests_properties(sdk.component.consumer PROPERTIES
     ENVIRONMENT_MODIFICATION "PATH=path_list_prepend:${SDK_ROOT}/bin")
+
+if(TARGET Sdk::sdk_development_command)
+    # Resolve through the imported target after relocation, not the build tree.
+    add_test(NAME sdk.component.development_command COMMAND Sdk::sdk_development_command)
+endif()

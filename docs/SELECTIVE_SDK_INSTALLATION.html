@@ -6,6 +6,7 @@
 <h1>Install an Umicom Framework SDK without product executables</h1>
 <p>An SDK contains the headers, libraries and package description needed to build another application. Use the <code>umicom-sdk-libraries</code> build target and <code>FrameworkSDK</code> installation component to produce that set without first building every product executable or test program. This is a development SDK; it does not install the Studio or Trader application.</p>
 <p>The selected component follows your build configuration. It includes every Framework library registered in the package export set, including configured optional adapters. It is not a choice of individual <code>find_package</code> components and it does not bundle external libraries. A GTK4 SDK still requires its GTK4 development dependencies; a Qt SDK requires Qt and a suitable C++ toolchain.</p>
+<p>The existing <code>umicom-sdk-libraries</code> name is retained for compatibility. Its dependency set also builds explicitly exported development commands, currently <code>umicom-source-contracts</code>, because the installed CMake export references that executable. These commands are installed but are never executed by installation.</p>
 <h2>Choose a build and installation folder</h2>
 <ol>
 <li>Open PowerShell in the Framework source folder. The example uses MSYS2 UCRT64 and its C23 compiler. Create a log directory outside the repository:
@@ -23,6 +24,12 @@ This target has dependencies on the registered libraries. A successful library b
 The prefix in this example must be new for this SDK configuration. Do not overlay a different SDK: old headers and optional dependency fragments could remain. Installation is not transactional; if it fails, keep its log, fix the cause and repeat into a new prefix.</li>
 </ol>
 <p>Run each command separately and stop on errors. PowerShell does not automatically stop after a failed native command. For a multi-configuration generator, also pass <code>--config Debug</code> to the build. On Linux, use Linux paths and your native C23 compiler.</p>
+<h2>Inspect declared SDK artifacts</h2>
+<p>New SDK installations contain a data-only <code>share/umicom/framework/sdk-artifacts.txt</code> receipt. It records the selected configuration and each registered archive, shared library, import library, interface target and development command. An interface target has no physical artifact.</p>
+<pre><code>cmake --build --preset windows-ucrt64-debug --target umicom --parallel 2
+&amp; ".\build\windows-ucrt64-debug\bin\umicom.exe" sdk artifacts "C:\umicom\installed\framework-sdk" --all</code></pre>
+<p>The native inspector needs to have been rebuilt with artifact-inspection support. Omit <code>--all</code> to list only missing files. Exit code 0 means all declared physical files were observed, 1 means files are missing or no physical artifacts were declared, and 2 means invalid arguments or an unreadable or malformed receipt. An older SDK without the receipt remains usable through the existing <code>sdk inspect</code> command, but cannot supply this stronger inventory evidence.</p>
+<p>This check never executes installed CMake files or commands. Presence does not authenticate file bytes, check ABI compatibility, discover unlisted exports, or prove that an application builds or runs. Select a trusted prefix: filesystem links may be followed by presence checks. Files may change after inspection. Continue with the independent consumer below.</p>
 <h2>Qualify the installed result</h2>
 <ol>
 <li>Run the component fixtures, which build their own small libraries and record per-stage logs under the build tree:
@@ -47,9 +54,11 @@ Follow <a href="INSTALLED_SDK_QUALIFICATION.html">installed SDK qualification</a
 <h2>Extend the library catalogue</h2>
 <p>When a Framework composition module exports a new library, retain its normal <code>install(TARGETS ... EXPORT UmicomFrameworkTargets ...)</code> rule, then call <code>umicom_register_sdk_libraries(my_library)</code>. This helper is internal to Framework's build composition. It adds the library to the SDK build target and registers SDK-only artifact installation without registering the target in the export set twice.</p>
 <p>Use real local static, shared, module or interface library targets. Imported libraries, aliases, object libraries, executables and Apple framework bundles are refused. Repeated registration is harmless. Optional modules must also install their dependency-discovery files with <code>COMPONENT FrameworkSDK EXCLUDE_FROM_ALL</code>, so an independent consumer can reconstruct the same external target names.</p>
+<p>If a development command is exported with the SDK, register it separately with <code>umicom_register_sdk_tools(my_command)</code> beside its normal installation rule. This accepts only owned non-bundle executable targets. Do not register ordinary product applications. Real source-contract installed-consumer cases exercise its archive, public header, command and relocation independently from the miniature fixtures.</p>
 <h2>Troubleshoot installation</h2>
 <ul>
 <li><strong>Missing executable during install:</strong> check that the command selects <code>--component FrameworkSDK</code>. A full install still requires its product executables to have been built.</li>
+<li><strong>Missing <code>source_contracts</code> archive or command:</strong> reconfigure with the corrected SDK registration, rebuild <code>umicom-sdk-libraries</code>, and install into a fresh prefix. Copying only the export file cannot repair this package. A failed consumer configure produces no build file, so stop before build, test or launch.</li>
 <li><strong>Missing archive:</strong> build <code>umicom-sdk-libraries</code> for the matching configuration, then install again to a fresh prefix. Missing artifacts are errors, not optional omissions.</li>
 <li><strong>Missing GTK, GtkSourceView, Qt, HTTP or playback dependency:</strong> install the external development packages used by the producer build. Do not remove exported link dependencies to suppress the diagnostic.</li>
 <li><strong>Imported target points outside the selected prefix:</strong> use a fresh consumer build directory and select the intended SDK explicitly. A previous cache can retain another package location.</li>

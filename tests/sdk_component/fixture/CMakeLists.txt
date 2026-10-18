@@ -86,3 +86,35 @@ install(EXPORT SdkFixtureTargets NAMESPACE Sdk:: FILE SdkFixtureTargets.cmake
     COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
 file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/tool-path-$<CONFIG>.txt"
     CONTENT "$<TARGET_FILE:sdk_tool>")
+
+# Exported developer commands must accompany the libraries without dragging
+# unrelated product applications into the selective build.
+if(TEST_CASE MATCHES "^(development-command|duplicate-tool|relocated-tool|missing-installed-tool)$")
+    add_executable(sdk_development_command tool.c)
+    install(TARGETS sdk_development_command EXPORT SdkFixtureTargets
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}")
+    umicom_register_sdk_tools(sdk_development_command)
+    if(TEST_CASE STREQUAL "duplicate-tool")
+        umicom_register_sdk_tools(sdk_development_command)
+    endif()
+    file(GENERATE OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/development-tool-$<CONFIG>.txt"
+        CONTENT "$<TARGET_FILE:sdk_development_command>")
+elseif(TEST_CASE STREQUAL "tool-missing")
+    umicom_register_sdk_tools(does_not_exist)
+elseif(TEST_CASE STREQUAL "tool-library")
+    umicom_register_sdk_tools(sdk_base)
+elseif(TEST_CASE STREQUAL "tool-imported")
+    add_executable(sdk_imported_command IMPORTED)
+    umicom_register_sdk_tools(sdk_imported_command)
+elseif(TEST_CASE STREQUAL "tool-alias")
+    add_executable(Sdk::tool_alias ALIAS sdk_tool)
+    umicom_register_sdk_tools(Sdk::tool_alias)
+elseif(TEST_CASE STREQUAL "tool-empty")
+    umicom_register_sdk_tools()
+elseif(TEST_CASE STREQUAL "tool-bundle")
+    set_target_properties(sdk_tool PROPERTIES MACOSX_BUNDLE TRUE)
+    umicom_register_sdk_tools(sdk_tool)
+endif()
+
+# Run after the optional deferred library registration above.
+cmake_language(DEFER CALL umicom_generate_sdk_artifact_inventory)

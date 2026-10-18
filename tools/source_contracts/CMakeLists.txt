@@ -90,3 +90,23 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     install(EXPORT UmicomFrameworkTargets NAMESPACE Umicom::
         DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomSourceContracts" COMPONENT Framework)
 endif()
+
+# Source contracts are exported to installed SDK consumers from this subdirectory.
+# Register both artifacts here, beside their existing full-install ownership;
+# a root-only library scan misses this archive and then its command executable.
+include("${_umicom_contract_root}/cmake/UmicomSdkComponent.cmake")
+umicom_register_sdk_libraries(umicom_source_contracts)
+umicom_register_sdk_tools(umicom-source-contracts)
+install(FILES "${_umicom_contract_root}/include/umicom/source_contracts/source_contracts.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/source_contracts"
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    # Preserve the same standalone development export when selecting only SDK files.
+    install(EXPORT UmicomFrameworkTargets NAMESPACE Umicom::
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomSourceContracts"
+        COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
+endif()
+
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    umicom_generate_sdk_artifact_inventory()
+endif()

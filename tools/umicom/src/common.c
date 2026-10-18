@@ -178,6 +178,7 @@ void umi_cli_print_help(void)
     (void)puts(
         "  umicom test-report CTEST_JUNIT_FILE [--all] (saved results only)\n"
         "  umicom sdk inspect SDK_PREFIX\n"
+        "  umicom sdk artifacts SDK_PREFIX [--all] (declared file presence)\n"
         "  umicom repo inspect-module MANIFEST\n"
         "  umicom repo modules [SUITE_DIRECTORY]\n"
         "  umicom repo check-module SUITE_DIRECTORY MANIFEST applications/slug\n"

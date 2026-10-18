@@ -118,6 +118,10 @@ function(_umicom_inventory_capture_last)
     # Prepare consumer probes after all owners exist, before inventory capture.
     # One shared completion hook avoids mutually waiting deferred finalisers.
     umicom_release_contracts_prepare()
+    # SDK receipts share this settled callback so late module registrations are included.
+    if(COMMAND umicom_generate_sdk_artifact_inventory)
+        umicom_generate_sdk_artifact_inventory()
+    endif()
     # Late registrations also receive the fixture policy. Share the existing
     # finaliser instead of creating two deferred hooks that wait on each other.
     if(COMMAND umicom_configure_test_workspaces)
@@ -226,6 +230,9 @@ function(umicom_release_inventory_complete)
     if(UMICOM_RELEASE_INVENTORY_CAPTURE)
         cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" ID umicom_inventory_final CALL _umicom_inventory_capture_last)
     elseif(UMICOM_RELEASE_HEADER_CHECKS)
+        cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" ID umicom_inventory_final CALL _umicom_inventory_capture_last)
+    elseif(COMMAND umicom_generate_sdk_artifact_inventory)
+        # SDK receipt generation also needs settled ownership when release auditing is off.
         cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" ID umicom_inventory_final CALL _umicom_inventory_capture_last)
     endif()
 endfunction()

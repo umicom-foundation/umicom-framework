@@ -55,5 +55,51 @@ function(umicom_register_sdk_libraries)
                 COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
         add_dependencies(umicom-sdk-libraries "${_target}")
         set_property(TARGET "${_target}" PROPERTY UMICOM_SDK_INSTALL_REGISTERED TRUE)
+        set_property(GLOBAL APPEND PROPERTY UMICOM_SDK_ARTIFACT_TARGETS "${_target}")
     endforeach()
 endfunction()
+
+# Exported development commands are part of the installed package contract too.
+# Keep the existing aggregate name for callers, but include explicitly registered
+# tools: omitting one makes CMake reject the complete export during find_package.
+# Product applications are never discovered or added automatically.
+function(umicom_register_sdk_tools)
+    if(NOT ARGC GREATER 0)
+        message(FATAL_ERROR "Framework SDK tool registration requires executable targets")
+    endif()
+    foreach(_target IN LISTS ARGN)
+        if(NOT TARGET "${_target}")
+            message(FATAL_ERROR "Framework SDK tool target does not exist: ${_target}")
+        endif()
+        get_target_property(_alias "${_target}" ALIASED_TARGET)
+        get_target_property(_imported "${_target}" IMPORTED)
+        get_target_property(_type "${_target}" TYPE)
+        get_target_property(_bundle "${_target}" MACOSX_BUNDLE)
+        if(_alias OR _imported OR NOT _type STREQUAL "EXECUTABLE" OR _bundle)
+            message(FATAL_ERROR "Framework SDK tool must be an owned non-bundle executable: ${_target}")
+        endif()
+        get_target_property(_registered "${_target}" UMICOM_SDK_TOOL_INSTALL_REGISTERED)
+        if(_registered)
+            continue()
+        endif()
+        if(NOT TARGET umicom-sdk-libraries)
+            add_custom_target(umicom-sdk-libraries)
+            set_property(TARGET umicom-sdk-libraries PROPERTY UMICOM_SDK_BUILD_TARGET TRUE)
+        else()
+            get_target_property(_owned umicom-sdk-libraries UMICOM_SDK_BUILD_TARGET)
+            if(NOT _owned)
+                message(FATAL_ERROR "Framework SDK build target name is already in use")
+            endif()
+        endif()
+        # The normal install rule retains its export and full-install ownership.
+        # This companion rule is required, not OPTIONAL, and never runs the tool.
+        install(TARGETS "${_target}"
+            RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+                COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
+        add_dependencies(umicom-sdk-libraries "${_target}")
+        set_property(TARGET "${_target}" PROPERTY UMICOM_SDK_TOOL_INSTALL_REGISTERED TRUE)
+        set_property(GLOBAL APPEND PROPERTY UMICOM_SDK_ARTIFACT_TARGETS "${_target}")
+    endforeach()
+endfunction()
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkArtifactInventory.cmake")
