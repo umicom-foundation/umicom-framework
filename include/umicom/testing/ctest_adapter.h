@@ -120,6 +120,10 @@ UmiStatus UmiCtestEscapeName(const char *testName, char *outPattern,
 UmiStatus UmiCtestParseReport(const char *xml, size_t length,
     const char *testName, UmiCtestReportSnapshot *outSnapshot);
 
+/* Result files are created exclusively below buildDirectory/test-work and
+ * removed non-recursively after the invocation. The existing build root and
+ * its parents are trusted writable paths, not a filesystem sandbox. No fallback
+ * to the user-profile temp directory occurs when this location is unavailable. */
 /** Execute the exactly named test from the CTest BUILD ROOT, not its test-level
  * WORKING_DIRECTORY. Requires CTest 3.21+ for --output-junit. A fresh private
  * report directory is owned for this call and is cleaned on every return path.

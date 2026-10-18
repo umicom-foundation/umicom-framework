@@ -19,8 +19,16 @@
  * overwritten. The project being tested still runs with the user's privileges:
  * this temporary directory is not a sandbox against the same user or process. */
 
+#ifdef _WIN32
+#include "../platform/native_path_internal.h"
+#else
+#include <sys/stat.h>
+#endif
+
 typedef struct UmiCtestReportFiles {
     int ownsDirectory;
+    /* Snapshot the selected root once for both report I/O and process argv. */
+    char buildPath[4096];
     char path[4096];
 #ifdef _WIN32
     wchar_t directoryWide[1024];
@@ -30,6 +38,8 @@ typedef struct UmiCtestReportFiles {
 #endif
 } UmiCtestReportFiles;
 
+/* Selected-test reports now live under the caller-selected build directory, with UTF-8 process arguments and the same exclusive per-run ownership. The system-temp and ANSI-code-page version is superseded. The former implementation is retained for review. */
+#if 0
 static UmiStatus CtestReportCreate(UmiCtestReportFiles *files)
 {
     memset(files, 0, sizeof *files);
@@ -89,7 +99,93 @@ static UmiStatus CtestReportCreate(UmiCtestReportFiles *files)
 #endif
     return UMI_STATUS_OK;
 }
-
+#else
+static UmiStatus CtestReportCreate(UmiCtestReportFiles *files, const char *buildDirectory)
+{
+    memset(files, 0, sizeof *files);
+    if (buildDirectory == NULL || buildDirectory[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+#ifdef _WIN32
+    wchar_t *buildWide = NULL;
+    UmiStatus pathStatus = UmiNativePathWide(buildDirectory, &buildWide);
+    if (pathStatus != UMI_STATUS_OK) return pathStatus;
+    wchar_t temporary[900];
+    DWORD length = GetFullPathNameW(buildWide, (DWORD)(sizeof temporary / sizeof temporary[0]), temporary, NULL);
+    free(buildWide);
+    if (length == 0U) return UMI_STATUS_IO_ERROR;
+    if (length >= sizeof temporary / sizeof temporary[0]) return UMI_STATUS_CAPACITY_EXCEEDED;
+    DWORD attributes = GetFileAttributesW(temporary);
+    if (attributes == INVALID_FILE_ATTRIBUTES || (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0U)
+        return UMI_STATUS_NOT_FOUND;
+    pathStatus = UmiNativePathUtf8(temporary, files->buildPath, sizeof files->buildPath);
+    if (pathStatus != UMI_STATUS_OK) return pathStatus;
+    const wchar_t suffix[] = L"\\test-work";
+    if ((size_t)length + sizeof suffix / sizeof suffix[0] > sizeof temporary / sizeof temporary[0])
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    memcpy(temporary + length, suffix, sizeof suffix);
+    if (!CreateDirectoryW(temporary, NULL) && GetLastError() != ERROR_ALREADY_EXISTS)
+        return UMI_STATUS_IO_ERROR;
+    attributes = GetFileAttributesW(temporary);
+    if (attributes == INVALID_FILE_ATTRIBUTES || (attributes & FILE_ATTRIBUTE_DIRECTORY) == 0U)
+        return UMI_STATUS_INVALID_STATE;
+    static volatile LONG sequence = 0;
+    for (unsigned attempt = 0U; attempt < 128U; ++attempt) {
+        unsigned long serial = (unsigned long)InterlockedIncrement(&sequence);
+        int written = swprintf(files->directoryWide,
+            sizeof files->directoryWide / sizeof files->directoryWide[0],
+            L"%ls\\umicom-ctest-%lu-%llu-%lu", temporary,
+            (unsigned long)GetCurrentProcessId(),
+            (unsigned long long)GetTickCount64(), serial);
+        if (written < 0 || (size_t)written >=
+            sizeof files->directoryWide / sizeof files->directoryWide[0])
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        if (CreateDirectoryW(files->directoryWide, NULL)) {
+            files->ownsDirectory = 1;
+            break;
+        }
+        if (GetLastError() != ERROR_ALREADY_EXISTS) return UMI_STATUS_IO_ERROR;
+    }
+    if (!files->ownsDirectory) return UMI_STATUS_ALREADY_EXISTS;
+    int written = swprintf(files->pathWide,
+        sizeof files->pathWide / sizeof files->pathWide[0],
+        L"%ls\\result.xml", files->directoryWide);
+    if (written < 0 || (size_t)written >= sizeof files->pathWide / sizeof files->pathWide[0])
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Process arguments are UTF-8 throughout Framework. Using the ANSI code
+     * page here would corrupt a valid Unicode build path before CreateProcessW. */
+    if (WideCharToMultiByte(CP_UTF8, WC_ERR_INVALID_CHARS, files->pathWide, -1,
+            files->path, (int)sizeof files->path, NULL, NULL) == 0)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+#else
+    char temporary[4096];
+    char current[4096];
+    int written;
+    if (buildDirectory[0] == '/')
+        written = snprintf(temporary, sizeof temporary, "%s", buildDirectory);
+    else {
+        if (getcwd(current, sizeof current) == NULL) return UMI_STATUS_IO_ERROR;
+        written = snprintf(temporary, sizeof temporary, "%s/%s", current, buildDirectory);
+    }
+    if (written < 0 || (size_t)written >= sizeof temporary) return UMI_STATUS_CAPACITY_EXCEEDED;
+    struct stat metadata;
+    if (stat(temporary, &metadata) != 0 || !S_ISDIR(metadata.st_mode)) return UMI_STATUS_NOT_FOUND;
+    size_t length = (size_t)written;
+    memcpy(files->buildPath, temporary, length + 1U);
+    const char suffix[] = "/test-work";
+    if (length + sizeof suffix > sizeof temporary) return UMI_STATUS_CAPACITY_EXCEEDED;
+    memcpy(temporary + length, suffix, sizeof suffix);
+    if (mkdir(temporary, 0700) != 0 && errno != EEXIST) return UMI_STATUS_IO_ERROR;
+    if (stat(temporary, &metadata) != 0 || !S_ISDIR(metadata.st_mode)) return UMI_STATUS_INVALID_STATE;
+    written = snprintf(files->directory, sizeof files->directory,
+        "%s/umicom-ctest-XXXXXX", temporary);
+    if (written < 0 || (size_t)written >= sizeof files->directory) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (mkdtemp(files->directory) == NULL) return UMI_STATUS_IO_ERROR;
+    files->ownsDirectory = 1;
+    written = snprintf(files->path, sizeof files->path, "%s/result.xml", files->directory);
+    if (written < 0 || (size_t)written >= sizeof files->path) return UMI_STATUS_CAPACITY_EXCEEDED;
+#endif
+    return UMI_STATUS_OK;
+}
+#endif
 static UmiStatus CtestReportRead(const UmiCtestReportFiles *files,
     char **outText, size_t *outLength)
 {

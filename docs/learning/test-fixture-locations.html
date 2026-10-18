@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Choose where test fixtures are stored</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:900px;margin:3rem auto;padding:0 1.4rem;color:#243246}h1,h2{line-height:1.2}pre{padding:1rem;background:#eef2f6;overflow:auto}code{font-family:ui-monospace,monospace}aside{border-left:4px solid #2563eb;padding:0 1rem}table{border-collapse:collapse;width:100%}td,th{padding:.65rem;border:1px solid #ccd5df;text-align:left}</style></head>
+<body><h1>Choose where test fixtures are stored</h1>
+<p>A test fixture is a temporary workspace containing files created for a test.
+A failed editor test may keep its fixture so you can inspect the source, settings and logs.
+These files are separate from your own projects.</p>
+<h2>1. Choose a visible location</h2>
+<p>Framework's full CMake build sets <code>UMICOM_TEST_WORK_ROOT</code> to the build folder's
+<code>test-work</code> directory by default. Each registered test gets a named subdirectory with
+a short identity suffix. Different builds and tests receive different directories.</p>
+<p>You can choose a shorter absolute path, especially when building on Windows. For example,
+from an Umicom Applications checkout with its dependencies installed:</p>
+<pre><code>cmake --preset windows-ucrt64-all-debug -DUMICOM_TEST_WORK_ROOT=C:/Umicom-Test-Work</code></pre>
+<p>For a standalone Framework build, add the same option to your existing configure command:</p>
+<pre><code>cmake -S . -B build/qualification -DUMICOM_TEST_WORK_ROOT=C:/Umicom-Test-Work</code></pre>
+<p>Keep your usual compiler and feature options. The directory is created during configuration.
+This setting changes where test processes create temporary files; it does not move existing fixtures,
+change application workspace preferences or redirect the desktop's normal data storage.</p>
+<h2>2. Build, then record a test run</h2>
+<p>For the Applications preset:</p>
+<pre><code>cmake --build --preset windows-ucrt64-all-debug --parallel 2
+ctest --preset windows-ucrt64-all-debug --parallel 2 --output-on-failure --no-tests=error --output-log build/windows-ucrt64-all-debug/tests.log</code></pre>
+<p>Stop if the build fails. A test run against older executables does not validate the latest source.
+A successful run prints a final summary. A log ending at a <code>Start</code> line is incomplete;
+it cannot establish the result of the remaining tests.</p>
+<h2>3. Inspect retained evidence</h2>
+<p>Look under your selected root for the test name. Tests using GLib's temporary-directory helper
+create a further unique folder there. Their failure output prints the retained path.
+Other tests may remove their own fixture after success.</p>
+<table><thead><tr><th>Situation</th><th>What to check</th></tr></thead><tbody>
+<tr><td>A path still points to the Windows user temp folder</td><td>Reconfigure the correct build.
+Inspect the test's generated environment. An explicit TEMP, TMP or TMPDIR override belongs to that
+fixture and is preserved. Launching a test executable directly bypasses CTest's environment.</td></tr>
+<tr><td>A custom location is ignored</td><td>Check the build's CMake cache for UMICOM_TEST_WORK_ROOT.
+The setting persists until you change it with another configure command.</td></tr>
+<tr><td>Windows reports a long path</td><td>Choose a short root such as C:/Umicom-Test-Work.
+This does not enable long-path support in external tools.</td></tr>
+<tr><td>Some project tests use their own build folder</td><td>The setting redirects temporary-directory
+APIs, not paths explicitly chosen by a test or external program.</td></tr>
+</tbody></table>
+<aside><p>Cross-directory test environment configuration requires CMake 3.28 or newer.
+Older CMake versions retain the existing same-directory limitation. Keep fixtures and raw logs
+in local build or private working folders; they can contain paths and project data.</p></aside>
+<h2>Live tests started by Studio or Framework</h2>
+<p>The native CTest execution service creates its temporary JUnit report beneath
+<code>SELECTED_BUILD/test-work/umicom-ctest-...</code>. It resolves the build root once,
+uses a new directory for each invocation, and removes only its own result file and empty directory.
+It does not fall back to the user profile if the selected build is unwritable.</p>
+<p>This temporary internal report is separate from retained test fixtures and saved qualification
+reports. To keep a complete suite report for review, use CTest's explicit output options described in
+<a href="inspect-test-reports.html">Inspect saved test reports</a>.</p>
+<h2>Contributing a test</h2>
+<p>Use the process temporary-directory API for scratch work. CTest supplies TMPDIR, TEMP and TMP
+consistently, plus UMICOM_TEST_WORK_DIRECTORY for diagnostics. Keep unrelated environment settings.
+If a fixture deliberately tests a particular temporary-directory policy, give it an explicit test
+environment override; Framework will leave that policy alone.</p>
+<p>For GTK controls inside collapsed sections, lookup is read-only. Explicitly reveal the section
+before simulating an action, then reacquire the control. Retained widgets from removed panels must
+remain unable to trigger commands. Checked lookup reports missing, ambiguous and oversized trees
+as separate outcomes instead of treating all three as an absent control.</p>
+</body></html>

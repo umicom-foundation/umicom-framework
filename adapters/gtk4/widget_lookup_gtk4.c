@@ -44,7 +44,12 @@ void *umi_gtk4_automation_find_named_widget(void *native_root, const char *widge
  * alone cannot lead out of a collapsed GtkExpander. Retain each route object
  * because selection notifications may synchronously rebuild or close a view. */
 typedef struct AutomationRevealRoute {
+/* Share logical-tree bounds between lookup and reveal. The former implementation is retained for review. */
+#if 0
     GtkWidget *nodes[257];
+#else
+    GtkWidget *nodes[UMI_GTK4_LOGICAL_TREE_DEPTH_LIMIT + 1U];
+#endif
     unsigned count;
     size_t visited;
     UmiStatus status;
@@ -54,7 +59,13 @@ static bool automation_reveal_route(GtkWidget *widget, GtkWidget *target,
     unsigned depth, AutomationRevealRoute *route)
 {
     if (widget == NULL || route->status != UMI_STATUS_OK) return false;
+/* Use the same supported-tree limit for a captured reveal route. The former implementation is retained for review. */
+#if 0
     if (depth >= G_N_ELEMENTS(route->nodes) || route->visited >= 16384U) {
+#else
+    if (depth >= G_N_ELEMENTS(route->nodes) ||
+        route->visited >= UMI_GTK4_LOGICAL_TREE_NODE_LIMIT) {
+#endif
         route->status = UMI_STATUS_CAPACITY_EXCEEDED;
         return false;
     }
@@ -120,6 +131,27 @@ UmiStatus umi_gtk4_automation_reveal_tagged_widget(void *native_root, const char
         umi_gtk4_automation_find_tagged_widget(native_root, automation_id) != search.found)
         status = UMI_STATUS_CANCELLED;
     for (unsigned i = 0U; i < route.count; ++i) g_clear_object(&route.nodes[i]);
+    g_clear_object(&search.found);
+    return status;
+}
+
+/* Checked lookup keeps absence separate from ambiguity or incomplete traversal.
+ * The output is borrowed only after the entire bounded tree has been inspected. */
+UmiStatus umi_gtk4_automation_find_tagged_widget_checked(void *native_root,
+    const char *automation_id, void **out_widget)
+{
+    if (out_widget == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_widget = NULL;
+    if (native_root == NULL || !GTK_IS_WIDGET(native_root) ||
+        automation_id == NULL || automation_id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    AutomationSearch search = {0};
+    automation_find_widgets(GTK_WIDGET(native_root), automation_id, NULL, 0U, &search);
+    UmiStatus status = search.status;
+    if (status == UMI_STATUS_OK) {
+        if (search.matches == 0U) status = UMI_STATUS_NOT_FOUND;
+        else if (search.matches != 1U) status = UMI_STATUS_ALREADY_EXISTS;
+        else *out_widget = search.found;
+    }
     g_clear_object(&search.found);
     return status;
 }

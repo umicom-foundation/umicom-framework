@@ -158,3 +158,45 @@ endif()
 
 # Scalable metadata uses the same test project and native process implementation.
 include("${CMAKE_CURRENT_LIST_DIR}/json_checks.cmake")
+
+# Suite evidence uses the production adapter and preserves selected-test compatibility.
+add_executable(umicom-ctest-report-collection-checks test_report_collection.c)
+target_link_libraries(umicom-ctest-report-collection-checks PRIVATE
+    umicom-ctest-checks-core umicom-ctest-checks-process)
+add_dependencies(umicom-ctest-checks umicom-ctest-report-collection-checks)
+if(BUILD_TESTING)
+    include("${CMAKE_CURRENT_LIST_DIR}/collection_checks.cmake")
+endif()
+
+# Failure injection still requires a real owner-selected report parent.
+file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/Umicom build root")
+
+# A process double checks ownership; the existing real-process fixture then
+# exercises the same Unicode build path through CTest and native argv transport.
+add_executable(umicom-ctest-report-workspace-checks test_report_workspace.c)
+target_link_libraries(umicom-ctest-report-workspace-checks PRIVATE umicom-ctest-checks-core)
+add_dependencies(umicom-ctest-checks umicom-ctest-report-workspace-checks)
+if(BUILD_TESTING)
+    foreach(scenario unicode relative launch-failure blocked missing)
+        set(report_root "${CMAKE_CURRENT_BINARY_DIR}/report café ${scenario}")
+        if(NOT scenario STREQUAL "missing")
+            file(MAKE_DIRECTORY "${report_root}")
+        endif()
+        if(scenario STREQUAL "relative")
+            set(report_root "report café ${scenario}")
+        endif()
+        add_test(NAME "framework.ctest.report_workspace.${scenario}"
+            COMMAND umicom-ctest-report-workspace-checks "${report_root}" "${scenario}")
+        set_tests_properties("framework.ctest.report_workspace.${scenario}" PROPERTIES TIMEOUT 30)
+    endforeach()
+    set(unicode_build "${CMAKE_CURRENT_BINARY_DIR}/report café native $<CONFIG>")
+    add_test(NAME framework.ctest.unicode_build_setup
+        COMMAND "${CMAKE_COMMAND}" -S "${CMAKE_CURRENT_SOURCE_DIR}/fixture"
+            -B "${unicode_build}" "-DUMICOM_CTEST_FIXTURE_HELPER=$<TARGET_FILE:umicom-ctest-fixture-helper>")
+    set_tests_properties(framework.ctest.unicode_build_setup PROPERTIES
+        FIXTURES_SETUP umicom_ctest_unicode_root TIMEOUT 60)
+    add_test(NAME framework.ctest.unicode_build_run
+        COMMAND umicom-ctest-execution-checks "${unicode_build}" pass)
+    set_tests_properties(framework.ctest.unicode_build_run PROPERTIES
+        FIXTURES_REQUIRED umicom_ctest_unicode_root TIMEOUT 30)
+endif()

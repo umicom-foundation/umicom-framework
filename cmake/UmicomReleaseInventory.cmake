@@ -118,6 +118,11 @@ function(_umicom_inventory_capture_last)
     # Prepare consumer probes after all owners exist, before inventory capture.
     # One shared completion hook avoids mutually waiting deferred finalisers.
     umicom_release_contracts_prepare()
+    # Late registrations also receive the fixture policy. Share the existing
+    # finaliser instead of creating two deferred hooks that wait on each other.
+    if(COMMAND umicom_configure_test_workspaces)
+        umicom_configure_test_workspaces("${CMAKE_BINARY_DIR}")
+    endif()
     if(NOT UMICOM_RELEASE_INVENTORY_CAPTURE)
         return()
     endif()

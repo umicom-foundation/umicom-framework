@@ -39,6 +39,19 @@ int main(void)
     assert(umi_document_provider_stat(&provider, path, &info) == UMI_STATUS_OK);
     assert(info.exists && info.regular_file && info.byte_count == 8U);
     assert(provider.remove(provider.instance, path) == UMI_STATUS_OK);
+    /* Use the same UTF-8 identity across write/read/stat/remove on Windows.
+     * Include a supplementary character to exercise a UTF-16 surrogate pair. */
+    assert(umi_fs_join(path, sizeof(path), root, "umicom-provider-caf\xc3\xa9-\xf0\x9f\x8c\x90.txt") == UMI_STATUS_OK);
+    assert(umi_document_provider_write(&provider, path, "unicode", 7U, 1) == UMI_STATUS_OK);
+    assert(umi_document_provider_stat(&provider, path, &info) == UMI_STATUS_OK);
+    assert(info.exists && info.regular_file && info.byte_count == 7U && info.readable && info.writable);
+    assert(umi_path_equal(path, info.path));
+    bytes = NULL;
+    assert(umi_document_provider_read(&provider, path, &bytes, &size) == UMI_STATUS_OK);
+    assert(size == 7U && memcmp(bytes, "unicode", 7U) == 0);
+    umi_document_provider_release_bytes(&provider, bytes);
+    assert(provider.remove(provider.instance, path) == UMI_STATUS_OK);
+    assert(umi_document_provider_stat(&provider, path, &info) == UMI_STATUS_NOT_FOUND);
     (void)printf("document provider passed\n");
     return 0;
 }

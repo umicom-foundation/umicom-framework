@@ -571,13 +571,23 @@ static UmiStatus CtestRunWithOutput(const char *buildDirectory,
     }
     UmiCtestReportFiles files;
     char *xml = NULL; size_t xmlLength = 0U;
+/* The selected build owns temporary result storage, avoiding dependence on the user profile temp directory. The former implementation is retained for review. */
+#if 0
     status = CtestReportCreate(&files);
+#else
+    status = CtestReportCreate(&files, buildDirectory);
+#endif
     if (status != UMI_STATUS_OK) {
         CtestDiagnostic(outResult, "Cannot create a fresh private CTest report directory.");
         goto cleanup;
     }
     const char *arguments[11]; size_t count = 0U;
+/* A single absolute build-root snapshot keeps CTest and its report in the same tree even if another thread changes the process directory. The former implementation is retained for review. */
+#if 0
     arguments[count++] = "--test-dir"; arguments[count++] = buildDirectory;
+#else
+    arguments[count++] = "--test-dir"; arguments[count++] = files.buildPath;
+#endif
     arguments[count++] = "-R"; arguments[count++] = pattern;
     arguments[count++] = "--output-on-failure";
     /* CTest otherwise withholds passing-test output until the run finishes. */

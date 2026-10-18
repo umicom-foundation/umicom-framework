@@ -176,6 +176,7 @@ void umi_cli_print_help(void)
         "  umicom repo help\n"
         , stdout);
     (void)puts(
+        "  umicom test-report CTEST_JUNIT_FILE [--all] (saved results only)\n"
         "  umicom sdk inspect SDK_PREFIX\n"
         "  umicom repo inspect-module MANIFEST\n"
         "  umicom repo modules [SUITE_DIRECTORY]\n"

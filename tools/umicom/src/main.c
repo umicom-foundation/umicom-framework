@@ -283,6 +283,9 @@ static int RunNativeCommand(int argc, char **argv)
     /* Use the stable identifier comparison to choose the matching record or policy. */
     /* VM policy and child ownership stay in Framework; this command is only
      * a presentation adapter shared with the standalone VM manager. */
+    /* Saved test evidence is inspected through Framework without a toolchain or test launch. */
+    if (strcmp(command, "test-report") == 0)
+        return umi_cli_command_test_report(argc - 2, argv + 2);
     if (strcmp(command, "qemu") == 0)
         return umi_cli_command_qemu(argc - 2, argv + 2);
     if (strcmp(command, "check") == 0 || strcmp(command, "doctor") == 0)

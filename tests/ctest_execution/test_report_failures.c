@@ -15,6 +15,7 @@
 
 #include "umicom/testing/ctest_adapter.h"
 #include "umicom/platform/process.h"
+#include "umicom/platform/path.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,6 +23,15 @@
 #include <direct.h>
 #else
 #include <unistd.h>
+#endif
+
+#include "report_file_helpers.h"
+/* Preserve every existing injected failure and cleanup assertion. On Windows
+ * the returned report argument is UTF-8, so fixture I/O must use wide paths too. */
+#ifdef _WIN32
+#define fopen ReportFixtureOpen
+#define remove ReportFixtureRemove
+#define _rmdir ReportFixtureRemoveDirectory
 #endif
 
 /* Deliberate test double, linked only in this executable. The separate real
@@ -38,7 +48,13 @@ UmiStatus umi_process_execute(const UmiProcessRequest *request, UmiProcessResult
     CHECK(request != NULL && request->argument_count == 10U);
     CHECK(strcmp(request->program, "ctest") == 0);
     CHECK(strcmp(request->arguments[0], "--test-dir") == 0);
+/* Execution now receives the same absolute selected build root as report storage. The former implementation is retained for review. */
+#if 0
     CHECK(strcmp(request->arguments[1], "Umicom build root") == 0);
+#else
+    CHECK(umi_path_is_absolute(request->arguments[1]));
+    CHECK(strstr(request->arguments[1], "Umicom build root") != NULL);
+#endif
     CHECK(strcmp(request->arguments[3], "^notes\\.save$") == 0);
     CHECK(strcmp(request->arguments[5], "--no-tests=error") == 0);
     CHECK(strcmp(request->arguments[6], "--output-junit") == 0);
@@ -47,6 +63,8 @@ UmiStatus umi_process_execute(const UmiProcessRequest *request, UmiProcessResult
     CHECK(strlen(request->arguments[7]) < sizeof reportPath);
     snprintf(reportPath, sizeof reportPath, "%s", request->arguments[7]);
     CHECK(strcmp(reportPath, previousPath) != 0);
+    CHECK(strstr(reportPath, "Umicom build root") != NULL);
+    CHECK(strstr(reportPath, "test-work") != NULL);
     FILE *old = fopen(reportPath, "rb"); CHECK(old == NULL); if (old != NULL) fclose(old);
     if (mode == 0U) return UMI_STATUS_IO_ERROR; /* Launch failed. */
     result->launched = 1; result->exit_code = 0;

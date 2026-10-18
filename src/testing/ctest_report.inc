@@ -18,6 +18,8 @@
  * parser beside its source owner avoids a second library or source-list entry.
  * This parser intentionally accepts CTest's small JUnit vocabulary only. */
 
+#include "umicom/testing/ctest_report.h"
+
 typedef struct UmiCtestXmlCursor {
     const char *bytes;
     size_t length;
@@ -431,6 +433,8 @@ static UmiStatus CtestReportState(const char *status, int failures, int skips,
     return UMI_STATUS_OK;
 }
 
+/* A shared scanner now supports both selected-test results and immutable suite inspection, keeping the same XML validation for both consumers. The former implementation is retained for review. */
+#if 0
 UmiStatus UmiCtestParseReport(const char *xml, size_t length,
     const char *testName, UmiCtestReportSnapshot *outSnapshot)
 {
@@ -546,7 +550,285 @@ cleanup:
     return status;
 #undef CTEST_REPORT_FAIL
 }
+#else
+/* Suite inspection shares the XML grammar with live selected-test execution.
+ * Records are private until the complete document and its totals are checked,
+ * so callers can never confuse a partly imported suite with a complete report. */
+struct UmiCtestReport {
+    UmiCtestReportSummary summary;
+    UmiCtestReportEntry *entries;
+    size_t capacity;
+};
 
+static UmiStatus CtestReportAppend(UmiCtestReport *report, const char *name,
+    const UmiCtestReportSnapshot *snapshot, bool disabled)
+{
+    size_t count = report->summary.tests;
+    if (count == UMI_CTEST_COLLECTION_MAX_TESTS ||
+        report->summary.measured_test_ms > UINT64_MAX - snapshot->duration_ms)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (count == report->capacity) {
+        size_t capacity = report->capacity == 0U ? 64U : report->capacity * 2U;
+        if (capacity > UMI_CTEST_COLLECTION_MAX_TESTS) capacity = UMI_CTEST_COLLECTION_MAX_TESTS;
+        if (capacity > SIZE_MAX / sizeof *report->entries) return UMI_STATUS_CAPACITY_EXCEEDED;
+        UmiCtestReportEntry *entries = realloc(report->entries, capacity * sizeof *entries);
+        if (entries == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+        report->entries = entries;
+        report->capacity = capacity;
+    }
+    UmiCtestReportEntry *entry = &report->entries[count];
+    memcpy(entry->name, name, strlen(name) + 1U);
+    entry->result = *snapshot;
+    entry->disabled = disabled;
+    ++report->summary.tests;
+    report->summary.measured_test_ms += snapshot->duration_ms;
+    if (disabled) ++report->summary.disabled;
+    else if (snapshot->state == UMI_TEST_STATE_PASSED) ++report->summary.passed;
+    else if (snapshot->state == UMI_TEST_STATE_FAILED) ++report->summary.failed;
+    else if (snapshot->state == UMI_TEST_STATE_TIMED_OUT) ++report->summary.timed_out;
+    else if (snapshot->state == UMI_TEST_STATE_SKIPPED) ++report->summary.skipped;
+    else if (snapshot->state == UMI_TEST_STATE_NOT_RUN) ++report->summary.not_run;
+    else return UMI_STATUS_PARSE_ERROR;
+    return UMI_STATUS_OK;
+}
+
+static int CtestReportNameCompare(const void *left, const void *right)
+{
+    const UmiCtestReportEntry *const *a = left;
+    const UmiCtestReportEntry *const *b = right;
+    return strcmp((*a)->name, (*b)->name);
+}
+
+static UmiStatus CtestReportFinish(UmiCtestReport *report)
+{
+    size_t count = report->summary.tests;
+    if (count == 0U) return UMI_STATUS_OK;
+    /* A sorted pointer index detects ambiguous decoded identities without
+     * changing document order or doing quadratic work on large suites. */
+    const UmiCtestReportEntry **ordered = malloc(count * sizeof *ordered);
+    if (ordered == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    for (size_t index = 0U; index < count; ++index) {
+        report->entries[index].result.testcase_count = count;
+        ordered[index] = &report->entries[index];
+    }
+    qsort(ordered, count, sizeof *ordered, CtestReportNameCompare);
+    UmiStatus status = UMI_STATUS_OK;
+    for (size_t index = 1U; index < count; ++index) {
+        if (strcmp(ordered[index - 1U]->name, ordered[index]->name) == 0) {
+            status = UMI_STATUS_PARSE_ERROR;
+            break;
+        }
+    }
+    free(ordered);
+    return status;
+}
+
+static UmiStatus CtestParseReportCore(const char *xml, size_t length,
+    const char *testName, UmiCtestReportSnapshot *outSnapshot, UmiCtestReport *report)
+{
+    UmiStatus status = UMI_STATUS_OK;
+    if (report == NULL) {
+        size_t nameLength;
+        status = CtestNameLength(testName, &nameLength);
+        if (status != UMI_STATUS_OK) return status;
+        if (outSnapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (xml == NULL || length == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t maximum = report == NULL ? UMI_CTEST_REPORT_MAX_BYTES : UMI_CTEST_COLLECTION_MAX_BYTES;
+    if (length > maximum) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (memchr(xml, '\0', length) != NULL) return UMI_STATUS_PARSE_ERROR;
+    UmiCtestXmlCursor cursor = { xml, length, 0U };
+    UmiCtestXmlTag *tag = (UmiCtestXmlTag *)calloc(1U, sizeof *tag);
+    if (tag == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    char stack[8][64]; size_t depth = 0U;
+    size_t caseCount = 0U, declaredCount = 0U, matches = 0U;
+    int sawRoot = 0, finishedRoot = 0, selected = 0, failures = 0, skips = 0;
+    char caseStatus[32] = "", message[256] = "", caseName[UMI_TEST_NAME_CAPACITY] = "";
+    const char *totalNames[3] = {"failures", "disabled", "skipped"};
+    size_t declaredTotals[3] = {0U, 0U, 0U};
+    bool totalPresent[3] = {false, false, false};
+    UmiCtestReportSnapshot current = {0}, selectedSnapshot = {0};
+#define CTEST_REPORT_FAIL(code) do { status = (code); goto cleanup; } while (0)
+    if (CtestXmlStarts(&cursor, "\xEF\xBB\xBF")) cursor.position += 3U;
+    /* Only a validated UTF-8 XML declaration may precede the root. */
+    if (CtestXmlStarts(&cursor, "<?xml")) {
+        status = CtestXmlDeclaration(&cursor, tag);
+        if (status != UMI_STATUS_OK) goto cleanup;
+    }
+    while (cursor.position < length) {
+        if (CtestXmlStarts(&cursor, "<!--")) {
+            cursor.position += 4U;
+            status = CtestXmlLiteralUntil(&cursor, "--");
+            if (status != UMI_STATUS_OK) goto cleanup;
+            if (!CtestXmlStarts(&cursor, "-->")) CTEST_REPORT_FAIL(UMI_STATUS_PARSE_ERROR);
+            cursor.position += 3U; continue;
+        }
+        if (CtestXmlStarts(&cursor, "<![CDATA[")) {
+            if (depth == 0U || !CtestXmlTextParent(stack[depth - 1U]))
+                CTEST_REPORT_FAIL(UMI_STATUS_PARSE_ERROR);
+            cursor.position += 9U;
+            status = CtestXmlLiteralUntil(&cursor, "]]>");
+            if (status != UMI_STATUS_OK) goto cleanup;
+            if (cursor.position == length) CTEST_REPORT_FAIL(UMI_STATUS_PARSE_ERROR);
+            cursor.position += 3U; continue;
+        }
+        if (xml[cursor.position] != '<') {
+            if (CtestXmlStarts(&cursor, "]]>")) CTEST_REPORT_FAIL(UMI_STATUS_PARSE_ERROR);
+            uint32_t value; size_t consumed;
+            if (xml[cursor.position] == '&') {
+                if (depth == 0U) CTEST_REPORT_FAIL(UMI_STATUS_PARSE_ERROR);
+                status = CtestXmlEntity(&cursor, &value);
+                if (status != UMI_STATUS_OK) goto cleanup;
+            } else {
+                if (!CtestUtf8Read(xml + cursor.position, length - cursor.position,
+                                  &consumed, &value)) CTEST_REPORT_FAIL(UMI_STATUS_PARSE_ERROR);
+                cursor.position += consumed;
+            }
+            if ((depth == 0U || !CtestXmlTextParent(stack[depth - 1U])) &&
+                !(value <= 127U && CtestXmlSpace((unsigned char)value)))
+                CTEST_REPORT_FAIL(UMI_STATUS_PARSE_ERROR);
+            continue;
+        }
+        status = CtestXmlReadTag(&cursor, tag);
+        if (status != UMI_STATUS_OK) goto cleanup;
+        if (tag->closing) {
+            if (depth == 0U || strcmp(stack[depth - 1U], tag->name) != 0)
+                CTEST_REPORT_FAIL(UMI_STATUS_PARSE_ERROR);
+        } else {
+            if (finishedRoot || depth == 8U ||
+                !CtestXmlAllowed(depth == 0U ? NULL : stack[depth - 1U], tag->name))
+                CTEST_REPORT_FAIL(UMI_STATUS_PARSE_ERROR);
+            if (strcmp(tag->name, "testsuite") == 0) {
+                if (sawRoot || !CtestXmlUnsigned(CtestXmlAttribute(tag, "tests"), &declaredCount))
+                    CTEST_REPORT_FAIL(UMI_STATUS_PARSE_ERROR);
+                if (report != NULL) {
+                    if (declaredCount > UMI_CTEST_COLLECTION_MAX_TESTS)
+                        CTEST_REPORT_FAIL(UMI_STATUS_CAPACITY_EXCEEDED);
+                    for (size_t index = 0U; index < 3U; ++index) {
+                        const char *total = CtestXmlAttribute(tag, totalNames[index]);
+                        totalPresent[index] = total != NULL;
+                        if (total != NULL && !CtestXmlUnsigned(total, &declaredTotals[index]))
+                            CTEST_REPORT_FAIL(UMI_STATUS_PARSE_ERROR);
+                    }
+                }
+                sawRoot = 1;
+            } else if (strcmp(tag->name, "testcase") == 0) {
+                const char *name = CtestXmlAttribute(tag, "name");
+                const char *state = CtestXmlAttribute(tag, "status");
+                const char *time = CtestXmlAttribute(tag, "time");
+                if (name == NULL || name[0] == '\0' || state == NULL ||
+                    strlen(state) >= sizeof caseStatus ||
+                    !CtestXmlMilliseconds(time, &current.duration_ms))
+                    CTEST_REPORT_FAIL(UMI_STATUS_PARSE_ERROR);
+                snprintf(caseStatus, sizeof caseStatus, "%s", state);
+                if (report != NULL) {
+                    size_t used;
+                    status = CtestNameLength(name, &used);
+                    if (status != UMI_STATUS_OK) goto cleanup;
+                    memcpy(caseName, name, used + 1U);
+                }
+                selected = testName != NULL && strcmp(name, testName) == 0;
+                if (selected && ++matches > 1U) CTEST_REPORT_FAIL(UMI_STATUS_PARSE_ERROR);
+                ++caseCount; failures = 0; skips = 0; message[0] = '\0';
+            } else if (strcmp(tag->name, "failure") == 0 || strcmp(tag->name, "skipped") == 0) {
+                const char *reason = CtestXmlAttribute(tag, "message");
+                if (strcmp(tag->name, "failure") == 0) ++failures; else ++skips;
+                if (failures + skips > 1 || reason == NULL || strlen(reason) >= sizeof message)
+                    CTEST_REPORT_FAIL(UMI_STATUS_PARSE_ERROR);
+                snprintf(message, sizeof message, "%s", reason);
+            }
+            snprintf(stack[depth++], sizeof stack[0], "%s", tag->name);
+        }
+        if (tag->closing || tag->empty) {
+            if (strcmp(tag->name, "testcase") == 0) {
+                status = CtestReportState(caseStatus, failures, skips, message, &current);
+                if (status != UMI_STATUS_OK) goto cleanup;
+                if (selected) selectedSnapshot = current;
+                if (report != NULL) {
+                    status = CtestReportAppend(report, caseName, &current,
+                        strcmp(caseStatus, "disabled") == 0);
+                    if (status != UMI_STATUS_OK) goto cleanup;
+                }
+            }
+            --depth;
+            if (depth == 0U) finishedRoot = 1;
+        }
+    }
+    if (!sawRoot || !finishedRoot || depth != 0U || caseCount != declaredCount)
+        CTEST_REPORT_FAIL(UMI_STATUS_PARSE_ERROR);
+    if (report == NULL) {
+        if (matches != 1U) CTEST_REPORT_FAIL(UMI_STATUS_NOT_FOUND);
+        selectedSnapshot.testcase_count = caseCount;
+        *outSnapshot = selectedSnapshot;
+    } else {
+        size_t actualTotals[3] = {report->summary.failed + report->summary.timed_out,
+            report->summary.disabled, report->summary.skipped + report->summary.not_run};
+        for (size_t index = 0U; index < 3U; ++index)
+            if (totalPresent[index] && declaredTotals[index] != actualTotals[index])
+                CTEST_REPORT_FAIL(UMI_STATUS_PARSE_ERROR);
+        status = CtestReportFinish(report);
+        if (status != UMI_STATUS_OK) goto cleanup;
+    }
+    status = UMI_STATUS_OK;
+cleanup:
+    free(tag);
+    return status;
+#undef CTEST_REPORT_FAIL
+}
+
+/* The original selected-test contract uses the shared scanner with no owned
+ * collection; its output publication and byte limit remain unchanged. */
+UmiStatus UmiCtestParseReport(const char *xml, size_t length,
+    const char *testName, UmiCtestReportSnapshot *outSnapshot)
+{
+    return CtestParseReportCore(xml, length, testName, outSnapshot, NULL);
+}
+
+UmiStatus UmiCtestReportImport(const char *xml, size_t length, UmiCtestReport **outReport)
+{
+    if (outReport == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outReport = NULL;
+    if (xml == NULL || length == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    if (length > UMI_CTEST_COLLECTION_MAX_BYTES) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiCtestReport *report = calloc(1U, sizeof *report);
+    if (report == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    UmiStatus status = CtestParseReportCore(xml, length, NULL, NULL, report);
+    if (status != UMI_STATUS_OK) {
+        UmiCtestReportDestroy(report);
+        return status;
+    }
+    *outReport = report;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiCtestReportReadSummary(const UmiCtestReport *report,
+    UmiCtestReportSummary *outSummary)
+{
+    if (report == NULL || outSummary == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outSummary = report->summary;
+    return UMI_STATUS_OK;
+}
+
+const UmiCtestReportEntry *UmiCtestReportEntryAt(const UmiCtestReport *report, size_t index)
+{
+    return report == NULL || index >= report->summary.tests ? NULL : &report->entries[index];
+}
+
+UmiStatus UmiCtestReportRequirePassed(const UmiCtestReport *report)
+{
+    if (report == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return report->summary.tests != 0U && report->summary.tests == report->summary.passed
+        ? UMI_STATUS_OK : UMI_STATUS_INVALID_STATE;
+}
+
+void UmiCtestReportDestroy(UmiCtestReport *report)
+{
+    if (report == NULL) return;
+    free(report->entries);
+    free(report);
+}
+
+#endif
 UmiStatus UmiCtestResultRequirePassed(const UmiTestResult *result)
 {
     if (result == NULL) return UMI_STATUS_INVALID_ARGUMENT;

@@ -15,6 +15,7 @@
 #-----------------------------------------------------------------------------
 
 include_guard(GLOBAL)
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomTestWorkspace.cmake")
 set(UMICOM_TEST_RUNTIME_FRAMEWORK_ROOT "${CMAKE_CURRENT_LIST_DIR}/..")
 
 add_library(umicom_test_runtime STATIC
@@ -165,6 +166,7 @@ set_property(GLOBAL PROPERTY UMICOM_TEST_RUNTIME_BINARY_BIN
 # Define the configure test runtime build helper so parent and application projects apply
 # one consistent rule.
 function(umicom_configure_test_runtime test_name test_directory)
+    umicom_configure_test_workspace("${test_name}" "${test_directory}")
     get_property(_umicom_test_runtime_binary_bin GLOBAL
         PROPERTY UMICOM_TEST_RUNTIME_BINARY_BIN)
     get_property(_umicom_test_runtime_compiler_bin GLOBAL
@@ -360,3 +362,12 @@ message(STATUS "Umicom test runtime and regression execution platform enabled")
 # This source tree supplies neither execution-profiles.json nor a JSON profile
 # loader. Do not advertise an absent configuration file as an install artifact;
 # a future resource implementation must add its reader, schema and tests together.
+
+# The miniature fixture configures no compiler and checks the real environment helper.
+if(BUILD_TESTING AND CMAKE_VERSION VERSION_GREATER_EQUAL "3.28")
+    add_subdirectory("${UMICOM_TEST_RUNTIME_FRAMEWORK_ROOT}/tests/test_workspace_configuration"
+        "${CMAKE_CURRENT_BINARY_DIR}/test-workspace-checks")
+endif()
+
+install(FILES "${UMICOM_TEST_RUNTIME_FRAMEWORK_ROOT}/docs/learning/test-fixture-locations.html"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/learning" COMPONENT Learning)

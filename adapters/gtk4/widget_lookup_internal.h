@@ -20,6 +20,12 @@
  * Extend logical-container ownership here so both callers retain the same bounds. */
 /* Retain the first matching object while checking for ambiguous identifiers.
  * A partial or ambiguous tree is not a licence to activate its first match. */
+/* A supported debugger page can contain 1,024 variable rows, each owning
+ * labels, entries and collapsed controls. Budget native widgets rather than
+ * assuming one widget per record. Search and reveal use the same finite bound. */
+#define UMI_GTK4_LOGICAL_TREE_NODE_LIMIT 131072U
+#define UMI_GTK4_LOGICAL_TREE_DEPTH_LIMIT 256U
+
 typedef struct AutomationSearch {
     GtkWidget *found;
     size_t matches;
@@ -33,7 +39,13 @@ static void automation_find_widgets(GtkWidget *widget, const char *target_id,
     GtkWidget *child;
     const char *id;
     if (widget == NULL || widget == excluded || search->status != UMI_STATUS_OK) return;
+/* Allow complete supported debugger trees without accepting an ambiguous partial traversal. The former implementation is retained for review. */
+#if 0
     if (depth > 256U || search->visited >= 16384U) {
+#else
+    if (depth > UMI_GTK4_LOGICAL_TREE_DEPTH_LIMIT ||
+        search->visited >= UMI_GTK4_LOGICAL_TREE_NODE_LIMIT) {
+#endif
         search->status = UMI_STATUS_CAPACITY_EXCEEDED;
         return;
     }

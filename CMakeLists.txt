@@ -4274,6 +4274,17 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-document-encoding-tests framework.document.encoding tests/document/test_document_encoding.c)
     umicom_add_framework_test(umicom-document-line-endings-tests framework.document.line_endings tests/document/test_document_line_endings.c)
     umicom_add_framework_test(umicom-document-uri-tests framework.document.uri tests/document/test_document_uri.c)
+    add_executable(umicom-atomic-file-ownership-tests tests/platform/test_atomic_file_ownership.c)
+    target_link_libraries(umicom-atomic-file-ownership-tests PRIVATE Umicom::platform)
+    umicom_apply_warnings(umicom-atomic-file-ownership-tests)
+    umicom_apply_sanitizers(umicom-atomic-file-ownership-tests)
+    foreach(_atomic_case unicode collision collision-limit concurrent directory invalid empty)
+        add_test(NAME framework.atomic_file.ownership.${_atomic_case}
+            COMMAND umicom-atomic-file-ownership-tests ${_atomic_case})
+        set_tests_properties(framework.atomic_file.ownership.${_atomic_case} PROPERTIES
+            TIMEOUT 45 LABELS "framework;platform;filesystem;regression")
+    endforeach()
+
     umicom_add_framework_test(umicom-document-fingerprint-tests framework.document.fingerprint tests/document/test_document_fingerprint.c)
     umicom_add_framework_test(umicom-document-provider-tests framework.document.provider tests/document/test_document_provider.c)
     umicom_add_framework_test(umicom-document-loader-saver-tests framework.document.loader_saver tests/document/test_document_loader_saver.c)
@@ -6067,3 +6078,6 @@ install(FILES docs/SELECTIVE_SDK_INSTALLATION.html
 install(FILES docs/SELECTIVE_SDK_INSTALLATION.html
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs"
     COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
+
+# Saved CTest evidence shares the live adapter parser and native CLI.
+include(cmake/UmicomCtestReportInspection.cmake)

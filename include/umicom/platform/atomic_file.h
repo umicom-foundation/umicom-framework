@@ -29,6 +29,13 @@ extern "C" {
  * Write atomic file in its stable representation and report capacity or input failures to
  * the caller.
  */
+/* Paths use UTF-8 on Windows. Relative paths are captured as absolute once.
+ * Missing parent directories are created. Writes use a same-directory,
+ * exclusively created temporary file, flush it, then replace the destination.
+ * Existing temporary names are never overwritten or removed; bounded collision
+ * retries can return ALREADY_EXISTS. Parent directories must be trusted and
+ * stable: this is not an adversarial filesystem sandbox. Independent successful
+ * writes to the same destination replace one another in completion order. */
 UmiStatus umi_atomic_file_write(const char *path,
                                 const void *data,
                                 size_t size);

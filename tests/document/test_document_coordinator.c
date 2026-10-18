@@ -55,6 +55,13 @@ int main(void)
     assert(umi_document_coordinator_close_active(coordinator, 0) == UMI_STATUS_OK);
     assert(umi_document_coordinator_count(coordinator) == 0U);
     assert(remove(path) == 0);
+    /* A display name with spaces remains legal when projected into an
+     * unsaved document URI and captured by language-service requests. */
+    assert(umi_document_coordinator_new(coordinator, "Private filename.c", NULL, 0U) == UMI_STATUS_OK);
+    assert(umi_document_coordinator_active_snapshot(coordinator, &snapshot) == UMI_STATUS_OK);
+    assert(umi_ui_document_view_model_find(umi_ui_workbench_documents(workbench),
+        snapshot.view_id, &view) == UMI_STATUS_OK);
+    assert(strcmp(view.uri, "untitled:///Private%20filename.c") == 0);
     umi_document_coordinator_destroy(coordinator);
     umi_document_store_destroy(store);
     umi_ui_workbench_destroy(workbench);

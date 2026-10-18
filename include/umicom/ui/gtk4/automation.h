@@ -119,6 +119,21 @@ void *umi_gtk4_automation_find_named_widget(
 UmiStatus umi_gtk4_automation_reveal_tagged_widget(
     void *native_root, const char *automation_id);
 
+/**
+ * @brief Find a unique tagged widget and report why lookup cannot complete.
+ * @param native_root Caller-owned GtkWidget on its GTK owning thread.
+ * @param automation_id Nonempty stable control identifier.
+ * @param out_widget Receives a borrowed widget on success, otherwise NULL.
+ * @return OK, NOT_FOUND, ALREADY_EXISTS for ambiguous IDs, INVALID_ARGUMENT,
+ * or CAPACITY_EXCEEDED when the logical tree exceeds 131072 native widgets or
+ * 256 ownership edges. No partial match is returned on a traversal failure.
+ *
+ * This is read-only and does not enable, reveal or activate any control.
+ * Keep the root alive and reacquire the widget after notification-capable work.
+ */
+UmiStatus umi_gtk4_automation_find_tagged_widget_checked(
+    void *native_root, const char *automation_id, void **out_widget);
+
 #ifdef __cplusplus
 }
 #endif

@@ -15,6 +15,9 @@
 #include "umicom/document/local_provider.h"
 
 #include <stdio.h>
+#ifdef _WIN32
+#include "../platform/native_path_internal.h"
+#endif
 
 #include "umicom/document/file_identity.h"
 #include "umicom/platform/atomic_file.h"
@@ -64,7 +67,18 @@ static UmiStatus local_remove(void *instance, const char *resource)
      * used.
      */
     if (resource == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Remove the same UTF-8 resource that read/stat address. Never use the
+     * current Windows code page to reinterpret a document identity. */
+#ifdef _WIN32
+    wchar_t *native = NULL;
+    UmiStatus status = UmiNativePathWide(resource, &native);
+    if (status != UMI_STATUS_OK) return status;
+    int removed = _wremove(native);
+    free(native);
+    return removed == 0 ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
+#else
     return remove(resource) == 0 ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
+#endif
 }
 
 /* Provide the local rename operation used by this module and its client applications. */

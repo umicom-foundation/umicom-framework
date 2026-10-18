@@ -445,8 +445,18 @@ static UmiStatus refresh_view(UmiDocumentCoordinator *coordinator, size_t index)
     if (store_snapshot.has_path) {
         (void)umi_document_uri_from_path(store_snapshot.path, view.uri, sizeof(view.uri));
     } /* Use this fallback path when the earlier condition does not apply. */ else {
+/* Unsaved names are display text, not pre-encoded URIs. The shared encoder preserves the document identity accepted by language services. The former implementation is retained for review. */
+#if 0
         (void)snprintf(view.uri, sizeof(view.uri), "untitled:///%s",
                        store_snapshot.display_name);
+#else
+        status = umi_document_uri_from_untitled_name(store_snapshot.display_name,
+            view.uri, sizeof(view.uri));
+        if (status != UMI_STATUS_OK) {
+            umi_document_store_free_text(text);
+            return status;
+        }
+#endif
     }
     (void)umi_document_language_detect(store_snapshot.display_name, &language);
     (void)snprintf(view.language_id, sizeof(view.language_id), "%s", language.language_id);

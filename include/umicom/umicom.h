@@ -220,6 +220,7 @@
 #include "umicom/testing/runner.h"
 #include "umicom/testing/report.h"
 #include "umicom/testing/ctest_adapter.h"
+#include "umicom/testing/ctest_report.h"
 
 #include "umicom/terminal/terminal.h"
 #include "umicom/terminal_ui/terminal_ui.h"

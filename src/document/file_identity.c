@@ -21,6 +21,7 @@
 
 #ifdef _WIN32
 #include <io.h>
+#include "../platform/native_path_internal.h"
 #define UMI_ACCESS _access
 #else
 #include <unistd.h>
@@ -36,7 +37,11 @@
 UmiStatus umi_document_file_info(const char *path,
                                  UmiDocumentFileInfo *out_info)
 {
+#ifdef _WIN32
+    struct _stat64 information;
+#else
     struct stat information;
+#endif
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -47,11 +52,38 @@ UmiStatus umi_document_file_info(const char *path,
     if (strlen(path) >= sizeof(out_info->path)) return UMI_STATUS_CAPACITY_EXCEEDED;
     (void)snprintf(out_info->path, sizeof(out_info->path), "%s", path);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
+    /* Metadata and file reading must resolve the same UTF-8 resource. Windows'
+     * narrow stat/access calls reinterpret UTF-8 through the active code page. */
+#ifdef _WIN32
+    wchar_t *native = NULL;
+    UmiStatus conversion = UmiNativePathWide(path, &native);
+    if (conversion != UMI_STATUS_OK) return conversion;
+    int stat_result = _wstat64(native, &information);
+    int saved_error = errno;
+    if (stat_result == 0) {
+        out_info->readable = _waccess(native, 4) == 0;
+        out_info->writable = _waccess(native, 2) == 0;
+    }
+    free(native);
+#else
+    int stat_result = stat(path, &information);
+    int saved_error = errno;
+#endif
+/* The narrow Windows metadata call is retained to explain the replaced boundary. */
+#if 0
     if (stat(path, &information) != 0) {
+#else
+    if (stat_result != 0) {
+#endif
         /* Missing, inaccessible and failed storage are different outcomes.
          * A permission error must never authorise recreating a supposedly
          * missing document. Preserve errno before another library call. */
+/* Capture the metadata error before conversion storage is released. The former implementation is retained for review. */
+#if 0
         int error = errno;
+#else
+        int error = saved_error;
+#endif
         if (error == ENOENT || error == ENOTDIR) return UMI_STATUS_NOT_FOUND;
         if (error == EACCES || error == EPERM) return UMI_STATUS_PERMISSION_DENIED;
         return UMI_STATUS_IO_ERROR;
@@ -60,8 +92,12 @@ UmiStatus umi_document_file_info(const char *path,
     out_info->regular_file = S_ISREG(information.st_mode);
     out_info->byte_count = (uint64_t)information.st_size;
     out_info->modified_time_seconds = (int64_t)information.st_mtime;
+    /* POSIX paths already use UTF-8 bytes; Windows access was checked using
+     * the same wide path as stat above. Preserve the original native calls. */
+#ifndef _WIN32
     out_info->readable = UMI_ACCESS(path, 4) == 0;
     out_info->writable = UMI_ACCESS(path, 2) == 0;
+#endif
     return UMI_STATUS_OK;
 }
 
