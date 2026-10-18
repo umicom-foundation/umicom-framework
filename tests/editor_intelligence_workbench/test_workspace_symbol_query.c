@@ -142,6 +142,10 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelWorkspaceSymbolQueryConditionalArchiv
     UmiEditorIntelWorkspaceSymbolQueryTransferEqual, UmiEditorIntelWorkspaceSymbolQueryTransferTails, UmiEditorIntelWorkspaceSymbolQueryTransferMalformed)
 
 
+/* Each failure exit now has an explicit block, so independent checks cannot
+ * appear to share a condition. The compact entry point is retained below for
+ * review; its replacement preserves the fixture operations and exit codes. */
+#if 0
 int main(void){UmiEditorIntelWorkspaceSymbolQuery model;UmiEditorIntelRange range={{3U,4U},{3U,12U}};/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_workspace_symbol_query_init(&model,"model-1","item","src/main.c",range)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */
     /* Each counter must reject exhaustion before any part of this value changes. */
     UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiEditorIntelWorkspaceSymbolQuery, &model, value.revision,
@@ -157,3 +161,50 @@ int main(void){UmiEditorIntelWorkspaceSymbolQuery model;UmiEditorIntelRange rang
     if (UmiEditorIntelWorkspaceSymbolQueryTransferCasesWithWorkspace(&model) != 0) return 1;
     if (UmiEditorIntelWorkspaceSymbolQueryConditionalArchiveCases(&model) != 0) return 1;
 return 0;}
+#endif
+
+int main(void) {
+  UmiEditorIntelWorkspaceSymbolQuery model;
+  UmiEditorIntelRange range = {{3U, 4U}, {3U, 12U}};
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
+  if (umi_editor_intel_workspace_symbol_query_init(&model, "model-1", "item", "src/main.c",
+                                                   range) != UMI_STATUS_OK) {
+    return 1;
+  }
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
+
+  /* Each counter must reject exhaustion before any part of this value changes. */
+
+  UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiEditorIntelWorkspaceSymbolQuery, &model, value.revision,
+                                  umi_editor_intel_workspace_symbol_query_set_score(&model, 91U));
+  UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiEditorIntelWorkspaceSymbolQuery, &model, revision,
+                                  umi_editor_intel_workspace_symbol_query_set_score(&model, 91U));
+  if (umi_editor_intel_workspace_symbol_query_set_score(&model, 91U) != UMI_STATUS_OK) {
+    return 2;
+  }
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
+
+  /* Each counter must reject exhaustion before any part of this value changes. */
+
+  UMI_TEST_VALUE_COUNTER_BOUNDARY(
+      UmiEditorIntelWorkspaceSymbolQuery, &model, revision,
+      umi_editor_intel_workspace_symbol_query_set_selected(&model, true));
+  if (umi_editor_intel_workspace_symbol_query_set_selected(&model, true) != UMI_STATUS_OK) {
+    return 3;
+  }
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
+  if (!umi_editor_intel_workspace_symbol_query_valid(&model) || model.value.score != 91U ||
+      !model.selected) {
+    return 4;
+  }
+  if (UmiEditorIntelWorkspaceSymbolQueryTransferCases(&model) != 0) {
+    return 1;
+  }
+  if (UmiEditorIntelWorkspaceSymbolQueryTransferCasesWithWorkspace(&model) != 0) {
+    return 1;
+  }
+  if (UmiEditorIntelWorkspaceSymbolQueryConditionalArchiveCases(&model) != 0) {
+    return 1;
+  }
+  return 0;
+}

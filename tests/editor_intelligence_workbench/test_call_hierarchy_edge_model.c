@@ -142,6 +142,10 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorIntelCallHierarchyEdgeModelConditionalArch
     UmiEditorIntelCallHierarchyEdgeModelTransferEqual, UmiEditorIntelCallHierarchyEdgeModelTransferTails, UmiEditorIntelCallHierarchyEdgeModelTransferMalformed)
 
 
+/* Each failure exit now has an explicit block, so independent checks cannot
+ * appear to share a condition. The compact entry point is retained below for
+ * review; its replacement preserves the fixture operations and exit codes. */
+#if 0
 int main(void){UmiEditorIntelCallHierarchyEdgeModel model;UmiEditorIntelRange range={{3U,4U},{3U,12U}};/* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_intel_call_hierarchy_edge_model_init(&model,"model-1","item","src/main.c",range)!=UMI_STATUS_OK)return 1;/* Preserve the original failure result so the caller can respond to the correct cause. */
     /* Each counter must reject exhaustion before any part of this value changes. */
     UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiEditorIntelCallHierarchyEdgeModel, &model, value.revision,
@@ -157,3 +161,52 @@ int main(void){UmiEditorIntelCallHierarchyEdgeModel model;UmiEditorIntelRange ra
     if (UmiEditorIntelCallHierarchyEdgeModelTransferCasesWithWorkspace(&model) != 0) return 1;
     if (UmiEditorIntelCallHierarchyEdgeModelConditionalArchiveCases(&model) != 0) return 1;
 return 0;}
+#endif
+
+int main(void) {
+  UmiEditorIntelCallHierarchyEdgeModel model;
+  UmiEditorIntelRange range = {{3U, 4U}, {3U, 12U}};
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
+  if (umi_editor_intel_call_hierarchy_edge_model_init(&model, "model-1", "item", "src/main.c",
+                                                      range) != UMI_STATUS_OK) {
+    return 1;
+  }
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
+
+  /* Each counter must reject exhaustion before any part of this value changes. */
+
+  UMI_TEST_VALUE_COUNTER_BOUNDARY(
+      UmiEditorIntelCallHierarchyEdgeModel, &model, value.revision,
+      umi_editor_intel_call_hierarchy_edge_model_set_score(&model, 91U));
+  UMI_TEST_VALUE_COUNTER_BOUNDARY(
+      UmiEditorIntelCallHierarchyEdgeModel, &model, revision,
+      umi_editor_intel_call_hierarchy_edge_model_set_score(&model, 91U));
+  if (umi_editor_intel_call_hierarchy_edge_model_set_score(&model, 91U) != UMI_STATUS_OK) {
+    return 2;
+  }
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
+
+  /* Each counter must reject exhaustion before any part of this value changes. */
+
+  UMI_TEST_VALUE_COUNTER_BOUNDARY(
+      UmiEditorIntelCallHierarchyEdgeModel, &model, revision,
+      umi_editor_intel_call_hierarchy_edge_model_set_selected(&model, true));
+  if (umi_editor_intel_call_hierarchy_edge_model_set_selected(&model, true) != UMI_STATUS_OK) {
+    return 3;
+  }
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
+  if (!umi_editor_intel_call_hierarchy_edge_model_valid(&model) || model.value.score != 91U ||
+      !model.selected) {
+    return 4;
+  }
+  if (UmiEditorIntelCallHierarchyEdgeModelTransferCases(&model) != 0) {
+    return 1;
+  }
+  if (UmiEditorIntelCallHierarchyEdgeModelTransferCasesWithWorkspace(&model) != 0) {
+    return 1;
+  }
+  if (UmiEditorIntelCallHierarchyEdgeModelConditionalArchiveCases(&model) != 0) {
+    return 1;
+  }
+  return 0;
+}

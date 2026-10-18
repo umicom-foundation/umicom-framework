@@ -81,6 +81,10 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorWbPinnedEditorConditionalArchiveCases, Umi
     UmiEditorWbPinnedEditorTransferEqual, UmiEditorWbPinnedEditorTransferTails, UmiEditorWbPinnedEditorTransferMalformed)
 
 
+/* Each failure exit now has an explicit block, so independent checks cannot
+ * appear to share a condition. The compact entry point is retained below for
+ * review; its replacement preserves the fixture operations and exit codes. */
+#if 0
 int main(void){ UmiEditorWbPinnedEditor s; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_pinned_editor_init(&s,"item",false)!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */
     /* Each counter must reject exhaustion before any part of this value changes. */
     UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiEditorWbPinnedEditor, &s, revision,
@@ -90,3 +94,35 @@ int main(void){ UmiEditorWbPinnedEditor s; /* Preserve the original failure resu
     if (UmiEditorWbPinnedEditorTransferCasesWithWorkspace(&s) != 0) return 1;
     if (UmiEditorWbPinnedEditorConditionalArchiveCases(&s) != 0) return 1;
  return 0; }
+#endif
+
+int main(void) {
+  UmiEditorWbPinnedEditor s;
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
+  if (umi_editor_wb_pinned_editor_init(&s, "item", false) != UMI_STATUS_OK) {
+    return 1;
+  }
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
+
+  /* Each counter must reject exhaustion before any part of this value changes. */
+
+  UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiEditorWbPinnedEditor, &s, revision,
+                                  umi_editor_wb_pinned_editor_set(&s, true));
+  if (umi_editor_wb_pinned_editor_set(&s, true) != UMI_STATUS_OK) {
+    return 2;
+  }
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
+  if (!umi_editor_wb_pinned_editor_valid(&s) || !s.enabled) {
+    return 3;
+  }
+  if (UmiEditorWbPinnedEditorTransferCases(&s) != 0) {
+    return 1;
+  }
+  if (UmiEditorWbPinnedEditorTransferCasesWithWorkspace(&s) != 0) {
+    return 1;
+  }
+  if (UmiEditorWbPinnedEditorConditionalArchiveCases(&s) != 0) {
+    return 1;
+  }
+  return 0;
+}

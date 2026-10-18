@@ -100,6 +100,10 @@ UMI_TEST_CONDITIONAL_ARCHIVE(UmiEditorWbEditorItemConditionalArchiveCases, UmiEd
     UmiEditorWbEditorItemTransferEqual, UmiEditorWbEditorItemTransferTails, UmiEditorWbEditorItemTransferMalformed)
 
 
+/* Each failure exit now has an explicit block, so independent checks cannot
+ * appear to share a condition. The compact entry point is retained below for
+ * review; its replacement preserves the fixture operations and exit codes. */
+#if 0
 int main(void){ UmiEditorWbEditorItem x; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(umi_editor_wb_editor_item_init(&x,"e1","a.c",UMI_EDITOR_WB_OPEN_PREVIEW)!=UMI_STATUS_OK)return 1; /* Preserve the original failure result so the caller can respond to the correct cause. */ if(!umi_editor_wb_editor_item_valid(&x))return 2;
     if (UmiEditorWbEditorItemTransferCases(&x) != 0) return 1;
     if (UmiEditorWbEditorItemTransferCasesWithWorkspace(&x) != 0) return 1;
@@ -109,3 +113,37 @@ int main(void){ UmiEditorWbEditorItem x; /* Preserve the original failure result
     UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiEditorWbEditorItem, &x, revision,
         umi_editor_wb_editor_item_set_dirty(&x,true));
     if(umi_editor_wb_editor_item_set_dirty(&x,true)!=UMI_STATUS_OK||!x.dirty)return 3; return 0; }
+#endif
+
+int main(void) {
+  UmiEditorWbEditorItem x;
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
+  if (umi_editor_wb_editor_item_init(&x, "e1", "a.c", UMI_EDITOR_WB_OPEN_PREVIEW) !=
+      UMI_STATUS_OK) {
+    return 1;
+  }
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
+  if (!umi_editor_wb_editor_item_valid(&x)) {
+    return 2;
+  }
+  if (UmiEditorWbEditorItemTransferCases(&x) != 0) {
+    return 1;
+  }
+  if (UmiEditorWbEditorItemTransferCasesWithWorkspace(&x) != 0) {
+    return 1;
+  }
+  if (UmiEditorWbEditorItemConditionalArchiveCases(&x) != 0) {
+    return 1;
+  }
+
+  /* Preserve the original failure result so the caller can respond to the correct cause. */
+
+  /* Each counter must reject exhaustion before any part of this value changes. */
+
+  UMI_TEST_VALUE_COUNTER_BOUNDARY(UmiEditorWbEditorItem, &x, revision,
+                                  umi_editor_wb_editor_item_set_dirty(&x, true));
+  if (umi_editor_wb_editor_item_set_dirty(&x, true) != UMI_STATUS_OK || !x.dirty) {
+    return 3;
+  }
+  return 0;
+}
