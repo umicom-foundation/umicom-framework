@@ -12,6 +12,7 @@
 #define _POSIX_C_SOURCE 200809L
 #endif
 #include "test_support.h"
+#include "../support/symbolic_link.h"
 #ifndef _WIN32
 #include <unistd.h>
 #include <sys/stat.h>
@@ -165,8 +166,17 @@ int TestInstall(const char *name)
         else if(!strcmp(name,"install.symlink")) {
 
 #ifdef _WIN32
+            /* Native fixtures exercise the existing refusal contract on capable
+             * Windows hosts. Retain the earlier unconditional skip for review. */
+#if 0
             UmiSetupBundleDestroy(b);
             return 77;
+#endif
+            int linkResult = UmiTestWindowsSymbolicLink(f.destination, f.root, 1);
+            CHECK(linkResult >= 0);
+            if (linkResult == 0) { UmiSetupBundleDestroy(b); return 77; }
+            CHECK(UmiSetupInstall(b,selected,f.destination,fingerprint,NULL,NULL,&r)==UMI_STATUS_ALREADY_EXISTS);
+            CHECK(!r.outputCreated && !r.completed);
 
 #else
             CHECK(symlink(f.root,f.destination)==0);
@@ -178,8 +188,21 @@ int TestInstall(const char *name)
         else if(!strcmp(name,"install.parent_symlink")) {
 
 #ifdef _WIN32
+            /* Check ancestor traversal on Windows as well as POSIX. The earlier
+             * platform-only skip stays disabled for review of coverage changes. */
+#if 0
             UmiSetupBundleDestroy(b);
             return 77;
+#endif
+            char symlinkPath[4096],dest[4096];
+            OK(ScJoin(f.root,"link",symlinkPath));
+            int linkResult = UmiTestWindowsSymbolicLink(symlinkPath, f.root, 1);
+            CHECK(linkResult >= 0);
+            if (linkResult == 0) { UmiSetupBundleDestroy(b); return 77; }
+            OK(ScJoin(symlinkPath,"new",dest));
+            OK(UmiSetupReview(b,selected,dest,fingerprint,NULL,NULL,&r));
+            CHECK(UmiSetupInstall(b,selected,dest,fingerprint,NULL,NULL,&r)==UMI_STATUS_PERMISSION_DENIED);
+            CHECK(!r.outputCreated && !r.completed);
 
 #else
             char symlinkPath[4096],dest[4096];

@@ -98,6 +98,8 @@ int umi_cli_command_repair(UmiCliContext *context, int argc, char **argv);
 int umi_cli_command_shell(UmiCliContext *context, int argc, char **argv);
 /** Read saved CTest JUnit evidence without invoking tests or changing repositories. */
 int umi_cli_command_test_report(int argc, char **argv);
+/* Preview affected targets and tests without executing the proposed plan. */
+int umi_cli_command_impact(int argc, char **argv);
 /** Inspect an explicitly selected installed SDK without executing its package. */
 int umi_cli_command_sdk(int argc, char **argv);
 /** Inspect registered applications and report missing or invalid manifests. */

@@ -9,6 +9,8 @@
 #ifndef _WIN32
 #define _POSIX_C_SOURCE 200809L
 #endif
+/* Skipped coverage must explain its unmet fixture or configuration prerequisite. */
+#include <stdio.h>
 #include "../build_log/fixture.h"
 #include "umicom/platform/rooted_files.h"
 #include "umicom/platform/filesystem.h"
@@ -280,6 +282,7 @@ int main(int argc, char **argv)
         int directory = strcmp(mode, "leaf-link") != 0;
         if (!Link(path, directory ? folder : target, directory))
         {
+            (void)fprintf(stderr, "SKIP: symbolic-link fixture could not be created; static-preview link rejection was not exercised.\n");
             free(response);
             return 77;
         }

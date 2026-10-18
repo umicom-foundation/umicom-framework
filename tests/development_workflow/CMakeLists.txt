@@ -67,6 +67,11 @@ foreach(case complete compile-failure test-failure no-tests no-cpack deploy-test
         COMMAND umicom-development-workflow-example "${case}")
     set_tests_properties(framework.development_workflow.delivery.${case} PROPERTIES
         TIMEOUT 180 RUN_SERIAL TRUE LABELS "framework;build;package;real-toolchain;regression")
+    # Compiler ABI probes add several nested directories below the generated
+    # project. Use the shared compact workspace policy to preserve Windows path
+    # budget, without changing the generated-project or failure expectations.
+    set_property(TEST framework.development_workflow.delivery.${case}
+        PROPERTY UMICOM_TEST_NESTED_BUILD TRUE)
 endforeach()
 
 add_executable(umicom-development-delivery-contract-test test_delivery_contracts.c)

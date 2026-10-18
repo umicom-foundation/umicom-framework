@@ -7,6 +7,8 @@
  *---------------------------------------------------------------------------*/
 
 #define _POSIX_C_SOURCE 200809L
+/* Skipped coverage must explain its unmet fixture or configuration prerequisite. */
+#include <stdio.h>
 #include "fixture.h"
 #ifndef _WIN32
 #include <sys/stat.h>
@@ -17,6 +19,7 @@ int main(void)
 #ifdef _WIN32
     /* Windows prevents removal of the active directory; POSIX supplies the
      * disappearing-cwd condition this regression specifically exercises. */
+    (void)fprintf(stderr, "SKIP: disappearing-current-directory regression requires POSIX removal semantics; Windows keeps the active directory open.\n");
     return 77;
 #else
     char original[UMI_PATH_CAPACITY];

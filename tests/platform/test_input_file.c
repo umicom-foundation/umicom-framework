@@ -11,6 +11,8 @@
 #endif
 /* Reuse the existing exclusive fixture-directory owner. It leaves only files
  * it created under the test working directory and never reuses an old leaf. */
+/* Skipped coverage must explain its unmet fixture or configuration prerequisite. */
+#include <stdio.h>
 #include "../build_log/fixture.h"
 #include "umicom/platform/input_file.h"
 int main(int argc, char **argv)
@@ -53,6 +55,7 @@ int main(int argc, char **argv)
     if (strcmp(name, "fifo") == 0)
     {
 #ifdef _WIN32
+        fprintf(stderr, "SKIP: this case requires a POSIX FIFO fixture; Windows named pipes have a different API.\n");
         return 77;
 #else
         CHECK(mkfifo(path, 0600) == 0);

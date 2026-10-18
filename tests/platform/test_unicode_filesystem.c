@@ -215,6 +215,7 @@ int main(int argc, char **argv)
         CHECK(SetCurrentDirectoryW(before));
         CheckBytes(path, "relative", 8U);
 #else
+        fprintf(stderr, "SKIP: Windows UTF-16 current-directory conversion is not exercised on this platform.\n");
         return 77;
 #endif
     }
@@ -240,6 +241,7 @@ int main(int argc, char **argv)
         free(beforeTemp);
         free(beforeTmp);
 #else
+        fprintf(stderr, "SKIP: Windows TEMP/TMP environment conversion is not exercised on this platform.\n");
         return 77;
 #endif
     }
@@ -258,6 +260,7 @@ int main(int argc, char **argv)
         CHECK(umi_directory_stat(invalid, &info) == UMI_STATUS_INVALID_ARGUMENT);
         CheckBytes(path, "retain", 6U);
 #else
+        fprintf(stderr, "SKIP: Windows UTF-8 to UTF-16 rejection is not exercised on this platform.\n");
         return 77;
 #endif
     }
@@ -268,6 +271,10 @@ int main(int argc, char **argv)
         FixtureDirectory(outside);
         FixturePath(sentinel, outside, unicodeName);
         CHECK(umi_fs_write_text(sentinel, "retain") == UMI_STATUS_OK);
+        /* Use the shared capability probe so unsupported Windows flags are
+         * retried and unexpected filesystem errors remain test failures.
+         * The original direct API probe is retained for review. */
+#if 0
         wchar_t nativeLink[UMI_PATH_CAPACITY], nativeTarget[UMI_PATH_CAPACITY];
         Wide(path, nativeLink);
         Wide(outside, nativeTarget);
@@ -279,12 +286,15 @@ int main(int argc, char **argv)
                 return 77;
             CHECK(0);
         }
+#endif
+        if (!FixtureSymbolicLink(path, outside, 1)) return 77;
         UmiFileInfo info;
         CHECK(umi_directory_stat(path, &info) == UMI_STATUS_OK && info.kind == UMI_FILE_KIND_SYMBOLIC_LINK);
         CHECK(umi_fs_remove_tree(directory) == UMI_STATUS_OK);
         CHECK(!umi_fs_exists(directory));
         CheckBytes(sentinel, "retain", 6U);
 #else
+        fprintf(stderr, "SKIP: Windows reparse-point directory traversal is not exercised on this platform.\n");
         return 77;
 #endif
     }

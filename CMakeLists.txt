@@ -58,6 +58,8 @@ if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
 endif()
 
 include(CTest)
+# Ownership declarations are available before any test helper registers cases.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomImpactInventory.cmake")
 include(GNUInstallDirs)
 # Shared SDK registration must precede optional library composition modules.
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomSdkComponent.cmake")
@@ -1597,6 +1599,7 @@ add_library(umicom_vcs STATIC
     # Share exact-path Git observations with every source-control client.
     src/vcs/working_tree.c
     src/vcs/working_tree_process.c
+    src/vcs/revision_changes.c
     src/vcs/working_tree_legacy.c
     src/vcs/working_tree_job.c
     src/vcs/working_tree_review.c
@@ -3403,6 +3406,7 @@ if(BUILD_TESTING)
         umicom_apply_warnings(${target})
         umicom_apply_sanitizers(${target})
         add_test(NAME ${test_name} COMMAND ${target})
+        umicom_test_impact_owners("${test_name}" TARGETS "${target}")
     endfunction()
     # Reflection tests exercise owned metadata and durable change publication.
     umicom_add_framework_test(
@@ -6086,3 +6090,6 @@ install(FILES docs/SELECTIVE_SDK_INSTALLATION.html
 
 # Saved CTest evidence shares the live adapter parser and native CLI.
 include(cmake/UmicomCtestReportInspection.cmake)
+
+# The impact command previews existing configured targets; it never runs Git mutations.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomBuildImpact.cmake")

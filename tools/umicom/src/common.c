@@ -177,6 +177,7 @@ void umi_cli_print_help(void)
         , stdout);
     (void)puts(
         "  umicom test-report CTEST_JUNIT_FILE [--all] (saved results only)\n"
+        "  umicom impact --inventory ABSOLUTE.tsv --working-tree (preview only)\n"
         "  umicom sdk inspect SDK_PREFIX\n"
         "  umicom sdk artifacts SDK_PREFIX [--all] (declared file presence)\n"
         "  umicom repo inspect-module MANIFEST\n"

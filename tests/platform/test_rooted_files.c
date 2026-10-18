@@ -9,6 +9,8 @@
 #ifndef _WIN32
 #define _POSIX_C_SOURCE 200809L
 #endif
+/* Skipped coverage must explain its unmet fixture or configuration prerequisite. */
+#include <stdio.h>
 #include "../build_log/fixture.h"
 #include "umicom/platform/rooted_files.h"
 #include "umicom/platform/filesystem.h"
@@ -217,6 +219,7 @@ int main(int argc, char **argv)
         options.include_hidden = 1;
         CHECK(umi_directory_walk(folder, &options, NoStaging, NULL) == UMI_STATUS_OK);
 #else
+        (void)fprintf(stderr, "SKIP: locked-file sharing semantics require the Windows fixture.\n");
         return 77;
 #endif
     }
@@ -243,7 +246,10 @@ int main(int argc, char **argv)
         FixturePath(target, folder, "keep.txt");
         int directory = strcmp(mode, "leaf-link") != 0;
         if (!Link(path, directory ? folder : target, directory))
+        {
+            (void)fprintf(stderr, "SKIP: symbolic-link fixture could not be created; rooted link rejection was not exercised.\n");
             return 77;
+        }
         const char *selectedRoot = strcmp(mode, "root-link") == 0 ? path : root;
         const char *leaf = strcmp(mode, "root-link") == 0 ? "keep.txt"
                            : directory                    ? "alias/keep.txt"
@@ -272,6 +278,7 @@ int main(int argc, char **argv)
         NativeBytes(root, "source/keep.txt", "old", 3U);
         CHECK(SetFileAttributesW(native, FILE_ATTRIBUTE_NORMAL));
 #else
+        (void)fprintf(stderr, "SKIP: Windows readonly-attribute behavior is unavailable on this host.\n");
         return 77;
 #endif
     }
@@ -284,6 +291,7 @@ int main(int argc, char **argv)
         struct stat info;
         CHECK(stat(path, &info) == 0 && (info.st_mode & 0777) == 0750);
 #else
+        (void)fprintf(stderr, "SKIP: POSIX permission-bit preservation is not exercised by the Windows fixture.\n");
         return 77;
 #endif
     }

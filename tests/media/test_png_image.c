@@ -104,13 +104,19 @@ int main(int argc, char **argv)
     if (strcmp(mode, "unavailable") == 0)
     {
         if (UmiMediaPngAvailable())
+        {
+            (void)fprintf(stderr, "SKIP: PNG decoding is enabled; the unavailable-provider contract requires a separate build without PNG support.\n");
             return 77;
+        }
         CHECK(UmiMediaPngDecode(input.bytes, input.size, NULL, &image) == UMI_STATUS_NOT_IMPLEMENTED &&
               image == NULL);
         return 0;
     }
     if (!UmiMediaPngAvailable())
+    {
+        (void)fprintf(stderr, "SKIP: this decoding scenario requires PNG support in the configured build.\n");
         return 77;
+    }
     if (strcmp(mode, "null-input") == 0)
     {
         CHECK(UmiMediaPngDecode(NULL, input.size, NULL, &image) == UMI_STATUS_INVALID_ARGUMENT &&

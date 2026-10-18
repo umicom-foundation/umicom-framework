@@ -81,6 +81,9 @@ static inline unsigned char *FixtureRead(const char *path, size_t *length)
 /* Create a link only inside caller-owned test fixtures. Windows can grant this
  * through Developer Mode or process privileges. A missing capability returns
  * zero; an unexpected filesystem error fails instead of hiding a regression. */
+/* The shared fixture distinguishes an unsupported capability from an actual
+ * error. Retain the earlier implementation for review of that policy. */
+#if 0
 static inline int FixtureSymbolicLink(const char *alias, const char *target, int directory)
 {
 #ifdef _WIN32
@@ -107,6 +110,14 @@ static inline int FixtureSymbolicLink(const char *alias, const char *target, int
     CHECK(symlink(target, alias) == 0);
     return 1;
 #endif
+}
+#endif
+#include "../support/symbolic_link.h"
+static inline int FixtureSymbolicLink(const char *alias, const char *target, int directory)
+{
+    int result = UmiTestWindowsSymbolicLink(alias, target, directory);
+    CHECK(result >= 0);
+    return result;
 }
 #endif /* _WIN32 fixture capability helper */
 #endif

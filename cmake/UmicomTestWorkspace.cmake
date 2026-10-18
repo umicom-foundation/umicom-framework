@@ -64,6 +64,20 @@ function(umicom_test_external_workspace requested_root output)
     set("${output}" "${_root}" PARENT_SCOPE)
 endfunction()
 
+# A nested configure creates its own compiler probes, project and build folders.
+# Keep its leaf compact while retaining the build/directory/test identity digest.
+# Ordinary test names remain readable and keep their previous locations.
+function(umicom_test_workspace_leaf test_name test_directory compact output)
+    string(REGEX REPLACE "[^A-Za-z0-9_-]" "-" _label "${test_name}")
+    string(SUBSTRING "${_label}" 0 40 _label)
+    if(compact)
+        set(_label "build")
+    endif()
+    string(SHA256 _digest "${CMAKE_BINARY_DIR}|${test_directory}|${test_name}")
+    string(SUBSTRING "${_digest}" 0 16 _digest)
+    set("${output}" "${_label}-${_digest}" PARENT_SCOPE)
+endfunction()
+
 function(umicom_configure_test_workspace test_name test_directory)
     # Cross-directory TEST properties require CMake 3.28. Preserve support for
     # older standalone projects when the test belongs to the current directory.
@@ -95,16 +109,31 @@ function(umicom_configure_test_workspace test_name test_directory)
     get_filename_component(_root "${UMICOM_TEST_WORK_ROOT}" ABSOLUTE BASE_DIR "${CMAKE_BINARY_DIR}")
     file(TO_CMAKE_PATH "${_root}" _root)
     get_property(_outside_required TEST "${test_name}" ${_scope} PROPERTY UMICOM_TEST_OUTSIDE_REPOSITORY)
+    # The original Git-boundary-only selection is retained for review.
+    #[[
     if(_outside_required)
+        umicom_test_external_workspace("${_root}" _root)
+    endif()
+    ]]
+    # Nested real-toolchain fixtures also need an external root: a short leaf
+    # alone cannot recover the path budget consumed by a deeply nested build tree.
+    get_property(_nested_build TEST "${test_name}" ${_scope} PROPERTY UMICOM_TEST_NESTED_BUILD)
+    if(_outside_required OR _nested_build)
         umicom_test_external_workspace("${_root}" _root)
     endif()
     # Names remain recognisable. The digest distinguishes punctuation variants,
     # repeated test names in separate directories and separate build trees.
+    # Shared leaf generation preserves ordinary names and shortens only nested
+    # builds. Retain the original calculation so its identity is reviewable.
+    #[[
     string(REGEX REPLACE "[^A-Za-z0-9_-]" "-" _label "${test_name}")
     string(SUBSTRING "${_label}" 0 40 _label)
     string(SHA256 _digest "${CMAKE_BINARY_DIR}|${test_directory}|${test_name}")
     string(SUBSTRING "${_digest}" 0 16 _digest)
     set(_directory "${_root}/${_label}-${_digest}")
+    ]]
+    umicom_test_workspace_leaf("${test_name}" "${test_directory}" "${_nested_build}" _leaf)
+    set(_directory "${_root}/${_leaf}")
     file(MAKE_DIRECTORY "${_directory}")
     set_property(TEST "${test_name}" ${_scope} APPEND PROPERTY ENVIRONMENT
         "TMPDIR=${_directory}" "TEMP=${_directory}" "TMP=${_directory}"
@@ -136,5 +165,18 @@ if(BUILD_TESTING AND NOT CMAKE_SCRIPT_MODE_FILE)
                 -P "${CMAKE_CURRENT_LIST_DIR}/../tests/test_runtime/check_external_fixture_root.cmake")
         set_tests_properties("framework.test_workspace.external.${_fixture_case}" PROPERTIES
             UMICOM_TEST_OUTSIDE_REPOSITORY TRUE TIMEOUT 30)
+    endforeach()
+endif()
+
+# Pure path-contract checks run without a compiler or a generated application.
+if(BUILD_TESTING AND NOT CMAKE_SCRIPT_MODE_FILE)
+    foreach(_leaf_case ordinary compact distinct-name distinct-directory distinct-build)
+        add_test(NAME "framework.test_workspace.leaf.${_leaf_case}"
+            COMMAND "${CMAKE_COMMAND}"
+                "-DUMICOM_FRAMEWORK_SOURCE=${CMAKE_CURRENT_LIST_DIR}/.."
+                "-DCASE=${_leaf_case}"
+                -P "${CMAKE_CURRENT_LIST_DIR}/../tests/test_runtime/check_fixture_leaf.cmake")
+        set_tests_properties("framework.test_workspace.leaf.${_leaf_case}" PROPERTIES
+            TIMEOUT 15 LABELS "framework;test-workspace;regression")
     endforeach()
 endif()

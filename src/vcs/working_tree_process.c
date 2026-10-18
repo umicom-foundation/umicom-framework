@@ -7,6 +7,9 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/vcs/working_tree.h"
+#include "umicom/vcs/revision_changes.h"
+#include "revision_changes_internal.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -127,4 +130,55 @@ UmiStatus UmiVcsWorkingTreeRead(const UmiVcsWorkingTreeRequest *request,
     }
     *out_tree = tree;
     return UMI_STATUS_OK;
+}
+
+/* Both read-only observations use one bounded stream collector and the same
+ * cancellation/process-tree ownership. Immutable commit IDs prevent a moving
+ * branch name from changing the two endpoints of this comparison. */
+UmiStatus UmiVcsRevisionChangesRead(const UmiVcsRevisionChangesRequest *request,
+    UmiVcsRevisionChanges **outChanges)
+{
+    if (request == NULL || outChanges == NULL || *outChanges != NULL ||
+        request->repository_root == NULL || request->repository_root[0] == '\0' ||
+        request->base_commit == NULL || request->head_commit == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    size_t baseLength = 0U, headLength = 0U;
+    while (baseLength <= 64U && request->base_commit[baseLength] != '\0') ++baseLength;
+    while (headLength <= 64U && request->head_commit[headLength] != '\0') ++headLength;
+    if (baseLength != headLength || !UmiVcsRevisionHex(request->base_commit, baseLength) ||
+        !UmiVcsRevisionHex(request->head_commit, headLength)) return UMI_STATUS_INVALID_ARGUMENT;
+    char base[80], head[80];
+    int baseWritten = snprintf(base, sizeof(base), "%s^{commit}", request->base_commit);
+    int headWritten = snprintf(head, sizeof(head), "%s^{commit}", request->head_commit);
+    if (baseWritten < 0 || (size_t)baseWritten >= sizeof(base) ||
+        headWritten < 0 || (size_t)headWritten >= sizeof(head)) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* A partial clone must not fetch during observation, and replacement refs
+     * must not change the content represented by the recorded object IDs. */
+    const char *arguments[] = {"--no-optional-locks", "--no-lazy-fetch", "--no-replace-objects",
+        "--no-pager", "-c", "core.fsmonitor=false",
+        "diff", "--raw", "--no-abbrev", "--no-renames", "--no-ext-diff", "--no-textconv",
+        "--no-relative", "--ignore-submodules=none", "-z", base, head, "--"};
+    UmiProcessRequest process = {0};
+    UmiProcessResult *result = calloc(1U, sizeof(*result));
+    if (result == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    StatusCapture capture = {0};
+    process.program = request->git_program != NULL && request->git_program[0] != '\0'
+        ? request->git_program : "git";
+    process.arguments = arguments;
+    process.argument_count = sizeof(arguments) / sizeof(arguments[0]);
+    process.working_directory = request->repository_root;
+    process.capture_stdout = process.capture_stderr = 1;
+    process.window_mode = UMI_PROCESS_WINDOW_HIDDEN;
+    process.timeout_ms = request->timeout_ms == 0U ? 30000U : request->timeout_ms;
+    process.poll_interval_ms = 10U;
+    process.cancellation = request->cancellation;
+    UmiStatus status = UmiProcessExecuteWithLifetime(&process, UMI_PROCESS_LIFETIME_TREE,
+        NULL, CaptureStatus, &capture, result);
+    if (status == UMI_STATUS_OK && result->cancelled) status = UMI_STATUS_CANCELLED;
+    if (status == UMI_STATUS_OK && result->timed_out) status = UMI_STATUS_TIMEOUT;
+    if (status == UMI_STATUS_OK && (!result->launched || result->exit_code != 0)) status = UMI_STATUS_UNAVAILABLE;
+    if (status == UMI_STATUS_OK) status = capture.status;
+    if (status == UMI_STATUS_OK) status = UmiVcsRevisionChangesParse(capture.bytes, capture.length, outChanges);
+    free(capture.bytes); free(result);
+    return status;
 }

@@ -7,6 +7,8 @@
  *---------------------------------------------------------------------------*/
 
 #define _POSIX_C_SOURCE 200809L
+/* Skipped coverage must explain its unmet fixture or configuration prerequisite. */
+#include <stdio.h>
 #include "fixture.h"
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -72,6 +74,7 @@ int main(int argc, char **argv)
 #ifdef _WIN32
         /* Windows standard handle isolation is exercised by normal GUI launch;
          * this case specifically covers Linux descriptors reused below three. */
+        (void)fprintf(stderr, "SKIP: closed-stdio descriptor reuse is a POSIX scenario; this Windows run provides no result for it.\n");
         failed = 77;
         goto cleanup;
 #else

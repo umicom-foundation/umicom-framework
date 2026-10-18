@@ -10,6 +10,8 @@
 /* Umicom Framework tests | Sammy Hegab, Umicom Foundation | MIT
  * Synthetic image-header fixtures. Callback tests are not QEMU/GRUB execution. */
 
+/* Skipped coverage must explain its unmet fixture or configuration prerequisite. */
+#include <stdio.h>
 #include "test_support.h"
 static int Images(const Fixture *f,char kernel[4096],char initrd[4096],int riscv)
 {
@@ -248,6 +250,7 @@ int TestMedia(const char *name)
     else {
 
 #ifndef __linux__
+        fprintf(stderr, "SKIP: ISO production requires the native Linux GRUB workflow; prepared-media tests run separately.\n");
         return 77;
 
 #else

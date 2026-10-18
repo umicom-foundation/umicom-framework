@@ -50,6 +50,7 @@ int main(int argc, char **argv)
     {
         if (UmiMediaPngEncoderAvailable())
         {
+            (void)fprintf(stderr, "SKIP: PNG encoding is enabled; the unavailable-provider contract requires a separate build without PNG support.\n");
             umi_media_image_surface_destroy(image);
             umi_cancellation_token_destroy(cancel);
             return 77;
@@ -58,6 +59,7 @@ int main(int argc, char **argv)
     }
     else if (!UmiMediaPngEncoderAvailable() || !UmiMediaPngAvailable())
     {
+        (void)fprintf(stderr, "SKIP: this encoding scenario requires both PNG encoder and decoder support.\n");
         umi_media_image_surface_destroy(image);
         umi_cancellation_token_destroy(cancel);
         return 77;

@@ -2,6 +2,7 @@
 # Build-system collection stays here; reusable immutable inspection belongs to
 # the existing distribution library. No release decision is made by this file.
 include_guard(GLOBAL)
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomImpactInventory.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomReleaseInventoryFormat.cmake")
 option(UMICOM_RELEASE_INVENTORY_CAPTURE "Capture configured targets, public headers and exact test names" OFF)
 # The existing composition harness disables recursive composition checks.
@@ -57,6 +58,8 @@ function(_umicom_inventory_directory directory output)
             get_property(_value TARGET "${_target}" PROPERTY "${_property}")
             string(APPEND _detail "${_property}=${_value}\n")
         endforeach()
+        # Keep raw properties while adding explicit impact edges ahead of them.
+        _umicom_impact_target_detail("${_target}" "${_detail}" _detail)
         _umicom_inventory_row("${output}" target "${_target}" "${_source_dir}" configured "${_detail}")
         get_property(_sources TARGET "${_target}" PROPERTY SOURCES)
         list(REMOVE_DUPLICATES _sources)
@@ -86,7 +89,14 @@ function(_umicom_inventory_directory directory output)
     endforeach()
     get_property(_tests DIRECTORY "${directory}" PROPERTY TESTS)
     foreach(_test IN LISTS _tests)
+        # Explicit prerequisites replace registration-only detail for selection;
+        # retain the earlier representation for comparison.
+        #[[
         _umicom_inventory_row("${output}" test "${_test}" "${directory}" registered "Configured registration; execution and required/optional policy are separate.")
+        ]]
+        _umicom_impact_test_detail("${_test}" "${directory}"
+            "Configured registration; execution and required/optional policy are separate." _test_detail)
+        _umicom_inventory_row("${output}" test "${_test}" "${directory}" registered "${_test_detail}")
     endforeach()
     get_property(_children DIRECTORY "${directory}" PROPERTY SUBDIRECTORIES)
     foreach(_child IN LISTS _children)
@@ -156,7 +166,14 @@ function(_umicom_inventory_capture_last)
         endif()
         file(RELATIVE_PATH _identity "${_root}" "${_header}")
         file(SHA256 "${_header}" _sha)
+        # Absolute source identity disambiguates Framework inside a larger suite.
+        # The original relative public identity and digest remain unchanged.
+        #[[
         _umicom_inventory_row("${_body}" header "${_identity}" "${_owner}" "${_state}" "sha256=${_sha}")
+        ]]
+        string(HEX "${_path}" _impact_path)
+        _umicom_inventory_row("${_body}" header "${_identity}" "${_owner}" "${_state}"
+            "impact-version=1\npath=${_impact_path}\nimpact-end\nsha256=${_sha}")
     endforeach()
     _umicom_inventory_directory("${CMAKE_BINARY_DIR}" "${_body}")
     file(SIZE "${_body}" _size)
@@ -199,6 +216,15 @@ function(umicom_release_inventory_complete)
     set_property(TARGET umicom_distribution PROPERTY UMICOM_RELEASE_INVENTORY_ATTACHED TRUE)
     get_property(_root GLOBAL PROPERTY UMICOM_RELEASE_INVENTORY_ROOT)
     target_sources(umicom_distribution PRIVATE "${_root}/src/distribution/runtime/inventory.c" "${_root}/src/distribution/runtime/inventory_text.c")
+    # Reuse the inventory owner for immutable affected-build planning.
+    target_sources(umicom_distribution PRIVATE
+        "${_root}/src/distribution/runtime/impact.c"
+        "${_root}/src/distribution/runtime/impact_path.c"
+        "${_root}/src/distribution/runtime/impact_metadata.c"
+        "${_root}/src/distribution/runtime/impact_expression.c")
+    include(GNUInstallDirs)
+    install(FILES "${_root}/include/umicom/distribution/runtime/impact.h"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/distribution/runtime" COMPONENT Framework)
     add_executable(umicom-release-inventory "${_root}/tools/release_inventory/main.c")
     target_link_libraries(umicom-release-inventory PRIVATE Umicom::distribution)
     set_target_properties(umicom-release-inventory PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
@@ -226,6 +252,7 @@ function(umicom_release_inventory_complete)
     install(FILES "${_root}/docs/learning/inspect-build-registration.md" DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)
     if(BUILD_TESTING)
         include("${_root}/tests/release_inventory/CMakeLists.txt")
+        include("${_root}/tests/release_impact/CMakeLists.txt")
     endif()
     if(UMICOM_RELEASE_INVENTORY_CAPTURE)
         cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" ID umicom_inventory_final CALL _umicom_inventory_capture_last)

@@ -33,7 +33,15 @@ int main(int argc, char **argv)
     else if (strcmp(mode, "symlink") == 0)
     {
 #ifdef _WIN32
+        /* Exercise the same refusal contract on Windows when link creation is
+         * available; the previous platform-only skip is retained for review. */
+#if 0
         return 77;
+#endif
+        char link[UMI_PATH_CAPACITY];
+        FixturePath(link, root, "linked");
+        if (!FixtureSymbolicLink(link, path, 0)) return 77;
+        CHECK(UmiLocalFileReplace(link, after, sizeof(after)) == UMI_STATUS_INVALID_ARGUMENT);
 #else
         char link[UMI_PATH_CAPACITY];
         FixturePath(link, root, "linked");
