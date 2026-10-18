@@ -58,6 +58,10 @@ if(BUILD_TESTING)
 endif()
 install(TARGETS umicom_native_launcher EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_native_launcher
+)
 install(DIRECTORY "${_umi_native_root}/include/umicom/native_launcher"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom COMPONENT Framework)
 install(FILES "${_umi_native_root}/docs/learning/native-launcher-delivery.html"

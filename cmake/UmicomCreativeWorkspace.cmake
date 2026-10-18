@@ -52,6 +52,10 @@ endif()
 umicom_creative_configure_target(umicom_creative_workspace)
 install(TARGETS umicom_creative_workspace EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_creative_workspace
+)
 install(DIRECTORY "${_umicom_creative_root}/include/umicom/creative_workspace"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom" COMPONENT Framework)
 if(TARGET Umicom::ui_gtk4)
@@ -70,6 +74,10 @@ if(TARGET Umicom::ui_gtk4)
     umicom_creative_configure_target(umicom_creative_workspace_gtk4)
     install(TARGETS umicom_creative_workspace_gtk4 EXPORT UmicomFrameworkTargets
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Framework)
+    # Include this exported library surface in the opt-in SDK without changing full installs.
+    umicom_register_sdk_libraries(
+        umicom_creative_workspace_gtk4
+    )
     install(FILES "${_umicom_creative_root}/include/umicom/ui/gtk4/creative_workspace.h"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)
 endif()

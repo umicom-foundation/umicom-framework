@@ -57,6 +57,10 @@ target_link_libraries(umicom_finance_operations PUBLIC
 umicom_finance_operations_configure_target(umicom_finance_operations)
 install(TARGETS umicom_finance_operations EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_finance_operations
+)
 install(DIRECTORY "${_umicom_finance_operations_root}/include/umicom/finance_operations"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom" COMPONENT Framework)
 install(FILES "${_umicom_finance_operations_root}/include/umicom/developer_operations/projection.h"
@@ -76,6 +80,10 @@ if(TARGET Umicom::ui_gtk4)
     umicom_finance_operations_configure_target(umicom_finance_operations_gtk4)
     install(TARGETS umicom_finance_operations_gtk4 EXPORT UmicomFrameworkTargets
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+    # Include this exported library surface in the opt-in SDK without changing full installs.
+    umicom_register_sdk_libraries(
+        umicom_finance_operations_gtk4
+    )
     install(FILES "${_umicom_finance_operations_root}/include/umicom/ui/gtk4/finance_operations.h"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)
     install(FILES "${_umicom_finance_operations_root}/include/umicom/application/suite_layout/gtk4_product_content_extension.h"

@@ -30,6 +30,10 @@ if(_sdk_receipt_supported)
         CONTENT "schema=umicom.sdk\nframework_version=${PROJECT_VERSION}\nframework_abi=${_sdk_abi}\ninclude_directory=${CMAKE_INSTALL_INCLUDEDIR}\nlibrary_directory=${CMAKE_INSTALL_LIBDIR}\nbase_library=${CMAKE_INSTALL_LIBDIR}/$<TARGET_FILE_NAME:umicom_base>\n")
     install(FILES "${CMAKE_CURRENT_BINARY_DIR}/sdk-metadata/$<CONFIG>/sdk.properties"
         DESTINATION share/umicom/framework COMPONENT Framework)
+    # The selective SDK needs the same dependency and resource contract.
+    install(FILES "${CMAKE_CURRENT_BINARY_DIR}/sdk-metadata/$<CONFIG>/sdk.properties"
+        DESTINATION share/umicom/framework
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
 else()
     message(STATUS "SDK metadata unavailable for this non-relative installation layout")
 endif()

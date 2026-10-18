@@ -44,6 +44,10 @@ foreach(_target IN ITEMS umicom_desktop_workspace umicom-desktop-workspace umico
 endforeach()
 install(TARGETS umicom_desktop_workspace EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_desktop_workspace
+)
 install(TARGETS umicom-desktop-workspace umicom-desktop-workspace-example
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Framework)
 install(DIRECTORY "${_dw_root}/include/umicom/desktop_workspace"

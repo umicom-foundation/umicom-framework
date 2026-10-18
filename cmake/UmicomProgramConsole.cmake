@@ -16,6 +16,10 @@ umicom_apply_warnings(umicom_program_console)
 umicom_apply_sanitizers(umicom_program_console)
 install(TARGETS umicom_program_console EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_program_console
+)
 target_sources(umicom_build PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../src/build/program_console.c")
 target_link_libraries(umicom_build PUBLIC Umicom::program_console)
 if(TARGET umicom_ui_gtk4)

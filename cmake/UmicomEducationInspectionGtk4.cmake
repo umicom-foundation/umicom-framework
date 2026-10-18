@@ -24,6 +24,10 @@ target_link_libraries(umicom_education_inspection_gtk4 PUBLIC Umicom::ui_gtk4
 umicom_education_inspection_configure_target(umicom_education_inspection_gtk4)
 install(TARGETS umicom_education_inspection_gtk4 EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_education_inspection_gtk4
+)
 install(FILES "${_education_inspection_ui_root}/include/umicom/ui/gtk4/education_inspection.h"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)
 # Retained for review: this reverse attachment depended on the consumer already

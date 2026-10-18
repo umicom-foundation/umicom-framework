@@ -423,6 +423,10 @@ install(TARGETS umicom_workbench_designer
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_workbench_designer
+)
 install(DIRECTORY
     "${UMICOM_WORKBENCH_DESIGNER_FRAMEWORK_ROOT}/include/umicom/workbench_designer"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom"

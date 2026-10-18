@@ -20,6 +20,10 @@ umicom_apply_warnings(umicom_pixverse)
 umicom_apply_sanitizers(umicom_pixverse)
 target_link_libraries(umicom_framework INTERFACE Umicom::pixverse)
 install(TARGETS umicom_pixverse EXPORT UmicomFrameworkTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_pixverse
+)
 if(TARGET umicom_ui_gtk4)
     target_sources(umicom_ui_gtk4 PRIVATE "${_umicom_pixverse_root}/adapters/gtk4/pixverse_panel_gtk4.c")
     target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::pixverse)

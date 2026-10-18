@@ -40,6 +40,10 @@ target_link_libraries(umicom_enterprise_workspace PUBLIC Umicom::data Umicom::se
 umicom_enterprise_configure_target(umicom_enterprise_workspace)
 install(TARGETS umicom_enterprise_workspace EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_enterprise_workspace
+)
 install(DIRECTORY "${_umicom_enterprise_root}/include/umicom/enterprise_workspace"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom" COMPONENT Framework)
 if(TARGET Umicom::ui_gtk4)
@@ -52,6 +56,10 @@ if(TARGET Umicom::ui_gtk4)
     umicom_enterprise_configure_target(umicom_enterprise_workspace_gtk4)
     install(TARGETS umicom_enterprise_workspace_gtk4 EXPORT UmicomFrameworkTargets
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Framework)
+    # Include this exported library surface in the opt-in SDK without changing full installs.
+    umicom_register_sdk_libraries(
+        umicom_enterprise_workspace_gtk4
+    )
     install(FILES "${_umicom_enterprise_root}/include/umicom/ui/gtk4/enterprise_workspace.h"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)
 endif()

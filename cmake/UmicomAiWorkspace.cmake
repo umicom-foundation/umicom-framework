@@ -78,12 +78,20 @@ endif()
 umicom_ai_workspace_configure_target(umicom_ai_workspace)
 install(TARGETS umicom_ai_workspace EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_ai_workspace
+)
 install(DIRECTORY "${_umicom_ai_workspace_root}/include/umicom/ai_workspace"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom" COMPONENT Framework)
 configure_file("${CMAKE_CURRENT_LIST_DIR}/UmicomAiWorkspaceDependencies.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/umicom-ai-workspace-config/UmicomAiWorkspaceDependencies.cmake" @ONLY)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/umicom-ai-workspace-config/UmicomAiWorkspaceDependencies.cmake"
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework" COMPONENT Framework)
+# The selective SDK needs the same dependency and resource contract.
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/umicom-ai-workspace-config/UmicomAiWorkspaceDependencies.cmake"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework"
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
 
 if(TARGET Umicom::ui_gtk4)
     # Both hosts use the same explicit local library selection and file policy.
@@ -100,6 +108,10 @@ if(TARGET Umicom::ui_gtk4)
     umicom_ai_workspace_configure_target(umicom_ai_workspace_gtk4)
     install(TARGETS umicom_ai_workspace_gtk4 EXPORT UmicomFrameworkTargets
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+    # Include this exported library surface in the opt-in SDK without changing full installs.
+    umicom_register_sdk_libraries(
+        umicom_ai_workspace_gtk4
+    )
     install(FILES "${_umicom_ai_workspace_root}/include/umicom/ui/gtk4/ai_workspace.h"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)
 endif()

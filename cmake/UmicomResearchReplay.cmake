@@ -36,6 +36,10 @@ endif()
 umicom_research_target(umicom_research_replay)
 install(TARGETS umicom_research_replay EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_research_replay
+)
 install(FILES
     "${_umi_research_root}/include/umicom/strategy_research/research_replay.h"
     "${_umi_research_root}/include/umicom/strategy_research/research_csv.h"

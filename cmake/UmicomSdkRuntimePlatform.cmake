@@ -193,6 +193,10 @@ install(TARGETS umicom_sdk_runtime EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_sdk_runtime
+)
 install(DIRECTORY "${UMICOM_SDK_RUNTIME_FRAMEWORK_ROOT}/include/umicom/sdk_runtime"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom")
 message(STATUS "Umicom installed SDK and runtime platform enabled")

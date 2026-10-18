@@ -14,6 +14,10 @@ umicom_apply_warnings(umicom_source_review)
 umicom_apply_sanitizers(umicom_source_review)
 install(TARGETS umicom_source_review EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_source_review
+)
 if(TARGET umicom_framework)
     target_link_libraries(umicom_framework INTERFACE Umicom::source_review)
 endif()

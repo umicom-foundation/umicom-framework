@@ -348,6 +348,10 @@ install(TARGETS umicom_test_runtime EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_test_runtime
+)
 install(DIRECTORY "${UMICOM_TEST_RUNTIME_FRAMEWORK_ROOT}/include/umicom/test_runtime"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom")
 message(STATUS "Umicom test runtime and regression execution platform enabled")

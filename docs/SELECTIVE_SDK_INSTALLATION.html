@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Install an Umicom Framework SDK without product executables</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:1000px;margin:40px auto;padding:0 24px;color:#18283b;background:#f8fafc}pre{overflow:auto;background:#e9eef5;padding:18px;border-radius:8px}code{font-family:Consolas,monospace}h1,h2{line-height:1.2}a{color:#155fa0}table{border-collapse:collapse;width:100%}td,th{border:1px solid #c5d1df;padding:10px;text-align:left}</style>
+</head><body>
+<h1>Install an Umicom Framework SDK without product executables</h1>
+<p>An SDK contains the headers, libraries and package description needed to build another application. Use the <code>umicom-sdk-libraries</code> build target and <code>FrameworkSDK</code> installation component to produce that set without first building every product executable or test program. This is a development SDK; it does not install the Studio or Trader application.</p>
+<p>The selected component follows your build configuration. It includes every Framework library registered in the package export set, including configured optional adapters. It is not a choice of individual <code>find_package</code> components and it does not bundle external libraries. A GTK4 SDK still requires its GTK4 development dependencies; a Qt SDK requires Qt and a suitable C++ toolchain.</p>
+<h2>Choose a build and installation folder</h2>
+<ol>
+<li>Open PowerShell in the Framework source folder. The example uses MSYS2 UCRT64 and its C23 compiler. Create a log directory outside the repository:
+<pre><code>Set-Location "C:\umicom\Umicom-Applications\framework"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+New-Item -ItemType Directory -Force "C:\umicom\_local\logs\sdk-component"</code></pre></li>
+<li>Configure the normal Framework preset:
+<pre><code>cmake --preset windows-ucrt64-debug -DBUILD_TESTING=ON 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\sdk-component\configure.log"</code></pre>
+If you are qualifying a GTK4 application SDK, add <code>-DUMICOM_BUILD_GTK4_ADAPTER=ON</code> and provide the matching development packages. Existing build options continue to control which capabilities are compiled.</li>
+<li>Build the SDK's libraries:
+<pre><code>cmake --build --preset windows-ucrt64-debug --target umicom-sdk-libraries --parallel 2 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\sdk-component\libraries.log"</code></pre>
+This target has dependencies on the registered libraries. A successful library build does not establish that all application executables or tests build.</li>
+<li>Choose a fresh prefix, then install the selected component:
+<pre><code>cmake --install ".\build\windows-ucrt64-debug" --config Debug --component FrameworkSDK --prefix "C:\umicom\installed\framework-sdk" 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\sdk-component\install.log"</code></pre>
+The prefix in this example must be new for this SDK configuration. Do not overlay a different SDK: old headers and optional dependency fragments could remain. Installation is not transactional; if it fails, keep its log, fix the cause and repeat into a new prefix.</li>
+</ol>
+<p>Run each command separately and stop on errors. PowerShell does not automatically stop after a failed native command. For a multi-configuration generator, also pass <code>--config Debug</code> to the build. On Linux, use Linux paths and your native C23 compiler.</p>
+<h2>Qualify the installed result</h2>
+<ol>
+<li>Run the component fixtures, which build their own small libraries and record per-stage logs under the build tree:
+<pre><code>ctest --test-dir ".\build\windows-ucrt64-debug" -C Debug -R "^framework[.]sdk[.]component[.]" --output-on-failure --no-tests=error 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\sdk-component\fixtures.log"</code></pre>
+They check selective and full installation, shared and transitive dependencies, repeated and deferred registration, relocation, Release configuration, spaces in paths and invalid or missing libraries. They run on native hosts; cross-compiled SDKs need qualification on an appropriate target environment.</li>
+<li>Build the independent Notes and workspace examples against the real installed Framework:
+<pre><code>cmake -S "C:\umicom\installed\framework-sdk\share\umicom-framework\examples\sdk_qualification" -B "C:\umicom\_local\sdk-component-consumer" -G Ninja -DCMAKE_BUILD_TYPE=Debug -DUMICOM_SDK_ROOT="C:\umicom\installed\framework-sdk" -DCMAKE_C_COMPILER="C:/msys64/ucrt64/bin/gcc.exe" -DCMAKE_PREFIX_PATH="C:/msys64/ucrt64" -DBUILD_TESTING=ON 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\sdk-component\consumer-configure.log"
+cmake --build "C:\umicom\_local\sdk-component-consumer" --parallel 2 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\sdk-component\consumer-build.log"
+ctest --test-dir "C:\umicom\_local\sdk-component-consumer" --output-on-failure --no-tests=error 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\sdk-component\consumer-tests.log"</code></pre>
+Follow <a href="INSTALLED_SDK_QUALIFICATION.html">installed SDK qualification</a> for the expected Notes and workspace behavior. These exercises use the installed headers and archives and do not substitute Framework implementation sources.</li>
+</ol>
+<h2>What is installed</h2>
+<table><thead><tr><th>Content</th><th>Purpose</th></tr></thead><tbody>
+<tr><td>Public headers and configured exported libraries</td><td>Compile and link consumers of the same Framework configuration.</td></tr>
+<tr><td>CMake package, version, export and dependency descriptions</td><td>Resolve <code>Umicom::</code> targets and the external packages they need.</td></tr>
+<tr><td>SDK metadata and header identity</td><td>Identify the configured SDK and reject mismatched installed public headers.</td></tr>
+<tr><td>Resources, templates and learning documents</td><td>Support installed application hosts and project creation.</td></tr>
+<tr><td>Canonical Windows branding and deployment support</td><td>Provide existing deployment helpers and source resources for independently built Windows applications.</td></tr>
+<tr><td>Notes and workspace qualification sources</td><td>Exercise real installed libraries from an independent project.</td></tr>
+</tbody></table>
+<p>The existing full installation and older <code>Framework</code> component remain available. The older component alone is not a complete SDK. SDK companion rules are excluded from a full installation to avoid changing its original library registration rules. Windows deployment support is also available to full installations built without product executables.</p>
+<h2>Extend the library catalogue</h2>
+<p>When a Framework composition module exports a new library, retain its normal <code>install(TARGETS ... EXPORT UmicomFrameworkTargets ...)</code> rule, then call <code>umicom_register_sdk_libraries(my_library)</code>. This helper is internal to Framework's build composition. It adds the library to the SDK build target and registers SDK-only artifact installation without registering the target in the export set twice.</p>
+<p>Use real local static, shared, module or interface library targets. Imported libraries, aliases, object libraries, executables and Apple framework bundles are refused. Repeated registration is harmless. Optional modules must also install their dependency-discovery files with <code>COMPONENT FrameworkSDK EXCLUDE_FROM_ALL</code>, so an independent consumer can reconstruct the same external target names.</p>
+<h2>Troubleshoot installation</h2>
+<ul>
+<li><strong>Missing executable during install:</strong> check that the command selects <code>--component FrameworkSDK</code>. A full install still requires its product executables to have been built.</li>
+<li><strong>Missing archive:</strong> build <code>umicom-sdk-libraries</code> for the matching configuration, then install again to a fresh prefix. Missing artifacts are errors, not optional omissions.</li>
+<li><strong>Missing GTK, GtkSourceView, Qt, HTTP or playback dependency:</strong> install the external development packages used by the producer build. Do not remove exported link dependencies to suppress the diagnostic.</li>
+<li><strong>Imported target points outside the selected prefix:</strong> use a fresh consumer build directory and select the intended SDK explicitly. A previous cache can retain another package location.</li>
+<li><strong>Relocation fails:</strong> use relative GNU installation directories such as <code>include</code>, <code>lib</code> and <code>share</code>. Custom absolute installation paths and external runtime dependencies need separate deployment qualification.</li>
+</ul>
+<p>The small component fixtures qualify the packaging mechanism. The independent examples qualify only their exercised Framework behavior. Run the full build, tests and application workflows before making broader release claims.</p>
+<footer><p>Sammy Hegab · Umicom Foundation · MIT</p></footer>
+</body></html>

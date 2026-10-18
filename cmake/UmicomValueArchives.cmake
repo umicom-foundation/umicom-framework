@@ -48,8 +48,16 @@ if(BUILD_TESTING)
 endif()
 install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../examples/value_archive/"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/value_archive" COMPONENT Framework)
+# The selective SDK needs the same dependency and resource contract.
+install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../examples/value_archive/"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/value_archive"
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/PORTABLE_STATE_ARCHIVES.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs" COMPONENT Framework)
+# The selective SDK needs the same dependency and resource contract.
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/PORTABLE_STATE_ARCHIVES.html"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs"
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
 
 # Compile both conditional callback families against a real typed codec.
 if(BUILD_TESTING)

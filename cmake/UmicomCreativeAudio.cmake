@@ -33,6 +33,10 @@ if(TARGET umicom_creative_workspace_gtk4)
         target_compile_definitions(umicom_creative_workspace_gtk4 PRIVATE UMI_CREATIVE_HAS_GSTREAMER=1)
         install(FILES "${_audio_root}/cmake/UmicomCreativePlaybackDependencies.cmake"
             DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework" COMPONENT Framework)
+        # The selective SDK needs the same dependency and resource contract.
+        install(FILES "${_audio_root}/cmake/UmicomCreativePlaybackDependencies.cmake"
+            DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework"
+            COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
     endif()
     install(FILES "${_audio_root}/include/umicom/ui/gtk4/creative_audition.h"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)

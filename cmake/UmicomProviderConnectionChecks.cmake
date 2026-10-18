@@ -42,10 +42,18 @@ umicom_apply_warnings(umicom_provider_connection_checks)
 umicom_apply_sanitizers(umicom_provider_connection_checks)
 install(TARGETS umicom_provider_connection_checks EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_provider_connection_checks
+)
 configure_file("${_umicom_connection_check_root}/cmake/UmicomConnectionCheckDependencies.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/UmicomConnectionCheckDependencies.cmake" @ONLY)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/UmicomConnectionCheckDependencies.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework COMPONENT Framework)
+# The selective SDK needs the same dependency and resource contract.
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/UmicomConnectionCheckDependencies.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
 if(TARGET umicom_ui_gtk4)
     target_sources(umicom_ui_gtk4 PRIVATE
         "${_umicom_connection_check_root}/adapters/gtk4/provider_connection_check_gtk4.c")

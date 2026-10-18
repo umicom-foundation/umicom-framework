@@ -28,5 +28,9 @@ if(COMMAND umicom_apply_sanitizers)
     umicom_apply_sanitizers(umicom_process_channel)
 endif()
 install(TARGETS umicom_process_channel EXPORT UmicomFrameworkTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_process_channel
+)
 install(FILES "${_umi_channel_root}/include/umicom/platform/process_channel.h" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/platform COMPONENT Framework)
 unset(_umi_channel_root)

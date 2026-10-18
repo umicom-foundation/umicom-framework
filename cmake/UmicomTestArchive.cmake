@@ -23,6 +23,10 @@ umicom_apply_sanitizers(umicom_test_archive)
 target_link_libraries(umicom_framework INTERFACE Umicom::test_archive)
 install(TARGETS umicom_test_archive EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_test_archive
+)
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/private-test-archives.html"
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)
 if(BUILD_TESTING)

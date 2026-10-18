@@ -30,6 +30,10 @@ if(COMMAND umicom_apply_sanitizers)
 endif()
 install(TARGETS umicom_money_text EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_money_text
+)
 install(FILES "${_umi_money_root}/include/umicom/finance/money_text.h"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/finance" COMPONENT Framework)
 if(BUILD_TESTING)

@@ -40,6 +40,10 @@ endif()
 umicom_ibkr_target(umicom_ibkr_connection)
 install(TARGETS umicom_ibkr_connection EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_ibkr_connection
+)
 install(FILES "${_umi_ibkr_root}/include/umicom/broker_connectivity/observation_export.h"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/broker_connectivity COMPONENT Framework)
 # The additional review contract is installed alongside the existing broker API.

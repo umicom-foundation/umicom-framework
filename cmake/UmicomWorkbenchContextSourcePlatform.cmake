@@ -154,6 +154,11 @@ install(
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+# Keep these exported dependencies available in a selective SDK installation.
+umicom_register_sdk_libraries(
+    umicom_workbench_context_source
+)
+
 
 install(
     DIRECTORY

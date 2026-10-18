@@ -19,6 +19,10 @@ if(COMMAND umicom_apply_sanitizers)
 endif()
 install(TARGETS umicom_desktop_system_gtk4 EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_desktop_system_gtk4
+)
 if(BUILD_TESTING)
     add_executable(umicom-desktop-system-gtk4-test "${CMAKE_CURRENT_LIST_DIR}/../tests/desktop_system/test_gtk4.c")
     target_link_libraries(umicom-desktop-system-gtk4-test PRIVATE Umicom::desktop_system_gtk4)

@@ -73,6 +73,10 @@ if(WIN32)
     install(TARGETS umicom-media-centre RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Framework)
 endif()
 install(TARGETS umicom_boot_media EXPORT UmicomFrameworkTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_boot_media
+)
 install(TARGETS umicom-media RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Framework)
 install(DIRECTORY "${_umi_boot_media_root}/include/umicom/boot_media" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom COMPONENT Framework)
 install(FILES "${_umi_boot_media_root}/docs/learning/prepare-and-check-boot-media.html" DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)

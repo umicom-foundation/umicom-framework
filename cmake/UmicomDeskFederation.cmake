@@ -25,6 +25,10 @@ if(COMMAND umicom_apply_sanitizers)
 endif()
 install(TARGETS umicom_desk_federation_host EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_desk_federation_host
+)
 if(BUILD_TESTING)
     add_executable(umicom-desk-federation-runtime-test
         "${_umi_desk_host_root}/tests/desk_federation/test_runtime_bridge.c")
@@ -59,6 +63,10 @@ if(TARGET Umicom::ui_gtk4)
     endif()
     install(TARGETS umicom_desk_federation_gtk4 EXPORT UmicomFrameworkTargets
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+    # Include this exported library surface in the opt-in SDK without changing full installs.
+    umicom_register_sdk_libraries(
+        umicom_desk_federation_gtk4
+    )
     install(FILES "${_umi_desk_host_root}/include/umicom/ui/gtk4/desk_federation.h"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)
     if(BUILD_TESTING)

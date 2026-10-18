@@ -19,6 +19,10 @@ umicom_apply_warnings(umicom_seedream)
 umicom_apply_sanitizers(umicom_seedream)
 target_link_libraries(umicom_framework INTERFACE Umicom::seedream)
 install(TARGETS umicom_seedream EXPORT UmicomFrameworkTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_seedream
+)
 if(TARGET umicom_ui_gtk4)
     target_sources(umicom_ui_gtk4 PRIVATE "${_umicom_seedream_root}/adapters/gtk4/seedream_panel_gtk4.c")
     target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::seedream)

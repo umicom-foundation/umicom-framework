@@ -44,6 +44,10 @@ endif()
 if(TARGET Umicom::ui_gtk4)
     install(TARGETS umicom_workbench_viewport_gtk4 EXPORT UmicomFrameworkTargets
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+    # Include this exported library surface in the opt-in SDK without changing full installs.
+    umicom_register_sdk_libraries(
+        umicom_workbench_viewport_gtk4
+    )
 endif()
 install(TARGETS umicom-component-workbench RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Learning)
 if(BUILD_TESTING)

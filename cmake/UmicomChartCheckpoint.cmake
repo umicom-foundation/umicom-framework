@@ -21,6 +21,10 @@ umicom_apply_warnings(umicom_chart_checkpoint)
 umicom_apply_sanitizers(umicom_chart_checkpoint)
 install(TARGETS umicom_chart_checkpoint EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_chart_checkpoint
+)
 
 # Trader's persistence coordinator is toolkit-neutral and can also be hosted by
 # Studio. Keeping it separate avoids storage dependencies in chart mathematics.
@@ -37,6 +41,10 @@ umicom_apply_warnings(umicom_trading_chart_persistence)
 umicom_apply_sanitizers(umicom_trading_chart_persistence)
 install(TARGETS umicom_trading_chart_persistence EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_trading_chart_persistence
+)
 
 # The complete Framework interface includes the new service; smaller consumers
 # can continue linking only the chart model or the storage adapter.

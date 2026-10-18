@@ -17,6 +17,10 @@ target_link_libraries(umicom_provider_chat PUBLIC Umicom::provider_connection_ch
 umicom_apply_warnings(umicom_provider_chat)
 umicom_apply_sanitizers(umicom_provider_chat)
 install(TARGETS umicom_provider_chat EXPORT UmicomFrameworkTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_provider_chat
+)
 install(FILES "${_umicom_provider_chat_root}/docs/learning/chat-with-saved-connections.html" DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)
 
 if(TARGET umicom_ui_gtk4)

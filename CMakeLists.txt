@@ -59,6 +59,8 @@ endif()
 
 include(CTest)
 include(GNUInstallDirs)
+# Shared SDK registration must precede optional library composition modules.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomSdkComponent.cmake")
 include(CMakePackageConfigHelpers)
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomHeaderGovernance.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomPublicContractFingerprint.cmake")
@@ -5095,12 +5097,22 @@ endif()
 # Installation and CMake package export
 # -----------------------------------------------------------------------------
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+# SDK-only companion rule leaves the established full installation unchanged.
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
 install(DIRECTORY templates/ DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/templates)
+# SDK-only companion rule leaves the established full installation unchanged.
+install(DIRECTORY templates/ DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/templates
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
 # Preserve the existing complete-template install and include native module
 # templates when an SDK consumer installs only the Framework component.
 install(DIRECTORY templates/application_module/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/templates/application_module
     COMPONENT Framework)
+# SDK-only companion rule leaves the established full installation unchanged.
+install(DIRECTORY templates/application_module/
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/templates/application_module
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
 
 # Public guides and the SDK example travel with the Framework installation.
 install(DIRECTORY docs/guides/
@@ -5129,6 +5141,10 @@ install(DIRECTORY examples/action_recovery/
 install(DIRECTORY examples/editor_workflow/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/editor_workflow
     COMPONENT Framework)
+# SDK-only companion rule leaves the established full installation unchanged.
+install(DIRECTORY examples/editor_workflow/
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/editor_workflow
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
 # Module authors can build this complete example against the installed SDK.
 install(DIRECTORY examples/application_module/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/application_module
@@ -5215,6 +5231,76 @@ install(TARGETS
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_base
+    umicom_diagnostics
+    umicom_messaging
+    umicom_data
+    umicom_platform
+    umicom_security
+    umicom_runtime
+    umicom_reflection
+    umicom_integration
+    umicom_resilience
+    umicom_observability
+    umicom_toolchain
+    umicom_compiler
+    umicom_repository
+    umicom_plugin
+    umicom_plugin_ui
+    umicom_scaffold
+    umicom_ui
+    umicom_ui_components
+    umicom_ui_headless
+    umicom_build
+    umicom_build_ui
+    umicom_diagnostic_ui
+    umicom_testing
+    umicom_terminal
+    umicom_terminal_ui
+    umicom_protocol
+    umicom_editor
+    umicom_document
+    umicom_vcs
+    umicom_vcs_ui
+    umicom_declarative
+    umicom_designer
+    umicom_web
+    umicom_browser
+    umicom_chart
+    umicom_frontend
+    umicom_ai
+    umicom_ai_ui
+    umicom_helix
+    umicom_delivery
+    umicom_abi
+    umicom_sdk
+    umicom_product
+    umicom_application
+    umicom_application_ui
+    umicom_desktop
+    umicom_distribution
+    umicom_distribution_ui
+    umicom_finance
+    umicom_finance_ui
+    umicom_trading
+    umicom_trading_ui
+    umicom_engine
+    umicom_game_engine
+    umicom_render3d
+    umicom_media_engine
+    umicom_social_engine
+    umicom_codeguard
+    umicom_project
+    umicom_language
+    umicom_debug
+    umicom_source_control
+    umicom_test_platform
+    umicom_test_ui
+    umicom_developer
+    umicom_framework
+)
 
 # Create this optional product surface only when its build option is enabled.
 if(UMICOM_BUILD_GTK4_ADAPTER)
@@ -5223,6 +5309,11 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
         LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
         RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    )
+    # Include this exported library surface in the opt-in SDK without changing full installs.
+    umicom_register_sdk_libraries(
+        umicom_ui_gtk4
+        umicom_chart_cairo
     )
 endif()
 
@@ -5242,6 +5333,13 @@ install(EXPORT UmicomFrameworkTargets
     NAMESPACE Umicom::
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework
 )
+# SDK-only companion rule leaves the established full installation unchanged.
+install(EXPORT UmicomFrameworkTargets
+    FILE UmicomFrameworkTargets.cmake
+    NAMESPACE Umicom::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework
+
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
 
 set(UMICOM_FRAMEWORK_FIND_SQLITE "")
 # Apply this branch only when its contract condition is satisfied.
@@ -5254,6 +5352,20 @@ set(UMICOM_FRAMEWORK_FIND_CAIRO "")
 if(TARGET umicom_chart_cairo)
     set(UMICOM_FRAMEWORK_FIND_CAIRO
         "find_dependency(PkgConfig)\npkg_check_modules(UMICOM_FRAMEWORK_CAIRO REQUIRED IMPORTED_TARGET cairo>=1.16)")
+endif()
+
+# Resolve the GTK imported target used by the exported native adapter.
+set(UMICOM_FRAMEWORK_FIND_GTK4 "")
+if(TARGET umicom_ui_gtk4)
+    set(UMICOM_FRAMEWORK_FIND_GTK4
+        "find_dependency(PkgConfig)\npkg_check_modules(UMICOM_FRAMEWORK_GTK4 REQUIRED IMPORTED_TARGET gtk4>=4.10)")
+endif()
+
+# GtkSourceView is optional during the producer build but required by an
+# exported adapter that was compiled with its richer editor implementation.
+if(TARGET umicom_ui_gtk4 AND TARGET PkgConfig::UMICOM_FRAMEWORK_SOURCEVIEW5)
+    string(APPEND UMICOM_FRAMEWORK_FIND_GTK4
+        "\nfind_dependency(PkgConfig)\npkg_check_modules(UMICOM_FRAMEWORK_SOURCEVIEW5 REQUIRED IMPORTED_TARGET gtksourceview-5)")
 endif()
 
 configure_package_config_file(
@@ -5280,11 +5392,26 @@ install(FILES
     cmake/UmicomPublicContractFingerprint.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework
 )
+# SDK-only companion rule leaves the established full installation unchanged.
+install(FILES
+    ${CMAKE_CURRENT_BINARY_DIR}/UmicomFrameworkConfig.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/UmicomFrameworkConfigVersion.cmake
+    cmake/UmicomApplicationBranding.cmake
+    cmake/UmicomApplicationModules.cmake
+    cmake/UmicomRequireInstalledSdk.cmake
+    cmake/UmicomPublicContractFingerprint.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework
+
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
 
 # Install the canonical resources once so independently built applications can
 # use the same icon and appearance files as the complete source superbuild.
 install(DIRECTORY resources/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/framework/resources)
+# SDK-only companion rule leaves the established full installation unchanged.
+install(DIRECTORY resources/
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/framework/resources
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
 
 include(cmake/UmicomOperationalStateQualification.cmake)
 include(cmake/UmicomTradingExecutionQualification.cmake)
@@ -5889,7 +6016,54 @@ include(cmake/UmicomInstalledSdkContractChecks.cmake)
 install(DIRECTORY examples/sdk_qualification/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/sdk_qualification
     COMPONENT Framework)
+# SDK-only companion rule leaves the established full installation unchanged.
+install(DIRECTORY examples/sdk_qualification/
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/sdk_qualification
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
 
 install(FILES docs/INSTALLED_SDK_QUALIFICATION.html
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs
     COMPONENT Framework)
+# SDK-only companion rule leaves the established full installation unchanged.
+install(FILES docs/INSTALLED_SDK_QUALIFICATION.html
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
+
+# Exercise selective installation with real independent native consumers.
+include(cmake/UmicomSdkComponentChecks.cmake)
+
+# Installed branding calls the Windows deployment helper even when Framework
+# was built without product executables. Export its existing support sources
+# as SDK resources, preserving the canonical implementation and licence.
+foreach(_sdk_support_file IN ITEMS
+        src/delivery/windows_runtime_bootstrap.c
+        src/delivery/windows_runtime_cache.c
+        include/umicom/delivery/windows_runtime_cache.h
+        LICENSE docs/windows-installation.html)
+    get_filename_component(_sdk_support_parent "${_sdk_support_file}" DIRECTORY)
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${_sdk_support_file}"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/deployment/${_sdk_support_parent}"
+        COMPONENT Framework)
+    install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${_sdk_support_file}"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/deployment/${_sdk_support_parent}"
+        COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
+endforeach()
+install(FILES cmake/UmicomWindowsDeployment.cmake
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework" COMPONENT Framework)
+install(FILES cmake/UmicomWindowsDeployment.cmake
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework"
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
+install(DIRECTORY cmake/windows/
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework/windows" COMPONENT Framework)
+install(DIRECTORY cmake/windows/
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework/windows"
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
+# Keep the installed documentation root useful for SDK-based application hosts.
+install(DIRECTORY docs/learning/
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/docs/learning"
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
+install(FILES docs/SELECTIVE_SDK_INSTALLATION.html
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs" COMPONENT Framework)
+install(FILES docs/SELECTIVE_SDK_INSTALLATION.html
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs"
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)

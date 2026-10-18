@@ -43,6 +43,10 @@ if(COMMAND umicom_apply_sanitizers)
 endif()
 install(TARGETS umicom_desktop_system EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_desktop_system
+)
 install(DIRECTORY "${_umi_desktop_system_root}/include/umicom/desktop_system"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom COMPONENT Framework)
 option(UMICOM_DESKTOP_SYSTEM_BUILD_TOOLS "Build read-only system report and Linux session launcher" ON)

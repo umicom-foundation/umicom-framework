@@ -13,6 +13,10 @@ target_link_libraries(umicom_ibkr_historical_chart PUBLIC Umicom::ibkr_connectio
 umicom_ibkr_target(umicom_ibkr_historical_chart)
 install(TARGETS umicom_ibkr_historical_chart EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_ibkr_historical_chart
+)
 if(BUILD_TESTING)
     add_executable(umicom-ibkr-historical_chart-test
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ibkr_connection/test_historical_chart.c")

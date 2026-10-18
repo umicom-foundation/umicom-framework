@@ -20,6 +20,10 @@ umicom_apply_warnings(umicom_cash_planning)
 umicom_apply_sanitizers(umicom_cash_planning)
 target_link_libraries(umicom_framework INTERFACE Umicom::cash_planning)
 install(TARGETS umicom_cash_planning EXPORT UmicomFrameworkTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_cash_planning
+)
 install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/cash_planning" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom COMPONENT Framework)
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/cash-planning.html" DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/learning COMPONENT Learning)
 if(TARGET umicom_ui_gtk4)

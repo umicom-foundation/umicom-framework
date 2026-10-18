@@ -46,6 +46,10 @@ install(TARGETS umicom_healthcare_core
     EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_healthcare_core
+)
 install(FILES
     "${_umicom_healthcare_framework_root}/include/umicom/healthcare/synthetic_access.h"
     "${_umicom_healthcare_framework_root}/include/umicom/healthcare/synthetic_registry.h"
@@ -118,6 +122,10 @@ if(TARGET Umicom::ui_gtk4)
     endif()
     install(TARGETS umicom_healthcare_access_gtk4 EXPORT UmicomFrameworkTargets
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+    # Include this exported library surface in the opt-in SDK without changing full installs.
+    umicom_register_sdk_libraries(
+        umicom_healthcare_access_gtk4
+    )
     install(FILES "${_umicom_healthcare_framework_root}/include/umicom/healthcare/access_gtk4.h"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/healthcare" COMPONENT Framework)
 endif()

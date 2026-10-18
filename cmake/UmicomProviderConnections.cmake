@@ -19,6 +19,10 @@ umicom_apply_warnings(umicom_provider_connections)
 umicom_apply_sanitizers(umicom_provider_connections)
 install(TARGETS umicom_provider_connections EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_provider_connections
+)
 install(FILES "${_umicom_connections_root}/docs/learning/saving-provider-connections.html"
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)
 if(BUILD_TESTING)

@@ -80,6 +80,10 @@ install(TARGETS umicom_ui_workspace_checkpoint
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_ui_workspace_checkpoint
+)
 
 # Exercise file exchange without GTK, storage or application side effects.
 if(BUILD_TESTING)

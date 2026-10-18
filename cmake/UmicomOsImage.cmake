@@ -57,6 +57,10 @@ foreach(_target IN ITEMS umicom_os_image umicom-os-image umicom-os-image-archive
 endforeach()
 install(TARGETS umicom_os_image EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_os_image
+)
 install(TARGETS umicom-os-image RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Framework)
 install(DIRECTORY "${_umi_os_image_root}/include/umicom/os_image"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom COMPONENT Framework)

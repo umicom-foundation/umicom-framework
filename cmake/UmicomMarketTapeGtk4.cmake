@@ -19,6 +19,10 @@ target_compile_definitions(umicom_market_tape_gtk4 PUBLIC UMICOM_HAS_MARKET_TAPE
 umicom_market_tape_target(umicom_market_tape_gtk4)
 install(TARGETS umicom_market_tape_gtk4 EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_market_tape_gtk4
+)
 install(FILES "${_umi_tape_gtk_root}/include/umicom/ui/gtk4/market_tape.h"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4 COMPONENT Framework)
 add_executable(umicom-market-tape-workbench "${_umi_tape_gtk_root}/examples/market_tape/gtk_main.c")
@@ -37,4 +41,8 @@ if(BUILD_TESTING)
 endif()
 install(FILES "${_umi_tape_gtk_root}/cmake/UmicomMarketTapeDependencies.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework COMPONENT Framework)
+# The selective SDK needs the same dependency and resource contract.
+install(FILES "${_umi_tape_gtk_root}/cmake/UmicomMarketTapeDependencies.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
 unset(_umi_tape_gtk_root)

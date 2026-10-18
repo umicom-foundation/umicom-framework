@@ -206,6 +206,12 @@ install(
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+# Keep these exported dependencies available in a selective SDK installation.
+umicom_register_sdk_libraries(
+    umicom_context_channel
+    umicom_cross_application_panel
+)
+
 
 install(DIRECTORY "${UMICOM_CONTEXT_CHANNEL_FRAMEWORK_ROOT}/include/umicom/cross_application_panel" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom")
 # Configure the optional target only when its feature has created it.

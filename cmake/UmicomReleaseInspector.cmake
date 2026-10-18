@@ -39,6 +39,10 @@ if(TARGET umicom-setup-centre)
 endif()
 install(TARGETS umicom_release_inspector EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_release_inspector
+)
 install(TARGETS umicom-release-inspect RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Framework)
 install(DIRECTORY "${_umi_inspect_root}/include/umicom/release_inspector"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom COMPONENT Framework)

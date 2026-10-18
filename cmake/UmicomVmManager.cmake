@@ -87,6 +87,10 @@ if(WIN32)
     install(TARGETS umicom-vm-manager RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Framework)
 endif()
 install(TARGETS umicom_vm_manager EXPORT UmicomFrameworkTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_vm_manager
+)
 install(TARGETS umicom-vm RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Framework)
 install(DIRECTORY "${_umi_vm_root}/include/umicom/vm_manager" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom COMPONENT Framework)
 install(FILES "${_umi_vm_root}/docs/learning/run-umicom-in-a-virtual-machine.html" DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)

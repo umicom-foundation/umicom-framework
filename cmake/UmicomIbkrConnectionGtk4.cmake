@@ -32,10 +32,18 @@ endif()
 umicom_ibkr_target(umicom_ibkr_connection_gtk4)
 install(TARGETS umicom_ibkr_connection_gtk4 EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_ibkr_connection_gtk4
+)
 install(FILES "${_ibkr_gtk_root}/include/umicom/broker_connectivity/connection_gtk4.h"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/broker_connectivity COMPONENT Framework)
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/UmicomIbkrGtkDependencies.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework COMPONENT Framework)
+# The selective SDK needs the same dependency and resource contract.
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/UmicomIbkrGtkDependencies.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
 add_executable(umicom-broker-workbench "${_ibkr_gtk_root}/examples/ibkr_connection/gtk_main.c")
 target_link_libraries(umicom-broker-workbench PRIVATE Umicom::ibkr_connection_gtk4)
 umicom_ibkr_target(umicom-broker-workbench)

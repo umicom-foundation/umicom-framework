@@ -18,6 +18,10 @@ umicom_apply_sanitizers(umicom_bank_feed)
 target_link_libraries(umicom_framework INTERFACE Umicom::bank_feed)
 install(TARGETS umicom_bank_feed EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_bank_feed
+)
 install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/bank_feed"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom COMPONENT Framework)
 # Application guides belong to the shared docs/guides installation in the

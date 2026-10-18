@@ -41,6 +41,10 @@ if(COMMAND umicom_apply_sanitizers)
 endif()
 install(TARGETS umicom_bank_operations EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_bank_operations
+)
 install(DIRECTORY "${_umicom_bank_operations_root}/include/umicom/bank_operations"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom" COMPONENT Framework)
 
@@ -60,6 +64,10 @@ if(TARGET Umicom::ui_gtk4)
     endif()
     install(TARGETS umicom_bank_operations_gtk4 EXPORT UmicomFrameworkTargets
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+    # Include this exported library surface in the opt-in SDK without changing full installs.
+    umicom_register_sdk_libraries(
+        umicom_bank_operations_gtk4
+    )
     install(FILES "${_umicom_bank_operations_root}/include/umicom/ui/gtk4/bank_operations.h"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)
 endif()

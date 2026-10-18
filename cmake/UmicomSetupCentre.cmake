@@ -49,6 +49,10 @@ if(TARGET Umicom::platform)
     endif()
     install(TARGETS umicom_setup_process EXPORT UmicomFrameworkTargets
         ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+    # Include this exported library surface in the opt-in SDK without changing full installs.
+    umicom_register_sdk_libraries(
+        umicom_setup_process
+    )
 endif()
 add_executable(umicom-setup "${_umi_setup_root}/examples/setup_centre/main.c")
 target_link_libraries(umicom-setup PRIVATE Umicom::setup_centre)
@@ -90,6 +94,10 @@ if(WIN32 AND TARGET Umicom::setup_process)
 endif()
 install(TARGETS umicom_setup_centre EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_setup_centre
+)
 install(TARGETS umicom-setup RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Framework)
 install(DIRECTORY "${_umi_setup_root}/include/umicom/setup_centre"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom COMPONENT Framework)

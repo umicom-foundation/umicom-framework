@@ -13,6 +13,10 @@ target_link_libraries(umicom_designer_native_gtk4 PUBLIC Umicom::designer_native
 umicom_apply_warnings(umicom_designer_native_gtk4)
 umicom_apply_sanitizers(umicom_designer_native_gtk4)
 install(TARGETS umicom_designer_native_gtk4 EXPORT UmicomFrameworkTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_designer_native_gtk4
+)
 install(FILES "${_native_root}/include/umicom/designer/native_gtk4.h" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/designer)
 if(BUILD_TESTING)
     add_executable(umicom-designer-native-gtk-test "${_native_root}/tests/designer_native/test_gtk.c")
@@ -24,3 +28,10 @@ if(BUILD_TESTING)
         set_tests_properties(framework.designer_native.gtk.${_case} PROPERTIES SKIP_RETURN_CODE 77 TIMEOUT 30)
     endforeach()
 endif()
+
+# Installed consumers must reconstruct the imported GTK dependency used above.
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/UmicomDesignerGtkDependencies.cmake"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework")
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/UmicomDesignerGtkDependencies.cmake"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework"
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)

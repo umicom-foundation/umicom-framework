@@ -12,6 +12,10 @@ umicom_apply_sanitizers(umicom_debug_ui)
 target_link_libraries(umicom_framework INTERFACE Umicom::debug_ui)
 install(TARGETS umicom_debug_ui EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_debug_ui
+)
 if(BUILD_TESTING)
     function(umicom_debug_selection_cases group file)
         set(target "umicom-debug-selection-${group}-test")

@@ -29,6 +29,10 @@ foreach(_tool IN ITEMS project project-example)
     umicom_apply_sanitizers(umicom-designer-${_tool})
 endforeach()
 install(TARGETS umicom_designer_native EXPORT UmicomFrameworkTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_designer_native
+)
 install(TARGETS umicom-designer-project umicom-designer-project-example RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 install(FILES "${_native_root}/include/umicom/designer/native_project.h" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/designer)
 if(BUILD_TESTING)

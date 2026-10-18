@@ -34,6 +34,10 @@ target_include_directories(umicom_market_tape PUBLIC
 umicom_market_tape_target(umicom_market_tape)
 install(TARGETS umicom_market_tape EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_market_tape
+)
 install(FILES "${_umi_tape_root}/include/umicom/trading/market_tape.h"
     "${_umi_tape_root}/include/umicom/trading/market_tape_practice.h"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/trading COMPONENT Framework)

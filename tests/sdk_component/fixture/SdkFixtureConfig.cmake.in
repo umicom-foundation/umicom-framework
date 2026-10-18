@@ -1,0 +1,3 @@
+@PACKAGE_INIT@
+# Umicom Foundation | MIT. Resolve only this installed export set.
+include("${CMAKE_CURRENT_LIST_DIR}/SdkFixtureTargets.cmake")

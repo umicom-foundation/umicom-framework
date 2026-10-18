@@ -4,6 +4,8 @@
 <style>body{font:17px/1.6 system-ui,sans-serif;max-width:1000px;margin:40px auto;padding:0 24px;color:#18283b;background:#f8fafc}pre{overflow:auto;background:#e9eef5;padding:18px;border-radius:8px}code{font-family:Consolas,monospace}h1,h2{line-height:1.2}aside{border-left:4px solid #2473b8;padding:12px 20px;background:white}a{color:#155fa0}</style></head><body>
 <h1>Qualify an installed Umicom Framework SDK</h1>
 <p>An SDK is the headers, libraries and build configuration that another application consumes. A successful build inside the Framework repository does not by itself show that an installed SDK is complete. This exercise builds existing Notes and workspace-import examples against a single installation, with no source-library fallback.</p>
+<h2>Choose full or SDK-only installation</h2>
+<p>For a library SDK without product executables, follow <a href="SELECTIVE_SDK_INSTALLATION.html">selective SDK installation</a>: build <code>umicom-sdk-libraries</code> and install <code>--component FrameworkSDK</code>. The full-install exercise below remains available. Both routes require a fresh prefix and matching external dependencies before running the independent consumers.</p>
 <h2>Prepare a complete installation</h2>
 <ol><li>Configure and build Framework or its Applications host using the supported preset for your compiler. Keep the compiler, architecture and configuration consistent between the SDK and its consumer.</li>
 <li>Install the completed build to a new, explicitly selected prefix. Use a full installation for this exercise. The current <code>Framework</code> install component alone does not include every archive, header and package file registered by the broader build.</li>

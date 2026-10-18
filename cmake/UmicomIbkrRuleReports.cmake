@@ -18,6 +18,10 @@ target_link_libraries(umicom_ibkr_rule_report PRIVATE Umicom::developer)
 umicom_ibkr_target(umicom_ibkr_rule_report)
 install(TARGETS umicom_ibkr_rule_report EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_ibkr_rule_report
+)
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/broker_connectivity/rule_report.h"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/broker_connectivity COMPONENT Framework)
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/review-contract-rule-reports.html"

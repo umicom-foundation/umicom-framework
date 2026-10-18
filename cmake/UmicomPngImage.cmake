@@ -17,6 +17,10 @@ endif()
 umicom_apply_warnings(umicom_png_image)
 umicom_apply_sanitizers(umicom_png_image)
 install(TARGETS umicom_png_image EXPORT UmicomFrameworkTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_png_image
+)
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/media/png_image.h"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/media COMPONENT Framework)
 

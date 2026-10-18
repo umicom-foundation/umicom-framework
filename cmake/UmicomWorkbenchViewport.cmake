@@ -23,6 +23,10 @@ foreach(_target IN ITEMS umicom_workbench_viewport umicom-layout-example)
 endforeach()
 install(TARGETS umicom_workbench_viewport EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_workbench_viewport
+)
 install(TARGETS umicom-layout-example RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Learning)
 install(FILES "${_umi_viewport_root}/include/umicom/workbench_layout/viewport.h"
     "${_umi_viewport_root}/include/umicom/workbench_layout/viewport_gtk4.h"

@@ -23,6 +23,10 @@ if(COMMAND umicom_apply_sanitizers)
 endif()
 install(TARGETS umicom_workspace_library_gtk4 EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_workspace_library_gtk4
+)
 install(FILES "${_umicom_workspace_library_root}/include/umicom/ui/gtk4/workspace_library.h"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)
 # The portable workspace model already owns umicom-workspace-library-test.

@@ -51,6 +51,10 @@ umicom_education_inspection_configure_target(umicom_education_inspection)
 # the standalone CLI can still build this same library without configuring GTK.
 install(TARGETS umicom_education_inspection EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_education_inspection
+)
 install(FILES
     "${_umicom_inspection_root}/include/umicom/education/binary_inspect.h"
     "${_umicom_inspection_root}/include/umicom/education/archive_inspect.h"

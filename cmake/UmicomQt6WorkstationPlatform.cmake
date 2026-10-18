@@ -529,5 +529,16 @@ install(TARGETS umicom_ui_qt6
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_ui_qt6
+)
 
 message(STATUS "Umicom Qt6 workstation adapter enabled (Qt ${Qt6_VERSION})")
+
+# Publish dependency discovery beside both package variants when Qt is enabled.
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/UmicomQt6Dependencies.cmake"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework")
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/UmicomQt6Dependencies.cmake"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework"
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)

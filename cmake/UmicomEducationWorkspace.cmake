@@ -58,6 +58,10 @@ target_link_libraries(umicom_education_workspace PUBLIC Umicom::data Umicom::dev
 umicom_education_configure_target(umicom_education_workspace)
 install(TARGETS umicom_education_workspace EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_education_workspace
+)
 install(DIRECTORY "${_umicom_education_root}/include/umicom/education_workspace"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom" COMPONENT Framework)
 foreach(course IN ITEMS notes assembly framework)
@@ -85,6 +89,10 @@ if(TARGET Umicom::ui_gtk4)
         Umicom::education_inspection_gtk4)
     install(TARGETS umicom_education_workspace_gtk4 EXPORT UmicomFrameworkTargets
         ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Framework)
+    # Include this exported library surface in the opt-in SDK without changing full installs.
+    umicom_register_sdk_libraries(
+        umicom_education_workspace_gtk4
+    )
     install(FILES "${_umicom_education_root}/include/umicom/ui/gtk4/education_workspace.h"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)
 endif()

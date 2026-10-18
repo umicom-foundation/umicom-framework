@@ -39,6 +39,10 @@ if(COMMAND umicom_apply_sanitizers)
 endif()
 install(TARGETS umicom_desk_federation EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_desk_federation
+)
 install(DIRECTORY "${_umi_federation_root}/include/umicom/desktop/federation"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/desktop" COMPONENT Framework)
 install(FILES "${_umi_federation_root}/docs/DESK_WORKSPACES.html"

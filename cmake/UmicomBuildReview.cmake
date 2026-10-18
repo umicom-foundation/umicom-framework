@@ -31,6 +31,10 @@ foreach(_target IN ITEMS umicom_build_review umicom-build-review umicom-build-re
 endforeach()
 install(TARGETS umicom_build_review EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+# Include this exported library surface in the opt-in SDK without changing full installs.
+umicom_register_sdk_libraries(
+    umicom_build_review
+)
 install(TARGETS umicom-build-review umicom-build-review-example
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Learning)
 install(FILES "${_umi_review_root}/include/umicom/build/review.h"
