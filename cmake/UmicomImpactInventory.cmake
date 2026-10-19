@@ -6,6 +6,8 @@
 # Licence: MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomImpactTestGraph.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomQualificationInputs.cmake")
 
 # Call in the directory that registered the test. Declare all executable and
 # fixture targets it needs; tests which inspect only files may use ALWAYS.
@@ -94,6 +96,9 @@ function(_umicom_impact_test_detail test_name directory raw output)
     if(_always)
         string(APPEND _detail "always=1\n")
     endif()
+    # Keep the earlier broad fallback for review. The indexed replacement can
+    # represent exact relationships after every directory has registered tests.
+    #[[
     # CTest can add setup/cleanup tests or order dependencies beyond the chosen
     # names. Until these edges are represented explicitly, broaden selection
     # so required fixture executables cannot be missed by a narrow build.
@@ -105,6 +110,30 @@ function(_umicom_impact_test_detail test_name directory raw output)
         endif()
     endforeach()
     if((_targets OR _always) AND NOT _external_test_edges)
+        string(APPEND _detail "complete=1\n")
+    else()
+        string(APPEND _detail "complete=0\n")
+    endif()
+    ]]
+    _umicom_impact_related_tests("${test_name}" "${directory}" _related _indexed)
+    set(_external_test_edges FALSE)
+    foreach(_property IN ITEMS DEPENDS FIXTURES_REQUIRED FIXTURES_SETUP FIXTURES_CLEANUP)
+        get_property(_value TEST "${test_name}" DIRECTORY "${directory}" PROPERTY "${_property}")
+        if(NOT "${_value}" STREQUAL "")
+            set(_external_test_edges TRUE)
+        endif()
+    endforeach()
+    get_property(_index_present GLOBAL PROPERTY UMICOM_IMPACT_TEST_GRAPH)
+    if(NOT "${_related}" STREQUAL "")
+        # Older readers treat the new version as incomplete and select all.
+        string(REPLACE "impact-version=1\n" "impact-version=2\n" _detail "${_detail}")
+        foreach(_related_test IN LISTS _related)
+            string(HEX "${_related_test}" _hex)
+            string(APPEND _detail "test=${_hex}\n")
+        endforeach()
+    endif()
+    if((_targets OR _always) AND ((_index_present AND _indexed) OR
+            (NOT _index_present AND NOT _external_test_edges)))
         string(APPEND _detail "complete=1\n")
     else()
         string(APPEND _detail "complete=0\n")

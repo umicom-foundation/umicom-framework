@@ -345,6 +345,7 @@ add_library(umicom_platform STATIC
     src/platform/atomic_file.c
     src/platform/output_file.c
     src/platform/input_file.c
+    src/platform/file_lease.c
     src/platform/threading.c
     src/platform/task.c
     src/platform/task_queue.c
@@ -1112,6 +1113,7 @@ add_library(umicom_build STATIC
     src/build/cpack_provider.c
     src/build/runner.c
     src/build/project_session.c
+    src/build/directory_guard.c
     src/build/job_identity.c
     src/build/profile_root.c
     src/build/graph.c
@@ -5876,6 +5878,7 @@ include(cmake/UmicomBuildLogCapture.cmake)
 include(cmake/UmicomJobHistory.cmake)
 include(cmake/UmicomTestArchive.cmake)
 include(cmake/UmicomInputFile.cmake)
+include(cmake/UmicomDirectoryGuard.cmake)
 include(cmake/UmicomPlatformSecrets.cmake)
 include(cmake/UmicomProviderConnections.cmake)
 include(cmake/UmicomProfileKeys.cmake)

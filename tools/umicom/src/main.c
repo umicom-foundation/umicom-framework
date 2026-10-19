@@ -285,6 +285,9 @@ static int RunNativeCommand(int argc, char **argv)
      * a presentation adapter shared with the standalone VM manager. */
     /* Saved test evidence is inspected through Framework without a toolchain or test launch. */
     /* Selection is computed by Framework; this route only displays its evidence. */
+    /* Archive inspection is read-only and retains historical provenance. */
+    if (strcmp(command, "qualification-report") == 0)
+        return umi_cli_command_qualification_report(argc - 2, argv + 2);
     if (strcmp(command, "impact") == 0)
         return umi_cli_command_impact(argc - 2, argv + 2);
     if (strcmp(command, "test-report") == 0)

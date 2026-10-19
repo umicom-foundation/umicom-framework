@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Recording scoped qualification evidence</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:960px;margin:40px auto;padding:0 24px;color:#172638;background:#f8fafc}pre{padding:18px;background:#e8eef5;overflow:auto}code{font-family:Consolas,monospace}h1,h2{line-height:1.2}a{color:#0758a3}</style></head>
+<body><main><h1>Recording scoped qualification evidence</h1>
+<p>A scoped check builds and tests the part of a project affected by a change.
+Framework can keep its selection, source observations and exact test outcomes
+together. The recording service does not run CMake, CTest or Git.</p>
+<p>Link <code>Umicom::distribution</code> for planning, observation, run recording
+and report formatting. Link the separate <code>Umicom::qualification_history</code>
+bridge when the host also uses Data Server job history. Pure assessment needs no
+database. Missing, not run, disabled, skipped, cancelled, timed out, failed and passed
+outcomes remain different. A rerun needs a new attempt; it cannot replace an
+earlier failure.</p>
+<h2>1. Declare additional inputs</h2>
+<p>Private headers, templates and runtime resources can affect a feature without
+being in compiler sources. Associate them with their real local target:</p>
+<pre><code>include("${framework_root}/cmake/UmicomImpactInventory.cmake")
+umicom_target_qualification_inputs(my_library FILES
+    src/private_state.h
+    resources/defaults.ini)</code></pre>
+<p>Call after creating the target. Relative paths use the calling directory;
+duplicates are removed per owner. A file can belong to several targets. Aliases,
+imported targets, directories and generator expressions are rejected. Missing
+or generated files stay unresolved and prevent a complete source observation.
+This declaration does not change compiler inputs or custom-command dependencies;
+maintain those build recipes separately. Undeclared inputs remain outside coverage.</p>
+<h2>2. Create a run before executing work</h2>
+<ol><li>Capture a fresh configured inventory and create an affected-work plan.</li>
+<li>Observe its listed bytes with <code>UmiReleaseSourceObserve</code>.
+Add <code>--list-inputs</code> to the normal <code>umicom impact</code> command
+to see every deduplicated input digest, byte count and escaped path.</li>
+<li>Generate a new attempt identity, expressed as lowercase SHA-256. Also supply
+a digest of the compiler, configuration, commands and relevant environment.</li>
+<li>Call <code>UmiReleaseQualificationCreate</code>. The plan and observation must
+describe the same inventory. Names and digests are copied; input objects may
+then be destroyed.</li></ol>
+<p>Keep inputs stable during execution. Matching observations do not prove that
+files stayed unchanged between reads, or that the compiler used those bytes.
+The service does not inspect unlisted inputs, authenticate supplied evidence,
+or create an isolated build snapshot.</p>
+<h2>3. Record outcomes and seal the attempt</h2>
+<pre><code>UmiReleaseQualificationIdentity identity;
+UmiReleaseQualificationGetIdentity(run, &amp;identity);
+/* Use the host's authorized executor for selected work. */
+UmiReleaseQualificationRecordBuild(run, &amp;identity, &amp;build_result);
+UmiReleaseQualificationRecordTest(run, &amp;identity, exact_test_name, &amp;test_result);
+/* Repeat for every selected test; check every returned status. */
+UmiReleaseQualificationClose(run, &amp;identity, after_observation, toolchain_after);
+UmiReleaseQualificationDescribe(run, &amp;summary);</code></pre>
+<p>Each result includes outcome, Framework status, exit code, duration and captured
+log digest. PASSED requires OK. A passing build requires a known zero exit code. Individual test exits may be unknown when an aggregate runner result covers them; unknown values are never asserted as zero. Exact selected names are
+required. Evidence from another attempt or plan is rejected. Build evidence must
+exist before test results. Tests after a failed build stay visible but cannot
+make the run ready: their executables might be stale.</p>
+<p>Close failed and interrupted attempts too. Supply null after-observation or
+toolchain when unavailable; explicit blockers remain. Closed runs cannot accept
+new results. Open attempts, no-test selections, missing results, non-passing
+outcomes or changed identities cannot become ready for review. Readiness covers
+this selection only; it is not product release approval.</p>
+<h2>Import a complete saved CTest report</h2><p>Link <code>Umicom::qualification_ctest</code> and call <code>UmiReleaseQualificationImportCtest</code> with the identified run, original JUnit bytes and the actual test-process result. The existing strict parser validates the XML. Every selected name must appear exactly once; missing, unexpected or duplicate names prevent the entire import. No partial results remain. Disabled and runtime skipped tests stay separate. The report parser retains its limits of 64 MiB, 100,000 tests and 255 bytes per test name; oversized names are refused rather than truncated.</p><p>JUnit does not provide each executable exit code. Imported records mark those codes unknown and identify the XML bytes by SHA-256. The aggregate runner outcome and captured-log digest are stored separately. A failed runner still blocks review even if every testcase row says passed. The caller must establish that the saved report came from this attempt; parsing alone cannot prove freshness.</p><h2>4. Save evidence privately</h2>
+<p>Call <code>UmiReleaseQualificationFormatReport</code> with null output and zero
+capacity to measure its buffer, allocate that size, then call again. Use the
+host's checked file-saving service to save it in a user-chosen private location
+outside public repositories. The formatter opens no files. It includes every
+selected target and test, missing results, before/after identities and log digests.
+Names are hex-encoded so tabs and newlines cannot create false records.
+Keep full logs separately with their matching digests.</p>
+<p>For database history, call <code>UmiReleaseQualificationHistoryBegin</code>
+on a pristine run and immediately call <code>UmiReleaseQualificationHistoryPublish</code>
+to record RUNNING before execution. Publish progress and closure with the returned
+entry ID and revision. Its three steps mean build evidence recorded, every test
+accounted for, and observations sealed; they are not a test count. Only a closed
+ready run becomes SUCCEEDED. Stale revisions are refused. Inspect the stored entry
+before retrying; never replay work because a history entry appears unfinished.
+The small history entry stores digests and progress, not detailed per-test results.</p>
+<h2>Report format</h2>
+<p>Version-one TSV starts with <code>UMICOM-QUALIFICATION</code> and version 1.
+Identity and observation rows contain lowercase digests. The selection row contains
+changed-path count and fallback mask. Summary fields are targets, tests, recorded,
+missing, passed, failed, skipped, not-run, cancelled, timed-out, disabled, blockers, closed,
+build-recorded, ready-for-review and test-process-recorded, in that order. Booleans use 0 or 1.
+Target rows contain a hex name and reason mask. Test rows add a result or
+<code>missing</code>. Results contain outcome, status, exit code, duration in
+milliseconds and log digest. The build and test-process rows use the same result fields. A dash in the exit-code field means unknown.
+The final row is <code>end</code>. An empty after-observation means unavailable,
+never unchanged. This is an audit record, not an authenticated certificate or
+executable replay format.</p>
+<h2>Troubleshooting</h2>
+<ul><li><strong>INVALID_STATE:</strong> inspect attempt/plan identity, closed state,
+build-before-tests ordering or stale history revision.</li>
+<li><strong>ALREADY_EXISTS:</strong> preserve the recorded outcome and create a
+new attempt for a retry.</li>
+<li><strong>NOT_FOUND:</strong> the name is not selected or has no recorded result.
+Do not substitute a passing default.</li>
+<li><strong>CAPACITY_EXCEEDED:</strong> retain the error. Truncating names or
+result sets would hide unchecked work.</li></ul>
+<p>Existing CLI and Studio workflows retain their behavior. Hosts must explicitly
+integrate these APIs; adding the recording service does not automatically attach
+evidence to every execution.</p>
+<p><a href="affected-builds.html">Planning affected builds and tests</a></p>
+
+<h2>Present a run safely in Studio or another frontend</h2>
+<p>Include <code>umicom/distribution/runtime/qualification_view.h</code> to capture an immutable view on the ledger's owning thread.
+The view copies the complete selection, exact names, outcomes and summary. Later run mutations or destruction cannot change the captured view.
+Transfer the view between threads only after capture completes; stop all readers before destroying it.</p>
+<ol><li>Call <code>UmiQualificationViewCapture(run, &amp;view)</code> while run mutations are serialized.</li>
+<li>Read the summary even when a filtered page is empty. Source and toolchain blockers can remain when every recorded test passed.</li>
+<li>Use <code>UmiQualificationViewPage</code> for bounded pages of tests, selected targets, missing required evidence or non-passing outcomes.
+Page offsets refer to the filtered list; each row also carries its stable unfiltered index.</li>
+<li>For GTK4, link <code>Umicom::qualification_gtk4</code>, include <code>umicom/ui/gtk4/qualification_review.h</code>, and create a panel on the GTK thread.</li>
+<li>Marshal the completed snapshot to that thread, then transfer it with <code>UmiGtk4QualificationReviewSetView(panel, &amp;view)</code>.
+Success clears the caller's pointer; the panel releases the old snapshot. Passing a null view clears the panel.</li></ol>
+<p>The GTK panel provides 64-row pages, evidence counters, full attempt/plan/source digests and persistent blockers.
+It treats names as plain text and visibly marks shortened display names. The immutable model and report retain exact names.
+Target rows mean selected work; aggregate build success does not provide separate per-target execution records.
+An optional absent test-process result is displayed as not supplied, while required missing build/test evidence remains a blocker.</p>
+<p>The adapter does not launch jobs, import files, infer success from an empty filter, or authorize Git publication.
+A host still needs to connect its actual executor and capture snapshots at meaningful progress points.
+This library does not automatically connect every existing Studio workflow to qualification records.</p>
+
+<h2>Sequence an attempt through a host executor</h2>
+<p><code>Umicom::qualification_workflow</code> combines the existing ledger, source observations, strict CTest import and optional build-directory guard.
+Include <code>umicom/distribution/runtime/qualification_workflow.h</code>. Call the synchronous service on a worker thread.</p>
+<ol><li>Supply the configured inventory, its impact plan, a new execution digest and source-read options.</li>
+<li>Provide build and test callbacks that execute the exact selection and return complete outcome evidence.
+A callback returns <code>OK</code> when its evidence is available; the recorded build or test process can still have failed.
+A callback error means the result is unavailable and cannot be recorded as a pass.</li>
+<li>Provide a toolchain observation callback. It runs before execution and during closure; it must hash the actual reviewed tools, commands and relevant environment.</li>
+<li>Optionally request cooperative ownership of the inventory's existing build directory. The host must resolve presets to that same directory before execution.</li>
+<li>Use the progress observer to capture immutable presentation views. This is an observation callback, not an asynchronous job, publication action or authority to mutate the ledger.</li>
+<li>Inspect both the returned status and any returned run. Before ledger creation a failure leaves the output null.
+After creation the caller receives the sealed attempt even when execution, import or final observation failed.</li></ol>
+<p>A failed or invalid build prevents the test callback from running. Incomplete or mismatched test reports change no test records.
+Cancellation prevents later executors; late cancellation remains an explicit interruption even when every test already passed.
+The first execution failure is retained, and a native lease-release failure also blocks review.
+A complete but non-passing assessment returns <code>INVALID_STATE</code>; <code>OK</code> requires a ready scoped summary.</p>
+<p>Hosts retain tool trust, command construction, process-tree lifetime, cancellation, private raw logs and report ownership.
+The service does not invent a compiler, run shell strings, automatically retry, or publish repository changes.
+Before/after observation cannot detect a change followed by a reversal; stable source snapshots and end-to-end CLI/Studio adoption remain separate integration work.</p>
+<p>The report's <code>execution-status</code> row retains a terminal orchestration status independently of individual outcomes.
+Interrupted attempts refuse later result writes. A closed interrupted attempt remains blocked; durable history records cancellation as cancelled and other execution failures with their original status.</p>
+</main>
+<section id="saved-evidence">
+<h2>Save a qualification result and reopen it later</h2>
+<p>A qualification archive keeps one attempt's exact selection, identities, outcomes and closing observations. The file is historical evidence. Opening it does not check today's source, run tests or resume an unfinished job. Store reports and their logs in a private directory you choose, outside source repositories.</p>
+<ol>
+<li>Let the qualification workflow finish and return its sealed run, including when the run failed or was cancelled. Call <code>UmiQualificationArchiveSave(run, absolutePath, &amp;receipt)</code> from a worker thread. Choose a new filename below an existing trusted directory. The service does not overwrite an existing file or choose a hidden profile directory.</li>
+<li>Keep the returned <code>reportSha256</code>, byte count and attempt identity with your private job history. The receipt is returned only after writing and closing succeeds. Keep the detailed build/test logs too: the report records their digests and does not contain their contents.</li>
+<li>Reopen the file using <code>UmiQualificationArchiveLoad(path, expectedDigest, &amp;view, &amp;receipt)</code>. The reader checks the expected digest when supplied, exact report structure, unique names, the recomputed plan identity and all derived totals and blockers. A malformed or inconsistent report returns an error with no partial view.</li>
+<li>Pass the owned view to the GTK qualification panel, or inspect it from the command line. A saved view remains explicitly marked historical. It cannot be converted into a mutable run or used to restart execution.</li>
+</ol>
+<pre><code>umicom qualification-report "C:\umicom\_local\qualification\attempt.tsv"
+umicom qualification-report "C:\umicom\_local\qualification\attempt.tsv" --all
+umicom qualification-report "C:\umicom\_local\qualification\attempt.tsv" --expect-report YOUR_RETAINED_SHA256</code></pre>
+<p>Replace the path with a report created by a host using the archive service, and replace the digest placeholder with the 64 lowercase hexadecimal characters from its retained receipt. The command does not create a report itself. Without <code>--all</code>, it shows missing and non-passing rows plus every summary blocker. Exit 0 means that the saved scoped result was ready for review; exit 1 means incomplete or blocked evidence; exit 2 means invalid input, a read failure or an output failure.</p>
+<p>If saving fails, the partial file is retained for diagnosis. Choose a different filename for another attempt; do not treat an existing file as proof that saving succeeded. A digest mismatch means the supplied receipt and file differ: retain both and investigate their provenance. A matching digest is not a signature and does not prove the recorded commands actually ran. Only separately trusted execution and logs can support that claim.</p>
+<p>The strict version-one parser accepts the canonical LF/tab report format, with hexadecimal name fields and bounded allocations. It rejects unknown versions, extra or missing rows, duplicate names, invalid numbers, contradictory outcomes and altered plan fingerprints. It can inspect an explicitly exported open report as a saved incomplete attempt, but the archive writer accepts only sealed runs. Report parsing and file I/O use the same Framework services from CLI and GTK hosts.</p>
+</section>
+
+
+<section id="focused-core">
+<h2>Check the evidence core without rebuilding every application</h2>
+<p>The independent project in <code>tests/scoped_qualification</code> compiles the real inventory, impact, source observation, qualification ledger, view and archive implementations. It reuses the normal core regression registrations and fixtures. It does not install a second Framework or replace the normal Framework build. Use a separate build directory so it cannot interfere with an application build already running.</p>
+<ol>
+<li>Open a terminal with a C23 compiler, CMake and Ninja available. The Windows example below uses the UCRT64 toolchain.</li>
+<li>Configure the focused source directory into a separate short binary directory. Keep logs outside the source repository.</li>
+<li>Build the focused project and inspect its build log. Stop if the build fails; test results from an incomplete build are not qualification.</li>
+<li>Run its registered tests. A successful focused run supports these core services only. The normal Framework build still needs to check optional CTest orchestration, persistent history, GTK presentation, CLI dispatch and installed SDK consumers.</li>
+</ol>
+<pre><code>Set-Location "C:\umicom\Umicom-Applications\framework"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+New-Item -ItemType Directory -Force "C:\umicom\_local\logs\qualification-core"
+cmake -S ".\tests\scoped_qualification" -B "C:\umicom\_local\build\qualification-core" -G Ninja -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe -DCMAKE_BUILD_TYPE=Debug 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\qualification-core\configure.log"
+cmake --build "C:\umicom\_local\build\qualification-core" --parallel 2 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\qualification-core\build.log"
+ctest --test-dir "C:\umicom\_local\build\qualification-core" --output-on-failure --no-tests=error --output-log "C:\umicom\_local\logs\qualification-core\tests.log"</code></pre>
+<p>Run each command separately and stop on an error. PowerShell does not automatically stop a pasted sequence after a native program fails. The private build directory keeps fixture files and logs accessible without placing them in a user profile or public source tree. CTest registers file-I/O fixtures below its own working directory; it does not remove existing evidence.</p>
+<p>This small project has no installation or launch step. Application launch and full SDK qualification belong to their normal configured projects. Passing its selected tests does not imply that every Framework test or every product passed.</p>
+</section>
+
+
+<section id="compare-attempts">
+<h2>Compare closed attempts without hiding lost coverage</h2>
+<p><code>UmiQualificationCompare</code> compares two closed immutable views and owns its result independently of them. It pairs the aggregate build, optional test-process record and exact test names. It reports added or removed test coverage, previously passing evidence that is now missing or non-passing, recovered passes and other outcome/status/exit changes. Timing and log-digest changes remain available in each row without being labelled failures by themselves.</p>
+<pre><code>umicom qualification-report "C:\umicom\_local\qualification\after.tsv" --compare "C:\umicom\_local\qualification\before.tsv"</code></pre>
+<p>The first file is the later result; <code>--compare</code> names the earlier file. Both must contain closed attempts. Add <code>--all</code> to include unchanged rows. Comparison returns exit 1 when previously passing evidence becomes missing or non-passing, or when test coverage was removed, even if the later selection itself passed. Invalid files or open attempts return exit 2.</p>
+<p>Different recorded plan identities mean that selection, source, inventory or toolchain inputs differ. An outcome transition can still help review, but it does not establish its cause. Two reports with the same execution identity do not establish independent runs. Summary blockers and saved-report provenance remain visible; comparison does not run commands, accept a release or update issue records automatically.</p>
+</section>
+
+</body></html>

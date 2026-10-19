@@ -81,3 +81,19 @@ bool PlanContains(const UmiReleaseImpactPlan *plan, const char *name, uint32_t r
     }
     return false;
 }
+
+/* The original version-one fixture remains available for compatibility cases. */
+bool FixtureRelatedTest(Fixture *f, const char *name, const char *target,
+    const char *const *related, size_t relatedCount, bool always)
+{
+    Fixture detail = {0};
+    bool ok = Append(&detail, "impact-version=2\ncomplete=1\n");
+    if (ok && target != NULL) ok = Append(&detail, "target=") && Hex(&detail, target) && Append(&detail, "\n");
+    for (size_t i = 0U; ok && i < relatedCount; ++i)
+        ok = Append(&detail, "test=") && Hex(&detail, related[i]) && Append(&detail, "\n");
+    if (ok && always) ok = Append(&detail, "always=1\n");
+    if (ok) ok = Append(&detail, "impact-end\nregistration only") &&
+        FixtureRow(f, "test", name, "/repo", "registered", detail.text);
+    FixtureDestroy(&detail);
+    return ok;
+}

@@ -54,7 +54,7 @@ function(_umicom_inventory_directory directory output)
         foreach(_property IN ITEMS TYPE SOURCES INTERFACE_SOURCES LINK_LIBRARIES
                 INTERFACE_LINK_LIBRARIES INCLUDE_DIRECTORIES INTERFACE_INCLUDE_DIRECTORIES
                 COMPILE_DEFINITIONS INTERFACE_COMPILE_DEFINITIONS COMPILE_OPTIONS
-                INTERFACE_COMPILE_OPTIONS LINK_OPTIONS C_STANDARD)
+                INTERFACE_COMPILE_OPTIONS LINK_OPTIONS C_STANDARD UMICOM_QUALIFICATION_INPUTS)
             get_property(_value TARGET "${_target}" PROPERTY "${_property}")
             string(APPEND _detail "${_property}=${_value}\n")
         endforeach()
@@ -62,6 +62,9 @@ function(_umicom_inventory_directory directory output)
         _umicom_impact_target_detail("${_target}" "${_detail}" _detail)
         _umicom_inventory_row("${output}" target "${_target}" "${_source_dir}" configured "${_detail}")
         get_property(_sources TARGET "${_target}" PROPERTY SOURCES)
+        # Explicit non-compiled inputs participate in ownership and byte observation.
+        get_property(_qualification_inputs TARGET "${_target}" PROPERTY UMICOM_QUALIFICATION_INPUTS)
+        list(APPEND _sources ${_qualification_inputs})
         list(REMOVE_DUPLICATES _sources)
         foreach(_source IN LISTS _sources)
             # Expressions and generated inputs are intentionally unresolved.
@@ -73,6 +76,9 @@ function(_umicom_inventory_directory directory output)
             else()
                 get_filename_component(_identity "${_source}" ABSOLUTE BASE_DIR "${_source_dir}")
                 get_property(_generated SOURCE "${_source}" TARGET_DIRECTORY "${_target}" PROPERTY GENERATED)
+                if(_identity IN_LIST _qualification_inputs)
+                    string(APPEND _detail "role=declared-input\n")
+                endif()
                 if(EXISTS "${_identity}" AND NOT IS_DIRECTORY "${_identity}" AND NOT _generated)
                     file(SHA256 "${_identity}" _sha)
                     string(APPEND _detail "sha256=${_sha}\n")
@@ -175,6 +181,8 @@ function(_umicom_inventory_capture_last)
         _umicom_inventory_row("${_body}" header "${_identity}" "${_owner}" "${_state}"
             "impact-version=1\npath=${_impact_path}\nimpact-end\nsha256=${_sha}")
     endforeach()
+    # Build the cross-directory test index only after all deferred registrations settle.
+    umicom_impact_index_tests("${CMAKE_BINARY_DIR}")
     _umicom_inventory_directory("${CMAKE_BINARY_DIR}" "${_body}")
     file(SIZE "${_body}" _size)
     if(_size GREATER 66000000)
@@ -222,7 +230,53 @@ function(umicom_release_inventory_complete)
         "${_root}/src/distribution/runtime/impact_path.c"
         "${_root}/src/distribution/runtime/impact_metadata.c"
         "${_root}/src/distribution/runtime/impact_expression.c")
+    # Run evidence shares the existing distribution owner; it cannot execute jobs.
+    target_sources(umicom_distribution PRIVATE
+        "${_root}/src/distribution/runtime/inventory_identity.c"
+        "${_root}/src/distribution/runtime/qualification.c"
+        "${_root}/src/distribution/runtime/qualification_identity.c"
+        "${_root}/src/distribution/runtime/qualification_assessment.c"
+        "${_root}/src/distribution/runtime/qualification_report.c"
+        "${_root}/src/distribution/runtime/qualification_batch.c"
+        "${_root}/src/distribution/runtime/qualification_view.c"
+        "${_root}/src/distribution/runtime/qualification_compare.c"
+        "${_root}/src/distribution/runtime/qualification_parse_fields.c"
+        "${_root}/src/distribution/runtime/qualification_parse.c"
+        "${_root}/src/distribution/runtime/qualification_archive.c")
+    umicom_release_inventory_own_headers(umicom_distribution include/umicom/distribution/runtime/qualification.h
+        include/umicom/distribution/runtime/qualification_report.h
+        include/umicom/distribution/runtime/qualification_view.h
+        include/umicom/distribution/runtime/qualification_archive.h
+        include/umicom/distribution/runtime/qualification_compare.h)
     include(GNUInstallDirs)
+    install(FILES "${_root}/include/umicom/distribution/runtime/qualification.h"
+        "${_root}/include/umicom/distribution/runtime/qualification_archive.h"
+        "${_root}/include/umicom/distribution/runtime/qualification_compare.h"
+        "${_root}/include/umicom/distribution/runtime/qualification_view.h"
+        "${_root}/include/umicom/distribution/runtime/qualification_report.h"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/distribution/runtime" COMPONENT Framework)
+    # Private parser/state headers are qualification inputs even though they are
+    # not public SDK headers or standalone compilation units.
+    umicom_target_qualification_inputs(umicom_distribution FILES
+        "${_root}/src/distribution/runtime/inventory_internal.h"
+        "${_root}/src/distribution/runtime/inventory_codec.h"
+        "${_root}/src/distribution/runtime/impact_internal.h"
+        "${_root}/src/distribution/runtime/source_observation_internal.h"
+        "${_root}/src/distribution/runtime/qualification_internal.h"
+        "${_root}/src/distribution/runtime/qualification_parse_internal.h")
+    # Observation uses the same bounded native reader as other Framework tools.
+    # Declare its static-library dependency explicitly for installed SDK consumers.
+    target_sources(umicom_distribution PRIVATE
+        "${_root}/src/distribution/runtime/source_observation.c"
+        "${_root}/src/distribution/runtime/source_observation_paths.c")
+    target_link_libraries(umicom_distribution PRIVATE Umicom::platform)
+    umicom_release_inventory_own_headers(umicom_distribution
+        include/umicom/distribution/runtime/source_observation.h)
+    include(GNUInstallDirs)
+    install(FILES "${_root}/include/umicom/distribution/runtime/source_observation.h"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/distribution/runtime" COMPONENT Framework)
+    install(FILES "${_root}/docs/guides/scoped-qualification.html"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/guides" COMPONENT Framework)
     install(FILES "${_root}/include/umicom/distribution/runtime/impact.h"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/distribution/runtime" COMPONENT Framework)
     add_executable(umicom-release-inventory "${_root}/tools/release_inventory/main.c")
@@ -238,6 +292,10 @@ function(umicom_release_inventory_complete)
         target_link_options(umicom-release-inventory PRIVATE -municode)
     endif()
     umicom_release_policy_attach()
+    include("${_root}/cmake/UmicomQualificationHistory.cmake")
+    include("${_root}/cmake/UmicomQualificationCtest.cmake")
+    include("${_root}/cmake/UmicomQualificationGtk4.cmake")
+    include("${_root}/cmake/UmicomQualificationWorkflow.cmake")
     if(TARGET umicom_base)
         umicom_release_inventory_own_headers(umicom_base include/umicom/base/status.h)
     endif()
@@ -253,6 +311,7 @@ function(umicom_release_inventory_complete)
     if(BUILD_TESTING)
         include("${_root}/tests/release_inventory/CMakeLists.txt")
         include("${_root}/tests/release_impact/CMakeLists.txt")
+        include("${_root}/tests/release_qualification/records.cmake")
     endif()
     if(UMICOM_RELEASE_INVENTORY_CAPTURE)
         cmake_language(DEFER DIRECTORY "${CMAKE_SOURCE_DIR}" ID umicom_inventory_final CALL _umicom_inventory_capture_last)

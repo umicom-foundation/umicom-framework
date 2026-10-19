@@ -93,6 +93,12 @@ UmiStatus UmiReleaseInventoryCompareTests(const UmiReleaseInventory *expected,
     const UmiReleaseInventory *observed,
     UmiReleaseInventoryDifferenceFn difference, void *context,
     UmiReleaseInventoryComparison *outComparison);
+/** Hash all sorted records and configured context, not current file bytes.
+ * Writes a lowercase SHA-256 string on success; failure preserves output.
+ * The inventory is immutable and no I/O is performed. This is not a signature. */
+UmiStatus UmiReleaseInventoryFingerprint(const UmiReleaseInventory *inventory,
+    char output[65]);
+
 #ifdef __cplusplus
 }
 #endif

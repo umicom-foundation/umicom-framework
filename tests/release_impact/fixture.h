@@ -15,6 +15,9 @@ bool FixtureStart(Fixture *fixture);
 bool FixtureRow(Fixture *fixture, const char *kind, const char *name, const char *owner, const char *state, const char *detail);
 bool FixtureTarget(Fixture *fixture, const char *name, const char *dependency);
 bool FixtureTest(Fixture *fixture, const char *name, const char *target, const char *helper, bool always);
+/* Versioned related-test metadata uses exact owned names, not command parsing. */
+bool FixtureRelatedTest(Fixture *fixture, const char *name, const char *target,
+    const char *const *related, size_t relatedCount, bool always);
 bool FixtureSource(Fixture *fixture, const char *name, const char *target);
 UmiStatus FixtureParse(Fixture *fixture, UmiReleaseInventory **inventory);
 void FixtureDestroy(Fixture *fixture);

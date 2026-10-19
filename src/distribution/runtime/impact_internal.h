@@ -19,5 +19,7 @@ struct UmiReleaseImpactPlan {
     UmiReleaseImpactSummary summary;
     UmiReleaseImpactItem *items;
     size_t count;
+    /* Owned identity prevents a later run from pairing this plan with another inventory. */
+    char inventoryFingerprint[65];
 };
 #endif

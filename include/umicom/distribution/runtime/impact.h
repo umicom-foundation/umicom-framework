@@ -26,8 +26,16 @@ typedef enum UmiReleaseImpactReason {
     UMI_RELEASE_IMPACT_TEST_OWNER = 4U,
     UMI_RELEASE_IMPACT_ALWAYS = 8U,
     UMI_RELEASE_IMPACT_FULL = 16U,
-    UMI_RELEASE_IMPACT_TEST_PREREQUISITE = 32U
+    UMI_RELEASE_IMPACT_TEST_PREREQUISITE = 32U,
+    /** Related setup, cleanup or ordered tests selected as a conservative group. */
+    UMI_RELEASE_IMPACT_TEST_DEPENDENCY = 64U
 } UmiReleaseImpactReason;
+/** Version-two test metadata can identify related test registrations. Selection
+ * includes the entire connected group and every declared executable prerequisite.
+ * This is a coverage decision, not a scheduler: CTest still owns ordering, fixture
+ * failure semantics and resource locks. Cycles terminate during selection but
+ * invalid execution cycles must still be diagnosed by CTest. */
+
 /** Missing knowledge widens coverage rather than returning an empty success. */
 typedef enum UmiReleaseImpactFallback {
     UMI_RELEASE_IMPACT_REQUESTED_FULL = 1U,
@@ -85,6 +93,10 @@ const UmiReleaseImpactItem *UmiReleaseImpactAt(const UmiReleaseImpactPlan *plan,
  * data, not shell-quoted command text. The function performs no I/O. */
 UmiStatus UmiReleaseImpactTestExpression(const UmiReleaseImpactPlan *plan,
     char *output, size_t capacity, size_t *outRequired);
+
+/** Borrow the canonical inventory fingerprint until plan destruction.
+ * NULL returns NULL. This binds metadata, not mutable source file contents. */
+const char *UmiReleaseImpactInventoryFingerprint(const UmiReleaseImpactPlan *plan);
 
 #ifdef __cplusplus
 }

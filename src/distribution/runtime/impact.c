@@ -15,6 +15,7 @@ typedef struct Changed { char *path; bool matched; } Changed;
 typedef struct Work {
     const UmiReleaseInventory *inventory;
     size_t count, targetStart, targetCount, row;
+    size_t testStart, testCount;
     uint32_t *reasons;
     Edge *edges;
     size_t edgeCount, edgeCapacity;
@@ -45,6 +46,20 @@ static size_t Target(const Work *work, const char *name)
         else high = mid;
     }
     return low < work->targetStart + work->targetCount &&
+        strcmp(Row(work, low)->identity, name) == 0 ? low : SIZE_MAX;
+}
+/* Test identities share the inventory's sorted kind/name order. Resolve exact
+ * names instead of interpreting command strings or guessing executable owners. */
+static size_t Test(const Work *work, const char *name)
+{
+    size_t low = work->testStart, high = low + work->testCount;
+    while (low < high) {
+        size_t mid = low + (high - low) / 2U;
+        int order = strcmp(Row(work, mid)->identity, name);
+        if (order < 0) low = mid + 1U;
+        else high = mid;
+    }
+    return low < work->testStart + work->testCount &&
         strcmp(Row(work, low)->identity, name) == 0 ? low : SIZE_MAX;
 }
 static UmiStatus AddEdge(Work *work, size_t from, size_t to)
@@ -78,6 +93,19 @@ static UmiStatus Field(void *context, const char *key, const char *value)
         if (kind != UMI_RELEASE_INVENTORY_HEADER || work->headerPath != NULL) return UMI_STATUS_PARSE_ERROR;
         work->headerPath = Copy(value);
         return work->headerPath == NULL ? UMI_STATUS_OUT_OF_MEMORY : UMI_STATUS_OK;
+    }
+    if (strcmp(key, "test") == 0) {
+        if (kind != UMI_RELEASE_INVENTORY_TEST) return UMI_STATUS_PARSE_ERROR;
+        size_t related = Test(work, value);
+        if (related == SIZE_MAX) {
+            work->fallback |= UMI_RELEASE_IMPACT_UNOWNED_TEST;
+            return UMI_STATUS_OK;
+        }
+        /* A fixture helper change affects its consumers too. Keep the whole
+         * relationship group together; do not reinterpret this as run order. */
+        UmiStatus status = AddEdge(work, work->row, related);
+        if (status == UMI_STATUS_OK) status = AddEdge(work, related, work->row);
+        return status;
     }
     bool dependency = strcmp(key, "dependency") == 0;
     if ((dependency && kind != UMI_RELEASE_INVENTORY_TARGET) ||
@@ -164,6 +192,9 @@ static UmiStatus ReadGraph(Work *work, Changed *changes, size_t changeCount)
     }
     return status;
 }
+/* The target-only traversal is retained for review. The replacement also
+ * follows explicit CTest groups so setup and cleanup cannot lose their builds. */
+#if 0
 static UmiStatus Propagate(Work *work)
 {
     /* Each target enters the queue once. Reverse edges preserve dependency
@@ -199,6 +230,46 @@ static UmiStatus Propagate(Work *work)
     free(queue);
     return UMI_STATUS_OK;
 }
+#endif
+static UmiStatus Propagate(Work *work)
+{
+    size_t *queue = malloc((work->count == 0U ? 1U : work->count) * sizeof(*queue));
+    if (queue == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    if (work->edgeCount > 1U) qsort(work->edges, work->edgeCount, sizeof(*work->edges), EdgeOrder);
+    size_t head = 0U, tail = 0U;
+    for (size_t i = 0U; i < work->count; ++i)
+        if (work->reasons[i] != 0U) queue[tail++] = i;
+    while (head < tail) {
+        size_t from = queue[head++], low = 0U, high = work->edgeCount;
+        while (low < high) {
+            size_t mid = low + (high - low) / 2U;
+            if (work->edges[mid].from < from) low = mid + 1U;
+            else high = mid;
+        }
+        for (size_t i = low; i < work->edgeCount && work->edges[i].from == from; ++i) {
+            size_t to = work->edges[i].to;
+            bool target = Row(work, to)->kind == UMI_RELEASE_INVENTORY_TARGET;
+            uint32_t reason = target ? UMI_RELEASE_IMPACT_DEPENDENT :
+                Row(work, from)->kind == UMI_RELEASE_INVENTORY_TEST ?
+                UMI_RELEASE_IMPACT_TEST_DEPENDENCY : UMI_RELEASE_IMPACT_TEST_OWNER;
+            /* Nonzero reasons also mark queue membership. Every row is visited
+             * once even when fixtures overlap or dependencies form a cycle. */
+            if (work->reasons[to] == 0U) queue[tail++] = to;
+            work->reasons[to] |= reason;
+        }
+    }
+    /* Build every selected test's declared targets, including fixture helpers.
+     * Rebuilding a prerequisite does not itself imply a changed source file. */
+    for (size_t i = 0U; i < work->edgeCount; ++i) {
+        size_t from = work->edges[i].from, to = work->edges[i].to;
+        if (Row(work, from)->kind == UMI_RELEASE_INVENTORY_TARGET &&
+            Row(work, to)->kind == UMI_RELEASE_INVENTORY_TEST && work->reasons[to] != 0U)
+            work->reasons[from] |= UMI_RELEASE_IMPACT_TEST_PREREQUISITE;
+    }
+    free(queue);
+    return UMI_STATUS_OK;
+}
+
 void UmiReleaseImpactDestroy(UmiReleaseImpactPlan *plan)
 {
     if (plan == NULL) return;
@@ -248,6 +319,9 @@ UmiStatus UmiReleaseImpactCreate(const UmiReleaseInventory *inventory,
             if (Row(&work, i)->kind == UMI_RELEASE_INVENTORY_TARGET) {
                 if (work.targetCount == 0U) work.targetStart = i;
                 ++work.targetCount;
+            } else if (Row(&work, i)->kind == UMI_RELEASE_INVENTORY_TEST) {
+                if (work.testCount == 0U) work.testStart = i;
+                ++work.testCount;
             }
         }
         if (accepted != 0U || forceFull) {
@@ -277,6 +351,9 @@ UmiStatus UmiReleaseImpactCreate(const UmiReleaseInventory *inventory,
         if (row->kind == UMI_RELEASE_INVENTORY_TARGET) ++plan->summary.targets;
         else ++plan->summary.tests;
     }
+    /* Bind the completed selection before publishing it to another service. */
+    if (status == UMI_STATUS_OK)
+        status = UmiReleaseInventoryFingerprint(inventory, plan->inventoryFingerprint);
     if (status == UMI_STATUS_OK) {
         plan->summary.changedPaths = accepted;
         plan->summary.fallbackReasons = work.fallback;
@@ -287,4 +364,9 @@ UmiStatus UmiReleaseImpactCreate(const UmiReleaseInventory *inventory,
     for (size_t i = 0U; i < accepted; ++i) free(changes[i].path);
     free(changes); free(work.reasons); free(work.edges); free(work.headerPath);
     return status;
+}
+
+const char *UmiReleaseImpactInventoryFingerprint(const UmiReleaseImpactPlan *plan)
+{
+    return plan == NULL ? NULL : plan->inventoryFingerprint;
 }

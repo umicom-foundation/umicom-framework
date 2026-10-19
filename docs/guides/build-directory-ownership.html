@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Owning a build directory</title><style>body{max-width:850px;margin:3rem auto;padding:0 1.5rem;font:17px/1.6 system-ui;color:#162536}pre{padding:1rem;background:#eef3f8;overflow:auto}h1,h2{line-height:1.2}</style></head>
+<body><main><h1>Owning a build directory</h1>
+<p>Two jobs can corrupt one another's outputs if they configure or build in the same directory at the same time.
+Framework supplies a cooperative guard: every participating job opens the same persistent guard file and holds exclusive ownership until its work ends.</p>
+<h2>Use it in a native build session</h2><ol>
+<li>Choose an absolute build directory and create it before submitting work. Keep separate directories for independent configurations.
+The guard never creates a directory or selects a location in your user profile.</li>
+<li>Include <code>umicom/build/directory_guard.h</code> and link <code>Umicom::build</code>.</li>
+<li>On the session owner's thread, enable the guard while the session is idle.</li>
+<li>Submit the normal workflow. The worker acquires ownership before its first phase and releases it after its final phase, failure or cancellation.</li>
+<li>Read the guard snapshot to distinguish an unavailable directory, a busy owner and an acquired lease. If acquisition fails, no executor phase starts.</li>
+</ol><pre>UmiStatus status = UmiBuildProjectSessionSetDirectoryGuard(session, true);
+if (status == UMI_STATUS_OK)
+    status = umi_build_project_session_submit(
+        session, profile, UMI_BUILD_PHASE_TEST, trusted);
+
+/* Poll on the frontend; the copied snapshot performs no disk I/O. */
+UmiBuildDirectoryGuardSnapshot guard;
+status = UmiBuildProjectSessionReadDirectoryGuard(session, &amp;guard);</pre>
+<p>Read <code>acquisition_status</code> only when <code>attempted</code> is true. A successful submission means the worker was queued,
+not that it acquired ownership or passed its tests. The session's terminal status remains authoritative for workflow completion.</p>
+<p>Existing sessions default to disabled. Enabling a guard does not protect earlier jobs, unguarded sessions or direct CMake, Ninja and CTest commands.
+CMake preset profiles currently refuse guarded execution with <code>UNAVAILABLE</code>, because preset inheritance can select a different binary directory.
+Use an explicit directory profile or resolve that workflow in the host before adopting a guard. Do not silently lock a different directory.</p>
+<h2>Coordinate another host</h2>
+<p><code>UmiBuildDirectoryGuardAcquire(directory, &amp;lease)</code> uses the same <code>.umicom-build.lock</code> filename.
+The output pointer must initially be null. Keep the lease alive for the complete protected workflow and call <code>UmiFileLeaseRelease(&amp;lease)</code> on every exit path.
+A custom executor must return only after its children stop using the directory. The native build runner owns its process tree.</p>
+<p>The lower-level <code>UmiFileLeaseTryAcquire</code> in <code>umicom/platform/file_lease.h</code> accepts a caller-chosen absolute regular-file path.
+It leaves existing bytes intact and creates a missing empty file. An incompatible owner returns <code>BUSY</code> immediately.
+The operating system releases native ownership when the handle closes or its process exits.</p>
+<h2>Keep the guard file</h2>
+<p>File existence does not indicate an active owner. Do not delete a guard file to recover from a busy result:
+another process may already hold its original file object, and a replacement would permit two owners.
+Wait for the owning job to finish or choose another build directory. Ordinary release leaves the empty file in place.</p>
+<p>Use a trusted, stable local directory. Final symlinks, reparse points and special files are refused, but ancestor directories are not secured against replacement.
+POSIX locks are advisory; Windows uses an exclusive sharing mode.
+Network filesystems, hostile directory changes and raw forked children that retain descriptors are outside this coordination guarantee.
+The guard does not freeze source files, prove compiler inputs, or authorize publication.</p>
+<p>Native support covers Windows, Linux and macOS. Other hosts report <code>UNAVAILABLE</code>.
+Regression coverage includes independent processes, process exit without cleanup, preserved file bytes, all-phase ownership,
+failed acquisition, cancellation, disabled compatibility and preset refusal. These checks must be executed for the host being qualified.</p>
+<p>Native reference contracts: <a href="https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-createfilew">Windows CreateFileW</a>
+and <a href="https://man7.org/linux/man-pages/man2/flock.2.html">Linux flock</a>.</p>
+</main></body></html>

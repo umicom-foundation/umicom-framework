@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/build/project_session.h"
 #include "umicom/build/run_current.h"
+#include "umicom/build/directory_guard.h"
 #include "umicom/build/live_output.h"
 #include "umicom/build/live_diagnostics.h"
 #include "umicom/build/parser.h"
@@ -56,6 +57,9 @@ struct UmiBuildProjectSession {
     /* The host owns the database; the session publishes only copied evidence. */
     UmiJobHistory *job_history;
     UmiBuildJobHistoryState durable;
+    /* Worker-owned lease spans all phases; readers get only copied evidence. */
+    UmiFileLease *directory_lease;
+    UmiBuildDirectoryGuardSnapshot directory_guard;
 };
 
 
@@ -438,6 +442,46 @@ static UmiStatus execute_session(UmiTaskContext *context, void *data)
     return status;
 }
 #endif
+
+/* Acquire outside the session mutex. The copied profile already owns an
+ * absolute source root, so later working-directory changes cannot redirect
+ * this workflow's guard. The owner must create the selected build folder. */
+static UmiStatus acquire_directory_guard(UmiBuildProjectSession *session)
+{
+    if (!session->directory_guard.enabled) return UMI_STATUS_OK;
+    char directory[UMI_BUILD_PATH_CAPACITY], path[UMI_PATH_CAPACITY] = "";
+    /* Presets can choose a different binary directory. Until the host has
+     * a resolved preset contract, refuse rather than lock an unrelated folder. */
+    UmiStatus status = session->profile.preset[0] != '\0' ||
+        session->profile.configure_preset[0] != '\0' ||
+        session->profile.build_preset[0] != '\0' ||
+        session->profile.test_preset[0] != '\0' ? UMI_STATUS_UNAVAILABLE : UMI_STATUS_OK;
+    if (status == UMI_STATUS_OK)
+        status = umi_path_absolute(session->profile.build_directory,
+            session->profile.source_directory, directory, sizeof(directory));
+    if (status == UMI_STATUS_OK)
+        status = UmiBuildDirectoryGuardPath(directory, path, sizeof(path));
+    if (status == UMI_STATUS_OK)
+        status = UmiFileLeaseTryAcquire(path, &session->directory_lease);
+    (void)umi_mutex_lock(session->mutex);
+    session->directory_guard.attempted = true;
+    session->directory_guard.acquisition_status = status;
+    session->directory_guard.held = session->directory_lease != NULL;
+    memcpy(session->directory_guard.path, path, strlen(path) + 1U);
+    (void)umi_mutex_unlock(session->mutex);
+    return status;
+}
+
+static UmiStatus release_directory_guard(UmiBuildProjectSession *session)
+{
+    UmiStatus status = UmiFileLeaseRelease(&session->directory_lease);
+    (void)umi_mutex_lock(session->mutex);
+    session->directory_guard.held = false;
+    session->directory_guard.release_status = status;
+    (void)umi_mutex_unlock(session->mutex);
+    return status;
+}
+
 static UmiStatus execute_session(UmiTaskContext *context, void *data)
 {
     UmiBuildProjectSession *session = data;
@@ -445,6 +489,9 @@ static UmiStatus execute_session(UmiTaskContext *context, void *data)
     (void)context;
     size_t completed=0U;
     status=record_job_progress(session,UMI_JOB_HISTORY_RUNNING,0U,UMI_STATUS_OK);
+    if (status == UMI_STATUS_OK && umi_cancellation_token_is_requested(session->cancellation))
+        status = UMI_STATUS_CANCELLED;
+    if (status == UMI_STATUS_OK) status = acquire_directory_guard(session);
     for (size_t index = 0U; status==UMI_STATUS_OK && index < session->phase_count; ++index) {
         UmiBuildResult *result = &session->results[index];
         if (umi_cancellation_token_is_requested(session->cancellation)) {
@@ -495,6 +542,10 @@ static UmiStatus execute_session(UmiTaskContext *context, void *data)
         if (completed<session->phase_count)
             status=record_job_progress(session,UMI_JOB_HISTORY_RUNNING,completed,UMI_STATUS_OK);
     }
+    /* Release before publishing terminal history. No error or cancellation
+     * branch can leave the build directory owned by an idle session. */
+    UmiStatus guard_status = release_directory_guard(session);
+    if (status == UMI_STATUS_OK && guard_status != UMI_STATUS_OK) status = guard_status;
     UmiJobHistoryState outcome=status==UMI_STATUS_OK?UMI_JOB_HISTORY_SUCCEEDED:
         status==UMI_STATUS_CANCELLED?UMI_JOB_HISTORY_CANCELLED:UMI_JOB_HISTORY_FAILED;
     UmiStatus history_status=record_job_progress(session,outcome,completed,status);
@@ -546,6 +597,8 @@ void umi_build_project_session_destroy(UmiBuildProjectSession *session)
     umi_build_project_session_cancel(session);
     if (session->queue != NULL) (void)umi_task_queue_shutdown(session->queue, 0);
     umi_task_queue_destroy(session->queue);
+    /* Shutdown joined the worker; release is idempotent after normal completion. */
+    (void)UmiFileLeaseRelease(&session->directory_lease);
     UmiOutputFileDestroy(session->log_file);
     umi_task_destroy(session->task);
     umi_cancellation_token_destroy(session->cancellation);
@@ -991,6 +1044,10 @@ static UmiStatus ProjectSessionSubmitMode(UmiBuildProjectSession *session,
     umi_cancellation_token_reset(session->cancellation);
     (void)umi_mutex_lock(session->mutex);
     ++session->snapshot.operation_id;
+    bool guard_enabled = session->directory_guard.enabled;
+    memset(&session->directory_guard, 0, sizeof(session->directory_guard));
+    session->directory_guard.enabled = guard_enabled;
+    session->directory_guard.operation_id = session->snapshot.operation_id;
     memset(&session->log, 0, sizeof(session->log));
     session->log.operation_id = session->snapshot.operation_id;
     session->log.enabled = new_log != NULL;
@@ -1249,4 +1306,28 @@ UmiStatus UmiBuildProjectSessionReadDiagnosticPage(UmiBuildProjectSession *sessi
     }
     (void)umi_mutex_unlock(session->mutex);
     return status;
+}
+
+
+/* This binding follows the session's owner-thread submission contract. Queue
+ * idleness covers both executor completion and the worker's final bookkeeping. */
+UmiStatus UmiBuildProjectSessionSetDirectoryGuard(UmiBuildProjectSession *session, bool enabled)
+{
+    if (session == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiTaskQueueStats stats = umi_task_queue_stats(session->queue);
+    if (stats.queued != 0U || stats.running != 0U) return UMI_STATUS_BUSY;
+    (void)umi_mutex_lock(session->mutex);
+    memset(&session->directory_guard, 0, sizeof(session->directory_guard));
+    session->directory_guard.enabled = enabled;
+    (void)umi_mutex_unlock(session->mutex);
+    return UMI_STATUS_OK;
+}
+UmiStatus UmiBuildProjectSessionReadDirectoryGuard(UmiBuildProjectSession *session,
+    UmiBuildDirectoryGuardSnapshot *outSnapshot)
+{
+    if (session == NULL || outSnapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)umi_mutex_lock(session->mutex);
+    *outSnapshot = session->directory_guard;
+    (void)umi_mutex_unlock(session->mutex);
+    return UMI_STATUS_OK;
 }

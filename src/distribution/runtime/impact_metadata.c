@@ -20,7 +20,15 @@ UmiStatus UmiImpactMetadataRead(const char *detail, UmiImpactFieldFn field,
     static const char marker[] = "impact-version=1\n";
     if (detail == NULL || field == NULL || present == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *present = false;
+    /* Version two adds related CTest registrations. Version-one readers do not
+     * recognise this marker and conservatively widen coverage. Keep their
+     * original check for format review; existing version-one input still works. */
+#if 0
     if (strncmp(detail, marker, sizeof(marker) - 1U) != 0) return UMI_STATUS_OK;
+#endif
+    static const char relatedMarker[] = "impact-version=2\n";
+    bool related = strncmp(detail, relatedMarker, sizeof(relatedMarker) - 1U) == 0;
+    if (!related && strncmp(detail, marker, sizeof(marker) - 1U) != 0) return UMI_STATUS_OK;
     const char *cursor = detail + sizeof(marker) - 1U;
     while (*cursor != '\0') {
         const char *end = strchr(cursor, '\n');
@@ -36,7 +44,8 @@ UmiStatus UmiImpactMetadataRead(const char *detail, UmiImpactFieldFn field,
         char key[21];
         memcpy(key, cursor, keySize); key[keySize] = '\0';
         if (strcmp(key, "complete") != 0 && strcmp(key, "dependency") != 0 &&
-            strcmp(key, "target") != 0 && strcmp(key, "always") != 0 && strcmp(key, "path") != 0)
+            strcmp(key, "target") != 0 && strcmp(key, "always") != 0 && strcmp(key, "path") != 0 &&
+            !(related && strcmp(key, "test") == 0))
             return UMI_STATUS_PARSE_ERROR;
         size_t valueSize = (size_t)(end - equals - 1);
         if (valueSize > UMI_RELEASE_INVENTORY_FIELD_LIMIT) return UMI_STATUS_CAPACITY_EXCEEDED;
