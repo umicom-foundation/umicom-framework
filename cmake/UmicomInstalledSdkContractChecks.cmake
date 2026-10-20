@@ -28,3 +28,9 @@ foreach(_case IN LISTS _sdk_cases)
     set_tests_properties("framework.sdk.installed_contract.${_case}" PROPERTIES
         TIMEOUT 60 LABELS "framework;sdk;configuration;regression")
 endforeach()
+
+# The repeated negative fixture deliberately runs two bounded configure processes.
+# Keep their combined budget separate from the original single-run cases.
+if(TEST framework.sdk.installed_contract.extra-header)
+    set_tests_properties(framework.sdk.installed_contract.extra-header PROPERTIES TIMEOUT 120)
+endif()

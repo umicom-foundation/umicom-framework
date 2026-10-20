@@ -9,6 +9,7 @@
 #ifndef UMICOM_UI_GTK4_PATH_PICKER_H
 #define UMICOM_UI_GTK4_PATH_PICKER_H
 #include <gtk/gtk.h>
+#include "umicom/base/status.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -19,6 +20,19 @@ typedef enum UmiPathPickerMode {
     UMI_PATH_PICKER_NEW_FILE,
     UMI_PATH_PICKER_DIRECTORY
 } UmiPathPickerMode;
+
+/** Seed a native chooser from explicit application context without filesystem
+ * access or a current-directory fallback. Call on the GTK owner thread.
+ * selectedPath, when supplied, is an absolute local file or directory and wins
+ * over fallbackFolder. fallbackFolder is an absolute local directory. Empty
+ * strings act as absent inputs. A new-file dialog can also suggest a basename.
+ * All supplied values must be UTF-8; relative paths, URIs and path separators
+ * in suggestedName are rejected before changing the dialog. With no location,
+ * clear prior seeds and let the operating-system chooser select its default.
+ * This sets initial navigation only; it never opens or writes the chosen file. */
+UmiStatus UmiPathPickerGtk4SetInitialLocation(GtkFileDialog *dialog,
+    UmiPathPickerMode mode, const char *selectedPath,
+    const char *fallbackFolder, const char *suggestedName);
 
 /**
  * @brief Create a Browse control that fills an existing path entry.

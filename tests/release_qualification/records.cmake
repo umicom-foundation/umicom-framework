@@ -55,7 +55,13 @@ set_tests_properties(framework.qualification.inventory_identity PROPERTIES TIMEO
 umicom_test_impact_owners(framework.qualification.inventory_identity TARGETS umi-qualification-inventory_identity-test)
 
 # Additional inputs affect coverage without entering compiler SOURCES.
+# Retain the former case list; the added generated-only input covers metadata
+# that is intentionally absent from the compiler source list.
+#[==[
 foreach(_case IN ITEMS basic duplicate runtime cross-directory shared missing generated
+        bad-owner alias imported expression directory no-files unknown-argument)
+]==]
+foreach(_case IN ITEMS basic duplicate runtime cross-directory shared missing generated generated-declared-only
         bad-owner alias imported expression directory no-files unknown-argument)
     set(_name "framework.qualification.inputs.${_case}")
     add_test(NAME "${_name}" COMMAND "${CMAKE_COMMAND}"

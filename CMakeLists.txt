@@ -6096,3 +6096,6 @@ include(cmake/UmicomCtestReportInspection.cmake)
 
 # The impact command previews existing configured targets; it never runs Git mutations.
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomBuildImpact.cmake")
+
+# Share board rules and portable planning state across application hosts.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomKanban.cmake")

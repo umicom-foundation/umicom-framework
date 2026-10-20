@@ -37,6 +37,14 @@ typedef void (*UmiGtk4DocumentEditResultFn)(void *context, UmiStatus status);
 UmiStatus UmiGtk4AdapterBindDocumentEditing(UmiGtk4Adapter *adapter,
     UmiDocumentCoordinator *coordinator, UmiGtk4DocumentEditResultFn completed,
     void *context);
+/** Focus the active coordinator-owned source editor after an explicit New/Open
+ * action. Refreshes document widgets only and preserves draft, selection and
+ * undo history. The embedding host must reveal its editor panel first; this
+ * function does not change application layout or run during periodic refresh.
+ * Returns NOT_FOUND without a source document and UNAVAILABLE when its native
+ * editor is hidden or cannot accept focus. Owner-thread only. */
+UmiStatus UmiGtk4AdapterFocusActiveDocument(UmiGtk4Adapter *adapter);
+
 /** Check the active source document, not an arbitrary focused entry field.
  * Keyboard routing is installed on source editors only; other fields retain
  * their toolkit editing behaviour. False includes no document or a busy paste. */

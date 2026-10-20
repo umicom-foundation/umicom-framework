@@ -9,6 +9,7 @@
 #include "umicom/ui/gtk4/path_picker.h"
 #include <stdio.h>
 #include <string.h>
+#include "../test_runtime/path_identity.h"
 
 /* Replace only the native-dialog boundary. Real GTK widgets still exercise
  * weak references, unmapping, editable limits and the asynchronous completion.
@@ -66,11 +67,64 @@ static void Drain(void)
 {
     while (g_main_context_iteration(NULL, FALSE)) {}
 }
+/* Inspect configured locations without displaying a native dialog or creating
+ * a file. A selected root must not be replaced by the process directory. */
+static int CheckInitialLocation(const char *scenario)
+{
+    char *cwd = g_get_current_dir();
+    char *folder = g_build_filename(cwd, "chosen project", NULL);
+    char *selectedPath = g_build_filename(cwd, "selected source.c", NULL);
+    GFile *folderFile = g_file_new_for_path(folder);
+    GFile *selectedFile = g_file_new_for_path(selectedPath);
+    GtkFileDialog *dialog = gtk_file_dialog_new();
+    CHECK(UmiPathPickerGtk4SetInitialLocation(dialog, UMI_PATH_PICKER_NEW_FILE,
+        NULL, folder, "notes caf\xc3\xa9.c") == UMI_STATUS_OK);
+    CHECK(g_file_equal(gtk_file_dialog_get_initial_folder(dialog), folderFile));
+    CHECK(strcmp(gtk_file_dialog_get_initial_name(dialog), "notes caf\xc3\xa9.c") == 0);
+    if (strcmp(scenario, "seed-file") == 0) {
+        CHECK(UmiPathPickerGtk4SetInitialLocation(dialog, UMI_PATH_PICKER_NEW_FILE,
+            selectedPath, folder, "unused.c") == UMI_STATUS_OK);
+        CHECK(g_file_equal(gtk_file_dialog_get_initial_file(dialog), selectedFile));
+    } else if (strcmp(scenario, "seed-clear") == 0) {
+        CHECK(UmiPathPickerGtk4SetInitialLocation(dialog, UMI_PATH_PICKER_EXISTING_FILE,
+            "", "", "") == UMI_STATUS_OK);
+        CHECK(gtk_file_dialog_get_initial_file(dialog) == NULL);
+        CHECK(gtk_file_dialog_get_initial_folder(dialog) == NULL);
+        CHECK(gtk_file_dialog_get_initial_name(dialog) == NULL);
+    } else if (strcmp(scenario, "seed-invalid") == 0) {
+        CHECK(UmiPathPickerGtk4SetInitialLocation(dialog, UMI_PATH_PICKER_NEW_FILE,
+            "relative.c", folder, "notes.c") == UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(UmiPathPickerGtk4SetInitialLocation(dialog, UMI_PATH_PICKER_NEW_FILE,
+            NULL, "relative-folder", "notes.c") == UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(UmiPathPickerGtk4SetInitialLocation(dialog, UMI_PATH_PICKER_NEW_FILE,
+            NULL, folder, "../notes.c") == UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(UmiPathPickerGtk4SetInitialLocation(dialog, UMI_PATH_PICKER_NEW_FILE,
+            NULL, folder, "\xff") == UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(UmiPathPickerGtk4SetInitialLocation(dialog, (UmiPathPickerMode)99,
+            NULL, NULL, NULL) == UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(g_file_equal(gtk_file_dialog_get_initial_folder(dialog), folderFile));
+        CHECK(strcmp(gtk_file_dialog_get_initial_name(dialog), "notes caf\xc3\xa9.c") == 0);
+    } else if (strcmp(scenario, "seed-folder") == 0) {
+        CHECK(UmiPathPickerGtk4SetInitialLocation(dialog, UMI_PATH_PICKER_DIRECTORY,
+            NULL, folder, NULL) == UMI_STATUS_OK);
+        CHECK(g_file_equal(gtk_file_dialog_get_initial_folder(dialog), folderFile));
+        CHECK(gtk_file_dialog_get_initial_name(dialog) == NULL);
+    } else return 2;
+    g_object_unref(dialog);
+    g_object_unref(folderFile);
+    g_object_unref(selectedFile);
+    g_free(cwd);
+    g_free(folder);
+    g_free(selectedPath);
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     if (argc != 2) return 2;
     if (!gtk_init_check()) return 77;
     const char *scenario = argv[1];
+    if (strncmp(scenario, "seed-", 5U) == 0) return CheckInitialLocation(scenario);
     GtkWidget *entry = gtk_entry_new();
     g_object_ref_sink(entry);
     CHECK(UmiPathPickerGtk4Create(NULL, UMI_PATH_PICKER_NEW_FILE, "Choose", NULL) == NULL);
@@ -119,7 +173,12 @@ int main(int argc, char **argv)
         if (strcmp(scenario, "remote") == 0) Complete(g_file_new_for_uri("https://example.invalid/report.csv"));
         else if (strcmp(scenario, "cancel") == 0) Complete(NULL);
         else Complete(g_file_new_for_path(path));
-        CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(entry)), unchanged ? "original draft" : path) == 0);
+        /* Retained spelling comparison; native canonicalisation may change separators without changing the selected file. */
+#if 0
+CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(entry)), unchanged ? "original draft" : path) == 0);
+#endif
+CHECK(unchanged ? strcmp(gtk_editable_get_text(GTK_EDITABLE(entry)), "original draft") == 0 :
+            UmiTestSameLocalPath(gtk_editable_get_text(GTK_EDITABLE(entry)), path));
     }
     CHECK(Picker(control)->pending == NULL);
     gtk_window_destroy(GTK_WINDOW(window));

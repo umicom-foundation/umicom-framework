@@ -11,6 +11,7 @@
 #include "umicom/ui/gtk4/interaction_recording.h"
 #include <gtk/gtk.h>
 #include <stdio.h>
+#include "../test_runtime/review_checkpoint.h"
 #include <string.h>
 #define CHECK(c)                                                                                             \
     do                                                                                                       \
@@ -101,6 +102,7 @@ static int ProgramMain(int argc, char **argv)
     if (argc != 3)
         return 2;
     const char *mode = argv[1];
+    UmiTestReviewCheckpoint(mode, "starting scenario");
     const char *cases[] = {"open",
                            "read",
                            "private",
@@ -136,6 +138,7 @@ static int ProgramMain(int argc, char **argv)
             known = 1;
     if (!known)
         return 2;
+    UmiTestReviewCheckpoint(mode, "initialising GTK");
     if (!gtk_init_check())
         return 77;
     UmiLanguageNavigationKind kind = UMI_LANGUAGE_NAVIGATION_SELECTION_RANGES;
@@ -219,6 +222,7 @@ static int ProgramMain(int argc, char **argv)
         goto inspect;
     }
     CHECK(UmiGtk4AdapterReviewSourceNavigation(adapter, directory, kind) == UMI_STATUS_OK);
+    UmiTestReviewCheckpoint(mode, "review opened");
     dialog = Review();
     CHECK(dialog != NULL);
     GtkWidget *program = Find(GTK_WIDGET(dialog), "document.completion.program");
@@ -262,7 +266,11 @@ static int ProgramMain(int argc, char **argv)
         else if (strcmp(mode, "unbind") == 0)
             CHECK(UmiGtk4AdapterBindDocumentEditing(adapter, NULL, NULL, NULL) == UMI_STATUS_OK);
         else
+        {
+            UmiTestReviewCheckpoint(mode, "closing parent");
             gtk_window_destroy(GTK_WINDOW(umi_gtk4_adapter_native_window(adapter)));
+            UmiTestReviewCheckpoint(mode, "parent close returned");
+        }
         CHECK(!UmiGtk4AdapterCompletionReviewBusy(adapter));
         unsigned count = result.count;
         g_signal_emit_by_name(apply, "clicked");
@@ -393,6 +401,7 @@ static int ProgramMain(int argc, char **argv)
         CHECK(view.read_only == (strcmp(mode, "read-only") == 0));
     }
 inspect:
+    UmiTestReviewCheckpoint(mode, "checking document state");
     CHECK(UmiUiDocumentViewModelCopyText(views, active.view_id, &text, &length) == UMI_STATUS_OK);
     const char *expected = strcmp(mode, "empty") == 0       ? ""
                            : strcmp(mode, "stale") == 0     ? "push"
@@ -400,6 +409,7 @@ inspect:
                                                             : "pu";
     CHECK(length == strlen(expected) && strcmp(text, expected) == 0);
 cleanup:
+    UmiTestReviewCheckpoint(mode, "cleanup begins");
     if (failed) UmiTestReviewFailureEvidence(dialog, mode);
     UmiUiDocumentViewModelFreeText(text);
     if (adapter != NULL)
@@ -411,7 +421,9 @@ cleanup:
     }
     g_clear_object(&dialog);
     g_clear_object(&apply);
+    UmiTestReviewCheckpoint(mode, "destroying adapter");
     umi_gtk4_adapter_destroy(adapter);
+    UmiTestReviewCheckpoint(mode, "adapter destroyed");
     umi_document_coordinator_destroy(documents);
     umi_document_store_destroy(store);
     umi_ui_application_shell_destroy(shell);

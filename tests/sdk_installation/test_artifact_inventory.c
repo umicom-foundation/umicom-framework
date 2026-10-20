@@ -6,6 +6,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/sdk/artifact_inventory.h"
+#include "umicom/platform/native_arguments.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,7 +24,11 @@ static int Reject(const char *text)
     if (status == UMI_STATUS_OK) UmiSdkArtifactInventoryDestroy(inventory);
     return status != UMI_STATUS_OK && inventory == NULL;
 }
+/* Retained entry signature for review; the native argument owner supplies UTF-8 Windows paths before inspection. */
+#if 0
 int main(int argc, char **argv)
+#endif
+static int InspectMain(int argc, char **argv)
 {
     CHECK(argc == 2 || argc == 4);
     const char *mode = argv[1];
@@ -138,4 +143,16 @@ int main(int argc, char **argv)
     UmiSdkArtifactInventoryDestroy(inventory);
     UmiSdkArtifactInventoryDestroy(NULL);
     return 0;
+}
+
+/* Use the same Unicode argument boundary as installed native tools. */
+int main(int argc, char **argv)
+{
+    int result = 2;
+    UmiStatus status = UmiNativeArgumentsDispatch(argc, argv, InspectMain, &result);
+    if (status != UMI_STATUS_OK) {
+        (void)fprintf(stderr, "Native argument capture failed: %d\n", (int)status);
+        return 2;
+    }
+    return result;
 }

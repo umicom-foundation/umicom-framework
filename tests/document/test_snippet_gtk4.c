@@ -11,6 +11,7 @@
 #include "umicom/ui/gtk4/interaction_recording.h"
 #include <gtk/gtk.h>
 #include <stdio.h>
+#include "../test_runtime/review_checkpoint.h"
 #include <string.h>
 #define CHECK(c)                                                                                             \
     do                                                                                                       \
@@ -107,6 +108,7 @@ int main(int argc, char **argv)
     if (argc != 2)
         return 2;
     const char *mode = argv[1];
+    UmiTestReviewCheckpoint(mode, "starting scenario");
     const char *cases[] = {"open",
                            "private",
                            "expand",
@@ -144,6 +146,7 @@ int main(int argc, char **argv)
             known = 1;
     if (!known)
         return 2;
+    UmiTestReviewCheckpoint(mode, "initialising GTK");
     if (!gtk_init_check())
         return 77;
     int failed = 0;
@@ -200,6 +203,7 @@ int main(int argc, char **argv)
         goto inspect;
     }
     CHECK(UmiGtk4AdapterReviewSnippet(adapter) == UMI_STATUS_OK);
+    UmiTestReviewCheckpoint(mode, "review opened");
     dialog = Review();
     CHECK(dialog != NULL);
     GtkWidget *body = Find(GTK_WIDGET(dialog), "document.snippet.template"),
@@ -324,7 +328,9 @@ int main(int argc, char **argv)
     CHECK(gtk_widget_get_sensitive(apply));
     if (strcmp(mode, "template-change") == 0 || strcmp(mode, "value-change") == 0)
     {
+        UmiTestReviewCheckpoint(mode, "changing snippet input");
         SetText(strcmp(mode, "template-change") == 0 ? body : value, "different");
+        UmiTestReviewCheckpoint(mode, "snippet input callback returned");
         CHECK(!gtk_widget_get_sensitive(apply));
         gtk_check_button_set_active(GTK_CHECK_BUTTON(approve), TRUE);
         g_signal_emit_by_name(apply, "clicked");
@@ -378,9 +384,11 @@ int main(int argc, char **argv)
     }
     goto cleanup;
 inspect:
+    UmiTestReviewCheckpoint(mode, "checking document state");
     CHECK(UmiUiDocumentViewModelCopyText(views, active.view_id, &output, &output_bytes) == UMI_STATUS_OK);
     CHECK(output_bytes == strlen(original) && strcmp(output, original) == 0);
 cleanup:
+    UmiTestReviewCheckpoint(mode, "cleanup begins");
     if (observer != 0U && choice != NULL)
         g_signal_handler_disconnect(choice, observer);
     g_free(shown);
@@ -391,7 +399,9 @@ cleanup:
         gtk_window_destroy(dialog);
     g_clear_object(&dialog);
     g_clear_object(&retained);
+    UmiTestReviewCheckpoint(mode, "destroying adapter");
     umi_gtk4_adapter_destroy(adapter);
+    UmiTestReviewCheckpoint(mode, "adapter destroyed");
     umi_document_coordinator_destroy(documents);
     umi_document_store_destroy(store);
     umi_ui_application_shell_destroy(shell);

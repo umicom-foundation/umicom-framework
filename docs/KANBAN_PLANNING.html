@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Planning boards with Umicom Framework</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:960px;margin:auto;padding:2rem;color:#182538;background:#f7f9fc}pre{overflow:auto;padding:1rem;background:#e8edf4}code{font-family:Consolas,monospace}h1,h2{line-height:1.25}table{border-collapse:collapse}td,th{padding:.6rem;border:1px solid #adb9ca;text-align:left}</style>
+<h1>Planning boards with Umicom Framework</h1>
+<p>A Kanban board groups work into columns. Umicom's native C library shares card rules between application hosts. The library provides planning data, checked changes, filtered pages and portable archives. A graphical board, collaboration server and automatic tool execution are separate application integrations.</p>
+<h2>1. Add the library to a native application</h2>
+<p>Use a C23 compiler and a Framework SDK containing the Kanban library. In your CMake project, load the package and link its target:</p>
+<pre>find_package(UmicomFramework CONFIG REQUIRED)
+target_link_libraries(my_application PRIVATE Umicom::kanban)
+set_target_properties(my_application PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES)</pre>
+<p>Source-tree hosts can link the same target after adding Framework. Include <code>umicom/kanban/board.h</code> for edits, <code>view.h</code> for pages and summaries, and <code>archive.h</code> for import/export.</p>
+<h2>2. Create a board and propose a card</h2>
+<p>Each successful batch produces a new revision. A revision is a number used to reject an edit based on an outdated view. Keep all board calls on one owner thread, or serialize them in your host. Check every returned status.</p>
+<pre>#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+#include "umicom/kanban/board.h"
+
+UmiKanbanBoard *board = NULL;
+UmiStatus status = umi_kanban_board_create_development(
+    "application", "Application development", &amp;board);
+if (status != UMI_STATUS_OK) return status;
+UmiKanbanEdit *edit = calloc(1, sizeof(*edit));
+if (edit == NULL) {
+    umi_kanban_board_destroy(board);
+    return UMI_STATUS_OUT_OF_MEMORY;
+}
+edit-&gt;kind = UMI_KANBAN_CREATE_CARD;
+strcpy(edit-&gt;card.id, "build-dialog");
+strcpy(edit-&gt;card.title, "Show build diagnostics");
+strcpy(edit-&gt;column_id, "todo");
+edit-&gt;card.priority = UMI_KANBAN_HIGH;
+UmiKanbanProblem problem;
+status = umi_kanban_board_apply(board,
+    umi_kanban_board_revision(board), "contributor", edit, 1, &amp;problem);
+free(edit);
+/* Read or save the board while this owner remains alive. */
+umi_kanban_board_destroy(board);
+return status;</pre>
+<p>The example uses short literals that fit the fixed fields. Validate user input length and encoding before copying it. Display card text as plain text. Actor and assignee identifiers are local labels, not authenticated identities.</p>
+<h2>3. Move work through the development workflow</h2>
+<table><tr><th>Column</th><th>Allowed destinations</th></tr><tr><td>todo</td><td>doing</td></tr><tr><td>doing</td><td>todo, testing</td></tr><tr><td>testing</td><td>doing, done</td></tr><tr><td>done</td><td>todo</td></tr></table>
+<p>Use a MOVE_CARD edit with the card ID and destination column ID. A before-card ID inserts before an active card; an empty value appends. UPDATE_CARD replaces card details without moving it. Custom boards can define different columns and transition edges when created.</p>
+<p>A card entering Doing or Testing must have no explicit blocker and all prerequisites in Done. Done also requires every checklist item complete. A planning checklist is a person's assertion; it does not certify build or test results. A blocked card already in progress stays visible.</p>
+<p>A work-in-progress limit caps active cards in a column; zero means unlimited. Limits are checked against the complete batch, allowing one card to leave while another enters. A rejected batch changes no cards, activity or revision. Reopening a prerequisite of completed work requires reopening its completed dependents in the same batch.</p>
+<h2>4. Read pages and summarize work</h2>
+<p>Read the revision, then call <code>umi_kanban_board_page</code> with that revision for every page. Filters combine column, assignee, label, case-sensitive text, minimum priority, blocked state and overdue state. Supply the current UTC time in seconds for deadline comparisons. If an edit changes the revision, restart pagination rather than combining pages from different states.</p>
+<p>Archives keep card IDs reserved. They do not count against active work limits. Restoring a card checks the current board rules again. An active card cannot reference an archived prerequisite. Summary counts distinguish active, archived, done, blocked and overdue work.</p>
+<h2>5. Save and restore a portable board</h2>
+<ol><li>Call <code>umi_kanban_board_encode</code> with a null buffer and zero capacity to measure the byte count.</li><li>Allocate that many bytes and encode at the same revision. A short buffer is refused without partially overwriting it.</li><li>Use your application's reviewed storage service and a user-selected location to save the bytes. The Kanban library itself does not access files or networks.</li><li>Read the file with a bounded input service and call <code>umi_kanban_board_decode</code>. Keep the current board until decoding succeeds.</li><li>Publish the new owner in the host and destroy the old owner only after readers have released it.</li></ol>
+<p>Decoding checks the envelope, lengths, identifiers, dependency graph, limits and completion rules. Its checksum detects accidental damage; it is not encryption or proof of authenticity. A restored board starts at revision 1 with empty local activity. The saved revision is historical information. Archives may contain private planning text; their storage and sharing remain the host's responsibility.</p>
+<h2>6. Qualify the module independently</h2>
+<p>From a Framework checkout, use a separate, short build directory. These commands compile the production board and base codec, and register only Kanban tests:</p>
+<pre>cmake -S tests/kanban -B build/kanban -G Ninja -DBUILD_TESTING=ON
+cmake --build build/kanban --parallel 2
+ctest --test-dir build/kanban --output-on-failure --no-tests=error</pre>
+<p>A successful run reports all registered Kanban cases passing. It does not qualify the full SDK, GTK host or other products. In a configured full Framework build, build <code>umi-kanban-board-test</code>, <code>umi-kanban-view-test</code> and <code>umi-kanban-archive-test</code>, then select <code>^framework[.]kanban[.]</code> with CTest's <code>-R</code> option.</p>
+<h2>Troubleshooting and limits</h2>
+<ul><li><strong>Stale:</strong> reread the board and ask the host to review the proposed edit again. Do not silently retry against a newer revision.</li><li><strong>WIP or dependency refusal:</strong> display the returned card/column identifiers and preserve the draft for correction.</li><li><strong>Invalid archive:</strong> preserve the original file and current board. Never replace good state after a failed import.</li><li><strong>Capacity:</strong> a board supports up to 1,024 cards, including archived cards, 16 columns and 128 edits per batch. Choose a smaller capacity for small boards.</li><li><strong>Activity:</strong> only the latest 256 events are retained. This is local activity, not a durable audit trail.</li></ul>
+<h2>7. Keep an editable board in a chosen folder</h2>
+<p>For native file storage, link <code>Umicom::kanban_storage</code> and include <code>umicom/kanban/document.h</code>. This separate adapter adds a document owner around the pure planning library. Ask the user to choose an existing folder and a filename ending in <code>.umikb</code>. It never chooses AppData or a home folder, creates parents, or uploads a board.</p>
+<pre>target_link_libraries(my_application PRIVATE Umicom::kanban_storage)</pre>
+<ol>
+<li>Use <code>umi_kanban_document_create(directory, filename, config, &amp;document)</code> for a new board, or <code>umi_kanban_document_open</code> for a saved board. Initialize the document pointer to null. Creation refuses an existing destination; opening refuses a damaged or unsupported archive.</li>
+<li>Borrow the board with <code>umi_kanban_document_board</code>, then use the same checked card editing API. The document owns this board. Do not destroy the borrowed board separately.</li>
+<li>Read <code>umi_kanban_document_state</code> to display the chosen location, revision and unsaved state. This call reads memory; it does not check for external file changes.</li>
+<li>Call <code>umi_kanban_document_save</code> with the reviewed live revision. The service compares the entire file with the last saved bytes and then writes a complete replacement. It keeps edits if the file changed, disappeared, became unreadable, or cannot be replaced.</li>
+<li>Call <code>umi_kanban_document_close(&amp;document, false)</code> when finished. Dirty documents refuse closure. Save successfully first, or obtain the user's decision to discard edits and pass <code>true</code>. Closing never saves implicitly.</li>
+</ol>
+<p>Run storage operations on a worker when used by an interactive application, and serialize all access to the document and borrowed board. No operation automatically merges, reloads or overwrites conflicting external content.</p>
+<h3>Recover from a refused save</h3>
+<p><code>UMI_KANBAN_SAVE_STALE_REVISION</code> means the host presented an older board view. Read the current state before asking the user to review again. <code>UMI_KANBAN_SAVE_EXTERNAL_CHANGE</code> means the observed file no longer matches the baseline. Preserve both versions. Use <code>umi_kanban_document_save_copy</code> with a different unused filename to keep the current edits. This leaves the original binding and unsaved flag unchanged. After reviewing the copy, close the original with an explicit discard decision and open the chosen file.</p>
+<p>A clean save checks disk but does not rewrite the archive. When reopening, the editable board starts at revision 1. The recorded archive revision describes an earlier session and must not be used as the current edit token.</p>
+<h3>Understand storage ownership and recovery limits</h3>
+<p>A session holds a native lease on the sibling file named <code>filename.umikb.lock</code>. A second cooperating editor receives <code>BUSY</code>. The guard remains after closing or crashing; its existence alone does not mean it is locked. Do not delete or replace guard files. They contain no board text. Keep the selected folder and its ancestors stable while a session is open.</p>
+<p>New files use exclusive creation. Failed initial writes can leave an incomplete new file; retain it for diagnosis and use a new filename. Existing saves use the native complete-replacement service. An unrelated program that ignores the guard can still race between the comparison and replacement. This is local cooperative ownership, not a distributed transaction or a power-loss guarantee. Archives are plaintext. Choose suitable folder permissions and sharing rules for private planning data.</p>
+<h3>Qualify the storage adapter</h3>
+<p>This focused project includes the existing board tests and native storage tests. It does not build the application suite:</p>
+<pre>cmake -S tests/kanban_storage -B build/kanban-storage -G Ninja -DBUILD_TESTING=ON
+cmake --build build/kanban-storage --parallel 2
+ctest --test-dir build/kanban-storage --output-on-failure --no-tests=error</pre>
+<!-- The storage selection now has two executable owners. The earlier single-target instruction is retained for review; build both targets to avoid Not Run outcomes.
+<p>For an already configured full Framework build, build <code>umi-kanban-document-test</code> and select <code>^framework[.]kanban[.]storage[.]</code> with CTest. Storage fixtures are created beneath the test build directory and retained for diagnosis. Windows symbolic-link cases report a skip when the native capability is unavailable; skips are not passes. These tests do not verify an application GUI, network collaboration or installed SDK relocation.</p>
+-->
+<p>For an already configured full Framework build, build both <code>umi-kanban-document-test</code> and <code>umi-kanban-storage-limits-test</code> and select <code>^framework[.]kanban[.]storage[.]</code> with CTest. Storage fixtures are created beneath the test build directory and retained for diagnosis. Windows symbolic-link cases report a skip when the native capability is unavailable; skips are not passes. These tests do not verify an application GUI, network collaboration or installed SDK relocation.</p>
+</html>

@@ -10,6 +10,7 @@
 #include <glib/gstdio.h>
 #include <stdio.h>
 #include <string.h>
+#include "../test_runtime/path_identity.h"
 #define CHECK(c) do { if (!(c)) { fprintf(stderr, "Line %d: %s\n", __LINE__, #c); result = 1; goto cleanup; } } while (0)
 typedef struct Probe { unsigned calls; UmiStatus status; } Probe;
 static UmiStatus Open(const char *path, bool create, void *context)
@@ -66,7 +67,11 @@ int main(void)
     CHECK(Wait(library) && Count(library) == 1U && probe.calls == 0U);
     CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(Find(library, "workspace.library.path"))), second) == 0);
     g_signal_emit_by_name(Find(library, "workspace.library.history.use"), "clicked");
-    CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(Find(library, "workspace.library.path"))), first) == 0);
+    /* Retained spelling comparison; native canonicalisation may change separators without changing the selected file. */
+#if 0
+CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(Find(library, "workspace.library.path"))), first) == 0);
+#endif
+CHECK(UmiTestSameLocalPath(gtk_editable_get_text(GTK_EDITABLE(Find(library, "workspace.library.path"))), first));
     CHECK(probe.calls == 0U);
     probe.status = UMI_STATUS_IO_ERROR;
     g_signal_emit_by_name(Find(library, "workspace.library.open"), "clicked");

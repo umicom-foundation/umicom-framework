@@ -11,6 +11,7 @@
 #include "umicom/ui/gtk4/interaction_recording.h"
 #include <gtk/gtk.h>
 #include <stdio.h>
+#include "../test_runtime/review_checkpoint.h"
 #include <string.h>
 #define CHECK(c)                                                                                             \
     do                                                                                                       \
@@ -483,6 +484,7 @@ static int ProgramMain(int argc, char **argv)
     if (argc != 3)
         return 2;
     const char *mode = argv[1];
+    UmiTestReviewCheckpoint(mode, "starting scenario");
     const char *cases[] = {"context-valid",
                            "context-empty",
                            "context-invalid",
@@ -528,6 +530,7 @@ static int ProgramMain(int argc, char **argv)
             known = 1;
     if (!known)
         return 2;
+    UmiTestReviewCheckpoint(mode, "initialising GTK");
     if (!gtk_init_check())
         return 77;
     int failed = 0;
@@ -595,6 +598,7 @@ static int ProgramMain(int argc, char **argv)
         goto inspect;
     }
     CHECK(UmiGtk4AdapterReviewCodeActions(adapter, directory) == UMI_STATUS_OK);
+    UmiTestReviewCheckpoint(mode, "review opened");
     dialog = Review();
     CHECK(dialog != NULL);
     GtkWidget *program = Find(GTK_WIDGET(dialog), "document.completion.program");
@@ -682,7 +686,9 @@ static int ProgramMain(int argc, char **argv)
                               strcmp(mode, "context-empty") == 0     ? "actions-context-empty"
                               : strcmp(mode, "context-invalid") == 0 ? "actions-context-invalid"
                                                                      : "actions-context-valid");
+    UmiTestReviewCheckpoint(mode, "requesting provider result");
     g_signal_emit_by_name(request, "clicked");
+    UmiTestReviewCheckpoint(mode, "request callback returned");
     if (strcmp(mode, "context-pending-change") == 0)
     {
         gtk_check_button_set_active(GTK_CHECK_BUTTON(diagnostics), FALSE);
@@ -853,6 +859,7 @@ static int ProgramMain(int argc, char **argv)
     else
         CHECK(result.count == 0U);
 inspect:
+    UmiTestReviewCheckpoint(mode, "checking document state");
     CHECK(UmiUiDocumentViewModelCopyText(views, active.view_id, &text, &length) == UMI_STATUS_OK);
     const char *expected =
         strcmp(mode, "multiline") == 0 ? "total\nx"
@@ -864,6 +871,7 @@ inspect:
                                                                             : "abc";
     CHECK(length == strlen(expected) && strcmp(text, expected) == 0);
 cleanup:
+    UmiTestReviewCheckpoint(mode, "cleanup begins");
     if (failed) UmiTestReviewFailureEvidence(dialog, mode);
     UmiUiDocumentViewModelFreeText(text);
     if (adapter != NULL)
@@ -875,7 +883,9 @@ cleanup:
     }
     g_clear_object(&dialog);
     g_clear_object(&apply);
+    UmiTestReviewCheckpoint(mode, "destroying adapter");
     umi_gtk4_adapter_destroy(adapter);
+    UmiTestReviewCheckpoint(mode, "adapter destroyed");
     umi_document_coordinator_destroy(documents);
     umi_document_store_destroy(store);
     umi_ui_application_shell_destroy(shell);

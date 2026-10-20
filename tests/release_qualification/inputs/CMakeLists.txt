@@ -29,9 +29,26 @@ elseif(CASE STREQUAL "missing")
     set(_path "${CMAKE_CURRENT_BINARY_DIR}/absent.input")
     umicom_target_qualification_inputs(owner FILES "${_path}")
     set(_state unresolved)
+# Retain the previous generated-source fixture for review. The replacement
+# confines generated artifacts to the binary directory and uses exact identities.
+#[====[
 elseif(CASE STREQUAL "generated")
     set_source_files_properties(input.h PROPERTIES GENERATED TRUE)
     umicom_target_qualification_inputs(owner FILES input.h)
+    set(_state unresolved)
+]====]
+elseif(CASE STREQUAL "generated" OR CASE STREQUAL "generated-declared-only")
+    # Generated outputs belong in the binary tree; never mark a tracked header
+    # GENERATED because a build-system clean may remove it. Keep this output
+    # present to prove that file existence alone does not qualify generated data.
+    set(_path "${CMAKE_CURRENT_BINARY_DIR}/generated.input")
+    file(WRITE "${_path}" "generated fixture bytes\n")
+    set_source_files_properties("${_path}" PROPERTIES GENERATED TRUE)
+    if(CASE STREQUAL "generated")
+        set_property(TARGET owner PROPERTY SOURCES "${_path}")
+        get_property(_original TARGET owner PROPERTY SOURCES)
+    endif()
+    umicom_target_qualification_inputs(owner FILES "${_path}")
     set(_state unresolved)
 elseif(CASE STREQUAL "bad-owner")
     umicom_target_qualification_inputs(absent FILES input.h)

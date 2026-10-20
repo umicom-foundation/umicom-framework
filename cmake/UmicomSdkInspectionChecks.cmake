@@ -88,7 +88,11 @@ endforeach()
 # execute imported targets or treat a file's presence as successful qualification.
 add_executable(umicom-sdk-artifact-inventory-tests
     "${CMAKE_CURRENT_LIST_DIR}/../tests/sdk_installation/test_artifact_inventory.c")
+# Retained earlier fixture dependency; process argument capture belongs to platform.
+if(FALSE)
 target_link_libraries(umicom-sdk-artifact-inventory-tests PRIVATE Umicom::sdk)
+endif()
+target_link_libraries(umicom-sdk-artifact-inventory-tests PRIVATE Umicom::sdk Umicom::platform)
 umicom_apply_warnings(umicom-sdk-artifact-inventory-tests)
 umicom_apply_sanitizers(umicom-sdk-artifact-inventory-tests)
 if(COMMAND umicom_register_validation_target)

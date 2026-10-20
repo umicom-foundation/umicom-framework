@@ -12,6 +12,7 @@
 #include <glib/gstdio.h>
 #include <stdio.h>
 #include <string.h>
+#include "../test_runtime/path_identity.h"
 #define CHECK(condition) do { if (!(condition)) { \
     fprintf(stderr, "Line %d: %s\n", __LINE__, #condition); result = 1; goto cleanup; \
 } } while (0)
@@ -60,14 +61,22 @@ int main(void)
     CHECK(entry != NULL && active != NULL && confirm != NULL);
     gtk_editable_set_text(GTK_EDITABLE(entry), path);
     Click(root, "workspace.library.open");
-    CHECK(strcmp(gtk_label_get_text(GTK_LABEL(active)), path) == 0);
+    /* Retained spelling comparison; native canonicalisation may change separators without changing the selected file. */
+#if 0
+CHECK(strcmp(gtk_label_get_text(GTK_LABEL(active)), path) == 0);
+#endif
+CHECK(UmiTestSameLocalPath(gtk_label_get_text(GTK_LABEL(active)), path));
     Click(root, "creative.project.create");
     Click(root, "creative.project.starter");
     /* Failed library selection must leave the live project and its editor usable. */
     gtk_check_button_set_active(GTK_CHECK_BUTTON(confirm), TRUE);
     gtk_editable_set_text(GTK_EDITABLE(entry), missing);
     Click(root, "workspace.library.open");
-    CHECK(strcmp(gtk_label_get_text(GTK_LABEL(active)), path) == 0);
+    /* Retained spelling comparison; native canonicalisation may change separators without changing the selected file. */
+#if 0
+CHECK(strcmp(gtk_label_get_text(GTK_LABEL(active)), path) == 0);
+#endif
+CHECK(UmiTestSameLocalPath(gtk_label_get_text(GTK_LABEL(active)), path));
     CHECK(!g_file_test(missing, G_FILE_TEST_EXISTS));
     Click(root, "creative.project.reload");
     UmiCreativeGtkPanelDestroy(panel); panel = NULL;

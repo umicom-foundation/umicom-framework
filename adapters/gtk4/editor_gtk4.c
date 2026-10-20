@@ -1369,3 +1369,59 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
 
 /* Folding changes presentation only; all source-reading paths above include hidden bytes. */
 #include "editor_folding_controls.inc"
+
+/* Focus belongs to an explicit editing action, not the status refresh loop.
+ * Resolve the actual document page by identity so a welcome tab, secondary
+ * group or Output text view can never receive source-editor input instead. */
+UmiStatus UmiGtk4AdapterFocusActiveDocument(UmiGtk4Adapter *adapter)
+{
+    if (adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (adapter->shell == NULL || adapter->window == NULL ||
+        adapter->edit_coordinator == NULL || adapter->edit_lifetime == NULL) return UMI_STATUS_UNAVAILABLE;
+    UmiDocumentWorkingCopySnapshot active;
+    UmiStatus status = umi_document_coordinator_active_snapshot(
+        adapter->edit_coordinator, &active);
+    if (status != UMI_STATUS_OK) return status;
+    GObject *lifetime = g_object_ref(adapter->edit_lifetime);
+    status = umi_gtk4_refresh_documents(adapter,
+        umi_ui_application_shell_workbench(adapter->shell));
+    /* Refresh can notify host observers. The binding is cleared before the
+     * adapter is freed, so do not dereference the old address after teardown. */
+    adapter = g_object_get_data(lifetime, "adapter");
+    g_object_unref(lifetime);
+    if (adapter == NULL) return UMI_STATUS_CANCELLED;
+    if (status != UMI_STATUS_OK) return status;
+    /* A refresh observer can activate a different document. Do not give focus
+     * to the old page after the user or host has selected another source. */
+    UmiDocumentWorkingCopySnapshot current;
+    status = umi_document_coordinator_active_snapshot(adapter->edit_coordinator, &current);
+    if (status != UMI_STATUS_OK) return status;
+    if (current.document_id != active.document_id || strcmp(current.view_id, active.view_id) != 0)
+        return UMI_STATUS_INVALID_STATE;
+    GtkWidget *notebook = NULL;
+    GtkWidget *page = find_document_page(adapter, active.view_id, &notebook);
+    GtkWidget *view = page != NULL
+        ? g_object_get_data(G_OBJECT(page), "umicom-editor-view") : NULL;
+    if (!GTK_IS_TEXT_VIEW(view) || !gtk_widget_is_sensitive(view))
+        return UMI_STATUS_UNAVAILABLE;
+    GtkRoot *root = gtk_widget_get_root(view);
+    if (!GTK_IS_WINDOW(root)) return UMI_STATUS_UNAVAILABLE;
+    /* A prepared but not yet presented top-level is valid. Hidden panels and
+     * inactive notebook/stack pages underneath it are not editing surfaces. */
+    for (GtkWidget *parent = view; parent != GTK_WIDGET(root);
+         parent = gtk_widget_get_parent(parent)) {
+        if (parent == NULL || !gtk_widget_get_visible(parent) ||
+            !gtk_widget_get_child_visible(parent)) return UMI_STATUS_UNAVAILABLE;
+    }
+    /* Focus observers may release the embedding host. Retain only native
+     * objects across that notification and do not revisit the adapter. The
+     * actual root also supports an editor detached into a floating window. */
+    g_object_ref(view);
+    g_object_ref(root);
+    gtk_window_set_focus(GTK_WINDOW(root), view);
+    GtkWidget *focused = gtk_window_get_focus(GTK_WINDOW(root));
+    gboolean accepted = focused == view || (focused != NULL && gtk_widget_is_ancestor(focused, view));
+    g_object_unref(root);
+    g_object_unref(view);
+    return accepted ? UMI_STATUS_OK : UMI_STATUS_UNAVAILABLE;
+}

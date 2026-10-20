@@ -14,7 +14,12 @@ if(TARGET umicom_ui_gtk4)
         if(COMMAND umicom_register_validation_target)
             umicom_register_validation_target(umicom-path-picker-test)
         endif()
+# Retain the original case catalogue for review; the active loop also checks explicit location hints.
+if(FALSE)
         foreach(case save open folder edited long close hidden remote cancel)
+        endforeach()
+endif()
+        foreach(case save open folder edited long close hidden remote cancel seed-folder seed-file seed-clear seed-invalid)
             add_test(NAME framework.path_picker.${case} COMMAND umicom-path-picker-test ${case})
             set_tests_properties(framework.path_picker.${case} PROPERTIES
                 TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;gtk4;files;ownership")

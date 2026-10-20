@@ -79,8 +79,13 @@ if(CASE STREQUAL "missing-before")
 elseif(CASE STREQUAL "missing-after")
     set(after_argument "${WORK}/absent-after.xml")
 endif()
+# Retained console-dependent decoder; comparison output is UTF-8 on every platform.
+if(FALSE)
 execute_process(COMMAND "${UMICOM_COMMAND}" test-report --compare "${before_argument}" "${after_argument}"
     RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15)
+endif()
+execute_process(COMMAND "${UMICOM_COMMAND}" test-report --compare "${before_argument}" "${after_argument}"
+    RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error TIMEOUT 15 ENCODING UTF-8)
 file(SHA256 "${before_file}" before_after)
 file(SHA256 "${after_file}" after_after)
 if(NOT before_hash STREQUAL before_after OR NOT after_hash STREQUAL after_after)

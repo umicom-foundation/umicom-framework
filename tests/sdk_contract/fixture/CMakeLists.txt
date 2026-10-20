@@ -3,10 +3,21 @@
 cmake_minimum_required(VERSION 3.24)
 project(InstalledSdkContractFixture LANGUAGES NONE)
 include("${CONTRACT_HELPER}")
+# Retained fixed fixture paths; a fresh SDK per configure prevents old negative-test inputs from becoming the baseline.
+if(FALSE)
 if(TEST_CASE STREQUAL "spaced-prefix")
     set(_sdk "${CMAKE_CURRENT_BINARY_DIR}/SDK with spaces")
 else()
     set(_sdk "${CMAKE_CURRENT_BINARY_DIR}/sdk")
+endif()
+
+endif()
+# Preserve earlier artifacts for inspection while making repeated runs independent.
+string(RANDOM LENGTH 16 ALPHABET 0123456789abcdef _run)
+if(TEST_CASE STREQUAL "spaced-prefix")
+    set(_sdk "${CMAKE_CURRENT_BINARY_DIR}/SDK with spaces-${_run}")
+else()
+    set(_sdk "${CMAKE_CURRENT_BINARY_DIR}/sdk-${_run}")
 endif()
 file(MAKE_DIRECTORY "${_sdk}/include/umicom/base" "${_sdk}/lib")
 file(WRITE "${_sdk}/include/umicom/base/version.h" "/* Public fixture identity. */\n#define FIXTURE_ABI 2\n")

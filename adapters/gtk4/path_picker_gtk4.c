@@ -9,6 +9,42 @@
 #include "umicom/ui/gtk4/path_picker.h"
 #include <string.h>
 
+/* Validate and capture every input before any GTK notification. Applications
+ * provide selected project/document context; Framework owns native navigation. */
+UmiStatus UmiPathPickerGtk4SetInitialLocation(GtkFileDialog *dialog,
+    UmiPathPickerMode mode, const char *selectedPath,
+    const char *fallbackFolder, const char *suggestedName)
+{
+    if (!GTK_IS_FILE_DIALOG(dialog) || mode < UMI_PATH_PICKER_EXISTING_FILE || mode > UMI_PATH_PICKER_DIRECTORY)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (selectedPath != NULL && selectedPath[0] == '\0') selectedPath = NULL;
+    if (fallbackFolder != NULL && fallbackFolder[0] == '\0') fallbackFolder = NULL;
+    if (suggestedName != NULL && suggestedName[0] == '\0') suggestedName = NULL;
+    if ((selectedPath != NULL && (!g_utf8_validate(selectedPath, -1, NULL) || !g_path_is_absolute(selectedPath))) ||
+        (fallbackFolder != NULL && (!g_utf8_validate(fallbackFolder, -1, NULL) || !g_path_is_absolute(fallbackFolder))) ||
+        (suggestedName != NULL && (!g_utf8_validate(suggestedName, -1, NULL) ||
+            strpbrk(suggestedName, "/\\") != NULL || strcmp(suggestedName, ".") == 0 || strcmp(suggestedName, "..") == 0)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    GFile *selected = selectedPath != NULL ? g_file_new_for_path(selectedPath) : NULL;
+    GFile *folder = fallbackFolder != NULL ? g_file_new_for_path(fallbackFolder) : NULL;
+    char *name = mode == UMI_PATH_PICKER_NEW_FILE ? g_strdup(suggestedName) : NULL;
+    g_object_ref(dialog);
+    g_object_freeze_notify(G_OBJECT(dialog));
+    if (selected != NULL) {
+        gtk_file_dialog_set_initial_file(dialog, selected);
+    } else {
+        gtk_file_dialog_set_initial_file(dialog, NULL);
+        gtk_file_dialog_set_initial_folder(dialog, folder);
+        gtk_file_dialog_set_initial_name(dialog, name);
+    }
+    g_object_thaw_notify(G_OBJECT(dialog));
+    g_object_unref(dialog);
+    g_clear_object(&selected);
+    g_clear_object(&folder);
+    g_free(name);
+    return UMI_STATUS_OK;
+}
+
 typedef struct PathPickRequest {
     GWeakRef control, entry, window;
     GCancellable *cancel;
@@ -148,6 +184,8 @@ static void Browse(GtkButton *button, gpointer data)
     GtkFileDialog *dialog = gtk_file_dialog_new();
     gtk_file_dialog_set_title(dialog, picker->title);
     gtk_file_dialog_set_modal(dialog, TRUE);
+/* The shared location contract replaces inline chooser seeding. Retain the original implementation for compatibility review. */
+#if 0
     /* An existing absolute draft seeds navigation; it is never opened here.
      * Relative input is left untouched until the user chooses a full path. */
     if (g_path_is_absolute(request->draft)) {
@@ -156,6 +194,13 @@ static void Browse(GtkButton *button, gpointer data)
         g_object_unref(initial);
     } else if (request->mode == UMI_PATH_PICKER_NEW_FILE && picker->suggestedName != NULL)
         gtk_file_dialog_set_initial_name(dialog, picker->suggestedName);
+
+#endif
+    /* A relative entry is a draft, not permission to resolve the process's
+     * working directory. The shared chooser policy uses explicit locations. */
+    (void)UmiPathPickerGtk4SetInitialLocation(dialog, request->mode,
+        g_path_is_absolute(request->draft) ? request->draft : NULL, NULL,
+        picker->suggestedName);
     if (request->mode == UMI_PATH_PICKER_EXISTING_FILE)
         gtk_file_dialog_open(dialog, GTK_WINDOW(root), request->cancel, Selected, request);
     else if (request->mode == UMI_PATH_PICKER_NEW_FILE)

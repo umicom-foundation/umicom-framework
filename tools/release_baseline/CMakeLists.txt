@@ -37,7 +37,19 @@ add_library(Umicom::base ALIAS umicom_base)
 add_library(umicom_distribution STATIC "${UMICOM_FRAMEWORK_SOURCE}/src/distribution/runtime/release_gate.c")
 add_library(Umicom::distribution ALIAS umicom_distribution)
 target_link_libraries(umicom_distribution PUBLIC Umicom::base)
+# Source observation and archive I/O are part of distribution even when thread
+# lifecycle qualification is disabled. Export their real platform owner too.
+add_library(umicom_platform STATIC
+    "${UMICOM_FRAMEWORK_SOURCE}/src/platform/input_file.c"
+    "${UMICOM_FRAMEWORK_SOURCE}/src/platform/output_file.c")
+add_library(Umicom::platform ALIAS umicom_platform)
+target_link_libraries(umicom_platform PUBLIC Umicom::base)
+# The original owner list is retained for review. Platform now shares these
+# export, language and warning properties because distribution depends on it.
+#[==[
 foreach(_target IN ITEMS umicom_base umicom_distribution)
+]==]
+foreach(_target IN ITEMS umicom_base umicom_distribution umicom_platform)
     string(REPLACE "umicom_" "" _export "${_target}")
     set_target_properties(${_target} PROPERTIES EXPORT_NAME ${_export} C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
     target_include_directories(${_target} PUBLIC $<BUILD_INTERFACE:${UMICOM_FRAMEWORK_SOURCE}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
@@ -46,6 +58,8 @@ foreach(_target IN ITEMS umicom_base umicom_distribution)
 endforeach()
 include("${UMICOM_FRAMEWORK_SOURCE}/cmake/UmicomReleaseBaseline.cmake")
 if(UMICOM_RELEASE_BASELINE_RETAIN_LIFECYCLE)
+# The lifecycle-only platform declaration is retained for review; native I/O now has an unconditional owner.
+if(FALSE)
     add_library(umicom_platform STATIC
         "${UMICOM_FRAMEWORK_SOURCE}/src/platform/threading.c"
         "${UMICOM_FRAMEWORK_SOURCE}/src/platform/cancellation.c"
@@ -58,10 +72,24 @@ if(UMICOM_RELEASE_BASELINE_RETAIN_LIFECYCLE)
     set_target_properties(umicom_platform PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
     umicom_apply_warnings(umicom_platform)
     umicom_apply_sanitizers(umicom_platform)
+
+endif()
+    # Optional thread sources extend the same owner instead of creating a second one.
+    target_sources(umicom_platform PRIVATE
+        "${UMICOM_FRAMEWORK_SOURCE}/src/platform/threading.c"
+        "${UMICOM_FRAMEWORK_SOURCE}/src/platform/cancellation.c"
+        "${UMICOM_FRAMEWORK_SOURCE}/src/platform/clock.c"
+        "${UMICOM_FRAMEWORK_SOURCE}/src/platform/task.c"
+        "${UMICOM_FRAMEWORK_SOURCE}/src/platform/task_queue.c")
+    target_link_libraries(umicom_platform PUBLIC Threads::Threads)
     include("${UMICOM_FRAMEWORK_SOURCE}/cmake/UmicomQueueShutdown.cmake")
     include("${UMICOM_FRAMEWORK_SOURCE}/cmake/UmicomThreadSafety.cmake")
 endif()
+# Retain the earlier export list; the platform archive is required by distribution consumers.
+if(FALSE)
 install(TARGETS umicom_base umicom_distribution EXPORT UmicomReleaseBaselineTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+endif()
+install(TARGETS umicom_base umicom_distribution umicom_platform EXPORT UmicomReleaseBaselineTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
 install(FILES "${UMICOM_FRAMEWORK_SOURCE}/include/umicom/base/status.h" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/base)
 install(FILES "${UMICOM_FRAMEWORK_SOURCE}/include/umicom/distribution/runtime/release_gate.h" "${UMICOM_FRAMEWORK_SOURCE}/include/umicom/distribution/runtime/types.h" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/distribution/runtime)
 include(CMakePackageConfigHelpers)
