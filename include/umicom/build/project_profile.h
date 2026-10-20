@@ -20,7 +20,9 @@
 extern "C" {
 #endif
 /** Prepare defaults without reading or executing CMake. The output is assigned
- * only on success. No executable is guessed for an imported folder. */
+ * only on success. No executable is guessed for an imported folder. Absolute
+ * roots do not read the process working directory; relative roots resolve
+ * against its current value and report a lookup failure without changing output. */
 UmiStatus UmiBuildProfileForWorkspace(const char *root, UmiBuildProfile *outProfile);
 /** Copy a generated model into the same profile contract used by the runner. */
 UmiStatus UmiBuildProfileFromProject(const UmiDeveloperProjectModel *model,

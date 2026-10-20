@@ -80,6 +80,9 @@ void umi_workspace_graph_destroy(UmiWorkspaceGraph *graph);
  * Provide the workspace graph open operation used by this module and its client
  * applications.
  */
+/** Absolute roots are resolved without consulting cwd. Relative roots retain
+ * compatibility resolution against cwd. Validation failures leave the current
+ * project identity, trust and revision unchanged. */
 UmiStatus umi_workspace_graph_open(UmiWorkspaceGraph *graph,
                                    const char *root,
                                    int trusted);

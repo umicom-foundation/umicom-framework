@@ -1,0 +1,127 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ai/training/tape.h
+ *
+ * PURPOSE:
+ *   Native C23 dense-tensor and reverse-mode automatic-differentiation
+ *   foundation for small, inspectable neural-network training experiments.
+ *
+ * ARCHITECTURE:
+ *   A training tape owns every tensor. No application owns a tensor buffer or
+ *   bypasses the Framework to compute gradients. The tape has explicit capacity
+ *   limits; no unbounded computational graph is created by this laboratory.
+ *   Callers serialise access; a tape is not thread-safe.
+ *   Models, tokenisers, persistence and accelerator adapters come in later
+ *   batches. This API deliberately does not claim transformer support yet.
+ *
+ * AUTHOR AND ORGANISATION:
+ *   Sammy Hegab
+ *   Umicom Foundation
+ *
+ * LICENCE:
+ *   MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_AI_TRAINING_TAPE_H
+#define UMICOM_AI_TRAINING_TAPE_H
+
+#include <stddef.h>
+#include "umicom/base/status.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* The first laboratory favours bounded allocations and repeatable CPU tests. */
+#define UMI_AI_TRAINING_MAX_TENSORS 256U
+#define UMI_AI_TRAINING_MAX_ELEMENTS 4096U
+
+typedef struct UmiAiTrainingTape UmiAiTrainingTape;
+typedef struct UmiAiTrainingTensor UmiAiTrainingTensor;
+
+/* Create an empty tape. On failure, the caller's output pointer is unchanged.
+ * A successful caller owns the tape and must destroy it exactly once. */
+UmiStatus UmiAiTrainingTapeCreate(UmiAiTrainingTape **outTape);
+
+/* Destroying the tape releases all tensors, gradients and saved target indices.
+ * Every tensor handle becomes invalid at this point. NULL is permitted. */
+void UmiAiTrainingTapeDestroy(UmiAiTrainingTape *tape);
+
+/* Drop operation results after the first retainLeafCount tensors. Each retained
+ * tensor must be an original leaf. This invalidates only discarded handles and
+ * permits the same leaf parameters to be used for the next training iteration.
+ * A failed rewind leaves the entire tape unchanged. */
+UmiStatus UmiAiTrainingTapeRewind(UmiAiTrainingTape *tape, size_t retainLeafCount);
+
+/* Create a row-major (rows x columns) leaf tensor, copying exactly valueCount
+ * finite float values. A trainable leaf can be updated by SGD; nontrainable
+ * leaves still receive gradients when they participate in the graph.
+ * The tape owns all buffers. Valid dimensions are nonzero and rows*columns must
+ * not exceed UMI_AI_TRAINING_MAX_ELEMENTS. */
+UmiStatus UmiAiTrainingTensorCreate(UmiAiTrainingTape *tape,
+                                   size_t rows, size_t columns,
+                                   const float *values, size_t valueCount,
+                                   int trainable,
+                                   UmiAiTrainingTensor **outTensor);
+
+/* Copy tensor data/gradients to caller-owned storage. capacity is in floats;
+ * values beyond the tensor's element count are untouched. */
+UmiStatus UmiAiTrainingTensorValues(const UmiAiTrainingTensor *tensor,
+                                   float *outValues, size_t capacity);
+UmiStatus UmiAiTrainingTensorGradients(const UmiAiTrainingTensor *tensor,
+                                      float *outGradients, size_t capacity);
+
+/* Read dimensions without exposing the tape-owned underlying buffer. */
+UmiStatus UmiAiTrainingTensorShape(const UmiAiTrainingTensor *tensor,
+                                  size_t *outRows, size_t *outColumns);
+
+/* Element-wise add. Supports equal shapes and broadcasting a single row
+ * (1 x columns) over a tensor's rows; gradients correctly sum broadcast rows. */
+UmiStatus UmiAiTrainingAdd(UmiAiTrainingTape *tape,
+                          const UmiAiTrainingTensor *left,
+                          const UmiAiTrainingTensor *right,
+                          UmiAiTrainingTensor **outTensor);
+
+/* Matrix multiplication, left (M x K) times right (K x N). */
+UmiStatus UmiAiTrainingMatmul(UmiAiTrainingTape *tape,
+                             const UmiAiTrainingTensor *left,
+                             const UmiAiTrainingTensor *right,
+                             UmiAiTrainingTensor **outTensor);
+
+/* Element-wise rectified linear unit: max(value, 0). */
+UmiStatus UmiAiTrainingRelu(UmiAiTrainingTape *tape,
+                           const UmiAiTrainingTensor *input,
+                           UmiAiTrainingTensor **outTensor);
+
+/* Mean squared error over equal-shaped prediction and target tensors.
+ * Returns a 1x1 loss tensor. */
+UmiStatus UmiAiTrainingMeanSquaredError(UmiAiTrainingTape *tape,
+                                       const UmiAiTrainingTensor *prediction,
+                                       const UmiAiTrainingTensor *target,
+                                       UmiAiTrainingTensor **outLoss);
+
+/* Average categorical negative log-likelihood over logits (B x V).
+ * Targets contain one class index per row, in [0, V). Uses a numerically
+ * stable log-sum-exp calculation; no softmax probabilities are materialised.
+ * Returns a 1x1 loss tensor. This is a teaching operator, not an LLM. */
+UmiStatus UmiAiTrainingCrossEntropy(UmiAiTrainingTape *tape,
+                                   const UmiAiTrainingTensor *logits,
+                                   const size_t *targets, size_t targetCount,
+                                   UmiAiTrainingTensor **outLoss);
+
+/* Reverse the recorded operations to differentiate a scalar loss. This clears
+ * all prior gradients, so repeat Backward only for the currently built graph. */
+UmiStatus UmiAiTrainingBackward(UmiAiTrainingTape *tape,
+                               const UmiAiTrainingTensor *loss);
+
+/* Stochastic-gradient-descent parameter update: weight -= rate * gradient.
+ * Only original trainable leaf tensors can be updated. All candidate values
+ * are checked before any weight is changed. Rewind before computing a fresh
+ * forward pass with updated parameters. */
+UmiStatus UmiAiTrainingSgdStep(UmiAiTrainingTape *tape,
+                              UmiAiTrainingTensor *parameter,
+                              float learningRate);
+
+#ifdef __cplusplus
+}
+#endif
+#endif /* UMICOM_AI_TRAINING_TAPE_H */

@@ -111,6 +111,8 @@ void umi_workspace_graph_destroy(UmiWorkspaceGraph *graph)
  * Provide the workspace graph open operation used by this module and its client
  * applications.
  */
+/* Workspace opening now shares the absolute-path independence of project settings. The earlier cwd-dependent open path is preserved for engineering review. */
+#if 0
 UmiStatus umi_workspace_graph_open(UmiWorkspaceGraph *graph,
                                    const char *root,
                                    int trusted)
@@ -129,6 +131,44 @@ UmiStatus umi_workspace_graph_open(UmiWorkspaceGraph *graph,
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     status = umi_path_absolute(root, current, absolute, sizeof(absolute));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (!umi_fs_is_directory(absolute)) return UMI_STATUS_NOT_FOUND;
+    (void)umi_mutex_lock(graph->mutex);
+    (void)snprintf(graph->root, sizeof(graph->root), "%s", absolute);
+    graph->project_count = 0U;
+    graph->trusted = trusted != 0;
+    graph->open = 1;
+    graph->revision += 1U;
+    (void)umi_mutex_unlock(graph->mutex);
+    return UMI_STATUS_OK;
+}
+
+#endif
+UmiStatus umi_workspace_graph_open(UmiWorkspaceGraph *graph,
+                                   const char *root,
+                                   int trusted)
+{
+    char absolute[UMI_PATH_CAPACITY];
+    char current[UMI_PATH_CAPACITY];
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (graph == NULL || root == NULL || root[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Full paths supplied by a chooser do not depend on the launch directory.
+     * Capture cwd only for compatibility callers supplying a relative path. */
+    if (umi_path_is_absolute(root))
+        status = umi_path_normalise(root, absolute, sizeof(absolute));
+    else {
+        status = umi_fs_current_directory(current, sizeof(current));
+        if (status == UMI_STATUS_OK)
+            status = umi_path_absolute(root, current, absolute, sizeof(absolute));
+    }
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
     /* Preserve the original failure result so the caller can respond to the correct cause. */

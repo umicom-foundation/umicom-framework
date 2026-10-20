@@ -18,6 +18,8 @@
 #include "umicom/platform/path.h"
 
 /* Build absolute source identity without changing the process working directory. */
+/* Absolute project identity no longer consults the process directory. The previous unconditional cwd lookup is retained for comparison; relative callers keep their documented resolution behavior. */
+#if 0
 UmiStatus UmiBuildProfileForWorkspace(const char *root, UmiBuildProfile *outProfile)
 {
     UmiBuildProfile profile;
@@ -30,6 +32,38 @@ UmiStatus UmiBuildProfileForWorkspace(const char *root, UmiBuildProfile *outProf
     umi_build_profile_init(&profile);
     status = umi_path_absolute(root, currentDirectory, profile.source_directory,
         sizeof(profile.source_directory));
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_text_copy(profile.profile_id, sizeof(profile.profile_id), "project.development");
+    if (status == UMI_STATUS_OK) status = umi_text_copy(profile.build_directory,
+        sizeof(profile.build_directory), "build/umicom-development");
+    if (status == UMI_STATUS_OK) status = umi_text_copy(profile.install_directory,
+        sizeof(profile.install_directory), "install/umicom-development");
+    if (status != UMI_STATUS_OK) return status;
+    profile.parallel_jobs = 2U;
+    profile.run_program[0] = '\0';
+    *outProfile = profile;
+    return UMI_STATUS_OK;
+}
+
+#endif
+UmiStatus UmiBuildProfileForWorkspace(const char *root, UmiBuildProfile *outProfile)
+{
+    UmiBuildProfile profile;
+    char currentDirectory[UMI_BUILD_PATH_CAPACITY];
+    UmiStatus status;
+    if (root == NULL || root[0] == '\0' || outProfile == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    umi_build_profile_init(&profile);
+    /* A user-selected full path already supplies project identity. A deleted,
+     * inaccessible or unrelated process directory must not prevent its use. */
+    if (umi_path_is_absolute(root))
+        status = umi_path_normalise(root, profile.source_directory, sizeof(profile.source_directory));
+    else {
+        status = umi_fs_current_directory(currentDirectory, sizeof(currentDirectory));
+        if (status == UMI_STATUS_OK)
+            status = umi_path_absolute(root, currentDirectory, profile.source_directory,
+                sizeof(profile.source_directory));
+    }
     if (status != UMI_STATUS_OK) return status;
     status = umi_text_copy(profile.profile_id, sizeof(profile.profile_id), "project.development");
     if (status == UMI_STATUS_OK) status = umi_text_copy(profile.build_directory,

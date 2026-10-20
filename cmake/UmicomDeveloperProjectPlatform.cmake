@@ -521,7 +521,12 @@ endif()
 
 # Focused real-service qualification. Each filesystem test owns its CTest cwd.
 if(BUILD_TESTING)
+# The focused qualification list now includes absolute project identity when cwd is unavailable. Retain the earlier list for review.
+if(FALSE)
     foreach(case IN ITEMS project_input_boundaries project_session money_boundaries save_all history_identity)
+    endforeach()
+endif()
+    foreach(case IN ITEMS project_input_boundaries project_absolute_identity project_session money_boundaries save_all history_identity)
         set(target "umicom-project-${case}-test")
         add_executable(${target} "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_project/test_${case}.c")
         target_link_libraries(${target} PRIVATE Umicom::Framework)
