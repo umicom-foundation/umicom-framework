@@ -74,6 +74,12 @@ UmiStatus UmiAiTrainingKvCacheInspect(const UmiAiTrainingKvCache *cache,
                                      uint64_t *outComputedRows,
                                      uint64_t *outWindowRebuilds);
 
+/* Return the actual sizeof heap allocation used by cache creation on this
+ * build. This includes fixed parameter reservations and in-object state, but
+ * excludes allocator bookkeeping and memory owned by the borrowed decoder.
+ * No cache instance or model is required. Output is preserved on error. */
+UmiStatus UmiAiTrainingKvCacheAllocationSize(size_t *outBytes);
+
 #ifdef __cplusplus
 }
 #endif

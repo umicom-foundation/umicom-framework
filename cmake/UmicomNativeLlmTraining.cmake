@@ -48,6 +48,9 @@ if(NOT TARGET umicom_ai_training)
         "${_umicom_ai_training_root}/src/ai/training/kv_cache.c"
         # Shared scalar reference and column-tiled CPU matrix kernels.
         "${_umicom_ai_training_root}/src/ai/training/matrix_kernel.c"
+        # Whole-decoder profiling and exact cache capacity accounting use the
+        # established decoder, model metadata and inference-only cache.
+        "${_umicom_ai_training_root}/src/ai/training/inference_profile.c"
     )
     add_library(Umicom::AiTraining ALIAS umicom_ai_training)
     target_include_directories(umicom_ai_training PUBLIC
@@ -349,4 +352,26 @@ if(BUILD_TESTING)
         umicom-ai-training-matrix-inference-test
         framework.ai.training.matrix_inference
         test_training_matrix_inference.c)
+endif()
+
+# Profile complete decoder and cached inference on identical token streams.
+# Deterministic work counts and numerical parity are test gates; CPU timings
+# are observations only and cannot make a regression test fail.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-inference-footprint-test
+        framework.ai.training.inference_footprint
+        test_training_inference_footprint.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-inference-parity-test
+        framework.ai.training.inference_parity
+        test_training_inference_parity.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-inference-rejections-test
+        framework.ai.training.inference_rejections
+        test_training_inference_rejections.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-inference-checkpoint-test
+        framework.ai.training.inference_checkpoint
+        test_training_inference_checkpoint.c)
 endif()

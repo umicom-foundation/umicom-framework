@@ -411,3 +411,13 @@ UmiStatus UmiAiTrainingKvCacheInspect(const UmiAiTrainingKvCache *cache,
     *outWindowRebuilds = cache->state.windowRebuilds;
     return UMI_STATUS_OK;
 }
+
+/* Use the real private structure rather than assuming a compact K/V-only
+ * allocation. Parameter reservations dominate this educational cache's heap
+ * use and are part of capacity planning until we add variable-sized storage. */
+UmiStatus UmiAiTrainingKvCacheAllocationSize(size_t *outBytes)
+{
+    if (outBytes == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outBytes = sizeof(UmiAiTrainingKvCache);
+    return UMI_STATUS_OK;
+}
