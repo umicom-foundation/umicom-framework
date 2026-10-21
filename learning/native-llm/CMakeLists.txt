@@ -292,3 +292,44 @@ if(BUILD_TESTING)
     set_tests_properties(framework.ai.training.accumulation_demo PROPERTIES
         LABELS "framework;ai;native-training;learning")
 endif()
+
+# Native AdamW learning laboratory: source data and model mathematics remain
+# Framework-owned. No optimiser state is reconstructed from model checkpoints.
+add_executable(umicom-native-llm-adamw
+    "${CMAKE_CURRENT_LIST_DIR}/train_adamw.c")
+target_link_libraries(umicom-native-llm-adamw PRIVATE Umicom::AiTraining)
+target_compile_features(umicom-native-llm-adamw PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-adamw PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-adamw PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME framework.ai.training.adamw_demo COMMAND
+        umicom-native-llm-adamw
+        "${CMAKE_CURRENT_LIST_DIR}/fixtures/manifest.txt")
+    set_tests_properties(framework.ai.training.adamw_demo PROPERTIES
+        LABELS "framework;ai;native-training;learning")
+endif()
+
+# Native scheduled SGD demonstration reuses the existing reviewed training
+# plan and Framework experiment execution, without implementing a new trainer.
+add_executable(umicom-native-llm-scheduled
+    "${CMAKE_CURRENT_LIST_DIR}/train_scheduled.c")
+target_link_libraries(umicom-native-llm-scheduled PRIVATE Umicom::AiTraining)
+target_compile_features(umicom-native-llm-scheduled PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-scheduled PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-scheduled PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME framework.ai.training.scheduled_demo COMMAND
+        umicom-native-llm-scheduled
+        "${CMAKE_CURRENT_LIST_DIR}/fixtures/experiment.conf"
+        32 4 0.0025)
+    set_tests_properties(framework.ai.training.scheduled_demo PROPERTIES
+        LABELS "framework;ai;native-training;learning")
+endif()

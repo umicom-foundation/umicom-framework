@@ -17,6 +17,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/decoder.h"
 #include "umicom/ai/training/gradient_accumulation.h"
+#include "umicom/ai/training/optimizer.h"
+#include "optimizer_internal.h"
 #include "umicom/ai/training/initialisation.h"
 #include "umicom/ai/training/transformer.h"
 #include "decoder_private.h"
@@ -513,4 +515,65 @@ finish:
     free(reduced);
     free(accumulated);
     return status;
+}
+
+/*-----------------------------------------------------------------------------
+ * Stateful AdamW training composes the same canonical forward, loss and
+ * backward graph used by ordinary SGD. Only the update rule differs.
+ *
+ * Preserve the existing TrainStep and accumulated-SGD paths unchanged.
+ * Model-only checkpoints intentionally do not claim exact AdamW continuation:
+ * first/second moment state must eventually have its own persisted contract.
+ *---------------------------------------------------------------------------*/
+UmiStatus UmiAiTrainingDecoderAdamWCreate(
+    UmiAiTrainingDecoder *model,
+    const UmiAiTrainingAdamWConfig *config,
+    UmiAiTrainingAdamW **outOptimizer)
+{
+    if (model == NULL || outOptimizer == NULL || model->completedSteps != 0U)
+        return UMI_STATUS_INVALID_STATE;
+    return UmiAiTrainingAdamWCreate(model->tape, model->parameters,
+        UMI_DECODER_PARAMETER_COUNT, config, outOptimizer);
+}
+
+UmiStatus UmiAiTrainingDecoderTrainAdamWStep(
+    UmiAiTrainingDecoder *model,
+    UmiAiTrainingAdamW *optimizer,
+    const size_t *inputIds,
+    const size_t *targetIds,
+    size_t tokenCount,
+    float learningRate,
+    float *outLoss)
+{
+    UmiAiTrainingTensor *logits = NULL, *loss = NULL;
+    UmiStatus status;
+    float candidateLoss = 0.0F;
+    if (model == NULL || optimizer == NULL || outLoss == NULL ||
+        targetIds == NULL || !isfinite(learningRate) || learningRate <= 0.0F)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = UmiAiTrainingAdamWValidateBinding(optimizer,
+        model->tape, model->parameters, UMI_DECODER_PARAMETER_COUNT,
+        model->completedSteps);
+    if (status != UMI_STATUS_OK) return status;
+    if (model->completedSteps == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = ValidateInputs(model, inputIds, targetIds, tokenCount);
+    if (status != UMI_STATUS_OK) return status;
+    status = ForwardLogits(model, inputIds, tokenCount, &logits);
+    if (status == UMI_STATUS_OK)
+        status = UmiAiTrainingCrossEntropy(model->tape, logits, targetIds,
+                                          tokenCount, &loss);
+    if (status == UMI_STATUS_OK)
+        status = UmiAiTrainingTensorValues(loss, &candidateLoss, 1U);
+    if (status == UMI_STATUS_OK)
+        status = UmiAiTrainingBackward(model->tape, loss);
+    /* The leaf gradients remain readable after the temporary graph is freed.
+     * No parameter is modified until AdamW validates all proposed weights. */
+    UmiStatus rewindStatus = RewindParameters(model);
+    if (status == UMI_STATUS_OK) status = rewindStatus;
+    if (status != UMI_STATUS_OK) return status;
+    status = UmiAiTrainingAdamWStep(optimizer, learningRate);
+    if (status != UMI_STATUS_OK) return status;
+    ++model->completedSteps;
+    *outLoss = candidateLoss;
+    return UMI_STATUS_OK;
 }

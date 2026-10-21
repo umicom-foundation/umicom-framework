@@ -18,6 +18,7 @@
 #include "umicom/ai/training/experiment.h"
 #include "umicom/ai/training/experiment_accumulation.h"
 #include "umicom/ai/training/gradient_accumulation.h"
+#include "umicom/ai/training/optimizer.h"
 #include "umicom/ai/training/capacity_plan.h"
 #include "umicom/ai/training/byte_tokenizer.h"
 #include "umicom/ai/training/checkpoint.h"
@@ -234,6 +235,7 @@ static UmiStatus RunInternal(
     const UmiAiTrainingExperimentConfig *config,
     const UmiAiTrainingDecoder *checkpointModel,
     const UmiAiTrainingExperimentAccumulation *accumulation,
+    const UmiAiTrainingLearningRateSchedule *schedule,
     UmiAiTrainingExperimentObserver observer,
     void *userData,
     UmiAiTrainingDecoder **outModel,
@@ -258,6 +260,12 @@ static UmiStatus RunInternal(
         UmiAiTrainingExperimentValidate(config) :
         UmiAiTrainingExperimentAccumulationValidate(config, accumulation);
     if (status != UMI_STATUS_OK) return status;
+    /* The schedule is an opt-in execution policy, not part of the existing
+     * experiment configuration ABI. Its horizon must include this run. */
+    if (schedule != NULL &&
+        (UmiAiTrainingLearningRateValidate(schedule) != UMI_STATUS_OK ||
+         (uint64_t)config->steps > schedule->totalSteps))
+        return UMI_STATUS_INVALID_ARGUMENT;
     status = UmiAiTrainingDatasetInspect(dataset, &datasetSummary);
     if (status != UMI_STATUS_OK) return status;
     if (datasetSummary.trainingDocuments == 0U ||
@@ -301,6 +309,12 @@ static UmiStatus RunInternal(
     }
     for (uint32_t step = (uint32_t)startSteps + 1U;
          step <= config->steps; ++step) {
+        float stepLearningRate = config->learningRate;
+        if (schedule != NULL) {
+            status = UmiAiTrainingLearningRateForStep(schedule,
+                         (uint64_t)step, &stepLearningRate);
+            if (status != UMI_STATUS_OK) goto fail;
+        }
         if (accumulation == NULL) {
             /* Preserve the original dataset draw and single-batch training
              * behaviour, including its optimiser and checkpoint semantics. */
@@ -313,7 +327,7 @@ static UmiStatus RunInternal(
             if (status != UMI_STATUS_OK) goto fail;
             status = UmiAiTrainingDecoderTrainStep(
                 created, inputs, targets, tokens,
-                config->learningRate, &progress.lastTrainingLoss);
+                stepLearningRate, &progress.lastTrainingLoss);
         } else {
             /* One effective batch, one atomic SGD update. All microbatch
              * forward/backward operations remain Framework decoder-owned. */
@@ -323,7 +337,7 @@ static UmiStatus RunInternal(
             status = UmiAiTrainingDecoderTrainAccumulated(
                     created, effectiveInputs, effectiveTargets,
                     effectiveTokens, (size_t)accumulation->microbatchSequences,
-                    config->learningRate, &progress.lastTrainingLoss);
+                    stepLearningRate, &progress.lastTrainingLoss);
         }
         if (status != UMI_STATUS_OK) goto fail;
         if (!isfinite(progress.lastTrainingLoss) ||
@@ -380,7 +394,7 @@ UmiStatus UmiAiTrainingExperimentRun(
     UmiAiTrainingDecoder **outModel,
     UmiAiTrainingExperimentResult *outResult)
 {
-    return RunInternal(dataset, config, NULL, NULL, observer, userData,
+    return RunInternal(dataset, config, NULL, NULL, NULL, observer, userData,
                        outModel, outResult);
 }
 
@@ -394,7 +408,7 @@ UmiStatus UmiAiTrainingExperimentResume(
     UmiAiTrainingExperimentResult *outResult)
 {
     if (checkpointModel == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    return RunInternal(dataset, config, checkpointModel, NULL,
+    return RunInternal(dataset, config, checkpointModel, NULL, NULL,
                        observer, userData, outModel, outResult);
 }
 
@@ -409,7 +423,7 @@ UmiStatus UmiAiTrainingExperimentRunAccumulated(
     UmiAiTrainingExperimentResult *outResult)
 {
     if (accumulation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    return RunInternal(dataset, config, NULL, accumulation,
+    return RunInternal(dataset, config, NULL, accumulation, NULL,
                        observer, userData, outModel, outResult);
 }
 
@@ -425,6 +439,72 @@ UmiStatus UmiAiTrainingExperimentResumeAccumulated(
 {
     if (accumulation == NULL || checkpointModel == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
-    return RunInternal(dataset, config, checkpointModel, accumulation,
+    return RunInternal(dataset, config, checkpointModel, accumulation, NULL,
                        observer, userData, outModel, outResult);
+}
+
+/* The scheduled entry points share the original dataset, decoder and
+ * checkpoint implementation. Only the deterministic SGD learning rate at an
+ * absolute optimiser-step index differs from existing constant-rate runs. */
+UmiStatus UmiAiTrainingExperimentRunScheduled(
+    const UmiAiTrainingDataset *dataset,
+    const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingLearningRateSchedule *schedule,
+    UmiAiTrainingExperimentObserver observer,
+    void *userData,
+    UmiAiTrainingDecoder **outModel,
+    UmiAiTrainingExperimentResult *outResult)
+{
+    if (schedule == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return RunInternal(dataset, config, NULL, NULL, schedule, observer,
+                       userData, outModel, outResult);
+}
+
+UmiStatus UmiAiTrainingExperimentResumeScheduled(
+    const UmiAiTrainingDataset *dataset,
+    const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingLearningRateSchedule *schedule,
+    const UmiAiTrainingDecoder *checkpointModel,
+    UmiAiTrainingExperimentObserver observer,
+    void *userData,
+    UmiAiTrainingDecoder **outModel,
+    UmiAiTrainingExperimentResult *outResult)
+{
+    if (schedule == NULL || checkpointModel == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    return RunInternal(dataset, config, checkpointModel, NULL, schedule,
+                       observer, userData, outModel, outResult);
+}
+
+UmiStatus UmiAiTrainingExperimentRunAccumulatedScheduled(
+    const UmiAiTrainingDataset *dataset,
+    const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingExperimentAccumulation *accumulation,
+    const UmiAiTrainingLearningRateSchedule *schedule,
+    UmiAiTrainingExperimentObserver observer,
+    void *userData,
+    UmiAiTrainingDecoder **outModel,
+    UmiAiTrainingExperimentResult *outResult)
+{
+    if (accumulation == NULL || schedule == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    return RunInternal(dataset, config, NULL, accumulation, schedule,
+                       observer, userData, outModel, outResult);
+}
+
+UmiStatus UmiAiTrainingExperimentResumeAccumulatedScheduled(
+    const UmiAiTrainingDataset *dataset,
+    const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingExperimentAccumulation *accumulation,
+    const UmiAiTrainingLearningRateSchedule *schedule,
+    const UmiAiTrainingDecoder *checkpointModel,
+    UmiAiTrainingExperimentObserver observer,
+    void *userData,
+    UmiAiTrainingDecoder **outModel,
+    UmiAiTrainingExperimentResult *outResult)
+{
+    if (accumulation == NULL || schedule == NULL || checkpointModel == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    return RunInternal(dataset, config, checkpointModel, accumulation,
+                       schedule, observer, userData, outModel, outResult);
 }

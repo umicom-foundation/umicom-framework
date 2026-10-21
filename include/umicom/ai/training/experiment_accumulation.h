@@ -71,6 +71,29 @@ UmiStatus UmiAiTrainingExperimentResumeAccumulated(
     UmiAiTrainingDecoder **outModel,
     UmiAiTrainingExperimentResult *outResult);
 
+/* Optional schedule-aware effective-batch SGD: the same absolute step
+ * drives both deterministic source-window selection and learning-rate policy.
+ * The original accumulated experiment APIs remain unchanged. */
+UmiStatus UmiAiTrainingExperimentRunAccumulatedScheduled(
+    const UmiAiTrainingDataset *dataset,
+    const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingExperimentAccumulation *accumulation,
+    const UmiAiTrainingLearningRateSchedule *schedule,
+    UmiAiTrainingExperimentObserver observer,
+    void *userData,
+    UmiAiTrainingDecoder **outModel,
+    UmiAiTrainingExperimentResult *outResult);
+UmiStatus UmiAiTrainingExperimentResumeAccumulatedScheduled(
+    const UmiAiTrainingDataset *dataset,
+    const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingExperimentAccumulation *accumulation,
+    const UmiAiTrainingLearningRateSchedule *schedule,
+    const UmiAiTrainingDecoder *checkpointModel,
+    UmiAiTrainingExperimentObserver observer,
+    void *userData,
+    UmiAiTrainingDecoder **outModel,
+    UmiAiTrainingExperimentResult *outResult);
+
 #ifdef __cplusplus
 }
 #endif

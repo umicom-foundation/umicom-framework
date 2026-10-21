@@ -37,6 +37,9 @@ if(NOT TARGET umicom_ai_training)
         # Native experiment plans and deterministic run orchestration:
         # and sampled held-out evaluation reuse the canonical model/dataset.
         "${_umicom_ai_training_root}/src/ai/training/experiment.c"
+        # Stateful AdamW and absolute-step learning rates reuse the existing
+        # training tape as the sole authority for parameter updates.
+        "${_umicom_ai_training_root}/src/ai/training/optimizer.c"
         "${_umicom_ai_training_root}/src/ai/training/experiment_plan.c"
         # Native autoregressive generation composes the decoder and RNG.
         "${_umicom_ai_training_root}/src/ai/training/generation.c"
@@ -481,4 +484,27 @@ if(BUILD_TESTING)
             UMI_AI_TEST_ACCUMULATED_PLAN_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/accumulated-experiment.conf"
             UMI_AI_TEST_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt")
     endforeach()
+endif()
+
+# Qualify stateful AdamW updates, absolute-step learning-rate schedules and
+# scheduled direct/effective-batch experiments without altering legacy SGD.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-learning-rate-test
+        framework.ai.training.learning_rate
+        test_training_learning_rate.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-adamw-test
+        framework.ai.training.adamw
+        test_training_adamw.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-decoder-adamw-test
+        framework.ai.training.decoder_adamw
+        test_training_decoder_adamw.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-scheduled-experiment-test
+        framework.ai.training.scheduled_experiment
+        test_training_scheduled_experiment.c)
+    target_compile_definitions(umicom-ai-training-scheduled-experiment-test PRIVATE
+        UMI_AI_TEST_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt")
 endif()

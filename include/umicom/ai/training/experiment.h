@@ -26,6 +26,7 @@
 #include <stdint.h>
 #include "umicom/ai/training/dataset_manifest.h"
 #include "umicom/ai/training/decoder.h"
+#include "umicom/ai/training/optimizer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -125,6 +126,28 @@ UmiStatus UmiAiTrainingExperimentRun(
 UmiStatus UmiAiTrainingExperimentResume(
     const UmiAiTrainingDataset *dataset,
     const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingDecoder *checkpointModel,
+    UmiAiTrainingExperimentObserver observer,
+    void *userData,
+    UmiAiTrainingDecoder **outModel,
+    UmiAiTrainingExperimentResult *outResult);
+
+/* An opt-in deterministic learning-rate schedule for existing SGD runs.
+ * The original Run/Resume API remains constant-rate and ABI compatible.
+ * A resumed run must retain the original schedule horizon, seed and source
+ * data; the weights-only checkpoint does not authenticate any of them. */
+UmiStatus UmiAiTrainingExperimentRunScheduled(
+    const UmiAiTrainingDataset *dataset,
+    const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingLearningRateSchedule *schedule,
+    UmiAiTrainingExperimentObserver observer,
+    void *userData,
+    UmiAiTrainingDecoder **outModel,
+    UmiAiTrainingExperimentResult *outResult);
+UmiStatus UmiAiTrainingExperimentResumeScheduled(
+    const UmiAiTrainingDataset *dataset,
+    const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingLearningRateSchedule *schedule,
     const UmiAiTrainingDecoder *checkpointModel,
     UmiAiTrainingExperimentObserver observer,
     void *userData,
