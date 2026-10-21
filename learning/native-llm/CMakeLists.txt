@@ -224,3 +224,22 @@ if(BUILD_TESTING)
     set_tests_properties(framework.ai.training.compact_cache_inspector PROPERTIES
         LABELS "framework;ai;native-training;learning")
 endif()
+
+# Learners inspect persistent training tape allocations and the model's
+# feasible batch dimensions without any separate application-local maths.
+add_executable(umicom-native-llm-training-memory
+    "${CMAKE_CURRENT_LIST_DIR}/inspect_training_memory.c")
+target_link_libraries(umicom-native-llm-training-memory PRIVATE Umicom::AiTraining)
+target_compile_features(umicom-native-llm-training-memory PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-training-memory PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-training-memory PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME framework.ai.training.memory_inspector
+             COMMAND umicom-native-llm-training-memory)
+    set_tests_properties(framework.ai.training.memory_inspector PROPERTIES
+        LABELS "framework;ai;native-training;learning")
+endif()

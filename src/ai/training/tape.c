@@ -27,6 +27,7 @@
 #include <math.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -61,12 +62,20 @@ struct UmiAiTrainingTensor {
     float normEpsilon; /* epsilon for layer normalisation derivative */
     UmiAiTrainingOperation operation;
     bool trainable;
+    /* Persistent allocation counts are fixed when this node is published.
+     * Operators retain ownership until a tape rewind, rollback or destroy. */
+    size_t targetAllocationCount;
+    size_t attentionAllocationCount;
+    size_t committedBytes;
 };
 
 struct UmiAiTrainingTape {
     UmiAiTrainingTensor *nodes[UMI_AI_TRAINING_MAX_TENSORS];
     size_t count;
     bool hasGradients;
+    size_t currentBytes;
+    size_t peakBytes;
+    size_t budgetBytes;
 };
 
 /* Verify a handle by its slot without dereferencing caller-provided memory
@@ -130,13 +139,52 @@ static void FreeNode(UmiAiTrainingTensor *node)
     free(node);
 }
 
+/* Count exactly the requested sizes of persistent malloc/calloc payloads.
+ * This computation is intentionally separate from ownership transfer: all
+ * earlier operators continue allocating candidate nodes off the tape. */
+static bool NodeCommittedBytes(const UmiAiTrainingTensor *node,
+                               size_t *outBytes)
+{
+    size_t bytes;
+    if (node == NULL || outBytes == NULL ||
+        node->count > (SIZE_MAX - sizeof(*node)) / (2U * sizeof(float)))
+        return false;
+    bytes = sizeof(*node) + node->count * 2U * sizeof(float);
+    if (node->targets != NULL) {
+        if (node->targetAllocationCount > (SIZE_MAX - bytes) / sizeof(size_t))
+            return false;
+        bytes += node->targetAllocationCount * sizeof(size_t);
+    }
+    if (node->attentionWeights != NULL) {
+        if (node->attentionAllocationCount > (SIZE_MAX - bytes) / sizeof(float))
+            return false;
+        bytes += node->attentionAllocationCount * sizeof(float);
+    }
+    *outBytes = bytes;
+    return true;
+}
+
 static UmiStatus PublishNode(UmiAiTrainingTape *tape, UmiAiTrainingTensor *node,
                             UmiAiTrainingTensor **outTensor)
 {
+    size_t bytes;
     if (tape == NULL || node == NULL || outTensor == NULL ||
         tape->count >= UMI_AI_TRAINING_MAX_TENSORS) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!NodeCommittedBytes(node, &bytes) ||
+        bytes > SIZE_MAX - tape->currentBytes ||
+        (tape->budgetBytes != 0U &&
+         bytes > tape->budgetBytes - tape->currentBytes)) {
+        /* A rejected node never joins the graph and cannot leak its saved
+         * indices, attention weights, gradient buffer or value buffer. */
+        FreeNode(node);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    node->committedBytes = bytes;
     node->id = tape->count;
     tape->nodes[tape->count++] = node;
+    tape->currentBytes += bytes;
+    if (tape->currentBytes > tape->peakBytes)
+        tape->peakBytes = tape->currentBytes;
     tape->hasGradients = false;
     *outTensor = node;
     return UMI_STATUS_OK;
@@ -148,7 +196,40 @@ UmiStatus UmiAiTrainingTapeCreate(UmiAiTrainingTape **outTape)
     if (outTape == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     newTape = calloc(1U, sizeof(*newTape));
     if (newTape == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    newTape->currentBytes = sizeof(*newTape);
+    newTape->peakBytes = sizeof(*newTape);
     *outTape = newTape;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiAiTrainingTapeMemoryInspect(
+    const UmiAiTrainingTape *tape,
+    UmiAiTrainingTapeMemory *outMemory)
+{
+    UmiAiTrainingTapeMemory candidate = {0};
+    if (tape == NULL || outMemory == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    candidate.currentBytes = tape->currentBytes;
+    candidate.peakBytes = tape->peakBytes;
+    candidate.budgetBytes = tape->budgetBytes;
+    candidate.tensorCount = tape->count;
+    for (size_t i = 0U; i < tape->count; ++i) {
+        const UmiAiTrainingTensor *node = tape->nodes[i];
+        candidate.tensorValuesBytes += node->count * sizeof(float);
+        candidate.tensorGradientBytes += node->count * sizeof(float);
+        candidate.auxiliaryBytes += node->targetAllocationCount * sizeof(size_t) +
+                                    node->attentionAllocationCount * sizeof(float);
+    }
+    *outMemory = candidate;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiAiTrainingTapeSetMemoryBudget(
+    UmiAiTrainingTape *tape, size_t budgetBytes)
+{
+    if (tape == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (budgetBytes != 0U && budgetBytes < tape->currentBytes)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    tape->budgetBytes = budgetBytes;
     return UMI_STATUS_OK;
 }
 
@@ -169,6 +250,7 @@ UmiStatus UmiAiTrainingTapeRewind(UmiAiTrainingTape *tape,
         }
     }
     for (size_t i = retainLeafCount; i < tape->count; ++i) {
+        tape->currentBytes -= tape->nodes[i]->committedBytes;
         FreeNode(tape->nodes[i]);
         tape->nodes[i] = NULL;
     }
@@ -193,6 +275,7 @@ UmiStatus UmiAiTrainingTapeRollback(UmiAiTrainingTape *tape,
 {
     if (tape == NULL || retainCount > tape->count) return UMI_STATUS_INVALID_ARGUMENT;
     for (size_t index = retainCount; index < tape->count; ++index) {
+        tape->currentBytes -= tape->nodes[index]->committedBytes;
         FreeNode(tape->nodes[index]);
         tape->nodes[index] = NULL;
     }
@@ -411,6 +494,7 @@ UmiStatus UmiAiTrainingCrossEntropy(UmiAiTrainingTape *tape,
     if (node == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     node->targets = malloc(targetCount * sizeof(*targets));
     if (node->targets == NULL) { FreeNode(node); return UMI_STATUS_OUT_OF_MEMORY; }
+    node->targetAllocationCount = targetCount;
     memcpy(node->targets, targets, targetCount * sizeof(*targets));
     node->values[0] = (float)average;
     node->left = logits;
@@ -440,6 +524,7 @@ UmiStatus UmiAiTrainingEmbeddingLookup(UmiAiTrainingTape *tape,
     if (node == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     node->targets = malloc(tokenCount * sizeof(*node->targets));
     if (node->targets == NULL) { FreeNode(node); return UMI_STATUS_OUT_OF_MEMORY; }
+    node->targetAllocationCount = tokenCount;
     memcpy(node->targets, tokenIds, tokenCount * sizeof(*tokenIds));
     for (size_t t = 0U; t < tokenCount; ++t) {
         memcpy(node->values + t * node->columns,
@@ -489,6 +574,7 @@ UmiStatus UmiAiTrainingCausalAttention(UmiAiTrainingTape *tape,
         FreeNode(node);
         return UMI_STATUS_OUT_OF_MEMORY;
     }
+    node->attentionAllocationCount = queries->rows * sequenceLength;
     for (size_t row = 0U; row < queries->rows; ++row) {
         size_t batchStart = (row / sequenceLength) * sequenceLength;
         size_t currentTime = row % sequenceLength;
@@ -575,6 +661,7 @@ UmiStatus UmiAiTrainingMultiHeadCausalAttention(
         FreeNode(node);
         return UMI_STATUS_OUT_OF_MEMORY;
     }
+    node->attentionAllocationCount = headCount * queries->rows * sequenceLength;
     for (size_t head = 0U; head < headCount; ++head) {
         size_t firstChannel = head * headWidth;
         for (size_t row = 0U; row < queries->rows; ++row) {

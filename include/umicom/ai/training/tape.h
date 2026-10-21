@@ -11,12 +11,10 @@
  *   bypasses the Framework to compute gradients. The tape has explicit capacity
  *   limits; no unbounded computational graph is created by this laboratory.
  *   Callers serialise access; a tape is not thread-safe.
- *   Models, tokenisers, persistence and accelerator adapters come in later
- *   batches. This API deliberately does not claim transformer support yet.
- *   HISTORICAL NOTE: the statement above describes the original Batch 01 tape.
- *   Batch 03 adds trainable multi-head attention and LayerNorm operators; the
- *   Framework now composes one experimental decoder Transformer Block in a
- *   separate module, without claiming a complete trained LLM.
+ *   The original bounded training tape is retained and now supports
+ *   trainable multi-head attention, layer normalisation and native decoder
+ *   composition through separate Framework-owned modules. The limits below
+ *   describe the educational trainer, not a production-scale model engine.
  *
  * AUTHOR AND ORGANISATION:
  *   Sammy Hegab
@@ -49,6 +47,35 @@ UmiStatus UmiAiTrainingTapeCreate(UmiAiTrainingTape **outTape);
 /* Destroying the tape releases all tensors, gradients and saved target indices.
  * Every tensor handle becomes invalid at this point. NULL is permitted. */
 void UmiAiTrainingTapeDestroy(UmiAiTrainingTape *tape);
+
+/* Memory accounting includes the tape object, its live tensor metadata,
+ * value and gradient allocations, token-index arrays and retained attention
+ * probabilities. It excludes allocator metadata, temporary per-operator work
+ * buffers, decoder objects and C call stacks. The high-water mark tracks only
+ * fully committed graph nodes. It is NOT process RSS or a total-process cap.
+ * budgetBytes=0 disables the persistent-graph budget (the default).
+ * A positive budget must not be smaller than the current allocation.
+ * Rejections preserve the existing graph, budget, and output values. */
+typedef struct UmiAiTrainingTapeMemory {
+    size_t currentBytes;
+    size_t peakBytes;
+    size_t budgetBytes;
+    size_t tensorCount;
+    size_t tensorValuesBytes;
+    size_t tensorGradientBytes;
+    size_t auxiliaryBytes;
+} UmiAiTrainingTapeMemory;
+
+UmiStatus UmiAiTrainingTapeMemoryInspect(
+    const UmiAiTrainingTape *tape,
+    UmiAiTrainingTapeMemory *outMemory);
+
+/* Set or clear a limit for committed tape-owned memory. The limit is checked
+ * immediately BEFORE a computed tensor node becomes visible on the tape.
+ * Failed publication releases its temporary node and leaves output handles
+ * unchanged. Temporary scratch allocations are outside this accounting. */
+UmiStatus UmiAiTrainingTapeSetMemoryBudget(
+    UmiAiTrainingTape *tape, size_t budgetBytes);
 
 /* Drop operation results after the first retainLeafCount tensors. Each retained
  * tensor must be an original leaf. This invalidates only discarded handles and

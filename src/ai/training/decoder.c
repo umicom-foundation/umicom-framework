@@ -146,6 +146,21 @@ UmiStatus UmiAiTrainingDecoderInspect(const UmiAiTrainingDecoder *model,
     return UMI_STATUS_OK;
 }
 
+UmiStatus UmiAiTrainingDecoderMemoryInspect(
+    const UmiAiTrainingDecoder *model,
+    UmiAiTrainingTapeMemory *outMemory)
+{
+    if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return UmiAiTrainingTapeMemoryInspect(model->tape, outMemory);
+}
+
+UmiStatus UmiAiTrainingDecoderSetMemoryBudget(
+    UmiAiTrainingDecoder *model, size_t budgetBytes)
+{
+    if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return UmiAiTrainingTapeSetMemoryBudget(model->tape, budgetBytes);
+}
+
 static UmiStatus ValidateInputs(const UmiAiTrainingDecoder *model,
                                 const size_t *tokens, const size_t *targets,
                                 size_t tokenCount)

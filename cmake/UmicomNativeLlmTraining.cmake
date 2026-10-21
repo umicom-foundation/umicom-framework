@@ -51,6 +51,9 @@ if(NOT TARGET umicom_ai_training)
         # Whole-decoder profiling and exact cache capacity accounting use the
         # established decoder, model metadata and inference-only cache.
         "${_umicom_ai_training_root}/src/ai/training/inference_profile.c"
+        # Inspect actual decoder tensor shapes and trainable memory limits
+        # before model creation; this does not introduce a second model.
+        "${_umicom_ai_training_root}/src/ai/training/capacity_plan.c"
     )
     add_library(Umicom::AiTraining ALIAS umicom_ai_training)
     target_include_directories(umicom_ai_training PUBLIC
@@ -391,4 +394,25 @@ if(BUILD_TESTING)
         umicom-ai-training-compact-cache-lifetime-test
         framework.ai.training.compact_cache_lifetime
         test_training_cache_compact_lifetime.c)
+endif()
+
+# Observe committed training-tape memory, enforce explicit graph budgets and
+# check decoder capacity against the existing authoritative tensor limits.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-memory-budget-test
+        framework.ai.training.memory_budget
+        test_training_memory_budget.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-memory-auxiliary-test
+        framework.ai.training.memory_auxiliary
+        test_training_memory_auxiliary.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-decoder-memory-test
+        framework.ai.training.decoder_memory
+        test_training_decoder_memory.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-capacity-plan-test
+        framework.ai.training.capacity_plan
+        test_training_capacity_plan.c)
 endif()

@@ -22,6 +22,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "umicom/base/status.h"
+#include "umicom/ai/training/tape.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -61,6 +62,19 @@ void UmiAiTrainingDecoderDestroy(UmiAiTrainingDecoder *model);
 UmiStatus UmiAiTrainingDecoderInspect(const UmiAiTrainingDecoder *model,
                                      UmiAiTrainingDecoderConfig *outConfig,
                                      uint64_t *outSteps);
+
+/* Inspect the decoder's actual training-tape allocations, including live
+ * trainable parameter tensors, temporary graph high-water mark and budget.
+ * The decoder owns its tape; this API never exposes its allocation pointers.
+ * SetMemoryBudget=0 restores unlimited committed-graph memory. A limit below
+ * the currently allocated parameter storage is rejected without mutation.
+ * Training/evaluation/inference calls remain synchronous and caller-serialised.
+ */
+UmiStatus UmiAiTrainingDecoderMemoryInspect(
+    const UmiAiTrainingDecoder *model,
+    UmiAiTrainingTapeMemory *outMemory);
+UmiStatus UmiAiTrainingDecoderSetMemoryBudget(
+    UmiAiTrainingDecoder *model, size_t budgetBytes);
 
 /* Any token buffer represents whole sequences of exactly contextLength tokens.
  * The returned matrix is [tokenCount, vocabularySize] in row-major order.
