@@ -126,3 +126,83 @@ If antivirus blocks another binary, follow the same process. Do not design
 renaming or packer changes merely to evade antivirus analysis. A build-time
 malware report is a security incident to investigate, not a reason to disable
 endpoint protection.
+
+## Additional evidence: repeated detections across two Umicom applications
+
+A subsequent screenshot of the quarantined-items history shows **three
+separate detections**, not one. The displayed local timestamps and identifiers
+are:
+
+| Local timestamp shown | Quarantined basename | Displayed detection ID |
+|---|---|---|
+| 19 October 2026, 09:17 | `umicom-studio-composition-lifecycle-test.exe` | `ti!7371548EA557` |
+| 21 October 2026, 23:38 | `umicom-native-llm-experiment.exe` | `ti!EFD3C6591343` |
+| 22 October 2026, 00:30 | `umicom-native-llm-experiment.exe` | `ti!8B9E296A0D14` |
+
+The first and second occurrences are consistent with the earlier security
+notification and CTest `Process not started` result. The third shows a second
+quarantined instance of the same experiment executable name. Different IDs do
+not, by themselves, prove that any two binaries are identical or unrelated.
+The short `ti!` strings are vendor display identifiers; **they are not a
+specific named malware family diagnosis**. McAfee Labs has published `Ti!`
+identifiers matching the initial twelve digits of a corresponding sample
+SHA-256, so compare the actual full digest rather than assuming that a
+short display name proves a shared malware family. They must be interpreted in
+conjunction with the full SHA-256 digest, detection engine, signature/version,
+and the vendor's analysis.
+
+This broadens the scope of review: investigate the provenance of the shared
+compiler/toolchain and common Framework dependencies, and the Studio test's
+build input, **in addition to** the specific AI executable. Neither success
+of the other CTests nor publication of the Umicom source can certify these
+quarantined Windows binaries as safe.
+
+### Read-only evidence commands
+
+```powershell
+Set-Location 'C:\umicom\Umicom-Applications'
+$ai = '.\build\windows-ucrt64-native-llm-debug\umicom-native-llm-experiment.exe'
+$studio = '.\build\windows-ucrt64-all-debug\bin\umicom-studio-composition-lifecycle-test.exe'
+
+foreach ($file in @($ai, $studio)) {
+    if (Test-Path -LiteralPath $file -PathType Leaf) {
+        Get-Item -LiteralPath $file | Select-Object FullName, Length, LastWriteTimeUtc
+        Get-FileHash -LiteralPath $file -Algorithm SHA256
+        Get-AuthenticodeSignature -LiteralPath $file |
+            Select-Object Status, StatusMessage
+    } else {
+        Write-Host "Missing or quarantined: $file"
+    }
+}
+
+# Identify the configured build tools without launching suspect test binaries.
+Get-Command cmake, ninja, gcc, clang -ErrorAction SilentlyContinue |
+    Select-Object Name, Source
+
+# Confirm exactly which executable the retained CTest definition launches.
+ctest --test-dir '.\build\windows-ucrt64-native-llm-debug' `
+    -N -V -R '^framework\.ai\.training\.accumulation_demo$'
+```
+
+A quarantined file may not be available for hashing from PowerShell. Do not
+restore it merely to obtain a hash. Ask McAfee for the complete digest or
+collect it from the original build evidence before quarantine, if available.
+If `ctest -N -V` reports another command, investigate the CMake test
+registration before changing or rerunning anything. Reviewing CTest's
+registered command does not execute the test itself.
+
+### What to report to the vendor
+
+Submit the above three detection IDs **separately**, with each original path,
+local timestamp, precise file hash (where available) and vendor product and
+signature versions. Explain that these are locally compiled native C23/GTK
+educational and IDE regression-test executables from the Umicom Foundation
+repository; never assert they are safe without a verdict. Request an analysis
+of each detection and, if confirmed erroneous, the relevant definition or
+reputation correction. McAfee's official support process accepts reviewed
+files via the Dispute a Detection & Allowlisting Data form. Security tools
+should remain enabled during the review.
+
+Do not send entire unreviewed workspaces, API keys, private repositories or
+personal datasets to external multi-engine scanning services. Confirm legal
+permission before submitting binaries or source code to any vendor.

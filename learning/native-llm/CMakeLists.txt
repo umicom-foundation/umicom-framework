@@ -348,3 +348,23 @@ else()
 endif()
 # Never create a checkpoint file as an incidental side effect of CTest.
 # Users deliberately choose a fresh destination when running this laboratory.
+
+# Native source-only AdamW experiment CLI. It uses Framework-owned model,
+# schedule, held-out evaluator and combined checkpoint persistence services.
+add_executable(umicom-native-llm-adamw-experiment
+    "${CMAKE_CURRENT_LIST_DIR}/train_adamw_experiment.c")
+target_link_libraries(umicom-native-llm-adamw-experiment PRIVATE Umicom::AiTraining)
+target_compile_features(umicom-native-llm-adamw-experiment PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-adamw-experiment PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-adamw-experiment PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME framework.ai.training.adamw_experiment_demo
+        COMMAND umicom-native-llm-adamw-experiment
+            "${CMAKE_CURRENT_LIST_DIR}/fixtures/experiment.conf" 32)
+    set_tests_properties(framework.ai.training.adamw_experiment_demo PROPERTIES
+        LABELS "framework;ai;native-training;learning")
+endif()

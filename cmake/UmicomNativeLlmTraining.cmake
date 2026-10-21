@@ -43,6 +43,9 @@ if(NOT TARGET umicom_ai_training)
         # Exact resume of combined decoder + AdamW moments. The existing
         # standalone decoder checkpoint remains byte-for-byte unchanged.
         "${_umicom_ai_training_root}/src/ai/training/optimizer_checkpoint.c"
+        # Reproducible AdamW experiments clone combined optimiser checkpoints
+        # before resuming; original SGD experiments remain untouched.
+        "${_umicom_ai_training_root}/src/ai/training/experiment_adamw.c"
         "${_umicom_ai_training_root}/src/ai/training/experiment_plan.c"
         # Native autoregressive generation composes the decoder and RNG.
         "${_umicom_ai_training_root}/src/ai/training/generation.c"
@@ -528,4 +531,28 @@ if(BUILD_TESTING)
         umicom-ai-training-adamw-checkpoint-file-test
         framework.ai.training.adamw_checkpoint_file
         test_training_adamw_checkpoint_file.c)
+endif()
+
+# Scheduled AdamW experiments: exact model+optimiser continuation without
+# disabling or renaming the established accumulation_demo regression.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-adamw-experiment-resume-test
+        framework.ai.training.adamw_experiment_resume
+        test_training_adamw_experiment_resume.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-adamw-experiment-contract-test
+        framework.ai.training.adamw_experiment_contract
+        test_training_adamw_experiment_contract.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-adamw-experiment-cancel-test
+        framework.ai.training.adamw_experiment_cancel
+        test_training_adamw_experiment_cancel.c)
+    foreach(_adamw_experiment_test IN ITEMS
+        umicom-ai-training-adamw-experiment-resume-test
+        umicom-ai-training-adamw-experiment-contract-test
+        umicom-ai-training-adamw-experiment-cancel-test)
+        target_compile_definitions(${_adamw_experiment_test} PRIVATE
+            UMI_AI_TEST_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt")
+    endforeach()
 endif()
