@@ -97,3 +97,19 @@ else()
     target_compile_options(umicom-native-llm-corpus PRIVATE
         -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
 endif()
+
+# Batch 06: train the canonical decoder on source-code bytes selected by a
+# reviewed file-level manifest. This tool is a thin consumer; no training
+# algorithms, tokenisation or persistence live outside the Framework.
+add_executable(umicom-native-llm-source-train
+    "${CMAKE_CURRENT_LIST_DIR}/train_source.c")
+target_link_libraries(umicom-native-llm-source-train PRIVATE Umicom::AiTraining)
+target_compile_features(umicom-native-llm-source-train PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-source-train PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-source-train PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+# No CLI training is executed automatically by CTest: the focused source
+# model regression exercises identical functionality in a bounded test.

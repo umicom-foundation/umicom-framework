@@ -248,3 +248,38 @@ Example from the Umicom-Applications repository root:
 & ".\build\windows-ucrt64-native-llm-debug\umicom-native-llm-corpus.exe" `
   ".\framework\learning\native-llm\README.md"
 ```
+
+---
+
+## Batch 06 — Reviewed source-code dataset and real byte-level training
+
+The previous historical batch descriptions are preserved above. Batch 06 adds
+`dataset_manifest.h` / `.c` to the existing Framework training library, using
+its canonical Corpus Loader, byte tokenizer, RNG and decoder. Each file is
+assigned to **either training or held-out evaluation**. No training window
+crosses a document boundary. Exact repeated paths and identical-size/FNV64
+fingerprints are rejected. Those are basic integrity measures, not a filesystem
+sandbox or statistical leakage guarantee.
+
+The public decoder vocabulary limit is raised from 64 to 260 so the existing
+reversible byte tokenizer can be connected to the existing decoder. The
+4096-elements-per-tensor tape limit still applies to each configuration.
+
+Run the tiny full training/evaluation example after building:
+
+```powershell
+Set-Location "C:\umicom\Umicom-Applications"
+& ".\build\windows-ucrt64-native-llm-debug\umicom-native-llm-source-train.exe" `
+  ".\framework\learning\native-llm\fixtures\manifest.txt" 64
+```
+
+The executable reports per-file provenance and held-out loss measured before
+and after training. Source-code fixtures are fictional, MIT-licensed teaching
+examples; the decoder does not yet understand C23 semantics. An explicit third
+argument optionally names a **new** checkpoint file. The program writes none
+by default and does not perform network requests. The operator must review all
+manifest entries and file contents before invoking this example on other data.
+
+Batch 06 registers three new tests and retains all previous ones, giving **33
+standalone CTest cases**. Inspect `CHANGE_SUMMARY.md` and `VALIDATION.md` for
+exact evidence and the limitations of the isolated Linux qualification.

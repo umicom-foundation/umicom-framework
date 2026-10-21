@@ -33,6 +33,7 @@ if(NOT TARGET umicom_ai_training)
         "${_umicom_ai_training_root}/src/ai/training/dataset_split.c"
         "${_umicom_ai_training_root}/src/ai/training/byte_tokenizer.c"
         "${_umicom_ai_training_root}/src/ai/training/corpus.c"
+        "${_umicom_ai_training_root}/src/ai/training/dataset_manifest.c"
     )
     add_library(Umicom::AiTraining ALIAS umicom_ai_training)
     target_include_directories(umicom_ai_training PUBLIC
@@ -199,4 +200,29 @@ if(BUILD_TESTING)
         umicom-ai-training-corpus-file-test
         framework.ai.training.corpus_file
         test_training_corpus_file.c)
+endif()
+
+# Batch 06: whole-file dataset split and deterministic source-code minibatches.
+# These additions use the existing tokenizer, corpus, RNG and decoder APIs.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-manifest-test
+        framework.ai.training.manifest
+        test_training_dataset_manifest.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-manifest-rejections-test
+        framework.ai.training.manifest_rejections
+        test_training_dataset_manifest_rejections.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-source-model-test
+        framework.ai.training.source_model
+        test_training_source_model.c)
+    # Resolve fixture paths from the checked-out source directory, NEVER cwd.
+    # Three fixed, licensed teaching files are used for deterministic tests.
+    foreach(_source_model_test IN ITEMS
+        umicom-ai-training-manifest-test
+        umicom-ai-training-source-model-test)
+        target_compile_definitions(${_source_model_test} PRIVATE
+            UMI_AI_TEST_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt")
+    endforeach()
 endif()

@@ -112,3 +112,25 @@ UmiStatus UmiAiTrainingRandomFillUniform(UmiAiTrainingRandomState *randomState,
     free(temporary);
     return UMI_STATUS_OK;
 }
+
+/* An unbiased [0, bound) sample without platform-specific PRNG APIs. The
+ * rejection threshold makes every accepted uint64_t equally likely modulo
+ * exclusiveMaximum. A rejected request leaves state and output untouched. */
+UmiStatus UmiAiTrainingRandomIndex(UmiAiTrainingRandomState *randomState,
+                                  uint64_t exclusiveMaximum,
+                                  uint64_t *outIndex)
+{
+    UmiAiTrainingRandomState proposed;
+    uint64_t threshold;
+    uint64_t value;
+    if (randomState == NULL || outIndex == NULL || exclusiveMaximum == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    proposed = *randomState;
+    threshold = (UINT64_C(0) - exclusiveMaximum) % exclusiveMaximum;
+    do {
+        value = NextRandom(&proposed);
+    } while (value < threshold);
+    *outIndex = value % exclusiveMaximum;
+    *randomState = proposed;
+    return UMI_STATUS_OK;
+}

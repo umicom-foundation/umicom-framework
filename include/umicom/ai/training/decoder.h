@@ -28,7 +28,10 @@ extern "C" {
 #endif
 
 /* Bounded limits serve the inspectable CPU teaching laboratory. */
-#define UMI_AI_DECODER_MAX_VOCABULARY 64U
+/* The reversible byte tokenizer requires 256 bytes + 4 reserved tokens.
+ * The actual supported vocabulary/channels combination is additionally
+ * bounded by UMI_AI_TRAINING_MAX_ELEMENTS (4096) per tensor. */
+#define UMI_AI_DECODER_MAX_VOCABULARY 260U
 #define UMI_AI_DECODER_MAX_CONTEXT 32U
 #define UMI_AI_DECODER_MAX_CHANNELS 32U
 #define UMI_AI_DECODER_MAX_HIDDEN_CHANNELS 64U

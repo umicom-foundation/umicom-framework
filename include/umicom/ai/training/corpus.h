@@ -42,6 +42,11 @@ UmiStatus UmiAiCorpusWindow(const UmiAiCorpus *corpus,
                             size_t start, size_t count,
                             uint32_t *inputs, uint32_t *targets,
                             size_t capacity);
+/* Stable FNV-1a64 of all immutable imported corpus bytes. Used to detect
+ * obvious duplicate documents; NOT a cryptographic signature or security
+ * boundary. On failure outFingerprint is unchanged. */
+UmiStatus UmiAiCorpusFingerprint(const UmiAiCorpus *corpus,
+                                 uint64_t *outFingerprint);
 #ifdef __cplusplus
 }
 #endif

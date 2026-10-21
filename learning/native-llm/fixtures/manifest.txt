@@ -1,0 +1,5 @@
+UMICOM-AI-DATASET-1
+# Independent C23 source files, selected solely for a small teaching run.
+train train/account.c
+train train/notes.c
+eval eval/payment.c

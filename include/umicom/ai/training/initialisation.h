@@ -51,6 +51,14 @@ UmiStatus UmiAiTrainingRandomFillUniform(UmiAiTrainingRandomState *randomState,
                                         float minimum, float maximum,
                                         float *values, size_t count);
 
+/* Deterministic, unbiased integer sample in [0, exclusiveMaximum). Samples
+ * are calculated with a local copy of the RNG state and published only on
+ * success. Used by Framework dataset batching without float rounding or
+ * application-local random-number implementations. NOT cryptographic. */
+UmiStatus UmiAiTrainingRandomIndex(UmiAiTrainingRandomState *randomState,
+                                  uint64_t exclusiveMaximum,
+                                  uint64_t *outIndex);
+
 #ifdef __cplusplus
 }
 #endif

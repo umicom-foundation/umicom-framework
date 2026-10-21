@@ -104,3 +104,19 @@ UmiStatus UmiAiCorpusWindow(const UmiAiCorpus *corpus,
     }
     return UMI_STATUS_OK;
 }
+
+/* Provenance fingerprint is computed only over the owned immutable snapshot,
+ * so the dataset cannot silently hash a different on-disk file. */
+UmiStatus UmiAiCorpusFingerprint(const UmiAiCorpus *corpus,
+                                 uint64_t *outFingerprint)
+{
+    uint64_t value = UINT64_C(14695981039346656037);
+    if (corpus == NULL || outFingerprint == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t i = 0U; i < corpus->length; ++i) {
+        value ^= (uint64_t)corpus->bytes[i];
+        value *= UINT64_C(1099511628211);
+    }
+    *outFingerprint = value;
+    return UMI_STATUS_OK;
+}
