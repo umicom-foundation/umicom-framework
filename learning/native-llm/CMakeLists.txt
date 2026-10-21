@@ -262,3 +262,23 @@ if(BUILD_TESTING)
     set_tests_properties(framework.ai.training.tensor_scaling_inspector PROPERTIES
         LABELS "framework;ai;native-training;learning")
 endif()
+
+# Train a larger effective source-code batch by aggregating gradients from
+# bounded temporary graphs. Neural mathematics remains Framework-owned.
+add_executable(umicom-native-llm-microbatch
+    "${CMAKE_CURRENT_LIST_DIR}/train_microbatches.c")
+target_link_libraries(umicom-native-llm-microbatch PRIVATE Umicom::AiTraining)
+target_compile_features(umicom-native-llm-microbatch PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-microbatch PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-microbatch PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME framework.ai.training.microbatch_demo
+        COMMAND umicom-native-llm-microbatch
+        "${CMAKE_CURRENT_LIST_DIR}/fixtures/manifest.txt")
+    set_tests_properties(framework.ai.training.microbatch_demo PROPERTIES
+        LABELS "framework;ai;native-training;learning")
+endif()

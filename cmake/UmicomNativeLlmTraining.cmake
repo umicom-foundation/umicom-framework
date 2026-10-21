@@ -440,3 +440,20 @@ if(BUILD_TESTING)
     target_compile_definitions(umicom-ai-training-multi-sequence-test PRIVATE
         UMI_AI_TEST_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt")
 endif()
+
+# Microbatch gradient accumulation shares the canonical decoder graph and
+# tape-owned atomic SGD. Existing training targets remain registered.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-supplied-gradients-test
+        framework.ai.training.supplied_gradients
+        test_training_supplied_gradients.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-gradient-accumulation-test
+        framework.ai.training.gradient_accumulation
+        test_training_gradient_accumulation.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-accumulated-limits-test
+        framework.ai.training.accumulated_limits
+        test_training_accumulated_limits.c)
+endif()

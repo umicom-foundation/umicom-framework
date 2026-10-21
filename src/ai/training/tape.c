@@ -21,6 +21,7 @@
  *   MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/tape.h"
+#include "umicom/ai/training/gradient_accumulation.h"
 #include "umicom/ai/training/matrix_kernel.h"
 
 #include <float.h>
@@ -1074,5 +1075,75 @@ UmiStatus UmiAiTrainingSgdStepMany(UmiAiTrainingTape *tape,
                 (double)learningRate * (double)parameter->gradients[i]);
         }
     }
+    return UMI_STATUS_OK;
+}
+
+/*-----------------------------------------------------------------------------
+ * Apply independently accumulated gradients without constructing one giant
+ * computation graph. Keep this optimiser in the canonical tape: applications
+ * must never update private tensor-value buffers directly.
+ *
+ * First validate every candidate update (including all parameters). Only
+ * after validation succeeds is any weight written. This is the same failure-
+ * atomic update policy as UmiAiTrainingSgdStepMany, but accepts gradients from
+ * separate microbatch graphs, which have already been rewound.
+ *---------------------------------------------------------------------------*/
+UmiStatus UmiAiTrainingSgdStepWithGradients(
+    UmiAiTrainingTape *tape,
+    UmiAiTrainingTensor *const *parameters,
+    const float *const *gradients,
+    size_t parameterCount,
+    float learningRate)
+{
+    if (tape == NULL || parameters == NULL || gradients == NULL ||
+        parameterCount == 0U || parameterCount > UMI_AI_TRAINING_MAX_TENSORS ||
+        !isfinite(learningRate) || learningRate <= 0.0F) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    /* A supplied gradient vector belongs to a completed, rewound graph.
+     * Refuse weight changes while any derived nodes still reference the old
+     * parameter values. All original leaves remain in their normal slots. */
+    for (size_t node = 0U; node < tape->count; ++node) {
+        if (tape->nodes[node]->operation != UMI_AI_TRAINING_LEAF)
+            return UMI_STATUS_INVALID_STATE;
+    }
+
+    /* Check membership by pointer equality before dereferencing a handle.
+     * Reject aliases so no parameter can accidentally be stepped twice. */
+    for (size_t p = 0U; p < parameterCount; ++p) {
+        if (!IsMember(tape, parameters[p]) || gradients[p] == NULL)
+            return UMI_STATUS_INVALID_ARGUMENT;
+        for (size_t q = 0U; q < p; ++q) {
+            if (parameters[p] == parameters[q])
+                return UMI_STATUS_INVALID_ARGUMENT;
+        }
+        if (!parameters[p]->trainable ||
+            parameters[p]->operation != UMI_AI_TRAINING_LEAF)
+            return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    /* All finite inputs and all representable updated weights are checked
+     * without modifying the tape or any of its trainable tensors. */
+    for (size_t p = 0U; p < parameterCount; ++p) {
+        const UmiAiTrainingTensor *parameter = parameters[p];
+        for (size_t i = 0U; i < parameter->count; ++i) {
+            double candidate;
+            if (!isfinite(gradients[p][i])) return UMI_STATUS_INVALID_ARGUMENT;
+            candidate = (double)parameter->values[i] -
+                (double)learningRate * (double)gradients[p][i];
+            if (!CanStore(candidate)) return UMI_STATUS_INVALID_ARGUMENT;
+        }
+    }
+    for (size_t p = 0U; p < parameterCount; ++p) {
+        UmiAiTrainingTensor *parameter = parameters[p];
+        for (size_t i = 0U; i < parameter->count; ++i) {
+            parameter->values[i] = (float)((double)parameter->values[i] -
+                (double)learningRate * (double)gradients[p][i]);
+        }
+    }
+    /* The graph's derivatives correspond to old parameter weights. Require
+     * another Backward call before a conventional tape SGD step is attempted. */
+    tape->hasGradients = false;
     return UMI_STATUS_OK;
 }
