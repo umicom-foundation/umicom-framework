@@ -31,6 +31,8 @@ if(NOT TARGET umicom_ai_training)
         "${_umicom_ai_training_root}/src/ai/training/decoder.c"
         "${_umicom_ai_training_root}/src/ai/training/checkpoint.c"
         "${_umicom_ai_training_root}/src/ai/training/dataset_split.c"
+        "${_umicom_ai_training_root}/src/ai/training/byte_tokenizer.c"
+        "${_umicom_ai_training_root}/src/ai/training/corpus.c"
     )
     add_library(Umicom::AiTraining ALIAS umicom_ai_training)
     target_include_directories(umicom_ai_training PUBLIC
@@ -179,4 +181,22 @@ if(BUILD_TESTING)
         umicom-ai-training-checkpoint-test
         framework.ai.training.checkpoint
         test_training_checkpoint.c)
+endif()
+
+# Batch 05: bounded, lossless byte tokenisation and local corpus ingestion.
+# These are independent source-aware training prerequisites; no existing dataset,
+# parameter, embedding, or transformer logic is reimplemented here.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-byte-tokenizer-test
+        framework.ai.training.byte_tokenizer
+        test_training_byte_tokenizer.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-corpus-test
+        framework.ai.training.corpus
+        test_training_corpus.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-corpus-file-test
+        framework.ai.training.corpus_file
+        test_training_corpus_file.c)
 endif()

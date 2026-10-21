@@ -226,3 +226,25 @@ Checkpoints restored byte-for-byte and inference predictions were identical.
 Use `Bits2Banking/content/lessons/10-native-ai/13-...`, `14-...` and `15-...`
 for full explanations, diagrams in text, laboratory exercises and correct
 interpretations of the evidence.
+
+
+## Batch 05 — Native source corpus and byte-level tokenisation
+
+`umicom-native-llm-corpus` imports one explicitly selected **local** file
+(up to 1 MiB) and displays a few reversible next-byte token pairs. A byte
+tokenizer provides IDs 4..259, reserving 0..3 for PAD/BOS/EOS/UNK. Files
+are read exactly; UTF-8 encoding is preserved byte-for-byte, but no Unicode
+normalisation, subword vocabulary, model training, or document permission
+management is claimed. Use only files approved for training.
+
+This is a data-preparation prerequisite; it does **not** yet join the
+full transformer training loop to a real corpus. The existing split and
+checkpoint services remain authoritative. The 3 additional focused CTest
+regressions exercise byte round trips, bounded windows and file import.
+
+Example from the Umicom-Applications repository root:
+
+```powershell
+& ".\build\windows-ucrt64-native-llm-debug\umicom-native-llm-corpus.exe" `
+  ".\framework\learning\native-llm\README.md"
+```

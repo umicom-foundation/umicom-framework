@@ -85,3 +85,15 @@ if(BUILD_TESTING)
     set_tests_properties(framework.ai.training.decoder_demo PROPERTIES
         LABELS "framework;ai;native-training;learning")
 endif()
+
+# Batch 05: thin read-only source-corpus inspector, with native Framework owners.
+add_executable(umicom-native-llm-corpus
+    "${CMAKE_CURRENT_LIST_DIR}/inspect_corpus.c")
+target_link_libraries(umicom-native-llm-corpus PRIVATE Umicom::AiTraining)
+target_compile_features(umicom-native-llm-corpus PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-corpus PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-corpus PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
