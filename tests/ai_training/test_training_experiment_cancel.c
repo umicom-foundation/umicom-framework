@@ -63,9 +63,18 @@ int main(void)
     CHECK(memcmp(&report, &before, sizeof(before)) == 0);
     config.steps = 64U;
     config.evalInterval = 16U;
+    /* The earlier tensor ceiling rejected two sequences. Four sequences
+     * now fit at context eight. Test a larger context which still exceeds
+     * the new storage bound without crossing the manifest policy limits. */
+#if 0
     config.batchSequences = 2U;
     CHECK(UmiAiTrainingExperimentValidate(&config) == UMI_STATUS_CAPACITY_EXCEEDED);
+#endif
+    config.batchSequences = 4U;
+    config.decoder.contextLength = 32U;
+    CHECK(UmiAiTrainingExperimentValidate(&config) == UMI_STATUS_CAPACITY_EXCEEDED);
     config.batchSequences = 1U;
+    config.decoder.contextLength = 8U;
     config.evalInterval = 0U;
     CHECK(UmiAiTrainingExperimentValidate(&config) == UMI_STATUS_INVALID_ARGUMENT);
     config.evalInterval = 16U;

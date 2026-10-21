@@ -34,7 +34,13 @@ int main(void)
     VERIFY(UmiAiTrainingSequenceOffset(&shape, 2U, 0U, 0U, &offset)
            == UMI_STATUS_INVALID_ARGUMENT);
     VERIFY(offset == 6U);
+    /* The original 900-channel check described the previous tensor bound.
+     * Keep that historical expectation disabled; 3000 exceeds today's cap. */
+#if 0
     VERIFY(UmiAiTrainingSequenceShapeCreate(2U, 3U, 900U, &shape)
+           == UMI_STATUS_INVALID_ARGUMENT);
+#endif
+    VERIFY(UmiAiTrainingSequenceShapeCreate(2U, 3U, 3000U, &shape)
            == UMI_STATUS_INVALID_ARGUMENT);
     VERIFY(shape.batch == 2U && shape.time == 3U && shape.channels == 4U);
     VERIFY(UmiAiTrainingSequenceShapeCreate(SIZE_MAX, 2U, 2U, &shape)

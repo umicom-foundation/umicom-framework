@@ -6,6 +6,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/initialisation.h"
+#include "umicom/ai/training/tape.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -49,8 +50,14 @@ int main(void)
     VERIFY(UmiAiTrainingRandomUniform(&first, 1.0F, 1.0F, &oneSample)
            == UMI_STATUS_INVALID_ARGUMENT);
     VERIFY(first.state == before.state && oneSample == -123.0F);
+    /* The former tensor ceiling is kept for review; a larger model now
+     * accepts this many values, while exceeding the current ceiling fails. */
+#if 0
     VERIFY(UmiAiTrainingRandomFillUniform(&first, -1.0F, 1.0F, sentinel, 4097U)
            == UMI_STATUS_CAPACITY_EXCEEDED);
+#endif
+    VERIFY(UmiAiTrainingRandomFillUniform(&first, -1.0F, 1.0F, sentinel,
+           UMI_AI_TRAINING_MAX_ELEMENTS + 1U) == UMI_STATUS_CAPACITY_EXCEEDED);
     VERIFY(first.state == before.state);
     VERIFY(sentinel[0] == -8.0F && sentinel[1] == -9.0F);
     VERIFY(UmiAiTrainingRandomFillUniform(&first, -1.0F, 1.0F, NULL, 0U)

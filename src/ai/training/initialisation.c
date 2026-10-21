@@ -17,6 +17,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/initialisation.h"
+#include "umicom/ai/training/tape.h"
 
 #include <math.h>
 #include <stdbool.h>
@@ -24,7 +25,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define UMICOM_TRAINING_INIT_MAX_VALUES 4096U
+/* Keep seeded parameter initialisation aligned with the public tensor
+ * capacity. A single invocation is atomic even at the expanded limit. */
+#define UMICOM_TRAINING_INIT_MAX_VALUES UMI_AI_TRAINING_MAX_ELEMENTS
 
 static uint64_t NextRandom(UmiAiTrainingRandomState *randomState)
 {

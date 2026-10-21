@@ -35,7 +35,10 @@ extern "C" {
 
 /* The first laboratory favours bounded allocations and repeatable CPU tests. */
 #define UMI_AI_TRAINING_MAX_TENSORS 256U
-#define UMI_AI_TRAINING_MAX_ELEMENTS 4096U
+/* This upper bound applies to each individual tensor, including logits and
+ * attention probability storage. It is not an aggregate training RAM budget.
+ * Shape-dependent buffers are still protected by the tape's allocation policy. */
+#define UMI_AI_TRAINING_MAX_ELEMENTS 16384U
 
 typedef struct UmiAiTrainingTape UmiAiTrainingTape;
 typedef struct UmiAiTrainingTensor UmiAiTrainingTensor;

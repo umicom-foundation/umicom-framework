@@ -25,13 +25,19 @@ int main(void)
     CHECK(plan.parameterValueBytes == plan.parameterGradientBytes);
     CHECK(plan.tokensPerBatch == 8U && plan.logitsElements == 2080U);
     CHECK(plan.attentionProbabilityElements == 128U);
+    /* The original planner demonstrated one sequence under the smaller
+     * tensor ceiling. The extended capacity now permits seven here. */
+#if 0
     CHECK(plan.maximumBatchSequences == 1U);
+#endif
+    CHECK(plan.maximumBatchSequences == 7U);
     CHECK(plan.minimumRetainedPayloadBytes ==
           plan.parameterValueBytes * 2U + plan.logitsBytes +
           plan.attentionProbabilityBytes);
     CHECK(plan.maximumTensorElements == UMI_AI_TRAINING_MAX_ELEMENTS);
 
     preserved = plan;
+#if 0
     CHECK(UmiAiTrainingCapacityPlanCompute(&cfg, 2U, &plan)
           == UMI_STATUS_CAPACITY_EXCEEDED);
     CHECK(memcmp(&plan, &preserved, sizeof(plan)) == 0);
@@ -39,6 +45,22 @@ int main(void)
     CHECK(UmiAiTrainingCapacityPlanCompute(&cfg, 1U, &plan)
           == UMI_STATUS_CAPACITY_EXCEEDED);
     CHECK(memcmp(&plan, &preserved, sizeof(plan)) == 0);
+#endif
+    CHECK(UmiAiTrainingCapacityPlanCompute(&cfg, 8U, &plan)
+          == UMI_STATUS_CAPACITY_EXCEEDED);
+    CHECK(memcmp(&plan, &preserved, sizeof(plan)) == 0);
+    CHECK(UmiAiTrainingCapacityPlanCompute(&cfg, 2U, &plan)
+          == UMI_STATUS_OK);
+    CHECK(plan.tokensPerBatch == 16U && plan.logitsElements == 4160U);
+    CHECK(UmiAiTrainingCapacityPlanCompute(&cfg, 7U, &plan)
+          == UMI_STATUS_OK);
+    CHECK(plan.logitsElements == 14560U);
+    preserved = plan;
+    cfg.channels = 32U;
+    CHECK(UmiAiTrainingCapacityPlanCompute(&cfg, 1U, &plan)
+          == UMI_STATUS_OK);
+    CHECK(plan.parameterElements > 4792U);
+    preserved = plan;
     cfg.channels = 8U;
     cfg.attentionHeads = 3U;
     CHECK(UmiAiTrainingCapacityPlanCompute(&cfg, 1U, &plan)
@@ -47,9 +69,16 @@ int main(void)
 
     cfg = (UmiAiTrainingDecoderConfig){8U, 4U, 4U, 8U, 2U, 1U};
     CHECK(UmiAiTrainingCapacityPlanCompute(&cfg, 128U, &plan) == UMI_STATUS_OK);
+#if 0
     CHECK(plan.maximumBatchSequences == 128U);
+#endif
+    CHECK(plan.maximumBatchSequences == 512U);
     preserved = plan;
+#if 0
     CHECK(UmiAiTrainingCapacityPlanCompute(&cfg, 129U, &plan)
+          == UMI_STATUS_CAPACITY_EXCEEDED);
+#endif
+    CHECK(UmiAiTrainingCapacityPlanCompute(&cfg, 513U, &plan)
           == UMI_STATUS_CAPACITY_EXCEEDED);
     CHECK(memcmp(&plan, &preserved, sizeof(plan)) == 0);
     CHECK(UmiAiTrainingCapacityPlanCompute(&cfg, 0U, &plan)

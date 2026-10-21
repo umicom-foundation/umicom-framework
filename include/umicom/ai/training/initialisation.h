@@ -44,8 +44,8 @@ UmiStatus UmiAiTrainingRandomUniform(UmiAiTrainingRandomState *randomState,
                                     float *outValue);
 
 /* Atomically fill caller-owned storage with reproducible values.
- * count=0 succeeds without requiring values. At most 4096 values are accepted
- * in this teaching implementation. If validation or allocation fails, neither
+ * count=0 succeeds without requiring values. At most UMI_AI_TRAINING_MAX_ELEMENTS values are accepted
+ * in this teaching implementation (see tape.h). If validation or allocation fails, neither
  * the state nor any caller-provided output value is modified. */
 UmiStatus UmiAiTrainingRandomFillUniform(UmiAiTrainingRandomState *randomState,
                                         float minimum, float maximum,

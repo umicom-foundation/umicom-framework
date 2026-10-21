@@ -416,3 +416,27 @@ if(BUILD_TESTING)
         framework.ai.training.capacity_plan
         test_training_capacity_plan.c)
 endif()
+
+# Larger bounded tensors and shape-sized matrix workspaces permit several
+# independent source sequences per optimiser step. These tests retain the
+# established decoder, checkpoint and training-tape implementations.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-wide-matrix-test
+        framework.ai.training.wide_matrix
+        test_training_wide_matrix.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-wide-tape-test
+        framework.ai.training.wide_tape
+        test_training_wide_tape.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-wide-decoder-test
+        framework.ai.training.wide_decoder
+        test_training_wide_decoder.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-multi-sequence-test
+        framework.ai.training.multi_sequence
+        test_training_multi_sequence.c)
+    target_compile_definitions(umicom-ai-training-multi-sequence-test PRIVATE
+        UMI_AI_TEST_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt")
+endif()

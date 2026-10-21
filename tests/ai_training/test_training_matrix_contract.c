@@ -84,8 +84,15 @@ int main(void)
     for (size_t i = 0U; i < 4U; ++i) CHECK(refused[i] == -313.0F);
     CHECK(UmiAiTrainingMatrixMultiply(left, 2U, 3U, right, 2U,
         (UmiAiTrainingMatrixMethod)999, refused, 4U) == UMI_STATUS_INVALID_ARGUMENT);
+    /* An older ceiling of 4096 was intentionally exceeded by the original
+     * test. Preserve its assertion for review while validating the new bound. */
+#if 0
     CHECK(UmiAiTrainingMatrixMultiply(left, 4097U, 1U, right, 1U,
         UMI_AI_MATRIX_TILED, refused, 4U) == UMI_STATUS_CAPACITY_EXCEEDED);
+#endif
+    CHECK(UmiAiTrainingMatrixMultiply(left, UMI_AI_MATRIX_MAX_ELEMENTS + 1U,
+        1U, right, 1U, UMI_AI_MATRIX_TILED, refused, 4U)
+        == UMI_STATUS_CAPACITY_EXCEEDED);
     CHECK(UmiAiTrainingMatrixMultiply(left, SIZE_MAX, 2U, right, 2U,
         UMI_AI_MATRIX_TILED, refused, 4U) == UMI_STATUS_CAPACITY_EXCEEDED);
     float nonfinite[1] = {NAN};
@@ -99,8 +106,12 @@ int main(void)
     unchanged = work;
     CHECK(UmiAiTrainingMatrixEstimateWork(0U, 1U, 1U,
         &work) == UMI_STATUS_INVALID_ARGUMENT);
+#if 0
     CHECK(UmiAiTrainingMatrixEstimateWork(1U, 4097U, 1U,
         &work) == UMI_STATUS_CAPACITY_EXCEEDED);
+#endif
+    CHECK(UmiAiTrainingMatrixEstimateWork(1U, UMI_AI_MATRIX_MAX_ELEMENTS + 1U,
+        1U, &work) == UMI_STATUS_CAPACITY_EXCEEDED);
     CHECK(memcmp(&work, &unchanged, sizeof(work)) == 0);
     puts("matrix multiplication numerical parity and contracts: PASS");
     return 0;

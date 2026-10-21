@@ -15,7 +15,7 @@
  *   requirement, or application-specific implementation is introduced.
  *   All inputs and outputs are caller-owned. Output publication is atomic:
  *   failures leave the output and optional work estimate unchanged. Aliased
- *   input/output arrays are supported through bounded staging storage.
+ *   input/output arrays are supported through checked, shape-sized staging storage.
  *
  * AUTHOR AND ORGANISATION:
  *   Sammy Hegab
@@ -30,12 +30,16 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "umicom/base/status.h"
+#include "umicom/ai/training/tape.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define UMI_AI_MATRIX_MAX_ELEMENTS 4096U
+/* Matrix operands and outputs use the same conservative per-tensor ceiling
+ * as the native training tape. Large outputs are staged in shape-sized heap
+ * memory, rather than reserving this entire limit on the C call stack. */
+#define UMI_AI_MATRIX_MAX_ELEMENTS UMI_AI_TRAINING_MAX_ELEMENTS
 #define UMI_AI_MATRIX_COLUMN_TILE 16U
 
 typedef enum UmiAiTrainingMatrixMethod {

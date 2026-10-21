@@ -60,7 +60,12 @@ int main(void)
     CHECK(RejectWithoutMutation("UMICOM-AI-EXPERIMENT-1\nmanifest=ok.txt\nlearning_rate=nan\n") == 0);
     CHECK(RejectWithoutMutation("UMICOM-AI-EXPERIMENT-1\nmanifest=ok.txt\nlearning_rate=0.0\n") == 0);
     CHECK(RejectWithoutMutation("UMICOM-AI-EXPERIMENT-1\nmanifest=ok.txt\nlearning_rate=0.1e0\n") == 0);
+    /* A context of 30 is now shape-feasible; exceed the decoder's absolute
+     * positional context cap instead of relying on old tensor storage limits. */
+#if 0
     CHECK(RejectWithoutMutation("UMICOM-AI-EXPERIMENT-1\nmanifest=ok.txt\ncontext=30\n") == 0);
+#endif
+    CHECK(RejectWithoutMutation("UMICOM-AI-EXPERIMENT-1\nmanifest=ok.txt\ncontext=33\n") == 0);
     CHECK(RejectWithoutMutation("UMICOM-AI-EXPERIMENT-1\nmanifest=ok.txt\nsteps=0\n") == 0);
     CHECK(RejectWithoutMutation("UMICOM-AI-EXPERIMENT-1\nmanifest=ok.txt\nattention_heads=3\n") == 0);
     CHECK(RejectWithoutMutation("UMICOM-AI-EXPERIMENT-1\nmanifest=ok.txt\nsteps=5\neval_interval=6\n") == 0);

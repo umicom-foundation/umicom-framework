@@ -23,7 +23,12 @@
 #include <float.h>
 #include <math.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
+
+/* Retain the earlier small-result stack path without reserving the expanded
+ * tensor maximum on every matrix call. Larger results use exact heap staging. */
+#define UMI_AI_MATRIX_INLINE_ELEMENTS 4096U
 
 static bool IsShapeValid(size_t rows, size_t inner, size_t columns)
 {
@@ -69,7 +74,14 @@ UmiStatus UmiAiTrainingMatrixMultiply(
     UmiAiTrainingMatrixMethod method,
     float *outValues, size_t capacity)
 {
+    float inlineStorage[UMI_AI_MATRIX_INLINE_ELEMENTS];
+    float *heapStorage = NULL;
+    float *staging = inlineStorage;
+    /* Historical fixed-stack workspace is retained as disabled reference.
+     * Larger tensor shapes require an allocation sized to the actual result. */
+#if 0
     float staging[UMI_AI_MATRIX_MAX_ELEMENTS];
+#endif
     const size_t outputCount =
         rows > 0U && columns > 0U && rows <= UMI_AI_MATRIX_MAX_ELEMENTS / columns
             ? rows * columns : 0U;
@@ -98,6 +110,16 @@ UmiStatus UmiAiTrainingMatrixMultiply(
     for (size_t i = 0U; i < inner * columns; ++i)
         if (!isfinite(right[i])) return UMI_STATUS_INVALID_ARGUMENT;
 
+    /* The original small-result stack fast path is unchanged in substance.
+     * Beyond that ceiling allocate exactly the output footprint. Validation
+     * above guarantees outputCount*sizeof(float) fits SIZE_MAX. Both paths
+     * stage before publication to preserve aliases and failure atomicity. */
+    if (outputCount > UMI_AI_MATRIX_INLINE_ELEMENTS) {
+        heapStorage = malloc(outputCount * sizeof(*heapStorage));
+        if (heapStorage == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+        staging = heapStorage;
+    }
+
     for (size_t row = 0U; row < rows; ++row) {
         if (method == UMI_AI_MATRIX_REFERENCE) {
             for (size_t col = 0U; col < columns; ++col) {
@@ -106,14 +128,17 @@ UmiStatus UmiAiTrainingMatrixMultiply(
                     sum += (double)left[row * inner + k] *
                            (double)right[k * columns + col];
                 }
-                if (!CanRepresent(sum)) return UMI_STATUS_INVALID_ARGUMENT;
+                if (!CanRepresent(sum)) {
+                    free(heapStorage);
+                    return UMI_STATUS_INVALID_ARGUMENT;
+                }
                 staging[row * columns + col] = (float)sum;
             }
         } else {
             for (size_t first = 0U; first < columns;
                  first += UMI_AI_MATRIX_COLUMN_TILE) {
-                /* Avoid first+tile overflow even if limits are raised.
-                 * The validated column bound is currently only 4096. */
+                /* The loop advances only within validated finite dimensions.
+                 * Column tiling preserves the original inner summation order. */
                 const size_t width = columns - first < UMI_AI_MATRIX_COLUMN_TILE
                     ? columns - first : UMI_AI_MATRIX_COLUMN_TILE;
                 double totals[UMI_AI_MATRIX_COLUMN_TILE] = {0};
@@ -124,13 +149,16 @@ UmiStatus UmiAiTrainingMatrixMultiply(
                         totals[col] += value * (double)weightRow[col];
                 }
                 for (size_t col = 0U; col < width; ++col) {
-                    if (!CanRepresent(totals[col]))
+                    if (!CanRepresent(totals[col])) {
+                        free(heapStorage);
                         return UMI_STATUS_INVALID_ARGUMENT;
+                    }
                     staging[row * columns + first + col] = (float)totals[col];
                 }
             }
         }
     }
     memcpy(outValues, staging, outputCount * sizeof(*outValues));
+    free(heapStorage);
     return UMI_STATUS_OK;
 }
