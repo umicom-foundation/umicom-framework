@@ -153,3 +153,22 @@ else()
     target_compile_options(umicom-native-llm-audit PRIVATE
         -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
 endif()
+
+# The read-only inference inspector compares reusable cached keys/values with
+# the existing training-tape decoder. This is a thin educational front-end.
+add_executable(umicom-native-llm-kv-inspect
+    "${CMAKE_CURRENT_LIST_DIR}/inspect_kv_cache.c")
+target_link_libraries(umicom-native-llm-kv-inspect PRIVATE Umicom::AiTraining)
+target_compile_features(umicom-native-llm-kv-inspect PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-kv-inspect PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-kv-inspect PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME framework.ai.training.kv_cache_inspector
+             COMMAND umicom-native-llm-kv-inspect)
+    set_tests_properties(framework.ai.training.kv_cache_inspector PROPERTIES
+        LABELS "framework;ai;native-training;learning")
+endif()

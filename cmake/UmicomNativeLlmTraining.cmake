@@ -43,6 +43,9 @@ if(NOT TARGET umicom_ai_training)
         # Hold-out scoring and identity evidence reuse the canonical decoder,
         # immutable source manifest, experiment plan and checkpoint codec.
         "${_umicom_ai_training_root}/src/ai/training/model_audit.c"
+        # Qualified inference-only attention key/value cache. The original
+        # decoder, training tape and model mathematics remain authoritative.
+        "${_umicom_ai_training_root}/src/ai/training/kv_cache.c"
     )
     add_library(Umicom::AiTraining ALIAS umicom_ai_training)
     target_include_directories(umicom_ai_training PUBLIC
@@ -306,4 +309,25 @@ if(BUILD_TESTING)
     endforeach()
     target_compile_definitions(umicom-ai-training-audit-changes-test PRIVATE
         UMI_AI_TEST_ALTERNATIVE_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/reviewed-alternative-manifest.txt")
+endif()
+
+# Key/value cache parity is checked against canonical decoder logits for
+# warm prefixes, rolling learned-position windows, training and checkpoints.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-kv-cache-parity-test
+        framework.ai.training.kv_cache_parity
+        test_training_kv_cache_parity.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-kv-cache-rejection-test
+        framework.ai.training.kv_cache_rejections
+        test_training_kv_cache_rejection.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-kv-cache-weights-test
+        framework.ai.training.kv_cache_weights
+        test_training_kv_cache_weights.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-kv-cache-context-test
+        framework.ai.training.kv_cache_context
+        test_training_kv_cache_context.c)
 endif()
