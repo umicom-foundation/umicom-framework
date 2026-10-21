@@ -28,7 +28,7 @@ if(NOT MSVC)
         -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
 endif()
 
-# The Batch 02 demonstration is another thin consumer of canonical Framework
+# The causal-attention demonstration is another thin consumer of canonical Framework
 # training primitives. It validates a context-sensitive educational corpus.
 add_executable(umicom-native-llm-attention-demo
     "${CMAKE_CURRENT_LIST_DIR}/train_attention.c")
@@ -47,7 +47,7 @@ if(BUILD_TESTING)
         LABELS "framework;ai;native-training;learning")
 endif()
 
-# Batch 03: native multi-head pre-LN Transformer Block training. This executable
+# Native multi-head pre-LN Transformer Block training. This executable
 # composes canonical Framework operators and never duplicates neural maths.
 add_executable(umicom-native-llm-transformer-demo
     "${CMAKE_CURRENT_LIST_DIR}/train_transformer.c")
@@ -66,7 +66,7 @@ if(BUILD_TESTING)
         LABELS "framework;ai;native-training;learning")
 endif()
 
-# Batch 04: a thin learner-facing executable that trains/evaluates a complete
+# A thin learner-facing decoder executable that trains/evaluates a complete
 # bounded decoder, writes a reviewed NEW checkpoint and reloads it. All maths,
 # format validation and file publication remain Framework-owned.
 add_executable(umicom-native-llm-decoder-demo
@@ -86,7 +86,7 @@ if(BUILD_TESTING)
         LABELS "framework;ai;native-training;learning")
 endif()
 
-# Batch 05: thin read-only source-corpus inspector, with native Framework owners.
+# Read-only source-corpus inspector, with native Framework owners.
 add_executable(umicom-native-llm-corpus
     "${CMAKE_CURRENT_LIST_DIR}/inspect_corpus.c")
 target_link_libraries(umicom-native-llm-corpus PRIVATE Umicom::AiTraining)
@@ -98,7 +98,7 @@ else()
         -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
 endif()
 
-# Batch 06: train the canonical decoder on source-code bytes selected by a
+# Train the canonical decoder on source-code bytes selected by a
 # reviewed file-level manifest. This tool is a thin consumer; no training
 # algorithms, tokenisation or persistence live outside the Framework.
 add_executable(umicom-native-llm-source-train
@@ -114,7 +114,7 @@ endif()
 # No CLI training is executed automatically by CTest: the focused source
 # model regression exercises identical functionality in a bounded test.
 
-#a native CLI over Framework-owned experiment plans and training.
+# Native CLI over Framework-owned experiment plans and training.
 # It retains the original source trainer for historical lesson compatibility.
 add_executable(umicom-native-llm-experiment
     "${CMAKE_CURRENT_LIST_DIR}/train_experiment.c")
@@ -124,5 +124,18 @@ if(MSVC)
     target_compile_options(umicom-native-llm-experiment PRIVATE /W4)
 else()
     target_compile_options(umicom-native-llm-experiment PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+
+# Inference reads an approved trained checkpoint. This CLI has no model
+# maths or sampling logic of its own: the Framework remains authoritative.
+add_executable(umicom-native-llm-generate
+    "${CMAKE_CURRENT_LIST_DIR}/generate_text.c")
+target_link_libraries(umicom-native-llm-generate PRIVATE Umicom::AiTraining)
+target_compile_features(umicom-native-llm-generate PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-generate PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-generate PRIVATE
         -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
 endif()
