@@ -42,6 +42,10 @@ typedef struct UmiAiKvState {
     uint64_t windowRebuilds;
 } UmiAiKvState;
 
+/* The previous cache reserved maximum tensor capacity for every parameter.
+ * It was correct but its fixed-size weight matrix dominated small models.
+ * Retain that layout for review; it is not part of the public C ABI. */
+#if 0
 struct UmiAiTrainingKvCache {
     UmiAiTrainingDecoder *decoder; /* borrowed; owner guarantees lifetime */
     UmiAiTrainingDecoderConfig config;
@@ -50,6 +54,114 @@ struct UmiAiTrainingKvCache {
     float parameters[UMI_DECODER_PARAMETER_COUNT][UMI_AI_TRAINING_MAX_ELEMENTS];
     UmiAiKvState state;
 };
+#endif
+
+/* One shape-sized allocation owns exact copied parameter values, key/value
+ * rows and one last-token logit row. All float regions live in packed[].
+ * The small fixed token-ID array is bounded by the public context limit.
+ * Per-call UmiAiKvState remains a local staging buffer so rejected operations
+ * cannot mutate any persistent state. No duplicate training owner is created. */
+struct UmiAiTrainingKvCache {
+    UmiAiTrainingDecoder *decoder; /* borrowed; owner guarantees lifetime */
+    UmiAiTrainingDecoderConfig config;
+    uint64_t decoderSteps;
+    size_t allocationBytes;
+    size_t lengths[UMI_DECODER_PARAMETER_COUNT];
+    float *parameters[UMI_DECODER_PARAMETER_COUNT];
+    size_t tokenCount;
+    size_t tokens[UMI_AI_DECODER_MAX_CONTEXT];
+    uint64_t computedRows;
+    uint64_t windowRebuilds;
+    float *keys;
+    float *values;
+    float *lastLogits;
+    float packed[];
+};
+
+/* All sizes are derived from the canonical decoder schema and checked before
+ * allocation. A result is committed only after the entire layout is valid. */
+static UmiStatus LayoutForConfig(
+    const UmiAiTrainingDecoderConfig *config,
+    size_t *outFloatCount, size_t *outBytes,
+    size_t outLengths[UMI_DECODER_PARAMETER_COUNT])
+{
+    size_t lengths[UMI_DECODER_PARAMETER_COUNT] = {0};
+    size_t floats = 0U;
+    size_t keyValueElements;
+    if (config == NULL || outFloatCount == NULL || outBytes == NULL ||
+        UmiAiDecoderValidateConfig(config) != UMI_STATUS_OK)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t parameter = 0U;
+         parameter < (size_t)UMI_DECODER_PARAMETER_COUNT; ++parameter) {
+        size_t rows = 0U, columns = 0U;
+        UmiAiDecoderParameterShape(config, parameter, &rows, &columns);
+        if (rows == 0U || columns == 0U ||
+            columns > UMI_AI_TRAINING_MAX_ELEMENTS ||
+            rows > UMI_AI_TRAINING_MAX_ELEMENTS / columns)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        const size_t elements = rows * columns;
+        if (floats > SIZE_MAX - elements)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        lengths[parameter] = elements;
+        floats += elements;
+    }
+    if ((size_t)config->channels > SIZE_MAX / (size_t)config->contextLength)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    keyValueElements = (size_t)config->channels *
+                       (size_t)config->contextLength;
+    if (keyValueElements > (SIZE_MAX - floats) / 2U)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    floats += 2U * keyValueElements;
+    if (floats > SIZE_MAX - (size_t)config->vocabularySize)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    floats += (size_t)config->vocabularySize;
+    if (floats > (SIZE_MAX - sizeof(UmiAiTrainingKvCache)) / sizeof(float))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    *outFloatCount = floats;
+    *outBytes = sizeof(UmiAiTrainingKvCache) + floats * sizeof(float);
+    if (outLengths != NULL)
+        memcpy(outLengths, lengths, sizeof(lengths));
+    return UMI_STATUS_OK;
+}
+
+/* Copy the compact persistent cache into an isolated stack transaction. The
+ * decoder is single-threaded: callers must not mutate a cache concurrently. */
+static void StageState(const UmiAiTrainingKvCache *cache,
+                       UmiAiKvState *outState)
+{
+    const size_t entries = cache->tokenCount * (size_t)cache->config.channels;
+    memset(outState, 0, sizeof(*outState));
+    outState->tokenCount = cache->tokenCount;
+    outState->computedRows = cache->computedRows;
+    outState->windowRebuilds = cache->windowRebuilds;
+    memcpy(outState->tokens, cache->tokens,
+           cache->tokenCount * sizeof(*cache->tokens));
+    memcpy(outState->keys, cache->keys, entries * sizeof(float));
+    memcpy(outState->values, cache->values, entries * sizeof(float));
+    if (cache->tokenCount > 0U)
+        memcpy(outState->lastLogits, cache->lastLogits,
+               (size_t)cache->config.vocabularySize * sizeof(float));
+}
+
+/* Publish the complete state only after every staged projection succeeds.
+ * A failed call leaves the token history, numerical outputs and counters
+ * untouched. Unused capacity does not contain observable cache entries. */
+static void CommitState(UmiAiTrainingKvCache *cache,
+                        const UmiAiKvState *state)
+{
+    const size_t entries = state->tokenCount * (size_t)cache->config.channels;
+    cache->tokenCount = state->tokenCount;
+    cache->computedRows = state->computedRows;
+    cache->windowRebuilds = state->windowRebuilds;
+    memcpy(cache->tokens, state->tokens,
+           state->tokenCount * sizeof(*cache->tokens));
+    memcpy(cache->keys, state->keys, entries * sizeof(float));
+    memcpy(cache->values, state->values, entries * sizeof(float));
+    if (state->tokenCount > 0U)
+        memcpy(cache->lastLogits, state->lastLogits,
+               (size_t)cache->config.vocabularySize * sizeof(float));
+}
+
 
 static bool CanStore(double value)
 {
@@ -281,6 +393,10 @@ static UmiStatus AdvanceRow(const UmiAiTrainingKvCache *cache,
     return UMI_STATUS_OK;
 }
 
+/* Superseded fixed-reservation creation path, retained for review.
+ * The live implementation below sizes one allocation using actual parameter
+ * shapes, and retains the same failure-atomic public ownership contract. */
+#if 0
 UmiStatus UmiAiTrainingKvCacheCreate(UmiAiTrainingDecoder *decoder,
                                      UmiAiTrainingKvCache **outCache)
 {
@@ -315,6 +431,81 @@ failed:
     free(candidate);
     return status;
 }
+#endif
+
+UmiStatus UmiAiTrainingKvCacheAllocationForConfig(
+    const UmiAiTrainingDecoderConfig *config, size_t *outBytes)
+{
+    size_t floatCount = 0U;
+    size_t allocated = 0U;
+    UmiStatus status;
+    if (outBytes == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = LayoutForConfig(config, &floatCount, &allocated, NULL);
+    if (status != UMI_STATUS_OK) return status;
+    *outBytes = allocated;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiAiTrainingKvCacheCreate(UmiAiTrainingDecoder *decoder,
+                                     UmiAiTrainingKvCache **outCache)
+{
+    UmiAiTrainingDecoderConfig config;
+    UmiAiTrainingKvCache *candidate;
+    uint64_t steps;
+    size_t floatCount = 0U;
+    size_t allocated = 0U;
+    size_t lengths[UMI_DECODER_PARAMETER_COUNT];
+    size_t offset = 0U;
+    size_t keyValueElements;
+    UmiStatus status;
+    if (decoder == NULL || outCache == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = UmiAiTrainingDecoderInspect(decoder, &config, &steps);
+    if (status != UMI_STATUS_OK) return status;
+    status = LayoutForConfig(&config, &floatCount, &allocated, lengths);
+    if (status != UMI_STATUS_OK) return status;
+    candidate = calloc(1U, allocated);
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    candidate->decoder = decoder;
+    candidate->config = config;
+    candidate->decoderSteps = steps;
+    candidate->allocationBytes = allocated;
+    for (size_t p = 0U; p < (size_t)UMI_DECODER_PARAMETER_COUNT; ++p) {
+        candidate->lengths[p] = lengths[p];
+        candidate->parameters[p] = &candidate->packed[offset];
+        offset += lengths[p];
+        status = UmiAiTrainingTensorValues(decoder->parameters[p],
+                         candidate->parameters[p], lengths[p]);
+        if (status != UMI_STATUS_OK) {
+            free(candidate);
+            return status;
+        }
+    }
+    keyValueElements = (size_t)config.contextLength * (size_t)config.channels;
+    candidate->keys = &candidate->packed[offset];
+    offset += keyValueElements;
+    candidate->values = &candidate->packed[offset];
+    offset += keyValueElements;
+    candidate->lastLogits = &candidate->packed[offset];
+    offset += (size_t)config.vocabularySize;
+    /* The checked layout is authoritative; never silently leave unused or
+     * missing payload behind after publishing the owned cache. */
+    if (offset != floatCount) {
+        free(candidate);
+        return UMI_STATUS_INTERNAL_ERROR;
+    }
+    *outCache = candidate;
+    return UMI_STATUS_OK;
+}
+
+/* The memory inspector reports the exact requested allocation for this
+ * instance; it excludes allocator metadata and temporary stack staging. */
+UmiStatus UmiAiTrainingKvCacheAllocatedBytes(
+    const UmiAiTrainingKvCache *cache, size_t *outBytes)
+{
+    if (cache == NULL || outBytes == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outBytes = cache->allocationBytes;
+    return UMI_STATUS_OK;
+}
 
 void UmiAiTrainingKvCacheDestroy(UmiAiTrainingKvCache *cache)
 {
@@ -325,7 +516,21 @@ UmiStatus UmiAiTrainingKvCacheReset(UmiAiTrainingKvCache *cache)
 {
     UmiStatus status = CacheIsCurrent(cache);
     if (status != UMI_STATUS_OK) return status;
+    /* Clearing only the compact mutable state keeps model parameters intact.
+     * Previously the complete fixed-size state was cleared as one structure. */
+#if 0
     memset(&cache->state, 0, sizeof(cache->state));
+#endif
+    cache->tokenCount = 0U;
+    cache->computedRows = 0U;
+    cache->windowRebuilds = 0U;
+    memset(cache->tokens, 0, sizeof(cache->tokens));
+    const size_t keyValueElements = (size_t)cache->config.contextLength *
+                                    (size_t)cache->config.channels;
+    memset(cache->keys, 0, keyValueElements * sizeof(float));
+    memset(cache->values, 0, keyValueElements * sizeof(float));
+    memset(cache->lastLogits, 0,
+           (size_t)cache->config.vocabularySize * sizeof(float));
     return UMI_STATUS_OK;
 }
 
@@ -348,7 +553,12 @@ UmiStatus UmiAiTrainingKvCachePrefill(UmiAiTrainingKvCache *cache,
         status = AdvanceRow(cache, &proposed, tokenIds[i]);
         if (status != UMI_STATUS_OK) return status;
     }
+    /* The former direct structure assignment is retained for comparison.
+     * The packed-state owner now copies only valid token/key/value extents. */
+#if 0
     cache->state = proposed;
+#endif
+    CommitState(cache, &proposed);
     memcpy(outLogits, proposed.lastLogits,
            (size_t)cache->config.vocabularySize * sizeof(*outLogits));
     return UMI_STATUS_OK;
@@ -365,7 +575,11 @@ UmiStatus UmiAiTrainingKvCacheAppend(UmiAiTrainingKvCache *cache,
         return UMI_STATUS_INVALID_ARGUMENT;
     if (capacity < (size_t)cache->config.vocabularySize)
         return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Snapshot the compact published state before attempting an append. */
+#if 0
     proposed = cache->state;
+#endif
+    StageState(cache, &proposed);
     if (proposed.tokenCount < (size_t)cache->config.contextLength) {
         status = AdvanceRow(cache, &proposed, tokenId);
         if (status != UMI_STATUS_OK) return status;
@@ -391,7 +605,12 @@ UmiStatus UmiAiTrainingKvCacheAppend(UmiAiTrainingKvCache *cache,
             if (status != UMI_STATUS_OK) return status;
         }
     }
+    /* The former direct structure assignment is retained for comparison.
+     * The packed-state owner now copies only valid token/key/value extents. */
+#if 0
     cache->state = proposed;
+#endif
+    CommitState(cache, &proposed);
     memcpy(outLogits, proposed.lastLogits,
            (size_t)cache->config.vocabularySize * sizeof(*outLogits));
     return UMI_STATUS_OK;
@@ -406,12 +625,22 @@ UmiStatus UmiAiTrainingKvCacheInspect(const UmiAiTrainingKvCache *cache,
     if (status != UMI_STATUS_OK) return status;
     if (outTokenCount == NULL || outComputedRows == NULL ||
         outWindowRebuilds == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+#if 0
     *outTokenCount = cache->state.tokenCount;
     *outComputedRows = cache->state.computedRows;
     *outWindowRebuilds = cache->state.windowRebuilds;
+#endif
+    *outTokenCount = cache->tokenCount;
+    *outComputedRows = cache->computedRows;
+    *outWindowRebuilds = cache->windowRebuilds;
     return UMI_STATUS_OK;
 }
 
+/* Historical fixed-allocation report. Retained for review: the revised
+ * implementation reports a conservative shape-independent upper bound.
+ * Existing callers can still use this as an admission limit. Callers needing
+ * actual memory must use AllocationForConfig or AllocatedBytes instead. */
+#if 0
 /* Use the real private structure rather than assuming a compact K/V-only
  * allocation. Parameter reservations dominate this educational cache's heap
  * use and are part of capacity planning until we add variable-sized storage. */
@@ -419,5 +648,21 @@ UmiStatus UmiAiTrainingKvCacheAllocationSize(size_t *outBytes)
 {
     if (outBytes == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *outBytes = sizeof(UmiAiTrainingKvCache);
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus UmiAiTrainingKvCacheAllocationSize(size_t *outBytes)
+{
+    if (outBytes == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* The maximum tensor and sequence dimensions are compile-time bounded.
+     * This is a conservative upper bound, not a live model allocation. */
+    const size_t maximumFloatElements =
+        (size_t)UMI_DECODER_PARAMETER_COUNT * UMI_AI_TRAINING_MAX_ELEMENTS +
+        2U * (size_t)UMI_AI_DECODER_MAX_CONTEXT *
+             (size_t)UMI_AI_DECODER_MAX_CHANNELS +
+        (size_t)UMI_AI_DECODER_MAX_VOCABULARY;
+    *outBytes = sizeof(UmiAiTrainingKvCache) +
+                maximumFloatElements * sizeof(float);
     return UMI_STATUS_OK;
 }

@@ -76,7 +76,13 @@ UmiStatus UmiAiTrainingInferenceEstimate(
         return UMI_STATUS_CAPACITY_EXCEEDED;
     candidate.keyValuePayloadBytes = keyValueElements * 2U * sizeof(float);
     candidate.fullContextLogitsBytes = logitsElements * sizeof(float);
+    /* Report the shape-dependent allocation, not the compatibility bound.
+     * This is the same layout checked by cache creation before it allocates. */
+#if 0
     status = UmiAiTrainingKvCacheAllocationSize(&candidate.cacheAllocationBytes);
+#endif
+    status = UmiAiTrainingKvCacheAllocationForConfig(
+        config, &candidate.cacheAllocationBytes);
     if (status != UMI_STATUS_OK) return status;
     *outFootprint = candidate;
     return UMI_STATUS_OK;

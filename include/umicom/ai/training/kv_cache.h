@@ -74,11 +74,25 @@ UmiStatus UmiAiTrainingKvCacheInspect(const UmiAiTrainingKvCache *cache,
                                      uint64_t *outComputedRows,
                                      uint64_t *outWindowRebuilds);
 
-/* Return the actual sizeof heap allocation used by cache creation on this
- * build. This includes fixed parameter reservations and in-object state, but
- * excludes allocator bookkeeping and memory owned by the borrowed decoder.
- * No cache instance or model is required. Output is preserved on error. */
+/* Compatibility: return a conservative, shape-independent UPPER BOUND for
+ * the cache allocation, rather than the old fixed-size reservation. Existing
+ * callers may use it for admission budgeting. It excludes allocator metadata,
+ * stack staging and decoder-owned memory. Output is unchanged on failure. */
 UmiStatus UmiAiTrainingKvCacheAllocationSize(size_t *outBytes);
+
+/* Calculate exact model-shape-dependent cache heap bytes BEFORE allocation.
+ * This includes the opaque control structure, parameter copies and the full
+ * configured key/value/logit payload. Does not allocate or access weights.
+ * Invalid configurations leave *outBytes unchanged. */
+UmiStatus UmiAiTrainingKvCacheAllocationForConfig(
+    const UmiAiTrainingDecoderConfig *config, size_t *outBytes);
+
+/* Report the actual owned heap allocation for an existing cache, excluding
+ * allocator metadata, borrowed decoder storage and temporary stack buffers.
+ * No pointer into the cache is returned; *outBytes remains unchanged on error.
+ * The decoder and cache must satisfy the documented lifetime contract. */
+UmiStatus UmiAiTrainingKvCacheAllocatedBytes(
+    const UmiAiTrainingKvCache *cache, size_t *outBytes);
 
 #ifdef __cplusplus
 }

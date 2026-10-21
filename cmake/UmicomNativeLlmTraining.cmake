@@ -375,3 +375,20 @@ if(BUILD_TESTING)
         framework.ai.training.inference_checkpoint
         test_training_inference_checkpoint.c)
 endif()
+
+# Exact shape-sized inference allocations preserve decoder parity and public
+# lifetime, while avoiding maximum-capacity storage per trained parameter.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-compact-cache-layout-test
+        framework.ai.training.compact_cache_layout
+        test_training_cache_compact_layout.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-compact-cache-state-test
+        framework.ai.training.compact_cache_state
+        test_training_cache_compact_state.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-compact-cache-lifetime-test
+        framework.ai.training.compact_cache_lifetime
+        test_training_cache_compact_lifetime.c)
+endif()

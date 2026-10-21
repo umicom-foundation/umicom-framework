@@ -205,3 +205,22 @@ if(BUILD_TESTING)
     set_tests_properties(framework.ai.training.inference_profiler PROPERTIES
         LABELS "framework;ai;native-training;learning")
 endif()
+
+# The native inspector measures real cache reservations for reviewed decoder
+# configurations. It delegates all memory accounting to the Framework.
+add_executable(umicom-native-llm-cache-memory
+    "${CMAKE_CURRENT_LIST_DIR}/inspect_cache_memory.c")
+target_link_libraries(umicom-native-llm-cache-memory PRIVATE Umicom::AiTraining)
+target_compile_features(umicom-native-llm-cache-memory PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-cache-memory PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-cache-memory PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME framework.ai.training.compact_cache_inspector
+             COMMAND umicom-native-llm-cache-memory)
+    set_tests_properties(framework.ai.training.compact_cache_inspector PROPERTIES
+        LABELS "framework;ai;native-training;learning")
+endif()

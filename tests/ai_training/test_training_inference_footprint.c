@@ -22,6 +22,7 @@ int main(void)
     UmiAiTrainingInferenceFootprint result;
     UmiAiTrainingInferenceFootprint previous;
     size_t expectedCacheBytes = 0U;
+    size_t compactCacheBytes = 0U;
     size_t preserved = 103U;
 
     CHECK(UmiAiTrainingInferenceEstimate(&config, &result) == UMI_STATUS_OK);
@@ -37,7 +38,16 @@ int main(void)
     CHECK(result.fullContextLogitsBytes == 6U * 17U * sizeof(float));
     CHECK(UmiAiTrainingKvCacheAllocationSize(&expectedCacheBytes) == UMI_STATUS_OK);
     CHECK(expectedCacheBytes > result.logicalParameterBytes);
+    /* The previous assertion compared a fixed allocation with a fixed
+     * estimated footprint. Retain it for engineering history: exact storage
+     * now varies with validated decoder shapes. */
+#if 0
     CHECK(result.cacheAllocationBytes == expectedCacheBytes);
+#endif
+    CHECK(UmiAiTrainingKvCacheAllocationForConfig(&config,
+               &compactCacheBytes) == UMI_STATUS_OK);
+    CHECK(result.cacheAllocationBytes == compactCacheBytes);
+    CHECK(compactCacheBytes < expectedCacheBytes);
 
     memcpy(&previous, &result, sizeof(previous));
     config.attentionHeads = 3U; /* channels must be divisible by heads */

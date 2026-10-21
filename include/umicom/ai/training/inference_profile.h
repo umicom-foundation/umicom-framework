@@ -65,9 +65,10 @@ typedef struct UmiAiTrainingInferenceProfile {
     int cpuClockAvailable;
 } UmiAiTrainingInferenceProfile;
 
-/* Calculate exact logical parameter sizes using the canonical decoder's
- * internal parameter-shape owner. Return the full fixed cache allocation
- * size for the current build, not an assumed compact allocation. */
+/* Calculate logical parameter sizes using the decoder's canonical schema.
+ * cacheAllocationBytes is the actual shape-dependent cache reservation,
+ * including packed parameters, stored keys/values and last-token logits.
+ * It excludes the allocator's metadata and local per-call stack staging. */
 UmiStatus UmiAiTrainingInferenceEstimate(
     const UmiAiTrainingDecoderConfig *config,
     UmiAiTrainingInferenceFootprint *outFootprint);
