@@ -40,6 +40,9 @@ if(NOT TARGET umicom_ai_training)
         "${_umicom_ai_training_root}/src/ai/training/experiment_plan.c"
         # Native autoregressive generation composes the decoder and RNG.
         "${_umicom_ai_training_root}/src/ai/training/generation.c"
+        # Hold-out scoring and identity evidence reuse the canonical decoder,
+        # immutable source manifest, experiment plan and checkpoint codec.
+        "${_umicom_ai_training_root}/src/ai/training/model_audit.c"
     )
     add_library(Umicom::AiTraining ALIAS umicom_ai_training)
     target_include_directories(umicom_ai_training PUBLIC
@@ -277,4 +280,30 @@ if(BUILD_TESTING)
         umicom-ai-training-generation-checkpoint-test
         framework.ai.training.generation_checkpoint
         test_training_generation_checkpoint.c)
+endif()
+
+# Independent evidence checks protect attribution of evaluation metrics to the
+# approved model checkpoint, source files and training plan.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-model-audit-test
+        framework.ai.training.model_audit
+        test_training_model_audit.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-audit-changes-test
+        framework.ai.training.audit_changes
+        test_training_audit_changes.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-audit-rejections-test
+        framework.ai.training.audit_rejections
+        test_training_audit_rejections.c)
+    foreach(_audit_test IN ITEMS
+        umicom-ai-training-model-audit-test
+        umicom-ai-training-audit-changes-test
+        umicom-ai-training-audit-rejections-test)
+        target_compile_definitions(${_audit_test} PRIVATE
+            UMI_AI_TEST_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt")
+    endforeach()
+    target_compile_definitions(umicom-ai-training-audit-changes-test PRIVATE
+        UMI_AI_TEST_ALTERNATIVE_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/reviewed-alternative-manifest.txt")
 endif()

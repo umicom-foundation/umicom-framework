@@ -1,0 +1,6 @@
+UMICOM-AI-DATASET-1
+# Deliberately changed file-level split for provenance verification.
+# This is an authorised teaching fixture, not an interchangeable evaluation.
+train train/account.c
+train eval/payment.c
+eval train/notes.c

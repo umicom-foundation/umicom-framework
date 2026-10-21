@@ -139,3 +139,17 @@ else()
     target_compile_options(umicom-native-llm-generate PRIVATE
         -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
 endif()
+
+# A read-only native consumer audits a reviewed training plan against an
+# approved checkpoint and source dataset. Identity and scoring belong to
+# Umicom Framework rather than to this command-line application.
+add_executable(umicom-native-llm-audit
+    "${CMAKE_CURRENT_LIST_DIR}/audit_model.c")
+target_link_libraries(umicom-native-llm-audit PRIVATE Umicom::AiTraining)
+target_compile_features(umicom-native-llm-audit PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-audit PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-audit PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
