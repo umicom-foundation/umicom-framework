@@ -113,3 +113,16 @@ else()
 endif()
 # No CLI training is executed automatically by CTest: the focused source
 # model regression exercises identical functionality in a bounded test.
+
+#a native CLI over Framework-owned experiment plans and training.
+# It retains the original source trainer for historical lesson compatibility.
+add_executable(umicom-native-llm-experiment
+    "${CMAKE_CURRENT_LIST_DIR}/train_experiment.c")
+target_link_libraries(umicom-native-llm-experiment PRIVATE Umicom::AiTraining)
+target_compile_features(umicom-native-llm-experiment PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-experiment PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-experiment PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()

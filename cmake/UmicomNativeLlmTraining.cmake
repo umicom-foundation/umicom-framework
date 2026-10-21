@@ -34,6 +34,10 @@ if(NOT TARGET umicom_ai_training)
         "${_umicom_ai_training_root}/src/ai/training/byte_tokenizer.c"
         "${_umicom_ai_training_root}/src/ai/training/corpus.c"
         "${_umicom_ai_training_root}/src/ai/training/dataset_manifest.c"
+        # Batch 07: native experiment plan, deterministic run orchestration,
+        # and sampled held-out evaluation reuse the canonical model/dataset.
+        "${_umicom_ai_training_root}/src/ai/training/experiment.c"
+        "${_umicom_ai_training_root}/src/ai/training/experiment_plan.c"
     )
     add_library(Umicom::AiTraining ALIAS umicom_ai_training)
     target_include_directories(umicom_ai_training PUBLIC
@@ -98,7 +102,7 @@ if(BUILD_TESTING)
         framework.ai.training.limits
         test_training_limits.c)
 
-    # Batch 02 extends the existing tape rather than introducing a parallel
+    #  extends the existing tape rather than introducing a parallel
     # autodiff system. These tests qualify the new native operators.
     _umicom_add_native_ai_training_test(
         umicom-ai-training-initialisation-test
@@ -121,7 +125,7 @@ if(BUILD_TESTING)
         framework.ai.training.attention_gradients
         test_training_attention_gradients.c)
 
-    # Batch 03: multi-head attention, trainable layer normalisation and
+    # multi-head attention, trainable layer normalisation and
     # failure-atomic pre-LN transformer block composition. The original
     # twelve tests and the Umicom::ai runtime remain unchanged.
     _umicom_add_native_ai_training_test(
@@ -158,7 +162,7 @@ if(BUILD_TESTING)
         test_training_block_failures.c)
 endif()
 
-# Batch 04: one complete (bounded) decoder, held-out sequence split, versioned
+# one complete (bounded) decoder, held-out sequence split, versioned
 # checkpoint snapshots and atomic multi-parameter SGD. Retain every earlier
 # test registration and shared Framework AI target unchanged.
 if(BUILD_TESTING)
@@ -184,7 +188,7 @@ if(BUILD_TESTING)
         test_training_checkpoint.c)
 endif()
 
-# Batch 05: bounded, lossless byte tokenisation and local corpus ingestion.
+# bounded, lossless byte tokenisation and local corpus ingestion.
 # These are independent source-aware training prerequisites; no existing dataset,
 # parameter, embedding, or transformer logic is reimplemented here.
 if(BUILD_TESTING)
@@ -202,7 +206,7 @@ if(BUILD_TESTING)
         test_training_corpus_file.c)
 endif()
 
-# Batch 06: whole-file dataset split and deterministic source-code minibatches.
+# whole-file dataset split and deterministic source-code minibatches.
 # These additions use the existing tokenizer, corpus, RNG and decoder APIs.
 if(BUILD_TESTING)
     _umicom_add_native_ai_training_test(
@@ -225,4 +229,29 @@ if(BUILD_TESTING)
         target_compile_definitions(${_source_model_test} PRIVATE
             UMI_AI_TEST_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt")
     endforeach()
+endif()
+
+# separate configuration, reproducibility and cancellation checks.
+# The tests use immutable authored fixtures and never publish checkpoints.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-experiment-plan-test
+        framework.ai.training.experiment_plan
+        test_training_experiment_plan.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-experiment-run-test
+        framework.ai.training.experiment_run
+        test_training_experiment_run.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-experiment-cancel-test
+        framework.ai.training.experiment_cancel
+        test_training_experiment_cancel.c)
+    foreach(_experiment_test IN ITEMS
+        umicom-ai-training-experiment-run-test
+        umicom-ai-training-experiment-cancel-test)
+        target_compile_definitions(${_experiment_test} PRIVATE
+            UMI_AI_TEST_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt")
+    endforeach()
+    target_compile_definitions(umicom-ai-training-experiment-run-test PRIVATE
+        UMI_AI_TEST_EXPERIMENT_PLAN_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/experiment.conf")
 endif()
