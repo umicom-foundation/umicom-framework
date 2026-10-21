@@ -16,6 +16,9 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/experiment.h"
+#include "umicom/ai/training/experiment_accumulation.h"
+#include "umicom/ai/training/gradient_accumulation.h"
+#include "umicom/ai/training/capacity_plan.h"
 #include "umicom/ai/training/byte_tokenizer.h"
 #include "umicom/ai/training/checkpoint.h"
 #include "umicom/ai/training/tape.h"
@@ -134,6 +137,63 @@ UmiStatus UmiAiTrainingExperimentEvaluate(
     return UMI_STATUS_OK;
 }
 
+/* The optional training batch is larger than the dataset sampler's fixed
+ * per-call limit. Draw it in independently reproducible whole-context chunks.
+ * All IDs are selected before decoder training begins, so source failure
+ * cannot leave a partially updated model. Absolute draw identifiers allow
+ * checkpoint continuation without a separate RNG state or format change. */
+static UmiStatus DrawEffectiveBatch(
+    const UmiAiTrainingDataset *dataset,
+    const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingExperimentAccumulation *accumulation,
+    uint64_t absoluteStepIndex,
+    size_t *inputs, size_t *targets)
+{
+    size_t drawn = 0U;
+    const size_t context = (size_t)config->decoder.contextLength;
+    const size_t effective = (size_t)accumulation->effectiveSequences;
+    const uint64_t drawsPerStep =
+        (uint64_t)((effective + UMI_AI_DATASET_MAX_SEQUENCES - 1U) /
+                   UMI_AI_DATASET_MAX_SEQUENCES);
+    uint64_t draw = 0U;
+    while (drawn < effective) {
+        size_t remaining = effective - drawn;
+        size_t sequences = remaining < UMI_AI_DATASET_MAX_SEQUENCES ?
+                           remaining : UMI_AI_DATASET_MAX_SEQUENCES;
+        size_t count = sequences * context;
+        UmiStatus status = UmiAiTrainingDatasetBatch(
+            dataset, UMI_AI_TRAINING_PARTITION_TRAIN, context, sequences,
+            config->trainSeed, absoluteStepIndex * drawsPerStep + draw,
+            inputs + drawn * context, targets + drawn * context, count);
+        if (status != UMI_STATUS_OK) return status;
+        drawn += sequences;
+        ++draw;
+    }
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiAiTrainingExperimentAccumulationValidate(
+    const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingExperimentAccumulation *accumulation)
+{
+    UmiAiTrainingCapacityPlan plan;
+    UmiStatus status = UmiAiTrainingExperimentValidate(config);
+    if (status != UMI_STATUS_OK) return status;
+    if (accumulation == NULL || accumulation->effectiveSequences == 0U ||
+        accumulation->microbatchSequences == 0U ||
+        accumulation->effectiveSequences > UMI_AI_EXPERIMENT_MAX_EFFECTIVE_SEQUENCES ||
+        accumulation->microbatchSequences > accumulation->effectiveSequences ||
+        (size_t)accumulation->effectiveSequences >
+            UMI_AI_TRAINING_MAX_ACCUMULATED_TOKENS /
+            (size_t)config->decoder.contextLength)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Inspect the real decoder parameter and tensor shapes; do not create
+     * a second model definition or depend on available host RAM estimates. */
+    status = UmiAiTrainingCapacityPlanCompute(&config->decoder,
+                   (size_t)accumulation->microbatchSequences, &plan);
+    return status;
+}
+
 /* Clone through the canonical portable codec. No second parameter layout or
  * unsupported pointer aliasing of the Framework decoder is introduced. */
 static UmiStatus CloneDecoder(const UmiAiTrainingDecoder *source,
@@ -173,6 +233,7 @@ static UmiStatus RunInternal(
     const UmiAiTrainingDataset *dataset,
     const UmiAiTrainingExperimentConfig *config,
     const UmiAiTrainingDecoder *checkpointModel,
+    const UmiAiTrainingExperimentAccumulation *accumulation,
     UmiAiTrainingExperimentObserver observer,
     void *userData,
     UmiAiTrainingDecoder **outModel,
@@ -184,13 +245,18 @@ static UmiStatus RunInternal(
     UmiAiTrainingExperimentProgress progress = {0};
     size_t inputs[UMI_AI_DATASET_MAX_CONTEXT * UMI_AI_DATASET_MAX_SEQUENCES];
     size_t targets[UMI_AI_DATASET_MAX_CONTEXT * UMI_AI_DATASET_MAX_SEQUENCES];
+    size_t *effectiveInputs = NULL;
+    size_t *effectiveTargets = NULL;
     UmiStatus status;
     size_t tokens;
+    size_t effectiveTokens = 0U;
     uint64_t startSteps = 0U, verifiedSteps = 0U;
     UmiAiTrainingDecoderConfig verifiedConfig;
     if (dataset == NULL || outModel == NULL || outResult == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
-    status = UmiAiTrainingExperimentValidate(config);
+    status = accumulation == NULL ?
+        UmiAiTrainingExperimentValidate(config) :
+        UmiAiTrainingExperimentAccumulationValidate(config, accumulation);
     if (status != UMI_STATUS_OK) return status;
     status = UmiAiTrainingDatasetInspect(dataset, &datasetSummary);
     if (status != UMI_STATUS_OK) return status;
@@ -209,6 +275,16 @@ static UmiStatus RunInternal(
         status = CloneDecoder(checkpointModel, &created);
     }
     if (status != UMI_STATUS_OK) return status;
+    if (accumulation != NULL) {
+        effectiveTokens = (size_t)accumulation->effectiveSequences *
+                          (size_t)config->decoder.contextLength;
+        effectiveInputs = malloc(effectiveTokens * sizeof(*effectiveInputs));
+        effectiveTargets = malloc(effectiveTokens * sizeof(*effectiveTargets));
+        if (effectiveInputs == NULL || effectiveTargets == NULL) {
+            status = UMI_STATUS_OUT_OF_MEMORY;
+            goto fail;
+        }
+    }
     progress.completedSteps = startSteps;
     status = UmiAiTrainingExperimentEvaluate(created, dataset, config,
                                               &progress.heldOutCrossEntropy,
@@ -225,16 +301,30 @@ static UmiStatus RunInternal(
     }
     for (uint32_t step = (uint32_t)startSteps + 1U;
          step <= config->steps; ++step) {
-        status = UmiAiTrainingDatasetBatch(
-            dataset, UMI_AI_TRAINING_PARTITION_TRAIN,
-            (size_t)config->decoder.contextLength,
-            (size_t)config->batchSequences,
-            config->trainSeed, (uint64_t)(step - 1U),
-            inputs, targets, tokens);
-        if (status != UMI_STATUS_OK) goto fail;
-        status = UmiAiTrainingDecoderTrainStep(
-            created, inputs, targets, tokens,
-            config->learningRate, &progress.lastTrainingLoss);
+        if (accumulation == NULL) {
+            /* Preserve the original dataset draw and single-batch training
+             * behaviour, including its optimiser and checkpoint semantics. */
+            status = UmiAiTrainingDatasetBatch(
+                dataset, UMI_AI_TRAINING_PARTITION_TRAIN,
+                (size_t)config->decoder.contextLength,
+                (size_t)config->batchSequences,
+                config->trainSeed, (uint64_t)(step - 1U),
+                inputs, targets, tokens);
+            if (status != UMI_STATUS_OK) goto fail;
+            status = UmiAiTrainingDecoderTrainStep(
+                created, inputs, targets, tokens,
+                config->learningRate, &progress.lastTrainingLoss);
+        } else {
+            /* One effective batch, one atomic SGD update. All microbatch
+             * forward/backward operations remain Framework decoder-owned. */
+            status = DrawEffectiveBatch(dataset, config, accumulation,
+                    (uint64_t)(step - 1U), effectiveInputs, effectiveTargets);
+            if (status != UMI_STATUS_OK) goto fail;
+            status = UmiAiTrainingDecoderTrainAccumulated(
+                    created, effectiveInputs, effectiveTargets,
+                    effectiveTokens, (size_t)accumulation->microbatchSequences,
+                    config->learningRate, &progress.lastTrainingLoss);
+        }
         if (status != UMI_STATUS_OK) goto fail;
         if (!isfinite(progress.lastTrainingLoss) ||
             progress.lastTrainingLoss < 0.0F) {
@@ -272,8 +362,12 @@ static UmiStatus RunInternal(
     report.lastTrainingLoss = progress.lastTrainingLoss;
     *outModel = created;
     *outResult = report;
+    free(effectiveInputs);
+    free(effectiveTargets);
     return UMI_STATUS_OK;
 fail:
+    free(effectiveInputs);
+    free(effectiveTargets);
     UmiAiTrainingDecoderDestroy(created);
     return status;
 }
@@ -286,7 +380,7 @@ UmiStatus UmiAiTrainingExperimentRun(
     UmiAiTrainingDecoder **outModel,
     UmiAiTrainingExperimentResult *outResult)
 {
-    return RunInternal(dataset, config, NULL, observer, userData,
+    return RunInternal(dataset, config, NULL, NULL, observer, userData,
                        outModel, outResult);
 }
 
@@ -300,6 +394,37 @@ UmiStatus UmiAiTrainingExperimentResume(
     UmiAiTrainingExperimentResult *outResult)
 {
     if (checkpointModel == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    return RunInternal(dataset, config, checkpointModel, observer, userData,
-                       outModel, outResult);
+    return RunInternal(dataset, config, checkpointModel, NULL,
+                       observer, userData, outModel, outResult);
+}
+
+/* New opt-in entry points retain the original C ABI and execution path. */
+UmiStatus UmiAiTrainingExperimentRunAccumulated(
+    const UmiAiTrainingDataset *dataset,
+    const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingExperimentAccumulation *accumulation,
+    UmiAiTrainingExperimentObserver observer,
+    void *userData,
+    UmiAiTrainingDecoder **outModel,
+    UmiAiTrainingExperimentResult *outResult)
+{
+    if (accumulation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return RunInternal(dataset, config, NULL, accumulation,
+                       observer, userData, outModel, outResult);
+}
+
+UmiStatus UmiAiTrainingExperimentResumeAccumulated(
+    const UmiAiTrainingDataset *dataset,
+    const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingExperimentAccumulation *accumulation,
+    const UmiAiTrainingDecoder *checkpointModel,
+    UmiAiTrainingExperimentObserver observer,
+    void *userData,
+    UmiAiTrainingDecoder **outModel,
+    UmiAiTrainingExperimentResult *outResult)
+{
+    if (accumulation == NULL || checkpointModel == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    return RunInternal(dataset, config, checkpointModel, accumulation,
+                       observer, userData, outModel, outResult);
 }

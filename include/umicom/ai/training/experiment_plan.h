@@ -21,6 +21,7 @@
 
 #include <stddef.h>
 #include "umicom/ai/training/experiment.h"
+#include "umicom/ai/training/experiment_accumulation.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,6 +61,25 @@ UmiStatus UmiAiTrainingExperimentPlanParse(
 UmiStatus UmiAiTrainingExperimentPlanLoadFile(
     const char *planFile,
     UmiAiTrainingExperimentConfig *outConfig,
+    char *outManifestPath, size_t manifestCapacity);
+
+/* Opt-in plan parsing also accepts these TWO keys together:
+ *   effective_sequences=8
+ *   microbatch_sequences=2
+ * Both absent means legacy training. Exactly one present is rejected. The
+ * original parser rejects these keys, preserving strict legacy behaviour.
+ * No existing public configuration struct or checkpoint format changes.
+ * All outputs remain untouched on failure. */
+UmiStatus UmiAiTrainingExperimentPlanParseAccumulated(
+    const char *text, size_t textLength,
+    UmiAiTrainingExperimentConfig *outConfig,
+    UmiAiTrainingExperimentAccumulation *outAccumulation,
+    char *outRelativeManifest, size_t manifestCapacity);
+
+UmiStatus UmiAiTrainingExperimentPlanLoadAccumulated(
+    const char *planFile,
+    UmiAiTrainingExperimentConfig *outConfig,
+    UmiAiTrainingExperimentAccumulation *outAccumulation,
     char *outManifestPath, size_t manifestCapacity);
 
 #ifdef __cplusplus

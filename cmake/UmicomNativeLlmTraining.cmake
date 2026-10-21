@@ -457,3 +457,28 @@ if(BUILD_TESTING)
         framework.ai.training.accumulated_limits
         test_training_accumulated_limits.c)
 endif()
+
+# Opt-in effective-batch experiments retain the established plan and decoder
+# ABI. Deterministic dataset draws and microbatch reduction are qualified here.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-accumulation-plan-test
+        framework.ai.training.accumulation_plan
+        test_training_accumulation_plan.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-accumulation-run-test
+        framework.ai.training.accumulation_run
+        test_training_accumulation_run.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-accumulation-rejections-test
+        framework.ai.training.accumulation_rejections
+        test_training_accumulation_rejections.c)
+    foreach(_accumulation_test IN ITEMS
+        umicom-ai-training-accumulation-plan-test
+        umicom-ai-training-accumulation-run-test
+        umicom-ai-training-accumulation-rejections-test)
+        target_compile_definitions(${_accumulation_test} PRIVATE
+            UMI_AI_TEST_ACCUMULATED_PLAN_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/accumulated-experiment.conf"
+            UMI_AI_TEST_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt")
+    endforeach()
+endif()

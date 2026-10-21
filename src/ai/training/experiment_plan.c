@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define UMI_PLAN_KEY_COUNT 13U
+#define UMI_PLAN_KEY_COUNT 15U
 
 typedef enum PlanKey {
     KEY_MANIFEST = 0,
@@ -31,14 +31,16 @@ typedef enum PlanKey {
     KEY_CONTEXT,
     KEY_CHANNELS,
     KEY_HIDDEN_CHANNELS,
-    KEY_ATTENTION_HEADS
+    KEY_ATTENTION_HEADS,
+    KEY_EFFECTIVE_SEQUENCES,
+    KEY_MICROBATCH_SEQUENCES
 } PlanKey;
 
 static const char *const keyNames[UMI_PLAN_KEY_COUNT] = {
     "manifest", "steps", "eval_interval", "eval_batches",
     "batch_sequences", "learning_rate", "model_seed", "train_seed",
     "eval_seed", "context", "channels", "hidden_channels",
-    "attention_heads"
+    "attention_heads", "effective_sequences", "microbatch_sequences"
 };
 
 static bool ParseUnsigned(const char *text, uint64_t *outValue)
@@ -115,6 +117,7 @@ static bool IsSafeRelativeManifest(const char *path)
 
 static UmiStatus ApplyKey(PlanKey key, const char *value,
                           UmiAiTrainingExperimentConfig *candidate,
+                          UmiAiTrainingExperimentAccumulation *accumulation,
                           char *relativeManifest)
 {
     uint64_t integer = 0U;
@@ -129,6 +132,9 @@ static UmiStatus ApplyKey(PlanKey key, const char *value,
         candidate->learningRate = rate;
         return UMI_STATUS_OK;
     }
+    if ((key == KEY_EFFECTIVE_SEQUENCES ||
+         key == KEY_MICROBATCH_SEQUENCES) && accumulation == NULL)
+        return UMI_STATUS_PARSE_ERROR;
     if (!ParseUnsigned(value, &integer)) return UMI_STATUS_PARSE_ERROR;
     if (key != KEY_MODEL_SEED && key != KEY_TRAIN_SEED &&
         key != KEY_EVAL_SEED && integer > UINT32_MAX)
@@ -145,17 +151,23 @@ static UmiStatus ApplyKey(PlanKey key, const char *value,
     case KEY_CHANNELS: candidate->decoder.channels = (uint32_t)integer; break;
     case KEY_HIDDEN_CHANNELS: candidate->decoder.hiddenChannels = (uint32_t)integer; break;
     case KEY_ATTENTION_HEADS: candidate->decoder.attentionHeads = (uint32_t)integer; break;
+    case KEY_EFFECTIVE_SEQUENCES:
+        accumulation->effectiveSequences = (uint32_t)integer; break;
+    case KEY_MICROBATCH_SEQUENCES:
+        accumulation->microbatchSequences = (uint32_t)integer; break;
     default: return UMI_STATUS_PARSE_ERROR;
     }
     return UMI_STATUS_OK;
 }
 
-UmiStatus UmiAiTrainingExperimentPlanParse(
+static UmiStatus ParsePlanInternal(
     const char *text, size_t textLength,
     UmiAiTrainingExperimentConfig *outConfig,
+    UmiAiTrainingExperimentAccumulation *outAccumulation,
     char *outRelativeManifest, size_t manifestCapacity)
 {
     UmiAiTrainingExperimentConfig candidate;
+    UmiAiTrainingExperimentAccumulation selectedAccumulation = {0};
     char relativeManifest[UMI_AI_EXPERIMENT_MAX_MANIFEST_RELATIVE] = {0};
     uint32_t seen = 0U;
     size_t cursor = 0U;
@@ -202,7 +214,9 @@ UmiStatus UmiAiTrainingExperimentPlanParse(
         if (key == UMI_PLAN_KEY_COUNT ||
             (seen & (UINT32_C(1) << (unsigned)key)) != 0U)
             return UMI_STATUS_PARSE_ERROR;
-        status = ApplyKey(key, separator + 1U, &candidate, relativeManifest);
+        status = ApplyKey(key, separator + 1U, &candidate,
+                          outAccumulation == NULL ? NULL : &selectedAccumulation,
+                          relativeManifest);
         if (status != UMI_STATUS_OK) return status;
         seen |= UINT32_C(1) << (unsigned)key;
     }
@@ -210,21 +224,59 @@ UmiStatus UmiAiTrainingExperimentPlanParse(
         return UMI_STATUS_PARSE_ERROR;
     status = UmiAiTrainingExperimentValidate(&candidate);
     if (status != UMI_STATUS_OK) return status;
+    if (outAccumulation != NULL) {
+        const uint32_t chosen = seen &
+            ((UINT32_C(1) << KEY_EFFECTIVE_SEQUENCES) |
+             (UINT32_C(1) << KEY_MICROBATCH_SEQUENCES));
+        const uint32_t both = (UINT32_C(1) << KEY_EFFECTIVE_SEQUENCES) |
+                              (UINT32_C(1) << KEY_MICROBATCH_SEQUENCES);
+        /* A single key is ambiguous: never silently use a fallback batch
+         * size while the author believes both values were reviewed. */
+        if (chosen != 0U && chosen != both) return UMI_STATUS_PARSE_ERROR;
+        if (chosen == both) {
+            status = UmiAiTrainingExperimentAccumulationValidate(
+                &candidate, &selectedAccumulation);
+            if (status != UMI_STATUS_OK) return status;
+        }
+    }
     size_t manifestLength = strlen(relativeManifest) + 1U;
     if (manifestLength > manifestCapacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     *outConfig = candidate;
+    if (outAccumulation != NULL) *outAccumulation = selectedAccumulation;
     memcpy(outRelativeManifest, relativeManifest, manifestLength);
     return UMI_STATUS_OK;
 }
 
-UmiStatus UmiAiTrainingExperimentPlanLoadFile(
+UmiStatus UmiAiTrainingExperimentPlanParse(
+    const char *text, size_t textLength,
+    UmiAiTrainingExperimentConfig *outConfig,
+    char *outRelativeManifest, size_t manifestCapacity)
+{
+    return ParsePlanInternal(text, textLength, outConfig, NULL,
+                             outRelativeManifest, manifestCapacity);
+}
+
+UmiStatus UmiAiTrainingExperimentPlanParseAccumulated(
+    const char *text, size_t textLength,
+    UmiAiTrainingExperimentConfig *outConfig,
+    UmiAiTrainingExperimentAccumulation *outAccumulation,
+    char *outRelativeManifest, size_t manifestCapacity)
+{
+    if (outAccumulation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return ParsePlanInternal(text, textLength, outConfig, outAccumulation,
+                             outRelativeManifest, manifestCapacity);
+}
+
+static UmiStatus LoadPlanInternal(
     const char *planFile,
     UmiAiTrainingExperimentConfig *outConfig,
+    UmiAiTrainingExperimentAccumulation *outAccumulation,
     char *outManifestPath, size_t manifestCapacity)
 {
     char text[UMI_AI_EXPERIMENT_MAX_PLAN_BYTES + 1U];
     char relative[UMI_AI_EXPERIMENT_MAX_MANIFEST_RELATIVE];
     UmiAiTrainingExperimentConfig candidate;
+    UmiAiTrainingExperimentAccumulation selectedAccumulation = {0};
     const char *separator = NULL;
     FILE *file;
     long length;
@@ -252,9 +304,9 @@ UmiStatus UmiAiTrainingExperimentPlanLoadFile(
         return UMI_STATUS_IO_ERROR;
     }
     if (fclose(file) != 0) return UMI_STATUS_IO_ERROR;
-    status = UmiAiTrainingExperimentPlanParse(text, (size_t)length,
-                                               &candidate, relative,
-                                               sizeof(relative));
+    status = ParsePlanInternal(text, (size_t)length, &candidate,
+                              outAccumulation == NULL ? NULL : &selectedAccumulation,
+                              relative, sizeof(relative));
     if (status != UMI_STATUS_OK) return status;
     /* Both Windows and POSIX plan paths use their final separator. Relative
      * manifest fragments always use /, independent of cwd. */
@@ -270,5 +322,28 @@ UmiStatus UmiAiTrainingExperimentPlanLoadFile(
     memcpy(outManifestPath, planFile, prefixLength);
     memcpy(outManifestPath + prefixLength, relative, relativeLength + 1U);
     *outConfig = candidate;
+    if (outAccumulation != NULL) *outAccumulation = selectedAccumulation;
     return UMI_STATUS_OK;
+}
+
+/* Both file loaders retain one strict byte reader and CWD-independent path
+ * resolver. Only the opt-in loader accepts effective/microbatch keys. */
+UmiStatus UmiAiTrainingExperimentPlanLoadFile(
+    const char *planFile,
+    UmiAiTrainingExperimentConfig *outConfig,
+    char *outManifestPath, size_t manifestCapacity)
+{
+    return LoadPlanInternal(planFile, outConfig, NULL,
+                            outManifestPath, manifestCapacity);
+}
+
+UmiStatus UmiAiTrainingExperimentPlanLoadAccumulated(
+    const char *planFile,
+    UmiAiTrainingExperimentConfig *outConfig,
+    UmiAiTrainingExperimentAccumulation *outAccumulation,
+    char *outManifestPath, size_t manifestCapacity)
+{
+    if (outAccumulation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return LoadPlanInternal(planFile, outConfig, outAccumulation,
+                            outManifestPath, manifestCapacity);
 }

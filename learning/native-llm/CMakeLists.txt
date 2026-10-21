@@ -282,3 +282,13 @@ if(BUILD_TESTING)
     set_tests_properties(framework.ai.training.microbatch_demo PROPERTIES
         LABELS "framework;ai;native-training;learning")
 endif()
+
+# The existing native experiment CLI now accepts an explicitly reviewed
+# effective-batch plan while preserving its original single-batch behaviour.
+if(BUILD_TESTING)
+    add_test(NAME framework.ai.training.accumulation_demo
+        COMMAND umicom-native-llm-experiment
+            "${CMAKE_CURRENT_LIST_DIR}/fixtures/accumulated-experiment.conf")
+    set_tests_properties(framework.ai.training.accumulation_demo PROPERTIES
+        LABELS "framework;ai;native-training;learning")
+endif()

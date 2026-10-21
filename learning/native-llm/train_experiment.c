@@ -11,6 +11,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/experiment.h"
+#include "umicom/ai/training/experiment_accumulation.h"
 #include "umicom/ai/training/experiment_plan.h"
 #include "umicom/ai/training/checkpoint.h"
 
@@ -39,6 +40,7 @@ int main(int argc, char **argv)
     UmiAiTrainingDecoder *model = NULL;
     UmiAiTrainingDecoder *startingCheckpoint = NULL;
     UmiAiTrainingExperimentConfig config;
+    UmiAiTrainingExperimentAccumulation accumulation = {0};
     UmiAiTrainingExperimentResult report;
     UmiStatus status;
     char manifestPath[UMI_EXPERIMENT_CLI_MANIFEST_CAPACITY];
@@ -46,8 +48,9 @@ int main(int argc, char **argv)
         fprintf(stderr, "usage: umicom-native-llm-experiment <reviewed-plan> [new-checkpoint-path] [existing-checkpoint-to-resume]\n");
         return 2;
     }
-    status = UmiAiTrainingExperimentPlanLoadFile(
-        argv[1], &config, manifestPath, sizeof(manifestPath));
+    status = UmiAiTrainingExperimentPlanLoadAccumulated(
+        argv[1], &config, &accumulation,
+        manifestPath, sizeof(manifestPath));
     if (status != UMI_STATUS_OK) {
         fprintf(stderr, "experiment plan rejected (status=%d)\n", (int)status);
         return 1;
@@ -70,6 +73,13 @@ int main(int argc, char **argv)
            datasetSummary.trainingBytes, datasetSummary.evaluationDocuments,
            datasetSummary.evaluationBytes, (unsigned)config.steps,
            (unsigned)config.evalInterval, (unsigned)config.evalBatches);
+    if (accumulation.effectiveSequences > 0U) {
+        printf("Effective training contexts=%u; microbatch contexts=%u; "
+               "held-out contexts per draw=%u\n",
+               (unsigned)accumulation.effectiveSequences,
+               (unsigned)accumulation.microbatchSequences,
+               (unsigned)config.batchSequences);
+    }
     for (size_t index = 0U; index < datasetSummary.documentCount; ++index) {
         UmiAiTrainingDocumentInfo item;
         status = UmiAiTrainingDatasetDocument(dataset, index, &item);
@@ -88,11 +98,22 @@ int main(int argc, char **argv)
         }
         puts("Resume requires the SAME reviewed corpus and training settings;");
         puts("the checkpoint format does not bind the original dataset hash.");
-        status = UmiAiTrainingExperimentResume(dataset, &config,
-                    startingCheckpoint, ShowProgress, NULL, &model, &report);
+        if (accumulation.effectiveSequences > 0U) {
+            status = UmiAiTrainingExperimentResumeAccumulated(dataset, &config,
+                &accumulation, startingCheckpoint, ShowProgress, NULL,
+                &model, &report);
+        } else {
+            status = UmiAiTrainingExperimentResume(dataset, &config,
+                startingCheckpoint, ShowProgress, NULL, &model, &report);
+        }
     } else {
-        status = UmiAiTrainingExperimentRun(dataset, &config, ShowProgress,
-                                            NULL, &model, &report);
+        if (accumulation.effectiveSequences > 0U) {
+            status = UmiAiTrainingExperimentRunAccumulated(dataset, &config,
+                &accumulation, ShowProgress, NULL, &model, &report);
+        } else {
+            status = UmiAiTrainingExperimentRun(dataset, &config, ShowProgress,
+                                                NULL, &model, &report);
+        }
     }
     if (status != UMI_STATUS_OK) goto error;
     printf("Completed %" PRIu64 " steps, %u evaluations\n"
