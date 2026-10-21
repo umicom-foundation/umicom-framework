@@ -46,6 +46,8 @@ if(NOT TARGET umicom_ai_training)
         # Qualified inference-only attention key/value cache. The original
         # decoder, training tape and model mathematics remain authoritative.
         "${_umicom_ai_training_root}/src/ai/training/kv_cache.c"
+        # Shared scalar reference and column-tiled CPU matrix kernels.
+        "${_umicom_ai_training_root}/src/ai/training/matrix_kernel.c"
     )
     add_library(Umicom::AiTraining ALIAS umicom_ai_training)
     target_include_directories(umicom_ai_training PUBLIC
@@ -330,4 +332,21 @@ if(BUILD_TESTING)
         umicom-ai-training-kv-cache-context-test
         framework.ai.training.kv_cache_context
         test_training_kv_cache_context.c)
+endif()
+
+# Validate the reusable matrix kernel before qualifying accelerated backends.
+# Training and KV-cache consumers use the same bounded C23 implementation.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-matrix-contract-test
+        framework.ai.training.matrix_contract
+        test_training_matrix_contract.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-matrix-tape-test
+        framework.ai.training.matrix_tape
+        test_training_matrix_tape.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-matrix-inference-test
+        framework.ai.training.matrix_inference
+        test_training_matrix_inference.c)
 endif()

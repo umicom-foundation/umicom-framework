@@ -20,6 +20,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/kv_cache.h"
 #include "umicom/ai/training/tape.h"
+#include "umicom/ai/training/matrix_kernel.h"
 #include "decoder_private.h"
 
 #include <float.h>
@@ -85,8 +86,25 @@ static const float *Weights(const UmiAiTrainingKvCache *cache,
     return cache->parameters[(size_t)id];
 }
 
-/* The training-tape Matmul uses double accumulation and float32 outputs.
- * Input and output arrays cannot alias in this helper. */
+/* The shared training/inference kernel accumulates in double and stores FP32.
+ * Caller inputs and outputs are borrowed; staging makes publication atomic. */
+static UmiStatus MultiplyRow(const float *row, size_t inputWidth,
+                             const float *weights, size_t outputWidth,
+                             float *out)
+{
+    /* The inference kernel and canonical tape now share one numerical
+     * implementation, avoiding duplicated dot-product code and permitting
+     * future qualified acceleration without changing the decoder ABI.
+     * The local staging buffer preserves failure-atomic output publication. */
+    UmiStatus status = UmiAiTrainingMatrixMultiply(
+        row, 1U, inputWidth, weights, outputWidth,
+        UMI_AI_MATRIX_AUTO, out, outputWidth);
+    return status == UMI_STATUS_OK ? UMI_STATUS_OK : UMI_STATUS_INVALID_STATE;
+}
+
+#if 0
+/* Historical scalar projection, superseded by the shared Framework-owned
+ * UmiAiTrainingMatrixMultiply kernel. Retained for numerical review. */
 static UmiStatus MultiplyRow(const float *row, size_t inputWidth,
                              const float *weights, size_t outputWidth,
                              float *out)
@@ -102,6 +120,8 @@ static UmiStatus MultiplyRow(const float *row, size_t inputWidth,
     }
     return UMI_STATUS_OK;
 }
+
+#endif
 
 static UmiStatus AddRow(const float *left, const float *right,
                         size_t count, float *out)

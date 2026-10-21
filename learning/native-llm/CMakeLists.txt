@@ -172,3 +172,17 @@ if(BUILD_TESTING)
     set_tests_properties(framework.ai.training.kv_cache_inspector PROPERTIES
         LABELS "framework;ai;native-training;learning")
 endif()
+
+# Measure CPU matrix workload and reference/tiled runtimes using the same
+# Framework-owned kernel. Times are observations, not speed guarantees.
+add_executable(umicom-native-llm-matrix-benchmark
+    "${CMAKE_CURRENT_LIST_DIR}/benchmark_matrix.c")
+target_link_libraries(umicom-native-llm-matrix-benchmark
+    PRIVATE Umicom::AiTraining)
+target_compile_features(umicom-native-llm-matrix-benchmark PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-matrix-benchmark PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-matrix-benchmark PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()

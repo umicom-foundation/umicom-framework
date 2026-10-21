@@ -21,6 +21,7 @@
  *   MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/tape.h"
+#include "umicom/ai/training/matrix_kernel.h"
 
 #include <float.h>
 #include <math.h>
@@ -307,6 +308,18 @@ UmiStatus UmiAiTrainingMatmul(UmiAiTrainingTape *tape,
     if (tape->count >= UMI_AI_TRAINING_MAX_TENSORS) return UMI_STATUS_CAPACITY_EXCEEDED;
     node = AllocateNode(tape, left->rows, right->columns);
     if (node == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    /* Use the shared, column-tiled C23 kernel in both the training tape and
+     * native inference. It preserves the original increasing-inner-index
+     * double accumulator for every output, so gradient rules are unchanged.
+     * The previous scalar loop is retained below for engineering review. */
+    UmiStatus status = UmiAiTrainingMatrixMultiply(
+        left->values, left->rows, left->columns,
+        right->values, right->columns,
+        UMI_AI_MATRIX_AUTO, node->values, node->count);
+    if (status != UMI_STATUS_OK) { FreeNode(node); return status; }
+#if 0
+    /* Superseded by UmiAiTrainingMatrixMultiply. Retained to document the
+     * original dot-product accumulation and numerical behaviour. */
     for (size_t r = 0U; r < node->rows; ++r) {
         for (size_t c = 0U; c < node->columns; ++c) {
             double sum = 0.0;
@@ -318,6 +331,7 @@ UmiStatus UmiAiTrainingMatmul(UmiAiTrainingTape *tape,
             node->values[r * node->columns + c] = (float)sum;
         }
     }
+#endif
     node->left = left;
     node->right = right;
     node->operation = UMI_AI_TRAINING_MATMUL;
@@ -931,7 +945,7 @@ UmiStatus UmiAiTrainingSgdStep(UmiAiTrainingTape *tape,
     return UMI_STATUS_OK;
 }
 
-/* Batch 04: a decoder contains many parameters. Per-tensor SGD alone cannot
+/* A decoder contains many parameters. Per-tensor SGD alone cannot
  * guarantee that a later invalid gradient will not leave an earlier parameter
  * updated. This two-pass operation maintains the Framework ownership and
  * avoids app-specific optimiser loops or partial model updates. */
