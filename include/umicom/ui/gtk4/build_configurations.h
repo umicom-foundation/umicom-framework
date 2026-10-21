@@ -26,7 +26,9 @@ extern "C"
                           uint64_t *out_revision, void *context);
         void *context;
     } UmiGtk4BuildConfigurationCallbacks;
-    /** Attach controls once to a visible Build Settings form. Nothing is loaded or
+    /* Earlier contract: bindings required a visible form. Staged construction
+     * now also accepts a live hidden form, without allowing hidden actions. */
+    /** Attach controls once to a prepared or visible Build Settings form. Nothing is loaded or
  * saved until the user clicks an action. Loading copies settings into the form
  * for review; only the existing Apply Settings action can activate them.
  * Saving requires explicit replacement consent for an existing name and never

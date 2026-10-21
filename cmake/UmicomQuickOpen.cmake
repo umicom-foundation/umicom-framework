@@ -9,6 +9,9 @@ function(umicom_attach_quick_open)
         return()
     endif()
     set_target_properties(umicom_ui_gtk4 PROPERTIES UMICOM_QUICK_OPEN_ATTACHED TRUE)
+    # Native row publication is a direct implementation dependency. Attach it
+    # here as well as in the root composition, so include order is immaterial.
+    include("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/UmicomListPublication.cmake")
     target_sources(umicom_ui_gtk4 PRIVATE "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../adapters/gtk4/quick_open_gtk4.c")
     if(BUILD_TESTING)
         # The selection test uses GLib directly. Enabling the GTK4 adapter does

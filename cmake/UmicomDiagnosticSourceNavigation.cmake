@@ -37,3 +37,15 @@ if(TARGET Umicom::ui_gtk4)
             TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;build;diagnostics;source;gtk4;ownership")
     endforeach()
 endif()
+
+# Use the real document coordinator and independent build-owned fixture folders.
+umicom_diagnostic_source_target(umicom-diagnostic-navigation-workflow-test
+    tests/test_diagnostic_navigation_workflow.c Umicom::diagnostic_ui)
+foreach(case next previous all-missing missing-line dirty no-wrap invalid-base beyond-page history history-stale-line missing-line-only)
+    set(directory "${CMAKE_CURRENT_BINARY_DIR}/diagnostic-navigation-fixtures/${case}")
+    file(MAKE_DIRECTORY "${directory}")
+    add_test(NAME framework.diagnostic_navigation.${case}
+        COMMAND umicom-diagnostic-navigation-workflow-test "${case}" "${directory}")
+    set_tests_properties(framework.diagnostic_navigation.${case} PROPERTIES
+        TIMEOUT 30 LABELS "framework;document;diagnostics;source;regression")
+endforeach()

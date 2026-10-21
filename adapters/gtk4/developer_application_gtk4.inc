@@ -458,6 +458,8 @@ static void DeveloperApplicationChooseFolder(GtkButton *button, gpointer context
     g_object_unref(picker);
 }
 
+/* Application creation now supports hidden preparation and checked presentation. The earlier direct presentation is retained for review. */
+#if 0
 UmiStatus UmiGtk4ApplicationModuleDialogCreate(GtkWindow *parent,
     UmiGtk4ProjectCreated onCreated, void *context, UmiGtk4DeveloperDialog **outDialog)
 {
@@ -512,4 +514,73 @@ UmiStatus UmiGtk4ApplicationModuleDialogCreate(GtkWindow *parent,
     *outDialog = dialog;
     gtk_window_present(dialog->window);
     return UMI_STATUS_OK;
+}
+
+#endif
+
+UmiStatus UmiGtk4ApplicationModuleDialogPrepare(GtkWindow *parent,
+    UmiGtk4ProjectCreated onCreated, void *context, UmiGtk4DeveloperDialog **outDialog)
+{
+    if (outDialog == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outDialog = NULL;
+    if (parent == NULL || onCreated == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiGtk4DeveloperDialog *dialog = NULL;
+    UmiStatus status = CreateForm(parent, "New Umicom Application",
+        "Create a C23 application with a manifest, tests and optional GTK frontend. "
+        "Choose its parent folder, preview every source file, then create it. "
+        "Repository registration and publication are separate reviewed actions.",
+        G_CALLBACK(DeveloperApplicationAccept), "Create Source", &dialog);
+    if (status != UMI_STATUS_OK) return status;
+    DeveloperApplicationForm *form = calloc(1U, sizeof *form);
+    if (form == NULL) { UmiGtk4DeveloperDialogDestroy(dialog); return UMI_STATUS_OUT_OF_MEMORY; }
+    dialog->application = form; dialog->onCreated = onCreated; dialog->context = context;
+    dialog->fields[0] = AddEntry(dialog, "Application name", "Umicom Notes", "developer.application.name");
+    dialog->fields[1] = AddEntry(dialog, "Application identifier", "org.umicom.notes", "developer.application.id");
+    dialog->fields[2] = AddEntry(dialog, "New folder and module slug", "notes", "developer.application.slug");
+    dialog->fields[3] = AddEntry(dialog, "Template folder (blank uses Framework resources)", "", "developer.application.templates");
+    dialog->fields[4] = AddEntry(dialog, "Parent folder (absolute path)", "", "developer.application.parent");
+    form->choose = gtk_button_new_with_label("Choose Parent Folder...");
+    form->gtk = gtk_check_button_new_with_label("Include a GTK desktop frontend");
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(form->gtk), TRUE);
+    form->preview = gtk_button_new_with_label("Preview Source");
+    form->files = gtk_drop_down_new_from_strings((const char *[]) {NULL});
+    form->text = gtk_text_view_new();
+    gtk_text_view_set_editable(GTK_TEXT_VIEW(form->text), FALSE);
+    gtk_text_view_set_monospace(GTK_TEXT_VIEW(form->text), TRUE);
+    GtkWidget *scroll = gtk_scrolled_window_new();
+    gtk_scrolled_window_set_min_content_height(GTK_SCROLLED_WINDOW(scroll), 240);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), form->text);
+    gtk_box_append(GTK_BOX(dialog->body), form->choose);
+    gtk_box_append(GTK_BOX(dialog->body), form->gtk);
+    gtk_box_append(GTK_BOX(dialog->body), form->preview);
+    gtk_box_append(GTK_BOX(dialog->body), form->files);
+    gtk_box_append(GTK_BOX(dialog->body), scroll);
+    (void)umi_gtk4_automation_tag_widget(form->choose, "developer.application.choose-parent");
+    (void)umi_gtk4_automation_tag_widget(form->gtk, "developer.application.gtk");
+    (void)umi_gtk4_automation_tag_widget(form->preview, "developer.application.preview");
+    (void)umi_gtk4_automation_tag_widget(form->files, "developer.application.files");
+    (void)umi_gtk4_automation_tag_widget(form->text, "developer.application.source");
+    (void)umi_gtk4_automation_tag_widget(dialog->message, "developer.application.status");
+    for (size_t i = 0U; i < 5U; ++i)
+        DeveloperConnect(dialog, G_OBJECT(dialog->fields[i]), "changed", G_CALLBACK(DeveloperApplicationEdited));
+    DeveloperConnect(dialog, G_OBJECT(form->gtk), "toggled", G_CALLBACK(DeveloperApplicationToggle));
+    DeveloperConnect(dialog, G_OBJECT(form->choose), "clicked", G_CALLBACK(DeveloperApplicationChooseFolder));
+    DeveloperConnect(dialog, G_OBJECT(form->preview), "clicked", G_CALLBACK(DeveloperApplicationPreview));
+    DeveloperConnect(dialog, G_OBJECT(form->files), "notify::selected", G_CALLBACK(DeveloperApplicationFileSelected));
+    DeveloperConnect(dialog, G_OBJECT(dialog->window), "notify::visible", G_CALLBACK(DeveloperApplicationVisibility));
+    DeveloperApplicationControls(dialog);
+    if (!DeveloperAlive(dialog)) { UmiGtk4DeveloperDialogDestroy(dialog); return UMI_STATUS_CANCELLED; }
+    *outDialog = dialog;
+    return UMI_STATUS_OK;
+}
+
+
+/* Keep the established immediate-opening API for callers with stable output
+ * storage; disposable hosts adopt a prepared form before presenting it. */
+UmiStatus UmiGtk4ApplicationModuleDialogCreate(GtkWindow *parent,
+    UmiGtk4ProjectCreated onCreated, void *context, UmiGtk4DeveloperDialog **outDialog)
+{
+    UmiStatus status = UmiGtk4ApplicationModuleDialogPrepare(parent, onCreated, context, outDialog);
+    if (status != UMI_STATUS_OK) return status;
+    return UmiGtk4DeveloperDialogPresent(*outDialog);
 }

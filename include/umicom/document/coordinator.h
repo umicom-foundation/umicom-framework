@@ -176,6 +176,17 @@ UmiStatus umi_document_coordinator_go_to_line(
 UmiStatus UmiDocumentCoordinatorGoToPosition(UmiDocumentCoordinator *coordinator,
     size_t oneBasedLine, size_t oneBasedByteColumn, size_t *outOffset);
 
+/** Open an absolute local source path and position its current complete draft as
+ * one navigation-history jump. Position conventions match GoToPosition above.
+ * Existing edited text is retained. Missing lines return NOT_FOUND and keep the
+ * source tab open for inspection; the previous active document is restored if
+ * it still exists. With no previous document the newly opened tab stays active.
+ * No text is edited, saved, discarded or added to Undo. Optional output changes
+ * only on success. This synchronous provider read uses the coordinator's owner
+ * thread; callers must keep its owners and provider alive through callbacks. */
+UmiStatus UmiDocumentCoordinatorOpenAtPosition(UmiDocumentCoordinator *coordinator,
+    const char *absolutePath, size_t oneBasedLine, size_t oneBasedByteColumn, size_t *outOffset);
+
 /**
  * Provide the document coordinator check external change operation used by this module and
  * its client applications.

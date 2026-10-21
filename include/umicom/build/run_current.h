@@ -20,6 +20,14 @@ extern "C"
  * identity across replacement; the native launcher remains authoritative.
  * No process starts and failure leaves out unchanged. out may alias profile. */
     UmiStatus UmiBuildRunCurrentPrepare(const UmiBuildProfile *profile, UmiBuildProfile *out);
+    /** Read the same launch-only requirements without changing the profile or
+     * creating a session. Supply a writable reason buffer with positive capacity,
+     * or NULL and zero to omit text. The bounded explanation may be truncated;
+     * this does not change the returned preparation status. The buffer must not
+     * overlap the profile. Messages do not include argument or environment values.
+     * An OK review proves existence at inspection time only; execution must still
+     * prepare again and handle replacement, permissions or format errors. */
+    UmiStatus UmiBuildRunCurrentReview(const UmiBuildProfile *profile, char *reason, size_t capacity);
     /** Queue exactly one Run phase through the existing worker, cancellation, output
  * and optional job-history owners. No configure, build, test or save occurs.
  * The caller must pass the current workspace trust decision. A nonempty log

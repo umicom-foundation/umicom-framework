@@ -9,6 +9,7 @@
  *---------------------------------------------------------------------------*/
 #include "gtk4_internal.h"
 #include "umicom/ui/gtk4/automation.h"
+#include "umicom/document/commands.h"
 #include "umicom/ui/gtk4/window_lifecycle.h"
 #include <string.h>
 #include <stdio.h>
@@ -86,6 +87,7 @@ static void CompletionReviewDetach(GObject *lifetime);
 static void SnippetReviewDetach(GObject *lifetime);
 static void RecoveryReviewDetach(GObject *lifetime);
 static void RecoveryMonitorDetach(GObject *lifetime);
+static void ReloadReviewDetach(GObject *lifetime);
 static void RecoveryReviewClose(GtkWidget *window);
 static void SnippetReviewClose(GtkWidget *window,int notify,UmiStatus status);
 
@@ -253,6 +255,8 @@ UmiStatus UmiGtk4AdapterBindDocumentEditing(UmiGtk4Adapter *adapter,
         RecoveryReviewDetach(adapter->edit_lifetime);
         /* Periodic snapshots must retire before the borrowed coordinator ends. */
         RecoveryMonitorDetach(adapter->edit_lifetime);
+        /* Saved-file comparisons lose authority with the same editing binding. */
+        ReloadReviewDetach(adapter->edit_lifetime);
     }
     UmiGtk4DocumentSaveAllDetach(adapter);
     if (adapter->edit_cancel != NULL) g_cancellable_cancel(adapter->edit_cancel);
@@ -308,8 +312,54 @@ static void ClipboardReadComplete(GObject *source, GAsyncResult *result, gpointe
     if (adapter != NULL) (void)EditFinished(adapter, status);
 }
 
+/* Readiness now recognizes canonical line actions under the same native ownership guards as execution. Retain the original base-command query for review. */
+#if 0
 int UmiGtk4AdapterDocumentCommandEnabled(UmiGtk4Adapter *adapter, const char *commandId)
 {
+    UmiDocumentEditCommand command;
+    UmiDocumentId id = 0U;
+    UmiDocumentEditState state;
+    if (UmiDocumentEditCommandFromId(commandId, &command) != UMI_STATUS_OK ||
+        EditFindDocument(adapter, NULL, &id) != UMI_STATUS_OK ||
+        UmiDocumentCoordinatorGetEditState(adapter->edit_coordinator, id, &state) != UMI_STATUS_OK)
+        return 0;
+    /* Disable delayed paste while a reviewed multi-document edit is open. */
+    if (command == UMI_DOCUMENT_EDIT_PASTE && UmiGtk4AdapterReplacementReviewBusy(adapter)) return 0;
+    switch (command) {
+    case UMI_DOCUMENT_EDIT_COPY: return state.selection_bytes != 0U;
+    case UMI_DOCUMENT_EDIT_SELECT_ALL: return state.text_bytes != 0U;
+    case UMI_DOCUMENT_EDIT_UNDO: return state.can_undo;
+    case UMI_DOCUMENT_EDIT_REDO: return state.can_redo;
+    /* Previous availability considered only another clipboard read:
+     * case UMI_DOCUMENT_EDIT_PASTE: return !state.read_only && adapter->edit_cancel == NULL;
+     * Save All and delayed Paste now exclude one another in this Framework
+     * adapter. Ordinary typing and immediate Copy/Undo remain available. */
+    case UMI_DOCUMENT_EDIT_PASTE: return !state.read_only && adapter->edit_cancel == NULL &&
+        /* Former final predicate retained: !UmiGtk4AdapterDocumentSaveAllBusy(adapter);
+         * Framework now also excludes an unanswered close question. */
+        !UmiGtk4AdapterDocumentSaveAllBusy(adapter) && !UmiGtk4AdapterDocumentCloseBusy(adapter);
+    case UMI_DOCUMENT_EDIT_CUT:
+    case UMI_DOCUMENT_EDIT_DELETE: return !state.read_only && state.selection_bytes != 0U;
+    }
+    return 0;
+}
+
+#endif
+
+int UmiGtk4AdapterDocumentCommandEnabled(UmiGtk4Adapter *adapter, const char *commandId)
+{
+    UmiEditorEditCommandKind lineKind;
+    if (UmiDocumentLineEditCommandFromId(commandId, &lineKind) == UMI_STATUS_OK) {
+        UmiDocumentId documentId = 0U;
+        UmiDocumentEditState lineState;
+        return adapter != NULL && adapter->edit_lifetime != NULL && adapter->window != NULL &&
+            UmiGtk4WindowIsOpen(adapter->window) && !adapter->applying_document_state && adapter->edit_cancel == NULL &&
+            !UmiGtk4AdapterDocumentSaveAllBusy(adapter) && !UmiGtk4AdapterDocumentCloseBusy(adapter) &&
+            !UmiGtk4AdapterReplacementReviewBusy(adapter) && !UmiGtk4AdapterDocumentProposalBusy(adapter) &&
+            !UmiGtk4AdapterCompletionReviewBusy(adapter) && EditFindDocument(adapter, NULL, &documentId) == UMI_STATUS_OK &&
+            UmiDocumentCoordinatorGetEditState(adapter->edit_coordinator, documentId, &lineState) == UMI_STATUS_OK &&
+            !lineState.read_only;
+    }
     UmiDocumentEditCommand command;
     UmiDocumentId id = 0U;
     UmiDocumentEditState state;
@@ -351,6 +401,9 @@ UmiStatus UmiGtk4EditorSynchronise(UmiGtk4Adapter *adapter, const char *viewId)
     return status == UMI_STATUS_OK ? UmiDocumentCoordinatorSyncDocument(adapter->edit_coordinator, id) : status;
 }
 
+static UmiStatus DocumentEditLinesForView(UmiGtk4Adapter *adapter, const char *viewId,
+    UmiEditorEditCommandKind kind, const UmiDocumentLineEditOptions *options);
+
 UmiStatus UmiGtk4EditorCommandForView(UmiGtk4Adapter *adapter,
     const char *commandId, const char *viewId)
 {
@@ -368,6 +421,9 @@ UmiStatus UmiGtk4EditorCommandForView(UmiGtk4Adapter *adapter,
 //     if (status != UMI_STATUS_OK) return status;
 
     if (adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiEditorEditCommandKind lineKind;
+    if (UmiDocumentLineEditCommandFromId(commandId, &lineKind) == UMI_STATUS_OK)
+        return DocumentEditLinesForView(adapter, viewId, lineKind, NULL);
     UmiStatus status = UmiDocumentEditCommandFromId(commandId, &command);
     if (status != UMI_STATUS_OK) return EditFinished(adapter, status);
     status = EditFindDocument(adapter, viewId, &id);
@@ -505,12 +561,36 @@ static gboolean LocationPromptClosing(GtkWindow *window, gpointer data)
     return FALSE; /* Let the window perform its normal close operation. */
 }
 
+/* Cancellation now verifies the original live form before closing it. Keep the earlier unconditional callback for review. */
+#if 0
 static void LocationPromptCancel(GtkButton *button, gpointer data)
 {
     (void)button;
     LocationPromptClose(GTK_WIDGET(data));
 }
 
+#endif
+/* Native removal revokes a retained form immediately. A button reparented to
+ * another window no longer carries the original prompt's authority. */
+static int LocationPromptLive(GtkWidget *window)
+{
+    LocationPrompt *prompt = g_object_get_data(G_OBJECT(window), "umicom-location-prompt");
+    return prompt != NULL && UmiGtk4WindowIsOpen(GTK_WINDOW(window)) &&
+        gtk_widget_get_visible(window) &&
+        g_object_get_data(prompt->lifetime, "location-dialog") == window &&
+        g_object_get_data(prompt->lifetime, "adapter") != NULL;
+}
+static void LocationPromptCancel(GtkButton *button, gpointer data)
+{
+    GtkWidget *window = data;
+    if (gtk_widget_get_root(GTK_WIDGET(button)) != GTK_ROOT(window) || !LocationPromptLive(window)) return;
+    g_object_ref(window);
+    LocationPromptClose(window);
+    g_object_unref(window);
+}
+
+/* Retain the complete prompt and input across observable GTK updates; the earlier callback retained only its editing token and is kept for review. */
+#if 0
 static void LocationPromptAccept(GtkWidget *source, gpointer data)
 {
     GtkWidget *window = data;
@@ -535,6 +615,35 @@ static void LocationPromptAccept(GtkWidget *source, gpointer data)
     if (adapter != NULL) (void)EditFinished(adapter, status);
 }
 
+#endif
+static void LocationPromptAccept(GtkWidget *source, gpointer data)
+{
+    GtkWidget *window = data;
+    if (gtk_widget_get_root(source) != GTK_ROOT(window) || !LocationPromptLive(window)) return;
+    /* Retain the form while property notifications or completion retire its
+     * native owner. The captured location also outlives the editable control. */
+    g_object_ref(window);
+    LocationPrompt *prompt = g_object_get_data(G_OBJECT(window), "umicom-location-prompt");
+    GObject *lifetime = g_object_ref(prompt->lifetime);
+    UmiGtk4Adapter *adapter = g_object_get_data(lifetime, "adapter");
+    char *location = g_strdup(gtk_editable_get_text(GTK_EDITABLE(prompt->entry)));
+    UmiStatus status = adapter != NULL && adapter->edit_coordinator != NULL
+        ? UmiDocumentCoordinatorNavigate(adapter->edit_coordinator,
+            prompt->document, location, strlen(location), NULL) : UMI_STATUS_CANCELLED;
+    g_free(location);
+    if (status == UMI_STATUS_OK) LocationPromptClose(window);
+    else if (LocationPromptLive(window)) gtk_label_set_text(GTK_LABEL(prompt->message),
+        status == UMI_STATUS_INVALID_STATE || status == UMI_STATUS_NOT_FOUND
+            ? "The document changed or the line is unavailable. Cancel and check the intended document."
+            : "Enter a positive line or line:column, for example 12:5.");
+    adapter = g_object_get_data(lifetime, "adapter");
+    if (adapter != NULL) (void)EditFinished(adapter, status);
+    g_object_unref(lifetime);
+    g_object_unref(window);
+}
+
+/* Prompt construction and presentation now retain the native form and validate its editing owner. Native-removal observation clears the active slot even for retained destroyed windows; keep the previous lifecycle for review. */
+#if 0
 UmiStatus UmiGtk4AdapterPromptDocumentLocation(UmiGtk4Adapter *adapter)
 {
     /* A modal replacement question owns the next document decision. */
@@ -592,6 +701,107 @@ UmiStatus UmiGtk4AdapterPromptDocumentLocation(UmiGtk4Adapter *adapter)
     gtk_window_present(GTK_WINDOW(prompt->window));
     (void)gtk_widget_grab_focus(prompt->entry);
     return UMI_STATUS_OK;
+}
+
+#endif
+UmiStatus UmiGtk4AdapterPromptDocumentLocation(UmiGtk4Adapter *adapter)
+{
+    if (adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (UmiGtk4AdapterReplacementReviewBusy(adapter)) return EditFinished(adapter, UMI_STATUS_BUSY);
+    UmiDocumentId id = 0U;
+    UmiStatus status = EditFindDocument(adapter, NULL, &id);
+    if (status != UMI_STATUS_OK) return EditFinished(adapter, status);
+    if (adapter->edit_lifetime == NULL || !UmiGtk4WindowIsOpen(adapter->window))
+        return EditFinished(adapter, UMI_STATUS_UNAVAILABLE);
+    /* Window creation and presentation notify native observers. Retain the
+     * parent and token before either operation, then recheck authority without
+     * reading an adapter that those observers may have released. */
+    GObject *lifetime = g_object_ref(adapter->edit_lifetime);
+    if (g_object_get_data(lifetime, "location-constructing") != NULL) {
+        g_object_unref(lifetime);
+        return UMI_STATUS_BUSY;
+    }
+    GtkWidget *existing = g_object_get_data(lifetime, "location-dialog");
+    if (existing != NULL) {
+        g_object_ref(existing);
+        gtk_window_present(GTK_WINDOW(existing));
+        status = g_object_get_data(lifetime, "adapter") == adapter && LocationPromptLive(existing)
+            ? UMI_STATUS_OK : UMI_STATUS_CANCELLED;
+        g_object_unref(existing);
+        g_object_unref(lifetime);
+        return status;
+    }
+    LocationPrompt *prompt = g_try_new0(LocationPrompt, 1);
+    if (prompt == NULL) { g_object_unref(lifetime); return EditFinished(adapter, UMI_STATUS_OUT_OF_MEMORY); }
+    GtkWindow *parent = g_object_ref(adapter->window);
+    prompt->lifetime = lifetime;
+    prompt->document = id;
+    g_object_set_data(lifetime, "location-constructing", GUINT_TO_POINTER(1U));
+    prompt->window = gtk_window_new();
+    GtkWidget *window = g_object_ref(prompt->window);
+    g_object_set_data_full(G_OBJECT(window), "umicom-location-prompt", prompt, LocationPromptFree);
+    if (g_object_get_data(lifetime, "adapter") != adapter || !UmiGtk4WindowIsOpen(parent) ||
+        !UmiGtk4WindowIsOpen(GTK_WINDOW(window))) {
+        g_object_set_data(lifetime, "location-constructing", NULL);
+        LocationPromptClose(window);
+        g_object_unref(parent);
+        g_object_unref(window);
+        return UMI_STATUS_CANCELLED;
+    }
+    /* Keep the content alive until construction ends, even if a window observer
+     * destroys the form before it becomes visible. The form owns it afterwards. */
+    GtkWidget *root = g_object_ref_sink(gtk_box_new(GTK_ORIENTATION_VERTICAL, 12));
+    GtkWidget *buttons = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    GtkWidget *cancel = gtk_button_new_with_label("Cancel");
+    GtkWidget *go = gtk_button_new_with_label("Go to location");
+    prompt->entry = gtk_entry_new();
+    prompt->message = gtk_label_new("Enter line or line:column. Columns count UTF-8 bytes.");
+    gtk_widget_set_margin_top(root, 18); gtk_widget_set_margin_bottom(root, 18);
+    gtk_widget_set_margin_start(root, 18); gtk_widget_set_margin_end(root, 18);
+    gtk_label_set_wrap(GTK_LABEL(prompt->message), TRUE);
+    gtk_label_set_xalign(GTK_LABEL(prompt->message), 0.0f);
+    gtk_entry_set_placeholder_text(GTK_ENTRY(prompt->entry), "12:5");
+    gtk_entry_set_max_length(GTK_ENTRY(prompt->entry), (int)UMI_DOCUMENT_LOCATION_TEXT_MAX);
+    gtk_widget_set_tooltip_text(prompt->entry, "Line starts at 1; an omitted column starts at the beginning of the line.");
+    gtk_box_append(GTK_BOX(root), prompt->message);
+    gtk_box_append(GTK_BOX(root), prompt->entry);
+    gtk_box_append(GTK_BOX(buttons), cancel); gtk_box_append(GTK_BOX(buttons), go);
+    gtk_box_append(GTK_BOX(root), buttons);
+    gtk_window_set_child(GTK_WINDOW(window), root);
+    gtk_window_set_title(GTK_WINDOW(window), "Go to source location");
+    gtk_window_set_transient_for(GTK_WINDOW(window), parent);
+    gtk_window_set_destroy_with_parent(GTK_WINDOW(window), TRUE);
+    gtk_window_set_modal(GTK_WINDOW(window), TRUE);
+    gtk_window_set_default_size(GTK_WINDOW(window), 440, -1);
+    g_signal_connect(window, "destroy", G_CALLBACK(LocationPromptDestroyed), prompt);
+    g_signal_connect(window, "close-request", G_CALLBACK(LocationPromptClosing), NULL);
+    g_signal_connect_object(cancel, "clicked", G_CALLBACK(LocationPromptCancel), window, 0);
+    g_signal_connect_object(go, "clicked", G_CALLBACK(LocationPromptAccept), window, 0);
+    g_signal_connect_object(prompt->entry, "activate", G_CALLBACK(LocationPromptAccept), window, 0);
+    (void)umi_gtk4_automation_tag_widget(window, "document.location.window");
+    (void)umi_gtk4_automation_tag_widget(prompt->entry, "document.location.input");
+    (void)umi_gtk4_automation_tag_widget(prompt->message, "document.location.message");
+    (void)umi_gtk4_automation_tag_widget(cancel, "document.location.cancel");
+    (void)umi_gtk4_automation_tag_widget(go, "document.location.go");
+    if (g_object_get_data(lifetime, "adapter") != adapter || !UmiGtk4WindowIsOpen(parent) ||
+        !UmiGtk4WindowIsOpen(GTK_WINDOW(window))) status = UMI_STATUS_CANCELLED;
+    else {
+        g_object_set_data(lifetime, "location-dialog", window);
+        status = UmiGtk4WatchWindowClosed(GTK_WINDOW(window), G_OBJECT(window), LocationPromptDestroyed, prompt);
+        if (status == UMI_STATUS_OK) {
+            gtk_window_present(GTK_WINDOW(window));
+            if (g_object_get_data(lifetime, "adapter") == adapter && LocationPromptLive(window))
+                (void)gtk_widget_grab_focus(prompt->entry);
+            if (g_object_get_data(lifetime, "adapter") != adapter || !LocationPromptLive(window))
+                status = UMI_STATUS_CANCELLED;
+        }
+    }
+    g_object_set_data(lifetime, "location-constructing", NULL);
+    if (status != UMI_STATUS_OK) LocationPromptClose(window);
+    g_object_unref(root);
+    g_object_unref(parent);
+    g_object_unref(window);
+    return status;
 }
 
 /* Keep menu and keyboard switching on the same public document contract. */
@@ -1310,3 +1520,6 @@ UmiStatus UmiGtk4AdapterClearNavigationHistory(UmiGtk4Adapter *adapter)
 #include "document_recovery.inc"
 
 #include "document_format.inc"
+
+/* Native saved-file review reuses the provider-neutral reload transaction. */
+#include "document_reload_review.inc"

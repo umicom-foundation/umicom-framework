@@ -41,9 +41,32 @@ UmiStatus UmiGtk4NewProjectDialogCreate(GtkWindow *parent,
 UmiStatus UmiGtk4ApplicationModuleDialogCreate(GtkWindow *parent,
     UmiGtk4ProjectCreated onCreated, void *context, UmiGtk4DeveloperDialog **outDialog);
 
+/** Prepare a hidden project or application form without creating files.
+ * Use stack-owned output storage across construction; native observers may
+ * close the host. Reacquire the host before adopting the returned handle and
+ * calling Present. Destroy any unadopted handle. The callback remains borrowed
+ * and is invoked only after an explicit visible-form acceptance.
+ * On failure the output is NULL. No build or Git command runs. */
+UmiStatus UmiGtk4NewProjectDialogPrepare(GtkWindow *parent,
+    UmiGtk4ProjectCreated onCreated, void *context, UmiGtk4DeveloperDialog **outDialog);
+UmiStatus UmiGtk4ApplicationModuleDialogPrepare(GtkWindow *parent,
+    UmiGtk4ProjectCreated onCreated, void *context, UmiGtk4DeveloperDialog **outDialog);
+
 UmiStatus UmiGtk4BuildSettingsDialogCreate(GtkWindow *parent,
     const UmiBuildProfile *profile, int trusted, UmiGtk4BuildSettingsApplied onApplied,
     void *context, UmiGtk4DeveloperDialog **outDialog);
+/** Construct a hidden settings form. Bind optional configuration controls,
+ * store the handle in the live owner, then call Present. No execution or trust
+ * change occurs. The profile is copied; the callback context remains borrowed.
+ * Destroy the returned handle even when later binding or presentation fails. */
+UmiStatus UmiGtk4BuildSettingsDialogPrepare(GtkWindow *parent,
+    const UmiBuildProfile *profile, int trusted, UmiGtk4BuildSettingsApplied onApplied,
+    void *context, UmiGtk4DeveloperDialog **outDialog);
+/** Present a live form on the GTK thread. Ownership remains with the caller.
+ * Presentation can synchronously notify observers that destroy the owner. The
+ * function retains internal lifetime and returns CANCELLED if the form closes.
+ * Callers must reacquire their own owner before accessing it after this call. */
+UmiStatus UmiGtk4DeveloperDialogPresent(UmiGtk4DeveloperDialog *dialog);
 /** Accept/Cancel hides the form. The owner retains it until Destroy. */
 /** Destroy may be called from an acceptance callback on the GTK thread. Clear
  * the owner's stored handle at that point; the callback's borrowed result stays

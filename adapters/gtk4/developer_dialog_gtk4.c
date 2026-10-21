@@ -239,6 +239,15 @@ static UmiGtk4DeveloperDialog *DeveloperAcquire(UmiGtk4DeveloperDialog *dialog)
     ++dialog->references;
     return dialog;
 }
+/* Binding changes form structure but does not authorize actions. A prepared
+ * hidden form may be bound; clicks still require DeveloperAcquire visibility. */
+static UmiGtk4DeveloperDialog *DeveloperAcquireBinding(UmiGtk4DeveloperDialog *dialog)
+{
+    if (!DeveloperAlive(dialog) || dialog->sdkChanging) return NULL;
+    ++dialog->references;
+    return dialog;
+}
+
 static void DeveloperConnect(UmiGtk4DeveloperDialog *dialog, GObject *object,
     const char *signal, GCallback callback)
 {
@@ -778,6 +787,8 @@ done:
 }
 
 /* Construct a modal form with scrolling, so smaller displays retain the buttons. */
+/* Form construction now retains the parent and refuses native retirement before returning its handle. Retain the previous sequence for ownership review. */
+#if 0
 static UmiStatus CreateForm(GtkWindow *parent, const char *title,
     const char *instructions, GCallback accepted, const char *acceptTitle,
     UmiGtk4DeveloperDialog **outDialog)
@@ -855,6 +866,92 @@ static UmiStatus CreateForm(GtkWindow *parent, const char *title,
     return UMI_STATUS_OK;
 }
 
+#endif
+
+static UmiStatus CreateForm(GtkWindow *parent, const char *title,
+    const char *instructions, GCallback accepted, const char *acceptTitle,
+    UmiGtk4DeveloperDialog **outDialog)
+{
+    UmiGtk4DeveloperDialog *dialog;
+    GtkWidget *root;
+    GtkWidget *scroll;
+    GtkWidget *label;
+    GtkWidget *buttons;
+    GtkWidget *cancel;
+    GtkWidget *accept;
+    if (parent == NULL || outDialog == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outDialog = NULL;
+    if (!UmiGtk4WindowIsOpen(parent)) return UMI_STATUS_INVALID_STATE;
+    dialog = calloc(1U, sizeof(*dialog));
+    if (dialog == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    /* Retain the native parent across observable window construction. A
+     * removed parent remains a valid object, but cannot authorize this form. */
+    g_object_ref(parent);
+    dialog->references = 1U;
+    g_weak_ref_init(&dialog->parentWindow, parent);
+    dialog->signalObjects = g_ptr_array_new_with_free_func(g_object_unref);
+    dialog->window = GTK_WINDOW(gtk_window_new());
+    /* Retain the GTK object until the owner explicitly destroys this handle. */
+    g_object_ref(dialog->window);
+    gtk_window_set_title(dialog->window, title);
+    gtk_window_set_transient_for(dialog->window, parent);
+    gtk_window_set_destroy_with_parent(dialog->window, TRUE);
+    gtk_window_set_modal(dialog->window, TRUE);
+    gtk_window_set_default_size(dialog->window, 700, 640);
+    root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 12);
+    dialog->root = g_object_ref_sink(root);
+    gtk_widget_set_margin_start(root, 18);
+    gtk_widget_set_margin_end(root, 18);
+    gtk_widget_set_margin_top(root, 18);
+    gtk_widget_set_margin_bottom(root, 18);
+    label = gtk_label_new(instructions);
+    gtk_label_set_wrap(GTK_LABEL(label), TRUE);
+    gtk_label_set_xalign(GTK_LABEL(label), 0.0F);
+    gtk_box_append(GTK_BOX(root), label);
+    dialog->body = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
+    scroll = gtk_scrolled_window_new();
+    gtk_widget_set_vexpand(scroll, TRUE);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), dialog->body);
+    gtk_box_append(GTK_BOX(root), scroll);
+    dialog->message = gtk_label_new("");
+    gtk_label_set_wrap(GTK_LABEL(dialog->message), TRUE);
+    gtk_label_set_xalign(GTK_LABEL(dialog->message), 0.0F);
+    gtk_box_append(GTK_BOX(root), dialog->message);
+    buttons = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    cancel = gtk_button_new_with_label("Cancel");
+    accept = gtk_button_new_with_label(acceptTitle);
+    dialog->acceptButton = accept;
+    /* Owned signal registrations replace the raw callback below; it is kept
+     * for review of the previous lifetime contract. */
+#if 0
+    g_signal_connect(cancel, "clicked", G_CALLBACK(CancelClicked), dialog);
+#endif
+    DeveloperConnect(dialog, G_OBJECT(cancel), "clicked", G_CALLBACK(CancelClicked));
+    /* Owned signal registrations replace the raw callback below; it is kept
+     * for review of the previous lifetime contract. */
+#if 0
+    g_signal_connect(accept, "clicked", accepted, dialog);
+#endif
+    DeveloperConnect(dialog, G_OBJECT(accept), "clicked", accepted);
+    (void)umi_gtk4_automation_tag_widget(accept, "developer.dialog.accept");
+    (void)umi_gtk4_automation_tag_widget(cancel, "developer.dialog.cancel");
+    gtk_box_append(GTK_BOX(buttons), cancel);
+    gtk_box_append(GTK_BOX(buttons), accept);
+    gtk_box_append(GTK_BOX(root), buttons);
+    gtk_window_set_child(dialog->window, root);
+    /* Owned signal registrations replace the raw callback below; it is kept
+     * for review of the previous lifetime contract. */
+#if 0
+    g_signal_connect(dialog->window, "close-request", G_CALLBACK(HideOnClose), dialog);
+#endif
+    DeveloperConnect(dialog, G_OBJECT(dialog->window), "close-request", G_CALLBACK(HideOnClose));
+    int alive = DeveloperAlive(dialog);
+    g_object_unref(parent);
+    if (!alive) { UmiGtk4DeveloperDialogDestroy(dialog); return UMI_STATUS_CANCELLED; }
+    *outDialog = dialog;
+    return UMI_STATUS_OK;
+}
+
 /* Template metadata and file recipes come from the existing Framework catalogue. */
 /* Project creation now requires an explicit destination and offers a parent-folder browser. The home-directory default is retained here so the owner can review the former behaviour. The previous implementation is retained for engineering review. */
 #if 0
@@ -898,6 +995,8 @@ UmiStatus UmiGtk4NewProjectDialogCreate(GtkWindow *parent,
     return UMI_STATUS_OK;
 }
 #endif
+/* Prepare and Present separate native construction from host adoption. The original immediate-opening form is retained for compatibility review. */
+#if 0
 UmiStatus UmiGtk4NewProjectDialogCreate(GtkWindow *parent,
     UmiGtk4ProjectCreated onCreated, void *context, UmiGtk4DeveloperDialog **outDialog)
 {
@@ -939,9 +1038,64 @@ UmiStatus UmiGtk4NewProjectDialogCreate(GtkWindow *parent,
     return UMI_STATUS_OK;
 }
 
+#endif
+
+UmiStatus UmiGtk4NewProjectDialogPrepare(GtkWindow *parent,
+    UmiGtk4ProjectCreated onCreated, void *context, UmiGtk4DeveloperDialog **outDialog)
+{
+    UmiGtk4DeveloperDialog *dialog = NULL;
+    const char *titles[UMI_DEVELOPER_PROJECT_TEMPLATE_CAPACITY + 1U] = {0};
+    UmiStatus status;
+    if (onCreated == NULL || outDialog == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outDialog = NULL;
+    status = CreateForm(parent, "New Umicom Project",
+        "Choose a CMake starter and a new folder. Studio will create source files, build settings and a README. It will not download dependencies or run code.",
+        G_CALLBACK(CreateClicked), "Create Project", &dialog);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_developer_project_service_create(&dialog->projects);
+    if (status != UMI_STATUS_OK) { UmiGtk4DeveloperDialogDestroy(dialog); return status; }
+    dialog->onCreated = onCreated;
+    dialog->context = context;
+    for (size_t index = 0U; index < umi_developer_project_builtin_template_count(); ++index) {
+        const UmiDeveloperProjectTemplate *recipe = umi_developer_project_builtin_template_at(index);
+        if (recipe->build_system != UMI_DEVELOPER_PROJECT_BUILD_CMAKE) continue;
+        if (dialog->templateCount >= UMI_DEVELOPER_PROJECT_TEMPLATE_CAPACITY) break;
+        titles[dialog->templateCount] = recipe->title;
+        dialog->templates[dialog->templateCount++] = recipe;
+    }
+    dialog->templatePicker = gtk_drop_down_new_from_strings(titles);
+    gtk_widget_set_tooltip_text(dialog->templatePicker, "CMake project templates supplied by Umicom Framework");
+    (void)umi_gtk4_automation_tag_widget(dialog->templatePicker, "developer.project.template");
+    gtk_box_append(GTK_BOX(dialog->body), dialog->templatePicker);
+    dialog->fields[0] = AddEntry(dialog, "Application name", "Umicom Notes", "developer.project.name");
+    dialog->fields[1] = AddEntry(dialog, "Application identifier", "org.umicom.notes", "developer.project.id");
+    dialog->fields[2] = AddEntry(dialog, "Repository name", "umicom-notes", "developer.project.repository");
+    dialog->fields[3] = AddEntry(dialog, "CMake target", "umicom_notes", "developer.project.target");
+    /* Leave the destination explicit. The parent browser previews a new path;
+     * entering a full path manually remains available for every platform. */
+    dialog->fields[4] = AddEntry(dialog, "New project folder (full path)", "", "developer.project.folder");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(dialog->fields[4]), "Choose a parent folder or enter a full new path");
+    DeveloperProjectLocationControls(dialog);
+    if (!DeveloperAlive(dialog)) { UmiGtk4DeveloperDialogDestroy(dialog); return UMI_STATUS_CANCELLED; }
+    *outDialog = dialog;
+    return UMI_STATUS_OK;
+}
+
+
+/* Existing consumers retain the immediate-opening entry point. Hosts which
+ * own callbacks in a disposable controller should prepare, adopt, then present. */
+UmiStatus UmiGtk4NewProjectDialogCreate(GtkWindow *parent,
+    UmiGtk4ProjectCreated onCreated, void *context, UmiGtk4DeveloperDialog **outDialog)
+{
+    UmiStatus status = UmiGtk4NewProjectDialogPrepare(parent, onCreated, context, outDialog);
+    if (status != UMI_STATUS_OK) return status;
+    return UmiGtk4DeveloperDialogPresent(*outDialog);
+}
 /* This form edits a value copy; the application owns the eventual trust decision. */
 #include "developer_compilation_database_gtk4.inc"
 
+/* The immediate constructor is retained for compatibility review. Preparing the shared form separately lets applications attach optional controls before presentation can notify their owners. */
+#if 0
 UmiStatus UmiGtk4BuildSettingsDialogCreate(GtkWindow *parent,
     const UmiBuildProfile *profile, int trusted, UmiGtk4BuildSettingsApplied onApplied,
     void *context, UmiGtk4DeveloperDialog **outDialog)
@@ -1034,6 +1188,129 @@ UmiStatus UmiGtk4BuildSettingsDialogCreate(GtkWindow *parent,
     *outDialog = dialog;
     gtk_window_present(dialog->window);
     return UMI_STATUS_OK;
+}
+
+#endif
+UmiStatus UmiGtk4BuildSettingsDialogPrepare(GtkWindow *parent,
+    const UmiBuildProfile *profile, int trusted, UmiGtk4BuildSettingsApplied onApplied,
+    void *context, UmiGtk4DeveloperDialog **outDialog)
+{
+    UmiGtk4DeveloperDialog *dialog;
+    UmiStatus status;
+    if (onApplied == NULL || outDialog == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outDialog = NULL;
+    status = umi_build_profile_validate(profile, NULL, 0U);
+    if (status != UMI_STATUS_OK) return status;
+    /* Construction may notify native window observers. Keep source settings
+     * independent of the application service throughout widget creation. */
+    UmiBuildProfile settings = *profile;
+    profile = &settings;
+    status = CreateForm(parent, "Project Build Settings",
+        "Review the build folder, program and install folder. A CMake preset controls configuration when its field is filled. Building a project can execute its scripts: trust only code you have reviewed.",
+        G_CALLBACK(ApplyClicked), "Apply Settings", &dialog);
+    if (status != UMI_STATUS_OK) return status;
+    dialog->profile = *profile;
+    dialog->onApplied = onApplied;
+    dialog->context = context;
+    for (size_t index = 0U; index < UMI_DEVELOPER_FORM_FIELDS; ++index) {
+        char id[80];
+        const UmiDeveloperProfileField *field = &PROFILE_FIELDS[index];
+        g_snprintf(id, sizeof(id), "developer.build.field.%zu", index);
+        dialog->fields[index] = AddEntry(dialog, field->title,
+            (const char *)profile + field->offset, id);
+    }
+    /* The profile owns this choice, so GUI and command-line builds can use
+     * the same tools. Opening settings neither changes PATH nor launches tools. */
+    gtk_widget_set_tooltip_text(dialog->fields[11],
+        "Choose the folder containing CMake, CTest, CPack and Ninja. "
+        "For MSYS2 UCRT64 this is usually C:\\msys64\\ucrt64\\bin. "
+        "Only child processes receive this folder in PATH. Leave blank to inherit PATH.");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(dialog->fields[13]), "APP_MODE=development DATA_FOLDER=\"C:/Project Data\"");
+    gtk_widget_set_tooltip_text(dialog->fields[13],
+        "Saved project settings, not secret storage. Quotes group values; no shell or variable expansion. Applies to Run and native Debug, not builds or terminal sessions.");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(dialog->fields[12]),
+        "-DCMAKE_PREFIX_PATH=\"C:/SDKs/Umicom\" -DUMICOM_LESSON_WITH_GTK=ON");
+    gtk_widget_set_tooltip_text(dialog->fields[12],
+        "Extra configure cache definitions, including explicit overrides after a preset. "
+        "Each argument must be -DNAME[:TYPE]=VALUE. Quotes preserve spaces; no shell expansion occurs. "
+        "Use the dedicated fields for compiler, configuration, testing and install choices.");
+    dialog->configurePreset = AddEntry(dialog, "Configure preset (separate stage)",
+        profile->configure_preset, "developer.build.configure-preset");
+    dialog->buildPreset = AddEntry(dialog, "Build preset (separate stage)",
+        profile->build_preset, "developer.build.build-preset");
+    dialog->testPreset = AddEntry(dialog, "Test preset (separate stage)",
+        profile->test_preset, "developer.build.test-preset");
+    GtkWidget *presetHelp = gtk_label_new(
+        "Clear the shared CMake preset above when using separate stage names. A blank stage uses the ordinary profile fields. Explicit presets control their own options. Set the build folder to the preset's binary directory for diagnostics, install, package and debugger paths.");
+    gtk_label_set_wrap(GTK_LABEL(presetHelp), TRUE);
+    gtk_label_set_xalign(GTK_LABEL(presetHelp), 0.0F);
+    gtk_box_append(GTK_BOX(dialog->body), presetHelp);
+    /* Show explicit override semantics beside the existing preset explanation. */
+    GtkWidget *definitionHelp = gtk_label_new(
+        "The CMake definitions field adds only the options you enter, after the configure preset if one is selected. "
+        "Use it for SDK search prefixes or project features. These settings are saved locally with this project; "
+        "do not put passwords or API keys in build definitions, logs or CMake caches.");
+    gtk_label_set_wrap(GTK_LABEL(definitionHelp), TRUE);
+    gtk_label_set_xalign(GTK_LABEL(definitionHelp), 0.0F);
+    gtk_box_append(GTK_BOX(dialog->body), definitionHelp);
+    DeveloperPresetControls(dialog);
+    dialog->runDirectory = AddEntry(dialog,
+        "Program working folder (blank uses the project folder)",
+        profile->run_working_directory, "developer.build.run-directory");
+    gtk_widget_set_tooltip_text(dialog->runDirectory,
+        "Run and native Debug use this folder. Relative paths start at the project folder; the executable path still starts at the project folder.");
+    dialog->arguments = AddEntry(dialog,
+        "Argument list (clear the single argument above before using this field)",
+        profile->run_arguments, "developer.build.arguments");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(dialog->arguments), "--file \"notes for review.txt\" --mode preview");
+    GtkWidget *argumentHelp = gtk_label_new(
+        "Spaces separate arguments. Quotes keep spaces inside one argument; \"\" passes an empty argument. Backslashes escape quotes, backslashes or spaces. No shell commands or variables are expanded.");
+    gtk_label_set_wrap(GTK_LABEL(argumentHelp), TRUE);
+    gtk_label_set_xalign(GTK_LABEL(argumentHelp), 0.0F);
+    gtk_box_append(GTK_BOX(dialog->body), argumentHelp);
+    DeveloperToolsControls(dialog);
+    DeveloperSdkControls(dialog);
+    DeveloperLaunchControls(dialog);
+    DeveloperTargetControls(dialog);
+    DeveloperInstalledControls(dialog);
+    gtk_editable_set_editable(GTK_EDITABLE(dialog->fields[1]), FALSE);
+    dialog->parallel = gtk_spin_button_new_with_range(1.0, 32.0, 1.0);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(dialog->parallel), (double)profile->parallel_jobs);
+    gtk_widget_set_tooltip_text(dialog->parallel, "Maximum parallel build jobs");
+    gtk_box_append(GTK_BOX(dialog->body), gtk_label_new("Parallel build jobs"));
+    gtk_box_append(GTK_BOX(dialog->body), dialog->parallel);
+    dialog->trust = gtk_check_button_new_with_label("I trust the code and build scripts in this project folder");
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(dialog->trust), trusted != 0);
+    (void)umi_gtk4_automation_tag_widget(dialog->trust, "developer.build.trusted");
+    gtk_box_append(GTK_BOX(dialog->body), dialog->trust);
+    DeveloperCompilerDatabaseControls(dialog);
+    *outDialog = dialog;
+    return UMI_STATUS_OK;
+}
+
+/* Presentation is an observable boundary: an owner may destroy its handle
+ * from a focus or visibility callback. The temporary reference covers GTK's
+ * complete call, and the result records whether the form is still usable. */
+UmiStatus UmiGtk4DeveloperDialogPresent(UmiGtk4DeveloperDialog *dialog)
+{
+    if (!DeveloperAlive(dialog)) return UMI_STATUS_INVALID_STATE;
+    ++dialog->references;
+    gtk_window_present(dialog->window);
+    UmiStatus status = DeveloperVisible(dialog) ? UMI_STATUS_OK : UMI_STATUS_CANCELLED;
+    DeveloperRelease(dialog);
+    return status;
+}
+
+/* Preserve the existing immediate-opening interface for current consumers.
+ * Applications with optional bindings can prepare, bind, then present once. */
+UmiStatus UmiGtk4BuildSettingsDialogCreate(GtkWindow *parent,
+    const UmiBuildProfile *profile, int trusted, UmiGtk4BuildSettingsApplied onApplied,
+    void *context, UmiGtk4DeveloperDialog **outDialog)
+{
+    UmiStatus status = UmiGtk4BuildSettingsDialogPrepare(parent, profile, trusted,
+        onApplied, context, outDialog);
+    if (status != UMI_STATUS_OK) return status;
+    return UmiGtk4DeveloperDialogPresent(*outDialog);
 }
 
 /* Drop callbacks and destroy the transient window before the owner disappears. */

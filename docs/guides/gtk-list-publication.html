@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Publishing a native file list</title><style>body{max-width:60rem;margin:2rem auto;padding:0 1.2rem;font:17px/1.65 system-ui;color:#183341}pre{background:#eef4f7;padding:1rem;overflow:auto}code{font-family:Consolas,monospace}h1,h2{line-height:1.2}a{color:#075d7b}</style></head><body>
+<!-- Umicom Framework | Sammy Hegab, Umicom Foundation | MIT -->
+<h1>Publishing a native file list</h1>
+<p>A file list displays a snapshot: the project, filter and file-index revision that were current when its rows were prepared. A native widget notification can run application code while rows are being removed or added. That code can close the window or select another project. Framework's <code>UmiGtk4ListBoxPublish</code> stops publication when the host reports that its captured snapshot is no longer current.</p>
+<h2>1. Prepare rows before changing the visible list</h2>
+<p>Include <code>umicom/ui/gtk4/list_publication.h</code> and link the GTK4 Framework target, <code>Umicom::ui_gtk4</code>. Create up to <code>UMI_GTK4_LIST_PUBLICATION_LIMIT</code> distinct widgets, taking a strong nonfloating reference to each with <code>g_object_ref_sink</code>. Leave them unparented. Ordinary labels or buttons are wrapped by GTK in list rows; explicit <code>GtkListBoxRow</code> widgets are also accepted.</p>
+<p>Use an unbound list without native sorting. Filter and order the source records before creating widgets. Do not supply a native root, an ancestor of the list or the same widget twice. Invalid input is rejected before Framework removes existing rows.</p>
+<h2>2. Capture the host identity</h2>
+<p>Keep an independent context alive until publication returns. Its current-state callback should resolve a live host and compare the project session, query, page offset and data revision with the captured values. A strong reference to a window keeps its allocation alive; it does not prove that the window is still open. Check both lifetime and the application's current ownership.</p>
+<pre><code>/* The host owns capture and every row through this call.
+ * CheckCapturedPage resolves its live host instead of retaining a raw owner. */
+UmiStatus status = UmiGtk4ListBoxPublish(
+    list, rows, rowCount, CheckCapturedPage, &amp;capture);
+</code></pre>
+<p>The callback returns <code>UMI_STATUS_OK</code> only while the original page remains valid. Return <code>UMI_STATUS_CANCELLED</code> for a retired host or an appropriate non-OK status for a changed source. Do not mutate the same native list from this callback. Nested publication is refused with <code>UMI_STATUS_BUSY</code>.</p>
+<h2>3. Invalidate old row actions before publishing</h2>
+<p>Give each page an action identity owned independently of the application window. A row click must compare that identity and the captured workspace session before opening a file. Replace the list's action identity before publication starts. Do not treat a copied filename as authority to act on the currently selected project.</p>
+<p>After the helper returns, resolve the host again before updating summary text or navigation buttons. Those setters can also emit notifications, so repeat the check between host-dependent operations. Mark the page rendered only when all required publication steps succeed.</p>
+<h2>4. Recover from cancellation</h2>
+<p>Preflight failures leave existing rows in place. Cancellation after removal begins can leave an empty or partial page. Framework does not roll back, retry, activate a row, move focus or restore selection. Invalidate the cancelled page's action identity and let the host take a fresh snapshot on its next refresh. Keep the last successful data snapshot separately from the native widgets.</p>
+<p>The helper retains the list, the old rows and copies of the input widget references while observers run. The caller still owns its references and must release them. Unexpected row insertion or reordering returns <code>UMI_STATUS_INVALID_STATE</code>; it is not treated as a successful display.</p>
+<h2>5. Review the regression examples</h2>
+<p><code>tests/gui_control_checks/test_list_publication.c</code> demonstrates preflight rejection, cancellation from real parent notifications, reentry, release of the caller's array, unexpected row changes and capacity limits. Its CTest names begin with <code>framework.ui.list_publication.</code>. A missing graphical display produces the explicit skip status 77; that is not evidence that native publication passed.</p>
+<p>Studio's Explorer uses this service to keep workspace changes and page actions consistent. Applications remain responsible for their own source snapshots, authorization rules, refresh scheduling and visible recovery messages.</p>
+</body></html>

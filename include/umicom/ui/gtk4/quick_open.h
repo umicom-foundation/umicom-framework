@@ -27,7 +27,11 @@ extern "C"
                                               const UmiFileIndexEntry *entry);
     /** Create, but do not present, a transient file picker. On success it owns
  * userData and calls destroyData once on finalization. On failure ownership
- * remains with the caller and outWindow is NULL. The returned window has a
+ * remains with the caller and outWindow is NULL. Cancellation during native
+ * construction returns CANCELLED and does not destroy caller data. A query
+ * update or native close during row publication leaves old actions retired;
+ * Refresh results can capture a new page while the picker remains open.
+ * The returned window has a
  * caller-owned reference; destroy it when finished and release that reference.
  * Parent closure retires the picker even when either window is retained.
  * Queries are at most 256 Unicode characters / 1024 UTF-8 bytes. Results are

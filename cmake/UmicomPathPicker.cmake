@@ -7,7 +7,7 @@ if(TARGET umicom_ui_gtk4)
         add_executable(umicom-path-picker-test "${CMAKE_CURRENT_LIST_DIR}/../tests/path_picker/test_path_picker.c")
         # The test substitutes native dialogs while retaining real GTK ownership.
         target_include_directories(umicom-path-picker-test PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../include")
-        target_link_libraries(umicom-path-picker-test PRIVATE PkgConfig::UMICOM_FRAMEWORK_GTK4)
+        target_link_libraries(umicom-path-picker-test PRIVATE PkgConfig::UMICOM_FRAMEWORK_GTK4 Umicom::platform)
         set_target_properties(umicom-path-picker-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
         umicom_apply_warnings(umicom-path-picker-test)
         umicom_apply_sanitizers(umicom-path-picker-test)

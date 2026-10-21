@@ -96,6 +96,18 @@ static UmiStatus Created(const UmiDeveloperProjectModel *model, const UmiBuildPr
         return UMI_STATUS_INVALID_ARGUMENT;
     return Applied(profile, 0, context);
 }
+/* Present owns its controller across native notifications. Releasing the
+ * owner's handle here must cancel presentation without accessing freed state. */
+static void CloseOnPresent(GObject *object, GParamSpec *property, gpointer context)
+{
+    (void)property;
+    if (!gtk_widget_get_visible(GTK_WIDGET(object))) return;
+    Probe *probe = context;
+    if (strcmp(probe->mode, "prepare-parent-close") == 0)
+        gtk_window_destroy(gtk_window_get_transient_for(GTK_WINDOW(object)));
+    else Dispose(probe);
+}
+
 static void VisibilityChanged(GObject *object, GParamSpec *property, gpointer context)
 {
     (void)property;
@@ -129,8 +141,33 @@ int main(int argc, char **argv)
     }
     else
     {
+        if (strncmp(probe.mode, "prepare-", 8U) == 0) {
+            CHECK(UmiGtk4BuildSettingsDialogPrepare(parent, &probe.profile, 0, Applied, &probe, &probe.dialog) == UMI_STATUS_OK);
+            /* Prepared windows exist but cannot submit results before show. */
+            GListModel *windows = gtk_window_get_toplevels();
+            for (guint i = 0U; i < g_list_model_get_n_items(windows); ++i) {
+                GtkWindow *candidate = g_list_model_get_item(windows, i);
+                if (gtk_window_get_transient_for(candidate) == parent) { form = candidate; break; }
+                g_object_unref(candidate);
+            }
+            CHECK(form != NULL && !gtk_widget_get_visible(GTK_WIDGET(form)));
+            GtkWidget *hiddenAccept = Find(GTK_WIDGET(form), "developer.dialog.accept");
+            CHECK(GTK_IS_BUTTON(hiddenAccept));
+            g_signal_emit_by_name(hiddenAccept, "clicked");
+            CHECK(probe.calls == 0U);
+            if (strcmp(probe.mode, "prepare-open") != 0) {
+                g_signal_connect(form, "notify::visible", G_CALLBACK(CloseOnPresent), &probe);
+                CHECK(UmiGtk4DeveloperDialogPresent(probe.dialog) == UMI_STATUS_CANCELLED);
+                CHECK(probe.calls == 0U);
+                if (strcmp(probe.mode, "prepare-owner-close") == 0) CHECK(probe.dialog == NULL);
+                goto cleanup;
+            }
+            CHECK(UmiGtk4DeveloperDialogPresent(probe.dialog) == UMI_STATUS_OK);
+            g_clear_object(&form);
+        } else {
         CHECK(UmiGtk4BuildSettingsDialogCreate(parent, &probe.profile, 0, Applied, &probe, &probe.dialog) ==
               UMI_STATUS_OK);
+        }
     }
     form = Form(parent);
     CHECK(form != NULL);

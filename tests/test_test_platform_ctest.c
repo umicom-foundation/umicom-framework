@@ -16,6 +16,7 @@
 #include "support/assertions.h"
 #include <assert.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "umicom/test_platform/test_platform.h"
 
@@ -23,6 +24,87 @@
  * Start this command or application, report setup failures, and return a process exit code
  * to the operating system.
  */
+/* No configured tree or CTest executable is needed to verify execution origin.
+ * Keep this check ahead of process submission in every frontend. */
+static void TestSelectionOrigin(void)
+{
+#ifdef _WIN32
+    const char *root = "C:/Projects/Notes/build";
+    const char *equivalent = "C:/Projects/Notes/./build";
+    const char *otherRoot = "C:/Projects/Other/build";
+#else
+    const char *root = "/projects/Notes/build";
+    const char *equivalent = "/projects/Notes/./build";
+    const char *otherRoot = "/projects/Other/build";
+#endif
+    const char *json = "{\"tests\":[{\"name\":\"smoke\",\"command\":[\"unused\"]}]}";
+    UmiTestPlatformService *service = NULL;
+    UmiTestPlatformSelection *selection = calloc(1U, sizeof *selection);
+    UmiTestPlatformSelection *before = calloc(1U, sizeof *before);
+    assert(selection != NULL && before != NULL);
+    assert(umi_test_platform_service_create(&service) == UMI_STATUS_OK);
+    UmiTestPlatformCtestImportOptions options = {0};
+    strcpy(options.project_id, "selected");
+    strcpy(options.suite_id, "selected.ctest");
+    strcpy(options.build_directory, root);
+    strcpy(options.configuration, "Debug");
+    UmiTestPlatformCtestImportSummary summary;
+    assert(umi_test_platform_service_import_ctest_json(service, json, &options, &summary) == UMI_STATUS_OK);
+    UmiTestPlatformItemRegistry *items = umi_test_platform_service_item(service);
+    UmiTestPlatformDiscoveryRegistry *discoveries = umi_test_platform_service_discovery(service);
+    selection->count = 1U;
+    strcpy(selection->item_ids[0], "selected.ctest.smoke");
+    selection->source_revision = umi_test_platform_item_registry_revision(items);
+    *before = *selection;
+    uint64_t itemRevision = umi_test_platform_item_registry_revision(items);
+    uint64_t discoveryRevision = umi_test_platform_discovery_registry_revision(discoveries);
+    assert(UmiTestPlatformCtestCheckSelection(items, discoveries, selection, "selected", root, "Debug") == UMI_STATUS_OK);
+    assert(UmiTestPlatformCtestCheckSelection(items, discoveries, selection, "selected", equivalent, "") == UMI_STATUS_OK);
+    assert(UmiTestPlatformCtestCheckSelection(items, discoveries, selection, "other", root, "Debug") == UMI_STATUS_INVALID_STATE);
+    assert(UmiTestPlatformCtestCheckSelection(items, discoveries, selection, "selected", otherRoot, "Debug") == UMI_STATUS_INVALID_STATE);
+    assert(UmiTestPlatformCtestCheckSelection(items, discoveries, selection, "selected", root, "Release") == UMI_STATUS_INVALID_STATE);
+    assert(UmiTestPlatformCtestCheckSelection(items, discoveries, selection, "selected", "relative", "Debug") == UMI_STATUS_INVALID_ARGUMENT);
+    assert(UmiTestPlatformCtestCheckSelection(items, discoveries, selection, "", root, "Debug") == UMI_STATUS_INVALID_ARGUMENT);
+    assert(UmiTestPlatformCtestCheckSelection(items, discoveries, selection, "selected", root, NULL) == UMI_STATUS_INVALID_ARGUMENT);
+    assert(UmiTestPlatformCtestCheckSelection(NULL, discoveries, selection, "selected", root, "Debug") == UMI_STATUS_INVALID_ARGUMENT);
+    assert(UmiTestPlatformCtestCheckSelection(items, NULL, selection, "selected", root, "Debug") == UMI_STATUS_INVALID_ARGUMENT);
+    assert(UmiTestPlatformCtestCheckSelection(items, discoveries, NULL, "selected", root, "Debug") == UMI_STATUS_INVALID_ARGUMENT);
+    assert(memcmp(selection, before, sizeof *before) == 0);
+    assert(umi_test_platform_item_registry_revision(items) == itemRevision);
+    assert(umi_test_platform_discovery_registry_revision(discoveries) == discoveryRevision);
+    selection->count = 0U;
+    assert(UmiTestPlatformCtestCheckSelection(items, discoveries, selection, "selected", root, "Debug") == UMI_STATUS_INVALID_ARGUMENT);
+    selection->count = sizeof selection->item_ids / sizeof selection->item_ids[0] + 1U;
+    assert(UmiTestPlatformCtestCheckSelection(items, discoveries, selection, "selected", root, "Debug") == UMI_STATUS_CAPACITY_EXCEEDED);
+    *selection = *before;
+    memset(selection->item_ids[0], 'x', sizeof selection->item_ids[0]);
+    assert(UmiTestPlatformCtestCheckSelection(items, discoveries, selection, "selected", root, "Debug") == UMI_STATUS_INVALID_ARGUMENT);
+    strcpy(selection->item_ids[0], "not.discovered");
+    assert(UmiTestPlatformCtestCheckSelection(items, discoveries, selection, "selected", root, "Debug") == UMI_STATUS_NOT_FOUND);
+    *selection = *before;
+    /* A later row from another project must reject the whole selection. */
+    strcpy(options.project_id, "other");
+    strcpy(options.suite_id, "other.ctest");
+    strcpy(options.build_directory, otherRoot);
+    assert(umi_test_platform_service_import_ctest_json(service, json, &options, &summary) == UMI_STATUS_OK);
+    assert(UmiTestPlatformCtestCheckSelection(items, discoveries, selection, "selected", root, "Debug") == UMI_STATUS_INVALID_STATE);
+    selection->source_revision = umi_test_platform_item_registry_revision(items);
+    selection->count = 2U;
+    strcpy(selection->item_ids[1], "other.ctest.smoke");
+    assert(UmiTestPlatformCtestCheckSelection(items, discoveries, selection, "selected", root, "Debug") == UMI_STATUS_INVALID_STATE);
+    selection->count = 1U;
+    UmiTestPlatformDiscoverySnapshot discovery;
+    assert(umi_test_platform_discovery_registry_find(discoveries, "discovery.selected.ctest", &discovery) == UMI_STATUS_OK);
+    strcpy(discovery.project_id, "other");
+    assert(umi_test_platform_discovery_registry_upsert(discoveries, &discovery) == UMI_STATUS_OK);
+    assert(UmiTestPlatformCtestCheckSelection(items, discoveries, selection, "selected", root, "Debug") == UMI_STATUS_INVALID_STATE);
+    assert(umi_test_platform_discovery_registry_remove(discoveries, "discovery.selected.ctest") == UMI_STATUS_OK);
+    assert(UmiTestPlatformCtestCheckSelection(items, discoveries, selection, "selected", root, "Debug") == UMI_STATUS_NOT_FOUND);
+    umi_test_platform_service_destroy(service);
+    free(before);
+    free(selection);
+}
+
 int main(void)
 {
     static const char json[] =
@@ -83,5 +165,6 @@ int main(void)
     assert(snapshot.suite_count == 1U);
     assert(snapshot.discovery_count == 1U);
     umi_test_platform_service_destroy(service);
+    TestSelectionOrigin();
     return 0;
 }

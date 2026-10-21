@@ -100,6 +100,13 @@ static int CheckInitialLocation(const char *scenario)
             NULL, folder, "../notes.c") == UMI_STATUS_INVALID_ARGUMENT);
         CHECK(UmiPathPickerGtk4SetInitialLocation(dialog, UMI_PATH_PICKER_NEW_FILE,
             NULL, folder, "\xff") == UMI_STATUS_INVALID_ARGUMENT);
+#ifdef _WIN32
+        /* A rooted path without a drive still depends on the process drive. */
+        CHECK(UmiPathPickerGtk4SetInitialLocation(dialog, UMI_PATH_PICKER_NEW_FILE,
+            NULL, "/chosen", "notes.c") == UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(UmiPathPickerGtk4SetInitialLocation(dialog, UMI_PATH_PICKER_NEW_FILE,
+            NULL, "C:chosen", "notes.c") == UMI_STATUS_INVALID_ARGUMENT);
+#endif
         CHECK(UmiPathPickerGtk4SetInitialLocation(dialog, (UmiPathPickerMode)99,
             NULL, NULL, NULL) == UMI_STATUS_INVALID_ARGUMENT);
         CHECK(g_file_equal(gtk_file_dialog_get_initial_folder(dialog), folderFile));

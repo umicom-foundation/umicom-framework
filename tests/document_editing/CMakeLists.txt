@@ -105,7 +105,9 @@ if(TARGET umicom_ui_gtk4)
     endif()
     foreach(case unknown-command null-command missing-document completion-detach
         direct-navigation invalid-location form-cancel form-rebind retained-control
-        form-other-tab form-enter form-go)
+        form-other-tab form-enter form-go
+        present-close present-detach construction-detach construction-reenter
+        retained-destroy reparented-cancel error-feedback-close)
         add_test(NAME framework.document_navigation.gtk4.${case}
             COMMAND umicom-document-navigation-gtk4-test ${case})
         set_tests_properties(framework.document_navigation.gtk4.${case} PROPERTIES
@@ -125,3 +127,23 @@ add_test(NAME framework.document_navigation.example COMMAND umicom-document-navi
 set_tests_properties(framework.document_navigation.example PROPERTIES TIMEOUT 30
     LABELS "framework;document;navigation;example")
 install(TARGETS umicom-document-navigation-example RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+
+# Saved-file review exercises actual GTK controls and isolated named files.
+if(TARGET umicom_ui_gtk4)
+    add_executable(umicom-document-reload-gtk4-test test_document_reload_gtk4.c)
+    target_link_libraries(umicom-document-reload-gtk4-test PRIVATE Umicom::ui_gtk4 Umicom::document)
+    umicom_apply_warnings(umicom-document-reload-gtk4-test)
+    umicom_apply_sanitizers(umicom-document-reload-gtk4-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-document-reload-gtk4-test)
+    endif()
+    foreach(case clean dirty cancel unapproved draft-changed disk-changed disk-missing other-tab undo
+        detach retained-control retained-window reparented-control completion-detach construction-detach
+        construction-reenter present-close feedback-close untitled busy)
+        add_test(NAME framework.document_reload.gtk4.${case}
+            COMMAND umicom-document-reload-gtk4-test ${case} "${CMAKE_CURRENT_BINARY_DIR}/reload-fixtures")
+        set_tests_properties(framework.document_reload.gtk4.${case} PROPERTIES TIMEOUT 30
+            SKIP_RETURN_CODE 77 RUN_SERIAL TRUE LABELS "framework;document;gtk4;native;reload")
+    endforeach()
+endif()

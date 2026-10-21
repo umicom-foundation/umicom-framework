@@ -38,3 +38,9 @@ if(TARGET umicom-environment-producer)
     set_tests_properties(framework.run_current.native PROPERTIES
         WORKING_DIRECTORY "${directory}" TIMEOUT 30 LABELS "framework;build;launch;native")
 endif()
+
+# Review shares launch preparation without submitting a job or executing the fixture.
+umicom_run_current_target(umicom-run-current-review-test test_review.c)
+foreach(case ready empty missing directory working-folder source-folder bare environment arguments buffer)
+    umicom_run_current_case(review "${case}" umicom-run-current-review-test)
+endforeach()

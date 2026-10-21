@@ -37,7 +37,7 @@ int main(int argc, char **argv)
                                             "null-owner",
                                             "undo-redo",
                                             "selection-history",
-                                            "other-tab"};
+                                            "other-tab", "identity-other-tab", "identity-closed", "identity-zero", "identity-null-owner", "identity-read-only", "identity-history"};
     int known = 0;
     for (size_t i = 0U; i < sizeof(cases) / sizeof(cases[0]); ++i)
         if (strcmp(name, cases[i]) == 0)
@@ -200,6 +200,36 @@ int main(int argc, char **argv)
         CHECK(UmiDocumentCoordinatorEditLines(NULL, kind, NULL) == UMI_STATUS_INVALID_ARGUMENT);
         Stop(&f);
         return 0;
+    }
+    if (strncmp(name, "identity-", 9U) == 0) {
+        if (strcmp(name, "identity-closed") == 0)
+            CHECK(umi_document_coordinator_close_active(f.documents, 1) == UMI_STATUS_OK);
+        if (strcmp(name, "identity-read-only") == 0) {
+            view.read_only = 1;
+            CHECK(umi_ui_document_view_model_upsert(views, &view) == UMI_STATUS_OK);
+        }
+        char other[UMI_UI_ID_CAPACITY];
+        CHECK(umi_document_coordinator_new(f.documents, "other.c", other, sizeof other) == UMI_STATUS_OK);
+        UmiDocumentWorkingCopySnapshot active, stillActive;
+        CHECK(umi_document_coordinator_active_snapshot(f.documents, &active) == UMI_STATUS_OK);
+        UmiStatus status = UmiDocumentCoordinatorEditLinesForDocument(
+            strcmp(name, "identity-null-owner") == 0 ? NULL : f.documents,
+            strcmp(name, "identity-zero") == 0 ? 0U : f.id, kind, NULL);
+        UmiStatus expectedStatus = strcmp(name, "identity-closed") == 0 ? UMI_STATUS_NOT_FOUND
+            : strcmp(name, "identity-zero") == 0 || strcmp(name, "identity-null-owner") == 0 ? UMI_STATUS_INVALID_ARGUMENT
+            : strcmp(name, "identity-read-only") == 0 ? UMI_STATUS_PERMISSION_DENIED : UMI_STATUS_OK;
+        CHECK(status == expectedStatus);
+        CHECK(umi_document_coordinator_active_snapshot(f.documents, &stillActive) == UMI_STATUS_OK && stillActive.document_id == active.document_id);
+        char *otherText = NULL; size_t otherBytes = 0U;
+        CHECK(UmiUiDocumentViewModelCopyText(views, other, &otherText, &otherBytes) == UMI_STATUS_OK && otherBytes == 0U);
+        UmiUiDocumentViewModelFreeText(otherText);
+        if (strcmp(name, "identity-closed") != 0) CHECK(ExpectText(&f, status == UMI_STATUS_OK ? expected : source) == 0);
+        if (strcmp(name, "identity-history") == 0) {
+            CHECK(UmiDocumentCoordinatorUndo(f.documents, f.id) == UMI_STATUS_OK && ExpectText(&f, source) == 0);
+            CHECK(UmiDocumentCoordinatorRedo(f.documents, f.id) == UMI_STATUS_OK && ExpectText(&f, expected) == 0);
+            CHECK(umi_document_coordinator_active_snapshot(f.documents, &stillActive) == UMI_STATUS_OK && stillActive.document_id == active.document_id);
+        }
+        Stop(&f); return 0;
     }
     if (strcmp(name, "other-tab") == 0)
     {

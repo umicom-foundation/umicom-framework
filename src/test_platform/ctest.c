@@ -20,6 +20,7 @@
 #include <string.h>
 
 #include "umicom/platform/process.h"
+#include "umicom/platform/path.h"
 #include "umicom/platform/process_search_path.h"
 
 /* Migration: the previous provider mutated live registries while parsing and
@@ -212,5 +213,52 @@ UmiStatus UmiTestPlatformCtestMakeRunRequest(
         memcpy(request.configuration, "Debug", sizeof("Debug"));
     request.enabled = item->enabled != 0;
     *outRequest = request;
+    return UMI_STATUS_OK;
+}
+
+/* Catalogue history may contain several projects. Validate the entire selected
+ * origin before the first process, so rejecting a later row cannot leave a
+ * partially executed selection from another build tree. */
+UmiStatus UmiTestPlatformCtestCheckSelection(
+    const UmiTestPlatformItemRegistry *items,
+    const UmiTestPlatformDiscoveryRegistry *discoveries,
+    const UmiTestPlatformSelection *selection, const char *projectId,
+    const char *absoluteBuildDirectory, const char *configuration)
+{
+    if (items == NULL || discoveries == NULL || selection == NULL ||
+        projectId == NULL || projectId[0] == '\0' || configuration == NULL ||
+        absoluteBuildDirectory == NULL || !umi_path_is_absolute(absoluteBuildDirectory))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (selection->count == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    if (selection->count > sizeof selection->item_ids / sizeof selection->item_ids[0])
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (selection->source_revision != 0U && selection->source_revision !=
+        umi_test_platform_item_registry_revision(items)) return UMI_STATUS_INVALID_STATE;
+    const char *expectedConfiguration = configuration[0] != '\0' ? configuration : "Debug";
+    for (size_t i = 0U; i < selection->count; ++i) {
+        if (memchr(selection->item_ids[i], '\0', sizeof selection->item_ids[i]) == NULL ||
+            selection->item_ids[i][0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+        UmiTestPlatformItemSnapshot item;
+        UmiStatus status = umi_test_platform_item_registry_find(items, selection->item_ids[i], &item);
+        if (status != UMI_STATUS_OK) return status;
+/* Project identity belongs to the provider discovery record, which is checked below. Keep the superseded per-row contract assumption disabled for interface review. */
+#if 0
+        if (strcmp(item.project_id, projectId) != 0) return UMI_STATUS_INVALID_STATE;
+#endif
+
+        UmiCtestJobRequest request;
+        status = UmiTestPlatformCtestMakeRunRequest(&item, discoveries, &request);
+        if (status != UMI_STATUS_OK) return status;
+        if (!umi_path_is_absolute(request.build_directory) ||
+            !umi_path_equal(request.build_directory, absoluteBuildDirectory) ||
+            strcmp(request.configuration, expectedConfiguration) != 0) return UMI_STATUS_INVALID_STATE;
+        UmiTestPlatformDiscoverySnapshot discovery;
+        char identity[sizeof discovery.id];
+        int written = snprintf(identity, sizeof identity, "discovery.%s", item.suite_id);
+        if (written < 0 || (size_t)written >= sizeof identity) return UMI_STATUS_CAPACITY_EXCEEDED;
+        status = umi_test_platform_discovery_registry_find(discoveries, identity, &discovery);
+        if (status != UMI_STATUS_OK) return status;
+        if (strcmp(discovery.project_id, projectId) != 0) return UMI_STATUS_INVALID_STATE;
+    }
     return UMI_STATUS_OK;
 }

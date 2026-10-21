@@ -100,6 +100,22 @@ UmiStatus UmiBuildProfileSourceDirectory(const UmiBuildProfile *profile, char *o
 UmiStatus UmiBuildProfileLaunchDirectory(const UmiBuildProfile *profile,
     const char *absoluteProjectDirectory, char *outDirectory, size_t capacity);
 
+/** Resolve the configured build folder from an already captured absolute
+ * project root, without reading the filesystem or process current directory.
+ * Relative build paths are relative to that root; absolute paths stay absolute.
+ * This does not interpret CMake presets, create folders or verify a configured
+ * build. Failure preserves output; output must not overlap either input. */
+UmiStatus UmiBuildProfileBuildDirectory(const UmiBuildProfile *profile,
+    const char *absoluteProjectDirectory, char *outDirectory, size_t capacity);
+
+/** Check that a valid profile names the captured absolute project root.
+ * Returns INVALID_STATE for a relative or different source root. The comparison
+ * normalizes path spelling; it neither resolves filesystem links nor reads cwd.
+ * Success grants no execution permission: the caller must separately check
+ * workspace trust, lifetime and whether another operation is running. */
+UmiStatus UmiBuildProfileCheckProject(const UmiBuildProfile *profile,
+    const char *absoluteProjectDirectory);
+
 void umi_build_profile_init(UmiBuildProfile *profile);
 /** Initialize a new profile from three strings and the established defaults.
  * Invalid or oversized input preserves the destination. Input strings may

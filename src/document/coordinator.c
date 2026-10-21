@@ -2546,6 +2546,52 @@ UmiStatus UmiDocumentCoordinatorGoToPosition(UmiDocumentCoordinator *coordinator
     return status;
 }
 
+/* Opening a compiler location is one user action. Keep the intermediate file
+ * activation out of navigation history so Back returns to the actual departure. */
+UmiStatus UmiDocumentCoordinatorOpenAtPosition(UmiDocumentCoordinator *coordinator,
+    const char *absolutePath, size_t oneBasedLine, size_t oneBasedByteColumn, size_t *outOffset)
+{
+    if (coordinator == NULL || absolutePath == NULL || !umi_path_is_absolute(absolutePath) || oneBasedLine == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (coordinator->navigation_depth == UINT_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    const int outer = coordinator->navigation_depth == 0U;
+    UmiEditorSourceLocation departure;
+    UmiStatus captured = outer ? NavigationCapture(coordinator, &departure) : UMI_STATUS_NOT_FOUND;
+    char previousView[UMI_UI_ID_CAPACITY] = {0};
+    UmiDocumentId previousDocument = 0U;
+    size_t previous = active_index(coordinator);
+    if (previous != SIZE_MAX) {
+        strcpy(previousView, coordinator->entries[previous].view_id);
+        previousDocument = coordinator->entries[previous].document_id;
+    }
+    ++coordinator->navigation_depth;
+    char targetView[UMI_UI_ID_CAPACITY];
+    size_t offset = 0U;
+    UmiStatus status = OpenDocumentUnrecorded(coordinator, absolutePath, targetView, sizeof targetView);
+    if (status == UMI_STATUS_OK) {
+        size_t target = active_index(coordinator);
+        if (target == SIZE_MAX || strcmp(coordinator->entries[target].view_id, targetView) != 0) {
+            status = UMI_STATUS_INVALID_STATE;
+        } else {
+            status = PositionDocumentUnrecorded(coordinator, oneBasedLine, oneBasedByteColumn, &offset);
+            /* A stale line must not become the departure of the next attempted
+             * diagnostic. Keep its tab for inspection, but restore the previous
+             * still-managed document without recording a failed jump. */
+            if (status != UMI_STATUS_OK && previousDocument != 0U) {
+                size_t prior = find_view(coordinator, previousView);
+                if (prior != SIZE_MAX && coordinator->entries[prior].document_id == previousDocument)
+                    (void)umi_ui_workbench_activate_document(coordinator->workbench, previousView);
+            }
+        }
+    }
+    --coordinator->navigation_depth;
+    if (status == UMI_STATUS_OK) {
+        if (outer) NavigationRecord(coordinator, &departure, captured);
+        if (outOffset != NULL) *outOffset = offset;
+    }
+    return status;
+}
+
 /*
  * Provide the document coordinator check external change operation used by this module and
  * its client applications.

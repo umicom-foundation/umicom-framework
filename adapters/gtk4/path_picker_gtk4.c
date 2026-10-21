@@ -7,10 +7,13 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/path_picker.h"
+#include "umicom/platform/path.h"
 #include <string.h>
 
 /* Validate and capture every input before any GTK notification. Applications
  * provide selected project/document context; Framework owns native navigation. */
+/* Framework path identity rejects Windows drive-relative roots. The former GLib-only check is retained for review; the replacement cannot seed a location that depends on the current drive. */
+#if 0
 UmiStatus UmiPathPickerGtk4SetInitialLocation(GtkFileDialog *dialog,
     UmiPathPickerMode mode, const char *selectedPath,
     const char *fallbackFolder, const char *suggestedName)
@@ -22,6 +25,43 @@ UmiStatus UmiPathPickerGtk4SetInitialLocation(GtkFileDialog *dialog,
     if (suggestedName != NULL && suggestedName[0] == '\0') suggestedName = NULL;
     if ((selectedPath != NULL && (!g_utf8_validate(selectedPath, -1, NULL) || !g_path_is_absolute(selectedPath))) ||
         (fallbackFolder != NULL && (!g_utf8_validate(fallbackFolder, -1, NULL) || !g_path_is_absolute(fallbackFolder))) ||
+        (suggestedName != NULL && (!g_utf8_validate(suggestedName, -1, NULL) ||
+            strpbrk(suggestedName, "/\\") != NULL || strcmp(suggestedName, ".") == 0 || strcmp(suggestedName, "..") == 0)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    GFile *selected = selectedPath != NULL ? g_file_new_for_path(selectedPath) : NULL;
+    GFile *folder = fallbackFolder != NULL ? g_file_new_for_path(fallbackFolder) : NULL;
+    char *name = mode == UMI_PATH_PICKER_NEW_FILE ? g_strdup(suggestedName) : NULL;
+    g_object_ref(dialog);
+    g_object_freeze_notify(G_OBJECT(dialog));
+    if (selected != NULL) {
+        gtk_file_dialog_set_initial_file(dialog, selected);
+    } else {
+        gtk_file_dialog_set_initial_file(dialog, NULL);
+        gtk_file_dialog_set_initial_folder(dialog, folder);
+        gtk_file_dialog_set_initial_name(dialog, name);
+    }
+    g_object_thaw_notify(G_OBJECT(dialog));
+    g_object_unref(dialog);
+    g_clear_object(&selected);
+    g_clear_object(&folder);
+    g_free(name);
+    return UMI_STATUS_OK;
+}
+
+#endif
+
+
+UmiStatus UmiPathPickerGtk4SetInitialLocation(GtkFileDialog *dialog,
+    UmiPathPickerMode mode, const char *selectedPath,
+    const char *fallbackFolder, const char *suggestedName)
+{
+    if (!GTK_IS_FILE_DIALOG(dialog) || mode < UMI_PATH_PICKER_EXISTING_FILE || mode > UMI_PATH_PICKER_DIRECTORY)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (selectedPath != NULL && selectedPath[0] == '\0') selectedPath = NULL;
+    if (fallbackFolder != NULL && fallbackFolder[0] == '\0') fallbackFolder = NULL;
+    if (suggestedName != NULL && suggestedName[0] == '\0') suggestedName = NULL;
+    if ((selectedPath != NULL && (!g_utf8_validate(selectedPath, -1, NULL) || !umi_path_is_absolute(selectedPath))) ||
+        (fallbackFolder != NULL && (!g_utf8_validate(fallbackFolder, -1, NULL) || !umi_path_is_absolute(fallbackFolder))) ||
         (suggestedName != NULL && (!g_utf8_validate(suggestedName, -1, NULL) ||
             strpbrk(suggestedName, "/\\") != NULL || strcmp(suggestedName, ".") == 0 || strcmp(suggestedName, "..") == 0)))
         return UMI_STATUS_INVALID_ARGUMENT;

@@ -23,6 +23,9 @@ int main(void)
         memcmp(&progress, &before, sizeof(progress)) != 0 ||
         UmiGtk4AdapterDocumentSaveAllProgress(NULL, NULL) != UMI_STATUS_INVALID_ARGUMENT)
         return 1;
+    /* Resolve the actual exported location-aware entry point without GTK setup. */
+    if (UmiGtk4AdapterDocumentSaveAllAt(NULL, NULL, NULL, NULL) != UMI_STATUS_INVALID_ARGUMENT)
+        return 1;
     memset(&progress, 0, sizeof(progress));
     progress.phase = UMI_DOCUMENT_SAVE_COMPLETE;
     progress.last_status = UMI_STATUS_OK;

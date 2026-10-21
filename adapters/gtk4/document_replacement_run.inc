@@ -279,6 +279,8 @@ int UmiGtk4AdapterReplacementReviewBusy(const UmiGtk4Adapter *adapter)
          g_object_get_data(adapter->edit_lifetime, "replacement-set-creating") != NULL);
 }
 #endif
+/* Reviewed file reload shares the document decision boundary so existing Save, Close and build callers respect the active comparison. The earlier predicate remains for engineering review. */
+#if 0
 int UmiGtk4AdapterReplacementReviewBusy(const UmiGtk4Adapter *adapter)
 {
     return adapter != NULL && adapter->edit_lifetime != NULL &&
@@ -287,6 +289,19 @@ int UmiGtk4AdapterReplacementReviewBusy(const UmiGtk4Adapter *adapter)
          g_object_get_data(adapter->edit_lifetime, "replacement-set-creating") != NULL ||
          g_object_get_data(adapter->edit_lifetime, "workspace-edit-dialog") != NULL ||
          g_object_get_data(adapter->edit_lifetime, "workspace-edit-creating") != NULL);
+}
+
+#endif
+
+int UmiGtk4AdapterReplacementReviewBusy(const UmiGtk4Adapter *adapter)
+{
+    return adapter != NULL && adapter->edit_lifetime != NULL &&
+        (g_object_get_data(adapter->edit_lifetime, "replacement-dialog") != NULL ||
+         g_object_get_data(adapter->edit_lifetime, "replacement-set-dialog") != NULL ||
+         g_object_get_data(adapter->edit_lifetime, "replacement-set-creating") != NULL ||
+         g_object_get_data(adapter->edit_lifetime, "workspace-edit-dialog") != NULL ||
+         g_object_get_data(adapter->edit_lifetime, "workspace-edit-creating") != NULL ||
+         UmiGtk4AdapterDocumentReloadBusy(adapter));
 }
 
 /* The sequential progress API refuses a different review model instead of interpreting its window as a sequential session.

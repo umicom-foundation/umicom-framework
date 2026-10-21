@@ -43,6 +43,8 @@ UmiStatus UmiGtk4AdapterBindDocumentEditing(UmiGtk4Adapter *adapter,
  * function does not change application layout or run during periodic refresh.
  * Returns NOT_FOUND without a source document and UNAVAILABLE when its native
  * editor is hidden or cannot accept focus. Owner-thread only. */
+/* CANCELLED also covers synchronous host retirement during a focus observer.
+ * No adapter access follows that observer without checking its editing token. */
 UmiStatus UmiGtk4AdapterFocusActiveDocument(UmiGtk4Adapter *adapter);
 
 /** Check the active source document, not an arbitrary focused entry field.
@@ -74,7 +76,10 @@ UmiStatus UmiGtk4AdapterPromptDocumentLocation(UmiGtk4Adapter *adapter);
  * Every immediate failure on a live callback binding reports completion once,
  * including unknown command IDs and missing documents. Invalid/unbound adapters
  * have no callback; callers must inspect the return status in that case.
- * Plain UTF-8 text only: no rich text, files or automatic clipboard logging. */
+ * Plain UTF-8 text only: no rich text, files or automatic clipboard logging.
+ * The nine canonical umicom.document.line-edit.* commands also use this entry
+ * point, the existing document transaction and Undo history. Source-view key
+ * bindings retain their originating view; this public call uses the active tab. */
 UmiStatus UmiGtk4AdapterDocumentCommand(UmiGtk4Adapter *adapter, const char *commandId);
 /** Receives a borrowed progress snapshot for this callback only. Copy it to
  * retain it. Completion runs on the GTK/document owner thread, after the run
@@ -90,6 +95,14 @@ typedef void (*UmiGtk4DocumentSaveResultFn)(void *context,
  * Teardown cancels work and suppresses callbacks to the detached context. */
 UmiStatus UmiGtk4AdapterDocumentSaveAll(UmiGtk4Adapter *adapter,
     UmiGtk4DocumentSaveResultFn completed, void *context);
+/** Begin the same sequence with an explicit initial folder for untitled files.
+ * initialFolder is copied before return; it must be absolute UTF-8 when nonempty.
+ * NULL/empty retains the operating-system chooser default. Invalid input fails
+ * before scheduling or writing any document. This is only a navigation hint:
+ * no directory is created, no filename is selected automatically, and named
+ * documents keep their existing destinations. Use on the GTK owner thread. */
+UmiStatus UmiGtk4AdapterDocumentSaveAllAt(UmiGtk4Adapter *adapter,
+    const char *initialFolder, UmiGtk4DocumentSaveResultFn completed, void *context);
 /** Request cancellation without discarding unsaved documents. A synchronous
  * write already in progress cannot be interrupted. Safe when no run exists. */
 UmiStatus UmiGtk4AdapterCancelDocumentSaveAll(UmiGtk4Adapter *adapter);
@@ -204,6 +217,20 @@ UmiStatus UmiGtk4AdapterReviewOpenReplacementsWithOptions(UmiGtk4Adapter *adapte
     const char *needle, const char *replacement, const UmiEditorSearchOptions *options);
 UmiStatus UmiGtk4AdapterReviewReplacementSetWithOptions(UmiGtk4Adapter *adapter,
     const char *needle, const char *replacement, const UmiEditorSearchOptions *options);
+/** Review both complete UTF-8 snapshots before adopting a saved file. Captures
+ * the active named document; changing tabs does not retarget the question.
+ * Apply requires explicit approval and rechecks the draft, path and disk bytes.
+ * Keep Current Draft and cancellation never write or discard a document.
+ * Successful reload is undoable through the coordinator. Other document review
+ * operations are excluded until this form closes. Completion uses the existing
+ * editing callback after closing; immediate opening errors return directly.
+ * Unbinding makes retained controls inert. Use the GTK/document owner thread. */
+UmiStatus UmiGtk4AdapterReviewDocumentReload(UmiGtk4Adapter *adapter);
+int UmiGtk4AdapterDocumentReloadBusy(const UmiGtk4Adapter *adapter);
+UmiStatus UmiGtk4AdapterCancelDocumentReload(UmiGtk4Adapter *adapter);
+
+/* Historical API name retained: this busy boundary also includes reviewed
+ * reload, so existing Save/Close/build callers cannot overlap that decision. */
 int UmiGtk4AdapterReplacementReviewBusy(const UmiGtk4Adapter *adapter);
 UmiStatus UmiGtk4AdapterReplacementReviewProgress(const UmiGtk4Adapter *adapter,
     UmiDocumentReplacementProgress *outProgress);

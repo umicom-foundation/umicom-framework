@@ -1563,6 +1563,7 @@ add_library(umicom_document STATIC
     src/document/saver.c
     src/document/language_detection.c
     src/document/file_filter.c
+    src/document/quick_open_query.c
     src/document/coordinator.c
     src/document/commands.c
     src/document/save_session.c
@@ -5980,6 +5981,8 @@ include(cmake/UmicomProgramConsole.cmake)
 
 # Persistent language diagnostics share copied drafts with desktop frontends.
 include(cmake/UmicomLiveDiagnostics.cmake)
+# Shared GTK row publication revalidates host snapshots after native observers.
+include(cmake/UmicomListPublication.cmake)
 
 # Attach external processes through the existing debugger session owner.
 include(cmake/UmicomNativeAttach.cmake)

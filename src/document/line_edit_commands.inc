@@ -61,3 +61,26 @@ static UmiStatus CommentLinesCommand(void *context, const char *argument, char *
 {
     return LineEditCommand(context, argument, message, capacity, UMI_EDITOR_EDIT_COMMAND_TOGGLE_LINE_COMMENT);
 }
+
+/* Native frontends share exact canonical identifiers with command search.
+ * Unknown names leave the caller value unchanged and cannot select a default
+ * destructive operation by prefix or spelling similarity. */
+UmiStatus UmiDocumentLineEditCommandFromId(const char *commandId, UmiEditorEditCommandKind *outKind)
+{
+    if (commandId == NULL || outKind == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    static const struct { const char *id; UmiEditorEditCommandKind kind; } commands[] = {
+        {UMI_DOCUMENT_COMMAND_DELETE_LINE, UMI_EDITOR_EDIT_COMMAND_DELETE_LINE},
+        {UMI_DOCUMENT_COMMAND_DUPLICATE_LINE, UMI_EDITOR_EDIT_COMMAND_DUPLICATE_LINE},
+        {UMI_DOCUMENT_COMMAND_MOVE_LINE_UP, UMI_EDITOR_EDIT_COMMAND_MOVE_LINE_UP},
+        {UMI_DOCUMENT_COMMAND_MOVE_LINE_DOWN, UMI_EDITOR_EDIT_COMMAND_MOVE_LINE_DOWN},
+        {UMI_DOCUMENT_COMMAND_JOIN_LINE_WITH_NEXT, UMI_EDITOR_EDIT_COMMAND_JOIN_LINE_WITH_NEXT},
+        {UMI_DOCUMENT_COMMAND_TRIM_TRAILING_WHITESPACE, UMI_EDITOR_EDIT_COMMAND_TRIM_TRAILING_WHITESPACE},
+        {UMI_DOCUMENT_COMMAND_INDENT_LINES, UMI_EDITOR_EDIT_COMMAND_INDENT_LINES},
+        {UMI_DOCUMENT_COMMAND_OUTDENT_LINES, UMI_EDITOR_EDIT_COMMAND_OUTDENT_LINES},
+        {UMI_DOCUMENT_COMMAND_TOGGLE_LINE_COMMENT, UMI_EDITOR_EDIT_COMMAND_TOGGLE_LINE_COMMENT}
+    };
+    for (size_t i = 0U; i < sizeof commands / sizeof commands[0]; ++i) {
+        if (strcmp(commandId, commands[i].id) == 0) { *outKind = commands[i].kind; return UMI_STATUS_OK; }
+    }
+    return UMI_STATUS_NOT_FOUND;
+}

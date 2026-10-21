@@ -24,6 +24,7 @@
 #include "umicom/platform/task_queue.h"
 #include "umicom/test_platform/discovery.h"
 #include "umicom/test_platform/item.h"
+#include "umicom/test_platform/filter.h"
 #include "umicom/test_platform/suite.h"
 
 #ifdef __cplusplus
@@ -179,6 +180,19 @@ UmiStatus UmiTestPlatformCtestMakeRunRequest(
     const UmiTestPlatformItemSnapshot *item,
     const UmiTestPlatformDiscoveryRegistry *discoveries,
     UmiCtestJobRequest *outRequest);
+
+/** Check every selected CTest item against a captured project, absolute build
+ * directory and configuration before starting any process. Empty configuration
+ * means Debug. A nonzero selection revision must still match the item registry.
+ * Invalid counts/identifiers, missing provenance or a different origin refuse
+ * the complete selection. No state is changed and no files or tools are read.
+ * The caller owns thread serialization and must separately authorize execution;
+ * lexical path equality does not establish filesystem confinement. */
+UmiStatus UmiTestPlatformCtestCheckSelection(
+    const UmiTestPlatformItemRegistry *items,
+    const UmiTestPlatformDiscoveryRegistry *discoveries,
+    const UmiTestPlatformSelection *selection, const char *projectId,
+    const char *absoluteBuildDirectory, const char *configuration);
 
 #ifdef __cplusplus
 }

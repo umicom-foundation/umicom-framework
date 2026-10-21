@@ -66,7 +66,19 @@ int main(int argc, char **argv)
         CHECK(UmiTestSourceLinkOpen(documents,&link,root,&offset)==(missingLine?UMI_STATUS_NOT_FOUND:UMI_STATUS_OK));
         CHECK(offset==(missingLine?9876U:9U)); expectUnchanged=0;
         UmiDocumentWorkingCopySnapshot active; OK(umi_document_coordinator_active_snapshot(documents,&active));
+/* Source navigation now restores the departure document when its target line is stale. The earlier assertion is retained to show the former activation policy; the replacement still verifies that the newly opened source tab survives. */
+#if 0
         CHECK(strcmp(active.view_id,view)!=0 && umi_document_coordinator_count(documents)==2);
+#endif
+        CHECK(umi_document_coordinator_count(documents)==2);
+        CHECK((strcmp(active.view_id,view)==0)==missingLine);
+        UmiDocumentWorkingCopySnapshot opened;
+        OK(umi_document_coordinator_at(documents,1,&opened));
+        CHECK(strcmp(opened.view_id,view)!=0);
+        char *openedText=NULL; size_t openedLength=0;
+        OK(UmiUiDocumentViewModelCopyText(views,opened.view_id,&openedText,&openedLength));
+        CHECK(openedLength==strlen(saved) && strcmp(openedText,saved)==0);
+        UmiUiDocumentViewModelFreeText(openedText);
         OK(umi_ui_document_view_model_find(views,view,&after));
         CHECK(after.cursor_offset==1 && after.selection_length==2 && after.dirty);
         char *text=NULL; size_t length=0; OK(UmiUiDocumentViewModelCopyText(views,view,&text,&length));

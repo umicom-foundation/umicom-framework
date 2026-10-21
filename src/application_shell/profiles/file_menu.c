@@ -213,6 +213,21 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .badge_count = 0U,
         .revision = 1U
     },
+    /* Saved-file reload is a reviewed editor action, separate from saving. */
+    {
+        .structure_size = (uint32_t)sizeof(UmiApplicationShellContribution),
+        .api_version = UMI_APPLICATION_SHELL_API_VERSION,
+        .contribution_id = "umicom.shell.file-menu.reload",
+        .title = "Reload from Disk...",
+        .description = "Compare the saved file with the current draft before replacing it.",
+        .command_id = "file.reload",
+        .group_id = "file",
+        .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
+        .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
+        .order = 218,
+        .flags = UMI_APPLICATION_SHELL_VISIBLE,
+        .revision = 1U
+    },
     {
         .structure_size = (uint32_t)sizeof(UmiApplicationShellContribution),
         .api_version = UMI_APPLICATION_SHELL_API_VERSION,

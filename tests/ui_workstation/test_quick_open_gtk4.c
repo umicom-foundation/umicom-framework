@@ -122,6 +122,127 @@ static UmiStatus Open(gpointer data, const char *query, const UmiFileIndexPage *
     (void)snprintf(host->opened, sizeof(host->opened), "%s", entry->path);
     return UMI_STATUS_OK;
 }
+/* Use native notifications to exercise cancellation, rather than replacing
+ * the picker implementation or directly changing its private state. */
+typedef struct QuickBoundaryProbe {
+    Host *host;
+    GtkWindow *parent;
+    GtkWidget *list, *extra;
+    GPtrArray *windows;
+    const char *mode;
+    unsigned calls;
+} QuickBoundaryProbe;
+static void QuickBoundaryAct(QuickBoundaryProbe *probe, GtkWindow *window)
+{
+    if (probe->calls++ != 0U) return;
+    if (strcmp(probe->mode, "construct-parent-close") == 0) gtk_window_destroy(probe->parent);
+    else if (strcmp(probe->mode, "request-reenter") == 0 || strcmp(probe->mode, "row-remove-query") == 0)
+        gtk_editable_set_text(GTK_EDITABLE(probe->host->query), "file-068");
+    else if (strcmp(probe->mode, "foreign-row") == 0)
+        gtk_list_box_append(GTK_LIST_BOX(probe->list), probe->extra);
+    else gtk_window_destroy(window);
+}
+static void QuickBoundaryNotify(GObject *object, GParamSpec *property, gpointer data)
+{
+    (void)property;
+    QuickBoundaryProbe *probe = data;
+    QuickBoundaryAct(probe, GTK_IS_WINDOW(object) ? GTK_WINDOW(object) : probe->host->dialog);
+}
+static void QuickBoundaryAdded(GListModel *model, guint position, guint removed, guint added, gpointer data)
+{
+    (void)removed;
+    QuickBoundaryProbe *probe = data;
+    for (guint i = 0U; i < added; ++i) {
+        GtkWindow *window = g_list_model_get_item(model, position + i);
+        if (window == NULL) continue;
+        g_ptr_array_add(probe->windows, window);
+        if (strncmp(probe->mode, "construct-", 10U) == 0) QuickBoundaryAct(probe, window);
+        else g_signal_connect(window, strcmp(probe->mode, "title-close") == 0 ? "notify::title" : "notify::child",
+            G_CALLBACK(QuickBoundaryNotify), probe);
+    }
+}
+static int QuickBoundaryCase(const char *mode)
+{
+    int failed = 0;
+    Host host = {0}; host.revision = 1U;
+    GtkWindow *parent = GTK_WINDOW(g_object_ref_sink(gtk_window_new()));
+    GListModel *windows = NULL;
+    GObject *observed = NULL;
+    gulong handler = 0U, addedHandler = 0U;
+    GtkWidget *extra = g_object_ref_sink(gtk_list_box_row_new());
+    QuickBoundaryProbe probe = {&host, parent, NULL, extra, g_ptr_array_new_with_free_func(g_object_unref), mode, 0U};
+    char *oldSummary = NULL;
+    const int construction = strncmp(mode, "construct-", 10U) == 0 ||
+        strcmp(mode, "title-close") == 0 || strcmp(mode, "child-close") == 0;
+    if (construction) {
+        windows = gtk_window_get_toplevels();
+        addedHandler = g_signal_connect(windows, "items-changed", G_CALLBACK(QuickBoundaryAdded), &probe);
+    }
+    UmiStatus created = UmiGtk4QuickOpenCreate(parent, Read, Open, &host, Destroy, &host.dialog);
+    if (construction) {
+        CHECK(created == UMI_STATUS_CANCELLED && host.dialog == NULL && probe.calls != 0U);
+        Pump();
+        CHECK(host.reads == 0U && host.opens == 0U && host.destroyed == 0U);
+        goto cleanup;
+    }
+    CHECK(created == UMI_STATUS_OK);
+    host.query = Find(GTK_WIDGET(host.dialog), "umicom-quick-open-query");
+    GtkWidget *list = Find(GTK_WIDGET(host.dialog), "umicom-quick-open-results"); probe.list = list;
+    GtkWidget *open = Find(GTK_WIDGET(host.dialog), "umicom-quick-open-open");
+    GtkWidget *next = Find(GTK_WIDGET(host.dialog), "umicom-quick-open-next");
+    GtkWidget *summary = Find(GTK_WIDGET(host.dialog), "umicom-quick-open-status");
+    GtkWidget *refresh = Find(GTK_WIDGET(host.dialog), "umicom-quick-open-refresh");
+    CHECK(host.query != NULL && list != NULL && open != NULL && next != NULL && summary != NULL && refresh != NULL);
+    Pump();
+    CHECK(host.reads == 1U && Rows(list) == 64U && gtk_widget_get_sensitive(open));
+    oldSummary = g_strdup(gtk_label_get_text(GTK_LABEL(summary)));
+    GtkWidget *target = open;
+    const char *signal = "notify::sensitive";
+    if (strncmp(mode, "row-remove-", 11U) == 0 || strcmp(mode, "foreign-row") == 0) {
+        target = GTK_WIDGET(gtk_list_box_get_row_at_index(GTK_LIST_BOX(list), 0)); signal = "notify::parent";
+    } else if (strcmp(mode, "summary-close") == 0) { target = summary; signal = "notify::label"; }
+    observed = g_object_ref(G_OBJECT(target));
+    handler = g_signal_connect(target, signal, G_CALLBACK(QuickBoundaryNotify), &probe);
+    if (strcmp(mode, "failed-open-close") == 0) {
+        host.failOpen = 1;
+        g_signal_emit_by_name(open, "clicked");
+    } else gtk_editable_set_text(GTK_EDITABLE(host.query), "file-069");
+    Pump();
+    CHECK(probe.calls != 0U && host.opens == 0U);
+    if (strcmp(mode, "request-reenter") == 0 || strcmp(mode, "row-remove-query") == 0) {
+        CHECK(UmiGtk4WindowIsOpen(host.dialog) && Rows(list) == 1U);
+        CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(host.query)), "file-068") == 0);
+        g_signal_emit_by_name(open, "clicked");
+        CHECK(host.opens == 1U && strstr(host.opened, "file-068.c") != NULL);
+    } else if (strcmp(mode, "foreign-row") == 0) {
+        CHECK(UmiGtk4WindowIsOpen(host.dialog) && !gtk_widget_get_sensitive(open));
+        CHECK(gtk_widget_get_parent(extra) == list);
+        g_signal_emit_by_name(open, "clicked"); CHECK(host.opens == 0U);
+        g_signal_emit_by_name(refresh, "clicked"); Pump();
+        CHECK(Rows(list) == 1U && gtk_widget_get_sensitive(open));
+        g_signal_emit_by_name(open, "clicked");
+        CHECK(host.opens == 1U && strstr(host.opened, "file-069.c") != NULL);
+    } else {
+        CHECK(!UmiGtk4WindowIsOpen(host.dialog));
+        if (strcmp(mode, "request-close") == 0)
+            CHECK(host.reads == 1U && gtk_widget_get_sensitive(next));
+        if (strcmp(mode, "failed-open-close") == 0)
+            CHECK(strcmp(oldSummary, gtk_label_get_text(GTK_LABEL(summary))) == 0);
+    }
+cleanup:
+    if (handler != 0U) g_signal_handler_disconnect(observed, handler);
+    if (addedHandler != 0U) g_signal_handler_disconnect(windows, addedHandler);
+    for (guint i = 0U; i < probe.windows->len; ++i)
+        g_signal_handlers_disconnect_by_data(g_ptr_array_index(probe.windows, i), &probe);
+    g_clear_object(&observed);
+    if (host.dialog != NULL) { gtk_window_destroy(host.dialog); g_object_unref(host.dialog); }
+    gtk_window_destroy(parent); g_object_unref(parent);
+    g_ptr_array_unref(probe.windows); g_object_unref(extra); g_free(oldSummary);
+    if (construction && host.destroyed != 0U) failed = 1;
+    if (!construction && host.dialog != NULL && host.destroyed != 1U) failed = 1;
+    return failed;
+}
+
 int main(int argc, char **argv)
 {
     if (argc != 2)
@@ -148,7 +269,8 @@ int main(int argc, char **argv)
                                             "literal-label",
                                             "escape",
                                             "destroy-once",
-                                            "invalid-create"};
+                                            "invalid-create",
+        "construct-parent-close", "construct-self-close", "title-close", "child-close", "request-close", "request-reenter", "summary-close", "row-remove-close", "row-remove-query", "foreign-row", "failed-open-close"};
     int known = 0;
     for (size_t i = 0U; i < sizeof(cases) / sizeof(cases[0]); ++i)
         if (strcmp(name, cases[i]) == 0)
@@ -157,6 +279,9 @@ int main(int argc, char **argv)
         return 2;
     if (!gtk_init_check())
         return 77;
+    const char *boundaryCases[] = {"construct-parent-close", "construct-self-close", "title-close", "child-close", "request-close", "request-reenter", "summary-close", "row-remove-close", "row-remove-query", "foreign-row", "failed-open-close"};
+    for (size_t i = 0U; i < sizeof boundaryCases / sizeof boundaryCases[0]; ++i)
+        if (strcmp(name, boundaryCases[i]) == 0) return QuickBoundaryCase(name);
     int failed = 0;
     Host host = {0};
     host.revision = 1U;

@@ -87,6 +87,8 @@ static void DeveloperConfigurationEdit(GtkButton *button, gpointer context)
     dialog->accepting = 0;
     DeveloperRelease(dialog);
 }
+/* Bindings may now be attached to a prepared hidden form before it is presented. The former visible-only binding is retained for review; user actions still require visibility. */
+#if 0
 UmiStatus UmiGtk4BuildSettingsBindConfigurationLifecycle(
     UmiGtk4DeveloperDialog *dialog, const UmiGtk4BuildConfigurationLifecycleCallbacks *callbacks)
 {
@@ -131,6 +133,55 @@ UmiStatus UmiGtk4BuildSettingsBindConfigurationLifecycle(
     g_object_unref(panel);
     dialog->accepting = 0;
     UmiStatus status = DeveloperVisible(dialog) ? UMI_STATUS_OK : UMI_STATUS_CANCELLED;
+    DeveloperRelease(owned);
+    return status;
+}
+
+#endif
+UmiStatus UmiGtk4BuildSettingsBindConfigurationLifecycle(
+    UmiGtk4DeveloperDialog *dialog, const UmiGtk4BuildConfigurationLifecycleCallbacks *callbacks)
+{
+    if (callbacks == NULL || callbacks->rename == NULL || callbacks->remove == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiGtk4DeveloperDialog *owned = DeveloperAcquireBinding(dialog);
+    if (owned == NULL)
+        return UMI_STATUS_INVALID_STATE;
+    if (!dialog->configurationBound || dialog->configurationLifecycleBound ||
+        dialog->configurationPanel == NULL || DeveloperConfigurationsBusy(dialog))
+    {
+        DeveloperRelease(owned);
+        return UMI_STATUS_INVALID_STATE;
+    }
+    dialog->accepting = 1;
+    dialog->configurationLifecycle = *callbacks;
+    dialog->configurationLifecycleBound = 1;
+    GtkWidget *panel = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+    g_object_ref_sink(panel);
+    dialog->configurationRename =
+        gtk_button_new_with_label("Rename selected configuration to the name above");
+    dialog->configurationRemoveConsent = gtk_check_button_new_with_label(
+        "Remove the selected saved configuration; keep current form settings");
+    dialog->configurationRemove = gtk_button_new_with_label("Remove selected saved configuration");
+    GtkWidget *controls[] = {dialog->configurationRename, dialog->configurationRemoveConsent,
+                             dialog->configurationRemove};
+    const char *tags[] = {"developer.configurations.rename",
+                          "developer.configurations.remove-consent",
+                          "developer.configurations.remove"};
+    for (size_t index = 0U; index < sizeof controls / sizeof controls[0]; ++index)
+    {
+        (void)umi_gtk4_automation_tag_widget(controls[index], tags[index]);
+        gtk_box_append(GTK_BOX(panel), controls[index]);
+    }
+    DeveloperConnect(dialog, G_OBJECT(dialog->configurationRename), "clicked",
+                     G_CALLBACK(DeveloperConfigurationEdit));
+    DeveloperConnect(dialog, G_OBJECT(dialog->configurationRemove), "clicked",
+                     G_CALLBACK(DeveloperConfigurationEdit));
+    DeveloperConnect(dialog, G_OBJECT(dialog->configurationPicker), "notify::selected",
+                     G_CALLBACK(DeveloperConfigurationSelectionChanged));
+    gtk_box_append(GTK_BOX(dialog->configurationPanel), panel);
+    g_object_unref(panel);
+    dialog->accepting = 0;
+    UmiStatus status = DeveloperAlive(dialog) ? UMI_STATUS_OK : UMI_STATUS_CANCELLED;
     DeveloperRelease(owned);
     return status;
 }

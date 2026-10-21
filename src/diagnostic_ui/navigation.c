@@ -156,6 +156,8 @@ UmiStatus UmiDiagnosticNavigationSource(UmiDiagnosticNavigation *navigation,
     return UMI_STATUS_OK;
 }
 
+/* The separate Open and Go To calls recorded two history jumps. The coordinator now owns their combined operation and stale-line restoration; preserve the earlier composition for review. */
+#if 0
 UmiStatus UmiDiagnosticOpenSource(UmiDocumentCoordinator *documents,
     const UmiDiagnosticSnapshot *diagnostic, const char *baseDirectory,
     size_t *outOffset)
@@ -186,4 +188,70 @@ UmiStatus UmiDiagnosticOpenSource(UmiDocumentCoordinator *documents,
     if (status != UMI_STATUS_OK) return status;
     return UmiDocumentCoordinatorGoToPosition(documents, diagnostic->line,
         diagnostic->column, outOffset);
+}
+
+#endif
+UmiStatus UmiDiagnosticOpenSource(UmiDocumentCoordinator *documents,
+    const UmiDiagnosticSnapshot *diagnostic, const char *baseDirectory,
+    size_t *outOffset)
+{
+    char decoded[UMI_PATH_CAPACITY], absolute[UMI_PATH_CAPACITY];
+    const char *path;
+    UmiStatus status;
+    if (documents == NULL || diagnostic == NULL ||
+        umi_diagnostic_snapshot_validate(diagnostic, NULL, 0U) != UMI_STATUS_OK)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (!SourceAvailable(diagnostic)) return UMI_STATUS_NOT_FOUND;
+    path = diagnostic->uri;
+    if (strncmp(path, "file:///", 8U) == 0) {
+        /* Encoded zero bytes must never crop the selected destination. */
+        if (strstr(path, "%00") != NULL) return UMI_STATUS_INVALID_ARGUMENT;
+        status = umi_document_uri_to_path(path, decoded, sizeof decoded);
+        if (status != UMI_STATUS_OK) return status;
+        path = decoded;
+    }
+    if (umi_path_is_absolute(path)) {
+        status = umi_path_normalise(path, absolute, sizeof absolute);
+    } else {
+        if (baseDirectory == NULL || !umi_path_is_absolute(baseDirectory)) return UMI_STATUS_INVALID_ARGUMENT;
+        status = umi_path_absolute(path, baseDirectory, absolute, sizeof absolute);
+    }
+    if (status != UMI_STATUS_OK) return status;
+    return UmiDocumentCoordinatorOpenAtPosition(documents, absolute, diagnostic->line,
+        diagnostic->column, outOffset);
+}
+
+/* Keep unavailable locations from trapping Next/Previous on the same record.
+ * Selection remains Framework-owned and is committed only after a source was
+ * reached. Other failures remain explicit instead of being silently skipped. */
+UmiStatus UmiDiagnosticNavigateOpenSource(UmiDiagnosticNavigation *navigation,
+    const UmiDiagnosticModel *model, const UmiDiagnosticFilter *filter, int backwards,
+    UmiDocumentCoordinator *documents, const char *baseDirectory,
+    UmiDiagnosticSnapshot *outDiagnostic, size_t *outOffset)
+{
+    if (navigation == NULL || model == NULL || filter == NULL || documents == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiDiagnosticNavigation candidate = *navigation;
+    const size_t count = umi_diagnostic_model_count(model);
+    const uint64_t revision = umi_diagnostic_model_revision(model);
+    uint64_t firstSequence = 0U;
+    for (size_t attempt = 0U; attempt < count; ++attempt) {
+        UmiDiagnosticSnapshot chosen;
+        if (umi_diagnostic_model_revision(model) != revision) return UMI_STATUS_INVALID_STATE;
+        UmiStatus status = UmiDiagnosticNavigationSource(&candidate, model, filter, backwards, &chosen);
+        if (status != UMI_STATUS_OK) return status;
+        if (attempt != 0U && chosen.sequence == firstSequence) return UMI_STATUS_NOT_FOUND;
+        if (attempt == 0U) firstSequence = chosen.sequence;
+        size_t offset = 0U;
+        status = UmiDiagnosticOpenSource(documents, &chosen, baseDirectory, &offset);
+        if (umi_diagnostic_model_revision(model) != revision) return UMI_STATUS_INVALID_STATE;
+        if (status == UMI_STATUS_OK) {
+            *navigation = candidate;
+            if (outDiagnostic != NULL) *outDiagnostic = chosen;
+            if (outOffset != NULL) *outOffset = offset;
+            return UMI_STATUS_OK;
+        }
+        if (status != UMI_STATUS_NOT_FOUND) return status;
+    }
+    return UMI_STATUS_NOT_FOUND;
 }

@@ -32,6 +32,13 @@ extern "C"
     UmiStatus UmiDocumentCoordinatorEditLines(UmiDocumentCoordinator *coordinator,
                                               UmiEditorEditCommandKind kind,
                                               const UmiDocumentLineEditOptions *options);
+    /** Edit the specified open document without changing the active tab. The
+     * selected document owns its caret, text and Undo step. A closed or unknown
+     * identity returns NOT_FOUND; zero is INVALID_ARGUMENT and never means the
+     * current tab. All other transaction and ownership rules above still apply. */
+    UmiStatus UmiDocumentCoordinatorEditLinesForDocument(UmiDocumentCoordinator *coordinator,
+        UmiDocumentId document_id, UmiEditorEditCommandKind kind,
+        const UmiDocumentLineEditOptions *options);
 #ifdef __cplusplus
 }
 #endif

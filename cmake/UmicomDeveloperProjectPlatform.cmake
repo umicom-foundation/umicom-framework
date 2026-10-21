@@ -494,7 +494,8 @@ function(umicom_attach_developer_dialogs_gtk4)
             umicom_apply_sanitizers(umicom-developer-settings-lifetime-test)
         endif()
         foreach(settingsCase IN ITEMS stage-fields mixed-fields owner-destroy parent-destroy
-                retained cancel recursive retry notify-close project-owner-destroy project-retained project-cancel)
+                retained cancel recursive retry notify-close project-owner-destroy project-retained project-cancel
+                prepare-open prepare-owner-close prepare-parent-close)
             add_test(NAME framework.ide_workflow.settings.gtk4.${settingsCase}
                 COMMAND umicom-developer-settings-lifetime-test ${settingsCase})
             set_tests_properties(framework.ide_workflow.settings.gtk4.${settingsCase} PROPERTIES
@@ -502,6 +503,25 @@ function(umicom_attach_developer_dialogs_gtk4)
         endforeach()
         if(COMMAND umicom_register_validation_target)
             umicom_register_validation_target(umicom-developer-settings-lifetime-test)
+        endif()
+        # Prepare/adopt/present must tolerate native retirement at every boundary.
+        add_executable(umicom-project-form-preparation-test
+            "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../tests/developer_project/test_project_form_preparation_gtk4.c")
+        target_link_libraries(umicom-project-form-preparation-test PRIVATE Umicom::ui_gtk4)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(umicom-project-form-preparation-test)
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(umicom-project-form-preparation-test)
+        endif()
+        foreach(case project-open application-open project-preclosed application-preclosed project-create-close application-create-close project-title-close application-title-close project-present-owner-close application-present-owner-close project-present-parent-close application-present-parent-close project-retained application-retained project-immediate-close application-immediate-close)
+            add_test(NAME framework.ide_workflow.project_form.gtk4.${case}
+                COMMAND umicom-project-form-preparation-test ${case})
+            set_tests_properties(framework.ide_workflow.project_form.gtk4.${case} PROPERTIES
+                SKIP_RETURN_CODE 77 TIMEOUT 45 LABELS "framework;ide-workflow;gtk4;ownership")
+        endforeach()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-project-form-preparation-test)
         endif()
         set(dialogTestDirectory "${CMAKE_CURRENT_BINARY_DIR}/qualification/developer_dialog")
         file(MAKE_DIRECTORY "${dialogTestDirectory}")

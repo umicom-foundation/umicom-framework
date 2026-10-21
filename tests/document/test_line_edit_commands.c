@@ -25,7 +25,7 @@ int main(int argc, char **argv)
                                             "empty-argument",
                                             "message-bounds",
                                             "read-only",
-                                            "no-document"};
+                                            "no-document", "mapping", "mapping-unknown", "mapping-null"};
     int known = 0;
     for (size_t i = 0U; i < sizeof(cases) / sizeof(cases[0]); ++i)
         if (strcmp(name, cases[i]) == 0)
@@ -45,6 +45,27 @@ int main(int argc, char **argv)
         {"indent-lines", UMI_DOCUMENT_COMMAND_INDENT_LINES, "a\nbb\nccc", "a\n    bb\nccc"},
         {"outdent-lines", UMI_DOCUMENT_COMMAND_OUTDENT_LINES, "a\n  bb\nccc", "a\nbb\nccc"},
         {"toggle-line-comment", UMI_DOCUMENT_COMMAND_TOGGLE_LINE_COMMENT, "a\nbb\nccc", "a\n// bb\nccc"}};
+    if (strncmp(name, "mapping", 7U) == 0) {
+        UmiEditorEditCommandKind mapped = UMI_EDITOR_EDIT_COMMAND_INSERT_TEXT;
+        if (strcmp(name, "mapping-null") == 0) {
+            CHECK(UmiDocumentLineEditCommandFromId(NULL, &mapped) == UMI_STATUS_INVALID_ARGUMENT);
+            CHECK(UmiDocumentLineEditCommandFromId(UMI_DOCUMENT_COMMAND_DUPLICATE_LINE, NULL) == UMI_STATUS_INVALID_ARGUMENT);
+            CHECK(mapped == UMI_EDITOR_EDIT_COMMAND_INSERT_TEXT);
+        } else if (strcmp(name, "mapping-unknown") == 0) {
+            const char *unknown[] = {"", "umicom.document.line-edit.", "umicom.document.line-edit.duplicate-line.extra", "edit.undo", "UMICOM.DOCUMENT.LINE-EDIT.DUPLICATE-LINE"};
+            for (size_t i = 0U; i < sizeof unknown / sizeof unknown[0]; ++i) {
+                CHECK(UmiDocumentLineEditCommandFromId(unknown[i], &mapped) == UMI_STATUS_NOT_FOUND);
+                CHECK(mapped == UMI_EDITOR_EDIT_COMMAND_INSERT_TEXT);
+            }
+        } else {
+            const UmiEditorEditCommandKind kinds[] = {UMI_EDITOR_EDIT_COMMAND_DELETE_LINE, UMI_EDITOR_EDIT_COMMAND_DUPLICATE_LINE, UMI_EDITOR_EDIT_COMMAND_MOVE_LINE_UP, UMI_EDITOR_EDIT_COMMAND_MOVE_LINE_DOWN, UMI_EDITOR_EDIT_COMMAND_JOIN_LINE_WITH_NEXT, UMI_EDITOR_EDIT_COMMAND_TRIM_TRAILING_WHITESPACE, UMI_EDITOR_EDIT_COMMAND_INDENT_LINES, UMI_EDITOR_EDIT_COMMAND_OUTDENT_LINES, UMI_EDITOR_EDIT_COMMAND_TOGGLE_LINE_COMMENT};
+            for (size_t i = 0U; i < sizeof rows / sizeof rows[0]; ++i) {
+                CHECK(UmiDocumentLineEditCommandFromId(rows[i].id, &mapped) == UMI_STATUS_OK);
+                CHECK(mapped == kinds[i]);
+            }
+        }
+        return 0;
+    }
     size_t chosen = 1U;
     for (size_t i = 0U; i < sizeof(rows) / sizeof(rows[0]); ++i)
         if (strcmp(name, rows[i].name) == 0)

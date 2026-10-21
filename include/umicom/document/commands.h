@@ -17,6 +17,7 @@
 #define UMICOM_DOCUMENT_COMMANDS_H
 
 #include "umicom/document/coordinator.h"
+#include "umicom/editor/edit_command.h"
 #include "umicom/runtime/command_registry.h"
 
 #ifdef __cplusplus
@@ -60,6 +61,11 @@ extern "C" {
 #define UMI_DOCUMENT_COMMAND_MATCH_DELIMITER "umicom.document.match-delimiter"
 #define UMI_DOCUMENT_COMMAND_SELECT_DELIMITER_CONTENT "umicom.document.select-delimiter-content"
 #define UMI_DOCUMENT_COMMAND_SELECT_DELIMITER_PAIR "umicom.document.select-delimiter-pair"
+
+/** Resolve one of the nine exact line-edit identifiers above. No execution or
+ * allocation occurs. Unknown names return NOT_FOUND without modifying out_kind;
+ * NULL input or output returns INVALID_ARGUMENT. */
+UmiStatus UmiDocumentLineEditCommandFromId(const char *command_id, UmiEditorEditCommandKind *out_kind);
 
 /**
  * Add document commands only after its inputs and available capacity have been checked.

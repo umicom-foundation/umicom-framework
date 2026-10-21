@@ -651,3 +651,46 @@ UmiStatus UmiBuildProfileLaunchDirectory(const UmiBuildProfile *profile,
     memcpy(outDirectory, resolved, length + 1U);
     return UMI_STATUS_OK;
 }
+
+/* Capture the build folder before discovery or test execution crosses a worker
+ * boundary. All clients use the same project-relative resolution; no frontend
+ * needs to change the process directory to make its tests discoverable. */
+UmiStatus UmiBuildProfileBuildDirectory(const UmiBuildProfile *profile,
+    const char *absoluteProjectDirectory, char *outDirectory, size_t capacity)
+{
+    char resolved[UMI_BUILD_PATH_CAPACITY];
+    if (outDirectory == NULL || capacity == 0U || absoluteProjectDirectory == NULL ||
+        !umi_path_is_absolute(absoluteProjectDirectory)) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = umi_build_profile_validate(profile, NULL, 0U);
+    if (status != UMI_STATUS_OK) return status;
+#ifdef _WIN32
+    /* C:build and /build depend on a current drive. Require either a complete
+     * drive/network root or a normal path relative to the captured project. */
+    if (!umi_path_is_absolute(profile->build_directory) &&
+        (profile->build_directory[0] == '/' || profile->build_directory[0] == '\\' ||
+         strchr(profile->build_directory, ':') != NULL)) return UMI_STATUS_INVALID_ARGUMENT;
+#endif
+    status = umi_path_absolute(profile->build_directory, absoluteProjectDirectory,
+        resolved, sizeof resolved);
+    if (status != UMI_STATUS_OK) return status;
+    size_t length = strlen(resolved);
+    if (length >= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+    memcpy(outDirectory, resolved, length + 1U);
+    return UMI_STATUS_OK;
+}
+
+/* Workspace trust belongs to a captured project, not to any profile a client
+ * may later install. Share the lexical ownership check across frontends without
+ * consulting cwd or implying filesystem containment or execution permission. */
+UmiStatus UmiBuildProfileCheckProject(const UmiBuildProfile *profile,
+    const char *absoluteProjectDirectory)
+{
+    if (absoluteProjectDirectory == NULL || !umi_path_is_absolute(absoluteProjectDirectory))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = umi_build_profile_validate(profile, NULL, 0U);
+    if (status != UMI_STATUS_OK) return status;
+    if (!umi_path_is_absolute(profile->source_directory) ||
+        !umi_path_equal(profile->source_directory, absoluteProjectDirectory))
+        return UMI_STATUS_INVALID_STATE;
+    return UMI_STATUS_OK;
+}

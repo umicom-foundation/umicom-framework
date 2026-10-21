@@ -170,3 +170,23 @@ else()
             "Save link readiness requires the GTK4 adapter and BUILD_TESTING=ON."
         COMMAND "${CMAKE_COMMAND}" -E false VERBATIM)
 endif()
+
+# Seeded chooser cases replace only the native dialog boundary; linked API
+# availability is checked separately by the existing native link target.
+if(TARGET umicom_ui_gtk4)
+    add_executable(umicom-document-save-location-test test_save_location_gtk4.c)
+    target_link_libraries(umicom-document-save-location-test PRIVATE Umicom::ui_gtk4 Umicom::document)
+    umicom_apply_warnings(umicom-document-save-location-test)
+    umicom_apply_sanitizers(umicom-document-save-location-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-document-save-location-test)
+    endif()
+    foreach(case captured outside default cancel detach invalid)
+        file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/save-location-${case}")
+        add_test(NAME framework.document_saving.location.${case}
+            COMMAND umicom-document-save-location-test ${case}
+                "${CMAKE_CURRENT_BINARY_DIR}/qualification/save-location-${case}")
+        set_tests_properties(framework.document_saving.location.${case} PROPERTIES
+            TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;document;saving;gtk4;location")
+    endforeach()
+endif()

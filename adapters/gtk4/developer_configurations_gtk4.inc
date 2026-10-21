@@ -335,6 +335,8 @@ UmiGtk4BuildSettingsBindConfigurations(UmiGtk4DeveloperDialog *dialog,
     return status;
 }
 #endif
+/* Bindings may now be attached to a prepared hidden form before it is presented. The former visible-only binding is retained for review; user actions still require visibility. */
+#if 0
 UmiStatus
 UmiGtk4BuildSettingsBindConfigurations(UmiGtk4DeveloperDialog *dialog,
                                        const UmiGtk4BuildConfigurationCallbacks *callbacks)
@@ -406,6 +408,83 @@ UmiGtk4BuildSettingsBindConfigurations(UmiGtk4DeveloperDialog *dialog,
     g_object_unref(panel);
     dialog->accepting = 0;
     if (!DeveloperVisible(dialog))
+        status = UMI_STATUS_CANCELLED;
+    DeveloperRelease(owned);
+    return status;
+}
+
+#endif
+UmiStatus
+UmiGtk4BuildSettingsBindConfigurations(UmiGtk4DeveloperDialog *dialog,
+                                       const UmiGtk4BuildConfigurationCallbacks *callbacks)
+{
+    if (callbacks == NULL || callbacks->capture == NULL || callbacks->load == NULL ||
+        callbacks->save == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiGtk4DeveloperDialog *owned = DeveloperAcquireBinding(dialog);
+    if (owned == NULL)
+        return UMI_STATUS_INVALID_STATE;
+    UmiStatus status = UMI_STATUS_OK;
+    if (dialog->onApplied == NULL || dialog->configurationBound ||
+        DeveloperConfigurationsBusy(dialog))
+    {
+        DeveloperRelease(owned);
+        return UMI_STATUS_INVALID_STATE;
+    }
+    dialog->accepting = 1;
+    dialog->configurationCallbacks = *callbacks;
+    dialog->configurationBound = 1;
+    /* Construct and connect privately before publishing the container. A host
+     * may close the dialog during a parent notification; all callbacks then
+     * already belong to the controller's normal disconnection list. */
+    GtkWidget *panel = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+    g_object_ref_sink(panel);
+    dialog->configurationPanel = panel;
+    GtkWidget *help = gtk_label_new("Keep named build and launch settings for this project. "
+                                    "Refresh names before saving or loading. "
+                                    "Load replaces edits in this form only; Apply Settings "
+                                    "activates them. Stored settings are not a secret vault.");
+    gtk_label_set_wrap(GTK_LABEL(help), TRUE);
+    gtk_label_set_xalign(GTK_LABEL(help), 0.0F);
+    dialog->configurationRead = gtk_button_new_with_label("Refresh saved configurations");
+    dialog->configurationPicker = gtk_drop_down_new(NULL, NULL);
+    dialog->configurationLoad = gtk_button_new_with_label("Load selected configuration into form");
+    dialog->configurationName = gtk_entry_new();
+    gtk_entry_set_placeholder_text(GTK_ENTRY(dialog->configurationName),
+                                   "For example: Debug with sample data");
+    gtk_widget_set_tooltip_text(dialog->configurationName,
+                                "1 to 63 letters, digits, spaces, dots, dashes or underscores; no "
+                                "leading or trailing space");
+    dialog->configurationReplace =
+        gtk_check_button_new_with_label("Replace an existing configuration with this name");
+    dialog->configurationSave = gtk_button_new_with_label("Save form as named configuration");
+    GtkWidget *controls[] = {help,
+                             dialog->configurationRead,
+                             dialog->configurationPicker,
+                             dialog->configurationLoad,
+                             dialog->configurationName,
+                             dialog->configurationReplace,
+                             dialog->configurationSave};
+    const char *tags[] = {"help", "refresh", "choices", "load", "name", "replace", "save"};
+    for (size_t index = 0U; index < sizeof controls / sizeof controls[0]; ++index)
+    {
+        char tag[96];
+        snprintf(tag, sizeof tag, "developer.configurations.%s", tags[index]);
+        umi_gtk4_automation_tag_widget(controls[index], tag);
+        gtk_box_append(GTK_BOX(panel), controls[index]);
+    }
+    DeveloperConnect(dialog, G_OBJECT(dialog->configurationRead), "clicked",
+                     G_CALLBACK(DeveloperConfigurationRefresh));
+    DeveloperConnect(dialog, G_OBJECT(dialog->configurationLoad), "clicked",
+                     G_CALLBACK(DeveloperConfigurationLoad));
+    DeveloperConnect(dialog, G_OBJECT(dialog->configurationSave), "clicked",
+                     G_CALLBACK(DeveloperConfigurationSave));
+    GtkWidget *section = gtk_expander_new("Saved configurations");
+    gtk_expander_set_child(GTK_EXPANDER(section), panel);
+    gtk_box_append(GTK_BOX(dialog->body), section);
+    g_object_unref(panel);
+    dialog->accepting = 0;
+    if (!DeveloperAlive(dialog))
         status = UMI_STATUS_CANCELLED;
     DeveloperRelease(owned);
     return status;

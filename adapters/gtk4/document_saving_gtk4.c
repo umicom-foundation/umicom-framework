@@ -10,6 +10,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "gtk4_internal.h"
+#include "umicom/ui/gtk4/path_picker.h"
 #include <stdio.h>
 
 /* The adapter owns one reference while attached. Each queued idle or chooser
@@ -19,6 +20,7 @@ typedef struct SaveRun {
     unsigned references;
     GObject *lifetime;
     GCancellable *cancel;
+    GtkFileDialog *dialog; /* Owns the copied initial folder for this sequence. */
     UmiDocumentSaveSession *session;
     UmiGtk4DocumentSaveResultFn completed;
     void *context;
@@ -33,6 +35,7 @@ static void SaveRunUnref(gpointer data)
     if (--run->references != 0U) return;
     UmiDocumentSaveSessionDestroy(run->session);
     g_clear_object(&run->cancel);
+    g_clear_object(&run->dialog);
     g_clear_object(&run->lifetime);
     g_free(run);
 }
@@ -109,6 +112,8 @@ static void SavePathChosen(GObject *source, GAsyncResult *result, gpointer data)
     SaveRunUnref(run);
 }
 
+/* The explicit-location prompt now rechecks its borrowed adapter after observable GTK property updates. Preserve the earlier pump for ownership review. */
+#if 0
 static gboolean SavePump(gpointer data)
 {
     SaveRun *run = data;
@@ -125,6 +130,8 @@ static gboolean SavePump(gpointer data)
         return G_SOURCE_REMOVE;
     if (progress.phase == UMI_DOCUMENT_SAVE_READY) SaveSchedule(run);
     else if (progress.phase == UMI_DOCUMENT_SAVE_NEEDS_PATH) {
+/* The per-file chooser previously lacked application location context. Reuse the sequence-owned dialog whose explicit starting folder was copied during admission; retain the previous prompt for comparison. */
+#if 0
         GtkFileDialog *dialog = gtk_file_dialog_new();
         char title[UMI_DOCUMENT_NAME_CAPACITY + 80U];
         (void)snprintf(title, sizeof(title), "Save All — choose a filename for %s", progress.display_name);
@@ -135,10 +142,71 @@ static gboolean SavePump(gpointer data)
         gtk_file_dialog_save(dialog, adapter->window, run->cancel,
             SavePathChosen, SaveRunRef(run));
         g_object_unref(dialog);
+#endif
+
+        char title[UMI_DOCUMENT_NAME_CAPACITY + 80U];
+        (void)snprintf(title, sizeof(title), "Save All — choose a filename for %s", progress.display_name);
+        gtk_file_dialog_set_title(run->dialog, title);
+        gtk_file_dialog_set_initial_name(run->dialog, progress.display_name);
+        gtk_file_dialog_set_modal(run->dialog, TRUE);
+        run->choosing = 1;
+        gtk_file_dialog_save(run->dialog, adapter->window, run->cancel,
+            SavePathChosen, SaveRunRef(run));
     } else SaveFinish(run, UMI_STATUS_OK);
     return G_SOURCE_REMOVE;
 }
 
+#endif
+
+
+static gboolean SavePump(gpointer data)
+{
+    SaveRun *run = data;
+    run->idle = 0U;
+    UmiGtk4Adapter *adapter = SaveOwner(run);
+    if (adapter == NULL) return G_SOURCE_REMOVE;
+    (void)UmiDocumentSaveSessionStep(run->session);
+    /* A provider must preserve its document owner during a synchronous save.
+     * A native rebind still invalidates subsequent UI work and completion. */
+    adapter = SaveOwner(run);
+    if (adapter == NULL) return G_SOURCE_REMOVE;
+    UmiDocumentSaveProgress progress;
+    if (UmiDocumentSaveSessionProgress(run->session, &progress) != UMI_STATUS_OK)
+        return G_SOURCE_REMOVE;
+    if (progress.phase == UMI_DOCUMENT_SAVE_READY) SaveSchedule(run);
+    else if (progress.phase == UMI_DOCUMENT_SAVE_NEEDS_PATH) {
+/* The per-file chooser previously lacked application location context. Reuse the sequence-owned dialog whose explicit starting folder was copied during admission; retain the previous prompt for comparison. */
+#if 0
+        GtkFileDialog *dialog = gtk_file_dialog_new();
+        char title[UMI_DOCUMENT_NAME_CAPACITY + 80U];
+        (void)snprintf(title, sizeof(title), "Save All — choose a filename for %s", progress.display_name);
+        gtk_file_dialog_set_title(dialog, title);
+        gtk_file_dialog_set_initial_name(dialog, progress.display_name);
+        gtk_file_dialog_set_modal(dialog, TRUE);
+        run->choosing = 1;
+        gtk_file_dialog_save(dialog, adapter->window, run->cancel,
+            SavePathChosen, SaveRunRef(run));
+        g_object_unref(dialog);
+#endif
+
+        char title[UMI_DOCUMENT_NAME_CAPACITY + 80U];
+        (void)snprintf(title, sizeof(title), "Save All — choose a filename for %s", progress.display_name);
+        gtk_file_dialog_set_title(run->dialog, title);
+        gtk_file_dialog_set_initial_name(run->dialog, progress.display_name);
+        gtk_file_dialog_set_modal(run->dialog, TRUE);
+        /* Property observers may detach the editing binding. The idle retains
+         * the run, but its borrowed adapter must be resolved again here. */
+        adapter = SaveOwner(run);
+        if (adapter == NULL) return G_SOURCE_REMOVE;
+        run->choosing = 1;
+        gtk_file_dialog_save(run->dialog, adapter->window, run->cancel,
+            SavePathChosen, SaveRunRef(run));
+    } else SaveFinish(run, UMI_STATUS_OK);
+    return G_SOURCE_REMOVE;
+}
+
+/* Explicit chooser location is now an optional shared service input. The compatibility wrapper below keeps the original interface; retain the previous admission implementation for ownership review. */
+#if 0
 UmiStatus UmiGtk4AdapterDocumentSaveAll(UmiGtk4Adapter *adapter,
     UmiGtk4DocumentSaveResultFn completed, void *context)
 {
@@ -166,6 +234,93 @@ UmiStatus UmiGtk4AdapterDocumentSaveAll(UmiGtk4Adapter *adapter,
     return UMI_STATUS_OK;
 }
 
+#endif
+
+
+/* Capture location before queuing any writes. The chooser owns the copied
+ * GFile, so later caller edits, workspace switches or cwd changes cannot retarget
+ * untitled prompts. Existing named documents retain their original paths. */
+/* Capture the editing lifetime before constructing GTK chooser state. The replacement rejects binding retirement during synchronous property observation; retain this draft for review. */
+#if 0
+UmiStatus UmiGtk4AdapterDocumentSaveAllAt(UmiGtk4Adapter *adapter,
+    const char *initialFolder, UmiGtk4DocumentSaveResultFn completed, void *context)
+{
+    if (adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (adapter->edit_coordinator == NULL || adapter->edit_lifetime == NULL ||
+        adapter->window == NULL || adapter->shell == NULL) return UMI_STATUS_UNAVAILABLE;
+    if (adapter->document_save_run != NULL || adapter->edit_cancel != NULL ||
+        UmiGtk4AdapterDocumentCloseBusy(adapter) ||
+        UmiGtk4AdapterReplacementReviewBusy(adapter)) return UMI_STATUS_BUSY;
+    GtkFileDialog *dialog = gtk_file_dialog_new();
+    if (dialog == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    UmiStatus status = UmiPathPickerGtk4SetInitialLocation(dialog,
+        UMI_PATH_PICKER_NEW_FILE, NULL, initialFolder, NULL);
+    if (status != UMI_STATUS_OK) { g_object_unref(dialog); return status; }
+    SaveRun *run = g_try_new0(SaveRun, 1);
+    if (run == NULL) { g_object_unref(dialog); return UMI_STATUS_OUT_OF_MEMORY; }
+    run->references = 1U;
+    run->dialog = dialog;
+    status = UmiDocumentSaveSessionCreate(adapter->edit_coordinator, &run->session);
+    if (status != UMI_STATUS_OK) { SaveRunUnref(run); return status; }
+    run->lifetime = g_object_ref(adapter->edit_lifetime);
+    run->cancel = g_cancellable_new();
+    run->completed = completed;
+    run->context = context;
+    adapter->document_save_run = run;
+    SaveSchedule(run);
+    return UMI_STATUS_OK;
+}
+
+#endif
+
+
+UmiStatus UmiGtk4AdapterDocumentSaveAllAt(UmiGtk4Adapter *adapter,
+    const char *initialFolder, UmiGtk4DocumentSaveResultFn completed, void *context)
+{
+    if (adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (adapter->edit_coordinator == NULL || adapter->edit_lifetime == NULL ||
+        adapter->window == NULL || adapter->shell == NULL) return UMI_STATUS_UNAVAILABLE;
+    if (adapter->document_save_run != NULL || adapter->edit_cancel != NULL ||
+        UmiGtk4AdapterDocumentCloseBusy(adapter) ||
+        UmiGtk4AdapterReplacementReviewBusy(adapter)) return UMI_STATUS_BUSY;
+    GObject *lifetime = g_object_ref(adapter->edit_lifetime);
+    GtkFileDialog *dialog = gtk_file_dialog_new();
+    if (dialog == NULL) { g_object_unref(lifetime); return UMI_STATUS_OUT_OF_MEMORY; }
+    UmiStatus status = UmiPathPickerGtk4SetInitialLocation(dialog,
+        UMI_PATH_PICKER_NEW_FILE, NULL, initialFolder, NULL);
+    if (status == UMI_STATUS_OK && g_object_get_data(lifetime, "adapter") != adapter)
+        status = UMI_STATUS_CANCELLED;
+    if (status != UMI_STATUS_OK) {
+        g_object_unref(dialog);
+        g_object_unref(lifetime);
+        return status;
+    }
+    SaveRun *run = g_try_new0(SaveRun, 1);
+    if (run == NULL) {
+        g_object_unref(dialog);
+        g_object_unref(lifetime);
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    run->references = 1U;
+    run->dialog = dialog;
+    run->lifetime = lifetime;
+    status = UmiDocumentSaveSessionCreate(adapter->edit_coordinator, &run->session);
+    if (status != UMI_STATUS_OK) { SaveRunUnref(run); return status; }
+    run->cancel = g_cancellable_new();
+    run->completed = completed;
+    run->context = context;
+    adapter->document_save_run = run;
+    SaveSchedule(run);
+    return UMI_STATUS_OK;
+}
+
+/* Compatibility: callers with no explicit location retain the operating-system
+ * chooser default. No current-directory or settings-directory guess is made. */
+UmiStatus UmiGtk4AdapterDocumentSaveAll(UmiGtk4Adapter *adapter,
+    UmiGtk4DocumentSaveResultFn completed, void *context)
+{
+    return UmiGtk4AdapterDocumentSaveAllAt(adapter, NULL, completed, context);
+}
 /* Observing a save must not schedule another step or retain a borrowed result. */
 UmiStatus UmiGtk4AdapterDocumentSaveAllProgress(const UmiGtk4Adapter *adapter,
     UmiDocumentSaveProgress *outProgress)

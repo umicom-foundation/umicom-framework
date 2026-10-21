@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "umicom/document/commands.h"
 #include "gtk4_internal.h"
 
 #include <string.h>
@@ -710,6 +711,8 @@ static void EditorRedo(GtkTextBuffer *buffer, gpointer data)
     g_signal_stop_emission_by_name(buffer, "redo");
     (void)UmiGtk4EditorCommandForView(binding->adapter, "edit.redo", binding->view_id);
 }
+/* Source keyboard actions now include shared line editing and reject extra Meta modifiers. Retain the previous history-only handler for review. */
+#if 0
 static gboolean EditorHistoryKey(GtkEventControllerKey *controller, guint keyval,
     guint keycode, GdkModifierType state, gpointer data)
 {
@@ -723,6 +726,39 @@ static gboolean EditorHistoryKey(GtkEventControllerKey *controller, guint keyval
     if ((modifiers == GDK_CONTROL_MASK && key == GDK_KEY_y) ||
         (modifiers == (GDK_CONTROL_MASK | GDK_SHIFT_MASK) && key == GDK_KEY_z)) command = "edit.redo";
     if (modifiers == GDK_CONTROL_MASK && key == GDK_KEY_a) command = "edit.select-all";
+    if (command == NULL) return FALSE;
+    (void)UmiGtk4EditorCommandForView(binding->adapter, command, binding->view_id);
+    return TRUE;
+}
+
+#endif
+
+static gboolean EditorHistoryKey(GtkEventControllerKey *controller, guint keyval,
+    guint keycode, GdkModifierType state, gpointer data)
+{
+    UmiGtk4EditorBinding *binding = data;
+    (void)controller; (void)keycode;
+    if (!EditorHasCommandOwner(binding)) return FALSE;
+    GdkModifierType modifiers = state & (GDK_CONTROL_MASK | GDK_SHIFT_MASK | GDK_ALT_MASK | GDK_SUPER_MASK | GDK_META_MASK);
+    const char *command = NULL;
+    guint key = gdk_keyval_to_lower(keyval);
+    if (modifiers == GDK_CONTROL_MASK && key == GDK_KEY_z) command = "edit.undo";
+    if ((modifiers == GDK_CONTROL_MASK && key == GDK_KEY_y) ||
+        (modifiers == (GDK_CONTROL_MASK | GDK_SHIFT_MASK) && key == GDK_KEY_z)) command = "edit.redo";
+    if (modifiers == GDK_CONTROL_MASK && key == GDK_KEY_a) command = "edit.select-all";
+    /* Source-only shortcuts use the same atomic line edits as toolbar and
+     * command search. Never bind these to the window or unrelated entry fields. */
+    if (modifiers == (GDK_CONTROL_MASK | GDK_SHIFT_MASK) && key == GDK_KEY_d)
+        command = UMI_DOCUMENT_COMMAND_DUPLICATE_LINE;
+    if (modifiers == (GDK_CONTROL_MASK | GDK_SHIFT_MASK) && key == GDK_KEY_k)
+        command = UMI_DOCUMENT_COMMAND_DELETE_LINE;
+    if (modifiers == GDK_ALT_MASK && key == GDK_KEY_Up) command = UMI_DOCUMENT_COMMAND_MOVE_LINE_UP;
+    if (modifiers == GDK_ALT_MASK && key == GDK_KEY_Down) command = UMI_DOCUMENT_COMMAND_MOVE_LINE_DOWN;
+    if (modifiers == GDK_CONTROL_MASK && key == GDK_KEY_bracketright) command = UMI_DOCUMENT_COMMAND_INDENT_LINES;
+    if (modifiers == GDK_CONTROL_MASK && key == GDK_KEY_bracketleft) command = UMI_DOCUMENT_COMMAND_OUTDENT_LINES;
+    if (modifiers == GDK_CONTROL_MASK && key == GDK_KEY_slash) command = UMI_DOCUMENT_COMMAND_TOGGLE_LINE_COMMENT;
+    if (modifiers == (GDK_CONTROL_MASK | GDK_SHIFT_MASK) && key == GDK_KEY_j)
+        command = UMI_DOCUMENT_COMMAND_JOIN_LINE_WITH_NEXT;
     if (command == NULL) return FALSE;
     (void)UmiGtk4EditorCommandForView(binding->adapter, command, binding->view_id);
     return TRUE;
@@ -1273,6 +1309,7 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
             g_signal_connect_data(text_buffer, "redo", G_CALLBACK(EditorRedo),
                 editor_binding_new(adapter, document.view_id), editor_binding_free, 0);
             GtkEventController *historyKeys = gtk_event_controller_key_new();
+            gtk_event_controller_set_name(historyKeys, "umicom-source-editor-commands");
             gtk_event_controller_set_propagation_phase(historyKeys, GTK_PHASE_CAPTURE);
             g_signal_connect_data(historyKeys, "key-pressed", G_CALLBACK(EditorHistoryKey),
                 editor_binding_new(adapter, document.view_id), editor_binding_free, 0);
@@ -1373,6 +1410,8 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
 /* Focus belongs to an explicit editing action, not the status refresh loop.
  * Resolve the actual document page by identity so a welcome tab, secondary
  * group or Output text view can never receive source-editor input instead. */
+/* Focus observers can retire the adapter after document refresh has succeeded. Keep the former focus result for review; the replacement retains the editing token until focus ends and reports cancellation for a retired binding. */
+#if 0
 UmiStatus UmiGtk4AdapterFocusActiveDocument(UmiGtk4Adapter *adapter)
 {
     if (adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
@@ -1423,5 +1462,65 @@ UmiStatus UmiGtk4AdapterFocusActiveDocument(UmiGtk4Adapter *adapter)
     gboolean accepted = focused == view || (focused != NULL && gtk_widget_is_ancestor(focused, view));
     g_object_unref(root);
     g_object_unref(view);
+    return accepted ? UMI_STATUS_OK : UMI_STATUS_UNAVAILABLE;
+}
+
+#endif
+
+
+UmiStatus UmiGtk4AdapterFocusActiveDocument(UmiGtk4Adapter *adapter)
+{
+    if (adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (adapter->shell == NULL || adapter->window == NULL ||
+        adapter->edit_coordinator == NULL || adapter->edit_lifetime == NULL) return UMI_STATUS_UNAVAILABLE;
+    UmiDocumentWorkingCopySnapshot active;
+    UmiStatus status = umi_document_coordinator_active_snapshot(
+        adapter->edit_coordinator, &active);
+    if (status != UMI_STATUS_OK) return status;
+    GObject *lifetime = g_object_ref(adapter->edit_lifetime);
+    status = umi_gtk4_refresh_documents(adapter,
+        umi_ui_application_shell_workbench(adapter->shell));
+    /* Refresh can notify host observers. The binding is cleared before the
+     * adapter is freed, so do not dereference the old address after teardown. */
+    adapter = g_object_get_data(lifetime, "adapter");
+    g_object_unref(lifetime);
+    if (adapter == NULL) return UMI_STATUS_CANCELLED;
+    if (status != UMI_STATUS_OK) return status;
+    /* A refresh observer can activate a different document. Do not give focus
+     * to the old page after the user or host has selected another source. */
+    UmiDocumentWorkingCopySnapshot current;
+    status = umi_document_coordinator_active_snapshot(adapter->edit_coordinator, &current);
+    if (status != UMI_STATUS_OK) return status;
+    if (current.document_id != active.document_id || strcmp(current.view_id, active.view_id) != 0)
+        return UMI_STATUS_INVALID_STATE;
+    GtkWidget *notebook = NULL;
+    GtkWidget *page = find_document_page(adapter, active.view_id, &notebook);
+    GtkWidget *view = page != NULL
+        ? g_object_get_data(G_OBJECT(page), "umicom-editor-view") : NULL;
+    if (!GTK_IS_TEXT_VIEW(view) || !gtk_widget_is_sensitive(view))
+        return UMI_STATUS_UNAVAILABLE;
+    GtkRoot *root = gtk_widget_get_root(view);
+    if (!GTK_IS_WINDOW(root)) return UMI_STATUS_UNAVAILABLE;
+    /* A prepared but not yet presented top-level is valid. Hidden panels and
+     * inactive notebook/stack pages underneath it are not editing surfaces. */
+    for (GtkWidget *parent = view; parent != GTK_WIDGET(root);
+         parent = gtk_widget_get_parent(parent)) {
+        if (parent == NULL || !gtk_widget_get_visible(parent) ||
+            !gtk_widget_get_child_visible(parent)) return UMI_STATUS_UNAVAILABLE;
+    }
+    /* Focus observers may release the embedding host. Retain only native
+     * objects across that notification and do not revisit the adapter. The
+     * actual root also supports an editor detached into a floating window. */
+    GObject *focusLifetime = g_object_ref(adapter->edit_lifetime);
+    g_object_ref(view);
+    g_object_ref(root);
+    gtk_window_set_focus(GTK_WINDOW(root), view);
+    GtkWidget *focused = gtk_window_get_focus(GTK_WINDOW(root));
+    gboolean accepted = focused == view || (focused != NULL && gtk_widget_is_ancestor(focused, view));
+    gboolean ownerAlive = g_object_get_data(focusLifetime, "adapter") == adapter;
+    g_object_unref(root);
+    g_object_unref(view);
+    g_object_unref(focusLifetime);
+    if (!ownerAlive) return UMI_STATUS_CANCELLED;
     return accepted ? UMI_STATUS_OK : UMI_STATUS_UNAVAILABLE;
 }
