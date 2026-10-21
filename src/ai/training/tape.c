@@ -35,7 +35,9 @@ typedef enum UmiAiTrainingOperation {
     UMI_AI_TRAINING_MATMUL,
     UMI_AI_TRAINING_RELU,
     UMI_AI_TRAINING_MSE,
-    UMI_AI_TRAINING_CROSS_ENTROPY
+    UMI_AI_TRAINING_CROSS_ENTROPY,
+    UMI_AI_TRAINING_EMBEDDING,
+    UMI_AI_TRAINING_CAUSAL_ATTENTION
 } UmiAiTrainingOperation;
 
 struct UmiAiTrainingTensor {
@@ -49,6 +51,9 @@ struct UmiAiTrainingTensor {
     size_t *targets; /* only cross-entropy operation nodes allocate these */
     const UmiAiTrainingTensor *left;
     const UmiAiTrainingTensor *right;
+    const UmiAiTrainingTensor *third; /* value operand of attention */
+    size_t sequenceLength; /* tokens in each independent sequence */
+    float *attentionWeights; /* owned [batch*time, time] cache */
     UmiAiTrainingOperation operation;
     bool trainable;
 };
@@ -114,6 +119,7 @@ static void FreeNode(UmiAiTrainingTensor *node)
 {
     if (node == NULL) return;
     free(node->targets);
+    free(node->attentionWeights);
     free(node->gradients);
     free(node->values);
     free(node);
@@ -365,6 +371,123 @@ UmiStatus UmiAiTrainingCrossEntropy(UmiAiTrainingTape *tape,
     return PublishNode(tape, node, outLoss);
 }
 
+/* Token embeddings use an integer-indexed gather rather than a one-hot
+ * [tokens, vocabulary] matrix. Their reverse-mode derivative is a scatter-add
+ * into the original embedding table, so repeated indices remain correct. */
+UmiStatus UmiAiTrainingEmbeddingLookup(UmiAiTrainingTape *tape,
+                                      const UmiAiTrainingTensor *embeddingTable,
+                                      const size_t *tokenIds, size_t tokenCount,
+                                      UmiAiTrainingTensor **outTensor)
+{
+    UmiAiTrainingTensor *node;
+    if (!IsMember(tape, embeddingTable) || tokenIds == NULL ||
+        outTensor == NULL || tokenCount == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!ShapeIsValid(tokenCount, embeddingTable->columns)) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    if (tape->count >= UMI_AI_TRAINING_MAX_TENSORS) return UMI_STATUS_CAPACITY_EXCEEDED;
+    for (size_t t = 0U; t < tokenCount; ++t) {
+        if (tokenIds[t] >= embeddingTable->rows) return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    node = AllocateNode(tape, tokenCount, embeddingTable->columns);
+    if (node == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    node->targets = malloc(tokenCount * sizeof(*node->targets));
+    if (node->targets == NULL) { FreeNode(node); return UMI_STATUS_OUT_OF_MEMORY; }
+    memcpy(node->targets, tokenIds, tokenCount * sizeof(*tokenIds));
+    for (size_t t = 0U; t < tokenCount; ++t) {
+        memcpy(node->values + t * node->columns,
+               embeddingTable->values + tokenIds[t] * embeddingTable->columns,
+               node->columns * sizeof(*node->values));
+    }
+    node->left = embeddingTable;
+    node->operation = UMI_AI_TRAINING_EMBEDDING;
+    return PublishNode(tape, node, outTensor);
+}
+
+/* Causal attention sees a rank-three logical sequence [batch,time,channels]
+ * through the existing row-major [batch*time,channels] tape allocation.
+ * Every row derives its own sequence boundary from sequenceLength. Inputs
+ * must be finite; the dot product is evaluated with double intermediates and
+ * scores are normalised by subtracting the row maximum before exp(). */
+UmiStatus UmiAiTrainingCausalAttention(UmiAiTrainingTape *tape,
+                                      const UmiAiTrainingTensor *queries,
+                                      const UmiAiTrainingTensor *keys,
+                                      const UmiAiTrainingTensor *values,
+                                      size_t sequenceLength,
+                                      UmiAiTrainingTensor **outTensor)
+{
+    UmiAiTrainingTensor *node;
+    double *scores;
+    double scale;
+    if (!IsMember(tape, queries) || !IsMember(tape, keys) ||
+        !IsMember(tape, values) || outTensor == NULL || sequenceLength == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (queries->rows != keys->rows || keys->rows != values->rows ||
+        queries->columns != keys->columns ||
+        queries->rows % sequenceLength != 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!ShapeIsValid(queries->rows, values->columns) ||
+        sequenceLength > UMI_AI_TRAINING_MAX_ELEMENTS / queries->rows) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    if (tape->count >= UMI_AI_TRAINING_MAX_TENSORS) return UMI_STATUS_CAPACITY_EXCEEDED;
+    scale = sqrt((double)queries->columns);
+    node = AllocateNode(tape, queries->rows, values->columns);
+    if (node == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    node->attentionWeights = calloc(queries->rows * sequenceLength,
+                                    sizeof(*node->attentionWeights));
+    scores = malloc(sequenceLength * sizeof(*scores));
+    if (node->attentionWeights == NULL || scores == NULL) {
+        free(scores);
+        FreeNode(node);
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    for (size_t row = 0U; row < queries->rows; ++row) {
+        size_t batchStart = (row / sequenceLength) * sequenceLength;
+        size_t currentTime = row % sequenceLength;
+        double maximum = -INFINITY;
+        double denominator = 0.0;
+        for (size_t past = 0U; past <= currentTime; ++past) {
+            double dot = 0.0;
+            size_t keyRow = batchStart + past;
+            for (size_t channel = 0U; channel < queries->columns; ++channel) {
+                dot += (double)queries->values[row * queries->columns + channel] *
+                       (double)keys->values[keyRow * keys->columns + channel];
+            }
+            scores[past] = dot / scale;
+            if (scores[past] > maximum) maximum = scores[past];
+        }
+        for (size_t past = 0U; past <= currentTime; ++past) {
+            denominator += exp(scores[past] - maximum);
+        }
+        for (size_t past = 0U; past <= currentTime; ++past) {
+            double probability = exp(scores[past] - maximum) / denominator;
+            node->attentionWeights[row * sequenceLength + past] = (float)probability;
+        }
+        for (size_t channel = 0U; channel < values->columns; ++channel) {
+            double result = 0.0;
+            for (size_t past = 0U; past <= currentTime; ++past) {
+                size_t valueRow = batchStart + past;
+                result += (double)node->attentionWeights[row * sequenceLength + past] *
+                          (double)values->values[valueRow * values->columns + channel];
+            }
+            if (!CanStore(result)) {
+                free(scores);
+                FreeNode(node);
+                return UMI_STATUS_INVALID_ARGUMENT;
+            }
+            node->values[row * node->columns + channel] = (float)result;
+        }
+    }
+    free(scores);
+    node->left = queries;
+    node->right = keys;
+    node->third = values;
+    node->sequenceLength = sequenceLength;
+    node->operation = UMI_AI_TRAINING_CAUSAL_ATTENTION;
+    return PublishNode(tape, node, outTensor);
+}
+
 /* Accumulation is explicit so a tensor shared by two operators receives both
  * contributions. Using double intermediates avoids silent float overflow in
  * intermediate dot products and derivative products. */
@@ -445,6 +568,60 @@ static bool BackwardNode(UmiAiTrainingTensor *node)
             }
         }
         return true;
+    case UMI_AI_TRAINING_EMBEDDING:
+        /* A discrete token index is not differentiable. Embedding rows share
+         * gradients across every occurrence of the same token. */
+        for (size_t token = 0U; token < node->rows; ++token) {
+            size_t tableRow = node->targets[token];
+            for (size_t channel = 0U; channel < node->columns; ++channel) {
+                size_t sourceIndex = token * node->columns + channel;
+                size_t tableIndex = tableRow * left->columns + channel;
+                if (!Accumulate(&left->gradients[tableIndex],
+                                (double)node->gradients[sourceIndex])) return false;
+            }
+        }
+        return true;
+    case UMI_AI_TRAINING_CAUSAL_ATTENTION: {
+        UmiAiTrainingTensor *values = (UmiAiTrainingTensor *)node->third;
+        double scale = sqrt((double)left->columns);
+        for (size_t row = 0U; row < node->rows; ++row) {
+            size_t batchStart = (row / node->sequenceLength) * node->sequenceLength;
+            size_t currentTime = row % node->sequenceLength;
+            double expectedDot = 0.0;
+            /* Differentiating softmax yields p_j * (dp_j - sum_k p_k dp_k).
+             * The first pass calculates the shared expected derivative. */
+            for (size_t past = 0U; past <= currentTime; ++past) {
+                double dot = 0.0;
+                size_t valueRow = batchStart + past;
+                for (size_t channel = 0U; channel < values->columns; ++channel) {
+                    dot += (double)node->gradients[row * node->columns + channel] *
+                           (double)values->values[valueRow * values->columns + channel];
+                }
+                expectedDot += (double)node->attentionWeights[row * node->sequenceLength + past] * dot;
+            }
+            for (size_t past = 0U; past <= currentTime; ++past) {
+                size_t keyRow = batchStart + past;
+                double probability = (double)node->attentionWeights[row * node->sequenceLength + past];
+                double dot = 0.0;
+                for (size_t channel = 0U; channel < values->columns; ++channel) {
+                    size_t index = keyRow * values->columns + channel;
+                    double upstream = (double)node->gradients[row * node->columns + channel];
+                    dot += upstream * (double)values->values[index];
+                    if (!Accumulate(&values->gradients[index], probability * upstream)) return false;
+                }
+                double scoreGradient = probability * (dot - expectedDot) / scale;
+                for (size_t channel = 0U; channel < left->columns; ++channel) {
+                    size_t queryIndex = row * left->columns + channel;
+                    size_t keyIndex = keyRow * right->columns + channel;
+                    if (!Accumulate(&left->gradients[queryIndex],
+                                    scoreGradient * (double)right->values[keyIndex]) ||
+                        !Accumulate(&right->gradients[keyIndex],
+                                    scoreGradient * (double)left->values[queryIndex])) return false;
+                }
+            }
+        }
+        return true;
+    }
     }
     return false;
 }

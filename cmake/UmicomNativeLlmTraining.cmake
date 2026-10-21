@@ -25,6 +25,8 @@ get_filename_component(_umicom_ai_training_root "${CMAKE_CURRENT_LIST_DIR}/.." A
 if(NOT TARGET umicom_ai_training)
     add_library(umicom_ai_training STATIC
         "${_umicom_ai_training_root}/src/ai/training/tape.c"
+        "${_umicom_ai_training_root}/src/ai/training/initialisation.c"
+        "${_umicom_ai_training_root}/src/ai/training/sequence_shape.c"
     )
     add_library(Umicom::AiTraining ALIAS umicom_ai_training)
     target_include_directories(umicom_ai_training PUBLIC
@@ -88,4 +90,27 @@ if(BUILD_TESTING)
         umicom-ai-training-limits-test
         framework.ai.training.limits
         test_training_limits.c)
+
+    # Batch 02 extends the existing tape rather than introducing a parallel
+    # autodiff system. These tests qualify the new native operators.
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-initialisation-test
+        framework.ai.training.initialisation
+        test_training_initialisation.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-sequence-shape-test
+        framework.ai.training.sequence_shape
+        test_training_sequence_shape.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-embedding-test
+        framework.ai.training.embedding
+        test_training_embedding.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-attention-test
+        framework.ai.training.attention
+        test_training_attention.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-attention-gradient-test
+        framework.ai.training.attention_gradients
+        test_training_attention_gradients.c)
 endif()

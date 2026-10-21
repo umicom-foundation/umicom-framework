@@ -52,3 +52,41 @@ The test executables report failures with explicit line numbers even in release 
 - No gradient update is supported while a tape is concurrently used by another thread; caller serialises access.
 - Checkpoint files, AdamW, higher-rank tensors, causal attention, positional embeddings, batching policies, deterministic RNG seeds and trained model evaluation remain future work.
 - The training corpus is deliberately memorisable. Falling loss is evidence that the code trains a simple model, **not** evidence of generalisation.
+
+---
+
+## Batch 02 continuation: reproducible embeddings and attention
+
+The preceding Batch 01 text is retained as the historical starting-point
+reference. This addendum describes the features now implemented in Batch 02:
+
+- `initialisation.h` / `initialisation.c` provide a caller-owned seeded PRNG
+  for reproducible parameter creation without global random state.
+- `sequence_shape.h` / `sequence_shape.c` validate logical rank-three
+  `[batch,time,channels]` layouts, flattened to the established 2D tape.
+- The existing `tape.h` / `tape.c` now add trainable embedding gather and
+  reverse-mode gradient scatter-add, including repeated token IDs.
+- The existing tape also adds single-head scaled dot-product *causal* attention
+  and independently tested Q/K/V derivatives, with explicit batch boundaries.
+- `train_attention.c` trains a small context-sensitive model from seeded
+  weights. This remains an educational attention-based experiment, **not** a
+  complete transformer or a production language model.
+
+The stand-alone CMake project now registers **12 tests**: six preserved
+Batch 01 tests, five new focused tests and the new attention-demo regression.
+Use the same PowerShell build procedure above, then run:
+
+```powershell
+& '.\build\native-llm-lesson\umicom-native-llm-attention-demo.exe'
+```
+
+The canonical Framework's *root* `CMakeLists.txt` still needs to include
+`cmake/UmicomNativeLlmTraining.cmake` for these tests to appear in the
+`windows-ucrt64-all-debug` consolidated preset. If the Batch 01 one-line
+include was already added, do **not** add it again. This Batch 02 package
+updates the existing module; it never replaces the main `Umicom::ai` runtime.
+
+The next milestone is the composition of a complete transformer block with
+residual connections, layer normalisation, feed-forward layers and multi-head
+attention. Proper training/evaluation splits and checkpoint persistence must
+precede claims that a model generalises to unseen data.

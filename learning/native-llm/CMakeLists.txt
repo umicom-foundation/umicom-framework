@@ -27,3 +27,22 @@ if(NOT MSVC)
     target_compile_options(umicom-native-llm-train PRIVATE
         -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
 endif()
+
+# The Batch 02 demonstration is another thin consumer of canonical Framework
+# training primitives. It validates a context-sensitive educational corpus.
+add_executable(umicom-native-llm-attention-demo
+    "${CMAKE_CURRENT_LIST_DIR}/train_attention.c")
+target_link_libraries(umicom-native-llm-attention-demo PRIVATE Umicom::AiTraining)
+target_compile_features(umicom-native-llm-attention-demo PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-attention-demo PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-attention-demo PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME framework.ai.training.attention_demo
+             COMMAND umicom-native-llm-attention-demo)
+    set_tests_properties(framework.ai.training.attention_demo PROPERTIES
+        LABELS "framework;ai;native-training;learning")
+endif()

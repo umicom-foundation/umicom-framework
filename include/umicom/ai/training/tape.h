@@ -121,6 +121,33 @@ UmiStatus UmiAiTrainingSgdStep(UmiAiTrainingTape *tape,
                               UmiAiTrainingTensor *parameter,
                               float learningRate);
 
+/* Gather rows from a [vocabulary, channels] embedding parameter table.
+ * Input token IDs are copied into the tape node and may be released after
+ * this call. The output is [tokenCount, channels]. The backward pass scatters
+ * and SUMS gradients into table rows, including repeated token IDs.
+ * No gradient exists with respect to the discrete token IDs. */
+UmiStatus UmiAiTrainingEmbeddingLookup(UmiAiTrainingTape *tape,
+                                      const UmiAiTrainingTensor *embeddingTable,
+                                      const size_t *tokenIds, size_t tokenCount,
+                                      UmiAiTrainingTensor **outTensor);
+
+/* Trainable, single-head scaled dot-product CAUSAL self-attention.
+ * Query, key and value matrices have [batch*time, channels] shape;
+ * query/key channel widths must agree, while value width may differ.
+ * sequenceLength is 'time': each sequence is handled independently and each
+ * output token reads ONLY keys/values at earlier or equal time positions.
+ *
+ * A bounded [batch*time, time] probability cache is saved on the tape for
+ * reverse-mode differentiation. The operator uses a stable masked softmax
+ * and returns a [batch*time, valueChannels] tensor. The output pointer stays
+ * unchanged on failure. It is not a complete transformer or multi-head layer. */
+UmiStatus UmiAiTrainingCausalAttention(UmiAiTrainingTape *tape,
+                                      const UmiAiTrainingTensor *queries,
+                                      const UmiAiTrainingTensor *keys,
+                                      const UmiAiTrainingTensor *values,
+                                      size_t sequenceLength,
+                                      UmiAiTrainingTensor **outTensor);
+
 #ifdef __cplusplus
 }
 #endif
