@@ -13,6 +13,10 @@
  *   Callers serialise access; a tape is not thread-safe.
  *   Models, tokenisers, persistence and accelerator adapters come in later
  *   batches. This API deliberately does not claim transformer support yet.
+ *   HISTORICAL NOTE: the statement above describes the original Batch 01 tape.
+ *   Batch 03 adds trainable multi-head attention and LayerNorm operators; the
+ *   Framework now composes one experimental decoder Transformer Block in a
+ *   separate module, without claiming a complete trained LLM.
  *
  * AUTHOR AND ORGANISATION:
  *   Sammy Hegab
@@ -147,6 +151,48 @@ UmiStatus UmiAiTrainingCausalAttention(UmiAiTrainingTape *tape,
                                       const UmiAiTrainingTensor *values,
                                       size_t sequenceLength,
                                       UmiAiTrainingTensor **outTensor);
+
+
+/* Capture the current graph size. A saved count can be passed to Rollback
+ * to discard only nodes created by a failed composed operation. No memory
+ * outside this tape changes and outCount is unchanged on failure. */
+UmiStatus UmiAiTrainingTapeCheckpoint(const UmiAiTrainingTape *tape,
+                                     size_t *outCount);
+
+/* Discard any suffix of the graph, including operator results. Unlike Rewind,
+ * the retained prefix need not consist solely of leaves. Retained nodes keep
+ * their identities. Discarded handles become invalid; caller must release
+ * them. A successful rollback clears previous gradient-readiness state. */
+UmiStatus UmiAiTrainingTapeRollback(UmiAiTrainingTape *tape,
+                                   size_t retainCount);
+
+/* Multi-head causal self-attention over [batch*time, channels] matrices.
+ * All Q/K/V matrices have the same dimensions, and channels must divide
+ * evenly into headCount contiguous heads. Every head is independently
+ * scaled by sqrt(channels/headCount) and masked by sequenceLength.
+ * The output is [batch*time, channels] in the original head order. The tape
+ * retains probabilities for reverse-mode differentiation and guarantees
+ * no cross-sequence or future-token access. Failed calls publish no node. */
+UmiStatus UmiAiTrainingMultiHeadCausalAttention(
+    UmiAiTrainingTape *tape,
+    const UmiAiTrainingTensor *queries,
+    const UmiAiTrainingTensor *keys,
+    const UmiAiTrainingTensor *values,
+    size_t sequenceLength,
+    size_t headCount,
+    UmiAiTrainingTensor **outTensor);
+
+/* Per-row layer normalisation with learned affine scale and bias:
+ *   y = ((x - mean) / sqrt(variance + epsilon)) * gamma + beta
+ * input is [rows, channels]; gamma and beta are each [1, channels].
+ * epsilon must be positive and finite. Backpropagation calculates gradients
+ * for input, gamma and beta, including the case of shared input operands. */
+UmiStatus UmiAiTrainingLayerNorm(UmiAiTrainingTape *tape,
+                                const UmiAiTrainingTensor *input,
+                                const UmiAiTrainingTensor *gamma,
+                                const UmiAiTrainingTensor *beta,
+                                float epsilon,
+                                UmiAiTrainingTensor **outTensor);
 
 #ifdef __cplusplus
 }

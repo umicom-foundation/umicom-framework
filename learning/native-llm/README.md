@@ -90,3 +90,59 @@ The next milestone is the composition of a complete transformer block with
 residual connections, layer normalisation, feed-forward layers and multi-head
 attention. Proper training/evaluation splits and checkpoint persistence must
 precede claims that a model generalises to unseen data.
+
+
+---
+
+## Batch 03 continuation: native multi-head decoder Transformer Block
+
+The earlier Batch 01 and 02 descriptions above are retained as **historical
+milestones**. The current implementation adds the following Framework-owned
+capabilities without deleting or replacing existing public APIs:
+
+- `UmiAiTrainingMultiHeadCausalAttention` divides query/key/value channels
+  into independently masked heads and accumulates Q/K/V gradients.
+- `UmiAiTrainingLayerNorm` implements trainable gamma/beta and verifies
+  analytical gradients against central finite differences.
+- `UmiAiTrainingTapeCheckpoint` and `UmiAiTrainingTapeRollback` allow
+  failure-atomic graph composition and invalidate previous gradients.
+- `transformer.h` / `transformer.c` compose one **pre-LN decoder block** with
+  two residual connections, Q/K/V/output projections, and a trainable ReLU
+  feed-forward sublayer using the existing shared tape operators.
+- `train_transformer.c` trains token embeddings, one block and vocabulary
+  projection on a deliberately tiny, memorisable two-sequence corpus.
+
+The isolated learning project now runs **21 CTest cases**. The eight new
+focused tests cover multi-head forward/masking, multi-head finite-difference
+and alias gradients, LayerNorm outputs, LayerNorm derivatives, residual
+identity, full composed block finite differences and causality, supervised
+parameter optimisation, and safe rollback/invalid parameters. The extra
+transformer-demo test makes 21 in total.
+
+### Native build and inspection (Windows PowerShell)
+
+```powershell
+Set-Location "C:\umicom\Umicom-Applications"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake -S ".\framework\learning\native-llm" `
+      -B ".\build\windows-ucrt64-native-llm-debug" `
+      -G Ninja -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=Debug
+cmake --build ".\build\windows-ucrt64-native-llm-debug" --parallel 2
+ctest --test-dir ".\build\windows-ucrt64-native-llm-debug" --output-on-failure
+& ".\build\windows-ucrt64-native-llm-debug\umicom-native-llm-transformer-demo.exe"
+```
+
+### Scope and limitations
+
+The block is a real trainable neural network component, **not yet a complete
+LLM or source-code expert**. It has no checkpoint persistence, positional
+embedding, general text tokenizer, held-out evaluation, generation sampler,
+large-context execution or GPU kernels. It uses float32 scalar CPU operators
+and a bounded graph. LayerNorm and multi-head attention support backward
+propagation; the feed-forward activation remains ReLU for transparency.
+
+The root Framework `CMakeLists.txt` still needs an explicit additive
+`include(cmake/UmicomNativeLlmTraining.cmake)` when a consumer wishes to
+register these standalone training targets in the full application build.
+Do not add the same include twice. Everything else in the Framework's original
+CMake configuration, source catalogue and application profiles is preserved.

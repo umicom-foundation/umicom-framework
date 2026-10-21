@@ -46,3 +46,22 @@ if(BUILD_TESTING)
     set_tests_properties(framework.ai.training.attention_demo PROPERTIES
         LABELS "framework;ai;native-training;learning")
 endif()
+
+# Batch 03: native multi-head pre-LN Transformer Block training. This executable
+# composes canonical Framework operators and never duplicates neural maths.
+add_executable(umicom-native-llm-transformer-demo
+    "${CMAKE_CURRENT_LIST_DIR}/train_transformer.c")
+target_link_libraries(umicom-native-llm-transformer-demo PRIVATE Umicom::AiTraining)
+target_compile_features(umicom-native-llm-transformer-demo PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-transformer-demo PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-transformer-demo PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME framework.ai.training.transformer_demo
+             COMMAND umicom-native-llm-transformer-demo)
+    set_tests_properties(framework.ai.training.transformer_demo PROPERTIES
+        LABELS "framework;ai;native-training;learning")
+endif()

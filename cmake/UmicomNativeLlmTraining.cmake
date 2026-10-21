@@ -27,6 +27,7 @@ if(NOT TARGET umicom_ai_training)
         "${_umicom_ai_training_root}/src/ai/training/tape.c"
         "${_umicom_ai_training_root}/src/ai/training/initialisation.c"
         "${_umicom_ai_training_root}/src/ai/training/sequence_shape.c"
+        "${_umicom_ai_training_root}/src/ai/training/transformer.c"
     )
     add_library(Umicom::AiTraining ALIAS umicom_ai_training)
     target_include_directories(umicom_ai_training PUBLIC
@@ -113,4 +114,40 @@ if(BUILD_TESTING)
         umicom-ai-training-attention-gradient-test
         framework.ai.training.attention_gradients
         test_training_attention_gradients.c)
+
+    # Batch 03: multi-head attention, trainable layer normalisation and
+    # failure-atomic pre-LN transformer block composition. The original
+    # twelve tests and the Umicom::ai runtime remain unchanged.
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-multihead-test
+        framework.ai.training.multihead
+        test_training_multihead.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-multihead-gradients-test
+        framework.ai.training.multihead_gradients
+        test_training_multihead_gradients.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-layernorm-test
+        framework.ai.training.layernorm
+        test_training_layernorm.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-layernorm-gradients-test
+        framework.ai.training.layernorm_gradients
+        test_training_layernorm_gradients.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-transformer-test
+        framework.ai.training.transformer
+        test_training_transformer.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-transformer-gradients-test
+        framework.ai.training.transformer_gradients
+        test_training_transformer_gradients.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-transformer-training-test
+        framework.ai.training.transformer_training
+        test_training_transformer_training.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-block-failures-test
+        framework.ai.training.block_failures
+        test_training_block_failures.c)
 endif()

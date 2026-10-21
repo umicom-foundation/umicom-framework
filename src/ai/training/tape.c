@@ -37,6 +37,8 @@ typedef enum UmiAiTrainingOperation {
     UMI_AI_TRAINING_MSE,
     UMI_AI_TRAINING_CROSS_ENTROPY,
     UMI_AI_TRAINING_EMBEDDING,
+    UMI_AI_TRAINING_MULTI_HEAD_ATTENTION,
+    UMI_AI_TRAINING_LAYER_NORM,
     UMI_AI_TRAINING_CAUSAL_ATTENTION
 } UmiAiTrainingOperation;
 
@@ -54,6 +56,8 @@ struct UmiAiTrainingTensor {
     const UmiAiTrainingTensor *third; /* value operand of attention */
     size_t sequenceLength; /* tokens in each independent sequence */
     float *attentionWeights; /* owned [batch*time, time] cache */
+    size_t headCount; /* multi-head attention cache/offset partition */
+    float normEpsilon; /* epsilon for layer normalisation derivative */
     UmiAiTrainingOperation operation;
     bool trainable;
 };
@@ -168,6 +172,35 @@ UmiStatus UmiAiTrainingTapeRewind(UmiAiTrainingTape *tape,
         tape->nodes[i] = NULL;
     }
     tape->count = retainLeafCount;
+    tape->hasGradients = false;
+    return UMI_STATUS_OK;
+}
+
+/* Checkpoint/rollback is intentionally separate from the leaf-only Rewind.
+ * Composer functions can release a partially constructed graph without
+ * disturbing caller-owned existing nodes or publishing a partial result. */
+UmiStatus UmiAiTrainingTapeCheckpoint(const UmiAiTrainingTape *tape,
+                                     size_t *outCount)
+{
+    if (tape == NULL || outCount == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outCount = tape->count;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiAiTrainingTapeRollback(UmiAiTrainingTape *tape,
+                                   size_t retainCount)
+{
+    if (tape == NULL || retainCount > tape->count) return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t index = retainCount; index < tape->count; ++index) {
+        FreeNode(tape->nodes[index]);
+        tape->nodes[index] = NULL;
+    }
+    tape->count = retainCount;
+    /* Never expose stale gradients computed for a different graph. */
+    for (size_t index = 0U; index < tape->count; ++index) {
+        UmiAiTrainingTensor *node = tape->nodes[index];
+        memset(node->gradients, 0, node->count * sizeof(*node->gradients));
+    }
     tape->hasGradients = false;
     return UMI_STATUS_OK;
 }
@@ -488,6 +521,149 @@ UmiStatus UmiAiTrainingCausalAttention(UmiAiTrainingTape *tape,
     return PublishNode(tape, node, outTensor);
 }
 
+/* The multi-head operator reuses the canonical tape and backward lifecycle.
+ * Each head occupies a contiguous channel range; the cache is indexed
+ * [head, row, past] and contains no probability for future positions. */
+UmiStatus UmiAiTrainingMultiHeadCausalAttention(
+    UmiAiTrainingTape *tape,
+    const UmiAiTrainingTensor *queries,
+    const UmiAiTrainingTensor *keys,
+    const UmiAiTrainingTensor *values,
+    size_t sequenceLength,
+    size_t headCount,
+    UmiAiTrainingTensor **outTensor)
+{
+    UmiAiTrainingTensor *node;
+    double *scores;
+    size_t headWidth;
+    double scale;
+    if (!IsMember(tape, queries) || !IsMember(tape, keys) ||
+        !IsMember(tape, values) || outTensor == NULL ||
+        sequenceLength == 0U || headCount == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    if (queries->rows != keys->rows || queries->rows != values->rows ||
+        queries->columns != keys->columns || queries->columns != values->columns ||
+        queries->columns % headCount != 0U ||
+        queries->rows % sequenceLength != 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Bound the cache and check products by division before multiplying. */
+    if (headCount > UMI_AI_TRAINING_MAX_ELEMENTS / queries->rows ||
+        sequenceLength > UMI_AI_TRAINING_MAX_ELEMENTS /
+                         (queries->rows * headCount)) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (tape->count >= UMI_AI_TRAINING_MAX_TENSORS) return UMI_STATUS_CAPACITY_EXCEEDED;
+    headWidth = queries->columns / headCount;
+    scale = sqrt((double)headWidth);
+    node = AllocateNode(tape, queries->rows, queries->columns);
+    if (node == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    node->attentionWeights = calloc(headCount * queries->rows * sequenceLength,
+                                    sizeof(*node->attentionWeights));
+    scores = malloc(sequenceLength * sizeof(*scores));
+    if (node->attentionWeights == NULL || scores == NULL) {
+        free(scores);
+        FreeNode(node);
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    for (size_t head = 0U; head < headCount; ++head) {
+        size_t firstChannel = head * headWidth;
+        for (size_t row = 0U; row < queries->rows; ++row) {
+            size_t batchStart = (row / sequenceLength) * sequenceLength;
+            size_t currentTime = row % sequenceLength;
+            size_t cacheStart = (head * queries->rows + row) * sequenceLength;
+            double maximum = -INFINITY;
+            double denominator = 0.0;
+            for (size_t past = 0U; past <= currentTime; ++past) {
+                size_t keyRow = batchStart + past;
+                double dot = 0.0;
+                for (size_t channel = 0U; channel < headWidth; ++channel) {
+                    size_t col = firstChannel + channel;
+                    dot += (double)queries->values[row * queries->columns + col] *
+                           (double)keys->values[keyRow * keys->columns + col];
+                }
+                scores[past] = dot / scale;
+                if (!isfinite(scores[past])) { free(scores); FreeNode(node); return UMI_STATUS_INVALID_ARGUMENT; }
+                if (scores[past] > maximum) maximum = scores[past];
+            }
+            for (size_t past = 0U; past <= currentTime; ++past) {
+                denominator += exp(scores[past] - maximum);
+            }
+            if (!isfinite(denominator) || denominator <= 0.0) {
+                free(scores); FreeNode(node); return UMI_STATUS_INVALID_ARGUMENT;
+            }
+            for (size_t past = 0U; past <= currentTime; ++past) {
+                double probability = exp(scores[past] - maximum) / denominator;
+                node->attentionWeights[cacheStart + past] = (float)probability;
+            }
+            for (size_t channel = 0U; channel < headWidth; ++channel) {
+                size_t col = firstChannel + channel;
+                double result = 0.0;
+                for (size_t past = 0U; past <= currentTime; ++past) {
+                    size_t valueRow = batchStart + past;
+                    result += (double)node->attentionWeights[cacheStart + past] *
+                              (double)values->values[valueRow * values->columns + col];
+                }
+                if (!CanStore(result)) { free(scores); FreeNode(node); return UMI_STATUS_INVALID_ARGUMENT; }
+                node->values[row * node->columns + col] = (float)result;
+            }
+        }
+    }
+    free(scores);
+    node->left = queries;
+    node->right = keys;
+    node->third = values;
+    node->sequenceLength = sequenceLength;
+    node->headCount = headCount;
+    node->operation = UMI_AI_TRAINING_MULTI_HEAD_ATTENTION;
+    return PublishNode(tape, node, outTensor);
+}
+
+/* Learnable row-wise layer normalisation. Each training sample/token is
+ * normalised independently; the implementation deliberately uses explicit
+ * double-precision sums instead of an unstable E[x^2]-E[x]^2 shortcut. */
+UmiStatus UmiAiTrainingLayerNorm(UmiAiTrainingTape *tape,
+                                const UmiAiTrainingTensor *input,
+                                const UmiAiTrainingTensor *gamma,
+                                const UmiAiTrainingTensor *beta,
+                                float epsilon,
+                                UmiAiTrainingTensor **outTensor)
+{
+    UmiAiTrainingTensor *node;
+    if (!IsMember(tape, input) || !IsMember(tape, gamma) ||
+        !IsMember(tape, beta) || outTensor == NULL ||
+        !isfinite(epsilon) || epsilon <= 0.0F) return UMI_STATUS_INVALID_ARGUMENT;
+    if (gamma->rows != 1U || beta->rows != 1U ||
+        gamma->columns != input->columns || beta->columns != input->columns) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (tape->count >= UMI_AI_TRAINING_MAX_TENSORS) return UMI_STATUS_CAPACITY_EXCEEDED;
+    node = AllocateNode(tape, input->rows, input->columns);
+    if (node == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    for (size_t row = 0U; row < input->rows; ++row) {
+        double mean = 0.0, variance = 0.0;
+        for (size_t col = 0U; col < input->columns; ++col) {
+            mean += (double)input->values[row * input->columns + col];
+        }
+        mean /= (double)input->columns;
+        for (size_t col = 0U; col < input->columns; ++col) {
+            double delta = (double)input->values[row * input->columns + col] - mean;
+            variance += delta * delta;
+        }
+        variance /= (double)input->columns;
+        double inverseStd = 1.0 / sqrt(variance + (double)epsilon);
+        for (size_t col = 0U; col < input->columns; ++col) {
+            size_t idx = row * input->columns + col;
+            double centred = (double)input->values[idx] - mean;
+            double result = centred * inverseStd * (double)gamma->values[col] +
+                            (double)beta->values[col];
+            if (!CanStore(result)) { FreeNode(node); return UMI_STATUS_INVALID_ARGUMENT; }
+            node->values[idx] = (float)result;
+        }
+    }
+    node->left = input;
+    node->right = gamma;
+    node->third = beta;
+    node->normEpsilon = epsilon;
+    node->operation = UMI_AI_TRAINING_LAYER_NORM;
+    return PublishNode(tape, node, outTensor);
+}
+
 /* Accumulation is explicit so a tensor shared by two operators receives both
  * contributions. Using double intermediates avoids silent float overflow in
  * intermediate dot products and derivative products. */
@@ -618,6 +794,90 @@ static bool BackwardNode(UmiAiTrainingTensor *node)
                         !Accumulate(&right->gradients[keyIndex],
                                     scoreGradient * (double)left->values[queryIndex])) return false;
                 }
+            }
+        }
+        return true;
+    }
+    case UMI_AI_TRAINING_MULTI_HEAD_ATTENTION: {
+        UmiAiTrainingTensor *values = (UmiAiTrainingTensor *)node->third;
+        size_t headWidth = left->columns / node->headCount;
+        double scale = sqrt((double)headWidth);
+        for (size_t head = 0U; head < node->headCount; ++head) {
+            size_t firstChannel = head * headWidth;
+            for (size_t row = 0U; row < node->rows; ++row) {
+                size_t start = (row / node->sequenceLength) * node->sequenceLength;
+                size_t current = row % node->sequenceLength;
+                size_t cache = (head * node->rows + row) * node->sequenceLength;
+                double expected = 0.0;
+                for (size_t past = 0U; past <= current; ++past) {
+                    double dot = 0.0;
+                    for (size_t ch = 0U; ch < headWidth; ++ch) {
+                        size_t col = firstChannel + ch;
+                        dot += (double)node->gradients[row * node->columns + col] *
+                               (double)values->values[(start + past) * values->columns + col];
+                    }
+                    expected += (double)node->attentionWeights[cache + past] * dot;
+                }
+                for (size_t past = 0U; past <= current; ++past) {
+                    double prob = (double)node->attentionWeights[cache + past];
+                    double dot = 0.0;
+                    size_t keyRow = start + past;
+                    for (size_t ch = 0U; ch < headWidth; ++ch) {
+                        size_t col = firstChannel + ch;
+                        size_t outIndex = row * node->columns + col;
+                        size_t valueIndex = keyRow * values->columns + col;
+                        double upstream = (double)node->gradients[outIndex];
+                        dot += upstream * (double)values->values[valueIndex];
+                        if (!Accumulate(&values->gradients[valueIndex], prob * upstream)) return false;
+                    }
+                    double scoreGrad = prob * (dot - expected) / scale;
+                    for (size_t ch = 0U; ch < headWidth; ++ch) {
+                        size_t col = firstChannel + ch;
+                        size_t qidx = row * left->columns + col;
+                        size_t kidx = keyRow * right->columns + col;
+                        if (!Accumulate(&left->gradients[qidx],
+                                        scoreGrad * (double)right->values[kidx]) ||
+                            !Accumulate(&right->gradients[kidx],
+                                        scoreGrad * (double)left->values[qidx])) return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+    case UMI_AI_TRAINING_LAYER_NORM: {
+        UmiAiTrainingTensor *beta = (UmiAiTrainingTensor *)node->third;
+        size_t width = left->columns;
+        for (size_t row = 0U; row < left->rows; ++row) {
+            double mean = 0.0, variance = 0.0;
+            for (size_t col = 0U; col < width; ++col) {
+                mean += (double)left->values[row * width + col];
+            }
+            mean /= (double)width;
+            for (size_t col = 0U; col < width; ++col) {
+                double delta = (double)left->values[row * width + col] - mean;
+                variance += delta * delta;
+            }
+            variance /= (double)width;
+            double invStd = 1.0 / sqrt(variance + (double)node->normEpsilon);
+            double sumDxhat = 0.0, sumDxhatXhat = 0.0;
+            for (size_t col = 0U; col < width; ++col) {
+                size_t idx = row * width + col;
+                double xhat = ((double)left->values[idx] - mean) * invStd;
+                double dxhat = (double)node->gradients[idx] * (double)right->values[col];
+                sumDxhat += dxhat;
+                sumDxhatXhat += dxhat * xhat;
+            }
+            for (size_t col = 0U; col < width; ++col) {
+                size_t idx = row * width + col;
+                double dy = (double)node->gradients[idx];
+                double xhat = ((double)left->values[idx] - mean) * invStd;
+                double dxhat = dy * (double)right->values[col];
+                double dx = (invStd / (double)width) *
+                            ((double)width * dxhat - sumDxhat - xhat * sumDxhatXhat);
+                if (!Accumulate(&left->gradients[idx], dx) ||
+                    !Accumulate(&right->gradients[col], dy * xhat) ||
+                    !Accumulate(&beta->gradients[col], dy)) return false;
             }
         }
         return true;
