@@ -336,3 +336,49 @@ UmiStatus UmiAiTrainingAdamWStep(
     free(copied);
     return status;
 }
+
+/* Read-only checkpoint inspection permits a portable, bounded codec without
+ * moving the private optimiser structure into a public ABI surface. */
+UmiStatus UmiAiTrainingAdamWInternalInspect(
+    const UmiAiTrainingAdamW *optimizer,
+    UmiAiTrainingAdamWConfig *outConfig,
+    uint64_t *outSteps, size_t *outParameterCount, size_t *outElements,
+    const size_t **outCounts, const double **outFirst,
+    const double **outSecond)
+{
+    if (optimizer == NULL || outConfig == NULL || outSteps == NULL ||
+        outParameterCount == NULL || outElements == NULL ||
+        outCounts == NULL || outFirst == NULL || outSecond == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    *outConfig = optimizer->config;
+    *outSteps = optimizer->completedSteps;
+    *outParameterCount = optimizer->parameterCount;
+    *outElements = optimizer->totalElements;
+    *outCounts = optimizer->counts;
+    *outFirst = optimizer->firstMoment;
+    *outSecond = optimizer->secondMoment;
+    return UMI_STATUS_OK;
+}
+
+/* Publish restored moments only after validating EVERY element. No existing
+ * model weight, tape graph or optimiser field is changed on rejection. */
+UmiStatus UmiAiTrainingAdamWInternalRestore(
+    UmiAiTrainingAdamW *optimizer, const double *first,
+    const double *second, size_t elementCount, uint64_t completedSteps)
+{
+    if (optimizer == NULL || first == NULL || second == NULL ||
+        elementCount != optimizer->totalElements ||
+        optimizer->completedSteps != 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t index = 0U; index < elementCount; ++index) {
+        if (!isfinite(first[index]) || !isfinite(second[index]) ||
+            second[index] < 0.0 ||
+            (completedSteps == 0U &&
+             (first[index] != 0.0 || second[index] != 0.0)))
+            return UMI_STATUS_PARSE_ERROR;
+    }
+    memcpy(optimizer->firstMoment, first, elementCount * sizeof(double));
+    memcpy(optimizer->secondMoment, second, elementCount * sizeof(double));
+    optimizer->completedSteps = completedSteps;
+    return UMI_STATUS_OK;
+}

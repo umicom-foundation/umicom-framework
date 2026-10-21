@@ -577,3 +577,24 @@ UmiStatus UmiAiTrainingDecoderTrainAdamWStep(
     *outLoss = candidateLoss;
     return UMI_STATUS_OK;
 }
+
+/* A decoder loaded from a combined model/AdamW checkpoint is already stepped.
+ * Fresh-start AdamWCreate still refuses such models. Only the codec invokes
+ * this internal bridge after verifying the checkpoint's shape and identity. */
+UmiStatus UmiAiDecoderAdamWRestoreCreate(
+    UmiAiTrainingDecoder *model, const UmiAiTrainingAdamWConfig *config,
+    UmiAiTrainingAdamW **outOptimizer)
+{
+    if (model == NULL || outOptimizer == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return UmiAiTrainingAdamWCreate(model->tape, model->parameters,
+           UMI_DECODER_PARAMETER_COUNT, config, outOptimizer);
+}
+
+UmiStatus UmiAiDecoderAdamWCheckBinding(
+    const UmiAiTrainingDecoder *model, const UmiAiTrainingAdamW *optimizer)
+{
+    if (model == NULL || optimizer == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return UmiAiTrainingAdamWValidateBinding(optimizer, model->tape,
+        (UmiAiTrainingTensor *const *)model->parameters,
+        UMI_DECODER_PARAMETER_COUNT, model->completedSteps);
+}

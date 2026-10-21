@@ -40,6 +40,9 @@ if(NOT TARGET umicom_ai_training)
         # Stateful AdamW and absolute-step learning rates reuse the existing
         # training tape as the sole authority for parameter updates.
         "${_umicom_ai_training_root}/src/ai/training/optimizer.c"
+        # Exact resume of combined decoder + AdamW moments. The existing
+        # standalone decoder checkpoint remains byte-for-byte unchanged.
+        "${_umicom_ai_training_root}/src/ai/training/optimizer_checkpoint.c"
         "${_umicom_ai_training_root}/src/ai/training/experiment_plan.c"
         # Native autoregressive generation composes the decoder and RNG.
         "${_umicom_ai_training_root}/src/ai/training/generation.c"
@@ -507,4 +510,22 @@ if(BUILD_TESTING)
         test_training_scheduled_experiment.c)
     target_compile_definitions(umicom-ai-training-scheduled-experiment-test PRIVATE
         UMI_AI_TEST_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt")
+endif()
+
+# Combined decoder/AdamW checkpoint regression tests. Preserve the existing
+# experiment CLI CTest: Windows security software may independently quarantine
+# that binary, which must be diagnosed rather than concealed or bypassed.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-adamw-resume-test
+        framework.ai.training.adamw_resume
+        test_training_adamw_resume.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-adamw-checkpoint-rejection-test
+        framework.ai.training.adamw_checkpoint_rejections
+        test_training_adamw_checkpoint_rejections.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-adamw-checkpoint-file-test
+        framework.ai.training.adamw_checkpoint_file
+        test_training_adamw_checkpoint_file.c)
 endif()

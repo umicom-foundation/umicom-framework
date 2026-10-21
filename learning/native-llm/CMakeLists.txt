@@ -333,3 +333,18 @@ if(BUILD_TESTING)
     set_tests_properties(framework.ai.training.scheduled_demo PROPERTIES
         LABELS "framework;ai;native-training;learning")
 endif()
+
+# Read-only verified source ingestion followed by an explicitly requested new
+# native combined checkpoint file. No scripts, shell execution or network.
+add_executable(umicom-native-llm-adamw-checkpoint
+    "${CMAKE_CURRENT_LIST_DIR}/inspect_adamw_checkpoint.c")
+target_link_libraries(umicom-native-llm-adamw-checkpoint PRIVATE Umicom::AiTraining)
+target_compile_features(umicom-native-llm-adamw-checkpoint PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-adamw-checkpoint PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-adamw-checkpoint PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+# Never create a checkpoint file as an incidental side effect of CTest.
+# Users deliberately choose a fresh destination when running this laboratory.
