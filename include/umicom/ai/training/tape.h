@@ -194,7 +194,19 @@ UmiStatus UmiAiTrainingLayerNorm(UmiAiTrainingTape *tape,
                                 float epsilon,
                                 UmiAiTrainingTensor **outTensor);
 
+/* Update several trainable leaves as one transaction. Validation covers every
+ * parameter and every candidate float BEFORE a single value is committed.
+ * Duplicate handles and non-leaves are rejected. An unsuccessfully completed
+ * call leaves all parameters unchanged; output buffers are not involved.
+ * The caller owns the array of handles; tape owns the parameter buffers.
+ * No worker may change the tape concurrently. */
+UmiStatus UmiAiTrainingSgdStepMany(UmiAiTrainingTape *tape,
+                                   UmiAiTrainingTensor *const *parameters,
+                                   size_t parameterCount,
+                                   float learningRate);
+
 #ifdef __cplusplus
 }
 #endif
 #endif /* UMICOM_AI_TRAINING_TAPE_H */
+

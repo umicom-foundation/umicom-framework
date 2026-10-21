@@ -930,3 +930,48 @@ UmiStatus UmiAiTrainingSgdStep(UmiAiTrainingTape *tape,
     }
     return UMI_STATUS_OK;
 }
+
+/* Batch 04: a decoder contains many parameters. Per-tensor SGD alone cannot
+ * guarantee that a later invalid gradient will not leave an earlier parameter
+ * updated. This two-pass operation maintains the Framework ownership and
+ * avoids app-specific optimiser loops or partial model updates. */
+UmiStatus UmiAiTrainingSgdStepMany(UmiAiTrainingTape *tape,
+                                   UmiAiTrainingTensor *const *parameters,
+                                   size_t parameterCount,
+                                   float learningRate)
+{
+    if (tape == NULL || parameters == NULL || parameterCount == 0U ||
+        parameterCount > UMI_AI_TRAINING_MAX_TENSORS ||
+        !isfinite(learningRate) || learningRate <= 0.0F) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Verify identities before accessing tensor fields. */
+    for (size_t p = 0U; p < parameterCount; ++p) {
+        if (!IsMember(tape, parameters[p])) return UMI_STATUS_INVALID_ARGUMENT;
+        for (size_t q = 0U; q < p; ++q) {
+            if (parameters[p] == parameters[q]) return UMI_STATUS_INVALID_ARGUMENT;
+        }
+    }
+    for (size_t p = 0U; p < parameterCount; ++p) {
+        UmiAiTrainingTensor *parameter = parameters[p];
+        if (!parameter->trainable || parameter->operation != UMI_AI_TRAINING_LEAF)
+            return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (!tape->hasGradients) return UMI_STATUS_INVALID_STATE;
+    for (size_t p = 0U; p < parameterCount; ++p) {
+        const UmiAiTrainingTensor *parameter = parameters[p];
+        for (size_t i = 0U; i < parameter->count; ++i) {
+            double candidate = (double)parameter->values[i] -
+                (double)learningRate * (double)parameter->gradients[i];
+            if (!CanStore(candidate)) return UMI_STATUS_INVALID_ARGUMENT;
+        }
+    }
+    for (size_t p = 0U; p < parameterCount; ++p) {
+        UmiAiTrainingTensor *parameter = parameters[p];
+        for (size_t i = 0U; i < parameter->count; ++i) {
+            parameter->values[i] = (float)((double)parameter->values[i] -
+                (double)learningRate * (double)parameter->gradients[i]);
+        }
+    }
+    return UMI_STATUS_OK;
+}

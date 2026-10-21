@@ -146,3 +146,83 @@ The root Framework `CMakeLists.txt` still needs an explicit additive
 register these standalone training targets in the full application build.
 Do not add the same include twice. Everything else in the Framework's original
 CMake configuration, source catalogue and application profiles is preserved.
+
+---
+
+## Batch 04 continuation — A bounded native decoder and portable checkpoints
+
+The historical Batch 01–03 descriptions above are preserved for provenance.
+Batch 04 composes the *same Framework training tape* into a complete, small
+one-block decoder-only Transformer experiment. New code is in:
+
+- `include/umicom/ai/training/decoder.h` and `src/ai/training/decoder.c`:
+  seeded trainable token/absolute-position tables, a pre-LN two-head block,
+  learned vocabulary logits, inference, full-parameter SGD, and evaluation.
+- `include/umicom/ai/training/dataset_split.h` and
+  `src/ai/training/dataset_split.c`: deterministic whole-sequence permutation.
+- `include/umicom/ai/training/checkpoint.h` and
+  `src/ai/training/checkpoint.c`: bounded portable binary32 checkpoint
+  encoder/decoder with checksum and explicit no-overwrite file publication.
+- `src/ai/training/decoder_private.h`: internal, stable parameter order; not an
+  application API.
+- `tape.h` / `tape.c`: additive `UmiAiTrainingSgdStepMany` transaction so a
+  bad weight update cannot leave an earlier model parameter changed.
+
+The existing native lab includes `train_decoder.c` and one new CTest entry;
+the Framework CMake module adds five focused tests. The isolated suite now
+contains **27 tests**, including all 21 prior tests.
+
+### Build and run the first complete decoder
+
+```powershell
+Set-Location "C:\umicom\Umicom-Applications"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake -S ".\framework\learning\native-llm" `
+      -B ".\build\windows-ucrt64-native-llm-debug" `
+      -G Ninja -DBUILD_TESTING=ON -DCMAKE_BUILD_TYPE=Debug
+cmake --build ".\build\windows-ucrt64-native-llm-debug" --parallel 2
+ctest --test-dir ".\build\windows-ucrt64-native-llm-debug" `
+      --output-on-failure --no-tests=error
+& ".\build\windows-ucrt64-native-llm-debug\umicom-native-llm-decoder-demo.exe"
+```
+
+To save a **new** model file (the same path will never intentionally be
+replaced), create an untracked experiment directory and supply a filename:
+
+```powershell
+New-Item -ItemType Directory -Force "C:\umicom\_local\models" | Out-Null
+& ".\build\windows-ucrt64-native-llm-debug\umicom-native-llm-decoder-demo.exe" `
+  "C:\umicom\_local\models\first-decoder-01.umidec"
+```
+
+### What was measured
+
+An independent Linux GCC 14.2 run on a 12-sequence toy corpus, with 9 distinct
+training combinations and 3 withheld combinations, observed training
+cross-entropy **1.386273 -> 0.590156** over 420 updates, while held-out
+cross-entropy **worsened from 1.415977 to 4.573408**. This is precisely why
+held-out evaluation matters. Neither loss trend proves language comprehension.
+Checkpoints restored byte-for-byte and inference predictions were identical.
+
+### Boundaries and current limitations
+
+- One decoder block, 15 trainable parameter tensors, no BPE tokenizer, no
+  decoder stack, no sampling, no optimiser moments or cloud runtime.
+- The checkpoint is `UMIDEC04` version 1 (NOT the historical `UMIMODEL`
+  word-transition file). Its FNV checksum detects accidents, not hostile edits;
+  authentication and trust policy belong outside the codec.
+- A checkpoint stores weights, architecture, seed and completed steps, but not
+  corpus identity, data-loader cursor, or learning-rate schedule. A later
+  AdamW/training-pipeline milestone must store all relevant optimiser state.
+- The standalone `learning/native-llm` CMake project builds independently.
+  To register its test targets in the large consolidated Framework build, add
+  **once** to the current Framework root `CMakeLists.txt`, after review:
+
+  ```cmake
+  # Share the same Framework-owned native training library with host apps.
+  include(cmake/UmicomNativeLlmTraining.cmake)
+  ```
+
+Use `Bits2Banking/content/lessons/10-native-ai/13-...`, `14-...` and `15-...`
+for full explanations, diagrams in text, laboratory exercises and correct
+interpretations of the evidence.

@@ -65,3 +65,23 @@ if(BUILD_TESTING)
     set_tests_properties(framework.ai.training.transformer_demo PROPERTIES
         LABELS "framework;ai;native-training;learning")
 endif()
+
+# Batch 04: a thin learner-facing executable that trains/evaluates a complete
+# bounded decoder, writes a reviewed NEW checkpoint and reloads it. All maths,
+# format validation and file publication remain Framework-owned.
+add_executable(umicom-native-llm-decoder-demo
+    "${CMAKE_CURRENT_LIST_DIR}/train_decoder.c")
+target_link_libraries(umicom-native-llm-decoder-demo PRIVATE Umicom::AiTraining)
+target_compile_features(umicom-native-llm-decoder-demo PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-decoder-demo PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-decoder-demo PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME framework.ai.training.decoder_demo
+             COMMAND umicom-native-llm-decoder-demo)
+    set_tests_properties(framework.ai.training.decoder_demo PROPERTIES
+        LABELS "framework;ai;native-training;learning")
+endif()

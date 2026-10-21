@@ -28,6 +28,9 @@ if(NOT TARGET umicom_ai_training)
         "${_umicom_ai_training_root}/src/ai/training/initialisation.c"
         "${_umicom_ai_training_root}/src/ai/training/sequence_shape.c"
         "${_umicom_ai_training_root}/src/ai/training/transformer.c"
+        "${_umicom_ai_training_root}/src/ai/training/decoder.c"
+        "${_umicom_ai_training_root}/src/ai/training/checkpoint.c"
+        "${_umicom_ai_training_root}/src/ai/training/dataset_split.c"
     )
     add_library(Umicom::AiTraining ALIAS umicom_ai_training)
     target_include_directories(umicom_ai_training PUBLIC
@@ -150,4 +153,30 @@ if(BUILD_TESTING)
         umicom-ai-training-block-failures-test
         framework.ai.training.block_failures
         test_training_block_failures.c)
+endif()
+
+# Batch 04: one complete (bounded) decoder, held-out sequence split, versioned
+# checkpoint snapshots and atomic multi-parameter SGD. Retain every earlier
+# test registration and shared Framework AI target unchanged.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-sgd-transaction-test
+        framework.ai.training.sgd_transaction
+        test_training_sgd_transaction.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-dataset-split-test
+        framework.ai.training.dataset_split
+        test_training_dataset_split.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-decoder-contract-test
+        framework.ai.training.decoder_contract
+        test_training_decoder_contract.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-decoder-train-test
+        framework.ai.training.decoder_train
+        test_training_decoder_train.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-checkpoint-test
+        framework.ai.training.checkpoint
+        test_training_checkpoint.c)
 endif()
