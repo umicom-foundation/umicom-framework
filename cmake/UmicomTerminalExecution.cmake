@@ -55,3 +55,11 @@ foreach(case stable switch-return recycle directory closed empty transcript malf
     set_tests_properties(framework.terminal_selection.${case} PROPERTIES
         TIMEOUT 30 LABELS "framework;terminal;selection;ownership;regression")
 endforeach()
+
+umicom_terminal_execution_target(umicom-terminal-link-bounds-test test_link_bounds.c)
+foreach(case coordinates overflow zero unterminated uri-capacity utf8-label arguments)
+    add_test(NAME framework.terminal_link.bounds.${case}
+        COMMAND umicom-terminal-link-bounds-test "${case}")
+    set_tests_properties(framework.terminal_link.bounds.${case} PROPERTIES
+        TIMEOUT 30 LABELS "framework;terminal;source-navigation;bounds;regression")
+endforeach()

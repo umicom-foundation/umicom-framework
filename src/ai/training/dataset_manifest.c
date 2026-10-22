@@ -22,6 +22,7 @@
 #include "umicom/ai/training/dataset_manifest.h"
 #include "umicom/ai/training/corpus.h"
 #include "umicom/ai/training/initialisation.h"
+#include "umicom/base/sha256.h"
 
 #include <stdbool.h>
 #include <ctype.h>
@@ -348,5 +349,90 @@ UmiStatus UmiAiTrainingDatasetBatch(
     }
     memcpy(outInputs, localInputs, count * sizeof(*outInputs));
     memcpy(outTargets, localTargets, count * sizeof(*outTargets));
+    return UMI_STATUS_OK;
+}
+/* A cryptographic digest of the IMMUTABLE source snapshots. Reuse the
+ * Framework's canonical SHA-256 and the Corpus owner's byte digest; do not
+ * reopen filenames or create an unrelated importer. Lengths/partition/path
+ * bytes are encoded explicitly to prevent concatenation ambiguities. */
+static UmiStatus DigestU32(UmiSha256 *digest, uint32_t value)
+{
+    unsigned char bytes[4];
+    for (size_t i = 0U; i < sizeof(bytes); ++i)
+        bytes[i] = (unsigned char)(value >> (8U * (unsigned)i));
+    return UmiSha256Update(digest, bytes, sizeof(bytes));
+}
+
+static UmiStatus DigestU64(UmiSha256 *digest, uint64_t value)
+{
+    unsigned char bytes[8];
+    for (size_t i = 0U; i < sizeof(bytes); ++i)
+        bytes[i] = (unsigned char)(value >> (8U * (unsigned)i));
+    return UmiSha256Update(digest, bytes, sizeof(bytes));
+}
+
+UmiStatus UmiAiTrainingDatasetSourceSha256(
+    const UmiAiTrainingDataset *dataset,
+    unsigned char outDigest[UMI_AI_DATASET_SOURCE_SHA256_BYTES])
+{
+    static const char domain[] = "UMICOM-AI-DATASET-SOURCE-SNAPSHOT-1\n";
+    UmiSha256 state;
+    unsigned char finalDigest[UMI_AI_DATASET_SOURCE_SHA256_BYTES];
+    UmiStatus status;
+    size_t trainCount = 0U, evalCount = 0U;
+    size_t trainBytes = 0U, evalBytes = 0U;
+    if (dataset == NULL || outDigest == NULL ||
+        dataset->summary.documentCount == 0U ||
+        dataset->summary.documentCount > UMI_AI_DATASET_MAX_FILES)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiSha256Init(&state);
+    status = UmiSha256Update(&state, domain, sizeof(domain) - 1U);
+    if (status != UMI_STATUS_OK) return status;
+    status = DigestU64(&state, (uint64_t)dataset->summary.documentCount);
+    if (status != UMI_STATUS_OK) return status;
+    for (size_t i = 0U; i < dataset->summary.documentCount; ++i) {
+        const UmiAiTrainingDocumentInfo *document = &dataset->documents[i];
+        const char *end = memchr(document->relativePath, '\0',
+                                 sizeof(document->relativePath));
+        unsigned char corpusDigest[UMI_AI_CORPUS_SHA256_BYTES];
+        size_t pathLength;
+        size_t corpusBytes = 0U;
+        if (end == NULL || end == document->relativePath ||
+            dataset->corpora[i] == NULL)
+            return UMI_STATUS_INVALID_STATE;
+        pathLength = (size_t)(end - document->relativePath);
+        status = UmiAiCorpusLength(dataset->corpora[i], &corpusBytes);
+        if (status != UMI_STATUS_OK) return status;
+        if (corpusBytes == 0U || corpusBytes != document->byteCount)
+            return UMI_STATUS_INVALID_STATE;
+        if (document->partition == UMI_AI_TRAINING_PARTITION_TRAIN) {
+            ++trainCount;
+            trainBytes += corpusBytes;
+        } else if (document->partition == UMI_AI_TRAINING_PARTITION_EVALUATE) {
+            ++evalCount;
+            evalBytes += corpusBytes;
+        } else return UMI_STATUS_INVALID_STATE;
+        status = UmiAiCorpusSha256(dataset->corpora[i], corpusDigest);
+        if (status != UMI_STATUS_OK) return status;
+        status = DigestU32(&state, (uint32_t)document->partition);
+        if (status != UMI_STATUS_OK) return status;
+        status = DigestU64(&state, (uint64_t)pathLength);
+        if (status != UMI_STATUS_OK) return status;
+        status = UmiSha256Update(&state, document->relativePath, pathLength);
+        if (status != UMI_STATUS_OK) return status;
+        status = DigestU64(&state, (uint64_t)corpusBytes);
+        if (status != UMI_STATUS_OK) return status;
+        status = UmiSha256Update(&state, corpusDigest, sizeof(corpusDigest));
+        if (status != UMI_STATUS_OK) return status;
+    }
+    if (trainCount != dataset->summary.trainingDocuments ||
+        evalCount != dataset->summary.evaluationDocuments ||
+        trainBytes != dataset->summary.trainingBytes ||
+        evalBytes != dataset->summary.evaluationBytes ||
+        trainCount == 0U || evalCount == 0U)
+        return UMI_STATUS_INVALID_STATE;
+    status = UmiSha256Final(&state, finalDigest);
+    if (status != UMI_STATUS_OK) return status;
+    memcpy(outDigest, finalDigest, sizeof(finalDigest));
     return UMI_STATUS_OK;
 }

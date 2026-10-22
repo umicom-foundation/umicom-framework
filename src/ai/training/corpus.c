@@ -7,6 +7,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/corpus.h"
 #include "umicom/ai/training/byte_tokenizer.h"
+#include "umicom/base/sha256.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -118,5 +119,24 @@ UmiStatus UmiAiCorpusFingerprint(const UmiAiCorpus *corpus,
         value *= UINT64_C(1099511628211);
     }
     *outFingerprint = value;
+    return UMI_STATUS_OK;
+}
+/* The canonical SHA-256 owner hashes exactly the already-imported bytes.
+ * We do not read the original disk file again or allocate a second corpus. */
+UmiStatus UmiAiCorpusSha256(const UmiAiCorpus *corpus,
+                            unsigned char outDigest[UMI_AI_CORPUS_SHA256_BYTES])
+{
+    UmiSha256 state;
+    unsigned char digest[UMI_AI_CORPUS_SHA256_BYTES];
+    UmiStatus status;
+    if (corpus == NULL || outDigest == NULL || corpus->bytes == NULL ||
+        corpus->length == 0U || corpus->length > UMI_AI_CORPUS_MAX_BYTES)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiSha256Init(&state);
+    status = UmiSha256Update(&state, corpus->bytes, corpus->length);
+    if (status != UMI_STATUS_OK) return status;
+    status = UmiSha256Final(&state, digest);
+    if (status != UMI_STATUS_OK) return status;
+    memcpy(outDigest, digest, sizeof(digest));
     return UMI_STATUS_OK;
 }

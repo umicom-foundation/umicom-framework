@@ -47,6 +47,13 @@ UmiStatus UmiAiCorpusWindow(const UmiAiCorpus *corpus,
  * boundary. On failure outFingerprint is unchanged. */
 UmiStatus UmiAiCorpusFingerprint(const UmiAiCorpus *corpus,
                                  uint64_t *outFingerprint);
+/* SHA-256 over the exact IMMUTABLE bytes already copied into this corpus.
+ * Never reopens the path, exposing neither byte pointers nor mutable storage.
+ * The caller owns the 32-byte output, which is untouched on failure.
+ * This is an identity digest, not evidence of a trusted data publisher. */
+#define UMI_AI_CORPUS_SHA256_BYTES 32U
+UmiStatus UmiAiCorpusSha256(const UmiAiCorpus *corpus,
+                            unsigned char outDigest[UMI_AI_CORPUS_SHA256_BYTES]);
 #ifdef __cplusplus
 }
 #endif

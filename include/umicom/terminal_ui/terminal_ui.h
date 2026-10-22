@@ -15,6 +15,7 @@
 #ifndef UMICOM_TERMINAL_UI_TERMINAL_UI_H
 #define UMICOM_TERMINAL_UI_TERMINAL_UI_H
 #include "umicom/terminal_ui/controller.h"
+#include "umicom/terminal_ui/selection.h"
 #include "umicom/terminal_ui/execution.h"
 #include "umicom/terminal_ui/history_view.h"
 #include "umicom/terminal_ui/navigation.h"

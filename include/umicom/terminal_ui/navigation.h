@@ -23,6 +23,10 @@ extern "C" {
  * Provide the terminal ui link navigation operation used by this module and its client
  * applications.
  */
+/** The fixed target array must contain a nonempty terminated string. An
+ * unterminated target or one too large for the URI returns CAPACITY_EXCEEDED
+ * without changing the output. The shortened label preserves UTF-8 character
+ * boundaries for valid UTF-8 input; the full target stays in the URI. */
 UmiStatus umi_terminal_ui_link_navigation(const UmiTerminalLink *link,
                                           UmiUiNavigationEntrySnapshot *out_entry);
 #ifdef __cplusplus

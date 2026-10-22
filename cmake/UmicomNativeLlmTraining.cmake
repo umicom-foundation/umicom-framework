@@ -47,6 +47,9 @@ if(NOT TARGET umicom_ai_training)
         # Independent continuation identity preserves the original checkpoint and
         # clipping record, adding strict opt-in dataset/schedule/AdamW binding.
         "${_umicom_ai_training_root}/src/ai/training/training_run_lock.c"
+        # Optional cryptographic source-snapshot lock. This hashes the exact
+        # already-imported immutable corpus bytes; no second data loader.
+        "${_umicom_ai_training_root}/src/ai/training/training_source_lock.c"
         # Exact resume of combined decoder + AdamW moments. The existing
         # standalone decoder checkpoint remains byte-for-byte unchanged.
         "${_umicom_ai_training_root}/src/ai/training/optimizer_checkpoint.c"
@@ -727,6 +730,31 @@ if(BUILD_TESTING)
         umicom-ai-training-run-lock-file-test
         umicom-ai-training-run-lock-disk-resume-test)
         target_compile_definitions(${_run_lock_target} PRIVATE
+            UMI_AI_TEST_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt"
+            UMI_AI_TEST_REORDERED_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest-reordered-for-run-lock.txt")
+    endforeach()
+endif()
+
+# Opt-in stronger provenance adds cryptographic identity of actual imported
+# source bytes without rewriting the previous run-lock/checkpoint formats.
+# Exercise corpus vectors, manifest ordering and disk-companion rejection.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-corpus-source-sha256-test
+        framework.ai.training.corpus_source_sha256
+        test_training_corpus_source_sha256.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-dataset-source-sha256-test
+        framework.ai.training.dataset_source_sha256
+        test_training_dataset_source_sha256.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-source-lock-test
+        framework.ai.training.source_lock
+        test_training_source_lock.c)
+    foreach(_source_identity_target IN ITEMS
+        umicom-ai-training-dataset-source-sha256-test
+        umicom-ai-training-source-lock-test)
+        target_compile_definitions(${_source_identity_target} PRIVATE
             UMI_AI_TEST_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt"
             UMI_AI_TEST_REORDERED_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest-reordered-for-run-lock.txt")
     endforeach()

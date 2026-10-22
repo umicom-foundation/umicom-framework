@@ -107,6 +107,17 @@ UmiStatus UmiAiTrainingDatasetBatch(
     uint64_t seed, uint64_t batchNumber,
     size_t *outInputs, size_t *outTargets, size_t capacity);
 
+/* Cryptographic source identity over the already-imported, immutable corpus.
+ * Domain-separated SHA-256 covers each ordered document's partition, relative
+ * path, byte count and SHA-256 of original source bytes. No source files are
+ * reopened, and no large temporary copy is allocated. The digest changes if
+ * document order or any source bytes change. On failure, outDigest is
+ * unchanged. This is NOT an authentication signature or sandbox. */
+#define UMI_AI_DATASET_SOURCE_SHA256_BYTES 32U
+UmiStatus UmiAiTrainingDatasetSourceSha256(
+    const UmiAiTrainingDataset *dataset,
+    unsigned char outDigest[UMI_AI_DATASET_SOURCE_SHA256_BYTES]);
+
 #ifdef __cplusplus
 }
 #endif

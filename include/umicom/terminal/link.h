@@ -60,6 +60,11 @@ typedef struct UmiTerminalLinkResult {
  * Provide the terminal links detect operation used by this module and its client
  * applications.
  */
+/** Compiler locations accept positive decimal line and optional column values
+ * through UINT32_MAX. Overflow or zero is not a compiler location; such tokens
+ * may still be ordinary file links under the existing path recognition rules.
+ * Tokenisation uses whitespace; a path containing spaces is not interpreted
+ * as one source location, even inside quotes. Detection never opens a target. */
 UmiStatus umi_terminal_links_detect(const char *text,
                                     UmiTerminalLinkResult *out_result);
 /**

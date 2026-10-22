@@ -26,6 +26,8 @@
  * Provide the terminal ui link navigation operation used by this module and its client
  * applications.
  */
+/* Bounded target validation and UTF-8 label boundaries replace unbounded strlen and byte-splitting in public terminal navigation projection. Retained for engineering review. */
+#if 0
 UmiStatus umi_terminal_ui_link_navigation(const UmiTerminalLink *link,
                                           UmiUiNavigationEntrySnapshot *out_entry)
 {
@@ -50,6 +52,49 @@ UmiStatus umi_terminal_ui_link_navigation(const UmiTerminalLink *link,
                    "terminal-link-%zu", link->byte_offset);
     label_length = target_length < sizeof(out_entry->label) - 1U
         ? target_length : sizeof(out_entry->label) - 1U;
+    (void)memcpy(out_entry->label, link->target, label_length);
+    out_entry->label[label_length] = '\0';
+    (void)memcpy(out_entry->uri, link->target, target_length + 1U);
+    out_entry->line = link->line;
+    out_entry->column = link->column;
+    return UMI_STATUS_OK;
+}
+
+#endif
+UmiStatus umi_terminal_ui_link_navigation(const UmiTerminalLink *link,
+                                          UmiUiNavigationEntrySnapshot *out_entry)
+{
+    size_t target_length;
+    size_t label_length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (link == NULL || out_entry == NULL || link->target[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Public fixed-size inputs may be malformed. Inspect only the supplied
+     * array and reject missing terminators before touching the output. */
+    target_length = 0U;
+    while (target_length < sizeof link->target && link->target[target_length] != '\0')
+        ++target_length;
+    if (target_length == sizeof link->target) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (target_length + 1U > sizeof(out_entry->uri)) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    (void)memset(out_entry, 0, sizeof(*out_entry));
+    out_entry->struct_size = (uint32_t)sizeof(*out_entry);
+    out_entry->api_version = UMI_UI_NAVIGATION_STACK_API_VERSION;
+    (void)snprintf(out_entry->id, sizeof(out_entry->id),
+                   "terminal-link-%zu", link->byte_offset);
+    label_length = target_length < sizeof(out_entry->label) - 1U
+        ? target_length : sizeof(out_entry->label) - 1U;
+    /* A display label may be shortened, but a valid UTF-8 character must not
+     * be split. The complete checked path remains in uri. */
+    while (label_length > 0U && label_length < target_length &&
+        ((unsigned char)link->target[label_length] & 0xc0U) == 0x80U)
+        --label_length;
     (void)memcpy(out_entry->label, link->target, label_length);
     out_entry->label[label_length] = '\0';
     (void)memcpy(out_entry->uri, link->target, target_length + 1U);

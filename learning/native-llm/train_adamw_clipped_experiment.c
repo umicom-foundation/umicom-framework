@@ -20,6 +20,7 @@
 #include "umicom/ai/training/gradient_policy.h"
 #include "umicom/ai/training/optimizer_checkpoint.h"
 #include "umicom/ai/training/training_run_lock.h"
+#include "umicom/ai/training/training_source_lock.h"
 
 #include <inttypes.h>
 #include <stdint.h>
@@ -110,6 +111,25 @@ static UmiStatus CompanionPath(const char *checkpointPath,
  * remains untouched unless the user explicitly supplies this final flag.
  * The added run lock binds the dataset catalogue and original training
  * schedule, while retaining the independently checked .clip-policy record. */
+/* Source-byte identity is an independently verified optional companion.
+ * The legacy policy and run-lock paths are retained unchanged. */
+static UmiStatus SourceLockPath(const char *checkpointPath,
+                                char *outPath, size_t capacity)
+{
+    const char suffix[] = ".source-lock";
+    size_t pathLength, suffixLength = sizeof(suffix) - 1U;
+    if (checkpointPath == NULL || checkpointPath[0] == '\0' ||
+        outPath == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    pathLength = strlen(checkpointPath);
+    if (pathLength >= UMI_CLIPPED_EXPERIMENT_PATH_MAX ||
+        pathLength > SIZE_MAX - suffixLength - 1U ||
+        pathLength + suffixLength + 1U > capacity)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    memcpy(outPath, checkpointPath, pathLength);
+    memcpy(outPath + pathLength, suffix, suffixLength + 1U);
+    return UMI_STATUS_OK;
+}
+
 static UmiStatus RunLockPath(const char *checkpointPath,
                              char *outPath, size_t capacity)
 {
@@ -138,6 +158,7 @@ int main(int argc, char **argv)
     UmiAiTrainingGradientPolicy policy;
     UmiAiTrainingRunLockInputs lockInputs;
     int strictRunLock = 0;
+    int strictSourceLock = 0;
     UmiAiTrainingDataset *dataset = NULL;
     UmiAiTrainingDecoder *model = NULL, *checkpointModel = NULL;
     UmiAiTrainingAdamW *optimizer = NULL, *checkpointOptimizer = NULL;
@@ -146,11 +167,18 @@ int main(int argc, char **argv)
     char manifest[UMI_CLIPPED_EXPERIMENT_PATH_MAX];
     char sidecar[UMI_CLIPPED_EXPERIMENT_PATH_MAX + 32U];
     char runLockPath[UMI_CLIPPED_EXPERIMENT_PATH_MAX + 32U];
+    char sourceLockPath[UMI_CLIPPED_EXPERIMENT_PATH_MAX + 32U];
     float maximumGradientNorm = 0.0F;
     uint64_t scheduleSteps = 0U;
     UmiStatus status = UMI_STATUS_INVALID_ARGUMENT;
 
-    if (argc >= 4 && strcmp(argv[argc - 1], "--strict-run-lock") == 0) {
+    if (argc >= 4 && strcmp(argv[argc - 1], "--strict-source-lock") == 0) {
+        /* Cryptographic source identity REQUIRES the earlier strict run lock;
+         * neither the previous flags nor default behaviour is weakened. */
+        strictSourceLock = 1;
+        strictRunLock = 1;
+        --argc;
+    } else if (argc >= 4 && strcmp(argv[argc - 1], "--strict-run-lock") == 0) {
         strictRunLock = 1;
         /* Only this opt-in trailing argument is consumed. Earlier invocation
          * shapes and the old .clip-policy-only contract remain unchanged. */
@@ -161,7 +189,7 @@ int main(int argc, char **argv)
         fputs("usage: umicom-native-llm-adamw-clipped-experiment "
               "<reviewed-plan> <schedule-total-steps> "
               "[NEW-combined-checkpoint] [existing-combined-checkpoint] "
-              "[--strict-run-lock]\n",
+              "[--strict-run-lock | --strict-source-lock]\n",
               stderr);
         return 2;
     }
@@ -230,6 +258,17 @@ int main(int argc, char **argv)
                 goto fail;
             }
         }
+        if (strictSourceLock) {
+            status = SourceLockPath(argv[3], sourceLockPath,
+                                    sizeof(sourceLockPath));
+            if (status != UMI_STATUS_OK) goto fail;
+            existing = fopen(sourceLockPath, "rb");
+            if (existing != NULL) {
+                fclose(existing);
+                status = UMI_STATUS_ALREADY_EXISTS;
+                goto fail;
+            }
+        }
     }
     if (argc == 5) {
         /* Verify provenance record before ANY optimisation, including a
@@ -279,6 +318,26 @@ int main(int argc, char **argv)
             goto fail;
         }
     }
+    if (strictSourceLock && argc == 5) {
+        /* Hash source bytes from the immutable dataset snapshot, not from
+         * an independent path re-open. No optimisation has begun yet. */
+        status = SourceLockPath(argv[4], sourceLockPath,
+                                sizeof(sourceLockPath));
+        if (status != UMI_STATUS_OK) goto fail;
+        status = EncodePair(checkpointModel, checkpointOptimizer,
+                            &checkpointBytes, &checkpointByteCount);
+        if (status != UMI_STATUS_OK) goto fail;
+        status = UmiAiTrainingSourceLockVerifyFile(
+            sourceLockPath, checkpointBytes, checkpointByteCount, dataset);
+        free(checkpointBytes);
+        checkpointBytes = NULL;
+        checkpointByteCount = 0U;
+        if (status != UMI_STATUS_OK) {
+            fputs("cryptographic source-lock missing or mismatched; "
+                  "resume refused\n", stderr);
+            goto fail;
+        }
+    }
     if (argc == 5) {
         status = UmiAiTrainingExperimentResumeAdamWClipped(
             dataset, &plan, &optimiserConfig, &schedule,
@@ -324,10 +383,23 @@ int main(int argc, char **argv)
                 runLockPath, checkpointBytes, checkpointByteCount, &lockInputs);
             if (status != UMI_STATUS_OK) goto fail;
         }
+        if (strictSourceLock) {
+            /* Incomplete bundles fail closed on the next resume. This is
+             * deliberately an additive companion, not a checkpoint rewrite. */
+            status = SourceLockPath(argv[3], sourceLockPath,
+                                    sizeof(sourceLockPath));
+            if (status != UMI_STATUS_OK) goto fail;
+            status = UmiAiTrainingSourceLockSaveNewFile(
+                sourceLockPath, checkpointBytes, checkpointByteCount, dataset);
+            if (status != UMI_STATUS_OK) goto fail;
+        }
         printf("New combined checkpoint and clipping policy: %s\n", argv[3]);
         if (strictRunLock)
             printf("Additional dataset/schedule/AdamW run lock: %s\n",
                    runLockPath);
+        if (strictSourceLock)
+            printf("Cryptographic immutable source-snapshot lock: %s\n",
+                   sourceLockPath);
     }
     free(checkpointBytes);
     UmiAiTrainingAdamWDestroy(optimizer);

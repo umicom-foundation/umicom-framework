@@ -13,6 +13,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/training_run_lock.h"
 #include "umicom/ai/training/optimizer_checkpoint.h"
+#include "umicom/ai/training/training_source_lock.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -78,7 +79,7 @@ int main(void)
     size_t loadedSize = 0U, resumedSize = 0U;
     uint64_t completed = 0U;
     size_t momentBytes = 0U;
-    char path[128], clipPath[160], lockPath[160];
+    char path[128], clipPath[160], lockPath[160], sourcePath[160];
     int length;
 
     CHECK(UmiAiTrainingExperimentDefaults(&config) == UMI_STATUS_OK);
@@ -102,6 +103,8 @@ int main(void)
     CHECK(length > 0 && (size_t)length < sizeof(clipPath));
     length = snprintf(lockPath, sizeof(lockPath), "%s.training-lock", path);
     CHECK(length > 0 && (size_t)length < sizeof(lockPath));
+    length = snprintf(sourcePath, sizeof(sourcePath), "%s.source-lock", path);
+    CHECK(length > 0 && (size_t)length < sizeof(sourcePath));
 
     /* Same immutable dataset, same absolute schedule and optimiser settings.
      * Only the intentional end step differs before versus after resuming. */
@@ -128,12 +131,19 @@ int main(void)
           checkpointBytes, checkpointSize, &clipping) == UMI_STATUS_OK);
     CHECK(UmiAiTrainingRunLockSaveNewFile(lockPath,
           checkpointBytes, checkpointSize, &identity) == UMI_STATUS_OK);
+    CHECK(UmiAiTrainingSourceLockSaveNewFile(sourcePath,
+          checkpointBytes, checkpointSize, dataset) == UMI_STATUS_OK);
 
-    /* Both independent records MUST verify before any resumed optimisation. */
+    /* The three independent records MUST verify before any resumed
+     * optimisation. The added source lock hashes actual imported bytes. */
     CHECK(UmiAiTrainingGradientPolicyVerifyFile(clipPath,
           loadedBytes, loadedSize, &clipping) == UMI_STATUS_OK);
     CHECK(UmiAiTrainingRunLockVerifyFile(lockPath,
           loadedBytes, loadedSize, &identity) == UMI_STATUS_OK);
+    CHECK(UmiAiTrainingSourceLockVerifyFile(sourcePath,
+          loadedBytes, loadedSize, dataset) == UMI_STATUS_OK);
+    CHECK(UmiAiTrainingSourceLockVerifyFile(sourcePath,
+          loadedBytes, loadedSize, reordered) == UMI_STATUS_PARSE_ERROR);
     identity.dataset = reordered;
     CHECK(UmiAiTrainingRunLockVerifyFile(lockPath,
           loadedBytes, loadedSize, &identity) == UMI_STATUS_PARSE_ERROR);
@@ -170,6 +180,11 @@ int main(void)
     CHECK(memcmp(loadedBytes, checkpointBytes, checkpointSize) == 0);
     CHECK(UmiAiTrainingRunLockVerifyFile(lockPath,
           loadedBytes, loadedSize, &identity) == UMI_STATUS_OK);
+    CHECK(UmiAiTrainingSourceLockVerifyFile(sourcePath,
+          loadedBytes, loadedSize, dataset) == UMI_STATUS_OK);
+    CHECK(remove(sourcePath) == 0);
+    CHECK(UmiAiTrainingSourceLockVerifyFile(sourcePath,
+          loadedBytes, loadedSize, dataset) == UMI_STATUS_IO_ERROR);
     CHECK(remove(lockPath) == 0);
     CHECK(UmiAiTrainingRunLockVerifyFile(lockPath,
           loadedBytes, loadedSize, &identity) == UMI_STATUS_IO_ERROR);

@@ -78,6 +78,8 @@ static void trim_punctuation(const char *text, size_t *length)
 }
 
 /* Provide the parse location operation used by this module and its client applications. */
+/* Compiler coordinates now use bounded positive uint32_t decimal parsing on every platform, including one-character relative filenames. Retained for engineering review. */
+#if 0
 static int parse_location(const char *token,
                           size_t length,
                           size_t *path_length,
@@ -125,6 +127,44 @@ static int parse_location(const char *token,
         }
     }
     return *path_length > 0U;
+}
+
+#endif
+/* Parse exactly the token slice. strtoul depends on unsigned-long width and
+ * can saturate before narrowing, so it cannot establish a uint32_t location. */
+static int terminal_location_number(const char *text, size_t length, uint32_t *out)
+{
+    if (length == 0U) return 0;
+    uint32_t value = 0U;
+    for (size_t index = 0U; index < length; ++index) {
+        if (text[index] < '0' || text[index] > '9') return 0;
+        uint32_t digit = (uint32_t)(text[index] - '0');
+        if (value > (UINT32_MAX - digit) / 10U) return 0;
+        value = value * 10U + digit;
+    }
+    if (value == 0U) return 0;
+    *out = value;
+    return 1;
+}
+static int parse_location(const char *token, size_t length, size_t *path_length,
+    uint32_t *line, uint32_t *column)
+{
+    size_t last = SIZE_MAX, previous = SIZE_MAX;
+    for (size_t index = 0U; index < length; ++index) {
+        if (token[index] == ':') { previous = last; last = index; }
+    }
+    if (last == SIZE_MAX || last == 0U || last + 1U >= length) return 0;
+    uint32_t final = 0U, first = 0U;
+    if (!terminal_location_number(token + last + 1U, length - last - 1U, &final)) return 0;
+    size_t path = last;
+    uint32_t row = final, col = 0U;
+    if (previous != SIZE_MAX && previous > 0U && previous + 1U < last &&
+        token[previous + 1U] >= '0' && token[previous + 1U] <= '9') {
+        if (!terminal_location_number(token + previous + 1U, last - previous - 1U, &first)) return 0;
+        path = previous; row = first; col = final;
+    }
+    *path_length = path; *line = row; *column = col;
+    return 1;
 }
 
 /*
