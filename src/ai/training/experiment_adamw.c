@@ -111,16 +111,19 @@ static UmiStatus RunInternal(
     const UmiAiTrainingDecoder *checkpointModel,
     const UmiAiTrainingAdamW *checkpointOptimizer,
     size_t microbatchSequences,
+    float maximumGradientNorm,
     UmiAiTrainingExperimentObserver observer,
     void *userData,
     UmiAiTrainingDecoder **outModel,
     UmiAiTrainingAdamW **outOptimizer,
-    UmiAiTrainingExperimentResult *outResult)
+    UmiAiTrainingExperimentResult *outResult,
+    UmiAiTrainingGradientClipReport *outLastClipReport)
 {
     UmiAiTrainingDecoder *model = NULL;
     UmiAiTrainingAdamW *optimizer = NULL;
     UmiAiTrainingExperimentResult report = {0};
     UmiAiTrainingExperimentProgress progress = {0};
+    UmiAiTrainingGradientClipReport lastClip = {0};
     UmiAiTrainingDecoderConfig actual;
     uint64_t startSteps = UINT64_C(0), modelSteps = UINT64_C(0);
     uint64_t optimizerSteps = UINT64_C(0);
@@ -137,11 +140,16 @@ static UmiStatus RunInternal(
         outResult == NULL ||
         (checkpointModel == NULL) != (checkpointOptimizer == NULL))
         return UMI_STATUS_INVALID_ARGUMENT;
+    if (!isfinite(maximumGradientNorm) || maximumGradientNorm < 0.0F ||
+        (maximumGradientNorm > 0.0F && outLastClipReport == NULL))
+        return UMI_STATUS_INVALID_ARGUMENT;
     status = UmiAiTrainingExperimentAdamWValidate(
         config, optimizerOptions, schedule);
     if (status != UMI_STATUS_OK) return status;
     if (microbatchSequences != 0U &&
         microbatchSequences > (size_t)config->batchSequences)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (maximumGradientNorm > 0.0F && microbatchSequences == 0U)
         return UMI_STATUS_INVALID_ARGUMENT;
 
     /* Validate metadata before allocation; none of these calls execute data. */
@@ -213,7 +221,14 @@ static UmiStatus RunInternal(
         status = UmiAiTrainingLearningRateForStep(
             schedule, step, &learningRate);
         if (status != UMI_STATUS_OK) goto fail;
-        if (microbatchSequences == 0U) {
+        if (maximumGradientNorm > 0.0F) {
+            /* New opt-in path: weight all microbatches before one global
+             * clipping decision and the original atomic AdamW transaction. */
+            status = UmiAiTrainingDecoderTrainAdamWAccumulatedClipped(
+                model, optimizer, inputs, targets, count,
+                microbatchSequences, learningRate, maximumGradientNorm,
+                &progress.lastTrainingLoss, &lastClip);
+        } else if (microbatchSequences == 0U) {
             /* Preserve the existing full-batch AdamW path for callers that
              * do not explicitly request microbatch training. */
             status = UmiAiTrainingDecoderTrainAdamWStep(
@@ -265,6 +280,7 @@ static UmiStatus RunInternal(
     *outModel = model;
     *outOptimizer = optimizer;
     *outResult = report;
+    if (outLastClipReport != NULL) *outLastClipReport = lastClip;
     return UMI_STATUS_OK;
 fail:
     UmiAiTrainingAdamWDestroy(optimizer);
@@ -284,7 +300,8 @@ UmiStatus UmiAiTrainingExperimentRunAdamW(
     UmiAiTrainingExperimentResult *outResult)
 {
     return RunInternal(dataset, config, optimizerOptions, schedule, NULL, NULL,
-                       0U, observer, userData, outModel, outOptimizer, outResult);
+                       0U, 0.0F, observer, userData,
+                       outModel, outOptimizer, outResult, NULL);
 }
 
 UmiStatus UmiAiTrainingExperimentResumeAdamW(
@@ -303,8 +320,8 @@ UmiStatus UmiAiTrainingExperimentResumeAdamW(
     if (checkpointModel == NULL || checkpointOptimizer == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     return RunInternal(dataset, config, optimizerOptions, schedule,
-                       checkpointModel, checkpointOptimizer, 0U, observer,
-                       userData, outModel, outOptimizer, outResult);
+                       checkpointModel, checkpointOptimizer, 0U, 0.0F, observer,
+                       userData, outModel, outOptimizer, outResult, NULL);
 }
 
 /* Effective-batch AdamW experiments preserve the published full-batch APIs.
@@ -324,8 +341,8 @@ UmiStatus UmiAiTrainingExperimentRunAdamWAccumulated(
 {
     if (microbatchSequences == 0U) return UMI_STATUS_INVALID_ARGUMENT;
     return RunInternal(dataset, config, optimizerOptions, schedule, NULL, NULL,
-                       microbatchSequences, observer, userData,
-                       outModel, outOptimizer, outResult);
+                       microbatchSequences, 0.0F, observer, userData,
+                       outModel, outOptimizer, outResult, NULL);
 }
 
 UmiStatus UmiAiTrainingExperimentResumeAdamWAccumulated(
@@ -346,6 +363,54 @@ UmiStatus UmiAiTrainingExperimentResumeAdamWAccumulated(
         microbatchSequences == 0U) return UMI_STATUS_INVALID_ARGUMENT;
     return RunInternal(dataset, config, optimizerOptions, schedule,
                        checkpointModel, checkpointOptimizer,
-                       microbatchSequences, observer, userData,
-                       outModel, outOptimizer, outResult);
+                       microbatchSequences, 0.0F, observer, userData,
+                       outModel, outOptimizer, outResult, NULL);
+}
+
+/* Optional stability policy composes the same existing training loop;
+ * no application-side optimiser or alternate sampler has been introduced. */
+UmiStatus UmiAiTrainingExperimentRunAdamWClipped(
+    const UmiAiTrainingDataset *dataset,
+    const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingAdamWConfig *optimizerOptions,
+    const UmiAiTrainingLearningRateSchedule *schedule,
+    size_t microbatchSequences, float maximumGradientNorm,
+    UmiAiTrainingExperimentObserver observer, void *userData,
+    UmiAiTrainingDecoder **outModel,
+    UmiAiTrainingAdamW **outOptimizer,
+    UmiAiTrainingExperimentResult *outResult,
+    UmiAiTrainingGradientClipReport *outLastClipReport)
+{
+    if (!isfinite(maximumGradientNorm) || maximumGradientNorm <= 0.0F ||
+        microbatchSequences == 0U || outLastClipReport == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    return RunInternal(dataset, config, optimizerOptions, schedule, NULL, NULL,
+                       microbatchSequences, maximumGradientNorm,
+                       observer, userData, outModel, outOptimizer,
+                       outResult, outLastClipReport);
+}
+
+UmiStatus UmiAiTrainingExperimentResumeAdamWClipped(
+    const UmiAiTrainingDataset *dataset,
+    const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingAdamWConfig *optimizerOptions,
+    const UmiAiTrainingLearningRateSchedule *schedule,
+    const UmiAiTrainingDecoder *checkpointModel,
+    const UmiAiTrainingAdamW *checkpointOptimizer,
+    size_t microbatchSequences, float maximumGradientNorm,
+    UmiAiTrainingExperimentObserver observer, void *userData,
+    UmiAiTrainingDecoder **outModel,
+    UmiAiTrainingAdamW **outOptimizer,
+    UmiAiTrainingExperimentResult *outResult,
+    UmiAiTrainingGradientClipReport *outLastClipReport)
+{
+    if (checkpointModel == NULL || checkpointOptimizer == NULL ||
+        !isfinite(maximumGradientNorm) || maximumGradientNorm <= 0.0F ||
+        microbatchSequences == 0U || outLastClipReport == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    return RunInternal(dataset, config, optimizerOptions, schedule,
+                       checkpointModel, checkpointOptimizer,
+                       microbatchSequences, maximumGradientNorm,
+                       observer, userData, outModel, outOptimizer,
+                       outResult, outLastClipReport);
 }

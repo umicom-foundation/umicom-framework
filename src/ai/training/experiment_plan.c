@@ -16,7 +16,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#define UMI_PLAN_KEY_COUNT 15U
+/* Only the new AdamW plan entry points permit the final key. Older clients
+ * keep strict rejection semantics rather than silently ignoring a policy. */
+#define UMI_PLAN_KEY_COUNT 16U
 
 typedef enum PlanKey {
     KEY_MANIFEST = 0,
@@ -33,14 +35,16 @@ typedef enum PlanKey {
     KEY_HIDDEN_CHANNELS,
     KEY_ATTENTION_HEADS,
     KEY_EFFECTIVE_SEQUENCES,
-    KEY_MICROBATCH_SEQUENCES
+    KEY_MICROBATCH_SEQUENCES,
+    KEY_MAXIMUM_GRADIENT_NORM
 } PlanKey;
 
 static const char *const keyNames[UMI_PLAN_KEY_COUNT] = {
     "manifest", "steps", "eval_interval", "eval_batches",
     "batch_sequences", "learning_rate", "model_seed", "train_seed",
     "eval_seed", "context", "channels", "hidden_channels",
-    "attention_heads", "effective_sequences", "microbatch_sequences"
+    "attention_heads", "effective_sequences", "microbatch_sequences",
+    "maximum_gradient_norm"
 };
 
 static bool ParseUnsigned(const char *text, uint64_t *outValue)
@@ -87,6 +91,38 @@ static bool ParseRate(const char *text, float *outRate)
     return true;
 }
 
+/* Maximum global gradient norm has a wider domain than learning_rate.
+ * A maximum of nine integer and nine fractional decimal digits prevents
+ * oversized/unportable representations while allowing practical thresholds.
+ * The nine-fractional-digit limit also forbids underflow to float zero. */
+static bool ParseMaximumGradientNorm(const char *text, float *outNorm)
+{
+    uint64_t integer = 0U, fraction = 0U, divisor = 1U;
+    unsigned wholeDigits = 0U;
+    bool dot = false, any = false, afterDot = false;
+    if (text == NULL || outNorm == NULL) return false;
+    for (const char *cursor = text; *cursor != '\0'; ++cursor) {
+        if (*cursor == '.' && !dot) { dot = true; continue; }
+        if (*cursor < '0' || *cursor > '9') return false;
+        unsigned digit = (unsigned)(*cursor - '0');
+        if (dot) {
+            if (divisor >= UINT64_C(1000000000)) return false;
+            fraction = fraction * UINT64_C(10) + (uint64_t)digit;
+            divisor *= UINT64_C(10);
+            afterDot = true;
+        } else {
+            if (++wholeDigits > 9U) return false;
+            integer = integer * UINT64_C(10) + (uint64_t)digit;
+        }
+        any = true;
+    }
+    if (!any || (dot && !afterDot)) return false;
+    const double maximum = (double)integer + (double)fraction / (double)divisor;
+    if (!(maximum > 0.0) || maximum > 999999999.999999999) return false;
+    *outNorm = (float)maximum;
+    return *outNorm > 0.0F;
+}
+
 /* Portable relative POSIX-style components only. A path is an input to a
  * trusted local manifest loader, never an authority or a sandbox boundary. */
 static bool IsSafeRelativeManifest(const char *path)
@@ -118,6 +154,7 @@ static bool IsSafeRelativeManifest(const char *path)
 static UmiStatus ApplyKey(PlanKey key, const char *value,
                           UmiAiTrainingExperimentConfig *candidate,
                           UmiAiTrainingExperimentAccumulation *accumulation,
+                          float *maximumGradientNorm,
                           char *relativeManifest)
 {
     uint64_t integer = 0U;
@@ -130,6 +167,13 @@ static UmiStatus ApplyKey(PlanKey key, const char *value,
     if (key == KEY_LEARNING_RATE) {
         if (!ParseRate(value, &rate)) return UMI_STATUS_PARSE_ERROR;
         candidate->learningRate = rate;
+        return UMI_STATUS_OK;
+    }
+    if (key == KEY_MAXIMUM_GRADIENT_NORM) {
+        if (maximumGradientNorm == NULL ||
+            !ParseMaximumGradientNorm(value, &rate))
+            return UMI_STATUS_PARSE_ERROR;
+        *maximumGradientNorm = rate;
         return UMI_STATUS_OK;
     }
     if ((key == KEY_EFFECTIVE_SEQUENCES ||
@@ -164,10 +208,12 @@ static UmiStatus ParsePlanInternal(
     const char *text, size_t textLength,
     UmiAiTrainingExperimentConfig *outConfig,
     UmiAiTrainingExperimentAccumulation *outAccumulation,
+    float *outMaximumGradientNorm,
     char *outRelativeManifest, size_t manifestCapacity)
 {
     UmiAiTrainingExperimentConfig candidate;
     UmiAiTrainingExperimentAccumulation selectedAccumulation = {0};
+    float selectedMaximumGradientNorm = 0.0F;
     char relativeManifest[UMI_AI_EXPERIMENT_MAX_MANIFEST_RELATIVE] = {0};
     uint32_t seen = 0U;
     size_t cursor = 0U;
@@ -216,6 +262,7 @@ static UmiStatus ParsePlanInternal(
             return UMI_STATUS_PARSE_ERROR;
         status = ApplyKey(key, separator + 1U, &candidate,
                           outAccumulation == NULL ? NULL : &selectedAccumulation,
+                          outMaximumGradientNorm == NULL ? NULL : &selectedMaximumGradientNorm,
                           relativeManifest);
         if (status != UMI_STATUS_OK) return status;
         seen |= UINT32_C(1) << (unsigned)key;
@@ -243,6 +290,8 @@ static UmiStatus ParsePlanInternal(
     if (manifestLength > manifestCapacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     *outConfig = candidate;
     if (outAccumulation != NULL) *outAccumulation = selectedAccumulation;
+    if (outMaximumGradientNorm != NULL)
+        *outMaximumGradientNorm = selectedMaximumGradientNorm;
     memcpy(outRelativeManifest, relativeManifest, manifestLength);
     return UMI_STATUS_OK;
 }
@@ -252,7 +301,7 @@ UmiStatus UmiAiTrainingExperimentPlanParse(
     UmiAiTrainingExperimentConfig *outConfig,
     char *outRelativeManifest, size_t manifestCapacity)
 {
-    return ParsePlanInternal(text, textLength, outConfig, NULL,
+    return ParsePlanInternal(text, textLength, outConfig, NULL, NULL,
                              outRelativeManifest, manifestCapacity);
 }
 
@@ -263,7 +312,20 @@ UmiStatus UmiAiTrainingExperimentPlanParseAccumulated(
     char *outRelativeManifest, size_t manifestCapacity)
 {
     if (outAccumulation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return ParsePlanInternal(text, textLength, outConfig, outAccumulation, NULL,
+                             outRelativeManifest, manifestCapacity);
+}
+
+UmiStatus UmiAiTrainingExperimentPlanParseAdamW(
+    const char *text, size_t textLength,
+    UmiAiTrainingExperimentConfig *outConfig,
+    UmiAiTrainingExperimentAccumulation *outAccumulation,
+    float *outMaximumGradientNorm,
+    char *outRelativeManifest, size_t manifestCapacity)
+{
+    if (outMaximumGradientNorm == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return ParsePlanInternal(text, textLength, outConfig, outAccumulation,
+                             outMaximumGradientNorm,
                              outRelativeManifest, manifestCapacity);
 }
 
@@ -271,12 +333,14 @@ static UmiStatus LoadPlanInternal(
     const char *planFile,
     UmiAiTrainingExperimentConfig *outConfig,
     UmiAiTrainingExperimentAccumulation *outAccumulation,
+    float *outMaximumGradientNorm,
     char *outManifestPath, size_t manifestCapacity)
 {
     char text[UMI_AI_EXPERIMENT_MAX_PLAN_BYTES + 1U];
     char relative[UMI_AI_EXPERIMENT_MAX_MANIFEST_RELATIVE];
     UmiAiTrainingExperimentConfig candidate;
     UmiAiTrainingExperimentAccumulation selectedAccumulation = {0};
+    float selectedMaximumGradientNorm = 0.0F;
     const char *separator = NULL;
     FILE *file;
     long length;
@@ -306,6 +370,7 @@ static UmiStatus LoadPlanInternal(
     if (fclose(file) != 0) return UMI_STATUS_IO_ERROR;
     status = ParsePlanInternal(text, (size_t)length, &candidate,
                               outAccumulation == NULL ? NULL : &selectedAccumulation,
+                              outMaximumGradientNorm == NULL ? NULL : &selectedMaximumGradientNorm,
                               relative, sizeof(relative));
     if (status != UMI_STATUS_OK) return status;
     /* Both Windows and POSIX plan paths use their final separator. Relative
@@ -323,6 +388,8 @@ static UmiStatus LoadPlanInternal(
     memcpy(outManifestPath + prefixLength, relative, relativeLength + 1U);
     *outConfig = candidate;
     if (outAccumulation != NULL) *outAccumulation = selectedAccumulation;
+    if (outMaximumGradientNorm != NULL)
+        *outMaximumGradientNorm = selectedMaximumGradientNorm;
     return UMI_STATUS_OK;
 }
 
@@ -333,7 +400,7 @@ UmiStatus UmiAiTrainingExperimentPlanLoadFile(
     UmiAiTrainingExperimentConfig *outConfig,
     char *outManifestPath, size_t manifestCapacity)
 {
-    return LoadPlanInternal(planFile, outConfig, NULL,
+    return LoadPlanInternal(planFile, outConfig, NULL, NULL,
                             outManifestPath, manifestCapacity);
 }
 
@@ -344,6 +411,19 @@ UmiStatus UmiAiTrainingExperimentPlanLoadAccumulated(
     char *outManifestPath, size_t manifestCapacity)
 {
     if (outAccumulation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return LoadPlanInternal(planFile, outConfig, outAccumulation, NULL,
+                            outManifestPath, manifestCapacity);
+}
+
+UmiStatus UmiAiTrainingExperimentPlanLoadAdamW(
+    const char *planFile,
+    UmiAiTrainingExperimentConfig *outConfig,
+    UmiAiTrainingExperimentAccumulation *outAccumulation,
+    float *outMaximumGradientNorm,
+    char *outManifestPath, size_t manifestCapacity)
+{
+    if (outMaximumGradientNorm == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return LoadPlanInternal(planFile, outConfig, outAccumulation,
+                            outMaximumGradientNorm,
                             outManifestPath, manifestCapacity);
 }

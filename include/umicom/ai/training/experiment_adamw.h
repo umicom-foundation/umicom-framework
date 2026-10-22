@@ -110,6 +110,46 @@ UmiStatus UmiAiTrainingExperimentResumeAdamWAccumulated(
     UmiAiTrainingAdamW **outOptimizer,
     UmiAiTrainingExperimentResult *outResult);
 
+/* New opt-in clipped AdamW entry points. These preserve the established
+ * deterministic sampler, absolute-step schedule, held-out evaluator and
+ * combined checkpoint format. Exactly one global L2 clipping decision is made
+ * AFTER token-weighted microbatch reduction, BEFORE each AdamW update.
+ *
+ * `microbatchSequences` is in [1, config->batchSequences]. A full batch can
+ * be represented by passing config->batchSequences; unlike legacy callers,
+ * clipped callers always use the canonical accumulation implementation.
+ * All results are committed together after success. If no update is needed
+ * (resume already at config.steps), outLastClipReport is zero-initialised.
+ *
+ * These APIs do NOT validate external provenance: for a file-based resume,
+ * check the separate immutable policy companion record against the exact
+ * checkpoint bytes before invoking them. */
+UmiStatus UmiAiTrainingExperimentRunAdamWClipped(
+    const UmiAiTrainingDataset *dataset,
+    const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingAdamWConfig *optimizerOptions,
+    const UmiAiTrainingLearningRateSchedule *schedule,
+    size_t microbatchSequences, float maximumGradientNorm,
+    UmiAiTrainingExperimentObserver observer, void *userData,
+    UmiAiTrainingDecoder **outModel,
+    UmiAiTrainingAdamW **outOptimizer,
+    UmiAiTrainingExperimentResult *outResult,
+    UmiAiTrainingGradientClipReport *outLastClipReport);
+
+UmiStatus UmiAiTrainingExperimentResumeAdamWClipped(
+    const UmiAiTrainingDataset *dataset,
+    const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingAdamWConfig *optimizerOptions,
+    const UmiAiTrainingLearningRateSchedule *schedule,
+    const UmiAiTrainingDecoder *checkpointModel,
+    const UmiAiTrainingAdamW *checkpointOptimizer,
+    size_t microbatchSequences, float maximumGradientNorm,
+    UmiAiTrainingExperimentObserver observer, void *userData,
+    UmiAiTrainingDecoder **outModel,
+    UmiAiTrainingAdamW **outOptimizer,
+    UmiAiTrainingExperimentResult *outResult,
+    UmiAiTrainingGradientClipReport *outLastClipReport);
+
 #ifdef __cplusplus
 }
 #endif

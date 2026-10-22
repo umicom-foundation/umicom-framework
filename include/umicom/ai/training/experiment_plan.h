@@ -82,6 +82,35 @@ UmiStatus UmiAiTrainingExperimentPlanLoadAccumulated(
     UmiAiTrainingExperimentAccumulation *outAccumulation,
     char *outManifestPath, size_t manifestCapacity);
 
+/* Opt-in AdamW experiment plan. In addition to the standard keys it accepts:
+ *   maximum_gradient_norm=1.0
+ * This setting is an optional positive, finite decimal, without exponent or
+ * locale-dependent syntax. An absent key returns 0.0f (= clipping disabled).
+ * When present, it enables global L2 clipping AFTER microbatch reduction and
+ * BEFORE the AdamW update. Unlike a learning rate, values may exceed 1.
+ *
+ * The legacy parsers deliberately REJECT maximum_gradient_norm. Existing
+ * ABI structs and checkpoint encodings are unchanged. The caller is required
+ * to preserve and compare the policy on resume; the Framework's separate
+ * gradient-policy companion record binds it to checkpoint bytes.
+ *
+ * Optional effective_sequences and microbatch_sequences must still occur
+ * together. All output arguments, including *outMaximumGradientNorm, remain
+ * unchanged upon any failure. */
+UmiStatus UmiAiTrainingExperimentPlanParseAdamW(
+    const char *text, size_t textLength,
+    UmiAiTrainingExperimentConfig *outConfig,
+    UmiAiTrainingExperimentAccumulation *outAccumulation,
+    float *outMaximumGradientNorm,
+    char *outRelativeManifest, size_t manifestCapacity);
+
+UmiStatus UmiAiTrainingExperimentPlanLoadAdamW(
+    const char *planFile,
+    UmiAiTrainingExperimentConfig *outConfig,
+    UmiAiTrainingExperimentAccumulation *outAccumulation,
+    float *outMaximumGradientNorm,
+    char *outManifestPath, size_t manifestCapacity);
+
 #ifdef __cplusplus
 }
 #endif

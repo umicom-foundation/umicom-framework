@@ -1,0 +1,275 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: learning/native-llm/train_adamw_clipped_experiment.c
+ *
+ * PURPOSE:
+ *   Thin C23 educational CLI for an explicitly reviewed global-gradient
+ *   clipping policy. The Framework owns training, optimiser and provenance.
+ *
+ * SAFETY:
+ *   A clipped checkpoint can be resumed only with a matching immutable
+ *   companion record. Combined checkpoint bytes are never altered to store
+ *   metadata. New checkpoint/record publication refuses existing paths.
+ *   Only approved local plans, source datasets and checkpoints should be used.
+ *
+ * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation
+ * LICENCE: MIT
+ *---------------------------------------------------------------------------*/
+#include "umicom/ai/training/experiment_adamw.h"
+#include "umicom/ai/training/experiment_plan.h"
+#include "umicom/ai/training/gradient_policy.h"
+#include "umicom/ai/training/optimizer_checkpoint.h"
+
+#include <inttypes.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define UMI_CLIPPED_EXPERIMENT_PATH_MAX 1024U
+#define UMI_CLIPPED_EXPERIMENT_POLICY_SUFFIX ".clip-policy"
+
+static int ReadUnsigned(const char *text, uint64_t *outNumber)
+{
+    uint64_t value = 0U;
+    if (text == NULL || text[0] == '\0' || outNumber == NULL) return 0;
+    for (const char *cursor = text; *cursor != '\0'; ++cursor) {
+        uint64_t digit;
+        if (*cursor < '0' || *cursor > '9') return 0;
+        digit = (uint64_t)(unsigned)(*cursor - '0');
+        if (value > (UINT64_MAX - digit) / UINT64_C(10)) return 0;
+        value = value * UINT64_C(10) + digit;
+    }
+    if (value == 0U) return 0;
+    *outNumber = value;
+    return 1;
+}
+
+static UmiStatus Progress(const UmiAiTrainingExperimentProgress *step,
+                          void *context)
+{
+    (void)context;
+    if (step == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    printf("step %" PRIu64 " | held-out CE %.6f | perplexity %.6f\n",
+           step->completedSteps, step->heldOutCrossEntropy,
+           step->heldOutPerplexity);
+    return UMI_STATUS_OK;
+}
+
+static UmiStatus EncodePair(const UmiAiTrainingDecoder *model,
+                            const UmiAiTrainingAdamW *optimizer,
+                            uint8_t **outBytes, size_t *outCount)
+{
+    uint8_t *bytes = NULL;
+    size_t capacity = 0U, written = 0U;
+    UmiStatus status;
+    if (model == NULL || optimizer == NULL ||
+        outBytes == NULL || outCount == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = UmiAiTrainingAdamWCheckpointSize(model, optimizer, &capacity);
+    if (status != UMI_STATUS_OK) return status;
+    if (capacity == 0U || capacity > UMI_AI_ADAMW_MAX_CHECKPOINT_BYTES)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    bytes = malloc(capacity);
+    if (bytes == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = UmiAiTrainingAdamWCheckpointEncode(model, optimizer,
+                                                 bytes, capacity, &written);
+    if (status == UMI_STATUS_OK && written != capacity)
+        status = UMI_STATUS_INVALID_STATE;
+    if (status != UMI_STATUS_OK) {
+        free(bytes);
+        return status;
+    }
+    *outBytes = bytes;
+    *outCount = written;
+    return UMI_STATUS_OK;
+}
+
+/* Only create the suffix in a bounded caller buffer. The provenance file
+ * itself is emitted exclusively through the reusable Framework C23 service. */
+static UmiStatus CompanionPath(const char *checkpointPath,
+                                char *outPath, size_t capacity)
+{
+    size_t nameLength, suffixLength;
+    if (checkpointPath == NULL || checkpointPath[0] == '\0' ||
+        outPath == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    nameLength = strlen(checkpointPath);
+    suffixLength = sizeof(UMI_CLIPPED_EXPERIMENT_POLICY_SUFFIX) - 1U;
+    if (nameLength >= UMI_CLIPPED_EXPERIMENT_PATH_MAX ||
+        nameLength > SIZE_MAX - suffixLength - 1U ||
+        nameLength + suffixLength + 1U > capacity)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    memcpy(outPath, checkpointPath, nameLength);
+    memcpy(outPath + nameLength, UMI_CLIPPED_EXPERIMENT_POLICY_SUFFIX,
+           suffixLength + 1U);
+    return UMI_STATUS_OK;
+}
+
+int main(int argc, char **argv)
+{
+    UmiAiTrainingExperimentConfig plan;
+    UmiAiTrainingExperimentAccumulation accumulation = {0};
+    UmiAiTrainingAdamWConfig optimiserConfig;
+    UmiAiTrainingLearningRateSchedule schedule;
+    UmiAiTrainingExperimentResult report;
+    UmiAiTrainingGradientClipReport lastClip = {0};
+    UmiAiTrainingGradientPolicy policy;
+    UmiAiTrainingDataset *dataset = NULL;
+    UmiAiTrainingDecoder *model = NULL, *checkpointModel = NULL;
+    UmiAiTrainingAdamW *optimizer = NULL, *checkpointOptimizer = NULL;
+    uint8_t *checkpointBytes = NULL;
+    size_t checkpointByteCount = 0U, microbatchSequences;
+    char manifest[UMI_CLIPPED_EXPERIMENT_PATH_MAX];
+    char sidecar[UMI_CLIPPED_EXPERIMENT_PATH_MAX + 32U];
+    float maximumGradientNorm = 0.0F;
+    uint64_t scheduleSteps = 0U;
+    UmiStatus status = UMI_STATUS_INVALID_ARGUMENT;
+
+    if (argc < 3 || argc > 5 || !ReadUnsigned(argv[2], &scheduleSteps) ||
+        scheduleSteps > (uint64_t)UMI_AI_EXPERIMENT_MAX_STEPS) {
+        fputs("usage: umicom-native-llm-adamw-clipped-experiment "
+              "<reviewed-plan> <schedule-total-steps> "
+              "[NEW-combined-checkpoint] [existing-combined-checkpoint]\n",
+              stderr);
+        return 2;
+    }
+    status = UmiAiTrainingExperimentPlanLoadAdamW(
+        argv[1], &plan, &accumulation, &maximumGradientNorm,
+        manifest, sizeof(manifest));
+    if (status != UMI_STATUS_OK) goto fail;
+    if (!(maximumGradientNorm > 0.0F)) {
+        fputs("reviewed plan must explicitly set maximum_gradient_norm\n",
+              stderr);
+        status = UMI_STATUS_INVALID_ARGUMENT;
+        goto fail;
+    }
+    /* This initial clipped experiment uses the established bounded AdamW
+     * experiment sampler. A supplied effective_sequences must match its
+     * existing batch_sequences; never claim to execute a larger batch while
+     * silently sampling fewer sequences. The decoder still accumulates
+     * gradients across microbatches within that approved effective batch. */
+    if (accumulation.effectiveSequences != 0U &&
+        accumulation.effectiveSequences != plan.batchSequences) {
+        status = UMI_STATUS_INVALID_ARGUMENT;
+        goto fail;
+    }
+    microbatchSequences = accumulation.microbatchSequences == 0U ?
+        (size_t)plan.batchSequences :
+        (size_t)accumulation.microbatchSequences;
+    policy = (UmiAiTrainingGradientPolicy){
+        maximumGradientNorm, plan.batchSequences, (uint32_t)microbatchSequences};
+    status = UmiAiTrainingAdamWDefaults(&optimiserConfig);
+    if (status != UMI_STATUS_OK) goto fail;
+    schedule = (UmiAiTrainingLearningRateSchedule){
+        UMI_AI_TRAINING_SCHEDULE_COSINE, plan.learningRate,
+        plan.learningRate * 0.1F,
+        scheduleSteps > UINT64_C(4) ? UINT64_C(2) : UINT64_C(0),
+        scheduleSteps};
+    status = UmiAiTrainingExperimentAdamWValidate(
+        &plan, &optimiserConfig, &schedule);
+    if (status != UMI_STATUS_OK) goto fail;
+
+    /* Refuse an occupied destination before doing expensive model work.
+     * No-clobber guarantees remain enforced by the checkpoint and policy
+     * publication services; this early check is only a usability check. */
+    if (argc >= 4) {
+        FILE *existing;
+        status = CompanionPath(argv[3], sidecar, sizeof(sidecar));
+        if (status != UMI_STATUS_OK) goto fail;
+        existing = fopen(argv[3], "rb");
+        if (existing != NULL) {
+            fclose(existing);
+            status = UMI_STATUS_ALREADY_EXISTS;
+            goto fail;
+        }
+        existing = fopen(sidecar, "rb");
+        if (existing != NULL) {
+            fclose(existing);
+            status = UMI_STATUS_ALREADY_EXISTS;
+            goto fail;
+        }
+    }
+    if (argc == 5) {
+        /* Verify provenance record before ANY optimisation, including a
+         * model resume with zero outstanding steps. Merely matching a scalar
+         * threshold is insufficient: the record binds the exact combined
+         * checkpoint bytes and selected microbatch policy as well. */
+        status = CompanionPath(argv[4], sidecar, sizeof(sidecar));
+        if (status != UMI_STATUS_OK) goto fail;
+        status = UmiAiTrainingAdamWCheckpointLoadFile(
+            argv[4], &checkpointModel, &checkpointOptimizer);
+        if (status != UMI_STATUS_OK) goto fail;
+        status = EncodePair(checkpointModel, checkpointOptimizer,
+                            &checkpointBytes, &checkpointByteCount);
+        if (status != UMI_STATUS_OK) goto fail;
+        status = UmiAiTrainingGradientPolicyVerifyFile(
+            sidecar, checkpointBytes, checkpointByteCount, &policy);
+        free(checkpointBytes);
+        checkpointBytes = NULL;
+        checkpointByteCount = 0U;
+        if (status != UMI_STATUS_OK) {
+            fputs("checkpoint clipping policy missing or mismatched; "
+                  "resume refused\n", stderr);
+            goto fail;
+        }
+    }
+    status = UmiAiTrainingDatasetLoadManifest(manifest, &dataset);
+    if (status != UMI_STATUS_OK) goto fail;
+    if (argc == 5) {
+        status = UmiAiTrainingExperimentResumeAdamWClipped(
+            dataset, &plan, &optimiserConfig, &schedule,
+            checkpointModel, checkpointOptimizer,
+            microbatchSequences, maximumGradientNorm,
+            Progress, NULL, &model, &optimizer, &report, &lastClip);
+    } else {
+        status = UmiAiTrainingExperimentRunAdamWClipped(
+            dataset, &plan, &optimiserConfig, &schedule,
+            microbatchSequences, maximumGradientNorm,
+            Progress, NULL, &model, &optimizer, &report, &lastClip);
+    }
+    if (status != UMI_STATUS_OK) goto fail;
+    printf("AdamW: %" PRIu64 " steps; held-out CE %.6f -> %.6f\n",
+           report.completedSteps, report.baselineHeldOutLoss,
+           report.finalHeldOutLoss);
+    printf("last-step gradient norm %.9g | applied scale %.9g | clipped %s\n",
+           lastClip.globalNorm, lastClip.appliedScale,
+           lastClip.wasClipped ? "yes" : "no");
+    puts("Checkpoints alone do not attest dataset identity, provenance "
+         "or host trust. Review all sources and settings before continuing.");
+
+    if (argc >= 4) {
+        /* Publication is intentionally fail-closed: if creating the second
+         * companion file fails, a checkpoint without policy remains unusable
+         * by this command. A pair cannot be committed atomically across two
+         * filesystem paths. The operator reviews any incomplete pair. */
+        status = UmiAiTrainingAdamWCheckpointSaveNewFile(
+            model, optimizer, argv[3]);
+        if (status != UMI_STATUS_OK) goto fail;
+        status = EncodePair(model, optimizer,
+                            &checkpointBytes, &checkpointByteCount);
+        if (status != UMI_STATUS_OK) goto fail;
+        status = CompanionPath(argv[3], sidecar, sizeof(sidecar));
+        if (status != UMI_STATUS_OK) goto fail;
+        status = UmiAiTrainingGradientPolicySaveNewFile(
+            sidecar, checkpointBytes, checkpointByteCount, &policy);
+        if (status != UMI_STATUS_OK) goto fail;
+        printf("New combined checkpoint and clipping policy: %s\n", argv[3]);
+    }
+    free(checkpointBytes);
+    UmiAiTrainingAdamWDestroy(optimizer);
+    UmiAiTrainingDecoderDestroy(model);
+    UmiAiTrainingAdamWDestroy(checkpointOptimizer);
+    UmiAiTrainingDecoderDestroy(checkpointModel);
+    UmiAiTrainingDatasetDestroy(dataset);
+    return 0;
+fail:
+    fprintf(stderr, "reviewed clipped AdamW experiment rejected (status=%d)\n",
+            (int)status);
+    free(checkpointBytes);
+    UmiAiTrainingAdamWDestroy(optimizer);
+    UmiAiTrainingDecoderDestroy(model);
+    UmiAiTrainingAdamWDestroy(checkpointOptimizer);
+    UmiAiTrainingDecoderDestroy(checkpointModel);
+    UmiAiTrainingDatasetDestroy(dataset);
+    return 1;
+}

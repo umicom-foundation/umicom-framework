@@ -41,6 +41,9 @@ if(NOT TARGET umicom_ai_training)
         # training tape as the sole authority for parameter updates.
         "${_umicom_ai_training_root}/src/ai/training/optimizer.c"
         "${_umicom_ai_training_root}/src/ai/training/gradient_clipping.c"
+        # Reviewed experiment policy records bind exact clipping settings to
+        # immutable AdamW checkpoint bytes using the existing base SHA-256.
+        "${_umicom_ai_training_root}/src/ai/training/gradient_policy.c"
         # Exact resume of combined decoder + AdamW moments. The existing
         # standalone decoder checkpoint remains byte-for-byte unchanged.
         "${_umicom_ai_training_root}/src/ai/training/optimizer_checkpoint.c"
@@ -671,4 +674,30 @@ if(BUILD_TESTING)
         umicom-ai-training-decoder-clipping-test
         framework.ai.training.decoder_clipping
         test_training_decoder_clipped.c)
+endif()
+
+# Explicitly reviewed gradient-stability policy remains opt-in. Legacy plan
+# parsers and AdamW entry points still reject or ignore no extra settings.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-gradient-policy-plan-test
+        framework.ai.training.gradient_policy_plan
+        test_training_gradient_policy_plan.c)
+    target_compile_definitions(umicom-ai-training-gradient-policy-plan-test PRIVATE
+        UMI_AI_TEST_CLIPPED_PLAN_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/clipped-adamw-experiment.conf"
+        UMI_AI_TEST_CLIPPED_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt")
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-gradient-policy-identity-test
+        framework.ai.training.gradient_policy_identity
+        test_training_gradient_policy_identity.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-gradient-policy-file-test
+        framework.ai.training.gradient_policy_file
+        test_training_gradient_policy_file.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-adamw-clipped-experiment-resume-test
+        framework.ai.training.adamw_clipped_experiment_resume
+        test_training_adamw_clipped_experiment_resume.c)
+    target_compile_definitions(umicom-ai-training-adamw-clipped-experiment-resume-test PRIVATE
+        UMI_AI_TEST_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt")
 endif()

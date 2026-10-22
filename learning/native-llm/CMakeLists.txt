@@ -407,3 +407,18 @@ if(BUILD_TESTING)
     set_tests_properties(framework.ai.training.gradient_clipping_demo PROPERTIES
         LABELS "framework;ai;native-training;learning")
 endif()
+
+# The opt-in clipped AdamW laboratory retains the pre-existing training CLI;
+# the new command refuses resume without a byte-matched policy companion.
+# No output checkpoints are produced by default CTest registration.
+add_executable(umicom-native-llm-adamw-clipped-experiment
+    "${CMAKE_CURRENT_LIST_DIR}/train_adamw_clipped_experiment.c")
+target_link_libraries(umicom-native-llm-adamw-clipped-experiment PRIVATE
+    Umicom::AiTraining)
+target_compile_features(umicom-native-llm-adamw-clipped-experiment PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-adamw-clipped-experiment PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-adamw-clipped-experiment PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
