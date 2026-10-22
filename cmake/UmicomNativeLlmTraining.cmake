@@ -54,6 +54,9 @@ if(NOT TARGET umicom_ai_training)
         "${_umicom_ai_training_root}/src/ai/training/benchmark.c"
         # Bounded reviewed-suite parser: no scripts, compiler or source execution.
         "${_umicom_ai_training_root}/src/ai/training/benchmark_suite.c"
+        # Bind completion evidence to portable model bytes, ordered cases
+        # and observed score fields through the existing Framework SHA-256.
+        "${_umicom_ai_training_root}/src/ai/training/benchmark_evidence.c"
         # Hold-out scoring and identity evidence reuse the canonical decoder,
         # immutable source manifest, experiment plan and checkpoint codec.
         "${_umicom_ai_training_root}/src/ai/training/model_audit.c"
@@ -70,6 +73,14 @@ if(NOT TARGET umicom_ai_training)
         "${_umicom_ai_training_root}/src/ai/training/capacity_plan.c"
     )
     add_library(Umicom::AiTraining ALIAS umicom_ai_training)
+    # Reuse the canonical base SHA-256 owner when the full Framework build
+    # provides it. The isolated teaching project compiles the SAME source.
+    if(TARGET Umicom::base)
+        target_link_libraries(umicom_ai_training PRIVATE Umicom::base)
+    else()
+        target_sources(umicom_ai_training PRIVATE
+            "${_umicom_ai_training_root}/src/base/sha256.c")
+    endif()
     target_include_directories(umicom_ai_training PUBLIC
         "$<BUILD_INTERFACE:${_umicom_ai_training_root}/include>"
     )
@@ -618,4 +629,25 @@ if(BUILD_TESTING)
         test_training_benchmark_suite_file.c)
     target_compile_definitions(umicom-ai-training-benchmark-suite-file-test PRIVATE
         UMI_AI_TEST_BENCHMARK_SUITE_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/benchmark-reviewed.txt")
+endif()
+
+# Review SHA-256 identity, failure-atomic JSON publication and preserved
+# benchmark semantics. Tests never run compiled model output or scripts.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-benchmark-evidence-identity-test
+        framework.ai.training.benchmark_evidence_identity
+        test_training_benchmark_evidence_identity.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-benchmark-evidence-json-test
+        framework.ai.training.benchmark_evidence_json
+        test_training_benchmark_evidence_json.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-benchmark-evidence-rejections-test
+        framework.ai.training.benchmark_evidence_rejections
+        test_training_benchmark_evidence_rejections.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-benchmark-evidence-changes-test
+        framework.ai.training.benchmark_evidence_changes
+        test_training_benchmark_evidence_changes.c)
 endif()
