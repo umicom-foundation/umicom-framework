@@ -49,6 +49,11 @@ if(NOT TARGET umicom_ai_training)
         "${_umicom_ai_training_root}/src/ai/training/experiment_plan.c"
         # Native autoregressive generation composes the decoder and RNG.
         "${_umicom_ai_training_root}/src/ai/training/generation.c"
+        # Independent, byte-exact completion evidence reuses the saved model
+        # and the canonical native sampler; generated code is never executed.
+        "${_umicom_ai_training_root}/src/ai/training/benchmark.c"
+        # Bounded reviewed-suite parser: no scripts, compiler or source execution.
+        "${_umicom_ai_training_root}/src/ai/training/benchmark_suite.c"
         # Hold-out scoring and identity evidence reuse the canonical decoder,
         # immutable source manifest, experiment plan and checkpoint codec.
         "${_umicom_ai_training_root}/src/ai/training/model_audit.c"
@@ -574,4 +579,43 @@ if(BUILD_TESTING)
         test_training_adamw_microbatch_rejections.c)
     target_compile_definitions(umicom-ai-training-adamw-microbatch-resume-test PRIVATE
         UMI_AI_TEST_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt")
+endif()
+
+# Review byte completions without altering decoder weights or checkpoint state.
+# These tests do not claim C23 compilation or functional correctness.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-benchmark-score-test
+        framework.ai.training.benchmark_score
+        test_training_benchmark_score.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-benchmark-runner-test
+        framework.ai.training.benchmark_runner
+        test_training_benchmark_runner.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-benchmark-rejections-test
+        framework.ai.training.benchmark_rejections
+        test_training_benchmark_rejections.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-benchmark-reporting-test
+        framework.ai.training.benchmark_reporting
+        test_training_benchmark_reporting.c)
+endif()
+
+# Validate text-only reviewed completion suites and failure-atomic loading.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-benchmark-suite-test
+        framework.ai.training.benchmark_suite
+        test_training_benchmark_suite.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-benchmark-suite-rejections-test
+        framework.ai.training.benchmark_suite_rejections
+        test_training_benchmark_suite_rejections.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-benchmark-suite-file-test
+        framework.ai.training.benchmark_suite_file
+        test_training_benchmark_suite_file.c)
+    target_compile_definitions(umicom-ai-training-benchmark-suite-file-test PRIVATE
+        UMI_AI_TEST_BENCHMARK_SUITE_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/benchmark-reviewed.txt")
 endif()
