@@ -50,6 +50,10 @@ if(NOT TARGET umicom_ai_training)
         # Optional cryptographic source-snapshot lock. This hashes the exact
         # already-imported immutable corpus bytes; no second data loader.
         "${_umicom_ai_training_root}/src/ai/training/training_source_lock.c"
+        # Optional completed-bundle integrity marker: stream SHA-256 over
+        # the saved AdamW checkpoint and all three existing policy sidecars.
+        # The marker is strictly supplementary and is always verified on read.
+        "${_umicom_ai_training_root}/src/ai/training/training_publication.c"
         # Exact resume of combined decoder + AdamW moments. The existing
         # standalone decoder checkpoint remains byte-for-byte unchanged.
         "${_umicom_ai_training_root}/src/ai/training/optimizer_checkpoint.c"
@@ -758,4 +762,34 @@ if(BUILD_TESTING)
             UMI_AI_TEST_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt"
             UMI_AI_TEST_REORDERED_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest-reordered-for-run-lock.txt")
     endforeach()
+endif()
+
+# A native, read-only publication verifier is useful even when the model
+# training executable is quarantined. It does not bypass platform security,
+# decode models, validate training semantics or execute generated text.
+if(NOT TARGET umicom-native-llm-publication-verify)
+    add_executable(umicom-native-llm-publication-verify
+        "${_umicom_ai_training_root}/learning/native-llm/verify_training_publication.c")
+    target_link_libraries(umicom-native-llm-publication-verify PRIVATE
+        Umicom::AiTraining)
+    target_compile_features(umicom-native-llm-publication-verify PRIVATE c_std_23)
+    if(MSVC)
+        target_compile_options(umicom-native-llm-publication-verify PRIVATE /W4)
+    else()
+        target_compile_options(umicom-native-llm-publication-verify PRIVATE
+            -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    endif()
+endif()
+
+# The tests exercise actual file publication, independent byte mutation,
+# incomplete sidecars, interrupted staging and refusal to replace markers.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-publication-file-test
+        framework.ai.training.publication_file
+        test_training_publication_file.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-publication-rejections-test
+        framework.ai.training.publication_rejections
+        test_training_publication_rejections.c)
 endif()

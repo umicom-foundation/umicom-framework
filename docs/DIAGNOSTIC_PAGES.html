@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Publish retained diagnostic pages</title><style>body{font:17px/1.6 system-ui;max-width:950px;margin:32px auto;padding:0 24px;color:#183442}pre{padding:18px;background:#edf2f6;overflow:auto}li{margin:10px 0}</style></head><body>
+<h1>Publish retained diagnostic pages</h1>
+<p>A native list can run application callbacks while it removes or inserts a row. Those callbacks may close the window, replace its filters or change the diagnostic model. Use an owned page to keep displayed records stable while checking whether they still belong to the current view.</p>
+<ol><li>Link <code>Umicom::diagnostic_ui</code> and include <code>umicom/diagnostic_ui/page.h</code>. Keep the model alive during capture and validation.</li>
+<li>Initialize a <code>UmiDiagnosticQuery</code>. Set its filters, order and offset. A page accepts up to 300 rows; a zero limit requests 300. The normal query initializer requests 64 until you change it.</li>
+<li>Call <code>UmiDiagnosticPageCreate</code>. On success, read the summary and borrowed immutable rows. On failure, the output pointer is unchanged. Free the page exactly once when its last consumer finishes.</li>
+<li>Before and after a native callback, resolve the window's lifetime and compare the captured page with the current model and query. A non-OK validation result means the page cannot authorize actions. Schedule a fresh capture instead of continuing a partial publication.</li>
+<li>Track a separate host generation for filter edits. An edit away from and back to the same text still cancels work associated with the previous user intent. A page validates current values, not the history of edits.</li></ol>
+<pre><code>UmiDiagnosticPage *page = NULL;
+UmiDiagnosticQuery query;
+umi_diagnostic_query_init(&amp;query);
+query.sort = UMI_DIAGNOSTIC_SORT_SEQUENCE_DESCENDING;
+query.limit = UMI_DIAGNOSTIC_PAGE_LIMIT;
+UmiStatus status = UmiDiagnosticPageCreate(model, &amp;query, &amp;page);
+if (status == UMI_STATUS_OK) {
+    UmiDiagnosticPageSummary summary;
+    (void)UmiDiagnosticPageReadSummary(page, &amp;summary);
+    /* Prepare owned native rows before publishing them. */
+    for (size_t i = 0; i &lt; summary.count; ++i) {
+        const UmiDiagnosticSnapshot *item = UmiDiagnosticPageItem(page, i);
+        /* Copy the fields required by your presentation. */
+        (void)item;
+    }
+}
+UmiDiagnosticPageDestroy(page);</code></pre>
+<h2>Counts and recovery</h2>
+<p>The matching count follows the query. Active, resolved and severity totals describe the whole model; severity totals exclude resolved records. <code>has_more</code> reports additional matches after the captured rows. To read the next page, increase the offset by the number of returned rows and capture again. A changing model can change page boundaries.</p>
+<p>Malformed bounded filter strings and unknown sort values return <code>INVALID_ARGUMENT</code>. A limit above 300 returns <code>CAPACITY_EXCEEDED</code>. Allocation failure returns <code>OUT_OF_MEMORY</code>. Model changes during capture can cancel the read; do not treat a partial read as a completed page. No retry loop is performed internally.</p>
+<p>For GTK4, <code>UmiGtk4ListBoxPublish</code> checks a caller-supplied current-state callback around row changes. Retain its input widgets and invalidate old row actions first. Cancellation may leave a partial list, so only enable actions after the whole page and its host checks succeed. This is not a thread lock, a source-file permission check or proof that the underlying build passed.</p>
+</body></html>

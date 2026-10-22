@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Select retained test runs</title><style>body{font:17px/1.6 system-ui;max-width:900px;margin:32px auto;padding:0 24px;color:#183442}pre{padding:16px;background:#eef3f7;overflow:auto}li{margin:10px 0}</style></head><body>
+<h1>Select retained test runs</h1>
+<p>A test can have records from several executions. A session ID identifies one recorded execution; it is an exact string supplied by the test provider. Use Framework's run catalogue to let a person choose which execution to inspect before showing its text, source locations or export.</p>
+<ol><li>Obtain the result and output registries from the test-platform service. Keep all registry access on their owning thread.</li><li>Call <code>UmiTestEvidenceRunsCreate</code> with the exact test item ID. The immutable catalogue discovers named sessions from every retained record, including runs that have only output or only results.</li><li>Read its summary and iterate <code>UmiTestEvidenceRunsAt</code>. Show counts as records, not as tests passed. IDs are sorted as strings and do not imply a chronological order.</li><li>Pass the chosen ID to <code>UmiTestEvidenceRunsCapture</code>. A null or empty ID explicitly means all runs. This checks the original registry identities and revisions before capturing.</li><li>Use the same resulting evidence with the text, source-link and CSV services. Destroy the evidence and catalogue when finished.</li></ol>
+<pre><code>#include "umicom/test_platform/evidence_runs.h"
+
+UmiTestEvidenceRuns *runs = NULL;
+UmiTestEvidence *evidence = NULL;
+UmiStatus status = UmiTestEvidenceRunsCreate(results, output, "test.example", &amp;runs);
+if (status == UMI_STATUS_OK) {
+    /* selected_session_id comes from a catalogue row, or is NULL for all runs. */
+    status = UmiTestEvidenceRunsCapture(runs, results, output,
+        selected_session_id, &amp;evidence);
+}
+/* Inspect evidence only when status is OK. */
+UmiTestEvidenceDestroy(evidence);
+UmiTestEvidenceRunsDestroy(runs);
+</code></pre>
+<h2>When evidence changes</h2>
+<p><code>INVALID_STATE</code> means the catalogue no longer describes those live registries. Capture a new catalogue and let the person review the refreshed choices. <code>NOT_FOUND</code> means the named run is absent. Keep that choice visibly unavailable instead of silently displaying all runs. Native applications must also check their window and test selection after callbacks; a valid catalogue does not keep an application window alive.</p>
+<p>Rows without a session ID appear in the unspecified summary counts and in all-runs evidence. They are never attributed to a named session. Catalogue discovery uses all retained records, but evidence capture retains its existing limits of 32 results and 64 output records. Its summary discloses the matching totals. Neither catalogue counts nor missing results prove a pass; skipped, cancelled, timed-out and not-run outcomes keep their meanings.</p>
+<p>Captures are independent copies. Relative source paths still need an explicit working directory; choosing a run does not reconstruct an old filesystem, checkout or working directory. Compare its reported source location with the current project before opening it.</p>
+</body></html>

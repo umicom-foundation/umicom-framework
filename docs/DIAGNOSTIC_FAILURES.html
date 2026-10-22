@@ -29,4 +29,5 @@ UmiLogger logger = {report, NULL, "application-startup"};
 <h2>4. Investigate a Studio startup failure</h2>
 <ol><li>Launch Studio from a terminal and retain standard error with the rest of the process log.</li><li>Find the first <code>[Studio startup]</code> message. It identifies the failed operation, such as <code>window.titlebar</code> or <code>bootstrap.create</code>.</li><li>Read the following higher-level messages as context for that same failure. For example, a bootstrap failure can also prevent runtime attachment and workbench creation.</li><li>Inspect the named operation and its status before changing unrelated application settings. Rebuild the changed libraries and the application before repeating the same workflow.</li></ol>
 <p>These diagnostics describe initialization failures. They do not certify a completed build, successful tests, working broker connections or a release-ready application.</p>
+<p>For a native Problems list, follow <a href="DIAGNOSTIC_PAGES.html">retained diagnostic page ownership</a> when displaying these messages.</p>
 </body></html>

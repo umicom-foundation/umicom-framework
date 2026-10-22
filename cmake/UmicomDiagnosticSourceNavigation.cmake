@@ -49,3 +49,11 @@ foreach(case next previous all-missing missing-line dirty no-wrap invalid-base b
     set_tests_properties(framework.diagnostic_navigation.${case} PROPERTIES
         TIMEOUT 30 LABELS "framework;document;diagnostics;source;regression")
 endforeach()
+
+# Captured diagnostic pages remain owned across native model/filter callbacks.
+umicom_diagnostic_source_target(umicom-diagnostic-page-test tests/test_diagnostic_page.c Umicom::diagnostic_ui)
+foreach(case empty pagination offset beyond-end filter resolved severity-order summary model-change model-clear model-identity query-change query-equivalence invalid-text invalid-limit arguments)
+    add_test(NAME framework.diagnostic_page.${case} COMMAND umicom-diagnostic-page-test "${case}")
+    set_tests_properties(framework.diagnostic_page.${case} PROPERTIES
+        TIMEOUT 30 LABELS "framework;diagnostics;presentation;ownership;regression")
+endforeach()

@@ -21,6 +21,7 @@
 #include "umicom/ai/training/optimizer_checkpoint.h"
 #include "umicom/ai/training/training_run_lock.h"
 #include "umicom/ai/training/training_source_lock.h"
+#include "umicom/ai/training/training_publication.h"
 
 #include <inttypes.h>
 #include <stdint.h>
@@ -159,6 +160,7 @@ int main(int argc, char **argv)
     UmiAiTrainingRunLockInputs lockInputs;
     int strictRunLock = 0;
     int strictSourceLock = 0;
+    int publishEvidence = 0;
     UmiAiTrainingDataset *dataset = NULL;
     UmiAiTrainingDecoder *model = NULL, *checkpointModel = NULL;
     UmiAiTrainingAdamW *optimizer = NULL, *checkpointOptimizer = NULL;
@@ -168,11 +170,20 @@ int main(int argc, char **argv)
     char sidecar[UMI_CLIPPED_EXPERIMENT_PATH_MAX + 32U];
     char runLockPath[UMI_CLIPPED_EXPERIMENT_PATH_MAX + 32U];
     char sourceLockPath[UMI_CLIPPED_EXPERIMENT_PATH_MAX + 32U];
+    char publicationPath[UMI_CLIPPED_EXPERIMENT_PATH_MAX + 32U];
     float maximumGradientNorm = 0.0F;
     uint64_t scheduleSteps = 0U;
     UmiStatus status = UMI_STATUS_INVALID_ARGUMENT;
 
-    if (argc >= 4 && strcmp(argv[argc - 1], "--strict-source-lock") == 0) {
+    if (argc >= 4 && strcmp(argv[argc - 1], "--publish-evidence") == 0) {
+        /* The optional marker exists only for fully source-locked runs. A
+         * user explicitly chooses this mode; legacy CLI behaviour remains
+         * available and unchanged. */
+        publishEvidence = 1;
+        strictSourceLock = 1;
+        strictRunLock = 1;
+        --argc;
+    } else if (argc >= 4 && strcmp(argv[argc - 1], "--strict-source-lock") == 0) {
         /* Cryptographic source identity REQUIRES the earlier strict run lock;
          * neither the previous flags nor default behaviour is weakened. */
         strictSourceLock = 1;
@@ -184,12 +195,13 @@ int main(int argc, char **argv)
          * shapes and the old .clip-policy-only contract remain unchanged. */
         --argc;
     }
-    if (argc < 3 || argc > 5 || !ReadUnsigned(argv[2], &scheduleSteps) ||
+    if (argc < 3 || argc > 5 || (publishEvidence && argc < 4) ||
+        !ReadUnsigned(argv[2], &scheduleSteps) ||
         scheduleSteps > (uint64_t)UMI_AI_EXPERIMENT_MAX_STEPS) {
         fputs("usage: umicom-native-llm-adamw-clipped-experiment "
               "<reviewed-plan> <schedule-total-steps> "
               "[NEW-combined-checkpoint] [existing-combined-checkpoint] "
-              "[--strict-run-lock | --strict-source-lock]\n",
+              "[--strict-run-lock | --strict-source-lock | --publish-evidence]\n",
               stderr);
         return 2;
     }
@@ -268,6 +280,33 @@ int main(int argc, char **argv)
                 status = UMI_STATUS_ALREADY_EXISTS;
                 goto fail;
             }
+        }
+        if (publishEvidence) {
+            /* This is a convenience preflight, never a replacement for the
+             * Framework's atomic no-clobber marker publication. */
+            int n = snprintf(publicationPath, sizeof(publicationPath),
+                             "%s.publication", argv[3]);
+            if (n <= 0 || (size_t)n >= sizeof(publicationPath)) {
+                status = UMI_STATUS_CAPACITY_EXCEEDED;
+                goto fail;
+            }
+            existing = fopen(publicationPath, "rb");
+            if (existing != NULL) {
+                fclose(existing);
+                status = UMI_STATUS_ALREADY_EXISTS;
+                goto fail;
+            }
+        }
+    }
+    if (publishEvidence && argc == 5) {
+        /* A verified publication marker checks the four on-disk byte streams
+         * before even decoding the borrowed checkpoint. Existing strict
+         * policy/source verification below still checks their semantics. */
+        status = UmiAiTrainingPublicationVerifyFile(argv[4]);
+        if (status != UMI_STATUS_OK) {
+            fputs("training publication incomplete or changed; resume refused\n",
+                  stderr);
+            goto fail;
         }
     }
     if (argc == 5) {
@@ -400,6 +439,17 @@ int main(int argc, char **argv)
         if (strictSourceLock)
             printf("Cryptographic immutable source-snapshot lock: %s\n",
                    sourceLockPath);
+        if (publishEvidence) {
+            /* Publish the explicit completion marker LAST. An interrupted
+             * run cannot be treated as published merely because it created
+             * the checkpoint and a subset of its companion records. */
+            status = UmiAiTrainingPublicationSaveNewFile(argv[3]);
+            if (status != UMI_STATUS_OK) goto fail;
+            status = UmiAiTrainingPublicationVerifyFile(argv[3]);
+            if (status != UMI_STATUS_OK) goto fail;
+            printf("Four-file training publication verified: %s\n",
+                   publicationPath);
+        }
     }
     free(checkpointBytes);
     UmiAiTrainingAdamWDestroy(optimizer);
