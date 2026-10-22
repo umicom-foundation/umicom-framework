@@ -24,7 +24,11 @@ static UmiStatus AddSource(UmiDiagnosticModel *model, const char *id,
     if (strlen(path) >= sizeof item.uri) return UMI_STATUS_CAPACITY_EXCEEDED;
     strcpy(item.uri, path);
     item.line = line;
+/* A location-free finding must have both line and column unset; retain invalid fixture input for review. Retained for engineering review. */
+#if 0
     item.column = 4U;
+#endif
+    item.column = line == 0U ? 0U : 4U;
     return umi_diagnostic_model_upsert(model, &item);
 }
 

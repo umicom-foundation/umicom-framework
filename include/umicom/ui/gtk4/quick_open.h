@@ -10,6 +10,7 @@
 #define UMICOM_UI_GTK4_QUICK_OPEN_H
 #include <gtk/gtk.h>
 #include "umicom/platform/file_index.h"
+#include "umicom/document/navigation.h"
 #ifdef __cplusplus
 extern "C"
 {
@@ -39,6 +40,19 @@ extern "C"
  * immediately; idle work only reads the index and never opens a file. */
     UmiStatus UmiGtk4QuickOpenCreate(GtkWindow *parent, UmiGtk4QuickOpenRead read, UmiGtk4QuickOpenOpen open,
                                      gpointer userData, GDestroyNotify destroyData, GtkWindow **outWindow);
+    /** Opt-in source-position picker. Filename filters accept :line[:column],
+ * with one-based lines and UTF-8 byte columns. Quote a filter containing literal
+ * colons. Read and openAt receive the decoded filename filter, never the suffix.
+ * A valid captured position is borrowed during openAt; NULL means ordinary open.
+ * The host still validates selection and owns file opening and navigation.
+ * Ownership, cancellation and query limits match UmiGtk4QuickOpenCreate. The
+ * original constructor continues treating every character as a literal filter. */
+    typedef UmiStatus (*UmiGtk4QuickOpenOpenAt)(gpointer userData, const char *filter,
+        const UmiFileIndexPage *page, size_t position, const UmiFileIndexEntry *entry,
+        const UmiDocumentLocation *location);
+    UmiStatus UmiGtk4QuickOpenCreateAt(GtkWindow *parent, UmiGtk4QuickOpenRead read,
+        UmiGtk4QuickOpenOpenAt openAt, gpointer userData, GDestroyNotify destroyData,
+        GtkWindow **outWindow);
 #ifdef __cplusplus
 }
 #endif

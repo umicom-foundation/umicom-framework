@@ -18,6 +18,46 @@ static GTask *pendingTask;
 static GAsyncReadyCallback pendingCallback;
 static gpointer pendingContext;
 static unsigned starts;
+/* Inject native setup notifications without displaying a system chooser.
+ * The real dialog properties and real widgets retain their normal ownership. */
+typedef struct SetupProbe {
+    GtkWidget *window, *control, *entry, *button;
+    const char *scenario;
+    unsigned calls;
+} SetupProbe;
+static SetupProbe *setupProbe;
+static int completeInline;
+static void Complete(GFile *file);
+static void SetupAction(void)
+{
+    SetupProbe *probe = setupProbe;
+    if (probe == NULL || probe->calls != 0U) return;
+    ++probe->calls;
+    if (strstr(probe->scenario, "reenter") != NULL)
+        g_signal_emit_by_name(probe->button, "clicked");
+    else if (strstr(probe->scenario, "edit") != NULL)
+        gtk_editable_set_text(GTK_EDITABLE(probe->entry), "newer draft");
+    else if (strstr(probe->scenario, "hide") != NULL)
+        gtk_widget_set_visible(probe->control, FALSE);
+    else gtk_window_destroy(GTK_WINDOW(probe->window));
+}
+static void SetupNotify(GObject *object, GParamSpec *property, gpointer data)
+{
+    (void)object; (void)property; (void)data;
+    SetupAction();
+}
+static GtkFileDialog *FakeDialogNew(void)
+{
+    GtkFileDialog *dialog = gtk_file_dialog_new();
+    if (setupProbe != NULL) {
+        if (strstr(setupProbe->scenario, "construct-") != NULL) SetupAction();
+        else if (strstr(setupProbe->scenario, "title-") != NULL)
+            g_signal_connect(dialog, "notify::title", G_CALLBACK(SetupNotify), NULL);
+        else if (strstr(setupProbe->scenario, "seed-") != NULL)
+            g_signal_connect(dialog, "notify::initial-name", G_CALLBACK(SetupNotify), NULL);
+    }
+    return dialog;
+}
 static void FakeStart(GtkFileDialog *dialog, GtkWindow *parent, GCancellable *cancel,
     GAsyncReadyCallback callback, gpointer context)
 {
@@ -27,12 +67,14 @@ static void FakeStart(GtkFileDialog *dialog, GtkWindow *parent, GCancellable *ca
     g_task_set_check_cancellable(pendingTask, FALSE);
     pendingCallback = callback;
     pendingContext = context;
+    if (completeInline) Complete(NULL);
 }
 static GFile *FakeFinish(GtkFileDialog *dialog, GAsyncResult *result, GError **error)
 {
     (void)dialog;
     return g_task_propagate_pointer(G_TASK(result), error);
 }
+#define gtk_file_dialog_new FakeDialogNew
 #define gtk_file_dialog_open FakeStart
 #define gtk_file_dialog_save FakeStart
 #define gtk_file_dialog_select_folder FakeStart
@@ -40,6 +82,7 @@ static GFile *FakeFinish(GtkFileDialog *dialog, GAsyncResult *result, GError **e
 #define gtk_file_dialog_save_finish FakeFinish
 #define gtk_file_dialog_select_folder_finish FakeFinish
 #include "../../adapters/gtk4/path_picker_gtk4.c"
+#undef gtk_file_dialog_new
 #undef gtk_file_dialog_open
 #undef gtk_file_dialog_save
 #undef gtk_file_dialog_select_folder
@@ -85,6 +128,15 @@ static int CheckInitialLocation(const char *scenario)
         CHECK(UmiPathPickerGtk4SetInitialLocation(dialog, UMI_PATH_PICKER_NEW_FILE,
             selectedPath, folder, "unused.c") == UMI_STATUS_OK);
         CHECK(g_file_equal(gtk_file_dialog_get_initial_file(dialog), selectedFile));
+        /* Re-seeding the same file must remain observable and replace both fields. */
+        CHECK(UmiPathPickerGtk4SetInitialLocation(dialog, UMI_PATH_PICKER_NEW_FILE,
+            selectedPath, folder, "ignored.c") == UMI_STATUS_OK);
+        CHECK(g_file_equal(gtk_file_dialog_get_initial_file(dialog), selectedFile));
+        GFile *parent = g_file_get_parent(selectedFile);
+        char *basename = g_file_get_basename(selectedFile);
+        CHECK(g_file_equal(gtk_file_dialog_get_initial_folder(dialog), parent));
+        CHECK(g_strcmp0(gtk_file_dialog_get_initial_name(dialog), basename) == 0);
+        g_object_unref(parent); g_free(basename);
     } else if (strcmp(scenario, "seed-clear") == 0) {
         CHECK(UmiPathPickerGtk4SetInitialLocation(dialog, UMI_PATH_PICKER_EXISTING_FILE,
             "", "", "") == UMI_STATUS_OK);
@@ -116,6 +168,10 @@ static int CheckInitialLocation(const char *scenario)
             NULL, folder, NULL) == UMI_STATUS_OK);
         CHECK(g_file_equal(gtk_file_dialog_get_initial_folder(dialog), folderFile));
         CHECK(gtk_file_dialog_get_initial_name(dialog) == NULL);
+        CHECK(UmiPathPickerGtk4SetInitialLocation(dialog, UMI_PATH_PICKER_DIRECTORY,
+            folder, cwd, "ignored.c") == UMI_STATUS_OK);
+        CHECK(g_file_equal(gtk_file_dialog_get_initial_folder(dialog), folderFile));
+        CHECK(gtk_file_dialog_get_initial_name(dialog) == NULL);
     } else return 2;
     g_object_unref(dialog);
     g_object_unref(folderFile);
@@ -126,11 +182,45 @@ static int CheckInitialLocation(const char *scenario)
     return 0;
 }
 
+static int CheckSetup(const char *scenario)
+{
+    GtkWidget *entry = g_object_ref_sink(gtk_entry_new());
+    GtkWidget *control = g_object_ref_sink(UmiPathPickerGtk4Create(GTK_ENTRY(entry),
+        UMI_PATH_PICKER_NEW_FILE, "Choose a path", "report.csv"));
+    GtkWidget *window = g_object_ref_sink(gtk_window_new());
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
+    gtk_box_append(GTK_BOX(box), entry); gtk_box_append(GTK_BOX(box), control);
+    gtk_window_set_child(GTK_WINDOW(window), box);
+    gtk_window_present(GTK_WINDOW(window)); Drain();
+    CHECK(gtk_widget_get_mapped(control));
+    gtk_editable_set_text(GTK_EDITABLE(entry), "original draft");
+    GtkWidget *button = g_object_ref(gtk_widget_get_first_child(control));
+    SetupProbe probe = {window, control, entry, button, scenario, 0U};
+    setupProbe = &probe;
+    completeInline = strcmp(scenario, "setup-inline-complete") == 0;
+    g_signal_emit_by_name(button, "clicked");
+    setupProbe = NULL; completeInline = 0;
+    if (strstr(scenario, "reenter") != NULL) {
+        CHECK(probe.calls == 1U && starts == 1U && pendingTask != NULL);
+        Complete(NULL);
+    } else if (strcmp(scenario, "setup-inline-complete") == 0) {
+        CHECK(starts == 1U && pendingTask == NULL);
+    } else {
+        CHECK(probe.calls == 1U && starts == 0U && pendingTask == NULL);
+    }
+    CHECK(Picker(control)->pending == NULL);
+    CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(entry)),
+        strstr(scenario, "edit") != NULL ? "newer draft" : "original draft") == 0);
+    gtk_window_destroy(GTK_WINDOW(window)); g_object_unref(window);
+    g_object_unref(control); g_object_unref(button); g_object_unref(entry); Drain();
+    return 0;
+}
 int main(int argc, char **argv)
 {
     if (argc != 2) return 2;
     if (!gtk_init_check()) return 77;
     const char *scenario = argv[1];
+    if (strncmp(scenario, "setup-", 6U) == 0) return CheckSetup(scenario);
     if (strncmp(scenario, "seed-", 5U) == 0) return CheckInitialLocation(scenario);
     GtkWidget *entry = gtk_entry_new();
     g_object_ref_sink(entry);

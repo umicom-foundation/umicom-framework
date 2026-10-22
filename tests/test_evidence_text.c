@@ -11,7 +11,9 @@
 #include <string.h>
 #define CHECK(x) do { if (!(x)) { fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, #x); exit(1); } } while (0)
 static void Add(UmiTestPlatformResultRegistry *results, UmiTestPlatformOutputRegistry *output,
-    const char *id, const char *item, const char *session, unsigned sequence, unsigned outcome)
+    const char *id, const char *item, const char *session, unsigned sequence,
+    /* Outcomes use the signed public snapshot field, avoiding implicit narrowing. */
+    int outcome)
 {
     UmiTestPlatformResultSnapshot result = {0};
     snprintf(result.id, sizeof result.id, "%s", id);

@@ -24,10 +24,15 @@
  * identifies the last boundary reached. No fixture text or paths are logged. */
 static void TraceCancel(const char *scenario, const char *phase)
 {
+/* All review scenarios need timeout evidence; extend the existing cancellation-only markers. Retained for engineering review. */
+#if 0
     if (strcmp(scenario, "cancel") == 0) {
         fprintf(stderr, "Workspace cancel phase: %s\n", phase);
         fflush(stderr);
     }
+#endif
+    fprintf(stderr, "Workspace review [%s]: %s\n", scenario, phase);
+    fflush(stderr);
 }
 
 typedef struct Completion
@@ -205,6 +210,7 @@ int main(int argc, char **argv)
             known = 1;
     if (!known)
         return 2;
+    TraceCancel(name, "initialising GTK");
     if (!gtk_init_check())
         return 77;
     int failed = 0;
@@ -257,7 +263,9 @@ int main(int argc, char **argv)
         CHECK(dialog == NULL);
         goto unchanged;
     }
+    TraceCancel(name, "opening workspace review");
     CHECK(UmiGtk4AdapterReviewWorkspaceEdits(adapter, &model) == UMI_STATUS_OK && model == NULL);
+    TraceCancel(name, "workspace review opened");
     dialog = Review();
     CHECK(dialog != NULL && UmiGtk4AdapterReplacementReviewBusy(adapter));
     GtkWidget *button = Find(GTK_WIDGET(dialog), "document.workspace-edit.apply");
@@ -454,11 +462,17 @@ cleanup:
     umi_gtk4_adapter_destroy(adapter);
     TraceCancel(name, "adapter retired");
     umi_document_coordinator_destroy(documents);
+    TraceCancel(name, "document coordinator destroyed");
     umi_document_store_destroy(store);
+    TraceCancel(name, "document store destroyed");
     umi_ui_application_shell_destroy(shell);
+    TraceCancel(name, "application shell destroyed");
     umi_ui_workbench_destroy(workbench);
+    TraceCancel(name, "workbench destroyed");
     umi_command_registry_destroy(commands);
+    TraceCancel(name, "command registry destroyed");
     g_clear_object(&application);
+    TraceCancel(name, "application released");
     TraceCancel(name, "cleanup completed");
     return failed;
 }

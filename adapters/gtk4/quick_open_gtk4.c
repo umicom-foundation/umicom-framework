@@ -9,6 +9,7 @@
 #include "umicom/ui/gtk4/quick_open.h"
 #include "umicom/ui/gtk4/window_lifecycle.h"
 #include "umicom/ui/gtk4/list_publication.h"
+#include "umicom/document/quick_open_query.h"
 #include <string.h>
 #define QUICK_OPEN_PAGE_SIZE 64U
 typedef struct QuickOpenState
@@ -17,6 +18,9 @@ typedef struct QuickOpenState
     GtkWidget *query, *list, *summary, *openButton, *previous, *next;
     UmiGtk4QuickOpenRead read;
     UmiGtk4QuickOpenOpen open;
+    UmiGtk4QuickOpenOpenAt openAt;
+    UmiDocumentLocation location;
+    int hasLocation;
     gpointer data;
     GDestroyNotify destroy;
     UmiFileIndexEntry *entries;
@@ -164,7 +168,16 @@ static void QuickOpenOpenPosition(QuickOpenState *state, size_t position)
     UmiFileIndexPage *page = g_memdup2(&state->page, sizeof(*page));
     gchar *query = g_strdup(state->capturedQuery);
     state->busy = 1;
+/* Position-aware callers now receive a captured location with the same result generation. Retained for engineering review. */
+#if 0
     UmiStatus status = state->open(state->data, query, page, position, entry);
+#endif
+    UmiDocumentLocation location = state->location;
+    const int hasLocation = state->hasLocation;
+    UmiStatus status = state->openAt != NULL
+        ? state->openAt(state->data, query, page, position, entry, hasLocation ? &location : NULL)
+        : state->open(state->data, query, page, position, entry);
+
     g_free(query);
     g_free(page);
     g_free(entry);
@@ -348,9 +361,23 @@ static gboolean QuickOpenLoad(gpointer data)
     gchar *query = g_strdup(gtk_editable_get_text(GTK_EDITABLE(state->query)));
     UmiFileIndexEntry *entries = g_new0(UmiFileIndexEntry, QUICK_OPEN_PAGE_SIZE);
     UmiFileIndexPage page = {0};
+/* The opt-in picker separates source coordinates before asking the shared file index to filter. Retained for engineering review. */
+#if 0
     UmiStatus status = strlen(query) <= 1024U ? state->read(state->data, query, offset, revision, entries,
                                                             QUICK_OPEN_PAGE_SIZE, &page)
                                               : UMI_STATUS_INVALID_ARGUMENT;
+#endif
+    UmiQuickOpenQuery parsed = {0};
+    const char *filter = query;
+    UmiStatus status = strlen(query) <= UMI_QUICK_OPEN_QUERY_MAX
+        ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+    if (status == UMI_STATUS_OK && state->openAt != NULL) {
+        status = UmiQuickOpenQueryParse(query, strlen(query), &parsed);
+        filter = parsed.filter;
+    }
+    const int invalidQuery = status != UMI_STATUS_OK && state->openAt != NULL;
+    if (status == UMI_STATUS_OK)
+        status = state->read(state->data, filter, offset, revision, entries, QUICK_OPEN_PAGE_SIZE, &page);
     if (status == UMI_STATUS_OK && !QuickOpenPageValid(&page, entries, offset, revision))
         status = UMI_STATUS_INVALID_STATE;
     /* Build labels from complete copied records; never parse a displayed path
@@ -388,7 +415,13 @@ static gboolean QuickOpenLoad(gpointer data)
                 memcpy(state->entries, entries, page.count * sizeof(*entries));
                 state->page = page;
                 g_free(state->capturedQuery);
+/* Selection revalidation uses the indexed filter; the location is stored alongside its immutable page. Retained for engineering review. */
+#if 0
                 state->capturedQuery = g_strdup(query);
+#endif
+                state->capturedQuery = g_strdup(filter);
+                state->location = parsed.location;
+                state->hasLocation = parsed.has_location;
                 state->ready = 1;
                 gchar *text =
                     page.count != 0U
@@ -410,8 +443,17 @@ static gboolean QuickOpenLoad(gpointer data)
                                                 : NULL);
             }
         }
+/* Query syntax feedback now identifies the editable input without suggesting an unnecessary index refresh. Retained for engineering review. */
+#if 0
         else if (QuickOpenCurrent(state, generation))
             QuickOpenMessage(state, status);
+#endif
+        else if (QuickOpenCurrent(state, generation)) {
+            if (invalidQuery)
+                gtk_label_set_text(GTK_LABEL(state->summary),
+                    "Use a filename filter, optionally followed by :line or :line:column. Positions start at 1. Quote a filename containing colons.");
+            else QuickOpenMessage(state, status);
+        }
     }
     state->busy = 0;
     g_free(entries);
@@ -629,6 +671,8 @@ static int QuickOpenConstructionCurrent(QuickOpenState *state, GtkWindow *parent
 {
     return !state->closed && UmiGtk4WindowIsOpen(state->window) && UmiGtk4WindowIsOpen(parent);
 }
+/* Both public constructors now share one lifetime-safe construction path; position parsing is opt-in. Retained for engineering review. */
+#if 0
 UmiStatus UmiGtk4QuickOpenCreate(GtkWindow *parent, UmiGtk4QuickOpenRead read, UmiGtk4QuickOpenOpen open,
                                  gpointer userData, GDestroyNotify destroyData, GtkWindow **outWindow)
 {
@@ -727,4 +771,119 @@ done:
     }
     g_object_unref(parent);
     return status;
+}
+#endif
+static UmiStatus QuickOpenCreate(GtkWindow *parent, UmiGtk4QuickOpenRead read, UmiGtk4QuickOpenOpen open,
+                                 UmiGtk4QuickOpenOpenAt openAt,
+                                 gpointer userData, GDestroyNotify destroyData, GtkWindow **outWindow)
+{
+    if (outWindow == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    *outWindow = NULL;
+    if (!GTK_IS_WINDOW(parent) || !UmiGtk4WindowIsOpen(parent) || read == NULL || (open == NULL && openAt == NULL))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Window construction itself notifies the application toplevel model.
+     * Protect the parent before that boundary and transfer user data only once
+     * all native construction steps have kept both windows open. */
+    g_object_ref(parent);
+    GtkWindow *window = GTK_WINDOW(g_object_ref_sink(gtk_window_new()));
+    QuickOpenState *state = g_new0(QuickOpenState, 1);
+    state->window = window;
+    state->read = read;
+    state->open = open;
+    state->openAt = openAt;
+    state->data = userData;
+    state->destroy = NULL; /* Caller retains ownership on construction failure. */
+    state->entries = g_new0(UmiFileIndexEntry, QUICK_OPEN_PAGE_SIZE);
+    state->query = g_object_ref_sink(QuickOpenControl(gtk_entry_new(), "umicom-quick-open-query"));
+    state->list = g_object_ref_sink(QuickOpenControl(gtk_list_box_new(), "umicom-quick-open-results"));
+    state->summary = g_object_ref_sink(
+        QuickOpenControl(gtk_label_new("Reading indexed filenames…"), "umicom-quick-open-status"));
+    state->openButton = g_object_ref_sink(
+        QuickOpenControl(gtk_button_new_with_label("Open selected"), "umicom-quick-open-open"));
+    state->previous = g_object_ref_sink(
+        QuickOpenControl(gtk_button_new_with_label("Previous"), "umicom-quick-open-previous"));
+    state->next =
+        g_object_ref_sink(QuickOpenControl(gtk_button_new_with_label("Next"), "umicom-quick-open-next"));
+    GtkWidget *refresh = g_object_ref_sink(
+        QuickOpenControl(gtk_button_new_with_label("Refresh results"), "umicom-quick-open-refresh"));
+    GtkWidget *box = g_object_ref_sink(gtk_box_new(GTK_ORIENTATION_VERTICAL, 8));
+    GtkWidget *bar = g_object_ref_sink(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6));
+    GtkWidget *scroll = g_object_ref_sink(gtk_scrolled_window_new());
+    UmiStatus status = UMI_STATUS_CANCELLED;
+    g_object_set_data_full(G_OBJECT(window), "umicom-quick-open", state, QuickOpenFree);
+    (void)UmiGtk4WatchWindowClosed(window, G_OBJECT(window), QuickOpenRetire, state);
+    (void)UmiGtk4WatchWindowClosed(parent, G_OBJECT(window), QuickOpenParentClosed, state);
+    if (!QuickOpenConstructionCurrent(state, parent)) goto done;
+    gtk_window_set_title(window, "Quick Open");
+    if (!QuickOpenConstructionCurrent(state, parent)) goto done;
+    gtk_window_set_default_size(window, 680, 480);
+    if (!QuickOpenConstructionCurrent(state, parent)) goto done;
+    gtk_window_set_transient_for(window, parent);
+    if (!QuickOpenConstructionCurrent(state, parent)) goto done;
+    gtk_window_set_destroy_with_parent(window, TRUE);
+    if (!QuickOpenConstructionCurrent(state, parent)) goto done;
+    gtk_entry_set_max_length(GTK_ENTRY(state->query), 256);
+    gtk_entry_set_placeholder_text(GTK_ENTRY(state->query), openAt != NULL
+        ? "Filename or relative path:line:column" : "Filter indexed filenames or relative paths");
+    gtk_accessible_update_property(GTK_ACCESSIBLE(state->query), GTK_ACCESSIBLE_PROPERTY_LABEL,
+                                   "Find an indexed file", -1);
+    gtk_widget_set_tooltip_text(state->query, openAt != NULL
+        ? "Filter filenames, optionally followed by :line or :line:column. Quote filenames containing colons. Columns count UTF-8 bytes."
+        : "Literal path search; ASCII letters ignore case. Enter opens the selected visible result after filtering completes.");
+    gtk_list_box_set_selection_mode(GTK_LIST_BOX(state->list), GTK_SELECTION_SINGLE);
+    gtk_list_box_set_activate_on_single_click(GTK_LIST_BOX(state->list), FALSE);
+    gtk_label_set_wrap(GTK_LABEL(state->summary), TRUE);
+    gtk_label_set_xalign(GTK_LABEL(state->summary), 0.0F);
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_widget_set_vexpand(scroll, TRUE);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), state->list);
+    gtk_box_append(GTK_BOX(box), state->query);
+    gtk_box_append(GTK_BOX(box), state->summary);
+    gtk_box_append(GTK_BOX(box), scroll);
+    gtk_box_append(GTK_BOX(bar), state->previous);
+    gtk_box_append(GTK_BOX(bar), state->next);
+    gtk_box_append(GTK_BOX(bar), refresh);
+    gtk_box_append(GTK_BOX(bar), state->openButton);
+    gtk_box_append(GTK_BOX(box), bar);
+    gtk_window_set_child(window, box);
+    if (!QuickOpenConstructionCurrent(state, parent)) goto done;
+    g_signal_connect_object(state->query, "changed", G_CALLBACK(QuickOpenChanged), window, 0);
+    g_signal_connect_object(state->query, "activate", G_CALLBACK(QuickOpenChosen), window, 0);
+    g_signal_connect_object(state->list, "row-selected", G_CALLBACK(QuickOpenSelected), window, 0);
+    g_signal_connect_object(state->list, "row-activated", G_CALLBACK(QuickOpenActivated), window, 0);
+    g_signal_connect_object(state->openButton, "clicked", G_CALLBACK(QuickOpenChosen), window, 0);
+    g_signal_connect_object(state->previous, "clicked", G_CALLBACK(QuickOpenPage), window, 0);
+    g_signal_connect_object(state->next, "clicked", G_CALLBACK(QuickOpenPage), window, 0);
+    g_signal_connect_object(refresh, "clicked", G_CALLBACK(QuickOpenRefresh), window, 0);
+    GtkEventController *keys = gtk_event_controller_key_new();
+    gtk_event_controller_set_name(keys, "umicom-quick-open-keys");
+    gtk_event_controller_set_propagation_phase(keys, GTK_PHASE_CAPTURE);
+    g_signal_connect_object(keys, "key-pressed", G_CALLBACK(QuickOpenKey), window, 0);
+    gtk_widget_add_controller(GTK_WIDGET(window), keys);
+    if (!QuickOpenConstructionCurrent(state, parent)) goto done;
+    QuickOpenRequest(state, 0U, 0U);
+    if (!QuickOpenConstructionCurrent(state, parent)) goto done;
+    state->destroy = destroyData;
+    *outWindow = window;
+    status = UMI_STATUS_OK;
+done:
+    g_object_unref(refresh); g_object_unref(scroll); g_object_unref(bar); g_object_unref(box);
+    if (status != UMI_STATUS_OK) {
+        gtk_window_destroy(window);
+        g_object_unref(window);
+    }
+    g_object_unref(parent);
+    return status;
+}
+
+UmiStatus UmiGtk4QuickOpenCreate(GtkWindow *parent, UmiGtk4QuickOpenRead read, UmiGtk4QuickOpenOpen open,
+    gpointer userData, GDestroyNotify destroyData, GtkWindow **outWindow)
+{
+    return QuickOpenCreate(parent, read, open, NULL, userData, destroyData, outWindow);
+}
+UmiStatus UmiGtk4QuickOpenCreateAt(GtkWindow *parent, UmiGtk4QuickOpenRead read, UmiGtk4QuickOpenOpenAt openAt,
+    gpointer userData, GDestroyNotify destroyData, GtkWindow **outWindow)
+{
+    return QuickOpenCreate(parent, read, NULL, openAt, userData, destroyData, outWindow);
 }

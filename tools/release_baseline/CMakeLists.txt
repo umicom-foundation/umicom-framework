@@ -34,6 +34,9 @@ endif()
 # This remains an explicitly focused dependency subset, not the full Core SDK.
 add_library(umicom_base STATIC "${UMICOM_FRAMEWORK_SOURCE}/src/base/status.c")
 add_library(Umicom::base ALIAS umicom_base)
+# Inventory fingerprints use the same SHA-256 implementation as the full SDK.
+# Keep it with its base owner so exported static consumers receive the definition.
+target_sources(umicom_base PRIVATE "${UMICOM_FRAMEWORK_SOURCE}/src/base/sha256.c")
 add_library(umicom_distribution STATIC "${UMICOM_FRAMEWORK_SOURCE}/src/distribution/runtime/release_gate.c")
 add_library(Umicom::distribution ALIAS umicom_distribution)
 target_link_libraries(umicom_distribution PUBLIC Umicom::base)

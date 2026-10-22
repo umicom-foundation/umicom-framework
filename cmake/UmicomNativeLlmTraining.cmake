@@ -44,6 +44,9 @@ if(NOT TARGET umicom_ai_training)
         # Reviewed experiment policy records bind exact clipping settings to
         # immutable AdamW checkpoint bytes using the existing base SHA-256.
         "${_umicom_ai_training_root}/src/ai/training/gradient_policy.c"
+        # Independent continuation identity preserves the original checkpoint and
+        # clipping record, adding strict opt-in dataset/schedule/AdamW binding.
+        "${_umicom_ai_training_root}/src/ai/training/training_run_lock.c"
         # Exact resume of combined decoder + AdamW moments. The existing
         # standalone decoder checkpoint remains byte-for-byte unchanged.
         "${_umicom_ai_training_root}/src/ai/training/optimizer_checkpoint.c"
@@ -700,4 +703,31 @@ if(BUILD_TESTING)
         test_training_adamw_clipped_experiment_resume.c)
     target_compile_definitions(umicom-ai-training-adamw-clipped-experiment-resume-test PRIVATE
         UMI_AI_TEST_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt")
+endif()
+
+# The opt-in run lock protects exact checkpoint continuation against changed
+# source catalogue order, optimiser hyperparameters, seeds or LR horizon.
+# The on-disk regression exercises real checkpoint read/write and maths;
+# it must NOT be replaced with mocks in the official Framework suite.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-run-lock-identity-test
+        framework.ai.training.run_lock_identity
+        test_training_run_lock_identity.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-run-lock-file-test
+        framework.ai.training.run_lock_file
+        test_training_run_lock_file.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-run-lock-disk-resume-test
+        framework.ai.training.run_lock_disk_resume
+        test_training_run_lock_disk_resume.c)
+    foreach(_run_lock_target IN ITEMS
+        umicom-ai-training-run-lock-identity-test
+        umicom-ai-training-run-lock-file-test
+        umicom-ai-training-run-lock-disk-resume-test)
+        target_compile_definitions(${_run_lock_target} PRIVATE
+            UMI_AI_TEST_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt"
+            UMI_AI_TEST_REORDERED_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest-reordered-for-run-lock.txt")
+    endforeach()
 endif()

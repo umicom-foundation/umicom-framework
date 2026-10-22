@@ -52,22 +52,41 @@ int main(int argc, char **argv)
         expected = UMI_STATUS_INVALID_ARGUMENT;
         expected_text = "NAME=VALUE";
     } else if (strcmp(mode, "arguments") == 0) {
+/* An unmatched quote returns the parser-specific status; argument syntax remains rejected. Retained for engineering review. */
+#if 0
         strcpy(profile->run_arguments, "'private-fixture-value");
         expected = UMI_STATUS_INVALID_ARGUMENT;
+#endif
+        strcpy(profile->run_arguments, "'private-fixture-value");
+        expected = UMI_STATUS_PARSE_ERROR;
         expected_text = "check quotes";
     } else {
         CHECK(strcmp(mode, "ready") == 0 || strcmp(mode, "buffer") == 0);
     }
+    /* Compare object bytes, including malformed fields. Semantic profile
+     * equality deliberately rejects invalid profiles and cannot prove immutability. */
+/* Capture every input byte so the read-only review is checked even for rejected values. Retained for engineering review. */
+#if 0
     *before = *profile;
+#endif
+    memcpy(before, profile, sizeof *before);
     char reason[512];
     memset(reason, 'x', sizeof reason);
     CHECK(UmiBuildRunCurrentReview(profile, reason, sizeof reason) == expected);
     CHECK(memchr(reason, '\0', sizeof reason) != NULL);
     CHECK(strstr(reason, expected_text) != NULL);
     CHECK(strstr(reason, "private-fixture-value") == NULL);
+/* Semantic equality validates profiles; malformed input is instead checked for exact byte preservation. Retained for engineering review. */
+#if 0
     CHECK(umi_build_profile_equal(profile, before));
+#endif
+    CHECK(memcmp(profile, before, sizeof *profile) == 0);
     CHECK(UmiBuildRunCurrentReview(profile, NULL, 0U) == expected);
+/* Semantic equality validates profiles; malformed input is instead checked for exact byte preservation. Retained for engineering review. */
+#if 0
     CHECK(umi_build_profile_equal(profile, before));
+#endif
+    CHECK(memcmp(profile, before, sizeof *profile) == 0);
     /* The review never edits the selected file, even when its contents cannot
      * be executed. Profile arguments and environment values stay out of feedback. */
     char *file_text = NULL;

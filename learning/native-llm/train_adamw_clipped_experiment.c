@@ -19,6 +19,7 @@
 #include "umicom/ai/training/experiment_plan.h"
 #include "umicom/ai/training/gradient_policy.h"
 #include "umicom/ai/training/optimizer_checkpoint.h"
+#include "umicom/ai/training/training_run_lock.h"
 
 #include <inttypes.h>
 #include <stdint.h>
@@ -105,6 +106,27 @@ static UmiStatus CompanionPath(const char *checkpointPath,
     return UMI_STATUS_OK;
 }
 
+/* Optional stronger continuation evidence: the established command line
+ * remains untouched unless the user explicitly supplies this final flag.
+ * The added run lock binds the dataset catalogue and original training
+ * schedule, while retaining the independently checked .clip-policy record. */
+static UmiStatus RunLockPath(const char *checkpointPath,
+                             char *outPath, size_t capacity)
+{
+    const char suffix[] = ".training-lock";
+    size_t pathLength, suffixLength = sizeof(suffix) - 1U;
+    if (checkpointPath == NULL || checkpointPath[0] == '\0' ||
+        outPath == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    pathLength = strlen(checkpointPath);
+    if (pathLength >= UMI_CLIPPED_EXPERIMENT_PATH_MAX ||
+        pathLength > SIZE_MAX - suffixLength - 1U ||
+        pathLength + suffixLength + 1U > capacity)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    memcpy(outPath, checkpointPath, pathLength);
+    memcpy(outPath + pathLength, suffix, suffixLength + 1U);
+    return UMI_STATUS_OK;
+}
+
 int main(int argc, char **argv)
 {
     UmiAiTrainingExperimentConfig plan;
@@ -114,6 +136,8 @@ int main(int argc, char **argv)
     UmiAiTrainingExperimentResult report;
     UmiAiTrainingGradientClipReport lastClip = {0};
     UmiAiTrainingGradientPolicy policy;
+    UmiAiTrainingRunLockInputs lockInputs;
+    int strictRunLock = 0;
     UmiAiTrainingDataset *dataset = NULL;
     UmiAiTrainingDecoder *model = NULL, *checkpointModel = NULL;
     UmiAiTrainingAdamW *optimizer = NULL, *checkpointOptimizer = NULL;
@@ -121,15 +145,23 @@ int main(int argc, char **argv)
     size_t checkpointByteCount = 0U, microbatchSequences;
     char manifest[UMI_CLIPPED_EXPERIMENT_PATH_MAX];
     char sidecar[UMI_CLIPPED_EXPERIMENT_PATH_MAX + 32U];
+    char runLockPath[UMI_CLIPPED_EXPERIMENT_PATH_MAX + 32U];
     float maximumGradientNorm = 0.0F;
     uint64_t scheduleSteps = 0U;
     UmiStatus status = UMI_STATUS_INVALID_ARGUMENT;
 
+    if (argc >= 4 && strcmp(argv[argc - 1], "--strict-run-lock") == 0) {
+        strictRunLock = 1;
+        /* Only this opt-in trailing argument is consumed. Earlier invocation
+         * shapes and the old .clip-policy-only contract remain unchanged. */
+        --argc;
+    }
     if (argc < 3 || argc > 5 || !ReadUnsigned(argv[2], &scheduleSteps) ||
         scheduleSteps > (uint64_t)UMI_AI_EXPERIMENT_MAX_STEPS) {
         fputs("usage: umicom-native-llm-adamw-clipped-experiment "
               "<reviewed-plan> <schedule-total-steps> "
-              "[NEW-combined-checkpoint] [existing-combined-checkpoint]\n",
+              "[NEW-combined-checkpoint] [existing-combined-checkpoint] "
+              "[--strict-run-lock]\n",
               stderr);
         return 2;
     }
@@ -188,6 +220,16 @@ int main(int argc, char **argv)
             status = UMI_STATUS_ALREADY_EXISTS;
             goto fail;
         }
+        if (strictRunLock) {
+            status = RunLockPath(argv[3], runLockPath, sizeof(runLockPath));
+            if (status != UMI_STATUS_OK) goto fail;
+            existing = fopen(runLockPath, "rb");
+            if (existing != NULL) {
+                fclose(existing);
+                status = UMI_STATUS_ALREADY_EXISTS;
+                goto fail;
+            }
+        }
     }
     if (argc == 5) {
         /* Verify provenance record before ANY optimisation, including a
@@ -215,6 +257,28 @@ int main(int argc, char **argv)
     }
     status = UmiAiTrainingDatasetLoadManifest(manifest, &dataset);
     if (status != UMI_STATUS_OK) goto fail;
+    lockInputs = (UmiAiTrainingRunLockInputs){
+        dataset, &plan, &optimiserConfig, &schedule, &policy};
+    if (strictRunLock && argc == 5) {
+        /* Existing checkpoints from the historical clipped laboratory have
+         * no .training-lock. Fail closed in strict mode: review and explicitly
+         * start a new strict experiment rather than inventing provenance. */
+        status = RunLockPath(argv[4], runLockPath, sizeof(runLockPath));
+        if (status != UMI_STATUS_OK) goto fail;
+        status = EncodePair(checkpointModel, checkpointOptimizer,
+                            &checkpointBytes, &checkpointByteCount);
+        if (status != UMI_STATUS_OK) goto fail;
+        status = UmiAiTrainingRunLockVerifyFile(
+            runLockPath, checkpointBytes, checkpointByteCount, &lockInputs);
+        free(checkpointBytes);
+        checkpointBytes = NULL;
+        checkpointByteCount = 0U;
+        if (status != UMI_STATUS_OK) {
+            fputs("strict run-lock missing or mismatched; resume refused\n",
+                  stderr);
+            goto fail;
+        }
+    }
     if (argc == 5) {
         status = UmiAiTrainingExperimentResumeAdamWClipped(
             dataset, &plan, &optimiserConfig, &schedule,
@@ -253,7 +317,17 @@ int main(int argc, char **argv)
         status = UmiAiTrainingGradientPolicySaveNewFile(
             sidecar, checkpointBytes, checkpointByteCount, &policy);
         if (status != UMI_STATUS_OK) goto fail;
+        if (strictRunLock) {
+            status = RunLockPath(argv[3], runLockPath, sizeof(runLockPath));
+            if (status != UMI_STATUS_OK) goto fail;
+            status = UmiAiTrainingRunLockSaveNewFile(
+                runLockPath, checkpointBytes, checkpointByteCount, &lockInputs);
+            if (status != UMI_STATUS_OK) goto fail;
+        }
         printf("New combined checkpoint and clipping policy: %s\n", argv[3]);
+        if (strictRunLock)
+            printf("Additional dataset/schedule/AdamW run lock: %s\n",
+                   runLockPath);
     }
     free(checkpointBytes);
     UmiAiTrainingAdamWDestroy(optimizer);

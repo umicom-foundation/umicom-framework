@@ -9,7 +9,8 @@ if(BUILD_TESTING)
         umicom_register_validation_target(umicom-quick-open-native-test)
     endif()
     foreach(case initial filter empty next previous stale-page refresh stale-open explicit-open query-invalidates retained-row retained-entry parent-close close-during-read changed-during-read coalesced malformed-count malformed-root read-failure literal-label escape destroy-once invalid-create
-        construct-parent-close construct-self-close title-close child-close request-close request-reenter summary-close row-remove-close row-remove-query foreign-row failed-open-close)
+        construct-parent-close construct-self-close title-close child-close request-close request-reenter summary-close row-remove-close row-remove-query foreign-row failed-open-close
+        location-open location-default location-plain location-invalid location-recover location-reenter location-page location-quoted location-legacy)
         add_test(NAME framework.developer.quick_open.gtk4.${case} COMMAND umicom-quick-open-native-test ${case})
         set_tests_properties(framework.developer.quick_open.gtk4.${case} PROPERTIES TIMEOUT 45 SKIP_RETURN_CODE 77 LABELS "framework;developer;quick-open;gtk4;ownership;regression")
     endforeach()

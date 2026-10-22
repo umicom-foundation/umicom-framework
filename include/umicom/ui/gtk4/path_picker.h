@@ -47,6 +47,10 @@ UmiStatus UmiPathPickerGtk4SetInitialLocation(GtkFileDialog *dialog,
  * Open, Export or Build action remains responsible for validation and execution.
  * Closing or hiding the control cancels its pending chooser. A late result is
  * ignored if the entry changed, moved to another window, or was destroyed.
+ * The same checks apply during dialog setup: native property observers may
+ * close the host or edit its path before dispatch. Such a request is cancelled
+ * without starting a chooser. Repeated Browse during setup starts at most one
+ * request; completion owns that request once native dispatch begins.
  * Remote URIs and paths exceeding the entry's character limit are rejected
  * without truncating the previous text. Applications may add stricter byte limits.
  */

@@ -1,0 +1,6 @@
+UMICOM-AI-DATASET-1
+# The same approved documents in a different sampling order.
+# This order deliberately differs from manifest.txt to test identity.
+train train/notes.c
+train train/account.c
+eval eval/payment.c

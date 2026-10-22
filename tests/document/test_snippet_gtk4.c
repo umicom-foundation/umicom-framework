@@ -403,10 +403,16 @@ cleanup:
     umi_gtk4_adapter_destroy(adapter);
     UmiTestReviewCheckpoint(mode, "adapter destroyed");
     umi_document_coordinator_destroy(documents);
+    UmiTestReviewCheckpoint(mode, "document coordinator destroyed");
     umi_document_store_destroy(store);
+    UmiTestReviewCheckpoint(mode, "document store destroyed");
     umi_ui_application_shell_destroy(shell);
+    UmiTestReviewCheckpoint(mode, "application shell destroyed");
     umi_ui_workbench_destroy(workbench);
+    UmiTestReviewCheckpoint(mode, "workbench destroyed");
     umi_command_registry_destroy(commands);
+    UmiTestReviewCheckpoint(mode, "command registry destroyed");
     g_clear_object(&application);
+    UmiTestReviewCheckpoint(mode, "application released");
     return failed;
 }

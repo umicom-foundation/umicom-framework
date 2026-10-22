@@ -46,3 +46,12 @@ add_dependencies(umicom-terminal-directory-test umicom-terminal-output-producer)
 foreach(case relative missing capacity alias closed running independent)
     umicom_terminal_execution_case(directory umicom-terminal-directory-test "${case}")
 endforeach()
+
+# Selection checks do not execute a process or depend on the producer fixture.
+umicom_terminal_execution_target(umicom-terminal-selection-test test_selection.c)
+foreach(case stable switch-return recycle directory closed empty transcript malformed arguments)
+    add_test(NAME framework.terminal_selection.${case}
+        COMMAND umicom-terminal-selection-test "${case}")
+    set_tests_properties(framework.terminal_selection.${case} PROPERTIES
+        TIMEOUT 30 LABELS "framework;terminal;selection;ownership;regression")
+endforeach()

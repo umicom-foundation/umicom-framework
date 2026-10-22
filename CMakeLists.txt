@@ -1293,6 +1293,7 @@ umicom_apply_sanitizers(umicom_terminal)
 add_library(umicom_terminal_ui STATIC
     src/terminal_ui/view_internal.c
     src/terminal_ui/controller.c
+    src/terminal_ui/selection.c
     src/terminal_ui/terminal_view.c
     src/terminal_ui/process_view.c
     src/terminal_ui/task_view.c
@@ -5440,6 +5441,7 @@ include(cmake/UmicomOperationalStateQualification.cmake)
 include(cmake/UmicomTradingExecutionQualification.cmake)
 include(cmake/UmicomDocumentSaveQualification.cmake)
 include(cmake/UmicomEditorWorkflowTests.cmake)
+include(cmake/UmicomQuickOpenQueryChecks.cmake)
 include(cmake/UmicomEditorTextPositions.cmake)
 include(cmake/UmicomDocumentReplacement.cmake)
 include(cmake/UmicomDocumentSourceRequests.cmake)

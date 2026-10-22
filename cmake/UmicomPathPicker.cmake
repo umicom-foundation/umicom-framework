@@ -19,7 +19,8 @@ if(FALSE)
         foreach(case save open folder edited long close hidden remote cancel)
         endforeach()
 endif()
-        foreach(case save open folder edited long close hidden remote cancel seed-folder seed-file seed-clear seed-invalid)
+        foreach(case save open folder edited long close hidden remote cancel seed-folder seed-file seed-clear seed-invalid
+            setup-construct-close setup-construct-reenter setup-title-close setup-title-hide setup-title-edit setup-title-reenter setup-seed-close setup-seed-edit setup-inline-complete)
             add_test(NAME framework.path_picker.${case} COMMAND umicom-path-picker-test ${case})
             set_tests_properties(framework.path_picker.${case} PROPERTIES
                 TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;gtk4;files;ownership")

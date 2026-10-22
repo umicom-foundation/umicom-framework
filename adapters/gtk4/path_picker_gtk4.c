@@ -51,6 +51,8 @@ UmiStatus UmiPathPickerGtk4SetInitialLocation(GtkFileDialog *dialog,
 #endif
 
 
+/* Explicit folder and basename publication replaces the metadata-reading convenience setter, retaining selected-path precedence. Retained for engineering review. */
+#if 0
 UmiStatus UmiPathPickerGtk4SetInitialLocation(GtkFileDialog *dialog,
     UmiPathPickerMode mode, const char *selectedPath,
     const char *fallbackFolder, const char *suggestedName)
@@ -77,6 +79,49 @@ UmiStatus UmiPathPickerGtk4SetInitialLocation(GtkFileDialog *dialog,
         gtk_file_dialog_set_initial_folder(dialog, folder);
         gtk_file_dialog_set_initial_name(dialog, name);
     }
+    g_object_thaw_notify(G_OBJECT(dialog));
+    g_object_unref(dialog);
+    g_clear_object(&selected);
+    g_clear_object(&folder);
+    g_free(name);
+    return UMI_STATUS_OK;
+}
+
+#endif
+UmiStatus UmiPathPickerGtk4SetInitialLocation(GtkFileDialog *dialog,
+    UmiPathPickerMode mode, const char *selectedPath,
+    const char *fallbackFolder, const char *suggestedName)
+{
+    if (!GTK_IS_FILE_DIALOG(dialog) || mode < UMI_PATH_PICKER_EXISTING_FILE || mode > UMI_PATH_PICKER_DIRECTORY)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (selectedPath != NULL && selectedPath[0] == '\0') selectedPath = NULL;
+    if (fallbackFolder != NULL && fallbackFolder[0] == '\0') fallbackFolder = NULL;
+    if (suggestedName != NULL && suggestedName[0] == '\0') suggestedName = NULL;
+    if ((selectedPath != NULL && (!g_utf8_validate(selectedPath, -1, NULL) || !umi_path_is_absolute(selectedPath))) ||
+        (fallbackFolder != NULL && (!g_utf8_validate(fallbackFolder, -1, NULL) || !umi_path_is_absolute(fallbackFolder))) ||
+        (suggestedName != NULL && (!g_utf8_validate(suggestedName, -1, NULL) ||
+            strpbrk(suggestedName, "/\\") != NULL || strcmp(suggestedName, ".") == 0 || strcmp(suggestedName, "..") == 0)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    GFile *selected = selectedPath != NULL ? g_file_new_for_path(selectedPath) : NULL;
+    GFile *folder = NULL;
+    char *name = NULL;
+    /* Derive chooser fields lexically. GTK's convenience file setter can query
+     * filesystem metadata and has had stale cached-file behavior; composing the
+     * folder and basename keeps this API free of I/O and repeated seeds exact. */
+    if (selected != NULL) {
+        folder = mode == UMI_PATH_PICKER_DIRECTORY ? g_object_ref(selected) : g_file_get_parent(selected);
+        if (mode != UMI_PATH_PICKER_DIRECTORY && folder != NULL)
+            name = g_file_get_basename(selected);
+        if (folder == NULL) folder = g_object_ref(selected);
+    } else {
+        folder = fallbackFolder != NULL ? g_file_new_for_path(fallbackFolder) : NULL;
+        name = mode == UMI_PATH_PICKER_NEW_FILE ? g_strdup(suggestedName) : NULL;
+    }
+    g_object_ref(dialog);
+    g_object_freeze_notify(G_OBJECT(dialog));
+    gtk_file_dialog_set_initial_file(dialog, NULL);
+    gtk_file_dialog_set_initial_folder(dialog, folder);
+    gtk_file_dialog_set_initial_name(dialog, name);
     g_object_thaw_notify(G_OBJECT(dialog));
     g_object_unref(dialog);
     g_clear_object(&selected);
@@ -199,6 +244,8 @@ static void Selected(GObject *source, GAsyncResult *result, gpointer data)
     g_clear_object(&control);
     FreeRequest(request);
 }
+/* The shared chooser now retains its native owners and rechecks the captured request at every observable setup step. Retained for engineering review. */
+#if 0
 static void Browse(GtkButton *button, gpointer data)
 {
     (void)button;
@@ -249,6 +296,75 @@ static void Browse(GtkButton *button, gpointer data)
         gtk_file_dialog_select_folder(dialog, GTK_WINDOW(root), request->cancel, Selected, request);
     g_object_unref(dialog);
     g_object_unref(entry);
+}
+#endif
+/* Construction may notify code that closes, reparents or edits the host.
+ * Strong local references protect memory; this predicate separately protects
+ * the right to start a chooser for the captured field and unchanged draft. */
+static gboolean RequestStillCurrent(GtkWidget *control, GtkEntry *entry,
+    GtkWindow *window, const PathPickRequest *request)
+{
+    PathPicker *picker = Picker(control);
+    return picker != NULL && picker->pending == request &&
+        !g_cancellable_is_cancelled(request->cancel) &&
+        gtk_widget_get_mapped(control) && gtk_widget_get_mapped(GTK_WIDGET(entry)) &&
+        gtk_widget_get_root(control) == GTK_ROOT(window) &&
+        gtk_widget_get_root(GTK_WIDGET(entry)) == GTK_ROOT(window) &&
+        strcmp(request->draft, gtk_editable_get_text(GTK_EDITABLE(entry))) == 0;
+}
+static void Browse(GtkButton *button, gpointer data)
+{
+    (void)button;
+    GtkWidget *control = data;
+    PathPicker *picker = Picker(control);
+    if (picker == NULL || picker->pending != NULL || !gtk_widget_get_mapped(control)) return;
+    g_object_ref(control);
+    GtkEntry *entry = g_weak_ref_get(&picker->entry);
+    GtkRoot *root = gtk_widget_get_root(control);
+    if (entry == NULL || !GTK_IS_WINDOW(root) ||
+        gtk_widget_get_root(GTK_WIDGET(entry)) != root ||
+        !gtk_widget_get_mapped(GTK_WIDGET(entry))) {
+        g_clear_object(&entry); g_object_unref(control);
+        return;
+    }
+    GtkWindow *window = g_object_ref(GTK_WINDOW(root));
+    char *title = g_strdup(picker->title), *suggestedName = g_strdup(picker->suggestedName);
+    PathPickRequest *request = g_new0(PathPickRequest, 1);
+    request->mode = picker->mode;
+    request->draft = g_strdup(gtk_editable_get_text(GTK_EDITABLE(entry)));
+    request->cancel = g_cancellable_new();
+    g_weak_ref_init(&request->control, control);
+    g_weak_ref_init(&request->entry, entry);
+    g_weak_ref_init(&request->window, window);
+    picker->pending = request; /* Reserve before native construction can reenter. */
+    GtkFileDialog *dialog = gtk_file_dialog_new();
+    if (!RequestStillCurrent(control, entry, window, request)) goto abandoned;
+    gtk_file_dialog_set_title(dialog, title);
+    if (!RequestStillCurrent(control, entry, window, request)) goto abandoned;
+    gtk_file_dialog_set_modal(dialog, TRUE);
+    if (!RequestStillCurrent(control, entry, window, request)) goto abandoned;
+    /* A relative entry remains a draft, not permission to resolve the process
+     * directory. Seeding copies the chosen location without reading a file. */
+    (void)UmiPathPickerGtk4SetInitialLocation(dialog, request->mode,
+        g_path_is_absolute(request->draft) ? request->draft : NULL, NULL, suggestedName);
+    if (!RequestStillCurrent(control, entry, window, request)) goto abandoned;
+    /* Completion owns request from this point, even if a test/native backend
+     * invokes it synchronously. Do not inspect request after dispatch returns. */
+    if (request->mode == UMI_PATH_PICKER_EXISTING_FILE)
+        gtk_file_dialog_open(dialog, window, request->cancel, Selected, request);
+    else if (request->mode == UMI_PATH_PICKER_NEW_FILE)
+        gtk_file_dialog_save(dialog, window, request->cancel, Selected, request);
+    else
+        gtk_file_dialog_select_folder(dialog, window, request->cancel, Selected, request);
+    goto finished;
+abandoned:
+    if (Picker(control)->pending == request) Picker(control)->pending = NULL;
+    g_cancellable_cancel(request->cancel);
+    FreeRequest(request); /* No asynchronous operation was started. */
+finished:
+    g_object_unref(dialog);
+    g_free(title); g_free(suggestedName);
+    g_object_unref(window); g_object_unref(entry); g_object_unref(control);
 }
 GtkWidget *UmiPathPickerGtk4Create(GtkEntry *entry, UmiPathPickerMode mode,
     const char *title, const char *suggestedName)

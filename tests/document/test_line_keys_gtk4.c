@@ -7,6 +7,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/document_commands.h"
 #include "umicom/document/commands.h"
+/* This fixture uses native GTK types directly; the adapter API is opaque. */
+#include <gtk/gtk.h>
 #include <stdio.h>
 #include <string.h>
 #define CHECK(x) do { if (!(x)) { fprintf(stderr, "%d: %s\n", __LINE__, #x); failed = 1; goto cleanup; } } while (0)

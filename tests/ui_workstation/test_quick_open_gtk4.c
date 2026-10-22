@@ -28,6 +28,9 @@ typedef struct Host
     unsigned reads, opens, destroyed;
     int closeRead, changeRead, badCount, badRoot, failRead, failOpen, literal;
     char opened[UMI_PATH_CAPACITY];
+    char openedFilter[1025];
+    UmiDocumentLocation openedLocation;
+    int receivedLocation, reenterOpen, literalColon;
 } Host;
 static void Destroy(gpointer data) { ++((Host *)data)->destroyed; }
 static GtkWidget *Find(GtkWidget *root, const char *id)
@@ -85,7 +88,9 @@ static UmiStatus Read(gpointer data, const char *query, size_t offset, uint64_t 
     for (size_t i = 0U; i < 70U; ++i)
     {
         char filename[64];
-        if (host->literal && i == 0U)
+        if (host->literalColon && i == 0U)
+            (void)snprintf(filename, sizeof(filename), "notes:12");
+        else if (host->literal && i == 0U)
             (void)snprintf(filename, sizeof(filename), "caf\xc3\xa9 <b>.c");
         else
             (void)snprintf(filename, sizeof(filename), "file-%03zu.c", i);
@@ -243,6 +248,92 @@ cleanup:
     return failed;
 }
 
+/* Opt-in coordinates must follow the exact captured page, including when a
+ * callback edits the query synchronously. Legacy callers keep literal colons. */
+static UmiStatus OpenAt(gpointer data, const char *filter, const UmiFileIndexPage *page,
+    size_t position, const UmiFileIndexEntry *entry, const UmiDocumentLocation *location)
+{
+    Host *host = data;
+    UmiStatus status = Open(data, filter, page, position, entry);
+    if (status != UMI_STATUS_OK) return status;
+    host->receivedLocation = location != NULL;
+    if (location != NULL) host->openedLocation = *location;
+    (void)snprintf(host->openedFilter, sizeof host->openedFilter, "%s", filter);
+    if (host->reenterOpen) {
+        gtk_editable_set_text(GTK_EDITABLE(host->query), "file-068:99:8");
+        if (location == NULL || location->line != host->openedLocation.line ||
+            location->column != host->openedLocation.column) return UMI_STATUS_INVALID_STATE;
+    }
+    return UMI_STATUS_OK;
+}
+static int PositionCase(const char *mode)
+{
+    int failed = 0;
+    Host host = {0}; host.revision = 1U;
+    host.literalColon = strcmp(mode, "location-quoted") == 0 || strcmp(mode, "location-legacy") == 0;
+    GtkWindow *parent = GTK_WINDOW(g_object_ref_sink(gtk_window_new()));
+    if (strcmp(mode, "location-legacy") == 0)
+        CHECK(UmiGtk4QuickOpenCreate(parent, Read, Open, &host, Destroy, &host.dialog) == UMI_STATUS_OK);
+    else
+        CHECK(UmiGtk4QuickOpenCreateAt(parent, Read, OpenAt, &host, Destroy, &host.dialog) == UMI_STATUS_OK);
+    host.query = Find(GTK_WIDGET(host.dialog), "umicom-quick-open-query");
+    GtkWidget *open = Find(GTK_WIDGET(host.dialog), "umicom-quick-open-open");
+    GtkWidget *next = Find(GTK_WIDGET(host.dialog), "umicom-quick-open-next");
+    GtkWidget *list = Find(GTK_WIDGET(host.dialog), "umicom-quick-open-results");
+    CHECK(host.query != NULL && open != NULL && next != NULL && list != NULL);
+    Pump();
+    const char *query = "file-069:12:5";
+    if (strcmp(mode, "location-default") == 0) query = "file-069:12";
+    if (strcmp(mode, "location-plain") == 0) query = "file-069";
+    if (strcmp(mode, "location-page") == 0) query = "file:12:5";
+    if (strcmp(mode, "location-quoted") == 0) query = "\"notes:12\":12:5";
+    if (strcmp(mode, "location-legacy") == 0) query = "notes:12";
+    gtk_editable_set_text(GTK_EDITABLE(host.query), query);
+    Pump();
+    CHECK(gtk_widget_get_sensitive(open));
+    if (strcmp(mode, "location-invalid") == 0 || strcmp(mode, "location-recover") == 0) {
+        unsigned reads = host.reads;
+        gtk_editable_set_text(GTK_EDITABLE(host.query), "file-069:");
+        g_signal_emit_by_name(open, "clicked"); /* Retired before idle filtering. */
+        CHECK(host.opens == 0U);
+        Pump();
+        CHECK(host.reads == reads && Rows(list) == 0U && !gtk_widget_get_sensitive(open));
+        if (strcmp(mode, "location-invalid") == 0) goto cleanup;
+        gtk_editable_set_text(GTK_EDITABLE(host.query), "file-069:12:5");
+        Pump(); CHECK(gtk_widget_get_sensitive(open));
+    }
+    if (strcmp(mode, "location-page") == 0) {
+        CHECK(gtk_widget_get_sensitive(next));
+        g_signal_emit_by_name(next, "clicked"); Pump();
+        CHECK(Rows(list) == 6U && gtk_widget_get_sensitive(open));
+    }
+    host.reenterOpen = strcmp(mode, "location-reenter") == 0;
+    g_signal_emit_by_name(open, "clicked");
+    CHECK(host.opens == 1U);
+    if (strcmp(mode, "location-legacy") == 0) {
+        CHECK(strstr(host.opened, "notes:12") != NULL && !host.receivedLocation);
+    } else {
+        CHECK(host.receivedLocation == (strcmp(mode, "location-plain") != 0));
+        if (host.receivedLocation)
+            CHECK(host.openedLocation.line == 12U && host.openedLocation.column ==
+                (strcmp(mode, "location-default") == 0 ? 1U : 5U));
+        CHECK(strcmp(host.openedFilter, host.literalColon ? "notes:12" :
+            (strcmp(mode, "location-page") == 0 ? "file" : "file-069")) == 0);
+        CHECK(strstr(host.opened, host.literalColon ? "notes:12" :
+            (strcmp(mode, "location-page") == 0 ? "file-064.c" : "file-069.c")) != NULL);
+    }
+    CHECK(UmiGtk4WindowIsOpen(host.dialog) == host.reenterOpen);
+    if (host.reenterOpen) {
+        Pump(); CHECK(gtk_widget_get_sensitive(open)); host.reenterOpen = 0;
+        g_signal_emit_by_name(open, "clicked");
+        CHECK(host.opens == 2U && host.openedLocation.line == 99U && host.openedLocation.column == 8U);
+    }
+cleanup:
+    if (host.dialog != NULL) { gtk_window_destroy(host.dialog); g_object_unref(host.dialog); }
+    gtk_window_destroy(parent); g_object_unref(parent); Pump();
+    if (host.destroyed != 1U) failed = 1;
+    return failed;
+}
 int main(int argc, char **argv)
 {
     if (argc != 2)
@@ -270,6 +361,7 @@ int main(int argc, char **argv)
                                             "escape",
                                             "destroy-once",
                                             "invalid-create",
+        "location-open", "location-default", "location-plain", "location-invalid", "location-recover", "location-reenter", "location-page", "location-quoted", "location-legacy",
         "construct-parent-close", "construct-self-close", "title-close", "child-close", "request-close", "request-reenter", "summary-close", "row-remove-close", "row-remove-query", "foreign-row", "failed-open-close"};
     int known = 0;
     for (size_t i = 0U; i < sizeof(cases) / sizeof(cases[0]); ++i)
@@ -279,6 +371,7 @@ int main(int argc, char **argv)
         return 2;
     if (!gtk_init_check())
         return 77;
+    if (strncmp(name, "location-", 9U) == 0) return PositionCase(name);
     const char *boundaryCases[] = {"construct-parent-close", "construct-self-close", "title-close", "child-close", "request-close", "request-reenter", "summary-close", "row-remove-close", "row-remove-query", "foreign-row", "failed-open-close"};
     for (size_t i = 0U; i < sizeof boundaryCases / sizeof boundaryCases[0]; ++i)
         if (strcmp(name, boundaryCases[i]) == 0) return QuickBoundaryCase(name);
@@ -300,6 +393,10 @@ int main(int argc, char **argv)
               UMI_STATUS_INVALID_ARGUMENT);
         CHECK(UmiGtk4QuickOpenCreate(parent, Read, Open, &host, Destroy, NULL) ==
               UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(UmiGtk4QuickOpenCreateAt(parent, Read, NULL, &host, Destroy, &invalid) ==
+              UMI_STATUS_INVALID_ARGUMENT && invalid == NULL);
+        CHECK(UmiGtk4QuickOpenCreateAt(parent, NULL, OpenAt, &host, Destroy, &invalid) ==
+              UMI_STATUS_INVALID_ARGUMENT && invalid == NULL);
         CHECK(host.destroyed == 0U);
         goto cleanup;
     }

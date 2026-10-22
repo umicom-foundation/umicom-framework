@@ -12,6 +12,7 @@
 #include "umicom/platform/filesystem.h"
 #include "umicom/platform/local_replace.h"
 #include <gtk/gtk.h>
+#include "../test_runtime/review_checkpoint.h"
 #include <stdio.h>
 #include <string.h>
 #define CHECK(c)                                                                                             \
@@ -172,6 +173,7 @@ int main(int argc, char **argv)
             known = 1;
     if (!known)
         return 2;
+    UmiTestReviewCheckpoint(mode, "initialising GTK");
     if (!gtk_init_check())
         return 77;
     int failed = 0;
@@ -231,7 +233,9 @@ int main(int argc, char **argv)
         CHECK(Review() == NULL);
         goto inspect;
     }
+    UmiTestReviewCheckpoint(mode, "opening review");
     CHECK(UmiGtk4AdapterReviewSnippetWithSettings(adapter, "SnippetTest", directory) == UMI_STATUS_OK);
+    UmiTestReviewCheckpoint(mode, "review opened");
     dialog = Review();
     CHECK(dialog != NULL);
     GtkWidget *body = Find(GTK_WIDGET(dialog), "document.snippet.template"),
@@ -256,6 +260,7 @@ int main(int argc, char **argv)
         char large[129];
         memset(large, 'x', 128U);
         large[128] = '\0';
+    UmiTestReviewCheckpoint(mode, "editing invalid template name");
         gtk_editable_set_text(GTK_EDITABLE(name), strcmp(mode, "blank-name") == 0 ? "" : large);
         g_signal_emit_by_name(save, "clicked");
         CHECK(g_object_get_data(G_OBJECT(dialog), "umicom-snippet-storage-pending") == NULL);
@@ -368,10 +373,12 @@ int main(int argc, char **argv)
         }
     }
 inspect:
+    UmiTestReviewCheckpoint(mode, "inspecting unchanged document");
     CHECK(UmiUiDocumentViewModelCopyText(views, active.view_id, &output, &output_bytes) == UMI_STATUS_OK);
     const char *expected = strcmp(mode, "load-apply") == 0 ? "saved-savedsource" : "source";
     CHECK(output_bytes == strlen(expected) && strcmp(output, expected) == 0);
 cleanup:
+    UmiTestReviewCheckpoint(mode, "cleanup begins");
     if (observer != 0U)
         g_signal_handler_disconnect(observed, observer);
     if (adapter != NULL)
@@ -389,11 +396,18 @@ cleanup:
     g_free(directory);
     UmiUiDocumentViewModelFreeText(output);
     umi_gtk4_adapter_destroy(adapter);
+    UmiTestReviewCheckpoint(mode, "adapter destroyed");
     umi_document_coordinator_destroy(documents);
+    UmiTestReviewCheckpoint(mode, "document coordinator destroyed");
     umi_document_store_destroy(store);
+    UmiTestReviewCheckpoint(mode, "document store destroyed");
     umi_ui_application_shell_destroy(shell);
+    UmiTestReviewCheckpoint(mode, "application shell destroyed");
     umi_ui_workbench_destroy(workbench);
+    UmiTestReviewCheckpoint(mode, "workbench destroyed");
     umi_command_registry_destroy(commands);
+    UmiTestReviewCheckpoint(mode, "command registry destroyed");
     g_clear_object(&application);
+    UmiTestReviewCheckpoint(mode, "application released");
     return failed;
 }

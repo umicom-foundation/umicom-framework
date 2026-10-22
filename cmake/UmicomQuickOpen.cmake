@@ -13,6 +13,8 @@ function(umicom_attach_quick_open)
     # here as well as in the root composition, so include order is immaterial.
     include("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/UmicomListPublication.cmake")
     target_sources(umicom_ui_gtk4 PRIVATE "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../adapters/gtk4/quick_open_gtk4.c")
+    # Position parsing is owned by the document service, not by an application.
+    target_link_libraries(umicom_ui_gtk4 PRIVATE Umicom::document)
     if(BUILD_TESTING)
         # The selection test uses GLib directly. Enabling the GTK4 adapter does
         # not guarantee that an imported target named PkgConfig::GLIB exists.
