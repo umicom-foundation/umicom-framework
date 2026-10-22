@@ -19,6 +19,7 @@
 #include "umicom/ai/training/experiment_adamw.h"
 #include "umicom/ai/training/optimizer_checkpoint.h"
 #include "umicom/ai/training/dataset_manifest.h"
+#include "umicom/ai/training/gradient_accumulation.h"
 #include "optimizer_internal.h"
 
 #include <math.h>
@@ -109,6 +110,7 @@ static UmiStatus RunInternal(
     const UmiAiTrainingLearningRateSchedule *schedule,
     const UmiAiTrainingDecoder *checkpointModel,
     const UmiAiTrainingAdamW *checkpointOptimizer,
+    size_t microbatchSequences,
     UmiAiTrainingExperimentObserver observer,
     void *userData,
     UmiAiTrainingDecoder **outModel,
@@ -138,6 +140,9 @@ static UmiStatus RunInternal(
     status = UmiAiTrainingExperimentAdamWValidate(
         config, optimizerOptions, schedule);
     if (status != UMI_STATUS_OK) return status;
+    if (microbatchSequences != 0U &&
+        microbatchSequences > (size_t)config->batchSequences)
+        return UMI_STATUS_INVALID_ARGUMENT;
 
     /* Validate metadata before allocation; none of these calls execute data. */
     status = UmiAiTrainingDatasetInspect(dataset, &report.dataset);
@@ -208,9 +213,17 @@ static UmiStatus RunInternal(
         status = UmiAiTrainingLearningRateForStep(
             schedule, step, &learningRate);
         if (status != UMI_STATUS_OK) goto fail;
-        status = UmiAiTrainingDecoderTrainAdamWStep(
-            model, optimizer, inputs, targets, count,
-            learningRate, &progress.lastTrainingLoss);
+        if (microbatchSequences == 0U) {
+            /* Preserve the existing full-batch AdamW path for callers that
+             * do not explicitly request microbatch training. */
+            status = UmiAiTrainingDecoderTrainAdamWStep(
+                model, optimizer, inputs, targets, count,
+                learningRate, &progress.lastTrainingLoss);
+        } else {
+            status = UmiAiTrainingDecoderTrainAdamWAccumulated(
+                model, optimizer, inputs, targets, count,
+                microbatchSequences, learningRate, &progress.lastTrainingLoss);
+        }
         if (status != UMI_STATUS_OK) goto fail;
         if (!isfinite(progress.lastTrainingLoss) ||
             progress.lastTrainingLoss < 0.0F) {
@@ -271,7 +284,7 @@ UmiStatus UmiAiTrainingExperimentRunAdamW(
     UmiAiTrainingExperimentResult *outResult)
 {
     return RunInternal(dataset, config, optimizerOptions, schedule, NULL, NULL,
-                       observer, userData, outModel, outOptimizer, outResult);
+                       0U, observer, userData, outModel, outOptimizer, outResult);
 }
 
 UmiStatus UmiAiTrainingExperimentResumeAdamW(
@@ -290,6 +303,49 @@ UmiStatus UmiAiTrainingExperimentResumeAdamW(
     if (checkpointModel == NULL || checkpointOptimizer == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     return RunInternal(dataset, config, optimizerOptions, schedule,
-                       checkpointModel, checkpointOptimizer, observer,
+                       checkpointModel, checkpointOptimizer, 0U, observer,
                        userData, outModel, outOptimizer, outResult);
+}
+
+/* Effective-batch AdamW experiments preserve the published full-batch APIs.
+ * The same deterministic source draw and absolute-step learning-rate schedule
+ * are used regardless of how the gradients are partitioned across graphs. */
+UmiStatus UmiAiTrainingExperimentRunAdamWAccumulated(
+    const UmiAiTrainingDataset *dataset,
+    const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingAdamWConfig *optimizerOptions,
+    const UmiAiTrainingLearningRateSchedule *schedule,
+    size_t microbatchSequences,
+    UmiAiTrainingExperimentObserver observer,
+    void *userData,
+    UmiAiTrainingDecoder **outModel,
+    UmiAiTrainingAdamW **outOptimizer,
+    UmiAiTrainingExperimentResult *outResult)
+{
+    if (microbatchSequences == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    return RunInternal(dataset, config, optimizerOptions, schedule, NULL, NULL,
+                       microbatchSequences, observer, userData,
+                       outModel, outOptimizer, outResult);
+}
+
+UmiStatus UmiAiTrainingExperimentResumeAdamWAccumulated(
+    const UmiAiTrainingDataset *dataset,
+    const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingAdamWConfig *optimizerOptions,
+    const UmiAiTrainingLearningRateSchedule *schedule,
+    const UmiAiTrainingDecoder *checkpointModel,
+    const UmiAiTrainingAdamW *checkpointOptimizer,
+    size_t microbatchSequences,
+    UmiAiTrainingExperimentObserver observer,
+    void *userData,
+    UmiAiTrainingDecoder **outModel,
+    UmiAiTrainingAdamW **outOptimizer,
+    UmiAiTrainingExperimentResult *outResult)
+{
+    if (checkpointModel == NULL || checkpointOptimizer == NULL ||
+        microbatchSequences == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    return RunInternal(dataset, config, optimizerOptions, schedule,
+                       checkpointModel, checkpointOptimizer,
+                       microbatchSequences, observer, userData,
+                       outModel, outOptimizer, outResult);
 }

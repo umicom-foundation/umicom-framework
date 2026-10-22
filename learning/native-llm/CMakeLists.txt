@@ -368,3 +368,23 @@ if(BUILD_TESTING)
     set_tests_properties(framework.ai.training.adamw_experiment_demo PROPERTIES
         LABELS "framework;ai;native-training;learning")
 endif()
+
+# The new educational CLI remains a thin native C23 consumer. All training,
+# source-sampling and optimiser maths is Framework-owned and reusable.
+add_executable(umicom-native-llm-adamw-microbatch
+    "${CMAKE_CURRENT_LIST_DIR}/train_adamw_microbatches.c")
+target_link_libraries(umicom-native-llm-adamw-microbatch PRIVATE Umicom::AiTraining)
+target_compile_features(umicom-native-llm-adamw-microbatch PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-adamw-microbatch PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-adamw-microbatch PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME framework.ai.training.adamw_microbatch_demo
+             COMMAND umicom-native-llm-adamw-microbatch
+                     "${CMAKE_CURRENT_LIST_DIR}/fixtures/manifest.txt")
+    set_tests_properties(framework.ai.training.adamw_microbatch_demo PROPERTIES
+        LABELS "framework;ai;native-training;learning")
+endif()

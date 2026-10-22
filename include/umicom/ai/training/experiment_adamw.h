@@ -78,6 +78,38 @@ UmiStatus UmiAiTrainingExperimentResumeAdamW(
     UmiAiTrainingAdamW **outOptimizer,
     UmiAiTrainingExperimentResult *outResult);
 
+/* Opt-in effective-batch AdamW experiments. The approved dataset sampler
+ * still owns every source window; each step processes its configured
+ * batchSequences in chunks of 1..batchSequences. Exactly one optimiser update
+ * occurs per effective batch. Existing direct-batch RunAdamW APIs are intact.
+ * For byte-identical resume, the source bytes, seeds, microbatch count, AdamW
+ * options and absolute learning-rate schedule must be unchanged. */
+UmiStatus UmiAiTrainingExperimentRunAdamWAccumulated(
+    const UmiAiTrainingDataset *dataset,
+    const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingAdamWConfig *optimizerOptions,
+    const UmiAiTrainingLearningRateSchedule *schedule,
+    size_t microbatchSequences,
+    UmiAiTrainingExperimentObserver observer,
+    void *userData,
+    UmiAiTrainingDecoder **outModel,
+    UmiAiTrainingAdamW **outOptimizer,
+    UmiAiTrainingExperimentResult *outResult);
+
+UmiStatus UmiAiTrainingExperimentResumeAdamWAccumulated(
+    const UmiAiTrainingDataset *dataset,
+    const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingAdamWConfig *optimizerOptions,
+    const UmiAiTrainingLearningRateSchedule *schedule,
+    const UmiAiTrainingDecoder *checkpointModel,
+    const UmiAiTrainingAdamW *checkpointOptimizer,
+    size_t microbatchSequences,
+    UmiAiTrainingExperimentObserver observer,
+    void *userData,
+    UmiAiTrainingDecoder **outModel,
+    UmiAiTrainingAdamW **outOptimizer,
+    UmiAiTrainingExperimentResult *outResult);
+
 #ifdef __cplusplus
 }
 #endif

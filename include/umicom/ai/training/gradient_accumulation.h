@@ -30,6 +30,7 @@
 #include <stddef.h>
 #include "umicom/ai/training/decoder.h"
 #include "umicom/ai/training/tape.h"
+#include "umicom/ai/training/optimizer.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -76,6 +77,23 @@ UmiStatus UmiAiTrainingSgdStepWithGradients(
  * and portable checkpoint format. */
 UmiStatus UmiAiTrainingDecoderTrainAccumulated(
     UmiAiTrainingDecoder *model,
+    const size_t *inputIds,
+    const size_t *targetIds,
+    size_t tokenCount,
+    size_t microbatchSequences,
+    float learningRate,
+    float *outLoss);
+
+/* Train one effective batch with AdamW using the Framework's canonical
+ * token-weighted microbatch gradient reducer. A single AdamW update changes
+ * both model parameters and first/second moment state. On failure the model's
+ * parameters, optimiser state, completed steps and *outLoss are preserved.
+ * The AdamW optimiser must be bound to this decoder and outlive the call.
+ * Combined decoder/AdamW checkpoints remain compatible and permit exact
+ * continuation under an unchanged dataset, schedule and microbatch policy. */
+UmiStatus UmiAiTrainingDecoderTrainAdamWAccumulated(
+    UmiAiTrainingDecoder *model,
+    struct UmiAiTrainingAdamW *optimizer,
     const size_t *inputIds,
     const size_t *targetIds,
     size_t tokenCount,

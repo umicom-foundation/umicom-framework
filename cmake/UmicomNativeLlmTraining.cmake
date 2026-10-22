@@ -556,3 +556,22 @@ if(BUILD_TESTING)
             UMI_AI_TEST_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt")
     endforeach()
 endif()
+
+# Accumulated AdamW shares the canonical decoder's microbatch gradient reducer.
+# Keep all previously registered experiments and Windows security tests intact.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-adamw-microbatch-parity-test
+        framework.ai.training.adamw_microbatch_parity
+        test_training_adamw_microbatch.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-adamw-microbatch-resume-test
+        framework.ai.training.adamw_microbatch_resume
+        test_training_adamw_microbatch_resume.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-adamw-microbatch-rejections-test
+        framework.ai.training.adamw_microbatch_rejections
+        test_training_adamw_microbatch_rejections.c)
+    target_compile_definitions(umicom-ai-training-adamw-microbatch-resume-test PRIVATE
+        UMI_AI_TEST_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt")
+endif()

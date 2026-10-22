@@ -370,6 +370,179 @@ UmiStatus UmiAiTrainingDecoderPredictNext(UmiAiTrainingDecoder *model,
  * A single tape-owned, transactionally validated SGD update follows. Existing
  * one-batch TrainStep, checkpoint encoding, and prediction stay unchanged.
  *---------------------------------------------------------------------------*/
+/* Shared, read-only effective-batch gradient reduction for SGD and AdamW.
+ * Keep the original SGD-only reduction below as an engineering reference,
+ * rather than maintaining divergent active gradient-weighting algorithms.
+ * The caller owns the returned float storage until it invokes one optimiser
+ * transaction. On failure no parameter or optimiser state is updated. */
+static UmiStatus CollectAccumulatedGradients(
+    UmiAiTrainingDecoder *model,
+    const size_t *inputIds,
+    const size_t *targetIds,
+    size_t tokenCount,
+    size_t microbatchSequences,
+    float **outStorage,
+    const float **outGradientPointers,
+    float *outMeanLoss)
+{
+    size_t counts[UMI_DECODER_PARAMETER_COUNT] = {0};
+    size_t offsets[UMI_DECODER_PARAMETER_COUNT] = {0};
+    double *accumulated = NULL;
+    float *reduced = NULL;
+    float *scratch = NULL;
+    size_t totalElements = 0U;
+    size_t context, microbatchTokens;
+    double weightedLoss = 0.0;
+    UmiStatus status = UMI_STATUS_OK;
+
+    if (model == NULL || inputIds == NULL || targetIds == NULL ||
+        outStorage == NULL || outGradientPointers == NULL ||
+        outMeanLoss == NULL || tokenCount == 0U ||
+        tokenCount > UMI_AI_TRAINING_MAX_ACCUMULATED_TOKENS ||
+        microbatchSequences == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    context = (size_t)model->config.contextLength;
+    if (context == 0U || tokenCount % context != 0U ||
+        microbatchSequences > UMI_AI_TRAINING_MAX_ACCUMULATED_TOKENS / context)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    microbatchTokens = microbatchSequences * context;
+
+    for (size_t i = 0U; i < tokenCount; ++i) {
+        if (inputIds[i] >= (size_t)model->config.vocabularySize ||
+            targetIds[i] >= (size_t)model->config.vocabularySize)
+            return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    size_t firstCount = tokenCount < microbatchTokens ? tokenCount : microbatchTokens;
+    status = ValidateInputs(model, inputIds, targetIds, firstCount);
+    if (status != UMI_STATUS_OK) return status;
+
+    for (size_t p = 0U; p < UMI_DECODER_PARAMETER_COUNT; ++p) {
+        size_t rows = 0U, columns = 0U, count;
+        UmiAiDecoderParameterShape(&model->config, p, &rows, &columns);
+        if (columns == 0U || rows > UMI_AI_TRAINING_MAX_ELEMENTS / columns) {
+            status = UMI_STATUS_CAPACITY_EXCEEDED;
+            goto finish;
+        }
+        count = rows * columns;
+        if (count > SIZE_MAX - totalElements) {
+            status = UMI_STATUS_CAPACITY_EXCEEDED;
+            goto finish;
+        }
+        offsets[p] = totalElements;
+        counts[p] = count;
+        totalElements += count;
+    }
+    if (totalElements > SIZE_MAX / sizeof(double) ||
+        totalElements > SIZE_MAX / sizeof(float)) {
+        status = UMI_STATUS_CAPACITY_EXCEEDED;
+        goto finish;
+    }
+    accumulated = calloc(totalElements, sizeof(*accumulated));
+    reduced = malloc(totalElements * sizeof(*reduced));
+    scratch = malloc(UMI_AI_TRAINING_MAX_ELEMENTS * sizeof(*scratch));
+    if (accumulated == NULL || reduced == NULL || scratch == NULL) {
+        status = UMI_STATUS_OUT_OF_MEMORY;
+        goto finish;
+    }
+    for (size_t start = 0U; start < tokenCount;) {
+        UmiAiTrainingTensor *logits = NULL, *loss = NULL;
+        size_t remaining = tokenCount - start;
+        size_t currentTokens = remaining < microbatchTokens ?
+                               remaining : microbatchTokens;
+        float currentLoss = 0.0F;
+        UmiStatus rewindStatus;
+        status = ForwardLogits(model, &inputIds[start], currentTokens, &logits);
+        if (status == UMI_STATUS_OK)
+            status = UmiAiTrainingCrossEntropy(model->tape, logits,
+                       &targetIds[start], currentTokens, &loss);
+        if (status == UMI_STATUS_OK)
+            status = UmiAiTrainingTensorValues(loss, &currentLoss, 1U);
+        if (status == UMI_STATUS_OK)
+            status = UmiAiTrainingBackward(model->tape, loss);
+        if (status == UMI_STATUS_OK) {
+            weightedLoss += (double)currentLoss * (double)currentTokens;
+            if (!isfinite(weightedLoss)) status = UMI_STATUS_INVALID_STATE;
+        }
+        for (size_t p = 0U;
+             status == UMI_STATUS_OK && p < UMI_DECODER_PARAMETER_COUNT; ++p) {
+            status = UmiAiTrainingTensorGradients(model->parameters[p], scratch,
+                                                  counts[p]);
+            for (size_t i = 0U; status == UMI_STATUS_OK && i < counts[p]; ++i) {
+                double sum = accumulated[offsets[p] + i] +
+                             (double)scratch[i] * (double)currentTokens;
+                if (!isfinite(sum)) status = UMI_STATUS_INVALID_STATE;
+                else accumulated[offsets[p] + i] = sum;
+            }
+        }
+        /* Always discard activation graphs. The parameter leaves survive. */
+        rewindStatus = RewindParameters(model);
+        if (status == UMI_STATUS_OK) status = rewindStatus;
+        if (status != UMI_STATUS_OK) goto finish;
+        start += currentTokens;
+    }
+    for (size_t p = 0U; p < UMI_DECODER_PARAMETER_COUNT; ++p) {
+        for (size_t i = 0U; i < counts[p]; ++i) {
+            double mean = accumulated[offsets[p] + i] / (double)tokenCount;
+            if (!isfinite(mean) || mean > (double)FLT_MAX ||
+                mean < -(double)FLT_MAX) {
+                status = UMI_STATUS_INVALID_STATE;
+                goto finish;
+            }
+            reduced[offsets[p] + i] = (float)mean;
+        }
+    }
+    double meanLoss = weightedLoss / (double)tokenCount;
+    if (!isfinite(meanLoss) || meanLoss > (double)FLT_MAX || meanLoss < 0.0) {
+        status = UMI_STATUS_INVALID_STATE;
+        goto finish;
+    }
+    for (size_t p = 0U; p < UMI_DECODER_PARAMETER_COUNT; ++p)
+        outGradientPointers[p] = &reduced[offsets[p]];
+    *outMeanLoss = (float)meanLoss;
+    *outStorage = reduced;
+    reduced = NULL;
+finish:
+    free(scratch);
+    free(reduced);
+    free(accumulated);
+    return status;
+}
+
+UmiStatus UmiAiTrainingDecoderTrainAccumulated(
+    UmiAiTrainingDecoder *model,
+    const size_t *inputIds,
+    const size_t *targetIds,
+    size_t tokenCount,
+    size_t microbatchSequences,
+    float learningRate,
+    float *outLoss)
+{
+    float *storage = NULL;
+    float candidateLoss = 0.0F;
+    const float *gradients[UMI_DECODER_PARAMETER_COUNT] = {0};
+    UmiStatus status;
+    if (model == NULL || outLoss == NULL ||
+        !isfinite(learningRate) || learningRate <= 0.0F)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (model->completedSteps == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = CollectAccumulatedGradients(model, inputIds, targetIds,
+                tokenCount, microbatchSequences, &storage, gradients,
+                &candidateLoss);
+    if (status != UMI_STATUS_OK) return status;
+    status = UmiAiTrainingSgdStepWithGradients(model->tape, model->parameters,
+                 gradients, UMI_DECODER_PARAMETER_COUNT, learningRate);
+    free(storage);
+    if (status != UMI_STATUS_OK) return status;
+    ++model->completedSteps;
+    *outLoss = candidateLoss;
+    return UMI_STATUS_OK;
+}
+
+/* The original SGD-only implementation is retained without execution for
+ * review of the common reducer transition. The new active reducer above is
+ * shared by both SGD and AdamW; do not physically delete this source without
+ * explicit owner approval. */
+#if 0
 UmiStatus UmiAiTrainingDecoderTrainAccumulated(
     UmiAiTrainingDecoder *model,
     const size_t *inputIds,
@@ -517,6 +690,8 @@ finish:
     return status;
 }
 
+#endif /* retained SGD-only gradient accumulator */
+
 /*-----------------------------------------------------------------------------
  * Stateful AdamW training composes the same canonical forward, loss and
  * backward graph used by ordinary SGD. Only the update rule differs.
@@ -572,6 +747,41 @@ UmiStatus UmiAiTrainingDecoderTrainAdamWStep(
     if (status == UMI_STATUS_OK) status = rewindStatus;
     if (status != UMI_STATUS_OK) return status;
     status = UmiAiTrainingAdamWStep(optimizer, learningRate);
+    if (status != UMI_STATUS_OK) return status;
+    ++model->completedSteps;
+    *outLoss = candidateLoss;
+    return UMI_STATUS_OK;
+}
+
+/* Stateful microbatch AdamW uses precisely the same gradient reduction as
+ * accumulated SGD, but applies ONE transactional AdamW update. Validate the
+ * borrowed optimiser binding BEFORE constructing any temporary graph. */
+UmiStatus UmiAiTrainingDecoderTrainAdamWAccumulated(
+    UmiAiTrainingDecoder *model,
+    UmiAiTrainingAdamW *optimizer,
+    const size_t *inputIds, const size_t *targetIds,
+    size_t tokenCount, size_t microbatchSequences,
+    float learningRate, float *outLoss)
+{
+    float *storage = NULL, candidateLoss = 0.0F;
+    const float *gradients[UMI_DECODER_PARAMETER_COUNT] = {0};
+    UmiStatus status;
+    if (model == NULL || optimizer == NULL || outLoss == NULL ||
+        !isfinite(learningRate) || learningRate <= 0.0F)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = UmiAiTrainingAdamWValidateBinding(optimizer,
+        model->tape, model->parameters, UMI_DECODER_PARAMETER_COUNT,
+        model->completedSteps);
+    if (status != UMI_STATUS_OK) return status;
+    if (model->completedSteps == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = CollectAccumulatedGradients(model, inputIds, targetIds,
+                tokenCount, microbatchSequences, &storage, gradients,
+                &candidateLoss);
+    if (status != UMI_STATUS_OK) return status;
+    status = UmiAiTrainingAdamWStepWithGradients(
+        optimizer, gradients, learningRate);
+    free(storage);
     if (status != UMI_STATUS_OK) return status;
     ++model->completedSteps;
     *outLoss = candidateLoss;
