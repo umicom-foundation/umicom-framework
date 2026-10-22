@@ -808,3 +808,44 @@ UmiStatus UmiAiDecoderAdamWCheckBinding(
         (UmiAiTrainingTensor *const *)model->parameters,
         UMI_DECODER_PARAMETER_COUNT, model->completedSteps);
 }
+
+/* Clip once after weighted microbatch reduction. Clipping each microbatch
+ * independently would change the optimiser update and checkpoint trajectory.
+ * This overload retains the existing unmodified SGD/AdamW entry points. */
+UmiStatus UmiAiTrainingDecoderTrainAdamWAccumulatedClipped(
+    UmiAiTrainingDecoder *model,
+    UmiAiTrainingAdamW *optimizer,
+    const size_t *inputIds, const size_t *targetIds,
+    size_t tokenCount, size_t microbatchSequences,
+    float learningRate, float maximumGradientNorm,
+    float *outLoss, UmiAiTrainingGradientClipReport *outReport)
+{
+    float *storage = NULL, candidateLoss = 0.0F;
+    const float *gradients[UMI_DECODER_PARAMETER_COUNT] = {0};
+    UmiAiTrainingGradientClipReport candidateReport;
+    UmiStatus status;
+    if (model == NULL || optimizer == NULL || outLoss == NULL ||
+        outReport == NULL || !isfinite(learningRate) ||
+        learningRate <= 0.0F || !isfinite(maximumGradientNorm) ||
+        maximumGradientNorm <= 0.0F)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = UmiAiTrainingAdamWValidateBinding(optimizer,
+        model->tape, model->parameters, UMI_DECODER_PARAMETER_COUNT,
+        model->completedSteps);
+    if (status != UMI_STATUS_OK) return status;
+    if (model->completedSteps == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = CollectAccumulatedGradients(model, inputIds, targetIds,
+                tokenCount, microbatchSequences, &storage, gradients,
+                &candidateLoss);
+    if (status != UMI_STATUS_OK) return status;
+    status = UmiAiTrainingAdamWStepWithClippedGradients(
+        optimizer, gradients, learningRate, maximumGradientNorm,
+        &candidateReport);
+    free(storage);
+    if (status != UMI_STATUS_OK) return status;
+    ++model->completedSteps;
+    *outLoss = candidateLoss;
+    *outReport = candidateReport;
+    return UMI_STATUS_OK;
+}

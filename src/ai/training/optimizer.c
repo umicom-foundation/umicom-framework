@@ -18,6 +18,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/optimizer.h"
 #include "umicom/ai/training/gradient_accumulation.h"
+#include "umicom/ai/training/gradient_clipping.h"
 #include "optimizer_internal.h"
 
 #include <float.h>
@@ -311,6 +312,47 @@ complete:
     free(weights);
     free(effective);
     free(candidateMoments);
+    return status;
+}
+
+/* Apply one global norm policy over the complete effective batch before
+ * AdamW updates its moments. Clipping microbatches separately would implement
+ * a different algorithm and should not be used as a substitute. */
+UmiStatus UmiAiTrainingAdamWStepWithClippedGradients(
+    UmiAiTrainingAdamW *optimizer, const float *const *gradients,
+    float learningRate, float maximumGradientNorm,
+    UmiAiTrainingGradientClipReport *outReport)
+{
+    UmiAiTrainingGradientClipReport candidate;
+    const float *scaledArrays[UMI_AI_TRAINING_MAX_TENSORS] = {0};
+    float *copy = NULL;
+    UmiStatus status;
+    if (optimizer == NULL || gradients == NULL || outReport == NULL ||
+        !isfinite(learningRate) || learningRate <= 0.0F)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = UmiAiTrainingGradientGlobalNorm(
+        gradients, optimizer->counts, optimizer->parameterCount,
+        maximumGradientNorm, &candidate);
+    if (status != UMI_STATUS_OK) return status;
+    if (optimizer->totalElements > SIZE_MAX / sizeof(float))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    copy = malloc(optimizer->totalElements * sizeof(float));
+    if (copy == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    for (size_t p = 0U; p < optimizer->parameterCount; ++p) {
+        size_t offset = optimizer->offsets[p];
+        size_t count = optimizer->counts[p];
+        scaledArrays[p] = &copy[offset];
+        for (size_t element = 0U; element < count; ++element) {
+            /* |scale| <= 1 ensures no overflow; very small gradients may
+             * underflow to zero as allowed by the model's FP32 contract. */
+            copy[offset + element] = (float)(
+                (double)gradients[p][element] * candidate.appliedScale);
+        }
+    }
+    status = UmiAiTrainingAdamWStepWithGradients(
+        optimizer, scaledArrays, learningRate);
+    free(copy);
+    if (status == UMI_STATUS_OK) *outReport = candidate;
     return status;
 }
 

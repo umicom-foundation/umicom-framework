@@ -388,3 +388,22 @@ if(BUILD_TESTING)
     set_tests_properties(framework.ai.training.adamw_microbatch_demo PROPERTIES
         LABELS "framework;ai;native-training;learning")
 endif()
+
+# A bounded native C23 laboratory over the Framework's clipping policy.
+add_executable(umicom-native-llm-gradient-clipping
+    "${CMAKE_CURRENT_LIST_DIR}/inspect_gradient_clipping.c")
+target_link_libraries(umicom-native-llm-gradient-clipping PRIVATE
+    Umicom::AiTraining)
+target_compile_features(umicom-native-llm-gradient-clipping PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-gradient-clipping PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-gradient-clipping PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME framework.ai.training.gradient_clipping_demo
+             COMMAND umicom-native-llm-gradient-clipping)
+    set_tests_properties(framework.ai.training.gradient_clipping_demo PROPERTIES
+        LABELS "framework;ai;native-training;learning")
+endif()

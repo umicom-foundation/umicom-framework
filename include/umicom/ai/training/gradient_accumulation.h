@@ -101,6 +101,19 @@ UmiStatus UmiAiTrainingDecoderTrainAdamWAccumulated(
     float learningRate,
     float *outLoss);
 
+/* Apply one global norm threshold AFTER all microbatch gradients have been
+ * combined. Each microbatch still uses the canonical decoder's bounded tape.
+ * On failure the optimiser moments, model weights, step count, loss and
+ * clipping report remain unchanged. A resumed experiment must retain the same
+ * clipping threshold alongside its approved dataset and schedule. */
+UmiStatus UmiAiTrainingDecoderTrainAdamWAccumulatedClipped(
+    UmiAiTrainingDecoder *model,
+    struct UmiAiTrainingAdamW *optimizer,
+    const size_t *inputIds, const size_t *targetIds,
+    size_t tokenCount, size_t microbatchSequences,
+    float learningRate, float maximumGradientNorm,
+    float *outLoss, UmiAiTrainingGradientClipReport *outReport);
+
 #ifdef __cplusplus
 }
 #endif

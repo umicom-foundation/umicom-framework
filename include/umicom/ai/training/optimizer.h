@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include "umicom/ai/training/decoder.h"
 #include "umicom/ai/training/tape.h"
+#include "umicom/ai/training/gradient_clipping.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -93,6 +94,17 @@ UmiStatus UmiAiTrainingAdamWStepWithGradients(
  * Graph results must be rewound first. */
 UmiStatus UmiAiTrainingAdamWStep(
     UmiAiTrainingAdamW *optimizer, float learningRate);
+
+/* Apply the same AdamW transaction after global L2 norm clipping. The
+ * Framework first inspects and validates all input gradients, then stages a
+ * scaled copy. Only a successful weight-and-moment update publishes outReport.
+ * The borrowed gradients are never modified. This API does not change the
+ * optimiser configuration or the portable checkpoint format. */
+UmiStatus UmiAiTrainingAdamWStepWithClippedGradients(
+    UmiAiTrainingAdamW *optimizer, const float *const *gradients,
+    float learningRate, float maximumGradientNorm,
+    UmiAiTrainingGradientClipReport *outReport);
+
 
 /* Decoder-facing wrappers reuse its canonical forward/loss/backward pipeline;
  * no alternative transformer or optimiser maths is defined by applications.

@@ -40,6 +40,7 @@ if(NOT TARGET umicom_ai_training)
         # Stateful AdamW and absolute-step learning rates reuse the existing
         # training tape as the sole authority for parameter updates.
         "${_umicom_ai_training_root}/src/ai/training/optimizer.c"
+        "${_umicom_ai_training_root}/src/ai/training/gradient_clipping.c"
         # Exact resume of combined decoder + AdamW moments. The existing
         # standalone decoder checkpoint remains byte-for-byte unchanged.
         "${_umicom_ai_training_root}/src/ai/training/optimizer_checkpoint.c"
@@ -650,4 +651,24 @@ if(BUILD_TESTING)
         umicom-ai-training-benchmark-evidence-changes-test
         framework.ai.training.benchmark_evidence_changes
         test_training_benchmark_evidence_changes.c)
+endif()
+
+# Native global L2 gradient clipping retains AdamW weight/moment atomicity.
+if(BUILD_TESTING)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-gradient-norm-test
+        framework.ai.training.gradient_norm
+        test_training_gradient_norm.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-gradient-clipping-rejections-test
+        framework.ai.training.gradient_clipping_rejections
+        test_training_gradient_clipping_rejections.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-adamw-clipping-parity-test
+        framework.ai.training.adamw_clipping_parity
+        test_training_adamw_clipping_parity.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-decoder-clipping-test
+        framework.ai.training.decoder_clipping
+        test_training_decoder_clipped.c)
 endif()
