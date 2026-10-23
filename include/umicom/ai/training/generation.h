@@ -88,6 +88,50 @@ UmiStatus UmiAiTrainingDecoderGenerateBytes(
     size_t newByteCount, uint64_t seed,
     uint8_t *outBytes, size_t capacity, size_t *outCount);
 
+/* Opt-in top-p (nucleus) policy. Unlike the older top-K-only options,
+ * topP selects the MINIMUM descending-logit prefix whose temperature-scaled
+ * softmax mass reaches this fraction of the original topK candidates.
+ * 0 < topP <= 1; topP=1 is exactly the existing top-K sampler.
+ * The original struct, functions and binary checkpoint format are unchanged. */
+typedef struct UmiAiTrainingNucleusOptions {
+    float temperature;
+    size_t topK;
+    float topP;
+} UmiAiTrainingNucleusOptions;
+
+/* Returns one selected token and optionally the number of retained candidates.
+ * The whole allowed range must have finite logits; ties prefer lower token IDs.
+ * TopP=1 delegates to the canonical sampler and consumes identical RNG state.
+ * For a one-candidate nucleus, no RNG state is consumed. All outputs and the
+ * caller's RNG remain unchanged on failure. The two output pointers, when
+ * present, must not alias. NULL randomState is permitted only when
+ * policy.topK==1, matching the legacy validation contract.
+ * Output capacity and allowed-token bounds are identical to SampleLogits. */
+UmiStatus UmiAiTrainingSampleLogitsNucleus(
+    const float *logits, size_t logitCount,
+    size_t firstAllowed, size_t afterLastAllowed,
+    const UmiAiTrainingNucleusOptions *policy,
+    UmiAiTrainingRandomState *randomState,
+    size_t *outTokenId, size_t *outRetainedCandidates);
+
+/* Explicit opt-in decoder generation with nucleus sampling. All prompt,
+ * output, seed, rolling-context, memory and cancellation conditions are
+ * inherited from the existing Generate and GenerateBytes services. The
+ * weights, checkpoint format, and pre-existing top-K calls never change. */
+UmiStatus UmiAiTrainingDecoderGenerateNucleus(
+    UmiAiTrainingDecoder *model,
+    const size_t *promptTokenIds, size_t promptTokenCount,
+    const UmiAiTrainingNucleusOptions *policy,
+    size_t newTokenCount, uint64_t seed,
+    size_t *outTokenIds, size_t capacity, size_t *outCount);
+
+UmiStatus UmiAiTrainingDecoderGenerateBytesNucleus(
+    UmiAiTrainingDecoder *model,
+    const uint8_t *promptBytes, size_t promptLength,
+    const UmiAiTrainingNucleusOptions *policy,
+    size_t newByteCount, uint64_t seed,
+    uint8_t *outBytes, size_t capacity, size_t *outCount);
+
 #ifdef __cplusplus
 }
 #endif
