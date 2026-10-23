@@ -793,3 +793,77 @@ if(BUILD_TESTING)
         framework.ai.training.publication_rejections
         test_training_publication_rejections.c)
 endif()
+
+# Optional cryptographic publisher attestation. The default native Framework
+# remains entirely C23 and needs no additional cryptography dependencies.
+# This explicitly enabled service uses OpenSSL's existing, reviewed Ed25519
+# primitive; never implement new signature mathematics in an application.
+# A signature binds the canonical, already-published checkpoint evidence to
+# an independently supplied public-key trust anchor. It does NOT establish
+# that a quarantined builder is safe, nor does it certify model correctness.
+option(UMICOM_AI_TRAINING_ENABLE_SIGNATURES
+    "Build opt-in native Ed25519 training publication signing and verification"
+    OFF)
+if(UMICOM_AI_TRAINING_ENABLE_SIGNATURES)
+    find_package(OpenSSL 3.0 REQUIRED COMPONENTS Crypto)
+    if(NOT TARGET umicom_ai_training_attestation)
+        add_library(umicom_ai_training_attestation STATIC
+            "${_umicom_ai_training_root}/src/ai/training/training_attestation.c")
+        add_library(Umicom::AiTrainingAttestation ALIAS
+            umicom_ai_training_attestation)
+        target_include_directories(umicom_ai_training_attestation PUBLIC
+            "$<BUILD_INTERFACE:${_umicom_ai_training_root}/include>")
+        target_link_libraries(umicom_ai_training_attestation PUBLIC
+            Umicom::AiTraining OpenSSL::Crypto)
+        target_compile_features(umicom_ai_training_attestation PUBLIC c_std_23)
+        if(MSVC)
+            target_compile_options(umicom_ai_training_attestation PRIVATE /W4)
+        else()
+            target_compile_options(umicom_ai_training_attestation PRIVATE
+                -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+        endif()
+    endif()
+
+    if(NOT TARGET umicom-native-llm-publication-attest)
+        add_executable(umicom-native-llm-publication-attest
+            "${_umicom_ai_training_root}/learning/native-llm/attest_training_publication.c")
+        target_link_libraries(umicom-native-llm-publication-attest PRIVATE
+            Umicom::AiTrainingAttestation)
+        target_compile_features(umicom-native-llm-publication-attest PRIVATE c_std_23)
+        if(MSVC)
+            target_compile_options(umicom-native-llm-publication-attest PRIVATE /W4)
+        else()
+            target_compile_options(umicom-native-llm-publication-attest PRIVATE
+                -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+        endif()
+    endif()
+
+    # Test private keys exist only in disposable local test workspaces. Tests
+    # exercise real libcrypto and the real Framework publication verifier,
+    # but never sign user models, ship keys or contact a remote authority.
+    if(BUILD_TESTING)
+        foreach(_umicom_attestation_case IN ITEMS roundtrip rejections)
+            set(_umicom_attestation_target
+                "umicom-ai-training-attestation-${_umicom_attestation_case}-test")
+            if(NOT TARGET "${_umicom_attestation_target}")
+                add_executable("${_umicom_attestation_target}"
+                    "${_umicom_ai_training_root}/tests/ai_training/test_training_attestation_${_umicom_attestation_case}.c")
+                target_link_libraries("${_umicom_attestation_target}" PRIVATE
+                    Umicom::AiTrainingAttestation)
+                target_compile_features("${_umicom_attestation_target}" PRIVATE c_std_23)
+                if(MSVC)
+                    target_compile_options("${_umicom_attestation_target}" PRIVATE /W4)
+                else()
+                    target_compile_options("${_umicom_attestation_target}" PRIVATE
+                        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+                endif()
+                add_test(
+                    NAME "framework.ai.training.attestation_${_umicom_attestation_case}"
+                    COMMAND "${_umicom_attestation_target}")
+                set_tests_properties(
+                    "framework.ai.training.attestation_${_umicom_attestation_case}"
+                    PROPERTIES LABELS "framework;ai;native-training;cryptography")
+            endif()
+        endforeach()
+    endif()
+endif()
