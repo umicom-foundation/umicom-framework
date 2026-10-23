@@ -955,3 +955,54 @@ if(UMICOM_AI_TRAINING_ENABLE_SIGNATURES AND
         endforeach()
     endif()
 endif()
+
+# An ordered, all-or-nothing release gate for several independently signed
+# native LLM publications. This optional Framework-owned C23 service calls
+# existing publisher-policy and JSON receipt APIs; neither a second signature
+# implementation nor a scripting-language release tool is introduced. Its
+# aggregate digest is explicitly NOT a new signature or trusted timestamp.
+if(UMICOM_AI_TRAINING_ENABLE_SIGNATURES AND
+   TARGET umicom_ai_training_attestation)
+    if(NOT TARGET umicom-native-llm-trust-batch)
+        target_sources(umicom_ai_training_attestation PRIVATE
+            "${_umicom_ai_training_root}/src/ai/training/training_trust_batch.c")
+
+        add_executable(umicom-native-llm-trust-batch
+            "${_umicom_ai_training_root}/learning/native-llm/verify_training_batch.c")
+        target_link_libraries(umicom-native-llm-trust-batch PRIVATE
+            Umicom::AiTrainingAttestation)
+        target_compile_features(umicom-native-llm-trust-batch PRIVATE c_std_23)
+        if(MSVC)
+            target_compile_options(umicom-native-llm-trust-batch PRIVATE /W4)
+        else()
+            target_compile_options(umicom-native-llm-trust-batch PRIVATE
+                -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+        endif()
+    endif()
+
+    if(BUILD_TESTING)
+        foreach(_umicom_batch_case IN ITEMS roundtrip rejections)
+            set(_umicom_batch_target
+                "umicom-ai-training-trust-batch-${_umicom_batch_case}-test")
+            if(NOT TARGET "${_umicom_batch_target}")
+                add_executable("${_umicom_batch_target}"
+                    "${_umicom_ai_training_root}/tests/ai_training/test_training_trust_batch_${_umicom_batch_case}.c")
+                target_link_libraries("${_umicom_batch_target}" PRIVATE
+                    Umicom::AiTrainingAttestation)
+                target_compile_features("${_umicom_batch_target}" PRIVATE c_std_23)
+                if(MSVC)
+                    target_compile_options("${_umicom_batch_target}" PRIVATE /W4)
+                else()
+                    target_compile_options("${_umicom_batch_target}" PRIVATE
+                        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+                endif()
+                add_test(
+                    NAME "framework.ai.training.trust_batch_${_umicom_batch_case}"
+                    COMMAND "${_umicom_batch_target}")
+                set_tests_properties(
+                    "framework.ai.training.trust_batch_${_umicom_batch_case}"
+                    PROPERTIES LABELS "framework;ai;native-training;cryptography;trust;receipt;release-gate")
+            endif()
+        endforeach()
+    endif()
+endif()
