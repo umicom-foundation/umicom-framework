@@ -63,6 +63,8 @@ if(NOT TARGET umicom_ai_training)
         "${_umicom_ai_training_root}/src/ai/training/experiment_plan.c"
         # Native autoregressive generation composes the decoder and RNG.
         "${_umicom_ai_training_root}/src/ai/training/generation.c"
+        # Qualified KV cache orchestration adds no new model or sampling maths.
+        "${_umicom_ai_training_root}/src/ai/training/generation_cache.c"
         # Independent, byte-exact completion evidence reuses the saved model
         # and the canonical native sampler; generated code is never executed.
         "${_umicom_ai_training_root}/src/ai/training/benchmark.c"
@@ -337,6 +339,16 @@ if(BUILD_TESTING)
         umicom-ai-training-generation-checkpoint-test
         framework.ai.training.generation_checkpoint
         test_training_generation_checkpoint.c)
+    # Regression coverage for the opt-in full-context KV cache generation
+    # adapter. Both test targets link the actual Framework inference owners.
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-generation-cache-parity-test
+        framework.ai.training.generation_cache_parity
+        test_training_generation_cache_parity.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-generation-cache-rejections-test
+        framework.ai.training.generation_cache_rejections
+        test_training_generation_cache_rejections.c)
 endif()
 
 # Independent evidence checks protect attribution of evaluation metrics to the
@@ -1193,5 +1205,21 @@ if(UMICOM_AI_TRAINING_ENABLE_SIGNATURES AND
                     PROPERTIES LABELS "framework;ai;native-training;cryptography;trust;release-approval")
             endif()
         endforeach()
+    endif()
+endif()
+
+# Read-only learner demonstration of the canonical decoder and KV-cache path.
+# Register in the shared Framework composition so standalone/full builds use
+# the same source owner and no application-local mathematical implementation.
+if(TARGET umicom_ai_training AND NOT TARGET umicom-native-llm-kv-nucleus-demo)
+    add_executable(umicom-native-llm-kv-nucleus-demo
+        "${_umicom_ai_training_root}/learning/native-llm/inspect_generation_cache.c")
+    target_link_libraries(umicom-native-llm-kv-nucleus-demo PRIVATE Umicom::AiTraining)
+    target_compile_features(umicom-native-llm-kv-nucleus-demo PRIVATE c_std_23)
+    if(MSVC)
+        target_compile_options(umicom-native-llm-kv-nucleus-demo PRIVATE /W4)
+    else()
+        target_compile_options(umicom-native-llm-kv-nucleus-demo PRIVATE
+            -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
     endif()
 endif()
