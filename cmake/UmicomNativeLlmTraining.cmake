@@ -918,3 +918,40 @@ if(UMICOM_AI_TRAINING_ENABLE_SIGNATURES AND
         endforeach()
     endif()
 endif()
+
+# Machine-readable offline verification receipts. This additive C23 module
+# calls the existing trust-policy and Ed25519 verifier; it does not add a new
+# signature algorithm, change checkpoint formats or enable crypto by default.
+# It intentionally reuses the existing publication-trust command-line target
+# rather than introducing another application's independent CLI parser.
+if(UMICOM_AI_TRAINING_ENABLE_SIGNATURES AND
+   TARGET umicom_ai_training_attestation)
+    target_sources(umicom_ai_training_attestation PRIVATE
+        "${_umicom_ai_training_root}/src/ai/training/training_trust_receipt.c")
+
+    if(BUILD_TESTING)
+        foreach(_umicom_receipt_case IN ITEMS roundtrip rejections)
+            set(_umicom_receipt_target
+                "umicom-ai-training-trust-receipt-${_umicom_receipt_case}-test")
+            if(NOT TARGET "${_umicom_receipt_target}")
+                add_executable("${_umicom_receipt_target}"
+                    "${_umicom_ai_training_root}/tests/ai_training/test_training_trust_receipt_${_umicom_receipt_case}.c")
+                target_link_libraries("${_umicom_receipt_target}" PRIVATE
+                    Umicom::AiTrainingAttestation)
+                target_compile_features("${_umicom_receipt_target}" PRIVATE c_std_23)
+                if(MSVC)
+                    target_compile_options("${_umicom_receipt_target}" PRIVATE /W4)
+                else()
+                    target_compile_options("${_umicom_receipt_target}" PRIVATE
+                        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+                endif()
+                add_test(
+                    NAME "framework.ai.training.trust_receipt_${_umicom_receipt_case}"
+                    COMMAND "${_umicom_receipt_target}")
+                set_tests_properties(
+                    "framework.ai.training.trust_receipt_${_umicom_receipt_case}"
+                    PROPERTIES LABELS "framework;ai;native-training;cryptography;trust;receipt")
+            endif()
+        endforeach()
+    endif()
+endif()
