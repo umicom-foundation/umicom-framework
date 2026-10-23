@@ -1092,3 +1092,53 @@ if(BUILD_TESTING AND UMICOM_AI_TRAINING_ENABLE_SIGNATURES AND
             umicom_ai_training_attestation_win32_names_probe)
     endif()
 endif()
+
+# Independently signed release approval: a distinct, caller-approved Ed25519
+# trust anchor authorises the exact existing plaintext approval. The original
+# unsigned release-approval parser/CLI and batch verifier remain available;
+# optional OpenSSL is the sole crypto dependency. No scripting runtime.
+if(UMICOM_AI_TRAINING_ENABLE_SIGNATURES AND
+   TARGET umicom_ai_training_attestation)
+    target_sources(umicom_ai_training_attestation PRIVATE
+        "${_umicom_ai_training_root}/src/ai/training/training_approval_attestation.c")
+
+    if(NOT TARGET umicom-native-llm-signed-release)
+        add_executable(umicom-native-llm-signed-release
+            "${_umicom_ai_training_root}/learning/native-llm/verify_signed_release_approval.c")
+        target_link_libraries(umicom-native-llm-signed-release PRIVATE
+            Umicom::AiTrainingAttestation)
+        target_compile_features(umicom-native-llm-signed-release PRIVATE c_std_23)
+        if(MSVC)
+            target_compile_options(umicom-native-llm-signed-release PRIVATE /W4)
+        else()
+            target_compile_options(umicom-native-llm-signed-release PRIVATE
+                -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+        endif()
+    endif()
+
+    if(BUILD_TESTING)
+        foreach(_umicom_signed_case IN ITEMS roundtrip rejections)
+            set(_umicom_signed_target
+                "umicom-ai-training-signed-approval-${_umicom_signed_case}-test")
+            if(NOT TARGET "${_umicom_signed_target}")
+                add_executable("${_umicom_signed_target}"
+                    "${_umicom_ai_training_root}/tests/ai_training/test_training_signed_approval_${_umicom_signed_case}.c")
+                target_link_libraries("${_umicom_signed_target}" PRIVATE
+                    Umicom::AiTrainingAttestation)
+                target_compile_features("${_umicom_signed_target}" PRIVATE c_std_23)
+                if(MSVC)
+                    target_compile_options("${_umicom_signed_target}" PRIVATE /W4)
+                else()
+                    target_compile_options("${_umicom_signed_target}" PRIVATE
+                        -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror)
+                endif()
+                add_test(
+                    NAME "framework.ai.training.signed_approval_${_umicom_signed_case}"
+                    COMMAND "${_umicom_signed_target}")
+                set_tests_properties(
+                    "framework.ai.training.signed_approval_${_umicom_signed_case}"
+                    PROPERTIES LABELS "framework;ai;native-training;cryptography;trust;release-approval")
+            endif()
+        endforeach()
+    endif()
+endif()

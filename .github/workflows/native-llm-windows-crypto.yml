@@ -42,12 +42,15 @@ jobs:
             -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON `
             -DUMICOM_AI_TRAINING_ENABLE_SIGNATURES=ON
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Compile explicit release-approval target (including name probe)
+      - name: Compile both release-approval targets (including Win32 name probe)
         shell: pwsh
         run: |
           $env:Path = 'C:\msys64\ucrt64\bin;' + $env:Path
           cmake --build .\build\native-llm-ucrt64 `
             --target umicom-native-llm-release-approve --parallel 2
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          cmake --build .\build\native-llm-ucrt64 `
+            --target umicom-native-llm-signed-release --parallel 2
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Build remaining native C23 tests
         shell: pwsh
@@ -60,6 +63,6 @@ jobs:
         run: |
           $env:Path = 'C:\msys64\ucrt64\bin;' + $env:Path
           ctest --test-dir .\build\native-llm-ucrt64 `
-            -R '^framework\.ai\.training\.(attestation_|trust_policy_|trust_receipt_|trust_batch_|release_approval_)' `
+            -R '^framework\.ai\.training\.(attestation_|trust_policy_|trust_receipt_|trust_batch_|release_approval_|signed_approval_)' `
             --output-on-failure --no-tests=error
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

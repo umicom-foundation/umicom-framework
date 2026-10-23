@@ -33,6 +33,9 @@ cmake -S .\framework\learning\native-llm `
 cmake --build .\build\windows-ucrt64-native-llm-debug `
   --target umicom-native-llm-release-approve --parallel 2
 
+cmake --build .\build\windows-ucrt64-native-llm-debug `
+  --target umicom-native-llm-signed-release --parallel 2
+
 cmake --build .\build\windows-ucrt64-native-llm-debug --parallel 2
 ```
 
@@ -42,7 +45,7 @@ that the entire Framework or Umicom Applications build is healthy.
 
 ```powershell
 ctest --test-dir .\build\windows-ucrt64-native-llm-debug `
-  -R '^framework\.ai\.training\.(attestation_|trust_policy_|trust_receipt_|trust_batch_|release_approval_)' `
+  -R '^framework\.ai\.training\.(attestation_|trust_policy_|trust_receipt_|trust_batch_|release_approval_|signed_approval_)' `
   --output-on-failure --no-tests=error
 ```
 
@@ -69,3 +72,13 @@ Cryptographic signatures confirm matching evidence under an independently
 approved public key; they do not establish model quality, source-data rights
 or a trusted signing clock. Antivirus detections must be reviewed through
 normal vendor/security processes rather than bypassing endpoint protection.
+
+## Independent release-approver signatures
+
+The `umicom-native-llm-signed-release` target separately signs an already
+reviewed release-approval record using an externally managed Ed25519 key.
+Its `verify` operation requires the **independently distributed approver public
+key**, the publisher trust policy and all referenced checkpoints in the
+approved order. It never chooses its own trust key from the detached signature
+or generates success JSON when a release is rejected. See
+`SIGNED_RELEASE_APPROVAL.md` for the C23 API and complete educational example.
