@@ -65,6 +65,8 @@ if(NOT TARGET umicom_ai_training)
         "${_umicom_ai_training_root}/src/ai/training/generation.c"
         # Qualified KV cache orchestration adds no new model or sampling maths.
         "${_umicom_ai_training_root}/src/ai/training/generation_cache.c"
+        # Retained streaming state composes the same KV cache and top-p sampler.
+        "${_umicom_ai_training_root}/src/ai/training/generation_session.c"
         # Independent, byte-exact completion evidence reuses the saved model
         # and the canonical native sampler; generated code is never executed.
         "${_umicom_ai_training_root}/src/ai/training/benchmark.c"
@@ -349,6 +351,15 @@ if(BUILD_TESTING)
         umicom-ai-training-generation-cache-rejections-test
         framework.ai.training.generation_cache_rejections
         test_training_generation_cache_rejections.c)
+    # Streaming pulls preserve seed/cache state and validate stale ownership.
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-generation-session-parity-test
+        framework.ai.training.generation_session_parity
+        test_training_generation_session_parity.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-generation-session-rejections-test
+        framework.ai.training.generation_session_rejections
+        test_training_generation_session_rejections.c)
 endif()
 
 # Independent evidence checks protect attribution of evaluation metrics to the
@@ -1221,5 +1232,26 @@ if(TARGET umicom_ai_training AND NOT TARGET umicom-native-llm-kv-nucleus-demo)
     else()
         target_compile_options(umicom-native-llm-kv-nucleus-demo PRIVATE
             -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    endif()
+endif()
+
+# A thin native teaching executable demonstrates streaming generation without
+# duplicating decoder, sampling, or KV-cache implementation in an application.
+if(TARGET umicom_ai_training AND NOT TARGET umicom-native-llm-streaming-demo)
+    add_executable(umicom-native-llm-streaming-demo
+        "${_umicom_ai_training_root}/learning/native-llm/inspect_generation_session.c")
+    target_link_libraries(umicom-native-llm-streaming-demo PRIVATE Umicom::AiTraining)
+    target_compile_features(umicom-native-llm-streaming-demo PRIVATE c_std_23)
+    if(MSVC)
+        target_compile_options(umicom-native-llm-streaming-demo PRIVATE /W4)
+    else()
+        target_compile_options(umicom-native-llm-streaming-demo PRIVATE
+            -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    endif()
+    if(BUILD_TESTING)
+        add_test(NAME framework.ai.training.generation_session_demo
+            COMMAND umicom-native-llm-streaming-demo)
+        set_tests_properties(framework.ai.training.generation_session_demo PROPERTIES
+            LABELS "framework;ai;native-training;learning;generation")
     endif()
 endif()
