@@ -1,0 +1,16 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+cmake_minimum_required(VERSION 3.24)
+project(UmicomWebEncodingQualification LANGUAGES C)
+include(CTest)
+get_filename_component(_root "${CMAKE_CURRENT_SOURCE_DIR}/../../.." ABSOLUTE)
+# Compile production encoder files directly without a browser or a server.
+add_library(umicom_web_encoding STATIC)
+add_library(Umicom::frontend ALIAS umicom_web_encoding)
+foreach(_source IN ITEMS markup_buffer patch_serializer websocket_patch_protocol sse_patch_protocol polling_patch_protocol)
+    target_sources(umicom_web_encoding PRIVATE "${_root}/src/frontend/native_web/${_source}.c")
+endforeach()
+target_include_directories(umicom_web_encoding PUBLIC "${_root}/include")
+set_target_properties(umicom_web_encoding PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+if(BUILD_TESTING)
+    include("${CMAKE_CURRENT_LIST_DIR}/../encoding_tests.cmake")
+endif()

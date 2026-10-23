@@ -15,6 +15,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/test_platform/explorer_model.h"
+#include "explorer_query_internal.h"
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -98,6 +99,60 @@ UmiStatus umi_test_explorer_model_rebuild(UmiTestExplorerModel *model,
     UmiTestExplorerModel retired = previous;
     ExplorerStorageFree(&retired);
     return UMI_STATUS_OK;
+}
+
+
+/* Copy only the requested presentation fields onto a borrowed source view.
+ * ExplorerProject copies retained selection/expansion into independent storage;
+ * it never frees or mutates the source view. */
+UmiStatus UmiExplorerPrepareQuery(const UmiTestExplorerModel *model,
+    const UmiTestPlatformItemRegistry *items,
+    const UmiTestPlatformResultRegistry *results,
+    const UmiTestPlatformFilter *filter, UmiTestExplorerSortMode sort,
+    UmiTestExplorerGroupMode group, UmiTestExplorerModel **out_prepared)
+{
+    if (out_prepared == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_prepared = NULL;
+    if (model == NULL || items == NULL || results == NULL || !ExplorerFilterValid(filter) ||
+        sort < UMI_TEST_EXPLORER_SORT_NAME || sort > UMI_TEST_EXPLORER_SORT_FRAMEWORK ||
+        group < UMI_TEST_EXPLORER_GROUP_HIERARCHY || group > UMI_TEST_EXPLORER_GROUP_OUTCOME)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (model->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiTestExplorerModel *prepared = calloc(1U, sizeof *prepared);
+    if (prepared == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    UmiTestExplorerModel source = *model;
+    source.filter = *filter;
+    source.filter.include_disabled = filter->include_disabled != 0;
+    source.filter.failed_only = filter->failed_only != 0;
+    source.sort_mode = sort;
+    source.group_mode = group;
+    UmiStatus status = ExplorerProject(prepared, &source, items, results);
+    if (status != UMI_STATUS_OK) {
+        umi_test_explorer_model_destroy(prepared);
+        return status;
+    }
+    *out_prepared = prepared;
+    return UMI_STATUS_OK;
+}
+
+void UmiExplorerPublishQuery(UmiTestExplorerModel *model, UmiTestExplorerModel *prepared)
+{
+    UmiTestExplorerModel previous = *model;
+    *model = *prepared;
+    free(prepared);
+    ExplorerStorageFree(&previous);
+}
+
+UmiStatus UmiTestExplorerModelApplyQuery(UmiTestExplorerModel *model,
+    const UmiTestPlatformItemRegistry *items,
+    const UmiTestPlatformResultRegistry *results,
+    const UmiTestPlatformFilter *filter, UmiTestExplorerSortMode sort,
+    UmiTestExplorerGroupMode group)
+{
+    UmiTestExplorerModel *prepared = NULL;
+    UmiStatus status = UmiExplorerPrepareQuery(model, items, results, filter, sort, group, &prepared);
+    if (status == UMI_STATUS_OK) UmiExplorerPublishQuery(model, prepared);
+    return status;
 }
 
 UmiStatus umi_test_explorer_model_set_expanded(UmiTestExplorerModel *model,

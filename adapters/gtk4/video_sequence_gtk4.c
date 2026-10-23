@@ -55,6 +55,9 @@ static void Select(GtkDropDown *selector, GParamSpec *spec, gpointer root) {
   LoadSelection(panel);
   panel->changing = false;
 }
+/* Replacing the list used to select a different clip after edits. The identity-
+ * preserving refresh below supersedes this version; retain it for review. */
+#if 0
 void UmiVideoSequenceGtkRefresh(UmiVideoSequencePanel *panel) {
   if (panel->closed)
     return;
@@ -86,6 +89,56 @@ void UmiVideoSequenceGtkRefresh(UmiVideoSequencePanel *panel) {
   LoadSelection(panel);
   panel->refreshing = false;
 }
+#endif
+
+void UmiVideoSequenceGtkRefresh(UmiVideoSequencePanel *panel) {
+  if (panel->closed)
+    return;
+  const UmiVideoSequence *sequence = UmiVideoSequenceEditorRead(panel->editor);
+  /* Keep identity from the old list before replacing its model. A move or
+   * removal has already changed the sequence, so its old numeric index is
+   * not a reliable identity. Copy GTK's borrowed label before notifications. */
+  guint oldPosition = gtk_drop_down_get_selected(GTK_DROP_DOWN(panel->selector));
+  GtkStringObject *selected = gtk_drop_down_get_selected_item(GTK_DROP_DOWN(panel->selector));
+  char *selectedId = selected != NULL ? g_strdup(gtk_string_object_get_string(selected)) : NULL;
+  panel->refreshing = true;
+  GtkStringList *items = gtk_string_list_new(NULL);
+  GString *summary = g_string_new(NULL);
+  uint32_t start = 0U;
+  g_string_append_printf(summary, "%s — %u × %u; %zu clips. %s\n", sequence->title, sequence->width,
+                         sequence->height, sequence->clip_count,
+                         panel->dirty ? "Unsaved edits." : "Recipe saved or unchanged.");
+  for (size_t i = 0U; i < sequence->clip_count; ++i) {
+    const UmiVideoSequenceClip *clip = &sequence->clips[i];
+    gtk_string_list_append(items, clip->id);
+    g_string_append_printf(summary, "%zu. %s — timeline %u ms; source [%u, %u) ms\n%s\n", i + 1U,
+                           clip->id, start, clip->begin_ms, clip->end_ms, clip->path);
+    start += clip->end_ms - clip->begin_ms;
+  }
+  g_string_append_printf(summary, "Assembled duration: %u ms. Render output is silent video.",
+                         start);
+  gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(panel->summary)), summary->str,
+                           -1);
+  g_string_free(summary, TRUE);
+  gtk_drop_down_set_model(GTK_DROP_DOWN(panel->selector), G_LIST_MODEL(items));
+  g_object_unref(items);
+  guint position = GTK_INVALID_LIST_POSITION;
+  for (size_t i = 0U; selectedId != NULL && i < sequence->clip_count; ++i)
+    if (strcmp(sequence->clips[i].id, selectedId) == 0)
+      position = (guint)i;
+  if (position == GTK_INVALID_LIST_POSITION && sequence->clip_count != 0U)
+    position = oldPosition < sequence->clip_count ? oldPosition : (guint)sequence->clip_count - 1U;
+  if (selectedId == NULL && sequence->clip_count != 0U)
+    position = 0U;
+  gtk_drop_down_set_selected(GTK_DROP_DOWN(panel->selector), position);
+  g_free(selectedId);
+  gtk_editable_set_text(GTK_EDITABLE(panel->title), sequence->title);
+  gtk_spin_button_set_value(GTK_SPIN_BUTTON(panel->width), sequence->width);
+  gtk_spin_button_set_value(GTK_SPIN_BUTTON(panel->height), sequence->height);
+  LoadSelection(panel);
+  panel->refreshing = false;
+}
+
 /* Buttons share the Framework model. Form changes do not silently alter a
  * recipe: Add, Replace or Apply settings publishes one undoable operation. */
 static void Edit(GtkButton *button, gpointer root) {
@@ -261,6 +314,20 @@ GtkWidget *UmiVideoSequenceGtk4Create(void) {
   Button(panel, editing, "Split clip", "video.split", "split", G_CALLBACK(Edit));
   panel->position = Spin(editing, "New position (starts at 1)", "video.position", 1.0, 6.0);
   Button(panel, editing, "Move clip", "video.move", "move", G_CALLBACK(Edit));
+  /* Relinking changes only committed recipe references. It is separate from
+   * Replace / trim so draft timing fields cannot accidentally change a cut. */
+  GtkWidget *relink = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
+  expander = gtk_expander_new("Relink source media");
+  gtk_expander_set_child(GTK_EXPANDER(expander), relink);
+  gtk_box_append(GTK_BOX(panel->form), expander);
+  Label(relink, "Select a clip above, then choose its replacement file. Timing and order stay "
+                "unchanged. Preview the replacement to check its content and duration.");
+  panel->relinkPath = Entry(relink, "Replacement local video", "video.relink-path");
+  Browse(relink, panel->relinkPath, UMI_PATH_PICKER_EXISTING_FILE, "Choose replacement video");
+  panel->relinkAll = gtk_check_button_new_with_label("Relink every clip with the same source path");
+  Tag(panel->relinkAll, "video.relink-all");
+  gtk_box_append(GTK_BOX(relink), panel->relinkAll);
+  Button(panel, relink, "Relink source", "video.relink", "relink", G_CALLBACK(UmiVideoSequenceGtkRelink));
   panel->summary = gtk_text_view_new();
   Tag(panel->summary, "video.summary");
   gtk_text_view_set_editable(GTK_TEXT_VIEW(panel->summary), FALSE);

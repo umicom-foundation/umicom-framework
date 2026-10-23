@@ -26,6 +26,17 @@ These controls use the existing data and do not send another broker request.</li
 <li>Read the contract, route, interval, capture status and last visible candle below the chart.
 Unavailable volume is labelled explicitly. A finished response can still include an unfinished final candle.</li>
 </ol>
+<h2>Read time and volume together</h2>
+<p>The chart labels the first and last visible timestamps in UTC, including seconds.
+The volume row uses the same horizontal positions as the candles. Gaps between provider
+observations remain gaps; the renderer does not invent bars or compress closed-market periods.</p>
+<p>A volume bar uses the provider's reported units. A reported zero is a small baseline mark;
+a missing value has no volume mark. The summary gives the number of observed volumes out of
+the visible candle count. If none are available, it says <strong>Volume unavailable</strong>.
+Bar colour follows the candle's price direction, not a claim about buying or selling volume.</p>
+<p>Historical and five-second streaming views use this same presentation. The streaming view
+shows seconds so two endpoints within one minute remain distinguishable. Exact broker decimal
+records remain authoritative; displayed floating-point bars are for visual inspection.</p>
 <h2>Bounds and recovery</h2><table><thead><tr><th>Setting</th><th>Supported behaviour</th></tr></thead><tbody>
 <tr><td>Bar intervals</td><td>1, 5, 15 and 30 minutes; 1 hour.</td></tr>
 <tr><td>Capture size</td><td>At most 512 bars and 64 KiB per broker response. The duration reserves space for an edge bar.</td></tr>

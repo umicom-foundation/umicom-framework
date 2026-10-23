@@ -106,6 +106,17 @@ UmiStatus umi_test_explorer_session_refresh(
  * Provide the test explorer session set filter operation used by this module and its
  * client applications.
  */
+/* Owner-thread composition: preserve the workspace query/selection, projection,
+ * session revision and caller summary on failure. Success publishes full-catalogue
+ * counts and advances the workspace, model and session revisions once each.
+ * The bound service/workspace, session and registries must remain alive and be
+ * serialized for the entire call; this API does not dispatch callbacks or I/O. */
+UmiStatus UmiTestExplorerSessionApplyFilter(UmiTestExplorerSession *session,
+    const UmiTestPlatformFilter *filter, UmiTestPlatformFilterSummary *out_summary);
+/* Check borrowed ownership before a host commits its own presentation fields. */
+int UmiTestExplorerSessionBindingMatches(const UmiTestExplorerSession *session,
+    const UmiTestPlatformService *service, const UmiTestWorkspace *workspace);
+
 UmiStatus umi_test_explorer_session_set_filter(
     UmiTestExplorerSession *session,
     const UmiTestPlatformFilter *filter);

@@ -6,6 +6,8 @@ include(CTest)
 # names stand in for the surrounding application; no executable is built/run.
 add_library(Umicom::finance INTERFACE IMPORTED)
 add_library(Umicom::data INTERFACE IMPORTED)
+# Canonical record integrity hashes belong to the shared base library.
+add_library(Umicom::base INTERFACE IMPORTED)
 # Storage checks use the canonical exclusive-file owner. This configuration-only
 # host must name that dependency too; native banking tests link the real library.
 add_library(Umicom::platform INTERFACE IMPORTED)

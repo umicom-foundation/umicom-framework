@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Changing a Test Explorer query</title>
+<style>body{font:17px/1.55 system-ui;max-width:900px;margin:3rem auto;padding:0 1rem;color:#202936}pre{background:#eef2f6;padding:1rem;overflow:auto}code{font-size:.9em}h1,h2{line-height:1.2}</style>
+<h1>Changing a Test Explorer query</h1>
+<p>A query contains the search text, suite, label and outcome filters. A projection is the set of rows prepared for display, including its order, selection and expanded groups. Applications should publish a query together with the rows it describes.</p>
+<h2>Use the shared session</h2>
+<ol><li>Create a Framework test-platform service and its workspace. Bind an Explorer session to that same service and workspace. A workspace from another service is rejected.</li>
+<li>Initialize a <code>UmiTestPlatformFilter</code> with <code>umi_test_platform_filter_init</code>. Its default outcome of <code>-1</code> means any outcome. Fill only complete strings that fit the public fields.</li>
+<li>Call <code>UmiTestExplorerSessionApplyFilter</code> on the owning thread. Keep the session, workspace, registries and any application presentation fields serialized during the call.</li>
+<li>Update your controls only when the call returns <code>UMI_STATUS_OK</code>. On refusal, retain the previous visible query and report the returned status. Retry the complete query after addressing the cause.</li></ol>
+<pre><code>UmiTestPlatformFilter filter;
+UmiTestPlatformFilterSummary summary;
+umi_test_platform_filter_init(&amp;filter);
+/* Example fixed text fits the public buffer, including its terminator. */
+memcpy(filter.text, "parser", sizeof "parser");
+UmiStatus status = UmiTestExplorerSessionApplyFilter(session, &amp;filter, &amp;summary);
+if (status == UMI_STATUS_OK) {
+    /* summary.matched_count counts direct matches across the catalogue. */
+}</code></pre>
+<p>The session prepares independent row storage first. Only then does it apply the workspace filter and transfer the completed rows. Failure preserves the previous workspace query and selected item, model query and rows, retained row selection and expansion, revisions and caller summary. Successful filtering advances the workspace, model and session revisions once each. The model object's address remains stable.</p>
+<h2>Sorting and grouping</h2>
+<p><code>umi_test_explorer_session_set_sort</code> and <code>umi_test_explorer_session_set_group</code> prepare their new projection before changing the visible ordering. A failure preserves the previous ordering and session revision. These operations leave the workspace filter unchanged.</p>
+<p>A host that owns a model directly can call <code>UmiTestExplorerModelApplyQuery</code> to apply filter, sort and group together. This changes only that model. The older model setters remain available for callers that deliberately configure a model separately from rebuilding it.</p>
+<h2>Studio integration</h2>
+<p>Studio's centre uses <code>UmiStudioTestServiceApplyExplorerFilter</code> so its presentation fields change only after Framework accepts both the workspace query and projection. The session must belong to that Studio service. The active suite remains part of the query. Overlong search or label strings are refused rather than silently shortened.</p>
+<p>Exact outcome filtering and the failed-only shortcut are different operations. An exact Failed query matches failed results; the shortcut also includes timed-out results. Hidden row selection is retained so it can reappear when the filter is cleared. It is separate from the workspace's currently actionable item and from a bounded execution plan.</p>
+<h2>Build and check the affected targets</h2>
+<p>In an already integrated Applications checkout with the UCRT64 toolchain installed, run these commands in PowerShell. Stop if a command fails. These are qualification instructions, not a statement that a particular checkout has passed.</p>
+<pre><code>Set-Location "C:\umicom\Umicom-Applications"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake --preset windows-ucrt64-all-debug -DBUILD_TESTING=ON
+cmake --build --preset windows-ucrt64-all-debug --parallel 2 --target umicom-test-explorer-query umicom-test-explorer-query-failure umicom-studio-explorer-filter-test
+ctest --preset windows-ucrt64-all-debug -R "^(framework[.]test[.]explorer_query|studio[.]explorer_filter_transaction)" --output-on-failure --no-tests=error</code></pre>
+<p>The regression fixtures use synthetic in-memory test catalogues. They exercise refused allocations, invalid fields, mismatched bindings, revisions, selection retention and Studio composition without launching external test processes. Running them does not replace the existing Explorer, workspace, installed-SDK or native UI qualification suites.</p>
+<h2>Limits</h2>
+<p>Owner-thread serialization is required; these functions do not make registries thread-safe. General session refresh also computes coverage, history, rerun and benchmark views; it is a separate operation and is not covered by the query transaction guarantee. Studio's centre snapshot reads the full hierarchy count directly; exporting hierarchy rows and creating an execution selection retain their own caller-buffer limits.</p>
+</html>

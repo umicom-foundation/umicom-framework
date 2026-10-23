@@ -15,6 +15,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/test_platform/explorer_session.h"
+#include "explorer_query_internal.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -174,6 +175,8 @@ static void initialise_policies(UmiTestExplorerSession *session)
  * Provide the test explorer session create bound operation used by this module and its
  * client applications.
  */
+/* A bound session must use the workspace canonical service so projection rows and workspace counts refer to the same catalogue. The earlier implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_test_explorer_session_create_bound(
     UmiTestPlatformService *service,
     UmiTestWorkspace *workspace,
@@ -186,6 +189,44 @@ UmiStatus umi_test_explorer_session_create_bound(
      * used.
      */
     if (service == NULL || workspace == NULL || out_session == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    *out_session = NULL;
+    session = (UmiTestExplorerSession *)calloc(1U, sizeof(*session));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (session == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    session->service = service;
+    session->workspace = workspace;
+    initialise_policies(session);
+    status = allocate_components(session);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) {
+        umi_test_explorer_session_destroy(session);
+        return status;
+    }
+    session->state = UMI_TEST_EXPLORER_SESSION_READY;
+    session->revision = 1U;
+    *out_session = session;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_test_explorer_session_create_bound(
+    UmiTestPlatformService *service,
+    UmiTestWorkspace *workspace,
+    UmiTestExplorerSession **out_session)
+{
+    UmiTestExplorerSession *session;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (service == NULL || workspace == NULL || out_session == NULL ||
+        UmiExplorerWorkspaceService(workspace) != service) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     *out_session = NULL;
@@ -353,6 +394,8 @@ UmiStatus umi_test_explorer_session_refresh(
  * Provide the test explorer session set filter operation used by this module and its
  * client applications.
  */
+/* Stage the projection before committing the shared workspace query so a refusal cannot expose mixed filter state. The earlier implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_test_explorer_session_set_filter(
     UmiTestExplorerSession *session,
     const UmiTestPlatformFilter *filter)
@@ -375,11 +418,63 @@ UmiStatus umi_test_explorer_session_set_filter(
     if (status == UMI_STATUS_OK) ++session->revision;
     return status;
 }
+#endif
+
+/* Validate binding identities before coordinating borrowed workspace state.
+ * This is an ownership check, not a lifetime extension or a thread lock. */
+int UmiTestExplorerSessionBindingMatches(const UmiTestExplorerSession *session,
+    const UmiTestPlatformService *service, const UmiTestWorkspace *workspace)
+{
+    return session != NULL && service != NULL && workspace != NULL &&
+        session->service == service && session->workspace == workspace &&
+        UmiExplorerWorkspaceService(workspace) == service;
+}
+
+UmiStatus UmiTestExplorerSessionApplyFilter(UmiTestExplorerSession *session,
+    const UmiTestPlatformFilter *filter, UmiTestPlatformFilterSummary *out_summary)
+{
+    if (session == NULL || out_summary == NULL ||
+        UmiTestPlatformFilterValidate(filter) != UMI_STATUS_OK)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (!UmiTestExplorerSessionBindingMatches(session, session->service, session->workspace))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (session->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiTestExplorerModelSnapshot view;
+    UmiStatus status = umi_test_explorer_model_snapshot(session->model, &view);
+    if (status != UMI_STATUS_OK) return status;
+    UmiTestExplorerModel *prepared = NULL;
+    status = UmiExplorerPrepareQuery(session->model,
+        umi_test_platform_service_item(session->service),
+        umi_test_platform_service_result(session->service), filter,
+        view.sort_mode, view.group_mode, &prepared);
+    if (status != UMI_STATUS_OK) return status;
+    UmiTestPlatformFilterSummary summary;
+    status = UmiTestWorkspaceApplyFilter(session->workspace, filter, &summary);
+    if (status != UMI_STATUS_OK) {
+        umi_test_explorer_model_destroy(prepared);
+        return status;
+    }
+    /* The workspace commit is followed only by no-fail owned storage transfer
+     * and scalar publication. No callback may observe an intermediate query. */
+    UmiExplorerPublishQuery(session->model, prepared);
+    ++session->revision;
+    *out_summary = summary;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_test_explorer_session_set_filter(
+    UmiTestExplorerSession *session, const UmiTestPlatformFilter *filter)
+{
+    UmiTestPlatformFilterSummary summary;
+    return UmiTestExplorerSessionApplyFilter(session, filter, &summary);
+}
 
 /*
  * Provide the test explorer session set sort operation used by this module and its client
  * applications.
  */
+/* Publish the requested ordering with its fully prepared projection, preserving the prior query when rebuilding is refused. The earlier implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_test_explorer_session_set_sort(
     UmiTestExplorerSession *session,
     UmiTestExplorerSortMode sort_mode)
@@ -402,11 +497,30 @@ UmiStatus umi_test_explorer_session_set_sort(
     if (status == UMI_STATUS_OK) ++session->revision;
     return status;
 }
+#endif
+
+UmiStatus umi_test_explorer_session_set_sort(
+    UmiTestExplorerSession *session, UmiTestExplorerSortMode sort_mode)
+{
+    if (session == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (session->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiTestExplorerModelSnapshot view;
+    UmiStatus status = umi_test_explorer_model_snapshot(session->model, &view);
+    if (status != UMI_STATUS_OK) return status;
+    status = UmiTestExplorerModelApplyQuery(session->model,
+        umi_test_platform_service_item(session->service),
+        umi_test_platform_service_result(session->service), &view.filter,
+        sort_mode, view.group_mode);
+    if (status == UMI_STATUS_OK) ++session->revision;
+    return status;
+}
 
 /*
  * Provide the test explorer session set group operation used by this module and its client
  * applications.
  */
+/* Publish the requested ordering with its fully prepared projection, preserving the prior query when rebuilding is refused. The earlier implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_test_explorer_session_set_group(
     UmiTestExplorerSession *session,
     UmiTestExplorerGroupMode group_mode)
@@ -426,6 +540,23 @@ UmiStatus umi_test_explorer_session_set_group(
             umi_test_platform_service_result(session->service));
     }
     /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) ++session->revision;
+    return status;
+}
+#endif
+
+UmiStatus umi_test_explorer_session_set_group(
+    UmiTestExplorerSession *session, UmiTestExplorerGroupMode group_mode)
+{
+    if (session == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (session->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiTestExplorerModelSnapshot view;
+    UmiStatus status = umi_test_explorer_model_snapshot(session->model, &view);
+    if (status != UMI_STATUS_OK) return status;
+    status = UmiTestExplorerModelApplyQuery(session->model,
+        umi_test_platform_service_item(session->service),
+        umi_test_platform_service_result(session->service), &view.filter,
+        view.sort_mode, group_mode);
     if (status == UMI_STATUS_OK) ++session->revision;
     return status;
 }

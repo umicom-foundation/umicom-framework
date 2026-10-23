@@ -141,6 +141,17 @@ UmiStatus umi_test_explorer_model_set_group(
  * Empty input clears rows but retains bounded presentation history. State for
  * absent IDs is retained up to MAX_CAPACITY; active IDs take precedence when
  * that history is full. Public snapshot layouts and selection limits are unchanged. */
+/* Apply a complete query and rebuild in one owner-thread operation. Failure
+ * preserves query, rows, retained selection/expansion and revision. Success
+ * advances the revision once. Registries and model must be serialized; this
+ * function invokes no callbacks. Prefer this API for interactive query edits;
+ * the older setters continue to configure a model separately from rebuilding. */
+UmiStatus UmiTestExplorerModelApplyQuery(UmiTestExplorerModel *model,
+    const UmiTestPlatformItemRegistry *items,
+    const UmiTestPlatformResultRegistry *results,
+    const UmiTestPlatformFilter *filter, UmiTestExplorerSortMode sort,
+    UmiTestExplorerGroupMode group);
+
 UmiStatus umi_test_explorer_model_rebuild(
     UmiTestExplorerModel *model,
     const UmiTestPlatformItemRegistry *items,

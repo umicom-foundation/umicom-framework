@@ -38,6 +38,24 @@ If you have unsaved edits, save them first or tick the replacement confirmation.
 undo history. Source media is referenced by its absolute path and is not copied into the recipe.</li></ol>
 <p>Recipes contain local filenames in plain text. Keep them private when those paths reveal sensitive
 project information. Moving a recipe to another computer requires adjusting its clip paths.</p>
+<h2>Relink a moved source file</h2><ol>
+<li>Select the stored clip in the clip list. Expand <strong>Relink source media</strong>
+and choose its replacement local video. Use the replacement field in this section;
+unapplied trim fields are not used by relinking.</li>
+<li>If several cuts refer to the same old path, select <strong>Relink every clip with the same
+source path</strong>. Matching uses the exact stored path, including its spelling.</li>
+<li>Press <strong>Relink source</strong>. This changes only the source references. Clip IDs,
+order, source start/end times and output settings remain unchanged. The selected clip remains
+selected even after moving it to another timeline position.</li>
+<li>Preview the replacement. A valid path does not prove it is the same recording or has enough
+media for the existing trim. Relinking does not copy, rename or overwrite either source file.</li>
+<li>Use Undo to restore the whole relink, or Redo to reapply it. Save a new recipe to keep
+these references after closing. A failed relink preserves the recipe and its undo history.</li></ol>
+<p>Other native or headless hosts use <code>video_relink.h</code>. Each request binds a clip ID,
+its expected old path and its replacement. If the old path has changed, the entire request
+returns <code>UMI_STATUS_INVALID_STATE</code>; reload and review the current references before
+retrying. The caller serializes editing on its owning thread. Relink validation performs no
+filesystem or codec inspection.</p>
 <h2>Render a video</h2><ol>
 <li>Select a trusted native FFmpeg executable that includes the <code>libx264</code> encoder.
 Umicom does not download or install it. Native rendering currently uses the Framework process channel

@@ -26,6 +26,9 @@ UmiStatus UmiIbkrRealtimeCandleCopy(const UmiIbkrConnection *c, uint32_t request
         return status;
     return UmiIbkrMarketBarCandle(&bar, out, volume);
 }
+/* The earlier adapter dropped volume availability before scene creation.
+ * Retain it for review; the replacement carries those flags through projection. */
+#if 0
 UmiStatus UmiIbkrRealtimeSceneCreate(const UmiIbkrConnection *c, uint32_t request, size_t first, size_t count,
                                      uint64_t now, uint64_t age, UmiChartRenderScene **out)
 {
@@ -56,6 +59,43 @@ UmiStatus UmiIbkrRealtimeSceneCreate(const UmiIbkrConnection *c, uint32_t reques
     }
     status = UmiIbkrMarketBarScene(candles, count,
                                    "Five-second bars | rolling window | provider volume units", out);
+    free(candles);
+    return status;
+}
+#endif
+
+UmiStatus UmiIbkrRealtimeSceneCreate(const UmiIbkrConnection *c, uint32_t request, size_t first,
+    size_t count, uint64_t now, uint64_t age, UmiChartRenderScene **out)
+{
+    if (out == NULL || count == 0U || count > UMI_IBKR_REALTIME_BAR_LIMIT)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiIbkrRealtimeSnapshot s;
+    UmiStatus status = UmiIbkrRealtimeCopy(c, request, now, age, &s);
+    if (status != UMI_STATUS_OK)
+        return status;
+    if (s.stale)
+        return UMI_STATUS_INVALID_STATE;
+    if (first > s.count || count > s.count - first)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiChartCandle *candles = calloc(count, sizeof *candles);
+    bool *available = calloc(count, sizeof *available);
+    if (candles == NULL || available == NULL) {
+        free(candles);
+        free(available);
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    /* Retain a separate observation flag. A zero placeholder for missing volume
+     * must not become an observed zero when this view reaches the renderer. */
+    for (size_t i = 0U; i < count; ++i) {
+        status = UmiIbkrRealtimeCandleCopy(c, request, first + i, now, age,
+                                          &candles[i], &available[i]);
+        if (status != UMI_STATUS_OK)
+            break;
+    }
+    if (status == UMI_STATUS_OK)
+        status = UmiIbkrMarketBarSceneObserved(candles, available, count,
+            "Five-second bars | rolling window | provider volume units", out);
+    free(available);
     free(candles);
     return status;
 }

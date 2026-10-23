@@ -134,6 +134,9 @@ UmiStatus UmiIbkrHistoricalCandleCopy(const UmiIbkrConnection *c, uint32_t reque
     return UmiIbkrMarketBarCandle(&bar,out,volumeAvailable);
 }
 
+/* The earlier adapter dropped volume availability before scene creation.
+ * Retain it for review; the replacement carries those flags through projection. */
+#if 0
 UmiStatus UmiIbkrHistoricalSceneCreate(const UmiIbkrConnection *c, uint32_t request, size_t first,
                                        size_t count, uint64_t now, uint64_t age, UmiChartRenderScene **out)
 {
@@ -161,6 +164,43 @@ UmiStatus UmiIbkrHistoricalSceneCreate(const UmiIbkrConnection *c, uint32_t requ
         }
     }
     status=UmiIbkrMarketBarScene(candles,count,"Historical capture | last bar may be unfinished",out);
+    free(candles);
+    return status;
+}
+#endif
+
+UmiStatus UmiIbkrHistoricalSceneCreate(const UmiIbkrConnection *c, uint32_t request, size_t first,
+    size_t count, uint64_t now, uint64_t age, UmiChartRenderScene **out)
+{
+    if (out == NULL || count == 0U || count > UMI_IBKR_HISTORICAL_BAR_LIMIT)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiIbkrHistoricalSnapshot s;
+    UmiStatus status = UmiIbkrHistoricalCopy(c, request, now, age, &s);
+    if (status != UMI_STATUS_OK)
+        return status;
+    if (s.stale || !s.complete)
+        return UMI_STATUS_INVALID_STATE;
+    if (first > s.count || count > s.count - first)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiChartCandle *candles = calloc(count, sizeof *candles);
+    bool *available = calloc(count, sizeof *available);
+    if (candles == NULL || available == NULL) {
+        free(candles);
+        free(available);
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    /* Retain a separate observation flag. A zero placeholder for missing volume
+     * must not become an observed zero when this view reaches the renderer. */
+    for (size_t i = 0U; i < count; ++i) {
+        status = UmiIbkrHistoricalCandleCopy(c, request, first + i, now, age,
+                                          &candles[i], &available[i]);
+        if (status != UMI_STATUS_OK)
+            break;
+    }
+    if (status == UMI_STATUS_OK)
+        status = UmiIbkrMarketBarSceneObserved(candles, available, count,
+            "Historical capture | last bar may be unfinished", out);
+    free(available);
     free(candles);
     return status;
 }

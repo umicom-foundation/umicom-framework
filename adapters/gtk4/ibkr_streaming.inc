@@ -208,7 +208,12 @@ static void StreamingControls(GtkWindow *window, ConnectionUi *ui, GtkWidget *ro
     gtk_label_set_selectable(GTK_LABEL(ui->streamOutput), TRUE);
     ui->streamDrawing = gtk_drawing_area_new();
     gtk_drawing_area_set_content_width(GTK_DRAWING_AREA(ui->streamDrawing), 960);
+    /* The scene now includes an aligned volume row and UTC labels. Retain the
+     * old price-only height for review while giving the complete scene room. */
+#if 0
     gtk_drawing_area_set_content_height(GTK_DRAWING_AREA(ui->streamDrawing), 340);
+#endif
+    gtk_drawing_area_set_content_height(GTK_DRAWING_AREA(ui->streamDrawing), 440);
     gtk_widget_set_name(ui->streamStart, "ibkr-stream-start");
     gtk_widget_set_name(ui->streamStop, "ibkr-stream-stop");
     gtk_widget_set_name(ui->streamRth, "ibkr-stream-rth");

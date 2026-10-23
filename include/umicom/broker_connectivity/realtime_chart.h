@@ -23,6 +23,9 @@ extern "C"
     UmiStatus UmiIbkrRealtimeSceneCreate(const UmiIbkrConnection *, uint32_t requestId, size_t first,
                                          size_t count, uint64_t nowMilliseconds,
                                          uint64_t maximumAgeMilliseconds, UmiChartRenderScene **outScene);
+/* Scenes include UTC endpoint labels with seconds and an aligned volume row.
+ * Missing volume has no bar; observed zero has a baseline mark. Volume retains
+ * provider units. Time gaps remain uncompressed and prices remain display values. */
 #ifdef __cplusplus
 }
 #endif

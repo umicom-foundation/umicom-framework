@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/test_platform/workspace.h"
+#include "explorer_query_internal.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -27,6 +28,14 @@ struct UmiTestWorkspace {
     char selected_session_id[128];
     uint64_t revision;
 };
+
+/* Identity only: the session may coordinate this workspace only while both
+ * borrow the same canonical service. This does not transfer ownership. */
+const UmiTestPlatformService *UmiExplorerWorkspaceService(const UmiTestWorkspace *workspace)
+{
+    return workspace == NULL ? NULL : workspace->service;
+}
+
 
 /* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(char *destination, size_t capacity,

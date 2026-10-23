@@ -18,6 +18,9 @@ static double DisplayValue(UmiDecimal value)
 
 /* Decimal arithmetic remains authoritative in broker records. Conversion here
  * is only for display; an unrepresentable price cannot become a rounded order. */
+/* Retain the original conversion for review. The replacement verifies exact
+ * volume when availability is asserted, before publishing either output. */
+#if 0
 UmiStatus UmiIbkrMarketBarCandle(const UmiIbkrHistoricalBar *bar, UmiChartCandle *out, bool *volumeAvailable)
 {
     if (!bar || !out || !volumeAvailable)
@@ -36,8 +39,34 @@ UmiStatus UmiIbkrMarketBarCandle(const UmiIbkrHistoricalBar *bar, UmiChartCandle
     *volumeAvailable = bar->volumeAvailable;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus UmiIbkrMarketBarCandle(const UmiIbkrHistoricalBar *bar, UmiChartCandle *out, bool *volumeAvailable)
+{
+    if (!bar || !out || !volumeAvailable)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status;
+    if (!bar->open.exact || !bar->high.exact || !bar->low.exact || !bar->close.exact)
+        return UMI_STATUS_NOT_IMPLEMENTED;
+    /* An available volume must have an exact retained decimal just like price.
+     * Do not display a default coefficient as a genuine provider observation. */
+    if (bar->volumeAvailable && !bar->volume.exact)
+        return UMI_STATUS_NOT_IMPLEMENTED;
+    UmiChartCandle candle = {
+        bar->timeMilliseconds,          DisplayValue(bar->open.value),
+        DisplayValue(bar->high.value),  DisplayValue(bar->low.value),
+        DisplayValue(bar->close.value), bar->volumeAvailable ? DisplayValue(bar->volume.value) : 0.0};
+    status = umi_chart_candle_validate(&candle);
+    if (status != UMI_STATUS_OK)
+        return status;
+    *out = candle;
+    *volumeAvailable = bar->volumeAvailable;
+    return UMI_STATUS_OK;
+}
 /* The scene copies every command. Callers can release their candle buffer once
  * this returns, and must recheck freshness before displaying a cached scene. */
+/* The price-only scene omitted time and volume context. The shared observation
+ * renderer replaces it; retain the earlier projection for review. */
+#if 0
 UmiStatus UmiIbkrMarketBarScene(const UmiChartCandle *candles, size_t count, const char *caption,
                                 UmiChartRenderScene **out)
 {
@@ -81,4 +110,11 @@ UmiStatus UmiIbkrMarketBarScene(const UmiChartCandle *candles, size_t count, con
     }
     *out = scene;
     return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus UmiIbkrMarketBarScene(const UmiChartCandle *candles, size_t count, const char *caption,
+                                UmiChartRenderScene **out)
+{
+    return UmiIbkrMarketBarSceneObserved(candles, NULL, count, caption, out);
 }

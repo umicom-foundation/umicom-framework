@@ -172,6 +172,12 @@ target_sources(umicom_test_platform PRIVATE
     src/test_platform/command.c
 )
 
+# Include ownership helpers in affected-source qualification as well as compiler dependencies.
+if(COMMAND umicom_target_qualification_inputs)
+    umicom_target_qualification_inputs(umicom_test_platform FILES
+        "${CMAKE_CURRENT_LIST_DIR}/../src/test_platform/explorer_query_internal.h")
+endif()
+
 # -----------------------------------------------------------------------------
 # Build Graph, Tasks and Deployment platform.
 #

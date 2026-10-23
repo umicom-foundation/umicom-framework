@@ -19,6 +19,7 @@ typedef struct UmiVideoSequencePanel {
   GtkWidget *projectPath, *approval, *program, *output, *cancelButton, *video;
   GtkWidget *soundtrackVideo, *soundtrackAudio, *soundtrackOutput;
   GtkWidget *captionVideo, *captionSource, *captionOutput;
+  GtkWidget *relinkPath, *relinkAll;
   GtkMediaStream *stream;
   UmiCancellationToken *cancel; /* Borrowed from the accepted job until completion. */
   uint32_t previewBegin, previewEnd;
@@ -30,4 +31,5 @@ void UmiVideoSequenceGtkMessage(UmiVideoSequencePanel *panel, const char *messag
 void UmiVideoSequenceGtkJob(GtkButton *button, gpointer root);
 void UmiVideoSequenceGtkPreview(GtkButton *button, gpointer root);
 void UmiVideoSequenceGtkStopPreview(UmiVideoSequencePanel *panel);
+void UmiVideoSequenceGtkRelink(GtkButton *button, gpointer root);
 #endif

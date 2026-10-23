@@ -39,6 +39,7 @@ endif()
 # The existing optional chart owner also serves rolling broker series.
 target_sources(umicom_ibkr_historical_chart PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/bar_chart.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/bar_chart_observed.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/realtime_chart.c")
 
 if(BUILD_TESTING)
@@ -84,5 +85,38 @@ if(BUILD_TESTING)
     endforeach()
     if(COMMAND umicom_register_validation_target)
         umicom_register_validation_target(umicom-ibkr-bar-range-test)
+    endif()
+endif()
+
+# Both public broker adapters must preserve observation metadata in the scene.
+if(BUILD_TESTING)
+    add_executable(umicom-ibkr-observed-chart-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ibkr_connection/test_observed_chart.c")
+    target_include_directories(umicom-ibkr-observed-chart-test PRIVATE
+        "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection")
+    target_link_libraries(umicom-ibkr-observed-chart-test PRIVATE Umicom::ibkr_historical_chart)
+    umicom_ibkr_target(umicom-ibkr-observed-chart-test)
+    foreach(kind historical streaming)
+        foreach(case labels alignment mixed-volume missing-volume zero-volume volume-precision owned)
+            add_test(NAME framework.ibkr_observed_chart.${kind}.${case}
+                COMMAND umicom-ibkr-observed-chart-test ${kind} ${case})
+            set_tests_properties(framework.ibkr_observed_chart.${kind}.${case} PROPERTIES
+                TIMEOUT 20 LABELS "framework;broker;chart;volume;regression")
+        endforeach()
+    endforeach()
+    add_executable(umicom-ibkr-bar-scene-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ibkr_connection/test_bar_scene.c")
+    target_include_directories(umicom-ibkr-bar-scene-test PRIVATE
+        "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection")
+    target_link_libraries(umicom-ibkr-bar-scene-test PRIVATE Umicom::ibkr_historical_chart)
+    umicom_ibkr_target(umicom-ibkr-bar-scene-test)
+    foreach(case gap negative-time capacity duplicate-time unordered invalid-candle caption-overflow bounds single)
+        add_test(NAME framework.ibkr_bar_scene.${case} COMMAND umicom-ibkr-bar-scene-test ${case})
+        set_tests_properties(framework.ibkr_bar_scene.${case} PROPERTIES
+            TIMEOUT 20 LABELS "framework;broker;chart;volume;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-ibkr-observed-chart-test)
+        umicom_register_validation_target(umicom-ibkr-bar-scene-test)
     endif()
 endif()

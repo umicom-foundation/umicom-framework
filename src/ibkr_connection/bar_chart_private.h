@@ -11,4 +11,8 @@
 #include "umicom/broker_connectivity/historical_chart.h"
 UmiStatus UmiIbkrMarketBarCandle(const UmiIbkrHistoricalBar *, UmiChartCandle *, bool *);
 UmiStatus UmiIbkrMarketBarScene(const UmiChartCandle *, size_t, const char *, UmiChartRenderScene **);
+/* NULL availability means all input volumes are observed. Explicit false entries
+ * retain their time slots without inventing zero-volume observations. */
+UmiStatus UmiIbkrMarketBarSceneObserved(const UmiChartCandle *, const bool *, size_t,
+    const char *, UmiChartRenderScene **);
 #endif

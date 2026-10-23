@@ -258,7 +258,12 @@ static void HistoricalControls(GtkWindow *window, ConnectionUi *ui, GtkWidget *r
     ui->historyOutput = Text("No historical capture on this connection.");
     ui->historyDrawing = gtk_drawing_area_new();
     gtk_drawing_area_set_content_width(GTK_DRAWING_AREA(ui->historyDrawing), 960);
+    /* The scene now includes an aligned volume row and UTC labels. Retain the
+     * old price-only height for review while giving the complete scene room. */
+#if 0
     gtk_drawing_area_set_content_height(GTK_DRAWING_AREA(ui->historyDrawing), 340);
+#endif
+    gtk_drawing_area_set_content_height(GTK_DRAWING_AREA(ui->historyDrawing), 440);
     gtk_widget_set_name(ui->historyRead, "ibkr-history-read");
     gtk_widget_set_name(ui->historyCancel, "ibkr-history-cancel");
     gtk_widget_set_name(ui->historyOutput, "ibkr-history-output");

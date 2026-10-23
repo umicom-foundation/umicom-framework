@@ -8,6 +8,7 @@
 
 /* Rename this fixture's source unity so the ordinary library remains available.
  * Fault injection is local to the test and adds no production control switch. */
+#define UmiExplorerWorkspaceService FilterFixtureWorkspaceOwner
 #define umi_test_workspace_create FilterFixtureWorkspace0
 #define umi_test_workspace_destroy FilterFixtureWorkspace1
 #define umi_test_workspace_refresh FilterFixtureWorkspace2

@@ -193,6 +193,8 @@ function(umicom_add_developer_capability_tests)
         endif()
     endforeach()
 
+    include("${CMAKE_CURRENT_SOURCE_DIR}/tests/test_explorer_query.cmake")
+
     # Professional Test Explorer, rerun, coverage, benchmark and history layer.
     umicom_add_framework_test(umicom-selected-test-evidence-tests framework.test.selected_evidence tests/test_selected_test_evidence.c)
     umicom_add_framework_test(umicom-evidence-text-test framework.test.evidence_text tests/test_evidence_text.c)

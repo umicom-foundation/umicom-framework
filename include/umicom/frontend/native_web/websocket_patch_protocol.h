@@ -27,6 +27,8 @@ extern "C" {
 
 #include "umicom/frontend/native_web/patch_serializer.h"
 /* Encode one patch batch for websocket delivery over the existing Framework web transport. */
+/** Invalid input, malformed UTF-8 and capacity failures leave the entire
+ * destination unchanged. Inputs must stay stable and must not overlap it. */
 UmiStatus umi_native_web_websocket_patch_protocol_encode(const UmiNativeWebPatchBatch *batch, UmiNativeWebMarkupBuffer *out_payload);
 
 #ifdef __cplusplus

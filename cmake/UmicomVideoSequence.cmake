@@ -4,6 +4,7 @@ include_guard(GLOBAL)
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomProcessChannel.cmake")
 target_sources(umicom_creative_workspace PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/video_sequence.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/video_relink.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/video_sequence_history.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/video_sequence_document.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/video_render_plan.c"
@@ -14,6 +15,7 @@ target_link_libraries(umicom_creative_workspace PRIVATE Umicom::process_channel 
 if(TARGET umicom_creative_workspace_gtk4)
     target_sources(umicom_creative_workspace_gtk4 PRIVATE
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/video_sequence_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/video_sequence_relink_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/video_sequence_jobs_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/video_sequence_preview_gtk4.c")
     install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/ui/gtk4/video_sequence.h"
@@ -38,6 +40,9 @@ if(BUILD_TESTING)
     endfunction()
     umicom_video_cases(umicom-video-edits-test test_edits.c
         split reorder trim remove bounds alias history)
+    umicom_video_cases(umicom-video-relink-test test_relink.c
+        single batch swap-alias cancelled roundtrip history noop-redo failed-history branch-history
+        null count stale missing duplicate relative unterminated invalid-id invalid-sequence)
     umicom_video_cases(umicom-video-document-test test_document.c
         roundtrip strict unchanged cancelled)
     umicom_video_cases(umicom-video-plan-test test_plan.c
@@ -65,6 +70,9 @@ if(BUILD_TESTING)
         endforeach()
     endif()
     if(TARGET umicom_creative_workspace_gtk4)
+        umicom_video_cases(umicom-video-relink-gtk-test test_relink_gtk4.c
+            selected shared reentry draft invalid busy retired selection-move selection-remove empty)
+        target_link_libraries(umicom-video-relink-gtk-test PRIVATE Umicom::creative_workspace_gtk4)
         umicom_video_cases(umicom-video-gtk-test test_gtk4.c
             edits save-open approval failed-open captured retained-control close-busy composition completion-reentry saved-undo)
         target_link_libraries(umicom-video-gtk-test PRIVATE Umicom::creative_workspace_gtk4)
