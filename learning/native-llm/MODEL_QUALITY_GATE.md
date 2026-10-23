@@ -89,3 +89,71 @@ All inputs remain owned by the caller. A rejection or error never partially over
 A model that passes the quality gate is **not automatically approved for distribution**. In particular, sampled next-token prediction does not test whether generated C23 code compiles, is safe, or satisfies a programming task. Both checkpoint files must come from reviewed sources; this demonstration does not authenticate signatures. Where signed native publications are used, verify them independently before opening checkpoints. The release approval policy and the training quality gate answer different questions and should not be conflated.
 
 Exercises: (1) Show why a change in the evaluation seed makes scores incomparable. (2) Adjust the cross-entropy and top-one values in the worked example and decide whether the candidate passes. (3) Explain why passing a 32-token sample cannot establish general model quality. (4) Compare the meaning of a model audit fingerprint with a cryptographically signed training publication.
+
+## Deterministic quality evidence in native C23
+
+A quality assessment is useful for automated tools only if its output can be
+interpreted without relying on terminal text or the computer's numeric locale.
+`UmiAiTrainingModelQualityEvidenceJson` is a Framework API that renders an
+already computed `UmiAiTrainingModelQualityReport` as compact JSON. It
+recalculates the decision from the original audit snapshots and policy before
+serialisation; inconsistent copied results are rejected without modifying the
+caller's output buffer.
+
+The native read-only comparison application supports an optional JSON output:
+
+```powershell
+Set-Location 'C:\umicom\Umicom-Applications'
+& '.\build\windows-ucrt64-native-llm-debug\umicom-native-llm-quality-compare.exe' `
+  'C:\umicom\reviewed\evaluation-plan.conf' `
+  'C:\umicom\reviewed\baseline.umi' `
+  'C:\umicom\reviewed\candidate.umi' --evidence-json
+```
+
+The three original positional arguments still work and retain their previous
+human-readable output. In JSON mode, stdout contains a single JSON document.
+A passing quality policy returns exit code 0; a valid measured comparison
+that fails the policy returns exit code 1 and still emits honest JSON.
+Malformed inputs and evaluation failures return a nonzero exit code and do
+not publish successful comparison evidence.
+
+### Reading exact floating-point values
+
+The JSON stores cross-entropy, perplexity, deltas and thresholds using
+`*_binary64` fields. Each contains exactly 16 lower-case hexadecimal digits
+representing the IEEE 754 binary64 pattern of the original `double` value.
+For example, the exact bits for 0.5 are `3fe0000000000000`. These strings
+are not decimal JSON numbers. An IEEE 754-compatible consumer can recover
+the original number from its bit pattern rather than guessing at rounding
+or depending on a machine's decimal separator.
+
+FNV-1a64 checkpoint, dataset and plan fields are explicitly labelled
+`*_fnv1a64`. They are reproducibility indicators, not digital signatures.
+The JSON's assurance fields remain `false` for publisher verification,
+independent release approval and general programming competence. Use the
+separate signed-publication and release-approval services for those tasks.
+
+### Build before running tests
+
+```powershell
+Set-Location 'C:\umicom\Umicom-Applications'
+$env:Path = 'C:\msys64\ucrt64\bin;' + $env:Path
+cmake -S .\framework\learning\native-llm `
+  -B .\build\windows-ucrt64-native-llm-debug -G Ninja `
+  -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON `
+  -DUMICOM_AI_TRAINING_ENABLE_SIGNATURES=ON
+if ($LASTEXITCODE -ne 0) { throw 'CMake configure failed.' }
+cmake --build .\build\windows-ucrt64-native-llm-debug --parallel 2
+if ($LASTEXITCODE -ne 0) { throw 'Native LLM build failed. Do not run CTest yet.' }
+ctest --test-dir .\build\windows-ucrt64-native-llm-debug `
+  -R '^framework\.ai\.training\.model_quality_' `
+  --output-on-failure --no-tests=error
+```
+
+The real integration regression calls `UmiAiTrainingDecoderInspect` with its
+correct `UmiAiTrainingDecoderConfig *` output argument. It is compiled with
+incompatible-pointer-type diagnostics treated as errors, preventing the
+previous Windows build failure from returning unnoticed. A missing CTest
+executable after a failed compilation means **not run**, not that the model
+failed its quality assessment. Resolve the compilation failure and rebuild
+all selected test targets before trusting a test result.

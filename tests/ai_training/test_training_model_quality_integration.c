@@ -19,7 +19,11 @@ int main(void)
 {
     UmiAiTrainingDataset *dataset = NULL;
     UmiAiTrainingDecoder *model = NULL;
-    UmiAiTrainingExperimentConfig plan, actual;
+    UmiAiTrainingExperimentConfig plan;
+    /* DecoderInspect requires the decoder-specific configuration, not the
+     * containing experiment plan. Using the latter collided with its stable
+     * public C23 ABI and prevented Windows GCC compilation. */
+    UmiAiTrainingDecoderConfig actual;
     UmiAiTrainingModelQualityPolicy policy;
     UmiAiTrainingModelQualityReport result;
     uint64_t beforeSteps = UINT64_C(987);
@@ -36,6 +40,12 @@ int main(void)
     CHECK(UmiAiTrainingDecoderCreate(&plan.decoder, &model) == UMI_STATUS_OK);
     CHECK(UmiAiTrainingDecoderInspect(model, &actual, &beforeSteps) == UMI_STATUS_OK);
     CHECK(beforeSteps == UINT64_C(0));
+    CHECK(actual.vocabularySize == plan.decoder.vocabularySize);
+    CHECK(actual.contextLength == plan.decoder.contextLength);
+    CHECK(actual.channels == plan.decoder.channels);
+    CHECK(actual.hiddenChannels == plan.decoder.hiddenChannels);
+    CHECK(actual.attentionHeads == plan.decoder.attentionHeads);
+    CHECK(actual.initialSeed == plan.decoder.initialSeed);
     CHECK(UmiAiTrainingModelQualityEvaluate(
         model, model, dataset, &plan, &policy, &result) == UMI_STATUS_OK);
     CHECK(result.accepted == 0);
@@ -45,6 +55,8 @@ int main(void)
     CHECK(result.baseline.modelFingerprint == result.candidate.modelFingerprint);
     CHECK(UmiAiTrainingDecoderInspect(model, &actual, &afterSteps) == UMI_STATUS_OK);
     CHECK(afterSteps == beforeSteps);
+    CHECK(actual.vocabularySize == plan.decoder.vocabularySize);
+    CHECK(actual.initialSeed == plan.decoder.initialSeed);
     UmiAiTrainingDecoderDestroy(model);
     UmiAiTrainingDatasetDestroy(dataset);
     puts("native model quality: real decoder held-out audit and no-change identity PASS");

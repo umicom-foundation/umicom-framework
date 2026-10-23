@@ -77,6 +77,10 @@ if(NOT TARGET umicom_ai_training)
         # Read-only candidate-quality selection reuses canonical held-out
         # ModelAuditEvaluate. It cannot authorise a signed release.
         "${_umicom_ai_training_root}/src/ai/training/model_quality_gate.c"
+        # Deterministic JSON quality evidence reuses the same validated
+        # comparison; binary64 metrics are exact bit strings, not locale
+        # dependent decimal data or signed release attestations.
+        "${_umicom_ai_training_root}/src/ai/training/model_quality_evidence.c"
         # Qualified inference-only attention key/value cache. The original
         # decoder, training tape and model mathematics remain authoritative.
         "${_umicom_ai_training_root}/src/ai/training/kv_cache.c"
@@ -381,7 +385,11 @@ endif()
 # Native quality gates are tested both with explicit copied metric fixtures
 # and using the actual decoder, immutable corpus and canonical ModelAudit.
 if(BUILD_TESTING)
-    foreach(_umicom_quality_case IN ITEMS reports rejections integration)
+    # Original registration list (all previous tests remain enabled):
+    # foreach(_umicom_quality_case IN ITEMS reports rejections integration)
+    # Extend it additively with output-evidence and rejection tests.
+    foreach(_umicom_quality_case IN ITEMS
+        reports rejections integration evidence evidence_rejections)
         _umicom_add_native_ai_training_test(
             "umicom-ai-training-model-quality-${_umicom_quality_case}-test"
             "framework.ai.training.model_quality_${_umicom_quality_case}"
@@ -390,6 +398,17 @@ if(BUILD_TESTING)
     target_compile_definitions(
         umicom-ai-training-model-quality-integration-test PRIVATE
         UMI_AI_TEST_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt")
+    # A wrong pointer type in this integration test previously prevented
+    # Windows UCRT64 builds. Require a hard compiler diagnostic for the actual
+    # public decoder interface, not a substitute isolated test header.
+    if(MSVC)
+        target_compile_options(
+            umicom-ai-training-model-quality-integration-test PRIVATE /we4133)
+    elseif(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(
+            umicom-ai-training-model-quality-integration-test PRIVATE
+            -Werror=incompatible-pointer-types)
+    endif()
 endif()
 
 # Key/value cache parity is checked against canonical decoder logits for

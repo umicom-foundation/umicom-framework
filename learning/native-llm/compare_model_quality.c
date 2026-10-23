@@ -16,9 +16,11 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/experiment_plan.h"
 #include "umicom/ai/training/model_quality_gate.h"
+#include "umicom/ai/training/model_quality_evidence.h"
 #include "umicom/ai/training/optimizer_checkpoint.h"
 
 #include <stdio.h>
+#include <string.h>
 
 #define UMI_MODEL_QUALITY_MANIFEST_CAPACITY 1024U
 
@@ -35,11 +37,28 @@ int main(int argc, char **argv)
     char manifest[UMI_MODEL_QUALITY_MANIFEST_CAPACITY];
     UmiStatus status;
     int exitCode = 2;
+    int emitJson = 0;
+    char evidenceJson[UMI_AI_MODEL_QUALITY_EVIDENCE_JSON_CAPACITY];
+    size_t evidenceWritten = 0U;
 
+    /* The original exactly-three-argument interface is retained below for
+     * review. The replacement still accepts it unchanged; only one optional
+     * output-format token has been added. No original model logic is removed. */
+#if 0
     if (argc != 4) {
         fputs("usage: umicom-native-llm-quality-compare "
               "<reviewed-evaluation-plan> <trusted-baseline-adamw.umi> "
               "<trusted-candidate-adamw.umi>\n", stderr);
+        return 2;
+    }
+#endif
+    /* Existing text output is unchanged. JSON is an optional fourth token,
+     * not a new trainer, second evaluator or implicit release authorisation. */
+    if (argc == 5 && strcmp(argv[4], "--evidence-json") == 0) emitJson = 1;
+    if (argc != 4 && !emitJson) {
+        fputs("usage: umicom-native-llm-quality-compare "
+              "<reviewed-evaluation-plan> <trusted-baseline-adamw.umi> "
+              "<trusted-candidate-adamw.umi> [--evidence-json]\n", stderr);
         return 2;
     }
     /* The opt-in AdamW parser accepts plans with or without clipping and
@@ -63,6 +82,21 @@ int main(int argc, char **argv)
         baseline, candidate, dataset, &plan, &policy, &report);
     if (status != UMI_STATUS_OK) goto failed;
 
+    if (emitJson) {
+        /* The Framework recomputes acceptance and stages JSON atomically.
+         * This executable intentionally emits NO human-readable commentary
+         * on stdout when the machine-readable option is selected. */
+        status = UmiAiTrainingModelQualityEvidenceJson(
+            &report, &policy, evidenceJson, sizeof(evidenceJson),
+            &evidenceWritten);
+        if (status != UMI_STATUS_OK) goto failed;
+        if (fwrite(evidenceJson, 1U, evidenceWritten, stdout) !=
+                evidenceWritten ||
+            fputc('\n', stdout) == EOF || fflush(stdout) != 0) {
+            fputs("cannot write quality evidence to stdout\n", stderr);
+            goto cleanup;
+        }
+    } else {
     printf("Native LLM model comparison — fixed-seed held-out windows\n"
            "Evaluated target tokens: %zu\n"
            "Baseline cross-entropy: %.7f; candidate: %.7f\n"
@@ -82,6 +116,7 @@ int main(int argc, char **argv)
            report.accepted != 0 ? "PASS" : "NOT PASSED");
     puts("This is a small sampled next-token comparison, not proof of coding "
          "competence, signed provenance or release approval.");
+    }
     exitCode = report.accepted != 0 ? 0 : 1;
     goto cleanup;
 
