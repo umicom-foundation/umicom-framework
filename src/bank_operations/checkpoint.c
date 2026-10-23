@@ -17,6 +17,8 @@
  *---------------------------------------------------------------------------*/
 #include "internal.h"
 #include "umicom/bank_operations/checkpoint.h"
+#include <stddef.h>
+#include <stdint.h>
 #include <string.h>
 
 UmiStatus UmiBankOperationsCheckpoint(const UmiBankOperations *operations,
@@ -31,6 +33,8 @@ UmiStatus UmiBankOperationsCheckpoint(const UmiBankOperations *operations,
     if (operations->poisoned || operations->state == NULL) return UMI_STATUS_INVALID_STATE;
     const BankState *state = operations->state;
     if (state->counts.revision != expected_revision) return UMI_STATUS_BUSY;
+    /* Check the live view before deriving anything: do not give a plausible
+     * prefix commitment for a stale, incomplete or inconsistent history. */
     if (state->counts.events > UMI_BANK_EVENT_CAPACITY ||
         state->counts.events != state->counts.revision) return UMI_STATUS_INVALID_STATE;
     status = umi_record_chain_start(chain_id, &candidate);
