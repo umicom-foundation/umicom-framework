@@ -1,8 +1,12 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/frontend_native_web/test_encoding_boundaries.c
- * PURPOSE: Exercise web encoder memory boundaries, Unicode and atomic transport output.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ *
+ * PURPOSE:
+ *   Verify deterministic C23 native-Web text/attribute escaping and bounded
+ *   buffer failure status at the public Framework API boundary.
+ *
+ * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/frontend/native_web/websocket_patch_protocol.h"

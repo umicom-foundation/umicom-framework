@@ -1,8 +1,18 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/bank_operations/checkpoint.c
- * PURPOSE: Reuse canonical banking event encoding for independent integrity anchors.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+ *
+ * PURPOSE:
+ *   Derive a fail-closed record-chain commitment from the already accepted,
+ *   ordered banking event journal without mutating financial state.
+ *
+ * IMPLEMENTATION:
+ *   Canonical BankEncode bytes are the only event representation committed to
+ *   the shared Umicom::record_chain service. Hashing raw structs would depend
+ *   on padding and break replay portability. The candidate checkpoint remains
+ *   private until the final revision and every event have been checked.
+ *
+ * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "internal.h"
