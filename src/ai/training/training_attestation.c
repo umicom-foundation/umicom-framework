@@ -79,9 +79,22 @@ static UmiStatus MakePath(const char *prefix, const char *suffix,
 }
 
 /* All input sizes are bounded independently of the underlying filesystem.
- * This function does not retain the file's path, descriptor or contents. */
+ * This function does not retain the file's path, descriptor or contents.
+ *
+ * Windows declares the external WINAPI ReadFile symbol in fileapi.h. A
+ * file-scope static declaration does NOT hide the incompatible prototype:
+ * both names inhabit the same C translation unit. Use a Framework-specific
+ * internal name while keeping the historical local helper implementation.
+ * The retired declaration is retained solely for review, never compilation.
+ */
+#if 0
+/* Superseded by ReadAttestationFileBytes because windows.h declares ReadFile.
+ * The function body and all bounded-file semantics are preserved below. */
 static UmiStatus ReadFile(const char *path, unsigned char *out,
-                          size_t capacity, size_t *outLength)
+                          size_t capacity, size_t *outLength);
+#endif
+static UmiStatus ReadAttestationFileBytes(const char *path, unsigned char *out,
+                                           size_t capacity, size_t *outLength)
 {
     FILE *input;
     size_t used;
@@ -108,8 +121,8 @@ static UmiStatus ReadPublication(const char *checkpointPath,
     char path[UMI_AI_TRAINING_PUBLICATION_MAX_PATH];
     UmiStatus status = MakePath(checkpointPath, ".publication", path);
     if (status != UMI_STATUS_OK) return status;
-    return ReadFile(path, bytes, UMI_AI_TRAINING_PUBLICATION_RECORD_CAPACITY,
-                    outLength);
+    return ReadAttestationFileBytes(
+        path, bytes, UMI_AI_TRAINING_PUBLICATION_RECORD_CAPACITY, outLength);
 }
 
 /* A UTF-8/plain-ASCII public-key file is a caller-approved trust anchor; a
@@ -122,7 +135,7 @@ static UmiStatus ReadPem(const char *path, int privateKey, EVP_PKEY **outKey)
     EVP_PKEY *key;
     UmiStatus status;
     if (outKey == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    status = ReadFile(path, bytes, sizeof(bytes), &count);
+    status = ReadAttestationFileBytes(path, bytes, sizeof(bytes), &count);
     if (status != UMI_STATUS_OK) return status;
     if (count > INT_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     bio = BIO_new_mem_buf(bytes, (int)count);
@@ -414,7 +427,8 @@ UmiStatus UmiAiTrainingAttestationVerifyAndInspectFile(
     status = MakePath(checkpointPath, UMI_AI_TRAINING_ATTESTATION_SUFFIX,
                       signaturePath);
     if (status != UMI_STATUS_OK) return status;
-    status = ReadFile(signaturePath, actual, sizeof(actual), &actualLength);
+    status = ReadAttestationFileBytes(
+        signaturePath, actual, sizeof(actual), &actualLength);
     if (status != UMI_STATUS_OK) return status;
     status = DecodeSignatureRecord(actual, actualLength, signedFingerprint,
                                    signature);

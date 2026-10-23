@@ -1,0 +1,65 @@
+# Umicom Framework | Native LLM signing and release approval on Windows
+# Purpose: build and run the actual UCRT64 C23/OpenSSL code path that imports
+#          <windows.h>; a Linux-only test cannot catch Win32 identifier clashes.
+# Created by: Umicom Foundation | Sammy Hegab | MIT
+name: Native LLM Windows Cryptography
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'cmake/UmicomNativeLlmTraining.cmake'
+      - 'src/ai/training/**'
+      - 'include/umicom/ai/training/**'
+      - 'tests/ai_training/**'
+      - 'learning/native-llm/**'
+      - '.github/workflows/native-llm-windows-crypto.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  windows-ucrt64-native-llm:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: UCRT64
+          update: true
+          install: >-
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-ninja
+            mingw-w64-ucrt-x86_64-openssl
+      - name: Configure native C23 training and OpenSSL
+        shell: pwsh
+        run: |
+          $env:Path = 'C:\msys64\ucrt64\bin;' + $env:Path
+          cmake -S .\learning\native-llm `
+            -B .\build\native-llm-ucrt64 -G Ninja `
+            -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON `
+            -DUMICOM_AI_TRAINING_ENABLE_SIGNATURES=ON
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Compile explicit release-approval target (including name probe)
+        shell: pwsh
+        run: |
+          $env:Path = 'C:\msys64\ucrt64\bin;' + $env:Path
+          cmake --build .\build\native-llm-ucrt64 `
+            --target umicom-native-llm-release-approve --parallel 2
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Build remaining native C23 tests
+        shell: pwsh
+        run: |
+          $env:Path = 'C:\msys64\ucrt64\bin;' + $env:Path
+          cmake --build .\build\native-llm-ucrt64 --parallel 2
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Run attestation and release-approval regressions
+        shell: pwsh
+        run: |
+          $env:Path = 'C:\msys64\ucrt64\bin;' + $env:Path
+          ctest --test-dir .\build\native-llm-ucrt64 `
+            -R '^framework\.ai\.training\.(attestation_|trust_policy_|trust_receipt_|trust_batch_|release_approval_)' `
+            --output-on-failure --no-tests=error
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

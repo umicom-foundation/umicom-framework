@@ -1058,3 +1058,37 @@ if(UMICOM_AI_TRAINING_ENABLE_SIGNATURES AND
         endforeach()
     endif()
 endif()
+
+# Platform-header symbol regression: compile the production attestation.c in
+# a deliberately adversarial translation unit. A Win32 ReadFile prototype is
+# introduced before the source: on Windows by windows.h itself, and on Unix
+# by a compatible compile-only declaration. This prevents a previously
+# Linux-invisible C symbol collision from reappearing during new work.
+#
+# The probe is an OBJECT library, never linked with the production library;
+# it has no runtime side effects, no extra public API and no duplicate crypto
+# definitions in binaries. Even a target-only signed Release build compiles
+# this probe when the test configuration is enabled.
+if(BUILD_TESTING AND UMICOM_AI_TRAINING_ENABLE_SIGNATURES AND
+   TARGET umicom_ai_training_attestation AND
+   NOT TARGET umicom_ai_training_attestation_win32_names_probe)
+    add_library(umicom_ai_training_attestation_win32_names_probe OBJECT
+        "${_umicom_ai_training_root}/tests/ai_training/test_training_attestation_win32_names.c")
+    target_include_directories(umicom_ai_training_attestation_win32_names_probe PRIVATE
+        "${_umicom_ai_training_root}/include")
+    target_link_libraries(umicom_ai_training_attestation_win32_names_probe PRIVATE
+        OpenSSL::Crypto)
+    target_compile_features(umicom_ai_training_attestation_win32_names_probe
+        PRIVATE c_std_23)
+    if(MSVC)
+        target_compile_options(umicom_ai_training_attestation_win32_names_probe
+            PRIVATE /W4)
+    else()
+        target_compile_options(umicom_ai_training_attestation_win32_names_probe
+            PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror)
+    endif()
+    if(TARGET umicom-native-llm-release-approve)
+        add_dependencies(umicom-native-llm-release-approve
+            umicom_ai_training_attestation_win32_names_probe)
+    endif()
+endif()
