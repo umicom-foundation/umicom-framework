@@ -108,6 +108,16 @@ UmiStatus umi_test_platform_operation_plan_failed(
  * Add test platform operation plan only after its inputs and available capacity have been
  * checked.
  */
+/* Replace a selection only after every requested identity exists and fits.
+ * Duplicate identities return ALREADY_EXISTS. Empty requests are invalid.
+ * Caller initializes plan first; repeat/stop settings are retained. Access to
+ * items must be serialized by its owner. Failure leaves the whole plan intact. */
+UmiStatus UmiTestPlatformOperationPlanSelected(
+    UmiTestPlatformOperationPlan *plan,
+    const UmiTestPlatformItemRegistry *items,
+    const char *const *item_ids,
+    size_t item_count);
+
 UmiStatus umi_test_platform_operation_plan_add(
     UmiTestPlatformOperationPlan *plan,
     const char *item_id

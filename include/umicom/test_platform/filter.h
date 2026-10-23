@@ -57,7 +57,11 @@ typedef struct UmiTestPlatformSelection {
  * a known state.
  */
 void umi_test_platform_filter_init(UmiTestPlatformFilter *filter);
-/* latest_result may be NULL when the test has never run. */
+/* Validate the fixed-size query fields without reading beyond them. */
+UmiStatus UmiTestPlatformFilterValidate(const UmiTestPlatformFilter *filter);
+/* latest_result may be NULL when the test has never run. Invalid filter or
+ * queried item text does not match. failed_only includes failed and timed-out
+ * results; skipped, cancelled and unrecorded outcomes are not failures. */
 int umi_test_platform_filter_matches(
     const UmiTestPlatformItemSnapshot *item,
     const UmiTestPlatformResultSnapshot *latest_result,
@@ -67,12 +71,47 @@ int umi_test_platform_filter_matches(
  * Provide the test platform filter select operation used by this module and its client
  * applications.
  */
+/* Results may be NULL for a catalogue without history. Selection preserves
+ * registry order. On any failure the output remains unchanged. Access to both
+ * registries must be serialized by their owner for this capture. */
 UmiStatus umi_test_platform_filter_select(
     const UmiTestPlatformItemRegistry *items,
     const UmiTestPlatformResultRegistry *results,
     const UmiTestPlatformFilter *filter,
     UmiTestPlatformSelection *out_selection
 );
+
+/* Catalogue inspection is independent of the bounded execution selection.
+ * Counts describe direct filter matches, not hierarchy-only presentation rows.
+ * Selected identity is optional. Empty or unmatched identity sets selected_matches
+ * to zero; first_item_id retains the first matching registry record. */
+typedef struct UmiTestPlatformFilterSummary {
+    size_t item_count, matched_count;
+    size_t passed_count, failed_count, skipped_count;
+    size_t cancelled_count, timed_out_count, not_run_count;
+    char first_item_id[128];
+    int selected_matches;
+    uint64_t item_revision, result_revision;
+} UmiTestPlatformFilterSummary;
+/* Capture counts and selected membership for the complete catalogue. Results
+ * may be NULL. The caller serializes registry access; no callbacks or execution
+ * occur. Allocation or validation failure leaves out_summary unchanged. */
+UmiStatus UmiTestPlatformFilterInspect(
+    const UmiTestPlatformItemRegistry *items,
+    const UmiTestPlatformResultRegistry *results,
+    const UmiTestPlatformFilter *filter,
+    const char *selected_id,
+    UmiTestPlatformFilterSummary *out_summary);
+
+/* Read one direct match in registry order, without the execution selection cap.
+ * An absent latest result is returned as a zero snapshot. Invalid indices and
+ * other failures leave both outputs unchanged. out_latest may be NULL. */
+UmiStatus UmiTestPlatformFilterItemAt(
+    const UmiTestPlatformItemRegistry *items,
+    const UmiTestPlatformResultRegistry *results,
+    const UmiTestPlatformFilter *filter, size_t visible_index,
+    UmiTestPlatformItemSnapshot *out_item,
+    UmiTestPlatformResultSnapshot *out_latest);
 
 #ifdef __cplusplus
 }

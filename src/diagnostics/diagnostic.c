@@ -163,6 +163,8 @@ UMI_DEFINE_STAGED_VALUE_INIT(umi_diagnostic_snapshot_init, UmiDiagnosticSnapshot
  * Check that diagnostic snapshot satisfies its contract before another service relies on
  * it.
  */
+/* Bounded validation now rejects unterminated inline text before records enter model queries or native presentation Retained for engineering review. */
+#if 0
 UmiStatus umi_diagnostic_snapshot_validate(const UmiDiagnosticSnapshot *snapshot,
                                            char *out_message,
                                            size_t capacity)
@@ -180,6 +182,60 @@ UmiStatus umi_diagnostic_snapshot_validate(const UmiDiagnosticSnapshot *snapshot
                snapshot->api_version != UMI_DIAGNOSTIC_API_VERSION) {
         message = "diagnostic snapshot ABI version is unsupported";
         status = UMI_STATUS_INVALID_STATE;
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (snapshot->id[0] == '\0' || snapshot->message[0] == '\0') {
+        message = "diagnostic id and message are required";
+        status = UMI_STATUS_INVALID_ARGUMENT;
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (snapshot->severity < UMI_DIAGNOSTIC_TRACE ||
+               snapshot->severity > UMI_DIAGNOSTIC_FATAL ||
+               snapshot->kind < UMI_DIAGNOSTIC_KIND_GENERAL ||
+               snapshot->kind > UMI_DIAGNOSTIC_KIND_SECURITY) {
+        message = "diagnostic severity or kind is outside the supported range";
+        status = UMI_STATUS_INVALID_ARGUMENT;
+    } else /* Apply this branch only when its contract condition is satisfied. */ if ((snapshot->line == 0U && snapshot->column != 0U) ||
+               (snapshot->end_line != 0U && snapshot->line == 0U)) {
+        message = "diagnostic source range is inconsistent";
+        status = UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (out_message != NULL && capacity > 0U) {
+        (void)snprintf(out_message, capacity, "%s", message);
+    }
+    return status;
+}
+
+#endif
+UmiStatus umi_diagnostic_snapshot_validate(const UmiDiagnosticSnapshot *snapshot,
+                                           char *out_message,
+                                           size_t capacity)
+{
+    const char *message = "valid";
+    UmiStatus status = UMI_STATUS_OK;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (snapshot == NULL) {
+        message = "diagnostic snapshot is null";
+        status = UMI_STATUS_INVALID_ARGUMENT;
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (snapshot->struct_size != (uint32_t)sizeof(*snapshot) ||
+               snapshot->api_version != UMI_DIAGNOSTIC_API_VERSION) {
+        message = "diagnostic snapshot ABI version is unsupported";
+        status = UMI_STATUS_INVALID_STATE;
+    } else if (memchr(snapshot->id, 0, sizeof snapshot->id) == NULL ||
+               memchr(snapshot->source, 0, sizeof snapshot->source) == NULL ||
+               memchr(snapshot->code, 0, sizeof snapshot->code) == NULL ||
+               memchr(snapshot->message, 0, sizeof snapshot->message) == NULL ||
+               memchr(snapshot->detail, 0, sizeof snapshot->detail) == NULL ||
+               memchr(snapshot->uri, 0, sizeof snapshot->uri) == NULL ||
+               memchr(snapshot->owner, 0, sizeof snapshot->owner) == NULL ||
+               memchr(snapshot->tags, 0, sizeof snapshot->tags) == NULL) {
+        /* Validate inline text before model queries, sorting or presentation
+         * treat it as a C string. Adjacent fields cannot terminate each other. */
+        message = "diagnostic text is not terminated within its field capacity";
+        status = UMI_STATUS_INVALID_ARGUMENT;
     } else /* Apply this branch only when its contract condition is satisfied. */ if (snapshot->id[0] == '\0' || snapshot->message[0] == '\0') {
         message = "diagnostic id and message are required";
         status = UMI_STATUS_INVALID_ARGUMENT;

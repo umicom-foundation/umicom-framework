@@ -1164,6 +1164,8 @@ add_library(umicom_diagnostic_ui STATIC
     src/diagnostic_ui/projection.c
     src/diagnostic_ui/build_projection.c
     src/diagnostic_ui/problems_view.c
+    src/diagnostic_ui/page.c
+    src/diagnostic_ui/page_navigation.c
     src/diagnostic_ui/output_view.c
     src/diagnostic_ui/navigation.c
 )
@@ -5143,6 +5145,7 @@ install(DIRECTORY docs/guides/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides
     COMPONENT Framework)
 install(FILES docs/WRITING_DOCUMENTATION.md docs/GUI_RECORDING.html docs/GUI_CONTROL_CHECKS.html docs/GUI_CHECK_SESSIONS.html docs/ACTION_RECOVERY.html docs/COMMAND_FEEDBACK.html docs/EDITING_DOCUMENTS.html
+    docs/TEST_EXPLORER_MODEL.html docs/TEST_EXPLORER_PAGES.html
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs
     COMPONENT Framework)
 install(DIRECTORY examples/project_files/

@@ -254,6 +254,46 @@ UmiStatus umi_test_platform_operation_plan_add(
     return UMI_STATUS_OK;
 }
 
+/* Selection assembly belongs in Framework so Studio and other frontends cannot
+ * publish a valid prefix when a later requested test is missing or duplicated.
+ * Build in heap storage rather than placing the bounded ID array on the stack. */
+UmiStatus UmiTestPlatformOperationPlanSelected(UmiTestPlatformOperationPlan *plan,
+    const UmiTestPlatformItemRegistry *items, const char *const *item_ids,
+    size_t item_count)
+{
+    if (plan == NULL || items == NULL || item_ids == NULL || item_count == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (item_count > UMI_TEST_PLATFORM_SELECTION_CAPACITY || plan->generation == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiStatus status = umi_test_platform_operation_plan_validate(plan);
+    if (status != UMI_STATUS_OK) return status;
+    UmiTestPlatformOperationPlan *candidate = malloc(sizeof *candidate);
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    umi_test_platform_operation_plan_init(candidate, UMI_TEST_PLATFORM_OPERATION_RUN_SELECTED);
+    candidate->repeat_count = plan->repeat_count;
+    candidate->stop_on_failure = plan->stop_on_failure;
+    const uint64_t revision = umi_test_platform_item_registry_revision(items);
+    for (size_t index = 0U; index < item_count; ++index) {
+        /* The existing bounded insertion validates each C-string before find
+         * reads it, and rejects duplicate identities without truncation. */
+        status = umi_test_platform_operation_plan_add(candidate, item_ids[index]);
+        if (status != UMI_STATUS_OK) break;
+        UmiTestPlatformItemSnapshot item;
+        status = umi_test_platform_item_registry_find(items, item_ids[index], &item);
+        if (status != UMI_STATUS_OK) break;
+    }
+    if (status == UMI_STATUS_OK && revision != umi_test_platform_item_registry_revision(items))
+        status = UMI_STATUS_INVALID_STATE;
+    if (status == UMI_STATUS_OK) {
+        candidate->selection.source_revision = revision;
+        candidate->generation = plan->generation + 1U;
+        *plan = *candidate;
+    }
+    free(candidate);
+    return status;
+}
+
+
 /*
  * Return the number of records represented by test platform operation execution without
  * changing their state.

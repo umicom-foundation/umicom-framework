@@ -18,5 +18,7 @@
 #include "umicom/diagnostic_ui/navigation.h"
 #include "umicom/diagnostic_ui/output_view.h"
 #include "umicom/diagnostic_ui/problems_view.h"
+#include "umicom/diagnostic_ui/page.h"
+#include "umicom/diagnostic_ui/page_navigation.h"
 #include "umicom/diagnostic_ui/projection.h"
 #endif

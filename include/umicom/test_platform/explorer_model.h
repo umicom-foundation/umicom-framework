@@ -28,6 +28,9 @@ extern "C" {
 
 #define UMI_TEST_EXPLORER_MODEL_API_VERSION 1U
 #define UMI_TEST_EXPLORER_MODEL_CAPACITY 4096U
+/* Legacy sizing hint above remains available. The model now accepts the full
+ * item registry capacity using dynamically sized, compact owned storage. */
+#define UMI_TEST_EXPLORER_MODEL_MAX_CAPACITY UMI_TEST_PLATFORM_ITEM_MAX_CAPACITY
 
 /**
  * List the named test explorer sort mode values accepted by this public contract.
@@ -133,6 +136,11 @@ UmiStatus umi_test_explorer_model_set_group(
  * Provide the test explorer model rebuild operation used by this module and its client
  * applications.
  */
+/* Owner-thread operation; no callbacks or I/O. All captures and allocations
+ * finish before publication. Failure retains the previous projection/revision.
+ * Empty input clears rows but retains bounded presentation history. State for
+ * absent IDs is retained up to MAX_CAPACITY; active IDs take precedence when
+ * that history is full. Public snapshot layouts and selection limits are unchanged. */
 UmiStatus umi_test_explorer_model_rebuild(
     UmiTestExplorerModel *model,
     const UmiTestPlatformItemRegistry *items,

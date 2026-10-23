@@ -57,3 +57,22 @@ foreach(case empty pagination offset beyond-end filter resolved severity-order s
     set_tests_properties(framework.diagnostic_page.${case} PROPERTIES
         TIMEOUT 30 LABELS "framework;diagnostics;presentation;ownership;regression")
 endforeach()
+
+# Page navigation is a separate contract from arbitrary-offset diagnostic queries.
+umicom_diagnostic_source_target(umicom-diagnostic-page-navigation-test
+    tests/test_diagnostic_page_navigation.c Umicom::diagnostic_ui)
+foreach(case empty first middle last exact-boundary unaligned huge-offset default-limit single-row filter resolved severity shrink clear retained invalid-limit invalid-query arguments arbitrary-offset)
+    add_test(NAME framework.diagnostic_page.navigation.${case}
+        COMMAND umicom-diagnostic-page-navigation-test "${case}")
+    set_tests_properties(framework.diagnostic_page.navigation.${case} PROPERTIES
+        TIMEOUT 30 LABELS "framework;diagnostics;presentation;navigation;regression")
+endforeach()
+
+# Validate producer records before model queries consume their inline strings.
+umicom_diagnostic_source_target(umicom-diagnostic-text-validation-test
+    tests/test_diagnostic_text_validation.c Umicom::diagnostic_ui)
+foreach(case unterminated-id boundary-id unterminated-source boundary-source unterminated-code boundary-code unterminated-message boundary-message unterminated-detail boundary-detail unterminated-uri boundary-uri unterminated-owner boundary-owner unterminated-tags boundary-tags all-terminated message-buffer encoding)
+    add_test(NAME framework.diagnostic_text.${case} COMMAND umicom-diagnostic-text-validation-test "${case}")
+    set_tests_properties(framework.diagnostic_text.${case} PROPERTIES
+        TIMEOUT 30 LABELS "framework;diagnostics;bounds;regression")
+endforeach()

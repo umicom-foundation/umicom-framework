@@ -28,4 +28,18 @@ UmiDiagnosticPageDestroy(page);</code></pre>
 <p>The matching count follows the query. Active, resolved and severity totals describe the whole model; severity totals exclude resolved records. <code>has_more</code> reports additional matches after the captured rows. To read the next page, increase the offset by the number of returned rows and capture again. A changing model can change page boundaries.</p>
 <p>Malformed bounded filter strings and unknown sort values return <code>INVALID_ARGUMENT</code>. A limit above 300 returns <code>CAPACITY_EXCEEDED</code>. Allocation failure returns <code>OUT_OF_MEMORY</code>. Model changes during capture can cancel the read; do not treat a partial read as a completed page. No retry loop is performed internally.</p>
 <p>For GTK4, <code>UmiGtk4ListBoxPublish</code> checks a caller-supplied current-state callback around row changes. Retain its input widgets and invalidate old row actions first. Cancellation may leave a partial list, so only enable actions after the whole page and its host checks succeed. This is not a thread lock, a source-file permission check or proof that the underlying build passed.</p>
+<h2>Previous and next page controls</h2>
+<p>For a paged user interface, include <code>umicom/diagnostic_ui/page_navigation.h</code> and use <code>UmiDiagnosticPageCreateWindow</code>. This wrapper aligns the requested offset to a page boundary and moves an obsolete offset to the last available page after results shrink. It uses at most two captures. The original <code>UmiDiagnosticPageCreate</code> still accepts arbitrary offsets.</p>
+<ol><li>Set the page size in <code>query.limit</code>, then pass the model and query to the window capture service. A zero limit requests 300 rows. Neither output changes on failure.</li><li>Display <code>navigation.page_index + 1</code> and <code>navigation.page_count</code> only when the count is nonzero. An empty result has zero pages and offset zero.</li><li>Enable Previous and Next using <code>has_previous</code> and <code>has_next</code>. Copy the corresponding offset into the next query. Reset the offset to zero when the user changes a filter or sort.</li><li>Use the returned <code>navigation.query</code> for validation: the caller's original offset may have been rounded or clamped. Keep checking the host lifetime and query generation around native notifications.</li><li>If a click refers to stale evidence, refresh first and require a new click. A page number is a view position, not a persistent diagnostic identity.</li></ol>
+<pre><code>UmiDiagnosticPage *page = NULL;
+UmiDiagnosticPageNavigation navigation;
+UmiStatus status = UmiDiagnosticPageCreateWindow(model, &amp;query, &amp;page, &amp;navigation);
+if (status == UMI_STATUS_OK) {
+    query = navigation.query;
+    /* Use navigation.next_offset only when has_next is true. */
+    /* Validate page against this query before authorizing row actions. */
+}
+UmiDiagnosticPageDestroy(page);</code></pre>
+<h2>Producer text and display text</h2>
+<p>Every inline diagnostic text field must contain a NUL character within its declared capacity. The model rejects records that fail this contract before storing them. Text encoding is a separate concern: a native presenter may replace invalid display bytes with a visible replacement character, while retaining the original message, identifier and source path in the diagnostic snapshot. Repaired display text must not become a source-file identity.</p>
 </body></html>

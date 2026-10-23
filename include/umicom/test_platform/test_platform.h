@@ -26,6 +26,7 @@
 #include "umicom/test_platform/run_session.h"
 #include "umicom/test_platform/result.h"
 #include "umicom/test_platform/evidence.h"
+#include "umicom/test_platform/evidence_runs.h"
 #include "umicom/test_platform/output.h"
 #include "umicom/test_platform/coverage.h"
 #include "umicom/test_platform/discovery.h"
@@ -45,6 +46,7 @@
 /* Professional Test Explorer, rerun, coverage, benchmark and history layer. */
 #include "umicom/test_platform/provider_registry.h"
 #include "umicom/test_platform/explorer_model.h"
+#include "umicom/test_platform/explorer_page.h"
 #include "umicom/test_platform/rerun_policy.h"
 #include "umicom/test_platform/coverage_analysis.h"
 #include "umicom/test_platform/benchmark_analysis.h"

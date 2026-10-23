@@ -104,6 +104,9 @@ UmiStatus umi_test_workspace_refresh(UmiTestWorkspace *workspace);
  * Provide the test workspace snapshot operation used by this module and its client
  * applications.
  */
+/* Snapshot inspection and selection of one test cover the full catalogue.
+ * Run All remains bounded by UMI_TEST_PLATFORM_SELECTION_CAPACITY;
+ * can_run_all is false when the visible selection cannot fit that plan. */
 UmiStatus umi_test_workspace_snapshot(
     UmiTestWorkspace *workspace,
     UmiTestWorkspaceSnapshot *out_snapshot
@@ -113,6 +116,16 @@ UmiStatus umi_test_workspace_snapshot(
  * Provide the test workspace set filter operation used by this module and its client
  * applications.
  */
+/* Apply a bounded query on the registry owner thread. Both workspace state and
+ * out_summary remain unchanged on failure. Summary membership describes the
+ * previous selected ID; the workspace selects the first match when necessary.
+ * Counts include the complete catalogue, independently of execution-plan size.
+ * out_summary is required; no callbacks or test execution occur. */
+UmiStatus UmiTestWorkspaceApplyFilter(
+    UmiTestWorkspace *workspace,
+    const UmiTestPlatformFilter *filter,
+    UmiTestPlatformFilterSummary *out_summary);
+
 UmiStatus umi_test_workspace_set_filter(
     UmiTestWorkspace *workspace,
     const char *text,
@@ -167,6 +180,8 @@ UmiStatus umi_test_workspace_plan_selected(
  * Provide the test workspace plan failed operation used by this module and its client
  * applications.
  */
+/* Rerun only failed or timed-out tests matching the current workspace filter.
+ * The lower-level operation plan service retains an unfiltered rerun entry point. */
 UmiStatus umi_test_workspace_plan_failed(
     UmiTestWorkspace *workspace,
     UmiTestPlatformOperationPlan *out_plan

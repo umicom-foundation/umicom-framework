@@ -129,6 +129,9 @@ UmiStatus umi_diagnostic_snapshot_init(UmiDiagnosticSnapshot *snapshot,
  * Check that diagnostic snapshot satisfies its contract before another service relies on
  * it.
  */
+/** Every inline text field must contain a NUL within its declared capacity.
+ * Text bytes are retained as supplied; native presenters choose how to display
+ * invalid encoding. Invalid records must not enter a diagnostic model. */
 UmiStatus umi_diagnostic_snapshot_validate(
     const UmiDiagnosticSnapshot *snapshot,
     char *out_message,

@@ -20,6 +20,238 @@
 #include <stdlib.h>
 #include <string.h>
 
+
+/* Compact owned snapshots and indexed traversal replace the fixed-size,
+ * recursive projection. The previous implementation is retained below for
+ * behavioural review; all existing public entry points remain available. */
+#include "explorer_storage.inc"
+#include "explorer_projection.inc"
+
+UmiStatus umi_test_explorer_model_create(UmiTestExplorerModel **out_model)
+{
+    if (out_model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_model = NULL;
+    UmiTestExplorerModel *model = (UmiTestExplorerModel *)calloc(1U, sizeof *model);
+    if (model == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    umi_test_platform_filter_init(&model->filter);
+    model->sort_mode = UMI_TEST_EXPLORER_SORT_NAME;
+    model->group_mode = UMI_TEST_EXPLORER_GROUP_HIERARCHY;
+    model->revision = 1U;
+    *out_model = model;
+    return UMI_STATUS_OK;
+}
+
+void umi_test_explorer_model_destroy(UmiTestExplorerModel *model)
+{
+    if (model == NULL) return;
+    ExplorerStorageFree(model);
+    free(model);
+}
+
+UmiStatus umi_test_explorer_model_set_filter(UmiTestExplorerModel *model,
+    const UmiTestPlatformFilter *filter)
+{
+    if (model == NULL || !ExplorerFilterValid(filter)) return UMI_STATUS_INVALID_ARGUMENT;
+    if (model->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    model->filter = *filter;
+    ++model->revision;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_test_explorer_model_set_sort(UmiTestExplorerModel *model,
+    UmiTestExplorerSortMode sort_mode)
+{
+    if (model == NULL || sort_mode < UMI_TEST_EXPLORER_SORT_NAME ||
+        sort_mode > UMI_TEST_EXPLORER_SORT_FRAMEWORK) return UMI_STATUS_INVALID_ARGUMENT;
+    if (model->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    model->sort_mode = sort_mode;
+    ++model->revision;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_test_explorer_model_set_group(UmiTestExplorerModel *model,
+    UmiTestExplorerGroupMode group_mode)
+{
+    if (model == NULL || group_mode < UMI_TEST_EXPLORER_GROUP_HIERARCHY ||
+        group_mode > UMI_TEST_EXPLORER_GROUP_OUTCOME) return UMI_STATUS_INVALID_ARGUMENT;
+    if (model->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    model->group_mode = group_mode;
+    ++model->revision;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_test_explorer_model_rebuild(UmiTestExplorerModel *model,
+    const UmiTestPlatformItemRegistry *items, const UmiTestPlatformResultRegistry *results)
+{
+    if (model == NULL || items == NULL || results == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (model->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiTestExplorerModel next = {0};
+    const UmiStatus status = ExplorerProject(&next, model, items, results);
+    if (status != UMI_STATUS_OK) {
+        ExplorerStorageFree(&next);
+        return status;
+    }
+    /* Publish once after every allocation, capture and hierarchy step succeeds.
+     * An unsuccessful rebuild leaves old rows, selection and revision intact. */
+    const UmiTestExplorerModel previous = *model;
+    *model = next;
+    UmiTestExplorerModel retired = previous;
+    ExplorerStorageFree(&retired);
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_test_explorer_model_set_expanded(UmiTestExplorerModel *model,
+    const char *item_id, int expanded)
+{
+    if (model == NULL || item_id == NULL || *item_id == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    const size_t index = ExplorerFind(model, item_id);
+    if (index == EXPLORER_NONE) return UMI_STATUS_NOT_FOUND;
+    const size_t state = ExplorerStateFind(model, item_id);
+    if (state == EXPLORER_NONE) return UMI_STATUS_INVALID_STATE;
+    if (model->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    model->records[index].expanded = model->states[state].expanded = expanded != 0;
+    ExplorerVisibility(model);
+    ++model->revision;
+    return UMI_STATUS_OK;
+}
+
+static UmiStatus ExplorerExpandAll(UmiTestExplorerModel *model, int expanded)
+{
+    if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (model->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    for (size_t i = 0U; i < model->row_count; ++i) {
+        const size_t state = ExplorerStateFind(model, ExplorerText(model, i, EXPLORER_TEXT_id));
+        model->records[i].expanded = expanded;
+        model->states[state].expanded = expanded;
+    }
+    ExplorerVisibility(model);
+    ++model->revision;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_test_explorer_model_expand_all(UmiTestExplorerModel *model)
+{
+    return ExplorerExpandAll(model, 1);
+}
+
+UmiStatus umi_test_explorer_model_collapse_all(UmiTestExplorerModel *model)
+{
+    return ExplorerExpandAll(model, 0);
+}
+
+static void ExplorerClearSelection(UmiTestExplorerModel *model)
+{
+    for (size_t i = 0U; i < model->row_count; ++i) model->records[i].selected = 0;
+    for (size_t i = 0U; i < model->state_count; ++i) model->states[i].selected = 0;
+}
+
+UmiStatus umi_test_explorer_model_select(UmiTestExplorerModel *model,
+    const char *item_id, int selected, int exclusive)
+{
+    if (model == NULL || item_id == NULL || *item_id == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    const size_t index = ExplorerFind(model, item_id);
+    if (index == EXPLORER_NONE) return UMI_STATUS_NOT_FOUND;
+    const size_t state = ExplorerStateFind(model, item_id);
+    if (state == EXPLORER_NONE) return UMI_STATUS_INVALID_STATE;
+    if (model->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Resolve first: a stale ID must not erase the current selection. */
+    if (exclusive) ExplorerClearSelection(model);
+    model->records[index].selected = model->states[state].selected = selected != 0;
+    ++model->revision;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_test_explorer_model_clear_selection(UmiTestExplorerModel *model)
+{
+    if (model == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (model->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    ExplorerClearSelection(model);
+    ++model->revision;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_test_explorer_model_selection(const UmiTestExplorerModel *model,
+    UmiTestPlatformSelection *out_selection)
+{
+    if (model == NULL || out_selection == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t count = 0U;
+    for (size_t i = 0U; i < model->row_count; ++i) count += model->records[i].selected != 0;
+    if (count > UMI_TEST_PLATFORM_SELECTION_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
+    memset(out_selection, 0, sizeof *out_selection);
+    for (size_t i = 0U; i < model->row_count; ++i) {
+        const size_t index = model->order[i];
+        if (!model->records[index].selected) continue;
+        const char *id = ExplorerText(model, index, EXPLORER_TEXT_id);
+        memcpy(out_selection->item_ids[out_selection->count++], id, strlen(id) + 1U);
+    }
+    out_selection->source_revision = model->revision;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_test_explorer_model_row_at(const UmiTestExplorerModel *model,
+    size_t position, UmiTestExplorerRow *out_row)
+{
+    if (model == NULL || out_row == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (position >= model->row_count) return UMI_STATUS_NOT_FOUND;
+    ExplorerReadRow(model, model->order[position], out_row);
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_test_explorer_model_visible_row_at(const UmiTestExplorerModel *model,
+    size_t visible_position, UmiTestExplorerRow *out_row)
+{
+    if (model == NULL || out_row == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (visible_position >= model->visible_count) return UMI_STATUS_NOT_FOUND;
+    ExplorerReadRow(model, model->visible[visible_position], out_row);
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_test_explorer_model_snapshot(const UmiTestExplorerModel *model,
+    UmiTestExplorerModelSnapshot *out_snapshot)
+{
+    if (model == NULL || out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    memset(out_snapshot, 0, sizeof *out_snapshot);
+    out_snapshot->struct_size = (uint32_t)sizeof *out_snapshot;
+    out_snapshot->api_version = UMI_TEST_EXPLORER_MODEL_API_VERSION;
+    out_snapshot->sort_mode = model->sort_mode; out_snapshot->group_mode = model->group_mode;
+    out_snapshot->filter = model->filter; out_snapshot->row_count = model->row_count;
+    out_snapshot->visible_row_count = model->visible_count;
+    out_snapshot->item_revision = model->item_revision;
+    out_snapshot->result_revision = model->result_revision;
+    out_snapshot->revision = model->revision;
+    for (size_t i = 0U; i < model->row_count; ++i) {
+        const ExplorerRecord *record = &model->records[i];
+        const UmiTestPlatformResultSnapshot *result = ExplorerResult(model, i);
+        out_snapshot->root_count += record->depth == 0U;
+        out_snapshot->leaf_count += record->child_count == 0U;
+        out_snapshot->selected_count += record->selected != 0;
+        if (result == NULL) { ++out_snapshot->not_run_count; continue; }
+        switch ((UmiTestPlatformOutcome)result->outcome) {
+            case UMI_TEST_PLATFORM_OUTCOME_PASSED: ++out_snapshot->passed_count; break;
+            case UMI_TEST_PLATFORM_OUTCOME_FAILED:
+            case UMI_TEST_PLATFORM_OUTCOME_TIMED_OUT: ++out_snapshot->failed_count; break;
+            case UMI_TEST_PLATFORM_OUTCOME_SKIPPED: ++out_snapshot->skipped_count; break;
+            default: ++out_snapshot->not_run_count; break;
+        }
+    }
+    return UMI_STATUS_OK;
+}
+
+size_t umi_test_explorer_model_count(const UmiTestExplorerModel *model)
+{
+    return model != NULL ? model->row_count : 0U;
+}
+size_t umi_test_explorer_model_visible_count(const UmiTestExplorerModel *model)
+{
+    return model != NULL ? model->visible_count : 0U;
+}
+uint64_t umi_test_explorer_model_revision(const UmiTestExplorerModel *model)
+{
+    return model != NULL ? model->revision : 0U;
+}
+
+/* The former fixed-capacity recursive implementation is retained for review. Compact owned records, indexed joins and iterative traversal above support the full discovery catalogue and publish rebuilds atomically. Retained for engineering review. */
+#if 0
 #define EXPLORER_ID_CAPACITY 128U
 
 typedef struct ExplorerStateRecord {
@@ -1034,3 +1266,5 @@ uint64_t umi_test_explorer_model_revision(const UmiTestExplorerModel *model)
 {
     return model != NULL ? model->revision : 0U;
 }
+
+#endif
