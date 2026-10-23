@@ -67,6 +67,9 @@ if(NOT TARGET umicom_ai_training)
         "${_umicom_ai_training_root}/src/ai/training/generation_cache.c"
         # Retained streaming state composes the same KV cache and top-p sampler.
         "${_umicom_ai_training_root}/src/ai/training/generation_session.c"
+        # Independently measurable inference economics: existing decoder and
+        # cache/session APIs remain sole mathematics and allocation authorities.
+        "${_umicom_ai_training_root}/src/ai/training/generation_performance.c"
         # Independent, byte-exact completion evidence reuses the saved model
         # and the canonical native sampler; generated code is never executed.
         "${_umicom_ai_training_root}/src/ai/training/benchmark.c"
@@ -360,6 +363,16 @@ if(BUILD_TESTING)
         umicom-ai-training-generation-session-rejections-test
         framework.ai.training.generation_session_rejections
         test_training_generation_session_rejections.c)
+    # A real-model comparison tests honest cache row forecasts against the
+    # decoder, while refusal tests protect failure-atomic report publication.
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-generation-performance-test
+        framework.ai.training.generation_performance
+        test_training_generation_performance.c)
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-generation-performance-rejections-test
+        framework.ai.training.generation_performance_rejections
+        test_training_generation_performance_rejections.c)
 endif()
 
 # Independent evidence checks protect attribution of evaluation metrics to the
@@ -1253,5 +1266,27 @@ if(TARGET umicom_ai_training AND NOT TARGET umicom-native-llm-streaming-demo)
             COMMAND umicom-native-llm-streaming-demo)
         set_tests_properties(framework.ai.training.generation_session_demo PROPERTIES
             LABELS "framework;ai;native-training;learning;generation")
+    endif()
+endif()
+
+# The learner CLI reports a measured reference-vs-cache comparison. Neither
+# input source, model weights nor checkpoint bytes are changed; the native
+# Framework owns both inference paths, all workload counters and resource sizes.
+if(TARGET umicom_ai_training AND NOT TARGET umicom-native-llm-generation-work)
+    add_executable(umicom-native-llm-generation-work
+        "${_umicom_ai_training_root}/learning/native-llm/profile_generation_work.c")
+    target_link_libraries(umicom-native-llm-generation-work PRIVATE Umicom::AiTraining)
+    target_compile_features(umicom-native-llm-generation-work PRIVATE c_std_23)
+    if(MSVC)
+        target_compile_options(umicom-native-llm-generation-work PRIVATE /W4)
+    else()
+        target_compile_options(umicom-native-llm-generation-work PRIVATE
+            -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    endif()
+    if(BUILD_TESTING)
+        add_test(NAME framework.ai.training.generation_performance_demo
+            COMMAND umicom-native-llm-generation-work)
+        set_tests_properties(framework.ai.training.generation_performance_demo PROPERTIES
+            LABELS "framework;ai;native-training;learning;generation;performance")
     endif()
 endif()
