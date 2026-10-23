@@ -1006,3 +1006,55 @@ if(UMICOM_AI_TRAINING_ENABLE_SIGNATURES AND
         endforeach()
     endif()
 endif()
+
+# Independently approved, exact release identity. A reviewer pins the ordered
+# SHA-256 of a previously verified batch outside its release-artifact directory.
+# The new service re-runs the real Ed25519 trust-batch verifier and compares
+# the reviewer's expected identity; it does not accept a release-supplied
+# expectation as its own authority. Checkpoint formats and the original batch
+# verifier are unchanged, and the dependency is optional as before.
+if(UMICOM_AI_TRAINING_ENABLE_SIGNATURES AND
+   TARGET umicom_ai_training_attestation)
+    target_sources(umicom_ai_training_attestation PRIVATE
+        "${_umicom_ai_training_root}/src/ai/training/training_release_approval.c")
+
+    if(NOT TARGET umicom-native-llm-release-approve)
+        add_executable(umicom-native-llm-release-approve
+            "${_umicom_ai_training_root}/learning/native-llm/verify_training_release_approval.c")
+        target_link_libraries(umicom-native-llm-release-approve PRIVATE
+            Umicom::AiTrainingAttestation)
+        target_compile_features(umicom-native-llm-release-approve PRIVATE c_std_23)
+        if(MSVC)
+            target_compile_options(umicom-native-llm-release-approve PRIVATE /W4)
+        else()
+            target_compile_options(umicom-native-llm-release-approve PRIVATE
+                -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+        endif()
+    endif()
+
+    if(BUILD_TESTING)
+        foreach(_umicom_approval_case IN ITEMS parse file gate)
+            set(_umicom_approval_target
+                "umicom-ai-training-release-approval-${_umicom_approval_case}-test")
+            if(NOT TARGET "${_umicom_approval_target}")
+                add_executable("${_umicom_approval_target}"
+                    "${_umicom_ai_training_root}/tests/ai_training/test_training_release_approval_${_umicom_approval_case}.c")
+                target_link_libraries("${_umicom_approval_target}" PRIVATE
+                    Umicom::AiTrainingAttestation)
+                target_compile_features("${_umicom_approval_target}" PRIVATE c_std_23)
+                if(MSVC)
+                    target_compile_options("${_umicom_approval_target}" PRIVATE /W4)
+                else()
+                    target_compile_options("${_umicom_approval_target}" PRIVATE
+                        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+                endif()
+                add_test(
+                    NAME "framework.ai.training.release_approval_${_umicom_approval_case}"
+                    COMMAND "${_umicom_approval_target}")
+                set_tests_properties(
+                    "framework.ai.training.release_approval_${_umicom_approval_case}"
+                    PROPERTIES LABELS "framework;ai;native-training;cryptography;trust;release-approval")
+            endif()
+        endforeach()
+    endif()
+endif()
