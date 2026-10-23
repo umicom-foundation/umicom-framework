@@ -233,3 +233,95 @@ if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
 endif()
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../examples/bank_feed/mapped-statement.csv"
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/examples/bank_feed COMPONENT Learning)
+
+# Daily traces extend the existing bank-feed owner, so applications and installed
+# SDK consumers use the same date selection and exact aggregate arithmetic.
+target_sources(umicom_bank_feed PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/bank_feed/statement_timeline.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/bank_feed/statement_timeline_report.c")
+if(BUILD_TESTING)
+    add_executable(umicom-bank-statement-timeline-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/bank_feed/test_statement_timeline.c")
+    set_target_properties(umicom-bank-statement-timeline-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-bank-statement-timeline-test PRIVATE Umicom::bank_feed)
+    umicom_apply_warnings(umicom-bank-statement-timeline-test)
+    umicom_apply_sanitizers(umicom-bank-statement-timeline-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-bank-statement-timeline-test)
+    endif()
+    foreach(case chronology pending-only empty-period negative-opening earliest-tie same-day precision
+        currency-isolation ownership csv-formula pagination invalid overflow intermediate-overflow capacity bounds mismatch row-evidence)
+        add_test(NAME framework.bank_statement.timeline.${case}
+            COMMAND umicom-bank-statement-timeline-test ${case})
+        set_tests_properties(framework.bank_statement.timeline.${case} PROPERTIES
+            TIMEOUT 20 LABELS "framework;banking;reconciliation;regression")
+    endforeach()
+endif()
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-bank-statement-timeline-native-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/bank_feed/test_statement_timeline_native.c")
+    set_target_properties(umicom-bank-statement-timeline-native-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-bank-statement-timeline-native-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-bank-statement-timeline-native-test)
+    umicom_apply_sanitizers(umicom-bank-statement-timeline-native-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-bank-statement-timeline-native-test)
+    endif()
+    foreach(case snapshot edit recompare invalid retained parent buffer-edit buffer-close export-edit export-close aggregate-only)
+        add_test(NAME framework.bank_statement.timeline.native.${case}
+            COMMAND umicom-bank-statement-timeline-native-test ${case})
+        set_tests_properties(framework.bank_statement.timeline.native.${case} PROPERTIES
+            TIMEOUT 20 SKIP_RETURN_CODE 77 LABELS "framework;banking;reconciliation;gtk4;regression")
+    endforeach()
+endif()
+
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../examples/bank_feed/daily-statement.csv"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/examples/bank_feed COMPONENT Learning)
+
+# Observation archives reuse the bank-feed owner and its bounded JSON services.
+# The previous CSV/report interfaces remain unchanged.
+target_sources(umicom_bank_feed PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/bank_feed/archive.c")
+if(BUILD_TESTING)
+    add_executable(umicom-bank-feed-archive-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/bank_feed/test_archive.c")
+    set_target_properties(umicom-bank-feed-archive-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-bank-feed-archive-test PRIVATE Umicom::bank_feed)
+    umicom_apply_warnings(umicom-bank-feed-archive-test)
+    umicom_apply_sanitizers(umicom-bank-feed-archive-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-bank-feed-archive-test)
+    endif()
+    foreach(case json csv mapped multiline unicode precision missing-id pagination ownership empty capacity
+        version metadata duplicate-key unknown-field duplicate-id late-failure date amount control invalid-utf8 truncated invalid-api
+        unknown-source mapped-control row-limit)
+        add_test(NAME framework.bank_feed.archive.${case} COMMAND umicom-bank-feed-archive-test ${case})
+        set_tests_properties(framework.bank_feed.archive.${case} PROPERTIES
+            TIMEOUT 20 LABELS "framework;banking;persistence;regression")
+    endforeach()
+    add_test(NAME framework.bank_feed.csv.control-del COMMAND umicom-bank-feed-csv-test control-del)
+    set_tests_properties(framework.bank_feed.csv.control-del PROPERTIES
+        TIMEOUT 20 LABELS "framework;banking;csv;import;regression")
+endif()
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-bank-feed-archive-native-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/bank_feed/test_archive_native.c")
+    set_target_properties(umicom-bank-feed-archive-native-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-bank-feed-archive-native-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-bank-feed-archive-native-test)
+    umicom_apply_sanitizers(umicom-bank-feed-archive-native-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-bank-feed-archive-native-test)
+    endif()
+    foreach(case roundtrip json-source csv-source exclusive-save invalid loading-change prepare-change
+        edit-notify close-notify close-loading retained)
+        add_test(NAME framework.bank_feed.archive.native.${case}
+            COMMAND umicom-bank-feed-archive-native-test ${case})
+        set_tests_properties(framework.bank_feed.archive.native.${case} PROPERTIES
+            TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;banking;persistence;gtk4;regression")
+    endforeach()
+endif()

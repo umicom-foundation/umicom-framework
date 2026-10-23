@@ -2,7 +2,10 @@
  * Umicom Framework | test_training_experiment_plan.c
  * Author: Sammy Hegab, Umicom Foundation | MIT
  * PURPOSE: Strict, reproducible native experiment-plan parsing.
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_experiment_plan.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/experiment_plan.h"
 #include <stdio.h>
 #include <string.h>

@@ -3,7 +3,9 @@
  * File: tests/ai_training/test_training_learning_rate.c
  * PURPOSE: Verify scheduled learning rates, warmup and failure-atomic outputs.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/optimizer.h"
 #include <math.h>
 #include <stdio.h>

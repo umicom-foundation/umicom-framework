@@ -74,7 +74,8 @@ if(BUILD_TESTING)
             selected shared reentry draft invalid busy retired selection-move selection-remove empty)
         target_link_libraries(umicom-video-relink-gtk-test PRIVATE Umicom::creative_workspace_gtk4)
         umicom_video_cases(umicom-video-gtk-test test_gtk4.c
-            edits save-open approval failed-open captured retained-control close-busy composition completion-reentry saved-undo)
+            edits save-open approval failed-open captured retained-control close-busy composition completion-reentry saved-undo
+            cancel-open retire-dispatch retire-complete retire-refresh)
         target_link_libraries(umicom-video-gtk-test PRIVATE Umicom::creative_workspace_gtk4)
         if(TARGET umicom-video-tool-fixture)
             add_dependencies(umicom-video-gtk-test umicom-video-tool-fixture)
@@ -97,4 +98,12 @@ if(BUILD_TESTING)
         add_test(NAME framework.video_sequence.encoder.actual COMMAND umicom-video-encoder-test "${UMICOM_VIDEO_FFMPEG_EXECUTABLE}")
         set_tests_properties(framework.video_sequence.encoder.actual PROPERTIES TIMEOUT 120 LABELS "framework;video-sequence;encoder;acceptance")
     endif()
+endif()
+
+# Lifetime regressions must not silently survive GTK ownership warnings.
+if(BUILD_TESTING AND TARGET umicom-video-gtk-test)
+    foreach(case cancel-open retire-dispatch retire-complete retire-refresh)
+        set_tests_properties(framework.video_sequence.umicom-video-gtk-test.${case}
+            PROPERTIES ENVIRONMENT "G_DEBUG=fatal-warnings")
+    endforeach()
 endif()

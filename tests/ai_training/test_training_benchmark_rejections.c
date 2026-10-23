@@ -3,7 +3,10 @@
  * PURPOSE: Reject invalid cases and insufficient output capacity without
  *          publishing partial results, even when a later case is malformed.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_benchmark_rejections.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/benchmark.h"
 #include <stdio.h>
 #include <string.h>

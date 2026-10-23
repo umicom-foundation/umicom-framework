@@ -2,7 +2,10 @@
  * Umicom Framework | tests/ai_training/test_training_generation_bytes.c
  * PURPOSE: Reversible byte generation, embedded NUL and invalid byte outputs.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_generation_bytes.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/generation.h"
 #include "umicom/ai/training/byte_tokenizer.h"
 #include <stdint.h>

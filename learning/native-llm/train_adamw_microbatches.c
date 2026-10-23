@@ -5,7 +5,10 @@
  * canonical Framework dataset, experiment, decoder and optimiser services.
  * Never executes source files or changes checkpoint files.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: learning/native-llm/train_adamw_microbatches.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/experiment_adamw.h"
 #include "umicom/ai/training/gradient_accumulation.h"
 #include <inttypes.h>

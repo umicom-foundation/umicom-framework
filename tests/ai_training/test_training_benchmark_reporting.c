@@ -3,7 +3,10 @@
  * PURPOSE: Verify bounded, non-executing metrics are honest about mismatches
  *          and do not claim correctness from a partial byte coincidence.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_benchmark_reporting.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/benchmark.h"
 #include <stdio.h>
 #define CHECK(test) do { if (!(test)) { \

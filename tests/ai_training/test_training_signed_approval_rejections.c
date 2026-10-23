@@ -3,7 +3,9 @@
  * File: tests/ai_training/test_training_signed_approval_rejections.c
  * PURPOSE: Fail-closed, no-clobber, tamper and wrong-key regression tests.
  * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "training_signed_approval_fixture.h"
 #include <stdio.h>
 #include <string.h>

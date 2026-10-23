@@ -1,5 +1,10 @@
 /* Umicom Framework | Sammy Hegab / Umicom Foundation | MIT
- * Validate corpus copying, window alignment, and rejection without writes. */
+ * Validate corpus copying, window alignment, and rejection without writes.
+ * File: tests/ai_training/test_training_corpus.c
+ * PURPOSE: Validate corpus copying, next-token window alignment and rejection without output writes.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/corpus.h"
 #include <stdio.h>
 #define CHECK(p) do { if (!(p)) { fprintf(stderr, "FAIL line %d\n", __LINE__); return 1; } } while (0)

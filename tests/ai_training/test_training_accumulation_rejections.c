@@ -4,7 +4,9 @@
  * PURPOSE: Reject unsupported microbatches, preserve model/report outputs
  *          after cancellation, and leave an input checkpoint untouched.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/experiment_accumulation.h"
 #include "umicom/ai/training/experiment_plan.h"
 #include <stdint.h>

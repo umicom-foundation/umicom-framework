@@ -7,6 +7,8 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/bank_statement.h"
+#include "umicom/bank_feed/statement_timeline.h"
+#include <stdio.h>
 #include "umicom/ui/gtk4/text_export.h"
 #include "window_removal_private.h"
 #include <string.h>
@@ -16,6 +18,8 @@ typedef struct StatementUi {
   char *account, *currency;
   GtkWidget *first, *last, *opening, *closing, *result, *save;
   GtkTextBuffer *csv;
+  GtkTextBuffer *dailyText, *dailyCsv; /* Owned independently of view lifetime. */
+  GtkWidget *dailySave;
   guint64 revision;
   gboolean closed, invalidating, publishing;
 } StatementUi;
@@ -31,6 +35,9 @@ static void StatementFree(gpointer data) {
   g_free(ui->account);
   g_free(ui->currency);
   g_clear_object(&ui->csv);
+  g_clear_object(&ui->dailyText);
+  g_clear_object(&ui->dailyCsv);
+  g_clear_object(&ui->dailySave);
   g_clear_object(&ui->save);
   g_free(ui);
 }
@@ -44,6 +51,7 @@ static void StatementClosed(GtkWidget *window, gpointer unused) {
   UmiBankFeedDestroy(ui->feed);
   ui->feed = NULL;
   UmiTextExportGtk4Retire(ui->save);
+  UmiTextExportGtk4Retire(ui->dailySave);
 }
 static bool StatementCurrent(GtkWindow *window, guint64 revision) {
   StatementUi *ui = StatementOwner(window);
@@ -67,6 +75,17 @@ static void StatementInvalidate(GtkWindow *window) {
   ui = StatementOwner(window);
   if (ui == NULL)
     return;
+  /* Daily and aggregate exports belong to the same reviewed input generation.
+   * Revoke both before showing new assumptions or accepting another comparison. */
+  gtk_widget_set_sensitive(ui->dailySave, FALSE);
+  ui = StatementOwner(window);
+  if (ui == NULL) return;
+  gtk_text_buffer_set_text(ui->dailyCsv, "", 0);
+  ui = StatementOwner(window);
+  if (ui == NULL) return;
+  gtk_text_buffer_set_text(ui->dailyText, "", 0);
+  ui = StatementOwner(window);
+  if (ui == NULL) return;
   gtk_label_set_text(GTK_LABEL(ui->result), "Enter dates and balances, then compare.");
   ui = StatementOwner(window);
   if (ui != NULL)
@@ -93,6 +112,38 @@ static void StatementLine(GString *text, const char *label, UmiDecimal value) {
   char number[UMI_DECIMAL_TEXT_MAX];
   if (UmiDecimalFormat(value, number, sizeof number) == UMI_STATUS_OK)
     g_string_append_printf(text, "%s: %s\n", label, number);
+}
+/* Format a detached report before touching any native widget. A notification
+ * may close the host, so no imported feed is borrowed during publication. */
+static GString *StatementDailyText(const UmiBankStatementTimeline *timeline, UmiStatus status) {
+  GString *text = g_string_new("Daily booked balances\n");
+  if (status != UMI_STATUS_OK) {
+    g_string_append_printf(text, "Daily trace unavailable: %s. No partial balances are shown.\n", umi_status_text(status));
+    return text;
+  }
+  UmiBankStatementTimelineSummary summary;
+  (void)UmiBankStatementTimelineRead(timeline, &summary);
+  StatementLine(text, "Minimum including supplied opening", summary.minimumBalance);
+  g_string_append_printf(text, "Minimum date: %04d-%02u-%02u\n", (int)summary.minimumDate.year,
+    (unsigned)summary.minimumDate.month, (unsigned)summary.minimumDate.day);
+  if (summary.hasNegativeBalance)
+    g_string_append_printf(text, "First negative opening or day close: %04d-%02u-%02u\n",
+      (int)summary.firstNegativeDate.year, (unsigned)summary.firstNegativeDate.month, (unsigned)summary.firstNegativeDate.day);
+  else g_string_append(text, "No negative opening or day close in the selected observations.\n");
+  for (size_t i = 0U; i < summary.days; ++i) {
+    UmiBankStatementDay day;
+    (void)UmiBankStatementTimelineAt(timeline, i, &day);
+    char credit[UMI_DECIMAL_TEXT_MAX], debit[UMI_DECIMAL_TEXT_MAX], balance[UMI_DECIMAL_TEXT_MAX];
+    (void)UmiDecimalFormat(day.credits, credit, sizeof credit);
+    (void)UmiDecimalFormat(day.debits, debit, sizeof debit);
+    (void)UmiDecimalFormat(day.closing, balance, sizeof balance);
+    g_string_append_printf(text, "%04d-%02u-%02u | credits %s | debits %s | closing %s | booked %zu | pending excluded %zu\n",
+      (int)day.date.year, (unsigned)day.date.month, (unsigned)day.date.day, credit, debit, balance,
+      day.bookedRows, day.pendingRows);
+  }
+  g_string_append(text, "Dates without observations keep the prior balance. Pending amounts are excluded.\n"
+    "Provider calendar days; no intraday sequence, live balance, forecast or proof of completeness.\n");
+  return text;
 }
 static void StatementCompare(GtkButton *button, gpointer data) {
   (void)button;
@@ -123,6 +174,18 @@ static void StatementCompare(GtkButton *button, gpointer data) {
   UmiStatus exportStatus = status;
   if (status == UMI_STATUS_OK)
     exportStatus = UmiBankStatementExportCsv(ui->feed, &request, &csv);
+  UmiBankStatementTimeline *timeline = NULL;
+  UmiStatus dailyStatus = status;
+  if (status == UMI_STATUS_OK)
+    dailyStatus = UmiBankStatementTimelineCreate(ui->feed, &request, &timeline);
+  GString *daily = StatementDailyText(timeline, dailyStatus);
+  UmiCsvDocument *dailyCsv = NULL;
+  if (dailyStatus == UMI_STATUS_OK) {
+    UmiStatus dailyExportStatus = UmiBankStatementTimelineExportCsv(timeline, &dailyCsv);
+    if (dailyExportStatus != UMI_STATUS_OK)
+      g_string_append_printf(daily, "Daily CSV unavailable: %s.\n", umi_status_text(dailyExportStatus));
+  }
+  UmiBankStatementTimelineDestroy(timeline);
   GString *text = g_string_new("");
   if (status != UMI_STATUS_OK)
     g_string_append_printf(
@@ -159,6 +222,24 @@ static void StatementCompare(GtkButton *button, gpointer data) {
       gtk_widget_set_sensitive(ui->save, TRUE);
     }
   }
+  if (StatementCurrent(window, revision)) {
+    ui = StatementOwner(window);
+    gtk_text_buffer_set_text(ui->dailyText, daily->str, -1);
+    if (StatementCurrent(window, revision) && dailyCsv != NULL) {
+      ui = StatementOwner(window);
+      gtk_text_buffer_set_text(ui->dailyCsv, UmiCsvDocumentData(dailyCsv), -1);
+      if (StatementCurrent(window, revision)) {
+        ui = StatementOwner(window);
+        gtk_widget_set_sensitive(ui->dailySave, TRUE);
+      }
+    }
+  }
+  /* A text-buffer notification can change inputs during set_text. Clear again
+   * after the outer publication finishes, so no residual insertion stays live. */
+  if (!StatementCurrent(window, revision) && StatementOwner(window) != NULL)
+    StatementInvalidate(window);
+  g_string_free(daily, TRUE);
+  UmiCsvDocumentDestroy(dailyCsv);
   ui = StatementOwner(window);
   if (ui != NULL)
     ui->publishing = FALSE;
@@ -247,6 +328,24 @@ GtkWindow *UmiBankStatementGtk4Create(const UmiBankFeed *feed, const char *accou
   gtk_widget_set_sensitive(ui->save, FALSE);
   gtk_box_append(GTK_BOX(box), ui->save);
   g_object_ref(ui->save);
+  GtkWidget *dailyHeading = gtk_label_new("Daily balance trace and CSV");
+  gtk_label_set_xalign(GTK_LABEL(dailyHeading), 0.0F);
+  gtk_box_append(GTK_BOX(box), dailyHeading);
+  ui->dailyText = gtk_text_buffer_new(NULL);
+  GtkWidget *dailyView = gtk_text_view_new_with_buffer(ui->dailyText);
+  gtk_widget_set_name(dailyView, "statement-daily-view");
+  gtk_text_view_set_editable(GTK_TEXT_VIEW(dailyView), FALSE);
+  gtk_text_view_set_monospace(GTK_TEXT_VIEW(dailyView), TRUE);
+  GtkWidget *dailyScroll = gtk_scrolled_window_new();
+  gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(dailyScroll), dailyView);
+  gtk_widget_set_size_request(dailyScroll, -1, 200);
+  gtk_box_append(GTK_BOX(box), dailyScroll);
+  ui->dailyCsv = gtk_text_buffer_new(NULL);
+  ui->dailySave = UmiTextExportGtk4CreateForBuffer(ui->dailyCsv, "statement-daily-balances.csv");
+  gtk_widget_set_name(ui->dailySave, "statement-daily-export");
+  gtk_widget_set_sensitive(ui->dailySave, FALSE);
+  gtk_box_append(GTK_BOX(box), ui->dailySave);
+  g_object_ref(ui->dailySave);
   GtkWidget *inputs[] = {ui->first, ui->last, ui->opening, ui->closing};
   for (size_t i = 0; i < 4U; ++i)
     g_signal_connect_object(inputs[i], "changed", G_CALLBACK(StatementChanged), window, 0);

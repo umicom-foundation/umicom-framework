@@ -133,3 +133,15 @@ UmiStatus UmiHealthcareSyntheticRegistryCount(
     *outCount = registry->count;
     return UMI_STATUS_OK;
 }
+
+/* Enumeration belongs beside registry ownership, so persistence adapters never
+ * reinterpret its private representation or omit identities without requests. */
+UmiStatus UmiHealthcareSyntheticRegistryAt(
+    const UmiHealthcareSyntheticRegistry *registry, size_t index,
+    UmiHealthcareSyntheticPatient *outPatient)
+{
+    if (registry == NULL || outPatient == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (index >= registry->count) return UMI_STATUS_NOT_FOUND;
+    *outPatient = registry->records[index];
+    return UMI_STATUS_OK;
+}

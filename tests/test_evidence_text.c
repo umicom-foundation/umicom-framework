@@ -57,7 +57,11 @@ int main(void)
     static const char *const outcomes[] = {"not-run", "passed", "failed", "skipped", "cancelled", "timed-out"};
     for (unsigned outcome = 0U; outcome < sizeof outcomes / sizeof outcomes[0]; ++outcome) {
         umi_test_platform_result_registry_clear(results); umi_test_platform_output_registry_clear(output);
+/* The six enumerated outcome indexes fit the signed public snapshot field; make that bounded conversion explicit. The previous statement is retained for review. */
+#if 0
         Add(results, output, "selected", "sample", "run", 7U, outcome);
+#endif
+        Add(results, output, "selected", "sample", "run", 7U, (int)outcome);
         Add(results, output, "unrelated", "sample.more", "run", 9U, UMI_TEST_PLATFORM_OUTCOME_PASSED);
         text = Report(results, output, "sample", NULL);
         char label[80]; snprintf(label, sizeof label, "[run] %s |", outcomes[outcome]);

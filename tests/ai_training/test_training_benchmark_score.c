@@ -3,7 +3,10 @@
  * PURPOSE: Distinguish exact, positional and prefix agreement, including
  *          binary data and length differences without modifying inputs.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_benchmark_score.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/benchmark.h"
 #include <stdio.h>
 #include <string.h>

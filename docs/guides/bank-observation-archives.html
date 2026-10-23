@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Save and reopen bank observations</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:960px;margin:3rem auto;padding:0 1rem;color:#182b3e}h1,h2{line-height:1.2}a{color:#075aa7}pre{white-space:pre-wrap;background:#eef3f7;padding:1rem}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bdc9d4;padding:.6rem;text-align:left}</style>
+</head><body><main>
+<h1>Save and reopen bank observations</h1>
+<p>An observation archive saves the transaction rows you imported so you can review them again later. It is a plain UTF-8 JSON file, suggested name <code>bank-observations.umibank.json</code>. Keep it in a private folder: it contains all account identifiers, descriptions and amounts in the import. It is not encrypted.</p>
+<h2>Save an import</h2>
+<ol>
+<li>Open <strong>Bank transaction reports</strong> in an application that exposes the shared inspector. For a first attempt, use the invented JSON in <a href="bank-transaction-reports.html">Review bank transaction reports</a> or the example in <a href="statement-csv-import.html">Import a statement CSV</a>.</li>
+<li>Choose the input format, choose your saved file and select <strong>Import for review</strong>. Review the account/currency selection and page indicators. A successful import enables both the CSV report and observation archive controls.</li>
+<li>Scroll to <strong>Reusable observation archive (all accounts in this import)</strong> and expand its export control. Enter a new absolute filename in a private existing folder. The account selection does not narrow the saved archive.</li>
+<li>Select the export control’s save button and wait for its success message. Existing files are refused; use a new filename for each snapshot. If saving fails, read the message and inspect any partial new file before trying a different filename.</li>
+</ol>
+<h2>Reopen the saved archive</h2>
+<ol>
+<li>In the same inspector or a new window, select <strong>Umicom observation archive</strong>. Choosing the format explicitly matters; the application does not guess it from the filename.</li>
+<li>Choose the archive you saved and select <strong>Import for review</strong>. Expected result: the same rows, account/currency totals, booking times, pending/mutable flags and page hints reappear. Source row order and amount spelling are retained.</li>
+<li>Review the original input SHA-256 displayed above the report. SHA-256 is a fingerprint of a sequence of bytes. On a new JSON or CSV import the inspector computes it from that file. On archive import it retains the fingerprint stored inside the archive.</li>
+<li>Use <strong>Reconcile selected account</strong> to open a separate comparison for that account, or save another archive. An archive does not include a previous comparison’s opening balance, period, matching decisions or ledger data.</li>
+</ol>
+<p>A saved fingerprint can be changed by someone editing the archive. It does not authenticate a provider, prove consent or prove that the archive matches an original statement. Keep the original input separately when you need to compare it. Importing and saving never connect to a bank, place orders or post ledger entries.</p>
+<h2>What is retained</h2>
+<table><thead><tr><th>Retained</th><th>Not retained</th></tr></thead><tbody>
+<tr><td>Account and transaction identifiers, reference and information text</td><td>Provider fields discarded by the original importer</td></tr>
+<tr><td>Exact amount text, currency, credit/debit direction, booking date or timestamp</td><td>Exchange rates, an account balance or a verified statement total</td></tr>
+<tr><td>Booked/pending state, mutability, missing IDs and original row order</td><td>A deduplicated history across separate imports</td></tr>
+<tr><td>Previous/next page indicators, original input format and its fingerprint when supplied</td><td>Page URLs, original filename, column mapping settings, credentials or consent</td></tr>
+</tbody></table>
+<p>The archive keeps the imported observations only. Page indicators are hints, including when neither is present. They do not prove that you imported every transaction. A mutable observation can change in a later bank response.</p>
+<h2>Limits and recovery</h2>
+<ul>
+<li>The portable archive accepts at most 4 MiB and 1,024 rows. The native export control additionally accepts at most 2,097,152 characters. If an encoded archive exceeds a bound, it is unavailable for export; no partial snapshot is offered by the encoder.</li>
+<li>Version 1 has an exact schema. Unknown versions, missing or duplicate keys, unknown fields, invalid dates, invalid amount syntax and duplicate nonempty transaction IDs within one account are refused. Missing IDs remain separate observations.</li>
+<li>CSV date-only bookings and multiline information remain supported. Other selected text rejects ASCII control characters, including DEL. Do not modify a real statement to hide an import error; obtain a valid export or correct the source mapping.</li>
+<li>Changing an input, clearing the report or closing its window retires the old export controls and pending import result. A save accepted before closing may still finish. There is no automatic save.</li>
+<li>For “Import failed”, first check the selected format. A report CSV is not this archive and uses a different schema. A truncated or edited archive should be replaced from a separately kept original, not treated as reliable evidence.</li>
+</ul>
+<h2>Use the service from C</h2>
+<p>Include <code>umicom/bank_feed/archive.h</code> and link <code>Umicom::bank_feed</code>. Pass an owned feed to <code>UmiBankFeedArchiveEncode</code>; release its output with <code>UmiBankFeedArchiveFree</code>. <code>UmiBankFeedArchiveDecode</code> creates a new feed that you release with <code>UmiBankFeedDestroy</code>. It copies retained values, so input bytes can be released after decoding.</p>
+<p>The optional metadata contains an input format and an empty or 64-character lowercase SHA-256 value. Unknown source is supported. The codec performs no file I/O. On failure, encoding clears its output pointer and length; decoding clears its feed pointer and leaves optional metadata unchanged. Keep file ownership and publication decisions in the host application, and serialise access to a feed with its destruction.</p>
+<p><a href="bank-transaction-reports.html">Back to transaction reports</a></p>
+</main></body></html>

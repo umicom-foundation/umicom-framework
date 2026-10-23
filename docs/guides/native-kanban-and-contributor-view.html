@@ -61,4 +61,10 @@ if (board != NULL) gtk_window_present(board);</pre>
 <tr><td>GTK test returns 77</td><td>The display was unavailable. Record skipped interaction coverage separately and rerun in a usable desktop session.</td></tr>
 </tbody></table>
 <p><a href="../KANBAN_PLANNING.html">Read the toolkit-independent board API guide</a>.</p>
+
+<h2>Embedding hosts and forced window removal</h2>
+<p>Use <code>gtk_window_close</code> for ordinary closure. It keeps the existing checks for pending work and unsaved edits. A host that forcibly calls <code>gtk_window_destroy</code> removes the editor immediately and discards its unsaved in-memory changes; it does not automatically save them.</p>
+<p>An already accepted file operation may still finish after forced removal. Its result is not attached to the removed window. The document lease is then released on a worker, even when the host retains a reference to the window. A create or save that already succeeded remains on disk.</p>
+<ol><li>Keep a reference to the window while coordinating shutdown.</li><li>After removal, use <code>UmiKanbanGtk4WindowBusy(window)</code> on the GTK owner thread to observe pending work and lease cleanup.</li><li>Continue processing the main loop until it returns false, then release the retained window reference. Do not block the owner thread in a polling loop that prevents completion callbacks.</li><li>Reopen the saved board normally to review its contents. A guard file is not permission to bypass the storage service or delete another editor's lease.</li></ol>
+<p>The busy query is a lifetime aid, not proof that a save succeeded. Normal file results appear in the window status. Forced removal has no remaining status surface, and process termination can prevent cleanup callbacks from running.</p>
 </body></html>

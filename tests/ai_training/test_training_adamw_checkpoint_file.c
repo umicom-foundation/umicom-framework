@@ -3,7 +3,10 @@
  * PURPOSE: Validate Framework-owned exclusive file persistence without
  *          silently replacing a successful checkpoint generation.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_adamw_checkpoint_file.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/optimizer_checkpoint.h"
 #include <stdio.h>
 #include <stdlib.h>

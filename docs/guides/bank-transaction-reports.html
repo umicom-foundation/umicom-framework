@@ -33,6 +33,8 @@
 before importing. Follow <a href="statement-csv-import.html">Import a statement CSV</a> for its
 nine columns, signed amounts, invented example and error recovery. The JSON instructions above
 remain supported. Arbitrary provider CSV and PDF layouts still need a separate converter.</p>
+<h2>Save observations for reopening</h2>
+<p>The <strong>Reusable observation archive</strong> section saves the retained data in a versioned Umicom JSON format. Choose <strong>Umicom observation archive</strong> when importing it again. Unlike the CSV report, it preserves booking timestamps, missing identifiers and page hints. Follow <a href="bank-observation-archives.html">Save and reopen bank observations</a> for the complete workflow and its limits.</p>
 <h2>For contributors</h2>
 <p>Use <code>Umicom::bank_feed</code> for parsing, row copies, account/currency totals and owned CSV reports. The GTK window adds file selection and asynchronous loading. Keep provider authentication outside this importer: a future connector must establish consent, validate account scope and preserve pagination before handing a response to a reader. Reuse Framework’s exact decimal and file owners when adding adapters.</p>
 <p>Reference: <a href="https://openbankinguk.github.io/read-write-api-site3/v4.0.1/resources-and-data-models/aisp/Transactions.html">Open Banking transaction resource</a>.</p>

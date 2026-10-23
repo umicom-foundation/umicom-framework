@@ -54,6 +54,14 @@ static void Complete(GObject *source, GAsyncResult *result, gpointer unused)
         g_object_unref(root);
         return;
     }
+    /* A retained root is not evidence of a live host. Discard late loads and
+     * leave the retirement notice intact; accepted writes keep their snapshot. */
+    if (panel->retired)
+    {
+        panel->busy = 0;
+        g_object_unref(root);
+        return;
+    }
     ++panel->updating;
     panel->busy = 0;
     char *message = NULL;
@@ -85,8 +93,17 @@ static void Complete(GObject *source, GAsyncResult *result, gpointer unused)
             UmiCashPlanDestroy(panel->pending);
             panel->pending = job->loaded;
             job->loaded = NULL;
+            /* Keep the raw document review for engineering comparison. The new
+             * projection summary adds checked differences before those documents. */
+#if 0
             char *review = g_strdup_printf(
                 "CURRENT STORED ASSUMPTIONS\n%s\nLOADED ASSUMPTIONS (not applied)\n%s", before, after);
+#endif
+            char *comparison = UmiCashPanelComparisonText(panel->plan, panel->pending);
+            char *review = g_strdup_printf(
+                "%s\nCURRENT STORED ASSUMPTIONS\n%s\nLOADED ASSUMPTIONS (not applied)\n%s",
+                comparison, before, after);
+            g_free(comparison);
             gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(panel->output)), review, -1);
             g_free(review);
             message = g_strdup(
@@ -97,7 +114,8 @@ static void Complete(GObject *source, GAsyncResult *result, gpointer unused)
         UmiCashPlanFreeBytes(before);
         UmiCashPlanFreeBytes(after);
     }
-    gtk_label_set_text(GTK_LABEL(panel->note), message);
+    if (!panel->retired)
+        gtk_label_set_text(GTK_LABEL(panel->note), message);
     g_free(message);
     --panel->updating;
     g_object_unref(root);
@@ -106,6 +124,8 @@ void UmiCashPanelFile(GtkButton *button, gpointer root)
 {
     CashPanel *panel = g_object_get_data(G_OBJECT(root), "umicom-cash-plan");
     if (panel == NULL || panel->updating || panel->busy)
+        return;
+    if (panel->retired)
         return;
     g_object_ref(root);
     ++panel->updating;
@@ -141,6 +161,15 @@ void UmiCashPanelFile(GtkButton *button, gpointer root)
         return;
     }
     UmiCashPanelInvalidate(panel);
+    /* Approval notification handlers may close the host. Recheck before this
+     * request acquires a worker, so a refused dispatch cannot create a file. */
+    if (panel->retired)
+    {
+        FreeJob(job);
+        --panel->updating;
+        g_object_unref(root);
+        return;
+    }
     job->generation = panel->generation;
     panel->busy = 1;
     GTask *task = g_task_new(NULL, NULL, Complete, NULL);
@@ -157,6 +186,8 @@ void UmiCashPanelApplyLoaded(GtkButton *button, gpointer root)
     (void)button;
     CashPanel *panel = g_object_get_data(G_OBJECT(root), "umicom-cash-plan");
     if (panel == NULL || panel->updating)
+        return;
+    if (panel->retired)
         return;
     g_object_ref(root);
     ++panel->updating;
@@ -176,7 +207,8 @@ void UmiCashPanelApplyLoaded(GtkButton *button, gpointer root)
     UmiCashPanelInvalidate(panel);
     UmiCashPanelSync(panel);
     UmiCashPanelRender(panel);
-    gtk_label_set_text(GTK_LABEL(panel->note),
+    if (!panel->retired)
+        gtk_label_set_text(GTK_LABEL(panel->note),
                        "Reviewed assumptions applied locally. Undo restores the previous "
                        "plan; save explicitly to a new file.");
     --panel->updating;

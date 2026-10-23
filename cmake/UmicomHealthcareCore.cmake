@@ -170,3 +170,77 @@ endif()
 install(FILES "${_umicom_healthcare_framework_root}/docs/healthcare/synthetic-access.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/healthcare" COMPONENT Framework)
 unset(_umicom_healthcare_framework_root)
+
+# Worklist projection stays in the portable component that owns its book.
+target_sources(umicom_healthcare_core PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/healthcare/access_worklist.c")
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/healthcare/access_worklist.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/healthcare" COMPONENT Framework)
+if(BUILD_TESTING)
+    add_executable(umicom-healthcare-worklist-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/healthcare/test_access_worklist.c")
+    target_link_libraries(umicom-healthcare-worklist-test PRIVATE Umicom::healthcare_core)
+    set_target_properties(umicom-healthcare-worklist-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-healthcare-worklist-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-healthcare-worklist-test)
+    endif()
+    foreach(worklist_case empty filters identity owner deadline snapshot invalid capacity)
+        add_test(NAME framework.healthcare.worklist.${worklist_case}
+            COMMAND umicom-healthcare-worklist-test "${worklist_case}")
+        set_tests_properties(framework.healthcare.worklist.${worklist_case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;healthcare;synthetic;regression")
+    endforeach()
+    if(TARGET Umicom::healthcare_access_gtk4)
+        add_executable(umicom-healthcare-worklist-gtk-test
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/healthcare/test_worklist_gtk4.c")
+        target_link_libraries(umicom-healthcare-worklist-gtk-test PRIVATE Umicom::healthcare_access_gtk4)
+        set_target_properties(umicom-healthcare-worklist-gtk-test PROPERTIES
+            C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(umicom-healthcare-worklist-gtk-test)
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(umicom-healthcare-worklist-gtk-test)
+        endif()
+        foreach(worklist_case identity owner selection reentry dispose)
+            add_test(NAME framework.healthcare.worklist.gtk.${worklist_case}
+                COMMAND umicom-healthcare-worklist-gtk-test "${worklist_case}")
+            set_tests_properties(framework.healthcare.worklist.gtk.${worklist_case} PROPERTIES
+                TIMEOUT 30 SKIP_RETURN_CODE 77 ENVIRONMENT "G_DEBUG=fatal-warnings"
+                LABELS "framework;healthcare;gtk4;lifetime;regression")
+        endforeach()
+    endif()
+endif()
+
+# Explicit header ownership also allows release-inventory consumers to map the
+# new worklist contract to the portable library instead of guessing by folder.
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_healthcare_core
+        include/umicom/healthcare/access_worklist.h)
+endif()
+if(BUILD_TESTING)
+    foreach(_worklist_target umicom-healthcare-worklist-test umicom-healthcare-worklist-gtk-test)
+        if(TARGET ${_worklist_target} AND COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(${_worklist_target})
+        endif()
+    endforeach()
+    if(COMMAND umicom_test_impact_owners)
+        foreach(_worklist_case empty filters identity owner deadline snapshot invalid capacity)
+            umicom_test_impact_owners(framework.healthcare.worklist.${_worklist_case}
+                TARGETS umicom-healthcare-worklist-test)
+        endforeach()
+        if(TARGET umicom-healthcare-worklist-gtk-test)
+            foreach(_worklist_case identity owner selection reentry dispose)
+                umicom_test_impact_owners(framework.healthcare.worklist.gtk.${_worklist_case}
+                    TARGETS umicom-healthcare-worklist-gtk-test)
+            endforeach()
+        endif()
+    endif()
+endif()
+
+# Optional storage shares the Framework codec while the core stays memory-only.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomHealthcareArchive.cmake")

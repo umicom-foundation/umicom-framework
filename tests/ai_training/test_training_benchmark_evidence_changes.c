@@ -1,7 +1,11 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework | model and reviewed-suite change detection.
  * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_benchmark_evidence_changes.c
+ * PURPOSE: Verify benchmark evidence detects changes to the model and reviewed evaluation suite.
+ * LICENCE: MIT
+ */
 #include "benchmark_evidence_fixture.h"
 int main(void)
 {

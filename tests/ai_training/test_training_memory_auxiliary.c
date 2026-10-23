@@ -3,7 +3,10 @@
  * PURPOSE: Account for persistent attention-probability and target-index
  *          allocations in addition to values, gradients and node metadata.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_memory_auxiliary.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/tape.h"
 #include <stdio.h>
 

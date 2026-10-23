@@ -1,5 +1,10 @@
 /* Umicom Framework | Sammy Hegab / Umicom Foundation | MIT
- * Verify the native tokenizer contract, reversibility and failure atomicity. */
+ * Verify the native tokenizer contract, reversibility and failure atomicity.
+ * File: tests/ai_training/test_training_byte_tokenizer.c
+ * PURPOSE: Verify byte-token reversibility and failure-atomic output handling.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/byte_tokenizer.h"
 #include <stdio.h>
 #include <string.h>

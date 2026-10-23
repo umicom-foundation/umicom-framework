@@ -4,7 +4,9 @@
  * PURPOSE: Prove no-clobber creation, tamper rejection, and missing companion
  *          refusal for reviewed native AdamW run locks.
  * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/training_run_lock.h"
 #include <stdint.h>
 #include <stdio.h>

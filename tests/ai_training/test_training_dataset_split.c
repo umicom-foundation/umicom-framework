@@ -2,7 +2,10 @@
  * Umicom Framework | tests/ai_training/test_training_dataset_split.c
  * Purpose: Prove seeded, disjoint sequence partitions and failure atomicity.
  * Author: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_dataset_split.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/dataset_split.h"
 #include <stdio.h>
 #include <string.h>

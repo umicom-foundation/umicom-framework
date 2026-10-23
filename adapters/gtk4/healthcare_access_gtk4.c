@@ -7,10 +7,18 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/healthcare/access_gtk4.h"
 #include "umicom/healthcare/synthetic_access.h"
+#include "umicom/healthcare/access_worklist.h"
 #include "umicom/ui/gtk4/drop_down.h"
+#ifdef UMICOM_HEALTHCARE_ARCHIVE_AVAILABLE
+#include "umicom/healthcare/access_archive.h"
+#include "umicom/platform/input_file.h"
+#include "umicom/platform/output_file.h"
+#include "umicom/ui/gtk4/path_picker.h"
+#endif
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 typedef enum AccessAction {
     ACCESS_REGISTER, ACCESS_REQUEST, ACCESS_FULL, ACCESS_PARTIAL,
@@ -22,6 +30,17 @@ typedef enum AccessAction {
 typedef struct AccessWorkspace {
     size_t references;
     int closed;
+    bool applying;
+    bool ioBusy;
+#ifdef UMICOM_HEALTHCARE_ARCHIVE_AVAILABLE
+    GtkWidget *archivePath;
+    GtkWidget *replaceApproval;
+    GtkWidget *archiveStatus;
+#endif
+    UmiHealthcareAccessWorklist worklist;
+    GtkWidget *filter;
+    GtkWidget *ownerFilter;
+    GtkWidget *workSummary;
     UmiHealthcareSyntheticRegistry *registry;
     UmiHealthcareAccessBook *book;
     GtkWidget *patient;
@@ -99,6 +118,9 @@ static void connect_owned(AccessWorkspace *workspace, GtkWidget *widget,
     g_signal_connect_data(widget, signal, callback, workspace, signal_release, 0);
 }
 
+/* The former insertion-index lookup is retained for review. Filtered rows now
+ * resolve their stable request ID and reject a stale displayed revision. */
+#if 0
 /* Index selection addresses an authoritative book record, never parsed display
  * text. Later searchable worklists can keep this same stable ID boundary. */
 static UmiStatus selected_record(AccessWorkspace *workspace,
@@ -107,6 +129,20 @@ static UmiStatus selected_record(AccessWorkspace *workspace,
     guint index = gtk_drop_down_get_selected(GTK_DROP_DOWN(workspace->selector));
     if (index == GTK_INVALID_LIST_POSITION) return UMI_STATUS_NOT_FOUND;
     return UmiHealthcareAccessAt(workspace->book, (size_t)index, record);
+}
+
+#endif
+static UmiStatus selected_record(AccessWorkspace *workspace,
+    UmiHealthcareAccessRecord *record)
+{
+    guint index = gtk_drop_down_get_selected(GTK_DROP_DOWN(workspace->selector));
+    if (index == GTK_INVALID_LIST_POSITION || (size_t)index >= workspace->worklist.count)
+        return UMI_STATUS_NOT_FOUND;
+    const UmiHealthcareAccessRecord *displayed = &workspace->worklist.items[index].record;
+    UmiStatus status = UmiHealthcareAccessFind(workspace->book, displayed->requestId, record);
+    if (status == UMI_STATUS_OK && record->revision != displayed->revision)
+        return UMI_STATUS_INVALID_STATE;
+    return status;
 }
 
 static const char *reply_text(UmiHealthcareAccessReply reply)
@@ -140,7 +176,7 @@ static void refresh_record(AccessWorkspace *workspace)
     char text[1200];
     if (workspace->closed) return;
     if (selected_record(workspace, &record) != UMI_STATUS_OK) {
-        gtk_label_set_text(GTK_LABEL(workspace->details), "Create a synthetic request to begin.");
+        gtk_label_set_text(GTK_LABEL(workspace->details), "Select a request in this worklist, or change the filters.");
         return;
     }
     (void)snprintf(text, sizeof(text),
@@ -163,11 +199,90 @@ static void refresh_record(AccessWorkspace *workspace)
     gtk_label_set_text(GTK_LABEL(workspace->details), text);
 }
 
+/* Projection never expires a reservation. The explicit expiry action owns that
+ * transition. Callers hold the controller and block reentry while GTK publishes
+ * models and labels; root disposal can occur at any notification boundary. */
+static UmiStatus rebuild_worklist(AccessWorkspace *workspace, const char *preferredId)
+{
+    UmiHealthcareAccessWorklist candidate;
+    gint64 clockValue = g_get_real_time();
+    uint64_t now = clockValue > 0 ? (uint64_t)(clockValue / G_USEC_PER_SEC) : 0U;
+    UmiStatus status = UmiHealthcareAccessWorklistBuild(workspace->book,
+        (UmiHealthcareAccessFilter)gtk_drop_down_get_selected(GTK_DROP_DOWN(workspace->filter)),
+        gtk_editable_get_text(GTK_EDITABLE(workspace->ownerFilter)), now, &candidate);
+    if (status != UMI_STATUS_OK) return status;
+    GtkStringList *model = gtk_string_list_new(NULL);
+    guint selection = GTK_INVALID_LIST_POSITION;
+    for (size_t i = 0U; i < candidate.count; ++i) {
+        gtk_string_list_append(model, candidate.items[i].record.requestId);
+        if (preferredId != NULL && strcmp(candidate.items[i].record.requestId, preferredId) == 0)
+            selection = (guint)i;
+    }
+    workspace->worklist = candidate;
+    g_clear_object(&workspace->requests);
+    workspace->requests = model;
+    gtk_drop_down_set_model(GTK_DROP_DOWN(workspace->selector), G_LIST_MODEL(model));
+    if (workspace->closed) return UMI_STATUS_OK;
+    /* If assignment removes a row from the unassigned view, leave selection
+     * empty rather than silently making the next request the action target. */
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(workspace->selector), selection);
+    if (workspace->closed) return UMI_STATUS_OK;
+    char summary[256];
+    (void)snprintf(summary, sizeof(summary),
+        "Showing %zu of %zu requests | Outstanding %zu | Follow-up %zu | Unassigned %zu | Overdue reservations %zu",
+        candidate.count, candidate.totalRequests, candidate.outstandingRequests,
+        candidate.followupRequests, candidate.unassignedFollowups, candidate.overdueReservations);
+    gtk_label_set_text(GTK_LABEL(workspace->workSummary), summary);
+    if (!workspace->closed) refresh_record(workspace);
+    return UMI_STATUS_OK;
+}
+
+/* Retain the former callback for review. The guarded replacement holds the
+ * controller even when a host destroys its root during a label notification. */
+#if 0
 static void selection_changed(GObject *object, GParamSpec *property, gpointer data)
 {
     (void)object;
     (void)property;
     refresh_record(data);
+}
+
+#endif
+static void selection_changed(GObject *object, GParamSpec *property, gpointer data)
+{
+    (void)object; (void)property;
+    AccessWorkspace *workspace = data;
+    if (workspace->closed || workspace->applying) return;
+    ++workspace->references;
+    workspace->applying = true;
+    refresh_record(workspace);
+    workspace->applying = false;
+    workspace_unref(workspace);
+}
+
+static void filter_refresh(AccessWorkspace *workspace)
+{
+    if (workspace->closed || workspace->applying) return;
+    ++workspace->references;
+    workspace->applying = true;
+    UmiHealthcareAccessRecord selected = {0};
+    (void)selected_record(workspace, &selected);
+    UmiStatus status = rebuild_worklist(workspace, selected.requestId);
+    if (!workspace->closed && status != UMI_STATUS_OK)
+        gtk_label_set_text(GTK_LABEL(workspace->feedback),
+            "Worklist unchanged. Use an empty owner filter or a fictional STF-000001 style ID.");
+    workspace->applying = false;
+    workspace_unref(workspace);
+}
+static void filter_changed(GObject *object, GParamSpec *property, gpointer data)
+{
+    (void)object; (void)property;
+    filter_refresh(data);
+}
+static void filter_clicked(GtkButton *button, gpointer data)
+{
+    (void)button;
+    filter_refresh(data);
 }
 
 /* The frontend selects an operation; Framework validates the current revision,
@@ -182,7 +297,13 @@ static void action_clicked(GtkButton *button, gpointer data)
     const char *patientId;
     uint64_t now;
     gint64 clockValue;
-    if (workspace->closed) return;
+    if (workspace->closed || workspace->applying) return;
+    /* Accepted archive I/O owns this session until completion; retained controls
+     * must not mutate the source while an open operation could replace it. */
+    if (workspace->ioBusy) return;
+    /* Hold the context and block nested actions until model publication ends. */
+    ++workspace->references;
+    workspace->applying = true;
     action = (AccessAction)GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "access-action"));
     patientId = gtk_editable_get_text(GTK_EDITABLE(workspace->patient));
     clockValue = g_get_real_time();
@@ -193,11 +314,15 @@ static void action_clicked(GtkButton *button, gpointer data)
         status = UmiHealthcareAccessRequest(workspace->book, workspace->registry, patientId,
             gtk_editable_get_text(GTK_EDITABLE(workspace->item)),
             (uint32_t)gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(workspace->quantity)), &record);
+        /* Retained insertion-order presentation. Filtered worklists below now
+         * rebuild the model and restore selection by request ID. */
+#if 0
         if (status == UMI_STATUS_OK) {
             gtk_string_list_append(workspace->requests, record.requestId);
             gtk_drop_down_set_selected(GTK_DROP_DOWN(workspace->selector),
                 g_list_model_get_n_items(G_LIST_MODEL(workspace->requests)) - 1U);
         }
+#endif
     } else {
         status = selected_record(workspace, &record);
         if (status == UMI_STATUS_OK) {
@@ -236,7 +361,10 @@ static void action_clicked(GtkButton *button, gpointer data)
             }
         }
     }
-    gtk_label_set_text(GTK_LABEL(workspace->feedback), status == UMI_STATUS_OK ?
+    if (status == UMI_STATUS_OK && action != ACCESS_REGISTER)
+        (void)rebuild_worklist(workspace, record.requestId);
+    if (!workspace->closed) {
+        gtk_label_set_text(GTK_LABEL(workspace->feedback), status == UMI_STATUS_OK ?
         "Recorded in this session." : status == UMI_STATUS_NOT_FOUND ?
         "Select a request, or register the synthetic patient before creating one." :
         status == UMI_STATUS_INVALID_ARGUMENT ?
@@ -246,7 +374,10 @@ static void action_clicked(GtkButton *button, gpointer data)
         status == UMI_STATUS_TIMEOUT ? "The reservation expired. Record its unmet outcome." :
         status == UMI_STATUS_PERMISSION_DENIED ? "The collection patient does not match the request." :
         umi_status_text(status));
-    refresh_record(workspace);
+    }
+    if (!workspace->closed) refresh_record(workspace);
+    workspace->applying = false;
+    workspace_unref(workspace);
 }
 
 static GtkWidget *labelled_field(GtkWidget *grid, int row, const char *label, GtkWidget *field)
@@ -270,6 +401,212 @@ static void append_action(AccessWorkspace *workspace, GtkWidget *box,
     gtk_box_append(GTK_BOX(box), button);
 }
 
+
+#ifdef UMICOM_HEALTHCARE_ARCHIVE_AVAILABLE
+/* Workers own immutable inputs and newly decoded handles, never live widget
+ * state. Completion holds only the controller until its owner-thread callback;
+ * disposal closes the controller early and makes late results inert. */
+typedef struct AccessArchiveJob {
+    AccessWorkspace *workspace;
+    char *path;
+    char *bytes;
+    size_t length;
+    bool saving;
+    UmiStatus status;
+    UmiHealthcareSyntheticRegistry *registry;
+    UmiHealthcareAccessBook *book;
+} AccessArchiveJob;
+
+static void archive_job_free(gpointer data)
+{
+    AccessArchiveJob *job = data;
+    g_free(job->path);
+    UmiHealthcareAccessArchiveFree(job->bytes);
+    UmiHealthcareAccessBookDestroy(job->book);
+    UmiHealthcareSyntheticRegistryDestroy(job->registry);
+    free(job);
+}
+
+static void archive_worker(GTask *task, gpointer source, gpointer data, GCancellable *cancel)
+{
+    AccessArchiveJob *job = data;
+    (void)source; (void)cancel;
+    if (job->saving) {
+        UmiOutputFile *file = NULL;
+        job->status = UmiOutputFileCreate(job->path, &file);
+        if (job->status == UMI_STATUS_OK) {
+            job->status = UmiOutputFileWrite(file, job->bytes, job->length);
+            UmiStatus closed = UmiOutputFileClose(file);
+            if (job->status == UMI_STATUS_OK) job->status = closed;
+        }
+        UmiOutputFileDestroy(file);
+    } else {
+        unsigned char *bytes = NULL;
+        size_t length = 0U;
+        job->status = UmiInputFileRead(job->path, UMI_HEALTHCARE_ACCESS_ARCHIVE_MAX_BYTES,
+            &bytes, &length);
+        if (job->status == UMI_STATUS_OK)
+            job->status = UmiHealthcareAccessArchiveDecode(bytes, length, &job->registry, &job->book);
+        UmiInputFileFree(bytes);
+    }
+    g_task_return_boolean(task, TRUE);
+}
+
+static void archive_done(GObject *source, GAsyncResult *result, gpointer data)
+{
+    (void)source; (void)data;
+    GTask *task = G_TASK(result);
+    AccessArchiveJob *job = g_task_get_task_data(task);
+    AccessWorkspace *workspace = job->workspace;
+    (void)g_task_propagate_boolean(task, NULL);
+    if (!workspace->closed) {
+        workspace->applying = true;
+        if (!job->saving && job->status == UMI_STATUS_OK) {
+            UmiHealthcareAccessBookDestroy(workspace->book);
+            UmiHealthcareSyntheticRegistryDestroy(workspace->registry);
+            workspace->book = job->book;
+            workspace->registry = job->registry;
+            job->book = NULL;
+            job->registry = NULL;
+            /* Restoring never carries a row index or a filter from another book.
+             * Model notifications can dispose the root; check every boundary. */
+            gtk_editable_set_text(GTK_EDITABLE(workspace->ownerFilter), "");
+            if (!workspace->closed)
+                gtk_drop_down_set_selected(GTK_DROP_DOWN(workspace->filter), UMI_HEALTHCARE_ACCESS_ALL);
+            if (!workspace->closed) (void)rebuild_worklist(workspace, NULL);
+        }
+        if (!workspace->closed) {
+            char *message = job->status == UMI_STATUS_OK ?
+                g_strdup_printf(job->saving ? "Saved captured session to %s" :
+                    "Opened synthetic archive %s. Select a request to continue.", job->path) :
+                g_strdup_printf(job->saving ?
+                    "Save failed (%s). Existing files are not overwritten. A partial new file may remain; use a new filename." :
+                    "Open failed (%s). The current session is unchanged.", umi_status_text(job->status));
+            gtk_label_set_text(GTK_LABEL(workspace->archiveStatus), message);
+            g_free(message);
+        }
+        workspace->applying = false;
+    }
+    workspace->ioBusy = false;
+    /* Release GTK-owned context on this thread, not in the worker's eventual
+     * task-data finalizer. The finalizer owns only independent allocations. */
+    job->workspace = NULL;
+    workspace_unref(workspace);
+}
+
+static void archive_clicked(GtkButton *button, gpointer data)
+{
+    AccessWorkspace *workspace = data;
+    AccessArchiveJob *job = NULL;
+    UmiStatus status = UMI_STATUS_OK;
+    size_t count = 0U;
+    bool saving = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "archive-save")) != 0;
+    if (workspace->closed || workspace->applying || workspace->ioBusy) return;
+    ++workspace->references;
+    workspace->applying = true;
+    const char *chosen = gtk_editable_get_text(GTK_EDITABLE(workspace->archivePath));
+    status = UmiOutputFileValidatePath(chosen);
+    if (status != UMI_STATUS_OK) {
+        gtk_label_set_text(GTK_LABEL(workspace->archiveStatus),
+            "Choose an ordinary absolute file path in an existing trusted folder.");
+        goto release;
+    }
+    if (!saving) {
+        status = UmiHealthcareSyntheticRegistryCount(workspace->registry, &count);
+        if (status != UMI_STATUS_OK) goto release;
+        if (count != 0U && !gtk_check_button_get_active(GTK_CHECK_BUTTON(workspace->replaceApproval))) {
+            gtk_label_set_text(GTK_LABEL(workspace->archiveStatus),
+                "Save the current session first, or confirm Replace current session before opening.");
+            goto release;
+        }
+    }
+    job = calloc(1U, sizeof(*job));
+    if (job == NULL) {
+        gtk_label_set_text(GTK_LABEL(workspace->archiveStatus), "Unable to allocate archive operation.");
+        goto release;
+    }
+    job->workspace = workspace;
+    job->saving = saving;
+    job->path = g_strdup(chosen);
+    if (saving) status = UmiHealthcareAccessArchiveEncode(workspace->registry, workspace->book,
+        &job->bytes, &job->length);
+    if (status != UMI_STATUS_OK) {
+        gtk_label_set_text(GTK_LABEL(workspace->archiveStatus), "Unable to capture this session; no file was written.");
+        goto release;
+    }
+    workspace->ioBusy = true;
+    if (!saving) gtk_check_button_set_active(GTK_CHECK_BUTTON(workspace->replaceApproval), FALSE);
+    if (workspace->closed) goto release;
+    gtk_label_set_text(GTK_LABEL(workspace->archiveStatus), saving ?
+        "Saving captured session…" : "Opening archive; the current session is retained until validation completes…");
+    if (workspace->closed) goto release;
+    GTask *task = g_task_new(NULL, NULL, archive_done, NULL);
+    g_task_set_task_data(task, job, archive_job_free);
+    workspace->applying = false;
+    g_task_run_in_thread(task, archive_worker);
+    g_object_unref(task);
+    return; /* Completion owns the controller reference. */
+release:
+    workspace->ioBusy = false;
+    workspace->applying = false;
+    if (job != NULL) archive_job_free(job);
+    workspace_unref(workspace);
+}
+
+static void append_archives(AccessWorkspace *workspace, GtkWidget *root)
+{
+    GtkWidget *row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    workspace->archivePath = gtk_entry_new();
+    gtk_widget_set_name(workspace->archivePath, "healthcare-archive-path");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(workspace->archivePath), "Choose an archive path");
+    gtk_widget_set_hexpand(workspace->archivePath, TRUE);
+    gtk_box_append(GTK_BOX(row), workspace->archivePath);
+    GtkWidget *browseOpen = UmiPathPickerGtk4Create(GTK_ENTRY(workspace->archivePath),
+        UMI_PATH_PICKER_EXISTING_FILE, "Choose a synthetic access archive", NULL);
+    GtkWidget *browseSave = UmiPathPickerGtk4Create(GTK_ENTRY(workspace->archivePath),
+        UMI_PATH_PICKER_NEW_FILE, "Choose a new synthetic access archive", "synthetic-access.json");
+    /* The shared picker owns a box containing its button and status. Keep the
+     * superseded direct button casts for review; use its supplied labels so
+     * hosts do not depend on the picker's private widget hierarchy. */
+#if 0
+    gtk_button_set_label(GTK_BUTTON(browseOpen), "Choose existing…");
+    gtk_button_set_label(GTK_BUTTON(browseSave), "Choose new…");
+#endif
+    gtk_box_append(GTK_BOX(row), browseOpen);
+    gtk_box_append(GTK_BOX(row), browseSave);
+    gtk_box_append(GTK_BOX(root), row);
+    workspace->replaceApproval = gtk_check_button_new_with_label("Replace current session when opening");
+    gtk_widget_set_name(workspace->replaceApproval, "healthcare-archive-replace");
+    gtk_box_append(GTK_BOX(root), workspace->replaceApproval);
+    row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    GtkWidget *save = gtk_button_new_with_label("Save new archive");
+    GtkWidget *open = gtk_button_new_with_label("Open archive");
+    gtk_widget_set_name(save, "healthcare-archive-save");
+    gtk_widget_set_name(open, "healthcare-archive-open");
+    g_object_set_data(G_OBJECT(save), "archive-save", GINT_TO_POINTER(1));
+    connect_owned(workspace, save, "clicked", G_CALLBACK(archive_clicked));
+    connect_owned(workspace, open, "clicked", G_CALLBACK(archive_clicked));
+    gtk_box_append(GTK_BOX(row), save);
+    gtk_box_append(GTK_BOX(row), open);
+    gtk_box_append(GTK_BOX(root), row);
+    workspace->archiveStatus = gtk_label_new("Archives contain fictional IDs and exercise state only. Save changes before closing.");
+    gtk_widget_set_name(workspace->archiveStatus, "healthcare-archive-status");
+    gtk_label_set_wrap(GTK_LABEL(workspace->archiveStatus), TRUE);
+    gtk_label_set_xalign(GTK_LABEL(workspace->archiveStatus), 0.0F);
+    gtk_box_append(GTK_BOX(root), workspace->archiveStatus);
+}
+#endif
+
+/* Hosts can defer their own close prompt while a live workspace is busy.
+ * Once disposed, the workspace is inert even if an accepted write finishes. */
+bool UmiHealthcareAccessWorkspaceBusy(GtkWidget *widget)
+{
+    if (widget == NULL || !G_TYPE_CHECK_INSTANCE_TYPE(widget, umi_healthcare_access_root_get_type()))
+        return false;
+    AccessWorkspace *workspace = ((UmiHealthcareAccessRoot *)widget)->workspace;
+    return workspace != NULL && !workspace->closed && (workspace->applying || workspace->ioBusy);
+}
+
 UmiStatus UmiHealthcareAccessWorkspaceNew(GtkWidget **outWidget)
 {
     AccessWorkspace *workspace;
@@ -291,7 +628,13 @@ UmiStatus UmiHealthcareAccessWorkspaceNew(GtkWidget **outWidget)
     gtk_widget_add_css_class(title, "title-1");
     gtk_label_set_xalign(GTK_LABEL(title), 0.0F);
     gtk_box_append(GTK_BOX(root), title);
+#ifdef UMICOM_HEALTHCARE_ARCHIVE_AVAILABLE
+    notice = gtk_label_new("Synthetic exercise • Manual archive storage\nUse fictional IDs only. No real patients, prescriptions, stock reservations or payments. Unsaved changes are lost on closing.");
+#else
+    /* The original memory-only notice remains correct for minimal hosts that
+     * do not link the optional archive component. */
     notice = gtk_label_new("Synthetic exercise • Session memory only\nUse fictional IDs only. No real patients, prescriptions, stock reservations or payments. Closing discards this session.");
+#endif
     gtk_label_set_wrap(GTK_LABEL(notice), TRUE);
     gtk_label_set_xalign(GTK_LABEL(notice), 0.0F);
     gtk_box_append(GTK_BOX(root), notice);
@@ -311,6 +654,26 @@ UmiStatus UmiHealthcareAccessWorkspaceNew(GtkWidget **outWidget)
     append_action(workspace, row, "Create request", "healthcare-request", ACCESS_REQUEST);
     workspace->coordinator = labelled_field(grid, 5, "Synthetic follow-up owner", gtk_entry_new());
     gtk_editable_set_text(GTK_EDITABLE(workspace->coordinator), "STF-000001");
+    static const char *const filters[] = {
+        "All requests", "Outstanding quantity", "Needs follow-up", "Unassigned follow-up",
+        "Reserved", "Overdue reservations", "Collected", NULL
+    };
+    workspace->filter = labelled_field(grid, 6, "Worklist", gtk_drop_down_new_from_strings(filters));
+    gtk_widget_set_name(workspace->filter, "healthcare-worklist-filter");
+    workspace->ownerFilter = labelled_field(grid, 7, "Filter by follow-up owner", gtk_entry_new());
+    gtk_entry_set_placeholder_text(GTK_ENTRY(workspace->ownerFilter), "All owners, or STF-000001");
+    gtk_widget_set_name(workspace->ownerFilter, "healthcare-owner-filter");
+    gtk_widget_set_name(workspace->coordinator, "healthcare-coordinator");
+    GtkWidget *refresh = gtk_button_new_with_label("Refresh worklist");
+    gtk_widget_set_name(refresh, "healthcare-worklist-refresh");
+    gtk_box_append(GTK_BOX(root), refresh);
+    connect_owned(workspace, refresh, "clicked", G_CALLBACK(filter_clicked));
+    connect_owned(workspace, workspace->filter, "notify::selected", G_CALLBACK(filter_changed));
+    workspace->workSummary = gtk_label_new("No requests");
+    gtk_widget_set_name(workspace->workSummary, "healthcare-worklist-summary");
+    gtk_label_set_wrap(GTK_LABEL(workspace->workSummary), TRUE);
+    gtk_label_set_xalign(GTK_LABEL(workspace->workSummary), 0.0F);
+    gtk_box_append(GTK_BOX(root), workspace->workSummary);
     workspace->requests = gtk_string_list_new(NULL);
     /* Retain the direct construction for ownership review. The shared helper
      * below now makes the consumed reference explicit for every application. */
@@ -352,6 +715,9 @@ UmiStatus UmiHealthcareAccessWorkspaceNew(GtkWidget **outWidget)
     gtk_label_set_wrap(GTK_LABEL(workspace->feedback), TRUE);
     gtk_label_set_xalign(GTK_LABEL(workspace->feedback), 0.0F);
     gtk_box_append(GTK_BOX(root), workspace->feedback);
+    #ifdef UMICOM_HEALTHCARE_ARCHIVE_AVAILABLE
+    append_archives(workspace, root);
+    #endif
     refresh_record(workspace);
     *outWidget = root;
     return UMI_STATUS_OK;

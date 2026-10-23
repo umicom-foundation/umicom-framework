@@ -3,7 +3,10 @@
  * PURPOSE: Check deterministic candidate selection with comparable held-out
  *          evidence and distinct model checkpoint identities.
  * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_model_quality_reports.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/model_quality_gate.h"
 
 #include <math.h>

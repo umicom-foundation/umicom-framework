@@ -2,7 +2,10 @@
  * Umicom Framework | tests/ai_training/test_training_adamw_clipping_parity.c
  * PURPOSE: Compare clipped AdamW with explicitly scaled supplied gradients.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_adamw_clipping_parity.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/optimizer.h"
 #include "umicom/ai/training/gradient_clipping.h"
 #include <math.h>

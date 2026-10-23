@@ -1,7 +1,11 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework | deterministic machine-readable evidence regression.
  * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_benchmark_evidence_json.c
+ * PURPOSE: Verify deterministic JSON reporting of native benchmark evidence.
+ * LICENCE: MIT
+ */
 #include "benchmark_evidence_fixture.h"
 #include <string.h>
 int main(void)

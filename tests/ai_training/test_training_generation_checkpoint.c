@@ -2,7 +2,10 @@
  * Umicom Framework | tests/ai_training/test_training_generation_checkpoint.c
  * PURPOSE: Stable sampling through save/reload of independently owned weights.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_generation_checkpoint.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/checkpoint.h"
 #include "umicom/ai/training/generation.h"
 #include "umicom/ai/training/byte_tokenizer.h"

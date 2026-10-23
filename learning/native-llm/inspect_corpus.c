@@ -4,7 +4,9 @@
  * The Framework supplies all parsing and tokenisation. Never modifies source.
  * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation
  * LICENCE: MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: learning/native-llm/inspect_corpus.c
+ */
 #include "umicom/ai/training/corpus.h"
 #include "umicom/ai/training/byte_tokenizer.h"
 #include <inttypes.h>

@@ -18,6 +18,9 @@ extern "C" {
  * Parent may be NULL; a supplied parent must be an open native window.
  * Closing the parent closes the review. No bank connection or posting occurs.
  * GTK owning thread only. Returns NULL for invalid input or allocation failure. */
+/* Daily booked balances and the separate daily CSV share this owned snapshot.
+ * Editing dates or balances revokes both exports. The daily minimum includes
+ * the supplied opening; it does not represent intraday lows or a live balance. */
 GtkWindow *UmiBankStatementGtk4Create(const UmiBankFeed *feed, const char *account,
                                       const char *currency, GtkWindow *parent);
 #ifdef __cplusplus

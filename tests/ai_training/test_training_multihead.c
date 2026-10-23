@@ -3,7 +3,10 @@
  * PURPOSE: Test multi-head causal masking, per-head channel isolation and
  *          batch independence against manually calculated probabilities.
  * AUTHOR: Sammy Hegab / Umicom Foundation | LICENCE: MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_multihead.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/tape.h"
 #include <math.h>
 #include <stdio.h>

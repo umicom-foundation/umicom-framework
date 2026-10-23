@@ -3,7 +3,10 @@
  * PURPOSE: Verify bounded text-case parsing, binary bytes and borrowed
  *          pointer lifetime without executing any source-code completion.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_benchmark_suite.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/benchmark_suite.h"
 #include <stdio.h>
 #include <string.h>

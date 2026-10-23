@@ -1,5 +1,10 @@
 /* Umicom Framework | Sammy Hegab / Umicom Foundation | MIT
- * Exercise native corpus file ingestion with temporary local-only fixtures. */
+ * Exercise native corpus file ingestion with temporary local-only fixtures.
+ * File: tests/ai_training/test_training_corpus_file.c
+ * PURPOSE: Exercise native corpus ingestion using temporary local files.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/corpus.h"
 #include <stdio.h>
 #define CHECK(p) do { if (!(p)) { fprintf(stderr, "FAIL line %d\n", __LINE__); return 1; } } while (0)

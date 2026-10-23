@@ -3,7 +3,10 @@
  * PURPOSE: Reject tampered/truncated checkpoint envelopes, stale optimizer
  *          bindings and corrupted hyperparameters without publishing handles.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_adamw_checkpoint_rejections.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/optimizer_checkpoint.h"
 #include <stdio.h>
 #include <stdlib.h>

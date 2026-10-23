@@ -4,7 +4,9 @@
  * PURPOSE: Verify reviewed, opt-in global-gradient clipping plan semantics,
  *          exact numeric parsing and rejection without output mutations.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/experiment_plan.h"
 #include <stdio.h>
 #include <string.h>

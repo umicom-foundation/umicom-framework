@@ -39,4 +39,52 @@ remain supported. Arbitrary provider CSV and PDF layouts still need a separate c
 Applications call the common GTK report launcher. Extend the shared selector and report together so
 arithmetic and exported rows always use the same account, currency and booking-date rules.
 Regression cases live in <code>tests/bank_feed/test_statement.c</code> and
-<code>tests/bank_feed/test_statement_native.c</code>.</p></main></body></html>
+<code>tests/bank_feed/test_statement_native.c</code>.</p>
+<p>For provider CSV layouts that need explicit column choices, select <strong>CSV with custom columns</strong>
+and follow <a href="statement-csv-mapping.html">Match statement CSV columns</a>. Daily review uses
+the same imported observations for JSON, prepared CSV and mapped CSV.</p>
+<h2>Inspect daily balances</h2>
+<ol>
+<li>Import <code>examples/bank_feed/daily-statement.csv</code> using <strong>Statement CSV</strong>.
+Select <code>practice-account | GBP</code> and open <strong>Reconcile selected account</strong>.</li>
+<li>Enter <code>2026-10-10</code> through <code>2026-10-13</code>, opening <code>10.00</code>
+and reported closing <code>3.00</code>. Select <strong>Compare balances</strong>.</li>
+<li>Read <strong>Daily balance trace and CSV</strong>. The days appear in date order, even if the
+source rows arrived in another order. Pending entries are counted but their amounts are excluded.</li>
+<li>Use the export below the daily view to save <code>statement-daily-balances.csv</code>.
+The original export above the view remains the transaction comparison report.</li>
+<li>After editing any date or balance, compare again. Both exports are disabled and the daily
+view is cleared until the new assumptions have been reviewed.</li>
+</ol>
+<table><thead><tr><th>Booking date</th><th>Booked movement</th><th>Calculated day close</th></tr></thead>
+<tbody><tr><td>10 October</td><td>None; pending credit excluded</td><td>10.00</td></tr>
+<tr><td>11 October</td><td>Debit 15.00</td><td>-5.00</td></tr>
+<tr><td>12 October</td><td>Credit 10.00 and debit 2.00</td><td>3.00</td></tr>
+<tr><td>13 October</td><td>None; pending debit excluded</td><td>3.00</td></tr></tbody></table>
+<p>The minimum is -5.00 on 11 October. The supplied opening participates in the minimum and
+first-negative calculation. A negative result describes these assumptions and imported entries;
+it is not a bank-confirmed balance or an overdraft decision.</p>
+<p>Only dates with selected observations have rows. A missing date carries the preceding
+calculated balance; it does not mean zero or prove that the source is complete. Daily grouping
+uses the provider's written date. Credits and debits within a day are combined, so the report
+does not describe intraday lows, transaction ordering or future cash movements.</p>
+<h2>Read the daily CSV</h2>
+<p>The export contains an opening row, one row per observed date and a closing row. Daily counts
+and movements describe that date; the closing row carries the period totals. Every row repeats
+the account, currency, selected period, supplied balances, arithmetic difference, pagination
+flags and report limitations. Keep this file private: it contains account data.</p>
+<p>Amounts are exact decimal text. Import amount columns as text to retain their written precision.
+The common CSV writer adds an apostrophe to formula-like text, including negative text amounts,
+to prevent spreadsheet formula execution. Do not treat this report as a ready-to-post bank import.</p>
+<p>If a daily intermediate balance exceeds the decimal range, no partial daily report is offered.
+A valid aggregate comparison can remain available: a final total may fit even when an earlier
+daily balance cannot. Narrow the period and supply its correct opening balance, or review the
+source amounts. The program does not round or silently omit entries to force a result.</p>
+<h2>Extend the daily report</h2>
+<p><code>umicom/bank_feed/statement_timeline.h</code> provides an immutable snapshot owned by
+the caller. It reuses the existing statement selection and aggregate rules. Release it with
+<code>UmiBankStatementTimelineDestroy</code>; creating or exporting it performs no file or
+network operation. The native review uses the same API and revokes exports on edits and close.
+Portable and GTK regressions are in <code>tests/bank_feed/test_statement_timeline.c</code> and
+<code>tests/bank_feed/test_statement_timeline_native.c</code>.</p>
+</main></body></html>

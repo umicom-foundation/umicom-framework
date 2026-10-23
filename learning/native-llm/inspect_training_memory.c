@@ -6,7 +6,9 @@
  *   difference between persistent model weights and a temporary graph peak.
  *   All neural mathematics and memory limits remain Framework-owned.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/capacity_plan.h"
 #include "umicom/ai/training/decoder.h"
 

@@ -2,7 +2,10 @@
  * Umicom Framework | tests/ai_training/test_training_gradient_clipping_rejections.c
  * PURPOSE: Reject invalid gradients and preserve caller-owned diagnostics.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_gradient_clipping_rejections.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/gradient_clipping.h"
 #include <math.h>
 #include <stdio.h>

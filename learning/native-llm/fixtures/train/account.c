@@ -1,4 +1,9 @@
-/* Umicom Foundation | MIT | Illustrative, fictional accounts in C23. */
+/* Umicom Foundation | MIT | Illustrative, fictional accounts in C23.
+ * File: learning/native-llm/fixtures/train/account.c
+ * PURPOSE: Provide a fictional account-credit sample with bounded integer arithmetic for native training.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ */
 #include <stdint.h>
 #include <stdbool.h>
 

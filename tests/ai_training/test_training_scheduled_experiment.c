@@ -3,7 +3,9 @@
  * File: tests/ai_training/test_training_scheduled_experiment.c
  * PURPOSE: Verify absolute-step schedule and exact resumed SGD parameters.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/experiment.h"
 #include "umicom/ai/training/experiment_accumulation.h"
 #include "umicom/ai/training/checkpoint.h"

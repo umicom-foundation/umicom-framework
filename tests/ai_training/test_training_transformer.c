@@ -3,7 +3,10 @@
  * PURPOSE: Verify complete pre-LN block forward shape and exact residual
  *          identity when its attention/FF projection outputs are zero.
  * AUTHOR: Sammy Hegab / Umicom Foundation | LICENCE: MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_transformer.c
+ * LICENCE: MIT
+ */
 #include "transformer_fixture.h"
 #include <math.h>
 #include <stdio.h>

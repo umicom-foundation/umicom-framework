@@ -9,6 +9,7 @@
 #ifndef UMICOM_UI_GTK4_KANBAN_WINDOW_H
 #define UMICOM_UI_GTK4_KANBAN_WINDOW_H
 #include <gtk/gtk.h>
+#include <stdbool.h>
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -20,6 +21,10 @@ extern "C" {
  * a document is open. Process termination cannot preserve unsaved memory.
  * No network listener, account authentication or automatic publication exists. */
 GtkWindow *UmiKanbanGtk4CreateWindow(GtkApplication *application);
+/* GTK owner-thread query. Includes lease cleanup after forced window removal.
+ * Keep the window referenced while polling. False does not certify successful
+ * storage: normal operations report their result in the window's status. */
+bool UmiKanbanGtk4WindowBusy(GtkWindow *window);
 /* Floating launch button for a native host. It must remain rooted in owner,
  * which supplies its GtkApplication. The new board window owns its document
  * independently, so closing Studio does not discard its unsaved board. */

@@ -8,7 +8,10 @@
  *   This command neither executes source files nor contacts network services.
  *
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: learning/native-llm/train_adamw_experiment.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/experiment_adamw.h"
 #include "umicom/ai/training/experiment_plan.h"
 #include "umicom/ai/training/optimizer_checkpoint.h"

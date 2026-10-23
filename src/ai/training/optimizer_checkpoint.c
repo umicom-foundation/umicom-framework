@@ -12,8 +12,9 @@
  *   Native file publication is exclusive and never overwrites checkpoints.
  *   The FNV checksum is for accidental corruption, NOT authentication.
  *
- * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation 
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/optimizer_checkpoint.h"
 #include "umicom/ai/training/checkpoint.h"
 #include "optimizer_internal.h"

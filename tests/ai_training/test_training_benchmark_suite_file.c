@@ -3,7 +3,10 @@
  * PURPOSE: Verify native read-only reviewed benchmark fixture ingestion and
  *          unchanged output when an explicitly requested file is absent.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_benchmark_suite_file.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/benchmark_suite.h"
 #include <stdio.h>
 #include <string.h>

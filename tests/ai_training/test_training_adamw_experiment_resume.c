@@ -2,7 +2,10 @@
  * Umicom Framework | tests/ai_training/test_training_adamw_experiment_resume.c
  * PURPOSE: Prove that scheduled AdamW exact-resume preserves model AND moments.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_adamw_experiment_resume.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/experiment_adamw.h"
 #include "umicom/ai/training/optimizer_checkpoint.h"
 #include <math.h>

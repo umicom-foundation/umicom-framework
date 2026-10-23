@@ -3,7 +3,10 @@
  * PURPOSE: Reject duplicate labels, invalid hex, oversized and malformed
  *          reviewed suites without publishing partial parser output.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_benchmark_suite_rejections.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/benchmark_suite.h"
 #include <stdio.h>
 #include <string.h>

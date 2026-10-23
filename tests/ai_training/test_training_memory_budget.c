@@ -3,7 +3,10 @@
  * PURPOSE: Verify committed tape-memory budgets and unchanged graph outputs
  *          across rejection, rewind, rollback and resumed operations.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_memory_budget.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/tape.h"
 #include <stdio.h>
 #include <string.h>

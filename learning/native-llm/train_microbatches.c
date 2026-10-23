@@ -12,7 +12,9 @@
  *   It does not write checkpoints, execute source code or publish any model.
  *
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/dataset_manifest.h"
 #include "umicom/ai/training/decoder.h"
 #include "umicom/ai/training/gradient_accumulation.h"

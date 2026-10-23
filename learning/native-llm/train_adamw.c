@@ -6,7 +6,9 @@
  *   rate schedule. Source selection and all neural maths belong to Framework.
  *   This sample does not write or pretend to restore AdamW moment state.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/dataset_manifest.h"
 #include "umicom/ai/training/optimizer.h"
 #include "umicom/ai/training/byte_tokenizer.h"

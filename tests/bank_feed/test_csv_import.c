@@ -146,6 +146,10 @@ int main(int argc, char **argv)
         char account[42];
         memset(account, 'a', sizeof account - 1U); account[sizeof account - 1U] = '\0';
         CHECK(Bad("practice-account", account, UMI_STATUS_CAPACITY_EXCEEDED, 1U) == 0);
+    } else if (!strcmp(mode, "control-del")) {
+        CHECK(Bad("practice-account", "practice\177account", UMI_STATUS_PARSE_ERROR, 1U) == 0);
+        CHECK(Bad("Example credit", "Example\177credit", UMI_STATUS_PARSE_ERROR, 4U) == 0);
+        CHECK(Bad("credit-one", "credit\177one", UMI_STATUS_PARSE_ERROR, 2U) == 0);
     } else if (!strcmp(mode, "utf8")) {
         CHECK(Bad("Example credit", "\xc0\xaf", UMI_STATUS_PARSE_ERROR, 0U) == 0);
     } else CHECK(0);

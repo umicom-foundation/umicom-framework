@@ -52,6 +52,32 @@ static void Notify(GObject *object, GParamSpec *property, gpointer data) {
   Click(observer->root, "video.remove");
   Click(observer->root, "video.save");
 }
+typedef struct Retirement {
+  GtkWidget *root;
+  bool onCompletion, fired;
+  unsigned updatesAfterRetirement;
+} Retirement;
+static void RetireOnSensitivity(GObject *object, GParamSpec *property, gpointer data) {
+  (void)property;
+  Retirement *observer = data;
+  if (!observer->fired && (bool)gtk_widget_get_sensitive(GTK_WIDGET(object)) == observer->onCompletion) {
+    observer->fired = true;
+    UmiVideoSequenceGtk4Retire(observer->root);
+  }
+}
+static void CountAfterRetirement(GObject *object, GParamSpec *property, gpointer data) {
+  (void)object; (void)property;
+  Retirement *observer = data;
+  if (observer->fired) ++observer->updatesAfterRetirement;
+}
+static void RetireOnBuffer(GtkTextBuffer *buffer, gpointer data) {
+  (void)buffer;
+  Retirement *observer = data;
+  if (!observer->fired) {
+    observer->fired = true;
+    UmiVideoSequenceGtk4Retire(observer->root);
+  }
+}
 int main(int argc, char **argv) {
   if (argc != 2 && argc != 3)
     return 2;
@@ -121,6 +147,44 @@ int main(int argc, char **argv) {
     CHECK(UmiVideoSequenceEditorRead(panel->editor)->clip_count == 1U);
     UmiFileInfo unexpected;
     CHECK(umi_directory_stat(changed, &unexpected) == UMI_STATUS_NOT_FOUND);
+  } else if (strcmp(argv[1], "cancel-open") == 0) {
+    Click(root, "video.save"); Wait(panel);
+    Click(root, "video.remove");
+    CHECK(panel->dirty && UmiVideoSequenceEditorRead(panel->editor)->clip_count == 0U);
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(panel->approval), TRUE);
+    Click(root, "video.open");
+    CHECK(panel->busy && panel->cancel != NULL);
+    /* No GTK iteration occurs before cancellation. Worker speed cannot make
+     * acceptance precede this request, even when parsing has already finished. */
+    umi_cancellation_token_request(panel->cancel);
+    Wait(panel);
+    CHECK(panel->dirty && panel->cancel == NULL);
+    CHECK(UmiVideoSequenceEditorRead(panel->editor)->clip_count == 0U);
+    Click(root, "video.undo");
+    CHECK(UmiVideoSequenceEditorRead(panel->editor)->clip_count == 1U);
+  } else if (strcmp(argv[1], "retire-dispatch") == 0 || strcmp(argv[1], "retire-complete") == 0) {
+    Retirement observer = {root, strcmp(argv[1], "retire-complete") == 0, false, 0U};
+    GtkWidget *form = g_object_ref(panel->form), *cancelButton = g_object_ref(panel->cancelButton);
+    gulong retiring = g_signal_connect(form, "notify::sensitive", G_CALLBACK(RetireOnSensitivity), &observer);
+    gulong checking = g_signal_connect(cancelButton, "notify::sensitive", G_CALLBACK(CountAfterRetirement), &observer);
+    Click(root, "video.save"); Wait(panel);
+    CHECK(observer.fired && observer.updatesAfterRetirement == 0U);
+    CHECK(panel->closed && panel->cancel == NULL);
+    UmiFileInfo info;
+    CHECK(umi_directory_stat(path, &info) == (observer.onCompletion ? UMI_STATUS_OK : UMI_STATUS_NOT_FOUND));
+    g_signal_handler_disconnect(form, retiring); g_signal_handler_disconnect(cancelButton, checking);
+    g_object_unref(form); g_object_unref(cancelButton);
+  } else if (strcmp(argv[1], "retire-refresh") == 0) {
+    Retirement observer = {root, true, false, 0U};
+    GtkTextBuffer *buffer = g_object_ref(gtk_text_view_get_buffer(GTK_TEXT_VIEW(panel->summary)));
+    GtkWidget *selector = g_object_ref(panel->selector);
+    gulong retiring = g_signal_connect(buffer, "changed", G_CALLBACK(RetireOnBuffer), &observer);
+    gulong checking = g_signal_connect(selector, "notify::model", G_CALLBACK(CountAfterRetirement), &observer);
+    Click(root, "video.save"); Wait(panel);
+    CHECK(observer.fired && panel->closed && observer.updatesAfterRetirement == 0U);
+    CHECK(!panel->busy && !panel->refreshing && panel->cancel == NULL);
+    g_signal_handler_disconnect(buffer, retiring); g_signal_handler_disconnect(selector, checking);
+    g_object_unref(buffer); g_object_unref(selector);
   } else if (strcmp(argv[1], "saved-undo") == 0) {
     Click(root, "video.save");
     Wait(panel);

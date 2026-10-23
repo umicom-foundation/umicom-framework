@@ -3,7 +3,10 @@
  * PURPOSE: Reconcile planned parameter sizes with canonical decoder shapes;
  *          refuse impossible tensors without touching caller output.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_capacity_plan.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/capacity_plan.h"
 #include "umicom/ai/training/tape.h"
 #include <stdio.h>

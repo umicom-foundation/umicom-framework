@@ -129,6 +129,14 @@ int main(int argc, char **argv)
         g_signal_emit_by_name(retained, "clicked"); REQUIRE(UmiKanbanGtk4Refresh(panel) == UMI_STATUS_UNAVAILABLE);
         g_object_unref(panel); panel = NULL; g_signal_emit_by_name(retained, "clicked"); g_object_unref(retained);
     } else if (strcmp(argv[1], "publication") == 0) {
+        /* GTK attaches an expander's content to its widget tree when expanded.
+         * Open the public review form just as the user does before finding it. */
+        GtkWidget *review = NULL;
+        for (GtkWidget *child = gtk_widget_get_first_child(panel); child != NULL;
+             child = gtk_widget_get_next_sibling(child))
+            if (GTK_IS_EXPANDER(child)) { review = child; break; }
+        REQUIRE(GTK_IS_EXPANDER(review));
+        gtk_expander_set_expanded(GTK_EXPANDER(review), TRUE);
         Set(panel, "kanban-public-title", "Reviewed feature"); Click(panel, "Include reviewed card"); Click(panel, "Generate website");
         GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(Named(panel, "kanban-public-source")));
         GtkTextIter first, last; gtk_text_buffer_get_bounds(buffer, &first, &last);

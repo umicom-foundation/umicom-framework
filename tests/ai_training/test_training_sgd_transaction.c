@@ -2,7 +2,10 @@
  * Umicom Framework | tests/ai_training/test_training_sgd_transaction.c
  * Purpose: Test failure-atomic multi-leaf SGD and incorrect lifecycle calls.
  * Author: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_sgd_transaction.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/tape.h"
 #include <float.h>
 #include <math.h>

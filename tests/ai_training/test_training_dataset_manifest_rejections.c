@@ -2,7 +2,10 @@
  * Umicom Framework | tests/ai_training/test_training_dataset_manifest_rejections.c
  * Purpose: Deny bad/duplicate manifests without partial output publication.
  * Author: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_dataset_manifest_rejections.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/dataset_manifest.h"
 #include <stdio.h>
 #include <string.h>

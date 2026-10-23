@@ -4,7 +4,9 @@
  * PURPOSE: Reject stale or malformed evidence and insufficient JSON capacity
  *          without modifying caller-owned bytes or length.
  * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/model_quality_evidence.h"
 
 #include <math.h>

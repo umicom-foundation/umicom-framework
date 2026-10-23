@@ -13,7 +13,9 @@
  *
  * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation
  * LICENCE: MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: learning/native-llm/compare_model_quality.c
+ */
 #include "umicom/ai/training/experiment_plan.h"
 #include "umicom/ai/training/model_quality_gate.h"
 #include "umicom/ai/training/model_quality_evidence.h"

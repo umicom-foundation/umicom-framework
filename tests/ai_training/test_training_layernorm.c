@@ -2,7 +2,10 @@
  * Umicom Framework | tests/ai_training/test_training_layernorm.c
  * PURPOSE: Layer normalisation row invariance, affine outputs and refusal.
  * AUTHOR: Sammy Hegab / Umicom Foundation | LICENCE: MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_layernorm.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/tape.h"
 #include <math.h>
 #include <stdio.h>

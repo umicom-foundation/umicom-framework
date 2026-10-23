@@ -4,7 +4,9 @@
  * PURPOSE: Prove bit-identical AdamW model+moments after clipping-aware
  *          continuation and unchanged original checkpoint handles.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/experiment_adamw.h"
 #include "umicom/ai/training/optimizer_checkpoint.h"
 #include <stdint.h>

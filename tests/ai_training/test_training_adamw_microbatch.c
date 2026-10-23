@@ -3,7 +3,10 @@
  * PURPOSE: Compare full AdamW training to the shared gradient reducer using
  * different microbatch sizes and prove the old SGD accumulator still works.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_adamw_microbatch.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/gradient_accumulation.h"
 #include "umicom/ai/training/optimizer_checkpoint.h"
 #include <math.h>

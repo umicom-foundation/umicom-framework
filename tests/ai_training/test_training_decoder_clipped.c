@@ -2,7 +2,10 @@
  * Umicom Framework | tests/ai_training/test_training_decoder_clipped.c
  * PURPOSE: Verify decoder-wide clipping applies after microbatch reduction.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_decoder_clipped.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/gradient_accumulation.h"
 #include "umicom/ai/training/optimizer.h"
 #include "umicom/ai/training/checkpoint.h"

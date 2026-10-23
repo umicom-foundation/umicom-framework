@@ -4,7 +4,9 @@
  * PURPOSE: Check independent no-clobber companion-file publication and
  *          fail-closed tampering, truncation and missing-file behaviour.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/gradient_policy.h"
 #include <stdio.h>
 #include <string.h>

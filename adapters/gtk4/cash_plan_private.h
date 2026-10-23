@@ -33,13 +33,16 @@ typedef struct CashPanel
     UmiCashPlan *plan, *previous, *pending;
     GtkWidget *fields[CASH_FIELDS], *scale, *receive, *enabled, *selector, *approval, *output, *note;
     GtkWidget *textExport; /* Retained with the other controls. */
+    GtkWidget *pathPickers[3]; /* Hide on retirement to cancel pending native choosers. */
     GtkStringList *names;
     GPtrArray *retained;
     uint64_t generation;
     int updating, busy, configDirty, entryDirty;
+    int retired; /* Logical host lifetime ends before retained widget finalisation. */
 } CashPanel;
 /* All helpers run on the GTK owner thread except the private file worker.
  * Signals hold a watched root, never a raw application runtime pointer. */
+char *UmiCashPanelComparisonText(const UmiCashPlan *baseline, const UmiCashPlan *scenario);
 void UmiCashPanelRender(CashPanel *panel);
 void UmiCashPanelSync(CashPanel *panel);
 void UmiCashPanelInvalidate(CashPanel *panel);

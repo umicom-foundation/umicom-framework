@@ -127,4 +127,11 @@ If a player does not show the captions, check its subtitle controls and format s
 is refused. A failed or cancelled export can leave a partial new file; choose another
 filename when retrying and read the renderer diagnostics. Caption paths are export inputs
 and are not saved inside the sequence recipe.</p></section>
+
+<section><h2>Cancel opening a recipe safely</h2>
+<ol><li>Save edits you want to keep. If replacing unsaved edits, review the replacement confirmation before choosing <strong>Open recipe</strong>.</li>
+<li>While the open is pending, use <strong>Cancel operation</strong>. Cancellation requested before the GTK owner accepts the parsed recipe keeps the current sequence and undo history.</li>
+<li>Wait for the result before starting another file operation. If the recipe was already accepted before you cancelled, the open has completed; cancellation does not undo a completed operation.</li></ol>
+<p>Saving and rendering are different: a file successfully created before cancellation remains a completed output. The result must not report that file as cancelled merely because a late request arrived. Failed or interrupted exports can still leave a partial new output, as described above.</p>
+<p>Embedding applications must call <code>UmiVideoSequenceGtk4Retire</code> before removing a live panel. Retirement requests cancellation and prevents late results from updating controls. Keep the GTK main loop running while accepted work finishes; process termination cannot report or recover incomplete work.</p></section>
 </body></html>

@@ -5,7 +5,9 @@
  *   Check that externally accumulated gradients receive one atomic native
  *   parameter update, and malformed requests cannot change existing weights.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/gradient_accumulation.h"
 #include <math.h>
 #include <stdio.h>

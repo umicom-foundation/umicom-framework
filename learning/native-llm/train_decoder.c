@@ -21,7 +21,9 @@
  * AUTHOR AND ORGANISATION:
  *   Sammy Hegab | Umicom Foundation
  * LICENCE: MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: learning/native-llm/train_decoder.c
+ */
 #include "umicom/ai/training/decoder.h"
 #include "umicom/ai/training/dataset_split.h"
 #include "umicom/ai/training/checkpoint.h"

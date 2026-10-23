@@ -5,7 +5,9 @@
  *   Confirm that several rewound microbatch graphs are equivalent to one
  *   larger mean-loss SGD step, including a shorter final microbatch.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/gradient_accumulation.h"
 #include "umicom/ai/training/checkpoint.h"
 #include <math.h>

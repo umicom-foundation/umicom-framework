@@ -2,7 +2,10 @@
  * Umicom Framework | tests/ai_training/test_training_generation.c
  * PURPOSE: Autoregressive rolling context, determinism, and output isolation.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_generation.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/generation.h"
 #include "umicom/ai/training/byte_tokenizer.h"
 #include "umicom/ai/training/checkpoint.h"

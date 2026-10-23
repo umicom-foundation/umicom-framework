@@ -5,7 +5,11 @@
 </head><body>
 <h1>Synthetic access requests</h1>
 <p>Umicom Healthcare uses Framework services to demonstrate how an item request moves from registration to a provider reply, acceptance, simulated funding, a timed reservation and collection. The same C23 service is used by the native window and the verification console.</p>
+<!-- The original memory-only wording is retained for review. The archive-enabled
+     host now offers manual snapshots; minimal hosts keep session-only storage.
 <aside><strong>Demonstration records only.</strong> Use fictional identifiers. This workspace does not contact providers, reserve real stock, transfer money, authenticate patients or provide clinical decisions. Records stay in memory and are discarded when the window closes. It is not a clinical record system.</aside>
+-->
+<aside><strong>Demonstration records only.</strong> Use fictional identifiers. This workspace does not contact providers, reserve real stock, transfer money, authenticate patients or provide clinical decisions. Records are held in memory. When archive controls are available, save a snapshot before closing to reopen it later. Unsaved changes are discarded. It is not a clinical record system.</aside>
 <section><h2>Open Healthcare from Desk</h2>
 <ol><li>Use an installation containing both <code>umicom-desk</code> and the native <code>umicom-healthcare</code> executable in its trusted <code>bin</code> directory. Windows adds <code>.exe</code> to both names.</li>
 <li>Open Desk and find <strong>Umicom Healthcare</strong> in its application selection.</li>
@@ -41,4 +45,55 @@
 <p>The public contract is <code>umicom/healthcare/synthetic_access.h</code>, owned by <code>Umicom::healthcare_core</code>. The native widget is <code>UmiHealthcareAccessWorkspaceNew</code> in <code>umicom/healthcare/access_gtk4.h</code>, owned by <code>Umicom::healthcare_access_gtk4</code>. Thin applications should consume these targets instead of copying their state transitions.</p>
 <p>Each accepted transition advances a revision. Failed operations leave stored records and caller outputs unchanged. The book is owned by one thread. The GTK root closes its controller before releasing child widgets, and retained controls become inert after that closure.</p>
 <p>Future persistent, authenticated workflows need separate reviewed contracts for storage, provider evidence, consent, access control, retries, event history and recovery. Do not turn this synthetic API into a real patient-data service simply by relaxing its identifier checks.</p></section>
+
+<section><h2>Find requests needing attention</h2>
+<ol><li>Choose a <strong>Worklist</strong>: All requests, Outstanding quantity, Needs follow-up, Unassigned follow-up, Reserved, Overdue reservations or Collected.</li>
+<li>Optionally enter a fictional <code>STF-000001</code> style ID in <strong>Filter by follow-up owner</strong>, then select <strong>Refresh worklist</strong>. Leave it empty to see all owners. A name or malformed ID is refused; the previous worklist stays visible.</li>
+<li>Select the request ID and review its quantities, outcome and revision before taking an action. Counts above the selector describe the entire session; the number shown describes the filtered view.</li>
+<li>For an unmet request or partial collection, enter the fictional coordinator in <strong>Synthetic follow-up owner</strong> and choose <strong>Assign follow-up</strong>.</li>
+<li>In the Unassigned view, the assigned request disappears. Selection becomes empty so the next click cannot accidentally assign another request. Select another request explicitly to continue.</li></ol>
+<p><strong>Outstanding</strong> means some requested quantity has not been collected, including an unmet outcome. <strong>Needs follow-up</strong> means an explicit unmet outcome or a partial collection. A provider reply alone does not create a follow-up assignment.</p>
+<p><strong>Overdue reservations</strong> compares deadlines with the clock when the worklist is refreshed. There is no background refresh. Reading a deadline does not expire the reservation: select the request and use <strong>Expire reservation</strong> before assigning its unmet follow-up.</p>
+<p>Changing filters does not alter requests. If an action is refused after a record changes, refresh and review the current record rather than automatically repeating the decision. Assignment records a fictional coordinator only; it does not authenticate a user or grant access.</p>
+<h3>Use the worklist in C23</h3>
+<pre>#include "umicom/healthcare/access_worklist.h"
+
+/* book belongs to this thread; now contains positive UTC epoch seconds. */
+UmiHealthcareAccessWorklist view;
+UmiStatus status = UmiHealthcareAccessWorklistBuild(
+    book, UMI_HEALTHCARE_ACCESS_UNASSIGNED, NULL, now, &amp;view);
+if (status == UMI_STATUS_OK) {
+    /* Each row owns a record copy. Use record.requestId and record.revision
+       when requesting a checked transition through synthetic_access.h. */
+}</pre>
+<p>Link <code>Umicom::healthcare_core</code>. The value snapshot holds at most 32 rows and remains readable after the book is destroyed. Build it again after accepted edits; the service performs no storage or network operations.</p></section>
+
+<section><h2>Save an exercise and reopen it</h2>
+<p>An archive is a JSON file containing the session's fictional patient IDs, requests, revisions, quantities, provider replies and follow-up assignments. It has no names, clinical notes, passwords or payment details. The full Framework build supplies these controls; a minimal Healthcare core build can remain memory-only.</p>
+<ol><li>Finish the request changes you want to keep. Use <strong>Choose new location...</strong> beside the archive path to choose a new filename, such as <code>synthetic-access.json</code>, in a folder you control. Choosing a path does not write anything.</li>
+<li>Select <strong>Save new archive</strong>. Wait for the message beginning <strong>Saved captured session</strong>. The file contains the session captured when you clicked Save, even if you subsequently edit the path entry.</li>
+<li>Close the application, reopen Healthcare, and use <strong>Browse existing...</strong> to choose that file. Select <strong>Open archive</strong>.</li>
+<li>If there are already registered patients in the current session, save that session first. Then tick <strong>Replace current session when opening</strong> and select Open again. The checkbox grants replacement for one attempt only.</li>
+<li>After the successful open message, select a request explicitly. The worklist resets to all requests and retains no selection from the previous session. IDs, quantities, revisions and owners should match the saved exercise.</li>
+<li>Continue the exercise and save to a new filename. This workflow never overwrites an existing archive.</li></ol>
+<p>The interface rejects domain actions while an archive operation is pending. It reads and writes files on a worker so disk access does not block the GTK thread. Closing during an accepted save can leave a completed or partial file; check the result before relying on it. Closing during Open discards a late result instead of changing a closed workspace.</p>
+<table><thead><tr><th>Problem</th><th>Recovery</th></tr></thead><tbody>
+<tr><td>Save failed or destination already exists</td><td>Select a new filename in an existing folder you control. The current session remains available. A failed write may leave a partial new file; it is not reported as a successful save.</td></tr>
+<tr><td>Open failed</td><td>The current session remains unchanged. Use a complete archive written by the supported format. Unknown versions, extra or duplicate fields, invalid IDs and inconsistent request states are refused.</td></tr>
+<tr><td>Reservation deadline has passed since saving</td><td>Opening does not expire it automatically. Refresh the Overdue reservations worklist, review the request and choose Expire reservation explicitly.</td></tr>
+<tr><td>No Open or Save controls</td><td>The host was built without the optional archive component. Link the shared archive and native components in a full Framework configuration; copying a JSON file beside the application cannot enable the controls.</td></tr>
+</tbody></table>
+<p>Archives support at most 32 patients and 32 requests and are limited to 64 KiB. They are readable snapshots, not encrypted storage, authenticated provider evidence, an event history or a multiuser database. Opening an older snapshot deliberately restores its older state. Keep only synthetic exercises in these files.</p>
+<h3>Use the archive service in C23</h3>
+<p>Link <code>Umicom::healthcare_archive</code> and include <code>umicom/healthcare/access_archive.h</code>. Capture on the thread that owns the registry and book. The resulting bytes are independent of those handles and can be passed to a file worker.</p>
+<pre>char *bytes = NULL;
+size_t length = 0;
+UmiStatus status = UmiHealthcareAccessArchiveEncode(registry, book, &amp;bytes, &amp;length);
+if (status == UMI_STATUS_OK) {
+    /* Write exactly length bytes using the Framework output-file service.
+       Keep bytes alive until the worker finishes. */
+}
+UmiHealthcareAccessArchiveFree(bytes);</pre>
+<p><code>UmiHealthcareAccessArchiveDecode</code> returns a new registry and book together only after the entire archive passes validation. Destroy both when no longer needed. Replace existing handles only after success and invalidate every view or queued command belonging to the old session. Stored revisions remain exact unsigned integers, including values above the exact-integer range of a floating-point number.</p>
+<p>Restoration checks whether the saved state is reachable through the existing domain transitions. It does not reconstruct or authenticate historical actions. When a host implements automatic storage, event history or shared editing later, those capabilities need their own contracts; this manual archive must not silently assume those responsibilities.</p></section>
 </body></html>

@@ -9,6 +9,7 @@
 #include "cash_plan_private.h"
 #include "window_removal_private.h"
 #include "umicom/ui/gtk4/text_export.h"
+#include "umicom/ui/gtk4/path_picker.h"
 #include "umicom/ui/gtk4/drop_down.h"
 #include <stdlib.h>
 /* Retain controls as well as the root-owned model. A notification handler may
@@ -39,10 +40,32 @@ void UmiCashPanelInvalidate(CashPanel *panel)
         ++panel->generation;
     gtk_check_button_set_active(GTK_CHECK_BUTTON(panel->approval), FALSE);
 }
+/* Retire the model before emitting widget notifications. Reentrant actions and
+ * task completions then observe the same closed-host boundary as every product. */
+void UmiGtk4CashPlanRetire(GtkWidget *root)
+{
+    if (root == NULL)
+        return;
+    CashPanel *panel = g_object_get_data(G_OBJECT(root), "umicom-cash-plan");
+    if (panel == NULL || panel->retired)
+        return;
+    g_object_ref(root);
+    panel->retired = 1;
+    UmiCashPanelInvalidate(panel);
+    UmiTextExportGtk4Retire(panel->textExport);
+    for (size_t i = 0U; i < 3U; ++i)
+        if (panel->pathPickers[i] != NULL)
+            gtk_widget_set_visible(panel->pathPickers[i], FALSE);
+    gtk_widget_set_sensitive(root, FALSE);
+    gtk_label_set_text(GTK_LABEL(panel->note), "This cash planner is closed. Open a new planner to continue.");
+    g_object_unref(root);
+}
 static void Changed(GObject *control, gpointer root)
 {
     CashPanel *panel = g_object_get_data(G_OBJECT(root), "umicom-cash-plan");
     if (panel == NULL || panel->updating)
+        return;
+    if (panel->retired)
         return;
     g_object_ref(root);
     ++panel->updating;
@@ -52,9 +75,10 @@ static void Changed(GObject *control, gpointer root)
         panel->configDirty = 1;
     if (field >= CASH_ID && field <= CASH_AMOUNT)
         panel->entryDirty = 1;
-    gtk_label_set_text(
-        GTK_LABEL(panel->note),
-        "Fields changed. Apply settings or add/update the entry. Reports and saves use stored assumptions.");
+    if (!panel->retired)
+        gtk_label_set_text(
+            GTK_LABEL(panel->note),
+            "Fields changed. Apply settings or add/update the entry. Reports and saves use stored assumptions.");
     --panel->updating;
     g_object_unref(root);
 }
@@ -109,6 +133,8 @@ static void EntryFields(CashPanel *panel)
 }
 void UmiCashPanelSync(CashPanel *panel)
 {
+    if (panel->retired)
+        return;
     UmiCashPlanConfig config;
     (void)UmiCashPlanRead(panel->plan, &config);
     ++panel->updating;
@@ -135,6 +161,8 @@ void UmiCashPanelSync(CashPanel *panel)
 }
 void UmiCashPanelRender(CashPanel *panel)
 {
+    if (panel->retired)
+        return;
     UmiCashPlanForecast *forecast = g_new0(UmiCashPlanForecast, 1);
     UmiStatus status = UmiCashPlanProject(panel->plan, forecast);
     GString *text = g_string_new("Stored assumptions - local planning only\n");
@@ -191,11 +219,15 @@ static void Selected(GObject *selector, GParamSpec *spec, gpointer root)
     CashPanel *panel = g_object_get_data(G_OBJECT(root), "umicom-cash-plan");
     if (panel == NULL || panel->updating)
         return;
+    if (panel->retired)
+        return;
     g_object_ref(root);
     ++panel->updating;
     UmiCashPanelInvalidate(panel);
-    EntryFields(panel);
-    gtk_label_set_text(GTK_LABEL(panel->note),
+    if (!panel->retired)
+        EntryFields(panel);
+    if (!panel->retired)
+        gtk_label_set_text(GTK_LABEL(panel->note),
                        "Selected entry copied to the editor. Update stores changes; Add needs a unique ID.");
     --panel->updating;
     g_object_unref(root);
@@ -246,6 +278,8 @@ static void Edit(GtkButton *button, gpointer root)
     CashPanel *panel = g_object_get_data(G_OBJECT(root), "umicom-cash-plan");
     if (panel == NULL || panel->updating)
         return;
+    if (panel->retired)
+        return;
     g_object_ref(root);
     ++panel->updating;
     const char *action = g_object_get_data(G_OBJECT(button), "cash-action");
@@ -263,12 +297,15 @@ static void Edit(GtkButton *button, gpointer root)
         else
         {
             UmiCashPanelInvalidate(panel);
-            UmiCashPlan *old = panel->plan;
-            panel->plan = panel->previous;
-            panel->previous = NULL;
-            UmiCashPlanDestroy(old);
-            UmiCashPanelSync(panel);
-            UmiCashPanelRender(panel);
+            if (!panel->retired)
+            {
+                UmiCashPlan *old = panel->plan;
+                panel->plan = panel->previous;
+                panel->previous = NULL;
+                UmiCashPlanDestroy(old);
+                UmiCashPanelSync(panel);
+                UmiCashPanelRender(panel);
+            }
         }
     }
     else
@@ -298,16 +335,21 @@ static void Edit(GtkButton *button, gpointer root)
         if (status == UMI_STATUS_OK)
         {
             UmiCashPanelInvalidate(panel);
-            UmiCashPlanDestroy(panel->previous);
-            panel->previous = panel->plan;
-            panel->plan = next;
-            next = NULL;
-            UmiCashPanelSync(panel);
-            UmiCashPanelRender(panel);
+            /* Invalidating approval emits notifications; a host may close there. */
+            if (!panel->retired)
+            {
+                UmiCashPlanDestroy(panel->previous);
+                panel->previous = panel->plan;
+                panel->plan = next;
+                next = NULL;
+                UmiCashPanelSync(panel);
+                UmiCashPanelRender(panel);
+            }
         }
         UmiCashPlanDestroy(next);
     }
-    gtk_label_set_text(GTK_LABEL(panel->note),
+    if (!panel->retired)
+        gtk_label_set_text(GTK_LABEL(panel->note),
                        status == UMI_STATUS_OK
                            ? "Stored plan updated. Save a new file to keep it after closing."
                            : umi_status_text(status));
@@ -360,6 +402,7 @@ UmiStatus UmiGtk4CashPlanCreate(GtkWidget **out)
         return status;
     }
     GtkWidget *root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
+    (void)umi_gtk4_automation_tag_widget(root, "cash.plan.root");
     g_object_set_data_full(G_OBJECT(root), "umicom-cash-plan", panel, Destroy);
     ++panel->updating;
     GtkWidget *intro = gtk_label_new("Local cash assumptions. No bank feed, payment or trade is executed. "
@@ -386,6 +429,23 @@ UmiStatus UmiGtk4CashPlanCreate(GtkWidget **out)
         gtk_grid_attach(GTK_GRID(grid), panel->fields[i], 1, i, 1, 1);
         g_object_set_data(G_OBJECT(panel->fields[i]), "cash-field", GINT_TO_POINTER(i + 1));
         g_signal_connect_object(panel->fields[i], "changed", G_CALLBACK(Changed), root, 0);
+    }
+    /* Native dialogs only select a path. Existing save/load/export actions keep
+     * validation, review and exclusive creation in their shared file owner. */
+    GtkWidget *paths = gtk_grid_new();
+    gtk_grid_set_column_spacing(GTK_GRID(paths), 8U);
+    gtk_box_append(GTK_BOX(root), paths);
+    const char *pathLabels[] = {"Open saved plan", "New plan JSON", "New projection CSV"};
+    const char *pathTitles[] = {"Choose a saved cash plan", "Choose a new cash plan filename", "Choose a new projection filename"};
+    const char *pathNames[] = {NULL, "cash-plan.json", "cash-projection.csv"};
+    const char *pathIds[] = {"cash.plan.browse-open", "cash.plan.browse-save", "cash.plan.browse-export"};
+    for (size_t i = 0U; i < 3U; ++i)
+    {
+        gtk_grid_attach(GTK_GRID(paths), gtk_label_new(pathLabels[i]), (int)i, 0, 1, 1);
+        panel->pathPickers[i] = Keep(panel, UmiPathPickerGtk4Create(GTK_ENTRY(panel->fields[CASH_PATH]),
+            i == 0U ? UMI_PATH_PICKER_EXISTING_FILE : UMI_PATH_PICKER_NEW_FILE,
+            pathTitles[i], pathNames[i]), pathIds[i]);
+        gtk_grid_attach(GTK_GRID(paths), panel->pathPickers[i], (int)i, 1, 1, 1);
     }
     panel->scale = Keep(panel, gtk_spin_button_new_with_range(0, 9, 1), "cash.plan.scale");
     g_object_set_data(G_OBJECT(panel->scale), "cash-field", GINT_TO_POINTER(CASH_OPENING + 1));
@@ -450,11 +510,20 @@ UmiStatus UmiGtk4CashPlanCreate(GtkWidget **out)
     *out = root;
     return UMI_STATUS_OK;
 }
+/* Export-only retirement is retained for review. Complete planner retirement
+ * now prevents retained edit controls and file actions from outliving the host. */
+#if 0
 static void CashWindowClosed(GtkWidget *window, gpointer root)
 {
     (void)window;
     CashPanel *panel = g_object_get_data(G_OBJECT(root), "umicom-cash-plan");
     if (panel != NULL) UmiTextExportGtk4Retire(panel->textExport);
+}
+#endif
+static void CashWindowClosed(GtkWidget *window, gpointer root)
+{
+    (void)window;
+    UmiGtk4CashPlanRetire(GTK_WIDGET(root));
 }
 static void Open(GtkButton *button, gpointer unused)
 {
@@ -475,7 +544,15 @@ static void Open(GtkButton *button, gpointer unused)
         gtk_window_set_transient_for(GTK_WINDOW(window), GTK_WINDOW(parent));
         gtk_window_set_destroy_with_parent(GTK_WINDOW(window), TRUE);
     }
+    /* Preserve direct hosting for architectural review. A scrolling host keeps
+     * every editor and file action reachable on displays shorter than the form. */
+#if 0
     gtk_window_set_child(GTK_WINDOW(window), content);
+#endif
+    GtkWidget *scroll = gtk_scrolled_window_new();
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), content);
+    gtk_window_set_child(GTK_WINDOW(window), scroll);
     /* Retained widgets must not start new writes after their host has closed. */
     g_signal_connect_object(window, "destroy", G_CALLBACK(CashWindowClosed), content, 0);
     /* Native removal happens before finalisation when a caller retains a window.

@@ -3,7 +3,10 @@
  * PURPOSE: Check the composed decoder block can learn a deterministic
  *          input-to-target mapping while retaining source parameters.
  * AUTHOR: Sammy Hegab / Umicom Foundation | LICENCE: MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_transformer_training.c
+ * LICENCE: MIT
+ */
 #include "transformer_fixture.h"
 #include <math.h>
 #include <stdio.h>

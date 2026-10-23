@@ -2,7 +2,10 @@
  * Umicom Framework | tests/ai_training/test_training_decoder_contract.c
  * Purpose: Reject bad decoder shapes, verify positional/causal isolation.
  * Author: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_decoder_contract.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/decoder.h"
 #include <math.h>
 #include <stdint.h>

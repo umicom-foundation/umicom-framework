@@ -4,7 +4,9 @@
  * PURPOSE: Verify digest binding, binary32 threshold identity, batch policy,
  *          exact record grammar and atomic publication of output buffers.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/gradient_policy.h"
 #include <stdint.h>
 #include <stdio.h>

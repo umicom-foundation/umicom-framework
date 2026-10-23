@@ -1,7 +1,11 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework | failure-atomic evidence and JSON rejections.
  * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_benchmark_evidence_rejections.c
+ * PURPOSE: Verify rejected benchmark evidence and JSON requests leave outputs unchanged.
+ * LICENCE: MIT
+ */
 #include "benchmark_evidence_fixture.h"
 #include <string.h>
 int main(void)

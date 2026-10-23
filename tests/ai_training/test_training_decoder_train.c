@@ -2,7 +2,10 @@
  * Umicom Framework | tests/ai_training/test_training_decoder_train.c
  * Purpose: Repeatably train the complete decoder and evaluate held-out groups.
  * Author: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_decoder_train.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/decoder.h"
 #include "umicom/ai/training/dataset_split.h"
 #include <math.h>

@@ -37,3 +37,25 @@ foreach(_case IN ITEMS roundtrip dirty-close conflict-copy existing retained com
         umicom_test_impact_owners("${_test}" TARGETS umi-kanban-window-test)
     endif()
 endforeach()
+
+# Retained-window tests observe real GTK removal, not finalisation alone.
+add_executable(umi-kanban-retirement-test "${_kanban_gtk_tests}/tests/kanban_gtk4/test_retirement.c")
+target_link_libraries(umi-kanban-retirement-test PRIVATE Umicom::kanban_gtk4)
+set_target_properties(umi-kanban-retirement-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+umicom_apply_warnings(umi-kanban-retirement-test)
+umicom_apply_sanitizers(umi-kanban-retirement-test)
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umi-kanban-retirement-test)
+endif()
+foreach(_case IN ITEMS prepare complete pending idle-dirty save-pending)
+    set(_test "framework.kanban.retirement.${_case}")
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/kanban-retirement-${_case}")
+    add_test(NAME "${_test}" COMMAND umi-kanban-retirement-test "${_case}"
+        "${CMAKE_CURRENT_BINARY_DIR}/qualification/kanban-retirement-${_case}")
+    set_tests_properties("${_test}" PROPERTIES TIMEOUT 60 SKIP_RETURN_CODE 77
+        ENVIRONMENT "G_DEBUG=fatal-warnings"
+        LABELS "framework;kanban;gtk4;files;ownership;regression")
+    if(COMMAND umicom_test_impact_owners)
+        umicom_test_impact_owners("${_test}" TARGETS umi-kanban-retirement-test)
+    endif()
+endforeach()

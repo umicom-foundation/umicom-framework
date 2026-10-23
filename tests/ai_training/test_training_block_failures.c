@@ -3,7 +3,10 @@
  * PURPOSE: Enforce bounded graph rollback, parameter-shape validation and
  *          preservation of caller output on failure.
  * AUTHOR: Sammy Hegab / Umicom Foundation | LICENCE: MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_block_failures.c
+ * LICENCE: MIT
+ */
 #include "transformer_fixture.h"
 #include <math.h>
 #include <stdio.h>

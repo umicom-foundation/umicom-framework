@@ -3,7 +3,10 @@
  * Purpose: Qualify immutable source inventory, file-level splits and seeded,
  *          shape-checked next-token minibatches without running a model.
  * Author: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_dataset_manifest.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/dataset_manifest.h"
 #include "umicom/ai/training/initialisation.h"
 #include <stdint.h>

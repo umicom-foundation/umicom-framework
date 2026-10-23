@@ -3,7 +3,10 @@
  * PURPOSE: Exercise the real decoder and immutable source-split evaluator;
  *          prove an identical checkpoint cannot pass as a new candidate.
  * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_model_quality_integration.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/model_quality_gate.h"
 
 #include <stdio.h>

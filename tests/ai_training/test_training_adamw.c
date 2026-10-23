@@ -3,7 +3,9 @@
  * File: tests/ai_training/test_training_adamw.c
  * PURPOSE: Validate bias correction, decoupled decay and atomic rejection.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/optimizer.h"
 #include <math.h>
 #include <stdio.h>

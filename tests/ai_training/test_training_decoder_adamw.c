@@ -3,7 +3,9 @@
  * File: tests/ai_training/test_training_decoder_adamw.c
  * PURPOSE: Confirm seeded decoder training and AdamW binding/step integrity.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/optimizer.h"
 #include "umicom/ai/training/checkpoint.h"
 #include <stdio.h>

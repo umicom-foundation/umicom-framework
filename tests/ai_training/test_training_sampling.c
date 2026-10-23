@@ -2,7 +2,10 @@
  * Umicom Framework | tests/ai_training/test_training_sampling.c
  * PURPOSE: Stable top-K ordering, seeded sampling and failure-atomic outputs.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_sampling.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/generation.h"
 #include <math.h>
 #include <stdint.h>

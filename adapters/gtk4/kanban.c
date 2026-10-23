@@ -10,6 +10,7 @@
 #include "umicom/ui/gtk4/text_export.h"
 #include "umicom/kanban/developers.h"
 #include "umicom/kanban/publication.h"
+#include "umicom/ui/gtk4/drop_down.h"
 #include "umicom/kanban/view.h"
 #include <string.h>
 
@@ -396,7 +397,11 @@ GtkWidget *UmiKanbanGtk4Create(UmiKanbanBoard *board)
     UmiKanbanConfig config; if (umi_kanban_board_config(board, &config) != UMI_STATUS_OK) { g_object_ref_sink(panel->root); g_object_unref(panel->root); return NULL; }
     GtkStringList *destinations = gtk_string_list_new(NULL);
     for (size_t i = 0U; i < config.column_count; ++i) gtk_string_list_append(destinations, g_utf8_validate(config.columns[i].title, -1, NULL) ? config.columns[i].title : config.columns[i].id);
+/* Transfer the model through the Framework helper so the ownership contract is explicit and shared. The previous statement is retained for review. */
+#if 0
     panel->destination = gtk_drop_down_new(G_LIST_MODEL(destinations), NULL);
+#endif
+    panel->destination = umi_ui_gtk4_drop_down_new_take_string_list(destinations);
     gtk_widget_set_name(panel->destination, "kanban-destination");
     gtk_box_append(GTK_BOX(actions), panel->destination); Button(panel, actions, "Move selected", G_CALLBACK(MoveSelected));
     GtkWidget *scroll = gtk_scrolled_window_new(); gtk_widget_set_vexpand(scroll, TRUE); gtk_widget_set_size_request(scroll, -1, 260);

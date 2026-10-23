@@ -1,0 +1,6 @@
+account,transaction,reference,information,booking_date,currency,amount,status,mutability
+practice-account,credit,example-credit,Invented booked credit,2026-10-12,GBP,10.00,BOOK,Immutable
+practice-account,pending-debit,,Invented pending debit excluded,2026-10-13,GBP,-1000.00,PDNG,Mutable
+practice-account,debit,example-debit,Invented booked debit,2026-10-11,GBP,-15.00,BOOK,Immutable
+practice-account,fee,example-fee,Invented booked fee,2026-10-12,GBP,-2.00,BOOK,Immutable
+practice-account,pending-credit,,Invented pending credit excluded,2026-10-10,GBP,2000.00,PDNG,Mutable

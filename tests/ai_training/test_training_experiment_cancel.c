@@ -2,7 +2,10 @@
  * Umicom Framework | test_training_experiment_cancel.c
  * Author: Sammy Hegab, Umicom Foundation | MIT
  * PURPOSE: Explicit cancellation without publishing partial model or result.
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_experiment_cancel.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/experiment.h"
 #include <math.h>
 #include <stdio.h>

@@ -2,7 +2,10 @@
  * Umicom Framework | test_training_experiment_run.c
  * Author: Sammy Hegab, Umicom Foundation | MIT
  * PURPOSE: Exact-seed experiments, held-out metrics, checkpoint equivalence.
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_experiment_run.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/experiment.h"
 #include "umicom/ai/training/experiment_plan.h"
 #include "umicom/ai/training/checkpoint.h"

@@ -3,7 +3,10 @@
  * PURPOSE: Prove exact decoder+AdamW moment continuation, byte-for-byte,
  *          against an uninterrupted seeded training run.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_adamw_resume.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/optimizer_checkpoint.h"
 #include <math.h>
 #include <stdio.h>

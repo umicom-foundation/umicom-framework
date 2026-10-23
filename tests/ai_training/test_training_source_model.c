@@ -3,7 +3,10 @@
  * Purpose: Use real C23 source bytes with the canonical decoder at 260 tokens,
  *          and confirm held-out evaluation cannot update model parameters.
  * Author: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_source_model.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/dataset_manifest.h"
 #include "umicom/ai/training/byte_tokenizer.h"
 #include "umicom/ai/training/decoder.h"

@@ -30,6 +30,11 @@ int main(int argc, char **argv)
         CHECK(umi_terminal_controller_activate(fixture.controller, "fixture.primary") == UMI_STATUS_OK);
         CHECK(UmiTerminalSelectionValidate(fixture.controller, &captured) == UMI_STATUS_INVALID_STATE);
     } else if (strcmp(argv[1], "recycle") == 0) {
+        /* The controller deliberately keeps one terminal tab alive. A spare
+         * session permits closing and recreating the captured identity. */
+        CHECK(umi_terminal_controller_open(fixture.controller, "", "fixture.spare", "Spare", ".") == UMI_STATUS_OK);
+        CHECK(umi_terminal_controller_activate(fixture.controller, "fixture.primary") == UMI_STATUS_OK);
+        CHECK(UmiTerminalSelectionCapture(fixture.controller, &captured) == UMI_STATUS_OK);
         CHECK(umi_terminal_controller_close(fixture.controller, "fixture.primary") == UMI_STATUS_OK);
         CHECK(umi_terminal_controller_open(fixture.controller, "", "fixture.primary", "Replacement", ".") == UMI_STATUS_OK);
         CHECK(UmiTerminalSelectionValidate(fixture.controller, &captured) == UMI_STATUS_INVALID_STATE);
@@ -43,7 +48,15 @@ int main(int argc, char **argv)
         CHECK(UmiTerminalSelectionCapture(fixture.controller, &current) == UMI_STATUS_INVALID_STATE);
         CHECK(memcmp(&current, &untouched, sizeof current) == 0);
     } else if (strcmp(argv[1], "empty") == 0) {
+/* Respect the last-tab rule and exercise missing backing-session validation separately. The previous statement is retained for review. */
+#if 0
         CHECK(umi_terminal_controller_close(fixture.controller, "fixture.primary") == UMI_STATUS_OK);
+#endif
+        CHECK(umi_terminal_controller_close(fixture.controller, "fixture.primary") == UMI_STATUS_BUSY);
+        CHECK(UmiTerminalSelectionValidate(fixture.controller, &captured) == UMI_STATUS_OK);
+        /* Removing the session through its shared manager simulates an absent
+         * backing session without changing the last-tab UI contract. */
+        CHECK(umi_terminal_manager_close(fixture.manager, "fixture.primary") == UMI_STATUS_OK);
         memset(&current, 0xa5, sizeof current); memcpy(&untouched, &current, sizeof untouched);
         CHECK(UmiTerminalSelectionCapture(fixture.controller, &current) == UMI_STATUS_NOT_FOUND);
         CHECK(memcmp(&current, &untouched, sizeof current) == 0);

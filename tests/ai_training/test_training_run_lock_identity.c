@@ -4,7 +4,9 @@
  * PURPOSE: Prove exact policy/dataset/checkpoint identity, a permitted new
  *          stop step, strict record grammar and atomic failed outputs.
  * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/training_run_lock.h"
 #include <stdint.h>
 #include <stdio.h>

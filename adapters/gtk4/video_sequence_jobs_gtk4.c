@@ -75,6 +75,12 @@ static void Complete(GObject *source, GAsyncResult *result, gpointer data) {
   if (root == NULL)
     return;
   UmiVideoSequencePanel *panel = UmiVideoSequenceGtkState(root);
+  /* Parsing is provisional until the GTK owner accepts it. A cancellation
+   * arriving after worker success must still preserve the current recipe.
+   * Save/render results describe already-created files and are not rewritten. */
+  if (job->kind == OPEN_RECIPE && job->status == UMI_STATUS_OK &&
+      umi_cancellation_token_is_requested(job->cancel))
+    job->status = UMI_STATUS_CANCELLED;
   /* Clear the borrowed token before GTask releases it, including for a
    * retired but retained widget. Late results never resurrect its controls. */
   if (panel->cancel == job->cancel)
@@ -98,9 +104,13 @@ static void Complete(GObject *source, GAsyncResult *result, gpointer data) {
       panel->dirty = false;
     }
     gtk_widget_set_sensitive(panel->form, TRUE);
+    if (panel->closed) goto finished;
     gtk_widget_set_sensitive(panel->cancelButton, FALSE);
+    if (panel->closed) goto finished;
     gtk_check_button_set_active(GTK_CHECK_BUTTON(panel->approval), FALSE);
+    if (panel->closed) goto finished;
     UmiVideoSequenceGtkRefresh(panel);
+    if (panel->closed) goto finished;
     const char *operation = job->kind == OPEN_RECIPE         ? "Open recipe"
                             : job->kind == SAVE_RECIPE       ? "Save recipe"
                             : job->kind == ATTACH_CAPTIONS   ? "Attach captions"
@@ -120,6 +130,9 @@ static void Complete(GObject *source, GAsyncResult *result, gpointer data) {
     if (!panel->closed && RenderJob(job->kind) && job->rendered.process.diagnostics[0] != '\0') {
       /* Diagnostics are text, never GTK markup. Keep the process owner's
        * bounded tail visible so a missing codec has an actionable cause. */
+      /* Retain the borrowed-buffer update for ownership review. The replacement
+       * below holds the buffer and refreshes its iterator across notifications. */
+#if 0
       GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(panel->summary));
       GtkTextIter end;
       gtk_text_buffer_get_end_iter(buffer, &end);
@@ -127,8 +140,23 @@ static void Complete(GObject *source, GAsyncResult *result, gpointer data) {
       char *valid = g_utf8_make_valid(job->rendered.process.diagnostics, -1);
       gtk_text_buffer_insert(buffer, &end, valid, -1);
       g_free(valid);
+#endif
+      /* A host can retire the root from a buffer observer. Hold the buffer
+       * across notifications and re-acquire iterators after each insertion. */
+      GtkTextBuffer *buffer = g_object_ref(gtk_text_view_get_buffer(GTK_TEXT_VIEW(panel->summary)));
+      GtkTextIter end;
+      gtk_text_buffer_get_end_iter(buffer, &end);
+      gtk_text_buffer_insert(buffer, &end, "\nRenderer diagnostics:\n", -1);
+      char *valid = g_utf8_make_valid(job->rendered.process.diagnostics, -1);
+      if (!panel->closed) {
+        gtk_text_buffer_get_end_iter(buffer, &end);
+        gtk_text_buffer_insert(buffer, &end, valid, -1);
+      }
+      g_free(valid);
+      g_object_unref(buffer);
     }
   }
+finished:
   panel->busy = false;
   g_object_unref(root);
 }
@@ -197,11 +225,21 @@ void UmiVideoSequenceGtkJob(GtkButton *button, gpointer data) {
   panel->changing = false;
   panel->cancel = job->cancel;
   UmiVideoSequenceGtkStopPreview(panel);
+  if (panel->closed) goto cancelled_before_dispatch;
   gtk_widget_set_sensitive(panel->form, FALSE);
+  if (panel->closed) goto cancelled_before_dispatch;
   gtk_widget_set_sensitive(panel->cancelButton, TRUE);
+  if (panel->closed) goto cancelled_before_dispatch;
   UmiVideoSequenceGtkMessage(panel, "Working with the captured recipe and selected path...");
+  if (panel->closed) goto cancelled_before_dispatch;
   GTask *task = g_task_new(NULL, NULL, Complete, NULL);
   g_task_set_task_data(task, job, FreeJob);
   g_task_run_in_thread(task, Work);
   g_object_unref(task);
+  return;
+cancelled_before_dispatch:
+  /* A native observer closed the owner before any worker accepted the job. */
+  panel->cancel = NULL;
+  panel->busy = false;
+  FreeJob(job);
 }

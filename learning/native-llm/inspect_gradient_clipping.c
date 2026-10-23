@@ -3,7 +3,9 @@
  * File: learning/native-llm/inspect_gradient_clipping.c
  * PURPOSE: Observe global gradient clipping before one native AdamW update.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/gradient_clipping.h"
 #include "umicom/ai/training/optimizer.h"
 

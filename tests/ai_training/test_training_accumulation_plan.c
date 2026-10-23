@@ -4,7 +4,9 @@
  * PURPOSE: Qualify strict, opt-in effective-batch plan fields and preserve
  *          legacy parser behaviour and failure-atomic public output buffers.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/experiment_plan.h"
 #include <stdint.h>
 #include <stdio.h>

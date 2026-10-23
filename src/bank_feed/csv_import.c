@@ -35,7 +35,15 @@ static UmiStatus CsvBankText(const UmiCsvReadRow *source, size_t column, char *o
     if (length == 0U && !optional) return UMI_STATUS_PARSE_ERROR;
     for (size_t i = 0U; i < length; ++i) {
         unsigned char ch = (unsigned char)source->fields[column][i];
+        /* The former check admitted ASCII DEL. Retain it for review; the
+         * shared CSV boundary now rejects DEL like JSON and archive imports,
+         * while descriptions still allow their documented TAB/CR/LF. */
+#if 0
         if (ch < 32U && !(multiline && (ch == '\t' || ch == '\r' || ch == '\n')))
+            return UMI_STATUS_PARSE_ERROR;
+#endif
+        if ((ch < 32U || ch == 127U) &&
+            !(multiline && (ch == '\t' || ch == '\r' || ch == '\n')))
             return UMI_STATUS_PARSE_ERROR;
         if ((ch & 0xc0U) != 0x80U) ++count;
     }

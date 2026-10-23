@@ -3,7 +3,10 @@
  * Purpose: Check portable checkpoint round trips, bounds, corruption and
  *          no-clobber file publication. No production model file is touched.
  * Author: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_checkpoint.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/checkpoint.h"
 #include <math.h>
 #include <stdint.h>

@@ -19,6 +19,11 @@ extern "C"
  * immutable copies; loading requires separate review and explicit apply.
  * The root owns signal lifetimes; retained controls become inert on teardown. */
     UmiStatus UmiGtk4CashPlanCreate(GtkWidget **out);
+    /* End the host lifetime on the GTK owner thread before removing an embedded
+ * planner. Idempotent; NULL is accepted. Retained controls cannot edit, apply
+ * loads or start new file work. Already dispatched immutable writes may finish;
+ * late loads are discarded. The launcher calls this at native window removal. */
+    void UmiGtk4CashPlanRetire(GtkWidget *root);
     /* Floating button opens an independent planner window, destroyed with its
  * parent when hosted in a window. An unparented launcher is inert. Each launch
  * starts with an empty local plan;

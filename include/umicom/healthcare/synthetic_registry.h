@@ -66,6 +66,13 @@ UmiStatus UmiHealthcareSyntheticRegistryFind(
     const char *syntheticPatientId,
     UmiHealthcareSyntheticPatient *outPatient);
 
+/* Copy an identity by insertion index without exposing storage. Archives use
+ * this to retain registered identities even when they have no access requests.
+ * Failure leaves outPatient unchanged. The registry itself remains in-memory. */
+UmiStatus UmiHealthcareSyntheticRegistryAt(
+    const UmiHealthcareSyntheticRegistry *registry, size_t index,
+    UmiHealthcareSyntheticPatient *outPatient);
+
 /* Return the number of synthetic identities currently held in the registry. */
 UmiStatus UmiHealthcareSyntheticRegistryCount(
     const UmiHealthcareSyntheticRegistry *registry,

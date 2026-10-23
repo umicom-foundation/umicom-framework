@@ -1,7 +1,11 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework | native benchmark evidence identity regression.
  * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_benchmark_evidence_identity.c
+ * PURPOSE: Verify stable identities for native benchmark evidence.
+ * LICENCE: MIT
+ */
 #include "benchmark_evidence_fixture.h"
 #include "umicom/base/sha256.h"
 #include <stdlib.h>

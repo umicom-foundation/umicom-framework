@@ -307,3 +307,121 @@ UmiStatus UmiHealthcareAccessAssignFollowup(UmiHealthcareAccessBook *book,
     memcpy(candidate.followupOwnerId, ownerId, sizeof(candidate.followupOwnerId));
     return publish(book, index, &candidate, outRecord);
 }
+
+/* Restore by exercising the domain transitions on a private candidate book.
+ * This keeps every frontend and persistence format subject to the same rules:
+ * deserializing a record must not become a second way to authorize a state.
+ * The witness transitions demonstrate reachability, not historical events. */
+static UmiStatus restore_record(UmiHealthcareAccessBook *book,
+    const UmiHealthcareSyntheticRegistry *registry,
+    const UmiHealthcareAccessRecord *source)
+{
+    UmiHealthcareAccessRecord value;
+    UmiStatus status;
+    const char *ids[] = {source->requestId, source->patientId, source->itemId,
+        source->providerId, source->followupOwnerId};
+    size_t index;
+    for (index = 0U; index < sizeof(ids) / sizeof(ids[0]); ++index) {
+        if (memchr(ids[index], '\0', UMI_HEALTHCARE_ACCESS_ID_CAPACITY) == NULL)
+            return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if ((source->simulatedFundingReady != 0 && source->simulatedFundingReady != 1) ||
+        (source->reservationConfirmed != 0 && source->reservationConfirmed != 1) ||
+        source->reply < UMI_HEALTHCARE_ACCESS_NO_REPLY ||
+        source->reply > UMI_HEALTHCARE_ACCESS_NO_RESPONSE ||
+        source->unmetReason < UMI_HEALTHCARE_ACCESS_UNMET_NONE ||
+        source->unmetReason > UMI_HEALTHCARE_ACCESS_UNMET_EXPIRED)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = UmiHealthcareAccessRequest(book, registry, source->patientId,
+        source->itemId, source->requestedQuantity, &value);
+    if (status != UMI_STATUS_OK) return status;
+    if (strcmp(value.requestId, source->requestId) != 0)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (source->reply != UMI_HEALTHCARE_ACCESS_NO_REPLY) {
+        status = UmiHealthcareAccessReplyRecord(book, value.requestId, value.revision,
+            source->providerId, source->reply, source->offeredQuantity, &value);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    if (source->acceptedQuantity != 0U) {
+        status = UmiHealthcareAccessAccept(book, value.requestId, value.revision,
+            source->acceptedQuantity, &value);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    if (source->simulatedFundingReady) {
+        status = UmiHealthcareAccessSimulateFunding(book, value.requestId, value.revision, &value);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    if (source->reservationConfirmed) {
+        status = UmiHealthcareAccessReserve(book, value.requestId, value.revision,
+            source->reservedAt, source->expiresAt, &value);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    if (source->collectedQuantity != 0U) {
+        /* The snapshot has no collection timestamp. Use the earliest permitted
+         * instant only to prove reachability; do not invent or store an event. */
+        status = UmiHealthcareAccessCollect(book, value.requestId, value.revision,
+            source->patientId, source->reservedAt, &value);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    if (source->unmetReason == UMI_HEALTHCARE_ACCESS_UNMET_EXPIRED) {
+        status = UmiHealthcareAccessExpire(book, value.requestId, value.revision,
+            source->expiresAt, &value);
+        if (status != UMI_STATUS_OK) return status;
+    } else if (source->unmetReason != UMI_HEALTHCARE_ACCESS_UNMET_NONE) {
+        status = UmiHealthcareAccessCloseUnmet(book, value.requestId, value.revision,
+            source->unmetReason, &value);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    if (source->followupOwnerId[0] != '\0') {
+        status = UmiHealthcareAccessAssignFollowup(book, value.requestId, value.revision,
+            source->followupOwnerId, &value);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    /* Compare named facts, never struct padding or a truncated memory image.
+     * These checks reject orphan timestamps, providers without a reply, and
+     * partial collections inconsistent with the exact accepted offer. */
+    if (strcmp(value.providerId, source->providerId) != 0 ||
+        strcmp(value.followupOwnerId, source->followupOwnerId) != 0 ||
+        value.offeredQuantity != source->offeredQuantity ||
+        value.acceptedQuantity != source->acceptedQuantity ||
+        value.collectedQuantity != source->collectedQuantity ||
+        value.reply != source->reply ||
+        value.simulatedFundingReady != source->simulatedFundingReady ||
+        value.reservationConfirmed != source->reservationConfirmed ||
+        value.reservedAt != source->reservedAt || value.expiresAt != source->expiresAt ||
+        value.unmetReason != source->unmetReason || source->revision < value.revision)
+        return UMI_STATUS_INVALID_STATE;
+    /* Repeated replies or coordinator reassignments can explain extra revisions.
+     * With neither, this state has one possible transition count. */
+    if (value.reply == UMI_HEALTHCARE_ACCESS_NO_REPLY &&
+        value.followupOwnerId[0] == '\0' && source->revision != value.revision)
+        return UMI_STATUS_INVALID_STATE;
+    book->records[book->count - 1U].revision = source->revision;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiHealthcareAccessBookRestore(
+    const UmiHealthcareSyntheticRegistry *registry,
+    const UmiHealthcareAccessRecord *records, size_t count,
+    UmiHealthcareAccessBook **outBook)
+{
+    UmiHealthcareAccessBook *candidate = NULL;
+    UmiStatus status;
+    size_t index;
+    if (outBook == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outBook = NULL;
+    if (registry == NULL || (count != 0U && records == NULL))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (count > UMI_HEALTHCARE_ACCESS_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = UmiHealthcareAccessBookCreate(&candidate);
+    if (status != UMI_STATUS_OK) return status;
+    for (index = 0U; index < count; ++index) {
+        status = restore_record(candidate, registry, &records[index]);
+        if (status != UMI_STATUS_OK) {
+            UmiHealthcareAccessBookDestroy(candidate);
+            return status;
+        }
+    }
+    *outBook = candidate;
+    return UMI_STATUS_OK;
+}

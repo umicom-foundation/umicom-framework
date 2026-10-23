@@ -67,6 +67,18 @@ typedef struct UmiHealthcareAccessRecord {
 
 /** Allocate an empty book; the caller releases it with Destroy. */
 UmiStatus UmiHealthcareAccessBookCreate(UmiHealthcareAccessBook **outBook);
+/** Restore a complete ordered snapshot into a new independently owned book.
+ * The caller supplies at most CAPACITY records and a matching registry. Each
+ * state must be reachable through the existing transition rules, and each
+ * stored revision must be consistent with that state. IDs and revisions are
+ * retained; the snapshot is not an authenticated event history. No time-based
+ * state is changed automatically. Outputs are cleared on failure; existing
+ * books are never mutated. NULL records are accepted only with count zero. */
+UmiStatus UmiHealthcareAccessBookRestore(
+    const UmiHealthcareSyntheticRegistry *registry,
+    const UmiHealthcareAccessRecord *records, size_t count,
+    UmiHealthcareAccessBook **outBook);
+
 /** Release the book after all callers and widgets stop using it. */
 void UmiHealthcareAccessBookDestroy(UmiHealthcareAccessBook *book);
 /** Open a request for a registered SYN-###### patient and ITM-###### item.

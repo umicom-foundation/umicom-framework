@@ -2,7 +2,10 @@
  * Umicom Framework | tests/ai_training/test_training_adamw_experiment_contract.c
  * PURPOSE: Reject incompatible schedules, optimiser options and resume state.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_adamw_experiment_contract.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/experiment_adamw.h"
 #include "umicom/ai/training/optimizer_checkpoint.h"
 #include <stdio.h>

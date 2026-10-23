@@ -3,7 +3,10 @@
  * PURPOSE: Verify the benchmark delegates to the canonical byte sampler,
  *          remains reproducible and leaves model checkpoints unchanged.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_benchmark_runner.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/benchmark.h"
 #include "umicom/ai/training/checkpoint.h"
 #include <stdio.h>

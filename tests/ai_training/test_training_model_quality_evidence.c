@@ -4,7 +4,9 @@
  * PURPOSE: Check deterministic, locale-independent model-quality JSON output,
  *          derived from validated canonical audit reports and policy.
  * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/model_quality_evidence.h"
 
 #include <math.h>

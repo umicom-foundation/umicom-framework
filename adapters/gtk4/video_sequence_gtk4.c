@@ -31,6 +31,7 @@ static UmiStatus Copy(char *out, size_t capacity, const char *text) {
 /* Copy a clip before notifying GTK observers. Changes to controls can cause
  * nested signals, so borrowed model storage must not escape into that work. */
 static void LoadSelection(UmiVideoSequencePanel *panel) {
+  if (panel->closed) return;
   const UmiVideoSequence *sequence = UmiVideoSequenceEditorRead(panel->editor);
   guint selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(panel->selector));
   if ((size_t)selected >= sequence->clip_count)
@@ -38,11 +39,16 @@ static void LoadSelection(UmiVideoSequencePanel *panel) {
   UmiVideoSequenceClip selectedClip = sequence->clips[selected];
   const UmiVideoSequenceClip *clip = &selectedClip;
   gtk_editable_set_text(GTK_EDITABLE(panel->id), clip->id);
+  if (panel->closed) return;
   gtk_editable_set_text(GTK_EDITABLE(panel->path), clip->path);
+  if (panel->closed) return;
   gtk_spin_button_set_value(GTK_SPIN_BUTTON(panel->begin), clip->begin_ms);
+  if (panel->closed) return;
   gtk_spin_button_set_value(GTK_SPIN_BUTTON(panel->end), clip->end_ms);
+  if (panel->closed) return;
   gtk_spin_button_set_value(GTK_SPIN_BUTTON(panel->split),
                             clip->begin_ms + (clip->end_ms - clip->begin_ms) / 2U);
+  if (panel->closed) return;
   gtk_spin_button_set_value(GTK_SPIN_BUTTON(panel->position), selected + 1U);
 }
 static void Select(GtkDropDown *selector, GParamSpec *spec, gpointer root) {
@@ -94,7 +100,10 @@ void UmiVideoSequenceGtkRefresh(UmiVideoSequencePanel *panel) {
 void UmiVideoSequenceGtkRefresh(UmiVideoSequencePanel *panel) {
   if (panel->closed)
     return;
-  const UmiVideoSequence *sequence = UmiVideoSequenceEditorRead(panel->editor);
+  /* Own the value across GTK notifications; a retired editor must not leave
+   * a borrowed recipe driving later widget updates. */
+  UmiVideoSequence snapshot = *UmiVideoSequenceEditorRead(panel->editor);
+  const UmiVideoSequence *sequence = &snapshot;
   /* Keep identity from the old list before replacing its model. A move or
    * removal has already changed the sequence, so its old numeric index is
    * not a reliable identity. Copy GTK's borrowed label before notifications. */
@@ -120,8 +129,10 @@ void UmiVideoSequenceGtkRefresh(UmiVideoSequencePanel *panel) {
   gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(panel->summary)), summary->str,
                            -1);
   g_string_free(summary, TRUE);
+  if (panel->closed) { g_object_unref(items); g_free(selectedId); goto finished; }
   gtk_drop_down_set_model(GTK_DROP_DOWN(panel->selector), G_LIST_MODEL(items));
   g_object_unref(items);
+  if (panel->closed) { g_free(selectedId); goto finished; }
   guint position = GTK_INVALID_LIST_POSITION;
   for (size_t i = 0U; selectedId != NULL && i < sequence->clip_count; ++i)
     if (strcmp(sequence->clips[i].id, selectedId) == 0)
@@ -132,10 +143,15 @@ void UmiVideoSequenceGtkRefresh(UmiVideoSequencePanel *panel) {
     position = 0U;
   gtk_drop_down_set_selected(GTK_DROP_DOWN(panel->selector), position);
   g_free(selectedId);
+  if (panel->closed) goto finished;
   gtk_editable_set_text(GTK_EDITABLE(panel->title), sequence->title);
+  if (panel->closed) goto finished;
   gtk_spin_button_set_value(GTK_SPIN_BUTTON(panel->width), sequence->width);
+  if (panel->closed) goto finished;
   gtk_spin_button_set_value(GTK_SPIN_BUTTON(panel->height), sequence->height);
+  if (panel->closed) goto finished;
   LoadSelection(panel);
+finished:
   panel->refreshing = false;
 }
 

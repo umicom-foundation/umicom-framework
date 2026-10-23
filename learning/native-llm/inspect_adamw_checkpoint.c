@@ -6,8 +6,9 @@
  *   exact in-process continuation on reviewed source-code samples. The
  *   canonical Framework owns every computation and checkpoint file operation.
  *   This program does not execute source text or contact network services.
- * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/optimizer_checkpoint.h"
 #include "umicom/ai/training/dataset_manifest.h"
 #include "umicom/ai/training/byte_tokenizer.h"

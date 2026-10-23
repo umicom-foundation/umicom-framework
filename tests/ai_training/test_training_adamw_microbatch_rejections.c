@@ -3,7 +3,10 @@
  * PURPOSE: Reject invalid and stale AdamW gradient accumulation requests
  * without changing caller outputs, model weights or optimiser-step counters.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_adamw_microbatch_rejections.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/gradient_accumulation.h"
 #include "umicom/ai/training/optimizer_checkpoint.h"
 #include <stdio.h>

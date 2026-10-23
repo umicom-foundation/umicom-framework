@@ -1,4 +1,9 @@
-/* Umicom Foundation | MIT | An intentionally small Notes record. */
+/* Umicom Foundation | MIT | An intentionally small Notes record.
+ * File: learning/native-llm/fixtures/train/notes.c
+ * PURPOSE: Provide a bounded note-title sample for native source-code training.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ */
 #include <stddef.h>
 #include <string.h>
 #include <stdbool.h>

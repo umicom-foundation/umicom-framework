@@ -4,7 +4,9 @@
  * PURPOSE: Check deterministic source draws, held-out evaluation, and exact
  *          checkpoint equivalence after an interrupted effective-batch run.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/experiment_accumulation.h"
 #include "umicom/ai/training/experiment_plan.h"
 #include "umicom/ai/training/checkpoint.h"

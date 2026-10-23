@@ -2,7 +2,10 @@
  * Umicom Framework | tests/ai_training/test_training_gradient_norm.c
  * PURPOSE: Validate the bounded numerical contract for global L2 clipping.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_gradient_norm.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/gradient_clipping.h"
 #include <float.h>
 #include <math.h>

@@ -7,6 +7,8 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/bank_feed/transactions.h"
+#include "umicom/bank_feed/archive.h"
+#include "umicom/base/sha256.h"
 #include "umicom/bank_feed/csv_import.h"
 #include "umicom/bank_feed/csv_mapping.h"
 #include "umicom/platform/input_file.h"
@@ -25,6 +27,9 @@ typedef struct BankFeedUi {
   GtkWidget *mapping, *mapHeaders[UMI_BANK_CSV_FIELD_COUNT], *mapAccount, *mapCurrency;
   GtkWidget *mapDate, *mapAmount, *mapStatus, *mapMutability;
   GtkTextBuffer *csv;
+  GtkTextBuffer *archive;
+  GtkWidget *archiveSave, *archiveNote;
+  UmiBankFeedArchiveInfo archiveInfo;
   UmiBankFeed *feed;
   size_t groupRows[UMI_BANK_FEED_MAX_ROWS], groupCount;
   guint64 generation;
@@ -38,6 +43,7 @@ typedef struct BankFeedLoad {
   UmiStatus status;
   guint format;
   UmiBankFeedCsvIssue issue;
+  UmiBankFeedArchiveInfo archiveInfo;
   UmiBankFeedCsvMapping mapping;
 } BankFeedLoad;
 /* Retaining a GTK object does not keep its native window open. Every control
@@ -50,6 +56,8 @@ static void FeedFree(gpointer data) {
   BankFeedUi *ui = data;
   UmiBankFeedDestroy(ui->feed);
   g_clear_object(&ui->csv);
+  g_clear_object(&ui->archive);
+  g_clear_object(&ui->archiveSave);
   g_clear_object(&ui->save);
   g_free(ui);
 }
@@ -74,6 +82,7 @@ static void FeedClosed(GtkWidget *window, gpointer unused) {
   /* Export may retain an already accepted immutable write. Retirement blocks
    * new captures without claiming that closing undoes a requested save. */
   UmiTextExportGtk4Retire(ui->save);
+  UmiTextExportGtk4Retire(ui->archiveSave);
 }
 /* File reading and parsing run away from the UI thread. Only the completion
  * callback may publish into GTK, and it must still match the original request. */
@@ -98,8 +107,17 @@ static void FeedWorker(GTask *task, gpointer source, gpointer data, GCancellable
     else if (load->format == 2U)
       load->status = UmiBankFeedCsvMappedCreate(bytes, length, &load->mapping,
                                                 &load->feed, &load->issue);
+    else if (load->format == 3U)
+      load->status = UmiBankFeedArchiveDecode(bytes, length, &load->feed, &load->archiveInfo);
     else
       load->status = UMI_STATUS_INVALID_ARGUMENT;
+  }
+  /* Preserve original input identity without retaining its private filename.
+   * Reopened archives retain their claimed source digest; do not relabel an
+   * archive hash as if it were the original provider response. */
+  if (load->status == UMI_STATUS_OK && load->format < 3U) {
+    load->archiveInfo.sourceFormat = (UmiBankFeedSourceFormat)(load->format + 1U);
+    load->status = UmiSha256Buffer(bytes, length, load->archiveInfo.sourceSha256);
   }
   UmiInputFileFree(bytes);
   g_task_return_boolean(task, TRUE);
@@ -116,6 +134,11 @@ static void FeedRender(GtkWindow *window) {
   guint index = gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->groups));
   GString *text =
       g_string_new("Imported bank data. Authenticity and statement completeness are unverified.\n");
+  const char *sourceNames[] = {"unknown", "Open Banking JSON", "statement CSV", "mapped CSV"};
+  g_string_append_printf(text, "Original source format: %s\nOriginal input SHA-256: %s\n"
+      "A restored digest is a retained claim, not authenticated provider evidence.\n\n",
+      sourceNames[ui->archiveInfo.sourceFormat],
+      ui->archiveInfo.sourceSha256[0] ? ui->archiveInfo.sourceSha256 : "not retained");
   UmiBankFeedSummary page;
   (void)UmiBankFeedRead(ui->feed, &page);
   g_string_append_printf(text,
@@ -179,6 +202,7 @@ static void FeedInvalidate(GtkWindow *window) {
   UmiBankFeedDestroy(ui->feed);
   ui->feed = NULL;
   ui->groupCount = 0U;
+  memset(&ui->archiveInfo, 0, sizeof ui->archiveInfo);
   /* Release owned data before notifications, then recheck the window after
    * each call that can invoke application handlers. */
   gtk_text_buffer_set_text(ui->csv, "", 0);
@@ -189,6 +213,15 @@ static void FeedInvalidate(GtkWindow *window) {
   ui = FeedOwner(window);
   if (ui == NULL)
     return;
+  gtk_widget_set_sensitive(ui->archiveSave, FALSE);
+  ui = FeedOwner(window);
+  if (ui == NULL) return;
+  gtk_text_buffer_set_text(ui->archive, "", 0);
+  ui = FeedOwner(window);
+  if (ui == NULL) return;
+  gtk_label_set_text(GTK_LABEL(ui->archiveNote), "No reusable snapshot is available until import succeeds.");
+  ui = FeedOwner(window);
+  if (ui == NULL) return;
   gtk_drop_down_set_model(GTK_DROP_DOWN(ui->groups), NULL);
   ui = FeedOwner(window);
   if (ui == NULL)
@@ -272,6 +305,7 @@ static void FeedLoaded(GObject *source, GAsyncResult *result, gpointer unused) {
     g_object_unref(window);
     return;
   }
+  ui->archiveInfo = load->archiveInfo;
   ui->feed = load->feed;
   load->feed = NULL;
   UmiBankFeedSummary summary;
@@ -298,6 +332,12 @@ static void FeedLoaded(GObject *source, GAsyncResult *result, gpointer unused) {
   }
   UmiCsvDocument *csv = NULL;
   UmiStatus exportStatus = UmiBankFeedExportCsv(ui->feed, &csv);
+  char *archive = NULL;
+  size_t archiveLength = 0U;
+  UmiStatus archiveStatus = UmiBankFeedArchiveEncode(ui->feed, &ui->archiveInfo, &archive, &archiveLength);
+  if (archiveStatus == UMI_STATUS_OK &&
+      g_utf8_strlen(archive, (gssize)archiveLength) > UMI_TEXT_EXPORT_MAX_CHARACTERS)
+    archiveStatus = UMI_STATUS_CAPACITY_EXCEEDED;
   ui->publishing = TRUE;
   gtk_drop_down_set_model(GTK_DROP_DOWN(ui->groups), G_LIST_MODEL(groups));
   g_object_unref(groups);
@@ -318,6 +358,18 @@ static void FeedLoaded(GObject *source, GAsyncResult *result, gpointer unused) {
   if (!FeedCurrent(window, load->generation))
     goto finished;
   ui = FeedOwner(window);
+  if (archiveStatus == UMI_STATUS_OK)
+    gtk_text_buffer_set_text(ui->archive, archive, (int)archiveLength);
+  if (!FeedCurrent(window, load->generation)) goto finished;
+  ui = FeedOwner(window);
+  gtk_widget_set_sensitive(ui->archiveSave, archiveStatus == UMI_STATUS_OK);
+  if (!FeedCurrent(window, load->generation)) goto finished;
+  ui = FeedOwner(window);
+  gtk_label_set_text(GTK_LABEL(ui->archiveNote), archiveStatus == UMI_STATUS_OK
+      ? "Save privately, then reopen with Umicom observation archive. All imported accounts are included."
+      : "Reusable snapshot unavailable: the encoded report exceeds its bounded export or could not be allocated. No partial snapshot is offered.");
+  if (!FeedCurrent(window, load->generation)) goto finished;
+  ui = FeedOwner(window);
   ui->publishing = FALSE;
   gtk_label_set_text(
       GTK_LABEL(ui->note),
@@ -331,6 +383,11 @@ finished:
   ui = FeedOwner(window);
   if (ui != NULL)
     ui->publishing = FALSE;
+  /* A text insertion may finish after a reentrant invalidation. Clear its
+   * residue only while no newer load or published feed owns the controls. */
+  if (ui != NULL && ui->feed == NULL && !ui->loading &&
+      ui->generation != load->generation) FeedInvalidate(window);
+  UmiBankFeedArchiveFree(archive);
   UmiCsvDocumentDestroy(csv);
   g_object_unref(window);
 }
@@ -450,7 +507,14 @@ GtkWindow *UmiBankFeedGtk4Create(GtkWindow *parent) {
   gtk_widget_set_margin_end(root, 16);
   gtk_widget_set_margin_top(root, 16);
   gtk_widget_set_margin_bottom(root, 16);
+  /* Retain the former fixed form for review. Whole-form scrolling keeps
+   * mapping and archive controls reachable in a small native window. */
+#if 0
   gtk_window_set_child(window, root);
+#endif
+  GtkWidget *formScroll = gtk_scrolled_window_new();
+  gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(formScroll), root);
+  gtk_window_set_child(window, formScroll);
   /* Retain the JSON introduction for review. The shared window now offers
    * a second local format while keeping broker authentication separate. */
 #if 0
@@ -476,7 +540,13 @@ GtkWindow *UmiBankFeedGtk4Create(GtkWindow *parent) {
 #if 0
   const char *formats[] = {"Open Banking JSON", "Statement CSV", NULL};
 #endif
+  /* Retain the prior choices for review. Explicit archive selection restores
+   * retained observations; it does not reinterpret an arbitrary JSON response. */
+#if 0
   const char *formats[] = {"Open Banking JSON", "Statement CSV", "CSV with custom columns", NULL};
+#endif
+  const char *formats[] = {"Open Banking JSON", "Statement CSV", "CSV with custom columns",
+                           "Umicom observation archive", NULL};
   ui->format = FeedNamed(gtk_drop_down_new_from_strings(formats), "bank-feed-format");
   gtk_widget_set_tooltip_text(ui->format, "Select the format of the file you are importing.");
   gtk_box_append(GTK_BOX(root), ui->format);
@@ -521,6 +591,7 @@ GtkWindow *UmiBankFeedGtk4Create(GtkWindow *parent) {
   GtkWidget *scroll = gtk_scrolled_window_new();
   gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), ui->view);
   gtk_widget_set_vexpand(scroll, TRUE);
+  gtk_widget_set_size_request(scroll, -1, 180);
   gtk_box_append(GTK_BOX(root), scroll);
   ui->csv = gtk_text_buffer_new(NULL);
   ui->save = UmiTextExportGtk4CreateForBuffer(ui->csv, "bank-transactions.csv");
@@ -530,6 +601,22 @@ GtkWindow *UmiBankFeedGtk4Create(GtkWindow *parent) {
   /* Keep the exporter alive for retirement even if GTK removes child ownership
    * before a retained native window is finally released. */
   g_object_ref(ui->save);
+  GtkWidget *archiveLabel = gtk_label_new("Reusable observation archive (all accounts in this import)");
+  gtk_label_set_wrap(GTK_LABEL(archiveLabel), TRUE);
+  gtk_box_append(GTK_BOX(root), archiveLabel);
+  ui->archiveNote = gtk_label_new("No reusable snapshot is available until import succeeds.");
+  gtk_label_set_wrap(GTK_LABEL(ui->archiveNote), TRUE);
+  gtk_widget_set_name(ui->archiveNote, "bank-feed-archive-note");
+  gtk_box_append(GTK_BOX(root), ui->archiveNote);
+  ui->archive = gtk_text_buffer_new(NULL);
+  ui->archiveSave = UmiTextExportGtk4CreateForBuffer(ui->archive, "bank-observations.umibank.json");
+  gtk_widget_set_name(ui->archiveSave, "bank-feed-archive-export");
+  gtk_widget_set_sensitive(ui->archiveSave, FALSE);
+  gtk_widget_set_tooltip_text(ui->archiveSave,
+      "Save a private snapshot for reopening with Umicom observation archive. "
+      "This retains imported rows, not a verified bank statement or ledger backup.");
+  gtk_box_append(GTK_BOX(root), ui->archiveSave);
+  g_object_ref(ui->archiveSave);
   g_signal_connect_object(ui->path, "changed", G_CALLBACK(FeedChanged), window, 0);
   g_signal_connect_object(ui->format, "notify::selected", G_CALLBACK(FeedFormatChanged), window, 0);
   g_signal_connect_object(load, "clicked", G_CALLBACK(FeedLoadClicked), window, 0);

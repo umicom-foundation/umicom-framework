@@ -11,6 +11,7 @@
 #include "umicom/ui/gtk4/path_picker.h"
 #include "umicom/kanban/document.h"
 #include <string.h>
+#include "window_removal_private.h"
 
 typedef enum JobKind { JOB_CREATE, JOB_OPEN, JOB_SAVE, JOB_CLOSE, JOB_SAVE_COPY } JobKind;
 typedef struct WindowState {
@@ -18,6 +19,7 @@ typedef struct WindowState {
     GtkWidget *body, *controls, *status, *directory, *filename, *discard, *panel;
     UmiKanbanDocument *document;
     bool busy;
+    bool closed;
 } WindowState;
 typedef struct Job {
     JobKind kind;
@@ -30,6 +32,9 @@ typedef struct Job {
 } Job;
 static void Say(WindowState *state, const char *message)
 { gtk_label_set_text(GTK_LABEL(state->status), message); }
+/* Retain the former release order for review. Clear the published panel pointer
+ * before notifications so recursive host teardown cannot release it twice. */
+#if 0
 static void ReleasePanel(WindowState *state)
 {
     if (state->panel == NULL) return;
@@ -37,6 +42,17 @@ static void ReleasePanel(WindowState *state)
     if (gtk_widget_get_parent(state->panel) == state->body)
         gtk_box_remove(GTK_BOX(state->body), state->panel);
     g_clear_object(&state->panel);
+}
+#endif
+static void ReleasePanel(WindowState *state)
+{
+    GtkWidget *panel = state->panel;
+    if (panel == NULL) return;
+    state->panel = NULL;
+    UmiKanbanGtk4Retire(panel);
+    if (gtk_widget_get_parent(panel) == state->body)
+        gtk_box_remove(GTK_BOX(state->body), panel);
+    g_object_unref(panel);
 }
 static void FreeState(gpointer data)
 {
@@ -81,28 +97,69 @@ static void Work(GTask *task, gpointer source, gpointer task_data, GCancellable 
     }
     g_task_return_boolean(task, TRUE);
 }
+static void Complete(GObject *source, GAsyncResult *result, gpointer data);
+static void Dispatch(WindowState *state, Job *job)
+{
+    GTask *task = g_task_new(state->window, NULL, Complete, NULL);
+    g_task_set_task_data(task, job, FreeJob);
+    g_task_run_in_thread(task, Work);
+    g_object_unref(task);
+}
+/* A removed but retained native window is no longer an editor. Finish any
+ * accepted file operation, then release its lease on the same worker path.
+ * Forced host destruction discards memory only; it never saves over the file. */
+static void CloseRetiredDocument(WindowState *state)
+{
+    ReleasePanel(state);
+    if (state->document == NULL) { state->busy = false; return; }
+    Job *cleanup = g_new0(Job, 1);
+    cleanup->kind = JOB_CLOSE;
+    cleanup->discard = true;
+    cleanup->document = state->document;
+    state->document = NULL;
+    state->busy = true;
+    Dispatch(state, cleanup);
+}
+static void WindowRemoved(GtkWidget *window, gpointer data)
+{
+    (void)window;
+    WindowState *state = data;
+    if (state->closed) return;
+    state->closed = true;
+    ReleasePanel(state);
+    if (!state->busy) CloseRetiredDocument(state);
+}
 static void Complete(GObject *source, GAsyncResult *result, gpointer data)
 {
     (void)data; GTask *task = G_TASK(result); Job *job = g_task_get_task_data(task);
     WindowState *state = g_object_get_data(source, "umicom-kanban-window");
     (void)g_task_propagate_boolean(task, NULL);
     state->document = job->document; job->document = NULL;
+    if (state->closed) goto retired;
     if (state->document != NULL && state->panel == NULL) {
         state->panel = UmiKanbanGtk4Create(umi_kanban_document_board(state->document));
         if (state->panel != NULL) {
-            g_object_ref_sink(state->panel); gtk_widget_set_vexpand(state->panel, TRUE);
+            g_object_ref_sink(state->panel);
+            if (state->closed) goto retired;
+            gtk_widget_set_vexpand(state->panel, TRUE);
+            if (state->closed) goto retired;
             gtk_box_append(GTK_BOX(state->body), state->panel);
+            if (state->closed) goto retired;
         }
     }
     /* Keep the operation guard through every observable GTK update. A native
      * property observer must not start another file job during completion. */
     if (state->panel != NULL) {
         UmiKanbanGtk4SetBusy(state->panel, false);
+        if (state->closed) goto retired;
         (void)UmiKanbanGtk4Refresh(state->panel);
+        if (state->closed) goto retired;
     }
     gtk_widget_set_sensitive(state->controls, TRUE);
+    if (state->closed) goto retired;
     /* Discard consent applies to one close attempt, never a later document. */
     gtk_check_button_set_active(GTK_CHECK_BUTTON(state->discard), FALSE);
+    if (state->closed) goto retired;
     if (job->status == UMI_STATUS_OK) {
         Say(state, job->kind == JOB_SAVE_COPY ? "Copy saved to the chosen new file. The current board keeps its original file and unsaved state; close it explicitly before opening the copy." :
             job->kind == JOB_SAVE ? "Board saved. Public website snapshots must be regenerated after changes." :
@@ -113,16 +170,21 @@ static void Complete(GObject *source, GAsyncResult *result, gpointer data)
             umi_status_text(job->status), (int)job->problem);
         Say(state, message);
     }
+    if (state->closed) goto retired;
     if (state->document != NULL && state->panel == NULL)
         Say(state, "The document opened, but its editor could not be created. Close the board before trying again.");
+    if (state->closed) goto retired;
     state->busy = false;
     if (job->close_window && state->document == NULL && job->status == UMI_STATUS_OK)
         gtk_window_destroy(state->window);
+    return;
+retired:
+    CloseRetiredDocument(state);
 }
 static void Start(WindowState *state, JobKind kind, bool close_window)
 {
     /* Reentrant observers must not receive another status notification here. */
-    if (state->busy) return;
+    if (state->busy || state->closed) return;
     if ((kind == JOB_CREATE || kind == JOB_OPEN) && state->document != NULL) {
         Say(state, "Save and close the current board before opening another."); return;
     }
@@ -143,6 +205,9 @@ static void Start(WindowState *state, JobKind kind, bool close_window)
             FreeJob(job); Say(state, "The board has unsaved changes. Save it, or explicitly enable discard before closing."); return;
         }
     }
+    /* Retain the earlier dispatch sequence for ownership review. The new
+     * sequence also handles native removal during preparation notifications. */
+#if 0
     /* Set the guard before GTK notifications. Transfer document ownership only
      * after freezing its borrowed panel; no GTK callback may race the worker. */
     state->busy = true;
@@ -153,6 +218,26 @@ static void Start(WindowState *state, JobKind kind, bool close_window)
     Say(state, "Working with the board file…");
     GTask *task = g_task_new(state->window, NULL, Complete, NULL);
     g_task_set_task_data(task, job, FreeJob); g_task_run_in_thread(task, Work); g_object_unref(task);
+
+#endif
+    state->busy = true;
+    job->document = state->document;
+    state->document = NULL;
+    if (state->panel != NULL) UmiKanbanGtk4SetBusy(state->panel, true);
+    if (state->closed) goto abandoned;
+    if (kind == JOB_CLOSE) ReleasePanel(state);
+    if (state->closed) goto abandoned;
+    gtk_widget_set_sensitive(state->controls, FALSE);
+    if (state->closed) goto abandoned;
+    Say(state, "Working with the board file…");
+    if (state->closed) goto abandoned;
+    Dispatch(state, job);
+    return;
+abandoned:
+    state->document = job->document;
+    job->document = NULL;
+    FreeJob(job);
+    CloseRetiredDocument(state);
 }
 static void Click(GtkButton *button, gpointer data)
 {
@@ -213,6 +298,7 @@ GtkWindow *UmiKanbanGtk4CreateWindow(GtkApplication *application)
     gtk_box_append(GTK_BOX(state->body), state->status);
     g_object_set_data_full(G_OBJECT(state->window), "umicom-kanban-window", state, FreeState);
     g_signal_connect(state->window, "close-request", G_CALLBACK(CloseRequest), state);
+    UmiGtk4ObserveWindowRemoval(state->window, G_OBJECT(state->window), WindowRemoved, state);
     return state->window;
 }
 
@@ -241,4 +327,13 @@ GtkWidget *UmiKanbanGtk4CreateLauncher(GtkWindow *owner)
     gtk_widget_set_tooltip_text(button, "Open a local planning board and prepare a reviewed contributor website");
     g_signal_connect_object(button, "clicked", G_CALLBACK(Launch), owner, 0);
     return button;
+}
+
+/* Poll only from the GTK owner thread. Cleanup is included so an embedding
+ * host can wait for lease retirement without inspecting widgets after close. */
+bool UmiKanbanGtk4WindowBusy(GtkWindow *window)
+{
+    if (!GTK_IS_WINDOW(window)) return false;
+    WindowState *state = g_object_get_data(G_OBJECT(window), "umicom-kanban-window");
+    return state != NULL && state->busy;
 }

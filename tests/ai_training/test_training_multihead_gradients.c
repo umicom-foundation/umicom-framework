@@ -3,7 +3,10 @@
  * PURPOSE: Independent central finite-difference checks for Q/K/V gradients
  *          across two heads, including aliased inputs.
  * AUTHOR: Sammy Hegab / Umicom Foundation | LICENCE: MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_multihead_gradients.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/tape.h"
 #include <math.h>
 #include <stdio.h>

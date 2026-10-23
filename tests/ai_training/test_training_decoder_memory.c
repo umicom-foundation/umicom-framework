@@ -3,7 +3,10 @@
  * PURPOSE: Verify model budget refusal does not mutate weights, steps or
  *          caller outputs; successful training releases temporary tape nodes.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_decoder_memory.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/decoder.h"
 #include "umicom/ai/training/checkpoint.h"
 #include <stdio.h>

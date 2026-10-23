@@ -9,6 +9,7 @@ add_library(umicom_cash_planning STATIC
     "${CMAKE_CURRENT_LIST_DIR}/../src/cash_planning/plan.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/cash_planning/date.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/cash_planning/forecast.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/cash_planning/comparison.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/cash_planning/document.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/cash_planning/report.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/cash_planning/file.c"
@@ -31,11 +32,44 @@ install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/cash-planning.html" DE
 if(TARGET umicom_ui_gtk4)
     target_sources(umicom_ui_gtk4 PRIVATE
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/cash_plan_gtk4.c"
-        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/cash_plan_files_gtk4.c")
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/cash_plan_files_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/cash_plan_review_gtk4.c")
     target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::cash_planning)
     install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/ui/gtk4/cash_plan.h" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4 COMPONENT Framework)
 endif()
 if(BUILD_TESTING)
+    # Portable comparisons use the exported cash owner; native review exercises
+    # the existing control path separately without adding product-specific math.
+    add_executable(umicom-cash-plan-comparison-test "${CMAKE_CURRENT_LIST_DIR}/../tests/cash_planning/test_comparison.c")
+    target_link_libraries(umicom-cash-plan-comparison-test PRIVATE Umicom::cash_planning)
+    set_target_properties(umicom-cash-plan-comparison-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-cash-plan-comparison-test)
+    umicom_apply_sanitizers(umicom-cash-plan-comparison-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-cash-plan-comparison-test)
+    endif()
+    foreach(case identical balances stable-ids reordered label date amount direction enabled excluded title currency scale start end projection-overflow delta-overflow headroom-overflow capacity null)
+        add_test(NAME framework.cash_planning.comparison.${case} COMMAND umicom-cash-plan-comparison-test ${case})
+        set_tests_properties(framework.cash_planning.comparison.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;cash-planning;finance;regression")
+    endforeach()
+    if(TARGET umicom_ui_gtk4)
+        add_executable(umicom-cash-plan-review-test "${CMAKE_CURRENT_LIST_DIR}/../tests/cash_planning/test_review_gtk4.c")
+        target_link_libraries(umicom-cash-plan-review-test PRIVATE Umicom::ui_gtk4)
+        set_target_properties(umicom-cash-plan-review-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        umicom_apply_warnings(umicom-cash-plan-review-test)
+        umicom_apply_sanitizers(umicom-cash-plan-review-test)
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-cash-plan-review-test)
+        endif()
+        foreach(case review apply-undo currency scale range overflow retired-actions host-close pickers retire-before-save retire-before-edit retire-loading)
+            file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/cash-plan/review/${case}")
+            add_test(NAME framework.cash_planning.review.${case} COMMAND umicom-cash-plan-review-test ${case})
+            set_tests_properties(framework.cash_planning.review.${case} PROPERTIES TIMEOUT 30 SKIP_RETURN_CODE 77
+                WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/cash-plan/review/${case}"
+                LABELS "framework;cash-planning;finance;gtk4;regression;ownership")
+        endforeach()
+    endif()
     add_executable(umicom-cash-plan-model-test "${CMAKE_CURRENT_LIST_DIR}/../tests/cash_planning/test_model.c")
     target_link_libraries(umicom-cash-plan-model-test PRIVATE Umicom::cash_planning)
     umicom_apply_warnings(umicom-cash-plan-model-test)

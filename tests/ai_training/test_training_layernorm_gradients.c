@@ -3,7 +3,10 @@
  * PURPOSE: Check row-normalisation x, gamma and beta gradients against finite
  *          differences, including repeated affine parameters across rows.
  * AUTHOR: Sammy Hegab / Umicom Foundation | LICENCE: MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_layernorm_gradients.c
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/tape.h"
 #include <math.h>
 #include <stdio.h>

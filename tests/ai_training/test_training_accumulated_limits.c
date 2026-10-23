@@ -5,7 +5,9 @@
  *   Exercise effective batches larger than one tensor and guarantee that
  *   rejected inputs, memory budgets and step lifetimes preserve a model.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "umicom/ai/training/gradient_accumulation.h"
 #include "umicom/ai/training/checkpoint.h"
 #include <stdint.h>

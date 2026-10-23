@@ -3,7 +3,9 @@
  * File: tests/ai_training/test_training_signed_approval_roundtrip.c
  * PURPOSE: Real independent Ed25519 approval verification and strict release.
  * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * LICENCE: MIT
+ */
 #include "training_signed_approval_fixture.h"
 #include <stdio.h>
 #include <string.h>

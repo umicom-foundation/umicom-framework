@@ -1,4 +1,9 @@
-/* Umicom Foundation | MIT | Held-out fictional payment validation. */
+/* Umicom Foundation | MIT | Held-out fictional payment validation.
+ * File: learning/native-llm/fixtures/eval/payment.c
+ * PURPOSE: Provide a fictional held-out payment-validation sample for native language-model evaluation.
+ * ORGANISATION: Umicom Foundation
+ * LICENCE: MIT
+ */
 #include <stdint.h>
 #include <stdbool.h>
 

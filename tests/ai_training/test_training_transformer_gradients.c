@@ -3,7 +3,10 @@
  * PURPOSE: Verify the complete composed attention+FFN+residual block using
  *          independent central finite differences on selected parameters.
  * AUTHOR: Sammy Hegab / Umicom Foundation | LICENCE: MIT
- *---------------------------------------------------------------------------*/
+ *---------------------------------------------------------------------------
+ * File: tests/ai_training/test_training_transformer_gradients.c
+ * LICENCE: MIT
+ */
 #include "transformer_fixture.h"
 #include <math.h>
 #include <stdio.h>
