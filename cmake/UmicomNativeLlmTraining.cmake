@@ -74,6 +74,9 @@ if(NOT TARGET umicom_ai_training)
         # Hold-out scoring and identity evidence reuse the canonical decoder,
         # immutable source manifest, experiment plan and checkpoint codec.
         "${_umicom_ai_training_root}/src/ai/training/model_audit.c"
+        # Read-only candidate-quality selection reuses canonical held-out
+        # ModelAuditEvaluate. It cannot authorise a signed release.
+        "${_umicom_ai_training_root}/src/ai/training/model_quality_gate.c"
         # Qualified inference-only attention key/value cache. The original
         # decoder, training tape and model mathematics remain authoritative.
         "${_umicom_ai_training_root}/src/ai/training/kv_cache.c"
@@ -356,6 +359,37 @@ if(BUILD_TESTING)
     endforeach()
     target_compile_definitions(umicom-ai-training-audit-changes-test PRIVATE
         UMI_AI_TEST_ALTERNATIVE_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/reviewed-alternative-manifest.txt")
+endif()
+
+# The quality-comparison CLI loads two reviewed combined AdamW checkpoints
+# and delegates ALL held-out model evaluation and score selection to the
+# Framework. It does not sign, publish or implicitly approve a release.
+if(NOT TARGET umicom-native-llm-quality-compare)
+    add_executable(umicom-native-llm-quality-compare
+        "${_umicom_ai_training_root}/learning/native-llm/compare_model_quality.c")
+    target_link_libraries(umicom-native-llm-quality-compare PRIVATE
+        Umicom::AiTraining)
+    target_compile_features(umicom-native-llm-quality-compare PRIVATE c_std_23)
+    if(MSVC)
+        target_compile_options(umicom-native-llm-quality-compare PRIVATE /W4)
+    else()
+        target_compile_options(umicom-native-llm-quality-compare PRIVATE
+            -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    endif()
+endif()
+
+# Native quality gates are tested both with explicit copied metric fixtures
+# and using the actual decoder, immutable corpus and canonical ModelAudit.
+if(BUILD_TESTING)
+    foreach(_umicom_quality_case IN ITEMS reports rejections integration)
+        _umicom_add_native_ai_training_test(
+            "umicom-ai-training-model-quality-${_umicom_quality_case}-test"
+            "framework.ai.training.model_quality_${_umicom_quality_case}"
+            "test_training_model_quality_${_umicom_quality_case}.c")
+    endforeach()
+    target_compile_definitions(
+        umicom-ai-training-model-quality-integration-test PRIVATE
+        UMI_AI_TEST_MANIFEST_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/manifest.txt")
 endif()
 
 # Key/value cache parity is checked against canonical decoder logits for

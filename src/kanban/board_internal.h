@@ -8,6 +8,7 @@
 #ifndef UMICOM_KANBAN_BOARD_INTERNAL_H
 #define UMICOM_KANBAN_BOARD_INTERNAL_H
 #include "umicom/kanban/board.h"
+#include "umicom/kanban/developers.h"
 #include <stdbool.h>
 #define UMI_KANBAN_MISSING SIZE_MAX
 
@@ -24,6 +25,9 @@ struct UmiKanbanBoard {
     uint64_t next_sequence;
     UmiKanbanActivity activity[UMI_KANBAN_ACTIVITY_CAPACITY];
     size_t activity_start, activity_count;
+    /* Owned records survive native save/open without depending on host widgets. */
+    UmiKanbanDeveloper developers[UMI_KANBAN_MAX_DEVELOPERS];
+    size_t developer_count;
 };
 bool UmiKanbanId(const char *text, bool optional);
 bool UmiKanbanText(const char *text, size_t capacity, bool optional);
@@ -36,4 +40,6 @@ UmiStatus UmiKanbanProblemSet(UmiKanbanProblem *problem, UmiKanbanProblemKind ki
     UmiStatus status, const char *card, const char *column);
 void UmiKanbanCopyRow(const UmiKanbanBoard *board, size_t index, UmiKanbanCardSnapshot *out);
 size_t UmiKanbanUnfinishedDependencies(const UmiKanbanBoard *board, const UmiKanbanCard *card);
+UmiStatus UmiKanbanDevelopersCheck(const UmiKanbanBoard *board);
+UmiStatus UmiKanbanDeveloperPut(UmiKanbanBoard *board, const char *id, const char *name);
 #endif

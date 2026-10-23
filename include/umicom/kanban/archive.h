@@ -8,6 +8,8 @@
 #ifndef UMICOM_KANBAN_ARCHIVE_H
 #define UMICOM_KANBAN_ARCHIVE_H
 #include "umicom/kanban/board.h"
+/* Developer-directory boards use a further schema extension. Names survive
+ * save/open; applications without this schema refuse rather than discard them. */
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -19,6 +21,10 @@ extern "C" {
  */
 UmiStatus umi_kanban_board_encode(const UmiKanbanBoard *board, uint64_t expected_revision,
     void *bytes, size_t capacity, size_t *out_size);
+/* Legacy boards retain the original schema. Boards containing Blocked columns
+ * use the extended schema; older readers refuse it without changing their board.
+ * Both schemas are readable here, with unchanged Done stage identity. */
+
 /* Decode into a new independent owner at revision 1 with empty local activity.
  * out_saved_revision is historical information, not a live revision token.
  * Reject unknown schemas, invalid text/counts, cycles, bad WIP/completion state,

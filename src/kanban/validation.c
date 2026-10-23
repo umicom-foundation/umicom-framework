@@ -51,6 +51,8 @@ UmiStatus UmiKanbanProblemSet(UmiKanbanProblem *problem, UmiKanbanProblemKind ki
     }
     return status;
 }
+/* The extended validator below accepts the appended Blocked stage while retaining every existing configuration check. Retained for engineering review. */
+#if 0
 UmiStatus UmiKanbanConfigCheck(const UmiKanbanConfig *config)
 {
     if (config == NULL || !UmiKanbanId(config->id, false) ||
@@ -64,6 +66,29 @@ UmiStatus UmiKanbanConfigCheck(const UmiKanbanConfig *config)
         if (!UmiKanbanId(column->id, false) ||
             !UmiKanbanText(column->title, sizeof(column->title), false) ||
             column->stage < UMI_KANBAN_TODO || column->stage > UMI_KANBAN_DONE ||
+            column->wip_limit > config->card_capacity || (config->transitions[i] & ~mask) != 0U)
+            return UMI_STATUS_INVALID_ARGUMENT;
+        for (size_t j = 0U; j < i; ++j) {
+            if (strcmp(column->id, config->columns[j].id) == 0) return UMI_STATUS_ALREADY_EXISTS;
+        }
+    }
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus UmiKanbanConfigCheck(const UmiKanbanConfig *config)
+{
+    if (config == NULL || !UmiKanbanId(config->id, false) ||
+        !UmiKanbanText(config->title, sizeof(config->title), false) ||
+        config->card_capacity == 0U || config->card_capacity > UMI_KANBAN_MAX_CARDS ||
+        config->column_count == 0U || config->column_count > UMI_KANBAN_MAX_COLUMNS)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    uint32_t mask = (UINT32_C(1) << config->column_count) - UINT32_C(1);
+    for (size_t i = 0U; i < config->column_count; ++i) {
+        const UmiKanbanColumn *column = &config->columns[i];
+        if (!UmiKanbanId(column->id, false) ||
+            !UmiKanbanText(column->title, sizeof(column->title), false) ||
+            column->stage < UMI_KANBAN_TODO || column->stage > UMI_KANBAN_BLOCKED ||
             column->wip_limit > config->card_capacity || (config->transitions[i] & ~mask) != 0U)
             return UMI_STATUS_INVALID_ARGUMENT;
         for (size_t j = 0U; j < i; ++j) {
@@ -146,6 +171,10 @@ UmiStatus UmiKanbanValidate(const UmiKanbanBoard *board, UmiKanbanProblem *probl
 {
     UmiStatus status = UmiKanbanConfigCheck(&board->config);
     if (status != UMI_STATUS_OK || board->count > board->config.card_capacity)
+        return UmiKanbanProblemSet(problem, UMI_KANBAN_PROBLEM_ARGUMENT,
+            UMI_STATUS_INVALID_ARGUMENT, NULL, NULL);
+    /* Directory validation also protects archive imports before publication. */
+    if (UmiKanbanDevelopersCheck(board) != UMI_STATUS_OK)
         return UmiKanbanProblemSet(problem, UMI_KANBAN_PROBLEM_ARGUMENT,
             UMI_STATUS_INVALID_ARGUMENT, NULL, NULL);
     size_t counts[UMI_KANBAN_MAX_COLUMNS] = {0};

@@ -3,7 +3,10 @@
 <title>Planning boards with Umicom Framework</title>
 <style>body{font:17px/1.6 system-ui,sans-serif;max-width:960px;margin:auto;padding:2rem;color:#182538;background:#f7f9fc}pre{overflow:auto;padding:1rem;background:#e8edf4}code{font-family:Consolas,monospace}h1,h2{line-height:1.25}table{border-collapse:collapse}td,th{padding:.6rem;border:1px solid #adb9ca;text-align:left}</style>
 <h1>Planning boards with Umicom Framework</h1>
+<!-- The original model-only overview is retained for review; the optional GTK adapter now provides a native host.
 <p>A Kanban board groups work into columns. Umicom's native C library shares card rules between application hosts. The library provides planning data, checked changes, filtered pages and portable archives. A graphical board, collaboration server and automatic tool execution are separate application integrations.</p>
+-->
+<p>A Kanban board groups work into columns. Umicom's C23 library shares checked card changes, filtered views and portable archives across applications. The optional GTK4 adapter adds a native document window. See <a href="guides/native-kanban-and-contributor-view.html">native boards and reviewed contributor pages</a> for the graphical workflow. A collaboration service and automatic tool execution remain separate capabilities.</p>
 <h2>1. Add the library to a native application</h2>
 <p>Use a C23 compiler and a Framework SDK containing the Kanban library. In your CMake project, load the package and link its target:</p>
 <pre>find_package(UmicomFramework CONFIG REQUIRED)
@@ -39,6 +42,7 @@ umi_kanban_board_destroy(board);
 return status;</pre>
 <p>The example uses short literals that fit the fixed fields. Validate user input length and encoding before copying it. Display card text as plain text. Actor and assignee identifiers are local labels, not authenticated identities.</p>
 <h2>3. Move work through the development workflow</h2>
+<p>The original <code>umi_kanban_board_create_development</code> constructor keeps this four-column workflow. Use the five-list constructor described below when an application needs a separate Blocked list.</p>
 <table><tr><th>Column</th><th>Allowed destinations</th></tr><tr><td>todo</td><td>doing</td></tr><tr><td>doing</td><td>todo, testing</td></tr><tr><td>testing</td><td>doing, done</td></tr><tr><td>done</td><td>todo</td></tr></table>
 <p>Use a MOVE_CARD edit with the card ID and destination column ID. A before-card ID inserts before an active card; an empty value appends. UPDATE_CARD replaces card details without moving it. Custom boards can define different columns and transition edges when created.</p>
 <p>A card entering Doing or Testing must have no explicit blocker and all prerequisites in Done. Done also requires every checklist item complete. A planning checklist is a person's assertion; it does not certify build or test results. A blocked card already in progress stays visible.</p>
@@ -83,4 +87,33 @@ ctest --test-dir build/kanban-storage --output-on-failure --no-tests=error</pre>
 <p>For an already configured full Framework build, build <code>umi-kanban-document-test</code> and select <code>^framework[.]kanban[.]storage[.]</code> with CTest. Storage fixtures are created beneath the test build directory and retained for diagnosis. Windows symbolic-link cases report a skip when the native capability is unavailable; skips are not passes. These tests do not verify an application GUI, network collaboration or installed SDK relocation.</p>
 -->
 <p>For an already configured full Framework build, build both <code>umi-kanban-document-test</code> and <code>umi-kanban-storage-limits-test</code> and select <code>^framework[.]kanban[.]storage[.]</code> with CTest. Storage fixtures are created beneath the test build directory and retained for diagnosis. Windows symbolic-link cases report a skip when the native capability is unavailable; skips are not passes. These tests do not verify an application GUI, network collaboration or installed SDK relocation.</p>
+<h2>8. Use five lists and assign a developer</h2>
+<p>Call <code>umi_kanban_board_create_workflow</code> to create To do, Doing, Testing, Blocked and Done, in that display order. Their identifiers are <code>todo</code>, <code>doing</code>, <code>testing</code>, <code>blocked</code> and <code>done</code>. This constructor permits moves between all lists while retaining checklist, prerequisite and work-limit checks. Existing four-column boards keep their original transitions.</p>
+<ol><li>Create a board with the five-list constructor, or obtain its configuration with <code>umi_kanban_board_config</code> and pass that configuration to <code>umi_kanban_document_create</code> for persistent native storage.</li>
+<!-- Application-owned names remain supported for older hosts; the shared directory below additionally persists names.
+<li>Keep developer display names in the application. Use a stable identifier such as <code>dev.alex</code> in <code>card.assignee</code>. An assignment is a planning label; it does not grant repository permissions or authenticate an account.</li>
+-->
+<li>Use a stable identifier such as <code>dev.alex</code> in <code>card.assignee</code>. Register a display name with <code>UMI_KANBAN_PUT_DEVELOPER</code>, using <code>card.id</code> for that person and <code>card.title</code> for their name. <code>developers.h</code> exposes revision-checked lookups. Renaming a person keeps their assignments intact. These labels do not grant repository permissions or authenticate an account.</li>
+<li>Use <code>UMI_KANBAN_ASSIGN_CARD</code> with only the card ID and assignee. An empty assignee removes the assignment. Other input card fields are ignored, so assigning work does not overwrite its title, checklist, dependencies or position.</li>
+<li>Use <code>UMI_KANBAN_MOVE_CARD</code> for a destination selected by a menu or drag operation. Pass the revision displayed when the user reviewed the action. Do not silently retry a stale action against a newer board.</li>
+<li>To assign and move together, submit both edits in one batch. Either both succeed at one new revision or neither changes the board. Refresh the visible cards and counts only after success.</li></ol>
+<p>This example assumes the host already owns a board and has captured <code>reviewed_revision</code> from the displayed view:</p>
+<pre>UmiKanbanEdit *edits = calloc(2, sizeof(*edits));
+if (edits == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+edits[0].kind = UMI_KANBAN_ASSIGN_CARD;
+strcpy(edits[0].card.id, "build-dialog");
+strcpy(edits[0].card.assignee, "dev.alex");
+edits[1].kind = UMI_KANBAN_MOVE_CARD;
+strcpy(edits[1].card.id, "build-dialog");
+strcpy(edits[1].column_id, "doing");
+UmiKanbanProblem problem;
+UmiStatus status = umi_kanban_board_apply(board, reviewed_revision,
+    "contributor", edits, 2, &amp;problem);
+free(edits);
+return status;</pre>
+<p>A card in the Blocked list counts as blocked even without a reason. Moving it out does not erase a recorded reason. Clear that reason with a reviewed full-card update before moving into Doing, Testing or Done. To do can retain a reason for future work. Dependencies and incomplete checklists still prevent an invalid completion. None of these list changes runs a build or marks a test as passed.</p>
+<h3>Archive compatibility and qualification</h3>
+<p>A board with registered developer names writes a further named-directory schema. Its reader also accepts the earlier schemas described below. A board with no directory retains its previous encoding. Names remain private unless supplied explicitly to the public HTML renderer; it never resolves private assignees automatically.</p>
+<p>Boards containing a Blocked column write the extended archive schema. The new reader accepts both that schema and the original one. A board without a Blocked column continues writing the original schema, including its developer assignments. Older readers refuse the extended schema; upgrade the receiving Framework before opening a five-list board there. Never relabel an archive to bypass a reader's schema check.</p>
+<p>The focused qualification project above also builds <code>umi-kanban-workflow-test</code>. Its cases cover list configuration, assignment preservation, stale edits, atomic moves, work limits, blocker counts and old/new archive compatibility. In an existing full build, build this target and select <code>^framework[.]kanban[.]workflow[.]</code> with CTest. These native cases do not validate a graphical host or a multi-user service.</p>
 </html>

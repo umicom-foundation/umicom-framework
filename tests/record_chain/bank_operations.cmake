@@ -1,0 +1,18 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+add_executable(umicom-bank-checkpoint-test "${CMAKE_CURRENT_LIST_DIR}/test_bank.c")
+target_link_libraries(umicom-bank-checkpoint-test PRIVATE Umicom::bank_operations)
+set_target_properties(umicom-bank-checkpoint-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+if(COMMAND umicom_apply_warnings)
+    umicom_apply_warnings(umicom-bank-checkpoint-test)
+endif()
+if(COMMAND umicom_apply_sanitizers)
+    umicom_apply_sanitizers(umicom-bank-checkpoint-test)
+endif()
+foreach(_case IN ITEMS history reload different-payload stale invalid-view invalid-input)
+    add_test(NAME framework.record_chain.bank.${_case} COMMAND umicom-bank-checkpoint-test "${_case}")
+    set_tests_properties(framework.record_chain.bank.${_case} PROPERTIES
+        TIMEOUT 30 LABELS "framework;record-chain;bank;regression")
+endforeach()
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-bank-checkpoint-test)
+endif()

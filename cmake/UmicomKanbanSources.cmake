@@ -9,7 +9,9 @@ function(umicom_add_kanban_sources target)
         "${_root}/src/kanban/validation.c"
         "${_root}/src/kanban/transaction.c"
         "${_root}/src/kanban/view.c"
-        "${_root}/src/kanban/archive.c")
+        "${_root}/src/kanban/archive.c"
+        "${_root}/src/kanban/publication.c"
+        "${_root}/src/kanban/developers.c")
     set_target_properties("${target}" PROPERTIES
         C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO EXPORT_NAME kanban)
     target_include_directories("${target}" PUBLIC

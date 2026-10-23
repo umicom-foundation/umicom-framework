@@ -16,7 +16,8 @@ install(TARGETS umicom_kanban EXPORT UmicomFrameworkTargets
 umicom_register_sdk_libraries(umicom_kanban)
 if(COMMAND umicom_release_inventory_own_headers)
     umicom_release_inventory_own_headers(umicom_kanban
-        include/umicom/kanban/board.h include/umicom/kanban/view.h include/umicom/kanban/archive.h)
+        include/umicom/kanban/board.h include/umicom/kanban/view.h include/umicom/kanban/archive.h
+        include/umicom/kanban/publication.h include/umicom/kanban/developers.h)
 endif()
 # Root installation owns include/ for both full and selective SDKs.
 install(FILES "${_kanban_root}/docs/KANBAN_PLANNING.html"
@@ -32,3 +33,10 @@ endif()
 if(TARGET Umicom::platform)
     include("${CMAKE_CURRENT_LIST_DIR}/UmicomKanbanStorage.cmake")
 endif()
+
+# Offline native workflow documentation accompanies both full and SDK installs.
+install(FILES "${_kanban_root}/docs/guides/native-kanban-and-contributor-view.html"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides" COMPONENT Framework)
+install(FILES "${_kanban_root}/docs/guides/native-kanban-and-contributor-view.html"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides"
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)

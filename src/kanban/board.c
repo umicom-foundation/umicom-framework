@@ -47,6 +47,31 @@ UmiStatus umi_kanban_board_create_development(const char *id, const char *title,
     config.transitions[3] = UINT32_C(1) << 0U;
     return umi_kanban_board_create(&config, out_board);
 }
+
+/* Hosts share the same five-list layout without duplicating stage indices.
+ * Keep Done's numeric identity stable; display order belongs to configuration. */
+UmiStatus umi_kanban_board_create_workflow(const char *id, const char *title,
+    UmiKanbanBoard **out_board)
+{
+    if (!UmiKanbanId(id, false) || !UmiKanbanText(title, 256U, false))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiKanbanConfig config = {0};
+    memcpy(config.id, id, strlen(id) + 1U);
+    memcpy(config.title, title, strlen(title) + 1U);
+    config.card_capacity = UMI_KANBAN_MAX_CARDS;
+    config.column_count = 5U;
+    const char *ids[] = {"todo", "doing", "testing", "blocked", "done"};
+    const char *titles[] = {"To do", "Doing", "Testing", "Blocked", "Done"};
+    const UmiKanbanStage stages[] = {UMI_KANBAN_TODO, UMI_KANBAN_DOING,
+        UMI_KANBAN_TESTING, UMI_KANBAN_BLOCKED, UMI_KANBAN_DONE};
+    for (size_t i = 0U; i < config.column_count; ++i) {
+        memcpy(config.columns[i].id, ids[i], strlen(ids[i]) + 1U);
+        memcpy(config.columns[i].title, titles[i], strlen(titles[i]) + 1U);
+        config.columns[i].stage = stages[i];
+        config.transitions[i] = UINT32_C(31) & ~(UINT32_C(1) << i);
+    }
+    return umi_kanban_board_create(&config, out_board);
+}
 void umi_kanban_board_destroy(UmiKanbanBoard *board)
 {
     if (board != NULL) { free(board->rows); free(board); }

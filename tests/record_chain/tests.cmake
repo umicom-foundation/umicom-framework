@@ -1,0 +1,20 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+get_filename_component(_record_chain_tests_root "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
+add_executable(umicom-record-chain-test "${_record_chain_tests_root}/tests/record_chain/test_chain.c")
+target_link_libraries(umicom-record-chain-test PRIVATE Umicom::record_chain)
+set_target_properties(umicom-record-chain-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+if(COMMAND umicom_apply_warnings)
+    umicom_apply_warnings(umicom-record-chain-test)
+endif()
+if(COMMAND umicom_apply_sanitizers)
+    umicom_apply_sanitizers(umicom-record-chain-test)
+endif()
+foreach(_case IN ITEMS vectors roundtrip binary-empty tamper-payload tamper-fields reorder duplicate
+        truncated anchor namespace kind invalid overflow limits short-buffer archive-boundaries resume empty)
+    add_test(NAME "framework.record_chain.${_case}" COMMAND umicom-record-chain-test "${_case}")
+    set_tests_properties("framework.record_chain.${_case}" PROPERTIES TIMEOUT 20
+        LABELS "framework;record-chain;integrity;regression")
+endforeach()
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-record-chain-test)
+endif()

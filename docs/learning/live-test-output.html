@@ -4,6 +4,44 @@
 <p>CTest runs tests registered by a configured CMake project. A single selected test can also run
 setup and cleanup fixtures: helper tests needed before or after the selected body. Framework captures
 that whole invocation while it runs and keeps the latest 65,535 bytes for a responsive frontend.</p>
+<h2>Choose a view before starting a run</h2>
+<p>A catalogue is the list of discovered tests. An execution plan is the bounded list of tests
+that one request will run. A catalogue may contain more than 1,024 tests: filtering and counting
+that catalogue does not require fitting it into a single execution plan.</p>
+<ol><li>Initialise a <code>UmiTestPlatformFilter</code> with
+<code>umi_test_platform_filter_init</code>. Leave <code>outcome</code> at <code>-1</code> to include
+all outcomes. Fill its text, suite and label fields without truncating them. Text and labels match
+case-insensitively; the suite identifier must match exactly.</li>
+<li>On the registry's owning thread, call <code>UmiTestWorkspaceApplyFilter</code> with the workspace,
+filter and a <code>UmiTestPlatformFilterSummary</code> output. On success, display
+<code>matched_count</code>. The workspace retains its selected test if it still matches, otherwise
+it selects the first match. No match clears the selection.</li>
+<li>If the call fails, keep the previous view. The query, selection and output summary remain
+unchanged. Correct invalid or overlong input; for an allocation failure, retain the existing view
+and retry when resources are available. Do not report a failed update as an empty catalogue.</li>
+<li>In Studio, use <code>UmiStudioTestServiceApplyFilter</code> to update both its view fields and
+the shared workspace. The registered <code>studio.tests.filter</code> command uses this service too.
+A successful filter update does not start any tests.</li>
+<li>Use the workspace's Run All or Rerun Failed planner when execution should follow the visible
+filter. Rerun Failed includes failed and timed-out outcomes that also match the current query.
+An explicit Passed filter therefore produces no failed-test rerun.</li></ol>
+<pre><code>UmiTestPlatformFilter filter;
+umi_test_platform_filter_init(&amp;filter);
+filter.failed_only = 1;
+UmiTestPlatformFilterSummary summary;
+UmiStatus status = UmiTestWorkspaceApplyFilter(workspace, &amp;filter, &amp;summary);
+if (status == UMI_STATUS_OK) {
+    /* Present summary.matched_count; no test process has started. */
+}</code></pre>
+<p>For an explicit list of test identifiers, initialise a heap-allocated operation plan and call
+<code>UmiTestPlatformOperationPlanSelected</code>. It checks the complete list against the registry
+before replacing the plan. A missing identifier, duplicate, malformed string or capacity error leaves
+the original plan intact. The selected order and repeat/stop settings are retained. The caller must
+still check the selected project's trust and each test's discovery origin before execution.</p>
+<p>The execution selection limit remains 1,024 identifiers. Narrow the view or select a smaller group
+if a run plan exceeds it. This limit does not mean that undisplayed tests passed, failed or were skipped.
+A skipped result is separate evidence and must remain visible as such.</p>
+
 <h2>Connect a test explorer</h2>
 <ol><li>Create a <code>UmiCtestJob</code> from copied test requests and submit it to the existing task queue.
 Keep the job and queue alive while it runs. The job validates selection, build root and repeat limits.</li>

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Use a native Kanban board and publish a contributor view</title>
+<style>body{font:17px/1.65 system-ui,sans-serif;color:#173247;background:#f4f7fa;max-width:980px;margin:auto;padding:30px}h1,h2{line-height:1.2}pre{background:#e4edf4;padding:18px;overflow:auto}code{font-family:Consolas,monospace}td,th{border:1px solid #becdd7;padding:12px;text-align:left}table{border-collapse:collapse}a{color:#145a88}.note{background:#fff5df;padding:16px;border-left:4px solid #a46b16}</style></head><body>
+<h1>Use a native Kanban board and publish a contributor view</h1>
+<p>A Kanban board groups cards into lists that describe the work's current state. Umicom keeps the board rules, named assignments, saved files and website generation in C23 Framework services. GTK4 presents the native editor. A browser displays the generated HTML and CSS; this first contributor website has no script, editing form or server account.</p>
+<h2>1. Open the native editor</h2>
+<ol><li>Use a Framework build containing <code>Umicom::kanban_gtk4</code>. The native tool option also provides <code>umicom-kanban</code>.</li>
+<li>Launch <code>umicom-kanban.exe</code> on Windows, or <code>umicom-kanban</code> on a system where it is installed. Studio builds linked to this adapter show <strong>Plan development → Open Kanban board</strong> on the welcome page.</li>
+<li>Choose an existing absolute folder for private board files. For example, create <code>C:\umicom\_local\boards</code> with your file manager, then select it with Browse.</li>
+<li>Enter a filename such as <code>development.umikb</code>. Click <strong>Create board</strong> for a new file or <strong>Open board</strong> for an existing saved board.</li></ol>
+<p>Expected result: five lists appear—To do, Doing, Testing, Blocked and Done. Create refuses an existing filename. Open validates the saved contents. A sibling <code>.lock</code> file coordinates local writers; leave it in place. The editor does not choose a hidden AppData directory or silently overwrite another board.</p>
+<h2>2. Add, assign and move cards</h2>
+<ol><li>Type a title and click <strong>Add card</strong>. The new card appears in To do and becomes selected.</li>
+<li>Click an existing card to select it. Edit its title and click <strong>Rename selected</strong>.</li>
+<li>Type a developer's display name and click <strong>Assign name</strong>, or press Enter in the developer field. Matching names appear below the field. An exact match, ignoring letter case, reuses an existing person. A new name creates a directory entry with a stable internal identifier.</li>
+<li>Clear the developer field and assign it to remove an assignment. Names are planning labels, not authenticated accounts or repository permissions.</li>
+<li>Drag a card onto another list. Alternatively, choose a destination beside <strong>Move selected</strong> and click that button.</li>
+<li>Click <strong>Save board</strong> to persist the board and its developer directory.</li></ol>
+<p>Expected result: moves and assignments either succeed together with a new board revision, or leave the previous state intact. Moving a card does not execute a build or certify tests. Existing checklist, dependency and work-limit rules still apply. A refused stale edit requires selecting the current card again and reviewing the change.</p>
+<p>The first native panel edits titles, assignments and list positions. The underlying C23 API also supports card descriptions, checklists, blockers, dependencies, priorities and list limits; their editing controls are not yet part of this panel. If an imported card is blocked by one of those rules, use a host that supports the relevant fields instead of weakening the rule.</p>
+<h2>3. Save safely and recover from an external change</h2>
+<ol><li><strong>Save board</strong> updates the file opened by the document, even if you have changed the filename field for a later operation.</li>
+<li>If another program changes that file, saving refuses the replacement and retains your in-memory edits.</li>
+<li>Choose an unused filename in the folder fields and click <strong>Save copy to new file</strong>. This writes the current board to a new file. It does not overwrite an existing destination or change the original document binding.</li>
+<li>After inspecting the copy, explicitly enable <strong>Discard unsaved board edits on this close attempt</strong> and close the original document. Open the recovered copy to continue working there.</li></ol>
+<p>Closing a board or its window refuses unsaved edits unless discard is explicitly selected. File work runs on a worker while editing controls are frozen. A board window opened by Studio owns its document independently: closing Studio's editor window does not discard the board. Forced process termination can still lose unsaved memory.</p>
+<h2>4. Prepare a public contributor page</h2>
+<ol><li>Expand <strong>Review a public website snapshot</strong>.</li>
+<li>Enter a public board title. This is separate from the private board title.</li>
+<li>Select a card. Enter the title and optional summary you want contributors to see. Enter a developer name only when you intend that name to be public.</li>
+<li>Click <strong>Include reviewed card</strong>. Repeat for every card to publish. Including the same card again replaces its reviewed fields.</li>
+<li>Click <strong>Generate website</strong>. Review the displayed HTML source. Use <strong>Save displayed text</strong> to save a new HTML file, for example <code>C:\umicom\_local\public-preview\index.html</code>, inside a folder you created.</li>
+<li>Open the saved file in a browser and inspect the titles, summaries, assignments and list positions before uploading it.</li></ol>
+<p>Only your explicit public fields and each selected card's current list are rendered. Private descriptions, local IDs, developer-directory names, activity, dependency data and storage paths are not copied into the page. All public fields are validated as UTF-8 and escaped as text. An empty selection produces an empty board, not an export of all private cards.</p>
+<p class="note">The reviewed public selection lasts for the current native window session. Save the HTML before closing. There is no persistent publication catalogue yet. Regenerate and upload a new snapshot after changing the board; an existing website does not update automatically.</p>
+<h2>5. Host the contributor view</h2>
+<ol><li>Create a clean website folder containing only the reviewed <code>index.html</code>.</li><li>Upload that file to your chosen static website host. Set it as the site's index document.</li><li>Visit the hosted URL in a normal browser and verify the visible cards. Contributors can view the board on desktop and mobile widths without installing GTK.</li></ol>
+<p>Keep the private board, its guard file, development logs and internal planning directory out of the upload. This Framework component does not deploy files or provide authentication. Hosting credentials, HTTPS and access policy belong to your chosen host. The page has embedded styling and does not load external assets or trackers.</p>
+<h2>6. Reuse the feature in a C23 application</h2>
+<pre>find_package(UmicomFramework CONFIG REQUIRED COMPONENTS kanban_gtk4)
+target_link_libraries(my_application PRIVATE Umicom::kanban_gtk4)
+set_target_properties(my_application PROPERTIES
+    C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)</pre>
+<p>Call the shared window from the GTK owner thread:</p>
+<pre>#include "umicom/ui/gtk4/kanban_window.h"
+
+GtkWindow *board = UmiKanbanGtk4CreateWindow(application);
+if (board != NULL) gtk_window_present(board);</pre>
+<p>For a host that already owns a board document, use <code>UmiKanbanGtk4Create</code> from <code>umicom/ui/gtk4/kanban.h</code>. That panel borrows the board. Freeze it before a worker accesses the document, refresh it after external edits, and retire it before releasing the document. The window helper manages these steps for ordinary hosts. Use <code>gtk_window_close</code> rather than forcibly destroying an open document window.</p>
+<p>Headless applications can link <code>Umicom::kanban</code> alone and call <code>umi_kanban_publication_html</code> with an explicitly reviewed array of <code>UmiKanbanPublicCard</code>. Measure output first with a null buffer and zero capacity; the returned size includes the terminating NUL byte. Allocate that size, render at the same board revision, and write exactly one byte fewer to the HTML file. The renderer performs no file or network operations.</p>
+<h2>7. Compatibility and limits</h2>
+<ul><li>Saved developer directories use a distinct archive schema. The updated reader accepts older four-list and five-list archives. Older readers refuse named-directory archives; update Framework before opening them.</li><li>Display names can repeat in the C23 directory. The first native assignment form refuses ambiguous matches; it does not guess which person was intended.</li><li>The board supports at most 1,024 cards and 128 named developers. Native title and name limits are byte limits, so long multibyte names may be refused without truncation.</li><li>Drag-and-drop is local to one native board panel. A drag from another application or another board cannot submit a move.</li><li>The contributor site is a snapshot. Registration, permissions, shared editing, persistent publication selections and a C23 web service are separate capabilities, not available here.</li></ul>
+<h2>8. Troubleshooting</h2>
+<table><thead><tr><th>Symptom</th><th>Next step</th></tr></thead><tbody>
+<tr><td>No native board target</td><td>Check that Framework includes its GTK4 adapter, platform storage and native-tool option. A headless build still provides the pure board library.</td></tr>
+<tr><td>Open or Create refused</td><td>Use an existing absolute folder and one ordinary filename ending in .umikb. Close another editor holding the same board. Do not delete its guard to bypass ownership.</td></tr>
+<tr><td>Save refused after external edits</td><td>Keep the board open and use Save copy to new file. Do not replace the external file to hide the conflict.</td></tr>
+<tr><td>Move or rename refused as stale</td><td>Refresh, select the current card again, and review the intended change. Older form text does not authorize overwriting newer fields.</td></tr>
+<tr><td>HTML file already exists</td><td>The shared export control creates new files only. Choose another local preview filename, review it, then publish it through your host's normal update process.</td></tr>
+<tr><td>GTK test returns 77</td><td>The display was unavailable. Record skipped interaction coverage separately and rerun in a usable desktop session.</td></tr>
+</tbody></table>
+<p><a href="../KANBAN_PLANNING.html">Read the toolkit-independent board API guide</a>.</p>
+</body></html>

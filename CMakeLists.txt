@@ -6107,3 +6107,9 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomBuildImpact.cmake")
 
 # Share board rules and portable planning state across application hosts.
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomKanban.cmake")
+
+# Native hosts share the same planning model and document ownership.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomKanbanGtk4.cmake")
+
+# Shared integrity primitives also serve hosts without optional banking services.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomRecordChain.cmake")

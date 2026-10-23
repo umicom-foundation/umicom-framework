@@ -18,7 +18,7 @@ typedef struct UmiKanbanFilter {
     char text[256]; /* Case-sensitive byte substring of title or description. */
     UmiKanbanPriority minimum_priority;
     int archived; /* 0: active only; 1: include archived; 2: archived only. */
-    int blocked_only; /* Explicit blocker or an unfinished prerequisite. */
+    int blocked_only; /* Explicit Blocked stage, blocker text or an unfinished prerequisite. */
     int overdue_only; /* Active, not done, with a nonzero deadline before now. */
     uint64_t now_unix_seconds;
 } UmiKanbanFilter;

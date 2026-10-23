@@ -24,8 +24,16 @@ extern "C" {
 #define UMI_KANBAN_ACTIVITY_CAPACITY 256U
 
 typedef struct UmiKanbanBoard UmiKanbanBoard;
+/* Blocked is appended below so existing stage values, including Done, retain their archive and API identity. Retained for engineering review. */
+#if 0
 typedef enum UmiKanbanStage {
     UMI_KANBAN_TODO, UMI_KANBAN_DOING, UMI_KANBAN_TESTING, UMI_KANBAN_DONE
+} UmiKanbanStage;
+#endif
+
+typedef enum UmiKanbanStage {
+    UMI_KANBAN_TODO, UMI_KANBAN_DOING, UMI_KANBAN_TESTING, UMI_KANBAN_DONE,
+    UMI_KANBAN_BLOCKED
 } UmiKanbanStage;
 typedef enum UmiKanbanPriority {
     UMI_KANBAN_LOW, UMI_KANBAN_NORMAL, UMI_KANBAN_HIGH, UMI_KANBAN_URGENT
@@ -77,13 +85,35 @@ typedef struct UmiKanbanCardSnapshot {
     uint64_t board_revision;
 } UmiKanbanCardSnapshot;
 
+/* An assignment-only edit below preserves all other card fields and participates in the existing atomic transaction. Retained for engineering review. */
+#if 0
 typedef enum UmiKanbanEditKind {
     UMI_KANBAN_CREATE_CARD, UMI_KANBAN_UPDATE_CARD, UMI_KANBAN_MOVE_CARD,
     UMI_KANBAN_ARCHIVE_CARD, UMI_KANBAN_RESTORE_CARD, UMI_KANBAN_SET_WIP
 } UmiKanbanEditKind;
+#endif
+
+/* The extended edit enum appends developer registration while retaining existing transaction identities. Retained for engineering review. */
+#if 0
+typedef enum UmiKanbanEditKind {
+    UMI_KANBAN_CREATE_CARD, UMI_KANBAN_UPDATE_CARD, UMI_KANBAN_MOVE_CARD,
+    UMI_KANBAN_ARCHIVE_CARD, UMI_KANBAN_RESTORE_CARD, UMI_KANBAN_SET_WIP,
+    UMI_KANBAN_ASSIGN_CARD
+} UmiKanbanEditKind;
+#endif
+
+typedef enum UmiKanbanEditKind {
+    UMI_KANBAN_CREATE_CARD, UMI_KANBAN_UPDATE_CARD, UMI_KANBAN_MOVE_CARD,
+    UMI_KANBAN_ARCHIVE_CARD, UMI_KANBAN_RESTORE_CARD, UMI_KANBAN_SET_WIP,
+    UMI_KANBAN_ASSIGN_CARD, UMI_KANBAN_PUT_DEVELOPER
+} UmiKanbanEditKind;
 
 typedef struct UmiKanbanEdit {
     UmiKanbanEditKind kind;
+    /* PUT_DEVELOPER uses card.id as developer ID and card.title as display
+     * name (1..127 bytes); other fields are ignored. See developers.h. */
+    /* ASSIGN uses card.id and card.assignee only; an empty assignee unassigns.
+     * It preserves details, checklist, dependencies, column and row order. */
     /* CREATE/UPDATE use the complete card. Other card actions use card.id.
      * CREATE must name a TODO column. UPDATE never moves a card. MOVE may
      * place it before an active card in the destination column; empty means
@@ -116,7 +146,7 @@ typedef struct UmiKanbanActivity {
     uint64_t board_revision;
     UmiKanbanEditKind kind;
     char actor[UMI_KANBAN_ID_SIZE]; /* Caller-supplied attribution, not authenticated. */
-    char card_id[UMI_KANBAN_ID_SIZE];
+    char card_id[UMI_KANBAN_ID_SIZE]; /* PUT_DEVELOPER records its developer ID here. */
     char from_column[UMI_KANBAN_ID_SIZE];
     char to_column[UMI_KANBAN_ID_SIZE];
 } UmiKanbanActivity;
@@ -133,6 +163,12 @@ UmiStatus umi_kanban_board_create(const UmiKanbanConfig *config, UmiKanbanBoard 
 /* Default transitions: todo->doing; doing->todo/testing; testing->doing/done;
  * done->todo. No WIP limits. Capacity MAX_CARDS. */
 UmiStatus umi_kanban_board_create_development(const char *id, const char *title,
+    UmiKanbanBoard **out_board);
+/* Five-list workflow: To do, Doing, Testing, Blocked, Done. Every list can
+ * move to another; existing blocker, checklist, dependency and WIP rules still
+ * apply. The four-column development constructor retains its original rules.
+ * Blocked is a planning stage; no reason text is required to place a card there. */
+UmiStatus umi_kanban_board_create_workflow(const char *id, const char *title,
     UmiKanbanBoard **out_board);
 void umi_kanban_board_destroy(UmiKanbanBoard *board);
 uint64_t umi_kanban_board_revision(const UmiKanbanBoard *board);

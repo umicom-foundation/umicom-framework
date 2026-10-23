@@ -54,6 +54,8 @@ static UmiStatus Reorder(UmiKanbanBoard *board, size_t source, size_t column,
     board->rows[destination] = row;
     return UMI_STATUS_OK;
 }
+/* The dispatcher below adds field-specific assignment through the same checked transaction, preserving other card data and activity ownership. Retained for engineering review. */
+#if 0
 static UmiStatus Edit(UmiKanbanBoard *board, const UmiKanbanEdit *edit,
     const char *actor, UmiKanbanProblem *problem)
 {
@@ -103,6 +105,179 @@ static UmiStatus Edit(UmiKanbanBoard *board, const UmiKanbanEdit *edit,
         return UmiKanbanProblemSet(problem, UMI_KANBAN_PROBLEM_ARCHIVED,
             UMI_STATUS_INVALID_STATE, edit->card.id, from);
     if (edit->kind == UMI_KANBAN_UPDATE_CARD) row->card = edit->card;
+    else if (edit->kind == UMI_KANBAN_ARCHIVE_CARD) row->archived = 1;
+    else if (edit->kind == UMI_KANBAN_RESTORE_CARD) row->archived = 0;
+    else if (edit->kind == UMI_KANBAN_MOVE_CARD) {
+        if (!UmiKanbanId(edit->before_card_id, true)) return UMI_STATUS_INVALID_ARGUMENT;
+        if (column != row->column) {
+            if ((board->config.transitions[row->column] & (UINT32_C(1) << column)) == 0U)
+                return UmiKanbanProblemSet(problem, UMI_KANBAN_PROBLEM_TRANSITION,
+                    UMI_STATUS_INVALID_STATE, row->card.id, edit->column_id);
+            UmiKanbanStage stage = board->config.columns[column].stage;
+            if (stage == UMI_KANBAN_DOING || stage == UMI_KANBAN_TESTING) {
+                if (row->card.blocked_reason[0] != '\0')
+                    return UmiKanbanProblemSet(problem, UMI_KANBAN_PROBLEM_BLOCKED,
+                        UMI_STATUS_INVALID_STATE, row->card.id, edit->column_id);
+                if (UmiKanbanUnfinishedDependencies(board, &row->card) != 0U)
+                    return UmiKanbanProblemSet(problem, UMI_KANBAN_PROBLEM_DEPENDENCY,
+                        UMI_STATUS_INVALID_STATE, row->card.id, edit->column_id);
+            }
+        }
+        UmiStatus status = Reorder(board, index, column, edit->before_card_id, problem);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    Record(board, edit, actor, from, edit->kind == UMI_KANBAN_MOVE_CARD ? edit->column_id : from);
+    return UMI_STATUS_OK;
+}
+#endif
+
+/* Developer edits below share the atomic candidate board and its revision, so failed card operations cannot leak directory changes. Retained for engineering review. */
+#if 0
+static UmiStatus Edit(UmiKanbanBoard *board, const UmiKanbanEdit *edit,
+    const char *actor, UmiKanbanProblem *problem)
+{
+    if (edit->kind < UMI_KANBAN_CREATE_CARD || edit->kind > UMI_KANBAN_ASSIGN_CARD)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    size_t column = UMI_KANBAN_MISSING;
+    if (edit->kind == UMI_KANBAN_SET_WIP || edit->kind == UMI_KANBAN_CREATE_CARD ||
+        edit->kind == UMI_KANBAN_MOVE_CARD) {
+        if (!UmiKanbanId(edit->column_id, false)) return UMI_STATUS_INVALID_ARGUMENT;
+        column = UmiKanbanColumnFind(&board->config, edit->column_id);
+        if (column == UMI_KANBAN_MISSING)
+            return UmiKanbanProblemSet(problem, UMI_KANBAN_PROBLEM_MISSING,
+                UMI_STATUS_NOT_FOUND, NULL, edit->column_id);
+    }
+    if (edit->kind == UMI_KANBAN_SET_WIP) {
+        if (edit->wip_limit > board->config.card_capacity) return UMI_STATUS_INVALID_ARGUMENT;
+        board->config.columns[column].wip_limit = edit->wip_limit;
+        Record(board, edit, actor, NULL, edit->column_id);
+        return UMI_STATUS_OK;
+    }
+    if (!UmiKanbanId(edit->card.id, false)) return UMI_STATUS_INVALID_ARGUMENT;
+    if ((edit->kind == UMI_KANBAN_CREATE_CARD || edit->kind == UMI_KANBAN_UPDATE_CARD) &&
+        UmiKanbanCardCheck(&edit->card) != UMI_STATUS_OK) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index = UmiKanbanFind(board, edit->card.id);
+    if (edit->kind == UMI_KANBAN_CREATE_CARD) {
+        if (index != UMI_KANBAN_MISSING)
+            return UmiKanbanProblemSet(problem, UMI_KANBAN_PROBLEM_DUPLICATE,
+                UMI_STATUS_ALREADY_EXISTS, edit->card.id, edit->column_id);
+        if (board->count == board->config.card_capacity)
+            return UmiKanbanProblemSet(problem, UMI_KANBAN_PROBLEM_CAPACITY,
+                UMI_STATUS_CAPACITY_EXCEEDED, edit->card.id, edit->column_id);
+        if (board->config.columns[column].stage != UMI_KANBAN_TODO)
+            return UmiKanbanProblemSet(problem, UMI_KANBAN_PROBLEM_TRANSITION,
+                UMI_STATUS_INVALID_STATE, edit->card.id, edit->column_id);
+        UmiKanbanRow *row = &board->rows[board->count++];
+        row->card = edit->card; row->column = column; row->archived = 0;
+        Record(board, edit, actor, NULL, edit->column_id);
+        return UMI_STATUS_OK;
+    }
+    if (index == UMI_KANBAN_MISSING)
+        return UmiKanbanProblemSet(problem, UMI_KANBAN_PROBLEM_MISSING,
+            UMI_STATUS_NOT_FOUND, edit->card.id, NULL);
+    UmiKanbanRow *row = &board->rows[index];
+    const char *from = board->config.columns[row->column].id;
+    if ((row->archived && edit->kind != UMI_KANBAN_RESTORE_CARD) ||
+        (!row->archived && edit->kind == UMI_KANBAN_RESTORE_CARD))
+        return UmiKanbanProblemSet(problem, UMI_KANBAN_PROBLEM_ARCHIVED,
+            UMI_STATUS_INVALID_STATE, edit->card.id, from);
+    if (edit->kind == UMI_KANBAN_ASSIGN_CARD) {
+        if (!UmiKanbanId(edit->card.assignee, true)) return UMI_STATUS_INVALID_ARGUMENT;
+        /* Only the assignment changes; caller snapshots cannot overwrite newer
+         * descriptions or checklists when the same transaction updates them. */
+        memset(row->card.assignee, 0, sizeof row->card.assignee);
+        memcpy(row->card.assignee, edit->card.assignee, strlen(edit->card.assignee) + 1U);
+    }
+    else if (edit->kind == UMI_KANBAN_UPDATE_CARD) row->card = edit->card;
+    else if (edit->kind == UMI_KANBAN_ARCHIVE_CARD) row->archived = 1;
+    else if (edit->kind == UMI_KANBAN_RESTORE_CARD) row->archived = 0;
+    else if (edit->kind == UMI_KANBAN_MOVE_CARD) {
+        if (!UmiKanbanId(edit->before_card_id, true)) return UMI_STATUS_INVALID_ARGUMENT;
+        if (column != row->column) {
+            if ((board->config.transitions[row->column] & (UINT32_C(1) << column)) == 0U)
+                return UmiKanbanProblemSet(problem, UMI_KANBAN_PROBLEM_TRANSITION,
+                    UMI_STATUS_INVALID_STATE, row->card.id, edit->column_id);
+            UmiKanbanStage stage = board->config.columns[column].stage;
+            if (stage == UMI_KANBAN_DOING || stage == UMI_KANBAN_TESTING) {
+                if (row->card.blocked_reason[0] != '\0')
+                    return UmiKanbanProblemSet(problem, UMI_KANBAN_PROBLEM_BLOCKED,
+                        UMI_STATUS_INVALID_STATE, row->card.id, edit->column_id);
+                if (UmiKanbanUnfinishedDependencies(board, &row->card) != 0U)
+                    return UmiKanbanProblemSet(problem, UMI_KANBAN_PROBLEM_DEPENDENCY,
+                        UMI_STATUS_INVALID_STATE, row->card.id, edit->column_id);
+            }
+        }
+        UmiStatus status = Reorder(board, index, column, edit->before_card_id, problem);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    Record(board, edit, actor, from, edit->kind == UMI_KANBAN_MOVE_CARD ? edit->column_id : from);
+    return UMI_STATUS_OK;
+}
+#endif
+
+static UmiStatus Edit(UmiKanbanBoard *board, const UmiKanbanEdit *edit,
+    const char *actor, UmiKanbanProblem *problem)
+{
+    if (edit->kind < UMI_KANBAN_CREATE_CARD || edit->kind > UMI_KANBAN_PUT_DEVELOPER)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (edit->kind == UMI_KANBAN_PUT_DEVELOPER) {
+        UmiStatus status = UmiKanbanDeveloperPut(board, edit->card.id, edit->card.title);
+        if (status == UMI_STATUS_OK) Record(board, edit, actor, NULL, NULL);
+        else if (status == UMI_STATUS_CAPACITY_EXCEEDED)
+            return UmiKanbanProblemSet(problem, UMI_KANBAN_PROBLEM_CAPACITY, status, NULL, NULL);
+        return status;
+    }
+    size_t column = UMI_KANBAN_MISSING;
+    if (edit->kind == UMI_KANBAN_SET_WIP || edit->kind == UMI_KANBAN_CREATE_CARD ||
+        edit->kind == UMI_KANBAN_MOVE_CARD) {
+        if (!UmiKanbanId(edit->column_id, false)) return UMI_STATUS_INVALID_ARGUMENT;
+        column = UmiKanbanColumnFind(&board->config, edit->column_id);
+        if (column == UMI_KANBAN_MISSING)
+            return UmiKanbanProblemSet(problem, UMI_KANBAN_PROBLEM_MISSING,
+                UMI_STATUS_NOT_FOUND, NULL, edit->column_id);
+    }
+    if (edit->kind == UMI_KANBAN_SET_WIP) {
+        if (edit->wip_limit > board->config.card_capacity) return UMI_STATUS_INVALID_ARGUMENT;
+        board->config.columns[column].wip_limit = edit->wip_limit;
+        Record(board, edit, actor, NULL, edit->column_id);
+        return UMI_STATUS_OK;
+    }
+    if (!UmiKanbanId(edit->card.id, false)) return UMI_STATUS_INVALID_ARGUMENT;
+    if ((edit->kind == UMI_KANBAN_CREATE_CARD || edit->kind == UMI_KANBAN_UPDATE_CARD) &&
+        UmiKanbanCardCheck(&edit->card) != UMI_STATUS_OK) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index = UmiKanbanFind(board, edit->card.id);
+    if (edit->kind == UMI_KANBAN_CREATE_CARD) {
+        if (index != UMI_KANBAN_MISSING)
+            return UmiKanbanProblemSet(problem, UMI_KANBAN_PROBLEM_DUPLICATE,
+                UMI_STATUS_ALREADY_EXISTS, edit->card.id, edit->column_id);
+        if (board->count == board->config.card_capacity)
+            return UmiKanbanProblemSet(problem, UMI_KANBAN_PROBLEM_CAPACITY,
+                UMI_STATUS_CAPACITY_EXCEEDED, edit->card.id, edit->column_id);
+        if (board->config.columns[column].stage != UMI_KANBAN_TODO)
+            return UmiKanbanProblemSet(problem, UMI_KANBAN_PROBLEM_TRANSITION,
+                UMI_STATUS_INVALID_STATE, edit->card.id, edit->column_id);
+        UmiKanbanRow *row = &board->rows[board->count++];
+        row->card = edit->card; row->column = column; row->archived = 0;
+        Record(board, edit, actor, NULL, edit->column_id);
+        return UMI_STATUS_OK;
+    }
+    if (index == UMI_KANBAN_MISSING)
+        return UmiKanbanProblemSet(problem, UMI_KANBAN_PROBLEM_MISSING,
+            UMI_STATUS_NOT_FOUND, edit->card.id, NULL);
+    UmiKanbanRow *row = &board->rows[index];
+    const char *from = board->config.columns[row->column].id;
+    if ((row->archived && edit->kind != UMI_KANBAN_RESTORE_CARD) ||
+        (!row->archived && edit->kind == UMI_KANBAN_RESTORE_CARD))
+        return UmiKanbanProblemSet(problem, UMI_KANBAN_PROBLEM_ARCHIVED,
+            UMI_STATUS_INVALID_STATE, edit->card.id, from);
+    if (edit->kind == UMI_KANBAN_ASSIGN_CARD) {
+        if (!UmiKanbanId(edit->card.assignee, true)) return UMI_STATUS_INVALID_ARGUMENT;
+        /* Only the assignment changes; caller snapshots cannot overwrite newer
+         * descriptions or checklists when the same transaction updates them. */
+        memset(row->card.assignee, 0, sizeof row->card.assignee);
+        memcpy(row->card.assignee, edit->card.assignee, strlen(edit->card.assignee) + 1U);
+    }
+    else if (edit->kind == UMI_KANBAN_UPDATE_CARD) row->card = edit->card;
     else if (edit->kind == UMI_KANBAN_ARCHIVE_CARD) row->archived = 1;
     else if (edit->kind == UMI_KANBAN_RESTORE_CARD) row->archived = 0;
     else if (edit->kind == UMI_KANBAN_MOVE_CARD) {

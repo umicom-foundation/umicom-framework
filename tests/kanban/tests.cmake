@@ -1,6 +1,12 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 get_filename_component(_kanban_test_root "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
-foreach(_group IN ITEMS board view archive)
+# The original registration order remains below for review; the new group adds
+# workflow coverage without changing the existing case names.
+# foreach(_group IN ITEMS board view archive)
+# Keep the earlier group list for review; directory and publication cases
+# exercise the same C23 services used by native hosts.
+# foreach(_group IN ITEMS board view archive workflow)
+foreach(_group IN ITEMS board view archive workflow developers publication)
     set(_target "umi-kanban-${_group}-test")
     add_executable("${_target}" "${_kanban_test_root}/tests/kanban/test_${_group}.c")
     target_link_libraries("${_target}" PRIVATE Umicom::kanban)
@@ -21,6 +27,21 @@ foreach(_group IN ITEMS board view archive)
         set(_cases lifecycle atomic stale transition wip checklist blocked dependencies cycle restore-wip activity invalid)
     elseif(_group STREQUAL "view")
         set(_cases filters pages summary invalid-filter)
+    elseif(_group STREQUAL "developers")
+        set(_cases register rename atomic invalid stale capacity roundtrip schema legacy missing)
+        if(COMMAND umicom_target_qualification_inputs)
+            umicom_target_qualification_inputs("${_target}" FILES "${_kanban_test_root}/src/base/value_archive_internal.h")
+        endif()
+    elseif(_group STREQUAL "publication")
+        set(_cases projection empty escaping utf8 short-buffer stale selection bounded-fields byte-limit stage-placement)
+    elseif(_group STREQUAL "workflow")
+        set(_cases layout legacy assign unassign assign-invalid assign-stale assign-atomic
+            assign-archived assign-order blocked-view blocked-reason done-checklist
+            done-dependency blocked-wip archive-roundtrip archive-schema archive-legacy)
+        if(COMMAND umicom_target_qualification_inputs)
+            umicom_target_qualification_inputs("${_target}" FILES
+                "${_kanban_test_root}/src/base/value_archive_internal.h")
+        endif()
     else()
         set(_cases roundtrip short-buffer truncation checksum schema trailing invalid-domain)
         if(COMMAND umicom_target_qualification_inputs)

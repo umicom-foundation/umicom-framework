@@ -165,3 +165,14 @@ unset(_umicom_finance_operations_root)
 # Close diagnostics and execution share the canonical evaluator; all callers
 # retain the existing financial service, persistence and command contracts.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomFinanceCloseReview.cmake")
+
+# Read-only history commitments reuse the original event codec and shared hash owner.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomRecordChain.cmake")
+target_sources(umicom_finance_operations PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../src/finance_operations/checkpoint.c")
+target_link_libraries(umicom_finance_operations PUBLIC Umicom::record_chain)
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_finance_operations include/umicom/finance_operations/checkpoint.h)
+endif()
+if(BUILD_TESTING)
+    include("${CMAKE_CURRENT_LIST_DIR}/../tests/record_chain/finance_operations.cmake")
+endif()

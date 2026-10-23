@@ -454,3 +454,8 @@ if(BUILD_TESTING)
 endif()
 
 message(STATUS "Umicom native C23 server-driven Web frontend enabled (no Wt, no WebAssembly)")
+
+# Boundary cases cover the same canonical JSON and transport implementations.
+if(BUILD_TESTING)
+    include("${CMAKE_CURRENT_LIST_DIR}/../tests/frontend_native_web/encoding_tests.cmake")
+endif()

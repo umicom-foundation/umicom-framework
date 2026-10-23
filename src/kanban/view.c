@@ -8,8 +8,17 @@
 #include "board_internal.h"
 #include "umicom/kanban/view.h"
 #include <string.h>
+/* The blocked projection below includes explicit Blocked columns as well as reasons and unfinished prerequisites. Retained for engineering review. */
+#if 0
 static bool Blocked(const UmiKanbanBoard *board, const UmiKanbanRow *row)
 { return row->card.blocked_reason[0] != '\0' || UmiKanbanUnfinishedDependencies(board, &row->card) != 0U; }
+#endif
+
+static bool Blocked(const UmiKanbanBoard *board, const UmiKanbanRow *row)
+{
+    return board->config.columns[row->column].stage == UMI_KANBAN_BLOCKED ||
+        row->card.blocked_reason[0] != '\0' || UmiKanbanUnfinishedDependencies(board, &row->card) != 0U;
+}
 static bool Overdue(const UmiKanbanBoard *board, const UmiKanbanRow *row, uint64_t now)
 {
     return !row->archived && board->config.columns[row->column].stage != UMI_KANBAN_DONE &&

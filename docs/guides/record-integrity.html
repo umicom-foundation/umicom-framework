@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Checking transaction history with Umicom Framework</title>
+<style>body{max-width:920px;margin:3rem auto;padding:0 1rem;background:#f8fafc;color:#172335;font:17px/1.6 system-ui}pre{overflow:auto;background:#e7edf4;padding:1rem}code{font-size:.9em}h1,h2{line-height:1.2}table{border-collapse:collapse;width:100%}td,th{border:1px solid #b8c4d3;text-align:left;padding:.5rem}</style>
+<h1>Checking transaction history</h1>
+<p>A <em>record chain</em> links each record to the digest of its predecessor. A digest is a fixed-size summary of bytes. Umicom Framework uses the existing SHA-256 service to detect changes relative to a checkpoint that you saved separately.</p>
+<p>This C23 component performs no file or network operations. It does not transfer money, authenticate people, encrypt records, run smart contracts or agree a blockchain history with other computers. An attacker who can replace both your records and your expected checkpoint can create a different internally consistent history. Retain the expected checkpoint through a separately trusted process.</p>
+<h2>1. Build an installed SDK consumer</h2>
+<p>The example requires an installed Framework SDK containing <code>Umicom::record_chain</code> and its base dependency. From the Framework source directory, configure the example with your SDK installation prefix:</p>
+<pre>cmake -S examples/record_chain -B build/record-chain-example -G Ninja -DCMAKE_PREFIX_PATH=C:/umicom/installed/applications
+cmake --build build/record-chain-example --parallel 2
+ctest --test-dir build/record-chain-example --output-on-failure --no-tests=error</pre>
+<p>The example creates a synthetic receipt, encodes and decodes it, then verifies its payload against a retained endpoint. A successful run prints <code>Verified one synthetic record</code> and exits with zero. A missing component means the selected SDK predates this capability or was installed incompletely; do not substitute headers from an unrelated source checkout.</p>
+<h2>2. Choose a source identity and payload schema</h2>
+<p>Supply a stable, nonzero 32-byte chain identity for each history. Keep different databases and incompatible payload schemas separate. A kind is a nonzero 32-bit application-defined schema identifier. Define exact payload bytes, including integer encoding and text normalization, before appending records. Never hash C structures directly: compiler padding and machine byte order are not a portable format.</p>
+<pre>UmiRecordChainCheckpoint checkpoint;
+UmiRecordChainRecord receipt;
+/* chain_id contains the host's stable source identity. */
+UmiStatus status = umi_record_chain_start(chain_id, &amp;checkpoint);
+if (status == UMI_STATUS_OK)
+    status = umi_record_chain_append(&amp;checkpoint, kind,
+        canonical_bytes, byte_count, &amp;receipt);</pre>
+<p>Serialize access to each checkpoint. Inputs and output objects must not overlap; the checkpoint itself is updated in place. Failed operations leave outputs and the checkpoint unchanged. Empty payloads are supported. Each payload is limited to 16 MiB, and each verification batch to 4,096 records.</p>
+<h2>3. Verify the complete intended history</h2>
+<p>Start from a previously trusted checkpoint. Each <code>UmiRecordChainInput</code> borrows a receipt and the exact corresponding payload bytes. Pass the separately retained endpoint to <code>umi_record_chain_verify</code>. Verification checks identity, sequence, predecessor, payload digest, record digest and final endpoint before updating the checkpoint.</p>
+<p>Reordered, duplicated or removed records fail. A valid prefix also fails when the expected endpoint represents a longer history. <code>umi_record_chain_accept</code> checks one next record only; callers using that lower-level function must still compare their final checkpoint themselves.</p>
+<h2>4. Store and exchange portable values</h2>
+<p>Use <code>archive.h</code> to encode an 80-byte checkpoint or a 156-byte receipt. Decoders require the exact size and reject trailing bytes and unknown schema markers. Decoding a receipt checks its own digest but does not verify its payload or its position in a history; call acceptance or batch verification afterward. Decoding a checkpoint does not establish its trust.</p>
+<table><tr><th>Envelope</th><th>Fields in order</th></tr>
+<tr><td>Checkpoint, 80 bytes</td><td>8-byte URCP marker (version 1), 32-byte identity, 8-byte sequence, 32-byte digest.</td></tr>
+<tr><td>Receipt, 156 bytes</td><td>8-byte URCR marker (version 1), 32-byte identity, 8-byte sequence, 4-byte kind, 8-byte payload size, 32-byte predecessor, 32-byte payload digest, 32-byte receipt digest.</td></tr></table>
+<p>Integers use big-endian byte order. Markers are the four ASCII letters followed by bytes 0, 0, 0, 1. Genesis hashes the ASCII bytes <code>UMICOM-RECORD-CHAIN-GENESIS:1</code>, one LF byte and the identity. The receipt digest hashes <code>UMICOM-RECORD-CHAIN-RECORD:1</code>, one LF byte and the 116 field bytes after its marker and before its final digest. No NUL terminator is included. The payload digest hashes only the payload bytes.</p>
+<h2>5. Inspect Bank and Exchange event histories</h2>
+<p><code>UmiBankOperationsCheckpoint</code> commits to retained UBO1 event text using kind <code>0x55424f31</code>. <code>UmiFinanceOperationsCheckpoint</code> commits to UFIN1 commands using kind <code>0x55464931</code>. Both reuse their existing canonical persistence codecs without the text terminator. They cover complete command histories, including approvals and reversals, rather than only current balances.</p>
+<p>Pass the revision you observed. <code>BUSY</code> means the local view changed: inspect it again before capturing a new anchor. These calls inspect cached state and do not reload storage. A poisoned service is refused; financial operations also refuse a view left behind by a failed reload. Explicitly reload or reopen the underlying service through its normal API to observe external changes.</p>
+<p>Capture, independently retain, and later compare checkpoints with the same source identity. Changing actor, payload or order changes the commitment. An identical idempotent request adds no event, so it does not change the checkpoint. The adapter does not establish a real bank balance or external trade settlement.</p>
+<h2>Privacy and application integration</h2>
+<p>Keep raw events and integrity anchors within their existing access policy. A digest of predictable private data can be guessed, so hashing is not anonymization. No checkpoint is automatically posted to a public chain or website. Native GTK4 hosts, C23 web services and other SDK consumers can share this library; authentication, durable anchor retention and any later signing service belong to explicit host boundaries.</p>
+<h2>Focused qualification</h2>
+<p>Developers can build the production receipt sources and base hash without compiling every application:</p>
+<pre>cmake -S tests/record_chain -B build/record-chain -G Ninja -DCMAKE_BUILD_TYPE=Debug
+cmake --build build/record-chain --parallel 2
+ctest --test-dir build/record-chain --output-on-failure --no-tests=error</pre>
+<p>The focused suite includes a real installed-consumer exercise that relocates a new SDK prefix and builds the independent example. Its stage logs remain below the build directory. Financial integration cases are part of the full Framework build and have names beginning <code>framework.record_chain.bank.</code> and <code>framework.record_chain.finance.</code>. These checks do not qualify network consensus, signing, payment-provider connections or a graphical workflow.</p>
+</html>
