@@ -450,3 +450,24 @@ UmiStatus UmiAiTrainingAttestationVerifyFile(
     return UmiAiTrainingAttestationVerifyAndInspectFile(
         checkpointPath, trustedPublicKeyPemPath, &ignored);
 }
+
+/* Public-key onboarding must compute the SAME canonical raw-key identity
+ * used by the signature verifier; hashing PEM text would be incorrect.
+ * Retain all caller output bytes on a malformed or inaccessible key. */
+UmiStatus UmiAiTrainingAttestationPublicKeyFingerprint(
+    const char *publicKeyPemPath,
+    char outFingerprint[UMI_SHA256_HEX_CAPACITY])
+{
+    EVP_PKEY *key = NULL;
+    char candidate[UMI_SHA256_HEX_CAPACITY];
+    UmiStatus status;
+    if (publicKeyPemPath == NULL || outFingerprint == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = ReadPem(publicKeyPemPath, 0, &key);
+    if (status != UMI_STATUS_OK) return status;
+    status = KeyFingerprint(key, candidate);
+    EVP_PKEY_free(key);
+    if (status != UMI_STATUS_OK) return status;
+    memcpy(outFingerprint, candidate, sizeof(candidate));
+    return UMI_STATUS_OK;
+}

@@ -58,6 +58,15 @@ UmiStatus UmiAiTrainingAttestationVerifyAndInspectFile(
     const char *checkpointPath, const char *trustedPublicKeyPemPath,
     UmiAiTrainingPublicationEvidence *outEvidence);
 
+/* Derive the SHA-256 fingerprint of the raw 32-byte Ed25519 public key,
+ * not the text of its PEM container. This is an independent provisioning
+ * aid for preparing reviewed trust-policy records. The supplied PEM must be
+ * a valid Ed25519 public key. Errors preserve the caller's output buffer;
+ * obtaining a fingerprint never automatically authorises that key. */
+UmiStatus UmiAiTrainingAttestationPublicKeyFingerprint(
+    const char *publicKeyPemPath,
+    char outFingerprint[UMI_SHA256_HEX_CAPACITY]);
+
 #ifdef __cplusplus
 }
 #endif

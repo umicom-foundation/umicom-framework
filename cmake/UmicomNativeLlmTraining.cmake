@@ -867,3 +867,54 @@ if(UMICOM_AI_TRAINING_ENABLE_SIGNATURES)
         endforeach()
     endif()
 endif()
+
+# Offline publisher trust: compose the existing Ed25519/publication verifier
+# with a locally approved allowlist, explicit revocation, and bounded key
+# validity intervals. An untrusted signature can choose only a candidate key
+# already declared in the operator's independently controlled policy file.
+# Keep this opt-in and do not introduce a second crypto implementation.
+if(UMICOM_AI_TRAINING_ENABLE_SIGNATURES AND
+   TARGET umicom_ai_training_attestation)
+    target_sources(umicom_ai_training_attestation PRIVATE
+        "${_umicom_ai_training_root}/src/ai/training/training_trust_policy.c")
+
+    if(NOT TARGET umicom-native-llm-publication-trust)
+        add_executable(umicom-native-llm-publication-trust
+            "${_umicom_ai_training_root}/learning/native-llm/verify_training_trust.c")
+        target_link_libraries(umicom-native-llm-publication-trust PRIVATE
+            Umicom::AiTrainingAttestation)
+        target_compile_features(umicom-native-llm-publication-trust PRIVATE c_std_23)
+        if(MSVC)
+            target_compile_options(umicom-native-llm-publication-trust PRIVATE /W4)
+        else()
+            target_compile_options(umicom-native-llm-publication-trust PRIVATE
+                -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+        endif()
+    endif()
+
+    if(BUILD_TESTING)
+        foreach(_umicom_trust_case IN ITEMS parse files verify)
+            set(_umicom_trust_target
+                "umicom-ai-training-trust-policy-${_umicom_trust_case}-test")
+            if(NOT TARGET "${_umicom_trust_target}")
+                add_executable("${_umicom_trust_target}"
+                    "${_umicom_ai_training_root}/tests/ai_training/test_training_trust_policy_${_umicom_trust_case}.c")
+                target_link_libraries("${_umicom_trust_target}" PRIVATE
+                    Umicom::AiTrainingAttestation)
+                target_compile_features("${_umicom_trust_target}" PRIVATE c_std_23)
+                if(MSVC)
+                    target_compile_options("${_umicom_trust_target}" PRIVATE /W4)
+                else()
+                    target_compile_options("${_umicom_trust_target}" PRIVATE
+                        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+                endif()
+                add_test(
+                    NAME "framework.ai.training.trust_policy_${_umicom_trust_case}"
+                    COMMAND "${_umicom_trust_target}")
+                set_tests_properties(
+                    "framework.ai.training.trust_policy_${_umicom_trust_case}"
+                    PROPERTIES LABELS "framework;ai;native-training;cryptography;trust")
+            endif()
+        endforeach()
+    endif()
+endif()
