@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Editing authorized records in a native application</title>
+<style>body{font:1rem/1.65 system-ui;max-width:64rem;margin:3rem auto;padding:0 1rem}code,pre{background:#eee}pre{padding:1rem;overflow:auto}</style>
+<main><h1>Editing authorized records in a native application</h1>
+<p>The Framework native form editor connects a typed form to an owned record host. The host checks the current session, user, purpose and policy whenever it reads or writes a record. Applications supply authentication and their schema; the editor does not provide a login service.</p>
+<h2>Compose an editor</h2><ol>
+<li>Link your native application with <code>Umicom::authorized_form_editor_gtk4</code> and include <code>umicom/ui/gtk4/authorized_form_editor.h</code>.</li>
+<li>Create an owned record host, register the authenticated identity, and install explicit operation and purpose rules. A new host denies access by default. Issue a current-time session through the host.</li>
+<li>Pass the host, immutable schema, private session handle and purpose to <code>UmiAuthorizedFormEditorGtk4New</code>. The widget retains the host. Keep schema data and any borrowed clock state alive until all widgets and background operations finish.</li>
+<li>Place the returned floating widget in a GTK container. Perform widget operations on the GTK owner thread. Do not put session handles in logs or visible fields.</li>
+<li>Use <code>UmiAuthorizedFormEditorGtk4ReadState</code> to inspect state. Use <code>UmiAuthorizedFormEditorGtk4CanClose</code> before routine closing. Prompt for explicit discard if there are unsaved values, or wait for a pending operation.</li>
+</ol>
+<h2>Try the fictional example</h2>
+<p>When examples and GTK dependencies are enabled, the <code>umicom-authorized-form-native-example</code> target opens a parcel form. It uses in-memory storage and fictional identities; it is not a production authentication example.</p>
+<ol><li>Enter <code>example.parcel</code> in Record ID and choose New.</li>
+<li>Enter a mass and an amendment reason, then choose Save. Wait until the operation completes.</li>
+<li>Change the mass and save again. The editor checks the previously reviewed record revision before appending an amendment.</li>
+<li>Choose Discard to abandon unsaved edits. A saved form returns to its last saved values; a never-saved draft closes.</li></ol>
+<h2>Understand asynchronous ownership</h2>
+<p>Save captures an immutable form snapshot. You can continue editing while storage runs. A successful save advances the stored baseline but does not overwrite later input or mark later edits as saved. Open refuses to replace unsaved input, including input entered while a read was pending.</p>
+<p>Current-time host methods sample the trusted clock after admission, so a queued operation cannot reuse an old timestamp to bypass session expiry. The default clock is monotonic: its values describe elapsed time, not UTC dates.</p>
+<p>Retiring or disposing the editor prevents further UI mutation. It does not cancel or undo a write already admitted by the host. Completion state retains the actual storage result. Keep processing the main context until pending work completes before releasing borrowed schema or clock data.</p>
+<h2>Recover from rejected operations</h2>
+<ul><li><strong>Access denied:</strong> inspect the current identity, session and both operation and purpose rules. The editor intentionally does not ask the user to type an actor name.</li>
+<li><strong>Stale record:</strong> preserve your edits and review the current head separately before deciding how to reconcile them. The editor never silently overwrites another amendment.</li>
+<li><strong>Invalid value:</strong> correct the field and apply it again. Required values are checked when the caller requests submission validation.</li>
+<li><strong>Busy:</strong> wait for the pending operation before opening another record, discarding or saving again.</li></ul>
+<p>A clean saved form rejects a duplicate amendment. This component does not yet provide automatic draft recovery, a record browser, session renewal or a product approval workflow. Passing submission validation only validates answers; it does not approve a medical or financial operation.</p>
+</main></html>

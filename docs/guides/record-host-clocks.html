@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Check session time when record work starts</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:58rem;margin:3rem auto;padding:0 1rem;color:#142539}pre{overflow:auto;background:#edf2f5;padding:1rem}code{font-family:monospace}h1,h2{line-height:1.2}</style>
+<main><h1>Check session time when record work starts</h1>
+<p>A background job can wait before reaching storage. A timestamp captured when the user clicked Save may be stale by the time the job starts. The record host's current-time entry points read its trusted clock after acquiring the shared host lock, then check the current session and policy.</p>
+<h2>Use the current-time interface</h2>
+<ol><li>Include <code>umicom/data/record_host_clock.h</code> and link the existing <code>Umicom::record_host</code> library. Ordinary host creation uses the system monotonic clock for these methods.</li>
+<li>After authenticating a registered, enabled identity, call <code>umi_record_host_issue_current_session</code> with a lifetime in nanoseconds. This uses the same clock domain as later current-time record operations.</li>
+<li>Dispatch document methods ending in <code>_current</code>, such as <code>umi_record_host_append_current</code>, or their typed-form equivalents. Each method copies the request and replaces its time with a fresh reading under the host lock. The original request stays unchanged.</li>
+<li>Preserve unsaved edits when the result is PERMISSION_DENIED, CANCELLED or UNAVAILABLE. An expired session must be replaced through trusted authentication; do not retry with a captured earlier timestamp.</li></ol>
+<h2>Clock domains</h2>
+<p>The default monotonic clock measures elapsed time within the running system. Its values are not UTC or calendar dates. Session issuance, expiry, access receipts and the recorded timestamp produced by these current-time operations use that same domain. Do not format those values as human dates. An optional observed timestamp remains caller-provided record content and does not control access.</p>
+<p>The existing explicit-time host APIs remain available for trusted callers managing their own clock domain. Do not mix their sessions with current-time operations unless both use the same domain. Persistent UTC event times and cross-device clock reconciliation need a separately defined record-time contract.</p>
+<h2>Controlled clock providers</h2>
+<p><code>umi_record_host_create_with_clock</code> copies a trusted <code>UmiClock</code> descriptor. Its state remains borrowed until the final host reference is released. The host does not dispose it. This supports controlled hosts and deterministic regression cases.</p>
+<p>The monotonic callback runs while the shared host lock is held. It must be thread-safe, bounded and must never call back into the same host. A zero reading returns UNAVAILABLE. A backward reading is refused by session validation. Retired hosts refuse admission before invoking the clock.</p>
+<h2>Qualify the behavior</h2>
+<pre><code>cmake --build build --target umicom-record-host-clock-test
+ctest --test-dir build -R "^framework\.record_host\.clock\." --output-on-failure --no-tests=error</code></pre>
+<p>The regression sources use controlled clock readings to check stale requests, expiry, rollback, unavailable time, unchanged input and output, retirement and all document/form entry points. They are separate from product login and native interface qualification.</p></main></html>

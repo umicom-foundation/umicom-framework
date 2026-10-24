@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Authorize record operations with identity and purpose</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:58rem;margin:3rem auto;padding:0 1rem;color:#142539}pre{overflow:auto;background:#edf2f5;padding:1rem}code{font-family:monospace}h1,h2{line-height:1.2}</style>
+<main><h1>Authorize record operations with identity and purpose</h1>
+<p>The authorized-record service checks who is using a record, which operation they need, and why they need it. It combines Framework's identity registry, session registry, policy engine and atomic record storage. An identity is a registered person or service. A session is a private handle issued by a trusted host after authentication. A policy is a set of explicit allow and deny rules.</p>
+<h2>Set up a trusted host</h2>
+<ol><li>Include <code>umicom/data/authorized_records.h</code> and link <code>Umicom::authorized_records</code>. Keep the identity, session and policy services alive until the authority is destroyed. Keep the Data Server and authority alive until the record adapter is destroyed.</li>
+<li>Authenticate the user through your application's trusted login system. Register an enabled identity and issue its session. The session registry itself does not check passwords or perform external login. Never accept a caller-supplied actor label as proof of identity.</li>
+<li>Create an authority with a fixed source label and an entity prefix ending in a dot, such as <code>example.</code>. The prefix bounds the records this authority can address. Identifiers and purpose names use ASCII letters, digits, dots, underscores and hyphens. A bare prefix is not a record.</li>
+<li>Add a policy for the operation and a policy for its purpose. These are separate checks. A read rule alone does not permit a read. For example:</li></ol>
+<pre><code>UmiPolicyRule read = {
+    "example.editor", "record.read", "example.note", UMI_POLICY_ALLOW
+};
+UmiPolicyRule purpose = {
+    "example.editor", "record.purpose",
+    "purpose/review/record/example.note", UMI_POLICY_ALLOW
+};</code></pre>
+<p>The existing policy engine uses the last matching rule. Keep rule ordering explicit. Missing rules deny access. Operation capabilities are <code>record.read</code>, <code>record.history</code>, <code>record.create</code> and <code>record.amend</code>. Purpose rules use <code>purpose/&lt;purpose&gt;/record/&lt;entity&gt;</code>.</p>
+<h2>Read and save</h2>
+<ol><li>Build a request containing the private session handle, record identifier, declared purpose, operation and trusted current clock value. The host supplies time; a remote client must not choose a time that extends its session.</li>
+<li>Use <code>umi_authorized_record_latest</code> for the current document. Use <code>umi_authorized_record_load</code> with a nonzero revision and READ_HISTORY permission for an older version. Use <code>umi_authorized_record_open_reviewed</code> to require that the current head still matches a previously reviewed metadata snapshot.</li>
+<li>Create a record with CREATE and expected revision zero. Amend with AMEND and the last reviewed revision. The service derives actor from the current identity, source from the authority, and recorded time from the trusted request. Supply the reason, optional observation time and document bytes.</li>
+<li>Inspect the returned status before using any output. On denial or storage failure the output remains unchanged. Successful results contain a copied access receipt. It describes the completed check; it is not a permission token and must not authorize a later operation.</li></ol>
+<h2>Run the fictional example</h2>
+<p>From a configured Framework build with testing enabled:</p>
+<pre><code>cmake --build build --target umicom-authorized-record-example-test
+ctest --test-dir build -R "^framework\.authorized_records\." --output-on-failure --no-tests=error</code></pre>
+<p>The example stores and reads a fictional note. Memory backend cases are always registered when the target is available. SQLite cases are registered when SQLite is found. The service does not require a graphical display.</p>
+<h2>Handle refusal without losing work</h2>
+<p>PERMISSION_DENIED means the current session, identity, scope, operation or purpose is not allowed. Preserve the user's unsaved draft and ask the trusted host to resolve access. INVALID_STATE means a reviewed record changed; reload and review before amending. BUSY means the storage transaction is already owned by another operation. Do not commit or roll back that other operation. Invalid or oversized input must be corrected before retrying.</p>
+<h2>Ownership and limits</h2>
+<p>One trusted owner must serialize policy, identity and session changes with protected record operations. The authority checks several existing services; it does not hold a lock across those services. Keep request buffers stable until the call returns. Do not expose raw Data Server writes, policy mutation, session issuance or lower-level record APIs to untrusted code. Those APIs remain available for trusted internal use and can bypass this adapter.</p>
+<p>This is an in-process access boundary, not a network authentication system or process sandbox. It does not encrypt storage, validate clinical decisions, authorize payments, or supply a durable security audit. Purpose appears in the returned access receipt; the historical document metadata format is unchanged. Applications needing a durable purpose trail must use a separately qualified audit sink. Existing application editors require explicit integration with the authority before their record operations gain these checks.</p></main></html>

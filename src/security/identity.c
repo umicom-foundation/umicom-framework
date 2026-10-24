@@ -26,6 +26,16 @@ struct UmiIdentityRegistry {
     uint64_t next_revision;
     UmiMutex *mutex;
 };
+/* Public metadata has fixed capacities. Establish termination before any
+ * registry lookup or string formatting, including for rejected input. */
+static UmiStatus identity_text_check(const char *text, size_t capacity, int allow_empty)
+{
+    if (!text) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t length = 0;
+    while (length < capacity && text[length]) ++length;
+    if (length == capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+    return length || allow_empty ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
 /* Find identity while leaving the underlying catalogue or model owned by this module. */
 static size_t identity_find(const UmiIdentityRegistry *registry,
                             const char *identity_id)
@@ -95,10 +105,17 @@ UmiStatus umi_identity_registry_register(UmiIdentityRegistry *registry,
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    /* The unbounded checks are retained for review; fixed-array inputs now
+     * use bounded scans before they can reach the registry. */
+#if 0
     if (strlen(identity->identity_id) >= UMI_IDENTITY_ID_CAPACITY ||
         strlen(identity->display_name) >= UMI_IDENTITY_DISPLAY_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+#endif
+    status = identity_text_check(identity->identity_id, sizeof identity->identity_id, 0);
+    if (status == UMI_STATUS_OK) status = identity_text_check(identity->display_name, sizeof identity->display_name, 1);
+    if (status != UMI_STATUS_OK) return status;
     status = umi_mutex_lock(registry->mutex);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
@@ -109,6 +126,11 @@ UmiStatus umi_identity_registry_register(UmiIdentityRegistry *registry,
     }
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (registry->count >= UMI_IDENTITY_REGISTRY_MAX) {
+        (void)umi_mutex_unlock(registry->mutex);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    /* Keep revision zero reserved and refuse wraparound before changing state. */
+    if (registry->next_revision == UINT64_MAX) {
         (void)umi_mutex_unlock(registry->mutex);
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
@@ -136,6 +158,8 @@ UmiStatus umi_identity_registry_get(const UmiIdentityRegistry *registry,
     if (registry == NULL || identity_id == NULL || out_identity == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    status = identity_text_check(identity_id, UMI_IDENTITY_ID_CAPACITY, 0);
+    if (status != UMI_STATUS_OK) return status;
     status = umi_mutex_lock(registry->mutex);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
@@ -164,6 +188,8 @@ UmiStatus umi_identity_registry_set_enabled(UmiIdentityRegistry *registry,
      * used.
      */
     if (registry == NULL || identity_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = identity_text_check(identity_id, UMI_IDENTITY_ID_CAPACITY, 0);
+    if (status != UMI_STATUS_OK) return status;
     status = umi_mutex_lock(registry->mutex);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
@@ -172,6 +198,11 @@ UmiStatus umi_identity_registry_set_enabled(UmiIdentityRegistry *registry,
     if (index == SIZE_MAX) {
         (void)umi_mutex_unlock(registry->mutex);
         return UMI_STATUS_NOT_FOUND;
+    }
+    /* Keep revision zero reserved and refuse wraparound before changing state. */
+    if (registry->next_revision == UINT64_MAX) {
+        (void)umi_mutex_unlock(registry->mutex);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     registry->items[index].enabled = enabled != 0;
     registry->items[index].revision = registry->next_revision++;

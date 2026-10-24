@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Save typed forms through record permissions</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:58rem;margin:3rem auto;padding:0 1rem;color:#142539}pre{overflow:auto;background:#edf2f5;padding:1rem}code{font-family:monospace}h1,h2{line-height:1.2}</style>
+<main><h1>Save typed forms through record permissions</h1>
+<p>A typed form keeps each answer's meaning: its field, value type, unit and whether the answer is known or deliberately missing. The authorized-form adapter stores these answers through the <a href="authorized-records.html">record access service</a>. It preserves the existing snapshot format and uses the same identity, session and purpose policy.</p>
+<h2>Connect the adapter</h2>
+<ol><li>Set up an authorized-record service as described in the linked guide. Keep its dependencies alive and serialize protected operations with security changes on one trusted owner.</li>
+<li>Link <code>Umicom::authorized_form_records</code> and include <code>umicom/data/authorized_form_records.h</code>. Keep the form schema and request inputs stable until each operation returns.</li>
+<li>Load revision zero with READ_HEAD for the current form. Load a positive record revision with READ_HISTORY. The output contains the storage revision, typed answers and access receipt together. A permission denial does not expose decoded answers.</li>
+<li>Create with CREATE and expected record revision zero. Amend with AMEND and the last reviewed storage revision. Amendments also require READ_HEAD for the same entity and purpose: the adapter checks that the previous document is a form using the same schema before writing.</li>
+<li>Handle success before marking a live draft saved. A form's editing revision and its storage revision are different counters. The adapter does not change the caller's draft. A saved marker must match the exact editing revision whose bytes were stored.</li></ol>
+<h2>Drafts and submission</h2>
+<p>Saving a draft allows unanswered required fields. Submission is a separate product action: call <code>umi_structured_form_validate</code> with submitting enabled, inspect its field report, then follow the application's reviewed workflow. A successful draft save does not mean that the form was submitted, approved or suitable for a clinical or financial decision.</p>
+<h2>Recover from refusal</h2>
+<p>Keep unsaved answers when access is denied. Reauthenticate or correct the host policy through the trusted host. Do not replace an actor label to bypass a denied session. INVALID_STATE during an amendment can mean the storage head or schema differs from the reviewed form. Reload and review the difference; a schema change requires a deliberate migration. PARSE_ERROR means stored content is not a valid typed snapshot. Do not overwrite it as a repair. BUSY means another transaction owns the store; retry after that owner finishes.</p>
+<h2>Qualify the service</h2>
+<p>From a configured Framework build with testing enabled:</p>
+<pre><code>cmake --build build --target umicom-authorized-form-load-test umicom-authorized-form-save-test
+ctest --test-dir build -R "^framework\.authorized_forms\." --output-on-failure --no-tests=error</code></pre>
+<p>These cases exercise fictional parcel forms against memory storage and, when available, SQLite. They cover denied reads, incompatible snapshots, preserved drafts, stale amendments and trusted authorship. They do not qualify a product login, a network endpoint or a native editor.</p>
+<h2>Limits</h2>
+<p>The existing unguarded form and record APIs remain available for trusted internal services. Applications must explicitly adopt this adapter and keep those lower-level services out of untrusted reach. The adapter supplies no passwords, encryption or durable purpose audit. Access receipts describe completed checks and never authorize later operations. Stored snapshots must fit the bounded record document size.</p></main></html>

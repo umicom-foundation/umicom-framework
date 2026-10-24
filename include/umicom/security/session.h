@@ -54,6 +54,12 @@ void umi_session_registry_destroy(UmiSessionRegistry *registry);
  * Provide the session registry issue operation used by this module and its client
  * applications.
  */
+/* The host authenticates the principal before issuance. This registry does
+ * not verify credentials or identity enablement. Handles contain 256 bits from
+ * the platform random source; treat them as opaque private values. Failure to
+ * obtain entropy or a unique handle does not create a session or alter output.
+ * Reject zero lifetime and expiry overflow. now_ns is a trusted clock value.
+ * Existing APIs and records remain available; do not parse handle formatting. */
 UmiStatus umi_session_registry_issue(UmiSessionRegistry *registry,
                                      const char *principal_id,
                                      uint64_t now_ns,
@@ -62,6 +68,10 @@ UmiStatus umi_session_registry_issue(UmiSessionRegistry *registry,
 /**
  * Check that session registry satisfies its contract before another service relies on it.
  */
+/* Refuse inactive/expired sessions and observations before issued_at or the
+ * previous last_seen. Expiry permanently deactivates a session. Other clock
+ * refusals retain its state. Failure leaves output unchanged. Registry lookup
+ * is not authorization: separately check current identity and resource policy. */
 UmiStatus umi_session_registry_validate(UmiSessionRegistry *registry,
                                         const char *session_id,
                                         uint64_t now_ns,

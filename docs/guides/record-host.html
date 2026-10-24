@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Own secure record operations across worker threads</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:58rem;margin:3rem auto;padding:0 1rem;color:#142539}pre{overflow:auto;background:#edf2f5;padding:1rem}code{font-family:monospace}h1,h2{line-height:1.2}</style>
+<main><h1>Own secure record operations across worker threads</h1>
+<p>The record host owns a Data Server, identity registry, session registry and policy engine. One mutex covers a security change or a complete protected storage operation. This gives background application workers a shared boundary without exposing raw storage or policy handles.</p>
+<h2>Create and configure a host</h2>
+<ol><li>Link <code>Umicom::record_host</code> and include <code>umicom/data/record_host.h</code>. Choose memory storage for temporary data or SQLite for a persistent record database. Supply a fixed source label and an entity prefix ending in a dot. Memory options use a NULL database path.</li>
+<li>Register identities through trusted application administration. A new host has no policy rules, so records are inaccessible until policy is configured.</li>
+<li>Replace the complete policy with <code>umi_record_host_replace_policy</code>. Every rule is copied and validated before the replacement becomes visible. A failed replacement retains the previous policy. Zero rules explicitly removes all grants. The last matching rule wins.</li>
+<li>Authenticate the user in the trusted host before calling <code>umi_record_host_issue_session</code>. Issuance requires a registered, enabled identity. Keep the returned session handle private. The service does not authenticate passwords or perform network login.</li></ol>
+<p>SQLite retains record content and amendment history. This host's identities, sessions and policy are in memory and must be bootstrapped again after reopening. Do not interpret reopening a database as restoring access credentials.</p>
+<h2>Use a worker</h2>
+<p>For queued work, use the <a href="record-host-clocks.html">current-time interface</a> so session expiry is checked after admission. Its trusted clock callback is the only configured provider invoked while that lock is held; it must not reenter the host.</p>
+<ol><li>Retain one host reference before scheduling a worker. Keep the schema, request and content buffers alive until its operation returns.</li>
+<li>Call a document or typed-form method. The host checks the current session, identity, operation and purpose while holding the same lock used by administrative mutations. The trusted host supplies clock values and binds each request to its authenticated session.</li>
+<li>Return a copied result to the interface and release the worker's host reference. Do not update GTK widgets from the worker. Reconcile the result with the interface's current draft before marking it saved.</li></ol>
+<p>Host methods can wait on storage or another operation. Use a worker for these calls when blocking the interface would be disruptive. <!-- The explicit-time API originally guaranteed: No caller callback executes while the host lock is held. Retained for review because the current-time extension adds one trusted clock provider. --> Application notification callbacks do not run under the host lock. Current-time methods invoke only their configured trusted clock provider there.</p>
+<h2>Close and retire</h2>
+<p><code>umi_record_host_retire</code> waits for an already admitted operation to finish, then permanently refuses later operations with CANCELLED. It does not undo a committed write or interrupt an active storage call. Retirement is idempotent, and state remains readable.</p>
+<p>Every caller must own a live reference. The controller can release its reference after workers have retained theirs. Final release destroys the host. Retaining a dangling pointer cannot resurrect it. Join workers or transfer ownership correctly before freeing their request and result buffers.</p>
+<h2>Review failure</h2>
+<p>PERMISSION_DENIED preserves unsaved input; resolve login or policy through trusted administration. INVALID_STATE on a save means the reviewed revision or form schema no longer matches. A competing writer can succeed first. CANCELLED means the host has retired; create and configure a new host if a new workflow is intended. Do not bypass these checks with raw database writes.</p>
+<h2>Qualify ownership and concurrency</h2>
+<pre><code>cmake --build build --target umicom-record-host-lifecycle-test umicom-record-host-policy-test umicom-record-host-documents-test umicom-record-host-forms-test umicom-record-host-concurrency-test
+ctest --test-dir build -R "^framework\.record_host\." --output-on-failure --no-tests=error</code></pre>
+<p>The regression sources use fictional identities and in-memory databases. SQLite cases use SQLite's in-memory mode. They cover whole-policy replacement, retained workers, retirement, competing edits and policy changes racing with writes.</p>
+<h2>Scope</h2>
+<p>This host is a reusable in-process service, not a process sandbox or complete product login. Its administrative APIs are trusted capabilities and must not be dispatched directly from untrusted client requests. It does not encrypt data, persist security policy, provide a durable purpose audit or make clinical/payment decisions. Other processes writing the same database must use compatible integrity and revision rules. Product editors require explicit adoption before these checks protect their workflows.</p></main></html>

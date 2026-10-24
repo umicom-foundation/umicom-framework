@@ -62,6 +62,9 @@ void umi_identity_registry_destroy(UmiIdentityRegistry *registry);
 /**
  * Add identity registry only after its inputs and available capacity have been checked.
  */
+/* Fixed identity/display fields must terminate within their capacities. Failed
+ * registration does not add an item. Lookup and enablement apply the same
+ * bounded ID check; failures leave outputs and stored identities unchanged. */
 UmiStatus umi_identity_registry_register(UmiIdentityRegistry *registry,
                                          const UmiIdentityRecord *identity);
 /**
