@@ -36,3 +36,8 @@ include("${_umicom_framework_root}/cmake/UmicomNativeLlmPositionAdmission.cmake"
 # learned-absolute decoder, checkpoint decoder and position admission service
 # continue to reject incompatible policy or checkpoint reinterpretations.
 include("${_umicom_framework_root}/cmake/UmicomNativeLlmRotaryResearch.cmake")
+
+# Batch 83–84: prove the derivatives required for a future trainable RoPE
+# decoder BEFORE making any change to the historic decoder or checkpoint ABI.
+# The Framework-owned rotation implementation remains the sole RoPE owner.
+include("${_umicom_framework_root}/cmake/UmicomNativeLlmRotaryTraining.cmake")

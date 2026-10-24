@@ -93,3 +93,50 @@ UmiStatus UmiAiTrainingRotaryRelativeDot(
     *outDot = dot;
     return UMI_STATUS_OK;
 }
+
+/* The transpose of each 2x2 rotary matrix is its inverse. This adjoint is
+ * NOT a learned-position gradient or a new inference kernel. It is the exact
+ * derivative required when an enclosing Framework training operator must
+ * propagate gradients through RoPE. The established forward function above
+ * is intentionally preserved verbatim for compatibility review. */
+UmiStatus UmiAiTrainingRotaryRotateAdjoint(
+    const UmiAiTrainingRotaryConfig *config,
+    const float *rotatedGradient, size_t channelCount,
+    uint64_t absolutePosition, float *outInputGradient, size_t capacity)
+{
+    float staged[UMI_AI_ROTARY_MAX_CHANNELS] = {0};
+    UmiStatus status = UmiAiTrainingRotaryConfigValidate(config);
+    if (status != UMI_STATUS_OK) return status;
+    if (rotatedGradient == NULL || outInputGradient == NULL ||
+        channelCount != config->headChannels ||
+        absolutePosition > UMI_AI_ROTARY_MAX_POSITION)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (capacity < channelCount) return UMI_STATUS_CAPACITY_EXCEEDED;
+    for (size_t i = 0U; i < channelCount; ++i)
+        if (!isfinite(rotatedGradient[i])) return UMI_STATUS_INVALID_ARGUMENT;
+
+    /* A detached staging array permits output=input without changing input
+     * before all numerical and capacity checks have completed. */
+    memcpy(staged, rotatedGradient, channelCount * sizeof(float));
+    for (size_t i = 0U; i < config->rotaryChannels; i += 2U) {
+        /* This is the same positional frequency used by Rotate above.
+         * Maintain a single canonical positional convention in this source. */
+        const double exponent = (double)i / (double)config->rotaryChannels;
+        const double angularFrequency = pow(config->frequencyBase, -exponent);
+        const double angle = (double)absolutePosition * angularFrequency;
+        const double sine = sin(angle);
+        const double cosine = cos(angle);
+        const double x = (double)rotatedGradient[i];
+        const double y = (double)rotatedGradient[i + 1U];
+        const double a = x * cosine + y * sine;
+        const double b = -x * sine + y * cosine;
+        if (!isfinite(a) || !isfinite(b) ||
+            a < -(double)FLT_MAX || a > (double)FLT_MAX ||
+            b < -(double)FLT_MAX || b > (double)FLT_MAX)
+            return UMI_STATUS_INVALID_STATE;
+        staged[i] = (float)a;
+        staged[i + 1U] = (float)b;
+    }
+    memcpy(outInputGradient, staged, channelCount * sizeof(float));
+    return UMI_STATUS_OK;
+}

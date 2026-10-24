@@ -68,6 +68,16 @@ UmiStatus UmiAiTrainingRotaryRelativeDot(
     const float *query, const float *key, size_t channelCount,
     uint64_t queryPosition, uint64_t keyPosition, double *outDot);
 
+/* Adjoint (Jacobian-transpose) of Rotate for a fixed absolute position:
+ * dLoss/dInput = R(position)^T * dLoss/dRotated. The unchanged channel tail
+ * passes through identically. This composes with the Framework training tape
+ * rather than defining an alternative neural-network training engine.
+ * In-place calls are supported; failed calls preserve outInputGradient. */
+UmiStatus UmiAiTrainingRotaryRotateAdjoint(
+    const UmiAiTrainingRotaryConfig *config,
+    const float *rotatedGradient, size_t channelCount,
+    uint64_t absolutePosition, float *outInputGradient, size_t capacity);
+
 #ifdef __cplusplus
 }
 #endif
