@@ -88,3 +88,33 @@ if(TARGET Umicom::form_records)
         add_test(NAME consumer.form-search COMMAND umicom-form-search-example)
     endif()
 endif()
+
+# Reusable search definitions resolve through the installed form/data adapter.
+if(TARGET Umicom::form_records)
+    add_executable(umicom-form-search-presets-example form_search_presets.c)
+    target_link_libraries(umicom-form-search-presets-example PRIVATE Umicom::form_records)
+    set_target_properties(umicom-form-search-presets-example PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(BUILD_TESTING)
+        add_test(NAME consumer.form-search-presets COMMAND umicom-form-search-presets-example)
+    endif()
+endif()
+
+# Saved definition discovery is available to installed form-record consumers.
+if(TARGET Umicom::form_records)
+    add_executable(umicom-form-search-discovery-example form_search_discovery.c)
+    target_link_libraries(umicom-form-search-discovery-example PRIVATE Umicom::form_records)
+    set_target_properties(umicom-form-search-discovery-example PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(BUILD_TESTING)
+        add_test(NAME consumer.form-search-discovery COMMAND umicom-form-search-discovery-example)
+    endif()
+endif()
+
+# Query draft recovery composes the installed form and record interfaces.
+if(TARGET Umicom::form_records)
+    add_executable(umicom-form-search-recovery-example form_search_recovery.c)
+    target_link_libraries(umicom-form-search-recovery-example PRIVATE Umicom::form_records)
+    set_target_properties(umicom-form-search-recovery-example PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(BUILD_TESTING)
+        add_test(NAME consumer.form-search-recovery COMMAND umicom-form-search-recovery-example)
+    endif()
+endif()

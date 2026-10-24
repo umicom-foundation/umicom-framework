@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Discover saved form searches</title>
+<style>body{max-width:58rem;margin:3rem auto;padding:0 1rem;font:17px/1.6 system-ui;color:#172535}code,pre{background:#edf2f6}pre{padding:1rem;overflow:auto}h1,h2{line-height:1.2}</style>
+<h1>Discover saved form searches</h1>
+<p>The search catalogue lists named definitions stored in a Data Server. It searches their titles and keys, then opens the exact revision you reviewed. It does not run those definitions or return record answers.</p>
+<h2>Build a catalogue request</h2>
+<ol><li>Create an immutable <code>UmiStructuredFormCatalogue</code> containing the trusted schemas used by the saved definitions. Keep each schema and its referenced strings alive.</li><li>Open the intended Data Server after your application authorizes access.</li><li>Fill <code>UmiStructuredFormSearchQuery</code> with the exact form ID, schema version and searched-record namespace. Set <code>limit</code> between 1 and 16. Leave the cursor and snapshot empty for the first page.</li><li>Call <code>umi_structured_form_search_catalogue_page</code>. Its <code>text</code> filter is a case-sensitive substring of the definition's title or entity key.</li><li>For another page, copy <code>next_after_entity</code> and <code>snapshot</code> into the next request. Keep the form, version, namespace and text unchanged. Stop when the cursor is empty.</li><li>Before using a row, call <code>umi_structured_form_search_reader_open_reviewed</code> with its revision metadata. A changed head is refused. Refresh explicitly instead of opening a different definition silently.</li></ol>
+<h2>Historical definitions</h2>
+<p><code>umi_structured_form_search_reader_load</code> accepts revision zero for the current head or an explicit earlier revision. The resolver reads a bounded form identity hint, selects its exact trusted schema, then validates the full definition. It never substitutes a newer version, downloads a schema or migrates a query automatically.</p>
+<h2>What a page proves</h2>
+<p>Every definition in <code>form.search.</code> is checked before filtering. Known definitions for other forms or namespaces are excluded. An unknown version, malformed definition or damaged document fails the whole scan, even if its title would not match. This prevents a partial list from looking complete.</p>
+<p>The reader checks revision heads again after the individual document reads. Those reads do not form one global transaction. The snapshot detects changes; it is not a signature or an authorization token. Store-level permissions remain the host's responsibility.</p>
+<h2>Limits and recovery</h2>
+<p>A scan supports at most 256 definition heads and examines at most 32,768 storage rows through the shared catalogue. Capacity failures do not truncate results. Output arguments stay unchanged on failure.</p>
+<p>If a page becomes stale, start a new first-page request. If a schema is unknown, register the actual historical schema before retrying; do not relabel the bytes as a newer version. If content is malformed, preserve the database for inspection and restore only through an explicit reviewed recovery workflow.</p>
+<p>The installed SDK example <code>examples/data_history/form_search_discovery.c</code> creates a fictional inventory definition, finds it by title and reopens its reviewed revision. Link the consumer to <code>Umicom::form_records</code>.</p>
+</html>

@@ -282,6 +282,10 @@ int UmiStructuredFormGtk4CanClose(GtkWidget *widget) {
   return self != NULL && !self->retired && !self->staged &&
          self->form->revision == self->form->saved_revision;
 }
+int UmiStructuredFormGtk4MatchesRevision(GtkWidget *widget, uint64_t revision) {
+  UmiStructuredFormRoot *self = root_from(widget);
+  return self != NULL && !self->retired && !self->staged && self->form->revision == revision;
+}
 void UmiStructuredFormGtk4Retire(GtkWidget *widget) {
   UmiStructuredFormRoot *self = root_from(widget);
   if (self != NULL)

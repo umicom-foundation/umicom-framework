@@ -3,7 +3,10 @@
 #ifndef UMICOM_UI_GTK4_FORM_RECORD_EDITOR_H
 #define UMICOM_UI_GTK4_FORM_RECORD_EDITOR_H
 #include "umicom/application/experience/structured_form_catalogue.h"
+#include "umicom/application/experience/structured_form_filter.h"
 #include "umicom/data/structured_form_session.h"
+#include "umicom/data/structured_form_search_catalogue.h"
+#include "umicom/data/structured_form_search_session.h"
 #include <gtk/gtk.h>
 #ifdef __cplusplus
 extern "C" {
@@ -53,6 +56,60 @@ UmiStatus UmiFormRecordEditorGtk4Connect(GtkWidget *editor, const char *path);
  * answers remain untouched. All these methods return asynchronous acceptance.
  * Missing/malformed/incompatible content is refused, never silently migrated. */
 UmiStatus UmiFormRecordEditorGtk4Find(GtkWidget *editor, const char *query, int next_page);
+/* Typed search adds visible AND conditions to the metadata query. SetFilter
+ * explicitly replaces query conditions without changing record drafts.
+ * FindTyped captures native text, the active schema version and namespace,
+ * then verifies saved payloads on a worker. Register historical schemas first
+ * if the namespace contains older versions. They are verified but excluded
+ * from active-version answer matches. Invalid text or changed query identity
+ * refuses results. Continuations require the same mode, revision and metadata.
+ * Search may run with unsaved record edits; it searches stored answers only.
+ * OpenListed refuses changed filters before and after its asynchronous read.
+ * Ordinary Find retains its existing metadata-only behavior. */
+UmiStatus UmiFormRecordEditorGtk4SetFilter(GtkWidget *editor, const UmiStructuredFormFilter *filter);
+UmiStatus UmiFormRecordEditorGtk4FindTyped(GtkWidget *editor, const char *metadata, int next_page);
+
+/* Saved searches are separate records in form.search.*. SaveSearch copies the
+ * current query and attribution, using zero to create or a reviewed revision to
+ * amend. It never saves record answers. Accepted saves complete after retirement.
+ * OpenSearch replaces query controls only if they have not changed during its
+ * read and the stored namespace equals this editor's namespace. It never starts
+ * a search automatically and never changes the record draft. Rendering checks
+ * UTF-8 before applying a definition. Changes made by synchronous GTK observers
+ * remain visible; a changed final query reports cancellation without rollback.
+ * SavedSearch returns the last successfully saved/opened metadata, including a
+ * completed save after retirement, without changing output when none exists. */
+UmiStatus UmiFormRecordEditorGtk4SaveSearch(GtkWidget *editor, const char *key, const char *title,
+    uint64_t expected_revision, const UmiRecordDraftAttribution *attribution);
+UmiStatus UmiFormRecordEditorGtk4OpenSearch(GtkWidget *editor, const char *key);
+UmiStatus UmiFormRecordEditorGtk4SavedSearch(GtkWidget *editor, UmiRecordRevision *out);
+
+/* Saved-definition discovery uses the registered historical catalogue, or the
+ * active schema alone when no catalogue was supplied before connecting.
+ * It never changes record answers or query conditions. Find owns a worker;
+ * Page copies only a completed page still bound to the visible title filter.
+ * OpenResult checks the listed head on storage and rejects later selection,
+ * title-filter or query-control edits. No automatic refresh or search occurs. */
+UmiStatus UmiFormRecordEditorGtk4FindSavedSearches(GtkWidget *editor, const char *text, int next_page);
+UmiStatus UmiFormRecordEditorGtk4SavedSearchPage(GtkWidget *editor, UmiStructuredFormSearchPage *out);
+UmiStatus UmiFormRecordEditorGtk4OpenSavedSearchResult(GtkWidget *editor, size_t index);
+
+/* Managed query editing has its own draft, independent of scratch query controls
+ * and record answers. Begin copies the current query; Edit loads a saved query.
+ * Reads, saves and recovery use the same serialized worker as record actions.
+ * CanClose now checks both record and managed query drafts. These APIs neither
+ * execute a query nor install it into the scratch search controls automatically. */
+UmiStatus UmiFormRecordEditorGtk4BeginSearchDraft(GtkWidget *editor, const char *key,
+                                                const char *title);
+UmiStatus UmiFormRecordEditorGtk4EditSearchDraft(GtkWidget *editor, const char *key);
+UmiStatus UmiFormRecordEditorGtk4SearchDraftState(GtkWidget *editor,
+                                                UmiStructuredFormSearchSessionView *out);
+UmiStatus UmiFormRecordEditorGtk4SaveSearchDraft(GtkWidget *editor,
+                                               const UmiRecordDraftAttribution *attribution);
+UmiStatus UmiFormRecordEditorGtk4DiscardSearchDraft(GtkWidget *editor);
+UmiStatus UmiFormRecordEditorGtk4KeepSearchRecovery(GtkWidget *editor, const char *path);
+UmiStatus UmiFormRecordEditorGtk4RecoverSearch(GtkWidget *editor, const char *path);
+
 UmiStatus UmiFormRecordEditorGtk4OpenListed(GtkWidget *editor, size_t index);
 UmiStatus UmiFormRecordEditorGtk4History(GtkWidget *editor, int older_page);
 UmiStatus UmiFormRecordEditorGtk4InspectRevision(GtkWidget *editor, size_t index);

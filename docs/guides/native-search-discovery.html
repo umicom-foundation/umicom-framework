@@ -1,0 +1,15 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Browse saved searches in the native editor</title>
+<style>body{max-width:58rem;margin:3rem auto;padding:0 1rem;font:17px/1.6 system-ui;color:#172535}code{background:#edf2f6}h1,h2{line-height:1.2}</style>
+<h1>Browse saved searches in the native editor</h1>
+<p>The shared form record editor can list saved query definitions by title or key. The list belongs to the same connected database and the active form's exact namespace and version.</p>
+<ol><li>Connect to your database. Enter a title fragment in <strong>Find saved search title or key</strong>, or leave it empty.</li><li>Choose <strong>Find saved searches</strong> and wait for completion. Each row shows the title, key and stored revision.</li><li>Choose <strong>Next saved searches</strong> when another page is available. Changing the title filter requires a new first-page search.</li><li>Select a row and choose <strong>Open selected search</strong>. The stored head must still match the row you reviewed.</li><li>Review the loaded conditions, then choose <strong>Search saved answers</strong> to run the query. Opening the definition does not search automatically or change your record draft.</li></ol>
+<h2>When a selection is refused</h2>
+<p>A definition changed by another writer must be listed again before opening. A change to the title filter, selected row, result model or query controls during a read also refuses that incoming result. Keep your visible edits and explicitly retry when ready.</p>
+<p>Unknown historical versions or damaged definitions fail discovery rather than producing an incomplete list. Hosts can register all trusted historical schemas with <code>UmiFormRecordEditorGtk4SetHistoryCatalogue</code> before connecting. Without that registration, discovery knows only the active schema.</p>
+<h2>Application integration</h2>
+<p><code>UmiFormRecordEditorGtk4FindSavedSearches</code> starts an asynchronous read. <code>UmiFormRecordEditorGtk4SavedSearchPage</code> copies the completed page only while it still matches the visible result model and text filter. <code>UmiFormRecordEditorGtk4OpenSavedSearchResult</code> opens an index from that page. These calls share the editor's worker, busy state and close protection.</p>
+<p>Use the GTK owner thread. Keep the registered schemas alive until every worker finishes. The selection is a reviewed data reference, not permission to access a database. Applications still own authorization and database-path decisions.</p>
+<p>Discovery supports 16 rows per page and 256 saved definitions per bounded scan. Title matching is case-sensitive. There is no fuzzy search, remote synchronization, query migration or automatic refresh.</p>
+<p>See <a href="native-saved-searches.html">saving a definition</a> and <a href="discover-saved-searches.html">portable discovery contracts</a>.</p>
+</html>

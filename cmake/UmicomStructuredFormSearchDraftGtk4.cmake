@@ -1,0 +1,146 @@
+# Previous registration retained for review: its shorthand identifiers did not
+# match the public API or source paths. The explicit registration below replaces it.
+if(FALSE)
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# Native drafts centralize query save and recovery ownership for application hosts.
+if(NOT TARGET Umicom::structured_search_draft_gtk4 OR NOT TARGET Umicom::form_records)
+    return()
+endif()
+include_guard(GLOBAL)
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
+include(GNUInstallDirs)
+get_filename_component(_search_draft_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+add_library(umicom_structured_search_draft_gtk4 STATIC "${_search_draft_root}/adapters/gtk4/structured_search_draft_gtk4.c")
+add_library(Umicom::structured_search_draft_gtk4 ALIAS umicom_structured_search_draft_gtk4)
+set_target_properties(umicom_structured_search_draft_gtk4 PROPERTIES EXPORT_NAME structured_search_draft_gtk4
+    C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+target_link_libraries(umicom_structured_search_draft_gtk4 PUBLIC Umicom::form_records Umicom::structured_form_filter_gtk4)
+if(COMMAND umicom_apply_warnings)
+    umicom_apply_warnings(umicom_structured_search_draft_gtk4)
+endif()
+if(COMMAND umicom_apply_sanitizers)
+    umicom_apply_sanitizers(umicom_structured_search_draft_gtk4)
+endif()
+install(TARGETS umicom_structured_search_draft_gtk4 EXPORT UmicomFrameworkTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+umicom_register_sdk_libraries(umicom_structured_search_draft_gtk4)
+install(FILES "${_search_draft_root}/include/umicom/ui/gtk4/structured_search_draft.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_structured_search_draft_gtk4 include/umicom/ui/gtk4/structured_search_draft.h)
+endif()
+foreach(_search_draft_component IN ITEMS Framework FrameworkSDK)
+    set(_search_draft_exclude "")
+    if(_search_draft_component STREQUAL "FrameworkSDK")
+        set(_search_draft_exclude EXCLUDE_FROM_ALL)
+    endif()
+    install(FILES "${_search_draft_root}/docs/guides/native-search-drafts.html"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides"
+        COMPONENT ${_search_draft_component} ${_search_draft_exclude})
+endforeach()
+if(BUILD_TESTING)
+    add_executable(umicom-search-draft-gtk-test "${_search_draft_root}/tests/application_experience/test_structured_search_draft_gtk4.c")
+    target_link_libraries(umicom-search-draft-gtk-test PRIVATE Umicom::structured_search_draft_gtk4)
+    set_target_properties(umicom-search-draft-gtk-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-search-draft-gtk-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-search-draft-gtk-test)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-search-draft-gtk-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-search-draft-gtk-test FILES
+            "${_search_draft_root}/tests/application_experience/structured_form_fixture.h"
+            "${_search_draft_root}/tests/data_history/search_session_fixture.h")
+    endif()
+    foreach(_search_draft_case IN ITEMS empty new open title metadata filter invalid-filter invalid-title long-title revert dirty-open dirty-begin discard-new discard-saved discard-button retained-control retained-discard save later-edit retire-save dispose-save failed-save wrong-token capture invalid-capture pending-capture restore dirty-restore wrong-scope utf8-title retired disposed null discard-observer-retire unclosed-entity)
+        add_test(NAME framework.structured_forms.search-draft.gtk.${_search_draft_case}
+            COMMAND umicom-search-draft-gtk-test ${_search_draft_case})
+        set_tests_properties(framework.structured_forms.search-draft.gtk.${_search_draft_case} PROPERTIES
+            TIMEOUT 30 SKIP_RETURN_CODE 77 ENVIRONMENT "G_DEBUG=fatal-warnings"
+            LABELS "framework;forms;gtk4;search-draft;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.structured_forms.search-draft.gtk.${_search_draft_case} TARGETS umicom-search-draft-gtk-test)
+        endif()
+    endforeach()
+endif()
+unset(_search_draft_root)
+unset(_search_draft_component)
+unset(_search_draft_exclude)
+unset(_search_draft_case)
+
+endif()
+
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# Native drafts centralize query save and recovery ownership for application hosts.
+if(NOT TARGET Umicom::structured_form_filter_gtk4 OR NOT TARGET Umicom::form_records)
+    return()
+endif()
+include_guard(GLOBAL)
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
+include(GNUInstallDirs)
+get_filename_component(_search_draft_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+add_library(umicom_structured_form_search_draft_gtk4 STATIC "${_search_draft_root}/adapters/gtk4/structured_form_search_draft_gtk4.c")
+add_library(Umicom::structured_form_search_draft_gtk4 ALIAS umicom_structured_form_search_draft_gtk4)
+set_target_properties(umicom_structured_form_search_draft_gtk4 PROPERTIES EXPORT_NAME structured_form_search_draft_gtk4
+    C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+target_link_libraries(umicom_structured_form_search_draft_gtk4 PUBLIC Umicom::form_records Umicom::structured_form_filter_gtk4)
+if(COMMAND umicom_apply_warnings)
+    umicom_apply_warnings(umicom_structured_form_search_draft_gtk4)
+endif()
+if(COMMAND umicom_apply_sanitizers)
+    umicom_apply_sanitizers(umicom_structured_form_search_draft_gtk4)
+endif()
+install(TARGETS umicom_structured_form_search_draft_gtk4 EXPORT UmicomFrameworkTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
+umicom_register_sdk_libraries(umicom_structured_form_search_draft_gtk4)
+install(FILES "${_search_draft_root}/include/umicom/ui/gtk4/structured_form_search_draft.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_structured_form_search_draft_gtk4 include/umicom/ui/gtk4/structured_form_search_draft.h)
+endif()
+foreach(_search_draft_component IN ITEMS Framework FrameworkSDK)
+    set(_search_draft_exclude "")
+    if(_search_draft_component STREQUAL "FrameworkSDK")
+        set(_search_draft_exclude EXCLUDE_FROM_ALL)
+    endif()
+    install(FILES "${_search_draft_root}/docs/guides/native-search-drafts.html"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides"
+        COMPONENT ${_search_draft_component} ${_search_draft_exclude})
+endforeach()
+if(BUILD_TESTING)
+    add_executable(umicom-search-draft-gtk-test "${_search_draft_root}/tests/data_history/test_search_draft_gtk4.c")
+    target_link_libraries(umicom-search-draft-gtk-test PRIVATE Umicom::structured_form_search_draft_gtk4)
+    set_target_properties(umicom-search-draft-gtk-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-search-draft-gtk-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-search-draft-gtk-test)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-search-draft-gtk-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-search-draft-gtk-test FILES
+            "${_search_draft_root}/tests/application_experience/structured_form_fixture.h"
+            "${_search_draft_root}/tests/data_history/search_session_fixture.h")
+    endif()
+    foreach(_search_draft_case IN ITEMS empty new open title metadata filter invalid-filter invalid-title long-title revert dirty-open dirty-begin discard-new discard-saved discard-button retained-control retained-discard save later-edit retire-save dispose-save failed-save wrong-token capture invalid-capture pending-capture restore dirty-restore wrong-scope utf8-title retired disposed null discard-observer-retire unclosed-entity)
+        add_test(NAME framework.structured_forms.search-draft.gtk.${_search_draft_case}
+            COMMAND umicom-search-draft-gtk-test ${_search_draft_case})
+        set_tests_properties(framework.structured_forms.search-draft.gtk.${_search_draft_case} PROPERTIES
+            TIMEOUT 30 SKIP_RETURN_CODE 77 ENVIRONMENT "G_DEBUG=fatal-warnings"
+            LABELS "framework;forms;gtk4;search-draft;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.structured_forms.search-draft.gtk.${_search_draft_case} TARGETS umicom-search-draft-gtk-test)
+        endif()
+    endforeach()
+endif()
+unset(_search_draft_root)
+unset(_search_draft_component)
+unset(_search_draft_exclude)
+unset(_search_draft_case)

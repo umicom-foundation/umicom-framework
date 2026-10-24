@@ -1,0 +1,25 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Editing saved searches in GTK4</title>
+<style>body{max-width:58rem;margin:2rem auto;padding:0 1rem;font:17px/1.6 system-ui}pre{overflow:auto;background:#eee;padding:1rem}code{font-size:.9em}</style>
+<main><h1>Editing saved searches in GTK4</h1><p>A saved search stores a title, conditions and the record namespace it searches. The reusable search-draft widget keeps incomplete text visible while a portable session tracks the last valid definition. It performs no file or database access.</p>
+<h2>Add an editor to a native application</h2><ol>
+<li>Link <code>Umicom::structured_form_search_draft_gtk4</code> and include <code>umicom/ui/gtk4/structured_form_search_draft.h</code>. Initialize GTK on its owner thread.</li>
+<li>Keep the form schema immutable and alive. Call <code>UmiStructuredFormSearchDraftGtk4New</code> with that schema and a fixed record prefix. Parent the returned floating widget or take a reference.</li>
+<li>Use <code>Begin</code> for a new <code>form.search.</code> identifier or <code>Open</code> with a verified record document. A new search is unsaved. Opening a stored search establishes its baseline.</li>
+<li>Let the user edit the title, metadata text and typed conditions. <code>State</code> reports the last accepted model. <code>Accept</code> validates current controls. An incomplete number or empty title remains visible and does not replace that model.</li>
+<li>Call <code>CanClose</code> from the application's close decision. It accepts valid visible text, then returns false for unsaved changes, incomplete values or a pending save. Offer Save, explicit Discard, or return to editing.</li></ol>
+<h2>Save without losing later typing</h2><ol>
+<li>Authorize the write and obtain attribution from the application's identity service.</li>
+<li>Call <code>PrepareSave</code>. Copy the request to a serialized storage worker and retain the widget until completion. The request is an immutable snapshot.</li>
+<li>Run <code>umi_record_save_request_commit</code> on the selected Data Server. Return the status and saved revision to the GTK owner thread.</li>
+<li>Always call <code>FinishSave</code>, including when dispatch fails. A failure leaves the draft available for retry. Completion after retirement or disposal still records the real save outcome; it does not overwrite text typed after preparation.</li></ol>
+<p><code>CanClose</code> may accept later valid text into the model. A successful save only advances the captured baseline. If the user typed again, those edits remain unsaved. Keep processing worker completion before releasing the last widget reference.</p>
+<h2>Recover an interrupted draft</h2><ol>
+<li>Call <code>Capture</code> when no save is pending. It accepts valid native values and returns a snapshot of the baseline and current definition. Invalid visible text cannot be captured by this typed interface; leave the editor open so the user can correct it.</li>
+<li>Use the record draft snapshot codec and the application's private file-storage policy to persist the snapshot. This format is plaintext and does not supply encryption or access control.</li>
+<li>When reopening, choose and authorize the database first, then call <code>umi_record_draft_snapshot_check_store</code>. It checks the baseline against that database but cannot prove database identity.</li>
+<li>Create a matching widget and call <code>Restore</code>. Both baseline and current content must match the exact form schema and fixed record namespace. A later save still checks the stored revision.</li></ol>
+<h2>Recovery and integration limits</h2><p>Opening, beginning or restoring another search refuses unsaved valid native edits. Invalid current text also blocks replacement. Explicit Discard restores stored controls or closes a new search. Controls retained from a replaced body cannot modify the active draft.</p>
+<p>A GTK observer can retire the widget while controls are replaced. In that case the operation reports cancellation even though its portable transition was accepted; inspect <code>State</code> before disposing the host. Do not retry blindly. All widget calls belong on the GTK thread.</p>
+<p>This component supplies a reusable editing surface. Applications must connect their own file chooser, close prompt, storage worker and authorization. Existing record-browser search controls do not automatically acquire this close/recovery workflow merely by linking the component.</p>
+<h2>Focused regression commands</h2><p>After configuring a GTK-enabled Framework build:</p><pre>cmake --build build/windows-ucrt64-debug --target umicom-search-draft-gtk-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]structured_forms[.]search-draft[.]gtk[.]" --output-on-failure --no-tests=error</pre><p>These tests require a display. A missing display is reported as skipped, not passed. The cases cover dirty-close decisions, stale controls, recovery scope and worker completion after disposal.</p></main></html>
