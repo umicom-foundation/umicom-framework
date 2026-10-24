@@ -106,3 +106,52 @@ if(BUILD_TESTING)
     set_tests_properties(framework.ai.training.kv_position_demo
         PROPERTIES LABELS "framework;ai;native-training;learning;kv-cache;position-parity")
 endif()
+
+# Batch 73–74: opt-in, unpadded growing-prefix autoregressive generation.
+# It composes the existing Framework KV cache, nucleus sampler and seeded RNG
+# without changing the historical BOS-left-padded generation policy.
+# This additive registration works in the isolated native LLM prefix laboratory.
+target_sources(umicom_ai_training PRIVATE
+    "${_umicom_prefix_root}/src/ai/training/prefix_generation.c")
+
+if(NOT TARGET umicom-native-llm-prefix-generation)
+    add_executable(umicom-native-llm-prefix-generation
+        "${_umicom_prefix_root}/learning/native-llm/prefix-work/profile_prefix_generation.c")
+    target_link_libraries(umicom-native-llm-prefix-generation PRIVATE Umicom::AiTraining)
+    target_compile_features(umicom-native-llm-prefix-generation PRIVATE c_std_23)
+    if(MSVC)
+        target_compile_options(umicom-native-llm-prefix-generation PRIVATE /W4)
+    else()
+        target_compile_options(umicom-native-llm-prefix-generation PRIVATE
+            -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    endif()
+endif()
+
+if(BUILD_TESTING)
+    foreach(_umicom_prefix_generation_case IN ITEMS parity rejections workload)
+        set(_umicom_prefix_generation_target
+            "umicom-ai-training-prefix-generation-${_umicom_prefix_generation_case}-test")
+        if(NOT TARGET "${_umicom_prefix_generation_target}")
+            add_executable("${_umicom_prefix_generation_target}"
+                "${_umicom_prefix_root}/tests/ai_training/test_training_prefix_generation_${_umicom_prefix_generation_case}.c")
+            target_link_libraries("${_umicom_prefix_generation_target}" PRIVATE Umicom::AiTraining)
+            target_compile_features("${_umicom_prefix_generation_target}" PRIVATE c_std_23)
+            if(MSVC)
+                target_compile_options("${_umicom_prefix_generation_target}" PRIVATE /W4)
+            else()
+                target_compile_options("${_umicom_prefix_generation_target}" PRIVATE
+                    -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror)
+            endif()
+            add_test(NAME
+                "framework.ai.training.prefix_generation_${_umicom_prefix_generation_case}"
+                COMMAND "${_umicom_prefix_generation_target}")
+            set_tests_properties(
+                "framework.ai.training.prefix_generation_${_umicom_prefix_generation_case}"
+                PROPERTIES LABELS "framework;ai;native-training;prefix-generation;sampling")
+        endif()
+    endforeach()
+    add_test(NAME framework.ai.training.prefix_generation_demo
+             COMMAND umicom-native-llm-prefix-generation)
+    set_tests_properties(framework.ai.training.prefix_generation_demo
+        PROPERTIES LABELS "framework;ai;native-training;learning;prefix-generation")
+endif()

@@ -286,6 +286,8 @@ add_library(umicom_data STATIC
     src/data/cache.c
     src/data/metadata.c
     src/data/lineage.c
+    # Revision-checked metadata uses the same transactional Data Server.
+    src/data/record_history.c
     src/data/backup.c
     src/data/integrity.c
     src/data/message_store.c
@@ -6113,3 +6115,6 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomKanbanGtk4.cmake")
 
 # Shared integrity primitives also serve hosts without optional banking services.
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomRecordChain.cmake")
+
+# Share amendment history qualification and installed examples across applications.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomRecordHistory.cmake")
