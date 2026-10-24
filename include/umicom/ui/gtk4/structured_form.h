@@ -27,6 +27,9 @@ UmiStatus UmiStructuredFormGtk4MarkSaved(GtkWidget *widget, uint64_t revision);
 /* Both unapplied text and accepted-but-unsaved edits block routine close. The
  * application owns its discard prompt; destroying the widget discards its draft. */
 int UmiStructuredFormGtk4CanClose(GtkWidget *widget);
+/* A captured native revision still matches only when no later visible input
+ * remains unapplied. This guards asynchronous review and replacement results. */
+int UmiStructuredFormGtk4MatchesRevision(GtkWidget *widget, uint64_t revision);
 void UmiStructuredFormGtk4Retire(GtkWidget *widget);
 #ifdef __cplusplus
 }

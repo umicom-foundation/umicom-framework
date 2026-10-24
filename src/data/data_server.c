@@ -13,6 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/data_server.h"
+#include "umicom/data/sqlite_health.h"
+#include "include/sqlite_backup_internal.h"
 
 #include <stdatomic.h>
 #include <stdint.h>
@@ -50,6 +52,8 @@ struct UmiDataServer {
     uint_fast64_t transaction_owner;
     int transaction_lost;
     int rollback_failed;
+    /* Immutable access mode: inspection connections cannot gain write access. */
+    int read_only;
     char path[UMI_DATA_PATH_CAPACITY];
     char last_error[UMI_DATA_ERROR_CAPACITY];
 #ifdef UMICOM_HAS_SQLITE
@@ -382,6 +386,9 @@ UmiStatus umi_data_server_create_sqlite(const char *database_path,
         free(server);
         return UMI_STATUS_IO_ERROR;
     }
+    /* SQLite may open an existing file read-only when filesystem access does
+     * not permit writing. Reflect the actual immutable handle capability. */
+    server->read_only = sqlite3_db_readonly(server->sqlite, "main") == 1;
     (void)sqlite3_busy_timeout(server->sqlite, 5000);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (sqlite3_exec(server->sqlite, schema, NULL, NULL, NULL) != SQLITE_OK) {
@@ -393,6 +400,88 @@ UmiStatus umi_data_server_create_sqlite(const char *database_path,
     *out_server = server;
     return UMI_STATUS_OK;
 #endif
+}
+
+/* Inspection opens the existing store without installing or migrating its
+ * schema. SQLite's READONLY flag enforces the file boundary; the shared API
+ * also refuses all mutation and arbitrary SQL before dispatching a statement.
+ * Read transactions use BEGIN rather than requesting a writer reservation. */
+UmiStatus umi_data_server_open_sqlite_readonly(const char *database_path,
+                                              UmiDataServer **out_server)
+{
+    if (out_server == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_server = NULL;
+    if (database_path == NULL || database_path[0] == '\0' ||
+        database_path[0] == ':' || strncmp(database_path, "file:", 5U) == 0)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (strlen(database_path) >= UMI_DATA_PATH_CAPACITY)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+#ifndef UMICOM_HAS_SQLITE
+    return UMI_STATUS_UNAVAILABLE;
+#else
+    UmiDataServer *server = NULL;
+    UmiStatus status = allocate_server(UMI_DATA_BACKEND_SQLITE, &server);
+    if (status != UMI_STATUS_OK) return status;
+    server->read_only = 1;
+    memcpy(server->path, database_path, strlen(database_path) + 1U);
+    int code = sqlite3_open_v2(database_path, &server->sqlite,
+        SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_PRIVATECACHE, NULL);
+    if (code != SQLITE_OK) {
+        status = server->sqlite != NULL ? DataSqlError(server, code) :
+            (code == SQLITE_NOMEM ? UMI_STATUS_OUT_OF_MEMORY : UMI_STATUS_IO_ERROR);
+        if (server->sqlite != NULL) (void)sqlite3_close(server->sqlite);
+        free(server);
+        return status;
+    }
+    code = sqlite3_busy_timeout(server->sqlite, 5000);
+    if (code != SQLITE_OK) status = DataSqlError(server, code);
+    if (status == UMI_STATUS_OK && sqlite3_db_readonly(server->sqlite, "main") != 1)
+        status = UMI_STATUS_PERMISSION_DENIED;
+    /* Reject an unrelated database or a view masquerading as the key/value
+     * table. Column preparation checks compatibility without changing data.
+     * This is schema admission, not a complete database integrity audit. */
+    sqlite3_stmt *statement = NULL;
+    if (status == UMI_STATUS_OK) {
+        code = sqlite3_prepare_v2(server->sqlite,
+            "SELECT type FROM main.sqlite_schema WHERE name='umicom_kv';",
+            -1, &statement, NULL);
+        if (code == SQLITE_OK) code = sqlite3_step(statement);
+        if (code == SQLITE_ROW) {
+            const unsigned char *kind = sqlite3_column_text(statement, 0);
+            if (kind == NULL || strcmp((const char *)kind, "table") != 0)
+                status = UMI_STATUS_INVALID_STATE;
+        } else status = code == SQLITE_DONE ? UMI_STATUS_INVALID_STATE : DataSqlError(server, code);
+        if (statement != NULL) {
+            code = sqlite3_finalize(statement);
+            statement = NULL;
+            if (status == UMI_STATUS_OK && code != SQLITE_OK) status = DataSqlError(server, code);
+        }
+    }
+    if (status == UMI_STATUS_OK) {
+        code = sqlite3_prepare_v2(server->sqlite, "SELECT key,value FROM main.umicom_kv LIMIT 0;",
+            -1, &statement, NULL);
+        if (code == SQLITE_OK) code = sqlite3_step(statement);
+        if (code != SQLITE_DONE) status = DataSqlError(server, code);
+        if (statement != NULL) {
+            code = sqlite3_finalize(statement);
+            if (status == UMI_STATUS_OK && code != SQLITE_OK) status = DataSqlError(server, code);
+        }
+    }
+    if (status != UMI_STATUS_OK) {
+        (void)sqlite3_close(server->sqlite);
+        free(server);
+        return status;
+    }
+    *out_server = server;
+    return UMI_STATUS_OK;
+#endif
+}
+
+int umi_data_server_is_readonly(const UmiDataServer *server)
+{
+    /* The mode never changes after construction; destruction still requires
+     * the caller to quiesce all users as for every Data Server accessor. */
+    return server != NULL && server->read_only;
 }
 
 /* Release or reset state held by data server so the same storage can be reused safely. */
@@ -513,6 +602,13 @@ UmiStatus umi_data_server_set(UmiDataServer *server, const char *key, const char
         return UMI_STATUS_INVALID_ARGUMENT;
     UmiStatus status = DataEnter(server, 0);
     if (status != UMI_STATUS_OK) return status;
+    /* A read-only handle is a storage capability, not a SQL text convention.
+     * Even SELECT through execute is refused; use the bounded data read APIs. */
+    if (server->read_only) {
+        DataMessage(server, "This Data Server connection permits inspection only.");
+        server_unlock(server);
+        return UMI_STATUS_PERMISSION_DENIED;
+    }
     if (server->backend == UMI_DATA_BACKEND_MEMORY) status = memory_set(server, key, value);
 #ifdef UMICOM_HAS_SQLITE
     else {
@@ -768,6 +864,13 @@ UmiStatus umi_data_server_delete(UmiDataServer *server, const char *key)
     if (server == NULL || key == NULL || key[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
     UmiStatus status = DataEnter(server, 0);
     if (status != UMI_STATUS_OK) return status;
+    /* A read-only handle is a storage capability, not a SQL text convention.
+     * Even SELECT through execute is refused; use the bounded data read APIs. */
+    if (server->read_only) {
+        DataMessage(server, "This Data Server connection permits inspection only.");
+        server_unlock(server);
+        return UMI_STATUS_PERMISSION_DENIED;
+    }
     status = UMI_STATUS_NOT_FOUND;
     if (server->backend == UMI_DATA_BACKEND_MEMORY) {
         for (size_t i = 0; i < UMI_DATA_MAX_RECORDS; ++i) {
@@ -930,7 +1033,13 @@ UmiStatus umi_data_server_begin(UmiDataServer *server)
     }
 #ifdef UMICOM_HAS_SQLITE
     else {
+        /* Writer reservations remain unchanged for ordinary connections. Keep
+         * the former statement for review of the additive inspection mode. */
+#if 0
         int code = sqlite3_exec(server->sqlite, "BEGIN IMMEDIATE;", NULL, NULL, NULL);
+#endif
+        const char *begin = server->read_only ? "BEGIN;" : "BEGIN IMMEDIATE;";
+        int code = sqlite3_exec(server->sqlite, begin, NULL, NULL, NULL);
         if (code != SQLITE_OK) status = DataSqlError(server, code);
     }
 #endif
@@ -1152,6 +1261,13 @@ UmiStatus umi_data_server_execute(UmiDataServer *server, const char *sql)
     if (server == NULL || sql == NULL || sql[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
     UmiStatus status = DataEnter(server, 0);
     if (status != UMI_STATUS_OK) return status;
+    /* A read-only handle is a storage capability, not a SQL text convention.
+     * Even SELECT through execute is refused; use the bounded data read APIs. */
+    if (server->read_only) {
+        DataMessage(server, "This Data Server connection permits inspection only.");
+        server_unlock(server);
+        return UMI_STATUS_PERMISSION_DENIED;
+    }
 #ifndef UMICOM_HAS_SQLITE
     status = UMI_STATUS_UNAVAILABLE;
 #else
@@ -1491,5 +1607,162 @@ UmiStatus UmiDataServerCopyError(const UmiDataServer *source, char *outText, siz
     UmiStatus status = length >= capacity ? UMI_STATUS_CAPACITY_EXCEEDED : UMI_STATUS_OK;
     if (status == UMI_STATUS_OK) memcpy(outText, server->last_error, length + 1U);
     if (!borrowedLock) server_unlock(server);
+    return status;
+}
+
+/* Health queries stay beside the opaque SQLite handle so every read and
+ * checkpoint respects the same transaction owner and re-entry rules. */
+UmiStatus umi_sqlite_health_read(UmiDataServer *server, UmiSqliteHealthReport *out)
+{
+    if (server == NULL || out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = DataEnter(server, 0);
+    if (status != UMI_STATUS_OK) return status;
+    if (server->backend != UMI_DATA_BACKEND_SQLITE) status = UMI_STATUS_UNAVAILABLE;
+    else if (server->transaction_active) status = UMI_STATUS_BUSY;
+#ifdef UMICOM_HAS_SQLITE
+    UmiSqliteHealthReport candidate = { .sound = true };
+    sqlite3_stmt *statement = NULL;
+    size_t rows = 0;
+    bool ok_seen = false;
+    if (status == UMI_STATUS_OK) {
+        int code = sqlite3_prepare_v2(server->sqlite, "PRAGMA main.quick_check(100);", -1, &statement, NULL);
+        if (code != SQLITE_OK) status = DataSqlError(server, code);
+        else while ((code = sqlite3_step(statement)) == SQLITE_ROW) {
+            if (++rows > UMI_SQLITE_HEALTH_DIAGNOSTIC_LIMIT || sqlite3_column_count(statement) != 1) {
+                status = UMI_STATUS_PARSE_ERROR; break;
+            }
+            const unsigned char *text = sqlite3_column_text(statement, 0);
+            int bytes = sqlite3_column_bytes(statement, 0);
+            if (text == NULL || bytes < 1 || memchr(text, '\0', (size_t)bytes) != NULL) {
+                status = UMI_STATUS_PARSE_ERROR; break;
+            }
+            if (bytes == 2 && memcmp(text, "ok", 2) == 0) {
+                if (ok_seen) { status = UMI_STATUS_PARSE_ERROR; break; }
+                ok_seen = true;
+            } else {
+                candidate.sound = false;
+                if (candidate.diagnostic_count++ == 0U) {
+                    if ((size_t)bytes >= sizeof candidate.first_diagnostic) {
+                        candidate.first_diagnostic_omitted = true;
+                        (void)snprintf(candidate.first_diagnostic, sizeof candidate.first_diagnostic,
+                            "%s", "SQLite diagnostic exceeds this report's text capacity.");
+                    } else {
+                        memcpy(candidate.first_diagnostic, text, (size_t)bytes);
+                        candidate.first_diagnostic[bytes] = '\0';
+                    }
+                }
+            }
+        }
+        if (status == UMI_STATUS_OK && code != SQLITE_DONE) status = DataSqlError(server, code);
+        if (status == UMI_STATUS_OK && (rows == 0U || (ok_seen && candidate.diagnostic_count != 0U)))
+            status = UMI_STATUS_PARSE_ERROR;
+    }
+    if (statement != NULL) {
+        int code = sqlite3_finalize(statement);
+        if (status == UMI_STATUS_OK && code != SQLITE_OK) status = DataSqlError(server, code);
+    }
+    candidate.diagnostic_limit_reached = candidate.diagnostic_count == UMI_SQLITE_HEALTH_DIAGNOSTIC_LIMIT;
+    if (status == UMI_STATUS_OK) *out = candidate;
+#endif
+    server_unlock(server);
+    return status;
+}
+UmiStatus umi_sqlite_checkpoint_full(UmiDataServer *server, UmiSqliteCheckpointReport *out)
+{
+    if (server == NULL || out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = DataEnter(server, 0);
+    if (status != UMI_STATUS_OK) return status;
+    if (server->backend != UMI_DATA_BACKEND_SQLITE) status = UMI_STATUS_UNAVAILABLE;
+    else if (server->transaction_active) status = UMI_STATUS_BUSY;
+    else if (server->read_only) status = UMI_STATUS_PERMISSION_DENIED;
+#ifdef UMICOM_HAS_SQLITE
+    UmiSqliteCheckpointReport candidate = { .log_frames = -1, .checkpointed_frames = -1 };
+    if (status == UMI_STATUS_OK) {
+        int code = sqlite3_wal_checkpoint_v2(server->sqlite, "main", SQLITE_CHECKPOINT_FULL,
+            &candidate.log_frames, &candidate.checkpointed_frames);
+        if (code != SQLITE_OK) status = DataSqlError(server, code);
+        else {
+            candidate.wal_mode = candidate.log_frames >= 0 && candidate.checkpointed_frames >= 0;
+            *out = candidate;
+        }
+    }
+#endif
+    server_unlock(server);
+    return status;
+}
+
+#ifdef UMICOM_HAS_SQLITE
+/* Backup errors belong to the private destination connection. Do not replace
+ * their message with the unrelated source connection's last SQLite error. */
+static UmiStatus DataBackupError(UmiDataServer *source, sqlite3 *destination, int code)
+{
+    DataMessage(source, destination != NULL ? sqlite3_errmsg(destination) : "SQLite backup open failed");
+    int primary = code & 0xff;
+    if (primary == SQLITE_BUSY || primary == SQLITE_LOCKED) return UMI_STATUS_BUSY;
+    if (primary == SQLITE_NOMEM) return UMI_STATUS_OUT_OF_MEMORY;
+    if (primary == SQLITE_TOOBIG) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (primary == SQLITE_READONLY || primary == SQLITE_PERM) return UMI_STATUS_PERMISSION_DENIED;
+    return UMI_STATUS_IO_ERROR;
+}
+#endif
+UmiStatus umi_data_server_backup_reserved(UmiDataServer *server, const char *destination,
+                                         UmiDataBackupReport *out)
+{
+    if (server == NULL || destination == NULL || out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (strlen(destination) >= sizeof out->destination) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiStatus status = DataEnter(server, 0);
+    if (status != UMI_STATUS_OK) return status;
+    if (server->backend != UMI_DATA_BACKEND_SQLITE) status = UMI_STATUS_UNAVAILABLE;
+    else if (server->transaction_active) status = UMI_STATUS_BUSY;
+#ifdef UMICOM_HAS_SQLITE
+    UmiDataServer *target = NULL;
+    UmiDataBackupReport candidate = {0};
+    if (status == UMI_STATUS_OK) status = allocate_server(UMI_DATA_BACKEND_SQLITE, &target);
+    if (status == UMI_STATUS_OK) {
+        /* READWRITE without CREATE only opens the already reserved empty leaf.
+         * No application or callback is given this private destination handle. */
+        int code = sqlite3_open_v2(destination, &target->sqlite,
+            SQLITE_OPEN_READWRITE | SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_PRIVATECACHE, NULL);
+        if (code != SQLITE_OK) status = DataBackupError(server, target->sqlite, code);
+        else {
+            sqlite3_backup *backup = sqlite3_backup_init(target->sqlite, "main", server->sqlite, "main");
+            if (backup == NULL) status = DataBackupError(server, target->sqlite, sqlite3_errcode(target->sqlite));
+            else {
+                code = sqlite3_backup_step(backup, -1);
+                if (code == SQLITE_DONE) {
+                    int pages = sqlite3_backup_pagecount(backup);
+                    if (pages < 0) status = UMI_STATUS_INVALID_STATE;
+                    else candidate.page_count = (size_t)pages;
+                } else status = DataBackupError(server, target->sqlite, code);
+                int finish = sqlite3_backup_finish(backup);
+                if (status == UMI_STATUS_OK && finish != SQLITE_OK)
+                    status = DataBackupError(server, target->sqlite, finish);
+            }
+        }
+    }
+    /* The source lock protects its opaque handle. The private destination has
+     * no other users, so its normal checked readers can safely acquire its lock. */
+    if (status == UMI_STATUS_OK) {
+        UmiSqliteHealthReport health;
+        status = umi_sqlite_health_read(target, &health);
+        if (status == UMI_STATUS_OK && !health.sound) status = UMI_STATUS_INVALID_STATE;
+        if (status == UMI_STATUS_OK) candidate.sqlite_quick_check_passed = true;
+        if (status == UMI_STATUS_OK) status = UmiDataServerCountChecked(target, &candidate.record_count);
+    }
+    if (target != NULL) {
+        if (target->sqlite != NULL) {
+            int close = sqlite3_close(target->sqlite);
+            if (status == UMI_STATUS_OK && close != SQLITE_OK)
+                status = DataBackupError(server, target->sqlite, close);
+            if (close != SQLITE_OK) (void)sqlite3_close_v2(target->sqlite);
+        }
+        free(target);
+    }
+    if (status == UMI_STATUS_OK) {
+        memcpy(candidate.destination, destination, strlen(destination) + 1U);
+        *out = candidate;
+    }
+#endif
+    server_unlock(server);
     return status;
 }

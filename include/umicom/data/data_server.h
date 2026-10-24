@@ -65,6 +65,20 @@ UmiStatus umi_data_server_create_memory(UmiDataServer **out_server);
  */
 UmiStatus umi_data_server_create_sqlite(const char *database_path,
                                         UmiDataServer **out_server);
+/* Open an EXISTING local SQLite Data Server for inspection. This never creates
+ * the database or installs its table. Empty names, : special names and file:
+ * URIs are refused. Hosts should supply an explicit absolute selected path.
+ * Missing/corrupt files report a storage error; unrelated schemas are refused.
+ * Output is cleared on every failure. A build without SQLite is UNAVAILABLE.
+ * Reads, visits, snapshots and owned begin/commit/rollback remain available.
+ * Set, delete and ALL execute calls return PERMISSION_DENIED. The connection
+ * cannot be upgraded. SQLite may use its normal journal/WAL coordination;
+ * this is not a byte-for-byte forensic filesystem access guarantee. */
+UmiStatus umi_data_server_open_sqlite_readonly(const char *database_path,
+                                              UmiDataServer **out_server);
+/* Returns zero for memory/writable handles and NULL. Access mode is immutable. */
+int umi_data_server_is_readonly(const UmiDataServer *server);
+
 /**
  * Release or reset state held by data server so the same storage can be reused safely.
  */

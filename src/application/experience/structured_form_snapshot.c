@@ -222,3 +222,26 @@ UmiStatus umi_structured_form_snapshot_decode(const UmiStructuredFormSchema *sch
   free(candidate);
   return status;
 }
+
+/* Header inspection reuses the codec reader so historical schema selection has
+ * the same bounds and byte order as decoding. It deliberately does not accept
+ * the body as valid; the catalogue always follows this hint with full decoding. */
+UmiStatus umi_structured_form_snapshot_identity(const void *bytes, size_t length,
+    UmiStructuredFormSnapshotIdentity *out) {
+  if (bytes == NULL || out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+  if (length < 8U || length > UMI_FORM_SNAPSHOT_MAX_BYTES || memcmp(bytes, "UMIFRM1\n", 8U) != 0)
+    return UMI_STATUS_PARSE_ERROR;
+  UmiStructuredFormSnapshotIdentity value = {0};
+  Reader r = {bytes, 8U, length, UMI_STATUS_OK};
+  take_string(&r, value.form_id, sizeof(value.form_id));
+  value.schema_version = take_number(&r, 8U);
+  value.revision = take_number(&r, 8U);
+  value.saved_revision = take_number(&r, 8U);
+  value.field_count = (size_t)take_number(&r, 2U);
+  if (r.status != UMI_STATUS_OK) return r.status;
+  if (!umi_application_experience_identifier_valid(value.form_id) || value.schema_version == 0U ||
+      value.revision == 0U || value.saved_revision > value.revision ||
+      value.field_count > UMI_APPLICATION_EXPERIENCE_FIELD_CAPACITY) return UMI_STATUS_PARSE_ERROR;
+  *out = value;
+  return UMI_STATUS_OK;
+}

@@ -1,0 +1,21 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Native database health and recovery</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:900px;margin:3rem auto;padding:0 1rem}code,pre{background:#eef2f6}pre{padding:1rem;overflow:auto}h1,h2{line-height:1.2}</style>
+<h1>Native database health and recovery</h1>
+<p>The shared GTK4 panel inspects an existing SQLite Data Server and creates independent database copies. Applications supply authorization and decide which database to use. The panel does not replace an application's open store.</p>
+<h2>Use the panel</h2><ol><li>Choose an existing SQLite database in the first row. Selecting a filename does not open it yet.</li><li>Select <strong>Check database</strong>. The worker runs SQLite quick_check. A completed check may report problems; absence of diagnostics does not authenticate data or validate application rules.</li><li>For a backup, choose a new filename in the second row and select <strong>Create backup</strong>. The destination must not exist. SQLite copies its committed snapshot, including WAL changes.</li><li>To recover a saved database into a separate file, choose that saved file as the source and another new filename as the destination. Select <strong>Recover to new database</strong>.</li><li>Inspect the newly created database before configuring your application to use it. The original file and active database stay available.</li></ol>
+<h2>Integrate with an application</h2>
+<p>Link <code>Umicom::database_maintenance_gtk4</code> and include <code>umicom/ui/gtk4/database_maintenance.h</code>. Create <code>UmiDatabaseMaintenanceGtk4Options</code> with a required authorization callback. That callback runs on the GTK thread with copied operation, source and destination values before any storage work starts. Authorize each selected path under your application's access policy; do not use an unconditional success callback for protected records.</p>
+<pre>GtkWidget *panel = NULL;
+UmiDatabaseMaintenanceGtk4Options options = {
+    .authorize = authorize_database_operation,
+    .authorize_context = application
+};
+UmiStatus status = UmiDatabaseMaintenanceGtk4New(&amp;options, &amp;panel);
+if (status == UMI_STATUS_OK)
+    gtk_box_append(GTK_BOX(container), panel);</pre>
+<p>Connect <code>operation-finished</code> to receive an integer UmiStatus, then read <code>UmiDatabaseMaintenanceGtk4State</code>. The method return value describes admission, not completion. For a health check, inspect <code>health.sound</code>. For a successful copy, inspect the captured destination, page count and key/value record count.</p>
+<h2>Closing and editing</h2>
+<p><code>CanClose</code> is false while admission or a worker operation is in progress. Retire the panel when abandoning its UI, and keep the main context alive until completion. A read is discarded after the selection changes. An accepted copy can still finish and its real outcome remains in the copied state even after retirement. There is no mid-operation cancellation and no automatic undo of file creation. A rejected new call preserves any earlier completed result; use its return value to diagnose the rejection.</p>
+<h2>Recovery guidance</h2>
+<p>If the destination exists, choose a different filename. If SQLite is busy, finish the other transaction and explicitly try again. A failure after exclusive destination creation may retain an empty or partial new file for inspection. No existing file is deleted. Run these operations beneath trusted directories; the service is not a sandbox against concurrent filesystem replacement. Backups are not encrypted and quick_check does not prove application-level correctness or power-loss durability.</p>
+</html>

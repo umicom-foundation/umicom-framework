@@ -17,6 +17,15 @@
 #include "umicom/data/sqlite.h"
 #include "umicom/platform/filesystem.h"
 
+#include "umicom/platform/output_file.h"
+#include "include/sqlite_backup_internal.h"
+#include <string.h>
+
+/* Checkpointing then copying a live main file can miss WAL commits or race
+ * another writer. Replacing an existing database also bypasses its journal
+ * ownership. SQLite snapshot copying to a new file replaces these bodies;
+ * retain the earlier implementation for engineering review. */
+#if 0
 /*
  * Initialise data backup from caller-provided values so later operations receive a known
  * state.
@@ -57,4 +66,48 @@ UmiStatus umi_data_backup_restore(const char *backup_path,
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     return umi_fs_copy_file(backup_path, database_path);
+}
+
+#endif
+
+UmiStatus umi_data_backup_create_checked(UmiDataServer *server,const char *backup_path,
+                                        UmiDataBackupReport *out)
+{
+    if (server == NULL || backup_path == NULL || out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (strlen(backup_path) >= sizeof out->destination) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiStatus status = UmiOutputFileValidatePath(backup_path);
+    if (status != UMI_STATUS_OK) return status;
+    UmiSqliteHealthReport health;
+    status = umi_sqlite_health_read(server, &health);
+    if (status != UMI_STATUS_OK) return status;
+    if (!health.sound) return UMI_STATUS_INVALID_STATE;
+    UmiOutputFile *reserved = NULL;
+    status = UmiOutputFileCreate(backup_path, &reserved);
+    if (status == UMI_STATUS_OK) status = UmiOutputFileClose(reserved);
+    UmiOutputFileDestroy(reserved);
+    if (status != UMI_STATUS_OK) return status;
+    return umi_data_server_backup_reserved(server, backup_path, out);
+}
+UmiStatus umi_data_backup_restore_checked(const char *backup_path,const char *database_path,
+                                         UmiDataBackupReport *out)
+{
+    if (backup_path == NULL || database_path == NULL || out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = UmiOutputFileValidatePath(backup_path);
+    if (status == UMI_STATUS_OK) status = UmiOutputFileValidatePath(database_path);
+    if (status != UMI_STATUS_OK) return status;
+    UmiDataServer *source = NULL;
+    status = umi_data_server_open_sqlite_readonly(backup_path, &source);
+    if (status == UMI_STATUS_OK) status = umi_data_backup_create_checked(source, database_path, out);
+    umi_data_server_destroy(source);
+    return status;
+}
+UmiStatus umi_data_backup_create(UmiDataServer *server,const char *backup_path)
+{
+    UmiDataBackupReport report;
+    return umi_data_backup_create_checked(server, backup_path, &report);
+}
+UmiStatus umi_data_backup_restore(const char *backup_path,const char *database_path)
+{
+    UmiDataBackupReport report;
+    return umi_data_backup_restore_checked(backup_path, database_path, &report);
 }

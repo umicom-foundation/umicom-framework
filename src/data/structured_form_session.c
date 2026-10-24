@@ -9,12 +9,17 @@
 #include "umicom/application/experience/structured_form_snapshot.h"
 #include <stdlib.h>
 #include <string.h>
+/* The same owned session state is now shared with the conflict adapter through
+ * a private header. Keep its original declaration for ownership review. */
+#if 0
 struct UmiStructuredFormSession {
   const UmiStructuredFormSchema *schema;
   UmiRecordDraft *draft;
   uint64_t generation;
   UmiStructuredForm current, baseline, pending;
 };
+#endif
+#include "structured_form_session_internal.h"
 static UmiStatus state(const UmiStructuredFormSession *session, UmiRecordDraftState *out) {
   return session == NULL ? UMI_STATUS_INVALID_ARGUMENT
                          : umi_record_draft_state(session->draft, out);

@@ -414,3 +414,28 @@ UmiStatus umi_record_draft_snapshot_restore(UmiRecordDraft *draft, const UmiReco
     free(baseline);
     return status;
 }
+
+/* Reconciliation must publish content and baseline together. Work on an owned
+ * copy so every failure preserves both the local draft and its revision token. */
+UmiStatus umi_record_draft_reconcile_reviewed(UmiRecordDraft *draft,
+    const UmiRecordDocument *reviewed, uint64_t expected_baseline,
+    const void *expected_content, size_t expected_length,
+    const void *replacement, size_t replacement_length)
+{
+    if (draft == NULL || reviewed == NULL || (expected_content == NULL && expected_length != 0U) ||
+        (replacement == NULL && replacement_length != 0U)) return UMI_STATUS_INVALID_ARGUMENT;
+    if (expected_length > UMI_RECORD_DOCUMENT_MAX_BYTES || replacement_length > UMI_RECORD_DOCUMENT_MAX_BYTES)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (draft->saving) return UMI_STATUS_BUSY;
+    if (!draft->ready || draft->length != expected_length ||
+        (expected_length != 0U && memcmp(draft->content, expected_content, expected_length) != 0))
+        return UMI_STATUS_INVALID_STATE;
+    UmiRecordDraft *candidate = malloc(sizeof(*candidate));
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    *candidate = *draft;
+    UmiStatus status = umi_record_draft_adopt_reviewed(candidate, reviewed, expected_baseline);
+    if (status == UMI_STATUS_OK) status = umi_record_draft_set_content(candidate, replacement, replacement_length);
+    if (status == UMI_STATUS_OK) *draft = *candidate;
+    free(candidate);
+    return status;
+}

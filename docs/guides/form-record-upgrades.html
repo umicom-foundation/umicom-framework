@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Reviewing stored form upgrades</title>
+<style>body{max-width:74ch;margin:3rem auto;padding:0 1rem;font:17px/1.6 system-ui;color:#172638;background:#fafcfe}code,pre{background:#edf1f5}pre{padding:1rem;overflow:auto}h1,h2{line-height:1.2}a{color:#12529a}</style></head><body>
+<h1>Reviewing stored form upgrades</h1>
+<p>A schema describes the fields and rules in a form. Changing that description must not silently change an older record's meaning. The Framework upgrade service creates a reviewable proposal and saves it as a new historical revision. Link your C23 application with <code>Umicom::form_records</code> and include <code>umicom/data/structured_form_upgrade.h</code>.</p>
+<h2>Before you begin</h2>
+<p>Keep the original schema available for reading old records. The new schema must have the same form identifier and a greater version. The conservative migration accepts added fields with valid defaults and removed unanswered fields. It refuses removing answered fields or changing an existing field's value type, unit or date/time format. Conversion between units needs a separately reviewed application workflow.</p>
+<h2>Review and save a proposal</h2><ol>
+<li>Load the original document with <code>umi_record_document_latest</code>. Identify its original schema from your application's trusted schema catalogue. Do not choose a schema from an untrusted file path.</li>
+<li>Call <code>umi_structured_form_upgrade_create</code> with that schema, the document and the new schema. This checks the stored digest and decodes the original form before migration. No storage is written.</li>
+<li>Read <code>umi_structured_form_upgrade_snapshot</code>. Show the original and target versions, retained/added/removed field counts and proposed values to the reviewer. The review has its own revision token, separate from form edits and stored record revisions.</li>
+<li>To adjust the proposal, capture an edit with <code>umi_structured_form_edit_capture</code> and apply it with <code>umi_structured_form_upgrade_apply</code>, passing the reviewed token. Invalid or stale edits leave the proposal unchanged.</li>
+<li>Collect source, actor and reason. Prepare an owned request with <code>umi_structured_form_upgrade_prepare_save</code>. Pass <code>submitting=1</code> when all mandatory answers are required; zero permits an incomplete draft. Preparation marks a save pending but performs no I/O.</li>
+<li>Pass the copied request to <code>umi_structured_form_upgrade_request_commit</code> on the chosen storage worker. It checks that the exact original historical document exists there, then appends only if the current stored head is still the reviewed revision. Keep the request unchanged while the worker uses it.</li>
+<li>Return the result and saved metadata to <code>umi_structured_form_upgrade_finish_save</code> on the owning thread. A successful matching reply closes the review. Read the new revision using the new schema, and the old revision using its original schema.</li>
+</ol>
+<h2>Ownership and recovery</h2><p>The immutable target schema must outlive the upgrade handle. Source documents and original schema data are copied or consumed during creation and may be released afterward. Allocate the large bounded view and request structures on the heap. Serialize operations on the handle and keep storage work off the GTK main thread.</p>
+<p>Pending saves block proposal edits. An unrelated completion does not clear the pending operation. A failed completion retains the proposal. If the storage result is uncertain, inspect the actual stored head before retrying; a lost response is not evidence that nothing was saved. Destroying the review does not cancel a worker.</p>
+<h2>Expected refusals</h2><ul>
+<li><code>INVALID_STATE</code> during creation: check schema identity/version, units, changed field types and removed answers.</li>
+<li><code>INVALID_STATE</code> on commit: the historical baseline differs or another writer appended a revision. Reload and review a new proposal; do not overwrite the newer head.</li>
+<li><code>BUSY</code>: finish the pending operation before starting another edit or save.</li>
+<li>Validation errors when submitting: display the new schema's required fields and let the reviewer provide answers.</li>
+</ul><p>Attribution labels do not authenticate a reviewer. The caller owns access control, permitted schema selection and authorization. This local review service does not provide encrypted storage, electronic signatures or protection against an administrator rewriting raw history.</p>
+<p>See <a href="form-conflict-review.html">ordinary form conflict review</a> and <a href="typed-record-navigation.html">record navigation and historical inspection</a>.</p></body></html>

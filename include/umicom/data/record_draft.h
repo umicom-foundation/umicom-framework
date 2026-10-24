@@ -112,6 +112,16 @@ UmiStatus umi_record_save_request_commit(UmiDataServer *server,
  * Never report CANCELLED merely because a window closed while I/O still runs. */
 UmiStatus umi_record_draft_finish_save(UmiRecordDraft *draft, uint64_t request_id,
                                       UmiStatus result, const UmiRecordRevision *saved);
+/* Atomically adopt a reviewed baseline AND replace local bytes after an
+ * explicit conflict decision. expected_content must still equal the current
+ * draft exactly and expected_baseline must match its stored revision. A pending
+ * save is BUSY. All validation completes on a private candidate before the
+ * original changes. Request IDs retain their lifetime-wide monotonic sequence.
+ * No database access occurs; the next save still checks the stored head. */
+UmiStatus umi_record_draft_reconcile_reviewed(UmiRecordDraft *draft,
+    const UmiRecordDocument *reviewed, uint64_t expected_baseline,
+    const void *expected_content, size_t expected_length,
+    const void *replacement, size_t replacement_length);
 #ifdef __cplusplus
 }
 #endif

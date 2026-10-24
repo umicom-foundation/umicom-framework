@@ -19,6 +19,7 @@
 
 #include "umicom/base/status.h"
 #include "umicom/data/data_server.h"
+#include "umicom/data/sqlite_health.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -42,6 +43,9 @@ UmiSqliteReport umi_sqlite_report(const UmiDataServer *server);
  * Provide the sqlite integrity check operation used by this module and its client
  * applications.
  */
+/* Uses the checked quick-check report: INVALID_STATE means reported structural
+ * diagnostics. For details use umi_sqlite_health_read. This is not a full
+ * foreign-key or application-record integrity check. */
 UmiStatus umi_sqlite_integrity_check(UmiDataServer *server);
 /**
  * Provide the sqlite checkpoint operation used by this module and its client applications.

@@ -89,7 +89,9 @@ static GtkWidget *discard_prompt(void) {
 int main(int argc, char **argv) {
   if (argc != 3)
     return 2;
-  const char *cases[] = {"options",
+  const char *cases[] = {"button-save",
+                         "zero-time",
+                         "options",
                          "relative-path",
                          "retired-actions",
                          "keys",
@@ -126,7 +128,35 @@ int main(int argc, char **argv) {
                          "recovery-retire-write",
                          "recovery-retire-read",
                          "recovery-wrong-store",
-                         "recovery-namespace"};
+                         "recovery-namespace",
+                         "review-new",
+                         "review-unresolved",
+                         "review-local",
+                         "review-incoming",
+                         "review-base",
+                         "review-later-read",
+                         "review-later-apply",
+                         "review-retire",
+                         "review-stale-save",
+                         "review-retained-choice",
+                         "review-unit",
+                         "review-disjoint",
+                         "catalogue-empty",
+                         "catalogue-open",
+                         "catalogue-dirty",
+                         "catalogue-late-query",
+                         "catalogue-stale",
+                         "catalogue-late-open",
+                         "catalogue-pages",
+                         "catalogue-changed-page",
+                         "history-inspect",
+                         "history-older",
+                         "history-stale-page",
+                         "history-retire",
+                         "inspection-retire",
+                         "inspection-schema",
+                         "history-late-edit",
+                         "history-record-change"};
   bool selected = false;
   for (size_t i = 0; i < sizeof(cases) / sizeof(cases[0]); ++i)
     if (strcmp(argv[1], cases[i]) == 0)
@@ -216,8 +246,10 @@ int main(int argc, char **argv) {
   }
   OK(UmiFormRecordEditorGtk4Begin(root, "one"));
   CHECK(!UmiFormRecordEditorGtk4CanClose(root));
-  UmiRecordDraftAttribution attribution = {
-      .source = "Native form fixture", .actor = "Fixture owner", .reason = "Synthetic regression"};
+  UmiRecordDraftAttribution attribution = {.source = "Native form fixture",
+                                           .actor = "Fixture owner",
+                                           .reason = "Synthetic regression",
+                                           .recorded_at_nanoseconds = 1U};
   if (strcmp(name, "new-discard") == 0) {
     CHECK(fill(root, "2"));
     OK(UmiFormRecordEditorGtk4Discard(root));
@@ -235,6 +267,32 @@ int main(int argc, char **argv) {
   }
   if (strcmp(name, "draft") != 0)
     CHECK(fill(root, "2"));
+  if (strcmp(name, "zero-time") == 0) {
+    attribution.recorded_at_nanoseconds = 0;
+    CHECK(UmiFormRecordEditorGtk4Save(root, &attribution, 1) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(!UmiFormRecordEditorGtk4Busy(root));
+    CHECK(umi_structured_form_record_load(reader, "test.form.one", 0, &fixture->schema, stored) ==
+          UMI_STATUS_NOT_FOUND);
+    CHECK(!UmiFormRecordEditorGtk4CanClose(root));
+    goto cleanup;
+  }
+  if (strcmp(name, "button-save") == 0) {
+    CHECK(text(root, "form-record-actor", "Button reviewer"));
+    CHECK(text(root, "form-record-reason", "Saved through the visible control"));
+    GtkWidget *save = find(root, "form-record-save-complete");
+    CHECK(GTK_IS_BUTTON(save));
+    gint64 before = g_get_real_time();
+    g_signal_emit_by_name(save, "clicked");
+    CHECK(idle(root));
+    OK(UmiFormRecordEditorGtk4LastStatus(root));
+    OK(umi_structured_form_record_load(reader, "test.form.one", 0, &fixture->schema, stored));
+    CHECK(stored->record.amendment.recorded_at_nanoseconds >= (uint64_t)before * 1000U);
+    CHECK(stored->record.amendment.recorded_at_nanoseconds <= (uint64_t)g_get_real_time() * 1000U);
+    CHECK(strcmp(stored->record.amendment.actor, "Button reviewer") == 0);
+    CHECK(stored->form.answers[0].value.decimal_value == 2);
+    CHECK(UmiFormRecordEditorGtk4CanClose(root));
+    goto cleanup;
+  }
   if (strcmp(name, "input-attribution") == 0) {
     GtkWidget *feedback = g_object_ref(find(root, "structured-form-feedback"));
     gulong id =
@@ -248,6 +306,11 @@ int main(int argc, char **argv) {
     OK(umi_structured_form_record_load(reader, "test.form.one", 0, &fixture->schema, stored));
     CHECK(strcmp(stored->record.amendment.actor, "Fixture owner") == 0);
     CHECK(strcmp(attribution.actor, "Changed during notification") == 0);
+    goto cleanup;
+  }
+  if (strcmp(name, "review-new") == 0) {
+    CHECK(UmiFormRecordEditorGtk4ReviewStored(root) == UMI_STATUS_INVALID_STATE);
+    CHECK(!UmiFormRecordEditorGtk4Busy(root));
     goto cleanup;
   }
   if (strcmp(name, "recovery-new") == 0) {
@@ -332,6 +395,273 @@ int main(int argc, char **argv) {
     OK(UmiFormRecordEditorGtk4LastStatus(root));
     OK(umi_structured_form_record_load(reader, "test.form.one", 0, &fixture->schema, stored));
     CHECK(stored->record.revision == 2 && stored->form.answers[0].value.decimal_value == 3.0);
+    goto cleanup;
+  }
+  if (g_str_has_prefix(name, "catalogue-")) {
+    UmiRecordRevision written;
+    bool paging =
+        strcmp(name, "catalogue-pages") == 0 || strcmp(name, "catalogue-changed-page") == 0;
+    if (paging) {
+      UmiRecordAmendment metadata = stored->record.amendment;
+      for (unsigned i = 0; i < 20; ++i) {
+        (void)g_snprintf(metadata.entity_id, sizeof(metadata.entity_id), "test.form.other%02u", i);
+        OK(umi_structured_form_record_save(reader, &metadata, &fixture->schema, &stored->form, 0,
+                                           &written));
+      }
+    }
+    if (strcmp(name, "catalogue-dirty") == 0)
+      CHECK(text(root, "parcel.mass.value", "9"));
+    OK(UmiFormRecordEditorGtk4Find(root, strcmp(name, "catalogue-empty") == 0 ? "absent-match" : "",
+                                   0));
+    if (strcmp(name, "catalogue-late-query") == 0)
+      CHECK(text(root, "form-record-search", "changed"));
+    CHECK(idle(root));
+    if (strcmp(name, "catalogue-late-query") == 0) {
+      CHECK(UmiFormRecordEditorGtk4LastStatus(root) == UMI_STATUS_INVALID_STATE);
+      goto cleanup;
+    }
+    OK(UmiFormRecordEditorGtk4LastStatus(root));
+    GtkWidget *results = find(root, "form-record-results");
+    CHECK(results != NULL);
+    GListModel *model = gtk_drop_down_get_model(GTK_DROP_DOWN(results));
+    CHECK(model != NULL);
+    if (strcmp(name, "catalogue-empty") == 0) {
+      CHECK(g_list_model_get_n_items(model) == 0);
+      CHECK(UmiFormRecordEditorGtk4OpenListed(root, 0) == UMI_STATUS_INVALID_STATE);
+      goto cleanup;
+    }
+    CHECK(g_list_model_get_n_items(model) == (paging ? 16U : 1U));
+    if (paging) {
+      if (strcmp(name, "catalogue-changed-page") == 0) {
+        UmiRecordAmendment metadata = stored->record.amendment;
+        (void)g_strlcpy(metadata.entity_id, "test.form.extra", sizeof(metadata.entity_id));
+        OK(umi_structured_form_record_save(reader, &metadata, &fixture->schema, &stored->form, 0,
+                                           &written));
+      }
+      OK(UmiFormRecordEditorGtk4Find(root, "", 1));
+      CHECK(idle(root));
+      if (strcmp(name, "catalogue-changed-page") == 0)
+        CHECK(UmiFormRecordEditorGtk4LastStatus(root) == UMI_STATUS_INVALID_STATE);
+      else {
+        OK(UmiFormRecordEditorGtk4LastStatus(root));
+        CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(GTK_DROP_DOWN(results))) == 5);
+        CHECK(UmiFormRecordEditorGtk4Find(root, "", 1) == UMI_STATUS_INVALID_STATE);
+      }
+      goto cleanup;
+    }
+    if (strcmp(name, "catalogue-dirty") == 0) {
+      CHECK(UmiFormRecordEditorGtk4OpenListed(root, 0) == UMI_STATUS_INVALID_STATE);
+      CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(find(root, "parcel.mass.value"))), "9") == 0);
+      goto cleanup;
+    }
+    if (strcmp(name, "catalogue-stale") == 0) {
+      UmiFormAnswer changed = form_mass(8);
+      OK(umi_structured_form_set(&fixture->schema, &stored->form, stored->form.revision,
+                                 "parcel.mass", &changed));
+      OK(umi_structured_form_record_save(reader, &stored->record.amendment, &fixture->schema,
+                                         &stored->form, 1, &written));
+    }
+    OK(UmiFormRecordEditorGtk4OpenListed(root, 0));
+    if (strcmp(name, "catalogue-late-open") == 0)
+      CHECK(text(root, "parcel.mass.value", "9"));
+    CHECK(idle(root));
+    if (strcmp(name, "catalogue-stale") == 0 || strcmp(name, "catalogue-late-open") == 0)
+      CHECK(UmiFormRecordEditorGtk4LastStatus(root) == UMI_STATUS_INVALID_STATE);
+    else
+      OK(UmiFormRecordEditorGtk4LastStatus(root));
+    OK(UmiFormRecordEditorGtk4State(root, state));
+    CHECK(state->record.expected_revision == 1 && state->form.answers[0].value.decimal_value == 2);
+    if (strcmp(name, "catalogue-late-open") == 0)
+      CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(find(root, "parcel.mass.value"))), "9") == 0);
+    goto cleanup;
+  }
+  if (g_str_has_prefix(name, "history-") || g_str_has_prefix(name, "inspection-")) {
+    UmiRecordRevision written;
+    bool paging = strcmp(name, "history-older") == 0 || strcmp(name, "history-stale-page") == 0;
+    for (uint64_t revision = 2; revision <= (paging ? 20U : 2U); ++revision) {
+      UmiFormAnswer changed = form_mass((double)(revision + 5));
+      OK(umi_structured_form_set(&fixture->schema, &stored->form, stored->form.revision,
+                                 "parcel.mass", &changed));
+      if (strcmp(name, "inspection-schema") == 0) {
+        UmiStructuredFormSchema newer = fixture->schema;
+        newer.version++;
+        stored->form.schema_version++;
+        OK(umi_structured_form_record_save(reader, &stored->record.amendment, &newer, &stored->form,
+                                           revision - 1, &written));
+      } else
+        OK(umi_structured_form_record_save(reader, &stored->record.amendment, &fixture->schema,
+                                           &stored->form, revision - 1, &written));
+    }
+    OK(UmiFormRecordEditorGtk4History(root, 0));
+    if (strcmp(name, "history-retire") == 0)
+      UmiFormRecordEditorGtk4Retire(root);
+    CHECK(idle(root));
+    if (strcmp(name, "history-retire") == 0) {
+      CHECK(UmiFormRecordEditorGtk4LastStatus(root) == UMI_STATUS_CANCELLED);
+      goto cleanup;
+    }
+    OK(UmiFormRecordEditorGtk4LastStatus(root));
+    GtkWidget *list = find(root, "form-record-history-results");
+    CHECK(list != NULL);
+    CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(GTK_DROP_DOWN(list))) ==
+          (paging ? 16U : 2U));
+    size_t selected = 1;
+    if (paging) {
+      if (strcmp(name, "history-stale-page") == 0) {
+        UmiFormAnswer changed = form_mass(30);
+        OK(umi_structured_form_set(&fixture->schema, &stored->form, stored->form.revision,
+                                   "parcel.mass", &changed));
+        OK(umi_structured_form_record_save(reader, &stored->record.amendment, &fixture->schema,
+                                           &stored->form, 20, &written));
+      }
+      OK(UmiFormRecordEditorGtk4History(root, 1));
+      CHECK(idle(root));
+      if (strcmp(name, "history-stale-page") == 0) {
+        CHECK(UmiFormRecordEditorGtk4LastStatus(root) == UMI_STATUS_INVALID_STATE);
+        goto cleanup;
+      }
+      OK(UmiFormRecordEditorGtk4LastStatus(root));
+      CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(GTK_DROP_DOWN(list))) == 4);
+      CHECK(UmiFormRecordEditorGtk4History(root, 1) == UMI_STATUS_INVALID_STATE);
+      selected = 3;
+    }
+    if (strcmp(name, "history-record-change") == 0) {
+      OK(UmiFormRecordEditorGtk4Begin(root, "two"));
+      CHECK(UmiFormRecordEditorGtk4InspectRevision(root, 0) == UMI_STATUS_INVALID_STATE);
+      goto cleanup;
+    }
+    if (strcmp(name, "history-inspect") == 0)
+      CHECK(text(root, "parcel.mass.value", "9"));
+    OK(UmiFormRecordEditorGtk4InspectRevision(
+        root, strcmp(name, "inspection-schema") == 0 ? 0 : selected));
+    if (strcmp(name, "history-late-edit") == 0)
+      CHECK(text(root, "parcel.mass.value", "9"));
+    if (strcmp(name, "inspection-retire") == 0)
+      UmiFormRecordEditorGtk4Retire(root);
+    CHECK(idle(root));
+    if (strcmp(name, "inspection-retire") == 0) {
+      CHECK(UmiFormRecordEditorGtk4LastStatus(root) == UMI_STATUS_CANCELLED);
+      goto cleanup;
+    }
+    if (strcmp(name, "inspection-schema") == 0) {
+      CHECK(UmiFormRecordEditorGtk4LastStatus(root) != UMI_STATUS_OK);
+      goto cleanup;
+    }
+    OK(UmiFormRecordEditorGtk4LastStatus(root));
+    GtkWidget *value = find(root, "form-inspect.parcel.mass.value"),
+              *metadata = find(root, "form-record-inspection-metadata");
+    CHECK(value != NULL && metadata != NULL);
+    CHECK(strstr(gtk_label_get_text(GTK_LABEL(value)), "2 mass.kg") != NULL);
+    CHECK(strstr(gtk_label_get_text(GTK_LABEL(metadata)), "stored revision 1") != NULL);
+    OK(UmiFormRecordEditorGtk4State(root, state));
+    CHECK(state->record.expected_revision == 1 && state->form.answers[0].value.decimal_value == 2);
+    if (strcmp(name, "history-inspect") == 0 || strcmp(name, "history-late-edit") == 0) {
+      CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(find(root, "parcel.mass.value"))), "9") == 0);
+      CHECK(!UmiFormRecordEditorGtk4CanClose(root));
+    }
+    goto cleanup;
+  }
+  if (g_str_has_prefix(name, "review-")) {
+    UmiRecordRevision written;
+    UmiFormAnswer incoming =
+        strcmp(name, "review-disjoint") == 0 ? form_text("Changed elsewhere") : form_mass(8);
+    OK(umi_structured_form_set(&fixture->schema, &stored->form, stored->form.revision,
+                               strcmp(name, "review-disjoint") == 0 ? "parcel.note" : "parcel.mass",
+                               &incoming));
+    OK(umi_structured_form_record_save(reader, &stored->record.amendment, &fixture->schema,
+                                       &stored->form, 1, &written));
+    CHECK(written.revision == 2);
+    CHECK(text(root, "parcel.mass.value", "3"));
+    OK(UmiFormRecordEditorGtk4ReviewStored(root));
+    CHECK(UmiFormRecordEditorGtk4ApplyReview(root) == UMI_STATUS_BUSY);
+    if (strcmp(name, "review-later-read") == 0)
+      CHECK(text(root, "parcel.mass.value", "9"));
+    if (strcmp(name, "review-retire") == 0)
+      UmiFormRecordEditorGtk4Retire(root);
+    CHECK(idle(root));
+    if (strcmp(name, "review-retire") == 0) {
+      CHECK(UmiFormRecordEditorGtk4LastStatus(root) == UMI_STATUS_CANCELLED);
+      goto cleanup;
+    }
+    if (strcmp(name, "review-later-read") == 0) {
+      CHECK(UmiFormRecordEditorGtk4LastStatus(root) == UMI_STATUS_INVALID_STATE);
+      CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(find(root, "parcel.mass.value"))), "9") == 0);
+      goto cleanup;
+    }
+    OK(UmiFormRecordEditorGtk4LastStatus(root));
+    GtkWidget *choice = find(root, "form-review.parcel.mass.choice");
+    CHECK(choice != NULL && GTK_IS_DROP_DOWN(choice));
+    if (strcmp(name, "review-unit") == 0) {
+      GtkWidget *row = gtk_widget_get_parent(choice);
+      unsigned units = 0;
+      for (GtkWidget *child = gtk_widget_get_first_child(row); child != NULL;
+           child = gtk_widget_get_next_sibling(child))
+        if (GTK_IS_LABEL(child) && strstr(gtk_label_get_text(GTK_LABEL(child)), "mass.kg") != NULL)
+          ++units;
+      CHECK(units == 3);
+      goto cleanup;
+    }
+    if (strcmp(name, "review-unresolved") == 0) {
+      CHECK(UmiFormRecordEditorGtk4ApplyReview(root) == UMI_STATUS_INVALID_STATE);
+      OK(UmiFormRecordEditorGtk4State(root, state));
+      CHECK(state->record.expected_revision == 1 &&
+            state->form.answers[0].value.decimal_value == 3);
+      goto cleanup;
+    }
+    guint selection = strcmp(name, "review-incoming") == 0 ? 3
+                      : strcmp(name, "review-base") == 0   ? 1
+                                                           : 2;
+    if (strcmp(name, "review-disjoint") != 0)
+      gtk_drop_down_set_selected(GTK_DROP_DOWN(choice), selection);
+    if (strcmp(name, "review-later-apply") == 0) {
+      CHECK(text(root, "parcel.mass.value", "9"));
+      CHECK(UmiFormRecordEditorGtk4ApplyReview(root) == UMI_STATUS_INVALID_STATE);
+      CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(find(root, "parcel.mass.value"))), "9") == 0);
+      goto cleanup;
+    }
+    if (strcmp(name, "review-retained-choice") == 0)
+      retained = g_object_ref(choice);
+    OK(UmiFormRecordEditorGtk4ApplyReview(root));
+    OK(UmiFormRecordEditorGtk4State(root, state));
+    CHECK(state->record.expected_revision == 2);
+    double expected = strcmp(name, "review-incoming") == 0 ? 8
+                      : strcmp(name, "review-base") == 0   ? 2
+                                                           : 3;
+    CHECK(state->form.answers[0].value.decimal_value == expected);
+    CHECK(UmiFormRecordEditorGtk4ApplyReview(root) == UMI_STATUS_INVALID_STATE);
+    OK(umi_structured_form_record_load(reader, "test.form.one", 0, &fixture->schema, stored));
+    CHECK(stored->record.revision == 2);
+    if (strcmp(name, "review-incoming") == 0) {
+      CHECK(UmiFormRecordEditorGtk4CanClose(root));
+      goto cleanup;
+    }
+    CHECK(!UmiFormRecordEditorGtk4CanClose(root));
+    if (strcmp(name, "review-disjoint") == 0)
+      CHECK(strcmp(state->form.answers[2].value.text_value, "Changed elsewhere") == 0);
+    if (retained != NULL) {
+      gtk_drop_down_set_selected(GTK_DROP_DOWN(retained), 3);
+      OK(UmiFormRecordEditorGtk4State(root, state));
+      CHECK(state->form.answers[0].value.decimal_value == 3);
+    }
+    if (strcmp(name, "review-stale-save") == 0) {
+      incoming = form_mass(10);
+      OK(umi_structured_form_set(&fixture->schema, &stored->form, stored->form.revision,
+                                 "parcel.mass", &incoming));
+      OK(umi_structured_form_record_save(reader, &stored->record.amendment, &fixture->schema,
+                                         &stored->form, 2, &written));
+    }
+    OK(UmiFormRecordEditorGtk4Save(root, &attribution, 1));
+    CHECK(idle(root));
+    if (strcmp(name, "review-stale-save") == 0) {
+      CHECK(UmiFormRecordEditorGtk4LastStatus(root) == UMI_STATUS_INVALID_STATE);
+      CHECK(!UmiFormRecordEditorGtk4CanClose(root));
+    } else {
+      OK(UmiFormRecordEditorGtk4LastStatus(root));
+      OK(umi_structured_form_record_load(reader, "test.form.one", 0, &fixture->schema, stored));
+      CHECK(stored->record.revision == 3 &&
+            stored->form.answers[0].value.decimal_value == expected);
+      CHECK(UmiFormRecordEditorGtk4CanClose(root));
+    }
     goto cleanup;
   }
   if (g_str_has_prefix(name, "prompt-")) {

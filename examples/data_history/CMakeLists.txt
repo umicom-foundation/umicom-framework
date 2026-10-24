@@ -50,3 +50,41 @@ set_target_properties(umicom-record-catalogue-example PROPERTIES
 if(BUILD_TESTING)
     add_test(NAME consumer.record-catalogue COMMAND umicom-record-catalogue-example)
 endif()
+
+# Entity bundles resolve only from the installed portable data component.
+add_executable(umicom-record-bundle-example record_bundles.c)
+target_link_libraries(umicom-record-bundle-example PRIVATE Umicom::data)
+set_target_properties(umicom-record-bundle-example PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+if(BUILD_TESTING)
+    add_test(NAME consumer.record-bundle COMMAND umicom-record-bundle-example)
+endif()
+
+# The installed data component owns the receipt transaction and reader too.
+add_executable(umicom-record-transfer-example record_transfers.c)
+target_link_libraries(umicom-record-transfer-example PRIVATE Umicom::data)
+set_target_properties(umicom-record-transfer-example PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+if(BUILD_TESTING)
+    add_test(NAME consumer.record-transfer COMMAND umicom-record-transfer-example)
+endif()
+
+# Installed consumers exercise backup ownership and its static dependencies.
+get_target_property(_backup_example_definitions Umicom::data INTERFACE_COMPILE_DEFINITIONS)
+if("UMICOM_HAS_SQLITE=1" IN_LIST _backup_example_definitions)
+    add_executable(umicom-data-backup-example sqlite_backup.c)
+    target_link_libraries(umicom-data-backup-example PRIVATE Umicom::data)
+    set_target_properties(umicom-data-backup-example PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(BUILD_TESTING)
+        file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/backup-example-output")
+        add_test(NAME consumer.data-backup COMMAND umicom-data-backup-example "${CMAKE_CURRENT_BINARY_DIR}/backup-example-output")
+    endif()
+endif()
+unset(_backup_example_definitions)
+# Typed search is an optional adapter beyond the portable data component.
+if(TARGET Umicom::form_records)
+    add_executable(umicom-form-search-example form_search.c)
+    target_link_libraries(umicom-form-search-example PRIVATE Umicom::form_records)
+    set_target_properties(umicom-form-search-example PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(BUILD_TESTING)
+        add_test(NAME consumer.form-search COMMAND umicom-form-search-example)
+    endif()
+endif()

@@ -9,7 +9,9 @@
 #include "umicom/base/sha256.h"
 #include "include/record_fields.h"
 #include "include/record_history_internal.h"
+#include "include/record_document_internal.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 /* Bounded chunks keep binary content portable across the string-based memory
  * and SQLite backends. The service owns encoding; applications keep their own
@@ -342,4 +344,39 @@ UmiStatus umi_record_document_open_reviewed(UmiDataServer *server,
     if (status != UMI_STATUS_OK) return abort_document(server, status);
     *output = candidate;
     return UMI_STATUS_OK;
+}
+
+/* Bundle operations compose existing history and content primitives under one
+ * transaction. Legacy public operations above retain their own ownership. */
+static UmiStatus document_transaction_active(UmiDataServer *server) {
+    if (server == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiDataServerSnapshot state;
+    UmiStatus status = umi_data_server_snapshot(server, &state);
+    if (status != UMI_STATUS_OK) return status;
+    return state.transaction_active ? UMI_STATUS_OK : UMI_STATUS_INVALID_STATE;
+}
+UmiStatus umi_record_document_read_in_transaction(UmiDataServer *server,
+    const char *entity_id,uint64_t revision,UmiRecordDocument *out) {
+    if (out == NULL || entity_id == NULL || revision == 0) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = document_transaction_active(server);
+    if (status != UMI_STATUS_OK) return status;
+    UmiRecordDocument *candidate = malloc(sizeof(*candidate));
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = read_content(server, entity_id, revision, candidate);
+    if (status == UMI_STATUS_OK) *out = *candidate;
+    free(candidate);return status;
+}
+UmiStatus umi_record_document_stage_in_transaction(UmiDataServer *server,
+    const UmiRecordDocument *document) {
+    if (document == NULL || document->length > UMI_RECORD_DOCUMENT_MAX_BYTES) return UMI_STATUS_INVALID_ARGUMENT;
+    char metadata[UMI_RECORD_REVISION_TEXT_CAPACITY], digest[UMI_SHA256_HEX_CAPACITY];
+    UmiStatus status = umi_record_revision_format(&document->record, metadata, sizeof metadata);
+    if (status == UMI_STATUS_OK) status = UmiSha256Buffer(document->content, document->length, digest);
+    if (status == UMI_STATUS_OK && strcmp(digest, document->record.amendment.content_sha256) != 0) status = UMI_STATUS_PARSE_ERROR;
+    if (status == UMI_STATUS_OK) status = document_transaction_active(server);
+    UmiRecordRevision staged;
+    if (status == UMI_STATUS_OK) status = umi_record_history_stage(server, &document->record.amendment,
+        document->record.previous_revision, &staged);
+    if (status == UMI_STATUS_OK) status = write_content(server, document);
+    return status;
 }

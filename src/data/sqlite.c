@@ -34,6 +34,8 @@ UmiSqliteReport umi_sqlite_report(const UmiDataServer *server)
  * Provide the sqlite integrity check operation used by this module and its client
  * applications.
  */
+/* Executing a PRAGMA successfully does not mean its diagnostic rows report a healthy store. The checked reader consumes and interprets those rows. The prior implementation is retained for review. */
+#if 0
 UmiStatus umi_sqlite_integrity_check(UmiDataServer *server)
 {
     /*
@@ -47,8 +49,18 @@ UmiStatus umi_sqlite_integrity_check(UmiDataServer *server)
     }
     return umi_data_server_execute(server, "PRAGMA quick_check;");
 }
+#endif
+UmiStatus umi_sqlite_integrity_check(UmiDataServer *server)
+{
+    UmiSqliteHealthReport report;
+    UmiStatus status = umi_sqlite_health_read(server, &report);
+    if (status != UMI_STATUS_OK) return status;
+    return report.sound ? UMI_STATUS_OK : UMI_STATUS_INVALID_STATE;
+}
 
 /* Provide the sqlite checkpoint operation used by this module and its client applications. */
+/* Checkpoint contention is reported by SQLite result state. The shared checkpoint operation now returns BUSY instead of discarding that information. The prior implementation is retained for review. */
+#if 0
 UmiStatus umi_sqlite_checkpoint(UmiDataServer *server)
 {
     /*
@@ -61,6 +73,12 @@ UmiStatus umi_sqlite_checkpoint(UmiDataServer *server)
         return UMI_STATUS_UNAVAILABLE;
     }
     return umi_data_server_execute(server, "PRAGMA wal_checkpoint(FULL);");
+}
+#endif
+UmiStatus umi_sqlite_checkpoint(UmiDataServer *server)
+{
+    UmiSqliteCheckpointReport report;
+    return umi_sqlite_checkpoint_full(server, &report);
 }
 
 /* Provide the sqlite compact operation used by this module and its client applications. */

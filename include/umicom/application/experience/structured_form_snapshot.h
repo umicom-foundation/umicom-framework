@@ -12,6 +12,16 @@
 extern "C" {
 #endif
 #define UMI_FORM_SNAPSHOT_MAX_BYTES 131072U
+/* A bounded untrusted header hint used only to select a trusted schema. Success
+ * does not validate the remaining body, prove authenticity or permit rendering.
+ * Resolve the original schema and perform a full decode before using answers. */
+typedef struct UmiStructuredFormSnapshotIdentity {
+  char form_id[UMI_APPLICATION_EXPERIENCE_ID_CAPACITY];
+  uint64_t schema_version, revision, saved_revision;
+  size_t field_count;
+} UmiStructuredFormSnapshotIdentity;
+UmiStatus umi_structured_form_snapshot_identity(const void *bytes, size_t length,
+    UmiStructuredFormSnapshotIdentity *out);
 /* Codec version 1 preserves schema ID/version, revision/saved revision, field
  * IDs, states, typed values, units and reasons. Only active value members are
  * stored, never C structure padding. No encryption, authentication or checksum
