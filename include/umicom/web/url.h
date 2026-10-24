@@ -34,6 +34,8 @@ UmiStatus umi_web_url_parse(const char *text,UmiWebUrl *out_url);
 /**
  * Read web url into validated module state and return a status when input cannot be used.
  */
+/* Invalid/incomplete percent escapes and encoded NUL are refused. Failure
+ * preserves the output; overlapping source/destination is supported. */
 UmiStatus umi_web_url_decode(const char *text,char *out_text,size_t capacity);
 #ifdef __cplusplus
 }

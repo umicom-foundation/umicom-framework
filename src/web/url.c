@@ -24,6 +24,42 @@
 /* Provide the hex value operation used by this module and its client applications. */
 static int hex_value(char c){/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(c>='0'&&c<='9')return c-'0';/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(c>='a'&&c<='f')return c-'a'+10;/* Keep the operation inside its valid bounds before reading, writing or adding data. */ if(c>='A'&&c<='F')return c-'A'+10;return -1;}
 /* Read web url into validated module state and return a status when input cannot be used. */
+/* Decode in two passes so malformed escapes and capacity errors leave the
+ * destination intact. Encoded NUL is refused because downstream URL/query APIs
+ * use terminated text. The previous permissive implementation is retained for
+ * comparison; the new implementation preserves ordinary percent/plus behavior. */
+#if 0
 UmiStatus umi_web_url_decode(const char *text,char *out_text,size_t capacity){size_t i=0U,o=0U;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(text==NULL||out_text==NULL||capacity==0U)return UMI_STATUS_INVALID_ARGUMENT;/* Continue only while work remains available; the loop body advances the state on each pass. */ while(text[i]!='\0'){char c=text[i++];/* Protect caller-owned memory by checking that required state is available before it is used. */ if(c=='%'&&text[i]!='\0'&&text[i+1U]!='\0'){int hi=hex_value(text[i]),lo=hex_value(text[i+1U]);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(hi<0||lo<0)return UMI_STATUS_PARSE_ERROR;c=(char)((hi<<4)|lo);i+=2U;}else /* Protect caller-owned memory by checking that required state is available before it is used. */ if(c=='+')c=' ';/* Protect caller-owned memory by checking that required state is available before it is used. */ if(o+1U>=capacity)return UMI_STATUS_CAPACITY_EXCEEDED;out_text[o++]=c;}out_text[o]='\0';return UMI_STATUS_OK;}
+#endif
+UmiStatus umi_web_url_decode(const char *text, char *out_text, size_t capacity) {
+  if (text == NULL || out_text == NULL || capacity == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+  size_t length = strlen(text), needed = 0U;
+  for (size_t i = 0U; i < length; ++i) {
+    if (text[i] == '%') {
+      if (length - i < 3U) return UMI_STATUS_PARSE_ERROR;
+      int high = hex_value(text[i + 1U]), low = hex_value(text[i + 2U]);
+      if (high < 0 || low < 0 || (high == 0 && low == 0)) return UMI_STATUS_PARSE_ERROR;
+      i += 2U;
+    }
+    if (needed >= capacity - 1U) return UMI_STATUS_CAPACITY_EXCEEDED;
+    ++needed;
+  }
+  /* A staging buffer also supports callers decoding into overlapping storage. */
+  char *candidate = malloc(needed + 1U);
+  if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+  size_t used = 0U;
+  for (size_t i = 0U; i < length; ++i) {
+    char value = text[i];
+    if (value == '%') {
+      value = (char)((unsigned)hex_value(text[i + 1U]) * 16U + (unsigned)hex_value(text[i + 2U]));
+      i += 2U;
+    } else if (value == '+') value = ' ';
+    candidate[used++] = value;
+  }
+  candidate[used] = '\0';
+  memcpy(out_text, candidate, used + 1U);
+  free(candidate);
+  return UMI_STATUS_OK;
+}
 /* Read web url into validated module state and return a status when input cannot be used. */
 UmiStatus umi_web_url_parse(const char *text,UmiWebUrl *out_url){const char *scheme_end,*authority,*path,*colon,*query;size_t n;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(text==NULL||out_url==NULL)return UMI_STATUS_INVALID_ARGUMENT;(void)memset(out_url,0,sizeof(*out_url));scheme_end=strstr(text,"://");if(scheme_end==NULL)return UMI_STATUS_PARSE_ERROR;n=(size_t)(scheme_end-text);if(n+1U>sizeof(out_url->scheme))return UMI_STATUS_CAPACITY_EXCEEDED;(void)memcpy(out_url->scheme,text,n);out_url->scheme[n]='\0';authority=scheme_end+3;path=strchr(authority,'/');if(path==NULL)path=authority+strlen(authority);colon=memchr(authority,':',(size_t)(path-authority));n=(size_t)((colon!=NULL?colon:path)-authority);if(n+1U>sizeof(out_url->host))return UMI_STATUS_CAPACITY_EXCEEDED;(void)memcpy(out_url->host,authority,n);out_url->host[n]='\0';out_url->port=(uint16_t)(colon!=NULL?strtoul(colon+1,NULL,10):(strcmp(out_url->scheme,"https")==0?443U:80U));if(*path=='\0')return umi_web_copy_text(out_url->path,sizeof(out_url->path),"/");query=strchr(path,'?');if(query==NULL)return umi_web_copy_text(out_url->path,sizeof(out_url->path),path);n=(size_t)(query-path);if(n+1U>sizeof(out_url->path))return UMI_STATUS_CAPACITY_EXCEEDED;(void)memcpy(out_url->path,path,n);out_url->path[n]='\0';return umi_web_copy_text(out_url->query,sizeof(out_url->query),query+1);}

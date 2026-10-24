@@ -1,0 +1,17 @@
+cmake_minimum_required(VERSION 3.24)
+project(UmicomStructuredFormConsumer LANGUAGES C)
+find_package(UmicomFramework CONFIG REQUIRED COMPONENTS application)
+add_executable(structured-form-example main.c)
+target_link_libraries(structured-form-example PRIVATE Umicom::application)
+set_target_properties(structured-form-example PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+include(CTest)
+if(BUILD_TESTING)
+    add_test(NAME structured-form-example COMMAND structured-form-example)
+endif()
+
+# Native composition is optional; the portable example remains available.
+if(TARGET Umicom::structured_form_gtk4)
+    add_executable(structured-form-native native.c)
+    target_link_libraries(structured-form-native PRIVATE Umicom::structured_form_gtk4)
+    set_target_properties(structured-form-native PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+endif()

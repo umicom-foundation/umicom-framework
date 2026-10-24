@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/application/experience/field.h"
 
+#include <math.h>
 #include <string.h>
 
 /*
@@ -66,6 +67,10 @@ umi_application_experience_field_option(const UmiApplicationExperienceField *fie
  * Check that application experience field satisfies its contract before another service
  * relies on it.
  */
+/* Enforced numeric bounds must be finite. NaN makes both ordering comparisons
+ * false and could silently admit values outside an intended constraint. The
+ * earlier descriptor validator is retained for review below. */
+#if 0
 UmiStatus umi_application_experience_field_validate(const UmiApplicationExperienceField *field) {
   size_t index;
   /*
@@ -85,6 +90,60 @@ UmiStatus umi_application_experience_field_validate(const UmiApplicationExperien
       (field->enforce_number_range != 0 && field->enforce_number_range != 1) ||
       (field->enforce_length_range != 0 && field->enforce_length_range != 1) ||
       (field->enforce_number_range && field->minimum_number > field->maximum_number) ||
+      (field->enforce_length_range && field->minimum_length > field->maximum_length) ||
+      field->option_count > UMI_APPLICATION_EXPERIENCE_OPTION_CAPACITY ||
+      (field->option_count > 0U && field->options == NULL))
+    return UMI_STATUS_INVALID_STATE;
+  /* Apply this branch only when its contract condition is satisfied. */
+  if (field->kind == UMI_APPLICATION_EXPERIENCE_FIELD_CHOICE && field->option_count == 0U)
+    return UMI_STATUS_INVALID_STATE;
+  /* Visit each bounded item once so every record receives the same rule. */
+  for (index = 0U; index < field->option_count; ++index) {
+    size_t previous;
+    const UmiApplicationExperienceFieldOption *option = &field->options[index];
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (option->label == NULL || option->label[0] == '\0' ||
+        !umi_application_experience_identifier_valid(option->option_id) ||
+        (option->disabled != 0 && option->disabled != 1))
+      return UMI_STATUS_INVALID_STATE;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (previous = 0U; previous < index; ++previous) {
+      /* Use the stable identifier comparison to choose the matching record or policy. */
+      if (strcmp(field->options[previous].option_id, option->option_id) == 0)
+        return UMI_STATUS_ALREADY_EXISTS;
+    }
+  }
+  /* Apply this branch only when its contract condition is satisfied. */
+  if (field->default_value.type != UMI_APPLICATION_EXPERIENCE_VALUE_NONE &&
+      field->default_value.type != field->value_type)
+    return UMI_STATUS_INVALID_STATE;
+  return umi_application_experience_value_validate(&field->default_value);
+}
+
+#endif
+UmiStatus umi_application_experience_field_validate(const UmiApplicationExperienceField *field) {
+  size_t index;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
+  if (field == NULL || field->label == NULL || field->help_text == NULL ||
+      field->label[0] == '\0' || !umi_application_experience_identifier_valid(field->field_id))
+    return UMI_STATUS_INVALID_ARGUMENT;
+  /* Apply this branch only when its contract condition is satisfied. */
+  if (field->kind < UMI_APPLICATION_EXPERIENCE_FIELD_TEXT ||
+      field->kind > UMI_APPLICATION_EXPERIENCE_FIELD_SECRET ||
+      field->value_type < UMI_APPLICATION_EXPERIENCE_VALUE_BOOLEAN ||
+      field->value_type > UMI_APPLICATION_EXPERIENCE_VALUE_TEXT ||
+      (field->required != 0 && field->required != 1) ||
+      (field->read_only != 0 && field->read_only != 1) ||
+      (field->enforce_number_range != 0 && field->enforce_number_range != 1) ||
+      (field->enforce_length_range != 0 && field->enforce_length_range != 1) ||
+      (field->enforce_number_range && (!isfinite(field->minimum_number) ||
+          !isfinite(field->maximum_number) || field->minimum_number > field->maximum_number)) ||
       (field->enforce_length_range && field->minimum_length > field->maximum_length) ||
       field->option_count > UMI_APPLICATION_EXPERIENCE_OPTION_CAPACITY ||
       (field->option_count > 0U && field->options == NULL))

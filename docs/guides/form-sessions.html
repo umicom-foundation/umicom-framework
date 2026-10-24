@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Editing and saving typed form records</title><style>body{max-width:900px;margin:3rem auto;padding:0 1rem;font:17px/1.6 system-ui;color:#192632}pre{background:#edf3f7;padding:1rem;overflow:auto}h1,h2{line-height:1.2}</style></head><body>
+<h1>Editing and saving typed form records</h1>
+<p>A structured form session joins typed answers to the Framework's durable draft protocol. It keeps the selected record, current edit, saved baseline and outstanding save separate. Link <code>Umicom::form_records</code> and include <code>umicom/data/structured_form_session.h</code>.</p>
+<h2>1. Create the editing owner</h2>
+<p>Call <code>umi_structured_form_session_create</code> with an immutable schema. Keep that schema alive until the session is destroyed. Serialize calls on one owner, normally the native UI thread or an application request owner. The service starts no threads and opens no database.</p>
+<h2>2. Start or open a record</h2>
+<p><code>session_begin</code> creates an unsaved typed draft under an entity identifier. It does not check whether that identifier already exists in a store; the first save checks. To open an existing record, use <code>umi_record_document_open_reviewed</code> to retrieve the exact catalogue selection, then pass the document to <code>session_open</code>. Opening verifies the payload digest and matching schema.</p>
+<p>Both operations refuse to replace unsaved edits or an outstanding save. Every accepted replacement advances a session generation. A generation identifies the selected editing context; a form revision identifies changes within that context. Capture both from <code>session_snapshot</code>.</p>
+<h2>3. Apply a reviewed edit</h2>
+<pre><code>umi_structured_form_session_snapshot(session, view);
+/* Prepare an edit against view-&gt;form with the shared form service. */
+umi_structured_form_session_apply(session, view-&gt;generation, edit);</code></pre>
+<p>A successful edit changes all captured fields atomically. An old generation, old form revision, changed previous answer, incompatible unit or oversized serialized form refuses the operation. The accepted model and its draft bytes stay together. A true no-op does not make a loaded record dirty.</p>
+<h2>4. Save without losing later typing</h2>
+<ol><li>Call <code>session_prepare_save</code> with the reviewed generation and attribution. Use <code>submitting=0</code> to save a valid draft, or <code>1</code> to also require the submission rules.</li><li>Copy the returned <code>UmiRecordSaveRequest</code> to your worker. Keep it unchanged and call <code>umi_record_save_request_commit</code> there using an owned, live Data Server.</li><li>Return the result and committed metadata to <code>session_finish_save</code> on the originating session owner. Use the exact request identifier.</li></ol>
+<p>Editing remains available while saving. A second save is busy. Successful completion advances the saved baseline to the captured content; newer edits remain dirty. Wrong request identifiers and mismatched success metadata leave the outstanding request intact. A failed write clears only the matching pending request and preserves the draft.</p>
+<p>If dispatch fails before a worker starts, finish the request with that failure. If storage reports an ambiguous I/O failure, inspect the store before retrying. Closing a window does not prove that a running write was cancelled. Complete workers and disconnect their replies before destroying their session.</p>
+<h2>5. Discard or recover explicitly</h2>
+<p><code>session_discard</code> requires an explicit user decision and the current generation. It restores the saved answers, or closes a never-saved new record. It advances generation so delayed edits for the discarded view are refused. It cannot run during a save.</p>
+<p><code>session_capture</code> returns a recovery snapshot when no save is pending. Use the existing record draft snapshot codec and rooted recovery-file service to retain it locally. Before restoring against a selected store, verify its baseline with <code>umi_record_draft_snapshot_check_store</code>. Then call <code>session_restore</code> on an empty or clean session. A newer stored head is not silently merged; the next save performs the normal predecessor check.</p>
+<h2>Limits and integration</h2>
+<p>Serialized forms must fit the bounded record document limit. Sessions do not encrypt data, authenticate actors, authorize records, schedule autosave or decide which database to use. Your application supplies those policies and retains the session across view refreshes. These services are shared foundations for product workflows; applications must still connect selection, editing, persistence and visible error handling.</p>
+<p>See <a href="structured-forms.html">structured forms</a>, <a href="browser-forms.html">browser controls</a> and <a href="record-draft-recovery.html">record recovery</a>.</p>
+</body></html>
