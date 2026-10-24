@@ -7,6 +7,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/data/record_history.h"
 #include "include/record_fields.h"
+#include "include/record_history_internal.h"
 #include <stdio.h>
 
 /* Keep shared record ownership in Data Server. Applications supply metadata
@@ -90,7 +91,40 @@ UmiStatus umi_record_revision_parse(const char *text, size_t length,
 /* Encode every identifier byte, including punctuation, to prevent key aliases.
  * 63 bytes become 126 hex digits; the complete key fits the memory backend's
  * 192-byte key contract, including prefix, revision and terminator. */
+/* The original private key builder remains for review. A shared internal entry
+ * now lets content storage use exactly the same identifier encoding as history. */
+#if 0
 static UmiStatus history_key(const char *entity, uint64_t revision, char *key, size_t capacity)
+{
+    if (entity == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    static const char hex[] = "0123456789abcdef";
+    char encoded[127];
+    size_t length = 0U;
+    while (length < 64U && entity[length] != '\0') {
+        unsigned char byte = (unsigned char)entity[length];
+        if (length == 63U || byte < 32U || byte == 127U) {
+            return UMI_STATUS_INVALID_ARGUMENT;
+        }
+        encoded[length * 2U] = hex[byte >> 4U];
+        encoded[length * 2U + 1U] = hex[byte & 15U];
+        ++length;
+    }
+    if (length == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    encoded[length * 2U] = '\0';
+    int written = revision == 0U
+        ? snprintf(key, capacity, "repo.record-history.h.%s", encoded)
+        : snprintf(key, capacity, "repo.record-history.r.%s.%020llu", encoded,
+                   (unsigned long long)revision);
+    return written < 0 || (size_t)written >= capacity
+        ? UMI_STATUS_CAPACITY_EXCEEDED : UMI_STATUS_OK;
+}
+
+#endif
+UmiStatus umi_record_history_key(const char *entity, uint64_t revision, char *key, size_t capacity)
 {
     if (entity == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -123,7 +157,7 @@ static UmiStatus history_head(const UmiDataServer *server, const char *entity,
                               uint64_t *head)
 {
     char key[192];
-    UmiStatus status = history_key(entity, 0U, key, sizeof key);
+    UmiStatus status = umi_record_history_key(entity, 0U, key, sizeof key);
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -149,7 +183,7 @@ UmiStatus umi_record_history_load(const UmiDataServer *server, const char *entit
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     char key[192];
-    UmiStatus status = history_key(entity_id, revision, key, sizeof key);
+    UmiStatus status = umi_record_history_key(entity_id, revision, key, sizeof key);
     if (status != UMI_STATUS_OK) {
         return status;
     }
@@ -195,6 +229,10 @@ static UmiStatus history_abort(UmiDataServer *server, UmiStatus original)
     return rolled_back == UMI_STATUS_OK ? original : UMI_STATUS_IO_ERROR;
 }
 
+/* The metadata-only transaction is preserved for review. Staging is shared
+ * internally so document content and history can commit under one owner; the
+ * public metadata-only API still begins and completes its own transaction. */
+#if 0
 UmiStatus umi_record_history_append(UmiDataServer *server,
                                    const UmiRecordAmendment *amendment,
                                    uint64_t expected_revision,
@@ -263,6 +301,105 @@ UmiStatus umi_record_history_append(UmiDataServer *server,
         return history_abort(server, status);
     }
     status = umi_data_server_commit(server);
+    if (status != UMI_STATUS_OK) {
+        return history_abort(server, status);
+    }
+    *output = candidate;
+    return UMI_STATUS_OK;
+}
+
+#endif
+UmiStatus umi_record_history_stage(UmiDataServer *server,
+                                   const UmiRecordAmendment *amendment,
+                                   uint64_t expected_revision,
+                                   UmiRecordRevision *output)
+{
+    if (server == NULL || amendment == NULL || output == NULL || !amendment_valid(amendment)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (expected_revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    /* Capture input before touching output, including when callers reuse an
+     * existing revision's amendment as the next request. */
+    UmiRecordRevision candidate = {*amendment, expected_revision + 1U, expected_revision};
+    char text[UMI_RECORD_REVISION_TEXT_CAPACITY];
+    UmiStatus status = umi_record_revision_format(&candidate, text, sizeof text);
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    /* This internal operation joins only a transaction already owned by its
+     * caller. Data Server rejects reads/writes from a competing thread. */
+    if (!umi_data_server_in_transaction(server)) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    uint64_t head = 0U;
+    status = history_head(server, amendment->entity_id, &head);
+    if (status != UMI_STATUS_OK && status != UMI_STATUS_NOT_FOUND) {
+        return status;
+    }
+    if (head != expected_revision) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    if (head != 0U) {
+        UmiRecordRevision previous;
+        status = umi_record_history_load(server, amendment->entity_id, head, &previous);
+        if (status != UMI_STATUS_OK) {
+            return status;
+        }
+        if (amendment->recorded_at_nanoseconds < previous.amendment.recorded_at_nanoseconds) {
+            return UMI_STATUS_INVALID_ARGUMENT;
+        }
+    }
+    char key[192];
+    status = umi_record_history_key(amendment->entity_id, candidate.revision, key, sizeof key);
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    char occupied[2];
+    status = umi_data_server_get(server, key, occupied, sizeof occupied);
+    if (status != UMI_STATUS_NOT_FOUND) {
+        return status == UMI_STATUS_OK || status == UMI_STATUS_CAPACITY_EXCEEDED
+            ? UMI_STATUS_INVALID_STATE : status;
+    }
+    status = umi_data_server_set(server, key, text);
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    status = umi_record_history_key(amendment->entity_id, 0U, key, sizeof key);
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    char head_text[32];
+    (void)snprintf(head_text, sizeof head_text, "%llu", (unsigned long long)candidate.revision);
+    status = umi_data_server_set(server, key, head_text);
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    *output = candidate;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_record_history_append(UmiDataServer *server,
+                                   const UmiRecordAmendment *amendment,
+                                   uint64_t expected_revision,
+                                   UmiRecordRevision *output)
+{
+    if (server == NULL || amendment == NULL || output == NULL || !amendment_valid(amendment)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (expected_revision == UINT64_MAX) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    UmiStatus status = umi_data_server_begin(server);
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    UmiRecordRevision candidate;
+    status = umi_record_history_stage(server, amendment, expected_revision, &candidate);
+    if (status == UMI_STATUS_OK) {
+        status = umi_data_server_commit(server);
+    }
     if (status != UMI_STATUS_OK) {
         return history_abort(server, status);
     }

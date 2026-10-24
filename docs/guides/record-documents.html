@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Save record content and history | Umicom Framework</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:960px;margin:3rem auto;padding:0 1.2rem;color:#182a3b}h1,h2{line-height:1.2}pre{padding:1rem;background:#eef3f7;overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #c4d1de;padding:.6rem;text-align:left}.note{background:#edf5fa;border-left:4px solid #26708e;padding:1rem}code{font-size:.9em}</style></head><body>
+<h1>Save record content and its history together</h1>
+<p>A transaction groups several database writes into one operation. Either all writes are committed, or the earlier state is retained after rollback. The record-document service uses a transaction for the content, amendment metadata and current-revision pointer, so an application does not need to coordinate separate saves.</p>
+<p>Include <code>umicom/data/record_document.h</code> and link <code>Umicom::data</code>. The service supports the Framework memory and optional SQLite Data Server backends. A record can contain up to 16,384 bytes, including binary zeroes. It is intended for bounded notes or structured records; large documents and media attachments need another storage service.</p>
+<p class="note">Actor and source fields are descriptive labels. They do not authenticate a user. Content is not encrypted. Access control, authenticated identity, record schemas and decisions about care or payments belong to the consuming services. The example uses fictional administrative and statement-review notes.</p>
+<h2>Create a record</h2>
+<ol><li>Create a Data Server with <code>umi_data_server_create_memory</code>, or open a database with <code>umi_data_server_create_sqlite</code>. Check its returned status before proceeding.</li><li>Choose a stable entity ID, at most 63 bytes. Use a product namespace, such as <code>bank.review.example</code>, to keep unrelated records separate.</li><li>Supply the amendment source, actor, reason and a nonzero recorded time. Metadata arrays must be terminated and contain no control characters.</li><li>Pass the content and its byte length to <code>umi_record_document_append</code>, using expected revision zero for a new record. Do not include a text terminator unless it is part of the intended content.</li><li>Keep the returned revision only when the call succeeds. The service calculates SHA-256 from the submitted bytes and replaces the copied metadata's digest; it does not change your input metadata.</li></ol>
+<pre>UmiRecordAmendment metadata = {
+    .entity_id = "bank.review.example",
+    .source = "fictional-statement",
+    .actor = "fictional-reviewer",
+    .reason = "Record a review note",
+    .recorded_at_nanoseconds = 100
+};
+const char note[] = "Reference requires review.";
+UmiRecordRevision saved;
+UmiStatus status = umi_record_document_append(server, &amp;metadata,
+    note, sizeof note - 1, 0, &amp;saved);
+if (status != UMI_STATUS_OK) {
+    /* Keep the editor draft and report the failure. */
+}</pre>
+<h2>Read and amend without losing another edit</h2>
+<ol><li>Read <code>umi_record_document_latest</code> into a caller-owned <code>UmiRecordDocument</code>. Its <code>length</code> gives the valid content size. Binary content is not a C string; use its length when displaying or exporting it.</li><li>Keep <code>document.record.revision</code> while the user edits their copy.</li><li>Submit the new bytes with that reviewed revision. A stale revision returns <code>UMI_STATUS_INVALID_STATE</code>. Keep the draft, reload the current record separately, and let the user compare the changes.</li><li>Use <code>umi_record_document_load</code> to read a particular earlier revision. The original content remains available after an amendment.</li><li>Use <code>umi_record_document_verify</code> to check every revision through the recorded head. This checks required rows, encoding, byte counts, digests and recorded-time order.</li></ol>
+<p>All public document operations own their transactions, including reads. Calls inside an existing transaction return <code>BUSY</code>; they do not complete the caller's transaction. SQLite reads currently use Data Server's immediate transaction mode and can contend with other database writers. Run database operations on the application's managed worker when blocking storage would affect the interface.</p>
+<h2>Keep the storage format consistent</h2>
+<p>The older <a href="record-amendments.html">metadata-only history API</a> remains available. Choose one append API for each entity. A metadata-only revision has no content rows, so it cannot silently be amended as a document. An explicit migration would need to supply and verify the missing historical content. The document service does not invent that content.</p>
+<p>Content is stored as bounded hexadecimal chunks with a versioned manifest. Applications must not write keys beginning with <code>repo.record-history.</code> or <code>repo.record-content.</code>. Each revision consumes several Data Server records; the memory backend's total record limit still applies. Failed saves do not delete earlier revisions to make room.</p>
+<h2>Run the installed example</h2>
+<p>After installing an SDK that includes the data component, copy <code>share/umicom-framework/examples/data_history</code> into your own example workspace. From that copied folder, use the installed prefix appropriate to your system:</p>
+<pre>cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH="C:/umicom/installed/applications"
+cmake --build build --parallel 2
+ctest --test-dir build --output-on-failure --no-tests=error</pre>
+<p>Stop on a failed command. The consumer project links the installed <code>Umicom::data</code> target. The document example should report two intact revisions for each fictional entity, with the original retained and a stale edit refused. The example uses memory storage and does not demonstrate restart persistence; the SQLite reopen regression covers that separate behavior.</p>
+<h2>Recover from an error</h2>
+<table><thead><tr><th>Status</th><th>Action</th></tr></thead><tbody>
+<tr><td>INVALID_STATE</td><td>Keep the draft. Inspect whether the reviewed revision is stale or a supposedly unused storage key is occupied. Do not overwrite existing rows.</td></tr>
+<tr><td>BUSY</td><td>Let the active transaction finish. Retry through the application's normal worker after reviewing its current state.</td></tr>
+<tr><td>INVALID_ARGUMENT</td><td>Check metadata, nonzero recorded time, entity ID, pointers and content length.</td></tr>
+<tr><td>NOT_FOUND / PARSE_ERROR</td><td>A required row is absent or malformed, or its content digest differs. Preserve the database for inspection. Do not treat missing content as an empty record or silently recreate it.</td></tr>
+<tr><td>CAPACITY_EXCEEDED</td><td>Check the 16 KiB document limit and the backend's record capacity. Keep the unsaved draft.</td></tr>
+<tr><td>IO_ERROR</td><td>Read Data Server diagnostics. A failed rollback can require further recovery on the same server. Do not assume the database is ready for a retry until its recovery contract is satisfied.</td></tr>
+</tbody></table>
+<p>Output snapshots remain unchanged on failure. Hash verification detects accidental content changes, not a malicious rewrite of the complete store, a deleted history tail, or a trusted signer. Store backups and retention policies remain separate responsibilities.</p>
+<footer><p>Umicom Framework · Sammy Hegab · Umicom Foundation · MIT</p></footer></body></html>

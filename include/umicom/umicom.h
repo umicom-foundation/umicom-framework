@@ -68,6 +68,7 @@
 #include "umicom/data/lineage.h"
 /* Shared amendment metadata remains independent of application presentation. */
 #include "umicom/data/record_history.h"
+#include "umicom/data/record_document.h"
 #include "umicom/data/backup.h"
 #include "umicom/data/integrity.h"
 #include "umicom/data/message_store.h"

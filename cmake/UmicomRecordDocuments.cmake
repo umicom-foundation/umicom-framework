@@ -1,0 +1,115 @@
+# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# Content storage belongs to the existing data SDK component. Applications do
+# not need another persistence library or a second transaction implementation.
+if(NOT TARGET umicom_data)
+    return()
+endif()
+include_guard(GLOBAL)
+get_filename_component(_document_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_data include/umicom/data/record_document.h)
+endif()
+if(COMMAND umicom_target_qualification_inputs)
+    umicom_target_qualification_inputs(umicom_data FILES
+        "${_document_root}/src/data/include/record_history_internal.h"
+        "${_document_root}/src/data/include/record_fields.h")
+endif()
+foreach(_document_component IN ITEMS Framework FrameworkSDK)
+    if(_document_component STREQUAL "FrameworkSDK")
+        set(_document_exclude EXCLUDE_FROM_ALL)
+    else()
+        set(_document_exclude "")
+    endif()
+    install(FILES "${_document_root}/docs/guides/record-documents.html"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides"
+        COMPONENT "${_document_component}" ${_document_exclude})
+endforeach()
+if(BUILD_TESTING)
+    find_package(Threads REQUIRED)
+    add_executable(umicom-record-document-concurrency-test "${_document_root}/tests/data_history/test_record_document_concurrency.c")
+    target_link_libraries(umicom-record-document-concurrency-test PRIVATE Threads::Threads)
+    add_executable(umicom-record-document-test "${_document_root}/tests/data_history/test_record_document.c")
+    add_executable(umicom-record-document-example "${_document_root}/examples/data_history/record_documents.c")
+    set(_document_targets umicom-record-document-test umicom-record-document-example umicom-record-document-concurrency-test)
+    if(SQLite3_FOUND)
+        add_executable(umicom-record-document-recovery-test
+            "${_document_root}/tests/data_history/test_record_document_recovery.c")
+        list(APPEND _document_targets umicom-record-document-recovery-test)
+    endif()
+    foreach(_document_target IN LISTS _document_targets)
+        target_link_libraries(${_document_target} PRIVATE Umicom::data)
+        set_target_properties(${_document_target} PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(${_document_target})
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(${_document_target})
+        endif()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(${_document_target})
+        endif()
+    endforeach()
+    set(_document_backends memory)
+    if(SQLite3_FOUND)
+        list(APPEND _document_backends sqlite)
+    endif()
+    foreach(_document_backend IN LISTS _document_backends)
+        add_test(NAME framework.data.document.${_document_backend}.competing
+            COMMAND umicom-record-document-concurrency-test ${_document_backend})
+        set_tests_properties(framework.data.document.${_document_backend}.competing PROPERTIES
+            TIMEOUT 30 LABELS "framework;data;document;${_document_backend};concurrency")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.data.document.${_document_backend}.competing
+                TARGETS umicom-record-document-concurrency-test)
+        endif()
+        foreach(_document_case IN ITEMS roundtrip boundaries digest stale nested invalid isolation
+                tamper manifest chunks mixed-history occupied missing)
+            add_test(NAME framework.data.document.${_document_backend}.${_document_case}
+                COMMAND umicom-record-document-test ${_document_backend} ${_document_case})
+            set_tests_properties(framework.data.document.${_document_backend}.${_document_case} PROPERTIES
+                TIMEOUT 30 LABELS "framework;data;document;${_document_backend};regression")
+            if(COMMAND umicom_test_impact_owners)
+                umicom_test_impact_owners(framework.data.document.${_document_backend}.${_document_case}
+                    TARGETS umicom-record-document-test)
+            endif()
+        endforeach()
+    endforeach()
+    add_test(NAME framework.data.document.memory.capacity COMMAND umicom-record-document-test memory capacity)
+    set_tests_properties(framework.data.document.memory.capacity PROPERTIES
+        TIMEOUT 60 LABELS "framework;data;document;memory;regression")
+    add_test(NAME framework.data.document.example COMMAND umicom-record-document-example)
+    set_tests_properties(framework.data.document.example PROPERTIES
+        TIMEOUT 30 LABELS "framework;data;document;example")
+    if(COMMAND umicom_test_impact_owners)
+        umicom_test_impact_owners(framework.data.document.memory.capacity TARGETS umicom-record-document-test)
+        umicom_test_impact_owners(framework.data.document.example TARGETS umicom-record-document-example)
+    endif()
+    if(SQLite3_FOUND)
+        file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/record-document-fixtures")
+        foreach(_document_case IN ITEMS manifest-failure chunk-failure head-failure commit-failure automatic-rollback)
+            add_test(NAME framework.data.document.sqlite.${_document_case}
+                COMMAND umicom-record-document-recovery-test ${_document_case})
+            set_tests_properties(framework.data.document.sqlite.${_document_case} PROPERTIES
+                TIMEOUT 30 LABELS "framework;data;document;sqlite;recovery")
+            if(COMMAND umicom_test_impact_owners)
+                umicom_test_impact_owners(framework.data.document.sqlite.${_document_case}
+                    TARGETS umicom-record-document-recovery-test)
+            endif()
+        endforeach()
+        add_test(NAME framework.data.document.sqlite.reopen COMMAND umicom-record-document-recovery-test
+            reopen "${CMAKE_CURRENT_BINARY_DIR}/record-document-fixtures")
+        set_tests_properties(framework.data.document.sqlite.reopen PROPERTIES
+            TIMEOUT 30 LABELS "framework;data;document;sqlite;recovery")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.data.document.sqlite.reopen TARGETS umicom-record-document-recovery-test)
+        endif()
+    endif()
+endif()
+unset(_document_root)
+unset(_document_component)
+unset(_document_exclude)
+unset(_document_target)
+unset(_document_targets)
+unset(_document_backends)
+unset(_document_backend)
+unset(_document_case)

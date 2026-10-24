@@ -16,6 +16,10 @@ extern "C" {
 
 #define UMI_RECORD_REVISION_TEXT_CAPACITY 1024U
 
+/* For content and metadata saved atomically, use record_document.h. Retain this
+ * metadata-only API for separately managed content. Do not alternate the two
+ * append APIs for the same entity: a metadata-only revision has no payload. */
+
 /* Bounded identifiers and metadata, not a clinical note or a document payload.
  * The caller supplies the SHA-256 of its separately retained content. This
  * service records the digest but does not authenticate the actor, calculate
