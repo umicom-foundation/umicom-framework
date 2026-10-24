@@ -26,3 +26,8 @@ include("${_umicom_framework_root}/cmake/UmicomNativeLlmPrefixBenchmark.cmake")
 # Bind the existing checkpoint to its declared learned-absolute positional
 # strategy and explicitly selected generation context (no silent migration).
 include("${_umicom_framework_root}/cmake/UmicomNativeLlmPositionContract.cmake")
+
+# Enforce positional policy at the actual model-loading, generation, and
+# benchmark boundaries. The 128-byte sidecar remains an additional record,
+# never a modification of the established native decoder checkpoint format.
+include("${_umicom_framework_root}/cmake/UmicomNativeLlmPositionAdmission.cmake")
