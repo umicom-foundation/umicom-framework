@@ -31,3 +31,8 @@ include("${_umicom_framework_root}/cmake/UmicomNativeLlmPositionContract.cmake")
 # benchmark boundaries. The 128-byte sidecar remains an additional record,
 # never a modification of the established native decoder checkpoint format.
 include("${_umicom_framework_root}/cmake/UmicomNativeLlmPositionAdmission.cmake")
+
+# Opt-in RoPE research uses NEW model-family mathematics only. The existing
+# learned-absolute decoder, checkpoint decoder and position admission service
+# continue to reject incompatible policy or checkpoint reinterpretations.
+include("${_umicom_framework_root}/cmake/UmicomNativeLlmRotaryResearch.cmake")
