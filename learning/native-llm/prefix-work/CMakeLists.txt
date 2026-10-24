@@ -63,3 +63,7 @@ include("${_umicom_framework_root}/cmake/UmicomNativeLlmRotaryQualification.cmak
 # rotary-tape gradients, bounded allocation rollback and repeated graph rewind.
 # None of the test-only code is linked into a deployed Framework application.
 include("${_umicom_framework_root}/cmake/UmicomNativeLlmRotaryRealTape.cmake")
+
+# Batch 93–94: interpret explicitly supplied CTest observations without
+# inventing a successful production-tape run or altering the decoder.
+include("${_umicom_framework_root}/cmake/UmicomNativeLlmRotaryAcceptance.cmake")
