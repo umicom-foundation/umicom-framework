@@ -54,6 +54,12 @@ UmiStatus umi_lineage_store_init(UmiLineageStore *store,
                                  const UmiStore *data_store);
 /**
  * Add lineage only after its inputs and available capacity have been checked.
+ * Serialize all appenders sharing a provider: UmiStore does not offer atomic
+ * compare-and-insert. Do not delete or edit lineage keys outside this service.
+ * Reopened handles skip occupied keys. On failure, the caller record and the
+ * handle sequence hint are unchanged. Zero next_sequence means exhausted.
+ * Metadata fields must be terminated and contain no control characters.
+ * Use record_history.h for transaction-owned, expected-revision amendments.
  */
 UmiStatus umi_lineage_append(UmiLineageStore *store,
                              UmiLineageRecord *record);

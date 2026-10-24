@@ -58,7 +58,7 @@ if(BUILD_TESTING)
         PROPERTIES LABELS "framework;ai;native-training;learning;kv-cache;prefix-reuse")
 endif()
 
-# Batch 71–72: the production decoder is the INDEPENDENT numerical reference
+# the production decoder is the INDEPENDENT numerical reference
 # for both final-prefix and first-eviction logits. This is additive to the
 # previously qualified growing-prefix module and does not replace its code.
 # The regular Framework decoder and KV-cache retain all mathematical ownership.
@@ -107,7 +107,7 @@ if(BUILD_TESTING)
         PROPERTIES LABELS "framework;ai;native-training;learning;kv-cache;position-parity")
 endif()
 
-# Batch 73–74: opt-in, unpadded growing-prefix autoregressive generation.
+# opt-in, unpadded growing-prefix autoregressive generation.
 # It composes the existing Framework KV cache, nucleus sampler and seeded RNG
 # without changing the historical BOS-left-padded generation policy.
 # This additive registration works in the isolated native LLM prefix laboratory.
