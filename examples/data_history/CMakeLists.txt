@@ -32,3 +32,12 @@ set_target_properties(umicom-record-history-page-example PROPERTIES
 if(BUILD_TESTING)
     add_test(NAME consumer.record-history-pages COMMAND umicom-record-history-page-example)
 endif()
+
+# Recovery codecs remain available to installed headless data consumers.
+add_executable(umicom-record-draft-recovery-example record_draft_recovery.c)
+target_link_libraries(umicom-record-draft-recovery-example PRIVATE Umicom::data)
+set_target_properties(umicom-record-draft-recovery-example PROPERTIES
+    C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+if(BUILD_TESTING)
+    add_test(NAME consumer.record-draft-recovery COMMAND umicom-record-draft-recovery-example)
+endif()

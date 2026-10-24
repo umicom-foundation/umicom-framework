@@ -292,6 +292,7 @@ add_library(umicom_data STATIC
     src/data/record_document.c
     # Shared draft ownership keeps save replies from replacing newer edits.
     src/data/record_draft.c
+    src/data/record_draft_snapshot.c
     # Bounded history queries share the existing data transaction owner.
     src/data/record_history_page.c
     src/data/backup.c
@@ -6127,6 +6128,8 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomRecordHistory.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomRecordDocuments.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomRecordDrafts.cmake")
 # Native products share the same draft and worker ownership rules.
+# Recovery storage is registered before the native editor which consumes it.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomRecordDraftRecovery.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomRecordEditorGtk4.cmake")
 
 # Stable history pages are usable by GTK and headless consumers.

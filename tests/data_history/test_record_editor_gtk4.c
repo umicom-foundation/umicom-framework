@@ -2,6 +2,7 @@
  * Real GTK and SQLite fixtures exercise visible drafts and retained controls.
  * Headless display absence is reported as skipped coverage, never a pass. */
 #include "umicom/ui/gtk4/record_editor.h"
+#include "umicom/data/record_draft_files.h"
 #include <glib/gstdio.h>
 #include <stdio.h>
 #include <string.h>
@@ -87,6 +88,8 @@ int main(int argc, char **argv)
     UmiRecordRevision revision;
     gulong signal = 0U;
     char *directory = NULL, *database = NULL, *oversized = NULL;
+    char *recovery_path = NULL, *alternate_path = NULL;
+    UmiRecordDraftSnapshot *recovery_snapshot = NULL;
     Observer observer = {0};
     const char *name = argc == 3 ? argv[1] : "";
     if (!gtk_init_check()) return 77;
@@ -145,7 +148,67 @@ int main(int argc, char **argv)
     CHECK(click(root, "record-editor-save")); CHECK(wait_idle(root));
     OK(UmiRecordEditorGtk4State(root, &state)); CHECK(state.expected_revision == 1U && !state.dirty);
     OK(umi_data_server_create_sqlite(database, &reader));
-    if (strcmp(name, "roundtrip") == 0) {
+    if (g_str_has_prefix(name, "recovery-")) {
+        recovery_path = g_build_filename(directory, "kept.umird", NULL);
+        alternate_path = g_build_filename(directory, "alternate.umird", NULL);
+        recovery_snapshot = g_try_new0(UmiRecordDraftSnapshot, 1); CHECK(recovery_snapshot != NULL);
+        CHECK(set_entry(root, "record-editor-recovery-path", recovery_path));
+        CHECK(set_text(root, "unsaved"));
+        CHECK(click(root, "record-editor-keep-draft")); CHECK(UmiRecordEditorGtk4Busy(root));
+        if (strcmp(name, "recovery-later-edit") == 0) CHECK(set_text(root, "later typing"));
+        if (strcmp(name, "recovery-retire-write") == 0) UmiRecordEditorGtk4Retire(root);
+        CHECK(wait_idle(root));
+        OK(umi_record_draft_snapshot_read(directory, "kept.umird", recovery_snapshot));
+        CHECK(recovery_snapshot->length == 7U && memcmp(recovery_snapshot->content, "unsaved", 7U) == 0);
+        OK(umi_record_document_latest(reader, "test.review.one", &document)); CHECK(document.record.revision == 1U);
+        if (strcmp(name, "recovery-retire-write") == 0) { CHECK(UmiRecordEditorGtk4State(root, &state) == UMI_STATUS_UNAVAILABLE); goto cleanup; }
+        OK(UmiRecordEditorGtk4State(root, &state)); CHECK(state.dirty && state.expected_revision == 1U);
+        CHECK(!UmiRecordEditorGtk4CanClose(root));
+        if (strcmp(name, "recovery-later-edit") == 0) { CHECK(text_is(root, "later typing")); goto cleanup; }
+        if (strcmp(name, "recovery-dirty") == 0) {
+            CHECK(set_text(root, "keep this")); CHECK(click(root, "record-editor-recover-draft"));
+            CHECK(!UmiRecordEditorGtk4Busy(root) && text_is(root, "keep this")); goto cleanup;
+        }
+        if (strcmp(name, "recovery-exclusive") == 0) {
+            CHECK(set_text(root, "second copy")); CHECK(click(root, "record-editor-keep-draft")); CHECK(wait_idle(root));
+            OK(umi_record_draft_snapshot_read(directory, "kept.umird", recovery_snapshot));
+            CHECK(recovery_snapshot->length == 7U && memcmp(recovery_snapshot->content, "unsaved", 7U) == 0);
+            CHECK(text_is(root, "second copy")); goto cleanup;
+        }
+        CHECK(click(root, "record-editor-discard")); CHECK(text_is(root, "first"));
+        if (strcmp(name, "recovery-stale") == 0) {
+            UmiRecordAmendment author = document.record.amendment; author.recorded_at_nanoseconds += 1U;
+            OK(umi_record_document_append(reader, &author, "external", 8U, 1U, &revision));
+        }
+        bool rejected = strcmp(name, "recovery-wrong-store") == 0 || strcmp(name, "recovery-namespace") == 0 || strcmp(name, "recovery-binary") == 0;
+        if (rejected) {
+            if (strcmp(name, "recovery-wrong-store") == 0) strcpy(recovery_snapshot->baseline.record.amendment.actor, "Different baseline actor");
+            else if (strcmp(name, "recovery-namespace") == 0) strcpy(recovery_snapshot->baseline.record.amendment.entity_id, "another.product.one");
+            else recovery_snapshot->content[0] = 0U;
+            OK(umi_record_draft_snapshot_write_new(alternate_path, recovery_snapshot));
+            CHECK(set_entry(root, "record-editor-recovery-path", alternate_path));
+        }
+        if (strcmp(name, "recovery-acceptance-edit") == 0 || strcmp(name, "recovery-completion-edit") == 0) {
+            observer = (Observer){.root = root, .prefix = strcmp(name, "recovery-acceptance-edit") == 0 ? "Reading and checking" : "Draft recovered", .close = false};
+            observed = g_object_ref(find(root, "record-editor-feedback"));
+            signal = g_signal_connect(observed, "notify::label", G_CALLBACK(observe), &observer);
+        }
+        CHECK(click(root, "record-editor-recover-draft"));
+        if (strcmp(name, "recovery-retire-read") == 0) UmiRecordEditorGtk4Retire(root);
+        CHECK(wait_idle(root));
+        if (strcmp(name, "recovery-retire-read") == 0) { CHECK(UmiRecordEditorGtk4State(root, &state) == UMI_STATUS_UNAVAILABLE); goto cleanup; }
+        if (rejected) { CHECK(text_is(root, "first")); OK(UmiRecordEditorGtk4State(root, &state)); CHECK(!state.dirty); goto cleanup; }
+        if (observer.prefix != NULL) {
+            CHECK(observer.fired && text_is(root, "observer edit"));
+            for (int pass = 0; pass < 8; ++pass) (void)g_main_context_iteration(NULL, FALSE);
+            CHECK(gtk_widget_get_sensitive(find(root, "record-editor-save"))); goto cleanup;
+        }
+        CHECK(text_is(root, "unsaved")); OK(UmiRecordEditorGtk4State(root, &state)); CHECK(state.dirty && state.expected_revision == 1U);
+        CHECK(click(root, "record-editor-save")); CHECK(wait_idle(root));
+        OK(UmiRecordEditorGtk4State(root, &state));
+        if (strcmp(name, "recovery-stale") == 0) CHECK(state.dirty && state.expected_revision == 1U);
+        else { CHECK(strcmp(name, "recovery-roundtrip") == 0); CHECK(!state.dirty && state.expected_revision == 2U); }
+    } else if (strcmp(name, "roundtrip") == 0) {
         CHECK(set_text(root, "second")); CHECK(click(root, "record-editor-save")); CHECK(wait_idle(root));
         OK(umi_record_document_latest(reader, "test.review.one", &document));
         CHECK(document.record.revision == 2U && document.length == 6U && memcmp(document.content, "second", 6U) == 0);
@@ -361,6 +424,9 @@ cleanup:
         char *wal = g_strconcat(database, "-wal", NULL), *shm = g_strconcat(database, "-shm", NULL);
         (void)g_remove(wal); (void)g_remove(shm); g_free(wal); g_free(shm);
     }
+    if (recovery_path != NULL) (void)g_remove(recovery_path);
+    if (alternate_path != NULL) (void)g_remove(alternate_path);
+    g_free(recovery_path); g_free(alternate_path); g_free(recovery_snapshot);
     if (directory != NULL) (void)g_rmdir(directory);
     g_free(database); g_free(directory);
     return result;

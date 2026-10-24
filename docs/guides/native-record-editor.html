@@ -18,7 +18,7 @@
 <li>Read both versions and edit your draft to include the text you intend to retain. Comparing alone does not change which revision the next save expects.</li>
 <li>Select <strong>Keep my draft against this revision</strong> only after review. This chooses the shown snapshot as the baseline and leaves your draft text unchanged. It does not merge text or write to storage.</li>
 <li>Select <strong>Save revision</strong> to append your reviewed draft. If storage changes again, the save is refused and you can compare again. Earlier stored revisions remain available through the record-document API.</li></ol>
-<p><strong>Discard local edits</strong> restores the chosen saved baseline, including an explicitly adopted comparison snapshot. For a new unsaved record it closes the draft. Opening another record refuses unsaved changes. The host's close guard asks you to save or discard and waits for active storage work. There is no crash recovery for unsaved drafts.</p>
+<p><strong>Discard local edits</strong> restores the chosen saved baseline, including an explicitly adopted comparison snapshot. For a new unsaved record it closes the draft. Opening another record refuses unsaved changes. The host's close guard asks you to save or discard and waits for active storage work. <!-- Earlier limitation retained for review: There is no crash recovery for unsaved drafts. Explicit recovery copies replace that limitation; they do not provide automatic capture. -->Only text captured in a completed recovery copy can be recovered after a forced exit.</p>
 <h2>Browse earlier amendments</h2>
 <ol><li>Expand <strong>Amendment history</strong> and select <strong>Refresh history</strong>. Each page shows at most 16 revisions, newest first, with reviewer, source, reason and recorded timestamp.</li>
 <li>Select <strong>Older revisions</strong> to continue. If another writer advances history, refresh from the new head rather than silently mixing pages from different heads.</li>
@@ -46,4 +46,5 @@ cmake --build build --target umicom-record-editor --parallel 2
 <tr><td>Cannot close or open another record</td><td>Wait for active storage work, then save or explicitly discard local edits. Oversized visible text also counts as unsaved.</td></tr>
 <tr><td>Native tests report skipped</td><td>GTK could not initialize a display. Run the GUI coverage in a desktop session. A skipped case has not validated the workflow.</td></tr>
 </tbody></table>
-<footer><p>Umicom Framework · Sammy Hegab · Umicom Foundation · MIT</p></footer></body></html>
+<footer><p>Umicom Framework · Sammy Hegab · Umicom Foundation · MIT</p></footer><section><h2>Keep an explicit recovery copy</h2><p>Expand <strong>Keep or recover unsaved work</strong> to retain the reviewed baseline and current draft in a new private file. Keeping a copy leaves unsaved state unchanged. Recovery refuses dirty replacement, checks the selected database baseline, and preserves normal stale-save checks. See <a href="record-draft-recovery.html">Keep and recover a record draft</a> for the complete workflow and failure recovery.</p></section>
+</body></html>

@@ -12,7 +12,7 @@ add_library(umicom_record_editor_gtk4 STATIC "${_record_editor_root}/adapters/gt
 add_library(Umicom::record_editor_gtk4 ALIAS umicom_record_editor_gtk4)
 set_target_properties(umicom_record_editor_gtk4 PROPERTIES EXPORT_NAME record_editor_gtk4
     C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
-target_link_libraries(umicom_record_editor_gtk4 PUBLIC Umicom::data Umicom::ui_gtk4)
+target_link_libraries(umicom_record_editor_gtk4 PUBLIC Umicom::data Umicom::ui_gtk4 Umicom::record_recovery)
 if(COMMAND umicom_apply_warnings)
     umicom_apply_warnings(umicom_record_editor_gtk4)
 endif()
@@ -58,7 +58,10 @@ if(BUILD_TESTING)
         list(APPEND _record_editor_cases roundtrip reopen stale later-edit oversize invalid-attribution
             busy dirty-open binary invalid-utf8 acceptance-close completion-close acceptance-edit completion-edit unroot close-guard
             retire-read retire-save compare-preserves compare-adopt compare-stale compare-discard compare-close
-            history-pages history-stale history-content history-invalid history-close metadata-utf8)
+            history-pages history-stale history-content history-invalid history-close metadata-utf8
+            recovery-roundtrip recovery-dirty recovery-exclusive recovery-stale recovery-wrong-store
+            recovery-namespace recovery-binary recovery-later-edit recovery-acceptance-edit recovery-completion-edit
+            recovery-retire-write recovery-retire-read)
     endif()
     foreach(_record_editor_case IN LISTS _record_editor_cases)
         add_test(NAME framework.data.editor.gtk.${_record_editor_case}

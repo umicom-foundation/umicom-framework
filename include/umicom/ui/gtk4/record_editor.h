@@ -37,6 +37,10 @@ typedef struct UmiRecordEditorGtk4Options {
  * Compare reads a separate stored snapshot while local typing remains available.
  * Explicit adoption changes only the baseline after review; it does not merge
  * text, save it or bypass the next storage revision check. */
+/* Explicit recovery copies use the shared record snapshot codec and exclusive
+ * file creation. Recovery checks the selected product namespace and historical
+ * baseline in the connected store, retains stale revision checks, and never
+ * replaces dirty text. Keeping a copy leaves the editor dirty; it is not autosave. */
 UmiStatus UmiRecordEditorGtk4New(const UmiRecordEditorGtk4Options *options, GtkWidget **output);
 bool UmiRecordEditorGtk4Busy(GtkWidget *editor);
 UmiStatus UmiRecordEditorGtk4State(GtkWidget *editor, UmiRecordDraftState *output);

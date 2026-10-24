@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Keep and recover a record draft</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:950px;margin:40px auto;padding:0 24px;color:#223047}code,pre{font-family:monospace}pre{background:#eef2f6;padding:16px;overflow:auto}h1,h2{line-height:1.2}a{color:#165baa}</style></head><body>
+<h1>Keep and recover a record draft</h1>
+<p>A draft is text you are still editing. A record revision is text committed to the database. A recovery copy keeps the draft and the exact earlier revision you reviewed, so you can resume editing later without pretending that the draft has been committed.</p>
+<h2>Use the native editor</h2>
+<ol>
+<li>Open the same local record database you used for the note. Open a record or create a new draft, then type your changes.</li>
+<li>Expand <strong>Keep or recover unsaved work</strong>. Enter an absolute filename in an existing directory you control, for example <code>C:/umicom/_local/recovery/review-note-1.umird</code>. Use a different filename for each copy.</li>
+<li>Choose <strong>Keep draft copy</strong>. Wait for the completion message. You can continue typing while the captured copy is written; that later typing is not included in the earlier capture.</li>
+<li>The editor still shows unsaved changes. Keeping a copy does not save a record revision. To close, save the record normally or explicitly discard the local edits after checking that the copy completed.</li>
+<li>To recover, open the appropriate database and save or discard any currently dirty draft. Enter the recovery file's absolute path and choose <strong>Recover draft copy</strong>.</li>
+<li>Review the recovered text, supply the reviewer and reason for the next revision, then choose <strong>Save revision</strong>. If someone has saved a newer revision, compare it before explicitly adopting its baseline.</li>
+</ol>
+<p>Recovery copies contain plaintext, including the earlier baseline. Keep them in private storage. They are bounded to the record editor's 16,384-byte content limit and are not encrypted. Healthcare exercise notes must remain fictional. There is no automatic timer, remote upload or automatic deletion of old copies.</p>
+<h2>Use the shared C23 API</h2>
+<p>Include <code>umicom/data/record_draft_snapshot.h</code> and link <code>Umicom::data</code> for capture, validation, encoding and restoration. For filesystem operations, include <code>umicom/data/record_draft_files.h</code> and link <code>Umicom::record_recovery</code>. This separate library reuses the platform file services without adding filesystem dependencies to every data consumer.</p>
+<ol>
+<li>Allocate a <code>UmiRecordDraftSnapshot</code> on the heap and call <code>umi_record_draft_snapshot_capture</code> on the draft's owning thread. A pending database save returns <code>BUSY</code>; finish that save before capturing.</li>
+<li>Pass the copied snapshot to a worker. Call <code>umi_record_draft_snapshot_write_new</code> with an absolute path. No live editor object is needed by this worker.</li>
+<li>Read a selected copy with <code>umi_record_draft_snapshot_read(directory, relative_path, output)</code>. The directory must be explicit and absolute. Rooted-file checks refuse traversal and links beneath the selected root.</li>
+<li>Before restoring against a database, call <code>umi_record_draft_snapshot_check_store</code>. It compares the complete historical baseline, including its canonical metadata and content. It allows a later stored head because the next save checks the head again.</li>
+<li>On the draft's owning thread, call <code>umi_record_draft_snapshot_restore</code>. It refuses to replace dirty text or a pending request. Native hosts must also reject replies for closed windows or text changed since the read began.</li>
+</ol>
+<p>Portable snapshots support arbitrary bytes. The GTK editor accepts UTF-8 text without embedded NUL and checks the application's record namespace. The codec verifies an explicit version, exact lengths, canonical metadata and a SHA-256 digest before publishing output. These checks detect accidental damage; they do not authenticate authors or protect a file from someone who can replace its contents and digest.</p>
+<h2>Try the installed example</h2>
+<p>Use the installed <code>examples/data_history</code> project and its existing SDK configuration. Build the <code>umicom-record-draft-recovery-example</code> target and run its executable. It captures, encodes, decodes and restores a new draft in memory. The expected message is <code>Recovered 24 unsaved bytes; no record was committed.</code></p>
+<h2>Understand a refusal</h2>
+<ul>
+<li><strong>File already exists:</strong> choose a new filename. Recovery never overwrites the previous copy.</li>
+<li><strong>Invalid or partial file:</strong> retain it for diagnosis and choose a complete copy. The current draft remains unchanged.</li>
+<li><strong>Different or missing baseline:</strong> select the original database. Recovery does not silently import another database's revision history.</li>
+<li><strong>Current draft has changes:</strong> save or explicitly discard them before restoring. A recovery read cannot take their place.</li>
+<li><strong>Stored revision changed:</strong> the recovered text remains available. Compare the latest stored text and make an explicit reconciliation decision.</li>
+<li><strong>Write failure:</strong> keep the editor open. A partial new file may remain, so retry under a new name after resolving storage access or space.</li>
+</ul>
+<p>An accepted file write continues if the widget retires. Hosts must keep its owning main context and process alive until <code>UmiRecordEditorGtk4Busy</code> becomes false. Forced termination cannot guarantee completion. Recovery does not restore cursor position, reviewer form fields, an in-flight save or a whole database backup.</p>
+<p>See also <a href="native-record-editor.html">Native record editor</a>, <a href="record-drafts.html">Record draft ownership</a> and <a href="record-documents.html">Atomic record documents</a>.</p>
+</body></html>

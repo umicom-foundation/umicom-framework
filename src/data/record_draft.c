@@ -6,6 +6,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/data/record_draft.h"
+#include "umicom/data/record_draft_snapshot.h"
 #include "umicom/base/sha256.h"
 #include "include/record_fields.h"
 #include <stdlib.h>
@@ -346,4 +347,70 @@ UmiStatus umi_record_draft_finish_save(UmiRecordDraft *draft, uint64_t request_i
     memset(&draft->pending, 0, sizeof draft->pending);
     draft->saving = false;
     return result;
+}
+
+/* Recovery extends the existing draft owner; keeping replacement here preserves
+ * its dirty/pending guards and the lifetime of completion request identities. */
+UmiStatus umi_record_draft_snapshot_validate(const UmiRecordDraftSnapshot *snapshot)
+{
+    if (snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (snapshot->length > UMI_RECORD_DOCUMENT_MAX_BYTES) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (snapshot->baseline.record.revision != 0U) return document_valid(&snapshot->baseline);
+    const UmiRecordAmendment *m = &snapshot->baseline.record.amendment;
+    if (!umi_record_field_valid(m->entity_id, sizeof m->entity_id, false) ||
+        snapshot->baseline.length != 0U || snapshot->baseline.record.previous_revision != 0U ||
+        m->source[0] != '\0' || m->actor[0] != '\0' || m->reason[0] != '\0' ||
+        m->content_sha256[0] != '\0' || m->observed_at_nanoseconds != 0U || m->recorded_at_nanoseconds != 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    return UMI_STATUS_OK;
+}
+static UmiStatus snapshot_copy_baseline(const UmiRecordDocument *input, UmiRecordDocument *output)
+{
+    memset(output, 0, sizeof *output);
+    if (input->record.revision == 0U) {
+        memcpy(output->record.amendment.entity_id, input->record.amendment.entity_id,
+            strlen(input->record.amendment.entity_id) + 1U);
+    } else {
+        char canonical[UMI_RECORD_REVISION_TEXT_CAPACITY];
+        UmiStatus status = umi_record_revision_format(&input->record, canonical, sizeof canonical);
+        if (status == UMI_STATUS_OK) status = umi_record_revision_parse(canonical, strlen(canonical), &output->record);
+        if (status != UMI_STATUS_OK) return status;
+        output->length = input->length;
+        memcpy(output->content, input->content, input->length);
+    }
+    return UMI_STATUS_OK;
+}
+UmiStatus umi_record_draft_snapshot_capture(const UmiRecordDraft *draft, UmiRecordDraftSnapshot *output)
+{
+    if (draft == NULL || output == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (draft->saving) return UMI_STATUS_BUSY;
+    if (!draft->ready) return UMI_STATUS_INVALID_STATE;
+    UmiRecordDraftSnapshot *candidate = calloc(1U, sizeof *candidate);
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    UmiStatus status = snapshot_copy_baseline(&draft->baseline, &candidate->baseline);
+    if (status == UMI_STATUS_OK) {
+        candidate->length = draft->length;
+        memcpy(candidate->content, draft->content, draft->length);
+        *output = *candidate;
+    }
+    free(candidate);
+    return status;
+}
+UmiStatus umi_record_draft_snapshot_restore(UmiRecordDraft *draft, const UmiRecordDraftSnapshot *snapshot)
+{
+    UmiStatus status = can_replace(draft);
+    if (status == UMI_STATUS_OK) status = umi_record_draft_snapshot_validate(snapshot);
+    if (status != UMI_STATUS_OK) return status;
+    UmiRecordDocument *baseline = calloc(1U, sizeof *baseline);
+    if (baseline == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = snapshot_copy_baseline(&snapshot->baseline, baseline);
+    if (status == UMI_STATUS_OK) {
+        draft->baseline = *baseline;
+        memset(draft->content, 0, sizeof draft->content);
+        memcpy(draft->content, snapshot->content, snapshot->length);
+        draft->length = snapshot->length;
+        draft->ready = true;
+    }
+    free(baseline);
+    return status;
 }

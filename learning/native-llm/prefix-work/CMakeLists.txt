@@ -46,3 +46,9 @@ include("${_umicom_framework_root}/cmake/UmicomNativeLlmRotaryTraining.cmake")
 # tape, using RoPE-derived matrices rather than changing tape implementation.
 # The historical decoder and checkpoint formats remain completely untouched.
 include("${_umicom_framework_root}/cmake/UmicomNativeLlmRotaryTape.cmake")
+
+# Batch 87–88: a fully tape-owned training experiment with repeated SGD,
+# independent final-loss evaluation, deterministic parameters and honest
+# per-step convergence evidence. The original decoder and all checkpoints
+# remain unchanged.
+include("${_umicom_framework_root}/cmake/UmicomNativeLlmRotaryOptimisation.cmake")
