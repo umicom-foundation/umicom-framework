@@ -22,3 +22,7 @@ include("${_umicom_framework_root}/cmake/UmicomNativeLlmPrefixReuse.cmake")
 # This additive module never rewrites the existing decoder, learned absolute
 # positional embeddings, training state or checkpoint compatibility.
 include("${_umicom_framework_root}/cmake/UmicomNativeLlmPrefixBenchmark.cmake")
+
+# Bind the existing checkpoint to its declared learned-absolute positional
+# strategy and explicitly selected generation context (no silent migration).
+include("${_umicom_framework_root}/cmake/UmicomNativeLlmPositionContract.cmake")
