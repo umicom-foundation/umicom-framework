@@ -58,3 +58,8 @@ include("${_umicom_framework_root}/cmake/UmicomNativeLlmRotaryOptimisation.cmake
 # When building this normal laboratory, these tests link the real Framework
 # training tape; test-only numerical mathematics remains outside libraries.
 include("${_umicom_framework_root}/cmake/UmicomNativeLlmRotaryQualification.cmake")
+
+# Batch 91–92: additional production-target admission regressions for direct
+# rotary-tape gradients, bounded allocation rollback and repeated graph rewind.
+# None of the test-only code is linked into a deployed Framework application.
+include("${_umicom_framework_root}/cmake/UmicomNativeLlmRotaryRealTape.cmake")
