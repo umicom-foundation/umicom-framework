@@ -41,3 +41,12 @@ set_target_properties(umicom-record-draft-recovery-example PROPERTIES
 if(BUILD_TESTING)
     add_test(NAME consumer.record-draft-recovery COMMAND umicom-record-draft-recovery-example)
 endif()
+
+# Discovery and revision-checked content reads resolve from the installed SDK.
+add_executable(umicom-record-catalogue-example record_catalogue.c)
+target_link_libraries(umicom-record-catalogue-example PRIVATE Umicom::data)
+set_target_properties(umicom-record-catalogue-example PROPERTIES
+    C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+if(BUILD_TESTING)
+    add_test(NAME consumer.record-catalogue COMMAND umicom-record-catalogue-example)
+endif()

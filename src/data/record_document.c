@@ -314,3 +314,32 @@ UmiStatus umi_record_document_verify(UmiDataServer *server, const char *entity_i
     *out_revisions = head.revision;
     return UMI_STATUS_OK;
 }
+
+/* Opening a listed record is a compare-and-read operation. Keeping this in the
+ * storage owner closes the race between a UI revision check and the content
+ * read while retaining the legacy latest/history entry points unchanged. */
+UmiStatus umi_record_document_open_reviewed(UmiDataServer *server,
+    const UmiRecordRevision *reviewed, UmiRecordDocument *output)
+{
+    if (server == NULL || reviewed == NULL || output == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiRecordRevision expected = *reviewed;
+    char expected_text[UMI_RECORD_REVISION_TEXT_CAPACITY];
+    UmiStatus status = umi_record_revision_format(&expected, expected_text, sizeof expected_text);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_data_server_begin(server);
+    if (status != UMI_STATUS_OK) return status;
+    UmiRecordRevision current;
+    UmiRecordDocument candidate;
+    char current_text[UMI_RECORD_REVISION_TEXT_CAPACITY];
+    status = umi_record_history_latest(server, expected.amendment.entity_id, &current);
+    if (status == UMI_STATUS_OK)
+        status = umi_record_revision_format(&current, current_text, sizeof current_text);
+    if (status == UMI_STATUS_OK && strcmp(expected_text, current_text) != 0)
+        status = UMI_STATUS_INVALID_STATE;
+    if (status == UMI_STATUS_OK)
+        status = read_content(server, expected.amendment.entity_id, expected.revision, &candidate);
+    if (status == UMI_STATUS_OK) status = umi_data_server_commit(server);
+    if (status != UMI_STATUS_OK) return abort_document(server, status);
+    *output = candidate;
+    return UMI_STATUS_OK;
+}

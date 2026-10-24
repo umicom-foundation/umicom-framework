@@ -295,6 +295,7 @@ add_library(umicom_data STATIC
     src/data/record_draft_snapshot.c
     # Bounded history queries share the existing data transaction owner.
     src/data/record_history_page.c
+    src/data/record_catalogue.c
     src/data/backup.c
     src/data/integrity.c
     src/data/message_store.c
@@ -4835,6 +4836,10 @@ if(BUILD_TESTING)
         framework.application_experience.form_model_validation
         tests/application_experience/test_form_model_validation.c)
     umicom_add_application_test(
+        umicom-application-experience-form-safety-test
+        framework.application_experience.form_safety
+        tests/application_experience/test_form_safety.c)
+    umicom_add_application_test(
         umicom-application-experience-form-history-test
         framework.application_experience.form_history
         tests/application_experience/test_form_history.c)
@@ -6134,3 +6139,4 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomRecordEditorGtk4.cmake")
 
 # Stable history pages are usable by GTK and headless consumers.
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomRecordHistoryPages.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomRecordCatalogue.cmake")

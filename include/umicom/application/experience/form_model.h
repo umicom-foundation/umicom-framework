@@ -45,6 +45,8 @@ umi_application_experience_form_model_init(UmiApplicationExperienceFormModel *mo
  * Copy application experience form model into module-owned storage so callers keep
  * ownership of their input values.
  */
+/* A changed value at UINT64_MAX revision returns CAPACITY_EXCEEDED without
+ * mutation. Setting the same already-present value remains a successful no-op. */
 UmiStatus umi_application_experience_form_model_set(UmiApplicationExperienceFormModel *model,
                                                     const char *field_id,
                                                     const UmiApplicationExperienceValue *value);

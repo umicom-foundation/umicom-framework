@@ -61,7 +61,9 @@ if(BUILD_TESTING)
             history-pages history-stale history-content history-invalid history-close metadata-utf8
             recovery-roundtrip recovery-dirty recovery-exclusive recovery-stale recovery-wrong-store
             recovery-namespace recovery-binary recovery-later-edit recovery-acceptance-edit recovery-completion-edit
-            recovery-retire-write recovery-retire-read)
+            recovery-retire-write recovery-retire-read
+            catalogue-open catalogue-search catalogue-empty catalogue-pages catalogue-dirty catalogue-query-edit
+            catalogue-completion-edit catalogue-retire catalogue-stale catalogue-later-edit catalogue-utf8 catalogue-model-close catalogue-selection-change)
     endif()
     foreach(_record_editor_case IN LISTS _record_editor_cases)
         add_test(NAME framework.data.editor.gtk.${_record_editor_case}

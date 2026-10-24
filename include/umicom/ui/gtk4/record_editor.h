@@ -41,6 +41,11 @@ typedef struct UmiRecordEditorGtk4Options {
  * file creation. Recovery checks the selected product namespace and historical
  * baseline in the connected store, retains stale revision checks, and never
  * replaces dirty text. Keeping a copy leaves the editor dirty; it is not autosave. */
+/* Find saved records reads bounded metadata pages in the product namespace.
+ * Search does not replace the draft. Open selected requires a clean draft and
+ * the exact listed metadata still current in storage. Search text changed during
+ * a read prevents old results replacing the visible query; late editor typing
+ * prevents a selected record replacing that draft. No content search is implied. */
 UmiStatus UmiRecordEditorGtk4New(const UmiRecordEditorGtk4Options *options, GtkWidget **output);
 bool UmiRecordEditorGtk4Busy(GtkWidget *editor);
 UmiStatus UmiRecordEditorGtk4State(GtkWidget *editor, UmiRecordDraftState *output);

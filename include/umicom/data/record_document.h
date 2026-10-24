@@ -51,6 +51,14 @@ UmiStatus umi_record_document_latest(UmiDataServer *server, const char *entity_i
 UmiStatus umi_record_document_verify(UmiDataServer *server, const char *entity_id,
                                     uint64_t *out_revisions);
 
+/* Open the exact metadata snapshot previously reviewed in a catalogue or other
+ * view. Check the current head and complete metadata under the same transaction
+ * as the verified content read. A changed head returns INVALID_STATE; never
+ * substitute a newer record silently. Metadata-only rows return NOT_FOUND.
+ * Output is unchanged on failure. This does not authorize access to the store. */
+UmiStatus umi_record_document_open_reviewed(UmiDataServer *server,
+    const UmiRecordRevision *reviewed, UmiRecordDocument *output);
+
 /* Reserve repo.record-history.* and repo.record-content.* for these services.
  * Raw store writes bypass integrity. Hash checking detects accidental changes,
  * not malicious replacement, missing tails or a trusted signer. Large files,

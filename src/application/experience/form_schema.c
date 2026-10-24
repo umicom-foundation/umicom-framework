@@ -21,6 +21,9 @@
  * Provide the application experience form schema index operation used by this module and
  * its client applications.
  */
+/* Validate the borrowed schema before looking through its fields.
+ * Shared lookup must reject malformed arrays before a frontend dereferences them. The prior implementation is retained for review. */
+#if 0
 size_t
 umi_application_experience_form_schema_index(const UmiApplicationExperienceFormSchema *schema,
                                              const char *field_id) {
@@ -31,6 +34,25 @@ umi_application_experience_form_schema_index(const UmiApplicationExperienceFormS
    */
   if (schema == NULL || field_id == NULL ||
       schema->field_count > UMI_APPLICATION_EXPERIENCE_FIELD_CAPACITY)
+    return SIZE_MAX;
+  /* Visit each bounded item once so every record receives the same rule. */
+  for (index = 0U; index < schema->field_count; ++index) {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (strcmp(schema->fields[index].field_id, field_id) == 0)
+      return index;
+  }
+  return SIZE_MAX;
+}
+#endif
+size_t
+umi_application_experience_form_schema_index(const UmiApplicationExperienceFormSchema *schema,
+                                             const char *field_id) {
+  size_t index;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
+  if (field_id == NULL || umi_application_experience_form_schema_validate(schema) != UMI_STATUS_OK)
     return SIZE_MAX;
   /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < schema->field_count; ++index) {

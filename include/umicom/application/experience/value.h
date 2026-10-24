@@ -72,6 +72,8 @@ UmiStatus umi_application_experience_value_validate(const UmiApplicationExperien
  * Provide the application experience value equal operation used by this module and its
  * client applications.
  */
+/* Invalid values, including unterminated fixed text, compare unequal. No text
+ * comparison reads beyond the bounded value storage. */
 int umi_application_experience_value_equal(const UmiApplicationExperienceValue *left,
                                            const UmiApplicationExperienceValue *right);
 /**

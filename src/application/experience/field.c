@@ -21,6 +21,8 @@
  * Provide the application experience field option operation used by this module and its
  * client applications.
  */
+/* Validate option ownership and identifiers before direct lookup. The prior implementation is retained for review. */
+#if 0
 const UmiApplicationExperienceFieldOption *
 umi_application_experience_field_option(const UmiApplicationExperienceField *field,
                                         const char *option_id) {
@@ -31,6 +33,25 @@ umi_application_experience_field_option(const UmiApplicationExperienceField *fie
    */
   if (field == NULL || option_id == NULL ||
       field->option_count > UMI_APPLICATION_EXPERIENCE_OPTION_CAPACITY)
+    return NULL;
+  /* Visit each bounded item once so every record receives the same rule. */
+  for (index = 0U; index < field->option_count; ++index) {
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (strcmp(field->options[index].option_id, option_id) == 0)
+      return &field->options[index];
+  }
+  return NULL;
+}
+#endif
+const UmiApplicationExperienceFieldOption *
+umi_application_experience_field_option(const UmiApplicationExperienceField *field,
+                                        const char *option_id) {
+  size_t index;
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
+  if (option_id == NULL || umi_application_experience_field_validate(field) != UMI_STATUS_OK)
     return NULL;
   /* Visit each bounded item once so every record receives the same rule. */
   for (index = 0U; index < field->option_count; ++index) {

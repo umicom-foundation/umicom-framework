@@ -54,6 +54,9 @@ int umi_application_experience_form_history_can_redo(
  * Provide the application experience form history record operation used by this module and
  * its client applications.
  */
+/* Validate cursor ownership before truncating redo entries; a malformed
+ * cursor must not become an out-of-bounds write or mutate the existing history. The prior implementation is retained for review. */
+#if 0
 UmiStatus umi_application_experience_form_history_record(
     UmiApplicationExperienceFormHistory *history,
     const UmiApplicationExperienceFormChangeset *changeset) {
@@ -65,6 +68,34 @@ UmiStatus umi_application_experience_form_history_record(
     return UMI_STATUS_INVALID_ARGUMENT;
   /* Keep the operation inside its valid bounds before reading, writing or adding data. */
   if (history->count > UMI_APPLICATION_EXPERIENCE_FORM_HISTORY_CAPACITY ||
+      changeset->count > UMI_APPLICATION_EXPERIENCE_CHANGE_CAPACITY)
+    return UMI_STATUS_INVALID_STATE;
+  history->count = history->cursor;
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+  if (history->count >= UMI_APPLICATION_EXPERIENCE_FORM_HISTORY_CAPACITY) {
+    (void)memmove(&history->entries[0], &history->entries[1],
+                  (UMI_APPLICATION_EXPERIENCE_FORM_HISTORY_CAPACITY - 1U) *
+                      sizeof(history->entries[0]));
+    history->count -= 1U;
+    history->cursor -= 1U;
+  }
+  history->entries[history->count++] = *changeset;
+  history->cursor = history->count;
+  return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_application_experience_form_history_record(
+    UmiApplicationExperienceFormHistory *history,
+    const UmiApplicationExperienceFormChangeset *changeset) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
+  if (history == NULL || changeset == NULL)
+    return UMI_STATUS_INVALID_ARGUMENT;
+  /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+  if (history->cursor > history->count ||
+      history->count > UMI_APPLICATION_EXPERIENCE_FORM_HISTORY_CAPACITY ||
       changeset->count > UMI_APPLICATION_EXPERIENCE_CHANGE_CAPACITY)
     return UMI_STATUS_INVALID_STATE;
   history->count = history->cursor;

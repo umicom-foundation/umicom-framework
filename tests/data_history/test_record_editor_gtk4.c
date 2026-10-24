@@ -78,6 +78,12 @@ static void observe(GObject *object, GParamSpec *spec, gpointer data)
     if (observer->close) g_object_run_dispose(G_OBJECT(observer->root));
     else (void)set_text(observer->root, "observer edit");
 }
+static void retire_on_model(GObject *object, GParamSpec *spec, gpointer data)
+{
+    (void)object; (void)spec;
+    Observer *observer = data;
+    if (!observer->fired) { observer->fired = true; g_object_run_dispose(G_OBJECT(observer->root)); }
+}
 int main(int argc, char **argv)
 {
     int result = 0;
@@ -148,7 +154,80 @@ int main(int argc, char **argv)
     CHECK(click(root, "record-editor-save")); CHECK(wait_idle(root));
     OK(UmiRecordEditorGtk4State(root, &state)); CHECK(state.expected_revision == 1U && !state.dirty);
     OK(umi_data_server_create_sqlite(database, &reader));
-    if (g_str_has_prefix(name, "recovery-")) {
+    if (g_str_has_prefix(name, "catalogue-")) {
+        OK(umi_record_document_latest(reader, "test.review.one", &document));
+        UmiRecordAmendment author = document.record.amendment;
+        strcpy(author.entity_id, "test.review.two");
+        if (strcmp(name, "catalogue-utf8") == 0) { author.actor[0] = (char)0xff; author.actor[1] = '\0'; }
+        OK(umi_record_document_append(reader, &author, "second", 6U, 0U, &revision));
+        strcpy(author.entity_id, "another.product.hidden");
+        OK(umi_record_document_append(reader, &author, "outside", 7U, 0U, &revision));
+        if (strcmp(name, "catalogue-pages") == 0) {
+            for (unsigned i = 0U; i < 18U; ++i) {
+                (void)snprintf(author.entity_id, sizeof author.entity_id, "test.review.page.%02u", i);
+                OK(umi_record_document_append(reader, &author, "page", 4U, 0U, &revision));
+            }
+        }
+        if (strcmp(name, "catalogue-search") == 0) CHECK(set_entry(root, "record-editor-search", "two"));
+        if (strcmp(name, "catalogue-empty") == 0) CHECK(set_entry(root, "record-editor-search", "not present"));
+        if (strcmp(name, "catalogue-dirty") == 0) CHECK(set_text(root, "unsaved work"));
+        if (strcmp(name, "catalogue-completion-edit") == 0) {
+            observer = (Observer){.root=root, .prefix="Results loaded", .close=false};
+            observed = g_object_ref(find(root, "record-editor-feedback"));
+            signal = g_signal_connect(observed, "notify::label", G_CALLBACK(observe), &observer);
+        }
+        if (strcmp(name, "catalogue-model-close") == 0) {
+            observer = (Observer){.root=root, .close=true};
+            observed = g_object_ref(find(root, "record-editor-results"));
+            signal = g_signal_connect(observed, "notify::model", G_CALLBACK(retire_on_model), &observer);
+        }
+        CHECK(click(root, "record-editor-find"));
+        if (strcmp(name, "catalogue-query-edit") == 0) CHECK(set_entry(root, "record-editor-search", "changed during read"));
+        if (strcmp(name, "catalogue-retire") == 0) UmiRecordEditorGtk4Retire(root);
+        CHECK(wait_idle(root));
+        if (strcmp(name, "catalogue-retire") == 0 || strcmp(name, "catalogue-model-close") == 0) { CHECK(UmiRecordEditorGtk4State(root, &state) == UMI_STATUS_UNAVAILABLE); goto cleanup; }
+        if (strcmp(name, "catalogue-completion-edit") == 0) {
+            CHECK(observer.fired && text_is(root, "observer edit"));
+            OK(UmiRecordEditorGtk4State(root, &state)); CHECK(state.dirty); goto cleanup;
+        }
+        GtkWidget *results = find(root, "record-editor-results"); CHECK(results != NULL);
+        GListModel *model = gtk_drop_down_get_model(GTK_DROP_DOWN(results));
+        if (strcmp(name, "catalogue-query-edit") == 0) {
+            CHECK(model == NULL || g_list_model_get_n_items(model) == 0U);
+            CHECK(!gtk_widget_get_sensitive(find(root, "record-editor-open-listed"))); CHECK(text_is(root, "first")); goto cleanup;
+        }
+        CHECK(model != NULL);
+        if (strcmp(name, "catalogue-empty") == 0) {
+            CHECK(g_list_model_get_n_items(model) == 0U);
+            CHECK(click(root, "record-editor-open-listed")); CHECK(!UmiRecordEditorGtk4Busy(root)); CHECK(text_is(root, "first")); goto cleanup;
+        }
+        if (strcmp(name, "catalogue-pages") == 0) {
+            CHECK(g_list_model_get_n_items(model) == 16U);
+            CHECK(click(root, "record-editor-find-next")); CHECK(wait_idle(root));
+            model = gtk_drop_down_get_model(GTK_DROP_DOWN(results)); CHECK(g_list_model_get_n_items(model) == 4U);
+            CHECK(!gtk_widget_get_sensitive(find(root, "record-editor-find-next"))); CHECK(text_is(root, "first")); goto cleanup;
+        }
+        CHECK(g_list_model_get_n_items(model) == (strcmp(name, "catalogue-search") == 0 ? 1U : 2U));
+        gtk_drop_down_set_selected(GTK_DROP_DOWN(results), strcmp(name, "catalogue-search") == 0 ? 0U : 1U);
+        if (strcmp(name, "catalogue-dirty") == 0) {
+            CHECK(click(root, "record-editor-open-listed")); CHECK(!UmiRecordEditorGtk4Busy(root)); CHECK(text_is(root, "unsaved work")); goto cleanup;
+        }
+        if (strcmp(name, "catalogue-stale") == 0) {
+            strcpy(author.entity_id, "test.review.two");
+            OK(umi_record_document_append(reader, &author, "changed", 7U, 1U, &revision));
+        }
+        CHECK(click(root, "record-editor-open-listed"));
+        if (strcmp(name, "catalogue-selection-change") == 0) gtk_drop_down_set_selected(GTK_DROP_DOWN(results), 0U);
+        if (strcmp(name, "catalogue-later-edit") == 0) CHECK(set_text(root, "typed during open"));
+        CHECK(wait_idle(root));
+        if (strcmp(name, "catalogue-stale") == 0) { CHECK(text_is(root, "first")); }
+        else if (strcmp(name, "catalogue-later-edit") == 0) { CHECK(text_is(root, "typed during open")); }
+        else {
+            CHECK(strcmp(name, "catalogue-open") == 0 || strcmp(name, "catalogue-search") == 0 || strcmp(name, "catalogue-utf8") == 0 || strcmp(name, "catalogue-selection-change") == 0);
+            CHECK(text_is(root, "second")); OK(UmiRecordEditorGtk4State(root, &state));
+            CHECK(strcmp(state.entity_id, "test.review.two") == 0 && !state.dirty);
+        }
+    } else if (g_str_has_prefix(name, "recovery-")) {
         recovery_path = g_build_filename(directory, "kept.umird", NULL);
         alternate_path = g_build_filename(directory, "alternate.umird", NULL);
         recovery_snapshot = g_try_new0(UmiRecordDraftSnapshot, 1); CHECK(recovery_snapshot != NULL);

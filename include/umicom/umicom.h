@@ -73,6 +73,7 @@
 #include "umicom/data/record_draft_snapshot.h"
 #include "umicom/data/record_draft_files.h"
 #include "umicom/data/record_history_page.h"
+#include "umicom/data/record_catalogue.h"
 #include "umicom/data/backup.h"
 #include "umicom/data/integrity.h"
 #include "umicom/data/message_store.h"

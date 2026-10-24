@@ -57,6 +57,11 @@ umi_application_experience_form_changeset_create(const UmiApplicationExperienceF
  * Perform application experience form changeset through the module contract so client
  * applications do not duplicate its policy.
  */
+/* Apply atomically after validating every field, presence flag, captured old
+ * value and target constraint. Reject duplicate/unknown fields, read-only edits
+ * and stale content even when revision numbers match. Failure preserves the
+ * complete model; reverse uses the same rules for undo. Omitted target fields
+ * remain omitted and required-field completeness is checked at form submission. */
 UmiStatus umi_application_experience_form_changeset_apply(
     UmiApplicationExperienceFormModel *model,
     const UmiApplicationExperienceFormChangeset *changeset, int reverse);

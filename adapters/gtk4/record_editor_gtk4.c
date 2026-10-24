@@ -5,14 +5,15 @@
 #include "umicom/ui/gtk4/record_editor.h"
 #include "umicom/ui/gtk4/path_picker.h"
 #include "umicom/data/record_history_page.h"
+#include "umicom/data/record_catalogue.h"
 #include "umicom/data/record_draft_files.h"
 #include "umicom/platform/output_file.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
-typedef enum EditorAction { EDITOR_CONNECT, EDITOR_NEW, EDITOR_OPEN, EDITOR_SAVE, EDITOR_DISCARD, EDITOR_COMPARE, EDITOR_ADOPT, EDITOR_HISTORY, EDITOR_OLDER, EDITOR_REVISION, EDITOR_KEEP_DRAFT, EDITOR_RECOVER_DRAFT } EditorAction;
-typedef enum EditorJobKind { JOB_CONNECT, JOB_OPEN, JOB_SAVE, JOB_COMPARE, JOB_HISTORY, JOB_OLDER, JOB_REVISION, JOB_KEEP_DRAFT, JOB_RECOVER_DRAFT } EditorJobKind;
+typedef enum EditorAction { EDITOR_CONNECT, EDITOR_NEW, EDITOR_OPEN, EDITOR_SAVE, EDITOR_DISCARD, EDITOR_COMPARE, EDITOR_ADOPT, EDITOR_HISTORY, EDITOR_OLDER, EDITOR_REVISION, EDITOR_KEEP_DRAFT, EDITOR_RECOVER_DRAFT, EDITOR_FIND, EDITOR_FIND_NEXT, EDITOR_OPEN_LISTED } EditorAction;
+typedef enum EditorJobKind { JOB_CONNECT, JOB_OPEN, JOB_SAVE, JOB_COMPARE, JOB_HISTORY, JOB_OLDER, JOB_REVISION, JOB_KEEP_DRAFT, JOB_RECOVER_DRAFT, JOB_FIND, JOB_FIND_NEXT, JOB_OPEN_LISTED } EditorJobKind;
 typedef struct RecordEditor {
     gatomicrefcount references;
     GMainContext *context;
@@ -27,6 +28,8 @@ typedef struct RecordEditor {
     uint64_t reviewed_base_revision;
     bool reviewed_latest;
     UmiRecordHistoryPage *history;
+    UmiRecordCataloguePage *catalogue;
+    GtkWidget *search, *results, *find, *find_next, *open_listed, *catalogue_summary;
     char *prefix, *source;
     GtkWidget *path, *key, *actor, *reason, *text, *summary, *feedback;
     GtkWidget *connect, *new_record, *open, *save, *discard;
@@ -41,6 +44,9 @@ typedef struct RecordJob {
     uint64_t edit_epoch;
     uint64_t reviewed_base_revision, requested_revision, history_head, history_before;
     UmiRecordHistoryPage *page;
+    UmiRecordCataloguePage *catalogue;
+    UmiRecordCatalogueQuery query;
+    UmiRecordRevision selected;
     char *path, *entity;
     UmiDataServer *server;
     UmiDataServer *opened_server;
@@ -70,6 +76,7 @@ static void editor_unref(RecordEditor *editor)
         g_free(editor->source);
         g_free(editor->reviewed);
         g_free(editor->history);
+        g_free(editor->catalogue);
         g_free(editor);
     }
 }
@@ -208,6 +215,14 @@ static void refresh(RecordEditor *editor)
     --editor->applying;
 }
 #endif
+static bool catalogue_current(const RecordEditor *editor)
+{
+    return !editor->retired && editor->catalogue != NULL && strcmp(editor->catalogue->text,
+        gtk_editable_get_text(GTK_EDITABLE(editor->search))) == 0;
+}
+/* Superseded by catalogue-aware composition below; retained to review the
+ * original recovery, retirement and draft ownership behavior. */
+#if 0
 static void refresh(RecordEditor *editor)
 {
     if (editor->retired) return;
@@ -260,6 +275,72 @@ static void refresh(RecordEditor *editor)
     label_text(editor, editor->history_summary, history);
     --editor->applying;
 }
+#endif
+static void refresh(RecordEditor *editor)
+{
+    if (editor->retired) return;
+    ++editor->applying;
+    UmiRecordDraftState state = {0};
+    (void)umi_record_draft_state(editor->draft, &state);
+    bool connected = editor->server != NULL;
+    bool editable = state.ready && (!editor->busy || (editor->operation != JOB_CONNECT && editor->operation != JOB_OPEN && editor->operation != JOB_RECOVER_DRAFT && editor->operation != JOB_OPEN_LISTED));
+    sensitive(editor, editor->path, !connected && !editor->busy);
+    sensitive(editor, editor->connect, !connected && !editor->busy);
+    sensitive(editor, editor->new_record, connected && !editor->busy);
+    sensitive(editor, editor->open, connected && !editor->busy);
+    sensitive(editor, editor->discard, !editor->busy && (state.ready || !editor->text_valid));
+    sensitive(editor, editor->save, connected && !editor->busy && state.dirty && editor->text_valid);
+    sensitive(editor, editor->text, editable);
+    sensitive(editor, editor->keep_draft, connected && !editor->busy && state.ready && editor->text_valid);
+    sensitive(editor, editor->recover_draft, connected && !editor->busy && !state.dirty && editor->text_valid);
+    sensitive(editor, editor->recovery_path, !editor->busy);
+    sensitive(editor, editor->compare, connected && state.ready && !editor->busy);
+    sensitive(editor, editor->adopt, connected && !editor->busy && editor->text_valid && review_current(editor, &state));
+    bool history_matches = editor->history != NULL && state.ready && strcmp(state.entity_id, editor->history->entity_id) == 0;
+    sensitive(editor, editor->history_refresh, connected && state.ready && !editor->busy);
+    sensitive(editor, editor->history_older, connected && !editor->busy && history_matches && editor->history->next_before_revision != 0U);
+    sensitive(editor, editor->history_view, connected && state.ready && !editor->busy);
+    bool catalogue_matches = catalogue_current(editor);
+    sensitive(editor, editor->find, connected && !editor->busy);
+    sensitive(editor, editor->find_next, connected && !editor->busy && catalogue_matches && editor->catalogue->next_after_entity[0] != '\0');
+    sensitive(editor, editor->results, !editor->busy);
+    guint selected = editor->retired ? GTK_INVALID_LIST_POSITION : gtk_drop_down_get_selected(GTK_DROP_DOWN(editor->results));
+    sensitive(editor, editor->open_listed, connected && !editor->busy && !state.dirty && editor->text_valid &&
+        catalogue_matches && selected < editor->catalogue->count);
+    char catalogue_text[192];
+    if (!catalogue_matches) (void)snprintf(catalogue_text, sizeof catalogue_text, "Find records to refresh this search.");
+    else (void)snprintf(catalogue_text, sizeof catalogue_text, "%zu listed | %zu matches in %zu records%s",
+        editor->catalogue->count, editor->catalogue->matching_count, editor->catalogue->namespace_count,
+        editor->catalogue->next_after_entity[0] != '\0' ? " | More results available" : " | End of results");
+    label_text(editor, editor->catalogue_summary, catalogue_text);
+    char text[256];
+    if (!state.ready) {
+        (void)snprintf(text, sizeof text, "%s", connected ? "Store ready. Create or open a record." : "Choose a local database to begin.");
+    } else {
+        (void)snprintf(text, sizeof text, "%s | revision %" PRIu64 " | %zu bytes | %s%s",
+            state.entity_id, state.expected_revision, state.length,
+            !editor->text_valid ? "Text exceeds the record limit" : state.dirty ? "Unsaved changes" : "Saved",
+            editor->busy ? " | Working" : "");
+    }
+    label_text(editor, editor->summary, text);
+    char review[640];
+    if (editor->reviewed == NULL) {
+        (void)snprintf(review, sizeof review, "Compare the stored revision without replacing your draft.");
+    } else {
+        (void)snprintf(review, sizeof review, "%s revision %" PRIu64 " by %s | %s%s",
+            editor->reviewed_latest ? "Reviewed" : "Historical (read only)", editor->reviewed->record.revision, editor->reviewed->record.amendment.actor,
+            editor->reviewed->record.amendment.reason,
+            review_current(editor, &state) ? "" : " | Compare again before adopting");
+    }
+    label_text(editor, editor->review_summary, review);
+    char history[224];
+    if (!history_matches) (void)snprintf(history, sizeof history, "Refresh history for the active record.");
+    else (void)snprintf(history, sizeof history, "%zu amendment rows from stored head %" PRIu64 "%s",
+        editor->history->count, editor->history->head_revision,
+        editor->history->next_before_revision != 0U ? " | Older rows available" : " | End of history");
+    label_text(editor, editor->history_summary, history);
+    --editor->applying;
+}
 static gboolean refresh_idle(gpointer data)
 {
     RecordEditor *editor = data;
@@ -279,6 +360,16 @@ static void schedule_refresh(RecordEditor *editor)
     editor->refresh_source = g_idle_source_new();
     g_source_set_callback(editor->refresh_source, refresh_idle, editor_ref(editor), refresh_release);
     (void)g_source_attach(editor->refresh_source, editor->context);
+}
+static void catalogue_changed(GObject *object, GParamSpec *property, gpointer data)
+{
+    (void)object; (void)property;
+    RecordEditor *editor = editor_ref(data);
+    if (!editor->retired) {
+        if (editor->applying != 0U) schedule_refresh(editor);
+        else refresh(editor);
+    }
+    editor_unref(editor);
 }
 static void feedback(RecordEditor *editor, const char *operation, UmiStatus status)
 {
@@ -350,6 +441,7 @@ static void job_free(gpointer data)
     g_free(job->entity);
     g_free(job->document);
     g_free(job->page);
+    g_free(job->catalogue);
     g_free(job->request);
     g_free(job->snapshot);
     g_free(job);
@@ -381,6 +473,9 @@ static void worker(GTask *task, gpointer source, gpointer data, GCancellable *ca
     g_task_return_boolean(task, TRUE);
 }
 #endif
+/* Superseded by catalogue-aware composition below; retained to review the
+ * original recovery, retirement and draft ownership behavior. */
+#if 0
 static void worker(GTask *task, gpointer source, gpointer data, GCancellable *cancellable)
 {
     (void)source; (void)cancellable;
@@ -413,6 +508,55 @@ static void worker(GTask *task, gpointer source, gpointer data, GCancellable *ca
             job->history_before, UMI_RECORD_HISTORY_PAGE_CAPACITY, job->page);
     } else if (job->kind == JOB_OPEN || job->kind == JOB_COMPARE || job->kind == JOB_REVISION) {
         job->status = job->kind == JOB_REVISION
+            ? umi_record_document_load(job->server, job->entity, job->requested_revision, job->document)
+            : umi_record_document_latest(job->server, job->entity, job->document);
+        if (job->status == UMI_STATUS_OK &&
+            (memchr(job->document->content, '\0', job->document->length) != NULL ||
+             !g_utf8_validate((const char *)job->document->content, (gssize)job->document->length, NULL))) {
+            job->status = UMI_STATUS_PARSE_ERROR;
+        }
+    } else {
+        job->status = umi_record_save_request_commit(job->server, job->request, &job->saved);
+    }
+    g_task_return_boolean(task, TRUE);
+}
+#endif
+static void worker(GTask *task, gpointer source, gpointer data, GCancellable *cancellable)
+{
+    (void)source; (void)cancellable;
+    RecordJob *job = data;
+    if (job->kind == JOB_FIND || job->kind == JOB_FIND_NEXT) {
+        job->status = umi_record_catalogue_page(job->server, &job->query, job->catalogue);
+    } else if (job->kind == JOB_CONNECT) {
+        job->status = umi_data_server_create_sqlite(job->path, &job->opened_server);
+    } else if (job->kind == JOB_KEEP_DRAFT) {
+        job->status = umi_record_draft_snapshot_write_new(job->path, job->snapshot);
+    } else if (job->kind == JOB_RECOVER_DRAFT) {
+        char *directory = g_path_get_dirname(job->path), *leaf = g_path_get_basename(job->path);
+        job->status = umi_record_draft_snapshot_read(directory, leaf, job->snapshot);
+        g_free(directory); g_free(leaf);
+        if (job->status == UMI_STATUS_OK) {
+            /* A recovery file cannot select another product namespace. The
+             * baseline is checked against the chosen store before UI adoption. */
+            const char *entity = job->snapshot->baseline.record.amendment.entity_id;
+            const char *prefix = job->entity;
+            if (!g_str_has_prefix(entity, prefix) || entity[strlen(prefix)] == '\0' ||
+                !g_utf8_validate(entity, -1, NULL) ||
+                memchr(job->snapshot->content, '\0', job->snapshot->length) != NULL ||
+                !g_utf8_validate((const char *)job->snapshot->content, (gssize)job->snapshot->length, NULL) ||
+                memchr(job->snapshot->baseline.content, '\0', job->snapshot->baseline.length) != NULL ||
+                !g_utf8_validate((const char *)job->snapshot->baseline.content, (gssize)job->snapshot->baseline.length, NULL))
+                job->status = UMI_STATUS_PARSE_ERROR;
+        }
+        if (job->status == UMI_STATUS_OK)
+            job->status = umi_record_draft_snapshot_check_store(job->server, job->snapshot);
+    } else if (job->kind == JOB_HISTORY || job->kind == JOB_OLDER) {
+        job->status = umi_record_history_page(job->server, job->entity, job->history_head,
+            job->history_before, UMI_RECORD_HISTORY_PAGE_CAPACITY, job->page);
+    } else if (job->kind == JOB_OPEN || job->kind == JOB_COMPARE || job->kind == JOB_REVISION || job->kind == JOB_OPEN_LISTED) {
+        job->status = job->kind == JOB_OPEN_LISTED
+            ? umi_record_document_open_reviewed(job->server, &job->selected, job->document)
+            : job->kind == JOB_REVISION
             ? umi_record_document_load(job->server, job->entity, job->requested_revision, job->document)
             : umi_record_document_latest(job->server, job->entity, job->document);
         if (job->status == UMI_STATUS_OK &&
@@ -523,6 +667,31 @@ static void completed(GObject *source, GAsyncResult *result, gpointer data)
     --editor->applying;
 }
 #endif
+/* The result model owns display strings; record identities remain in the
+ * immutable page. A changed query cannot publish results for its previous text. */
+static UmiStatus show_catalogue(RecordEditor *editor, RecordJob *job)
+{
+    if (strcmp(job->query.text, gtk_editable_get_text(GTK_EDITABLE(editor->search))) != 0)
+        return UMI_STATUS_CANCELLED;
+    GtkStringList *model = gtk_string_list_new(NULL);
+    for (size_t i = 0U; i < job->catalogue->count; ++i) {
+        UmiRecordRevision *record = &job->catalogue->rows[i];
+        char text[512];
+        (void)snprintf(text, sizeof text, "%s | revision %" PRIu64 " | %s | %s",
+            record->amendment.entity_id, record->revision, record->amendment.actor, record->amendment.reason);
+        char *valid = g_utf8_make_valid(text, -1);
+        gtk_string_list_append(model, valid); g_free(valid);
+    }
+    g_free(editor->catalogue); editor->catalogue = job->catalogue; job->catalogue = NULL;
+    g_object_ref(editor->results);
+    gtk_drop_down_set_model(GTK_DROP_DOWN(editor->results), G_LIST_MODEL(model));
+    if (!editor->retired) gtk_drop_down_set_selected(GTK_DROP_DOWN(editor->results), GTK_INVALID_LIST_POSITION);
+    g_object_unref(editor->results); g_object_unref(model);
+    return editor->retired ? UMI_STATUS_CANCELLED : UMI_STATUS_OK;
+}
+/* Superseded by catalogue-aware composition below; retained to review the
+ * original recovery, retirement and draft ownership behavior. */
+#if 0
 static void completed(GObject *source, GAsyncResult *result, gpointer data)
 {
     (void)source; (void)data;
@@ -566,6 +735,74 @@ static void completed(GObject *source, GAsyncResult *result, gpointer data)
             job->kind == JOB_REVISION ? "Historical content shown read-only. Compare stored text to choose a current save baseline." :
             job->kind == JOB_COMPARE ? "Stored text shown below. Your draft is unchanged; review both before choosing a save baseline." :
             "Captured revision saved. Any later edits remain in the editor.");
+        else if (job->kind == JOB_KEEP_DRAFT || job->kind == JOB_RECOVER_DRAFT)
+            feedback(editor, job->kind == JOB_KEEP_DRAFT ? "Recovery copy failed; choose a new filename and keep your draft" : "Recovery refused; current draft unchanged", status);
+        else if (job->kind == JOB_SAVE && status == UMI_STATUS_INVALID_STATE)
+            label_text(editor, editor->feedback, "Save refused: the stored revision changed. Compare the stored text, then explicitly choose the revision for your next save.");
+        else if ((job->kind == JOB_HISTORY || job->kind == JOB_OLDER) && status == UMI_STATUS_INVALID_STATE)
+            label_text(editor, editor->feedback, "History advanced since this page. Refresh history to restart from the new head; your draft is unchanged.");
+        else if (job->kind == JOB_HISTORY || job->kind == JOB_OLDER || job->kind == JOB_REVISION)
+            feedback(editor, "History read failed; draft unchanged", status);
+        else feedback(editor, job->kind == JOB_CONNECT ? "Database unavailable" : job->kind == JOB_OPEN ? "Open left the draft unchanged" : job->kind == JOB_COMPARE ? "Comparison failed; draft unchanged" : "Save failed; keep this draft", status);
+    }
+    --editor->applying;
+}
+#endif
+static void completed(GObject *source, GAsyncResult *result, gpointer data)
+{
+    (void)source; (void)data;
+    GTask *task = G_TASK(result);
+    RecordJob *job = g_task_get_task_data(task);
+    RecordEditor *editor = job->owner;
+    (void)g_task_propagate_boolean(task, NULL);
+    ++editor->applying;
+    UmiStatus status = job->status;
+    if (!editor->retired) {
+        if ((job->kind == JOB_FIND || job->kind == JOB_FIND_NEXT) && status == UMI_STATUS_OK) {
+            status = show_catalogue(editor, job);
+        } else if (job->kind == JOB_SAVE) {
+            status = umi_record_draft_finish_save(editor->draft, job->request->request_id,
+                status, status == UMI_STATUS_OK ? &job->saved : NULL);
+        } else if (job->kind == JOB_CONNECT && status == UMI_STATUS_OK) {
+            editor->server = job->opened_server;
+            job->opened_server = NULL;
+        } else if ((job->kind == JOB_HISTORY || job->kind == JOB_OLDER) && status == UMI_STATUS_OK) {
+            status = show_history(editor, job);
+        } else if ((job->kind == JOB_COMPARE || job->kind == JOB_REVISION) && status == UMI_STATUS_OK) {
+            status = show_review(editor, job);
+        } else if ((job->kind == JOB_OPEN || job->kind == JOB_RECOVER_DRAFT || job->kind == JOB_OPEN_LISTED) && status == UMI_STATUS_OK) {
+            if (editor->epoch_exhausted || editor->edit_epoch != job->edit_epoch || !editor->text_valid) {
+                status = UMI_STATUS_CANCELLED;
+            } else {
+                status = job->kind == JOB_RECOVER_DRAFT
+                    ? umi_record_draft_snapshot_restore(editor->draft, job->snapshot)
+                    : umi_record_draft_open(editor->draft, job->document);
+                if (status == UMI_STATUS_OK) status = show_content(editor);
+                if (status == UMI_STATUS_OK && job->kind == JOB_OPEN_LISTED && !editor->retired) {
+                    /* Keep the manual key field aligned after explicit result
+                     * selection; notification-time edits remain in the draft. */
+                    g_object_ref(editor->key);
+                    gtk_editable_set_text(GTK_EDITABLE(editor->key), job->entity + strlen(editor->prefix));
+                    g_object_unref(editor->key);
+                }
+            }
+        }
+    }
+    editor->busy = false;
+    refresh(editor);
+    if (!editor->retired) {
+        if (status == UMI_STATUS_OK) label_text(editor, editor->feedback,
+            job->kind == JOB_CONNECT ? "Database ready. This widget keeps using this path until closed." :
+            (job->kind == JOB_FIND || job->kind == JOB_FIND_NEXT) ? "Results loaded. Select a record and choose Open selected; your draft is unchanged." :
+            (job->kind == JOB_OPEN || job->kind == JOB_OPEN_LISTED) ? "Record opened. Earlier revisions remain in the store." :
+            job->kind == JOB_KEEP_DRAFT ? "Captured draft kept in a new recovery file. Later typing and unsaved state are unchanged; the record was not saved." :
+            job->kind == JOB_RECOVER_DRAFT ? "Draft recovered against its original baseline. Review the text; a newer stored revision still requires comparison before saving." :
+            (job->kind == JOB_HISTORY || job->kind == JOB_OLDER) ? "History page loaded. Reading it does not change your draft or save baseline." :
+            job->kind == JOB_REVISION ? "Historical content shown read-only. Compare stored text to choose a current save baseline." :
+            job->kind == JOB_COMPARE ? "Stored text shown below. Your draft is unchanged; review both before choosing a save baseline." :
+            "Captured revision saved. Any later edits remain in the editor.");
+        else if (job->kind == JOB_FIND || job->kind == JOB_FIND_NEXT || job->kind == JOB_OPEN_LISTED)
+            feedback(editor, "Record list changed or unavailable; find again, existing draft retained", status);
         else if (job->kind == JOB_KEEP_DRAFT || job->kind == JOB_RECOVER_DRAFT)
             feedback(editor, job->kind == JOB_KEEP_DRAFT ? "Recovery copy failed; choose a new filename and keep your draft" : "Recovery refused; current draft unchanged", status);
         else if (job->kind == JOB_SAVE && status == UMI_STATUS_INVALID_STATE)
@@ -683,6 +920,9 @@ static UmiStatus begin_job(RecordEditor *editor, EditorJobKind kind, const char 
     return UMI_STATUS_OK;
 }
 #endif
+/* Superseded by catalogue-aware composition below; retained to review the
+ * original recovery, retirement and draft ownership behavior. */
+#if 0
 static UmiStatus begin_job(RecordEditor *editor, EditorJobKind kind, const char *entity)
 {
     RecordJob *job = g_try_new0(RecordJob, 1);
@@ -759,6 +999,113 @@ static UmiStatus begin_job(RecordEditor *editor, EditorJobKind kind, const char 
     return UMI_STATUS_OK;
 }
 
+#endif
+static UmiStatus begin_job(RecordEditor *editor, EditorJobKind kind, const char *entity)
+{
+    RecordJob *job = g_try_new0(RecordJob, 1);
+    if (job == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    job->owner = editor_ref(editor);
+    job->kind = kind;
+    job->server = editor->server;
+    job->edit_epoch = editor->edit_epoch;
+    UmiStatus status = UMI_STATUS_OK;
+    if (kind == JOB_FIND || kind == JOB_FIND_NEXT) {
+        const char *search = gtk_editable_get_text(GTK_EDITABLE(editor->search));
+        if (strlen(search) >= sizeof job->query.text) status = UMI_STATUS_CAPACITY_EXCEEDED;
+        else memcpy(job->query.text, search, strlen(search) + 1U);
+        memcpy(job->query.entity_prefix, editor->prefix, strlen(editor->prefix) + 1U);
+        job->query.limit = UMI_RECORD_CATALOGUE_PAGE_CAPACITY;
+        job->catalogue = g_try_new0(UmiRecordCataloguePage, 1);
+        if (job->catalogue == NULL) status = UMI_STATUS_OUT_OF_MEMORY;
+        if (kind == JOB_FIND_NEXT) {
+            if (!catalogue_current(editor) || editor->catalogue->next_after_entity[0] == '\0') status = UMI_STATUS_INVALID_STATE;
+            else {
+                memcpy(job->query.expected_snapshot, editor->catalogue->snapshot, sizeof job->query.expected_snapshot);
+                memcpy(job->query.after_entity, editor->catalogue->next_after_entity, sizeof job->query.after_entity);
+            }
+        }
+    } else if (kind == JOB_OPEN_LISTED) {
+        guint selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(editor->results));
+        if (!catalogue_current(editor) || selected >= editor->catalogue->count) status = UMI_STATUS_INVALID_STATE;
+        else {
+            job->selected = editor->catalogue->rows[selected];
+            job->entity = g_strdup(job->selected.amendment.entity_id);
+            if (!g_utf8_validate(job->entity, -1, NULL) || !g_str_has_prefix(job->entity, editor->prefix) ||
+                job->entity[strlen(editor->prefix)] == '\0') status = UMI_STATUS_INVALID_ARGUMENT;
+        }
+        job->document = g_try_new0(UmiRecordDocument, 1);
+        if (job->document == NULL) status = UMI_STATUS_OUT_OF_MEMORY;
+    } else if (kind == JOB_CONNECT) {
+        job->path = g_strdup(gtk_editable_get_text(GTK_EDITABLE(editor->path)));
+        if (!g_path_is_absolute(job->path) || strlen(job->path) > 4096U)
+            status = UMI_STATUS_INVALID_ARGUMENT;
+    } else if (kind == JOB_KEEP_DRAFT || kind == JOB_RECOVER_DRAFT) {
+        job->path = g_strdup(gtk_editable_get_text(GTK_EDITABLE(editor->recovery_path)));
+        job->entity = g_strdup(editor->prefix);
+        status = UmiOutputFileValidatePath(job->path);
+        job->snapshot = g_try_new0(UmiRecordDraftSnapshot, 1);
+        if (status == UMI_STATUS_OK && job->snapshot == NULL) status = UMI_STATUS_OUT_OF_MEMORY;
+        if (status == UMI_STATUS_OK && kind == JOB_KEEP_DRAFT)
+            status = umi_record_draft_snapshot_capture(editor->draft, job->snapshot);
+    } else if (kind == JOB_HISTORY || kind == JOB_OLDER) {
+        job->entity = g_strdup(entity);
+        job->page = g_try_new0(UmiRecordHistoryPage, 1);
+        if (job->page == NULL) status = UMI_STATUS_OUT_OF_MEMORY;
+        if (kind == JOB_OLDER) {
+            if (editor->history == NULL || strcmp(editor->history->entity_id, entity) != 0 || editor->history->next_before_revision == 0U) status = UMI_STATUS_INVALID_STATE;
+            else { job->history_head = editor->history->head_revision; job->history_before = editor->history->next_before_revision; }
+        }
+    } else if (kind == JOB_OPEN || kind == JOB_COMPARE || kind == JOB_REVISION) {
+        job->entity = g_strdup(entity);
+        if (kind == JOB_COMPARE || kind == JOB_REVISION) {
+            UmiRecordDraftState state;
+            status = umi_record_draft_state(editor->draft, &state);
+            if (status == UMI_STATUS_OK && !state.ready) status = UMI_STATUS_INVALID_STATE;
+            if (status == UMI_STATUS_OK) job->reviewed_base_revision = state.expected_revision;
+        }
+        if (kind == JOB_REVISION && status == UMI_STATUS_OK) status = selected_revision(editor, &job->requested_revision);
+        job->document = g_try_new0(UmiRecordDocument, 1);
+        if (job->document == NULL) status = UMI_STATUS_OUT_OF_MEMORY;
+    } else {
+        UmiRecordDraftAttribution author;
+        status = attribution(editor, &author);
+        job->request = g_try_new0(UmiRecordSaveRequest, 1);
+        if (status == UMI_STATUS_OK && job->request == NULL) status = UMI_STATUS_OUT_OF_MEMORY;
+        if (status == UMI_STATUS_OK) status = umi_record_draft_prepare_save(editor->draft, &author, job->request);
+    }
+    if (status != UMI_STATUS_OK) { job_free(job); return status; }
+    editor->busy = true;
+    editor->operation = kind;
+    refresh(editor);
+    label_text(editor, editor->feedback, kind == JOB_CONNECT ? "Opening or creating the selected local database…" :
+        (kind == JOB_FIND || kind == JOB_FIND_NEXT) ? "Finding records; you can continue editing…" :
+        (kind == JOB_OPEN || kind == JOB_OPEN_LISTED) ? "Reading the selected record…" :
+        kind == JOB_KEEP_DRAFT ? "Keeping a captured recovery copy; you can continue editing…" :
+        kind == JOB_RECOVER_DRAFT ? "Reading and checking the selected recovery copy…" :
+        (kind == JOB_HISTORY || kind == JOB_OLDER) ? "Reading a bounded history page…" :
+        kind == JOB_REVISION ? "Reading selected historical content…" :
+        kind == JOB_COMPARE ? "Reading the stored text for comparison; you can continue editing…" :
+        "Saving the captured revision; you can continue editing…");
+    if (editor->retired || ((kind == JOB_OPEN || kind == JOB_RECOVER_DRAFT || kind == JOB_OPEN_LISTED) && (editor->epoch_exhausted || editor->edit_epoch != job->edit_epoch))) {
+        if (kind == JOB_SAVE) (void)umi_record_draft_finish_save(editor->draft,
+            job->request->request_id, UMI_STATUS_CANCELLED, NULL);
+        editor->busy = false;
+        job_free(job);
+        return UMI_STATUS_CANCELLED;
+    }
+    /* No task references a widget. Its context reference owns the storage
+     * handle until completion, even if root removal retires the editor. */
+    GTask *task = g_task_new(NULL, NULL, completed, NULL);
+    g_task_set_task_data(task, job, job_free);
+    g_task_set_check_cancellable(task, FALSE);
+    g_task_run_in_thread(task, worker);
+    g_object_unref(task);
+    return UMI_STATUS_OK;
+}
+
+/* Superseded by catalogue-aware composition below; retained to review the
+ * original recovery, retirement and draft ownership behavior. */
+#if 0
 static void action(GtkButton *button, gpointer data)
 {
     RecordEditor *editor = editor_ref(data);
@@ -776,6 +1123,97 @@ static void action(GtkButton *button, gpointer data)
         status = UMI_STATUS_UNAVAILABLE;
     if (status == UMI_STATUS_OK) {
         switch (which) {
+        case EDITOR_CONNECT:
+            status = editor->server != NULL ? UMI_STATUS_INVALID_STATE : begin_job(editor, JOB_CONNECT, NULL);
+            break;
+        case EDITOR_NEW:
+            status = dirty(editor) ? UMI_STATUS_INVALID_STATE : umi_record_draft_begin(editor->draft, entity);
+            if (status == UMI_STATUS_OK) status = show_content(editor);
+            break;
+        case EDITOR_OPEN:
+            status = dirty(editor) ? UMI_STATUS_INVALID_STATE : begin_job(editor, JOB_OPEN, entity);
+            break;
+        case EDITOR_KEEP_DRAFT:
+            status = sync_text(editor);
+            if (status == UMI_STATUS_OK) status = begin_job(editor, JOB_KEEP_DRAFT, NULL);
+            break;
+        case EDITOR_RECOVER_DRAFT:
+            status = dirty(editor) ? UMI_STATUS_INVALID_STATE : begin_job(editor, JOB_RECOVER_DRAFT, NULL);
+            break;
+        case EDITOR_SAVE:
+            status = sync_text(editor);
+            if (status == UMI_STATUS_OK) status = begin_job(editor, JOB_SAVE, NULL);
+            break;
+        case EDITOR_COMPARE: {
+            UmiRecordDraftState state;
+            status = umi_record_draft_state(editor->draft, &state);
+            if (status == UMI_STATUS_OK && !state.ready) status = UMI_STATUS_INVALID_STATE;
+            if (status == UMI_STATUS_OK) status = begin_job(editor, JOB_COMPARE, state.entity_id);
+            break;
+        }
+        case EDITOR_HISTORY:
+        case EDITOR_OLDER:
+        case EDITOR_REVISION: {
+            UmiRecordDraftState state;
+            status = umi_record_draft_state(editor->draft, &state);
+            if (status == UMI_STATUS_OK && !state.ready) status = UMI_STATUS_INVALID_STATE;
+            EditorJobKind kind = which == EDITOR_HISTORY ? JOB_HISTORY : which == EDITOR_OLDER ? JOB_OLDER : JOB_REVISION;
+            if (status == UMI_STATUS_OK) status = begin_job(editor, kind, state.entity_id);
+            break;
+        }
+        case EDITOR_ADOPT: {
+            UmiRecordDraftState state;
+            status = umi_record_draft_state(editor->draft, &state);
+            if (status == UMI_STATUS_OK && (!editor->text_valid || !review_current(editor, &state)))
+                status = UMI_STATUS_INVALID_STATE;
+            if (status == UMI_STATUS_OK) status = umi_record_draft_adopt_reviewed(editor->draft,
+                editor->reviewed, editor->reviewed_base_revision);
+            break;
+        }
+        case EDITOR_DISCARD: {
+            UmiRecordDraftState state;
+            status = umi_record_draft_state(editor->draft, &state);
+            if (status == UMI_STATUS_OK && state.ready) status = umi_record_draft_discard(editor->draft);
+            if (status == UMI_STATUS_OK) status = show_content(editor);
+            break;
+        }
+        }
+    }
+    g_free(entity);
+    refresh(editor);
+    if (status != UMI_STATUS_OK) feedback(editor, "Action refused; existing content retained", status);
+    else if (which == EDITOR_NEW) label_text(editor, editor->feedback, "New unsaved record. Enter text, reviewer and amendment reason before saving.");
+    else if (which == EDITOR_ADOPT) label_text(editor, editor->feedback, "Reviewed baseline chosen; your text is unchanged. Save revision to append it, or discard to restore that reviewed text.");
+    else if (which == EDITOR_DISCARD) label_text(editor, editor->feedback, "Unsaved edits discarded by your request.");
+    --editor->applying;
+    editor_unref(editor);
+}
+
+#endif
+static void action(GtkButton *button, gpointer data)
+{
+    RecordEditor *editor = editor_ref(data);
+    if (editor->retired || editor->applying != 0U || editor->busy) { editor_unref(editor); return; }
+    ++editor->applying;
+    EditorAction which = (EditorAction)GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "record-action"));
+    UmiStatus status = UMI_STATUS_OK;
+    char *entity = NULL;
+    if (which == EDITOR_NEW || which == EDITOR_OPEN) {
+        const char *key = gtk_editable_get_text(GTK_EDITABLE(editor->key));
+        entity = g_strconcat(editor->prefix, key, NULL);
+        if (*key == '\0' || strlen(entity) >= 64U) status = UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (status == UMI_STATUS_OK && which != EDITOR_CONNECT && editor->server == NULL)
+        status = UMI_STATUS_UNAVAILABLE;
+    if (status == UMI_STATUS_OK) {
+        switch (which) {
+        case EDITOR_FIND:
+        case EDITOR_FIND_NEXT:
+            status = begin_job(editor, which == EDITOR_FIND ? JOB_FIND : JOB_FIND_NEXT, NULL);
+            break;
+        case EDITOR_OPEN_LISTED:
+            status = dirty(editor) ? UMI_STATUS_INVALID_STATE : begin_job(editor, JOB_OPEN_LISTED, NULL);
+            break;
         case EDITOR_CONNECT:
             status = editor->server != NULL ? UMI_STATUS_INVALID_STATE : begin_job(editor, JOB_CONNECT, NULL);
             break;
@@ -907,6 +1345,26 @@ UmiStatus UmiRecordEditorGtk4New(const UmiRecordEditorGtk4Options *options, GtkW
     gtk_box_append(GTK_BOX(box), row);
     editor->new_record = button(editor, row, "New draft", "record-editor-new", EDITOR_NEW);
     editor->open = button(editor, row, "Open record", "record-editor-open", EDITOR_OPEN);
+    GtkWidget *catalogue = gtk_expander_new("Find saved records");
+    gtk_box_append(GTK_BOX(box), catalogue);
+    GtkWidget *catalogue_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+    gtk_expander_set_child(GTK_EXPANDER(catalogue), catalogue_box);
+    editor->search = entry(catalogue_box, "Search identifier, reviewer, source or reason (case sensitive)", "record-editor-search", 159);
+    row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    gtk_box_append(GTK_BOX(catalogue_box), row);
+    editor->find = button(editor, row, "Find records", "record-editor-find", EDITOR_FIND);
+    editor->find_next = button(editor, row, "Next results", "record-editor-find-next", EDITOR_FIND_NEXT);
+    editor->results = gtk_drop_down_new(NULL, NULL);
+    gtk_widget_set_name(editor->results, "record-editor-results");
+    gtk_box_append(GTK_BOX(catalogue_box), editor->results);
+    editor->open_listed = button(editor, catalogue_box, "Open selected", "record-editor-open-listed", EDITOR_OPEN_LISTED);
+    editor->catalogue_summary = gtk_label_new("");
+    gtk_widget_set_name(editor->catalogue_summary, "record-editor-catalogue-summary");
+    gtk_label_set_xalign(GTK_LABEL(editor->catalogue_summary), 0.0F);
+    gtk_label_set_wrap(GTK_LABEL(editor->catalogue_summary), TRUE);
+    gtk_box_append(GTK_BOX(catalogue_box), editor->catalogue_summary);
+    connect_owned(editor, G_OBJECT(editor->search), "notify::text", G_CALLBACK(catalogue_changed));
+    connect_owned(editor, G_OBJECT(editor->results), "notify::selected", G_CALLBACK(catalogue_changed));
     editor->actor = entry(box, "Reviewer name (recorded label, not a sign-in)", "record-editor-actor", 127);
     editor->reason = entry(box, "Reason for this revision", "record-editor-reason", 255);
     editor->text = gtk_text_view_new();

@@ -53,6 +53,8 @@ void umi_application_experience_validation_report_init(
  * Check that application experience form satisfies its contract before another service
  * relies on it.
  */
+/* Validate schema structure before indexing the fixed model arrays. Structural
+ * failure leaves report unchanged; valid incomplete forms produce field issues. */
 UmiStatus
 umi_application_experience_form_validate(const UmiApplicationExperienceFormModel *model,
                                          UmiApplicationExperienceValidationReport *report);

@@ -43,6 +43,8 @@ void umi_application_experience_form_history_init(UmiApplicationExperienceFormHi
  * Provide the application experience form history record operation used by this module and
  * its client applications.
  */
+/* Refuse an invalid cursor/count without truncating redo or modifying entries.
+ * Recording does not apply changes; apply/undo/redo validate against the model. */
 UmiStatus umi_application_experience_form_history_record(
     UmiApplicationExperienceFormHistory *history,
     const UmiApplicationExperienceFormChangeset *changeset);

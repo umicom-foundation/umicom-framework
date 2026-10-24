@@ -52,3 +52,9 @@ include("${_umicom_framework_root}/cmake/UmicomNativeLlmRotaryTape.cmake")
 # per-step convergence evidence. The original decoder and all checkpoints
 # remain unchanged.
 include("${_umicom_framework_root}/cmake/UmicomNativeLlmRotaryOptimisation.cmake")
+
+# Batch 89–90: qualify previously implemented rotary-tape optimisation against
+# an independent C23 causal-attention/MSE oracle and a numerical gradient check.
+# When building this normal laboratory, these tests link the real Framework
+# training tape; test-only numerical mathematics remains outside libraries.
+include("${_umicom_framework_root}/cmake/UmicomNativeLlmRotaryQualification.cmake")

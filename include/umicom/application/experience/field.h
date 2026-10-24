@@ -70,6 +70,8 @@ UmiStatus umi_application_experience_field_accepts(const UmiApplicationExperienc
  * Provide the application experience field option operation used by this module and its
  * client applications.
  */
+/* Invalid field/option descriptors return NULL without dereferencing a missing
+ * option array. The returned option is borrowed from the caller-owned field. */
 const UmiApplicationExperienceFieldOption *
 umi_application_experience_field_option(const UmiApplicationExperienceField *field,
                                         const char *option_id);

@@ -54,6 +54,8 @@ umi_application_experience_form_schema_field(const UmiApplicationExperienceFormS
  * Provide the application experience form schema index operation used by this module and
  * its client applications.
  */
+/* Lookup validates the complete borrowed schema first. Invalid arrays, field
+ * identifiers or duplicate fields return SIZE_MAX (field lookup returns NULL). */
 size_t
 umi_application_experience_form_schema_index(const UmiApplicationExperienceFormSchema *schema,
                                              const char *field_id);

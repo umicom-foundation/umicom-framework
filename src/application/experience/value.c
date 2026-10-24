@@ -142,6 +142,9 @@ UmiStatus umi_application_experience_value_validate(const UmiApplicationExperien
  * Provide the application experience value equal operation used by this module and its
  * client applications.
  */
+/* Validate fixed text termination before comparison. Invalid values are never
+ * equal; the earlier implementation remains available for review. */
+#if 0
 int umi_application_experience_value_equal(const UmiApplicationExperienceValue *left,
                                            const UmiApplicationExperienceValue *right) {
   /*
@@ -149,6 +152,32 @@ int umi_application_experience_value_equal(const UmiApplicationExperienceValue *
    * used.
    */
   if (left == NULL || right == NULL || left->type != right->type)
+    return 0;
+  /* Select the behaviour associated with the requested command or state value. */
+  switch (left->type) {
+  case UMI_APPLICATION_EXPERIENCE_VALUE_NONE:
+    return 1;
+  case UMI_APPLICATION_EXPERIENCE_VALUE_BOOLEAN:
+    return left->boolean_value == right->boolean_value;
+  case UMI_APPLICATION_EXPERIENCE_VALUE_INTEGER:
+    return left->integer_value == right->integer_value;
+  case UMI_APPLICATION_EXPERIENCE_VALUE_DECIMAL:
+    return left->decimal_value == right->decimal_value;
+  case UMI_APPLICATION_EXPERIENCE_VALUE_TEXT:
+    return strcmp(left->text_value, right->text_value) == 0;
+  default:
+    return 0;
+  }
+}
+#endif
+int umi_application_experience_value_equal(const UmiApplicationExperienceValue *left,
+                                           const UmiApplicationExperienceValue *right) {
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
+  if (umi_application_experience_value_validate(left) != UMI_STATUS_OK ||
+      umi_application_experience_value_validate(right) != UMI_STATUS_OK || left->type != right->type)
     return 0;
   /* Select the behaviour associated with the requested command or state value. */
   switch (left->type) {

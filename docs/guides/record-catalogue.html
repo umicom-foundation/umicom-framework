@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Find saved records | Umicom Framework</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:960px;margin:3rem auto;padding:0 1.2rem;color:#182a3b}h1,h2{line-height:1.2}pre{background:#eef3f7;padding:1rem;overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #c4d1de;padding:.6rem;text-align:left}</style></head><body>
+<h1>Find and open saved records</h1>
+<p>A record catalogue is a list of current record identities and their amendment metadata. The shared C23 service lets a native window or another host find a record without knowing its exact key. It uses the same memory or SQLite Data Server as amendment history. No separate index needs rebuilding.</p>
+<h2>Find a note in a native application</h2>
+<ol><li>Open the application's local record editor and choose the database that contains your fictional notes.</li>
+<li>Expand <strong>Find saved records</strong>. Leave the search empty to browse the application's namespace, or enter part of an identifier, reviewer name, source or amendment reason. Search is case sensitive and does not inspect note content.</li>
+<li>Choose <strong>Find records</strong>. The status shows the number listed and total matches. Choose <strong>Next results</strong> for another page, up to 16 rows at a time.</li>
+<li>Select a result from the list, then choose <strong>Open selected</strong>. Save or explicitly discard current unsaved text first. Searching itself leaves that text alone.</li>
+<li>If the list has changed, choose <strong>Find records</strong> again and review the new results. Opening checks that the selected record still has the metadata shown in the list; it will not silently substitute a newer revision.</li></ol>
+<p>A list is a snapshot, meaning it describes the store at the moment the read transaction completed. It does not lock out future changes. The editor also checks the storage revision when saving. Namespace filtering organizes records; it does not provide sign-in or access control.</p>
+<h2>Use the shared service from C23</h2>
+<pre>#include "umicom/data/record_catalogue.h"
+#include "umicom/data/record_document.h"
+
+UmiRecordCatalogueQuery query = {.entity_prefix = "notes.", .limit = 16};
+UmiRecordCataloguePage page;
+UmiStatus status = umi_record_catalogue_page(server, &amp;query, &amp;page);
+if (status == UMI_STATUS_OK &amp;&amp; page.count != 0) {
+    /* The host explicitly selects this row before opening its content. */
+    UmiRecordDocument document;
+    status = umi_record_document_open_reviewed(server, &amp;page.rows[0], &amp;document);
+}</pre>
+<p>For another page, copy <code>page.snapshot</code> to <code>query.expected_snapshot</code> and <code>page.next_after_entity</code> to <code>query.after_entity</code>, retaining the prefix and search text. Stop when <code>next_after_entity</code> is empty. An invalidated snapshot returns <code>UMI_STATUS_INVALID_STATE</code>; clear both continuation fields and explicitly restart. Never treat that error as an empty result.</p>
+<p>Results are sorted by identifier bytes. A snapshot digest includes all current amendment metadata within the namespace and the search parameters. Changing a head, adding a record, or changing the query invalidates continuation. Unrelated namespaces do not invalidate it. The digest detects changes; it is not a signature or authorization token.</p>
+<h2>Build the installed example</h2>
+<p>Install a Framework SDK containing the data component. Copy its <code>share/umicom-framework/examples/data_history</code> directory into your example workspace. From the copied directory, run each command separately and stop on an error:</p>
+<pre>cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH="C:/umicom/installed/applications" -DCMAKE_C_COMPILER="C:/msys64/ucrt64/bin/gcc.exe"
+cmake --build build --target umicom-record-catalogue-example --parallel 2
+ctest --test-dir build -R "^consumer.record-catalogue$" --output-on-failure --no-tests=error</pre>
+<p>The example uses fictional records in memory and prints <code>Opened notes.fictional: 12 verified content bytes</code>. These commands describe the workflow; a successful local run is the evidence that your SDK supports it.</p>
+<h2>Limits and troubleshooting</h2>
+<table><thead><tr><th>Result</th><th>Meaning and next step</th></tr></thead><tbody>
+<tr><td>No matches</td><td>Check the selected database, namespace and letter case. Content words are not searched.</td></tr>
+<tr><td>Capacity exceeded</td><td>The namespace contains more than 256 heads, or scanning the store exceeds 32,768 key/value rows including history and unrelated rows. Use a narrower namespace where appropriate or a separately designed indexed store. This service refuses a partial result; it never claims unseen records are absent.</td></tr>
+<tr><td>Invalid state on continuation or opening</td><td>The reviewed metadata or query no longer matches. Refresh the list and review again.</td></tr>
+<tr><td>Busy</td><td>The server already has a transaction or another operation owns it. Complete the existing operation before retrying; the catalogue never rolls back a transaction it did not acquire.</td></tr>
+<tr><td>Not found or parse error</td><td>A required row may be missing or malformed. Metadata-only histories can appear in the catalogue but have no document content to open. Preserve the store and inspect its integrity rather than silently creating replacement records.</td></tr>
+</tbody></table>
+<p>The catalogue validates the listed metadata, not every historical revision or payload. Opening verifies the selected content. Whole-chain integrity, permissions, encryption, full-text indexing and remote collaboration are separate concerns.</p>
+<footer>Umicom Framework · Sammy Hegab · Umicom Foundation · MIT</footer></body></html>
