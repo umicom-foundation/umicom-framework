@@ -17,3 +17,8 @@ get_filename_component(_umicom_framework_root
     "${CMAKE_CURRENT_LIST_DIR}/../../.." ABSOLUTE)
 include("${_umicom_framework_root}/cmake/UmicomNativeLlmTraining.cmake")
 include("${_umicom_framework_root}/cmake/UmicomNativeLlmPrefixReuse.cmake")
+
+# Paired canonical/full-context versus incremental-prefix benchmark.
+# This additive module never rewrites the existing decoder, learned absolute
+# positional embeddings, training state or checkpoint compatibility.
+include("${_umicom_framework_root}/cmake/UmicomNativeLlmPrefixBenchmark.cmake")
