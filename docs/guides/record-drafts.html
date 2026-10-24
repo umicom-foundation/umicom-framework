@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Edit records without losing drafts | Umicom Framework</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:960px;margin:3rem auto;padding:0 1.2rem;color:#182a3b}h1,h2{line-height:1.2}pre{padding:1rem;background:#eef3f7;overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #c4d1de;padding:.6rem;text-align:left}.note{background:#edf5fa;border-left:4px solid #26708e;padding:1rem}code{font-size:.9em}</style></head><body>
+<h1>Edit records without losing unsaved work</h1>
+<p>A draft is the local copy a person is editing. The saved baseline is the version they opened or last saved. A save request is a separate copy captured when they choose Save. Keeping these three values separate allows an application to keep accepting edits while storage is busy.</p>
+<p>Include <code>umicom/data/record_draft.h</code> and link <code>Umicom::data</code>. The draft service works with <a href="record-documents.html">atomic record documents</a>, which store content and amendment history together. Each draft holds up to 16,384 bytes. Content can be text or binary; the service does not parse a product's record schema.</p>
+<p class="note">Draft-handle operations do no database I/O and create no threads or widgets. The separate save-request commit function is called by the host on its storage worker. It supplies shared editing behavior for application hosts. Attribution labels do not grant access; the application remains responsible for permissions and authenticated identity. Draft memory and stored documents are not encrypted by this service.</p>
+<h2>Open a record or start a new one</h2>
+<ol>
+<li>Create a handle with <code>umi_record_draft_create</code>. Check the status before using the returned pointer.</li>
+<li>For a saved record, read <code>umi_record_document_latest</code> on the application's storage worker. On the draft's owning thread, pass the resulting snapshot to <code>umi_record_draft_open</code>. Open validates the metadata and content digest before copying it.</li>
+<li>For a new record, call <code>umi_record_draft_begin</code> with a stable entity ID of at most 63 bytes. A new empty record is dirty and can be saved. Begin does not query storage; saving expected revision zero will reject an existing record.</li>
+<li>Read <code>umi_record_draft_state</code> to obtain the content length, dirty flag, saving flag and reviewed revision. Copy bytes with <code>umi_record_draft_copy_content</code>. It does not append a text terminator; allocate and add one separately when displaying text.</li>
+<li>When content changes, call <code>umi_record_draft_set_content</code> with its byte length. Invalid or oversized input leaves the existing draft intact.</li>
+</ol>
+<p>Open and Begin refuse to replace a dirty draft. Offer the user Save, Discard or Cancel before opening another record. Call <code>umi_record_draft_discard</code> only after their decision: it restores a saved baseline, or closes an unsaved new record. Open, Begin and Discard return <code>BUSY</code> while a save is outstanding.</p>
+<h2>Capture and complete a save</h2>
+<ol>
+<li>Supply <code>UmiRecordDraftAttribution</code> with source, actor, reason and a nonzero recorded time. Fields must be terminated and contain no control characters. Observed time can be zero when it is unknown.</li>
+<li>Call <code>umi_record_draft_prepare_save</code>. It captures the current content, derives the entity and predecessor revision, and calculates the content digest. Check its status before dispatching anything.</li>
+<li>Copy the returned <code>UmiRecordSaveRequest</code> into a managed worker's owned job data. Its approximately 17 KiB payload should not be passed as a pointer to a temporary stack variable. The worker receives the copy and its storage handle, never the mutable draft.</li>
+<li>Let the worker call <code>umi_record_save_request_commit</code>. It verifies that the captured content still matches its digest before the atomic document append. Do not replace the captured content with whatever is currently in the editor.</li>
+<li>When the worker finishes, route its result back to the same draft on its owning thread. Use <code>umi_record_draft_finish_save</code> with the captured request ID and the committed revision returned by storage. On failure, pass the failed status and <code>NULL</code>.</li>
+<li>Refresh the visible status from <code>umi_record_draft_state</code>. A successful save can leave <code>dirty</code> true because a newer edit remains unsaved.</li>
+</ol>
+<pre>/* Worker: request is its own copy; it never accesses the editor draft. */
+UmiRecordRevision saved;
+UmiStatus result = umi_record_save_request_commit(server, &amp;request, &amp;saved);
+
+/* Owning thread, after the worker has finished: */
+UmiStatus acknowledged = umi_record_draft_finish_save(draft,
+    request.request_id, result, result == UMI_STATUS_OK ? &amp;saved : NULL);
+/* Check acknowledged and refresh the displayed state. */</pre>
+<p>For example, a user saves “review pending” and then types “review completed”. When the first write finishes, the saved baseline becomes “review pending” and the editor still contains “review completed”. Its next save uses the new baseline revision. Returning the editor to its older baseline while a save is running also keeps those bytes; the completed write does not silently replace them.</p>
+<p>Request IDs are unique within one draft handle's lifetime. A second preparation returns <code>BUSY</code>. A wrong ID or mismatched successful revision leaves the pending request intact so the host can diagnose the wrong reply. Route completions to their original handle; IDs are not global authorization tokens.</p>
+<h2>Keep workers and handles alive correctly</h2>
+<p>Serialize all calls on a draft, normally on the UI thread. The service is not a lock around widgets or a thread-safe shared editor. A worker uses its copied request while the owning thread may continue changing the draft.</p>
+<p>If dispatch fails before a job starts, finish the prepared request with an appropriate failure such as <code>CANCELLED</code>. If I/O is already running, wait for its actual completion. Closing a window does not prove the write was cancelled. Complete or disconnect replies before destroying the draft, and keep the Data Server alive until its workers finish.</p>
+<p>A non-OK completion clears the pending flag and returns the worker's status. It retains the baseline and current bytes. This is different from an invalid completion ID, which does not change pending state. Destroy releases ordinary memory; it does not cancel work, remove persisted history or securely erase secrets.</p>
+<h2>Review a changed stored revision without losing the draft</h2>
+<ol><li>Keep the current draft and load the latest stored document on the storage worker. Capture the current draft entity and <code>expected_revision</code> when starting that read.</li>
+<li>Show the stored snapshot separately from the editable draft. Let the user compare both versions and decide which text they want to keep.</li>
+<li>After their explicit decision, call <code>umi_record_draft_adopt_reviewed</code> with the validated stored document and the baseline revision captured before the read. A different entity, an older revision, a changed baseline or a pending save is refused. Reusing the same revision with different content or attribution is refused too.</li>
+<li>The call changes only the saved reference point. Every current draft byte remains in place. If the draft already equals the reviewed content it becomes clean; otherwise Save prepares a new revision against the reviewed baseline.</li>
+<li>Another writer may change storage after review. The next save still checks the stored revision and may require another comparison. Adopting a snapshot is not permission to overwrite an unseen version.</li></ol>
+<p>Prefer this single checked operation over a sequence that discards and reopens the draft. <a href="native-record-editor.html">The native GTK4 editor</a> provides this comparison and adoption flow for application hosts.</p>
+<!-- The earlier manual recovery instructions remain as an engineering reference.
+The checked adopt_reviewed API above replaces discard/open reconstruction because
+it preserves working bytes atomically if accepting the reviewed baseline fails. -->
+<details><summary>Earlier manual recovery sequence, retained for comparison</summary>
+<h2>Recover from a stale save</h2>
+<ol>
+<li>Keep the draft. A rejected write must not be reported as a successful save.</li>
+<li>Copy the local bytes for a comparison view or an explicit draft export. Keep this copy until the user accepts the resolved content.</li>
+<li>Load the latest stored document separately. Show both versions and explain that another writer advanced the revision.</li>
+<li>After the user's decision, explicitly discard the old baseline, open the latest document, and set the reviewed combined content as a new edit.</li>
+<li>Prepare a fresh save. The new request uses the reviewed latest revision. Another concurrent write can still reject it; handle that result the same way.</li>
+</ol>
+<p>The service does not automatically merge free text or approve changes. After <code>IO_ERROR</code>, persistence may need recovery and verification before another save: losing a reply does not prove that a write failed to commit.</p>
+</details>
+<h2>Run the installed example</h2>
+<p>Install an SDK containing the data component, then copy <code>share/umicom-framework/examples/data_history</code> into your own example workspace. From that copied directory, use your installed SDK prefix:</p>
+<pre>cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH="C:/umicom/installed/applications"
+cmake --build build --target umicom-record-draft-example --parallel 2
+ctest --test-dir build -R "^consumer.record-drafts$" --output-on-failure --no-tests=error</pre>
+<p>Stop on a failed command. Expected example output:</p>
+<pre>synthetic-care-review: later edit retained; both captured revisions readable
+synthetic-bank-review: later edit retained; both captured revisions readable</pre>
+<p>The console example executes storage inline to make the sequence easy to read. It uses fictional records in memory; it does not provide a clinical editor, a bank transaction service, crash recovery for unsaved drafts or a background worker. Native application hosts must supply those integrations separately.</p>
+<h2>Common statuses</h2>
+<table><thead><tr><th>Status</th><th>What to inspect</th></tr></thead><tbody>
+<tr><td>INVALID_STATE</td><td>A closed or clean draft cannot prepare a save. A dirty draft cannot be replaced. A stale storage revision or wrong completion also uses this status; keep the operation context when reporting the error.</td></tr>
+<tr><td>BUSY</td><td>A save is pending, or the storage transaction is busy. Complete the active operation before preparing another save or replacing its document.</td></tr>
+<tr><td>INVALID_ARGUMENT</td><td>Check pointers, metadata fields, identity, nonzero recorded time and returned completion metadata.</td></tr>
+<tr><td>PARSE_ERROR</td><td>The supplied document's digest does not match its bytes. Preserve the original evidence and reload through the document service.</td></tr>
+<tr><td>CAPACITY_EXCEEDED</td><td>The content or output buffer is too small or large for the operation, or a revision/request counter is exhausted. No revision wraps back to zero.</td></tr>
+<tr><td>IO_ERROR</td><td>Keep the draft and inspect Data Server recovery diagnostics before retrying. Re-read persisted state when the write outcome is uncertain.</td></tr>
+</tbody></table>
+<footer><p>Umicom Framework · Sammy Hegab · Umicom Foundation · MIT</p></footer></body></html>

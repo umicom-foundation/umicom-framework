@@ -13,7 +13,22 @@ target_link_libraries(umicom-record-document-example PRIVATE Umicom::data)
 set_target_properties(umicom-record-document-example PROPERTIES
     C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
 include(CTest)
+# This consumer also checks the portable draft API through the installed SDK.
+add_executable(umicom-record-draft-example record_drafts.c)
+target_link_libraries(umicom-record-draft-example PRIVATE Umicom::data)
+set_target_properties(umicom-record-draft-example PROPERTIES
+    C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
 if(BUILD_TESTING)
     add_test(NAME consumer.record-history COMMAND umicom-record-history-example)
     add_test(NAME consumer.record-documents COMMAND umicom-record-document-example)
+    add_test(NAME consumer.record-drafts COMMAND umicom-record-draft-example)
+endif()
+
+# Bounded amendment browsing also resolves solely from the installed SDK.
+add_executable(umicom-record-history-page-example record_history_pages.c)
+target_link_libraries(umicom-record-history-page-example PRIVATE Umicom::data)
+set_target_properties(umicom-record-history-page-example PROPERTIES
+    C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+if(BUILD_TESTING)
+    add_test(NAME consumer.record-history-pages COMMAND umicom-record-history-page-example)
 endif()

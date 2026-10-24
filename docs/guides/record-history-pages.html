@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Page record history | Umicom Framework</title><style>body{font:17px/1.6 system-ui,sans-serif;max-width:940px;margin:3rem auto;padding:0 1rem;color:#182a3b}pre{background:#edf2f6;padding:1rem;overflow:auto}h1,h2{line-height:1.2}</style></head><body>
+<h1>Read amendment history in bounded pages</h1>
+<p>Include <code>umicom/data/record_history_page.h</code> and link <code>Umicom::data</code>. The query returns up to 16 amendment rows, newest first, for one entity. It works with metadata-only history and the metadata of atomic record documents. It does not require GTK or create a worker.</p>
+<h2>Read the first and following pages</h2>
+<ol><li>Allocate a <code>UmiRecordHistoryPage</code>. Call <code>umi_record_history_page</code> with the Data Server, entity ID, expected head zero, before revision zero and a page size from 1 to 16.</li>
+<li>Check the returned status before reading the output. <code>count</code> gives the number of rows. <code>head_revision</code> identifies the latest revision observed in this transaction.</li>
+<li>If <code>next_before_revision</code> is nonzero, pass it as the next exclusive cursor and pass the returned <code>head_revision</code> as the expected head. The next page starts immediately before that revision. Reuse the same entity.</li>
+<li>Stop when the returned cursor is zero. Do not pass zero again as a continuation; zero requests the first page.</li>
+<li>If a continuation returns <code>INVALID_STATE</code>, storage has advanced or the requested cursor is outside the current range. Retain the existing visible page and ask for a fresh first page. Do not append stale output as though the request succeeded.</li></ol>
+<pre>UmiRecordHistoryPage page;
+UmiStatus status = umi_record_history_page(server, "fictional-review",
+    0, 0, UMI_RECORD_HISTORY_PAGE_CAPACITY, &amp;page);
+/* Display only after status == UMI_STATUS_OK. */
+if (status == UMI_STATUS_OK &amp;&amp; page.next_before_revision != 0) {
+    status = umi_record_history_page(server, page.entity_id,
+        page.head_revision, page.next_before_revision,
+        UMI_RECORD_HISTORY_PAGE_CAPACITY, &amp;page);
+}</pre>
+<h2>Understand consistency and limits</h2>
+<p>Each query owns one Data Server transaction, covering the head, page rows and preceding boundary. It validates metadata identity, canonical revision numbers and timestamp order within that range. It publishes the output only after the transaction commits. An existing caller transaction returns <code>BUSY</code> and remains owned by the caller. Other failures roll back the query; rollback failure reports <code>IO_ERROR</code>.</p>
+<p>The head check detects normal appends between requests. It is not a cryptographic snapshot token and does not detect a malicious replacement of an entire store under the same head. Pages do not verify every earlier link or payload. Use <code>umi_record_document_load</code> for selected content and <code>umi_record_document_verify</code> for the complete content history. Provenance labels are not authentication.</p>
+<p>A missing entity returns <code>NOT_FOUND</code>. A missing row inside a requested range also returns <code>NOT_FOUND</code>, while malformed metadata or reversed timestamps return <code>PARSE_ERROR</code>. Neither case means an empty successful history. The caller output stays unchanged on every error. A cursor of one returns an empty successful page because there is no revision zero.</p>
+<h2>Try the installed example</h2>
+<p>Copy the installed <code>share/umicom-framework/examples/data_history</code> directory to a writable example workspace and run these commands there. Stop if a command fails.</p>
+<pre>cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH="C:/umicom/installed/applications"
+cmake --build build --target umicom-record-history-page-example --parallel 2
+ctest --test-dir build -R "^consumer.record-history-pages$" --output-on-failure --no-tests=error</pre>
+<p>The example uses only fictional in-memory metadata. Expected program output is <code>History head 19: 19 revisions across 2 pages</code>. Native hosts can use the <a href="native-record-editor.html">record editor's history pane</a>, which dispatches reads on a storage worker and keeps historical content read-only.</p>
+<footer><p>Umicom Framework · Sammy Hegab · Umicom Foundation · MIT</p></footer></body></html>

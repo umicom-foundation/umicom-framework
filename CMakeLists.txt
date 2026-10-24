@@ -290,6 +290,10 @@ add_library(umicom_data STATIC
     src/data/record_history.c
     # Content and provenance share one transaction rather than separate saves.
     src/data/record_document.c
+    # Shared draft ownership keeps save replies from replacing newer edits.
+    src/data/record_draft.c
+    # Bounded history queries share the existing data transaction owner.
+    src/data/record_history_page.c
     src/data/backup.c
     src/data/integrity.c
     src/data/message_store.c
@@ -6121,3 +6125,9 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomRecordChain.cmake")
 # Share amendment history qualification and installed examples across applications.
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomRecordHistory.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomRecordDocuments.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomRecordDrafts.cmake")
+# Native products share the same draft and worker ownership rules.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomRecordEditorGtk4.cmake")
+
+# Stable history pages are usable by GTK and headless consumers.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomRecordHistoryPages.cmake")

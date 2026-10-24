@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 3.25)
+project(UmicomNativeRecordEditor LANGUAGES C)
+# This consumer must resolve the installed native component without source fallback.
+find_package(UmicomFramework CONFIG REQUIRED)
+if(NOT TARGET Umicom::record_editor_gtk4)
+    message(FATAL_ERROR "Install a Framework SDK that includes record_editor_gtk4 and its GTK/data dependencies")
+endif()
+add_executable(umicom-record-editor main.c)
+target_link_libraries(umicom-record-editor PRIVATE Umicom::record_editor_gtk4)
+set_target_properties(umicom-record-editor PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)

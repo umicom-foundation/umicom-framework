@@ -41,3 +41,8 @@ include("${_umicom_framework_root}/cmake/UmicomNativeLlmRotaryResearch.cmake")
 # decoder BEFORE making any change to the historic decoder or checkpoint ABI.
 # The Framework-owned rotation implementation remains the sole RoPE owner.
 include("${_umicom_framework_root}/cmake/UmicomNativeLlmRotaryTraining.cmake")
+
+# Batch 85–86: bounded automatic differentiation over the existing Framework
+# tape, using RoPE-derived matrices rather than changing tape implementation.
+# The historical decoder and checkpoint formats remain completely untouched.
+include("${_umicom_framework_root}/cmake/UmicomNativeLlmRotaryTape.cmake")

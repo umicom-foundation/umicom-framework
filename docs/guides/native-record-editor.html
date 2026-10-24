@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Local record notes | Umicom Framework</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:960px;margin:3rem auto;padding:0 1.2rem;color:#182a3b}h1,h2{line-height:1.2}pre{background:#eef3f7;padding:1rem;overflow:auto}table{border-collapse:collapse;width:100%}th,td{border:1px solid #c4d1de;padding:.6rem;text-align:left}.note{background:#edf5fa;border-left:4px solid #26708e;padding:1rem}</style></head><body>
+<h1>Open and edit local record notes</h1>
+<p>The Framework record editor provides a native GTK4 text surface over the <a href="record-drafts.html">shared draft service</a>. A product supplies its title, description and record namespace. Framework owns database access, revision checks, the editable draft and background storage work. Healthcare composes this editor in its Review notes tab beside its existing Access exercise.</p>
+<p class="note">This is a local notes workflow for fictional exercises. It is not a clinical record system, a banking ledger, a sign-in service or encrypted storage. Reviewer names are attribution labels. Applications must provide their own authenticated access policy before using the service with restricted information.</p>
+<h2>Save and reopen a fictional note</h2>
+<ol><li>Open the Healthcare application and choose <strong>Review notes</strong>, or launch the SDK example below.</li>
+<li>Enter an absolute database filename in a directory you control, such as <code>C:/umicom/_local/record-notes.sqlite3</code>. The directory must already exist. The file can be new or an existing compatible Umicom Data Server database. Use a dedicated file for the exercise.</li>
+<li>Select <strong>Open or create database</strong>. Choosing a filename alone does not create a file. Wait for the database-ready message. This editor keeps that database until it closes.</li>
+<li>Enter <code>practice-one</code> as the record key and select <strong>New draft</strong>. The application namespace is added automatically. New draft does not query storage; attempting to save an already-used key is refused by the revision check.</li>
+<li>Enter fictional text, a reviewer name and a reason for the revision. Select <strong>Save revision</strong>. A saved message means the captured text was committed. You can continue typing during the write; newer text remains marked as unsaved.</li>
+<li>Close after all saves complete and the draft is clean. Reopen the application, choose the same database and key, then select <strong>Open record</strong>. Expect the last saved text and revision to appear.</li></ol>
+<p>The editor accepts UTF-8 text up to 16,384 bytes. Some characters use multiple bytes. Larger visible text remains available to shorten or copy; it cannot be saved or silently treated as clean. Stored binary records and invalid UTF-8 are refused without replacing the current draft.</p>
+<h2>Review another writer's changes</h2>
+<ol><li>If Save reports a changed stored revision, keep your draft. Select <strong>Compare stored text</strong>. The lower read-only pane shows a separate stored snapshot and its attribution; your draft stays editable above it.</li>
+<li>Read both versions and edit your draft to include the text you intend to retain. Comparing alone does not change which revision the next save expects.</li>
+<li>Select <strong>Keep my draft against this revision</strong> only after review. This chooses the shown snapshot as the baseline and leaves your draft text unchanged. It does not merge text or write to storage.</li>
+<li>Select <strong>Save revision</strong> to append your reviewed draft. If storage changes again, the save is refused and you can compare again. Earlier stored revisions remain available through the record-document API.</li></ol>
+<p><strong>Discard local edits</strong> restores the chosen saved baseline, including an explicitly adopted comparison snapshot. For a new unsaved record it closes the draft. Opening another record refuses unsaved changes. The host's close guard asks you to save or discard and waits for active storage work. There is no crash recovery for unsaved drafts.</p>
+<h2>Browse earlier amendments</h2>
+<ol><li>Expand <strong>Amendment history</strong> and select <strong>Refresh history</strong>. Each page shows at most 16 revisions, newest first, with reviewer, source, reason and recorded timestamp.</li>
+<li>Select <strong>Older revisions</strong> to continue. If another writer advances history, refresh from the new head rather than silently mixing pages from different heads.</li>
+<li>Enter a positive revision number from the history and select <strong>View historical text</strong>. Its content appears in the read-only review pane. Your editable draft and save baseline stay unchanged.</li>
+<li>Use <strong>Compare stored text</strong> again when preparing a save against the current stored revision. Historical viewing cannot choose an older save baseline.</li></ol>
+<p>History pages inspect metadata, not the entire payload chain. Reading a selected document verifies that document's content. See <a href="record-history-pages.html">the shared paging API</a> for head checks and transaction guarantees.</p>
+<h2>Compose the editor in a native application</h2>
+<ol><li>Link <code>Umicom::record_editor_gtk4</code> and include <code>umicom/ui/gtk4/record_editor.h</code>. Build with GTK4 and the SQLite Data Server provider for local persistence.</li>
+<li>Call <code>UmiRecordEditorGtk4New</code> on the GTK thread with a title, description, nonempty namespace prefix and source label. It copies the strings and returns a floating widget on success; parent it in a window or container.</li>
+<li>Connect the window's <code>close-request</code> signal and return the inverse of <code>UmiRecordEditorGtk4RequestClose</code>. The installed example demonstrates retaining the editor for that signal connection and releasing the reference with the closure.</li>
+<li>Keep the process and owning GLib main context alive while <code>UmiRecordEditorGtk4Busy</code> is true. Removal, disposal or explicit retirement prevents new actions and late reads from updating the closed surface. It does not cancel a database write already accepted.</li>
+<li>Create a new widget when changing database or attaching to another root. Unrooting permanently retires its action authority, including controls another object retained.</li></ol>
+<p>The implementation dispatches owned snapshots to GTask workers. Workers never read widgets or a mutable draft. Completion returns to the owning main context; observer callbacks may remove the host, so subsequent widget access checks retirement. Forced process termination can interrupt work and is not equivalent to an orderly close.</p>
+<h2>Build the installed SDK example</h2>
+<p>Install a GTK-enabled Framework SDK containing <code>record_editor_gtk4</code>, its data and UI dependencies, and SQLite support. Copy <code>share/umicom-framework/examples/record_editor</code> into your own example workspace. From that copied directory run the following, stopping if a command fails:</p>
+<pre>cmake -S . -B build -G Ninja -DCMAKE_PREFIX_PATH="C:/umicom/installed/applications" -DCMAKE_C_COMPILER="C:/msys64/ucrt64/bin/gcc.exe"
+cmake --build build --target umicom-record-editor --parallel 2
+&amp; ".\build\umicom-record-editor.exe"</pre>
+<p>Keep the UCRT64 GTK runtime directory on PATH when launching on Windows. The example opens the Local record notes window; use the fictional workflow above. It has no automatic connection and does not create a database until you choose the action.</p>
+<h2>Troubleshooting</h2>
+<table><thead><tr><th>Symptom</th><th>Next step</th></tr></thead><tbody>
+<tr><td>Database unavailable</td><td>Use an absolute file path in an existing writable directory. Confirm SQLite support is built. Do not select an unrelated application's database.</td></tr>
+<tr><td>Save refused</td><td>Check reviewer and reason fields, text size and the status message. For a changed revision, use the comparison workflow. For an I/O error, keep the draft and inspect storage before retrying; a missing reply does not prove a write never committed.</td></tr>
+<tr><td>Comparison fails</td><td>The key may not yet exist, storage may be unavailable, or the stored content may be binary. Your draft remains available. Comparing a new unused key normally reports not found.</td></tr>
+<tr><td>Cannot close or open another record</td><td>Wait for active storage work, then save or explicitly discard local edits. Oversized visible text also counts as unsaved.</td></tr>
+<tr><td>Native tests report skipped</td><td>GTK could not initialize a display. Run the GUI coverage in a desktop session. A skipped case has not validated the workflow.</td></tr>
+</tbody></table>
+<footer><p>Umicom Framework · Sammy Hegab · Umicom Foundation · MIT</p></footer></body></html>
