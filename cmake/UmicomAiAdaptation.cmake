@@ -20,7 +20,9 @@ if(NOT TARGET umicom_ai_adaptation)
         "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/source_admission.c"
         "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/caption_text.c"
         "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/adapter_checkpoint.c"
-        "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/source_evidence.c")
+        "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/source_evidence.c"
+        "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/low_rank_training.c"
+        "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/reviewed_examples.c")
     add_library(Umicom::AiAdaptation ALIAS umicom_ai_adaptation)
     target_include_directories(umicom_ai_adaptation PUBLIC
         "${UMICOM_AI_ADAPTATION_ROOT}/include")
@@ -71,6 +73,24 @@ if(BUILD_TESTING)
         add_test(NAME framework.ai.adaptation.source_evidence
             COMMAND umicom-ai-training-source-evidence-test)
     endif()
+    # A supervised update uses the existing Framework graph and SGD writer.
+    if(NOT TARGET umicom-ai-training-low-rank-step-test)
+        add_executable(umicom-ai-training-low-rank-step-test
+            "${UMICOM_AI_ADAPTATION_ROOT}/tests/ai_training/test_training_low_rank_step.c")
+        target_link_libraries(umicom-ai-training-low-rank-step-test PRIVATE
+            Umicom::AiAdaptation)
+        add_test(NAME framework.ai.adaptation.low_rank_step
+            COMMAND umicom-ai-training-low-rank-step-test)
+    endif()
+    # Review and actual SHA-256 checks precede JSONL preparation.
+    if(NOT TARGET umicom-ai-training-reviewed-examples-test)
+        add_executable(umicom-ai-training-reviewed-examples-test
+            "${UMICOM_AI_ADAPTATION_ROOT}/tests/ai_training/test_training_reviewed_examples.c")
+        target_link_libraries(umicom-ai-training-reviewed-examples-test PRIVATE
+            Umicom::AiAdaptation)
+        add_test(NAME framework.ai.adaptation.reviewed_examples
+            COMMAND umicom-ai-training-reviewed-examples-test)
+    endif()
     if(TARGET Umicom::creative_workspace AND NOT TARGET umicom-ai-training-caption-text-test)
         add_executable(umicom-ai-training-caption-text-test
             "${UMICOM_AI_ADAPTATION_ROOT}/tests/ai_training/test_training_caption_text.c")
@@ -83,7 +103,9 @@ if(BUILD_TESTING)
             umicom-ai-training-low-rank-test
             umicom-ai-training-source-admission-test
             umicom-ai-training-adapter-checkpoint-test
-            umicom-ai-training-source-evidence-test)
+            umicom-ai-training-source-evidence-test
+            umicom-ai-training-low-rank-step-test
+            umicom-ai-training-reviewed-examples-test)
         target_compile_features(${target} PRIVATE c_std_23)
         if(MSVC)
             target_compile_options(${target} PRIVATE /W4)
