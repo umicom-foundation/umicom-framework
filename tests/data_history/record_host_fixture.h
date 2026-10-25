@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/record_host_fixture.h
+ *
+ * PURPOSE:
+ *   Owned-host tests expose no underlying Data Server or mutable security handles.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Owned-host tests expose no underlying Data Server or mutable security handles. */
 #ifndef UMICOM_RECORD_HOST_FIXTURE_H

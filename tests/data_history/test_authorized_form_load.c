@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_authorized_form_load.c
+ *
+ * PURPOSE:
+ *   Publish typed answers, record identity and access receipt as one result.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Publish typed answers, record identity and access receipt as one result. */
 #include "authorized_form_fixture.h"

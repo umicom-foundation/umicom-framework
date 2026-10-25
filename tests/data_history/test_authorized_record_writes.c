@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_authorized_record_writes.c
+ *
+ * PURPOSE:
+ *   Mutation receipts derive actor/source/time and preserve optimistic revision checks.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Mutation receipts derive actor/source/time and preserve optimistic revision checks. */
 #include "../security/record_access_fixture.h"

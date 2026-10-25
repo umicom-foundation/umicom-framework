@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_record_host_forms.c
+ *
+ * PURPOSE:
+ *   Typed workflows retain access and schema checks inside the host's shared lock.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Typed workflows retain access and schema checks inside the host's shared lock. */
 #include "../application_experience/structured_form_fixture.h"

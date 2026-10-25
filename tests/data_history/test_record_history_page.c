@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_record_history_page.c
+ *
+ * PURPOSE:
+ *   Stable pages must cover each revision once and keep caller output on errors.
+ *   Fixtures use metadata-only history; payload integrity has separate coverage.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Stable pages must cover each revision once and keep caller output on errors.
  * Fixtures use metadata-only history; payload integrity has separate coverage. */

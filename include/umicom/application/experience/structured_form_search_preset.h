@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/application/experience/structured_form_search_preset.h
+ *
+ * PURPOSE:
+ *   Named saved queries retain explicit namespace and typed answer conditions.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Named saved queries retain explicit namespace and typed answer conditions. */
 #ifndef UMICOM_APPLICATION_EXPERIENCE_STRUCTURED_FORM_SEARCH_PRESET_H

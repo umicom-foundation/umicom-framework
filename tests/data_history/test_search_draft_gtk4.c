@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_search_draft_gtk4.c
+ *
+ * PURPOSE:
+ *   Native text and portable drafts share explicit save and recovery boundaries.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Native text and portable drafts share explicit save and recovery boundaries. */
 #include "search_session_fixture.h"

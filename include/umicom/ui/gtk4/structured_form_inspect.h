@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/gtk4/structured_form_inspect.h
+ *
+ * PURPOSE:
+ *   Show an owned, read-only snapshot without granting editing authority.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Show an owned, read-only snapshot without granting editing authority. */
 #ifndef UMICOM_UI_GTK4_STRUCTURED_FORM_INSPECT_H

@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/structured_forms/authorized_native.c
+ *
+ * PURPOSE:
+ *   Fictional local example of host-supplied identity and protected native storage.
+ *   Bootstrap grants below demonstrate composition; they are not a login system.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Fictional local example of host-supplied identity and protected native storage.
  * Bootstrap grants below demonstrate composition; they are not a login system. */

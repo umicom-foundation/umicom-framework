@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/structured_form_upgrade.c
+ *
+ * PURPOSE:
+ *   Schema migration and storage share one reviewed draft. Ordinary editing does
+ *   not silently reinterpret old records or bypass final storage concurrency.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Schema migration and storage share one reviewed draft. Ordinary editing does
  * not silently reinterpret old records or bypass final storage concurrency. */

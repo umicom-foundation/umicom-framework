@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/gtk4/structured_form_filter.h
+ *
+ * PURPOSE:
+ *   Native filter editing shares typed parsing with non-GTK clients.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Native filter editing shares typed parsing with non-GTK clients. */
 #ifndef UMICOM_UI_GTK4_STRUCTURED_FORM_FILTER_H

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/data_history/form_search_presets.c
+ *
+ * PURPOSE:
+ *   Save and reopen a reusable inventory search through installed SDK contracts.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Save and reopen a reusable inventory search through installed SDK contracts. */
 #include "umicom/data/structured_form_query.h"

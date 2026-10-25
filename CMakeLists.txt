@@ -5462,6 +5462,7 @@ include(cmake/UmicomQuickOpenQueryChecks.cmake)
 include(cmake/UmicomEditorTextPositions.cmake)
 include(cmake/UmicomDocumentReplacement.cmake)
 include(cmake/UmicomDocumentSourceRequests.cmake)
+include(cmake/UmicomDocumentOpenBatch.cmake)
 
 message(STATUS "Umicom Framework version: ${PROJECT_VERSION}")
 message(STATUS "C standard: C${CMAKE_C_STANDARD}")
@@ -6038,6 +6039,7 @@ include(cmake/UmicomEducationInspectionTests.cmake)
 
 # File choosers collect paths without executing the host application action.
 include(cmake/UmicomPathPicker.cmake)
+include(cmake/UmicomLocalFileDrop.cmake)
 include(cmake/UmicomTextExport.cmake)
 
 # Studio and education share the same read-only teaching trace surface.
@@ -6178,3 +6180,27 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomDatabaseMaintenanceGtk4.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomFormRecordImportGtk4.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomFormRecordEditorGtk4.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomStructuredFormWeb.cmake")
+
+# Configure the real independent modules together: standalone tests cannot
+# expose global executable-name collisions or include-order regressions.
+if(BUILD_TESTING)
+    foreach(_search_composition_order IN ITEMS forward reverse)
+        foreach(_search_composition_testing IN ITEMS ON OFF)
+            set(_search_composition_name "framework.build_configuration.form-search.${_search_composition_order}.${_search_composition_testing}")
+            add_test(NAME ${_search_composition_name}
+                COMMAND "${CMAKE_COMMAND}"
+                    "-DROOT=${CMAKE_CURRENT_SOURCE_DIR}"
+                    "-DDEST=${CMAKE_CURRENT_BINARY_DIR}/form-search-${_search_composition_order}-${_search_composition_testing}"
+                    "-DGENERATOR=${CMAKE_GENERATOR}"
+                    "-DCOMPILER=${CMAKE_C_COMPILER}"
+                    "-DORDER=${_search_composition_order}"
+                    "-DTESTING=${_search_composition_testing}"
+                    -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/build_configuration/check_form_search_composition.cmake")
+            set_tests_properties(${_search_composition_name} PROPERTIES TIMEOUT 180
+                LABELS "framework;forms;search;configuration;regression")
+        endforeach()
+    endforeach()
+endif()
+unset(_search_composition_name)
+unset(_search_composition_order)
+unset(_search_composition_testing)

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_authorized_form_save.c
+ *
+ * PURPOSE:
+ *   Preserve draft edits and reject unauthorized or incompatible amendments.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Preserve draft edits and reject unauthorized or incompatible amendments. */
 #include "authorized_form_fixture.h"

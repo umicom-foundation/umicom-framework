@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/data_history/record_draft_recovery.c
+ *
+ * PURPOSE:
+ *   The installed SDK can capture and restore a draft without GTK or file I/O.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * The installed SDK can capture and restore a draft without GTK or file I/O. */
 #include "umicom/data/record_draft_snapshot.h"

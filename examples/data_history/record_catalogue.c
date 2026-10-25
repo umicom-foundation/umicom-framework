@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/data_history/record_catalogue.c
+ *
+ * PURPOSE:
+ *   A headless host uses the same catalogue and checked open as native widgets.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A headless host uses the same catalogue and checked open as native widgets. */
 #include "umicom/data/record_catalogue.h"

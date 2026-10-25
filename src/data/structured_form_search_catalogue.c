@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/structured_form_search_catalogue.c
+ *
+ * PURPOSE:
+ *   Bind result pages to query identity and checked revision heads.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Bind result pages to query identity and checked revision heads. */
 #include "umicom/data/structured_form_search_catalogue.h"

@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_structured_form_upgrade.c
+ *
+ * PURPOSE:
+ *   Upgrades retain the original history, require explicit review and bind worker
+ *   requests to the same baseline in both supported local storage backends.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Upgrades retain the original history, require explicit review and bind worker
  * requests to the same baseline in both supported local storage backends. */

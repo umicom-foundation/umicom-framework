@@ -1,4 +1,20 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_training_rotary_window.c
+ *
+ * PURPOSE:
+ *   Independently reconstruct causal single-block sliding attention
+ *   and compare it with the Framework-owned RoPE ring-cache results.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | tests/ai_training/test_training_rotary_window.c
  * PURPOSE: Independently reconstruct causal single-block sliding attention
  *          and compare it with the Framework-owned RoPE ring-cache results.

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/healthcare/synthetic_profile.h
+ *
+ * PURPOSE:
+ *   Versioned fictional administrative profiles for native and browser exercises.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Versioned fictional administrative profiles for native and browser exercises. */
 #ifndef UMICOM_HEALTHCARE_SYNTHETIC_PROFILE_H

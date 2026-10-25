@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/structured_form_bundle.c
+ *
+ * PURPOSE:
+ *   The review owns captured bytes so selecting another file cannot change an
+ *   approved restore. Shared readers preserve the meaning of historical versions.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * The review owns captured bytes so selecting another file cannot change an
  * approved restore. Shared readers preserve the meaning of historical versions. */

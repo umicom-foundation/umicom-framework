@@ -53,7 +53,12 @@ if(BUILD_TESTING)
         else()
             continue()
         endif()
-        set(_search_discovery_target "umicom-search-${_search_discovery_group}-test")
+        # Qualify executable names by their owning service so independent test modules
+        # can coexist. The former short name is retained for engineering review.
+        if(FALSE)
+            set(_search_discovery_target "umicom-search-${_search_discovery_group}-test")
+        endif()
+        set(_search_discovery_target "umicom-structured-form-search-${_search_discovery_group}-test")
         add_executable(${_search_discovery_target} "${_search_discovery_root}/${_search_discovery_source}")
         target_link_libraries(${_search_discovery_target} PRIVATE ${_search_discovery_library})
         set_target_properties(${_search_discovery_target} PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)

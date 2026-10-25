@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/application/experience/structured_form_filter_text.c
+ *
+ * PURPOSE:
+ *   Human input is parsed before it becomes a typed query; locale never changes it.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Human input is parsed before it becomes a typed query; locale never changes it. */
 #include "umicom/application/experience/structured_form_filter_text.h"

@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/application_experience/test_structured_form_merge.c
+ *
+ * PURPOSE:
+ *   Independent branches, explicit missing values and stale choices must remain
+ *   distinguishable. These proposals never write to storage.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Independent branches, explicit missing values and stale choices must remain
  * distinguishable. These proposals never write to storage. */

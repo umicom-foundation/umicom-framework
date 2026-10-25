@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_search_session_save.c
+ *
+ * PURPOSE:
+ *   Immutable save requests keep later edits and reject stale completion tokens.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Immutable save requests keep later edits and reject stale completion tokens. */
 #include "search_session_fixture.h"

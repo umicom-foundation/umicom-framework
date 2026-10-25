@@ -1,0 +1,81 @@
+# Umicom Framework
+# File: cmake/UmicomEditorLineOrdering.cmake
+# PURPOSE: Integrate immutable line ordering with the editor, document commands and SDK.
+# AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+# LICENCE: MIT
+if(NOT TARGET umicom_editor)
+    return()
+endif()
+include_guard(GLOBAL)
+include(GNUInstallDirs)
+get_filename_component(_ordering_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+target_sources(umicom_editor PRIVATE "${_ordering_root}/src/editor/line_sort.c")
+install(FILES "${_ordering_root}/include/umicom/editor/line_sort.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/editor" COMPONENT Framework)
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_editor include/umicom/editor/line_sort.h)
+endif()
+install(FILES "${_ordering_root}/docs/guides/selected-line-ordering.html"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides" COMPONENT Framework)
+if(BUILD_TESTING)
+    set(_ordering_core_cases ascending descending partial end-at-start reverse-selection no-final
+        crlf mixed blank unicode case duplicate unchanged one-line empty-selection bare-cr utf8
+        boundary nul limit line-limit cancel owned arguments)
+    set(_ordering_engine_cases engine plan empty selection)
+    set(_ordering_document_cases ascending descending partial unchanged empty-selection readonly
+        other-tab closed identity identity-unchanged pending command argument)
+    foreach(_ordering_group IN ITEMS core engine document)
+        if(_ordering_group STREQUAL "core")
+            set(_ordering_source "tests/editor/test_line_sort.c")
+            set(_ordering_library Umicom::editor)
+        elseif(_ordering_group STREQUAL "engine")
+            set(_ordering_source "tests/editor/test_line_sort_engine.c")
+            set(_ordering_library Umicom::editor)
+        else()
+            if(NOT TARGET Umicom::document)
+                continue()
+            endif()
+            set(_ordering_source "tests/document/test_line_sort.c")
+            set(_ordering_library Umicom::document)
+        endif()
+        set(_ordering_target "umicom-line-ordering-${_ordering_group}-test")
+        add_executable(${_ordering_target} "${_ordering_root}/${_ordering_source}")
+        target_link_libraries(${_ordering_target} PRIVATE ${_ordering_library})
+        set_target_properties(${_ordering_target} PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(${_ordering_target})
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(${_ordering_target})
+        endif()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(${_ordering_target})
+        endif()
+        if(COMMAND umicom_target_qualification_inputs)
+            umicom_target_qualification_inputs(${_ordering_target} FILES
+                "${_ordering_root}/src/editor/line_edit_plan.inc"
+                "${_ordering_root}/src/document/line_edit.inc"
+                "${_ordering_root}/src/document/line_edit_commands.inc"
+                "${_ordering_root}/tests/document/replacement_fixture.h")
+        endif()
+        foreach(_ordering_case IN LISTS _ordering_${_ordering_group}_cases)
+            set(_ordering_test "framework.editor.line_ordering.${_ordering_group}.${_ordering_case}")
+            add_test(NAME ${_ordering_test} COMMAND ${_ordering_target} ${_ordering_case})
+            set_tests_properties(${_ordering_test} PROPERTIES TIMEOUT 30
+                LABELS "framework;editor;document;line-ordering;ownership;regression")
+            if(COMMAND umicom_test_impact_owners)
+                umicom_test_impact_owners(${_ordering_test} TARGETS ${_ordering_target})
+            endif()
+        endforeach()
+    endforeach()
+endif()
+unset(_ordering_root)
+unset(_ordering_group)
+unset(_ordering_source)
+unset(_ordering_library)
+unset(_ordering_target)
+unset(_ordering_test)
+unset(_ordering_case)
+unset(_ordering_core_cases)
+unset(_ordering_engine_cases)
+unset(_ordering_document_cases)

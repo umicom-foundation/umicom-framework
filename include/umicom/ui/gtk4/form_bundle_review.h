@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/gtk4/form_bundle_review.h
+ *
+ * PURPOSE:
+ *   A native preview copies all historical answers before asking for confirmation.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A native preview copies all historical answers before asking for confirmation. */
 #ifndef UMICOM_UI_GTK4_FORM_BUNDLE_REVIEW_H

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/security/test_record_access_request.c
+ *
+ * PURPOSE:
+ *   Reject ambiguous resources before session lookup or policy evaluation.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Reject ambiguous resources before session lookup or policy evaluation. */
 #include "record_access_fixture.h"

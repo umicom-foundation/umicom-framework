@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/security/record_access_fixture.h
+ *
+ * PURPOSE:
+ *   Fictional identities exercise the same authority against both storage engines.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Fictional identities exercise the same authority against both storage engines. */
 #ifndef UMICOM_RECORD_ACCESS_FIXTURE_H

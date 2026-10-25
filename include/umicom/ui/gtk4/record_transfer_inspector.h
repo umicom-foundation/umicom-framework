@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/gtk4/record_transfer_inspector.h
+ *
+ * PURPOSE:
+ *   Reopen import provenance without giving the viewer a writable connection.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Reopen import provenance without giving the viewer a writable connection. */
 #ifndef UMICOM_UI_GTK4_RECORD_TRANSFER_INSPECTOR_H

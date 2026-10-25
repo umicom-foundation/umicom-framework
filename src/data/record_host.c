@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/record_host.c
+ *
+ * PURPOSE:
+ *   One owned lock spans current security decisions and storage completion.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * One owned lock spans current security decisions and storage completion. */
 #include "umicom/data/record_host.h"

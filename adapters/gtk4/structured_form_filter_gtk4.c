@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/structured_form_filter_gtk4.c
+ *
+ * PURPOSE:
+ *   Rows keep local text; only the shared parser publishes typed filter operands.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Rows keep local text; only the shared parser publishes typed filter operands. */
 #include "umicom/ui/gtk4/structured_form_filter.h"

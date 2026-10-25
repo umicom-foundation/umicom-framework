@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_sqlite_backup_history.c
+ *
+ * PURPOSE:
+ *   Whole-store recovery retains original history and separate import provenance.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Whole-store recovery retains original history and separate import provenance. */
 #include "readonly_fixture.h"

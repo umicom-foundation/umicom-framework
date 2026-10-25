@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/structured_form_search_draft_gtk4.c
+ *
+ * PURPOSE:
+ *   Keep incomplete native text local while portable sessions own valid drafts.
+ *   Complete replacement controls are built before changing the active model.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Keep incomplete native text local while portable sessions own valid drafts.
  * Complete replacement controls are built before changing the active model. */

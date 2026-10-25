@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/record_catalogue.c
+ *
+ * PURPOSE:
+ *   Discovery owns a read transaction. Visitor callbacks only copy identities;
+ *   metadata reads happen afterwards, outside the Data Server visitor lock.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Discovery owns a read transaction. Visitor callbacks only copy identities;
  * metadata reads happen afterwards, outside the Data Server visitor lock. */

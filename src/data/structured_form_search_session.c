@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/structured_form_search_session.c
+ *
+ * PURPOSE:
+ *   Compose saved-query validation with existing draft and immutable-save ownership.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Compose saved-query validation with existing draft and immutable-save ownership. */
 #include "umicom/data/structured_form_search_session.h"

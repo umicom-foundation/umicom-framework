@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/structured_form_conflict.h
+ *
+ * PURPOSE:
+ *   Bind a typed conflict review to a selected record and its exact local bytes.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Bind a typed conflict review to a selected record and its exact local bytes. */
 #ifndef UMICOM_DATA_STRUCTURED_FORM_CONFLICT_H

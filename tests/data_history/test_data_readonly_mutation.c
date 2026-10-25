@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_data_readonly_mutation.c
+ *
+ * PURPOSE:
+ *   Public mutation routes cannot turn an inspection connection into a writer.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Public mutation routes cannot turn an inspection connection into a writer. */
 #include "readonly_fixture.h"

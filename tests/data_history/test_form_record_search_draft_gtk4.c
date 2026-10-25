@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_form_record_search_draft_gtk4.c
+ *
+ * PURPOSE:
+ *   Managed query editing must preserve independent record and scratch state.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Managed query editing must preserve independent record and scratch state. */
 #include "managed_search_fixture.h"

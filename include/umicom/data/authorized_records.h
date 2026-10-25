@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/authorized_records.h
+ *
+ * PURPOSE:
+ *   Protect bounded document operations with current identity and purpose policy.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Protect bounded document operations with current identity and purpose policy. */
 #ifndef UMICOM_DATA_AUTHORIZED_RECORDS_H

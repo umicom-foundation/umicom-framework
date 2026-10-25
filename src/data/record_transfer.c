@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/record_transfer.c
+ *
+ * PURPOSE:
+ *   Commit original history and local import provenance as one storage decision.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Commit original history and local import provenance as one storage decision. */
 #include "include/record_bundle_internal.h"

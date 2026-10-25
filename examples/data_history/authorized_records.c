@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/data_history/authorized_records.c
+ *
+ * PURPOSE:
+ *   A synthetic, single-owner host demonstrates explicit record and purpose policy.
+ *   Real applications authenticate their user before issuing a session.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A synthetic, single-owner host demonstrates explicit record and purpose policy.
  * Real applications authenticate their user before issuing a session. */

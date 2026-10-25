@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/structured_form_query.h
+ *
+ * PURPOSE:
+ *   Search verified typed answers using registered semantic schema versions.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Search verified typed answers using registered semantic schema versions. */
 #ifndef UMICOM_DATA_STRUCTURED_FORM_QUERY_H

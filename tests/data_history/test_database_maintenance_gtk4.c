@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_database_maintenance_gtk4.c
+ *
+ * PURPOSE:
+ *   Exercise native admission, captured file identity and asynchronous outcomes.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Exercise native admission, captured file identity and asynchronous outcomes. */
 #include "readonly_fixture.h"

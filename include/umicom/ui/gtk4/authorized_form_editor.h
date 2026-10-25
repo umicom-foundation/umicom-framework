@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/gtk4/authorized_form_editor.h
+ *
+ * PURPOSE:
+ *   Native typed editing with current-time, authorized background persistence.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Native typed editing with current-time, authorized background persistence. */
 #ifndef UMICOM_UI_GTK4_AUTHORIZED_FORM_EDITOR_H

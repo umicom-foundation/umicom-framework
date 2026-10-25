@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/record_transfer_inspector_gtk4.c
+ *
+ * PURPOSE:
+ *   GTK captures intent; a worker owns its read-only connection and copied result.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * GTK captures intent; a worker owns its read-only connection and copied result. */
 #include "umicom/platform/output_file.h"

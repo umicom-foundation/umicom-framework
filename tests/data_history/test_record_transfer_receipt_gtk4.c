@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_record_transfer_receipt_gtk4.c
+ *
+ * PURPOSE:
+ *   Receipt views own literal provenance text and never mutate stored history.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Receipt views own literal provenance text and never mutate stored history. */
 #include "umicom/ui/gtk4/record_transfer_receipt.h"

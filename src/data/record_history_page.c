@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/record_history_page.c
+ *
+ * PURPOSE:
+ *   Publish a complete bounded page only after its read transaction succeeds.
+ *   Pages deliberately share the existing history codec and transaction owner.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Publish a complete bounded page only after its read transaction succeeds.
  * Pages deliberately share the existing history codec and transaction owner. */

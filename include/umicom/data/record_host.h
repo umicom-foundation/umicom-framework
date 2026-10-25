@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/record_host.h
+ *
+ * PURPOSE:
+ *   Own and serialize record storage with its identity/session/policy boundary.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Own and serialize record storage with its identity/session/policy boundary. */
 #ifndef UMICOM_DATA_RECORD_HOST_H

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/application_experience/test_structured_form_filter_gtk4.c
+ *
+ * PURPOSE:
+ *   Native controls must preserve invalid text and distinguish every accepted edit.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Native controls must preserve invalid text and distinguish every accepted edit. */
 #include "structured_form_fixture.h"

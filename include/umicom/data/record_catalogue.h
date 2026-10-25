@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/record_catalogue.h
+ *
+ * PURPOSE:
+ *   Shared record discovery keeps key encoding and consistent reads out of hosts.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Shared record discovery keeps key encoding and consistent reads out of hosts. */
 #ifndef UMICOM_DATA_RECORD_CATALOGUE_H

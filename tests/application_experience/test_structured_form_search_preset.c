@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/application_experience/test_structured_form_search_preset.c
+ *
+ * PURPOSE:
+ *   A saved search retains scope and conditions without retaining pagination.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A saved search retains scope and conditions without retaining pagination. */
 #include "structured_form_fixture.h"

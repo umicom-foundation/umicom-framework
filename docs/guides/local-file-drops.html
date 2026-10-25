@@ -1,0 +1,17 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Receiving local file drops</title><main>
+<h1>Receiving local file drops</h1>
+<p>A file drop is a selection made in a desktop file manager and released over a native application. Framework converts the selection into copied local paths. Your application decides whether to open a document, import data or perform another reviewed operation.</p>
+<ol>
+<li>Include <code>umicom/ui/gtk4/local_file_drop.h</code> and link <code>Umicom::ui_gtk4</code>. Use GTK 4.10 or newer, matching the native application baseline.</li>
+<li>Implement a <code>UmiLocalFileDropGtk4Receiver</code>. Its widget, path array and strings are borrowed for the callback only. Copy the paths before scheduling work. Return <code>UMI_STATUS_OK</code> only after accepting the request; this does not mean that later asynchronous work has finished.</li>
+<li>Call <code>UmiLocalFileDropGtk4Create</code> with a selection limit between 1 and 128 and your receiver. Pass a context destructor when the controller should own the context. A failed creation leaves the context with you.</li>
+<li>Pass the returned controller to <code>gtk_widget_add_controller</code>. That transfers the controller reference to the widget. Select the propagation phase before attachment if your editor must receive files before a child text widget handles them.</li>
+<li>Keep the widget visible and sensitive in an open window. Report operation results using the application's existing document or import service.</li>
+</ol>
+<h2>Selection rules</h2>
+<p>The controller accepts GdkFileList copy drops. Every path must be absolute, local, valid UTF-8 and shorter than 4096 bytes including space for its terminating zero. An empty list, remote URI, excessive count or invalid item rejects the whole selection before your receiver runs. Order and duplicate paths remain available for your application's policy. The adapter does not test file existence, read files, follow project trust decisions, move files or delete anything.</p>
+<h2>Ownership and recovery</h2>
+<p>The receiver may close its window or remove the controller. Copied paths stay available until it returns. Recursive drops on the same controller are rejected. Hidden, detached or destroyed hosts do not receive a drop. Controller finalization calls the context destructor once; keep the GTK main thread as the owner of these objects.</p>
+<p>If a selection is rejected, try a smaller local selection or use the application's file chooser. A drop accepted by a document queue may still contain a missing file or unsupported content; show those per-file outcomes rather than treating admission as a successful read.</p>
+<p>GTK defines the <a href="https://docs.gtk.org/gtk4/class.DropTarget.html">drop-controller contract</a> and the <a href="https://docs.gtk.org/gdk4/struct.FileList.html">file-list transfer type</a>.</p>
+</main></html>

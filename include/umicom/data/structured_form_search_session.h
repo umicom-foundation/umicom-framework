@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/structured_form_search_session.h
+ *
+ * PURPOSE:
+ *   Own editable saved-query drafts without tying them to GTK or a database.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Own editable saved-query drafts without tying them to GTK or a database. */
 #ifndef UMICOM_DATA_STRUCTURED_FORM_SEARCH_SESSION_H

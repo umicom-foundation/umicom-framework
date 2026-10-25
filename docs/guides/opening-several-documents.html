@@ -1,0 +1,15 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>Open several source documents</title><style>body{font:1rem/1.6 system-ui;max-width:64rem;margin:3rem auto;padding:0 1rem}pre{background:#eee;padding:1rem;overflow:auto}</style>
+<main><h1>Open several source documents</h1>
+<p>A selection of files can contain an unreadable item. Framework's opening plan records a separate outcome for each selected path, allowing a host to keep useful tabs open while explaining failures.</p>
+<h2>Use the document owner</h2><ol>
+<li>Include <code>umicom/document/open_batch.h</code> and link <code>Umicom::document</code>.</li>
+<li>Call <code>UmiDocumentOpenBatchCreate</code> with at most 32 absolute local paths. This copies the selection and performs no reads. Relative, missing or invalid paths are not interpreted as project commands.</li>
+<li>On the document owner's thread, call <code>UmiDocumentOpenBatchStep</code> once. An OK result means that one outcome was recorded. Inspect that item with <code>UmiDocumentOpenBatchAt</code> to determine whether it opened successfully.</li>
+<li>Yield to your event loop, then step again with the same coordinator. Keep the coordinator and its borrowed services alive. Never run steps concurrently or destroy the plan from a provider callback.</li>
+<li>Display the copied summary and individual results. NOT_FOUND from Step means no files remain. Destroy the plan when the report is no longer needed.</li></ol>
+<p>The existing coordinator resolves already-open paths. Opening the same source again selects its current tab; it does not reload over unsaved changes. Different spellings are compared through the coordinator's normal path rules. This does not establish that arbitrary symbolic links identify the same file.</p>
+<h2>Cancellation and partial results</h2><p>Cancel marks pending files as cancelled and retains successful tabs. Cancellation cannot undo a read already running. A reentrant step or cancel during a provider callback returns BUSY. An invalid overall request, such as too many files, starts no work. Invalid individual members are recorded as failures while other members continue.</p>
+<p>Opening files does not save documents, grant workspace trust or run a build. The host may yield between items; an individual synchronous provider read can still take time. Remote resource URIs are outside this local-path contract.</p>
+<h2>Studio workflow</h2><ol><li>Choose File → Open and select several files using the native chooser.</li><li>Wait for Studio to finish opening the selection. Successful sources appear as editor tabs.</li><li>If any file fails, read the File opening results window. Fix permissions, select a supported text file or reduce the selection, then retry only the files that need attention.</li></ol>
+<p>Existing editor size and text encoding limits still apply. The results report describes opening, not compilation or project membership.</p></main></html>

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_data_readonly_open.c
+ *
+ * PURPOSE:
+ *   Inspection must not create stores or repair an unrelated schema.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Inspection must not create stores or repair an unrelated schema. */
 #include "readonly_fixture.h"

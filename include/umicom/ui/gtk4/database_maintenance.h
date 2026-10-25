@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/gtk4/database_maintenance.h
+ *
+ * PURPOSE:
+ *   Shared native access to checked SQLite inspection, backup and recovery.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Shared native access to checked SQLite inspection, backup and recovery. */
 #ifndef UMICOM_UI_GTK4_DATABASE_MAINTENANCE_H

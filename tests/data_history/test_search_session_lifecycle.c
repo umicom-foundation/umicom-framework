@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_search_session_lifecycle.c
+ *
+ * PURPOSE:
+ *   Draft ownership binds commands to one definition and one observed edit.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Draft ownership binds commands to one definition and one observed edit. */
 #include "search_session_fixture.h"

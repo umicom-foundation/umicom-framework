@@ -1,6 +1,22 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/ai_training/test_training_rotary_tensor.c
+ *
+ * PURPOSE:
+ *   Validate multi-head batch forward/adjoint against scalar owner,
+ *   in-place calls and the independent transpose inner-product rule.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_training_rotary_tensor.c
  * PURPOSE: Validate multi-head batch forward/adjoint against scalar owner,
  *          in-place calls and the independent transpose inner-product rule.
  * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | MIT

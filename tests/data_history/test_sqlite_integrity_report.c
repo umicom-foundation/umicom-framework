@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_sqlite_integrity_report.c
+ *
+ * PURPOSE:
+ *   quick_check diagnostics are data rows, not failed SQL execution codes.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * quick_check diagnostics are data rows, not failed SQL execution codes. */
 #include "readonly_fixture.h"

@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/healthcare/synthetic_profile.c
+ *
+ * PURPOSE:
+ *   One immutable schema keeps native/web answers and stored versions aligned.
+ *   Missing answers and fictional contact permission remain explicit states.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * One immutable schema keeps native/web answers and stored versions aligned.
  * Missing answers and fictional contact permission remain explicit states. */

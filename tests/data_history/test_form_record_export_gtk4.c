@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_form_record_export_gtk4.c
+ *
+ * PURPOSE:
+ *   Saved-history export captures its destination and baseline before dispatch.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Saved-history export captures its destination and baseline before dispatch. */
 #include "../application_experience/structured_form_fixture.h"

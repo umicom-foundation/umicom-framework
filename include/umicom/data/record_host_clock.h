@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/record_host_clock.h
+ *
+ * PURPOSE:
+ *   Read trusted time after admission instead of reusing a queued request time.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Read trusted time after admission instead of reusing a queued request time. */
 #ifndef UMICOM_DATA_RECORD_HOST_CLOCK_H

@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_record_document_recovery.c
+ *
+ * PURPOSE:
+ *   Persistent-store failures are injected at specific transaction boundaries.
+ *   Fixtures contain synthetic bytes and never overwrite an existing database.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Persistent-store failures are injected at specific transaction boundaries.
  * Fixtures contain synthetic bytes and never overwrite an existing database. */

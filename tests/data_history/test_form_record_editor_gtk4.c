@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_form_record_editor_gtk4.c
+ *
+ * PURPOSE:
+ *   Exercise real native controls and SQLite history. Missing display coverage
+ *   is explicitly skipped; persistence failures never become successful skips.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Exercise real native controls and SQLite history. Missing display coverage
  * is explicitly skipped; persistence failures never become successful skips. */

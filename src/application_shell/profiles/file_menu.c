@@ -17,6 +17,52 @@
 #include "umicom/application_shell/profiles/file_menu.h"
 
 static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
+    /* Separate copies preserve the source document; hosts supply admission. */
+    {
+        .structure_size = (uint32_t)sizeof(UmiApplicationShellContribution),
+        .api_version = UMI_APPLICATION_SHELL_API_VERSION,
+        .contribution_id = "umicom.shell.file-menu.save-copy",
+        .title = "Save Copy...",
+        .description = "Write the captured draft to a new file and keep the source unchanged.",
+        .command_id = "file.save-copy",
+        .group_id = "file",
+        .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
+        .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
+        .order = 245,
+        .flags = UMI_APPLICATION_SHELL_VISIBLE,
+        .revision = 1U
+    },
+    /* Shared captions route to a host-owned opening queue; enablement is queried. */
+    {
+        .structure_size = (uint32_t)sizeof(UmiApplicationShellContribution),
+        .api_version = UMI_APPLICATION_SHELL_API_VERSION,
+        .contribution_id = "umicom.shell.file-menu.cancel-opening",
+        .title = "Cancel Opening Files",
+        .description = "Stop pending opens without closing documents that already opened.",
+        .command_id = "file.open.cancel",
+        .group_id = "file",
+        .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
+        .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
+        .order = 145,
+        /* A host enables this only when its opening queue has the required state. */
+        .flags = UMI_APPLICATION_SHELL_VISIBLE,
+        .revision = 1U
+    },
+    {
+        .structure_size = (uint32_t)sizeof(UmiApplicationShellContribution),
+        .api_version = UMI_APPLICATION_SHELL_API_VERSION,
+        .contribution_id = "umicom.shell.file-menu.opening-results",
+        .title = "Opening Results",
+        .description = "Review each outcome from the latest completed file selection.",
+        .command_id = "file.open.results",
+        .group_id = "file",
+        .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
+        .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
+        .order = 146,
+        /* A host enables this only when its opening queue has the required state. */
+        .flags = UMI_APPLICATION_SHELL_VISIBLE,
+        .revision = 1U
+    },
     /* Hosts bind these to the document coordinator, then query its history. */
     {
         .structure_size = (uint32_t)sizeof(UmiApplicationShellContribution),

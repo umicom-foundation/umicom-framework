@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/application/experience/structured_form_catalogue.h
+ *
+ * PURPOSE:
+ *   Trusted form versions for historical reads and explicit upgrade selection.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Trusted form versions for historical reads and explicit upgrade selection. */
 #ifndef UMICOM_APPLICATION_EXPERIENCE_STRUCTURED_FORM_CATALOGUE_H

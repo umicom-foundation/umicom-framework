@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/application/experience/structured_form_filter_text.h
+ *
+ * PURPOSE:
+ *   One textual filter boundary for native and web clients.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * One textual filter boundary for native and web clients. */
 #ifndef UMICOM_APPLICATION_EXPERIENCE_STRUCTURED_FORM_FILTER_TEXT_H

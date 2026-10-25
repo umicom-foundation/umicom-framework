@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/form_records/native.c
+ *
+ * PURPOSE:
+ *   The host owns only composition and close approval. Framework owns all form,
+ *   persistence, browsing, history, recovery and conflict-review behavior.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * The host owns only composition and close approval. Framework owns all form,
  * persistence, browsing, history, recovery and conflict-review behavior. */

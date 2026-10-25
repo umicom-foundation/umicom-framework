@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_authorized_form_editor_lifecycle.c
+ *
+ * PURPOSE:
+ *   Native replacement and retirement must preserve ownership and unsaved input.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Native replacement and retirement must preserve ownership and unsaved input. */
 #include "authorized_form_editor_fixture.h"

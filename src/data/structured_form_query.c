@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/structured_form_query.c
+ *
+ * PURPOSE:
+ *   Compose existing integrity readers; never search raw unvalidated payloads.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Compose existing integrity readers; never search raw unvalidated payloads. */
 #include "umicom/data/structured_form_query.h"

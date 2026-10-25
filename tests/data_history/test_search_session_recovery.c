@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_search_session_recovery.c
+ *
+ * PURPOSE:
+ *   Recovery validates both baseline and draft against the chosen query scope.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Recovery validates both baseline and draft against the chosen query scope. */
 #include "search_session_fixture.h"

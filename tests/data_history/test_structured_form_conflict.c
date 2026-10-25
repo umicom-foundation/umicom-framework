@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_structured_form_conflict.c
+ *
+ * PURPOSE:
+ *   Reconciliation preserves local work on every refusal and retains the final
+ *   storage revision check. Memory and SQLite exercise the same contract.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Reconciliation preserves local work on every refusal and retains the final
  * storage revision check. Memory and SQLite exercise the same contract. */

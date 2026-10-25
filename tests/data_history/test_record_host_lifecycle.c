@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_record_host_lifecycle.c
+ *
+ * PURPOSE:
+ *   Worker references retain storage; retiring refuses subsequent activity.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Worker references retain storage; retiring refuses subsequent activity. */
 #include "record_host_fixture.h"

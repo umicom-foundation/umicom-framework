@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/application/experience/structured_form_filter.h
+ *
+ * PURPOSE:
+ *   Typed filters preserve unit and missing-answer semantics across frontends.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Typed filters preserve unit and missing-answer semantics across frontends. */
 #ifndef UMICOM_APPLICATION_EXPERIENCE_STRUCTURED_FORM_FILTER_H

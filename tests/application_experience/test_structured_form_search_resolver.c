@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/application_experience/test_structured_form_search_resolver.c
+ *
+ * PURPOSE:
+ *   A bounded hint selects a schema but never bypasses complete validation.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A bounded hint selects a schema but never bypasses complete validation. */
 #include "structured_form_fixture.h"

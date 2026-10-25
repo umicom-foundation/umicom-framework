@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/application/experience/structured_form_filter_snapshot.c
+ *
+ * PURPOSE:
+ *   Canonical text operands avoid binary floating-point and locale assumptions.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Canonical text operands avoid binary floating-point and locale assumptions. */
 #include "umicom/application/experience/structured_form_filter_snapshot.h"

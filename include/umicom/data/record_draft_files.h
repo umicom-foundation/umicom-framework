@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/record_draft_files.h
+ *
+ * PURPOSE:
+ *   Explicit private recovery files reuse Framework file ownership contracts.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Explicit private recovery files reuse Framework file ownership contracts. */
 #ifndef UMICOM_DATA_RECORD_DRAFT_FILES_H

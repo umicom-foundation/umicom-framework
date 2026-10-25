@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_structured_form_search_catalogue.c
+ *
+ * PURPOSE:
+ *   Discovery validates excluded definitions and binds pagination to reviewed heads.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Discovery validates excluded definitions and binds pagination to reviewed heads. */
 #include "../application_experience/structured_form_fixture.h"

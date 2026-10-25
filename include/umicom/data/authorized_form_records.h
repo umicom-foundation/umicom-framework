@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/authorized_form_records.h
+ *
+ * PURPOSE:
+ *   Typed form persistence through the current record-access authority.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Typed form persistence through the current record-access authority. */
 #ifndef UMICOM_DATA_AUTHORIZED_FORM_RECORDS_H

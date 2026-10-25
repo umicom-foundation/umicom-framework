@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/readonly_fixture.h
+ *
+ * PURPOSE:
+ *   Unique, retained SQLite fixtures keep parallel cases independent.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Unique, retained SQLite fixtures keep parallel cases independent. */
 #ifndef UMICOM_TEST_READONLY_FIXTURE_H

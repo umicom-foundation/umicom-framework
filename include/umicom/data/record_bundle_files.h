@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/record_bundle_files.h
+ *
+ * PURPOSE:
+ *   Explicit, bounded file transfer for reviewed record history bundles.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Explicit, bounded file transfer for reviewed record history bundles. */
 #ifndef UMICOM_DATA_RECORD_BUNDLE_FILES_H

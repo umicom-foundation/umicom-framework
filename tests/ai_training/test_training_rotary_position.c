@@ -1,4 +1,19 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_training_rotary_position.c
+ *
+ * PURPOSE:
+ *   Test RoPE rotation, partial rotary widths and relative shift parity.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | tests/ai_training/test_training_rotary_position.c
  * PURPOSE: Test RoPE rotation, partial rotary widths and relative shift parity.
  * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | MIT

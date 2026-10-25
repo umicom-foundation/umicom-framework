@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_authorized_form_editor_ownership.c
+ *
+ * PURPOSE:
+ *   Completion belongs to captured work, even after later typing or view disposal.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Completion belongs to captured work, even after later typing or view disposal. */
 #include "authorized_form_editor_fixture.h"

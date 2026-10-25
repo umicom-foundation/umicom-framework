@@ -1,6 +1,22 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/ai_training/test_training_rotary_training_rejections.c
+ *
+ * PURPOSE:
+ *   Enforce finite bounded inputs, position overflow protection,
+ *   output alias contract and failure-atomic gradient/tensor output.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_training_rotary_training_rejections.c
  * PURPOSE: Enforce finite bounded inputs, position overflow protection,
  *          output alias contract and failure-atomic gradient/tensor output.
  * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | MIT

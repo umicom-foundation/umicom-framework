@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/application/experience/structured_form_merge.c
+ *
+ * PURPOSE:
+ *   Conflict resolution is a reviewed proposal. Keeping its input snapshots
+ *   separate from persistence prevents a UI choice becoming an implicit write.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Conflict resolution is a reviewed proposal. Keeping its input snapshots
  * separate from persistence prevents a UI choice becoming an implicit write. */

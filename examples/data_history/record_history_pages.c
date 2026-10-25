@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/data_history/record_history_pages.c
+ *
+ * PURPOSE:
+ *   Installed data-SDK example: page amendment metadata without a GUI dependency.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Installed data-SDK example: page amendment metadata without a GUI dependency. */
 #include "umicom/data/record_history_page.h"

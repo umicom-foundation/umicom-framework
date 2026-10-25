@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/gtk4/form_record_editor.h
+ *
+ * PURPOSE:
+ *   Compose typed forms with revision-checked local record persistence.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Compose typed forms with revision-checked local record persistence. */
 #ifndef UMICOM_UI_GTK4_FORM_RECORD_EDITOR_H

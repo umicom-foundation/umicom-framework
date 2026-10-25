@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/security/test_session_entropy.c
+ *
+ * PURPOSE:
+ *   This target supplies a deterministic entropy fault double to the production
+ *   session translation unit. Production links the operating-system provider.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * This target supplies a deterministic entropy fault double to the production
  * session translation unit. Production links the operating-system provider. */

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/include/record_bundle_internal.h
+ *
+ * PURPOSE:
+ *   Private immutable bundle representation shared by codec and transaction owner.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Private immutable bundle representation shared by codec and transaction owner. */
 #ifndef UMICOM_DATA_RECORD_BUNDLE_INTERNAL_H

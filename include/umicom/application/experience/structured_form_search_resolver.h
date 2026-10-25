@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/application/experience/structured_form_search_resolver.h
+ *
+ * PURPOSE:
+ *   Resolve stored query definitions only against trusted immutable schemas.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Resolve stored query definitions only against trusted immutable schemas. */
 #ifndef UMICOM_STRUCTURED_FORM_SEARCH_RESOLVER_H

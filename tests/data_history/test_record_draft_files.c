@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_record_draft_files.c
+ *
+ * PURPOSE:
+ *   Isolated fixtures retain storage evidence and never overwrite user files.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Isolated fixtures retain storage evidence and never overwrite user files. */
 #ifndef _WIN32

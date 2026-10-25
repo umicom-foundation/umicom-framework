@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_form_search_discovery_gtk4.c
+ *
+ * PURPOSE:
+ *   Native discovery preserves query edits and opens only reviewed definitions.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Native discovery preserves query edits and opens only reviewed definitions. */
 #include "../application_experience/structured_form_fixture.h"

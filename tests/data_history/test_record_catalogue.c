@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_record_catalogue.c
+ *
+ * PURPOSE:
+ *   Backend-independent discovery fixtures use fictional administrative records.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Backend-independent discovery fixtures use fictional administrative records. */
 #include "umicom/data/record_catalogue.h"

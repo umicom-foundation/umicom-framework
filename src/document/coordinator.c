@@ -3742,3 +3742,6 @@ UmiStatus UmiDocumentCoordinatorReopenLast(UmiDocumentCoordinator *coordinator,
 #include "recovery_observations.inc"
 
 #include "document_format.inc"
+
+/* Separate copies capture the existing draft and never change its saved identity. */
+#include "copy_capture.inc"

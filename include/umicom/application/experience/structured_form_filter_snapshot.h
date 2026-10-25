@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/application/experience/structured_form_filter_snapshot.h
+ *
+ * PURPOSE:
+ *   Bounded portable filter snapshots bind operands to their schema meaning.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Bounded portable filter snapshots bind operands to their schema meaning. */
 #ifndef UMICOM_APPLICATION_EXPERIENCE_STRUCTURED_FORM_FILTER_SNAPSHOT_H

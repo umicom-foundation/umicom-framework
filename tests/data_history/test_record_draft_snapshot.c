@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_record_draft_snapshot.c
+ *
+ * PURPOSE:
+ *   Recovery regression cases verify state ownership and malformed binary inputs.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Recovery regression cases verify state ownership and malformed binary inputs. */
 #include "umicom/data/record_draft_snapshot.h"

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/structured_form_search_reader.h
+ *
+ * PURPOSE:
+ *   Verified definitions retain their exact trusted historical schema.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Verified definitions retain their exact trusted historical schema. */
 #ifndef UMICOM_DATA_STRUCTURED_FORM_SEARCH_READER_H

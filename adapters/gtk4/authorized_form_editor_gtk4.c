@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/authorized_form_editor_gtk4.c
+ *
+ * PURPOSE:
+ *   Reuse typed controls and an owned authorization host; never run storage on GTK.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Reuse typed controls and an owned authorization host; never run storage on GTK. */
 #include "umicom/ui/gtk4/authorized_form_editor.h"

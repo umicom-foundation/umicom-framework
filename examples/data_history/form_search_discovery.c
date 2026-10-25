@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/data_history/form_search_discovery.c
+ *
+ * PURPOSE:
+ *   Discover a named inventory query and open exactly the row reviewed.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Discover a named inventory query and open exactly the row reviewed. */
 #include "umicom/data/structured_form_search_catalogue.h"

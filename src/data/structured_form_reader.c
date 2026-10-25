@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/structured_form_reader.c
+ *
+ * PURPOSE:
+ *   History decoding keeps storage integrity and form semantics in one result.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * History decoding keeps storage integrity and form semantics in one result. */
 #include "umicom/data/structured_form_reader.h"

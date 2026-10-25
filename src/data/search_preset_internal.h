@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/search_preset_internal.h
+ *
+ * PURPOSE:
+ *   One entity boundary for preset persistence, historical readers and discovery.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * One entity boundary for preset persistence, historical readers and discovery. */
 #ifndef UMICOM_SEARCH_PRESET_INTERNAL_H

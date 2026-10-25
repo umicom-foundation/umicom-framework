@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_sqlite_backup_create.c
+ *
+ * PURPOSE:
+ *   Snapshot creation must include committed WAL pages and preserve occupied files.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Snapshot creation must include committed WAL pages and preserve occupied files. */
 #include "readonly_fixture.h"

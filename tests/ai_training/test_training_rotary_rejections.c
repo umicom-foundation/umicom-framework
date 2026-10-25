@@ -1,4 +1,20 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_training_rotary_rejections.c
+ *
+ * PURPOSE:
+ *   Reject invalid RoPE and ring inputs without publishing partial
+ *   vectors, corrupting state or consuming an absolute position.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | tests/ai_training/test_training_rotary_rejections.c
  * PURPOSE: Reject invalid RoPE and ring inputs without publishing partial
  *          vectors, corrupting state or consuming an absolute position.

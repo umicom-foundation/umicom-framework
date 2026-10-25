@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/record_history_page.h
+ *
+ * PURPOSE:
+ *   Bounded history pages let application hosts inspect amendments without
+ *   scanning an entire store or implementing private persistence-key rules.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Bounded history pages let application hosts inspect amendments without
  * scanning an entire store or implementing private persistence-key rules. */

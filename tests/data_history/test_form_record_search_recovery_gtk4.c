@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_form_record_search_recovery_gtk4.c
+ *
+ * PURPOSE:
+ *   Query recovery is explicit private-file I/O, independent of answer recovery.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Query recovery is explicit private-file I/O, independent of answer recovery. */
 #include "managed_search_fixture.h"

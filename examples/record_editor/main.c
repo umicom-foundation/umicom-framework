@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/record_editor/main.c
+ *
+ * PURPOSE:
+ *   Installed-SDK native host. Only product identity and window composition live
+ *   here; Framework owns draft editing, revision checks and storage workers.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Installed-SDK native host. Only product identity and window composition live
  * here; Framework owns draft editing, revision checks and storage workers. */

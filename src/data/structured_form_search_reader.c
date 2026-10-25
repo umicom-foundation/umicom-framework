@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/structured_form_search_reader.c
+ *
+ * PURPOSE:
+ *   Reuse document integrity checks before interpreting stored query definitions.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Reuse document integrity checks before interpreting stored query definitions. */
 #include "umicom/data/structured_form_search_reader.h"

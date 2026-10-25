@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/record_bundle_files.c
+ *
+ * PURPOSE:
+ *   File ownership stays in Platform; Data Server owns bundle integrity.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * File ownership stays in Platform; Data Server owns bundle integrity. */
 #include "umicom/data/record_bundle_files.h"

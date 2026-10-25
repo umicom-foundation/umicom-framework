@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/authorized_form_editor_fixture.h
+ *
+ * PURPOSE:
+ *   Native tests use fictional data, a controlled atomic clock and real host workers.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Native tests use fictional data, a controlled atomic clock and real host workers. */
 #ifndef UMICOM_AUTHORIZED_FORM_EDITOR_FIXTURE_H

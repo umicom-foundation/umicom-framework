@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_record_draft_storage.c
+ *
+ * PURPOSE:
+ *   These tests connect detached save requests to real Data Server operations.
+ *   Each run owns an isolated store; no private record data or network is used.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * These tests connect detached save requests to real Data Server operations.
  * Each run owns an isolated store; no private record data or network is used. */

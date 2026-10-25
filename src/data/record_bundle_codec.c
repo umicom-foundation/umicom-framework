@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/record_bundle_codec.c
+ *
+ * PURPOSE:
+ *   Length framing and canonical metadata keep bundles portable across backends.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Length framing and canonical metadata keep bundles portable across backends. */
 #include "include/record_bundle_internal.h"

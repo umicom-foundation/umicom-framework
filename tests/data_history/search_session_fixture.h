@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/search_session_fixture.h
+ *
+ * PURPOSE:
+ *   One fictional setup for query-draft lifecycle, save and recovery regressions.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * One fictional setup for query-draft lifecycle, save and recovery regressions. */
 #ifndef UMICOM_SEARCH_SESSION_FIXTURE_H

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_sqlite_checkpoint_report.c
+ *
+ * PURPOSE:
+ *   A blocked FULL checkpoint is BUSY even when its SQL wrapper could execute.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A blocked FULL checkpoint is BUSY even when its SQL wrapper could execute. */
 #include "readonly_fixture.h"

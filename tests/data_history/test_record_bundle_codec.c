@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_record_bundle_codec.c
+ *
+ * PURPOSE:
+ *   Corrupt or ambiguous transfer framing must not become an accepted archive.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Corrupt or ambiguous transfer framing must not become an accepted archive. */
 #include "umicom/base/sha256.h"

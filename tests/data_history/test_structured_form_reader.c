@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_structured_form_reader.c
+ *
+ * PURPOSE:
+ *   A trusted historical schema and stored integrity must both match before open.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A trusted historical schema and stored integrity must both match before open. */
 #include "../application_experience/structured_form_fixture.h"

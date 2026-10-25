@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/security/record_access.c
+ *
+ * PURPOSE:
+ *   Compose existing identity/session/policy services; never trust an actor label.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Compose existing identity/session/policy services; never trust an actor label. */
 #include "umicom/security/record_access.h"

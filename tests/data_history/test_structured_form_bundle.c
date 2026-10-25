@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_structured_form_bundle.c
+ *
+ * PURPOSE:
+ *   Reject wrong history, retain drafts, and restore only the immutable review.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Reject wrong history, retain drafts, and restore only the immutable review. */
 #include "../application_experience/structured_form_fixture.h"

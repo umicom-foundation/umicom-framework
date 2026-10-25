@@ -46,7 +46,11 @@ int main(void)
 #if 0
     assert(profile->contribution_count == 17U);
 #endif
+    /* Preserve the earlier inventory while checking both new opening actions. */
+#if 0
     assert(profile->contribution_count == 18U);
+#endif
+    assert(profile->contribution_count == 20U);
     assert(umi_application_shell_profile_validate(profile) == UMI_STATUS_OK);
 
     assert(umi_application_shell_registry_create(&registry) == UMI_STATUS_OK);
@@ -86,6 +90,14 @@ int main(void)
     assert(umi_application_shell_registry_find(registry,
         "umicom.shell.file-menu.reload", &contribution) == UMI_STATUS_OK);
     assert(strcmp(contribution.command_id, "file.reload") == 0);
+    assert((contribution.flags & UMI_APPLICATION_SHELL_ENABLED) == 0U);
+    assert(umi_application_shell_registry_find(registry,
+        "umicom.shell.file-menu.cancel-opening", &contribution) == UMI_STATUS_OK);
+    assert(strcmp(contribution.command_id, "file.open.cancel") == 0);
+    assert((contribution.flags & UMI_APPLICATION_SHELL_ENABLED) == 0U);
+    assert(umi_application_shell_registry_find(registry,
+        "umicom.shell.file-menu.opening-results", &contribution) == UMI_STATUS_OK);
+    assert(strcmp(contribution.command_id, "file.open.results") == 0);
     assert((contribution.flags & UMI_APPLICATION_SHELL_ENABLED) == 0U);
     umi_application_shell_registry_destroy(registry);
     return 0;

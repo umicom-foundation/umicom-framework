@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/data_history/form_search_recovery.c
+ *
+ * PURPOSE:
+ *   Recover a query draft through the portable SDK, then save its captured request.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Recover a query draft through the portable SDK, then save its captured request. */
 #include "umicom/data/structured_form_search_session.h"

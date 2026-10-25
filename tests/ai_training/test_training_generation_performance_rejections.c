@@ -1,4 +1,19 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_training_generation_performance_rejections.c
+ *
+ * PURPOSE:
+ *   Reject invalid workload proposals without corrupting report output.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | tests/ai_training/test_training_generation_performance_rejections.c
  * PURPOSE: Reject invalid workload proposals without corrupting report output.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT

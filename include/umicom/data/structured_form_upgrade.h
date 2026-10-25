@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/structured_form_upgrade.h
+ *
+ * PURPOSE:
+ *   Review a compatible schema upgrade before appending a new stored revision.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Review a compatible schema upgrade before appending a new stored revision. */
 #ifndef UMICOM_DATA_STRUCTURED_FORM_UPGRADE_H

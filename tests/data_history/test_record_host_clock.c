@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_record_host_clock.c
+ *
+ * PURPOSE:
+ *   A queued timestamp cannot extend a session after current-time admission.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A queued timestamp cannot extend a session after current-time admission. */
 #include "../application_experience/structured_form_fixture.h"

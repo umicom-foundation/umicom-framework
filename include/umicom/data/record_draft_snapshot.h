@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/record_draft_snapshot.h
+ *
+ * PURPOSE:
+ *   Recovery snapshots retain both the reviewed record and unsaved bytes. They
+ *   are independent of a window, a database connection and a pending worker.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Recovery snapshots retain both the reviewed record and unsaved bytes. They
  * are independent of a window, a database connection and a pending worker. */

@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_record_draft_review.c
+ *
+ * PURPOSE:
+ *   Reviewed-baseline adoption preserves local text and rejects a different
+ *   entity, stale comparison or rewritten same-number revision.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Reviewed-baseline adoption preserves local text and rejects a different
  * entity, stale comparison or rewritten same-number revision. */

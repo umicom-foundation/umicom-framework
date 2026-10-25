@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/gtk4/record_transfer_receipt.h
+ *
+ * PURPOSE:
+ *   Display copied import provenance without granting edit or execution authority.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Display copied import provenance without granting edit or execution authority. */
 #ifndef UMICOM_UI_GTK4_RECORD_TRANSFER_RECEIPT_H

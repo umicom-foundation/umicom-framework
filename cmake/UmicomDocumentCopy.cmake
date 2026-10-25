@@ -1,0 +1,66 @@
+# Umicom Framework
+# File: cmake/UmicomDocumentCopy.cmake
+# PURPOSE: Integrate source-copy capture with the existing document library and SDK.
+# AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+# LICENCE: MIT
+if(NOT TARGET umicom_document)
+    return()
+endif()
+include_guard(GLOBAL)
+include(GNUInstallDirs)
+get_filename_component(_copy_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+target_sources(umicom_document PRIVATE "${_copy_root}/src/document/copy.c")
+install(FILES "${_copy_root}/include/umicom/document/copy.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/document" COMPONENT Framework)
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_document include/umicom/document/copy.h)
+endif()
+install(FILES "${_copy_root}/docs/guides/source-copies.html"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides" COMPONENT Framework)
+if(BUILD_TESTING)
+    set(_copy_capture_cases arguments missing dirty readonly selection after-edit after-owner other-tab metadata)
+    set(_copy_encoding_cases utf8 bom le be empty mixed nonbmp invalid-utf8 nul limit encoding arguments)
+    set(_copy_output_cases new exists source missing-parent relative dot unicode repeat empty symlink directory)
+    foreach(_copy_group IN ITEMS capture encoding output)
+        set(_copy_target "umicom-document-copy-${_copy_group}-test")
+        add_executable(${_copy_target} "${_copy_root}/tests/document/test_copy_${_copy_group}.c")
+        target_link_libraries(${_copy_target} PRIVATE Umicom::document)
+        set_target_properties(${_copy_target} PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(${_copy_target})
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(${_copy_target})
+        endif()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(${_copy_target})
+        endif()
+        if(COMMAND umicom_target_qualification_inputs)
+            umicom_target_qualification_inputs(${_copy_target} FILES
+                "${_copy_root}/src/document/copy_capture.inc"
+                "${_copy_root}/src/document/copy_internal.h"
+                "${_copy_root}/tests/document/replacement_fixture.h"
+                "${_copy_root}/tests/build_log/fixture.h")
+        endif()
+        foreach(_copy_case IN LISTS _copy_${_copy_group}_cases)
+            set(_copy_test "framework.document.copy.${_copy_group}.${_copy_case}")
+            add_test(NAME ${_copy_test} COMMAND ${_copy_target} ${_copy_case})
+            set_tests_properties(${_copy_test} PROPERTIES TIMEOUT 30
+                LABELS "framework;document;copy;ownership;regression")
+            if(_copy_case STREQUAL "symlink")
+                set_tests_properties(${_copy_test} PROPERTIES SKIP_RETURN_CODE 77)
+            endif()
+            if(COMMAND umicom_test_impact_owners)
+                umicom_test_impact_owners(${_copy_test} TARGETS ${_copy_target})
+            endif()
+        endforeach()
+    endforeach()
+endif()
+unset(_copy_root)
+unset(_copy_target)
+unset(_copy_group)
+unset(_copy_case)
+unset(_copy_test)
+unset(_copy_capture_cases)
+unset(_copy_encoding_cases)
+unset(_copy_output_cases)

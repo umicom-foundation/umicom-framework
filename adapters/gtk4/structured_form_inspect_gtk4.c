@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/structured_form_inspect_gtk4.c
+ *
+ * PURPOSE:
+ *   Historical inspection uses copied labels so changing a schema or current
+ *   draft later cannot turn the displayed history into another editable record.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Historical inspection uses copied labels so changing a schema or current
  * draft later cannot turn the displayed history into another editable record. */

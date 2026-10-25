@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/form_record_import_gtk4.c
+ *
+ * PURPOSE:
+ *   Workers own immutable requests. GTK owns intent and confirmation, while the
+ *   common data services own framing, schema checks and atomic record restore.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Workers own immutable requests. GTK owns intent and confirmation, while the
  * common data services own framing, schema checks and atomic record restore. */

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/security/test_session_lifetime.c
+ *
+ * PURPOSE:
+ *   Session clock boundaries and failed outputs are part of the public contract.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Session clock boundaries and failed outputs are part of the public contract. */
 #include "umicom/security/session.h"

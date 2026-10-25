@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_record_transfer_receipt.c
+ *
+ * PURPOSE:
+ *   Receipt decoding validates framing and meaning before publishing any output.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Receipt decoding validates framing and meaning before publishing any output. */
 #include "../../src/data/include/record_transfer_internal.h"

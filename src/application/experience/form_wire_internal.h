@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/application/experience/form_wire_internal.h
+ *
+ * PURPOSE:
+ *   Private bounded framing shared by filter and saved-search codecs.
+ *   Callers validate models and stage output; helpers never allocate or publish.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Private bounded framing shared by filter and saved-search codecs.
  * Callers validate models and stage output; helpers never allocate or publish. */

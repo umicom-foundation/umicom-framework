@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/record_time_internal.h
+ *
+ * PURPOSE:
+ *   Shared native provenance time formatting preserves unknown and nanoseconds.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Shared native provenance time formatting preserves unknown and nanoseconds. */
 #ifndef UMICOM_GTK4_RECORD_TIME_INTERNAL_H

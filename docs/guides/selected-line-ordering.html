@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Sort selected source lines</title>
+<style>body{font:18px/1.6 system-ui;max-width:850px;margin:3rem auto;padding:0 1rem;color:#183047}code,pre{background:#edf2f6}pre{padding:1rem;overflow:auto}</style>
+<h1>Sort selected source lines</h1>
+<p>Framework can prepare ascending or descending text order for selected complete lines. This is useful for plain lists, configuration entries and other text whose order you intend to change. It does not understand programming-language syntax or dependencies.</p>
+<ol>
+<li>Keep the original UTF-8 source available while calling <code>UmiEditorLineSortPlanCreate</code>. Give the source byte length, two selection byte offsets, direction (0 ascending, 1 descending), and an optional cancellation token.</li>
+<li>Inspect the plan with <code>UmiEditorLineSortPlanInspect</code>. The summary gives the selected block and whether the text changed.</li>
+<li>Read the complete proposed text through <code>UmiEditorLineSortPlanRead</code>. It belongs to the plan. Text outside the selected line block is preserved.</li>
+<li>Destroy the plan after use. Creating a plan does not modify a file, document, selection or Undo history.</li>
+</ol>
+<p>For an open document, call <code>UmiDocumentCoordinatorEditLinesForDocument</code> with its document ID and <code>UMI_EDITOR_EDIT_COMMAND_SORT_LINES_ASCENDING</code> or <code>UMI_EDITOR_EDIT_COMMAND_SORT_LINES_DESCENDING</code>. The coordinator checks ownership and read-only state, then records a changed result as one reversible edit. Earlier unsynchronized typing remains a separate history step. The active tab need not be the target tab.</p>
+<h2>Ordering and line endings</h2>
+<p>Order compares UTF-8 bytes. It is case-sensitive, not numeric or language-specific. For example, “10” sorts before “2” and “A” before “a”. Equal lines keep their relative order. Each output position keeps its original LF or CRLF line separator, including mixed line endings. A missing final newline stays missing. Bare CR line endings are not supported by this command.</p>
+<p>A selection expands to the complete lines it touches. Ending exactly at the beginning of the next line excludes that next line. An empty selection returns <code>UMI_STATUS_NOT_FOUND</code>; it never sorts the whole document implicitly. A changed result selects the reordered block. An unchanged result keeps the original selection and adds no Undo step.</p>
+<h2>Limits and recovery</h2>
+<p>The operation accepts at most eight MiB of UTF-8 text and 65,536 selected lines. Invalid UTF-8 returns a parse error; an offset inside a Unicode character is an invalid argument. Input with embedded NUL is refused. Cancellation, allocation failure and limit errors leave the source unchanged. Reduce the selection or fix malformed text before retrying. Destroy any successful plan even when you decide not to apply it.</p>
+<p>Native Studio exposes the same commands in Code tools and command search. Select lines, search for “sort selected”, choose a direction, then review the result. Use Undo to restore the previous text and selection. Save writes the current draft through the normal document save workflow.</p>
+</html>

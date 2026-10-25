@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/record_bundle_store.c
+ *
+ * PURPOSE:
+ *   A restore is all-or-nothing; caller transactions and existing records survive.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A restore is all-or-nothing; caller transactions and existing records survive. */
 #include "include/record_bundle_internal.h"

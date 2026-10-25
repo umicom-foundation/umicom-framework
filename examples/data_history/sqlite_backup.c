@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/data_history/sqlite_backup.c
+ *
+ * PURPOSE:
+ *   Installed data-only consumer: copy, recover, inspect and retain both files.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Installed data-only consumer: copy, recover, inspect and retain both files. */
 #include "umicom/data/backup.h"

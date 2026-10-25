@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/authorized_records.c
+ *
+ * PURPOSE:
+ *   Reauthorize at the storage boundary and derive provenance from trusted state.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Reauthorize at the storage boundary and derive provenance from trusted state. */
 #include "umicom/data/authorized_records.h"

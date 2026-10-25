@@ -41,7 +41,12 @@ if(BUILD_TESTING)
     set(_form_search_query_cases all filter pages empty metadata metadata-none state version foreign-form unknown-schema unregistered-query payload metadata-only excluded-damage stale changed-filter changed-metadata cursor nested empty-prefix limit-zero limit-large bad-snapshot cursor-without-snapshot invalid-filter null reviewed-open reopen-stale)
     set(_form_search_text_cases decimal integer-min integer-max integer-overflow boolean boolean-case text contains outside-threshold outside-equal state state-value missing-value unit comma nan trailing empty-number field field-termination value-termination date date-invalid alias-parse alias-format format-unit null)
     foreach(_form_search_group IN ITEMS filter query text)
-        set(_form_search_target umicom-form-${_form_search_group}-test)
+        # Qualify executable names by their owning service so independent test modules
+        # can coexist. The former short name is retained for engineering review.
+        if(FALSE)
+            set(_form_search_target umicom-form-${_form_search_group}-test)
+        endif()
+        set(_form_search_target umicom-structured-form-filter-${_form_search_group}-test)
         if(_form_search_group STREQUAL "filter")
             add_executable(${_form_search_target} "${_form_search_root}/tests/application_experience/test_structured_form_filter.c")
             target_link_libraries(${_form_search_target} PRIVATE Umicom::application)

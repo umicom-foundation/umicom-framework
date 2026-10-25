@@ -1,4 +1,19 @@
 /*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_training_generation_performance.c
+ *
+ * PURPOSE:
+ *   Real decoder generation parity plus honest KV-cache work accounting.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
  * Umicom Framework | tests/ai_training/test_training_generation_performance.c
  * PURPOSE: Real decoder generation parity plus honest KV-cache work accounting.
  * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation | MIT

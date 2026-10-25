@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_sqlite_backup_restore.c
+ *
+ * PURPOSE:
+ *   Recovery creates a new store; existing destinations and source bytes survive.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Recovery creates a new store; existing destinations and source bytes survive. */
 #include "readonly_fixture.h"

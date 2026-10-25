@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/application/experience/structured_form_filter.c
+ *
+ * PURPOSE:
+ *   Filter boundaries validate meaning before comparisons and never coerce units.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Filter boundaries validate meaning before comparisons and never coerce units. */
 #include "umicom/application/experience/structured_form_filter.h"

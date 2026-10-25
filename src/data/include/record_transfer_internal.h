@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/include/record_transfer_internal.h
+ *
+ * PURPOSE:
+ *   Receipt framing is shared by the transaction owner and checked reader.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Receipt framing is shared by the transaction owner and checked reader. */
 #ifndef UMICOM_DATA_RECORD_TRANSFER_INTERNAL_H

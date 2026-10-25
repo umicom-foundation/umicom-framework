@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/authorized_form_records.c
+ *
+ * PURPOSE:
+ *   Reuse canonical typed snapshots and the shared authorization/storage boundary.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Reuse canonical typed snapshots and the shared authorization/storage boundary. */
 #include "umicom/data/authorized_form_records.h"

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/security/record_access.h
+ *
+ * PURPOSE:
+ *   Bind record permissions to current session identity, namespace and purpose.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Bind record permissions to current session identity, namespace and purpose. */
 #ifndef UMICOM_SECURITY_RECORD_ACCESS_H

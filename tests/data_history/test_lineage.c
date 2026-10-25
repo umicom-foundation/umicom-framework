@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_lineage.c
+ *
+ * PURPOSE:
+ *   Reopen, provider failure and legacy-text regressions use real public APIs.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Reopen, provider failure and legacy-text regressions use real public APIs. */
 #include "umicom/data/lineage.h"

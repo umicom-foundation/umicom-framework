@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/application_experience/test_form_safety.c
+ *
+ * PURPOSE:
+ *   Invalid shared form structures must fail before mutating a model or report.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Invalid shared form structures must fail before mutating a model or report. */
 #include "umicom/application/experience/experience.h"

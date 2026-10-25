@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/data_history/form_search.c
+ *
+ * PURPOSE:
+ *   Search a fictional inventory with only installed public SDK contracts.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Search a fictional inventory with only installed public SDK contracts. */
 #include "umicom/data/structured_form_query.h"

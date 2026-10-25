@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_record_history.c
+ *
+ * PURPOSE:
+ *   Synthetic metadata exercises the shared storage boundary. No care decisions,
+ *   payments, external identities or external provider traffic are involved.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Synthetic metadata exercises the shared storage boundary. No care decisions,
  * payments, external identities or external provider traffic are involved. */

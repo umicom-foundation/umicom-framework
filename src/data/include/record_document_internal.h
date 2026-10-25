@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/include/record_document_internal.h
+ *
+ * PURPOSE:
+ *   Internal transaction composition; caller must begin and commit/rollback.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Internal transaction composition; caller must begin and commit/rollback. */
 #ifndef UMICOM_DATA_RECORD_DOCUMENT_INTERNAL_H

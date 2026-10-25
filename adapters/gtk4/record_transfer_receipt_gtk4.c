@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/record_transfer_receipt_gtk4.c
+ *
+ * PURPOSE:
+ *   Reusable receipt presentation keeps import labels distinct from original ones.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Reusable receipt presentation keeps import labels distinct from original ones. */
 #include "record_time_internal.h"

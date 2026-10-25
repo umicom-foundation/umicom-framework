@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/record_bundle.h
+ *
+ * PURPOSE:
+ *   Portable bounded history transfer without replacing an existing entity.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Portable bounded history transfer without replacing an existing entity. */
 #ifndef UMICOM_DATA_RECORD_BUNDLE_H

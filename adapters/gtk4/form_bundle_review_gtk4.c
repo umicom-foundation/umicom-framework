@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/form_bundle_review_gtk4.c
+ *
+ * PURPOSE:
+ *   Review is display-only: copied labels cannot change after the source closes,
+ *   and the host owns the separate authorization and storage operation.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Review is display-only: copied labels cannot change after the source closes,
  * and the host owns the separate authorization and storage operation. */

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/include/sqlite_backup_internal.h
+ *
+ * PURPOSE:
+ *   Private destination ownership boundary for the public backup service.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Private destination ownership boundary for the public backup service. */
 #ifndef UMICOM_DATA_SQLITE_BACKUP_INTERNAL_H

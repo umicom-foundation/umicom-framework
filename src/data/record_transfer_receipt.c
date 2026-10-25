@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/record_transfer_receipt.c
+ *
+ * PURPOSE:
+ *   Canonical receipt payloads separate import attribution from original authors.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Canonical receipt payloads separate import attribution from original authors. */
 #include "include/record_transfer_internal.h"

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_structured_form_search_reader.c
+ *
+ * PURPOSE:
+ *   Historical query readers retain exact schemas and verified revision identity.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Historical query readers retain exact schemas and verified revision identity. */
 #include "../application_experience/structured_form_fixture.h"

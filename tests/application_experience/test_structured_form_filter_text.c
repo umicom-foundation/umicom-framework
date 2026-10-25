@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/application_experience/test_structured_form_filter_text.c
+ *
+ * PURPOSE:
+ *   Text filters preserve exact type, missing-state and numeric boundary meaning.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Text filters preserve exact type, missing-state and numeric boundary meaning. */
 #include "structured_form_fixture.h"

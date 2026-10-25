@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/form_records/schema.h
+ *
+ * PURPOSE:
+ *   A fictional equipment register shared by portable and native SDK examples.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A fictional equipment register shared by portable and native SDK examples. */
 #ifndef UMICOM_FORM_RECORD_EXAMPLE_SCHEMA_H

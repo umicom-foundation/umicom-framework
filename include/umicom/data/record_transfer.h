@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/record_transfer.h
+ *
+ * PURPOSE:
+ *   Import provenance is separate from the original record's authorship.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Import provenance is separate from the original record's authorship. */
 #ifndef UMICOM_DATA_RECORD_TRANSFER_H

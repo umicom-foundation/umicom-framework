@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/gtk4/form_record_import.h
+ *
+ * PURPOSE:
+ *   Explicit native record import composes shared file, review and store services.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Explicit native record import composes shared file, review and store services. */
 #ifndef UMICOM_UI_GTK4_FORM_RECORD_IMPORT_H

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/structured_form_search_preset.h
+ *
+ * PURPOSE:
+ *   Named query history reuses atomic record documents and reviewed opens.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Named query history reuses atomic record documents and reviewed opens. */
 #ifndef UMICOM_DATA_STRUCTURED_FORM_SEARCH_PRESET_H

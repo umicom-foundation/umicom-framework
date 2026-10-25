@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_authorized_record_reads.c
+ *
+ * PURPOSE:
+ *   A denied or stale read must reveal neither document bytes nor a new receipt.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A denied or stale read must reveal neither document bytes nor a new receipt. */
 #include "../security/record_access_fixture.h"

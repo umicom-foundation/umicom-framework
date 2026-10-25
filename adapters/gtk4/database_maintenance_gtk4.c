@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/database_maintenance_gtk4.c
+ *
+ * PURPOSE:
+ *   Workers own storage handles; GTK owns intent, admission and presentation.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Workers own storage handles; GTK owns intent, admission and presentation. */
 #include "umicom/platform/output_file.h"

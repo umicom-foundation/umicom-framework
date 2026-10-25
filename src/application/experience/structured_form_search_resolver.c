@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/application/experience/structured_form_search_resolver.c
+ *
+ * PURPOSE:
+ *   Catalogue discovery shares the canonical decoder instead of guessing versions.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Catalogue discovery shares the canonical decoder instead of guessing versions. */
 #include "umicom/application/experience/structured_form_search_resolver.h"

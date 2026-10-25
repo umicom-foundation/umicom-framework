@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/form_records/main.c
+ *
+ * PURPOSE:
+ *   Exercise the installed portable contract with a fictional record. No files,
+ *   external services, native windows or source-tree fallback are required.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Exercise the installed portable contract with a fictional record. No files,
  * external services, native windows or source-tree fallback are required. */

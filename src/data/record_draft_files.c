@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/record_draft_files.c
+ *
+ * PURPOSE:
+ *   Reuse exclusive output and bounded rooted reads instead of inventing another
+ *   file replacement policy. Recovery must never overwrite another draft.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Reuse exclusive output and bounded rooted reads instead of inventing another
  * file replacement policy. Recovery must never overwrite another draft. */

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_structured_form_query.c
+ *
+ * PURPOSE:
+ *   Typed queries reject partial discovery and stale continuation identities.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Typed queries reject partial discovery and stale continuation identities. */
 #include "../application_experience/structured_form_fixture.h"

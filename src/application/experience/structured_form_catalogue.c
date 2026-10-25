@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/application/experience/structured_form_catalogue.c
+ *
+ * PURPOSE:
+ *   Application-owned version definitions stay stable while workers read history.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Application-owned version definitions stay stable while workers read history. */
 #include "umicom/application/experience/structured_form_catalogue.h"

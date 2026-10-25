@@ -1,3 +1,20 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/data_history/record_drafts.c
+ *
+ * PURPOSE:
+ *   An installed-SDK example of editing while a captured save is outstanding.
+ *   The console runs storage inline for clarity. GUI hosts dispatch the copied
+ *   request to their managed worker and return completion to the owning thread.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * An installed-SDK example of editing while a captured save is outstanding.
  * The console runs storage inline for clarity. GUI hosts dispatch the copied

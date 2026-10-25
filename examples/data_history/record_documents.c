@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/data_history/record_documents.c
+ *
+ * PURPOSE:
+ *   Two non-production consumers share content storage instead of copying SQL,
+ *   digest calculation and stale-write handling into application modules.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Two non-production consumers share content storage instead of copying SQL,
  * digest calculation and stale-write handling into application modules. */

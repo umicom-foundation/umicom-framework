@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/form_record_editor_gtk4.c
+ *
+ * PURPOSE:
+ *   Keep database work away from GTK and give every worker copied input. Typed
+ *   sessions own revision checks; products supply only schema and namespace.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Keep database work away from GTK and give every worker copied input. Typed
  * sessions own revision checks; products supply only schema and namespace. */

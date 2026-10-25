@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/gtk4/structured_form_search_draft.h
+ *
+ * PURPOSE:
+ *   Native query drafts share portable revision, save and recovery ownership.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Native query drafts share portable revision, save and recovery ownership. */
 #ifndef UMICOM_UI_GTK4_STRUCTURED_FORM_SEARCH_DRAFT_H

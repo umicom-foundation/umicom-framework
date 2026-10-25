@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/managed_search_fixture.h
+ *
+ * PURPOSE:
+ *   Fictional query data exercises the public workbench through its real worker.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Fictional query data exercises the public workbench through its real worker. */
 #ifndef UMICOM_MANAGED_SEARCH_FIXTURE_H

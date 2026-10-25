@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/structured_form_search_catalogue.h
+ *
+ * PURPOSE:
+ *   Discover verified saved queries without exposing raw database key encoding.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Discover verified saved queries without exposing raw database key encoding. */
 #ifndef UMICOM_DATA_STRUCTURED_FORM_SEARCH_CATALOGUE_H

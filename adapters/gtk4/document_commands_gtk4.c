@@ -358,7 +358,11 @@ int UmiGtk4AdapterDocumentCommandEnabled(UmiGtk4Adapter *adapter, const char *co
             !UmiGtk4AdapterReplacementReviewBusy(adapter) && !UmiGtk4AdapterDocumentProposalBusy(adapter) &&
             !UmiGtk4AdapterCompletionReviewBusy(adapter) && EditFindDocument(adapter, NULL, &documentId) == UMI_STATUS_OK &&
             UmiDocumentCoordinatorGetEditState(adapter->edit_coordinator, documentId, &lineState) == UMI_STATUS_OK &&
-            !lineState.read_only;
+            /* Sorting requires an explicit selection; the earlier line actions
+             * continue to use their caret/whole-document policies. */
+            !lineState.read_only &&
+            ((lineKind != UMI_EDITOR_EDIT_COMMAND_SORT_LINES_ASCENDING &&
+              lineKind != UMI_EDITOR_EDIT_COMMAND_SORT_LINES_DESCENDING) || lineState.selection_bytes != 0U);
     }
     UmiDocumentEditCommand command;
     UmiDocumentId id = 0U;

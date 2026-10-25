@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/application/experience/structured_form_merge.h
+ *
+ * PURPOSE:
+ *   Review field-level concurrent changes before any persistence decision.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Review field-level concurrent changes before any persistence decision. */
 #ifndef UMICOM_APPLICATION_EXPERIENCE_STRUCTURED_FORM_MERGE_H

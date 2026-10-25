@@ -1,3 +1,20 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/record_editor_gtk4.c
+ *
+ * PURPOSE:
+ *   Shared native record editing keeps worker inputs, draft state and host
+ *   lifetime separate. Applications compose this surface without duplicating
+ *   database calls, revision checks or notification-sensitive callbacks.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Shared native record editing keeps worker inputs, draft state and host
  * lifetime separate. Applications compose this surface without duplicating

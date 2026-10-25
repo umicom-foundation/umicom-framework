@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/data_history/record_bundles.c
+ *
+ * PURPOSE:
+ *   Transfer fictional history to another store without replacing existing data.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Transfer fictional history to another store without replacing existing data. */
 #include "umicom/data/record_bundle.h"

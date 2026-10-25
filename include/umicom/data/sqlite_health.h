@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/sqlite_health.h
+ *
+ * PURPOSE:
+ *   Check SQLite result rows rather than treating statement execution as health.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Check SQLite result rows rather than treating statement execution as health. */
 #ifndef UMICOM_DATA_SQLITE_HEALTH_H

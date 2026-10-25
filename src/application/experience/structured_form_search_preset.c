@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/application/experience/structured_form_search_preset.c
+ *
+ * PURPOSE:
+ *   Presets store query intent; pagination and authorization are deliberately fresh.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Presets store query intent; pagination and authorization are deliberately fresh. */
 #include "umicom/application/experience/structured_form_search_preset.h"

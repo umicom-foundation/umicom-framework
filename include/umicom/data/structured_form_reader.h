@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/structured_form_reader.h
+ *
+ * PURPOSE:
+ *   Resolve immutable historical schemas after checking stored document integrity.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Resolve immutable historical schemas after checking stored document integrity. */
 #ifndef UMICOM_DATA_STRUCTURED_FORM_READER_H

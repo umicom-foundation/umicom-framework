@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_structured_form_search_preset.c
+ *
+ * PURPOSE:
+ *   Preset revisions and query scopes share the same checked record boundary.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Preset revisions and query scopes share the same checked record boundary. */
 #include "../application_experience/structured_form_fixture.h"

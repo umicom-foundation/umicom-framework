@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_form_record_search_presets_gtk4.c
+ *
+ * PURPOSE:
+ *   Saved-query writes retain captured input; late read results cannot replace edits.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Saved-query writes retain captured input; late read results cannot replace edits. */
 #include "../application_experience/structured_form_fixture.h"

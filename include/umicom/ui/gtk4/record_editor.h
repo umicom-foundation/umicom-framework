@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/ui/gtk4/record_editor.h
+ *
+ * PURPOSE:
+ *   A reusable native editor for bounded local record notes. Storage and draft
+ *   ownership remain in Framework; products supply their title and namespace.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * A reusable native editor for bounded local record notes. Storage and draft
  * ownership remain in Framework; products supply their title and namespace. */

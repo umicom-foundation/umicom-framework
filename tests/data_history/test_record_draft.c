@@ -1,3 +1,20 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_record_draft.c
+ *
+ * PURPOSE:
+ *   Draft regressions exercise user-visible editing transitions independently
+ *   of widgets and storage. Successful completions below model a storage reply;
+ *   the separate storage test exercises actual atomic document writes.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Draft regressions exercise user-visible editing transitions independently
  * of widgets and storage. Successful completions below model a storage reply;

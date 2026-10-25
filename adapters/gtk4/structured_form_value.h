@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/structured_form_value.h
+ *
+ * PURPOSE:
+ *   Private native value controls; shared answer validation stays in application.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Private native value controls; shared answer validation stays in application. */
 #ifndef UMICOM_GTK4_STRUCTURED_FORM_VALUE_H

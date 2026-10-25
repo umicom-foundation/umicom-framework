@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/structured_form_search_preset.c
+ *
+ * PURPOSE:
+ *   Compose query serialization with the same revision checks as other records.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Compose query serialization with the same revision checks as other records. */
 #include "umicom/data/structured_form_search_preset.h"

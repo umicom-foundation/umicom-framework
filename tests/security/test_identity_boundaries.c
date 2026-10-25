@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/security/test_identity_boundaries.c
+ *
+ * PURPOSE:
+ *   Reject unterminated identity metadata before any lookup or stored mutation.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Reject unterminated identity metadata before any lookup or stored mutation. */
 #include "umicom/security/identity.h"

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/security/test_record_access_policy.c
+ *
+ * PURPOSE:
+ *   Permissions must be current for both the operation and its declared purpose.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Permissions must be current for both the operation and its declared purpose. */
 #include "record_access_fixture.h"

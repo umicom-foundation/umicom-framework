@@ -1,6 +1,21 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/ai_training/test_training_rotary_acceptance.c
+ *
+ * PURPOSE:
+ *   Test the independent evidence interpretation contract.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_training_rotary_acceptance.c
  * PURPOSE: Test the independent evidence interpretation contract.
  * NOTE: Synthetic fixture observations test REJECTION LOGIC ONLY. These
  * are not evidence that the production rotary tape passed.

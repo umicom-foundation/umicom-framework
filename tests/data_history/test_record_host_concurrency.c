@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_record_host_concurrency.c
+ *
+ * PURPOSE:
+ *   Start competing owners together; accept only outcomes allowed by one total order.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Start competing owners together; accept only outcomes allowed by one total order. */
 #include "record_host_fixture.h"

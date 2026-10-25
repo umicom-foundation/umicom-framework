@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/healthcare/test_synthetic_profile.c
+ *
+ * PURPOSE:
+ *   Qualify fictional profile semantics independently of any UI or database.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Qualify fictional profile semantics independently of any UI or database. */
 #include "umicom/application/experience/structured_form_snapshot.h"

@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: include/umicom/data/structured_form_bundle.h
+ *
+ * PURPOSE:
+ *   Review an entire typed history before an explicit, non-overwriting restore.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Review an entire typed history before an explicit, non-overwriting restore. */
 #ifndef UMICOM_DATA_STRUCTURED_FORM_BUNDLE_H

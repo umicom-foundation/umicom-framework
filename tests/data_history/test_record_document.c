@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_record_document.c
+ *
+ * PURPOSE:
+ *   Storage regressions use fictional records and arbitrary bytes. They exercise
+ *   the same contract for each backend without opening application windows.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Storage regressions use fictional records and arbitrary bytes. They exercise
  * the same contract for each backend without opening application windows. */

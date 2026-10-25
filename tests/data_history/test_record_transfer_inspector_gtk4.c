@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_record_transfer_inspector_gtk4.c
+ *
+ * PURPOSE:
+ *   Drive actual GTK controls and retain fixtures for failed owner-run checks.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Drive actual GTK controls and retain fixtures for failed owner-run checks. */
 #include "../../src/data/include/record_history_internal.h"

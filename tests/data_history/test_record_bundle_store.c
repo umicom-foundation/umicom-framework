@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/test_record_bundle_store.c
+ *
+ * PURPOSE:
+ *   Full entity history restores atomically without replacing occupied records.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Full entity history restores atomically without replacing occupied records. */
 #include "../../src/data/include/record_history_internal.h"

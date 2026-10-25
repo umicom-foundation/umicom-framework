@@ -1,3 +1,19 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/data/structured_form_conflict.c
+ *
+ * PURPOSE:
+ *   Field decisions remain bound to both the storage baseline and selected draft.
+ *   Adoption is local; final storage concurrency checks remain in record save.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Field decisions remain bound to both the storage baseline and selected draft.
  * Adoption is local; final storage concurrency checks remain in record save. */

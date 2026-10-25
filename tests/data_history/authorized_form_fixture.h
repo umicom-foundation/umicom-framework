@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/data_history/authorized_form_fixture.h
+ *
+ * PURPOSE:
+ *   Combine fictional typed answers with the real authority and storage adapter.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
  * Combine fictional typed answers with the real authority and storage adapter. */
 #ifndef UMICOM_AUTHORIZED_FORM_FIXTURE_H
