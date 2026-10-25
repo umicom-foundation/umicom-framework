@@ -1610,6 +1610,44 @@ UmiStatus UmiDataServerCopyError(const UmiDataServer *source, char *outText, siz
     return status;
 }
 
+#ifdef UMICOM_HAS_SQLITE
+/* quick_check omits CHECK expressions when this connection disables them.
+ * Refuse that reduced scope rather than report a misleading healthy result or
+ * silently change a caller's import configuration. The Data Server lock owns
+ * this read and the subsequent scan as one non-reentrant operation. */
+static UmiStatus DataHealthChecksEnabled(UmiDataServer *server)
+{
+    sqlite3_stmt *statement = NULL;
+    int code = sqlite3_prepare_v2(server->sqlite, "PRAGMA ignore_check_constraints;",
+        -1, &statement, NULL);
+    UmiStatus status = UMI_STATUS_OK;
+    if (code != SQLITE_OK) status = DataSqlError(server, code);
+    else {
+        code = sqlite3_step(statement);
+        if (code != SQLITE_ROW) status = code == SQLITE_DONE ?
+            UMI_STATUS_UNAVAILABLE : DataSqlError(server, code);
+        else if (sqlite3_column_count(statement) != 1 ||
+                 sqlite3_column_type(statement, 0) != SQLITE_INTEGER)
+            status = UMI_STATUS_PARSE_ERROR;
+        else {
+            int disabled = sqlite3_column_int(statement, 0);
+            if (disabled != 0 && disabled != 1) status = UMI_STATUS_PARSE_ERROR;
+            else if (disabled != 0) status = UMI_STATUS_INVALID_STATE;
+            else {
+                code = sqlite3_step(statement);
+                if (code != SQLITE_DONE) status = code == SQLITE_ROW ?
+                    UMI_STATUS_PARSE_ERROR : DataSqlError(server, code);
+            }
+        }
+    }
+    if (statement != NULL) {
+        code = sqlite3_finalize(statement);
+        if (status == UMI_STATUS_OK && code != SQLITE_OK) status = DataSqlError(server, code);
+    }
+    return status;
+}
+#endif
+
 /* Health queries stay beside the opaque SQLite handle so every read and
  * checkpoint respects the same transaction owner and re-entry rules. */
 UmiStatus umi_sqlite_health_read(UmiDataServer *server, UmiSqliteHealthReport *out)
@@ -1624,6 +1662,7 @@ UmiStatus umi_sqlite_health_read(UmiDataServer *server, UmiSqliteHealthReport *o
     sqlite3_stmt *statement = NULL;
     size_t rows = 0;
     bool ok_seen = false;
+    if (status == UMI_STATUS_OK) status = DataHealthChecksEnabled(server);
     if (status == UMI_STATUS_OK) {
         int code = sqlite3_prepare_v2(server->sqlite, "PRAGMA main.quick_check(100);", -1, &statement, NULL);
         if (code != SQLITE_OK) status = DataSqlError(server, code);

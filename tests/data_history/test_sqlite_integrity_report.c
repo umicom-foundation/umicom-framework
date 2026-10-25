@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
   const char *cases[] = {"healthy",     "constraint", "multiple",        "limit",
                          "readonly",    "memory",     "nested",          "null",
                          "null-output", "preserved",  "long-diagnostic", "foreign-key-scope",
-                         "legacy"};
+                         "legacy", "checks-disabled"};
   if (argc != 3 || !ro_case(argv[1], cases, sizeof(cases) / sizeof(cases[0])))
     return 2;
   int result = 0;
@@ -59,7 +59,8 @@ int main(int argc, char **argv) {
   }
   bool damaged = strcmp(name, "constraint") == 0 || strcmp(name, "multiple") == 0 ||
                  strcmp(name, "limit") == 0 || strcmp(name, "readonly") == 0 ||
-                 strcmp(name, "long-diagnostic") == 0 || strcmp(name, "legacy") == 0;
+                 strcmp(name, "long-diagnostic") == 0 || strcmp(name, "legacy") == 0 ||
+                 strcmp(name, "checks-disabled") == 0;
   if (damaged) {
     if (strcmp(name, "long-diagnostic") == 0) {
       char table[650], sql[1800];
@@ -82,13 +83,27 @@ int main(int argc, char **argv) {
         OK(umi_data_server_execute(writer,
                                    "WITH RECURSIVE n(x) AS (SELECT 1 UNION ALL SELECT x+1 FROM n "
                                    "WHERE x<120) INSERT INTO damaged SELECT -x FROM n;"));
+      /* Keep the original fixture reset for review. The disabled-check case
+       * deliberately leaves this connection policy active until admission. */
+#if 0
       OK(umi_data_server_execute(writer, "PRAGMA ignore_check_constraints=OFF;"));
+#endif
+      if (strcmp(name, "checks-disabled") != 0)
+        OK(umi_data_server_execute(writer, "PRAGMA ignore_check_constraints=OFF;"));
     }
   }
   if (strcmp(name, "foreign-key-scope") == 0)
     OK(umi_data_server_execute(
         writer, "PRAGMA foreign_keys=OFF; CREATE TABLE parent(id INTEGER PRIMARY KEY); CREATE "
                 "TABLE child(id REFERENCES parent(id)); INSERT INTO child VALUES(42);"));
+  if (strcmp(name, "checks-disabled") == 0) {
+    CHECK(umi_sqlite_health_read(writer, &report) == UMI_STATUS_INVALID_STATE);
+    CHECK(memcmp(&report, &sentinel, sizeof report) == 0);
+    /* A second violating insert proves the health API did not silently change
+     * the caller\'s policy. The subsequent explicit reset enables the scan. */
+    OK(umi_data_server_execute(writer, "INSERT INTO damaged VALUES(-2);"));
+    OK(umi_data_server_execute(writer, "PRAGMA ignore_check_constraints=OFF;"));
+  }
   UmiDataServer *selected = writer;
   if (strcmp(name, "readonly") == 0) {
     OK(umi_data_server_open_sqlite_readonly(file, &reader));

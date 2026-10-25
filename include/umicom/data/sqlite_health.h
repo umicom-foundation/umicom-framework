@@ -41,6 +41,9 @@ typedef struct UmiSqliteCheckpointReport {
  * The count is bounded, not proof that no further problems exist. An oversized
  * first diagnostic is replaced by a fixed explanation and marked omitted.
  * This does not check foreign keys, record checksums, access rights or backups.
+ * INVALID_STATE rejects connections with ignore_check_constraints enabled,
+ * leaving both output and connection policy unchanged. Disable that pragma
+ * explicitly before requesting a complete CHECK-constraint scan.
  * It can run on a read-only connection. Existing owned transactions are BUSY;
  * no operation silently commits, rolls back or includes pending caller edits.
  * Output is unchanged for admission, engine or completion errors. Runs on the

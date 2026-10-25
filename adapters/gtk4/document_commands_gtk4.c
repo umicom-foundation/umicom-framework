@@ -834,7 +834,18 @@ UmiStatus UmiGtk4AdapterPromptDocumentLocation(UmiGtk4Adapter *adapter)
         g_object_set_data(lifetime, "location-dialog", window);
         status = UmiGtk4WatchWindowClosed(GTK_WINDOW(window), G_OBJECT(window), LocationPromptDestroyed, prompt);
         if (status == UMI_STATUS_OK) {
+            /* Property observers can close this retained form. Queue their
+             * notifications until GTK finishes presenting its native surface;
+             * otherwise a visible observer can destroy a Win32 input context
+             * while gtk_window_present still needs it. Thaw remains observable,
+             * so the existing lifetime checks still govern focus and completion.
+             * Keep the immediate notification path for engineering review. */
+#if 0
             gtk_window_present(GTK_WINDOW(window));
+#endif
+            g_object_freeze_notify(G_OBJECT(window));
+            gtk_window_present(GTK_WINDOW(window));
+            g_object_thaw_notify(G_OBJECT(window));
             if (g_object_get_data(lifetime, "adapter") == adapter && LocationPromptLive(window))
                 (void)gtk_widget_grab_focus(prompt->entry);
             if (g_object_get_data(lifetime, "adapter") != adapter || !LocationPromptLive(window))

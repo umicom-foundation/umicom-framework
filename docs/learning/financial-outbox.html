@@ -1,0 +1,78 @@
+<!doctype html>
+<!-- Umicom Framework | File: docs/learning/financial-outbox.html
+PURPOSE: Teach local outgoing-message ownership and recovery.
+AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation | LICENCE: MIT -->
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Outgoing financial messages and recovery</title>
+<style>body{font:17px/1.6 system-ui;max-width:960px;margin:40px auto;padding:0 24px;color:#243247}code,pre{font-family:monospace}pre{background:#eef3f8;padding:18px;overflow:auto}table{border-collapse:collapse;width:100%}td,th{padding:10px;border:1px solid #ccd6e2;text-align:left}h1,h2{color:#143b62}</style>
+<h1>Outgoing financial messages and recovery</h1>
+<p>An outbox stores the exact message an application intends to deliver. Framework commits that
+message before a worker starts an attempt. The worker supplies the transport result afterward.
+This service stores local evidence; it does not connect to a bank or execute a payment.</p>
+<h2>Try the synthetic walkthrough</h2>
+<ol><li>Build a financial console against a Framework SDK that exports
+<code>UMICOM_HAS_UFMP_OUTBOX</code>.</li><li>Run one of these commands from the build output directory:
+<pre>.\umicom-bank-console.exe --outbox-recovery
+.\umicom-trader-console.exe --outbox-recovery
+.\umicom-accountant-console.exe --outbox-recovery
+.\umicom-tms-console.exe --outbox-recovery</pre></li>
+<li>Expect one retry after a known unsent attempt, followed by manual review after an ambiguous
+attempt. The output states <code>Automatic retry after ambiguity: no</code>,
+<code>Network requests: 0</code> and <code>Financial postings: 0</code>.</li></ol>
+<p>The example uses disposable memory and does not prove crash durability. If the command reports
+unavailable support, rebuild against the SDK containing <code>Umicom::financial_inbox</code> and
+the outgoing-message header. Existing console commands remain supported.</p>
+<h2>Integrate a worker</h2>
+<ol><li>Validate the participant, authorization, business schema and payload before enqueueing.
+The local digest is an integrity check, not a digital signature.</li>
+<li>Open an application-owned Data Server. Choose SQLite when records must survive reopening.
+Link <code>Umicom::financial_inbox</code> and include
+<code>umicom/financial_messaging/outbox.h</code>.</li>
+<li>Call <code>UmiUfmpOutboxEnqueue</code>. Save the returned ID and revision. The exact envelope,
+body, retry policy and identity indexes commit together. Do not edit reserved keys directly.</li>
+<li>Call <code>UmiUfmpOutboxTransition</code> with <code>BEGIN</code>, the observed revision and
+a trusted timestamp. Send only after success. Perform transport I/O outside the transaction.</li>
+<li>Use the revision returned by BEGIN when reporting the result. A revision is a sequence
+number that prevents an older worker's result from overwriting a newer state.</li>
+<li>After restarting, stop any previous worker before applying <code>RECOVER</code> to an
+in-flight record. It becomes manual review; the service does not assume that a missing reply means
+the destination received nothing.</li></ol>
+<table><tr><th>Evidence</th><th>Result</th><th>What it means</th></tr>
+<tr><td>Authenticated transport receipt</td><td>Transport received</td><td>No inference about payment acceptance, settlement or beneficiary credit.</td></tr>
+<tr><td>Proof no bytes reached transport</td><td>Ready with bounded delay</td><td>Retry only within the attempt limit and original envelope lifetime.</td></tr>
+<tr><td>Timeout after possible transmission</td><td>Manual review</td><td>Reconcile with the recipient before another business operation.</td></tr>
+<tr><td>Interrupted in-flight attempt</td><td>Manual review</td><td>The previous worker may have transmitted before the process stopped.</td></tr>
+<tr><td>Expired ready entry</td><td>Expired</td><td>No automatic renewal or new message identity.</td></tr></table>
+<h2>Inspect saved outgoing records</h2>
+<p>Select an existing application Data Server database. Each product can read up to 32 checked
+records without changing delivery state or displaying message bodies:</p>
+<pre>.\umicom-bank-console.exe --outbox-list "C:\umicom\_local\finance\outgoing.sqlite3"
+.\umicom-bank-console.exe --outbox-list "C:\umicom\_local\finance\outgoing.sqlite3" &lt;next-cursor&gt;</pre>
+<p>Use the cursor printed by the first command when More is yes. Trader, Accountant and TMS expose
+the same option. Missing databases are refused, never created. This is a current per-row view;
+refresh from the beginning to see records inserted before the cursor. Participant labels and IDs
+may be private; review the output before sharing it.</p>
+<h2>Product responsibilities</h2>
+<p>Bank and TMS can use the service to track delivery of independently approved instructions.
+Accountant can retain delivery evidence alongside its own reconciliation workflow. Trader can use
+it for reviewed reporting messages. These integrations must still implement their own permissions,
+operator review and transport adapters. The current console walkthrough is synthetic; no live
+banking or broker route is supplied by it.</p>
+<h2>Recover from a refusal</h2>
+<ul><li><code>BUSY</code>: reread the record. It may have changed, be inside another transaction,
+or not yet be due. Never send on a failed BEGIN.</li>
+<li><code>ALREADY_EXISTS</code>: an identity was reused with different content or policy.
+Inspect the original; do not change identifiers merely to bypass this check.</li>
+<li><code>PARSE_ERROR</code>: stored evidence is malformed or inconsistent. Preserve the database
+for diagnosis; do not delete evidence and create another outgoing message automatically.</li>
+<li><code>TIMEOUT</code> from BEGIN: the envelope expired. RECOVER can persist EXPIRED.
+A replacement operation requires a separate reviewed workflow.</li>
+<li><code>PERMISSION_DENIED</code>: a read-only store cannot enqueue or transition. It can load
+records for inspection.</li></ul>
+<h2>Limits</h2>
+<p>Payloads are bounded to 1,024 bytes and attempts to 32. SQLite durability follows Data Server
+and storage configuration. There is no background sender, cross-process worker supervisor,
+network authentication, canonical CBOR/COSE wire encoder, automatic retention, manual reopening UI,
+or exactly-once financial guarantee. Read-only catalogue pages do not create a global snapshot
+or dispatch workers. Terminal states cannot be reset through this API.</p>
+</html>
