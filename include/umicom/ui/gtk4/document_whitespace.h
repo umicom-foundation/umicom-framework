@@ -15,6 +15,9 @@
 
 #ifndef UMICOM_UI_GTK4_DOCUMENT_WHITESPACE_H
 #define UMICOM_UI_GTK4_DOCUMENT_WHITESPACE_H
+/* This native API names GtkWindow directly. Declare it here so a consumer
+ * can include this header first without relying on unrelated GTK includes. */
+#include <gtk/gtk.h>
 #include "umicom/document/whitespace.h"
 #include "umicom/document/whitespace_commands.h"
 #include "umicom/ui/gtk4/document_commands.h"

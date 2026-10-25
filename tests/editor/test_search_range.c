@@ -53,6 +53,9 @@ static const Case cases[] = {
     {"case-insensitive", "Cat CAT", 0U, 7U, "cat", "x", 1U, 0U, "x x", 2U},
     {"smart-lower", "Cat CAT", 0U, 7U, "cat", "x", 2U, 0U, "x x", 2U},
     {"smart-upper", "Cat CAT", 0U, 7U, "Cat", "x", 2U, 0U, "x CAT", 1U},
+    /* Preserve the malformed multi-line literals for review. Explicit escapes
+     * below keep LF and CRLF test data independent of source-file line endings.
+     * They still test replacement across a line and replacement of CRLF itself.
     {"newline", "a
      b a ",0U,5U," a "," x ",0U,0U," x b x ",2U},
      {"crlf",
@@ -60,6 +63,9 @@ static const Case cases[] = {
       b ",1U,2U,"
       ","
       ",0U,0U," a b ",1U},
+     */
+    {"newline", "a\nb a", 0U, 5U, "a", "x", 0U, 0U, "x\nb x", 2U},
+    {"crlf", "a\r\nb", 1U, 2U, "\r\n", "\n", 0U, 0U, "a\nb", 1U},
       {"not-search-output", "a", 0U, 1U, "a", "aa", 0U, 0U, "aa", 1U},
       {"range-end", "cat", 3U, 0U, "cat", "x", 0U, 0U, "cat", 0U}};
 int main(int argc, char **argv) {

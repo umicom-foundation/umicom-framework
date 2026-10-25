@@ -46,6 +46,12 @@ bool umi_treasury_settlement_netting_valid(const UmiTreasurySettlementNetting *v
  * client applications.
  */
 int64_t umi_treasury_settlement_netting_net_minor(const UmiTreasurySettlementNetting *value);
+/* Checked access refuses malformed IDs or negative gross legs before signed
+ * subtraction. Failure leaves out_minor unchanged. The legacy accessor returns
+ * zero for invalid input; use this operation to distinguish invalid from flat.
+ * This legacy value has no currency/account scope and does not authorize netting. */
+UmiStatus UmiTreasurySettlementNettingNetChecked(const UmiTreasurySettlementNetting *value,
+    int64_t *out_minor);
 /** Transfer this value using the portable format described in value_archive.h.
  * Pass NULL bytes and zero capacity to measure the encoded size. The decoder
  * validates every field before replacing the destination; refused input leaves

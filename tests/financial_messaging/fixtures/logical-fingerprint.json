@@ -1,0 +1,26 @@
+{
+  "format": "umicom-logical-fingerprint-reference",
+  "version": 1,
+  "warning": "Internal logical fingerprint, not UFMP wire encoding, COSE signing input or authentication.",
+  "byteOrder": "8-byte unsigned big-endian integers; UTF-8 text prefixed with an 8-byte byte count.",
+  "fields": {
+    "revision": 1,
+    "messageType": "payment.initiate",
+    "messageTypeValue": 14,
+    "payloadFormat": 2,
+    "sender": "Bank.B",
+    "recipient": "Bank.A",
+    "schema": "synthetic.profile.1",
+    "idempotencyKey": "operation.1",
+    "messageId": "message.1",
+    "conversationId": "conversation.1",
+    "causationId": "",
+    "traceId": "",
+    "createdMilliseconds": 1000,
+    "expiresMilliseconds": 2000,
+    "payloadHex": "01"
+  },
+  "payloadSha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+  "envelopeSha256": "3b88f5e77168ee42a33ac99a9ee2a34b37e3188bc6e33d4ad91bb8e1226bdc51",
+  "operationSha256": "41968c2fae00e9ac54e252d55f0c3e08bd8e39575f3b3245a0ab14c6cd6af968"
+}

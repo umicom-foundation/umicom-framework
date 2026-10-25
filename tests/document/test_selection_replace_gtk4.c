@@ -128,6 +128,13 @@ int main(int argc, char **argv) {
   if (!strcmp(name, "constructor-unbind"))
     observer = g_signal_connect(gtk_window_get_toplevels(), "items-changed",
                                 G_CALLBACK(UnbindOnCreate), &f);
+  /* Connect the re-entry probe before constructing the review. Merely declaring
+   * the callback does not exercise the admission guard during toplevel signals. */
+  if (!strcmp(name, "constructor-repeat")) {
+    reenter.adapter = f.adapter;
+    observer = g_signal_connect(gtk_window_get_toplevels(), "items-changed",
+                                G_CALLBACK(RepeatOnCreate), &reenter);
+  }
   UmiStatus status =
       UmiGtk4AdapterReviewSelectionReplacement(f.adapter, needle, replacement, &options);
   if (observer) {

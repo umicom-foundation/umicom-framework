@@ -6252,3 +6252,7 @@ include(cmake/UmicomLanguageComments.cmake)
 include(cmake/UmicomDocumentLanguage.cmake)
 include(cmake/UmicomSelectionReplacement.cmake)
 include(cmake/UmicomSourceSelection.cmake)
+
+# Reuse the finance SDK for logical financial messages and synthetic exercises.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomFinancialMessaging.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomFinancialInbox.cmake")

@@ -15,6 +15,9 @@
 
 #ifndef UMICOM_UI_GTK4_EDITOR_CONFIG_ADOPTION_H
 #define UMICOM_UI_GTK4_EDITOR_CONFIG_ADOPTION_H
+/* This native API names GtkWindow directly. Declare it here so a consumer
+ * can include this header first without relying on unrelated GTK includes. */
+#include <gtk/gtk.h>
 #include "umicom/document/coordinator.h"
 #include "umicom/ui/gtk4.h"
 #ifdef __cplusplus

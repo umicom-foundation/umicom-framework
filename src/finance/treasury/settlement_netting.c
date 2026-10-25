@@ -55,6 +55,11 @@ bool umi_treasury_settlement_netting_valid(const UmiTreasurySettlementNetting *v
  * Provide the treasury settlement netting net minor operation used by this module and its
  * client applications.
  */
+/* The unchecked accessor is retained for review. The checked operation below
+ * validates both nonnegative gross legs before subtraction, keeping malformed
+ * restored/plugin values from causing signed overflow. Existing callers retain
+ * their zero-on-NULL convention; other malformed input now also returns zero. */
+#if 0
 int64_t umi_treasury_settlement_netting_net_minor(const UmiTreasurySettlementNetting *value) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -62,6 +67,26 @@ int64_t umi_treasury_settlement_netting_net_minor(const UmiTreasurySettlementNet
      */
     if (value == NULL) return (int64_t)0;
     return value->receive_minor - value->pay_minor;
+}
+
+#endif
+
+UmiStatus UmiTreasurySettlementNettingNetChecked(const UmiTreasurySettlementNetting *value,
+    int64_t *out_minor)
+{
+    if (out_minor == NULL || !umi_treasury_settlement_netting_valid(value))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Each validated operand lies in [0, INT64_MAX], so their difference
+     * lies in [-INT64_MAX, INT64_MAX] and is representable. */
+    *out_minor = value->receive_minor - value->pay_minor;
+    return UMI_STATUS_OK;
+}
+
+int64_t umi_treasury_settlement_netting_net_minor(const UmiTreasurySettlementNetting *value)
+{
+    int64_t result = 0;
+    (void)UmiTreasurySettlementNettingNetChecked(value, &result);
+    return result;
 }
 
 /* State transfer belongs to this Framework value owner. Explicit fields keep

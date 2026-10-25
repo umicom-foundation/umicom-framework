@@ -89,3 +89,14 @@ foreach(_white_variable IN ITEMS root pair parts header directory target group o
     unset(_white_${_white_variable})
 endforeach()
 unset(_white_variable)
+
+# Compile the native public header on its own before its integration test.
+# This catches missing GTK declarations even when the test fixture happens
+# to include GTK first. Reuse the Framework header-consumer mechanism.
+if(BUILD_TESTING AND TARGET umicom-whitespace-native-test)
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomPublicHeaderCompileChecks.cmake")
+    umicom_add_public_header_compile_check(umicom-whitespace-header-check
+        umicom_ui_gtk4 "${CMAKE_CURRENT_LIST_DIR}/../include"
+        "umicom/ui/gtk4/document_whitespace.h")
+    add_dependencies(umicom-whitespace-native-test umicom-whitespace-header-check)
+endif()

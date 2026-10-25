@@ -91,3 +91,14 @@ unset(_adoption_case)
 unset(_adoption_evidence_cases)
 unset(_adoption_plan_cases)
 unset(_adoption_native_cases)
+
+# Compile the native public header on its own before its integration test.
+# This catches missing GTK declarations even when the test fixture happens
+# to include GTK first. Reuse the Framework header-consumer mechanism.
+if(BUILD_TESTING AND TARGET umicom-editor-config-adoption-native-test)
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomPublicHeaderCompileChecks.cmake")
+    umicom_add_public_header_compile_check(umicom-editor-config-adoption-header-check
+        umicom_ui_gtk4 "${CMAKE_CURRENT_LIST_DIR}/../include"
+        "umicom/ui/gtk4/editor_config_adoption.h")
+    add_dependencies(umicom-editor-config-adoption-native-test umicom-editor-config-adoption-header-check)
+endif()

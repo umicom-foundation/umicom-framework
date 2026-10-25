@@ -112,6 +112,9 @@ int main(int argc, char **argv) {
   UmiStatus status = UmiGtk4AdapterInspectDocumentText(f.adapter, 0U);
   if (observer)
     g_signal_handler_disconnect(gtk_window_get_toplevels(), observer);
+  /* Opening an observation, including interrupted construction, must leave
+   * the source working copy untouched. Check it before deliberate edits. */
+  CHECK(NativeEditText(&f, "a\n\xc3\xa9\xe2\x80\xae"));
   if (!strcmp(name, "constructor-retire")) {
     CHECK(status == UMI_STATUS_CANCELLED && Form() == NULL);
     goto cleanup;

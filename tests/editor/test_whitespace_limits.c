@@ -24,6 +24,12 @@
       return 1;                                                                                    \
     }                                                                                              \
   } while (0)
+/* This unused helper fragment lost its declaration when the limit tests were
+ * separated from the successful transform cases. Preserve it for review;
+ * test_whitespace_trim.c and test_whitespace_indentation.c retain the complete
+ * CheckPlan implementation and mapping assertions. The limit cases below
+ * continue to exercise their own status, capacity and output checks. */
+#if 0
 (const char *source, size_t cursor, size_t selected, UmiEditorWhitespaceOptions options,
  const char *expected, size_t mapped_cursor, size_t mapped_selected) {
   UmiEditorWhitespacePlan *plan = NULL;
@@ -41,6 +47,7 @@
   UmiEditorWhitespacePlanDestroy(plan);
   return 0;
 }
+#endif
 
 int main(int argc, char **argv) {
   CHECK(argc == 2);

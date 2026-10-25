@@ -15,6 +15,9 @@
 
 #ifndef UMICOM_UI_GTK4_DOCUMENT_INSPECTION_H
 #define UMICOM_UI_GTK4_DOCUMENT_INSPECTION_H
+/* This native API names GtkWindow directly. Declare it here so a consumer
+ * can include this header first without relying on unrelated GTK includes. */
+#include <gtk/gtk.h>
 #include "umicom/document/inspection.h"
 #include "umicom/ui/gtk4/document_commands.h"
 #ifdef __cplusplus
