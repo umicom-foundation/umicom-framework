@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/language_choice.h"
+#include "umicom/ui/gtk4/drop_down.h"
 #include <string.h>
 static int LanguageChoiceWidget(GtkWidget *widget) {
   return widget != NULL && GTK_IS_DROP_DOWN(widget) &&
@@ -60,7 +61,12 @@ UmiStatus UmiGtk4LanguageChoiceCreate(const char *id, GtkWidget **out) {
   }
   /* GtkDropDown takes ownership of the supplied model. The choice catalogue
    * remains static; only its display strings are copied into GTK. */
+  /* Centralise GTK model transfer in the shared ownership helper. This retains
+   * the same catalogue and selected row; the earlier call stays for review. */
+#if 0
   GtkWidget *widget = gtk_drop_down_new(G_LIST_MODEL(model), NULL);
+#endif
+  GtkWidget *widget = umi_ui_gtk4_drop_down_new_take_string_list(model);
   g_object_set_data(G_OBJECT(widget), "umicom-language-choice", GINT_TO_POINTER(1));
   gtk_widget_set_name(widget, "document.language.choice");
   gtk_drop_down_set_selected(GTK_DROP_DOWN(widget), selected);

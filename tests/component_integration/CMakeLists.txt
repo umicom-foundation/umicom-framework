@@ -18,7 +18,19 @@ foreach(_case IN ITEMS deferred immediate mixed repeated missing partial tests_o
         "-DHOST_TOOLSET=${CMAKE_GENERATOR_TOOLSET}"
         "-DHOST_CROSSCOMPILING=${CMAKE_CROSSCOMPILING}"
         -P "${CMAKE_CURRENT_LIST_DIR}/run_case.cmake")
+    # Five inventory checks, four rebuilds and the full nested suite share this
+    # outer deadline. The old single-stage budget killed passing nested tests.
+    # Each Execute operation retains its separate 180-second timeout.
+    if(FALSE)
     set_tests_properties(framework.component_integration.${_case} PROPERTIES
         TIMEOUT 240 PROCESSORS 2 LABELS "component-integration;configure;native")
+    endif()
+    set(_case_timeout 240)
+    if(_case STREQUAL "reconfigure")
+        set(_case_timeout 900)
+    endif()
+    set_tests_properties(framework.component_integration.${_case} PROPERTIES
+        TIMEOUT ${_case_timeout} PROCESSORS 2 LABELS "component-integration;configure;native")
 endforeach()
+unset(_case_timeout)
 unset(_umi_composition_root)

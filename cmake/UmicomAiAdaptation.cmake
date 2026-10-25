@@ -18,7 +18,9 @@ if(NOT TARGET umicom_ai_adaptation)
     add_library(umicom_ai_adaptation STATIC
         "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/low_rank.c"
         "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/source_admission.c"
-        "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/caption_text.c")
+        "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/caption_text.c"
+        "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/adapter_checkpoint.c"
+        "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/source_evidence.c")
     add_library(Umicom::AiAdaptation ALIAS umicom_ai_adaptation)
     target_include_directories(umicom_ai_adaptation PUBLIC
         "${UMICOM_AI_ADAPTATION_ROOT}/include")
@@ -53,6 +55,22 @@ if(BUILD_TESTING)
         add_test(NAME framework.ai.adaptation.source_admission
             COMMAND umicom-ai-training-source-admission-test)
     endif()
+    if(NOT TARGET umicom-ai-training-adapter-checkpoint-test)
+        add_executable(umicom-ai-training-adapter-checkpoint-test
+            "${UMICOM_AI_ADAPTATION_ROOT}/tests/ai_training/test_training_adapter_checkpoint.c")
+        target_link_libraries(umicom-ai-training-adapter-checkpoint-test PRIVATE
+            Umicom::AiAdaptation)
+        add_test(NAME framework.ai.adaptation.adapter_checkpoint
+            COMMAND umicom-ai-training-adapter-checkpoint-test)
+    endif()
+    if(NOT TARGET umicom-ai-training-source-evidence-test)
+        add_executable(umicom-ai-training-source-evidence-test
+            "${UMICOM_AI_ADAPTATION_ROOT}/tests/ai_training/test_training_source_evidence.c")
+        target_link_libraries(umicom-ai-training-source-evidence-test PRIVATE
+            Umicom::AiAdaptation)
+        add_test(NAME framework.ai.adaptation.source_evidence
+            COMMAND umicom-ai-training-source-evidence-test)
+    endif()
     if(TARGET Umicom::creative_workspace AND NOT TARGET umicom-ai-training-caption-text-test)
         add_executable(umicom-ai-training-caption-text-test
             "${UMICOM_AI_ADAPTATION_ROOT}/tests/ai_training/test_training_caption_text.c")
@@ -63,7 +81,9 @@ if(BUILD_TESTING)
     endif()
     foreach(target IN ITEMS
             umicom-ai-training-low-rank-test
-            umicom-ai-training-source-admission-test)
+            umicom-ai-training-source-admission-test
+            umicom-ai-training-adapter-checkpoint-test
+            umicom-ai-training-source-evidence-test)
         target_compile_features(${target} PRIVATE c_std_23)
         if(MSVC)
             target_compile_options(${target} PRIVATE /W4)

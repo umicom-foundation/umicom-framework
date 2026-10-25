@@ -2,7 +2,14 @@
  * Umicom Framework
  * File: tests/bank_feed/test_archive.c
  * PURPOSE: Check exact observation round trips, provenance limits and all-or-nothing archive
- * rejection. AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation LICENCE: MIT
+ * rejection.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "csv_fixture.h"

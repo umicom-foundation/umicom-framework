@@ -50,6 +50,13 @@ static GtkWidget *Find(GtkWidget *widget, const char *id)
 {
     return umi_gtk4_automation_find_tagged_widget(widget, id);
 }
+/* Flush each boundary so a platform hang identifies the last completed action.
+ * These markers diagnose a timeout; they do not weaken the lifecycle assertions. */
+static void Phase(const char *name)
+{
+    fprintf(stderr, "Language connection phase: %s\n", name);
+    fflush(stderr);
+}
 static int WaitIdle(GtkWidget *panel)
 {
     gint64 deadline = g_get_monotonic_time() + 10 * G_TIME_SPAN_SECOND;
@@ -88,6 +95,7 @@ static int ProgramMain(int argc, char **argv)
 {
     if (argc != 3)
         return 2;
+    Phase("initialise-gtk");
     if (!gtk_init_check())
         return 77;
     const char *mode = argv[1];
@@ -116,6 +124,7 @@ static int ProgramMain(int argc, char **argv)
     g_object_ref_sink(panel);
     gtk_window_set_child(GTK_WINDOW(window), panel);
     gtk_window_set_default_size(GTK_WINDOW(window), 600, 500);
+    Phase("present-panel");
     gtk_window_present(GTK_WINDOW(window));
     CHECK(WaitMapped(panel));
     GtkWidget *executable = Find(panel, "language.connection.executable");
@@ -179,7 +188,9 @@ static int ProgramMain(int argc, char **argv)
     }
     if (strcmp(mode, "notify-close") == 0)
         g_signal_connect(message, "notify::label", G_CALLBACK(CloseOnResult), window);
+    Phase("start-worker");
     g_signal_emit_by_name(check, "clicked");
+    Phase("worker-dispatched");
     CHECK(!gtk_widget_get_sensitive(check));
     if (strcmp(mode, "cancel") == 0)
         g_signal_emit_by_name(cancel, "clicked");
@@ -193,9 +204,11 @@ static int ProgramMain(int argc, char **argv)
     }
     if (strcmp(mode, "edit") == 0 || strcmp(mode, "edit-back") == 0)
     {
+        Phase("edit-arguments");
         gtk_editable_set_text(GTK_EDITABLE(arguments), "different");
         if (strcmp(mode, "edit-back") == 0)
             gtk_editable_set_text(GTK_EDITABLE(arguments), "lsp");
+        Phase("arguments-edited");
     }
     if (strcmp(mode, "hide") == 0 || strcmp(mode, "remap") == 0)
     {
@@ -215,7 +228,9 @@ static int ProgramMain(int argc, char **argv)
         gtk_window_set_child(GTK_WINDOW(window), NULL);
         gtk_window_destroy(GTK_WINDOW(window));
     }
+    Phase("await-completion");
     CHECK(WaitIdle(panel));
+    Phase("completion-received");
     if (strcmp(mode, "hide") == 0)
     {
         gtk_widget_set_visible(panel, TRUE);
@@ -262,11 +277,13 @@ static int ProgramMain(int argc, char **argv)
             CHECK(0);
     }
 cleanup:
+    Phase("destroy-window");
     gtk_window_destroy(GTK_WINDOW(window));
     if (panel != NULL)
     {
         /* Closing requests cancellation. Wait for the actual completion before
          * releasing test-held controls; a fixed sleep is not evidence. */
+        Phase("drain-worker");
         if (!WaitIdle(panel))
             failed = 1;
         g_object_unref(panel);
@@ -277,6 +294,7 @@ cleanup:
         (void)g_rmdir(folder);
         g_free(folder);
     }
+    Phase("finished");
     return failed;
 }
 #include "../native_process/utf8_entry.inc"

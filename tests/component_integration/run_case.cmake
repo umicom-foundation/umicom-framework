@@ -34,6 +34,8 @@ file(COPY "${CMAKE_CURRENT_LIST_DIR}/probe/" DESTINATION "${_source}")
 get_filename_component(_cmake_directory "${CMAKE_COMMAND}" DIRECTORY)
 find_program(_ctest NAMES ctest HINTS "${_cmake_directory}" NO_DEFAULT_PATH REQUIRED)
 function(Execute step)
+    # Identify the running stage before waiting; retain complete logs below.
+    message(STATUS "Integration stage ${step}; logs: ${RUN}")
     execute_process(COMMAND ${ARGN}
         RESULT_VARIABLE _status OUTPUT_FILE "${RUN}/${step}.out.txt"
         ERROR_FILE "${RUN}/${step}.err.txt" TIMEOUT 180)
