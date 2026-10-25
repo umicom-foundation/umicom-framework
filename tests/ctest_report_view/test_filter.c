@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "fixture.h"
+#include <limits.h>
 int main(int argc, char **argv) {
   CHECK(argc == 2);
   const char *name = argv[1],
@@ -58,6 +59,29 @@ int main(int argc, char **argv) {
   UmiStatus status = UmiCtestReportViewCreate(report, &filter, &view);
   if (!strncmp(name, "invalid-", 8U) || !strcmp(name, "unterminated")) {
     CHECK(status == UMI_STATUS_INVALID_ARGUMENT && view == NULL);
+    if (!strcmp(name, "invalid-mask")) {
+      /* Check every representable flag, including the top unsigned bit. This
+       * keeps rejection independent of the enum constant's promoted type. */
+      unsigned bit = 1U;
+      do {
+        filter.outcomes = bit;
+        UmiStatus expected = bit <= (unsigned)UMI_CTEST_VIEW_ALL
+                                 ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+        CHECK(UmiCtestReportFilterValidate(&filter) == expected);
+        if (expected == UMI_STATUS_INVALID_ARGUMENT) {
+          filter.outcomes |= (unsigned)UMI_CTEST_VIEW_ALL;
+          CHECK(UmiCtestReportViewCreate(report, &filter, &view) ==
+                UMI_STATUS_INVALID_ARGUMENT && view == NULL);
+        }
+        bit <<= 1U;
+      } while (bit != 0U);
+      filter.outcomes = UINT_MAX;
+      CHECK(UmiCtestReportFilterValidate(&filter) == UMI_STATUS_INVALID_ARGUMENT);
+      filter.outcomes = UMI_CTEST_VIEW_ALL;
+      OK(UmiCtestReportFilterValidate(&filter));
+      filter.outcomes = 0U;
+      OK(UmiCtestReportFilterValidate(&filter));
+    }
     goto done;
   }
   OK(status);

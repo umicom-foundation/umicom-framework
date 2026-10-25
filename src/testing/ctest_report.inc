@@ -83,7 +83,16 @@ static int CtestUtf8Read(const char *text, size_t length, size_t *used,
  * low-level testing library independent of document/editor link dependencies. */
 UmiStatus UmiCtestReportFilterValidate(const UmiCtestReportFilter *filter)
 {
+    /* Enum constants can have signed int type even with unsigned initializers.
+     * Complement an unsigned mask, matching the stored outcome flags, so upper
+     * bits are rejected without a signed-to-unsigned conversion. The former
+     * equivalent predicate is retained for review of the warning correction. */
+#if 0
     if (filter == NULL || (filter->outcomes & ~UMI_CTEST_VIEW_ALL) != 0U ||
+        filter->order < UMI_CTEST_REPORT_DOCUMENT_ORDER || filter->order > UMI_CTEST_REPORT_OUTCOME_ORDER)
+        return UMI_STATUS_INVALID_ARGUMENT;
+#endif
+    if (filter == NULL || (filter->outcomes & ~(unsigned)UMI_CTEST_VIEW_ALL) != 0U ||
         filter->order < UMI_CTEST_REPORT_DOCUMENT_ORDER || filter->order > UMI_CTEST_REPORT_OUTCOME_ORDER)
         return UMI_STATUS_INVALID_ARGUMENT;
     const char *end = memchr(filter->name_contains, '\0', sizeof filter->name_contains);

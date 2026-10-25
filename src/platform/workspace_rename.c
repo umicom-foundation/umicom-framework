@@ -22,15 +22,25 @@
 #include <string.h>
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
+/* Native fragments use the platform types and functions below. Retain the
+ * former ordering for review; the active include follows their declarations. */
+#if 0
 #include "workspace_rename_windows.inc"
+#endif
 #include <windows.h>
+#include "workspace_rename_windows.inc"
 #elif defined(__linux__)
+/* As on Windows, system declarations must precede the native implementation.
+ * Keep the former ordering disabled for review without changing rename logic. */
+#if 0
 #include "workspace_rename_linux.inc"
+#endif
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
 #include <unistd.h>
+#include "workspace_rename_linux.inc"
 #else
 static UmiStatus RenameNative(const char *root, const char *relative,
                               UmiWorkspaceRenameResult *result) {

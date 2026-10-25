@@ -14,6 +14,9 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/document/source_selection.h"
+/* Range selection belongs to navigation; include its contract directly instead
+ * of relying on an unrelated header to expose the coordinator entry point. */
+#include "umicom/document/source_navigation.h"
 #include "umicom/document/source_request.h"
 UmiStatus UmiDocumentCoordinatorSelectSourceUnit(UmiDocumentCoordinator *owner, UmiDocumentId id,
                                                  UmiEditorSourceSelectionKind kind) {
