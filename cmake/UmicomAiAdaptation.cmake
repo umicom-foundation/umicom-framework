@@ -25,7 +25,11 @@ if(NOT TARGET umicom_ai_adaptation)
         "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/low_rank_training.c"
         "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/reviewed_examples.c"
         "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/decoder_logit_adapter.c"
-        "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/reviewed_corpus.c")
+        "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/reviewed_corpus.c"
+        # Reuse the canonical byte tokenizer and cross-entropy; no new neural
+        # maths, curriculum-local runtime or application-specific trainer.
+        "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/supervised_window.c"
+        "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/selected_loss.c")
     add_library(Umicom::AiAdaptation ALIAS umicom_ai_adaptation)
     target_include_directories(umicom_ai_adaptation PUBLIC
         "${UMICOM_AI_ADAPTATION_ROOT}/include")
@@ -121,6 +125,30 @@ if(BUILD_TESTING)
         add_test(NAME framework.ai.adaptation.transformer_low_rank
             COMMAND umicom-ai-training-transformer-low-rank-test)
     endif()
+    if(NOT TARGET umicom-ai-training-supervised-window-test)
+        add_executable(umicom-ai-training-supervised-window-test
+            "${UMICOM_AI_ADAPTATION_ROOT}/tests/ai_training/test_training_supervised_window.c")
+        target_link_libraries(umicom-ai-training-supervised-window-test PRIVATE
+            Umicom::AiAdaptation)
+        add_test(NAME framework.ai.adaptation.supervised_window
+            COMMAND umicom-ai-training-supervised-window-test)
+    endif()
+    if(NOT TARGET umicom-ai-training-selected-loss-test)
+        add_executable(umicom-ai-training-selected-loss-test
+            "${UMICOM_AI_ADAPTATION_ROOT}/tests/ai_training/test_training_selected_loss.c")
+        target_link_libraries(umicom-ai-training-selected-loss-test PRIVATE
+            Umicom::AiAdaptation)
+        add_test(NAME framework.ai.adaptation.selected_loss
+            COMMAND umicom-ai-training-selected-loss-test)
+    endif()
+    if(NOT TARGET umicom-ai-training-decoder-selected-test)
+        add_executable(umicom-ai-training-decoder-selected-test
+            "${UMICOM_AI_ADAPTATION_ROOT}/tests/ai_training/test_training_decoder_selected.c")
+        target_link_libraries(umicom-ai-training-decoder-selected-test PRIVATE
+            Umicom::AiAdaptation)
+        add_test(NAME framework.ai.adaptation.decoder_selected
+            COMMAND umicom-ai-training-decoder-selected-test)
+    endif()
     if(TARGET Umicom::creative_workspace AND NOT TARGET umicom-ai-training-caption-text-test)
         add_executable(umicom-ai-training-caption-text-test
             "${UMICOM_AI_ADAPTATION_ROOT}/tests/ai_training/test_training_caption_text.c")
@@ -138,7 +166,10 @@ if(BUILD_TESTING)
             umicom-ai-training-reviewed-examples-test
             umicom-ai-training-decoder-logit-adapter-test
             umicom-ai-training-reviewed-corpus-test
-            umicom-ai-training-transformer-low-rank-test)
+            umicom-ai-training-transformer-low-rank-test
+            umicom-ai-training-supervised-window-test
+            umicom-ai-training-selected-loss-test
+            umicom-ai-training-decoder-selected-test)
         target_compile_features(${target} PRIVATE c_std_23)
         if(MSVC)
             target_compile_options(${target} PRIVATE /W4)

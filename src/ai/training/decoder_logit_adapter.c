@@ -10,6 +10,7 @@
 #include "umicom/ai/training/decoder_logit_adapter.h"
 #include "umicom/ai/training/initialisation.h"
 #include "umicom/ai/training/tape.h"
+#include "umicom/ai/training/selected_loss.h"
 
 #include <math.h>
 #include <stdint.h>
@@ -233,6 +234,7 @@ UmiStatus UmiAiTrainingDecoderLogitAdapterLogits(
 static UmiStatus AdapterLossStep(
     UmiAiTrainingDecoderLogitAdapter *adapter,
     const size_t *inputs, const size_t *targets, size_t tokenCount,
+    const uint8_t *lossMask, size_t maskCount,
     int train, float learningRate, float *outLoss)
 {
     UmiStatus status = AdapterValidateInput(adapter, inputs, targets,
@@ -245,10 +247,19 @@ static UmiStatus AdapterLossStep(
         return UMI_STATUS_CAPACITY_EXCEEDED;
     UmiAiTrainingTensor *predicted = NULL, *loss = NULL;
     float candidate = 0.0F;
+    /* The original full-context objective is unchanged. Explicitly selected
+     * targets opt in to the Framework's tape-owned row-selection composition.
+     * All submitted target IDs are validated by AdapterValidateInput, even
+     * for ignored rows, matching the historical decoder contract. */
+    if (lossMask != NULL && maskCount != tokenCount)
+        return UMI_STATUS_INVALID_ARGUMENT;
     status = AdapterForward(adapter, inputs, tokenCount, &predicted);
-    if (status == UMI_STATUS_OK)
+    if (status == UMI_STATUS_OK && lossMask == NULL)
         status = UmiAiTrainingCrossEntropy(adapter->tape, predicted,
                                           targets, tokenCount, &loss);
+    else if (status == UMI_STATUS_OK)
+        status = UmiAiTrainingSelectedCrossEntropy(adapter->tape, predicted,
+            targets, tokenCount, lossMask, maskCount, &loss);
     if (status == UMI_STATUS_OK)
         status = UmiAiTrainingTensorValues(loss, &candidate, 1U);
     if (status == UMI_STATUS_OK && (!isfinite(candidate) || candidate < 0.0F))
@@ -275,7 +286,7 @@ UmiStatus UmiAiTrainingDecoderLogitAdapterEvaluate(
     size_t tokenCount, float *outLoss)
 {
     return AdapterLossStep(adapter, inputTokenIds, targetTokenIds,
-                           tokenCount, 0, 0.0F, outLoss);
+                           tokenCount, NULL, 0U, 0, 0.0F, outLoss);
 }
 
 UmiStatus UmiAiTrainingDecoderLogitAdapterTrainStep(
@@ -287,7 +298,42 @@ UmiStatus UmiAiTrainingDecoderLogitAdapterTrainStep(
     float prior = 0.0F;
     if (outReport == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     UmiStatus status = AdapterLossStep(adapter, inputTokenIds, targetTokenIds,
-                                       tokenCount, 1, learningRate, &prior);
+                                       tokenCount, NULL, 0U, 1,
+                                       learningRate, &prior);
+    if (status != UMI_STATUS_OK) return status;
+    *outReport = (UmiAiTrainingDecoderLogitStep){
+        .crossEntropyBeforeUpdate = prior,
+        .tokenCount = tokenCount,
+        .completedAdapterSteps = adapter->adapterSteps
+    };
+    return UMI_STATUS_OK;
+}
+
+/* An explicit assistant-response mask is applied AFTER the existing frozen
+ * decoder has produced its canonical logits. The original unmasked entry
+ * points retain the exact previously published cross-entropy semantics. */
+UmiStatus UmiAiTrainingDecoderLogitAdapterEvaluateSelected(
+    UmiAiTrainingDecoderLogitAdapter *adapter,
+    const size_t *inputTokenIds, const size_t *targetTokenIds,
+    size_t tokenCount, const uint8_t *lossMask, size_t maskCount,
+    float *outLoss)
+{
+    if (lossMask == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return AdapterLossStep(adapter, inputTokenIds, targetTokenIds,
+        tokenCount, lossMask, maskCount, 0, 0.0F, outLoss);
+}
+
+UmiStatus UmiAiTrainingDecoderLogitAdapterTrainSelected(
+    UmiAiTrainingDecoderLogitAdapter *adapter,
+    const size_t *inputTokenIds, const size_t *targetTokenIds,
+    size_t tokenCount, const uint8_t *lossMask, size_t maskCount,
+    float learningRate, UmiAiTrainingDecoderLogitStep *outReport)
+{
+    float prior = 0.0F;
+    if (outReport == NULL || lossMask == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = AdapterLossStep(adapter, inputTokenIds, targetTokenIds,
+        tokenCount, lossMask, maskCount, 1, learningRate, &prior);
     if (status != UMI_STATUS_OK) return status;
     *outReport = (UmiAiTrainingDecoderLogitStep){
         .crossEntropyBeforeUpdate = prior,

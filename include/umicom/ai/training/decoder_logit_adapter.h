@@ -12,6 +12,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "umicom/ai/training/selected_loss.h"
 #include "umicom/ai/training/decoder.h"
 
 #ifdef __cplusplus
@@ -78,12 +79,34 @@ UmiStatus UmiAiTrainingDecoderLogitAdapterEvaluate(
  * rewinds its temporary nodes after each step, preserving trained leaves.
  * The caller serialises access. Invalid input and rejected SGD updates leave
  * all published outputs unchanged. This is not yet full Transformer fine-
- * tuning or an assistant-response-only masked-loss trainer. */
+ * tuning. A separate opt-in Selected entry point now supports a verified
+ * response-only loss mask without changing this historical unmasked API. */
 UmiStatus UmiAiTrainingDecoderLogitAdapterTrainStep(
     UmiAiTrainingDecoderLogitAdapter *adapter,
     const size_t *inputTokenIds, const size_t *targetTokenIds,
     size_t tokenCount, float learningRate,
     UmiAiTrainingDecoderLogitStep *outReport);
+
+/* Explicit assistant-response-only objective on one fixed-size window.
+ * The selected loss is averaged over mask=1 positions, including a final EOS
+ * if the window builder marked it. The original full-context TrainStep and
+ * Evaluate interfaces remain unchanged; this mode must be selected by name.
+ * Every input and target ID must still be inside the decoder vocabulary,
+ * including ignored targets (PAD=0 is appropriate for padded rows).
+ * Empty/all-zero/invalid masks and wrong mask lengths are rejected without
+ * changing outputs or adapter weights. The model must remain frozen.
+ * Only adapter matrix values are trained; the opaque decoder is borrowed. */
+UmiStatus UmiAiTrainingDecoderLogitAdapterEvaluateSelected(
+    UmiAiTrainingDecoderLogitAdapter *adapter,
+    const size_t *inputTokenIds, const size_t *targetTokenIds,
+    size_t tokenCount, const uint8_t *lossMask, size_t maskCount,
+    float *outLoss);
+
+UmiStatus UmiAiTrainingDecoderLogitAdapterTrainSelected(
+    UmiAiTrainingDecoderLogitAdapter *adapter,
+    const size_t *inputTokenIds, const size_t *targetTokenIds,
+    size_t tokenCount, const uint8_t *lossMask, size_t maskCount,
+    float learningRate, UmiAiTrainingDecoderLogitStep *outReport);
 
 #ifdef __cplusplus
 }
