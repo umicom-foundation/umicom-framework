@@ -22,7 +22,9 @@ if(NOT TARGET umicom_ai_adaptation)
         "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/adapter_checkpoint.c"
         "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/source_evidence.c"
         "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/low_rank_training.c"
-        "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/reviewed_examples.c")
+        "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/reviewed_examples.c"
+        "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/decoder_logit_adapter.c"
+        "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/reviewed_corpus.c")
     add_library(Umicom::AiAdaptation ALIAS umicom_ai_adaptation)
     target_include_directories(umicom_ai_adaptation PUBLIC
         "${UMICOM_AI_ADAPTATION_ROOT}/include")
@@ -91,6 +93,24 @@ if(BUILD_TESTING)
         add_test(NAME framework.ai.adaptation.reviewed_examples
             COMMAND umicom-ai-training-reviewed-examples-test)
     endif()
+    # Use real frozen-decoder logits and the canonical token-level loss.
+    if(NOT TARGET umicom-ai-training-decoder-logit-adapter-test)
+        add_executable(umicom-ai-training-decoder-logit-adapter-test
+            "${UMICOM_AI_ADAPTATION_ROOT}/tests/ai_training/test_training_decoder_logit_adapter.c")
+        target_link_libraries(umicom-ai-training-decoder-logit-adapter-test PRIVATE
+            Umicom::AiAdaptation)
+        add_test(NAME framework.ai.adaptation.decoder_logit_adapter
+            COMMAND umicom-ai-training-decoder-logit-adapter-test)
+    endif()
+    # Source-group split checks run over reviewed, byte-verified JSONL records.
+    if(NOT TARGET umicom-ai-training-reviewed-corpus-test)
+        add_executable(umicom-ai-training-reviewed-corpus-test
+            "${UMICOM_AI_ADAPTATION_ROOT}/tests/ai_training/test_training_reviewed_corpus.c")
+        target_link_libraries(umicom-ai-training-reviewed-corpus-test PRIVATE
+            Umicom::AiAdaptation)
+        add_test(NAME framework.ai.adaptation.reviewed_corpus
+            COMMAND umicom-ai-training-reviewed-corpus-test)
+    endif()
     if(TARGET Umicom::creative_workspace AND NOT TARGET umicom-ai-training-caption-text-test)
         add_executable(umicom-ai-training-caption-text-test
             "${UMICOM_AI_ADAPTATION_ROOT}/tests/ai_training/test_training_caption_text.c")
@@ -105,7 +125,9 @@ if(BUILD_TESTING)
             umicom-ai-training-adapter-checkpoint-test
             umicom-ai-training-source-evidence-test
             umicom-ai-training-low-rank-step-test
-            umicom-ai-training-reviewed-examples-test)
+            umicom-ai-training-reviewed-examples-test
+            umicom-ai-training-decoder-logit-adapter-test
+            umicom-ai-training-reviewed-corpus-test)
         target_compile_features(${target} PRIVATE c_std_23)
         if(MSVC)
             target_compile_options(${target} PRIVATE /W4)
