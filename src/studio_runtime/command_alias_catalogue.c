@@ -27,6 +27,7 @@ static const AliasFactory FACTORIES[] = {
     umi_studio_command_alias_view_source_control,
     umi_studio_command_alias_view_test_explorer,
     umi_studio_command_alias_view_kanban,
+    umi_studio_command_alias_view_bookmarks,
     umi_studio_command_alias_view_debug,
     umi_studio_command_alias_view_build_dashboard,
     umi_studio_command_alias_view_outline,

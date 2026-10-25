@@ -29,7 +29,11 @@ int main(void) {
 #if 0
     assert(umi_studio_surface_catalogue_count() == 27U);
 #endif
-  assert(umi_studio_surface_catalogue_count() == 28U);
+  /* The bookmark pane extends the exact catalogue. Keep the previous bound for review. */
+#if 0
+assert(umi_studio_surface_catalogue_count() == 28U);
+#endif
+  assert(umi_studio_surface_catalogue_count() == 29U);
   assert(umi_studio_surface_catalogue_for_kind(UMI_STUDIO_SURFACE_EDITOR) != NULL);
   assert(umi_studio_surface_catalogue_for_kind(UMI_STUDIO_SURFACE_AI_MODEL_COMPARISON) != NULL);
   assert(umi_studio_surface_catalogue_for_kind(UMI_STUDIO_SURFACE_LEARNING) != NULL);

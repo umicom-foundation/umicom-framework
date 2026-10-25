@@ -127,3 +127,5 @@ UmiStatus UmiDocumentCoordinatorClearBookmarks(UmiDocumentCoordinator *coordinat
     coordinator->bookmark_count = 0U; ++coordinator->bookmark_revision;
     return UMI_STATUS_OK;
 }
+
+#include "bookmark_selection.inc"

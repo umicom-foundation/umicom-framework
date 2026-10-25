@@ -375,6 +375,7 @@ add_library(umicom_platform STATIC
     src/platform/search.c
     src/platform/search_filter.c
     src/platform/search_session.c
+    src/platform/search_page.c
     src/platform/session_store.c
     src/platform/recovery.c
     src/platform/clock.c
@@ -5476,6 +5477,7 @@ include(cmake/UmicomDocumentReplacement.cmake)
 include(cmake/UmicomDocumentSourceRequests.cmake)
 include(cmake/UmicomDocumentOpenBatch.cmake)
 include(cmake/UmicomDocumentCopy.cmake)
+include(cmake/UmicomSearchPages.cmake)
 include(cmake/UmicomEditorLineOrdering.cmake)
 include(cmake/UmicomEditorSelectionCase.cmake)
 include(cmake/UmicomEditorIndentation.cmake)
@@ -5884,6 +5886,7 @@ include(cmake/UmicomBreakpointProperties.cmake)
 include(cmake/UmicomDrawingAppearance.cmake)
 include(cmake/UmicomDrawingCoordinates.cmake)
 include(cmake/UmicomDocumentBookmarks.cmake)
+include(cmake/UmicomBookmarkPanel.cmake)
 
 # Bank extensions are now loaded by UmicomBankOperations.cmake after their optional owner and review helpers exist.
 # The previous composition remains for engineering review.

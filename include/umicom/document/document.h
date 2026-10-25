@@ -40,6 +40,7 @@
 #include "umicom/document/indentation.h"
 #include "umicom/document/format.h"
 #include "umicom/document/bookmarks.h"
+#include "umicom/document/bookmark_selection.h"
 #include "umicom/document/reopen.h"
 #include "umicom/document/navigation_history.h"
 #include "umicom/document/replacement.h"

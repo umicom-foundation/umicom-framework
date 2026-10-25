@@ -27,6 +27,7 @@ static const ActivationFactory FACTORIES[] = {
     umi_studio_activation_profile_source_control,
     umi_studio_activation_profile_test_explorer,
     umi_studio_activation_profile_kanban,
+    umi_studio_activation_profile_bookmarks,
     umi_studio_activation_profile_debug,
     umi_studio_activation_profile_build,
     umi_studio_activation_profile_ai_chat,

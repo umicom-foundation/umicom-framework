@@ -73,7 +73,9 @@ typedef enum UmiStudioRuntimeSurfaceKind {
     /* Preview the active editor document independently from visual design. */
     UMI_STUDIO_SURFACE_LIVE_PREVIEW = 27,
     /* Preserve existing numeric identities while adding a reusable planning pane. */
-    UMI_STUDIO_SURFACE_KANBAN = 28
+    UMI_STUDIO_SURFACE_KANBAN = 28,
+    /* Append identities so saved layouts keep their original meaning. */
+    UMI_STUDIO_SURFACE_BOOKMARKS = 29
 } UmiStudioRuntimeSurfaceKind;
 
 /* Keep bounded surface loops aligned when a reusable Studio panel is added. */
@@ -82,7 +84,11 @@ typedef enum UmiStudioRuntimeSurfaceKind {
 #if 0
 #define UMI_STUDIO_SURFACE_LAST UMI_STUDIO_SURFACE_LIVE_PREVIEW
 #endif
+/* The bookmark pane extends enumeration; preserve the prior bound for review. */
+#if 0
 #define UMI_STUDIO_SURFACE_LAST UMI_STUDIO_SURFACE_KANBAN
+#endif
+#define UMI_STUDIO_SURFACE_LAST UMI_STUDIO_SURFACE_BOOKMARKS
 
 /**
  * List the named studio runtime selection kind values accepted by this public contract.

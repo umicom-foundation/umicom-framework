@@ -29,7 +29,11 @@ int main(void) {
 #if 0
     assert(umi_studio_command_alias_count()==23U);
 #endif
-  assert(umi_studio_command_alias_count() == 24U);
+  /* The bookmark pane extends the exact catalogue. Keep the previous bound for review. */
+#if 0
+assert(umi_studio_command_alias_count() == 24U);
+#endif
+  assert(umi_studio_command_alias_count() == 25U);
   assert(umi_studio_command_alias_find("view.explorer") != NULL);
   assert(umi_studio_command_alias_find("designer.open") != NULL);
   /* Visit each bounded item once so every record receives the same rule. */

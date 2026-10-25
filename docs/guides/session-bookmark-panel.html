@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Session bookmarks</title>
+<style>body{max-width:850px;margin:3rem auto;padding:0 1rem;font:18px/1.6 system-ui;color:#172332}code{background:#eef2f6;padding:.1rem .3rem}</style>
+<h1>Review session bookmarks</h1>
+<p>A bookmark records a location in an open source document. It does not copy or save the document.</p>
+<ol><li>Open a source document and place the cursor on a useful line.</li>
+<li>Use the editor's Toggle Bookmark control. One marker is kept per document line.</li>
+<li>Open <strong>Bookmarks</strong> in Studio's View or window catalogue.</li>
+<li>Choose <strong>Refresh bookmarks</strong> after adding or removing markers elsewhere.</li>
+<li>Select a location to return to its document. The editor becomes visible and unsaved text stays intact.</li>
+<li>Choose <strong>Remove marker</strong> to forget that location. This never deletes a file or closes a tab.</li></ol>
+<h2>Closed documents and changed lines</h2>
+<p>Closed markers stay visible but their location buttons are disabled. Reopening the same filename creates a new document identity, so an older marker does not jump into it. Remove the old marker and add a new one.</p>
+<p>Locations are fixed line numbers and UTF-8 byte columns. They do not follow edits. A removed line refuses navigation; an overly long column clamps to the current line end. Refreshing does not repair an obsolete location.</p>
+<h2>Embedding in another application</h2>
+<p>Bind a document coordinator to the existing GTK4 adapter, then call <code>UmiGtk4BookmarkPanelCreate</code>. Parent the returned owned widget under that adapter's window and release your reference. The panel observes the binding's lifetime; it does not own the coordinator. A successful visit callback can reveal the application's editor. Call <code>UmiGtk4BookmarkPanelRefresh</code> when your host needs an updated list.</p>
+<p>Selection and removal use the displayed bookmark revision. Busy or stale decisions are refused. Unbinding the adapter makes retained controls inactive. Bookmarks are session-only and are not restored when the application restarts.</p>
+<h2>Troubleshooting</h2>
+<p>If an action is refused, finish the active save or close decision and refresh. If a marker's line was removed, delete that marker and create one at the desired current location. Source text and undo history are not modified by these actions.</p>
+</html>

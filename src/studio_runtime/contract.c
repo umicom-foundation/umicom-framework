@@ -42,7 +42,12 @@ const UmiStudioRuntimeContract *umi_studio_runtime_contract(void)
 #if 0
         .required_surface_count = 27U,
 #endif
+/* Append the bookmark surface contract without changing prior identities.
+ * The preceding contract remains available for compatibility review. */
+#if 0
         .required_surface_count = 28U,
+#endif
+        .required_surface_count = 29U,
         .required_ide_command_count = 29U,
         .required_ai_command_count = 23U,
 /* The Kanban entry extends the supported catalogue. Retain the earlier
@@ -50,7 +55,12 @@ const UmiStudioRuntimeContract *umi_studio_runtime_contract(void)
 #if 0
         .required_alias_count = 23U,
 #endif
+/* Append the bookmark surface contract without changing prior identities.
+ * The preceding contract remains available for compatibility review. */
+#if 0
         .required_alias_count = 24U,
+#endif
+        .required_alias_count = 25U,
         .required_studio_command_count = 17U,
         .required_layout_count = 10U
     };

@@ -1572,3 +1572,5 @@ UmiStatus UmiGtk4AdapterClearNavigationHistory(UmiGtk4Adapter *adapter)
 #include "document_reload_review.inc"
 
 #include "document_newline.inc"
+
+#include "document_bookmark_panel.inc"

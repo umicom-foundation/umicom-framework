@@ -22,6 +22,7 @@
 #include "umicom/studio_runtime/command_aliases/view_source_control.h"
 #include "umicom/studio_runtime/command_aliases/view_test_explorer.h"
 #include "umicom/studio_runtime/command_aliases/view_kanban.h"
+#include "umicom/studio_runtime/command_aliases/view_bookmarks.h"
 #include "umicom/studio_runtime/command_aliases/view_debug.h"
 #include "umicom/studio_runtime/command_aliases/view_build_dashboard.h"
 #include "umicom/studio_runtime/command_aliases/view_outline.h"

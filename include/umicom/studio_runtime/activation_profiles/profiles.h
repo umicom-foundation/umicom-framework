@@ -24,6 +24,7 @@
 #include "umicom/studio_runtime/activation_profiles/source_control.h"
 #include "umicom/studio_runtime/activation_profiles/test_explorer.h"
 #include "umicom/studio_runtime/activation_profiles/kanban.h"
+#include "umicom/studio_runtime/activation_profiles/bookmarks.h"
 #include "umicom/studio_runtime/activation_profiles/debug.h"
 #include "umicom/studio_runtime/activation_profiles/build.h"
 #include "umicom/studio_runtime/activation_profiles/ai_chat.h"

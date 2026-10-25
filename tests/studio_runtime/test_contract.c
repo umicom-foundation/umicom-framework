@@ -31,13 +31,21 @@ int main(void) {
 #if 0
     assert(contract->required_surface_count==27U);
 #endif
-  assert(contract->required_surface_count == 28U);
+  /* The bookmark pane extends the exact catalogue. Keep the previous bound for review. */
+#if 0
+assert(contract->required_surface_count == 28U);
+#endif
+  assert(contract->required_surface_count == 29U);
 /* The Kanban entry extends the supported catalogue. Retain the earlier
  * cardinality for compatibility review; exact identity checks remain active. */
 #if 0
     assert(contract->required_alias_count==23U);
 #endif
-  assert(contract->required_alias_count == 24U);
+  /* The bookmark pane extends the exact catalogue. Keep the previous bound for review. */
+#if 0
+assert(contract->required_alias_count == 24U);
+#endif
+  assert(contract->required_alias_count == 25U);
   assert(contract->required_studio_command_count == 17U);
   assert(contract->required_layout_count == 10U);
   return 0;

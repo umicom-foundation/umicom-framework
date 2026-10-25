@@ -28,7 +28,11 @@ int main(void) {
 #if 0
     assert(umi_studio_activation_profile_count() == 27U);
 #endif
-  assert(umi_studio_activation_profile_count() == 28U);
+  /* The bookmark pane extends the exact catalogue. Keep the previous bound for review. */
+#if 0
+assert(umi_studio_activation_profile_count() == 28U);
+#endif
+  assert(umi_studio_activation_profile_count() == 29U);
   assert(umi_studio_activation_resolve("ide.open.problem", &rule) == UMI_STATUS_OK);
   assert(rule.surface == UMI_STUDIO_SURFACE_EDITOR);
   assert(umi_studio_activation_resolve("ai.developer.open-approvals", &rule) == UMI_STATUS_OK);
