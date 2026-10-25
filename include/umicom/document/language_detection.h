@@ -37,6 +37,11 @@ typedef struct UmiDocumentLanguageIdentity {
  * Provide the document language detect operation used by this module and its client
  * applications.
  */
+/* Match the basename, including CMakeLists.txt, Makefile/GNUmakefile and common
+ * shell startup files, then known extensions. Exact .C remains C++, .S Assembly;
+ * other recognized extensions accept ASCII case variants. Unknown/empty names
+ * remain plain text. Paths must terminate within UMI_PATH_CAPACITY bytes; no
+ * filesystem reads occur. Invalid input preserves output. */
 UmiStatus umi_document_language_detect(
     const char *path_or_name,
     UmiDocumentLanguageIdentity *out_identity);

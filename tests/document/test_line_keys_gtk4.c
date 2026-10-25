@@ -7,6 +7,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/document_commands.h"
 #include "umicom/document/commands.h"
+#include "umicom/document/indentation.h"
+#include "umicom/ui/gtk4/editor_indentation.h"
 /* This fixture uses native GTK types directly; the adapter API is opaque. */
 #include <gtk/gtk.h>
 #include <stdio.h>
@@ -17,6 +19,16 @@ static void Completed(void *data, UmiStatus status)
 {
     Result *result = data; ++result->calls; result->status = status;
     if (result->destroy) { umi_gtk4_adapter_destroy(result->adapter); result->adapter = NULL; }
+}
+static void RetireForIndentation(GObject *object,GParamSpec *spec,gpointer data)
+{
+    (void)object;(void)spec;Result *result=data;
+    if(result->adapter!=NULL){umi_gtk4_adapter_destroy(result->adapter);result->adapter=NULL;}
+}
+static void ReconfigureIndentation(GObject *object,GParamSpec *spec,gpointer data)
+{
+    (void)object;(void)spec;UmiEditorIndentation policy = {8U,1};
+    (void)UmiDocumentCoordinatorSetIndentation(data,&policy);
 }
 static GtkWidget *FindEditor(GtkWidget *root)
 {
@@ -49,7 +61,8 @@ int main(int argc, char **argv)
     if (argc != 2) return 2;
     const char *mode = argv[1], *cases[] = {"duplicate", "delete", "move-up", "move-down", "indent", "outdent",
         "comment", "join", "canonical", "extra-meta", "extra-super", "unmatched", "read-only",
-        "retired", "closed-document", "other-tab", "completion-close", "caps-lock"};
+        "retired", "closed-document", "other-tab", "completion-close", "caps-lock", "tab-spaces", "tab-literal", "tab-selection",
+        "tab-outdent", "tab-read-only", "tab-retired", "tab-extra-ctrl", "tab-completion-close", "tab-presentation", "tab-presentation-retire", "tab-presentation-reconfigure"};
     int known = 0;
     for (size_t i = 0U; i < sizeof cases / sizeof cases[0]; ++i) if (strcmp(mode, cases[i]) == 0) known = 1;
     if (!known) return 2;
@@ -86,7 +99,22 @@ int main(int argc, char **argv)
     if (strcmp(mode, "unmatched") == 0) modifiers = GDK_CONTROL_MASK;
     if (strcmp(mode, "caps-lock") == 0) { key = GDK_KEY_D; modifiers |= GDK_LOCK_MASK; }
     view.cursor_offset = 2U; view.selection_length = 0U; view.dirty = 1;
+    /* Include Tab in the existing read-only fixture rather than duplicating history. */
+#if 0
     view.read_only = strcmp(mode, "read-only") == 0;
+#endif
+    const int readOnly = strcmp(mode, "read-only") == 0 || strcmp(mode, "tab-read-only") == 0;
+    view.read_only = readOnly;
+    UmiEditorIndentation indentation = {4U, 1};
+    if (strncmp(mode, "tab-", 4U) == 0) {
+        key = GDK_KEY_Tab; modifiers = 0; view.cursor_offset = 3U; expected = "a\nb   b\nccc";
+        if (strcmp(mode, "tab-literal") == 0) { indentation.insert_spaces = 0; expected = "a\nb\tb\nccc"; }
+        if (strcmp(mode, "tab-selection") == 0) { view.cursor_offset = 2U; view.selection_length = 2U; expected = "a\n    bb\nccc"; }
+        if (strcmp(mode, "tab-outdent") == 0) { key = GDK_KEY_ISO_Left_Tab; modifiers = GDK_SHIFT_MASK; source = "a\n    bb\nccc"; view.cursor_offset = 6U; expected = "a\nbb\nccc"; }
+        if (strcmp(mode, "tab-extra-ctrl") == 0) modifiers = GDK_CONTROL_MASK;
+        if (strcmp(mode, "tab-presentation") == 0 || strcmp(mode, "tab-presentation-retire") == 0) { indentation.tab_width = 2U; indentation.insert_spaces = 0; expected = "a\nb\tb\nccc"; }
+    }
+    CHECK(UmiDocumentCoordinatorSetIndentation(documents, &indentation) == UMI_STATUS_OK);
     CHECK(UmiUiDocumentViewModelUpsertText(views, &view, source, strlen(source)) == UMI_STATUS_OK);
     CHECK(umi_document_coordinator_sync_active(documents) == UMI_STATUS_OK);
     UmiDocumentWorkingCopySnapshot target, active;
@@ -96,15 +124,49 @@ int main(int argc, char **argv)
     CHECK(UmiGtk4AdapterBindDocumentEditing(result.adapter, documents, Completed, &result) == UMI_STATUS_OK);
     editor = FindEditor(umi_gtk4_adapter_native_window(result.adapter)); CHECK(editor != NULL); g_object_ref(editor);
     keys = KeyController(editor); CHECK(keys != NULL);
-    const int ignored = strcmp(mode, "extra-meta") == 0 || strcmp(mode, "extra-super") == 0 ||
+    if (strcmp(mode, "tab-presentation-reconfigure") == 0) {
+        indentation.tab_width = 2U;
+        CHECK(UmiDocumentCoordinatorSetIndentation(documents, &indentation) == UMI_STATUS_OK);
+        const char *property = g_object_class_find_property(G_OBJECT_GET_CLASS(editor), "tab-width") != NULL ? "notify::tab-width" : "notify::tabs";
+        gulong observer = g_signal_connect(editor, property, G_CALLBACK(ReconfigureIndentation), documents);
+        CHECK(UmiGtk4AdapterRefreshIndentation(result.adapter) == UMI_STATUS_INVALID_STATE);
+        g_signal_handler_disconnect(editor, observer);
+        CHECK(UmiGtk4AdapterRefreshIndentation(result.adapter) == UMI_STATUS_OK);
+        expected = "a\nb       b\nccc";
+    }
+    if (strcmp(mode, "tab-presentation-retire") == 0) {
+        const char *property = g_object_class_find_property(G_OBJECT_GET_CLASS(editor), "tab-width") != NULL ? "notify::tab-width" : "notify::tabs";
+        gulong observer = g_signal_connect(editor, property, G_CALLBACK(RetireForIndentation), &result);
+        CHECK(UmiGtk4AdapterRefreshIndentation(result.adapter) == UMI_STATUS_CANCELLED && result.adapter == NULL);
+        g_signal_handler_disconnect(editor, observer);
+        CHECK(ModelText(views, first, source)); goto cleanup;
+    }
+    if (strcmp(mode, "tab-presentation") == 0) {
+        CHECK(UmiGtk4AdapterRefreshIndentation(result.adapter) == UMI_STATUS_OK);
+        if (g_object_class_find_property(G_OBJECT_GET_CLASS(editor), "tab-width") != NULL) {
+            guint width = 0U; gboolean spaces = TRUE;
+            g_object_get(editor, "tab-width", &width, "insert-spaces-instead-of-tabs", &spaces, NULL);
+            CHECK(width == 2U && !spaces);
+        } else { PangoTabArray *tabs = gtk_text_view_get_tabs(GTK_TEXT_VIEW(editor)); CHECK(tabs != NULL && pango_tab_array_get_size(tabs) == 1); pango_tab_array_free(tabs); }
+    }
+    const int ignored = strcmp(mode, "tab-retired") == 0 || strcmp(mode, "tab-extra-ctrl") == 0 ||
+        strcmp(mode, "extra-meta") == 0 || strcmp(mode, "extra-super") == 0 ||
         strcmp(mode, "unmatched") == 0 || strcmp(mode, "retired") == 0 || strcmp(mode, "closed-document") == 0;
+    /* Retained Tab controllers have no document authority after retirement. */
+#if 0
     if (strcmp(mode, "retired") == 0) { umi_gtk4_adapter_destroy(result.adapter); result.adapter = NULL; }
+#endif
+    if (strcmp(mode, "retired") == 0 || strcmp(mode, "tab-retired") == 0) { umi_gtk4_adapter_destroy(result.adapter); result.adapter = NULL; }
     if (strcmp(mode, "closed-document") == 0) CHECK(umi_document_coordinator_close_active(documents, 1) == UMI_STATUS_OK);
     if (strcmp(mode, "other-tab") == 0) {
         CHECK(umi_document_coordinator_new(documents, "other.c", second, sizeof second) == UMI_STATUS_OK);
         CHECK(umi_document_coordinator_active_snapshot(documents, &active) == UMI_STATUS_OK);
     }
+    /* Completion may retire the host after any document command, including Tab. */
+#if 0
     result.destroy = strcmp(mode, "completion-close") == 0;
+#endif
+    result.destroy = strcmp(mode, "completion-close") == 0 || strcmp(mode, "tab-completion-close") == 0;
     if (strcmp(mode, "canonical") == 0) {
         CHECK(UmiGtk4AdapterDocumentCommandEnabled(result.adapter, UMI_DOCUMENT_COMMAND_DUPLICATE_LINE));
         CHECK(UmiGtk4AdapterDocumentCommand(result.adapter, UMI_DOCUMENT_COMMAND_DUPLICATE_LINE) == UMI_STATUS_OK);
@@ -115,9 +177,17 @@ int main(int argc, char **argv)
         CHECK(handled == !ignored);
     }
     CHECK(result.calls == (ignored ? 0U : 1U));
+    /* Preserve the single-command expectation while including Tab read-only input. */
+#if 0
     if (!ignored) CHECK(result.status == (strcmp(mode, "read-only") == 0 ? UMI_STATUS_PERMISSION_DENIED : UMI_STATUS_OK));
+#endif
+    if (!ignored) CHECK(result.status == (readOnly ? UMI_STATUS_PERMISSION_DENIED : UMI_STATUS_OK));
     if (strcmp(mode, "closed-document") == 0) { CHECK(umi_document_coordinator_count(documents) == 0U); goto cleanup; }
+    /* The previous predicate covered the original shortcut set. */
+#if 0
     const int changed = !ignored && strcmp(mode, "read-only") != 0;
+#endif
+    const int changed = !ignored && !readOnly;
     CHECK(ModelText(views, first, changed ? expected : source));
     if (result.adapter != NULL && strcmp(mode, "other-tab") != 0) {
         GtkWidget *visible = FindEditor(umi_gtk4_adapter_native_window(result.adapter));

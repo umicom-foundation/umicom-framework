@@ -7,10 +7,14 @@
  *---------------------------------------------------------------------------*/
 #include "document_internal.h"
 #include "umicom/platform/output_file.h"
+#include "umicom/kanban/location.h"
 
 UmiStatus UmiKanbanDocumentAllocate(const char *directory, const char *filename,
     UmiKanbanDocument **out_document)
 {
+    /* Shared location admission also serves project launchers. Preserve the former
+     * inline checks so contributors can compare the unchanged archive naming rules. */
+#if 0
     if (filename == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     size_t length = 0U;
     while (length < UMI_KANBAN_FILENAME_CAPACITY && filename[length] != '\0') ++length;
@@ -22,6 +26,10 @@ UmiStatus UmiKanbanDocumentAllocate(const char *directory, const char *filename,
         return UMI_STATUS_INVALID_ARGUMENT;
     UmiStatus status = UmiRootedFileValidatePath(directory, filename);
     if (status != UMI_STATUS_OK) return status;
+#endif
+    UmiStatus status = UmiKanbanLocationValidate(directory, filename);
+    if (status != UMI_STATUS_OK) return status;
+    size_t length = strlen(filename);
     UmiKanbanDocument *document = calloc(1U, sizeof(*document));
     if (document == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     char guard_name[UMI_KANBAN_FILENAME_CAPACITY + 5U];

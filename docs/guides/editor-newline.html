@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>New lines in source documents</title>
+<body><main><h1>New lines in source documents</h1>
+<p>Framework source editors use the same document history for keyboard editing and commands.
+A line ending is the invisible character sequence separating lines: LF is one byte, while CRLF is two.</p>
+<ol><li>Open a writable source document and place the caret after some indented text.</li>
+<li>Press Enter. The new line copies existing leading spaces and tabs before the caret.
+It does not add extra indentation after braces or interpret the programming language.</li>
+<li>Press Shift+Enter to insert a line ending without copying indentation.</li>
+<li>Use Undo to restore the previous text and selection. Save remains a separate action.</li></ol>
+<h2>Selections and file formats</h2><p>Enter replaces selected text, just like ordinary typing.
+It uses the ending of the line where that selection starts. A final line without an ending inherits the preceding line's ending.
+An empty or single-line document starts with LF. Mixed LF and CRLF files retain untouched endings.
+Malformed UTF-8, embedded zeros, bare CR endings and edits exceeding the 8 MiB working-copy limit are refused.</p>
+<h2>Using the service</h2><p>Include <code>umicom/document/newline.h</code> and call
+<code>UmiDocumentCoordinatorInsertNewline(documents, document_id, 1)</code> on the document owner's thread.
+Pass zero as the last argument for a plain new line. This edits the named draft without activating another tab.
+The toolkit-neutral <code>UmiEditorNewlineCreate</code> returns an owned token; release it with <code>UmiEditorNewlineFree</code>.</p>
+<h2>When Enter cannot edit</h2><p>Check that the document is writable and the editor still owns its window.
+Finish or cancel a pending replacement, completion review, clipboard read or save question, then retry.
+No fallback edit is applied after a refused managed command. Unmanaged text controls retain their normal toolkit behavior.</p>
+</main></body></html>

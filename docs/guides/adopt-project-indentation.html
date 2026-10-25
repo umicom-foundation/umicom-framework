@@ -1,0 +1,27 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Adopt project indentation</title>
+<style>body{font:17px/1.6 system-ui;max-width:900px;margin:3rem auto;padding:0 1.5rem;color:#172b3a}pre,code{background:#f1f4f7}pre{padding:1rem;overflow:auto}h1,h2{line-height:1.2}</style>
+<main><h1>Adopt project indentation for one document</h1>
+<p>An <code>.editorconfig</code> file describes editor preferences for matching files in a project. Umicom can inspect those preferences and propose indentation for an open saved document. Adoption is explicit and affects that working copy only.</p>
+<h2>Review and apply</h2><ol>
+<li>Open a project folder and a saved source file inside it.</li>
+<li>Choose <strong>Use project indentation</strong> in the editor actions. The window identifies the captured source file and project boundary.</li>
+<li>Choose <strong>Inspect</strong>. Reads run in the background. The report shows the previous and proposed indentation, source file names and their SHA-256 digests. A digest identifies observed bytes; it does not lock a file.</li>
+<li>Review the proposal, then choose <strong>Apply indentation</strong>. Umicom re-reads the configuration and compares it with the reviewed evidence before changing that document's override.</li>
+<li>Use <strong>Document indentation</strong> and <strong>Use session defaults</strong> to remove the override later.</li></ol>
+<p>Changing tabs does not change the captured target. Editing source text during a review is allowed. Changing the target's saved path, its indentation settings, session defaults or configuration evidence rejects the pending proposal. Inspect again after reviewing the change.</p>
+<h2>What changes</h2><p>Only the document indentation pair is adopted: a width from 1 to 16 and spaces or tabs. Missing properties keep the document's current effective values. Distinct indentation and tab widths cannot currently be represented. Invalid indentation values are rejected instead of silently replaced with defaults.</p>
+<p>Encoding, line endings, trailing whitespace and final-newline properties are reported but not applied. No source text, Undo history, file, project settings file or persisted session default is rewritten. The override expires when the working copy closes.</p>
+<h2>Configuration example</h2><pre><code>root = true
+[*.c]
+indent_style = space
+indent_size = 4
+</code></pre>
+<p>The search stops at <code>root = true</code> or the chosen project boundary. Umicom does not search ancestors above that boundary. The inspector uses bounded UTF-8 parsing, refuses links below the admitted root and never executes project commands. See <a href="project-editor-config.html">the configuration inspector guide</a> for parser limits.</p>
+<h2>Recovery</h2><ul>
+<li><strong>Configuration changed:</strong> Inspect again. Even changed comments produce different source evidence and require a fresh review.</li>
+<li><strong>No applicable settings:</strong> check matching sections and indentation property names. A configuration containing only encoding or newline preferences offers no indentation proposal.</li>
+<li><strong>Unsupported widths:</strong> use matching indentation and tab widths from 1 to 16, or keep the existing document policy.</li>
+<li><strong>Operation cancelled:</strong> no pending worker is allowed to apply after cancellation or editor retirement.</li>
+<li><strong>Applied, refresh interrupted:</strong> the policy mutation completed before a native display callback interrupted refresh. Refresh the editor display; this message does not mean the setting was rolled back.</li></ul>
+<h2>Embed the C23 service</h2><p>Load an inspection on a worker. On the document owner thread, create <code>UmiDocumentEditorConfigPlan</code>; success transfers inspection ownership to the plan. Show its summary. Before approval, re-read the same scope and call <code>UmiDocumentEditorConfigPlanApplyObserved</code> on the owner thread. Destroy the plan and the reinspection independently.</p>
+<p>The service compares supplied observations and performs no file I/O during application. Files can change after a re-read; there is no filesystem-wide transaction. Applications must keep the coordinator alive and serialize its document operations. A successfully applied plan is consumed and cannot be applied twice.</p></main></html>

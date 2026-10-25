@@ -24,7 +24,9 @@ function(umicom_attach_line_edits_checks)
     if(COMMAND umicom_register_validation_target)
         umicom_register_validation_target(umicom-line-keys-gtk4-test)
     endif()
-    foreach(case duplicate delete move-up move-down indent outdent comment join canonical extra-meta extra-super unmatched read-only retired closed-document other-tab completion-close caps-lock)
+    foreach(case duplicate delete move-up move-down indent outdent comment join canonical extra-meta extra-super unmatched read-only retired closed-document other-tab completion-close caps-lock
+        tab-spaces tab-literal tab-selection tab-outdent tab-read-only tab-retired tab-extra-ctrl
+        tab-completion-close tab-presentation tab-presentation-retire tab-presentation-reconfigure)
         add_test(NAME framework.document.line_keys.gtk4.${case} COMMAND umicom-line-keys-gtk4-test ${case})
         set_tests_properties(framework.document.line_keys.gtk4.${case} PROPERTIES TIMEOUT 45 SKIP_RETURN_CODE 77
             LABELS "framework;document;line-edit;keyboard;gtk4;ownership;regression")

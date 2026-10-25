@@ -17,6 +17,7 @@
  * Recovery creates a new store; existing destinations and source bytes survive. */
 #include "readonly_fixture.h"
 #include "umicom/data/backup.h"
+#include "umicom/data/sqlite.h"
 int main(int argc, char **argv) {
   const char *cases[] = {"roundtrip",   "existing",       "same-source",     "missing-source",
                          "malformed",   "unrelated",      "relative-source", "relative-target",
@@ -84,6 +85,18 @@ int main(int argc, char **argv) {
     OK(umi_data_server_execute(
         source, "CREATE TABLE damaged(value CHECK(value>0)); PRAGMA ignore_check_constraints=ON; "
                 "INSERT INTO damaged VALUES(-1); PRAGMA ignore_check_constraints=OFF;"));
+    /* Compare the preflight view before restore reserves its destination.
+     * Retain all original assertions: evidence is not a substitute for health. */
+    UmiDataServer *probe = NULL;
+    UmiSqliteHealthReport writer_health = {0}, reader_health = {0};
+    UmiStatus writer_status = umi_sqlite_health_read(source, &writer_health);
+    UmiStatus reader_status = umi_data_server_open_sqlite_readonly(file, &probe);
+    if (reader_status == UMI_STATUS_OK)
+      reader_status = umi_sqlite_health_read(probe, &reader_health);
+    fprintf(stderr, "restore preflight writer=%d sound=%d count=%zu reader=%d sound=%d count=%zu\n",
+            (int)writer_status, writer_health.sound, writer_health.diagnostic_count,
+            (int)reader_status, reader_health.sound, reader_health.diagnostic_count);
+    umi_data_server_destroy(probe);
     CHECK(umi_data_backup_restore_checked(file, target, &report) == UMI_STATUS_INVALID_STATE);
     goto refused;
   }

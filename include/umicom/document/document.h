@@ -33,9 +33,11 @@
 /* Captured file selection shares the authoritative document owner. */
 #include "umicom/document/open_batch.h"
 #include "umicom/document/copy.h"
+#include "umicom/document/path_usage.h"
 #include "umicom/document/search.h"
 #include "umicom/document/file_search.h"
 #include "umicom/document/line_edit.h"
+#include "umicom/document/indentation.h"
 #include "umicom/document/format.h"
 #include "umicom/document/bookmarks.h"
 #include "umicom/document/reopen.h"

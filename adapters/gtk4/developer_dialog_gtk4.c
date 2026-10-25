@@ -71,6 +71,7 @@ struct UmiGtk4DeveloperDialog {
     GtkWidget *runDirectory;
     GtkWidget *configurePreset, *buildPreset, *testPreset;
     GtkWidget *presetPicker, *presetRead, *presetUse, *presetDetail;
+    GtkWidget *presetUseSet; /* Explicit related-stage selection; never auto-applied. */
     UmiProjectPresetCatalogue *presetCatalogue;
     char presetRoot[UMI_BUILD_PATH_CAPACITY];
     int presetLoading, presetChanging;

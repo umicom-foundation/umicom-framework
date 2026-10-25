@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/document/language_detection.h"
 
+#include "umicom/platform/path.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -53,6 +54,10 @@ static const LanguageDefinition DEFINITIONS[] = {
  * Provide the document language detect operation used by this module and its client
  * applications.
  */
+/* Preserve the extension-only implementation for review. Filename identities
+ * and bounded basename matching below let project files use the same language
+ * contracts as ordinary source files, without inspecting their contents. */
+#if 0
 UmiStatus umi_document_language_detect(
     const char *path_or_name,
     UmiDocumentLanguageIdentity *out_identity)
@@ -92,4 +97,75 @@ UmiStatus umi_document_language_detect(
         }
     }
     return UMI_STATUS_OK;
+}
+#endif
+
+static int LanguageAsciiEqual(const char *a,const char *b)
+{
+    for(;*a!='\0'&&*b!='\0';++a,++b) {
+        unsigned char x=(unsigned char)*a,y=(unsigned char)*b;
+        if(x>='A'&&x<='Z')x=(unsigned char)(x+('a'-'A'));
+        if(y>='A'&&y<='Z')y=(unsigned char)(y+('a'-'A'));
+        if(x!=y)return 0;
+    }
+    return *a==*b;
+}
+UmiStatus umi_document_language_detect(const char *path_or_name,UmiDocumentLanguageIdentity *out)
+{
+    if(path_or_name==NULL||out==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    size_t length=0U;while(length<UMI_PATH_CAPACITY&&path_or_name[length]!='\0')++length;
+    if(length==UMI_PATH_CAPACITY)return UMI_STATUS_CAPACITY_EXCEEDED;
+    const char *base=path_or_name;
+    for(size_t i=0U;i<length;++i)if(path_or_name[i]=='/'||path_or_name[i]=='\\')base=path_or_name+i+1U;
+    UmiDocumentLanguageIdentity next={0};
+    (void)snprintf(next.language_id,sizeof next.language_id,"%s","plain");
+    (void)snprintf(next.mime_type,sizeof next.mime_type,"%s","text/plain");
+    (void)snprintf(next.icon_name,sizeof next.icon_name,"%s","text-x-generic-symbolic");
+    next.text=1;
+    const char *special=NULL;
+    if(!strcmp(base,"CMakeLists.txt"))special="cmake";
+    else if(!strcmp(base,"Makefile")||!strcmp(base,"makefile")||!strcmp(base,"GNUmakefile"))special="makefile";
+    else if(!strcmp(base,".bashrc")||!strcmp(base,".bash_profile")||!strcmp(base,".profile")||!strcmp(base,".zshrc"))special="sh";
+    if(special!=NULL){(void)snprintf(next.language_id,sizeof next.language_id,"%s",special);*out=next;return UMI_STATUS_OK;}
+    static const LanguageDefinition additional[]={
+    {"cxx", "cpp", "text/plain", "text-x-generic-symbolic"},
+    {"hxx", "cpp", "text/plain", "text-x-generic-symbolic"},
+    {"C", "cpp", "text/plain", "text-x-generic-symbolic"},
+    {"cs", "c-sharp", "text/plain", "text-x-generic-symbolic"},
+    {"java", "java", "text/plain", "text-x-generic-symbolic"},
+    {"rs", "rust", "text/plain", "text-x-generic-symbolic"},
+    {"go", "go", "text/plain", "text-x-generic-symbolic"},
+    {"kt", "kotlin", "text/plain", "text-x-generic-symbolic"},
+    {"kts", "kotlin", "text/plain", "text-x-generic-symbolic"},
+    {"swift", "swift", "text/plain", "text-x-generic-symbolic"},
+    {"jsonc", "jsonc", "text/plain", "text-x-generic-symbolic"},
+    {"pyi", "python3", "text/plain", "text-x-generic-symbolic"},
+    {"rb", "ruby", "text/plain", "text-x-generic-symbolic"},
+    {"pl", "perl", "text/plain", "text-x-generic-symbolic"},
+    {"r", "r", "text/plain", "text-x-generic-symbolic"},
+    {"R", "r", "text/plain", "text-x-generic-symbolic"},
+    {"lua", "lua", "text/plain", "text-x-generic-symbolic"},
+    {"toml", "toml", "text/plain", "text-x-generic-symbolic"},
+    {"ini", "ini", "text/plain", "text-x-generic-symbolic"},
+    };
+    const char *extension=strrchr(base,'.');
+    if(extension!=NULL&&extension[1]!='\0') {
+        ++extension;const LanguageDefinition *found=NULL;
+        /* Exact matching preserves conventional .C and .S identities before
+         * case-insensitive fallback for otherwise known suffixes. */
+        for(size_t i=0U;i<sizeof additional/sizeof additional[0];++i)
+            if(!strcmp(extension,additional[i].extension)){found=&additional[i];break;}
+        for(size_t i=0U;found==NULL&&i<sizeof DEFINITIONS/sizeof DEFINITIONS[0];++i)
+            if(!strcmp(extension,DEFINITIONS[i].extension))found=&DEFINITIONS[i];
+        for(size_t i=0U;found==NULL&&i<sizeof DEFINITIONS/sizeof DEFINITIONS[0];++i)
+            if(LanguageAsciiEqual(extension,DEFINITIONS[i].extension))found=&DEFINITIONS[i];
+        for(size_t i=0U;found==NULL&&i<sizeof additional/sizeof additional[0];++i)
+            if(LanguageAsciiEqual(extension,additional[i].extension))found=&additional[i];
+        if(found!=NULL) {
+            (void)snprintf(next.language_id,sizeof next.language_id,"%s",found->language_id);
+            (void)snprintf(next.mime_type,sizeof next.mime_type,"%s",found->mime_type);
+            (void)snprintf(next.icon_name,sizeof next.icon_name,"%s",found->icon_name);
+        }
+    }
+    *out=next;return UMI_STATUS_OK;
 }

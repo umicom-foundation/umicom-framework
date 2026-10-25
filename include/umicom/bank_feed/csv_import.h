@@ -30,6 +30,8 @@ typedef struct UmiBankFeedCsvIssue {
  * false page flags never establish completeness. No I/O or posting occurs.
  * Failure clears *out. Optional issue is cleared first, then receives one-based
  * logical record/column when known; zero means the failure was not localised.
+ * Unsupported controls (including DEL), NUL and malformed UTF-8 are rejected
+ * before records are decoded; those failures leave both coordinates zero.
  * The owned result is independent of input and uses the existing feed APIs. */
 UmiStatus UmiBankFeedCsvCreate(const void *bytes, size_t length, UmiBankFeed **out,
                              UmiBankFeedCsvIssue *issue);

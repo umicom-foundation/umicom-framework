@@ -378,6 +378,8 @@ UmiStatus umi_document_commands_register(UmiCommandRegistry *registry,
         const char *description;
         UmiRegisteredCommandHandler handler;
     } DEFINITIONS[] = {
+        {UMI_DOCUMENT_COMMAND_SORT_LINES_ASCENDING, "Sort Selected Lines Ascending", "Order selected lines by ordinal text with Undo", SortAscendingCommand},
+        {UMI_DOCUMENT_COMMAND_SORT_LINES_DESCENDING, "Sort Selected Lines Descending", "Reverse ordinal selected-line ordering with Undo", SortDescendingCommand},
         {UMI_DOCUMENT_COMMAND_NEW, "New File", "Create an untitled working copy", new_command},
         {UMI_DOCUMENT_COMMAND_OPEN, "Open File", "Decode and open a local document", open_command},
         {UMI_DOCUMENT_COMMAND_SAVE, "Save", "Atomically save the active document", save_command},
@@ -429,6 +431,15 @@ UmiStatus umi_document_commands_register(UmiCommandRegistry *registry,
         const char *description;
         UmiRegisteredCommandHandler handler;
     } DEFINITIONS[] = {
+        {UMI_DOCUMENT_COMMAND_INSERT_NEWLINE, "Insert New Line", "Preserve the line ending and leading indentation", InsertNewlineCommand},
+        {UMI_DOCUMENT_COMMAND_INSERT_PLAIN_NEWLINE, "Insert Plain New Line", "Preserve the line ending without copying indentation", InsertPlainNewlineCommand},
+        {UMI_DOCUMENT_COMMAND_INSERT_INDENTATION, "Insert Indentation", "Insert to the next tab stop, or indent selected lines using editor preferences", InsertIndentationCommand},
+        /* Register selection operations in the active catalogue, shared by
+         * command search and automation as well as native frontends. */
+        {UMI_DOCUMENT_COMMAND_UPPERCASE_SELECTION, "Uppercase Selected ASCII Letters", "Convert ASCII letters in the selection and retain other characters", UppercaseSelectionCommand},
+        {UMI_DOCUMENT_COMMAND_LOWERCASE_SELECTION, "Lowercase Selected ASCII Letters", "Convert ASCII letters in the selection and retain other characters", LowercaseSelectionCommand},
+        {UMI_DOCUMENT_COMMAND_SORT_LINES_ASCENDING, "Sort Selected Lines Ascending", "Order selected lines by ordinal text with Undo", SortAscendingCommand},
+        {UMI_DOCUMENT_COMMAND_SORT_LINES_DESCENDING, "Sort Selected Lines Descending", "Reverse ordinal selected-line ordering with Undo", SortDescendingCommand},
         {UMI_DOCUMENT_COMMAND_NEW, "New File", "Create an untitled working copy", new_command},
         {UMI_DOCUMENT_COMMAND_OPEN, "Open File", "Decode and open a local document", open_command},
         {UMI_DOCUMENT_COMMAND_SAVE, "Save", "Atomically save the active document", save_command},
@@ -449,8 +460,9 @@ UmiStatus umi_document_commands_register(UmiCommandRegistry *registry,
         {UMI_DOCUMENT_COMMAND_MOVE_LINE_DOWN, "Move Current Line Down", "Exchange the caret line with the next line", MoveLineDownCommand},
         {UMI_DOCUMENT_COMMAND_JOIN_LINE_WITH_NEXT, "Join Next Line", "Join the caret line to the next line", JoinLineCommand},
         {UMI_DOCUMENT_COMMAND_TRIM_TRAILING_WHITESPACE, "Trim Trailing Whitespace", "Remove spaces and tabs at line ends throughout the draft", TrimLinesCommand},
-        {UMI_DOCUMENT_COMMAND_INDENT_LINES, "Indent Selected Lines", "Add four spaces to selected lines or the caret line", IndentLinesCommand},
-        {UMI_DOCUMENT_COMMAND_OUTDENT_LINES, "Outdent Selected Lines", "Remove one tab or up to four spaces from selected lines", OutdentLinesCommand},
+        {UMI_DOCUMENT_COMMAND_INDENT_LINES, "Indent Selected Lines", /* Previous fixed policy: "Add four spaces to selected lines or the caret line" */ "Indent selected lines or the caret line using editor preferences", IndentLinesCommand},
+        {UMI_DOCUMENT_COMMAND_OUTDENT_LINES, "Outdent Selected Lines", /* Previous fixed policy: "Remove one tab or up to four spaces from selected lines" */ "Remove one tab or up to the configured width of leading spaces", OutdentLinesCommand},
+        {UMI_DOCUMENT_COMMAND_TOGGLE_LANGUAGE_COMMENT, "Toggle Language Line Comment", "Use the source language line prefix; review the draft before Save", LanguageCommentCommand},
         {UMI_DOCUMENT_COMMAND_TOGGLE_LINE_COMMENT, "Toggle // Comment", "Toggle the literal // prefix on selected nonblank lines", CommentLinesCommand}
     };
     UmiCommandDescriptor descriptor;

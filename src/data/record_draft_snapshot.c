@@ -58,7 +58,12 @@ UmiStatus umi_record_draft_snapshot_encode(const UmiRecordDraftSnapshot *snapsho
     unsigned char *bytes = calloc(signed_length + SNAPSHOT_DIGEST_BYTES, 1U);
     if (bytes == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     memcpy(bytes, snapshot_magic, sizeof snapshot_magic);
+    /* The wire flag is exactly one byte. Retain the implicit conversion for
+     * review; the bounded cast below documents its serialized representation. */
+#if 0
     bytes[8] = snapshot->baseline.record.revision == 0U ? 0U : 1U;
+#endif
+    bytes[8] = (unsigned char)(snapshot->baseline.record.revision == 0U ? 0U : 1U);
     write_u32(bytes + 12U, (uint32_t)metadata_length);
     write_u32(bytes + 16U, (uint32_t)snapshot->baseline.length);
     write_u32(bytes + 20U, (uint32_t)snapshot->length);

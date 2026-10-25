@@ -1,0 +1,78 @@
+# Umicom Framework
+# File: cmake/UmicomEditorIndentation.cmake
+# PURPOSE: Integrate shared indentation policy and regression coverage with owning SDK targets.
+# AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+# LICENCE: MIT
+if(NOT TARGET umicom_editor)
+    return()
+endif()
+include_guard(GLOBAL)
+include(GNUInstallDirs)
+get_filename_component(_indent_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+target_sources(umicom_editor PRIVATE "${_indent_root}/src/editor/indentation.c")
+install(FILES "${_indent_root}/include/umicom/editor/indentation.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/editor" COMPONENT Framework)
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_editor include/umicom/editor/indentation.h)
+endif()
+if(TARGET umicom_document)
+    install(FILES "${_indent_root}/include/umicom/document/indentation.h"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/document" COMPONENT Framework)
+    if(COMMAND umicom_release_inventory_own_headers)
+        umicom_release_inventory_own_headers(umicom_document include/umicom/document/indentation.h)
+    endif()
+endif()
+if(TARGET umicom_ui_gtk4)
+    install(FILES "${_indent_root}/include/umicom/ui/gtk4/editor_indentation.h"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)
+    if(COMMAND umicom_release_inventory_own_headers)
+        umicom_release_inventory_own_headers(umicom_ui_gtk4 include/umicom/ui/gtk4/editor_indentation.h)
+    endif()
+endif()
+install(FILES "${_indent_root}/docs/guides/editor-indentation.html"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides" COMPONENT Framework)
+if(BUILD_TESTING)
+    set(_indent_editor_cases defaults unit-spaces unit-tab width-one width-sixteen next-stop at-stop
+        after-tab unicode emoji newline crlf boundary utf8 nul range short invalid arguments)
+    set(_indent_document_cases defaults policy invalid arguments tab-spaces tab-literal selection outdent
+        mixed-outdent override readonly inactive identity pending command command-argument closed)
+    foreach(_indent_group IN ITEMS editor document)
+        if(NOT TARGET umicom_${_indent_group})
+            continue()
+        endif()
+        set(_indent_target "umicom-indentation-${_indent_group}-test")
+        add_executable(${_indent_target} "${_indent_root}/tests/${_indent_group}/test_indentation.c")
+        target_link_libraries(${_indent_target} PRIVATE Umicom::${_indent_group})
+        set_target_properties(${_indent_target} PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(${_indent_target})
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(${_indent_target})
+        endif()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(${_indent_target})
+        endif()
+        if(COMMAND umicom_target_qualification_inputs)
+            umicom_target_qualification_inputs(${_indent_target} FILES
+                "${_indent_root}/src/document/indentation.inc"
+                "${_indent_root}/src/document/line_edit.inc"
+                "${_indent_root}/tests/document/replacement_fixture.h")
+        endif()
+        foreach(_indent_case IN LISTS _indent_${_indent_group}_cases)
+            set(_indent_test "framework.editor.indentation.${_indent_group}.${_indent_case}")
+            add_test(NAME ${_indent_test} COMMAND ${_indent_target} ${_indent_case})
+            set_tests_properties(${_indent_test} PROPERTIES TIMEOUT 30 LABELS "framework;editor;document;indentation;regression")
+            if(COMMAND umicom_test_impact_owners)
+                umicom_test_impact_owners(${_indent_test} TARGETS ${_indent_target})
+            endif()
+        endforeach()
+    endforeach()
+endif()
+unset(_indent_root)
+unset(_indent_group)
+unset(_indent_target)
+unset(_indent_test)
+unset(_indent_case)
+unset(_indent_editor_cases)
+unset(_indent_document_cases)

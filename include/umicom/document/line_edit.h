@@ -14,6 +14,10 @@
 extern "C"
 {
 #endif
+    /* The initial NULL-options behavior remains four spaces. Applications may
+     * now change that default through document/indentation.h. Supplying an
+     * options object retains its literal-token behavior, including its legacy
+     * four-space fallback for NULL indent_text. No global setting is read. */
     typedef struct UmiDocumentLineEditOptions
     {
         const char *indent_text;

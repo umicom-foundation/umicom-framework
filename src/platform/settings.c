@@ -925,3 +925,6 @@ const char *umi_setting_type_text(UmiSettingType type)
         default: return "unknown";
     }
 }
+
+/* Related settings share this repository lock; single-value APIs remain compatible. */
+#include "settings_changes.inc"

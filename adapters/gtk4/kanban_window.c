@@ -337,3 +337,6 @@ bool UmiKanbanGtk4WindowBusy(GtkWindow *window)
     WindowState *state = g_object_get_data(G_OBJECT(window), "umicom-kanban-window");
     return state != NULL && state->busy;
 }
+
+/* Project windows share the existing serialized document and close ownership. */
+#include "kanban_project.inc"

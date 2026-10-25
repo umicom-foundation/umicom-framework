@@ -1444,6 +1444,13 @@ add_library(umicom_editor STATIC
     src/editor/feature.c
     src/editor/feature_builtin.c
     src/editor/text_buffer.c
+    src/editor/comment_style.c
+    src/editor/source_selection.c
+    # The document inspector requires these pure observations in every editor build.
+    src/editor/text_inspection.c
+    src/editor/text_inspection_unicode.c
+    src/editor/text_inspection_metrics.c
+    src/editor/text_inspection_notices.c
     src/editor/line_index.c
     src/editor/search_engine.c
     src/editor/edit_history.c
@@ -1575,9 +1582,14 @@ add_library(umicom_document STATIC
     src/document/loader.c
     src/document/saver.c
     src/document/language_detection.c
+    src/document/languages.c
+    src/document/source_selection.c
+    src/document/source_selection_commands.c
     src/document/file_filter.c
     src/document/quick_open_query.c
     src/document/coordinator.c
+    # Copy capture is an unconditional coordinator dependency, not an optional test feature.
+    src/document/copy.c
     src/document/commands.c
     src/document/save_session.c
     src/document/close_session.c
@@ -5463,6 +5475,11 @@ include(cmake/UmicomEditorTextPositions.cmake)
 include(cmake/UmicomDocumentReplacement.cmake)
 include(cmake/UmicomDocumentSourceRequests.cmake)
 include(cmake/UmicomDocumentOpenBatch.cmake)
+include(cmake/UmicomDocumentCopy.cmake)
+include(cmake/UmicomEditorLineOrdering.cmake)
+include(cmake/UmicomEditorSelectionCase.cmake)
+include(cmake/UmicomEditorIndentation.cmake)
+include(cmake/UmicomProjectPresetSets.cmake)
 
 message(STATUS "Umicom Framework version: ${PROJECT_VERSION}")
 message(STATUS "C standard: C${CMAKE_C_STANDARD}")
@@ -6204,3 +6221,28 @@ endif()
 unset(_search_composition_name)
 unset(_search_composition_order)
 unset(_search_composition_testing)
+
+# Shared no-replacement workspace rename and document path guards.
+include(cmake/UmicomWorkspaceRename.cmake)
+
+include(cmake/UmicomEditorPreferences.cmake)
+
+include(cmake/UmicomEditorPreferenceStorage.cmake)
+
+include(cmake/UmicomEditorNewline.cmake)
+
+include(cmake/UmicomEditorConfig.cmake)
+
+# Document-specific presentation policy shares the existing coordinator.
+include(cmake/UmicomDocumentIndentation.cmake)
+
+# Explicit configuration adoption composes evidence with per-document policy.
+include(cmake/UmicomEditorConfigAdoption.cmake)
+
+include(cmake/UmicomWhitespaceReview.cmake)
+
+include(cmake/UmicomTextInspection.cmake)
+include(cmake/UmicomLanguageComments.cmake)
+include(cmake/UmicomDocumentLanguage.cmake)
+include(cmake/UmicomSelectionReplacement.cmake)
+include(cmake/UmicomSourceSelection.cmake)

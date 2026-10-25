@@ -325,3 +325,34 @@ if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
             TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;banking;persistence;gtk4;regression")
     endforeach()
 endif()
+
+# Shared CSV admission precedes bank field decoding. Exercise both diagnostic
+# paths without weakening the reader's bounded UTF-8/control policy.
+if(BUILD_TESTING)
+    add_executable(umicom-bank-csv-issue-locations-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/bank_feed/test_csv_issue_locations.c")
+    target_link_libraries(umicom-bank-csv-issue-locations-test PRIVATE Umicom::bank_feed)
+    set_target_properties(umicom-bank-csv-issue-locations-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-bank-csv-issue-locations-test)
+    umicom_apply_sanitizers(umicom-bank-csv-issue-locations-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-bank-csv-issue-locations-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-bank-csv-issue-locations-test FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/bank_feed/fixture.h"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/bank_feed/csv_fixture.h")
+    endif()
+    foreach(case normal-header-control mapped-header-control normal-data-control mapped-data-control
+        normal-invalid-utf8 mapped-invalid-utf8 normal-embedded-nul mapped-embedded-nul normal-date mapped-date)
+        set(_csv_issue_test framework.bank_feed.csv.issue-location.${case})
+        add_test(NAME ${_csv_issue_test} COMMAND umicom-bank-csv-issue-locations-test ${case})
+        set_tests_properties(${_csv_issue_test} PROPERTIES
+            TIMEOUT 20 LABELS "framework;banking;csv;import;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(${_csv_issue_test} TARGETS umicom-bank-csv-issue-locations-test)
+        endif()
+    endforeach()
+    unset(_csv_issue_test)
+endif()

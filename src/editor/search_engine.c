@@ -279,3 +279,6 @@ UmiStatus UmiEditorSearchReplaceAll(const char *text, size_t textBytes,
     if (outCount != NULL) *outCount = count;
     return UMI_STATUS_OK;
 }
+
+/* Range edits share the same matching rules and inspect full-source boundaries. */
+#include "search_range.inc"

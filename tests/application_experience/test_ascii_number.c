@@ -98,10 +98,24 @@ int main(int argc, char **argv) {
           i == 42);
     CHECK(umi_ascii_int64_parse(NULL, 0U, &i) == UMI_STATUS_INVALID_ARGUMENT);
   } else if (strcmp(name, "negative-zero") == 0) {
+    /* Some Windows math headers route signbit through a float helper.
+     * Preserve that assertion for review; copysign keeps this double-valued
+     * contract and also requires the parsed value to remain exactly zero. */
+#if 0
     CHECK(umi_ascii_double_parse("-0", 2U, &value) == UMI_STATUS_OK && signbit(value));
+#endif
+    CHECK(umi_ascii_double_parse("-0", 2U, &value) == UMI_STATUS_OK && value == 0.0 &&
+          copysign(1.0, value) < 0.0);
     CHECK(umi_ascii_double_format(value, text, sizeof(text), &length) == UMI_STATUS_OK);
     value = 1.0;
+    /* Some Windows math headers route signbit through a float helper.
+     * Preserve that assertion for review; copysign keeps this double-valued
+     * contract and also requires the parsed value to remain exactly zero. */
+#if 0
     CHECK(umi_ascii_double_parse(text, length, &value) == UMI_STATUS_OK && signbit(value));
+#endif
+    CHECK(umi_ascii_double_parse(text, length, &value) == UMI_STATUS_OK && value == 0.0 &&
+          copysign(1.0, value) < 0.0);
   } else
     CHECK(0);
   return 0;

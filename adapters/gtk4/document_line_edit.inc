@@ -68,3 +68,16 @@ UmiStatus UmiGtk4AdapterEditLines(UmiGtk4Adapter *adapter, UmiEditorEditCommandK
 {
     return DocumentEditLinesForView(adapter, NULL, kind, options);
 }
+
+/* Keep the originating view for keyboard/menu clients. The existing line path
+ * owns busy gates, read-only admission, refresh and completion exactly once. */
+static UmiStatus DocumentLanguageCommentForView(UmiGtk4Adapter *adapter,const char *viewId)
+{
+    if(adapter==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    UmiDocumentId id=0U;const UmiEditorLineCommentStyle *style=NULL;
+    UmiStatus status=EditFindDocument(adapter,viewId,&id);
+    if(status==UMI_STATUS_OK)status=UmiDocumentCoordinatorLineCommentStyle(adapter->edit_coordinator,id,&style);
+    if(status!=UMI_STATUS_OK)return EditFinished(adapter,status);
+    UmiDocumentLineEditOptions options={NULL,style->prefix};
+    return DocumentEditLinesForView(adapter,viewId,UMI_EDITOR_EDIT_COMMAND_TOGGLE_LINE_COMMENT,&options);
+}

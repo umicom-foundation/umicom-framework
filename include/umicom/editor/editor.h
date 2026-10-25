@@ -26,6 +26,7 @@
 #include "umicom/editor/search_engine.h"
 #include "umicom/editor/edit_history.h"
 #include "umicom/editor/edit_command.h"
+#include "umicom/editor/line_sort.h"
 #include "umicom/editor/edit_engine.h"
 #include "umicom/editor/source_location.h"
 #include "umicom/editor/navigation_history.h"

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Choose indentation for one document</title>
+<style>body{font:17px/1.6 system-ui;max-width:880px;margin:3rem auto;padding:0 1.5rem;color:#172b3a}code,pre{background:#f0f4f7}pre{padding:1rem;overflow:auto}h1,h2{line-height:1.2}</style>
+<main><h1>Choose indentation for one document</h1>
+<p>Indentation controls what Tab inserts and how tab characters are displayed. A document override applies to one open working copy. Other files continue to use their own overrides or the session defaults.</p>
+<h2>Use the native editor</h2><ol>
+<li>Open a source file or create an untitled document.</li>
+<li>Open <strong>Document indentation</strong> in the editor actions. The form names the captured document. Switching tabs does not change that target.</li>
+<li>Enter a whole tab width from 1 to 16. Select whether Tab inserts spaces, then choose <strong>Apply to this document</strong>.</li>
+<li>Press Tab at a caret or with a selection. A selection indents complete lines; Shift+Tab removes one level. Undo reverses text edits.</li>
+<li>Choose <strong>Use session defaults</strong> to remove the override. The message reports the effective setting. The controls remain your editable draft; clearing the override does not silently rewrite those controls.</li>
+</ol><p>Applying a preference does not reformat existing text, mark it dirty, save a file or add an Undo entry. The override lasts until the working copy closes. It is not currently saved in a project or user settings file.</p>
+<h2>Use the shared C API</h2><pre><code>#include &lt;umicom/document/indentation_override.h&gt;
+UmiDocumentIndentationReview review;
+UmiStatus status = UmiDocumentCoordinatorInspectIndentation(documents, id, &amp;review);
+if (status == UMI_STATUS_OK) {
+    UmiEditorIndentation choice = {2U, 1};
+    status = UmiDocumentCoordinatorApplyIndentation(documents, &amp;review, &amp;choice, NULL);
+}</code></pre>
+<p>The review belongs to a live coordinator and a named document. Keep the coordinator alive, use its owning thread, and do not serialize the review. Pass <code>NULL</code> instead of a choice to inherit session defaults. A stale review is rejected even when the requested pair happens to match current values.</p>
+<h2>Recover from a rejected change</h2><ul>
+<li><strong>Settings changed elsewhere:</strong> close and reopen the form. Review the current pair before applying.</li>
+<li><strong>Document closed:</strong> open its file again and capture the new working copy.</li>
+<li><strong>Document operation busy:</strong> finish saving, reloading or navigation, then retry.</li>
+<li><strong>Refresh interrupted:</strong> the setting may already have applied. The message distinguishes that outcome. Refresh the editor display; do not assume source or preferences were rolled back.</li>
+</ul>
+<p>Read-only source can have a different display policy, but text editing remains blocked. Tab width describes logical columns, not proportional-font character cells. Independent tab and indentation widths are not yet supported. The EditorConfig inspector remains a review tool; it does not automatically apply these settings.</p></main></html>

@@ -521,6 +521,10 @@ int main(int argc, char **argv) {
     CHECK(list != NULL);
     CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(GTK_DROP_DOWN(list))) ==
           (paging ? 16U : 2U));
+    /* Keep the earlier fixture for review. A named history index replaces the
+     * shadowing selection variable so record paging and form selection remain
+     * distinct state in this regression. */
+#if 0
     size_t selected = 1;
     if (paging) {
       if (strcmp(name, "history-stale-page") == 0) {
@@ -550,6 +554,36 @@ int main(int argc, char **argv) {
       CHECK(text(root, "parcel.mass.value", "9"));
     OK(UmiFormRecordEditorGtk4InspectRevision(
         root, strcmp(name, "inspection-schema") == 0 ? 0 : selected));
+#endif
+    size_t history_index = 1;
+    if (paging) {
+      if (strcmp(name, "history-stale-page") == 0) {
+        UmiFormAnswer changed = form_mass(30);
+        OK(umi_structured_form_set(&fixture->schema, &stored->form, stored->form.revision,
+                                   "parcel.mass", &changed));
+        OK(umi_structured_form_record_save(reader, &stored->record.amendment, &fixture->schema,
+                                           &stored->form, 20, &written));
+      }
+      OK(UmiFormRecordEditorGtk4History(root, 1));
+      CHECK(idle(root));
+      if (strcmp(name, "history-stale-page") == 0) {
+        CHECK(UmiFormRecordEditorGtk4LastStatus(root) == UMI_STATUS_INVALID_STATE);
+        goto cleanup;
+      }
+      OK(UmiFormRecordEditorGtk4LastStatus(root));
+      CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(GTK_DROP_DOWN(list))) == 4);
+      CHECK(UmiFormRecordEditorGtk4History(root, 1) == UMI_STATUS_INVALID_STATE);
+      history_index = 3;
+    }
+    if (strcmp(name, "history-record-change") == 0) {
+      OK(UmiFormRecordEditorGtk4Begin(root, "two"));
+      CHECK(UmiFormRecordEditorGtk4InspectRevision(root, 0) == UMI_STATUS_INVALID_STATE);
+      goto cleanup;
+    }
+    if (strcmp(name, "history-inspect") == 0)
+      CHECK(text(root, "parcel.mass.value", "9"));
+    OK(UmiFormRecordEditorGtk4InspectRevision(
+        root, strcmp(name, "inspection-schema") == 0 ? 0 : history_index));
     if (strcmp(name, "history-late-edit") == 0)
       CHECK(text(root, "parcel.mass.value", "9"));
     if (strcmp(name, "inspection-retire") == 0)

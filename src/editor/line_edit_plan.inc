@@ -19,9 +19,28 @@ static int LineEditPrefix(UmiEditorEditCommandKind kind)
     return kind == UMI_EDITOR_EDIT_COMMAND_INDENT_LINES || kind == UMI_EDITOR_EDIT_COMMAND_OUTDENT_LINES ||
            kind == UMI_EDITOR_EDIT_COMMAND_TOGGLE_LINE_COMMENT;
 }
+static int LineEditSort(UmiEditorEditCommandKind kind)
+{
+    return kind == UMI_EDITOR_EDIT_COMMAND_SORT_LINES_ASCENDING ||
+           kind == UMI_EDITOR_EDIT_COMMAND_SORT_LINES_DESCENDING;
+}
+/* Case operations retain exact selected bytes instead of extending to line boundaries. */
+static int LineEditCase(UmiEditorEditCommandKind kind)
+{
+    return kind == UMI_EDITOR_EDIT_COMMAND_TRANSFORM_UPPERCASE ||
+           kind == UMI_EDITOR_EDIT_COMMAND_TRANSFORM_LOWERCASE;
+}
 static int LineEditSupported(UmiEditorEditCommandKind kind)
 {
+    /* Selection ordering uses the same immutable proposal and document-owned history. */
+#if 0
     return LineEditPrefix(kind) || kind == UMI_EDITOR_EDIT_COMMAND_DELETE_LINE ||
+#endif
+    /* Case commands join the existing proposal pipeline; preserve the former admission. */
+#if 0
+    return LineEditSort(kind) || LineEditPrefix(kind) || kind == UMI_EDITOR_EDIT_COMMAND_DELETE_LINE ||
+#endif
+    return LineEditCase(kind) || LineEditSort(kind) || LineEditPrefix(kind) || kind == UMI_EDITOR_EDIT_COMMAND_DELETE_LINE ||
            kind == UMI_EDITOR_EDIT_COMMAND_DUPLICATE_LINE || kind == UMI_EDITOR_EDIT_COMMAND_MOVE_LINE_UP ||
            kind == UMI_EDITOR_EDIT_COMMAND_MOVE_LINE_DOWN ||
            kind == UMI_EDITOR_EDIT_COMMAND_JOIN_LINE_WITH_NEXT ||
@@ -101,8 +120,23 @@ UmiStatus UmiEditorLineEditPlanCreate(const char *source, size_t source_bytes,
     UmiEditorEditCommandRequest request = *requested;
     if (status == UMI_STATUS_OK)
         status = LineEditToken(&request);
+    /* Caret-only commands retain their old behavior. Sorting must retain the
+     * explicit selection rather than turning it into an empty request. */
+#if 0
     if (!LineEditPrefix(request.kind))
         request.selection_start = request.selection_end = request.cursor_offset;
+#endif
+    /* Preserve selection for both ordering and case conversion. The earlier
+     * predicate remains for review because collapsing this range loses intent. */
+#if 0
+    if (!LineEditPrefix(request.kind) && !LineEditSort(request.kind))
+        request.selection_start = request.selection_end = request.cursor_offset;
+#endif
+    if (!LineEditPrefix(request.kind) && !LineEditSort(request.kind) && !LineEditCase(request.kind))
+        request.selection_start = request.selection_end = request.cursor_offset;
+    if (status == UMI_STATUS_OK && LineEditCase(request.kind) &&
+        request.selection_start == request.selection_end)
+        status = UMI_STATUS_NOT_FOUND;
     /* Only the line index is needed by the shared transformation functions.
      * The temporary owner has no mutable buffer or transaction array: the
      * document coordinator remains the one authority for applying and Undo. */
@@ -144,13 +178,26 @@ UmiStatus UmiEditorLineEditPlanCreate(const char *source, size_t source_bytes,
         status = generate_after(&projection, &view, &request, &updated, &updated_bytes, &cursor, &lines);
     int changed = status == UMI_STATUS_OK &&
                   (updated_bytes != source_bytes || memcmp(updated, source, source_bytes) != 0);
+    /* Both prefix edits and sorting keep a complete-line selection. */
+#if 0
     if (status == UMI_STATUS_OK && changed && LineEditPrefix(request.kind))
+#endif
+    if (status == UMI_STATUS_OK && changed && (LineEditPrefix(request.kind) || LineEditSort(request.kind)))
     {
         status = umi_editor_line_index_rebuild(projection.line_index, updated, updated_bytes, 0U);
         if (status == UMI_STATUS_OK)
             status = umi_editor_line_index_line_range(projection.line_index, first, &cursor, &end);
         if (status == UMI_STATUS_OK && requested->selection_start != requested->selection_end)
             selection_bytes = block_end(&projection, last, updated_bytes) - cursor;
+    }
+    else if (status == UMI_STATUS_OK && changed && LineEditCase(request.kind))
+    {
+        /* ASCII conversion is length preserving. Keep the exact selection so
+         * callers can inspect the replacement and apply Undo as one edit. */
+        cursor = request.selection_start < request.selection_end ? request.selection_start : request.selection_end;
+        selection_bytes = request.selection_start < request.selection_end
+            ? request.selection_end - request.selection_start : request.selection_start - request.selection_end;
+        lines = last - first + 1U;
     }
     else if (status == UMI_STATUS_OK && changed &&
              request.kind == UMI_EDITOR_EDIT_COMMAND_TRIM_TRAILING_WHITESPACE)

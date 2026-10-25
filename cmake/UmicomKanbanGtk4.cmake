@@ -23,7 +23,7 @@ install(TARGETS umicom_kanban_gtk4 EXPORT UmicomFrameworkTargets
 umicom_register_sdk_libraries(umicom_kanban_gtk4)
 if(COMMAND umicom_release_inventory_own_headers)
     umicom_release_inventory_own_headers(umicom_kanban_gtk4
-        include/umicom/ui/gtk4/kanban.h include/umicom/ui/gtk4/kanban_window.h)
+        include/umicom/ui/gtk4/kanban.h include/umicom/ui/gtk4/kanban_window.h include/umicom/ui/gtk4/kanban_project.h)
 endif()
 if(UMICOM_BUILD_NATIVE_TOOL)
     add_executable(umicom-kanban "${_kanban_gtk_root}/tools/kanban/main.c")
@@ -40,3 +40,6 @@ endif()
 if(BUILD_TESTING)
     include("${_kanban_gtk_root}/tests/kanban_gtk4/tests.cmake")
 endif()
+
+install(FILES "${_kanban_gtk_root}/include/umicom/ui/gtk4/kanban_project.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)

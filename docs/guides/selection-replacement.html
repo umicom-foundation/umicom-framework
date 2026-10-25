@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Replace within a source selection</title>
+<style>body{font:17px/1.6 system-ui;max-width:850px;margin:3rem auto;padding:0 1rem;background:#f7f9fb;color:#182b3a}code{background:#e3ebf0;padding:.15em .35em}pre{white-space:pre-wrap;padding:1rem;background:#e3ebf0}</style>
+<main><h1>Replace within a source selection</h1><p>A selection is the text you highlight in an editor. This operation replaces complete literal matches inside that captured selection. The surrounding document is kept unchanged.</p>
+<h2>Use the review</h2><ol><li>Select the text to edit in a writable document.</li><li>Enter the Find and Replace text and choose the case and whole-word settings.</li><li>Open <strong>Replace in selection</strong>. The proposed text is filled in; the source has not changed.</li><li>Choose <strong>Preview complete draft</strong> and inspect the complete before and after document.</li><li>Approve the displayed edit, then choose <strong>Apply reviewed replacement</strong>. Undo restores the prior draft. Saving remains a separate action.</li></ol>
+<h2>Shared C API</h2><p><code>UmiDocumentPrepareSelectionReplacement</code> creates an owned <code>UmiDocumentProposal</code>. Use its inspect, text, check, apply and destroy operations. Apply requires the reviewed proposal revision and explicit approval. Preparation does not save, synchronize or add history.</p>
+<pre>UmiDocumentProposal *proposal = NULL;
+size_t matches = 0;
+UmiStatus status = UmiDocumentPrepareSelectionReplacement(
+    documents, document_id, "old", "new", NULL, &amp;proposal, &amp;matches);
+/* Inspect and approve the result before calling Apply. */
+UmiDocumentProposalDestroy(proposal);</pre>
+<p><code>UmiEditorSearchReplaceRangeSize</code> and <code>UmiEditorSearchReplaceRange</code> are the reusable byte-oriented layer. The offset and span must fit the complete input. Output is the complete document, including its unchanged prefix and suffix. Measure first; allocate one additional byte for the terminating zero. Input/output overlap is rejected.</p>
+<h2>Boundaries and limits</h2><p>Matching is literal, with exact case, ASCII-insensitive or smart-case options. Whole-word checks include the neighboring characters outside the selected range, so selecting <code>cat</code> inside <code>scatter</code> does not make it a whole word. Only complete, nonoverlapping original matches are replaced. Replacement text is not searched again. Match-list limits do not truncate replacements.</p>
+<p>The document layer requires UTF-8 text and selection boundaries that do not split a character or a CRLF line ending. Empty selections are rejected. No match produces an unchanged review. Editing the captured source invalidates the proposal; opening another tab does not redirect it. A proposal belongs to its original coordinator and is not a file-writing or network operation.</p>
+<h2>Recovery</h2><p>If the review says the source changed, cancel and create a new review from the current selection. If Apply is unavailable, preview the latest proposed text and approve it again. Read-only documents must be made writable through the document owner before editing. Native tests require an available GTK display; a skipped native test is not a pass.</p></main></html>

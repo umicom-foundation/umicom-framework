@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Comment source lines</title><body>
+<h1>Comment source lines</h1>
+<p>Framework can add or remove a line-comment prefix selected from a document's language. Studio exposes this through <strong>Toggle language comment</strong>. The explicit <strong>Toggle // comment</strong> command remains available and keeps its existing shortcut.</p>
+<ol><li>Open a source file. Its filename determines the initial language. CMakeLists.txt and Makefile are recognised as project files.</li>
+<li>Place the caret on a line, or select the lines you want to change.</li>
+<li>Choose Toggle language comment. C and related languages use <code>//</code>; Python, shell, CMake and similar configuration files use <code>#</code>; SQL and Lua use <code>--</code>; INI uses <code>;</code>.</li>
+<li>Inspect the result before saving. Use Undo to restore the previous text and selection.</li></ol>
+<h2>Behaviour and limits</h2><p>One invocation changes one document through its existing editing history. If every nonblank selected line already has the chosen prefix, the command removes it; otherwise it adds the prefix to the selected lines. Blank lines are retained. Read-only documents cannot be changed.</p>
+<p>This action uses literal line prefixes; it does not parse string literals, multiline strings, shebang lines, SQL dialects, embedded languages or conditional compilation. Select appropriate lines and review them. JSON, HTML, CSS, Markdown, plain text and generic Assembly have no guessed line syntax. The language-aware command is unavailable for those languages.</p>
+<h2>Embedding Framework</h2><p>Use <code>UmiDocumentCoordinatorLineCommentStyle</code> to query a named document's language policy, and <code>UmiDocumentCoordinatorToggleLanguageComment</code> for a headless edit. GTK hosts dispatch <code>UMI_DOCUMENT_COMMAND_TOGGLE_LANGUAGE_COMMENT</code> through <code>UmiGtk4AdapterDocumentCommand</code>. They should query availability again when updating their controls. A completion callback may retire the host, so treat the call as the last use of a borrowed UI owner.</p>
+<p>The style catalogue is immutable shared data. Hosts must not free or modify its returned descriptors. Unknown language IDs leave output pointers unchanged. No command saves the document or accesses the clipboard.</p>
+</body></html>

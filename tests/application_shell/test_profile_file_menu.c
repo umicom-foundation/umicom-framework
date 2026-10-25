@@ -50,7 +50,11 @@ int main(void)
 #if 0
     assert(profile->contribution_count == 18U);
 #endif
+    /* Save Copy adds one action while preserving the complete former menu. */
+#if 0
     assert(profile->contribution_count == 20U);
+#endif
+    assert(profile->contribution_count == 21U);
     assert(umi_application_shell_profile_validate(profile) == UMI_STATUS_OK);
 
     assert(umi_application_shell_registry_create(&registry) == UMI_STATUS_OK);
@@ -58,6 +62,10 @@ int main(void)
            UMI_STATUS_OK);
     assert(umi_application_shell_registry_count(registry) ==
            profile->contribution_count);
+    assert(umi_application_shell_registry_find(registry,
+        "umicom.shell.file-menu.save-copy", &contribution) == UMI_STATUS_OK);
+    assert(strcmp(contribution.command_id, "file.save-copy") == 0);
+    assert((contribution.flags & UMI_APPLICATION_SHELL_ENABLED) == 0U);
     assert(umi_application_shell_registry_find(
         registry,
         "umicom.shell.file-menu.root",

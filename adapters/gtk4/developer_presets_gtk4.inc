@@ -6,6 +6,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/selection_list.h"
+#include "umicom/developer_project/preset_set.h"
 
 
 typedef struct DeveloperPresetRead
@@ -104,6 +105,16 @@ static void DeveloperPresetDetails(GObject *object, GParamSpec *property, gpoint
                 choice.condition_false ? "Condition is false; cannot select. " : "",
                 expanded && origin.inherited_metadata ? "Displayed metadata includes inherited values. " : "",
                 "CMake validates all settings, expressions and conditions when run.");
+            if (choice.stage == UMI_PROJECT_PRESET_CONFIGURE) {
+                UmiProjectPresetSetSummary related;
+                if (UmiProjectPresetSetInspect(dialog->presetCatalogue, (size_t)selected, &related) == UMI_STATUS_OK) {
+                    char *details = g_strdup_printf("%s\nRelated visible choices: %zu build, %zu test. %s",
+                        text, related.build_count, related.test_count, related.discovery_incomplete
+                        ? "Read included presets before selecting a complete set."
+                        : "Use matching stages only when each related stage has one choice.");
+                    g_free(text); text = details;
+                }
+            }
             /* Copy before notifying GTK: an extension may close the form or
              * start another read while a label-change notification is delivered. */
             gtk_label_set_text(GTK_LABEL(dialog->presetDetail), text);
@@ -201,6 +212,8 @@ static void DeveloperPresetReadDone(GObject *source, GAsyncResult *result, gpoin
         if (!DeveloperVisible(dialog))
             goto done;
         gtk_widget_set_sensitive(dialog->presetUse, summary.count != 0U);
+        if (!DeveloperVisible(dialog)) goto done;
+        gtk_widget_set_sensitive(dialog->presetUseSet, summary.count != 0U);
     }
     if (!DeveloperVisible(dialog))
         goto done;
@@ -238,6 +251,8 @@ static void DeveloperPresetReadClicked(GtkButton *button, gpointer context)
     gtk_widget_set_sensitive(dialog->presetRead, FALSE);
     if (!DeveloperVisible(dialog))
         goto abandoned;
+    gtk_widget_set_sensitive(dialog->presetUseSet, FALSE);
+    if (!DeveloperVisible(dialog)) goto abandoned;
     gtk_widget_set_sensitive(dialog->presetUse, FALSE);
     if (!DeveloperVisible(dialog))
         goto abandoned;
@@ -268,6 +283,34 @@ abandoned:
     dialog->presetLoading = 0;
     DeveloperRelease(dialog);
 }
+/* Publishing several editable fields can synchronously notify application code.
+ * Keep a copied expectation for every field, and stop if an observer edits the
+ * form or retires its project. Never restore old text over an observer's edit. */
+static UmiStatus DeveloperPresetPublishSet(UmiGtk4DeveloperDialog *dialog,
+    const UmiBuildProfile *selected)
+{
+    GtkWidget *fields[] = {dialog->configurePreset, dialog->buildPreset, dialog->testPreset};
+    const char *names[] = {selected->configure_preset, selected->build_preset, selected->test_preset};
+    char expected[3][UMI_BUILD_NAME_CAPACITY];
+    for (size_t i=0U;i<3U;++i) {
+        if (g_strlcpy(expected[i],gtk_editable_get_text(GTK_EDITABLE(fields[i])),sizeof expected[i]) >= sizeof expected[i])
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    for (size_t i=0U;i<3U;++i) {
+        (void)g_strlcpy(expected[i],names[i],sizeof expected[i]);
+        gtk_editable_set_text(GTK_EDITABLE(fields[i]),expected[i]);
+        if (!DeveloperVisible(dialog)) return UMI_STATUS_CANCELLED;
+        if (dialog->presetInputsChanged ||
+            strcmp(dialog->presetRoot,gtk_editable_get_text(GTK_EDITABLE(dialog->fields[1]))) != 0 ||
+            gtk_editable_get_text(GTK_EDITABLE(dialog->fields[6]))[0] != '\0')
+            return UMI_STATUS_INVALID_STATE;
+        for (size_t j=0U;j<3U;++j)
+            if (strcmp(expected[j],gtk_editable_get_text(GTK_EDITABLE(fields[j]))) != 0)
+                return UMI_STATUS_INVALID_STATE;
+    }
+    return UMI_STATUS_OK;
+}
+
 static void DeveloperPresetUseClicked(GtkButton *button, gpointer context)
 {
     (void)button;
@@ -308,15 +351,32 @@ static void DeveloperPresetUseClicked(GtkButton *button, gpointer context)
     UmiProjectPresetChoice choice;
     UmiBuildProfile current = dialog->profile, selected;
     current.preset[0] = '\0'; /* The visible legacy field was explicitly cleared above. */
+    /* The original single-stage selection remains available. Related-stage
+     * selection uses Framework matching and publishes no guessed names. */
+#if 0
     UmiStatus status =
         UmiProjectPresetCatalogueSelect(dialog->presetCatalogue, (size_t)index, &current, &selected);
+#endif
+    bool related = GTK_WIDGET(button) == dialog->presetUseSet;
+    UmiStatus status = related
+        ? UmiProjectPresetSetSelect(dialog->presetCatalogue, (size_t)index, &current, &selected)
+        : UmiProjectPresetCatalogueSelect(dialog->presetCatalogue, (size_t)index, &current, &selected);
     if (status == UMI_STATUS_OK)
         status = UmiProjectPresetCatalogueAt(dialog->presetCatalogue, (size_t)index, &choice);
     if (status != UMI_STATUS_OK)
     {
         ShowStatus(
             dialog, status,
-            "Choose a visible preset whose condition is not false. Read the files again if they changed.");
+            related ? "Choose a configure preset with exactly one available build and test preset referring to it. "
+                "Read included presets for inherited choices. If choices are missing or ambiguous, select stage names separately."
+                : "Choose a visible preset whose condition is not false. Read the files again if they changed.");
+        goto done;
+    }
+    if (related) {
+        status = DeveloperPresetPublishSet(dialog, &selected);
+        if (DeveloperVisible(dialog)) ShowStatus(dialog, status, status == UMI_STATUS_OK
+            ? "Configure, build and test names copied. Review settings, then Apply Settings to save. No tool was run."
+            : "The form changed while copying stage names. Review all three fields before applying settings.");
         goto done;
     }
     GtkWidget *entry = choice.stage == UMI_PROJECT_PRESET_CONFIGURE ? dialog->configurePreset
@@ -367,6 +427,11 @@ static void DeveloperPresetControls(UmiGtk4DeveloperDialog *dialog)
     dialog->presetPicker = gtk_drop_down_new(NULL, NULL);
     gtk_drop_down_set_enable_search(GTK_DROP_DOWN(dialog->presetPicker), TRUE);
     dialog->presetUse = gtk_button_new_with_label("Use selected name");
+    dialog->presetUseSet = gtk_button_new_with_label("Use matching configure, build and test presets");
+    gtk_widget_set_sensitive(dialog->presetUseSet, FALSE);
+    gtk_widget_set_tooltip_text(dialog->presetUseSet,
+        "Copy the selected configure name and its unique visible build/test choices. Does not run tools or apply settings.");
+    (void)umi_gtk4_automation_tag_widget(dialog->presetUseSet, "developer.presets.use-set");
     dialog->presetDetail =
         gtk_label_new("Read CMakePresets.json and CMakeUserPresets.json to choose a declared name. Included "
                       "files and inherited values are not resolved. Manual stage fields remain available.");
@@ -381,9 +446,11 @@ static void DeveloperPresetControls(UmiGtk4DeveloperDialog *dialog)
     gtk_box_append(GTK_BOX(dialog->body), dialog->presetReadIncludes);
     gtk_box_append(GTK_BOX(dialog->body), dialog->presetPicker);
     gtk_box_append(GTK_BOX(dialog->body), dialog->presetUse);
+    gtk_box_append(GTK_BOX(dialog->body), dialog->presetUseSet);
     gtk_box_append(GTK_BOX(dialog->body), dialog->presetDetail);
     DeveloperConnect(dialog, G_OBJECT(dialog->presetRead), "clicked", G_CALLBACK(DeveloperPresetReadClicked));
     DeveloperConnect(dialog, G_OBJECT(dialog->presetPicker), "notify::selected",
                      G_CALLBACK(DeveloperPresetDetails));
     DeveloperConnect(dialog, G_OBJECT(dialog->presetUse), "clicked", G_CALLBACK(DeveloperPresetUseClicked));
+    DeveloperConnect(dialog, G_OBJECT(dialog->presetUseSet), "clicked", G_CALLBACK(DeveloperPresetUseClicked));
 }

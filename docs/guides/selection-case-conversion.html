@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Convert selected ASCII letters — Umicom</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:840px;margin:3rem auto;padding:0 1.4rem;color:#162334}code{background:#eef2f5;padding:.15rem .3rem}h1,h2{line-height:1.2}aside{border-left:4px solid #1c6c9b;padding:.3rem 1rem;background:#f2f7fb}</style></head>
+<body><main><h1>Convert selected ASCII letters</h1>
+<p>Studio can change the case of selected letters without changing the rest of the document.
+ASCII letters are the English letters <code>A–Z</code> and <code>a–z</code>.
+Accented letters, other writing systems, emoji, numbers and punctuation remain unchanged.</p>
+<h2>In Studio</h2><ol>
+<li>Open a writable text document and select the characters to change.</li>
+<li>Open <strong>Code tools</strong>. Type <strong>selection case</strong> in its filter.</li>
+<li>Choose <strong>Uppercase selected ASCII letters</strong> or <strong>Lowercase selected ASCII letters</strong>.</li>
+<li>Inspect the selected replacement. For example, selecting <code>abc</code> inside <code>xabcx</code>
+and choosing uppercase produces <code>xABCx</code>. The surrounding letters are not changed.</li>
+<li>Use Undo to restore the draft, or Save when you want to write it to disk.</li></ol>
+<p>Conversion is one document edit. It keeps the exact selection and participates in the same
+Undo and Redo history as other document commands. It does not save the file automatically.</p>
+<h2>Shared Framework use</h2>
+<p>Applications can register the canonical commands
+<code>umicom.document.line-edit.uppercase-selection</code> and
+<code>umicom.document.line-edit.lowercase-selection</code> through
+<code>umi_document_commands_register</code>. These commands read the current draft and selection;
+they do not accept a file path or offsets as an argument.</p>
+<p>Clients preparing a preview without changing a document can use <code>UmiEditorLineEditPlanCreate</code>
+with <code>UMI_EDITOR_EDIT_COMMAND_TRANSFORM_UPPERCASE</code> or
+<code>UMI_EDITOR_EDIT_COMMAND_TRANSFORM_LOWERCASE</code>. The plan owns its output until destroyed.
+Use the document coordinator to apply the result so that document identity and history remain authoritative.</p>
+<h2>If a command is unavailable</h2><ul>
+<li>Select text first. An empty selection is refused; it does not convert the entire file.</li>
+<li>Use a writable document. Read-only documents remain unchanged.</li>
+<li>Finish any pending edit review before applying another command.</li>
+<li>The document facade accepts valid UTF-8 text up to 8 MiB and LF or CRLF line endings.
+A selection may not split a UTF-8 character. Bare CR line endings are currently unsupported.</li>
+<li>Already converted text makes no new Undo entry. This is a successful unchanged result.</li></ul>
+<aside><p>This is explicit ASCII conversion, not language-sensitive Unicode casing.
+For example, uppercasing <code>café</code> produces <code>CAFé</code>.
+It does not rename symbols, update references, infer capitalization rules or format source code.</p></aside>
+</main></body></html>

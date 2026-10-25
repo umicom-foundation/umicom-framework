@@ -1,0 +1,21 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Project planning boards</title>
+<body><main><h1>Project planning boards</h1><p>A project board is an independent planning document associated with one captured project folder.
+Opening another project does not redirect a board you already opened.</p><ol>
+<li>In Studio, open a project folder, then choose <strong>Project board</strong> in Explorer or <strong>Open project board</strong> on Welcome.</li>
+<li>Check the project path in the new window title. Framework suggests a filename specific to that project path.</li>
+<li>Choose an existing private folder for the board. The field starts empty; no folder is created and no file is placed inside your source repository automatically.</li>
+<li>Choose <strong>Create board</strong> for a new archive or <strong>Open board</strong> to reopen the suggested file. Creation refuses an existing file.</li>
+<li>Create cards, assign developer names and move work between lists. Save explicitly. Close asks you to save or discard unsaved work.</li></ol>
+<p>Choosing Project board again returns to that project's existing window. The board remains open if Studio closes.
+Do not publish its archive as an accidental consequence of adding source files to Git. A public contributor view is a separate, explicitly reviewed export.</p>
+<h2>Filename identity</h2><p>The suggested name uses SHA-256, a digest of the normalised project path. This makes names stable for the same path without embedding the path in the filename.
+It is not encryption or a guarantee that two paths refer to the same directory. Moving the project or changing path case can suggest a different name.
+Choose your existing archive explicitly if the project moved. The window's project association describes the captured project; choosing a different filename does not rewrite archive content.</p>
+<h2>Current limits</h2><p>This version uses independent board windows. Storage folder preferences and a docked Studio board pane are not yet provided.
+The user selects the private folder on each newly created window. Opening a board does not register accounts, grant project execution trust, or upload a website.
+An untrusted project can have a planning window because this action does not execute project code.</p>
+<h2>Embedding in another native application</h2><p>Call <code>UmiKanbanGtk4CreateProjectWindow(application, project_root, &amp;window)</code> with a NULL output on the GTK owner thread.
+On success, present the application-owned window separately. No file operation starts at construction.
+Use <code>UmiKanbanGtk4ProjectLocation</code> to read the captured association. For toolkit-neutral naming, use <code>UmiKanbanProjectLocationCreate</code>.
+The document service repeats storage checks when the user opens or creates the archive.</p>
+</main></body></html>

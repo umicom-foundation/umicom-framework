@@ -14,6 +14,12 @@
 extern "C"
 {
 #endif
+    /* SORT_LINES_ASCENDING/DESCENDING additionally accept a nonempty selection.
+     * They share line_sort.h ordinal ordering, separator preservation and limits.
+     * An empty selection is refused rather than sorting the complete document. */
+    /* TRANSFORM_UPPERCASE/LOWERCASE also accept an explicit nonempty selection.
+     * They convert ASCII letters only, preserve all other UTF-8 bytes and retain
+     * the exact selected interval. Empty selection returns NOT_FOUND. */
     typedef struct UmiEditorLineEditPlan UmiEditorLineEditPlan;
     typedef struct UmiEditorLineEditSummary
     {

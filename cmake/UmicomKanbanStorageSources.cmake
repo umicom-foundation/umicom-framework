@@ -5,7 +5,7 @@ include(GNUInstallDirs)
 function(umicom_add_kanban_storage_sources target)
     get_filename_component(_root "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/.." ABSOLUTE)
     target_sources("${target}" PRIVATE
-        "${_root}/src/kanban/document.c" "${_root}/src/kanban/document_save.c")
+        "${_root}/src/kanban/location.c" "${_root}/src/kanban/document.c" "${_root}/src/kanban/document_save.c")
     set_target_properties("${target}" PROPERTIES
         C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO EXPORT_NAME kanban_storage)
     target_include_directories("${target}" PUBLIC

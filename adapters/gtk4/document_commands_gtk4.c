@@ -7,6 +7,7 @@
  * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
+#include "umicom/document/language_comment.h"
 #include "gtk4_internal.h"
 #include "umicom/ui/gtk4/automation.h"
 #include "umicom/document/commands.h"
@@ -348,8 +349,29 @@ int UmiGtk4AdapterDocumentCommandEnabled(UmiGtk4Adapter *adapter, const char *co
 
 int UmiGtk4AdapterDocumentCommandEnabled(UmiGtk4Adapter *adapter, const char *commandId)
 {
+    /* Contextual syntax adds policy admission to the existing writable-source gate. */
+    if(commandId!=NULL&&strcmp(commandId,UMI_DOCUMENT_COMMAND_TOGGLE_LANGUAGE_COMMENT)==0) {
+        UmiDocumentId id=0U;const UmiEditorLineCommentStyle *style=NULL;
+        return UmiGtk4AdapterDocumentCommandEnabled(adapter,UMI_DOCUMENT_COMMAND_TOGGLE_LINE_COMMENT)&&
+            EditFindDocument(adapter,NULL,&id)==UMI_STATUS_OK&&
+            UmiDocumentCoordinatorLineCommentStyle(adapter->edit_coordinator,id,&style)==UMI_STATUS_OK;
+    }
     UmiEditorEditCommandKind lineKind;
+    /* Tab shares writable-source availability with line indentation. Keep
+     * the former mapping-only branch for review. */
+#if 0
     if (UmiDocumentLineEditCommandFromId(commandId, &lineKind) == UMI_STATUS_OK) {
+#endif
+    /* Newline commands share writable-source admission with Tab. Preserve the previous predicate. */
+#if 0
+    const int insertIndentation = commandId != NULL && strcmp(commandId, UMI_DOCUMENT_COMMAND_INSERT_INDENTATION) == 0;
+#endif
+    const int insertIndentation = commandId != NULL &&
+        (strcmp(commandId, UMI_DOCUMENT_COMMAND_INSERT_INDENTATION) == 0 ||
+         strcmp(commandId, UMI_DOCUMENT_COMMAND_INSERT_NEWLINE) == 0 ||
+         strcmp(commandId, UMI_DOCUMENT_COMMAND_INSERT_PLAIN_NEWLINE) == 0);
+    if (insertIndentation) lineKind = UMI_EDITOR_EDIT_COMMAND_INDENT_LINES;
+    if (insertIndentation || UmiDocumentLineEditCommandFromId(commandId, &lineKind) == UMI_STATUS_OK) {
         UmiDocumentId documentId = 0U;
         UmiDocumentEditState lineState;
         return adapter != NULL && adapter->edit_lifetime != NULL && adapter->window != NULL &&
@@ -361,8 +383,16 @@ int UmiGtk4AdapterDocumentCommandEnabled(UmiGtk4Adapter *adapter, const char *co
             /* Sorting requires an explicit selection; the earlier line actions
              * continue to use their caret/whole-document policies. */
             !lineState.read_only &&
+            /* Case conversion needs an explicit selection too. Preserve the
+             * previous ordering-only availability predicate for review. */
+#if 0
             ((lineKind != UMI_EDITOR_EDIT_COMMAND_SORT_LINES_ASCENDING &&
               lineKind != UMI_EDITOR_EDIT_COMMAND_SORT_LINES_DESCENDING) || lineState.selection_bytes != 0U);
+#endif
+            ((lineKind != UMI_EDITOR_EDIT_COMMAND_SORT_LINES_ASCENDING &&
+              lineKind != UMI_EDITOR_EDIT_COMMAND_SORT_LINES_DESCENDING &&
+              lineKind != UMI_EDITOR_EDIT_COMMAND_TRANSFORM_UPPERCASE &&
+              lineKind != UMI_EDITOR_EDIT_COMMAND_TRANSFORM_LOWERCASE) || lineState.selection_bytes != 0U);
     }
     UmiDocumentEditCommand command;
     UmiDocumentId id = 0U;
@@ -405,6 +435,9 @@ UmiStatus UmiGtk4EditorSynchronise(UmiGtk4Adapter *adapter, const char *viewId)
     return status == UMI_STATUS_OK ? UmiDocumentCoordinatorSyncDocument(adapter->edit_coordinator, id) : status;
 }
 
+static UmiStatus DocumentLanguageCommentForView(UmiGtk4Adapter *adapter,const char *viewId);
+static UmiStatus DocumentNewlineForView(UmiGtk4Adapter *adapter, const char *viewId, int inherit);
+static UmiStatus DocumentIndentationForView(UmiGtk4Adapter *adapter, const char *viewId);
 static UmiStatus DocumentEditLinesForView(UmiGtk4Adapter *adapter, const char *viewId,
     UmiEditorEditCommandKind kind, const UmiDocumentLineEditOptions *options);
 
@@ -425,6 +458,14 @@ UmiStatus UmiGtk4EditorCommandForView(UmiGtk4Adapter *adapter,
 //     if (status != UMI_STATUS_OK) return status;
 
     if (adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (commandId != NULL && strcmp(commandId, UMI_DOCUMENT_COMMAND_TOGGLE_LANGUAGE_COMMENT) == 0)
+        return DocumentLanguageCommentForView(adapter,viewId);
+    if (commandId != NULL && strcmp(commandId, UMI_DOCUMENT_COMMAND_INSERT_NEWLINE) == 0)
+        return DocumentNewlineForView(adapter, viewId, 1);
+    if (commandId != NULL && strcmp(commandId, UMI_DOCUMENT_COMMAND_INSERT_PLAIN_NEWLINE) == 0)
+        return DocumentNewlineForView(adapter, viewId, 0);
+    if (commandId != NULL && strcmp(commandId, UMI_DOCUMENT_COMMAND_INSERT_INDENTATION) == 0)
+        return DocumentIndentationForView(adapter, viewId);
     UmiEditorEditCommandKind lineKind;
     if (UmiDocumentLineEditCommandFromId(commandId, &lineKind) == UMI_STATUS_OK)
         return DocumentEditLinesForView(adapter, viewId, lineKind, NULL);
@@ -1515,8 +1556,10 @@ UmiStatus UmiGtk4AdapterClearNavigationHistory(UmiGtk4Adapter *adapter)
 
 /* Keep source range discovery and navigation in the shared document owner. */
 #include "document_delimiter_navigation.inc"
+#include "document_source_selection.inc"
 
 #include "document_line_edit.inc"
+#include "document_indentation.inc"
 
 #include "document_typing_history.inc"
 
@@ -1527,3 +1570,5 @@ UmiStatus UmiGtk4AdapterClearNavigationHistory(UmiGtk4Adapter *adapter)
 
 /* Native saved-file review reuses the provider-neutral reload transaction. */
 #include "document_reload_review.inc"
+
+#include "document_newline.inc"

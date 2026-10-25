@@ -26,6 +26,10 @@
     }
 
 static const UmiEditorEditCommandDescriptor COMMANDS[] = {
+    COMMAND(UMI_EDITOR_EDIT_COMMAND_SORT_LINES_ASCENDING,
+            "editor.edit.sort-lines-ascending", "Sort Selected Lines Ascending", "", 1, 1),
+    COMMAND(UMI_EDITOR_EDIT_COMMAND_SORT_LINES_DESCENDING,
+            "editor.edit.sort-lines-descending", "Sort Selected Lines Descending", "", 1, 1),
     COMMAND(UMI_EDITOR_EDIT_COMMAND_INSERT_TEXT,
             "editor.edit.insert-text", "Insert Text", "", 0, 0),
     COMMAND(UMI_EDITOR_EDIT_COMMAND_REPLACE_RANGE,

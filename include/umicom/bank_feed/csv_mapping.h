@@ -59,6 +59,8 @@ void UmiBankFeedCsvMappingInit(UmiBankFeedCsvMapping *mapping);
  * use BOOK/PDNG and Immutable/Mutable. Pending always remains mutable.
  * Normalised field, byte and row limits apply. Failure clears *out; issue uses
  * original one-based CSV record/column, with zero for settings or constants.
+ * Whole-input text rejection (unsupported controls, NUL or malformed UTF-8)
+ * occurs before mapping any records and leaves both coordinates zero.
  * Settings/input are borrowed only during this call; the result owns its data.
  * This does not authenticate a bank, prove completeness, post or save data. */
 UmiStatus UmiBankFeedCsvMappedCreate(const void *bytes, size_t length,

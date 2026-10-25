@@ -18,6 +18,8 @@
 #include "umicom/document/bookmarks.h"
 #include "umicom/editor/navigation_history.h"
 #include "umicom/document/coordinator.h"
+#include "umicom/document/indentation.h"
+#include "umicom/document/indentation_override.h"
 #include "umicom/document/search.h"
 #include "search_options_internal.h"
 #include "umicom/document/close.h"
@@ -86,6 +88,14 @@ typedef struct UmiDocumentCoordinatorEntry {
     uint64_t edit_store_revision;
     int edit_pending;
     int edit_cache_valid;
+    /* Overrides are document presentation policy, separate from text history. */
+    UmiEditorIndentation indentation_override;
+    uint64_t indentation_revision;
+    int has_indentation_override;
+    /* Syntax policy belongs to this working copy, not to its filename or text history. */
+    UmiDocumentLanguageIdentity language_override;
+    uint64_t language_revision;
+    int has_language_override;
 } UmiDocumentCoordinatorEntry;
 
 /* Closed-document history is owned by the coordinator, not by tabs. Only
@@ -96,6 +106,9 @@ typedef struct ClosedDocumentEntry {
 } ClosedDocumentEntry;
 
 struct UmiDocumentCoordinator {
+    /* One copied policy serves toolbar, command search and native Tab input. */
+    UmiEditorIndentation indentation;
+    uint64_t indentation_revision;
     UmiDocumentStore *store;
     UmiUiWorkbench *workbench;
     UmiDocumentProvider provider;
@@ -458,7 +471,13 @@ static UmiStatus refresh_view(UmiDocumentCoordinator *coordinator, size_t index)
         }
 #endif
     }
+    /* Retain filename-only projection for review. Explicit session language now
+     * survives normal edits, Undo and Save As through the document owner. */
+#if 0
     (void)umi_document_language_detect(store_snapshot.display_name, &language);
+#endif
+    if (entry->has_language_override) language = entry->language_override;
+    else (void)umi_document_language_detect(store_snapshot.display_name, &language);
     (void)snprintf(view.language_id, sizeof(view.language_id), "%s", language.language_id);
     (void)snprintf(view.icon_name, sizeof(view.icon_name), "%.*s",
                    (int)sizeof(view.icon_name) - 1, language.icon_name);
@@ -592,6 +611,7 @@ UmiStatus umi_document_coordinator_create(
      * used.
      */
     if (coordinator == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    (void)UmiEditorIndentationDefault(&coordinator->indentation);
     coordinator->store = store;
     coordinator->workbench = workbench;
     coordinator->provider = provider != NULL ? *provider : umi_document_local_provider();
@@ -3652,6 +3672,7 @@ UmiStatus UmiDocumentCoordinatorApplyClose(UmiDocumentCoordinator *coordinator,
 #include "replacement_review.inc"
 /* Selection proposals reuse this translation unit's replacement and Undo owners. */
 #include "selection_proposal.inc"
+#include "whitespace_review.inc"
 
 /* Async source results share the same captured draft, conflict checks and Undo owner. */
 #include "source_request.inc"
@@ -3731,7 +3752,9 @@ UmiStatus UmiDocumentCoordinatorReopenLast(UmiDocumentCoordinator *coordinator,
 /* Exact protocol selection shares the live document and navigation owners. */
 #include "source_navigation.inc"
 
+#include "indentation_override.inc"
 #include "line_edit.inc"
+#include "indentation.inc"
 
 /* Native typing uses the same source/selection history as explicit commands. */
 #include "typing_history.inc"
@@ -3745,3 +3768,17 @@ UmiStatus UmiDocumentCoordinatorReopenLast(UmiDocumentCoordinator *coordinator,
 
 /* Separate copies capture the existing draft and never change its saved identity. */
 #include "copy_capture.inc"
+
+/* Newline editing shares captured transactions and the existing document history. */
+#include "newline.inc"
+
+/* Text inspection borrows no live state after capture; history remains unchanged. */
+#include "text_inspection.inc"
+
+/* Language tokens are resolved here; the existing line-edit transaction owns text. */
+#include "language_comment.inc"
+
+#include "language_override.inc"
+
+/* Selection-scoped replacement retains the existing proposal review and Undo contract. */
+#include "selection_replace.inc"

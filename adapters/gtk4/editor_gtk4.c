@@ -26,6 +26,8 @@
 #include <gtksourceview/gtksource.h>
 #endif
 
+#include "editor_indentation.inc"
+
 typedef struct UmiGtk4EditorBinding {
     UmiGtk4Adapter *adapter;
     char view_id[UMI_UI_ID_CAPACITY];
@@ -759,6 +761,18 @@ static gboolean EditorHistoryKey(GtkEventControllerKey *controller, guint keyval
     if (modifiers == GDK_CONTROL_MASK && key == GDK_KEY_slash) command = UMI_DOCUMENT_COMMAND_TOGGLE_LINE_COMMENT;
     if (modifiers == (GDK_CONTROL_MASK | GDK_SHIFT_MASK) && key == GDK_KEY_j)
         command = UMI_DOCUMENT_COMMAND_JOIN_LINE_WITH_NEXT;
+    /* Keep Tab on a managed source view inside the same document history,
+     * including the plain GtkTextView fallback. Ctrl+Tab remains navigation. */
+    if (modifiers == 0 && key == GDK_KEY_Tab) command = UMI_DOCUMENT_COMMAND_INSERT_INDENTATION;
+    if (modifiers == GDK_SHIFT_MASK && (key == GDK_KEY_Tab || key == GDK_KEY_ISO_Left_Tab))
+        command = UMI_DOCUMENT_COMMAND_OUTDENT_LINES;
+    /* Intercept only ordinary source Enter. Shared transactions preserve line endings
+     * and Undo in both GtkSourceView and plain GtkTextView. Other modifiers keep
+     * their toolkit/application meaning; completion review remains exclusive. */
+    if (key == GDK_KEY_Return || key == GDK_KEY_KP_Enter) {
+        if (modifiers == 0) command = UMI_DOCUMENT_COMMAND_INSERT_NEWLINE;
+        if (modifiers == GDK_SHIFT_MASK) command = UMI_DOCUMENT_COMMAND_INSERT_PLAIN_NEWLINE;
+    }
     if (command == NULL) return FALSE;
     (void)UmiGtk4EditorCommandForView(binding->adapter, command, binding->view_id);
     return TRUE;
@@ -1401,7 +1415,12 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
                              adapter);
     }
     adapter->applying_document_state = 0;
+    /* The old return is retained; presentation now follows the same policy as
+     * Tab and command edits. No adapter access follows property notifications. */
+#if 0
     return UMI_STATUS_OK;
+#endif
+    return UmiGtk4AdapterRefreshIndentation(adapter);
 }
 
 /* Folding changes presentation only; all source-reading paths above include hidden bytes. */

@@ -92,12 +92,40 @@ UmiStatus UmiDocumentCoordinatorEditLinesForDocument(UmiDocumentCoordinator *coo
     UmiStatus status = umi_ui_document_view_model_find(views, coordinator->entries[index].view_id, &before);
     if (status != UMI_STATUS_OK)
         return status;
+    /* A view ID may survive a projection replacement. Verify the canonical
+     * document identity before planning even an unchanged edit; otherwise text
+     * from an unrelated projection could be committed to this working copy. */
+    char identity[UMI_UI_ID_CAPACITY];
+    (void)snprintf(identity, sizeof identity, "document.%llu", (unsigned long long)documentId);
+    if (strcmp(before.document_id, identity) != 0)
+        return UMI_STATUS_INVALID_STATE;
     if (before.read_only)
         return UMI_STATUS_PERMISSION_DENIED;
     char *source = NULL;
     size_t bytes = 0U;
     status = UmiUiDocumentViewModelCopyText(views, before.view_id, &source, &bytes);
     UmiEditorEditCommandRequest request;
+    /* An explicit options object retains the original literal-token behavior.
+     * Otherwise use the coordinator policy. Outdent removes a tab or up to the
+     * configured width of spaces even when new indentation uses tabs. */
+    char indentation[UMI_EDITOR_INDENTATION_MAXIMUM_WIDTH + 1U];
+    UmiDocumentLineEditOptions defaults = {NULL, NULL};
+    if (status == UMI_STATUS_OK && options == NULL) {
+        /* Preserve the global-only lookup; named working copies now own overrides. */
+#if 0
+        UmiEditorIndentation policy = coordinator->indentation;
+#endif
+        UmiDocumentIndentationReview review;
+        status = UmiDocumentCoordinatorInspectIndentation(coordinator, documentId, &review);
+        UmiEditorIndentation policy = status == UMI_STATUS_OK ? review.effective : coordinator->indentation;
+        if (kind == UMI_EDITOR_EDIT_COMMAND_OUTDENT_LINES) policy.insert_spaces = 1;
+        size_t indentationBytes = 0U;
+        /* Do not overwrite a failed identity/policy read with successful token formatting. */
+        if (status == UMI_STATUS_OK)
+            status = UmiEditorIndentationUnit(&policy, indentation, sizeof indentation, &indentationBytes);
+        defaults.indent_text = indentation;
+        options = &defaults;
+    }
     if (status == UMI_STATUS_OK)
         status = umi_editor_edit_command_request_initialize(&request, kind, before.cursor_offset);
     if (status == UMI_STATUS_OK &&

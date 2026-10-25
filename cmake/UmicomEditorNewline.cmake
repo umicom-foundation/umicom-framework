@@ -1,0 +1,85 @@
+# Umicom Framework
+# File: cmake/UmicomEditorNewline.cmake
+# PURPOSE: Register shared newline planning, SDK ownership and native regression coverage.
+# AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+# LICENCE: MIT
+if(NOT TARGET umicom_editor)
+    return()
+endif()
+include_guard(GLOBAL)
+include(GNUInstallDirs)
+get_filename_component(_newline_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+target_sources(umicom_editor PRIVATE "${_newline_root}/src/editor/newline.c")
+foreach(_newline_owner IN ITEMS editor document)
+    if(TARGET umicom_${_newline_owner})
+        install(FILES "${_newline_root}/include/umicom/${_newline_owner}/newline.h"
+            DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/${_newline_owner}" COMPONENT Framework)
+        if(COMMAND umicom_release_inventory_own_headers)
+            umicom_release_inventory_own_headers(umicom_${_newline_owner} include/umicom/${_newline_owner}/newline.h)
+        endif()
+    endif()
+endforeach()
+install(FILES "${_newline_root}/docs/guides/editor-newline.html"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides" COMPONENT Framework)
+if(BUILD_TESTING)
+    set(_newline_editor_cases empty lf crlf last-crlf last-lf mixed-current mixed-last mid-indent start-indent
+        blank plain plain-crlf unicode selection whole middle after-ending whitespace-selection
+        arguments range selection-range utf8-boundary selection-boundary crlf-boundary utf8-tail nul bare-cr
+        limit limit-replace too-large)
+    set(_newline_document_cases indent plain crlf selection unicode readonly identity inactive closed pending
+        command plain-command command-argument arguments bare-cr cursor)
+    set(_newline_gtk4_cases enter keypad plain crlf selection unicode readonly retired completion-close other-tab
+        ctrl meta caps-lock canonical plain-canonical)
+    foreach(_newline_group IN ITEMS editor document gtk4)
+        set(_newline_owner ${_newline_group})
+        set(_newline_source "tests/${_newline_group}/test_newline.c")
+        if(_newline_group STREQUAL "gtk4")
+            set(_newline_owner ui_gtk4)
+            set(_newline_source tests/document/test_newline_gtk4.c)
+        endif()
+        if(NOT TARGET umicom_${_newline_owner})
+            continue()
+        endif()
+        set(_newline_target "umicom-newline-${_newline_group}-test")
+        add_executable(${_newline_target} "${_newline_root}/${_newline_source}")
+        target_link_libraries(${_newline_target} PRIVATE Umicom::${_newline_owner})
+        set_target_properties(${_newline_target} PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(${_newline_target})
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(${_newline_target})
+        endif()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(${_newline_target})
+        endif()
+        if(COMMAND umicom_target_qualification_inputs)
+            umicom_target_qualification_inputs(${_newline_target} FILES
+                "${_newline_root}/src/document/newline.inc"
+                "${_newline_root}/adapters/gtk4/document_newline.inc"
+                "${_newline_root}/tests/document/replacement_fixture.h"
+                "${_newline_root}/tests/document/native_edit_fixture.h")
+        endif()
+        foreach(_newline_case IN LISTS _newline_${_newline_group}_cases)
+            set(_newline_test "framework.editor.newline.${_newline_group}.${_newline_case}")
+            add_test(NAME ${_newline_test} COMMAND ${_newline_target} ${_newline_case})
+            set_tests_properties(${_newline_test} PROPERTIES TIMEOUT 45 LABELS "framework;editor;document;newline;regression")
+            if(_newline_group STREQUAL "gtk4")
+                set_tests_properties(${_newline_test} PROPERTIES SKIP_RETURN_CODE 77 LABELS "framework;editor;document;newline;gtk4;regression")
+            endif()
+            if(COMMAND umicom_test_impact_owners)
+                umicom_test_impact_owners(${_newline_test} TARGETS ${_newline_target})
+            endif()
+        endforeach()
+    endforeach()
+endif()
+unset(_newline_root)
+unset(_newline_owner)
+unset(_newline_group)
+unset(_newline_target)
+unset(_newline_source)
+unset(_newline_case)
+unset(_newline_test)
+unset(_newline_editor_cases)
+unset(_newline_document_cases)
+unset(_newline_gtk4_cases)

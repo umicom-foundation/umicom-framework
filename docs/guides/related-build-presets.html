@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Choose related build presets</title>
+<style>body{font:18px/1.6 system-ui;max-width:850px;margin:3rem auto;padding:0 1rem;color:#183047}code{background:#edf2f6}</style>
+<h1>Choose related build presets</h1>
+<p>A project can give different names to its configure, build and test presets. The Framework Build Settings form can copy a matching set into the three stage fields for review. Nothing is executed by this action.</p>
+<ol>
+<li>Open Build Settings for the project and check its source folder.</li>
+<li>Read the project preset files. If they include other files or inherit preset values, use <strong>Read included presets</strong> for a project whose files you trust. Included files can be outside the project folder.</li>
+<li>Select a visible configure preset. The details show how many visible build and test choices refer to it.</li>
+<li>Choose <strong>Use matching configure, build and test presets</strong>. This requires exactly one eligible build choice and one test choice. Their names may differ from the configure name.</li>
+<li>Review all three stage fields and the remaining settings. Choose Apply Settings to save them. Starting configure, build or test is a separate action.</li>
+</ol>
+<h2>When no set can be selected</h2>
+<p>If either stage is missing, no names are copied. If several choices refer to the configure preset, choose the desired stage names individually with <strong>Use selected name</strong>. Hidden and literal-false presets are excluded. Conditions that need evaluation remain for CMake to evaluate when run; discovery does not guarantee that a preset will be available.</p>
+<p>A direct read cannot prove that a set is unique when includes or inheritance remain unresolved. Use the expanded read, or select individual names. Clear the old shared preset field before choosing separate stage names. Changing the source folder retires the discovered list, even if you change it back: read the files again.</p>
+<p>Only the three stage names change. The launch program, launch arguments, build target, tool directory, SDK definitions and other fields stay as entered. Build, test and configure presets own their CMake options. Review the separate build folder for operations that do not use a stage preset, such as target discovery or launching an executable.</p>
+<h2>Using the C23 service</h2>
+<p>Include <code>umicom/developer_project/preset_set.h</code> and link the developer library. Inspect an existing catalogue with <code>UmiProjectPresetSetInspect</code>, using a configure-row index. The summary reports related counts, unique indexes and incomplete discovery. Use <code>UmiProjectPresetSetSelect</code> to prepare a complete profile candidate. It preserves output on failure and supports updating a profile in place. Neither function reads files, saves settings, grants trust or starts a process.</p>
+<p>Preset files can change after discovery. Refresh the list after editing them. See the <a href="https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html">CMake preset reference</a> for the <code>configurePreset</code> relationship used by build and test presets.</p>
+</html>

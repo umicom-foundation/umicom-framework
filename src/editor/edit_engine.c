@@ -353,10 +353,23 @@ static UmiStatus transform_case(const UmiEditorTextBufferView *view,
     status = allocate_copy(view->bytes, view->byte_count, out_bytes);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Byte-oriented case conversion must not depend on the process locale:
+     * high bytes belong to UTF-8 sequences, not individual locale characters.
+     * Preserve the former loop for review; ASCII conversion below leaves every
+     * non-ASCII byte unchanged. Full Unicode case mapping is a separate service. */
+#if 0
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = start; index < end; ++index) {
         unsigned char byte = (unsigned char)(*out_bytes)[index];
         (*out_bytes)[index] = (char)(uppercase ? toupper(byte) : tolower(byte));
+    }
+#endif
+    for (index = start; index < end; ++index) {
+        unsigned char byte = (unsigned char)(*out_bytes)[index];
+        if (uppercase && byte >= (unsigned char)'a' && byte <= (unsigned char)'z')
+            (*out_bytes)[index] = (char)(byte - (unsigned char)'a' + (unsigned char)'A');
+        else if (!uppercase && byte >= (unsigned char)'A' && byte <= (unsigned char)'Z')
+            (*out_bytes)[index] = (char)(byte - (unsigned char)'A' + (unsigned char)'a');
     }
     *out_count = view->byte_count;
     *out_cursor = end;
@@ -1571,6 +1584,29 @@ static UmiStatus prepare_history(UmiEditorEditEngine *engine,
     return UMI_STATUS_OK;
 }
 
+
+#include "umicom/editor/line_sort.h"
+/* The engine and document proposal both use the same ordinal ordering plan. */
+static UmiStatus GenerateSortedLines(const UmiEditorTextBufferView *view,
+    const UmiEditorEditCommandRequest *request,char **out_bytes,size_t *out_count,
+    size_t *out_cursor,size_t *out_lines)
+{
+    UmiEditorLineSortPlan *plan=NULL;
+    UmiStatus status=UmiEditorLineSortPlanCreate(view->bytes,view->byte_count,
+        request->selection_start,request->selection_end,
+        request->kind==UMI_EDITOR_EDIT_COMMAND_SORT_LINES_DESCENDING,NULL,&plan);
+    UmiEditorLineSortSummary summary;const char *text=NULL;size_t count=0U;
+    if(status==UMI_STATUS_OK)status=UmiEditorLineSortPlanInspect(plan,&summary);
+    if(status==UMI_STATUS_OK)status=UmiEditorLineSortPlanRead(plan,&text,&count);
+    if(status==UMI_STATUS_OK){
+        char *copy=malloc(count+1U);
+        if(copy==NULL)status=UMI_STATUS_OUT_OF_MEMORY;
+        else{memcpy(copy,text,count+1U);*out_bytes=copy;*out_count=count;
+            *out_cursor=summary.selection_start;*out_lines=summary.line_count;}
+    }
+    UmiEditorLineSortPlanDestroy(plan);return status;
+}
+
 /* Provide the generate after operation used by this module and its client applications. */
 static UmiStatus generate_after(
     const UmiEditorEditEngine *engine,
@@ -1596,6 +1632,9 @@ static UmiStatus generate_after(
     }
     /* Select the behaviour associated with the requested command or state value. */
     switch (request->kind) {
+        case UMI_EDITOR_EDIT_COMMAND_SORT_LINES_ASCENDING:
+        case UMI_EDITOR_EDIT_COMMAND_SORT_LINES_DESCENDING:
+            return GenerateSortedLines(view,request,out_bytes,out_count,out_cursor,out_lines);
         case UMI_EDITOR_EDIT_COMMAND_INSERT_TEXT:
             /*
              * Protect caller-owned memory by checking that required state is available before it is

@@ -34,7 +34,11 @@ int main(void)
     const UmiEditorEditCommandDescriptor *descriptor;
     size_t index;
 
+    /* The fourteen original operations remain; two sort operations are added. */
+#if 0
     assert(umi_editor_edit_command_count() == 14U);
+#endif
+    assert(umi_editor_edit_command_count() == 16U);
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < umi_editor_edit_command_count(); ++index) {
         descriptor = umi_editor_edit_command_at(index);

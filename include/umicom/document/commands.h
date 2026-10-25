@@ -47,7 +47,35 @@ extern "C" {
 #if 0
 #define UMI_DOCUMENT_COMMAND_COUNT 14U
 #endif
+/* Preserve the former catalogue size; sorting adds two selection-only commands. */
+#if 0
 #define UMI_DOCUMENT_COMMAND_COUNT 23U
+#endif
+/* Selection case conversion extends the shared catalogue; keep the previous
+ * count for review while retaining every existing command. */
+#if 0
+#define UMI_DOCUMENT_COMMAND_COUNT 25U
+#endif
+/* Tab insertion joins the canonical catalogue; preserve the prior count. */
+#if 0
+#define UMI_DOCUMENT_COMMAND_COUNT 27U
+#endif
+/* Newline insertion extends the catalogue; retain the preceding size for review. */
+#if 0
+#define UMI_DOCUMENT_COMMAND_COUNT 28U
+#endif
+/* Preserve the former count; the contextual comment command is appended. */
+#if 0
+#define UMI_DOCUMENT_COMMAND_COUNT 30U
+#endif
+#define UMI_DOCUMENT_COMMAND_COUNT 31U
+#define UMI_DOCUMENT_COMMAND_INSERT_NEWLINE "umicom.document.insert-newline"
+#define UMI_DOCUMENT_COMMAND_INSERT_PLAIN_NEWLINE "umicom.document.insert-plain-newline"
+#define UMI_DOCUMENT_COMMAND_INSERT_INDENTATION "umicom.document.insert-indentation"
+#define UMI_DOCUMENT_COMMAND_UPPERCASE_SELECTION "umicom.document.line-edit.uppercase-selection"
+#define UMI_DOCUMENT_COMMAND_LOWERCASE_SELECTION "umicom.document.line-edit.lowercase-selection"
+#define UMI_DOCUMENT_COMMAND_SORT_LINES_ASCENDING "umicom.document.line-edit.sort-lines-ascending"
+#define UMI_DOCUMENT_COMMAND_SORT_LINES_DESCENDING "umicom.document.line-edit.sort-lines-descending"
 #define UMI_DOCUMENT_COMMAND_DELETE_LINE "umicom.document.line-edit.delete-line"
 #define UMI_DOCUMENT_COMMAND_DUPLICATE_LINE "umicom.document.line-edit.duplicate-line"
 #define UMI_DOCUMENT_COMMAND_MOVE_LINE_UP "umicom.document.line-edit.move-line-up"
@@ -57,12 +85,14 @@ extern "C" {
 #define UMI_DOCUMENT_COMMAND_INDENT_LINES "umicom.document.line-edit.indent-lines"
 #define UMI_DOCUMENT_COMMAND_OUTDENT_LINES "umicom.document.line-edit.outdent-lines"
 #define UMI_DOCUMENT_COMMAND_TOGGLE_LINE_COMMENT "umicom.document.line-edit.toggle-line-comment"
+#define UMI_DOCUMENT_COMMAND_TOGGLE_LANGUAGE_COMMENT "umicom.document.line-edit.toggle-language-comment"
 
 #define UMI_DOCUMENT_COMMAND_MATCH_DELIMITER "umicom.document.match-delimiter"
 #define UMI_DOCUMENT_COMMAND_SELECT_DELIMITER_CONTENT "umicom.document.select-delimiter-content"
 #define UMI_DOCUMENT_COMMAND_SELECT_DELIMITER_PAIR "umicom.document.select-delimiter-pair"
 
-/** Resolve one of the nine exact line-edit identifiers above. No execution or
+/** Resolve one of the exact line-edit identifiers above, including line sorting.
+ * The original nine commands remain supported. No execution or
  * allocation occurs. Unknown names return NOT_FOUND without modifying out_kind;
  * NULL input or output returns INVALID_ARGUMENT. */
 UmiStatus UmiDocumentLineEditCommandFromId(const char *command_id, UmiEditorEditCommandKind *out_kind);

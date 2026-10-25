@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Editor indentation — Umicom Framework and Studio</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:840px;margin:3rem auto;padding:0 1.4rem;color:#162334}code{background:#eef2f5;padding:.15rem .3rem}h1,h2{line-height:1.2}</style></head>
+<body><main><h1>Editor indentation</h1>
+<p>Indentation is the whitespace at the start of a source line. Studio uses its existing
+<code>studio.editor.tab_width</code> and <code>studio.editor.insert_spaces</code> settings to configure
+the shared document editor. The default is four columns with spaces. Widths from one through sixteen are supported.</p>
+<h2>Editing a document</h2><ol>
+<li>Open a writable source document and place the caret where indentation is needed.</li>
+<li>Press Tab. With spaces enabled, this inserts enough spaces to reach the next logical tab stop.
+For example, at column one with width four it inserts three spaces. With spaces disabled it inserts a literal tab.</li>
+<li>Select text and press Tab to indent the lines touched by the selection. The selected text is kept.</li>
+<li>Press Shift+Tab to remove one leading tab or up to the configured width of leading spaces from the selected lines or current line.</li>
+<li>Use Undo or Redo to reverse or repeat the edit. Save remains a separate action.</li></ol>
+<p>The Code Tools indent and outdent commands use the same preferences. Existing source is not reformatted
+when settings change. Ctrl+Tab keeps its normal navigation role.</p>
+<h2>For application authors</h2>
+<p><code>UmiDocumentCoordinatorSetIndentation</code> copies a validated <code>UmiEditorIndentation</code>.
+The coordinator owns that policy; it does not read global settings or persist them.
+Studio applies its typed settings at UI creation and refresh through <code>UmiStudioUiApplyEditorSettings</code>.</p>
+<p><code>UmiDocumentCoordinatorInsertIndentation</code> acts on a particular open document and preserves
+its identity and Undo history. It does not activate an inactive tab. Canonical command clients can
+run <code>umicom.document.insert-indentation</code> without an argument.</p>
+<p>Calling line-edit operations with a non-NULL <code>UmiDocumentLineEditOptions</code> retains their original
+explicit token behavior. With NULL options they use the coordinator policy. This lets a contributor
+implement a reviewed project-specific action without silently changing the user's preferences.</p>
+<h2>Native views and limits</h2>
+<p>Framework updates GtkSourceView's tab width, indent width and spaces setting, and supplies measured
+tab stops to the plain GtkTextView fallback. Both source views route Tab through the same document operation.
+Property refresh holds native view references and stops if its document binding is retired.</p>
+<p>Logical tab stops count each Unicode scalar as one column and advance existing tabs to the next stop.
+They do not claim exact screen-cell width for combining marks, emoji sequences or wide characters.
+Only the affected UTF-8 prefix is examined by the standalone tab-stop helper; document edits validate the complete draft.
+This feature does not infer indentation from existing code or replace language-specific formatting.</p>
+<h2>Troubleshooting</h2><ul>
+<li>A read-only document cannot be indented. Close an outstanding edit review before trying another edit.</li>
+<li>Changing preferences does not modify source or create an Undo entry by itself.</li>
+<li>Malformed settings are rejected instead of being silently truncated. Use a width between one and sixteen.</li>
+<li>If a shared editor client changes the policy directly, refresh its native document views to update tab display.</li></ul>
+</main></body></html>

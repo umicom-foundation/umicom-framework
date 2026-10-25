@@ -273,6 +273,11 @@ static GtkWidget *DocumentProposalTextView(GtkWidget *box, const char *label, co
     gtk_accessible_update_property(GTK_ACCESSIBLE(view), GTK_ACCESSIBLE_PROPERTY_LABEL, label, -1);
     return view;
 }
+
+/* The active constructor below accepts optional prefilled literal replacements.
+ * It preserves the same comparison, approval and Undo path for manual proposals.
+ * Keep the original manual-only constructor for engineering review. */
+#if 0
 UmiStatus UmiGtk4AdapterReviewSelectedCode(UmiGtk4Adapter *adapter)
 {
     if (adapter == NULL)
@@ -399,4 +404,170 @@ UmiStatus UmiGtk4AdapterReviewSelectedCode(UmiGtk4Adapter *adapter)
     g_object_unref(parent);
     g_object_unref(lifetime);
     return status;
+}
+
+#endif
+#include "umicom/ui/gtk4/selection_replace.h"
+static UmiStatus DocumentProposalOpen(UmiGtk4Adapter *adapter,const char *needle,
+    const char *replacement,const UmiEditorSearchOptions *options)
+{
+    if (adapter == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (adapter->edit_coordinator == NULL || adapter->edit_lifetime == NULL || adapter->window == NULL ||
+        !UmiGtk4WindowIsOpen(adapter->window))
+        return UMI_STATUS_UNAVAILABLE;
+    if (g_object_get_data(adapter->edit_lifetime, "proposal-opening") != NULL ||
+        UmiGtk4AdapterDocumentProposalBusy(adapter) || UmiGtk4AdapterReplacementReviewBusy(adapter) ||
+        UmiGtk4AdapterDocumentSaveAllBusy(adapter) || UmiGtk4AdapterDocumentCloseBusy(adapter) ||
+        adapter->edit_cancel != NULL || g_object_get_data(adapter->edit_lifetime, "location-dialog") != NULL)
+        return UMI_STATUS_BUSY;
+    UmiDocumentId id = 0U;
+    UmiDocumentProposal *proposal = NULL;
+    UmiStatus status = EditFindDocument(adapter, NULL, &id);
+    if (status == UMI_STATUS_OK)
+        status = needle == NULL
+            ? UmiDocumentProposalCreate(adapter->edit_coordinator, id, &proposal)
+            : UmiDocumentPrepareSelectionReplacement(adapter->edit_coordinator, id,
+                needle, replacement, options, &proposal, NULL);
+    if (status != UMI_STATUS_OK)
+        return status;
+    UmiDocumentProposalSummary summary;
+    const char *selected = NULL;
+    size_t selected_bytes = 0U;
+    status = UmiDocumentProposalInspect(proposal, &summary);
+    if (status == UMI_STATUS_OK)
+        status = UmiDocumentProposalSelection(proposal, &selected, &selected_bytes);
+    if (status != UMI_STATUS_OK)
+    {
+        UmiDocumentProposalDestroy(proposal);
+        return status;
+    }
+    const char *initial = selected;
+    size_t initial_bytes = selected_bytes;
+    if (needle != NULL) {
+        const char *before, *after;
+        size_t before_bytes, after_bytes;
+        status = UmiDocumentProposalTexts(proposal, &before, &before_bytes, &after, &after_bytes);
+        if (status != UMI_STATUS_OK) { UmiDocumentProposalDestroy(proposal); return status; }
+        initial = after + summary.selection_offset;
+        initial_bytes = after_bytes - (before_bytes - summary.selection_bytes);
+    }
+    /* Retain identity before publishing a toplevel: construction observers may
+     * destroy/rebind the host. No later construction dereferences adapter. */
+    GObject *lifetime = g_object_ref(adapter->edit_lifetime);
+    GtkWindow *parent = g_object_ref(adapter->window);
+    g_object_set_data(lifetime, "proposal-opening", GINT_TO_POINTER(1));
+    GtkWidget *window = gtk_window_new();
+    g_object_ref(window);
+    /* Constructor observers are synchronous: no native fields or coordinator
+     * may be dereferenced after retirement of the captured editing token. */
+    if (g_object_get_data(lifetime, "adapter") != adapter ||
+        !UmiGtk4WindowIsOpen(parent) || !UmiGtk4WindowIsOpen(GTK_WINDOW(window))) {
+        g_object_set_data(lifetime, "proposal-opening", NULL);
+        if (UmiGtk4WindowIsOpen(GTK_WINDOW(window))) gtk_window_destroy(GTK_WINDOW(window));
+        g_object_unref(window);g_object_unref(parent);g_object_unref(lifetime);
+        UmiDocumentProposalDestroy(proposal);
+        return UMI_STATUS_CANCELLED;
+    }
+    DocumentProposalReview *review = g_new0(DocumentProposalReview, 1);
+    review->lifetime = g_object_ref(lifetime);
+    review->proposal = proposal;
+    review->generation = 1U;
+    g_object_set_data_full(G_OBJECT(window), "umicom-document-proposal", review, DocumentProposalReviewFree);
+    GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8), *scroll = gtk_scrolled_window_new();
+    review->message =
+        g_object_ref_sink(gtk_label_new("Paste or type the proposed replacement below, then Preview complete "
+                                        "draft. No file or provider is accessed by this form."));
+    gtk_label_set_wrap(GTK_LABEL(review->message), TRUE);
+    gtk_box_append(GTK_BOX(box), review->message);
+    char *target = g_strdup_printf("%s — captured selection: %zu bytes at byte %zu. %s", summary.display_name,
+                                   summary.selection_bytes, summary.selection_offset,
+                                   summary.has_unsaved_changes ? "Includes unsaved source edits." : "");
+    GtkWidget *label = gtk_label_new(target);
+    g_free(target);
+    gtk_label_set_wrap(GTK_LABEL(label), TRUE);
+    gtk_box_append(GTK_BOX(box), label);
+    review->source =
+        DocumentProposalTextView(box, "Captured selection (read only)", "document.proposal.source", 0);
+    review->input = DocumentProposalTextView(box, "Proposed replacement (empty text deletes the selection)",
+                                             "document.proposal.input", 1);
+    gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(review->source)), selected,
+                             (gint)selected_bytes);
+    gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(review->input)), initial,
+                             (gint)initial_bytes);
+    review->preview = g_object_ref_sink(gtk_button_new_with_label("Preview complete draft"));
+    gtk_box_append(GTK_BOX(box), review->preview);
+    review->comparison = g_object_ref_sink(gtk_box_new(GTK_ORIENTATION_VERTICAL, 0));
+    gtk_widget_set_vexpand(review->comparison, TRUE);
+    (void)UmiGtk4RecordingSetPrivate(review->comparison, 1);
+    gtk_box_append(GTK_BOX(box), review->comparison);
+    review->approve = g_object_ref_sink(gtk_check_button_new_with_label(
+        "I approve replacing this captured selection with the reviewed text"));
+    gtk_box_append(GTK_BOX(box), review->approve);
+    GtkWidget *buttons = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    review->apply = g_object_ref_sink(gtk_button_new_with_label("Apply reviewed replacement"));
+    gtk_widget_set_sensitive(review->apply, FALSE);
+    review->cancel = g_object_ref_sink(gtk_button_new_with_label("Cancel"));
+    gtk_box_append(GTK_BOX(buttons), review->apply);
+    gtk_box_append(GTK_BOX(buttons), review->cancel);
+    gtk_box_append(GTK_BOX(box), buttons);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), box);
+    gtk_window_set_child(GTK_WINDOW(window), scroll);
+    gtk_window_set_title(GTK_WINDOW(window), "Review selected-code replacement");
+    gtk_window_set_default_size(GTK_WINDOW(window), 1100, 800);
+    gtk_window_set_transient_for(GTK_WINDOW(window), parent);
+    gtk_window_set_destroy_with_parent(GTK_WINDOW(window), TRUE);
+    gtk_window_set_modal(GTK_WINDOW(window), TRUE);
+    (void)umi_gtk4_automation_tag_widget(window, "document.proposal.review");
+    (void)umi_gtk4_automation_tag_widget(review->preview, "document.proposal.preview");
+    (void)umi_gtk4_automation_tag_widget(review->apply, "document.proposal.apply");
+    (void)umi_gtk4_automation_tag_widget(review->approve, "document.proposal.approve");
+    (void)umi_gtk4_automation_tag_widget(review->cancel, "document.proposal.cancel");
+    g_signal_connect_object(gtk_text_view_get_buffer(GTK_TEXT_VIEW(review->input)), "changed",
+                            G_CALLBACK(DocumentProposalChanged), window, 0);
+    g_signal_connect_object(review->preview, "clicked", G_CALLBACK(DocumentProposalPreview), window, 0);
+    g_signal_connect_object(review->apply, "clicked", G_CALLBACK(DocumentProposalApply), window, 0);
+    g_signal_connect_object(review->cancel, "clicked", G_CALLBACK(DocumentProposalCancel), window, 0);
+    g_signal_connect(window, "close-request", G_CALLBACK(DocumentProposalClosing), NULL);
+    if (g_object_get_data(lifetime, "adapter") != adapter || !UmiGtk4WindowIsOpen(parent) ||
+        !UmiGtk4WindowIsOpen(GTK_WINDOW(window)))
+        status = UMI_STATUS_CANCELLED;
+    else
+    {
+        g_object_set_data(lifetime, "proposal-dialog", window);
+        status =
+            UmiGtk4WatchWindowClosed(GTK_WINDOW(window), G_OBJECT(window), DocumentProposalRemoved, NULL);
+        if (status == UMI_STATUS_OK)
+            status =
+                UmiGtk4WatchWindowClosed(parent, G_OBJECT(window), DocumentProposalParentRemoved, window);
+        if (status == UMI_STATUS_OK && review->closed)
+            status = UMI_STATUS_CANCELLED;
+    }
+    if (status == UMI_STATUS_OK)
+    {
+        gtk_window_set_default_widget(GTK_WINDOW(window), review->cancel);
+        gtk_window_set_focus(GTK_WINDOW(window), review->input);
+        /* Focus notifications may retire the host too. A closed modal must
+         * not be presented again after its binding has been invalidated. */
+        if (DocumentProposalOwner(window, review) != NULL)
+            gtk_window_present(GTK_WINDOW(window));
+        if (DocumentProposalOwner(window, review) == NULL)
+            status = UMI_STATUS_CANCELLED;
+    }
+    else
+        DocumentProposalClose(window, 0, status);
+    g_object_set_data(lifetime, "proposal-opening", NULL);
+    g_object_unref(window);
+    g_object_unref(parent);
+    g_object_unref(lifetime);
+    return status;
+}
+
+UmiStatus UmiGtk4AdapterReviewSelectedCode(UmiGtk4Adapter *adapter) {
+    return DocumentProposalOpen(adapter,NULL,NULL,NULL);
+}
+UmiStatus UmiGtk4AdapterReviewSelectionReplacement(UmiGtk4Adapter *adapter,
+    const char *needle,const char *replacement,const UmiEditorSearchOptions *options) {
+    if(needle==NULL||replacement==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    return DocumentProposalOpen(adapter,needle,replacement,options);
 }

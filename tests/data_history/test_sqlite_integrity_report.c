@@ -95,6 +95,17 @@ int main(int argc, char **argv) {
     selected = reader;
   }
   OK(umi_sqlite_health_read(selected, &report));
+  /* Keep the failing expectation intact. Read-only connection failures need
+   * evidence from both handles; these diagnostics do not count as a repair. */
+  if (report.sound != !damaged) {
+    UmiSqliteHealthReport writer_report = {0};
+    UmiStatus writer_status = umi_sqlite_health_read(writer, &writer_report);
+    fprintf(stderr, "integrity case=%s readonly=%d sound=%d diagnostics=%zu first=%s\n", name,
+            umi_data_server_is_readonly(selected), report.sound, report.diagnostic_count,
+            report.first_diagnostic);
+    fprintf(stderr, "writer status=%d sound=%d diagnostics=%zu first=%s\n", (int)writer_status,
+            writer_report.sound, writer_report.diagnostic_count, writer_report.first_diagnostic);
+  }
   CHECK(report.sound == !damaged);
   CHECK(umi_sqlite_integrity_check(selected) ==
         (damaged ? UMI_STATUS_INVALID_STATE : UMI_STATUS_OK));

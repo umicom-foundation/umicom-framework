@@ -9,7 +9,11 @@ endif()
 include_guard(GLOBAL)
 include(GNUInstallDirs)
 get_filename_component(_copy_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
-target_sources(umicom_document PRIVATE "${_copy_root}/src/document/copy.c")
+# The document library now owns this required source alongside coordinator.c.
+# Retain the former late registration for review; this module owns SDK and tests.
+if(FALSE)
+    target_sources(umicom_document PRIVATE "${_copy_root}/src/document/copy.c")
+endif()
 install(FILES "${_copy_root}/include/umicom/document/copy.h"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/document" COMPONENT Framework)
 if(COMMAND umicom_release_inventory_own_headers)
