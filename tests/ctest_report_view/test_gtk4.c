@@ -1,0 +1,193 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ctest_report_view/test_gtk4.c
+ *
+ * PURPOSE:
+ *   Exercise native saved-report filters, worker cancellation and retained-control lifetimes.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+#include "../build_log/fixture.h"
+#undef CHECK
+#include "fixture.h"
+#include "umicom/testing/ctest_report_file.h"
+#include "umicom/ui/gtk4/automation.h"
+#include "umicom/ui/gtk4/ctest_report.h"
+static GtkWidget *Find(GtkWidget *root, const char *tag) {
+  return umi_gtk4_automation_find_tagged_widget(root, tag);
+}
+static void Click(GtkWidget *root, const char *tag) {
+  GtkWidget *b = Find(root, tag);
+  CHECK(GTK_IS_BUTTON(b));
+  g_signal_emit_by_name(b, "clicked");
+}
+static void Drain(void) {
+  for (unsigned i = 0; i < 40U; ++i) {
+    while (g_main_context_iteration(NULL, FALSE)) {
+    }
+    g_usleep(1000U);
+  }
+}
+static void Wait(GtkWidget *root) {
+  gint64 end = g_get_monotonic_time() + 10 * G_TIME_SPAN_SECOND;
+  while (UmiGtk4CtestReportBusy(root)) {
+    CHECK(g_get_monotonic_time() < end);
+    g_main_context_iteration(NULL, FALSE);
+    g_usleep(1000U);
+  }
+}
+static char *Text(GtkTextBuffer *buffer) {
+  GtkTextIter a, z;
+  gtk_text_buffer_get_bounds(buffer, &a, &z);
+  return gtk_text_buffer_get_text(buffer, &a, &z, FALSE);
+}
+static void CloseOnText(GtkTextBuffer *buffer, gpointer window) {
+  (void)buffer;
+  gtk_window_destroy(GTK_WINDOW(window));
+}
+int main(int argc, char **argv) {
+  CHECK(argc == 2);
+  const char *name = argv[1],
+             *names[] = {"normal",       "paging",        "filter",         "draft-filter",
+                         "outcomes",     "missing",       "invalid-filter", "hidden",
+                         "retained",     "cancel-load",   "hide-show",      "close-load",
+                         "close-render", "captured-path", "clear"};
+  CHECK(Known(name, names, sizeof names / sizeof names[0]));
+  if (!gtk_init_check())
+    return 77;
+  char directory[UMI_PATH_CAPACITY], path[UMI_PATH_CAPACITY], missing[UMI_PATH_CAPACITY];
+  FixtureDirectory(directory);
+  FixturePath(path, directory, "report.xml");
+  FixturePath(missing, directory, "missing.xml");
+  char *xml = ManyXml(150);
+  UmiOutputFile *file = NULL;
+  OK(UmiOutputFileCreate(path, &file));
+  OK(UmiOutputFileWrite(file, xml, strlen(xml)));
+  OK(UmiOutputFileClose(file));
+  UmiOutputFileDestroy(file);
+  free(xml);
+  GtkApplication *app = gtk_application_new("org.umicom.CtestReport", G_APPLICATION_NON_UNIQUE);
+  CHECK(g_application_register(G_APPLICATION(app), NULL, NULL));
+  GtkWindow *window = GTK_WINDOW(gtk_application_window_new(app));
+  g_object_ref(window);
+  GtkWidget *root = UmiGtk4CtestReportCreate();
+  g_object_ref_sink(root);
+  gtk_window_set_child(window, root);
+  gtk_window_present(window);
+  Drain();
+  GtkWidget *entry = Find(root, "ctest.report.path"), *filter = Find(root, "ctest.report.name"),
+            *open = Find(root, "ctest.report.open");
+  CHECK(GTK_IS_EDITABLE(entry) && GTK_IS_BUTTON(open) && gtk_widget_get_mapped(open));
+  GtkTextBuffer *buffer =
+      g_object_ref(gtk_text_view_get_buffer(GTK_TEXT_VIEW(Find(root, "ctest.report.output"))));
+  gtk_editable_set_text(GTK_EDITABLE(entry), path);
+  if (!strcmp(name, "hidden")) {
+    gtk_widget_set_visible(root, FALSE);
+    Click(root, "ctest.report.open");
+    CHECK(!UmiGtk4CtestReportBusy(root));
+    goto done;
+  }
+  if (!strcmp(name, "retained")) {
+    g_object_ref(open);
+    gtk_window_destroy(window);
+    g_signal_emit_by_name(open, "clicked");
+    CHECK(!UmiGtk4CtestReportBusy(root));
+    g_object_unref(open);
+    goto done;
+  }
+  Click(root, "ctest.report.open");
+  CHECK(UmiGtk4CtestReportBusy(root));
+  if (!strcmp(name, "cancel-load"))
+    Click(root, "ctest.report.cancel");
+  if (!strcmp(name, "hide-show")) {
+    gtk_widget_set_visible(root, FALSE);
+    gtk_widget_set_visible(root, TRUE);
+  }
+  if (!strcmp(name, "close-load"))
+    gtk_window_destroy(window);
+  if (!strcmp(name, "captured-path"))
+    gtk_editable_set_text(GTK_EDITABLE(entry), missing);
+  Wait(root);
+  char *text = Text(buffer);
+  if (!strcmp(name, "cancel-load") || !strcmp(name, "hide-show") || !strcmp(name, "close-load")) {
+    CHECK(text[0] == '\0');
+    g_free(text);
+    goto done;
+  }
+  CHECK(strstr(text, "Showing 1..64 of 150"));
+  g_free(text);
+  if (!strcmp(name, "captured-path"))
+    CHECK(!strcmp(gtk_label_get_text(GTK_LABEL(Find(root, "ctest.report.source"))), path));
+  if (!strcmp(name, "paging") || !strcmp(name, "draft-filter")) {
+    if (!strcmp(name, "draft-filter"))
+      gtk_editable_set_text(GTK_EDITABLE(filter), "no-match");
+    Click(root, "ctest.report.next");
+    text = Text(buffer);
+    CHECK(strstr(text, "Showing 65..128 of 150"));
+    g_free(text);
+    Click(root, "ctest.report.next");
+    text = Text(buffer);
+    CHECK(strstr(text, "Showing 129..150 of 150"));
+    g_free(text);
+    Click(root, "ctest.report.previous");
+    text = Text(buffer);
+    CHECK(strstr(text, "Showing 65..128 of 150"));
+    g_free(text);
+  } else if (!strcmp(name, "filter")) {
+    gtk_editable_set_text(GTK_EDITABLE(filter), "ROW-000007");
+    Click(root, "ctest.report.apply");
+    text = Text(buffer);
+    CHECK(strstr(text, "Showing 1..1 of 1") && strstr(text, "row-000007"));
+    g_free(text);
+  } else if (!strcmp(name, "outcomes")) {
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(Find(root, "ctest.report.outcome")), 2U);
+    Click(root, "ctest.report.apply");
+    text = Text(buffer);
+    CHECK(strstr(text, "Showing 0..0 of 0"));
+    g_free(text);
+  } else if (!strcmp(name, "missing")) {
+    gtk_editable_set_text(GTK_EDITABLE(entry), missing);
+    Click(root, "ctest.report.open");
+    Wait(root);
+    text = Text(buffer);
+    CHECK(!text[0]);
+    g_free(text);
+  } else if (!strcmp(name, "invalid-filter")) {
+    char wide[511];
+    for (size_t i = 0; i < 255U; ++i) {
+      wide[2 * i] = (char)0xc3;
+      wide[2 * i + 1] = (char)0xa9;
+    }
+    wide[510] = '\0';
+    gtk_editable_set_text(GTK_EDITABLE(filter), wide);
+    Click(root, "ctest.report.apply");
+    text = Text(buffer);
+    CHECK(!text[0]);
+    g_free(text);
+  } else if (!strcmp(name, "close-render")) {
+    g_signal_connect_object(buffer, "changed", G_CALLBACK(CloseOnText), window, 0);
+    Click(root, "ctest.report.apply");
+    CHECK(!gtk_widget_get_mapped(root));
+  } else if (!strcmp(name, "clear")) {
+    Click(root, "ctest.report.clear");
+    text = Text(buffer);
+    CHECK(!text[0]);
+    g_free(text);
+    UmiCtestReport *read = NULL;
+    OK(UmiCtestReportReadFile(path, &read));
+    UmiCtestReportDestroy(read);
+  }
+done:
+  gtk_window_destroy(window);
+  g_object_unref(buffer);
+  g_object_unref(window);
+  g_object_unref(root);
+  g_object_unref(app);
+  return 0;
+}

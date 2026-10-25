@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Captured debugger output</title>
+<style>body{font:18px/1.6 system-ui;max-width:900px;margin:3rem auto;padding:0 1rem}code{background:#eee;padding:.15rem}h1,h2{line-height:1.2}</style></head><body>
+<h1>Captured debugger output</h1>
+<p>A console report is an owned copy of the output records returned by a debugger console query. It keeps page boundaries stable while the live registry changes. It does not evaluate expressions or send commands to the program being debugged.</p>
+<h2>Use the native output browser</h2><ol>
+<li>Open an application that embeds <code>UmiGtk4DebugConsoleCreate</code>. The application supplies the callback that queries its debugger service.</li>
+<li>Leave the session and category fields empty to include all retained records, or enter an exact session ID or category. Text matching is bytewise case-insensitive; it is not a regular expression or Unicode case folding.</li>
+<li>Choose the minimum numeric severity and the ordering, then select <strong>Refresh output</strong>. The browser captures the matching records and displays up to 64 per page.</li>
+<li>Use <strong>Next</strong> and <strong>Previous</strong> to navigate the capture. Editing a filter does not change the capture until another Refresh succeeds.</li>
+<li>Use <strong>Copy page</strong> to put only the displayed page on the clipboard. Output can contain source paths and application data; review it before sharing.</li>
+<li>Select <strong>Clear view</strong> to discard this capture. This does not remove records from the debugger service.</li></ol>
+<h2>Integrate the C23 services</h2>
+<p>Execute an <code>UmiDebugConsoleQuery</code>, pass it to <code>UmiDebugConsoleReportCreate</code>, then destroy the query when it is no longer needed. The report owns its record copies. Read its summary with <code>UmiDebugConsoleReportRead</code> and release it with <code>UmiDebugConsoleReportDestroy</code>.</p>
+<p><code>UmiDebugConsoleReportFormat</code> accepts an offset and a page limit from 1 to 128. Pass a null output buffer and zero capacity to obtain the required byte count, allocate that count plus one byte for the terminator, then format again. A short destination remains unchanged. An offset past the capture returns <code>UMI_STATUS_NOT_FOUND</code>.</p>
+<p>The GTK widget owns its callback context only after successful construction and invokes the supplied destroy function once when the widget is finally released. Refresh is synchronous and intended for an in-memory query. Applications should not perform network access in that callback.</p>
+<h2>Limits and recovery</h2>
+<p>The underlying registry retains at most 2048 entries. A report is not a complete process transcript. If the query limits its results, the formatted heading identifies truncation. Invalid UTF-8 prevents capture; terminal control bytes are escaped for display. Body line breaks and tabs remain readable.</p>
+<p>An invalid filter or failed refresh clears the previous displayed results. Correct the input and refresh again. An empty result can mean the filter matched nothing, the registry was cleared, or no debugger output has been received. The widget does not start a debugger or launch a program.</p>
+</body></html>

@@ -9,6 +9,7 @@
 #define UMICOM_UI_GTK4_TEXT_EXPORT_H
 #include <gtk/gtk.h>
 #include <stdbool.h>
+#include "umicom/base/status.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -47,6 +48,22 @@ GtkWidget *UmiTextExportGtk4CreateForBuffer(GtkTextBuffer *source, const char *s
  * may finish; it cannot access the source widget or an application service.
  */
 void UmiTextExportGtk4Retire(GtkWidget *widget);
+
+/** An owner-thread admission callback for displayed reports that are valid only
+ * for a particular source revision. Return OK immediately before capture or a
+ * refusal status. Do not perform blocking I/O. The control holds its operation
+ * guard through the callback and checks retirement again before writing.
+ * A successful capture is immutable; later source changes do not cancel it. */
+typedef UmiStatus (*UmiTextExportAdmission)(void *context);
+/** Same bounded buffer export, with an explicit admission callback. A successful
+ * constructor takes context ownership and calls destroy_context on finalization,
+ * on the GTK owner thread. Failure leaves context owned by the caller. Keep
+ * context weakly bound to any external view/service; it can outlive that owner.
+ * Retirement prevents further callbacks. Legacy constructors remain unguarded. */
+GtkWidget *UmiTextExportGtk4CreateGuardedBuffer(GtkTextBuffer *source,
+    const char *suggestedFilename, UmiTextExportAdmission admission,
+    void *context, GDestroyNotify destroy_context);
+
 
 /**
  * @brief Observe whether an accepted write is awaiting main-thread completion.

@@ -8,6 +8,7 @@
 
 #include "umicom/kanban/publication.h"
 #include "board_internal.h"
+#include "publication_plan_internal.h"
 #include <string.h>
 
 typedef struct HtmlWriter { char *bytes; size_t used; UmiStatus status; } HtmlWriter;
@@ -36,6 +37,9 @@ static void Escape(HtmlWriter *writer, const char *text)
 }
 /* Validate canonical UTF-8 before emitting the document. This rejects embedded
  * controls and invalid/overlong encodings rather than publishing ambiguous text. */
+/* Public-field validation is shared with the immutable saved-plan codec.
+ * Retain the earlier local implementation for engineering review. */
+#if 0
 static bool PublicText(const char *text, size_t capacity, bool optional)
 {
     if (text == NULL) return false;
@@ -59,6 +63,9 @@ static bool PublicText(const char *text, size_t capacity, bool optional)
     }
     return true;
 }
+#endif
+static bool PublicText(const char *text,size_t capacity,bool optional)
+{ return UmiKanbanPublicText(text,capacity,optional); }
 static const UmiKanbanStage PublicStages[] = {UMI_KANBAN_TODO, UMI_KANBAN_DOING,
     UMI_KANBAN_TESTING, UMI_KANBAN_BLOCKED, UMI_KANBAN_DONE};
 static const char *const PublicTitles[] = {"To do", "Doing", "Testing", "Blocked", "Done"};

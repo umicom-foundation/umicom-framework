@@ -10,6 +10,7 @@
 #include "umicom/ui/gtk4/text_export.h"
 #include "umicom/kanban/developers.h"
 #include "umicom/kanban/publication.h"
+#include "umicom/ui/gtk4/kanban_publication_store.h"
 #include "umicom/ui/gtk4/drop_down.h"
 #include "umicom/kanban/view.h"
 #include <string.h>
@@ -20,6 +21,7 @@ typedef struct Panel {
     GtkWidget *root, *lanes, *status, *title, *developer, *suggestions, *destination;
     GtkWidget *public_title, *public_summary, *public_developer, *site_title, *export_control;
     GtkTextBuffer *html;
+    GtkWidget *public_plan_store;
     UmiKanbanConfig config;
     UmiKanbanPublicCard *publication;
     size_t publication_count;
@@ -27,6 +29,8 @@ typedef struct Panel {
     char selected[UMI_KANBAN_ID_SIZE], drag_card[UMI_KANBAN_ID_SIZE];
     char *drag_token;
     bool busy, refreshing, applying;
+    bool html_current, html_invalidating, html_publishing;
+    uint64_t public_generation, html_generation, html_revision;
 } Panel;
 typedef struct Binding {
     GWeakRef root;
@@ -67,6 +71,10 @@ static void FreePanel(gpointer data)
         UmiTextExportGtk4Retire(panel->export_control);
         g_object_unref(panel->export_control);
     }
+    if(panel->public_plan_store!=NULL){
+        UmiKanbanPublicPlanGtk4Retire(panel->public_plan_store);
+        g_object_unref(panel->public_plan_store);
+    }
     g_free(panel->drag_token); g_free(panel->publication); g_free(panel);
 }
 static GtkWidget *Label(const char *text)
@@ -89,6 +97,9 @@ static bool CopyEntry(GtkWidget *entry, char *out, size_t capacity, bool optiona
     if ((!optional && length == 0U) || length >= capacity || !g_utf8_validate(text, -1, NULL)) return false;
     memcpy(out, text, length + 1U); return true;
 }
+/* Reviewed publication freshness is shared by edits, title changes and export. */
+#include "kanban_publication_freshness.inc"
+
 static UmiStatus Apply(Panel *panel, uint64_t revision, const UmiKanbanEdit *edits, size_t count)
 {
     /* Completion messages are observable too; serialize the entire edit
@@ -272,6 +283,9 @@ static void RefreshClick(GtkWidget *button, gpointer data)
     (void)button; GtkWidget *root = NULL; Panel *panel = Acquire(data, &root);
     if (panel != NULL) { (void)UmiKanbanGtk4Refresh(root); g_object_unref(root); }
 }
+/* Preserve the former preview flow for review. The replacement invalidates
+ * derived HTML and guards native notifications before accepting an export. */
+#if 0
 static void IncludePublic(GtkWidget *button, gpointer data)
 {
     (void)button; GtkWidget *root = NULL; Panel *panel = Acquire(data, &root); if (panel == NULL) return;
@@ -292,11 +306,52 @@ static void IncludePublic(GtkWidget *button, gpointer data)
 done:
     g_object_unref(root);
 }
+
+#endif
+static void IncludePublic(GtkWidget *button, gpointer data)
+{
+    (void)button; GtkWidget *root = NULL; Panel *panel = Acquire(data, &root); if (panel == NULL) return;
+    panel->applying=true;
+    UmiKanbanPublicCard card = {0}; UmiKanbanCardSnapshot row;
+    if (umi_kanban_board_find(panel->board, panel->selected, &row) != UMI_STATUS_OK || row.archived) { Message(panel, "Select an active card to review for publication."); goto done; }
+    if (!CopyEntry(panel->public_title, card.title, sizeof(card.title), false) ||
+        !CopyEntry(panel->public_summary, card.summary, sizeof(card.summary), true) ||
+        !CopyEntry(panel->public_developer, card.developer, sizeof(card.developer), true)) {
+        Message(panel, "Enter a public title and bounded public fields. Private card text is not copied automatically."); goto done;
+    }
+    g_strlcpy(card.card_id, panel->selected, sizeof(card.card_id));
+    size_t index = panel->publication_count;
+    for (size_t i = 0U; i < panel->publication_count; ++i) if (strcmp(panel->publication[i].card_id, card.card_id) == 0) { index = i; break; }
+    if (index == UMI_KANBAN_MAX_CARDS) { Message(panel, "The public selection is full."); goto done; }
+    if (index == panel->publication_count) ++panel->publication_count;
+    panel->publication[index] = card;
+    InvalidatePublic(panel);
+    Message(panel, "Reviewed fields added to the public selection. Generate HTML to inspect the complete snapshot before saving.");
+done:
+    panel->applying=false;
+    g_object_unref(root);
+}
+/* Preserve the former preview flow for review. The replacement invalidates
+ * derived HTML and guards native notifications before accepting an export. */
+#if 0
 static void ClearPublic(GtkWidget *button, gpointer data)
 {
     (void)button; GtkWidget *root = NULL; Panel *panel = Acquire(data, &root);
     if (panel != NULL) { panel->publication_count = 0U; gtk_text_buffer_set_text(panel->html, "", 0); Message(panel, "Public selection cleared."); g_object_unref(root); }
 }
+
+#endif
+static void ClearPublic(GtkWidget *button,gpointer data)
+{
+    (void)button;GtkWidget *root=NULL;Panel *panel=Acquire(data,&root);
+    if(panel==NULL)return;
+    panel->applying=true;panel->publication_count=0U;InvalidatePublic(panel);
+    if(panel->board!=NULL)Message(panel,"Public selection cleared. Regenerate the website before exporting.");
+    panel->applying=false;g_object_unref(root);
+}
+/* Preserve the former preview flow for review. The replacement invalidates
+ * derived HTML and guards native notifications before accepting an export. */
+#if 0
 static void GeneratePublic(GtkWidget *button, gpointer data)
 {
     (void)button; GtkWidget *root = NULL; Panel *panel = Acquire(data, &root); if (panel == NULL) return;
@@ -314,6 +369,45 @@ static void GeneratePublic(GtkWidget *button, gpointer data)
     }
     g_free(html); g_object_unref(root);
 }
+
+#endif
+static void GeneratePublic(GtkWidget *button,gpointer data)
+{
+    (void)button;GtkWidget *root=NULL;Panel *panel=Acquire(data,&root);
+    if(panel==NULL)return;
+    panel->applying=true;InvalidatePublic(panel);
+    if(panel->board==NULL){panel->applying=false;g_object_unref(root);return;}
+    const uint64_t generation=panel->public_generation,revision=panel->revision;
+    char *title=g_strdup(gtk_editable_get_text(GTK_EDITABLE(panel->site_title)));
+    size_t size=0U;
+    UmiStatus status=generation==UINT64_MAX?UMI_STATUS_CAPACITY_EXCEEDED:
+        umi_kanban_publication_html(panel->board,revision,title,panel->publication,
+            panel->publication_count,NULL,0U,&size);
+    char *html=status==UMI_STATUS_OK?g_try_malloc(size):NULL;
+    if(status==UMI_STATUS_OK&&html==NULL)status=UMI_STATUS_OUT_OF_MEMORY;
+    if(status==UMI_STATUS_OK)status=umi_kanban_publication_html(panel->board,revision,title,
+        panel->publication,panel->publication_count,html,size,&size);
+    if(status==UMI_STATUS_OK){
+        GtkTextBuffer *buffer=g_object_ref(panel->html);
+        panel->html_publishing=true;
+        gtk_text_buffer_set_text(buffer,html,(gint)(size-1U));
+        panel->html_publishing=false;
+        /* Rendering and GTK publication are different boundaries. A native
+         * observer can edit the title or retire the board while text changes. */
+        if(panel->board!=NULL&&umi_kanban_board_revision(panel->board)==revision&&
+            panel->public_generation==generation){
+            panel->html_revision=revision;panel->html_generation=generation;panel->html_current=true;
+        }else{InvalidatePublic(panel);status=UMI_STATUS_INVALID_STATE;}
+        g_object_unref(buffer);
+    }
+    if(panel->board!=NULL)Message(panel,status==UMI_STATUS_OK?
+        "Current website source prepared from reviewed public fields. Save to a new HTML file; upload only that file to your host.":
+        "Public snapshot refused or changed during review. Refresh, check the selected cards and public fields, then generate again.");
+    g_free(title);g_free(html);panel->applying=false;g_object_unref(root);
+}
+/* Shared persistence operates on immutable reviewed fields, never board I/O. */
+#include "kanban_publication_plan.inc"
+
 static void Button(Panel *panel, GtkWidget *box, const char *text, GCallback callback)
 {
     GtkWidget *button = gtk_button_new_with_label(text); gtk_box_append(GTK_BOX(box), button);
@@ -343,6 +437,7 @@ UmiStatus UmiKanbanGtk4Refresh(GtkWidget *root)
     /* Rebuilding emits GTK notifications. Reentrant actions cannot access a
      * half-presented view or start another refresh. */
     panel->refreshing = true;
+    if(panel->revision!=revision)InvalidatePublic(panel);
     panel->config = config; panel->revision = revision;
     GtkWidget *child;
     while ((child = gtk_widget_get_first_child(panel->lanes)) != NULL) gtk_box_remove(GTK_BOX(panel->lanes), child);
@@ -408,8 +503,13 @@ GtkWidget *UmiKanbanGtk4Create(UmiKanbanBoard *board)
     panel->lanes = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 14); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), panel->lanes); gtk_box_append(GTK_BOX(panel->root), scroll);
     GtkWidget *expander = gtk_expander_new("Review a public website snapshot"), *publication = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
     gtk_expander_set_child(GTK_EXPANDER(expander), publication); gtk_box_append(GTK_BOX(panel->root), expander);
+    /* The original temporary-selection guidance is retained for review.
+     * Explicit private plan persistence now survives application restart. */
+#if 0
     gtk_box_append(GTK_BOX(publication), Label("Only the public fields you enter below are exported. Source descriptions, activity, identifiers and paths stay private. The selection is temporary until exported."));
-    panel->site_title = Entry(publication, "Public board title", 255); gtk_editable_set_text(GTK_EDITABLE(panel->site_title), "Umicom contributor board");
+#endif
+    gtk_box_append(GTK_BOX(publication), Label("Only reviewed public fields are exported. Private descriptions, activity, identifiers and paths stay private. Save a private selection plan to retain the review; regenerate website HTML after changing it."));
+    panel->site_title = Entry(publication, "Public board title", 255); gtk_widget_set_name(panel->site_title,"kanban-public-board-title"); gtk_editable_set_text(GTK_EDITABLE(panel->site_title), "Umicom contributor board");
     panel->public_title = Entry(publication, "Public title for the selected card", 255);
     gtk_widget_set_name(panel->public_title, "kanban-public-title");
     panel->public_summary = Entry(publication, "Public summary (optional)", 1023);
@@ -418,12 +518,26 @@ GtkWidget *UmiKanbanGtk4Create(UmiKanbanBoard *board)
     Button(panel, actions, "Include reviewed card", G_CALLBACK(IncludePublic)); Button(panel, actions, "Clear selection", G_CALLBACK(ClearPublic)); Button(panel, actions, "Generate website", G_CALLBACK(GeneratePublic));
     GtkWidget *source = gtk_text_view_new(); gtk_widget_set_name(source, "kanban-public-source"); gtk_text_view_set_editable(GTK_TEXT_VIEW(source), FALSE); gtk_text_view_set_monospace(GTK_TEXT_VIEW(source), TRUE); panel->html = gtk_text_view_get_buffer(GTK_TEXT_VIEW(source));
     GtkWidget *source_scroll = gtk_scrolled_window_new(); gtk_widget_set_size_request(source_scroll, -1, 140); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(source_scroll), source); gtk_box_append(GTK_BOX(publication), source_scroll);
+    /* Keep the old unguarded buffer export for review. Publication now validates
+     * its board and reviewed-field generations immediately before capture. */
+#if 0
     panel->export_control = UmiTextExportGtk4CreateForBuffer(panel->html, "index.html");
+#endif
+    panel->public_generation=1U;
+    Bind(panel->site_title,"changed",G_CALLBACK(PublicTitleChanged),panel,NULL,NULL,0U);
+    panel->export_control=CreateReviewedExport(panel);
     if (panel->export_control != NULL) {
         /* The panel owns a reference as well as the parent; finalization may
          * dispose GTK children before the panel data destructor runs. */
         g_object_ref_sink(panel->export_control);
         gtk_box_append(GTK_BOX(publication), panel->export_control);
+    }
+    panel->public_plan_store=CreatePublicPlanStore(panel);
+    if(panel->public_plan_store!=NULL){
+        g_object_ref_sink(panel->public_plan_store);
+        GtkWidget *saved=gtk_expander_new("Save or reopen a private public-selection plan");
+        gtk_expander_set_child(GTK_EXPANDER(saved),panel->public_plan_store);
+        gtk_box_append(GTK_BOX(publication),saved);
     }
     if (UmiKanbanGtk4Refresh(panel->root) != UMI_STATUS_OK) { GtkWidget *root = panel->root; g_object_ref_sink(root); g_object_unref(root); return NULL; }
     return panel->root;
@@ -433,6 +547,7 @@ void UmiKanbanGtk4SetBusy(GtkWidget *root, bool busy)
     if (!GTK_IS_WIDGET(root)) return;
     Panel *panel = g_object_get_data(G_OBJECT(root), PANEL_KEY);
     if (panel == NULL || panel->board == NULL) return;
+    UmiKanbanPublicPlanGtk4SetBusy(panel->public_plan_store,busy);
     panel->busy = busy; panel->drag_card[0] = '\0'; gtk_widget_set_sensitive(root, !busy);
 }
 void UmiKanbanGtk4Retire(GtkWidget *root)
@@ -441,5 +556,6 @@ void UmiKanbanGtk4Retire(GtkWidget *root)
     Panel *panel = g_object_get_data(G_OBJECT(root), PANEL_KEY);
     if (panel == NULL) return;
     panel->board = NULL; panel->busy = true; panel->drag_card[0] = '\0';
+    UmiKanbanPublicPlanGtk4Retire(panel->public_plan_store);
     UmiTextExportGtk4Retire(panel->export_control); gtk_widget_set_sensitive(root, FALSE);
 }

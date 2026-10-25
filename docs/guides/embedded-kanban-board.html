@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Embedding a local Kanban board</title>
+<style>body{font:17px/1.6 system-ui;max-width:850px;margin:3rem auto;padding:0 1rem;color:#243342}code{background:#edf2f7;padding:.15rem .3rem}h1,h2{line-height:1.2}</style>
+<h1>Embedding a local Kanban board</h1>
+<p>The native board window owns one document, its unsaved changes and its file operations. A dock moves that window's existing controls into another native window. It does not open a second copy of the file or create a second editable board.</p>
+<h2>Add a dock to a GTK4 host</h2>
+<ol><li>Create a board with <code>UmiKanbanGtk4CreateWindow</code> or <code>UmiKanbanGtk4CreateProjectWindow</code>. Keep its window referenced while using it.</li>
+<li>Call <code>UmiKanbanGtk4DockWindow(host, board, &amp;pane)</code> on the GTK owner thread. Both windows must belong to the same application. The call refuses a board that is already docked or has a pending file operation.</li>
+<li>Add the returned pane to the host's layout. The pane has an owned, nonfloating reference; release that reference when your host no longer needs it.</li>
+<li>Use <code>UmiKanbanGtk4Undock(pane, true)</code> to return the controls to their original window. This does not save, discard or close the document.</li>
+<li>Use <code>UmiKanbanGtk4PresentWindow(board)</code> when a launcher needs to show an existing board. It first returns docked contents, so the launcher cannot show an empty backing window.</li></ol>
+<h2>Ownership and closing</h2>
+<p>Hiding or moving a layout pane keeps its board open. Removing the host window or releasing the pane returns the board to its independent window and presents it. The user can continue editing or save there. A pending save continues under the original board owner.</p>
+<p>Request normal board closure with <code>gtk_window_close()</code>. The existing document guard refuses unsaved changes unless the user explicitly chooses to discard them. Forcing board destruction or terminating the process cannot preserve unsaved memory.</p>
+<h2>Project and publication boundaries</h2>
+<p>A project board retains the project identity captured when it was created. Changing the host's project does not retarget its open board. Private storage remains an explicit choice. Docking does not remember a location, write a file, evaluate code, start a server or publish a website.</p>
+<h2>Refused operations</h2>
+<p><code>BUSY</code> means a file operation or native transfer is in progress. Finish it and try again. <code>ALREADY_EXISTS</code> means the board is in another dock; return it before moving it. <code>CANCELLED</code> means a window was removed during the operation. Keep existing documents and inspect their independent windows instead of reopening the same file blindly.</p>
+</html>

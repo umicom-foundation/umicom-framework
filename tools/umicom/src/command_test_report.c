@@ -8,6 +8,7 @@
 #include "cli.h"
 #include "umicom/platform/input_file.h"
 #include "umicom/testing/ctest_report.h"
+#include "umicom/testing/ctest_report_file.h"
 #include "umicom/testing/ctest_report_comparison.h"
 #include <stdio.h>
 #include <string.h>
@@ -40,6 +41,9 @@ static void ReportText(const char *text)
 
 /* Each input is resolved before its bounded read and shared XML import.
  * The CLI owns paths; the Framework comparison service only owns outcomes. */
+/* Bounded file admission now belongs to Framework so command-line and native
+ * hosts share the same parser boundary. Retain the former composition for review. */
+#if 0
 static UmiStatus ReportReadSaved(const char *file, UmiCtestReport **out)
 {
     *out = NULL;
@@ -55,6 +59,20 @@ static UmiStatus ReportReadSaved(const char *file, UmiCtestReport **out)
         status = UmiInputFileRead(absolute, UMI_CTEST_COLLECTION_MAX_BYTES, &bytes, &size);
     if (status == UMI_STATUS_OK) status = UmiCtestReportImport((const char *)bytes, size, out);
     UmiInputFileFree(bytes);
+    return status;
+}
+
+#endif
+static UmiStatus ReportReadSaved(const char *file, UmiCtestReport **out)
+{
+    *out = NULL;
+    char current[UMI_PATH_CAPACITY], absolute[UMI_PATH_CAPACITY];
+    UmiStatus status = umi_path_is_absolute(file)
+        ? umi_path_copy(absolute, sizeof absolute, file)
+        : umi_fs_current_directory(current, sizeof current);
+    if (status == UMI_STATUS_OK && !umi_path_is_absolute(file))
+        status = umi_path_absolute(file, current, absolute, sizeof absolute);
+    if (status == UMI_STATUS_OK) status = UmiCtestReportReadFile(absolute, out);
     return status;
 }
 
@@ -132,6 +150,9 @@ int umi_cli_command_test_report(int argc, char **argv)
         (void)fputs("Use umicom test-report CTEST_JUNIT_FILE [--all].\n", stderr);
         return 2;
     }
+    /* The shared bounded reader now serves both command variants. Retain the
+     * former inline admission for engineering review of compatible behaviour. */
+#if 0
     char current[UMI_PATH_CAPACITY], absolute[UMI_PATH_CAPACITY];
     UmiStatus status;
     if (umi_path_is_absolute(argv[0])) status = umi_path_copy(absolute, sizeof absolute, argv[0]);
@@ -148,6 +169,9 @@ int umi_cli_command_test_report(int argc, char **argv)
     if (status == UMI_STATUS_OK)
         status = UmiCtestReportImport((const char *)bytes, size, &report);
     UmiInputFileFree(bytes);
+#endif
+    UmiCtestReport *report = NULL;
+    UmiStatus status = ReportReadSaved(argv[0], &report);
     if (status != UMI_STATUS_OK) {
         (void)fprintf(stderr, "Cannot inspect saved CTest report (status %d). "
             "Use a complete CTest JUnit XML file, not a console transcript. "

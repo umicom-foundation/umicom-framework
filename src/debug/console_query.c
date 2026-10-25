@@ -89,6 +89,11 @@ static int compare_entries(const UmiDebugConsoleEntrySnapshot *a,
 }
 
 /* Provide the sort items operation used by this module and its client applications. */
+/* Console captures can contain thousands of large text records. Retain the
+ * earlier insertion sort for review; the library sorter avoids shifting that
+ * complete text tail on every insertion. Separate comparators keep ordering
+ * policy local to each call without mutable global or thread-local state. */
+#if 0
 static void sort_items(UmiDebugConsoleQuery *query, UmiDebugConsoleSort sort)
 {
     size_t index;
@@ -108,6 +113,22 @@ static void sort_items(UmiDebugConsoleQuery *query, UmiDebugConsoleSort sort)
         }
         query->items[insertion] = item;
     }
+}
+
+#endif
+static int compare_oldest(const void *a, const void *b)
+{ return compare_entries(a, b, UMI_DEBUG_CONSOLE_SORT_OLDEST_FIRST); }
+static int compare_newest(const void *a, const void *b)
+{ return compare_entries(a, b, UMI_DEBUG_CONSOLE_SORT_NEWEST_FIRST); }
+static int compare_severity(const void *a, const void *b)
+{ return compare_entries(a, b, UMI_DEBUG_CONSOLE_SORT_SEVERITY_FIRST); }
+static void sort_items(UmiDebugConsoleQuery *query, UmiDebugConsoleSort sort)
+{
+    if (query->count < 2U) return;
+    int (*compare)(const void *, const void *) =
+        sort == UMI_DEBUG_CONSOLE_SORT_NEWEST_FIRST ? compare_newest :
+        sort == UMI_DEBUG_CONSOLE_SORT_SEVERITY_FIRST ? compare_severity : compare_oldest;
+    qsort(query->items, query->count, sizeof *query->items, compare);
 }
 
 /* Provide the reserve items operation used by this module and its client applications. */

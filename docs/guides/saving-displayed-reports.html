@@ -43,4 +43,9 @@ disposal can precede service cleanup, call <code>UmiTextExportGtk4Retire</code> 
 closing, then release your reference. Keep report formatting in its existing owner.</p>
 <p>This is a text snapshot, not a signed audit record, accounting backup or broker
 instruction. Share it only with the intended recipient; reports can contain private information.</p>
-</main></body></html>
+</main><h2>Export only a current generated report</h2>
+<p>A generated website may depend on both a model revision and reviewed public fields. Use <code>UmiTextExportGtk4CreateGuardedBuffer</code> when an old buffer must not be saved after either changes. Its admission callback runs on the GTK owner thread before a text copy is accepted. Return <code>UMI_STATUS_OK</code> only while the report still represents the reviewed source; otherwise return a refusal status.</p>
+<p>The callback must be short and must not perform blocking file or network work. Keep external owners weakly bound and retire the control before releasing them. The constructor takes callback-context ownership only on success. The context destructor runs when the export control is finalized.</p>
+<p>The existing label and buffer constructors retain their original behavior. Every accepted export still writes an immutable copy to a new filename. A later source change does not rewrite or cancel that accepted file. A refusal creates no file; regenerate and review the report before trying again.</p>
+
+</body></html>

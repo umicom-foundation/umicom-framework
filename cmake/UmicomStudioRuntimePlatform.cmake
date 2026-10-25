@@ -66,6 +66,7 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/activation_profiles/source_control.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/activation_profiles/terminal.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/activation_profiles/test_explorer.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/activation_profiles/kanban.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/activation_profiles/visual_designer.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/activation_profiles/component_palette.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/activation_profiles/component_structure.c"
@@ -105,6 +106,7 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/command_aliases/view_source_control.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/command_aliases/view_terminal.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/command_aliases/view_test_explorer.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/command_aliases/view_kanban.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/command_aliases/designer_open.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/command_execution.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/command_search.c"
@@ -159,6 +161,7 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/surface_profiles/source_control.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/surface_profiles/terminal.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/surface_profiles/test_explorer.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/surface_profiles/kanban.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/surface_profiles/visual_designer.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/surface_profiles/component_palette.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/surface_profiles/component_structure.c"
@@ -1543,3 +1546,5 @@ endif()
 
 message(STATUS
     "Umicom final Framework-owned Studio runtime composition enabled")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomKanbanDock.cmake")

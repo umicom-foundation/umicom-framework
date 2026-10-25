@@ -28,6 +28,7 @@ static const SurfaceFactory FACTORIES[] = {
     umi_studio_surface_profile_terminal,
     umi_studio_surface_profile_source_control,
     umi_studio_surface_profile_test_explorer,
+    umi_studio_surface_profile_kanban,
     umi_studio_surface_profile_debug,
     umi_studio_surface_profile_build,
     umi_studio_surface_profile_ai_chat,

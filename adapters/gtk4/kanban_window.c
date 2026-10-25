@@ -10,10 +10,12 @@
 #include "umicom/ui/gtk4/kanban.h"
 #include "umicom/ui/gtk4/path_picker.h"
 #include "umicom/kanban/document.h"
+#include "umicom/kanban/binding_storage.h"
 #include <string.h>
 #include "window_removal_private.h"
 
-typedef enum JobKind { JOB_CREATE, JOB_OPEN, JOB_SAVE, JOB_CLOSE, JOB_SAVE_COPY } JobKind;
+typedef enum JobKind { JOB_CREATE, JOB_OPEN, JOB_SAVE, JOB_CLOSE, JOB_SAVE_COPY,
+    JOB_BINDING_SAVE, JOB_BINDING_LOAD } JobKind;
 typedef struct WindowState {
     GtkWindow *window;
     GtkWidget *body, *controls, *status, *directory, *filename, *discard, *panel;
@@ -25,6 +27,8 @@ typedef struct Job {
     JobKind kind;
     UmiKanbanDocument *document;
     char *directory, *filename;
+    char *settings_directory;
+    UmiKanbanProjectBinding binding;
     uint64_t revision;
     bool discard, close_window;
     UmiStatus status;
@@ -74,12 +78,18 @@ static void FreeJob(gpointer data)
     /* Completion normally returns ownership to the window. This fallback
      * releases a worker-owned lease if application teardown interrupts it. */
     if (job->document != NULL) (void)umi_kanban_document_close(&job->document, true);
+    g_free(job->settings_directory);
     g_free(job->directory); g_free(job->filename); g_free(job);
 }
 static void Work(GTask *task, gpointer source, gpointer task_data, GCancellable *cancel)
 {
     (void)source; (void)cancel; Job *job = task_data;
-    if (job->kind == JOB_CREATE) {
+    if (job->kind == JOB_BINDING_SAVE) {
+        job->status = UmiKanbanBindingStorageSave(job->settings_directory, &job->binding);
+    } else if (job->kind == JOB_BINDING_LOAD) {
+        job->status = UmiKanbanBindingStorageLoad(job->settings_directory,
+            job->binding.project_root, &job->binding);
+    } else if (job->kind == JOB_CREATE) {
         UmiKanbanBoard *template = NULL; UmiKanbanConfig config;
         job->status = umi_kanban_board_create_workflow("development", "Development board", &template);
         if (job->status == UMI_STATUS_OK) job->status = umi_kanban_board_config(template, &config);
@@ -136,6 +146,29 @@ static void Complete(GObject *source, GAsyncResult *result, gpointer data)
     (void)g_task_propagate_boolean(task, NULL);
     state->document = job->document; job->document = NULL;
     if (state->closed) goto retired;
+    /* A location is only a prefilled choice. Do not overwrite edits made while
+     * its worker was reading, and never open the recalled archive implicitly. */
+    if (job->kind == JOB_BINDING_LOAD && job->status == UMI_STATUS_OK) {
+        if (strcmp(gtk_editable_get_text(GTK_EDITABLE(state->directory)), job->directory) != 0 ||
+            strcmp(gtk_editable_get_text(GTK_EDITABLE(state->filename)), job->filename) != 0)
+            job->status = UMI_STATUS_INVALID_STATE;
+        else if (!g_utf8_validate(job->binding.directory, -1, NULL) ||
+                 !g_utf8_validate(job->binding.filename, -1, NULL))
+            job->status = UMI_STATUS_PARSE_ERROR;
+        else {
+            gtk_editable_set_text(GTK_EDITABLE(state->directory), job->binding.directory);
+            if (state->closed) goto retired;
+            /* A notification observer may edit the other field. Preserve it
+             * instead of treating this partial native update as a transaction. */
+            if (strcmp(gtk_editable_get_text(GTK_EDITABLE(state->filename)), job->filename) != 0)
+                job->status = UMI_STATUS_INVALID_STATE;
+            else gtk_editable_set_text(GTK_EDITABLE(state->filename), job->binding.filename);
+            if (state->closed) goto retired;
+            if (strcmp(gtk_editable_get_text(GTK_EDITABLE(state->directory)), job->binding.directory) != 0 ||
+                strcmp(gtk_editable_get_text(GTK_EDITABLE(state->filename)), job->binding.filename) != 0)
+                job->status = UMI_STATUS_INVALID_STATE;
+        }
+    }
     if (state->document != NULL && state->panel == NULL) {
         state->panel = UmiKanbanGtk4Create(umi_kanban_document_board(state->document));
         if (state->panel != NULL) {
@@ -161,7 +194,9 @@ static void Complete(GObject *source, GAsyncResult *result, gpointer data)
     gtk_check_button_set_active(GTK_CHECK_BUTTON(state->discard), FALSE);
     if (state->closed) goto retired;
     if (job->status == UMI_STATUS_OK) {
-        Say(state, job->kind == JOB_SAVE_COPY ? "Copy saved to the chosen new file. The current board keeps its original file and unsaved state; close it explicitly before opening the copy." :
+        Say(state, job->kind == JOB_BINDING_SAVE ? "Private project location remembered. No board archive was saved or published." :
+            job->kind == JOB_BINDING_LOAD ? "Saved location recalled. Review the fields, then choose Open board." :
+            job->kind == JOB_SAVE_COPY ? "Copy saved to the chosen new file. The current board keeps its original file and unsaved state; close it explicitly before opening the copy." :
             job->kind == JOB_SAVE ? "Board saved. Public website snapshots must be regenerated after changes." :
             job->kind == JOB_CLOSE ? "Board closed." : "Board opened. Changes remain local until you save them.");
     } else {
@@ -185,6 +220,9 @@ static void Start(WindowState *state, JobKind kind, bool close_window)
 {
     /* Reentrant observers must not receive another status notification here. */
     if (state->busy || state->closed) return;
+    if ((kind == JOB_BINDING_SAVE || kind == JOB_BINDING_LOAD) && state->document != NULL) {
+        Say(state, "Save and close the board before changing its remembered location."); return;
+    }
     if ((kind == JOB_CREATE || kind == JOB_OPEN) && state->document != NULL) {
         Say(state, "Save and close the current board before opening another."); return;
     }
@@ -195,6 +233,22 @@ static void Start(WindowState *state, JobKind kind, bool close_window)
     job->directory = g_strdup(gtk_editable_get_text(GTK_EDITABLE(state->directory)));
     job->filename = g_strdup(gtk_editable_get_text(GTK_EDITABLE(state->filename)));
     job->discard = gtk_check_button_get_active(GTK_CHECK_BUTTON(state->discard));
+    if (kind == JOB_BINDING_SAVE || kind == JOB_BINDING_LOAD) {
+        const UmiKanbanProjectLocation *project =
+            g_object_get_data(G_OBJECT(state->window), "umicom-kanban-project");
+        const char *settings = g_object_get_data(G_OBJECT(state->window), "umicom-kanban-settings");
+        if (project == NULL || settings == NULL) {
+            FreeJob(job); Say(state, "This window has no private project settings location."); return;
+        }
+        job->settings_directory = g_strdup(settings);
+        UmiStatus status = UMI_STATUS_OK;
+        if (kind == JOB_BINDING_SAVE)
+            status = UmiKanbanProjectBindingCreate(project->project_root, job->directory, job->filename, &job->binding);
+        else memcpy(job->binding.project_root, project->project_root, strlen(project->project_root)+1U);
+        if (status != UMI_STATUS_OK) {
+            FreeJob(job); Say(state, "Choose a valid absolute folder and board filename before remembering it."); return;
+        }
+    }
     if (state->document != NULL) {
         UmiKanbanDocumentState snapshot;
         if (umi_kanban_document_state(state->document, &snapshot) != UMI_STATUS_OK) {
@@ -340,3 +394,5 @@ bool UmiKanbanGtk4WindowBusy(GtkWindow *window)
 
 /* Project windows share the existing serialized document and close ownership. */
 #include "kanban_project.inc"
+
+#include "kanban_binding.inc"

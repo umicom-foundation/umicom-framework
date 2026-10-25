@@ -52,6 +52,7 @@ const char *umi_studio_runtime_surface_kind_text(
         case UMI_STUDIO_SURFACE_DESIGN_MIXED: return "design-mixed";
         case UMI_STUDIO_SURFACE_DESIGN_PREVIEW: return "design-preview";
         case UMI_STUDIO_SURFACE_LIVE_PREVIEW: return "live-preview";
+        case UMI_STUDIO_SURFACE_KANBAN: return "kanban";
         default: return "unknown";
     }
 }

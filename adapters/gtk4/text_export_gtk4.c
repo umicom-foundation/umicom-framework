@@ -14,6 +14,9 @@ typedef struct TextExport {
     GtkWidget *root, *path, *save, *status;
     GWeakRef source;
     bool busy, retired;
+    UmiTextExportAdmission admission;
+    void *admission_context;
+    GDestroyNotify admission_destroy;
 } TextExport;
 
 typedef struct TextExportWrite {
@@ -91,6 +94,9 @@ static void ExportWorker(GTask *task, gpointer source, gpointer data, GCancellab
     g_task_return_boolean(task, TRUE);
 }
 
+/* Keep completion guarded through observable status/sensitivity changes.
+ * The earlier release-before-feedback path is retained for review. */
+#if 0
 static void ExportComplete(GObject *source, GAsyncResult *result, gpointer data)
 {
     (void)source; (void)data;
@@ -116,6 +122,35 @@ static void ExportComplete(GObject *source, GAsyncResult *result, gpointer data)
     g_object_unref(root);
 }
 
+#endif
+static void ExportComplete(GObject *source, GAsyncResult *result, gpointer data)
+{
+    (void)source; (void)data;
+    TextExportWrite *write = g_task_get_task_data(G_TASK(result));
+    (void)g_task_propagate_boolean(G_TASK(result), NULL);
+    GtkWidget *root = g_weak_ref_get(&write->root);
+    if (root == NULL) return;
+    TextExport *export = g_object_get_data(G_OBJECT(root), "umicom-text-export");
+    if (!export->retired) {
+        /* The receipt names the accepted destination, even if the entry or report
+         * changed while writing. It never describes a newer report as saved. */
+        char *message = write->status == UMI_STATUS_OK ?
+            g_strdup_printf("Saved captured text (%" G_GUINT64_FORMAT " bytes) to %s",
+                (guint64)write->written, write->path) :
+            g_strdup_printf("Save failed (status %d; %" G_GUINT64_FORMAT
+                " bytes written) at %s. Existing files are preserved. A new partial file may remain; inspect it before choosing another filename.",
+                (int)write->status, (guint64)write->written, write->path);
+        gtk_label_set_text(GTK_LABEL(export->status), message);
+        g_free(message);
+        if (!export->retired) gtk_widget_set_sensitive(export->save, TRUE);
+    }
+    export->busy = false;
+    g_object_unref(root);
+}
+
+/* Preserve direct capture for review. The replacement owns admission before
+ * owner callbacks and refusal feedback, preventing reentrant writes. */
+#if 0
 static void ExportClicked(GtkButton *button, gpointer data)
 {
     (void)button;
@@ -151,6 +186,44 @@ static void ExportClicked(GtkButton *button, gpointer data)
     g_object_unref(root);
 }
 
+#endif
+static void ExportClicked(GtkButton *button, gpointer data)
+{
+    (void)button;
+    GtkWidget *root=g_object_ref(data);
+    TextExport *export=g_object_get_data(G_OBJECT(root),"umicom-text-export");
+    if(export->retired||export->busy){g_object_unref(root);return;}
+    /* A caller-supplied admission callback and every feedback notification may
+     * reenter this control. Hold admission until the worker or refusal owns the
+     * complete result; the worker receives only copied text and destination. */
+    export->busy=true;
+    TextExportWrite *write=g_new0(TextExportWrite,1);
+    g_weak_ref_init(&write->root,root);
+    write->path=g_strdup(gtk_editable_get_text(GTK_EDITABLE(export->path)));
+    UmiStatus status=UmiOutputFileValidatePath(write->path);
+    if(status==UMI_STATUS_OK&&export->admission!=NULL)
+        status=export->admission(export->admission_context);
+    if(export->retired)status=UMI_STATUS_CANCELLED;
+    GObject *source=g_weak_ref_get(&export->source);
+    if(status==UMI_STATUS_OK)status=ExportCapture(source,&write->text,&write->length);
+    g_clear_object(&source);
+    if(export->retired)status=UMI_STATUS_CANCELLED;
+    if(status!=UMI_STATUS_OK){
+        if(!export->retired){
+            char *message=g_strdup_printf("Cannot capture text (status %d). Review the report's current source and regenerate it if needed. Choose a new absolute filename and a nonempty report within the export size limit. No file was created.",(int)status);
+            gtk_label_set_text(GTK_LABEL(export->status),message);g_free(message);
+        }
+        export->busy=false;ExportWriteFree(write);g_object_unref(root);return;
+    }
+    GTask *task=g_task_new(NULL,NULL,ExportComplete,NULL);
+    g_task_set_task_data(task,write,ExportWriteFree);
+    g_task_run_in_thread(task,ExportWorker);g_object_unref(task);
+    gtk_widget_set_sensitive(export->save,FALSE);
+    if(!export->retired)gtk_label_set_text(GTK_LABEL(export->status),
+        "Saving the captured text. Later report edits are not part of this file.");
+    g_object_unref(root);
+}
+
 static void ExportFree(gpointer data)
 {
     TextExport *export = data;
@@ -158,6 +231,7 @@ static void ExportFree(gpointer data)
     g_weak_ref_clear(&export->source);
     g_object_unref(export->save);
     g_object_unref(export->path); g_object_unref(export->status);
+    if(export->admission_destroy!=NULL)export->admission_destroy(export->admission_context);
     g_free(export);
 }
 
@@ -227,4 +301,18 @@ bool UmiTextExportGtk4Busy(GtkWidget *widget)
     if (widget == NULL) return false;
     TextExport *export = g_object_get_data(G_OBJECT(widget), "umicom-text-export");
     return export != NULL && export->busy;
+}
+
+GtkWidget *UmiTextExportGtk4CreateGuardedBuffer(GtkTextBuffer *source,
+    const char *suggestedFilename,UmiTextExportAdmission admission,
+    void *context,GDestroyNotify destroy_context)
+{
+    if(!GTK_IS_TEXT_BUFFER(source)||admission==NULL)return NULL;
+    GtkWidget *root=ExportCreate(G_OBJECT(source),suggestedFilename);
+    if(root!=NULL){
+        TextExport *export=g_object_get_data(G_OBJECT(root),"umicom-text-export");
+        export->admission=admission;export->admission_context=context;
+        export->admission_destroy=destroy_context;
+    }
+    return root;
 }

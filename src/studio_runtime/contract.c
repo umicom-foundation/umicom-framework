@@ -37,10 +37,20 @@ const UmiStudioRuntimeContract *umi_studio_runtime_contract(void)
         .shell_persona_id = "umicom.shell.persona.studio-ide",
         .perspective_id = "umicom.perspective.integrated-development",
         .default_layout_id = "umicom.studio.layout.default",
+/* The Kanban entry extends the supported catalogue. Retain the earlier
+ * cardinality for compatibility review; exact identity checks remain active. */
+#if 0
         .required_surface_count = 27U,
+#endif
+        .required_surface_count = 28U,
         .required_ide_command_count = 29U,
         .required_ai_command_count = 23U,
+/* The Kanban entry extends the supported catalogue. Retain the earlier
+ * cardinality for compatibility review; exact identity checks remain active. */
+#if 0
         .required_alias_count = 23U,
+#endif
+        .required_alias_count = 24U,
         .required_studio_command_count = 17U,
         .required_layout_count = 10U
     };

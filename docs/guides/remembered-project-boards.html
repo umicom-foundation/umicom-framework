@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Remember a private project board</title>
+<style>body{font:17px/1.6 system-ui;max-width:850px;margin:3rem auto;padding:0 1rem;color:#172332}code,pre{background:#eef2f6}pre{padding:1rem;overflow:auto}</style>
+<h1>Remember a private project board</h1>
+<p>A project binding remembers where you chose to keep a Kanban board. It contains the project path, the board folder and its filename. The board itself remains a separate document with its existing save, conflict and close rules.</p>
+<h2>Use it in Studio</h2>
+<ol>
+<li>Open a project, then run <code>project.board</code> from the command search. A project board window opens.</li>
+<li>Choose an existing private folder and enter a filename ending in <code>.umikb</code>. Use <strong>Remember entered location</strong> while no board is open.</li>
+<li>Wait for “Private project location remembered”. This saves the location only. Use <strong>Create board</strong> or <strong>Open board</strong> separately.</li>
+<li>On a later visit, choose <strong>Recall saved location</strong>. Review the filled folder and filename, then choose <strong>Open board</strong>.</li>
+<li>Save and close the board before changing its remembered location. Closing a window with unsaved cards still requires the existing save or discard decision.</li>
+</ol>
+<h2>Embed the shared controls</h2>
+<p>Applications link <code>Umicom::kanban_gtk4</code>. Create a project window, then enable location controls using an existing private settings directory:</p>
+<pre><code>#include &lt;umicom/ui/gtk4/kanban_binding.h&gt;
+GtkWindow *board = NULL;
+UmiStatus status = UmiKanbanGtk4CreateProjectWindow(app, project_root, &amp;board);
+if (status == UMI_STATUS_OK)
+    status = UmiKanbanGtk4EnableProjectStorage(board, private_settings_directory);
+/* Handle status before presenting the window. */</code></pre>
+<p>The native adapter copies paths into a worker request. It does not let a worker use GTK widgets. A removed window cannot apply recalled fields. If the user edits either field during loading, recall refuses to overwrite that edit. Applications may instead use <code>UmiKanbanGtk4EnableProjectStorageForApplication</code> to resolve their normal configuration folder; the host remains responsible for creating that folder.</p>
+<h2>Use the C service without GTK</h2>
+<p>Link <code>Umicom::kanban_storage</code> and include <code>umicom/kanban/binding_storage.h</code>. Create a binding with <code>UmiKanbanProjectBindingCreate</code>, then call <code>UmiKanbanBindingStorageSave</code> or <code>UmiKanbanBindingStorageLoad</code>. Supply an existing absolute settings folder. These calls may block, so interactive hosts should run them on a worker.</p>
+<p>The codec reuses Framework value archives, validates complete fields and checks the stored project identity on load. Neither decoding nor loading grants permission to open a board. A checksum detects accidental damage; it does not encrypt the record or authenticate its author.</p>
+<h2>Recovery and limits</h2>
+<ul>
+<li>If no location is saved, choose the folder manually and remember it. A missing record does not create a board.</li>
+<li>If the settings directory is missing or read-only, create or choose a suitable private location. Existing board files are unaffected.</li>
+<li>If a record is malformed or belongs to another project, loading refuses it. Re-enter the correct location and explicitly remember it.</li>
+<li>Moved projects and path aliases can have different binding names. Reconfirm their location instead of assuming they identify the same project.</li>
+<li>Location saves use atomic replacement and local last-writer-wins preference semantics. They are not collaborative board transactions.</li>
+<li>The record contains local paths. Keep settings outside public repositories. Public board exports do not automatically include this record.</li>
+</ul>
+</html>

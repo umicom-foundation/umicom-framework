@@ -19,6 +19,7 @@
  * This parser intentionally accepts CTest's small JUnit vocabulary only. */
 
 #include "umicom/testing/ctest_report.h"
+#include "umicom/testing/ctest_report_view.h"
 
 typedef struct UmiCtestXmlCursor {
     const char *bytes;
@@ -75,6 +76,26 @@ static int CtestUtf8Read(const char *text, size_t length, size_t *used,
     if (result < minimum || !CtestXmlScalar(result)) return 0;
     *used = count; *value = result;
     return 1;
+}
+
+
+/* Filtering uses the same scalar grammar as imported CTest names, keeping the
+ * low-level testing library independent of document/editor link dependencies. */
+UmiStatus UmiCtestReportFilterValidate(const UmiCtestReportFilter *filter)
+{
+    if (filter == NULL || (filter->outcomes & ~UMI_CTEST_VIEW_ALL) != 0U ||
+        filter->order < UMI_CTEST_REPORT_DOCUMENT_ORDER || filter->order > UMI_CTEST_REPORT_OUTCOME_ORDER)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    const char *end = memchr(filter->name_contains, '\0', sizeof filter->name_contains);
+    if (end == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t length = (size_t)(end-filter->name_contains);
+    for (size_t offset=0U;offset<length;) {
+        size_t used;uint32_t scalar;
+        if (!CtestUtf8Read(filter->name_contains+offset,length-offset,&used,&scalar))
+            return UMI_STATUS_INVALID_ARGUMENT;
+        offset+=used;
+    }
+    return UMI_STATUS_OK;
 }
 
 static UmiStatus CtestNameLength(const char *name, size_t *outLength)

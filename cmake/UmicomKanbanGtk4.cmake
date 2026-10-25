@@ -11,6 +11,8 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomTextExport.cmake")
 get_filename_component(_kanban_gtk_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
 add_library(umicom_kanban_gtk4 STATIC
     "${_kanban_gtk_root}/adapters/gtk4/kanban.c"
+    "${_kanban_gtk_root}/adapters/gtk4/kanban_publication_store.c"
+    "${_kanban_gtk_root}/adapters/gtk4/kanban_dock.c"
     "${_kanban_gtk_root}/adapters/gtk4/kanban_window.c")
 add_library(Umicom::kanban_gtk4 ALIAS umicom_kanban_gtk4)
 set_target_properties(umicom_kanban_gtk4 PROPERTIES
@@ -43,3 +45,57 @@ endif()
 
 install(FILES "${_kanban_gtk_root}/include/umicom/ui/gtk4/kanban_project.h"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)
+
+install(FILES "${_kanban_gtk_root}/include/umicom/ui/gtk4/kanban_binding.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_kanban_gtk4 include/umicom/ui/gtk4/kanban_binding.h)
+endif()
+if(COMMAND umicom_target_qualification_inputs)
+    umicom_target_qualification_inputs(umicom_kanban_gtk4 FILES
+        "${_kanban_gtk_root}/adapters/gtk4/kanban_project.inc"
+        "${_kanban_gtk_root}/adapters/gtk4/kanban_publication_plan.inc"
+        "${_kanban_gtk_root}/adapters/gtk4/kanban_binding.inc")
+endif()
+
+install(FILES "${_kanban_gtk_root}/include/umicom/ui/gtk4/kanban_publication_store.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_kanban_gtk4 include/umicom/ui/gtk4/kanban_publication_store.h)
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomKanbanPublicationPlan.cmake")
+
+install(FILES "${_kanban_gtk_root}/include/umicom/ui/gtk4/kanban_dock.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_kanban_gtk4 include/umicom/ui/gtk4/kanban_dock.h)
+endif()
+
+# Native tests may be composed after the headless Studio catalogue.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomKanbanDock.cmake")
+
+install(FILES "${_kanban_gtk_root}/docs/guides/embedded-kanban-board.html"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs" COMPONENT Framework)
+
+if(BUILD_TESTING)
+    add_executable(umi-kanban-public-freshness-test "${CMAKE_CURRENT_LIST_DIR}/../tests/kanban_gtk4/test_public_freshness.c")
+    target_link_libraries(umi-kanban-public-freshness-test PRIVATE Umicom::kanban_gtk4)
+    set_target_properties(umi-kanban-public-freshness-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umi-kanban-public-freshness-test)
+    umicom_apply_sanitizers(umi-kanban-public-freshness-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umi-kanban-public-freshness-test)
+    endif()
+    foreach(case normal include-change title-change board-edit external external-refresh generate-refused clear retired reentrant-title reentrant-edit reentrant-export regenerate refused-edit accepted-snapshot)
+        set(test "framework.kanban.publication_freshness.${case}")
+        set(directory "${CMAKE_CURRENT_BINARY_DIR}/qualification/framework.kanban.publication_freshness/${case}")
+        file(MAKE_DIRECTORY "${directory}")
+        add_test(NAME ${test} COMMAND umi-kanban-public-freshness-test ${case} "${directory}")
+        set_tests_properties(${test} PROPERTIES TIMEOUT 45 SKIP_RETURN_CODE 77
+            WORKING_DIRECTORY "${directory}" ENVIRONMENT "G_DEBUG=fatal-warnings"
+            LABELS "framework;gtk4;publication;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(${test} TARGETS umi-kanban-public-freshness-test)
+        endif()
+    endforeach()
+endif()

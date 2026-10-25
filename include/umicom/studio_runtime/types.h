@@ -71,11 +71,18 @@ typedef enum UmiStudioRuntimeSurfaceKind {
     UMI_STUDIO_SURFACE_DESIGN_MIXED = 25,
     UMI_STUDIO_SURFACE_DESIGN_PREVIEW = 26,
     /* Preview the active editor document independently from visual design. */
-    UMI_STUDIO_SURFACE_LIVE_PREVIEW = 27
+    UMI_STUDIO_SURFACE_LIVE_PREVIEW = 27,
+    /* Preserve existing numeric identities while adding a reusable planning pane. */
+    UMI_STUDIO_SURFACE_KANBAN = 28
 } UmiStudioRuntimeSurfaceKind;
 
 /* Keep bounded surface loops aligned when a reusable Studio panel is added. */
+/* Retain the previous bound for catalogue compatibility review. Kanban extends
+ * surface iteration without changing any earlier persisted identity. */
+#if 0
 #define UMI_STUDIO_SURFACE_LAST UMI_STUDIO_SURFACE_LIVE_PREVIEW
+#endif
+#define UMI_STUDIO_SURFACE_LAST UMI_STUDIO_SURFACE_KANBAN
 
 /**
  * List the named studio runtime selection kind values accepted by this public contract.

@@ -1,0 +1,21 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Save reviewed public board fields</title>
+<style>body{max-width:64rem;margin:3rem auto;padding:0 1rem;font:18px/1.6 system-ui;color:#17212b}code{background:#edf2f6}h1,h2{line-height:1.2}</style>
+<h1>Save reviewed public board fields</h1>
+<p>The Kanban board can keep the public fields you reviewed in a separate <code>.umipublic</code> plan. This lets you reopen a contributor-site selection without copying the private board description into a website.</p>
+<p><strong>The plan is private.</strong> It contains board and card identifiers and the reviewed fields. It is not encrypted. Keep it in your private local folder, outside public repositories. The generated HTML is the file intended for publication after you inspect it.</p>
+<h2>Save a selection</h2><ol>
+<li>Open a board and expand <strong>Review a public website snapshot</strong>.</li>
+<li>Select each card you want to publish. Enter a public title, optional summary and an approved developer display name, then select <strong>Include reviewed card</strong>. Private descriptions and internal developer identifiers are not filled into these fields automatically.</li>
+<li>Enter the public board title. Expand <strong>Save or reopen a private public-selection plan</strong>.</li>
+<li>Choose an existing private directory and a filename ending in <code>.umipublic</code>. Select <strong>Save current public selection</strong>. This replaces the selected plan file through the Framework rooted-file storage service. It does not save or replace the board document.</li></ol>
+<h2>Load and review later</h2><ol>
+<li>Open the intended board, choose the saved plan’s private directory and filename, and select <strong>Load selection for review</strong>.</li>
+<li>Read the preview. It shows the saved board identity, revision, public board title and every selected card’s public fields. Loading does not change the current selection or generate HTML.</li>
+<li>Review the public fields for the current board. Check the approval box and select <strong>Adopt reviewed fields</strong>. The host requires the same board identifier and still-active selected cards. A stale view must be refreshed first.</li>
+<li>Select <strong>Generate website</strong> separately. Inspect the HTML output, then save it through the existing HTML export control. Upload only that reviewed HTML file to your chosen host.</li></ol>
+<p>Adoption preserves the saved public wording. It does not copy changed private titles, descriptions or assignments. Current card positions come from the current board when you generate the website. Adoption clears any previously generated HTML so it cannot be mistaken for the new selection.</p>
+<h2>Failures and limits</h2>
+<p>A different board, archived or missing card, invalid archive or stale view is refused. The previous live selection is retained. Discard loaded selection clears only the review. Plan files are bounded to 2 MiB and 1,024 selected cards. Their checksum detects accidental damage; it does not identify a trusted author.</p>
+<p>Loading and saving run on a worker. Hiding or closing the controls prevents late review publication. A save already dispatched may finish writing its independently captured plan; closing the window does not undo that save. Host applications must retire the control before releasing a borrowed board.</p>
+<h2>Reuse in another application</h2>
+<p>The pure <code>Umicom::kanban</code> library owns immutable plans, validation and encoding. The optional <code>Umicom::kanban_storage</code> library reads and replaces private files. <code>Umicom::kanban_gtk4</code> supplies the review controls. The host capture and adoption callbacks run on the GTK thread; workers own only copied paths and immutable plan values. The same services support Studio and other native applications.</p></html>

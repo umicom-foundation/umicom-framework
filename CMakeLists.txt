@@ -6047,6 +6047,8 @@ include(cmake/UmicomProcessCatalog.cmake)
 
 # Paused instruction pages share the native debugger connection and selection owners.
 include(cmake/UmicomDebugInstructions.cmake)
+include(cmake/UmicomDebugBacktrace.cmake)
+include(cmake/UmicomDebugConsoleReport.cmake)
 
 # Readiness consumers verify the archive that owns the suite lifecycle.
 include(cmake/UmicomIntegrationReadiness.cmake)
@@ -6134,6 +6136,7 @@ install(FILES docs/SELECTIVE_SDK_INSTALLATION.html
 
 # Saved CTest evidence shares the live adapter parser and native CLI.
 include(cmake/UmicomCtestReportInspection.cmake)
+include(cmake/UmicomCtestReportView.cmake)
 
 # The impact command previews existing configured targets; it never runs Git mutations.
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomBuildImpact.cmake")

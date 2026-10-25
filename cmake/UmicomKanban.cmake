@@ -40,3 +40,13 @@ install(FILES "${_kanban_root}/docs/guides/native-kanban-and-contributor-view.ht
 install(FILES "${_kanban_root}/docs/guides/native-kanban-and-contributor-view.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides"
     COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
+
+# Reviewed public fields have a separate private archive from board documents.
+install(FILES "${_kanban_root}/include/umicom/kanban/publication_plan.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/kanban" COMPONENT Framework)
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_kanban include/umicom/kanban/publication_plan.h)
+endif()
+install(FILES "${_kanban_root}/docs/guides/saved-publication-plans.html"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides" COMPONENT Framework)
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomKanbanPublicationPlan.cmake")
