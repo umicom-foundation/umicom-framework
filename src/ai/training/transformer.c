@@ -29,11 +29,30 @@ static int ShapeMatches(const UmiAiTrainingTensor *tensor,
            actualRows == rows && actualColumns == columns;
 }
 
-UmiStatus UmiAiTrainingTransformerBlockForward(
+/* Keep the canonical matrix multiplication as the default. A Framework-owned
+ * extension can supply a differently composed projection; it must still use
+ * the shared tape and honour its lifetime and error contracts. */
+static UmiStatus Project(
+    UmiAiTrainingTape *tape,
+    UmiAiTrainingTransformerProjection role,
+    const UmiAiTrainingTensor *input,
+    const UmiAiTrainingTensor *weights,
+    UmiAiTrainingTransformerProjectionHook hook,
+    void *context,
+    UmiAiTrainingTensor **outTensor)
+{
+    if (hook == NULL)
+        return UmiAiTrainingMatmul(tape, input, weights, outTensor);
+    return hook(context, tape, role, input, weights, outTensor);
+}
+
+UmiStatus UmiAiTrainingTransformerBlockForwardWithProjections(
     UmiAiTrainingTape *tape,
     const UmiAiTrainingTensor *input,
     const UmiAiTrainingTransformerBlockParameters *parameters,
     const UmiAiTrainingTransformerBlockConfig *config,
+    UmiAiTrainingTransformerProjectionHook hook,
+    void *hookContext,
     UmiAiTrainingTensor **outTensor)
 {
     size_t rows = 0U, channels = 0U;
@@ -82,24 +101,28 @@ UmiStatus UmiAiTrainingTransformerBlockForward(
      * input; tape backprop correctly accumulates those three gradient paths. */
     UMI_TRANSFORMER_STEP(UmiAiTrainingLayerNorm(tape, input,
         parameters->normScale1, parameters->normBias1, config->normEpsilon, &norm1));
-    UMI_TRANSFORMER_STEP(UmiAiTrainingMatmul(tape, norm1, parameters->queryWeights, &query));
-    UMI_TRANSFORMER_STEP(UmiAiTrainingMatmul(tape, norm1, parameters->keyWeights, &key));
-    UMI_TRANSFORMER_STEP(UmiAiTrainingMatmul(tape, norm1, parameters->valueWeights, &value));
+    UMI_TRANSFORMER_STEP(Project(tape, UMI_AI_TRANSFORMER_PROJECTION_QUERY,
+        norm1, parameters->queryWeights, hook, hookContext, &query));
+    UMI_TRANSFORMER_STEP(Project(tape, UMI_AI_TRANSFORMER_PROJECTION_KEY,
+        norm1, parameters->keyWeights, hook, hookContext, &key));
+    UMI_TRANSFORMER_STEP(Project(tape, UMI_AI_TRANSFORMER_PROJECTION_VALUE,
+        norm1, parameters->valueWeights, hook, hookContext, &value));
     UMI_TRANSFORMER_STEP(UmiAiTrainingMultiHeadCausalAttention(tape, query, key, value,
         config->sequenceLength, config->attentionHeads, &attended));
-    UMI_TRANSFORMER_STEP(UmiAiTrainingMatmul(tape, attended,
-        parameters->outputWeights, &projected));
+    UMI_TRANSFORMER_STEP(Project(tape, UMI_AI_TRANSFORMER_PROJECTION_ATTENTION_OUTPUT,
+        attended, parameters->outputWeights, hook, hookContext, &projected));
     UMI_TRANSFORMER_STEP(UmiAiTrainingAdd(tape, input, projected, &residual1));
 
     /* Pre-LN feed-forward sublayer with a documented ReLU (not GELU) and a
      * learned broadcast bias on each dense projection. */
     UMI_TRANSFORMER_STEP(UmiAiTrainingLayerNorm(tape, residual1,
         parameters->normScale2, parameters->normBias2, config->normEpsilon, &norm2));
-    UMI_TRANSFORMER_STEP(UmiAiTrainingMatmul(tape, norm2, parameters->upWeights, &expanded));
+    UMI_TRANSFORMER_STEP(Project(tape, UMI_AI_TRANSFORMER_PROJECTION_FEED_FORWARD_UP,
+        norm2, parameters->upWeights, hook, hookContext, &expanded));
     UMI_TRANSFORMER_STEP(UmiAiTrainingAdd(tape, expanded, parameters->upBias, &expandedBias));
     UMI_TRANSFORMER_STEP(UmiAiTrainingRelu(tape, expandedBias, &activated));
-    UMI_TRANSFORMER_STEP(UmiAiTrainingMatmul(tape, activated,
-        parameters->downWeights, &contracted));
+    UMI_TRANSFORMER_STEP(Project(tape, UMI_AI_TRANSFORMER_PROJECTION_FEED_FORWARD_DOWN,
+        activated, parameters->downWeights, hook, hookContext, &contracted));
     UMI_TRANSFORMER_STEP(UmiAiTrainingAdd(tape, contracted,
         parameters->downBias, &contractedBias));
     UMI_TRANSFORMER_STEP(UmiAiTrainingAdd(tape, residual1, contractedBias, &residual2));
@@ -112,4 +135,17 @@ rollback:
      * untouched. Rollback only frees nodes created by this composition. */
     (void)UmiAiTrainingTapeRollback(tape, checkpoint);
     return status;
+}
+
+/* Retain the established public operation and its exact mathematical path.
+ * Without a projection hook, every dense operation remains tape Matmul. */
+UmiStatus UmiAiTrainingTransformerBlockForward(
+    UmiAiTrainingTape *tape,
+    const UmiAiTrainingTensor *input,
+    const UmiAiTrainingTransformerBlockParameters *parameters,
+    const UmiAiTrainingTransformerBlockConfig *config,
+    UmiAiTrainingTensor **outTensor)
+{
+    return UmiAiTrainingTransformerBlockForwardWithProjections(
+        tape, input, parameters, config, NULL, NULL, outTensor);
 }

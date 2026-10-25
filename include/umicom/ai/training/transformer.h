@@ -75,6 +75,40 @@ UmiStatus UmiAiTrainingTransformerBlockForward(
     const UmiAiTrainingTransformerBlockConfig *config,
     UmiAiTrainingTensor **outTensor);
 
+/* Give one optional, Framework-owned projection extension a narrow entry
+ * point without duplicating the attention, residual, normalisation or MLP
+ * composition. NULL hooks preserve the canonical block's existing behaviour.
+ * These identifiers are projection roles, not checkpoint parameter indices. */
+typedef enum UmiAiTrainingTransformerProjection {
+    UMI_AI_TRANSFORMER_PROJECTION_QUERY = 1,
+    UMI_AI_TRANSFORMER_PROJECTION_KEY,
+    UMI_AI_TRANSFORMER_PROJECTION_VALUE,
+    UMI_AI_TRANSFORMER_PROJECTION_ATTENTION_OUTPUT,
+    UMI_AI_TRANSFORMER_PROJECTION_FEED_FORWARD_UP,
+    UMI_AI_TRANSFORMER_PROJECTION_FEED_FORWARD_DOWN
+} UmiAiTrainingTransformerProjection;
+
+/* A hook substitutes precisely ONE matrix projection with Framework tape
+ * operations and publishes a tape-owned output on success. It must neither
+ * update weights, rewind earlier graph nodes nor mutate caller-owned inputs.
+ * The enclosing block validates canonical base shapes before dispatching,
+ * and rolls back new graph nodes if the hook rejects the request. */
+typedef UmiStatus (*UmiAiTrainingTransformerProjectionHook)(
+    void *context, UmiAiTrainingTape *tape,
+    UmiAiTrainingTransformerProjection projection,
+    const UmiAiTrainingTensor *input,
+    const UmiAiTrainingTensor *canonicalWeights,
+    UmiAiTrainingTensor **outTensor);
+
+UmiStatus UmiAiTrainingTransformerBlockForwardWithProjections(
+    UmiAiTrainingTape *tape,
+    const UmiAiTrainingTensor *input,
+    const UmiAiTrainingTransformerBlockParameters *parameters,
+    const UmiAiTrainingTransformerBlockConfig *config,
+    UmiAiTrainingTransformerProjectionHook hook,
+    void *hookContext,
+    UmiAiTrainingTensor **outTensor);
+
 #ifdef __cplusplus
 }
 #endif

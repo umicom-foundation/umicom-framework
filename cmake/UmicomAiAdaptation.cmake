@@ -17,6 +17,7 @@ endif()
 if(NOT TARGET umicom_ai_adaptation)
     add_library(umicom_ai_adaptation STATIC
         "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/low_rank.c"
+        "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/transformer_low_rank.c"
         "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/source_admission.c"
         "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/caption_text.c"
         "${UMICOM_AI_ADAPTATION_ROOT}/src/ai/training/adapter_checkpoint.c"
@@ -111,6 +112,15 @@ if(BUILD_TESTING)
         add_test(NAME framework.ai.adaptation.reviewed_corpus
             COMMAND umicom-ai-training-reviewed-corpus-test)
     endif()
+    # Optional projection hooks preserve the existing Transformer block path.
+    if(NOT TARGET umicom-ai-training-transformer-low-rank-test)
+        add_executable(umicom-ai-training-transformer-low-rank-test
+            "${UMICOM_AI_ADAPTATION_ROOT}/tests/ai_training/test_training_transformer_low_rank.c")
+        target_link_libraries(umicom-ai-training-transformer-low-rank-test PRIVATE
+            Umicom::AiAdaptation)
+        add_test(NAME framework.ai.adaptation.transformer_low_rank
+            COMMAND umicom-ai-training-transformer-low-rank-test)
+    endif()
     if(TARGET Umicom::creative_workspace AND NOT TARGET umicom-ai-training-caption-text-test)
         add_executable(umicom-ai-training-caption-text-test
             "${UMICOM_AI_ADAPTATION_ROOT}/tests/ai_training/test_training_caption_text.c")
@@ -127,7 +137,8 @@ if(BUILD_TESTING)
             umicom-ai-training-low-rank-step-test
             umicom-ai-training-reviewed-examples-test
             umicom-ai-training-decoder-logit-adapter-test
-            umicom-ai-training-reviewed-corpus-test)
+            umicom-ai-training-reviewed-corpus-test
+            umicom-ai-training-transformer-low-rank-test)
         target_compile_features(${target} PRIVATE c_std_23)
         if(MSVC)
             target_compile_options(${target} PRIVATE /W4)
