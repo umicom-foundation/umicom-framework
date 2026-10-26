@@ -14,6 +14,11 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/accounting/accounting_period.h"
 #include <string.h>
+
+/* Retain the former implementation for review. The replacement validates
+ * complete restored values and bounded containers before lookup or eligibility,
+ * and stages initialization before publication to preserve caller data. */
+#if 0
 /*
  * Initialise accounting accounting period from caller-provided values so later operations
  * receive a known state.
@@ -56,4 +61,56 @@ bool umi_accounting_accounting_period_open(const UmiAccountingAccountingPeriod *
      */
     if(value==NULL) return (bool)0;
     return value->status==UMI_ACCOUNTING_PERIOD_OPEN;
+}
+
+#endif
+
+/* A status flag alone cannot authorize use of a malformed period. Keep dates,
+ * identity and state validation together, and publish initialized values once. */
+UmiStatus umi_accounting_accounting_period_init(UmiAccountingAccountingPeriod *value,
+    const char *id, UmiFinancialDate start_date, UmiFinancialDate end_date,
+    UmiAccountingPeriodStatus period_status)
+{
+    if (value == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    UmiAccountingAccountingPeriod next = {0};
+    UmiStatus status = umi_accounting_id_assign(&next.id, id);
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    next.start_date = start_date;
+    next.end_date = end_date;
+    next.status = period_status;
+    if (!umi_accounting_accounting_period_valid(&next)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    *value = next;
+    return UMI_STATUS_OK;
+}
+
+bool umi_accounting_accounting_period_valid(const UmiAccountingAccountingPeriod *value)
+{
+    return value != NULL && umi_financial_id_is_valid(&value->id) &&
+        umi_financial_date_is_valid(value->start_date) &&
+        umi_financial_date_is_valid(value->end_date) &&
+        umi_financial_date_compare(value->start_date, value->end_date) <= 0 &&
+        (value->status == UMI_ACCOUNTING_PERIOD_OPEN ||
+         value->status == UMI_ACCOUNTING_PERIOD_SOFT_CLOSED ||
+         value->status == UMI_ACCOUNTING_PERIOD_CLOSED);
+}
+
+bool umi_accounting_accounting_period_open(const UmiAccountingAccountingPeriod *value)
+{
+    return umi_accounting_accounting_period_valid(value) &&
+        value->status == UMI_ACCOUNTING_PERIOD_OPEN;
+}
+
+bool umi_accounting_accounting_period_contains(const UmiAccountingAccountingPeriod *value,
+    UmiFinancialDate date)
+{
+    return umi_accounting_accounting_period_valid(value) &&
+        umi_financial_date_is_valid(date) &&
+        umi_financial_date_compare(date, value->start_date) >= 0 &&
+        umi_financial_date_compare(date, value->end_date) <= 0;
 }

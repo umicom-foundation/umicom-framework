@@ -132,9 +132,14 @@ int main(int argc, char **argv)
         /* GTK attaches an expander's content to its widget tree when expanded.
          * Open the public review form just as the user does before finding it. */
         GtkWidget *review = NULL;
+        /* Earlier positional lookup is retained for review. Private forms may
+         * precede publication; identify the public section by its stable name. */
+#if 0
         for (GtkWidget *child = gtk_widget_get_first_child(panel); child != NULL;
              child = gtk_widget_get_next_sibling(child))
             if (GTK_IS_EXPANDER(child)) { review = child; break; }
+#endif
+        review = Named(panel, "kanban-publication-expander");
         REQUIRE(GTK_IS_EXPANDER(review));
         gtk_expander_set_expanded(GTK_EXPANDER(review), TRUE);
         Set(panel, "kanban-public-title", "Reviewed feature"); Click(panel, "Include reviewed card"); Click(panel, "Generate website");

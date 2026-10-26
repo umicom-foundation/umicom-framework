@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Checked journal arithmetic — Umicom Framework</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:920px;margin:2rem auto;padding:0 1.2rem;color:#1c2935}pre{background:#eef3f7;padding:1rem;overflow:auto}code{font-size:.9em}h1,h2{line-height:1.25}</style></head>
+<body><main><h1>Checked journal arithmetic</h1>
+<p>The finance component stores journal amounts as signed 64-bit integer minor units.
+A journal line contains one positive debit or credit. It has no currency field, so the
+surrounding accounting service must establish account currency and scale before combining
+lines. Equality of integer totals is not proof that currencies, periods or permissions match.</p>
+<h2>1. Construct complete values</h2>
+<ol><li>Include <code>umicom/finance/accounting/journal_entry.h</code> and link to
+<code>Umicom::finance</code>.</li>
+<li>Create the entry with <code>umi_accounting_journal_entry_init</code>, supplying an ID
+and a valid Gregorian date. The new entry is a draft.</li>
+<li>Create each line with <code>umi_accounting_journal_line_init</code>, supplying a line ID,
+account ID and nonnegative debit and credit amounts. Exactly one side must be positive.</li>
+<li>Call <code>umi_accounting_journal_entry_add_line</code> and check its result. The maximum
+is 32 lines. Invalid input, an overflowing total or a non-draft entry leaves the entry unchanged.</li></ol>
+<p>Initialization stages a complete value before replacing the destination. Invalid identifiers,
+dates or amounts preserve the existing destination. Callers must serialize access and respect
+the ownership requirements documented in the public headers.</p>
+<h2>2. Inspect totals with a status result</h2>
+<p>Use <code>umi_accounting_journal_entry_totals(entry, &amp;debit, &amp;credit)</code>.
+Both outputs must be distinct and outside the entry. On failure, neither output changes.
+The function validates the public line count before traversal and checks each addition before
+performing it. A malformed structure returns <code>UMI_STATUS_INVALID_ARGUMENT</code>;
+an unrepresentable total returns <code>UMI_STATUS_CAPACITY_EXCEEDED</code>.</p>
+<p>The older scalar debit and credit accessors remain available. They return zero for invalid
+or overflowing input, which cannot distinguish refusal from an empty total. Use the checked
+operation for financial decisions. <code>umi_accounting_journal_entry_balanced</code> also
+uses checked totals and returns false for invalid, overflowing or empty entries.</p>
+<h2>3. Generate from an accounting event</h2>
+<p><code>umi_accounting_posting_engine_generate</code> builds the whole journal before
+publishing it. Malformed event or rule fields, inactive rules, mismatched event types and
+invalid journal IDs leave the output unchanged. Refused requests increment the rejection
+counter once when both counters have room; exhausted counters refuse without changing state.</p>
+<p>The minimum signed integer has no representable positive signed magnitude. The checked
+event-magnitude API and posting engine refuse it instead of silently saturating. The legacy
+scalar event-magnitude function keeps its compatibility saturation and must not drive new
+posting logic. Negative events retain the existing absolute-magnitude mapping; the caller
+must choose appropriate reversal rules and accounts.</p>
+<h2>4. Store an accepted journal locally</h2>
+<p><code>umi_accounting_journal_book_post</code> copies a balanced journal into a bounded
+in-memory book and marks the copy posted. It rejects duplicate journal IDs and invalid existing
+book state. The maximum is 64 entries. <code>umi_accounting_journal_book_validate</code>
+checks the count, every stored entry and duplicate IDs before later operations rely on the book.</p>
+<p>This book does not authorize an operator, validate account currencies, close a financial
+period or persist a ledger transaction. Compose those controls explicitly through the relevant
+Framework services before using the local journal result.</p>
+
+<h2>5. Review accounts, periods and the current book together</h2>
+<p>The <a href="journal-posting-review.html">local journal posting review</a> captures the
+candidate, chart, calendar and book before a user decision. It checks account eligibility,
+inclusive period boundaries, exact totals and duplicate journal IDs. Apply refuses changes
+to active captured fields and succeeds at most once. These checks remain local and require
+the surrounding owner to establish currency, authorization and durable posting policy.</p>
+
+<h2>Recover from a refusal</h2>
+<ol><li>Keep the previous entry, book and output values. A failed request is not a partial success.</li>
+<li>Inspect the returned status and the original fields. Do not clamp an amount or replace it with zero.</li>
+<li>Correct the input under an explicit accounting rule, then prepare a new request.</li>
+<li>If a restored record is invalid, retain it for diagnosis outside the active book.</li></ol>
+<p>For double-valued local practice and CSV capture, see
+<a href="accounting-review.html">Reviewing a local accounting batch</a>. That compatibility
+workflow is separate from these integer journal contracts.</p>
+</main></body></html>

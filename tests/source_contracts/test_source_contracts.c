@@ -429,6 +429,44 @@ static int binarySource(const char *base)
     return 0;
 }
 
+/* Metadata must not conceal malformed source. The same audit covers public
+ * headers and include fragments; retained source inside a comment stays valid. */
+static int literalSource(const char *base)
+{
+    const char *extensions[] = {".c", ".inc", ".h"};
+    const char *banner = "/* File: fixture\nPurpose: Check lexical admission.\n"
+        "Organisation: Test team\nLicence: MIT\n*/\n";
+    for (size_t kind = 0U; kind < 3U; ++kind) {
+        char folder[32]; CHECK(snprintf(folder, sizeof folder, "literal-%zu", kind) > 0);
+        char *root = ScJoin(base, folder); CHECK(root && directory(root) == 0);
+        char leaf[32]; CHECK(snprintf(leaf, sizeof leaf, "fixture%s", extensions[kind]) > 0);
+        char *path = ScJoin(root, leaf); CHECK(path);
+        char content[1024];
+        CHECK(snprintf(content, sizeof content,
+            "%s#ifndef LITERAL_FIXTURE_H\n#define LITERAL_FIXTURE_H\n"
+            "static const char *value = \"escaped\\ntext\";\n#endif\n", banner) > 0);
+        CHECK(writeText(path, content) == 0);
+        const char *roots[] = {root};
+        UmiSourceContractReport report = {0};
+        CHECK(UmiSourceContractAudit(roots, 1U, kind == 2U, &report) == 0);
+        CHECK(snprintf(content, sizeof content,
+            "%s#ifndef LITERAL_FIXTURE_H\n#define LITERAL_FIXTURE_H\n"
+            "static const char *value = \"broken\ntext\";\n#endif\n", banner) > 0);
+        CHECK(writeText(path, content) == 0);
+        report = (UmiSourceContractReport){0};
+        CHECK(UmiSourceContractAudit(roots, 1U, kind == 2U, &report) == 1);
+        CHECK(report.findings == 1U && report.input_errors == 0U);
+        CHECK(snprintf(content, sizeof content,
+            "%s#ifndef LITERAL_FIXTURE_H\n#define LITERAL_FIXTURE_H\n"
+            "/* retained: \"broken\ntext\" */\nstatic int value = 1'000;\n#endif\n", banner) > 0);
+        CHECK(writeText(path, content) == 0);
+        report = (UmiSourceContractReport){0};
+        CHECK(UmiSourceContractAudit(roots, 1U, kind == 2U, &report) == 0);
+        free(path); free(root);
+    }
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     if (argc < 2 || argc > 3) return 2;
@@ -438,6 +476,7 @@ int main(int argc, char **argv)
     else if (strcmp(argv[1], "identity") == 0) result = identity();
     else if (strcmp(argv[1], "presets") == 0) result = presets();
     else if (strcmp(argv[1], "binary-source") == 0 && argc == 3) result = binarySource(argv[2]);
+    else if (strcmp(argv[1], "literal-source") == 0 && argc == 3) result = literalSource(argv[2]);
     else if (strcmp(argv[1], "filesystem") == 0 && argc == 3) result = filesystem(argv[2]);
     else if (strcmp(argv[1], "portfolio") == 0 && argc == 3) result = portfolio(argv[2]);
     else if (strcmp(argv[1], "rules") == 0 && argc == 3) result = rules(argv[2]);

@@ -17,6 +17,7 @@ get_filename_component(_umicom_contract_root "${CMAKE_CURRENT_SOURCE_DIR}/../.."
 
 add_library(umicom_source_contracts STATIC
     "${_umicom_contract_root}/src/source_contracts/text.c"
+    "${_umicom_contract_root}/src/source_contracts/literals.c"
     "${_umicom_contract_root}/src/source_contracts/metadata.c"
     "${_umicom_contract_root}/src/source_contracts/files.c"
     "${_umicom_contract_root}/src/source_contracts/audit.c"
@@ -48,7 +49,7 @@ if(BUILD_TESTING)
         "${_umicom_contract_root}/src/source_contracts")
     set_target_properties(umicom-source-contract-tests PROPERTIES
         C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
-    foreach(_case metadata lexer identity presets filesystem portfolio rules binary-source)
+    foreach(_case metadata lexer identity presets filesystem portfolio rules binary-source literal-source)
         file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/fixtures/${_case}")
         add_test(NAME "framework.source_contracts.${_case}"
             COMMAND umicom-source-contract-tests "${_case}"
@@ -109,4 +110,41 @@ endif()
 
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     umicom_generate_sdk_artifact_inventory()
+endif()
+
+# Literal admission is independent of a full product build and catches source
+# text corruption before attribution or include-guard checks can obscure it.
+if(BUILD_TESTING)
+    add_executable(umicom-source-literals-test
+        "${_umicom_contract_root}/tests/source_contracts/test_literals.c")
+    target_link_libraries(umicom-source-literals-test PRIVATE Umicom::source_contracts)
+    target_include_directories(umicom-source-literals-test PRIVATE
+        "${_umicom_contract_root}/src/source_contracts")
+    set_target_properties(umicom-source-literals-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(MSVC)
+        target_compile_options(umicom-source-literals-test PRIVATE /W4)
+    else()
+        target_compile_options(umicom-source-literals-test PRIVATE
+            -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-source-literals-test)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-source-literals-test)
+    endif()
+    foreach(_literal_case escaped splice-lf splice-crlf numeric-separators comments adjacent
+        raw-string raw-character raw-crlf raw-cr unterminated-string unterminated-character
+        unterminated-comment disabled-malformed physical-location invalid-api)
+        add_test(NAME framework.source_contracts.literal.${_literal_case}
+            COMMAND umicom-source-literals-test ${_literal_case})
+        set_tests_properties(framework.source_contracts.literal.${_literal_case} PROPERTIES
+            TIMEOUT 20 LABELS "framework;native;source-contracts;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.source_contracts.literal.${_literal_case}
+                TARGETS umicom-source-literals-test)
+        endif()
+    endforeach()
+    unset(_literal_case)
 endif()

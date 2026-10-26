@@ -34,6 +34,8 @@ char *ScCopy(const char *text, size_t length);
 void ScFinding(UmiSourceContractReport *report, const char *path, size_t line,
     const char *rule, const char *message, bool input_error);
 int ScLex(ScText *text, const char *data, bool cmake);
+/* Narrow lexical admission shared by source/header audits; no compilation. */
+int ScLiterals(const char *source, const char *path, UmiSourceContractReport *report);
 void ScTextFree(ScText *text);
 bool ScTokenEquals(const ScText *text, size_t index, const char *value);
 bool ScIdentifier(const ScText *text, size_t index);

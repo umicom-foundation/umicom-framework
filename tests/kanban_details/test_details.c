@@ -106,7 +106,15 @@ int main(int argc, char **argv)
         if (!strcmp(name, "roundtrip")) {
             size_t size = 0U; unsigned char *encoded = Archive(board, &size);
             UmiKanbanBoard *copy = NULL;
+            /* The earlier draft omitted the required saved-revision output.
+             * Keep it for review; the public decoder returns history separately
+             * from the reopened board revision, which starts at one. */
+#if 0
             REQUIRE(umi_kanban_board_decode(encoded, size, &copy) == UMI_STATUS_OK);
+#endif
+            uint64_t saved_revision = 0U;
+            REQUIRE(umi_kanban_board_decode(encoded, size, &copy, &saved_revision) == UMI_STATUS_OK);
+            REQUIRE(saved_revision == revision + 1U);
             UmiKanbanCardDetailSnapshot restored;
             REQUIRE(UmiKanbanCardDetailsRead(copy, umi_kanban_board_revision(copy), "card", &restored) == UMI_STATUS_OK);
             REQUIRE(!strcmp(restored.details.description, details.description) &&

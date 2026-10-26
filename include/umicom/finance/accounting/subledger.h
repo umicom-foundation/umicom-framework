@@ -46,6 +46,12 @@ bool umi_accounting_subledger_valid(const UmiAccountingSubledger *value);
  * applications.
  */
 int64_t umi_accounting_subledger_net_minor(const UmiAccountingSubledger *value);
+/* Checked net preserves out_minor on refusal; output must not overlap input.
+ * Invalid identifiers or negative debit/credit totals return INVALID_ARGUMENT.
+ * The legacy scalar getter returns zero on refusal. Initialization preserves
+ * the complete destination on failure, including aliased identifier input. */
+UmiStatus umi_accounting_subledger_net_minor_checked(const UmiAccountingSubledger *value,
+    int64_t *out_minor);
 #ifdef __cplusplus
 }
 #endif

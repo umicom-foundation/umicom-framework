@@ -43,6 +43,18 @@ extern "C"
     UmiStatus UmiDocumentCoordinatorEditLinesForDocument(UmiDocumentCoordinator *coordinator,
         UmiDocumentId document_id, UmiEditorEditCommandKind kind,
         const UmiDocumentLineEditOptions *options);
+    /** Inspect current line-edit admission without changing text, selection,
+     * active tab, revision or history. Use the coordinator owner thread. Zero
+     * identity, NULL owner and unsupported kinds are INVALID_ARGUMENT; a closed
+     * identity or an empty selection for case/sort is NOT_FOUND. A read-only
+     * draft is PERMISSION_DENIED and an occupied owner is BUSY.
+     *
+     * OK covers identity, bounds, editability and required selection only. It
+     * does not validate neighboring lines, encoding, tokens or capacity, reserve
+     * an edit, or authorize later mutation. Execute through EditLinesForDocument
+     * and handle its result even after this query succeeds. */
+    UmiStatus UmiDocumentCoordinatorCheckLineEdit(UmiDocumentCoordinator *coordinator,
+        UmiDocumentId document_id, UmiEditorEditCommandKind kind);
 #ifdef __cplusplus
 }
 #endif

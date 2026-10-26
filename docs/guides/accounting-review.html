@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reviewing a local accounting batch — Umicom Framework</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:920px;margin:2rem auto;padding:0 1.2rem;color:#1c2935}pre{background:#eef3f7;padding:1rem;overflow:auto}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccd7df;padding:.5rem;text-align:left}code{font-size:.9em}h1,h2{line-height:1.25}</style></head>
+<body><main><h1>Reviewing a local accounting batch</h1>
+<p>An accounting batch groups debit and credit lines for review. The compatibility
+<code>UmiOpenTmsAccountingBook</code> stores up to 256 lines in memory. Framework checks
+each currency separately and can capture an immutable review before changing the batch's
+local approval or posting flags. No function in this interface sends a payment, connects to
+a bank, writes a journal to disk or authenticates an approver.</p>
+<h2>1. Create a valid batch</h2>
+<ol><li>Allocate a book and initialise it with <code>umi_open_tms_accounting_book_init</code>.
+Keep one owner responsible for access; concurrent writes are not supported.</li>
+<li>Fill each <code>UmiOpenTmsAccountingLine</code> with an account ID, reference, currency
+and either a debit or credit. Call <code>umi_open_tms_accounting_book_add</code> and check
+its result before updating the display.</li>
+<li>Use exactly three uppercase ASCII currency letters. This checks syntax only; it does
+not consult a currency registry. IDs and references must fit their arrays, end in a zero
+byte, contain a non-space character and have no control bytes.</li>
+<li>Amounts must be finite and nonnegative, with exactly one positive side. A successful
+addition revokes earlier approval. A locally posted book refuses additions.</li></ol>
+<p>The compatibility model uses <code>double</code> and an absolute balance tolerance of
+<code>0.000001</code> for each currency. It is suitable for a local preview, not exact-money
+posting. Converting a preview into the separate accounting ledger needs explicit currency,
+rounding, account, permission and idempotency policies. Do not silently cast these amounts
+to integer minor units.</p>
+<h2>2. Show the actual review</h2>
+<ol><li>Call <code>umi_open_tms_accounting_review_create</code> with
+<code>UMI_OPEN_TMS_ACCOUNTING_APPROVE</code>. Creation validates every active line,
+checks currency balances and copies the complete batch without changing it.</li>
+<li>Read metadata using <code>umi_open_tms_accounting_review_read</code>. Show the source
+revision, action, line count and proposed flags.</li>
+<li>Read each line using <code>umi_open_tms_accounting_review_line</code>. Display these
+owned copies, rather than rereading a live book that may have changed.</li>
+<li>After the user's decision and your application's current permission checks, call
+<code>umi_open_tms_accounting_review_apply</code>. Success advances the revision once.
+A changed revision, flag, line count, order, account, reference, currency or amount refuses
+the old review without changing the book.</li>
+<li>Destroy the review when finished. Prepare a separate
+<code>UMI_OPEN_TMS_ACCOUNTING_POST</code> review for an already approved batch if the
+workflow needs its local posted flag. That flag is only in-memory workflow state.</li></ol>
+<p>The review owns its copy and can outlive the source object. Reusing a successfully applied
+review fails. On stale-state refusal, show the current batch and request a new decision;
+never retry by replacing the stored revision. Padding and unused array tails are not user
+data and do not invalidate a semantically identical batch.</p>
+<h2>Use the TMS practice window</h2>
+<p>In Umicom TMS, choose <strong>Accounting batch practice</strong>. Enter a line and select
+<strong>Add line to local batch</strong>. For a balanced example, add GBP 100 debit to a practice
+cash account, then GBP 100 credit to a practice receivable account. Enter 0 on the unused side.</p>
+<p>Select <strong>Approve local batch</strong>, then <strong>Prepare complete batch review</strong>.
+Inspect every displayed line and the proposed state. Tick the acknowledgement and select
+<strong>Apply reviewed local action</strong>. Setting the local posted flag requires a second,
+separate review. Editing any entry or changing the action revokes the prepared review. Adding
+a line after approval also revokes that approval. Decimal inputs use a full stop with no grouping,
+exponent or whitespace. Each new window has an empty batch; closing discards unsaved edits.</p>
+<p>Older SDKs show that the optional surface is unavailable. The acknowledgement is not an
+authenticated second approver. For the original in-memory workflow, closing without an explicit save
+discards the batch; the file workflow below adds controlled persistence.</p>
+<h2>Save a capture or review an imported batch</h2>
+<ol><li>Enter an absolute archive path in a directory you control, then select
+<strong>Save captured batch to new file</strong>. The file must not already exist. The worker saves
+the batch as it was when requested; later edits are not included. Wait for the result before closing
+if you need to see the save receipt. An accepted write may finish after the window closes.</li>
+<li>To import, enter an existing archive path and select <strong>Open archive for review</strong>.
+Read both CURRENT and LOADED sections, including every line, currency and local approval/posting flag.
+Nothing in the live batch changes during this preview. An invalid file leaves it untouched.</li>
+<li>Tick <strong>I reviewed the current and loaded batches</strong> and choose
+<strong>Replace with reviewed local batch</strong>. Changing an entry or action revokes this review.
+Open again after any such edit; older action reviews are also invalidated.</li></ol>
+<p>Existing files are never overwritten. A failed write can leave a partial new file for inspection;
+choose another path for a retry. Archives are neither encrypted nor authenticated, and imported
+flags do not authorise a payment, journal entry or separate approval.</p>
+<h2>3. Keep currencies separate</h2>
+<p><code>umi_open_tms_accounting_book_currency_totals</code> returns one currency's debit
+and credit totals. An unknown currency returns <code>UMI_STATUS_NOT_FOUND</code>.
+Overflow refuses the calculation and leaves both outputs unchanged. The older aggregate
+<code>umi_open_tms_accounting_book_totals</code> accepts only empty or single-currency books;
+a mixed-currency book returns <code>UMI_STATUS_INVALID_STATE</code>. GBP 100 debit and USD 100
+credit do not balance each other.</p>
+<h2>Save and restore portable batch values</h2>
+<p>Include <code>umicom/open_tms/accounting_archive.h</code> and link to
+<code>Umicom::finance</code>. This interface encodes values into caller-owned memory;
+it does not open files. The separate <code>Umicom::treasury_files</code> component exposes
+<code>umi_open_tms_accounting_book_save_new</code> and <code>umi_open_tms_accounting_book_load</code>
+for blocking file work on a worker. The native window composes these services asynchronously.</p>
+<ol><li>Call <code>umi_open_tms_accounting_book_archive_encode(book, NULL, 0, &amp;size)</code>
+to measure the required storage, allocate it, then encode and check the result.
+A short output buffer remains untouched and reports the required size.</li>
+<li>On import, enforce <code>umi_open_tms_accounting_book_archive_limit()</code> before
+allocating input storage. Decode into a separate draft. Small-stack callers should use
+<code>umi_open_tms_accounting_book_archive_decode_with_workspace</code> with two distinct
+heap-allocated books: one scratch value and one output. Neither may overlap the input.</li>
+<li>Show every draft line, currency, revision and imported lifecycle flag. An unfinished
+draft may be unbalanced. An archive claiming approved or posted state must balance per
+currency. Bad envelopes, fields or flags leave the destination unchanged.</li>
+<li>Capture a separate expected copy of the current local book before review.
+After the user's decision, call <code>umi_open_tms_accounting_book_archive_decode_if_unchanged</code>
+on the owning thread. A changed active line, revision or flag refuses replacement.
+Destroy any earlier action review and create a new one for the restored batch.</li></ol>
+<p>The archive contains only active fields, not structure padding or unused text tails.
+Its checksum detects accidental corruption; it supplies neither authentication nor
+encryption. Imported approvals are historical local values and never establish the identity
+or permission of an approver. Restoring an older revision is allowed; applications requiring
+monotonic history must impose that policy before replacing local state.</p>
+<h2>4. Try the installed SDK example</h2>
+<p>Install a Framework SDK containing the finance component first. From the Framework
+source directory, substitute your installed prefix in this example. Stop if any command
+fails; a successful configuration alone does not establish SDK usability.</p>
+<pre>cmake -S examples/accounting_review -B build/accounting-review -G Ninja -DUMICOM_SDK_PREFIX=C:/umicom/installed/framework
+cmake --build build/accounting-review
+ctest --test-dir build/accounting-review --output-on-failure --no-tests=error</pre>
+<p>The scenarios exercise normal local application, stale-review refusal, separate
+GBP/USD totals, archive round trips and stale replacement refusal. Each should return success after checking its expected outcome. The example
+links only to exported Framework targets and rejects a package found outside the requested
+installed prefix.</p>
+
+<h2>Export a captured spreadsheet report</h2>
+<ol><li>In the accounting practice window, select <strong>Open captured CSV report</strong>.
+The new window captures the current batch and shows its revision. Later edits in the practice
+window do not change this report. Open another report to capture newer values.</li>
+<li>Review the CSV rows. The batch row records local flags, line rows retain entry order,
+and currency-total rows are sorted by currency. A blank amount means it does not apply to
+that row. There is no total combining GBP, USD or other currencies.</li>
+<li>Expand <strong>Save displayed text</strong>, choose a new absolute filename ending in
+<code>.csv</code>, then save. Existing files are kept. An accepted write may finish after
+the report closes; wait for the result if you need to inspect its receipt.</li></ol>
+<p>The export uses a full stop as the decimal separator and quotes every field. Formula-like
+account and reference text receives a leading apostrophe. Spreadsheet import settings can
+still affect display, so import identifiers as text. These double-valued amounts are local
+practice data, not an exact ledger. The CSV is for inspection, not restoration; use the archive
+workflow to reopen the original values.</p>
+<p>Applications without GTK can include <code>umicom/open_tms/accounting_report.h</code> and
+call <code>umi_open_tms_accounting_book_report</code>. On success it returns an owned
+<code>UmiCsvDocument</code>; release it with <code>UmiCsvDocumentDestroy</code>. On failure
+the output pointer is null and the source book is unchanged. Draft imbalance can be reported,
+but a claimed approval that does not balance is rejected. Invalid UTF-8 or an overflowing
+total also rejects the complete report.</p>
+<h2>Try file persistence with an installed SDK</h2>
+<p>The <code>accounting_files</code> example requires the optional
+<code>treasury_files</code> component. It links only to the installed package you select.
+Create a private output directory first and substitute a new archive filename on each
+round-trip run. Stop on any failed command.</p>
+<pre>cmake -S examples/accounting_files -B build/accounting-files -G Ninja -DUMICOM_SDK_PREFIX=C:/umicom/installed/framework
+cmake --build build/accounting-files
+New-Item -ItemType Directory -Force C:\umicom\_local\examples
+&amp; .\build\accounting-files\accounting-files.exe roundtrip C:/umicom/_local/examples/accounting-example.umiv
+&amp; .\build\accounting-files\accounting-files.exe inspect C:/umicom/_local/examples/accounting-example.umiv</pre>
+<p>A successful round trip saves a synthetic balanced GBP batch, reloads it, compares all
+serialized values and prints its CSV report. <code>inspect</code> reads the existing archive
+without writing it. An existing destination is a refusal, not a request to replace it. This
+example does not register an automatic file-writing CTest: the archive destination is always
+an explicit user choice.</p>
+<h2>Troubleshooting</h2>
+<table><thead><tr><th>Result</th><th>What to inspect</th></tr></thead><tbody>
+<tr><td>Invalid argument</td><td>Check bounded text, currency syntax, non-finite amounts and whether both sides or neither side are positive.</td></tr>
+<tr><td>Invalid state</td><td>Check each currency balance, lifecycle flags and whether the batch changed after preview creation. Make a fresh review after an edit.</td></tr>
+<tr><td>Capacity exceeded</td><td>Check the 256-line limit, an overflowing total or an exhausted revision. Do not wrap revisions or truncate lines.</td></tr>
+<tr><td>Already exists</td><td>The batch is already approved; approval is not a way to create another revision.</td></tr>
+<tr><td>Package configuration missing</td><td>Install the finance component and confirm the prefix contains the Framework package and its exported libraries.</td></tr>
+</tbody></table>
+<p>Native hosts must additionally validate text encoding before displaying portable byte strings.
+Public book fields are caller-owned and can be overwritten; they are not tamper-proof approval
+evidence. Retain a separate authenticated ledger workflow for real posting.</p>
+</main></body></html>

@@ -82,6 +82,10 @@ UmiStatus umi_accounting_ledger_account_archive_decode_if_unchanged(const void *
     const UmiAccountingLedgerAccount *expected, UmiAccountingLedgerAccount *value);
 
 
+/* Initialization stages a complete account before publication and preserves
+ * value on refusal, including aliased id/name strings. Posting eligibility
+ * requires a valid account and its posting_allowed flag; it is not authority
+ * to bypass period, currency, approval or durable-ledger controls. */
 #ifdef __cplusplus
 }
 #endif

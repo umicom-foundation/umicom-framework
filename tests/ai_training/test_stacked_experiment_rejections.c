@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_experiment_rejections.c
+ *
+ * PURPOSE:
+ *   Check invalid training plans and overlapping source-group rejection.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | source-group and invalid-plan rejection | Sammy Hegab | MIT */
 #include "stacked_test_fixture.h"
 int main(void)

@@ -18,8 +18,18 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* The former diagnostic contained a physical newline inside its C string.
+ * Retain its exact spelling in a comment for review: an inactive preprocessor
+ * branch would still expose the malformed token to lexical diagnostics.
 #define CHECK(condition) do {   if (!(condition)) {     fprintf(stderr, "%s:%d: %s
 ", __FILE__, __LINE__, #condition);     exit(1);   } } while (0)
+ */
+#define CHECK(condition) do { \
+  if (!(condition)) { \
+    fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, #condition); \
+    exit(1); \
+  } \
+} while (0)
 
 typedef struct Reentry {
   GtkWidget *panel;

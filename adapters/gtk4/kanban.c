@@ -15,6 +15,7 @@
 #include "umicom/ui/gtk4/drop_down.h"
 #include "umicom/kanban/view.h"
 #include "umicom/kanban/card_details.h"
+#include "umicom/kanban/column_policy.h"
 #include <string.h>
 #include "focus_handoff_private.h"
 
@@ -30,7 +31,36 @@ typedef struct Panel {
     GtkTextBuffer *details_description;
     UmiKanbanCardDetailSnapshot details_snapshot;
     bool details_ready, details_interrupted;
+    GtkWidget *checklist_form, *checklist_status;
+    GtkWidget *checklist_text[UMI_KANBAN_MAX_CHECKS], *checklist_complete[UMI_KANBAN_MAX_CHECKS];
+    UmiKanbanCardChecklistSnapshot checklist_snapshot;
+    bool checklist_ready, checklist_interrupted;
+    GtkWidget *dependencies_form, *dependency_add, *dependency_remove, *dependencies_status;
+    char (*dependency_choices)[UMI_KANBAN_ID_SIZE];
+    char dependency_existing[UMI_KANBAN_MAX_DEPENDENCIES][UMI_KANBAN_ID_SIZE];
+    char dependency_card[UMI_KANBAN_ID_SIZE];
+    size_t dependency_choice_count, dependency_existing_count;
+    uint64_t dependency_revision;
+    bool dependencies_ready, dependencies_interrupted;
+    GtkWidget *labels_form, *labels_status, *labels_text[UMI_KANBAN_MAX_LABELS];
+    UmiKanbanCardLabelsSnapshot labels_snapshot;
+    bool labels_ready, labels_interrupted;
+    GtkWidget *policy_form, *policy_column, *policy_limit, *policy_status;
+    UmiKanbanColumnPolicySnapshot policy_snapshot;
+    bool policy_ready, policy_interrupted;
+    GtkWidget *deadline_form, *deadline_enabled, *deadline_value, *deadline_status;
+    UmiKanbanCardDeadlineSnapshot deadline_snapshot;
+    bool deadline_ready, deadline_interrupted;
+    GtkWidget *archive_form, *archive_card, *archive_status;
+    char (*archive_ids)[UMI_KANBAN_ID_SIZE];
+    size_t archive_count;
+    uint64_t archive_revision;
+    UmiKanbanCardSnapshot archive_snapshot;
+    bool archive_ready, archive_interrupted;
     UmiKanbanConfig config;
+    UmiKanbanFilter filter;
+    GtkWidget *filter_form, *filter_text, *filter_label, *filter_developer, *filter_priority;
+    GtkWidget *filter_blocked, *filter_overdue, *filter_time, *filter_status;
     UmiKanbanPublicCard *publication;
     size_t publication_count;
     uint64_t revision, drag_revision, selection_revision;
@@ -90,6 +120,20 @@ static void FreePanel(gpointer data)
     g_clear_object(&panel->details_fields[0]); g_clear_object(&panel->details_fields[1]);
     g_clear_object(&panel->details_priority); g_clear_object(&panel->details_status);
     g_clear_object(&panel->details_description);
+    for (size_t i = 0U; i < UMI_KANBAN_MAX_CHECKS; ++i) {
+        g_clear_object(&panel->checklist_text[i]); g_clear_object(&panel->checklist_complete[i]);
+    }
+    g_clear_object(&panel->checklist_status);
+    for (size_t i = 0U; i < UMI_KANBAN_MAX_LABELS; ++i) g_clear_object(&panel->labels_text[i]);
+    g_clear_object(&panel->labels_status);
+    g_clear_object(&panel->deadline_enabled); g_clear_object(&panel->deadline_value); g_clear_object(&panel->deadline_status);
+    g_clear_object(&panel->filter_text); g_clear_object(&panel->filter_label); g_clear_object(&panel->filter_developer);
+    g_clear_object(&panel->filter_priority); g_clear_object(&panel->filter_blocked); g_clear_object(&panel->filter_overdue);
+    g_clear_object(&panel->filter_time); g_clear_object(&panel->filter_status);
+    g_clear_object(&panel->archive_card); g_clear_object(&panel->archive_status); g_free(panel->archive_ids);
+    g_clear_object(&panel->policy_column); g_clear_object(&panel->policy_limit); g_clear_object(&panel->policy_status);
+    g_clear_object(&panel->dependency_add); g_clear_object(&panel->dependency_remove);
+    g_clear_object(&panel->dependencies_status); g_free(panel->dependency_choices);
     g_free(panel->drag_token); g_free(panel->publication); g_free(panel);
 }
 static GtkWidget *Label(const char *text)
@@ -140,6 +184,10 @@ static UmiStatus Apply(Panel *panel, uint64_t revision, const UmiKanbanEdit *edi
     panel->applying = false;
     return status;
 }
+/* The former revision-only row callback is retained for review. The
+ * replacement checks current native ancestry and guards observable selection
+ * updates, preventing detached or nested callbacks from selecting another card. */
+#if 0
 static void SelectCard(GtkWidget *button, gpointer data)
 {
     (void)button; Binding *binding = data; GtkWidget *root = NULL; Panel *panel = Acquire(binding, &root);
@@ -158,6 +206,14 @@ static void SelectCard(GtkWidget *button, gpointer data)
          * was abandoned for another selection, even at the same revision. */
         if (panel->details_ready && strcmp(panel->details_snapshot.card_id, row.card.id) != 0)
             panel->details_ready = false;
+        if (panel->checklist_ready && strcmp(panel->checklist_snapshot.card_id, row.card.id) != 0)
+            panel->checklist_ready = false;
+        if (panel->dependencies_ready && strcmp(panel->dependency_card, row.card.id) != 0)
+            panel->dependencies_ready = false;
+        if (panel->labels_ready && strcmp(panel->labels_snapshot.card_id, row.card.id) != 0)
+            panel->labels_ready = false;
+        if (panel->deadline_ready && strcmp(panel->deadline_snapshot.card_id, row.card.id) != 0)
+            panel->deadline_ready = false;
         g_strlcpy(panel->selected, row.card.id, sizeof(panel->selected));
         panel->selection_revision = binding->revision;
         gtk_editable_set_text(GTK_EDITABLE(panel->title), g_utf8_validate(row.card.title, -1, NULL) ? row.card.title : "");
@@ -165,6 +221,63 @@ static void SelectCard(GtkWidget *button, gpointer data)
         Message(panel, "Card selected. Edit its title, assign a developer or choose a destination.");
     } else Message(panel, "Refresh the board before selecting this older card view.");
     g_object_unref(root);
+}
+#endif
+
+/* A callback may retain a row after Refresh removed it without changing the
+ * board revision. Native ancestry, not the revision alone, proves that the
+ * callback still belongs to the current presentation. Unparented fixture roots
+ * retain their established programmatic interface while detached rows do not. */
+static bool CardSourceAttached(Panel *panel, GtkWidget *widget)
+{
+    return GTK_IS_WIDGET(widget) && gtk_widget_is_ancestor(widget, panel->lanes);
+}
+static bool SelectedSourceCurrent(Panel *panel, GtkWidget *widget, uint64_t revision)
+{
+    return panel->board && !panel->busy && CardSourceAttached(panel, widget) &&
+        umi_kanban_board_revision(panel->board) == revision;
+}
+static void AbandonCardSelection(Panel *panel)
+{
+    panel->selected[0] = '\0'; panel->selection_revision = 0U;
+    panel->details_ready = false; panel->checklist_ready = false;
+    panel->dependencies_ready = false; panel->labels_ready = false; panel->deadline_ready = false;
+}
+static void SelectCard(GtkWidget *button, gpointer data)
+{
+    Binding *binding = data; GtkWidget *root = NULL; Panel *panel = Acquire(binding, &root);
+    if (panel == NULL) return;
+    if (!CardSourceAttached(panel, button)) { g_object_unref(root); return; }
+    panel->applying = true;
+    UmiKanbanCardSnapshot row;
+    if (binding->revision == umi_kanban_board_revision(panel->board) &&
+        umi_kanban_board_find(panel->board, binding->id, &row) == UMI_STATUS_OK && !row.archived) {
+        UmiKanbanDeveloper person; char owner[128] = "";
+        if (row.card.assignee[0] != '\0') {
+            if (umi_kanban_board_developer_find(panel->board, binding->revision, row.card.assignee, &person) == UMI_STATUS_OK)
+                g_strlcpy(owner, person.name, sizeof owner);
+            else g_strlcpy(owner, row.card.assignee, sizeof owner);
+        }
+        if (panel->details_ready && strcmp(panel->details_snapshot.card_id, row.card.id)) panel->details_ready = false;
+        if (panel->checklist_ready && strcmp(panel->checklist_snapshot.card_id, row.card.id)) panel->checklist_ready = false;
+        if (panel->dependencies_ready && strcmp(panel->dependency_card, row.card.id)) panel->dependencies_ready = false;
+        if (panel->labels_ready && strcmp(panel->labels_snapshot.card_id, row.card.id)) panel->labels_ready = false;
+        if (panel->deadline_ready && strcmp(panel->deadline_snapshot.card_id, row.card.id)) panel->deadline_ready = false;
+        g_strlcpy(panel->selected, row.card.id, sizeof panel->selected); panel->selection_revision = binding->revision;
+        /* Editable notifications can run application code. Guard the whole
+         * selection and recheck ownership before publishing its next field. */
+        gtk_editable_set_text(GTK_EDITABLE(panel->title), g_utf8_validate(row.card.title, -1, NULL) ? row.card.title : "");
+        if (!SelectedSourceCurrent(panel, button, binding->revision)) goto interrupted;
+        gtk_editable_set_text(GTK_EDITABLE(panel->developer), g_utf8_validate(owner, -1, NULL) ? owner : "");
+        if (!SelectedSourceCurrent(panel, button, binding->revision)) goto interrupted;
+        Message(panel, "Card selected. Edit its title, assign a developer or choose a destination.");
+        if (!SelectedSourceCurrent(panel, button, binding->revision)) goto interrupted;
+    } else Message(panel, "Refresh the board before selecting this older card view.");
+    goto complete;
+interrupted:
+    AbandonCardSelection(panel);
+complete:
+    panel->applying = false; g_object_unref(root);
 }
 static void AddCard(GtkWidget *button, gpointer data)
 {
@@ -264,6 +377,10 @@ static void MoveSelected(GtkWidget *button, gpointer data)
     }
     g_object_unref(root);
 }
+/* Previous drag callbacks are retained for review. Current callbacks also
+ * require an attached source and target; refresh cancels outstanding drag state
+ * even when the board itself did not change. No card deletion occurs here. */
+#if 0
 static GdkContentProvider *PrepareDrag(GtkDragSource *source, double x, double y, gpointer data)
 {
     (void)source; (void)x; (void)y; Binding *binding = data; GtkWidget *root = NULL; Panel *panel = Acquire(binding, &root);
@@ -292,6 +409,49 @@ static gboolean Drop(GtkDropTarget *target, const GValue *value, double x, doubl
         UmiKanbanEdit *edit = g_new0(UmiKanbanEdit, 1); edit->kind = UMI_KANBAN_MOVE_CARD;
         g_strlcpy(edit->card.id, panel->drag_card, sizeof(edit->card.id));
         g_strlcpy(edit->column_id, binding->column, sizeof(edit->column_id));
+        uint64_t revision = panel->drag_revision; panel->drag_card[0] = '\0';
+        accepted = Apply(panel, revision, edit, 1U) == UMI_STATUS_OK; g_free(edit);
+    }
+    g_object_unref(root); return accepted;
+}
+#endif
+
+static GdkContentProvider *PrepareDrag(GtkDragSource *source, double x, double y, gpointer data)
+{
+    (void)x; (void)y; Binding *binding = data; GtkWidget *root = NULL; Panel *panel = Acquire(binding, &root);
+    if (panel == NULL) return NULL;
+    GdkContentProvider *provider = NULL; UmiKanbanCardSnapshot row;
+    GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(source));
+    if (SelectedSourceCurrent(panel, widget, binding->revision) &&
+        umi_kanban_board_find(panel->board, binding->id, &row) == UMI_STATUS_OK && !row.archived) {
+        g_strlcpy(panel->drag_card, binding->id, sizeof panel->drag_card); panel->drag_revision = binding->revision;
+        provider = gdk_content_provider_new_typed(G_TYPE_STRING, panel->drag_token);
+    }
+    g_object_unref(root); return provider;
+}
+static void EndDrag(GtkDragSource *source, GdkDrag *drag, gboolean delete_data, gpointer data)
+{
+    (void)drag; (void)delete_data; Binding *binding = data;
+    GtkWidget *root = NULL; Panel *panel = Acquire(binding, &root);
+    if (panel != NULL) {
+        GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(source));
+        /* A late signal from an old row must not cancel a newly prepared drag. */
+        if (CardSourceAttached(panel, widget) && binding->revision == panel->drag_revision &&
+            !strcmp(binding->id, panel->drag_card)) panel->drag_card[0] = '\0';
+        g_object_unref(root);
+    }
+}
+static gboolean Drop(GtkDropTarget *target, const GValue *value, double x, double y, gpointer data)
+{
+    (void)x; (void)y; Binding *binding = data; GtkWidget *root = NULL; Panel *panel = Acquire(binding, &root);
+    if (panel == NULL) return FALSE;
+    gboolean accepted = FALSE; GtkWidget *widget = gtk_event_controller_get_widget(GTK_EVENT_CONTROLLER(target));
+    if (SelectedSourceCurrent(panel, widget, binding->revision) && binding->revision == panel->drag_revision &&
+        G_VALUE_HOLDS_STRING(value) && panel->drag_card[0] != '\0' &&
+        g_strcmp0(g_value_get_string(value), panel->drag_token) == 0) {
+        UmiKanbanEdit *edit = g_new0(UmiKanbanEdit, 1); edit->kind = UMI_KANBAN_MOVE_CARD;
+        g_strlcpy(edit->card.id, panel->drag_card, sizeof edit->card.id);
+        g_strlcpy(edit->column_id, binding->column, sizeof edit->column_id);
         uint64_t revision = panel->drag_revision; panel->drag_card[0] = '\0';
         accepted = Apply(panel, revision, edit, 1U) == UMI_STATUS_OK; g_free(edit);
     }
@@ -435,6 +595,13 @@ static void Button(Panel *panel, GtkWidget *box, const char *text, GCallback cal
 }
 /* Reuse the board revision contract for private detail forms in every host. */
 #include "kanban_card_details.inc"
+#include "kanban_card_labels.inc"
+#include "kanban_card_deadline.inc"
+#include "kanban_card_archive.inc"
+#include "kanban_view_filter.inc"
+#include "kanban_column_policy.inc"
+#include "kanban_card_checklist.inc"
+#include "kanban_card_dependencies.inc"
 
 UmiStatus UmiKanbanGtk4Refresh(GtkWidget *root)
 {
@@ -448,7 +615,14 @@ UmiStatus UmiKanbanGtk4Refresh(GtkWidget *root)
     UmiKanbanCardSnapshot *rows = g_try_new0(UmiKanbanCardSnapshot, UMI_KANBAN_MAX_CARDS);
     char (*names)[128] = g_try_malloc0(UMI_KANBAN_MAX_CARDS * sizeof(*names));
     if (rows == NULL || names == NULL) { g_free(rows); g_free(names); g_object_unref(root); return UMI_STATUS_OUT_OF_MEMORY; }
+    /* The previous unfiltered projection is retained for review. Query rows
+     * through the shared filter while capturing unfiltered occupancy separately. */
+#if 0
     if (status == UMI_STATUS_OK) status = umi_kanban_board_page(panel->board, revision, NULL, 0U, rows, UMI_KANBAN_MAX_CARDS, &count, &total);
+#endif
+    UmiKanbanSummary summary;
+    if (status == UMI_STATUS_OK) status = umi_kanban_board_summary(panel->board, revision, 0U, &summary);
+    if (status == UMI_STATUS_OK) status = umi_kanban_board_page(panel->board, revision, &panel->filter, 0U, rows, UMI_KANBAN_MAX_CARDS, &count, &total);
     /* Snapshot all borrowed model data before GTK notifications can retire a host. */
     for (size_t i = 0U; status == UMI_STATUS_OK && i < count; ++i) {
         UmiKanbanDeveloper person;
@@ -460,6 +634,7 @@ UmiStatus UmiKanbanGtk4Refresh(GtkWidget *root)
     /* Rebuilding emits GTK notifications. Reentrant actions cannot access a
      * half-presented view or start another refresh. */
     panel->refreshing = true;
+    panel->drag_card[0] = '\0';
     if(panel->revision!=revision)InvalidatePublic(panel);
     panel->config = config; panel->revision = revision;
     GtkWidget *child;
@@ -478,6 +653,28 @@ UmiStatus UmiKanbanGtk4Refresh(GtkWidget *root)
             gtk_widget_set_name(button, rows[i].card.id);
             gtk_button_set_child(GTK_BUTTON(button), body); gtk_box_append(GTK_BOX(body), Label(rows[i].card.title));
             gtk_box_append(GTK_BOX(body), Label(names[i][0] == '\0' ? "Unassigned" : names[i]));
+            /* Card snapshots were copied before publication; display private
+             * labels and absolute deadlines as plain text without model reads. */
+            if (rows[i].card.label_count != 0U) {
+                GString *labels_text = g_string_new("Labels: ");
+                for (size_t label = 0U; label < rows[i].card.label_count; ++label) {
+                    if (label != 0U) g_string_append(labels_text, " | ");
+                    g_string_append(labels_text, rows[i].card.labels[label]);
+                }
+                GtkWidget *metadata = Label(labels_text->str);
+                gtk_widget_set_name(metadata, "kanban-card-labels-summary");
+                gtk_box_append(GTK_BOX(body), metadata); g_string_free(labels_text, TRUE);
+            }
+            if (rows[i].card.due_unix_seconds != 0U) {
+                char *date = DeadlineText(rows[i].card.due_unix_seconds);
+                char message[128];
+                if (date) g_snprintf(message, sizeof message, "Due: %s (UTC)", date);
+                else g_snprintf(message, sizeof message, "Due: %" G_GUINT64_FORMAT " UTC seconds (outside date display)", (guint64)rows[i].card.due_unix_seconds);
+                g_free(date);
+                GtkWidget *metadata = Label(message);
+                gtk_widget_set_name(metadata, "kanban-card-deadline-summary");
+                gtk_box_append(GTK_BOX(body), metadata);
+            }
             gtk_box_append(GTK_BOX(column), button); ++visible;
             Bind(button, "clicked", G_CALLBACK(SelectCard), panel, rows[i].card.id, NULL, revision);
             GtkDragSource *drag = gtk_drag_source_new(); gtk_drag_source_set_actions(drag, GDK_ACTION_MOVE);
@@ -485,7 +682,25 @@ UmiStatus UmiKanbanGtk4Refresh(GtkWidget *root)
             Bind(drag, "drag-end", G_CALLBACK(EndDrag), panel, rows[i].card.id, NULL, revision);
             gtk_widget_add_controller(button, GTK_EVENT_CONTROLLER(drag));
         }
+        /* The previous empty-column message is retained. A filtered list can
+         * have hidden occupancy, so empty presentation does not imply capacity. */
+#if 0
         if (visible == 0U) gtk_box_append(GTK_BOX(column), Label("Drop a card here"));
+#endif
+        if (visible == 0U) gtk_box_append(GTK_BOX(column), Label("No visible cards. Check active occupancy below before moving work here."));
+        char occupancy[96];
+        /* Keep the former all-visible label for comparison. Filtered rows
+         * must never understate the occupancy used by board admission rules. */
+#if 0
+        if (config.columns[col].wip_limit != 0U)
+            g_snprintf(occupancy, sizeof occupancy, "%zu active / limit %zu", visible, config.columns[col].wip_limit);
+        else g_snprintf(occupancy, sizeof occupancy, "%zu active / unlimited", visible);
+#endif
+        if (config.columns[col].wip_limit != 0U)
+            g_snprintf(occupancy, sizeof occupancy, "%zu shown / %zu active / limit %zu", visible, summary.columns[col], config.columns[col].wip_limit);
+        else g_snprintf(occupancy, sizeof occupancy, "%zu shown / %zu active / unlimited", visible, summary.columns[col]);
+        GtkWidget *limit_label = Label(occupancy); gtk_widget_set_name(limit_label, "kanban-list-limit");
+        gtk_box_append(GTK_BOX(column), limit_label);
     }
     panel->refreshing = false;
     status = panel->board == NULL ? UMI_STATUS_UNAVAILABLE : UMI_STATUS_OK;
@@ -524,10 +739,38 @@ GtkWidget *UmiKanbanGtk4Create(UmiKanbanBoard *board)
     gtk_box_append(GTK_BOX(actions), panel->destination); Button(panel, actions, "Move selected", G_CALLBACK(MoveSelected));
     GtkWidget *scroll = gtk_scrolled_window_new(); gtk_widget_set_vexpand(scroll, TRUE); gtk_widget_set_size_request(scroll, -1, 260);
     panel->lanes = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 14); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), panel->lanes); gtk_box_append(GTK_BOX(panel->root), scroll);
+    GtkWidget *filter = gtk_expander_new("Filter board cards");
+    gtk_widget_set_name(filter, "kanban-view-filter-expander");
+    gtk_expander_set_child(GTK_EXPANDER(filter), CreateFilterForm(panel));
+    gtk_box_append(GTK_BOX(panel->root), filter);
     GtkWidget *details = gtk_expander_new("Edit private card details");
     gtk_widget_set_name(details, "kanban-card-details-expander");
     gtk_expander_set_child(GTK_EXPANDER(details), CreateDetailsForm(panel));
     gtk_box_append(GTK_BOX(panel->root), details);
+    GtkWidget *checklist = gtk_expander_new("Edit acceptance checklist");
+    gtk_widget_set_name(checklist, "kanban-card-checklist-expander");
+    gtk_expander_set_child(GTK_EXPANDER(checklist), CreateChecklistForm(panel));
+    gtk_box_append(GTK_BOX(panel->root), checklist);
+    GtkWidget *dependencies = gtk_expander_new("Edit prerequisite cards");
+    gtk_widget_set_name(dependencies, "kanban-card-dependencies-expander");
+    gtk_expander_set_child(GTK_EXPANDER(dependencies), CreateDependenciesForm(panel));
+    gtk_box_append(GTK_BOX(panel->root), dependencies);
+    GtkWidget *labels = gtk_expander_new("Edit private card labels");
+    gtk_widget_set_name(labels, "kanban-card-labels-expander");
+    gtk_expander_set_child(GTK_EXPANDER(labels), CreateLabelsForm(panel));
+    gtk_box_append(GTK_BOX(panel->root), labels);
+    GtkWidget *deadline = gtk_expander_new("Edit card deadline in UTC");
+    gtk_widget_set_name(deadline, "kanban-card-deadline-expander");
+    gtk_expander_set_child(GTK_EXPANDER(deadline), CreateDeadlineForm(panel));
+    gtk_box_append(GTK_BOX(panel->root), deadline);
+    GtkWidget *archive = gtk_expander_new("Archive or restore cards");
+    gtk_widget_set_name(archive, "kanban-card-archive-expander");
+    gtk_expander_set_child(GTK_EXPANDER(archive), CreateArchiveForm(panel));
+    gtk_box_append(GTK_BOX(panel->root), archive);
+    GtkWidget *policy = gtk_expander_new("Review list work limits");
+    gtk_widget_set_name(policy, "kanban-column-policy-expander");
+    gtk_expander_set_child(GTK_EXPANDER(policy), CreatePolicyForm(panel, &config));
+    gtk_box_append(GTK_BOX(panel->root), policy);
     /* Private completion review is separate from the public website fields.
      * The first Done-stage column is shown in the retained decision preview. */
     panel->completion_review = CreateCompletionReview(panel);
@@ -539,6 +782,7 @@ GtkWidget *UmiKanbanGtk4Create(UmiKanbanBoard *board)
         gtk_box_append(GTK_BOX(panel->root), review);
     }
     GtkWidget *expander = gtk_expander_new("Review a public website snapshot"), *publication = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
+    gtk_widget_set_name(expander, "kanban-publication-expander");
     gtk_expander_set_child(GTK_EXPANDER(expander), publication); gtk_box_append(GTK_BOX(panel->root), expander);
     /* The original temporary-selection guidance is retained for review.
      * Explicit private plan persistence now survives application restart. */
@@ -610,7 +854,15 @@ void UmiKanbanGtk4SetBusy(GtkWidget *root, bool busy)
     /* Guard borrowed model access before focus notifications. A reentrant
      * retirement takes precedence over this request to enable the controls. */
     panel->busy = busy;
-    if (busy) { panel->details_ready = false; panel->details_interrupted = true; }
+    if (busy) {
+        panel->details_ready = false; panel->details_interrupted = true;
+        panel->checklist_ready = false; panel->checklist_interrupted = true;
+        panel->dependencies_ready = false; panel->dependencies_interrupted = true;
+        panel->labels_ready = false; panel->labels_interrupted = true;
+        panel->policy_ready = false; panel->policy_interrupted = true;
+        panel->deadline_ready = false; panel->deadline_interrupted = true;
+        panel->archive_ready = false; panel->archive_interrupted = true;
+    }
     panel->drag_card[0] = '\0';
     UmiKanbanPublicPlanGtk4SetBusy(panel->public_plan_store, busy);
     UmiKanbanCompletionGtk4SetBusy(panel->completion_review, busy);
@@ -627,6 +879,12 @@ void UmiKanbanGtk4Retire(GtkWidget *root)
     panel->board = NULL;
     panel->busy = true;
     panel->details_ready = false; panel->details_interrupted = true;
+    panel->checklist_ready = false; panel->checklist_interrupted = true;
+    panel->dependencies_ready = false; panel->dependencies_interrupted = true;
+    panel->labels_ready = false; panel->labels_interrupted = true;
+    panel->policy_ready = false; panel->policy_interrupted = true;
+    panel->deadline_ready = false; panel->deadline_interrupted = true;
+    panel->archive_ready = false; panel->archive_interrupted = true;
     panel->drag_card[0] = '\0';
     UmiGtk4ReleaseSubtreeFocus(root);
     UmiKanbanPublicPlanGtk4Retire(panel->public_plan_store);

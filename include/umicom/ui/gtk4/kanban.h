@@ -29,7 +29,34 @@ extern "C" {
  * The private card-details form explicitly loads title, description, priority
  * and blocker at the selected revision. Applying retains every other card
  * field. Refresh never authorizes a stale form; selecting a different card,
- * hiding the form or freezing its host requires a new explicit load. */
+ * hiding the form or freezing its host requires a new explicit load.
+ * The separate acceptance checklist form replaces only reviewed checklist
+ * rows under the same revision guard. Empty text explicitly removes an item;
+ * checkmarks are user assertions, not authenticated qualification evidence.
+ * Prerequisite selectors load exact card IDs and board revision before explicit
+ * Add/Remove. Prompt rows perform no edit, and native display order never
+ * replaces the captured IDs. Existing cycle and Done rules remain in force.
+ * Labels load an active card at its selected revision, preserve all other fields
+ * and stay private. Empty rows are omitted and duplicate labels are refused.
+ * List limits load a named column and active occupancy; zero is unlimited. A
+ * different picker selection, even away-and-back, invalidates the review.
+ * Limit changes cannot silently move cards or lower a nonzero limit below
+ * occupancy. These forms require a new load after freezing or hiding.
+ * Deadline edits require exact UTC seconds in YYYY-MM-DDTHH:MM:SSZ notation
+ * and an explicit Use deadline checkbox. Clearing is deliberate; unsupported
+ * larger portable values are preserved until explicitly replaced or cleared.
+ * Native dates start one second after the Unix epoch and end in year 9999.
+ * No scheduling, timezone inference, reminder or automatic completion occurs.
+ * The archive form loads active and archived cards into a revision-bound picker.
+ * Review describes the exact archive/restore action; Apply performs it once.
+ * Selection changes, reloads, hidden forms and busy hosts invalidate reviews.
+ * Restoring uses the recorded list and existing WIP/dependency rules. Archiving
+ * never deletes fields, releases board capacity or publishes private text.
+ * Native filters reuse C23 queries; they affect only active-card presentation.
+ * Developer names are case-folded, exact registered IDs take precedence, and
+ * ambiguous names are refused. List occupancy remains unfiltered. A new filter
+ * abandons card selection and drag authority without editing board records.
+ * The overdue cutoff is explicit UTC; no host clock is consulted. */
 GtkWidget *UmiKanbanGtk4Create(UmiKanbanBoard *board);
 UmiStatus UmiKanbanGtk4Refresh(GtkWidget *panel);
 void UmiKanbanGtk4SetBusy(GtkWidget *panel, bool busy);

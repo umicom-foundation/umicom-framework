@@ -87,4 +87,57 @@ the caller. It reuses the existing statement selection and aggregate rules. Rele
 network operation. The native review uses the same API and revokes exports on edits and close.
 Portable and GTK regressions are in <code>tests/bank_feed/test_statement_timeline.c</code> and
 <code>tests/bank_feed/test_statement_timeline_native.c</code>.</p>
+
+<h2>Save a comparison you can reopen</h2>
+<p>A transaction CSV is useful for inspecting rows. A reusable statement review also retains
+the account, currency, dates and supplied opening/closing balances used in a comparison.</p>
+<ol>
+<li>Import your statement and select <strong>Reconcile selected account</strong>.</li>
+<li>Enter the period and balances, then select <strong>Compare balances</strong>.
+A mismatch can be saved too; it is an observation to investigate.</li>
+<li>At the bottom of the comparison window, use the reusable review export.
+Choose an absolute, new private filename such as <code>C:\umicom\_local\statements\review.json</code>.
+Create the containing folder first. Select its save action and wait for the result.</li>
+<li>In <strong>Bank transaction reports</strong>, choose
+<strong>Umicom statement review archive</strong>, select that saved file and choose
+<strong>Import for review</strong>.</li>
+<li>The imported observations appear in the report and a separate comparison opens with
+the saved dates and balances. Its totals are calculated again. Changing the source-file
+selection later does not change this independent comparison.</li>
+<li>Edit any date or balance to explore another assumption, then compare again before saving.
+Use another filename to retain both reviews: existing files are not overwritten.</li>
+</ol>
+<p>The archive contains <strong>all accounts in the original import</strong>, including rows
+outside the selected period. Keep it private. It preserves known source format and a claimed
+source SHA-256 digest, but neither the archive nor that digest authenticates a provider.
+Mapping settings, source paths and discarded provider extensions cannot be recovered.
+Decimal scales are retained; spacing, redundant signs and leading zeros in entered balances
+are replaced by canonical decimal text.</p>
+<h3>Recovery and limits</h3>
+<ul>
+<li>A malformed or unsupported review is refused. No partial comparison opens and no ledger
+posting occurs. Select the correct file format and retain the original file for inspection.</li>
+<li>A changed path, changed format or closed import window invalidates an outstanding load.
+Wait for the worker to finish before starting another import.</li>
+<li>Editing a comparison revokes all three exports: aggregate CSV, daily CSV and reusable review.
+A save already accepted by the export service contains the earlier immutable snapshot and may finish.</li>
+<li>The observation archive remains bounded at 4 MiB and 1,024 rows. The review envelope permits
+another 4,096 bytes for scope. Native export additionally limits text to 2,097,152 characters.
+If an archive cannot fit, an otherwise valid arithmetic comparison remains visible.</li>
+<li>Reopening is a calculation over retained observations. It does not prove statement
+completeness, source integrity, settlement, permission to transact or reconciliation with a ledger.</li>
+</ul>
+<h3>Reuse the C23 service</h3>
+<p>Include <code>umicom/bank_feed/statement_archive.h</code> and link
+<code>Umicom::bank_feed</code>. Create an owned review with
+<code>UmiBankStatementArchiveCreate</code>, read copied fields with
+<code>UmiBankStatementArchiveRead</code>, and release it with
+<code>UmiBankStatementArchiveDestroy</code>. Encode/decode do no file I/O.
+Free encoded bytes with <code>UmiBankFeedArchiveFree</code>. Decode calculates totals from the
+stored observations; the file does not carry a trusted success flag.</p>
+<p><code>examples/statement_review</code> is a complete installed-SDK consumer.
+Its <code>roundtrip</code> case expects a zero difference; <code>mismatch</code> expects 0.01.
+Both retain a pending debit while excluding it from booked movement. The native importer and
+comparison window use these same shared services.</p>
+
 </main></body></html>

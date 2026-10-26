@@ -8,6 +8,7 @@
 
 #include "umicom/ui/gtk4/bank_statement.h"
 #include "umicom/bank_feed/statement_timeline.h"
+#include "umicom/bank_feed/statement_archive.h"
 #include <stdio.h>
 #include "umicom/ui/gtk4/text_export.h"
 #include "window_removal_private.h"
@@ -20,6 +21,9 @@ typedef struct StatementUi {
   GtkTextBuffer *csv;
   GtkTextBuffer *dailyText, *dailyCsv; /* Owned independently of view lifetime. */
   GtkWidget *dailySave;
+  UmiBankFeedArchiveInfo source;
+  GtkTextBuffer *reviewArchive;
+  GtkWidget *reviewSave; /* Owned export control, retired with this snapshot. */
   guint64 revision;
   gboolean closed, invalidating, publishing;
 } StatementUi;
@@ -35,6 +39,8 @@ static void StatementFree(gpointer data) {
   g_free(ui->account);
   g_free(ui->currency);
   g_clear_object(&ui->csv);
+  g_clear_object(&ui->reviewArchive);
+  g_clear_object(&ui->reviewSave);
   g_clear_object(&ui->dailyText);
   g_clear_object(&ui->dailyCsv);
   g_clear_object(&ui->dailySave);
@@ -52,6 +58,7 @@ static void StatementClosed(GtkWidget *window, gpointer unused) {
   ui->feed = NULL;
   UmiTextExportGtk4Retire(ui->save);
   UmiTextExportGtk4Retire(ui->dailySave);
+  UmiTextExportGtk4Retire(ui->reviewSave);
 }
 static bool StatementCurrent(GtkWindow *window, guint64 revision) {
   StatementUi *ui = StatementOwner(window);
@@ -67,6 +74,14 @@ static void StatementInvalidate(GtkWindow *window) {
   if (ui->invalidating)
     return;
   ui->invalidating = TRUE;
+  /* The reusable review is authority for these exact fields. Revoke it before
+   * any notification can try to save the previous comparison. */
+  gtk_widget_set_sensitive(ui->reviewSave, FALSE);
+  ui = StatementOwner(window);
+  if (ui == NULL) return;
+  gtk_text_buffer_set_text(ui->reviewArchive, "", 0);
+  ui = StatementOwner(window);
+  if (ui == NULL) return;
   gtk_widget_set_sensitive(ui->save, FALSE);
   ui = StatementOwner(window);
   if (ui == NULL)
@@ -186,6 +201,18 @@ static void StatementCompare(GtkButton *button, gpointer data) {
       g_string_append_printf(daily, "Daily CSV unavailable: %s.\n", umi_status_text(dailyExportStatus));
   }
   UmiBankStatementTimelineDestroy(timeline);
+  UmiBankStatementArchive *review = NULL;
+  char *reviewBytes = NULL;
+  size_t reviewLength = 0U;
+  UmiStatus reviewStatus = status;
+  if (reviewStatus == UMI_STATUS_OK)
+    reviewStatus = UmiBankStatementArchiveCreate(ui->feed, &request, &ui->source, &review);
+  if (reviewStatus == UMI_STATUS_OK)
+    reviewStatus = UmiBankStatementArchiveEncode(review, &reviewBytes, &reviewLength);
+  UmiBankStatementArchiveDestroy(review);
+  if (reviewStatus == UMI_STATUS_OK &&
+      g_utf8_strlen(reviewBytes, (gssize)reviewLength) > UMI_TEXT_EXPORT_MAX_CHARACTERS)
+    reviewStatus = UMI_STATUS_CAPACITY_EXCEEDED;
   GString *text = g_string_new("");
   if (status != UMI_STATUS_OK)
     g_string_append_printf(
@@ -209,6 +236,13 @@ static void StatementCompare(GtkButton *button, gpointer data) {
     g_string_append(text, "An arithmetic match does not prove a complete or authentic statement.");
     if (exportStatus != UMI_STATUS_OK)
       g_string_append(text, "\nCSV unavailable: the report could not fit in its bounded export.");
+  }
+  if (status == UMI_STATUS_OK) {
+    if (reviewStatus == UMI_STATUS_OK)
+      g_string_append(text, "\nA reusable review retains all imported accounts and these dates/balances. Save privately.");
+    else
+      g_string_append_printf(text, "\nReusable review unavailable: %s. The comparison above remains valid.",
+          umi_status_text(reviewStatus));
   }
   /* Finish all work that borrows the feed before publishing any GTK changes.
    * Each notification may edit inputs; revision checks prevent stale exports. */
@@ -234,6 +268,15 @@ static void StatementCompare(GtkButton *button, gpointer data) {
       }
     }
   }
+  if (StatementCurrent(window, revision) && reviewStatus == UMI_STATUS_OK) {
+    ui = StatementOwner(window);
+    gtk_text_buffer_set_text(ui->reviewArchive, reviewBytes, (int)reviewLength);
+    if (StatementCurrent(window, revision)) {
+      ui = StatementOwner(window);
+      gtk_widget_set_sensitive(ui->reviewSave, TRUE);
+    }
+  }
+  UmiBankFeedArchiveFree(reviewBytes);
   /* A text-buffer notification can change inputs during set_text. Clear again
    * after the outer publication finishes, so no residual insertion stays live. */
   if (!StatementCurrent(window, revision) && StatementOwner(window) != NULL)
@@ -258,8 +301,14 @@ static GtkWidget *StatementEntry(GtkWidget *box, const char *label, const char *
   gtk_box_append(GTK_BOX(box), entry);
   return entry;
 }
+/* The compatibility constructor below delegates to this provenance-aware
+ * owner. Its previous signature is retained here for engineering review. */
+#if 0
 GtkWindow *UmiBankStatementGtk4Create(const UmiBankFeed *feed, const char *account,
                                       const char *currency, GtkWindow *parent) {
+#endif
+GtkWindow *UmiBankStatementGtk4CreateWithSource(const UmiBankFeed *feed, const char *account,
+    const char *currency, const UmiBankFeedArchiveInfo *source, GtkWindow *parent) {
   if (parent != NULL && !UmiGtk4WindowRegistered(parent))
     return NULL;
   UmiBankFeedSummary summary;
@@ -276,12 +325,28 @@ GtkWindow *UmiBankStatementGtk4Create(const UmiBankFeed *feed, const char *accou
   }
   if (!found)
     return NULL;
+  /* Validate caller-supplied provenance through the canonical archive boundary
+   * before constructing widgets. A digest remains an untrusted source claim. */
+  /* Encoding the whole feed merely to validate provenance would reject a
+   * usable comparison when its escaped archive exceeds the export bound.
+   * Keep that earlier draft here; validate only the claim at this boundary. */
+#if 0
+  if (source != NULL) {
+    char *validation = NULL;
+    size_t validationLength = 0U;
+    UmiStatus valid = UmiBankFeedArchiveEncode(feed, source, &validation, &validationLength);
+    UmiBankFeedArchiveFree(validation);
+    if (valid != UMI_STATUS_OK) return NULL;
+  }
+#endif
+  if (source != NULL && UmiBankFeedArchiveInfoValidate(source) != UMI_STATUS_OK) return NULL;
   UmiBankFeed *copy = NULL;
   if (UmiBankFeedClone(feed, &copy) != UMI_STATUS_OK)
     return NULL;
   GtkWindow *window = GTK_WINDOW(gtk_window_new());
   StatementUi *ui = g_new0(StatementUi, 1);
   ui->feed = copy;
+  if (source != NULL) ui->source = *source;
   ui->account = g_strdup(account);
   ui->currency = g_strdup(currency);
   g_object_set_data_full(G_OBJECT(window), STATEMENT_UI, ui, StatementFree);
@@ -346,9 +411,61 @@ GtkWindow *UmiBankStatementGtk4Create(const UmiBankFeed *feed, const char *accou
   gtk_widget_set_sensitive(ui->dailySave, FALSE);
   gtk_box_append(GTK_BOX(box), ui->dailySave);
   g_object_ref(ui->dailySave);
+  GtkWidget *archiveHint = gtk_label_new(
+      "Save a reusable statement review, then reopen it in Bank transaction reports "
+      "using Umicom statement review archive. It contains every imported account; "
+      "source digests and supplied balances are not verified bank evidence.");
+  gtk_label_set_wrap(GTK_LABEL(archiveHint), TRUE);
+  gtk_box_append(GTK_BOX(box), archiveHint);
+  ui->reviewArchive = gtk_text_buffer_new(NULL);
+  ui->reviewSave = UmiTextExportGtk4CreateForBuffer(ui->reviewArchive, "statement-review.umibank.json");
+  gtk_widget_set_name(ui->reviewSave, "statement-review-export");
+  gtk_widget_set_sensitive(ui->reviewSave, FALSE);
+  gtk_box_append(GTK_BOX(box), ui->reviewSave);
+  g_object_ref(ui->reviewSave);
   GtkWidget *inputs[] = {ui->first, ui->last, ui->opening, ui->closing};
   for (size_t i = 0; i < 4U; ++i)
     g_signal_connect_object(inputs[i], "changed", G_CALLBACK(StatementChanged), window, 0);
   g_signal_connect_object(compare, "clicked", G_CALLBACK(StatementCompare), window, 0);
   return window;
+}
+
+
+/* Reopening supplies a copied scope to a new independent window. No saved
+ * match flag is trusted: the native comparison uses the normal calculation. */
+GtkWindow *UmiBankStatementGtk4CreateFromArchive(const UmiBankStatementArchive *archive,
+    GtkWindow *parent) {
+  UmiBankStatementArchiveSnapshot scope;
+  UmiBankFeed *feed = NULL;
+  if (UmiBankStatementArchiveRead(archive, &scope) != UMI_STATUS_OK ||
+      UmiBankStatementArchiveCloneFeed(archive, &feed) != UMI_STATUS_OK) return NULL;
+  GtkWindow *window = UmiBankStatementGtk4CreateWithSource(feed, scope.account, scope.currency,
+      &scope.source, parent);
+  UmiBankFeedDestroy(feed);
+  if (window == NULL) return NULL;
+  g_object_ref(window);
+  char first[32], last[32], opening[UMI_DECIMAL_TEXT_MAX], closing[UMI_DECIMAL_TEXT_MAX];
+  (void)snprintf(first, sizeof first, "%04d-%02u-%02u", (int)scope.firstDate.year,
+      (unsigned)scope.firstDate.month, (unsigned)scope.firstDate.day);
+  (void)snprintf(last, sizeof last, "%04d-%02u-%02u", (int)scope.lastDate.year,
+      (unsigned)scope.lastDate.month, (unsigned)scope.lastDate.day);
+  UmiStatus status = UmiDecimalFormat(scope.openingBalance, opening, sizeof opening);
+  if (status == UMI_STATUS_OK) status = UmiDecimalFormat(scope.closingBalance, closing, sizeof closing);
+  const char *values[] = {first, last, opening, closing};
+  for (size_t i = 0U; status == UMI_STATUS_OK && i < 4U; ++i) {
+    StatementUi *ui = StatementOwner(window);
+    if (ui == NULL) { status = UMI_STATUS_INVALID_STATE; break; }
+    GtkWidget *fields[] = {ui->first, ui->last, ui->opening, ui->closing};
+    gtk_editable_set_text(GTK_EDITABLE(fields[i]), values[i]);
+  }
+  if (status == UMI_STATUS_OK && StatementOwner(window) != NULL)
+    StatementCompare(NULL, window);
+  bool open = status == UMI_STATUS_OK && StatementOwner(window) != NULL;
+  if (!open) gtk_window_destroy(window);
+  g_object_unref(window);
+  return open ? window : NULL;
+}
+GtkWindow *UmiBankStatementGtk4Create(const UmiBankFeed *feed, const char *account,
+    const char *currency, GtkWindow *parent) {
+  return UmiBankStatementGtk4CreateWithSource(feed, account, currency, NULL, parent);
 }

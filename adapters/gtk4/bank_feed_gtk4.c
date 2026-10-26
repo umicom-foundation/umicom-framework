@@ -13,6 +13,8 @@
 #include "umicom/bank_feed/csv_mapping.h"
 #include "umicom/platform/input_file.h"
 #include "umicom/ui/gtk4/bank_feed.h"
+#include "umicom/bank_feed/statement.h"
+#include "umicom/ui/gtk4/bank_comparison.h"
 #include "umicom/ui/gtk4/bank_statement.h"
 #include "umicom/ui/gtk4/path_picker.h"
 #include "umicom/ui/gtk4/text_export.h"
@@ -31,6 +33,9 @@ typedef struct BankFeedUi {
   GtkWidget *archiveSave, *archiveNote;
   UmiBankFeedArchiveInfo archiveInfo;
   UmiBankFeed *feed;
+  UmiBankFeed *comparisonBefore; /* Explicit independent snapshot, not an implicit history. */
+  UmiBankFeedArchiveInfo comparisonInfo;
+  GtkWidget *comparisonNote;
   size_t groupRows[UMI_BANK_FEED_MAX_ROWS], groupCount;
   guint64 generation;
   gboolean closed, publishing, loading, invalidating;
@@ -45,6 +50,7 @@ typedef struct BankFeedLoad {
   UmiBankFeedCsvIssue issue;
   UmiBankFeedArchiveInfo archiveInfo;
   UmiBankFeedCsvMapping mapping;
+  UmiBankStatementArchive *review; /* Worker-owned until native completion. */
 } BankFeedLoad;
 /* Retaining a GTK object does not keep its native window open. Every control
  * callback checks both ownership and native registration before using children. */
@@ -55,6 +61,7 @@ static BankFeedUi *FeedOwner(GtkWindow *window) {
 static void FeedFree(gpointer data) {
   BankFeedUi *ui = data;
   UmiBankFeedDestroy(ui->feed);
+  UmiBankFeedDestroy(ui->comparisonBefore);
   g_clear_object(&ui->csv);
   g_clear_object(&ui->archive);
   g_clear_object(&ui->archiveSave);
@@ -67,6 +74,7 @@ static void FeedLoadFree(gpointer data) {
   BankFeedLoad *load = data;
   g_weak_ref_clear(&load->window);
   UmiBankFeedDestroy(load->feed);
+  UmiBankStatementArchiveDestroy(load->review);
   g_free(load->path);
   g_free(load);
 }
@@ -79,6 +87,8 @@ static void FeedClosed(GtkWidget *window, gpointer unused) {
   ++ui->generation;
   UmiBankFeedDestroy(ui->feed);
   ui->feed = NULL;
+  UmiBankFeedDestroy(ui->comparisonBefore);
+  ui->comparisonBefore = NULL;
   /* Export may retain an already accepted immutable write. Retirement blocks
    * new captures without claiming that closing undoes a requested save. */
   UmiTextExportGtk4Retire(ui->save);
@@ -92,7 +102,13 @@ static void FeedWorker(GTask *task, gpointer source, gpointer data, GCancellable
   BankFeedLoad *load = data;
   unsigned char *bytes = NULL;
   size_t length = 0U;
+  /* Only the reviewed envelope needs its small scope allowance. Existing
+   * transaction formats keep their previous input bound. */
+#if 0
   load->status = UmiInputFileRead(load->path, UMI_BANK_FEED_MAX_BYTES, &bytes, &length);
+#endif
+  size_t limit = load->format == 4U ? UMI_BANK_STATEMENT_ARCHIVE_MAX_BYTES : UMI_BANK_FEED_MAX_BYTES;
+  load->status = UmiInputFileRead(load->path, limit, &bytes, &length);
   /* Preserve the JSON-only dispatch for review. Explicit format selection
    * replaces it so a filename extension never decides financial semantics. */
 #if 0
@@ -109,6 +125,16 @@ static void FeedWorker(GTask *task, gpointer source, gpointer data, GCancellable
                                                 &load->feed, &load->issue);
     else if (load->format == 3U)
       load->status = UmiBankFeedArchiveDecode(bytes, length, &load->feed, &load->archiveInfo);
+    else if (load->format == 4U) {
+      load->status = UmiBankStatementArchiveDecode(bytes, length, &load->review);
+      UmiBankStatementArchiveSnapshot snapshot;
+      if (load->status == UMI_STATUS_OK)
+        load->status = UmiBankStatementArchiveRead(load->review, &snapshot);
+      if (load->status == UMI_STATUS_OK) {
+        load->archiveInfo = snapshot.source;
+        load->status = UmiBankStatementArchiveCloneFeed(load->review, &load->feed);
+      }
+    }
     else
       load->status = UMI_STATUS_INVALID_ARGUMENT;
   }
@@ -379,6 +405,20 @@ static void FeedLoaded(GObject *source, GAsyncResult *result, gpointer unused) {
           : "Imported locally; CSV exceeds the export limit. No partial CSV is available.");
   if (FeedCurrent(window, load->generation))
     FeedRender(window);
+  /* The worker decoded and copied the scope. Only a still-current request may
+   * open its editor; changing format/path or closing the parent retires it. */
+  if (load->review != NULL && FeedCurrent(window, load->generation)) {
+    GtkWindow *review = UmiBankStatementGtk4CreateFromArchive(load->review, window);
+    if (review != NULL) {
+      if (FeedCurrent(window, load->generation) && UmiGtk4WindowRegistered(review))
+        gtk_window_present(review);
+      else gtk_window_destroy(review);
+    } else if (FeedCurrent(window, load->generation)) {
+      ui = FeedOwner(window);
+      gtk_label_set_text(GTK_LABEL(ui->note),
+          "Observations imported, but the saved comparison window could not be opened.");
+    }
+  }
 finished:
   ui = FeedOwner(window);
   if (ui != NULL)
@@ -475,7 +515,13 @@ static void FeedStatementClicked(GtkButton *button, gpointer data) {
     if ((size_t)index < ui->groupCount) {
       UmiBankFeedRow selected;
       if (UmiBankFeedAt(ui->feed, ui->groupRows[index], &selected) == UMI_STATUS_OK) {
+        /* Keep the previous constructor call for review. The source claim now
+         * travels into the owned comparison and its reusable private export. */
+#if 0
         GtkWindow *review = UmiBankStatementGtk4Create(ui->feed, selected.account, selected.currency, window);
+#endif
+        GtkWindow *review = UmiBankStatementGtk4CreateWithSource(ui->feed, selected.account,
+            selected.currency, &ui->archiveInfo, window);
         if (review != NULL)
           gtk_window_present(review);
       }
@@ -487,6 +533,8 @@ static GtkWidget *FeedNamed(GtkWidget *widget, const char *name) {
   gtk_widget_set_name(widget, name);
   return widget;
 }
+#include "bank_feed_comparison.inc"
+
 GtkWindow *UmiBankFeedGtk4Create(GtkWindow *parent) {
   if (parent != NULL && !UmiGtk4WindowRegistered(parent))
     return NULL;
@@ -545,8 +593,14 @@ GtkWindow *UmiBankFeedGtk4Create(GtkWindow *parent) {
 #if 0
   const char *formats[] = {"Open Banking JSON", "Statement CSV", "CSV with custom columns", NULL};
 #endif
+  /* Append the review format without changing existing stored choice indexes.
+   * The earlier four-choice catalogue remains for engineering review. */
+#if 0
   const char *formats[] = {"Open Banking JSON", "Statement CSV", "CSV with custom columns",
                            "Umicom observation archive", NULL};
+#endif
+  const char *formats[] = {"Open Banking JSON", "Statement CSV", "CSV with custom columns",
+                           "Umicom observation archive", "Umicom statement review archive", NULL};
   ui->format = FeedNamed(gtk_drop_down_new_from_strings(formats), "bank-feed-format");
   gtk_widget_set_tooltip_text(ui->format, "Select the format of the file you are importing.");
   gtk_box_append(GTK_BOX(root), ui->format);
@@ -626,6 +680,7 @@ GtkWindow *UmiBankFeedGtk4Create(GtkWindow *parent) {
                                    "bank-feed-reconcile");
   gtk_box_append(GTK_BOX(root), compare);
   g_signal_connect_object(compare, "clicked", G_CALLBACK(FeedStatementClicked), window, 0);
+  FeedComparisonControls(ui, root, window);
   return window;
 }
 static void FeedOpen(GtkButton *button, gpointer unused) {

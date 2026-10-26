@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_rejections.c
+ *
+ * PURPOSE:
+ *   Check selected-loss failures and capacity refusals preserve prior state.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | failure-atomic selected-loss and capacity contracts | Sammy Hegab | MIT */
 #include "stacked_test_fixture.h"
 int main(void)

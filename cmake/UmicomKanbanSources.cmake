@@ -16,6 +16,7 @@ function(umicom_add_kanban_sources target)
         "${_root}/src/kanban/publication_plan_archive.c"
         "${_root}/src/kanban/developers.c"
         "${_root}/src/kanban/card_details.c"
+        "${_root}/src/kanban/column_policy.c"
         "${_root}/src/kanban/completion_plan.c"
         "${_root}/src/kanban/completion_validation.c"
         "${_root}/src/kanban/completion_board.c"

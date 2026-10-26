@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_checkpoint.c
+ *
+ * PURPOSE:
+ *   Check that an owned checkpoint restores independent model state and logits.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | independent stacked-model snapshot restoration | Sammy Hegab | MIT */
 #include "stacked_test_fixture.h"
 int main(void)

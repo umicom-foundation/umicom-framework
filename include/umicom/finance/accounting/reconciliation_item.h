@@ -47,6 +47,17 @@ bool umi_accounting_reconciliation_item_valid(const UmiAccountingReconciliationI
  * client applications.
  */
 bool umi_accounting_reconciliation_item_matched(const UmiAccountingReconciliationItem *value);
+/* Exact unsigned distance supports the full separation between two int64_t
+ * values, up to UINT64_MAX. Signed difference is external minus ledger and
+ * returns CAPACITY_EXCEEDED when not representable. Both checked operations
+ * preserve their output on failure; output storage must not overlap input.
+ * Matching compares exact distance with a nonnegative tolerance without
+ * saturation. Initialization preserves the complete destination on refusal.
+ * Amount currency and scale compatibility remain the caller's responsibility. */
+UmiStatus umi_accounting_reconciliation_item_distance_minor_checked(
+    const UmiAccountingReconciliationItem *value, uint64_t *out_distance);
+UmiStatus umi_accounting_reconciliation_item_difference_minor_checked(
+    const UmiAccountingReconciliationItem *value, int64_t *out_difference);
 #ifdef __cplusplus
 }
 #endif

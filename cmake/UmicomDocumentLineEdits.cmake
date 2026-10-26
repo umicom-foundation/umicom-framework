@@ -13,3 +13,23 @@ if(BUILD_TESTING)
         set_tests_properties(framework.document.line_edit.${case} PROPERTIES TIMEOUT 30 LABELS "framework;document;line-edit;history;regression")
     endforeach()
 endif()
+
+# Admission is shared by headless command clients and native menu controls.
+if(BUILD_TESTING AND NOT TARGET umicom-document-line-admission-test)
+    add_executable(umicom-document-line-admission-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/document/test_line_edit_admission.c")
+    target_link_libraries(umicom-document-line-admission-test PRIVATE Umicom::document)
+    umicom_apply_warnings(umicom-document-line-admission-test)
+    umicom_apply_sanitizers(umicom-document-line-admission-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-document-line-admission-test)
+    endif()
+    foreach(case caret-kinds empty-selection selected-kinds read-only
+            selection-transition readonly-transition zero-id null-owner unknown-id
+            unsupported-kind closed other-tab history neighbor-deferred)
+        add_test(NAME framework.document.line_admission.${case}
+            COMMAND umicom-document-line-admission-test ${case})
+        set_tests_properties(framework.document.line_admission.${case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;document;line-edit;availability;regression")
+    endforeach()
+endif()

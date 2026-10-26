@@ -14,6 +14,9 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/accounting/journal_entry.h"
 #include <string.h>
+
+/* The former journal implementation is retained for review. Checked totals and complete line validation replace unbounded traversal and signed addition; valid journal behavior remains available through the same public functions. */
+#if 0
 /*
  * Initialise accounting journal entry from caller-provided values so later operations
  * receive a known state.
@@ -44,3 +47,89 @@ int64_t umi_accounting_journal_entry_total_credit(const UmiAccountingJournalEntr
  * client applications.
  */
 bool umi_accounting_journal_entry_balanced(const UmiAccountingJournalEntry *value){ return value!=NULL&&value->line_count>=2U&&umi_accounting_journal_entry_total_debit(value)==umi_accounting_journal_entry_total_credit(value); }
+
+#endif
+
+/* Checked traversal belongs to the journal owner: every caller, including
+ * restored/plugin state, must use the same bounds and representability rules. */
+UmiStatus umi_accounting_journal_entry_init(UmiAccountingJournalEntry *value,
+    const char *id, UmiFinancialDate accounting_date) {
+    if (value == NULL || !umi_financial_date_is_valid(accounting_date)) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiAccountingJournalEntry next = {0};
+    UmiStatus status = umi_accounting_id_assign(&next.id, id);
+    if (status != UMI_STATUS_OK) return status;
+    next.accounting_date = accounting_date; next.status = UMI_ACCOUNTING_JOURNAL_DRAFT;
+    if (!umi_accounting_journal_entry_valid(&next)) return UMI_STATUS_INVALID_ARGUMENT;
+    *value = next;
+    return UMI_STATUS_OK;
+}
+bool umi_accounting_journal_entry_valid(const UmiAccountingJournalEntry *value) {
+    /* Membership is independent of the compiler's enum signedness. Retain the
+     * range draft for review; named values also remain safe if the enum grows. */
+#if 0
+    if (value == NULL || value->line_count > UMI_ACCOUNTING_MAX_LINES ||
+        !umi_financial_id_is_valid(&value->id) || !umi_financial_date_is_valid(value->accounting_date) ||
+        value->status < UMI_ACCOUNTING_JOURNAL_DRAFT || value->status > UMI_ACCOUNTING_JOURNAL_REVERSED)
+        return false;
+#endif
+    if (value == NULL || value->line_count > UMI_ACCOUNTING_MAX_LINES ||
+        !umi_financial_id_is_valid(&value->id) ||
+        !umi_financial_date_is_valid(value->accounting_date)) {
+        return false;
+    }
+    switch (value->status) {
+    case UMI_ACCOUNTING_JOURNAL_DRAFT:
+    case UMI_ACCOUNTING_JOURNAL_VALIDATED:
+    case UMI_ACCOUNTING_JOURNAL_POSTED:
+    case UMI_ACCOUNTING_JOURNAL_REVERSED:
+        break;
+    default:
+        return false;
+    }
+    for (size_t i = 0U; i < value->line_count; ++i)
+        if (!umi_accounting_journal_line_valid(&value->lines[i])) return false;
+    return true;
+}
+UmiStatus umi_accounting_journal_entry_totals(const UmiAccountingJournalEntry *value,
+    int64_t *out_debit, int64_t *out_credit) {
+    if (out_debit == NULL || out_credit == NULL || out_debit == out_credit ||
+        !umi_accounting_journal_entry_valid(value)) return UMI_STATUS_INVALID_ARGUMENT;
+    int64_t debit = 0, credit = 0;
+    for (size_t i = 0U; i < value->line_count; ++i) {
+        const UmiAccountingJournalLine *line = &value->lines[i];
+        if (line->debit_minor > INT64_MAX - debit || line->credit_minor > INT64_MAX - credit)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        debit += line->debit_minor; credit += line->credit_minor;
+    }
+    *out_debit = debit; *out_credit = credit;
+    return UMI_STATUS_OK;
+}
+UmiStatus umi_accounting_journal_entry_add_line(UmiAccountingJournalEntry *value,
+    const UmiAccountingJournalLine *line) {
+    if (!umi_accounting_journal_entry_valid(value) || !umi_accounting_journal_line_valid(line))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (value->status != UMI_ACCOUNTING_JOURNAL_DRAFT) return UMI_STATUS_INVALID_STATE;
+    if (value->line_count >= UMI_ACCOUNTING_MAX_LINES) return UMI_STATUS_CAPACITY_EXCEEDED;
+    int64_t debit = 0, credit = 0;
+    UmiStatus status = umi_accounting_journal_entry_totals(value, &debit, &credit);
+    if (status != UMI_STATUS_OK) return status;
+    if (line->debit_minor > INT64_MAX - debit || line->credit_minor > INT64_MAX - credit)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiAccountingJournalLine accepted = *line;
+    value->lines[value->line_count] = accepted;
+    ++value->line_count;
+    return UMI_STATUS_OK;
+}
+int64_t umi_accounting_journal_entry_total_debit(const UmiAccountingJournalEntry *value) {
+    int64_t debit = 0, credit = 0;
+    return umi_accounting_journal_entry_totals(value, &debit, &credit) == UMI_STATUS_OK ? debit : 0;
+}
+int64_t umi_accounting_journal_entry_total_credit(const UmiAccountingJournalEntry *value) {
+    int64_t debit = 0, credit = 0;
+    return umi_accounting_journal_entry_totals(value, &debit, &credit) == UMI_STATUS_OK ? credit : 0;
+}
+bool umi_accounting_journal_entry_balanced(const UmiAccountingJournalEntry *value) {
+    int64_t debit = 0, credit = 0;
+    return umi_accounting_journal_entry_totals(value, &debit, &credit) == UMI_STATUS_OK &&
+        value->line_count >= 2U && debit > 0 && debit == credit;
+}

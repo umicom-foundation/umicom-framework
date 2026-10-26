@@ -67,6 +67,13 @@ if(COMMAND umicom_target_qualification_inputs)
         "${_kanban_gtk_root}/adapters/gtk4/kanban_publication_plan.inc"
         "${_kanban_gtk_root}/adapters/gtk4/kanban_completion_bridge.inc"
         "${_kanban_gtk_root}/adapters/gtk4/kanban_card_details.inc"
+        "${_kanban_gtk_root}/adapters/gtk4/kanban_card_labels.inc"
+        "${_kanban_gtk_root}/adapters/gtk4/kanban_card_deadline.inc"
+        "${_kanban_gtk_root}/adapters/gtk4/kanban_card_archive.inc"
+        "${_kanban_gtk_root}/adapters/gtk4/kanban_view_filter.inc"
+        "${_kanban_gtk_root}/adapters/gtk4/kanban_column_policy.inc"
+        "${_kanban_gtk_root}/adapters/gtk4/kanban_card_checklist.inc"
+        "${_kanban_gtk_root}/adapters/gtk4/kanban_card_dependencies.inc"
         "${_kanban_gtk_root}/adapters/gtk4/kanban_completion_report.inc"
         "${_kanban_gtk_root}/adapters/gtk4/kanban_binding.inc"
         "${_kanban_gtk_root}/adapters/gtk4/focus_handoff_private.h")

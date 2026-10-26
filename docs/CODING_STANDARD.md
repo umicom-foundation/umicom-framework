@@ -228,6 +228,31 @@ source. Inspect the final file bytes, not only the text displayed by an editor. 
 a binary-file result from a source search as an encoding defect to investigate. Keep
 byte-level checks separate from compiler and runtime validation.
 
+C string and character literals must not contain physical line breaks. Use the
+source escape \n inside a string, or close the literal and continue with an adjacent
+literal on the next source line. A source generator's string escaping is a separate
+layer: inspect the emitted file. Preserve lexically malformed historical code inside
+a block comment, because #if 0 still requires well-formed preprocessing tokens.
+The source-contract audit checks literal/comment boundaries and C23 digit separators;
+it does not replace compilation, type checking or execution.
+
+Native row callbacks need both the expected model revision and membership in the
+current presentation. Refresh can remove a row without changing its model. Retained
+widgets and controllers must not regain action authority after removal. Guard complete
+selection updates across observable GTK properties, and recheck ownership before
+publishing the next field. Add regressions for nested callbacks and late drag signals.
+
+Locate native fixture sections by a stable name or semantic role. Do not assume that
+the first expander, button or matching widget type is the intended control. A new
+unrelated section must not silently redirect an existing interaction test.
+
+Financial observation APIs must distinguish unavailable values, invalid numbers,
+arithmetic overflow and measured zero. Check finiteness before ordering comparisons.
+State machines need explicit permitted edges and full matrix coverage; a newer version
+alone does not authorise an arbitrary next state. Preview/apply boundaries bind all
+relevant active values, not struct padding or unused capacity, and stale input refuses
+without partial writes. A local lifecycle label is not external settlement evidence.
+
 ## Before requesting review
 
 - Explain the concrete behaviour changed and why it belongs in this component.
@@ -240,3 +265,34 @@ byte-level checks separate from compiler and runtime validation.
 
 These practices reduce recurring mistakes. They do not guarantee that future code is
 free of defects; review and executed qualification remain necessary.
+
+## Optional provider coverage
+
+A host with an optional provider cannot exercise its unavailable branch by changing
+only an expected result. Retain the host-dependent cases and build a separate fixture
+from the same production adapter sources with that provider disabled. Link only its
+lower-level dependencies, not the enabled adapter. Assert the capability is absent;
+a surprising enabled provider must fail the fixture rather than skip it. Keep these
+fixture targets private to testing and out of the installed SDK.
+
+Exercise refusal ordering, cancellation, unchanged caller-owned outputs and the
+absence of file creation through that fixture. Record the host-dependent skip and
+the disabled-provider result separately. A new authored case is still unqualified
+until its actual binary runs; it does not convert old skipped evidence into a pass.
+
+## Fixture identity and encoded bytes
+
+Represent deliberately malformed text with explicit byte values and assert its encoding
+before passing it to the component under test. A visible Unicode character is not the
+same input as a single invalid byte. Pair negative encoding fixtures with valid Unicode
+controls, including later pages when validation occurs at presentation time.
+
+Native selection fixtures must assert the actual selected state after changing a model
+or selection; toolkit policies can restore a selection. Positive formatter cases must
+be admitted by their public parser, with parser refusal checked separately.
+
+Reserve filesystem fixture directories exclusively and never adopt or delete an existing
+entry to make a rerun pass. Preserve evidence left by failed runs and check that two live
+fixtures remain independent. A fresh directory fixes isolation; it does not prove the
+product operation succeeds. Keep failed-output sentinels separate from semantic preview
+expectations used by later assertions.

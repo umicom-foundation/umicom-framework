@@ -1,4 +1,12 @@
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: tests/component_integration/CMakeLists.txt
+# PURPOSE: Register bounded composition scenarios with complete outer deadlines.
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+# LICENCE: MIT
+#-----------------------------------------------------------------------------
 # Use include(), not add_subdirectory(): this registration may itself be late.
 include_guard(GLOBAL)
 get_filename_component(_umi_composition_root "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
@@ -26,7 +34,16 @@ foreach(_case IN ITEMS deferred immediate mixed repeated missing partial tests_o
         TIMEOUT 240 PROCESSORS 2 LABELS "component-integration;configure;native")
     endif()
     set(_case_timeout 240)
+    # The original exception handled repeated explicit reconfiguration only.
+    # Keep it for review; automatic regeneration also adds a second build and
+    # inventory before running the complete nested suite. Each subprocess still
+    # has its own 180-second deadline, so a stuck step is not given 900 seconds.
+    if(FALSE)
     if(_case STREQUAL "reconfigure")
+        set(_case_timeout 900)
+    endif()
+    endif()
+    if(_case STREQUAL "reconfigure" OR _case STREQUAL "regenerate")
         set(_case_timeout 900)
     endif()
     set_tests_properties(framework.component_integration.${_case} PROPERTIES

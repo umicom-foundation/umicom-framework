@@ -51,6 +51,9 @@ int UmiSourceContractReadAttribution(const char *source, size_t length,
     UmiSourceAttribution *out);
 
 /* Run the same metadata parser for headers and C/include-fragment audits.
+ * A narrow lexical guard also rejects broken quoted literals/block comments.
+ * C23 numeric separators, escaped quotes, physical line splices and comments
+ * are recognised. This does not compile, expand macros or validate C semantics.
  * Zero means no findings; one means a contract failure; two means input/I/O
  * failure. Missing roots and empty scans are errors, never silent passes. */
 int UmiSourceContractAudit(const char *const *roots, size_t count,

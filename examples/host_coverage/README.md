@@ -24,3 +24,18 @@ This C23 example reads a CSV plan and complete CTest JUnit reports through publi
 The example prints pages of up to 64 requirements. Exit 0 means all explicitly listed requirements passed for the supplied identity, 1 means outstanding or empty coverage, and 2 means an input or output error. A saved identity is caller-supplied metadata, not proof of which source produced a report.
 
 If configuration cannot find the SDK, check that the selected directory contains the Framework package, libraries and headers. Do not add a source-tree include path to bypass an incomplete installation. If an input is refused, inspect the retained log and the [host-coverage guide](../../docs/guides/test-host-coverage.html). This example neither runs the tests listed in the plan nor modifies their evidence.
+
+## Focus on outstanding coverage
+
+Keep the same manifest and source arguments, then add a display option:
+
+```powershell
+& ".\build\host-coverage-consumer\host-coverage-consumer.exe" "C:\umicom\_local\logs\testing\coverage.csv" "source-fingerprint-from-the-run" --outstanding
+$LASTEXITCODE
+& ".\build\host-coverage-consumer\host-coverage-consumer.exe" "C:\umicom\_local\logs\testing\coverage.csv" "source-fingerprint-from-the-run" --outstanding "editor"
+$LASTEXITCODE
+```
+
+The optional last argument matches literal test-name or capability text, folding ASCII case. Use `--passed` to display saved passes. Every page includes the accepted filter and the original whole-review counts. The exit status still evaluates **all** listed requirements, even when the filtered display contains only passes or no rows.
+
+The additional filtered-passed, filtered-empty and filtered-text checks expect exit 1 from synthetic mixed evidence. This checks that presentation cannot conceal an outstanding qualification requirement. These documented results are expected outcomes, not a claim that a particular SDK build has passed qualification.

@@ -72,3 +72,10 @@ if(COMMAND umicom_release_inventory_own_headers)
     umicom_release_inventory_own_headers(umicom_kanban include/umicom/kanban/card_details.h)
 endif()
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomKanbanCardDetails.cmake")
+
+# List policies use the same atomic board and archive as card edits.
+install(FILES "${_kanban_root}/include/umicom/kanban/column_policy.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/kanban" COMPONENT Framework)
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_kanban include/umicom/kanban/column_policy.h)
+endif()

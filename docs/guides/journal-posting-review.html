@@ -1,0 +1,89 @@
+<!doctype html>
+<!-- Umicom Framework
+File: docs/guides/journal-posting-review.html
+PURPOSE: Teach checked, local journal review and refusal recovery.
+AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+LICENCE: MIT -->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Review a local journal — Umicom Framework</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:940px;margin:2rem auto;padding:0 1.2rem;color:#1c2935}pre{background:#eef3f7;padding:1rem;overflow:auto}code{font-size:.9em}h1,h2{line-height:1.25}table{border-collapse:collapse;width:100%}td,th{padding:.6rem;border:1px solid #ccd5de;text-align:left}</style></head>
+<body><main><h1>Review a local journal</h1>
+<p>A journal records the debit and credit lines of an accounting event. A chart of accounts
+identifies the accounts that may receive those lines. An accounting calendar identifies the
+period containing the journal date. The Framework review service combines these local checks
+and captures the values before an application asks an operator to apply the journal.</p>
+<p>This service changes a bounded in-memory book. It does not connect to a bank, authorize a
+payment, authenticate an approver or persist a ledger transaction. Journals do not contain
+currency or scale metadata: the surrounding service must establish compatible account
+currencies and minor units before using these APIs.</p>
+<h2>1. Prepare and inspect</h2>
+<ol><li>Include <code>umicom/finance/accounting/posting_review.h</code> and link
+<code>Umicom::finance</code>.</li>
+<li>Construct the journal, chart, calendar and book with their existing initialization APIs.
+Check each insertion result. Keep one owner responsible for serializing changes.</li>
+<li>Call <code>umi_accounting_posting_inspect</code>. Its return value describes whether
+inspection produced a preview. A return of <code>UMI_STATUS_OK</code> does not alone mean
+posting is permitted: read <code>preview.refusal</code> and <code>preview.blocker</code>.</li>
+<li>Display totals, the resolved period and any refused line. A line index of
+<code>SIZE_MAX</code> means the refusal concerns the whole entry or its context.</li></ol>
+<p>Inspection requires a valid, balanced draft or validated entry; complete valid containers;
+a matching open period; known postable accounts; available book capacity; and a new journal ID.
+It does not change its inputs or allocate a review.</p>
+<h2>2. Capture the decision</h2>
+<p>Call <code>umi_accounting_posting_review_create</code> only when a fresh review is needed.
+It repeats inspection and owns a heap copy of all active context. On failure it sets the
+output review pointer to NULL. On success, use
+<code>umi_accounting_posting_review_preview</code> and
+<code>umi_accounting_posting_review_entry</code> to display the immutable capture.
+These borrowed pointers remain valid until review destruction.</p>
+<pre><code>UmiAccountingPostingReview *review = NULL;
+UmiStatus status = umi_accounting_posting_review_create(
+    &amp;entry, &amp;chart, &amp;calendar, &amp;book, &amp;review);
+if (status != UMI_STATUS_OK) {
+    /* Present the refusal; keep the existing owner values. */
+    return status;
+}
+/* Present the capture and obtain the application's explicit local decision. */
+status = umi_accounting_posting_review_apply(
+    review, &amp;entry, &amp;chart, &amp;calendar, &amp;book);
+umi_accounting_posting_review_destroy(review);
+return status;</code></pre>
+<h2>3. Apply once to unchanged owners</h2>
+<p>Apply requires the same live owner addresses and their captured active fields. A changed
+line amount, account name, posting flag, date range, calendar order or existing journal
+requires a fresh review. Padding, unused rows and bytes after text terminators are ignored.
+A successful apply appends one posted copy; it does not change the candidate journal.
+Repeating apply is refused.</p>
+<p>The caller must serialize access for the entire operation and keep the owners alive.
+Address and content comparison is a local stale-decision check. It is not a security boundary,
+a persisted replay defense or a generation counter that detects change-and-restore history.
+Applications with asynchronous dialogs must also use their owner-lifetime controls.</p>
+<h2>4. Handle refusal without losing edits</h2>
+<table><thead><tr><th>Observation</th><th>Next action</th></tr></thead><tbody>
+<tr><td>Invalid record, count or amount overflow</td><td>Preserve the source for diagnosis. Correct the input through its owner; never clamp an amount to make it fit.</td></tr>
+<tr><td>Missing or closed period</td><td>Select a permitted accounting date or resolve the period policy through an authorized workflow. Do not bypass the check.</td></tr>
+<tr><td>Missing or blocked account</td><td>Review the chart and the indicated journal line. Account flags are local data, not operator authorization.</td></tr>
+<tr><td>Duplicate journal or full book</td><td>Inspect existing entries. A duplicate refusal must not be retried under an invented ID to conceal a repeated event.</td></tr>
+<tr><td>Apply returns INVALID_STATE</td><td>Keep all current data, discard the stale review and inspect again. Refusal does not partially append an entry.</td></tr>
+</tbody></table>
+<h2>5. Exercise the installed SDK example</h2>
+<p>After installing Framework and its Learning component, the following PowerShell commands
+build the example entirely against that installed SDK. Change the prefix if your installation
+is elsewhere. Stop if a command reports an error.</p>
+<pre><code>$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake -S "C:\umicom\installed\applications\share\umicom\examples\journal_posting" -B "C:\umicom\_local\build\journal-posting" -G Ninja -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe -DUMICOM_SDK_PREFIX=C:/umicom/installed/applications -DBUILD_TESTING=ON
+cmake --build "C:\umicom\_local\build\journal-posting" --parallel 2
+ctest --test-dir "C:\umicom\_local\build\journal-posting" --output-on-failure --no-tests=error
+&amp; "C:\umicom\_local\build\journal-posting\journal-posting.exe" apply</code></pre>
+<p>The example covers apply, a changed account, a closed period, an unrepresentable signed
+magnitude and a changed book. Expected successful execution reports the appropriate refusal
+or one locally stored journal and exits with code zero. The example explicitly uses synthetic
+GBP pennies; it performs no filesystem persistence or provider communication.</p>
+<p>If a new declaration or symbol is missing, build and install the same Framework revision
+before configuring the example. Do not add source-tree include or library paths to hide an
+incomplete installation. The installed SDK guard checks that the requested prefix supplies
+the imported targets.</p>
+<p>See <a href="accounting-journal-boundaries.html">checked journal arithmetic</a> for integer
+limits, and <a href="accounting-review.html">local accounting batches</a> for the separate
+double-valued practice workflow.</p>
+</main></body></html>

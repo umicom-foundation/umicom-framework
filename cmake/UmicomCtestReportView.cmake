@@ -4,6 +4,21 @@
 # AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
 # LICENCE: MIT
 include_guard(GLOBAL)
+
+# Filtered presentation does not change the original coverage gate.
+target_sources(umicom_testing PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/testing/ctest_coverage_view.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/testing/ctest_coverage_view_text.c")
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/testing/ctest_coverage_view.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/testing" COMPONENT Framework)
+if(COMMAND umicom_target_qualification_inputs)
+    umicom_target_qualification_inputs(umicom_testing FILES
+        "${CMAKE_CURRENT_LIST_DIR}/../src/testing/ctest_coverage_text_private.h")
+endif()
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_testing include/umicom/testing/ctest_coverage_view.h)
+endif()
+
 target_sources(umicom_testing PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/testing/ctest_report_view.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/testing/ctest_report_view_text.c"
@@ -154,7 +169,7 @@ umicom_apply_sanitizers(umi-host-coverage-consumer-check)
 if(COMMAND umicom_register_validation_target)
     umicom_register_validation_target(umi-host-coverage-consumer-check)
 endif()
-foreach(scenario passed skipped stale malformed)
+foreach(scenario passed skipped stale malformed filtered-passed filtered-empty filtered-text)
     set(test "framework.ctest.coverage_consumer.${scenario}")
     add_test(NAME ${test} COMMAND "${CMAKE_COMMAND}"
         "-DPROGRAM=$<TARGET_FILE:umi-host-coverage-consumer-check>"
@@ -221,4 +236,16 @@ if(TARGET umicom_ui_gtk4)
     umicom_saved_report_group(evidence_gtk4 Umicom::ui_gtk4 normal empty-suite mixed filter draft-path
         file-change cancel-replacement missing-replacement clear busy observer hidden owned null
         wrong-widget replacement)
+endif()
+
+umicom_saved_report_group(coverage_filter Umicom::testing
+    default all passed-gate none empty name capability host configuration combined literal non-ascii
+    order-name order-host order-outcome filter-copy outcome-0 outcome-1 outcome-2 outcome-3 outcome-4
+    outcome-5 outcome-6 outcome-7 outcome-8 invalid-mask invalid-order unterminated invalid-utf8 controls
+    invalid-api format short paging empty-page)
+
+if(TARGET umicom_ui_gtk4)
+    umicom_saved_report_group(coverage_filter_gtk4 Umicom::ui_gtk4
+        passed outstanding host configuration text capability empty paging edit-render close-render
+        clear-render reload failed-reload retained oversize)
 endif()

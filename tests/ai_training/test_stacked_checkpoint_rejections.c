@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_checkpoint_rejections.c
+ *
+ * PURPOSE:
+ *   Check rejection of malformed checkpoint bytes without publishing a model.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | portable checkpoint invalid-byte rejection | Sammy Hegab | MIT */
 #include "stacked_test_fixture.h"
 int main(void)

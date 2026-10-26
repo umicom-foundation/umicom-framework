@@ -60,7 +60,17 @@ int main(int argc, char **argv)
     } else if (!strcmp(name, "unicode")) {
         after = Import("<testsuite tests='1'><testcase name='caf\xc3\xa9' status='run' time='0'/></testsuite>");
     } else if (!strcmp(name, "escape")) {
+        /* Test names reject control characters at import. Retain the former
+         * invalid fixture for review, then check that refusal separately from
+         * formatting a valid name containing literal backslashes. */
+#if 0
         after = Import("<testsuite tests='1'><testcase name='line&#10;slash\\tail' status='run' time='0'/></testsuite>");
+#endif
+        const char *invalid = "<testsuite tests='1'><testcase name='line&#10;slash\\tail' status='run' time='0'/></testsuite>";
+        UmiCtestReport *rejected = NULL;
+        CHECK(UmiCtestReportImport(invalid, strlen(invalid), &rejected) == UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(rejected == NULL);
+        after = Import("<testsuite tests='1'><testcase name='line\\slash\\tail' status='run' time='0'/></testsuite>");
     } else if (!strcmp(name, "empty")) {
         after = Import("<testsuite tests='0'></testsuite>");
     } else if (!strcmp(name, "unchanged-failure")) {
@@ -89,7 +99,12 @@ int main(int argc, char **argv)
     } else if (!strcmp(name, "unicode")) {
         CHECK(strstr(text, "[added] caf\xc3\xa9"));
     } else if (!strcmp(name, "escape")) {
+        /* The positive formatting case must be reachable through the public
+         * importer. Control-name rejection is asserted above. */
+#if 0
         CHECK(strstr(text, "line\\x0Aslash\\x5Ctail") && !strstr(text, "line\nslash"));
+#endif
+        CHECK(strstr(text, "line\\x5Cslash\\x5Ctail") && !strstr(text, "line\\slash"));
     } else if (!strcmp(name, "empty") || !strcmp(name, "unchanged-failure")) {
         CHECK(strstr(text, "Showing 0..0 of 0") && strstr(text, "does not establish an all-passed result"));
         if (!strcmp(name, "unchanged-failure")) CHECK(strstr(text, "Unchanged outcomes: 6"));

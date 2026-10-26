@@ -53,7 +53,26 @@ typedef struct UmiOpenTmsFxForwardBook {
     uint64_t revision;
 } UmiOpenTmsFxForwardBook;
 
+/* This bounded owner stores observations, not authenticated trade permissions.
+ * Added records may carry any known state for imported evidence. Identity fields
+ * must terminate within their arrays and contain nonblank, control-free bytes.
+ * Currency codes are distinct three-letter uppercase codes. Notional/rates must
+ * be finite; notional and contractual rate are positive. A zero market rate means
+ * unavailable. Invalid rows never enter the book; corrupt public book contents
+ * are refused rather than traversed beyond capacity.
+ *
+ * Transition is strictly Draft -> Confirmed -> Settlement pending -> Settled.
+ * Cancellation is allowed from the first three states. Same-state, backwards,
+ * skipped-stage, unknown-state and terminal transitions are refused. The supplied
+ * trade version must increase; failures leave the complete book unchanged.
+ * Maturity zero remains an unspecified timestamp. This API does not check clocks,
+ * approvals, cash or external settlement; use a reviewed application service for
+ * those separate responsibilities. Serialise all access and initialise first.
+ * Find borrows a pointer until the next mutation; invalid books return NULL. */
 void umi_open_tms_fx_forward_book_init(UmiOpenTmsFxForwardBook *book);
+/* Check the complete inline record set without mutation or execution. NULL
+ * returns INVALID_ARGUMENT; malformed active state returns INVALID_STATE. */
+UmiStatus umi_open_tms_fx_forward_book_validate(const UmiOpenTmsFxForwardBook *book);
 /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
  * before this operation changes state or invokes nested work. Initialize the
  * owner before use and serialize mutations through its owning service. */
@@ -71,6 +90,15 @@ UmiStatus umi_open_tms_fx_forward_book_transition(
     const char *tradeId,
     UmiOpenTmsFxForwardState state,
     uint64_t version);
+/* Calculate notional * (market forward rate - contract forward rate).
+ * This is an undiscounted observation, not a production pricing model or a
+ * posting amount. Only numeric fields participate. Zero market rate returns
+ * UNAVAILABLE; non-finite or invalid values return INVALID_ARGUMENT; overflow
+ * returns CAPACITY_EXCEEDED. Failure leaves *outValue unchanged.
+ * Legacy scalar API below remains available and returns zero on refusal. */
+UmiStatus umi_open_tms_fx_forward_mark_to_market_checked(
+    const UmiOpenTmsFxForward *trade, double *outValue);
+
 double umi_open_tms_fx_forward_mark_to_market(
     const UmiOpenTmsFxForward *trade);
 

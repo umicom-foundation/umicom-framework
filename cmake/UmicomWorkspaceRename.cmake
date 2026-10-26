@@ -28,7 +28,7 @@ install(FILES "${_rename_root}/docs/guides/renaming-project-files.html"
 if(BUILD_TESTING)
     set(_rename_preview_cases basic nested backslash same empty-source empty-name parent-source
         parent-name absolute-source absolute-name new-folder new-folder-backslash nested-new-folder
-        metadata-source metadata-name device
+        metadata-source metadata-name device fixture-isolation
         colon trailing-dot trailing-space stale untrusted closed project-root project-parent arguments capacity)
     set(_rename_filesystem_cases file nested directory existing-file existing-directory missing-source
         missing-parent unicode unchanged arguments stale untrusted)

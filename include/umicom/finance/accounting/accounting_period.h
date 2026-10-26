@@ -47,6 +47,11 @@ bool umi_accounting_accounting_period_valid(const UmiAccountingAccountingPeriod 
  * client applications.
  */
 bool umi_accounting_accounting_period_open(const UmiAccountingAccountingPeriod *value);
+/* Inclusive range membership. Invalid periods or dates return false; membership
+ * does not imply the period is open. Initialization preserves value on failure,
+ * including when id points into the previous value. */
+bool umi_accounting_accounting_period_contains(const UmiAccountingAccountingPeriod *value,
+    UmiFinancialDate date);
 #ifdef __cplusplus
 }
 #endif

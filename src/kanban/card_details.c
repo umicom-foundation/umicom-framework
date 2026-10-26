@@ -116,3 +116,109 @@ UmiStatus UmiKanbanCardChecklistApply(UmiKanbanBoard *board, uint64_t revision,
     }
     return umi_kanban_board_apply(board, revision, actor, &edit, 1U, NULL);
 }
+
+static UmiStatus ChangeDependency(UmiKanbanBoard *board, uint64_t revision,
+    const char *card_id, const char *required_card_id, const char *actor, bool add)
+{
+    if (!UmiKanbanId(required_card_id, false) || !UmiKanbanId(actor, false))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiKanbanCardSnapshot row;
+    UmiStatus status = FindActive(board, revision, card_id, &row);
+    if (status != UMI_STATUS_OK) return status;
+    size_t found = row.card.dependency_count;
+    for (size_t i = 0U; i < row.card.dependency_count; ++i)
+        if (!strcmp(row.card.dependencies[i], required_card_id)) { found = i; break; }
+    if (add && found < row.card.dependency_count) return UMI_STATUS_ALREADY_EXISTS;
+    if (!add && found == row.card.dependency_count) return UMI_STATUS_NOT_FOUND;
+    if (add && row.card.dependency_count == UMI_KANBAN_MAX_DEPENDENCIES)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiKanbanEdit edit = {0};
+    edit.kind = UMI_KANBAN_UPDATE_CARD; edit.card = row.card;
+    if (add) {
+        char *slot = edit.card.dependencies[edit.card.dependency_count++];
+        memset(slot, 0, UMI_KANBAN_ID_SIZE);
+        memcpy(slot, required_card_id, strlen(required_card_id) + 1U);
+    } else {
+        for (size_t i = found + 1U; i < edit.card.dependency_count; ++i)
+            memcpy(edit.card.dependencies[i - 1U], edit.card.dependencies[i], UMI_KANBAN_ID_SIZE);
+        --edit.card.dependency_count;
+        memset(edit.card.dependencies[edit.card.dependency_count], 0, UMI_KANBAN_ID_SIZE);
+    }
+    return umi_kanban_board_apply(board, revision, actor, &edit, 1U, NULL);
+}
+UmiStatus UmiKanbanCardDependencyAdd(UmiKanbanBoard *board, uint64_t revision,
+    const char *card_id, const char *required_card_id, const char *actor)
+{ return ChangeDependency(board, revision, card_id, required_card_id, actor, true); }
+UmiStatus UmiKanbanCardDependencyRemove(UmiKanbanBoard *board, uint64_t revision,
+    const char *card_id, const char *required_card_id, const char *actor)
+{ return ChangeDependency(board, revision, card_id, required_card_id, actor, false); }
+
+
+UmiStatus UmiKanbanCardLabelsRead(const UmiKanbanBoard *board, uint64_t revision,
+    const char *card_id, UmiKanbanCardLabelsSnapshot *out)
+{
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiKanbanCardSnapshot row;
+    UmiStatus status = FindActive(board, revision, card_id, &row);
+    if (status != UMI_STATUS_OK) return status;
+    UmiKanbanCardLabelsSnapshot result = {0};
+    memcpy(result.card_id, row.card.id, strlen(row.card.id) + 1U);
+    result.board_revision = revision; result.labels.count = row.card.label_count;
+    for (size_t i = 0U; i < row.card.label_count; ++i)
+        memcpy(result.labels.labels[i], row.card.labels[i], strlen(row.card.labels[i]) + 1U);
+    *out = result;
+    return UMI_STATUS_OK;
+}
+UmiStatus UmiKanbanCardLabelsApply(UmiKanbanBoard *board, uint64_t revision,
+    const char *card_id, const char *actor, const UmiKanbanCardLabels *labels)
+{
+    if (labels == NULL || labels->count > UMI_KANBAN_MAX_LABELS || !UmiKanbanId(actor, false))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t i = 0U; i < labels->count; ++i) {
+        if (!UmiKanbanText(labels->labels[i], UMI_KANBAN_ID_SIZE, false))
+            return UMI_STATUS_INVALID_ARGUMENT;
+        for (size_t j = 0U; j < i; ++j)
+            if (!strcmp(labels->labels[j], labels->labels[i])) return UMI_STATUS_ALREADY_EXISTS;
+    }
+    UmiKanbanCardSnapshot row;
+    UmiStatus status = FindActive(board, revision, card_id, &row);
+    if (status != UMI_STATUS_OK) return status;
+    /* Reuse the original card so absent fields stay with their canonical owner.
+     * The normal transaction also preserves Done and prerequisite invariants. */
+    UmiKanbanEdit edit = {0};
+    edit.kind = UMI_KANBAN_UPDATE_CARD; edit.card = row.card;
+    edit.card.label_count = labels->count;
+    memset(edit.card.labels, 0, sizeof edit.card.labels);
+    for (size_t i = 0U; i < labels->count; ++i)
+        memcpy(edit.card.labels[i], labels->labels[i], strlen(labels->labels[i]) + 1U);
+    return umi_kanban_board_apply(board, revision, actor, &edit, 1U, NULL);
+}
+
+
+UmiStatus UmiKanbanCardDeadlineRead(const UmiKanbanBoard *board, uint64_t revision,
+    const char *card_id, UmiKanbanCardDeadlineSnapshot *out)
+{
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiKanbanCardSnapshot row;
+    UmiStatus status = FindActive(board, revision, card_id, &row);
+    if (status != UMI_STATUS_OK) return status;
+    UmiKanbanCardDeadlineSnapshot result = {0};
+    memcpy(result.card_id, row.card.id, strlen(row.card.id) + 1U);
+    result.board_revision = revision; result.due_unix_seconds = row.card.due_unix_seconds;
+    *out = result;
+    return UMI_STATUS_OK;
+}
+UmiStatus UmiKanbanCardDeadlineApply(UmiKanbanBoard *board, uint64_t revision,
+    const char *card_id, const char *actor, uint64_t due_unix_seconds)
+{
+    if (!UmiKanbanId(actor, false)) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiKanbanCardSnapshot row;
+    UmiStatus status = FindActive(board, revision, card_id, &row);
+    if (status != UMI_STATUS_OK) return status;
+    /* A deadline edits planning metadata only. No scheduling, completion,
+     * assignment, timezone conversion or notification occurs in this service. */
+    UmiKanbanEdit edit = {0};
+    edit.kind = UMI_KANBAN_UPDATE_CARD; edit.card = row.card;
+    edit.card.due_unix_seconds = due_unix_seconds;
+    return umi_kanban_board_apply(board, revision, actor, &edit, 1U, NULL);
+}

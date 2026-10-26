@@ -1,4 +1,18 @@
-/* Umicom Framework | model scaling estimate acceptance | Sammy Hegab | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_training_model_scaling_plan.c
+ *
+ * PURPOSE:
+ *   Check model scaling estimates, shape validation and arithmetic overflow.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 #include "umicom/ai/training/model_scaling_plan.h"
 #include <stdio.h>
 #include <stdint.h>

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Compare two imported bank reports</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:980px;margin:3rem auto;padding:0 1rem;color:#182b3e}h1,h2{line-height:1.2}pre{white-space:pre-wrap;background:#eef3f7;padding:1rem}table{border-collapse:collapse;width:100%}th,td{border:1px solid #bacbd8;text-align:left;vertical-align:top;padding:.6rem}a{color:#075aa7}.note{border-left:4px solid #a26812;padding:1rem;background:#fff7e8}</style></head>
+<body><main><h1>Compare two imported bank reports</h1>
+<p>Use this review to see how two saved transaction imports differ. Both imports remain unchanged.
+The comparison matches an exact account ID and a nonempty transaction ID. It does not merge
+imports, connect to a bank, change a ledger or calculate money to transfer.</p>
+<p>Bank, Trader and TMS expose the shared <strong>Bank transaction reports</strong> window.
+The Framework supplies the comparison so these applications use the same matching rules.</p>
+<h2>Try two invented reports</h2>
+<ol>
+<li>Use <code>examples/bank_feed/comparison-before.csv</code> and
+<code>examples/bank_feed/comparison-after.csv</code> in the Framework checkout. Installed examples
+are under <code>share/umicom/examples/bank_feed</code> within your installation prefix.</li>
+<li>Open <strong>Bank transaction reports</strong>. Select <strong>Statement CSV</strong>, choose
+<code>comparison-before.csv</code>, and select <strong>Import for review</strong>. Wait for
+<strong>Imported locally</strong>.</li>
+<li>Select <strong>Retain current import as before</strong>. The message confirms the retained row
+count and the original source digest. A digest identifies bytes; it does not authenticate a bank.
+All accounts in that import are retained, regardless of the account dropdown.</li>
+<li>Choose <code>comparison-after.csv</code> and select <strong>Import for review</strong> again.
+Changing the file clears the current view while leaving the explicitly retained import available.</li>
+<li>Select <strong>Compare retained import</strong>. A separate window shows both imported sides.
+For these examples, expect two changed pairs, one after-only row and one unidentified observation
+on each side. Identical unidentified rows stay separate.</li>
+<li>Choose a row to inspect its original index, ID, amount, currency, status, reference and description.
+<strong>Hide identical pairs</strong> filters only the view; it does not remove data.</li>
+<li>To save the comparison, choose a new private CSV filename in the export control and explicitly
+save. The CSV includes every comparison, even pairs hidden by the filter. Existing files are not
+overwritten.</li>
+<li>Return to the import window and select <strong>Forget retained import</strong> when finished.
+An already open comparison keeps its own copies. Closing the import window also closes its
+comparison windows and releases the retained data.</li>
+</ol>
+<p><strong>Clear report</strong> clears the current import. The separate <strong>Forget retained
+import</strong> action clears the before side. Retained data is held only in memory; it is not saved
+automatically and will not reappear after restarting the window.</p>
+<h2>Read the result correctly</h2>
+<table><thead><tr><th>Result</th><th>Meaning</th></tr></thead><tbody>
+<tr><td>same</td><td>Matching identifiers and all retained fields agree.</td></tr>
+<tr><td>changed</td><td>Matching identifiers exist, but at least one retained field differs.
+For example, a pending debit becomes booked. Amount spelling is separate from exact numeric value:
+<code>12.50</code> and <code>12.50000</code> are numerically equal but their spelling differs.</td></tr>
+<tr><td>before-only / after-only</td><td>A known identifier occurs only on that imported side.
+This is not evidence of deletion, a newly created bank transaction or a missing payment.</td></tr>
+<tr><td>before-unidentified / after-unidentified</td><td>The transaction ID was absent.
+Descriptions, dates and amounts are not used to guess its identity.</td></tr>
+</tbody></table>
+<p>The first side's original order is retained, followed by unmatched observations from the second side.
+The words before and after describe the sides you chose; the application does not prove chronology.
+IDs and timestamps compare exactly, including case and timestamp spelling. Currencies are not converted.</p>
+<div class="note">An import may contain only one page or an incomplete period. Previous/next page flags
+remain visible, but absent flags do not prove completeness. The review covers the selected fields retained
+by the importer; discarded provider extensions cannot be compared. Restored archive metadata is an
+unverified claim.</div>
+<h2>Understand the CSV</h2>
+<p>The first data row contains scope metadata. Each comparison then has a row for each present side.
+<code>comparison_index</code> links the pair; <code>before_index</code> and <code>after_index</code>
+refer to zero-based positions in the respective imports. A blank index means that side is absent.
+Both imports' page flags and the scope warning repeat on every data row.</p>
+<p><code>changed_fields_mask</code> adds these independent values when fields differ:</p>
+<table><thead><tr><th>Value</th><th>Field</th></tr></thead><tbody>
+<tr><td>1</td><td>Exact decimal amount</td></tr><tr><td>2</td><td>Amount spelling</td></tr>
+<tr><td>4</td><td>Currency</td></tr><tr><td>8</td><td>Credit/debit direction</td></tr>
+<tr><td>16</td><td>Booked/pending status</td></tr><tr><td>32</td><td>Mutability</td></tr>
+<tr><td>64</td><td>Booking time text</td></tr><tr><td>128</td><td>Reference</td></tr>
+<tr><td>256</td><td>Information/description</td></tr></tbody></table>
+<p>For example, <code>48</code> is status plus mutability. A one-sided observation has mask zero
+because no pair exists to compare. Text that could be interpreted as a spreadsheet formula is escaped
+by the shared CSV writer. This report is a review export, not a statement CSV that can be re-imported.</p>
+<h2>Limits and recovery</h2>
+<ul>
+<li>Each import accepts at most 1,024 rows. The comparison can contain at most 2,048 entries.</li>
+<li>Failed replacement imports do not replace the retained before side. Correct the file or mapping,
+import again, then compare explicitly.</li>
+<li>Comparison and retention are unavailable while an import is still loading. Wait for its result.</li>
+<li>Core CSV output is bounded to 4 MiB. The native exporter also limits text to 2,097,152 characters.
+An oversized export is refused as a whole; the native observation review stays available.</li>
+<li>If a host changes a selection during display publication, choose the filter or row again.
+Closing a window retires its controls. An export already accepted may finish its immutable write.</li>
+<li>Keep reports and snapshots in a private location. Account IDs, references and descriptions are included.</li>
+</ul>
+<h2>Use the C23 service</h2>
+<p>Include <code>umicom/bank_feed/comparison.h</code> and link <code>Umicom::bank_feed</code>.
+Call <code>UmiBankFeedComparisonCreate</code> with two accepted feeds, then read its summary and rows.
+The result owns copies, so the input feeds can be released after creation. Destroy the result with
+<code>UmiBankFeedComparisonDestroy</code>. The API performs no file or network operations.</p>
+<p><a href="bank-transaction-reports.html">Bank transaction reports</a> ·
+<a href="statement-csv-import.html">Prepare statement CSV</a></p>
+</main></body></html>

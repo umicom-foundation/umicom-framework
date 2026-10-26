@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reviewing a local FX-forward transition — Umicom Framework</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:920px;margin:2rem auto;padding:0 1.2rem;color:#1c2935}pre{background:#eef3f7;padding:1rem;overflow:auto}table{border-collapse:collapse;width:100%}td,th{border:1px solid #ccd7df;padding:.5rem;text-align:left}code{font-size:.9em}h1,h2{line-height:1.25}</style></head>
+<body><main><h1>Reviewing a local FX-forward transition</h1>
+<p>An FX forward records an agreement to exchange two currencies later at a specified rate.
+Framework's bounded forward book stores local observations about that agreement. A transition review
+shows the proposed lifecycle change before the caller chooses to apply it. It does not authorise a
+trade, reserve money or send settlement instructions.</p>
+<h2>1. Understand the lifecycle</h2>
+<table><thead><tr><th>Current state</th><th>Allowed next state</th></tr></thead><tbody>
+<tr><td>Draft</td><td>Confirmed or Cancelled</td></tr>
+<tr><td>Confirmed</td><td>Settlement pending or Cancelled</td></tr>
+<tr><td>Settlement pending</td><td>Settled or Cancelled</td></tr>
+<tr><td>Settled or Cancelled</td><td>No further transition</td></tr>
+</tbody></table>
+<p>Each transition needs a strictly newer trade version. Repeating a state, skipping a stage or
+changing a terminal record is refused. Imported records can start in any known state: importing a
+record does not prove that another system approved it. Applications must label that provenance.</p>
+<h2>2. Prepare and display the review</h2>
+<ol><li>Initialise <code>UmiOpenTmsFxForwardBook</code> and admit a complete record with
+<code>umi_open_tms_fx_forward_book_add</code>.</li>
+<li>Call <code>umi_open_tms_fx_forward_review_create</code> with the identity, next state and next version.</li>
+<li>Read the before/after copies with <code>umi_open_tms_fx_forward_review_read</code>. Display the
+trade identity, currencies, notional, proposed state and versions.</li>
+<li>After the user's decision and the application's current permission check, call
+<code>umi_open_tms_fx_forward_review_apply</code>. Check its status before displaying success.</li>
+<li>Destroy the review when no longer needed. Destroying it does not undo a successful transition.</li></ol>
+<p>The review owns its data. Changing a display snapshot cannot change the requested transition.
+Apply compares the complete active book, including unrelated records. A changed book returns
+<code>UMI_STATUS_BUSY</code> without writing anything. Refresh, create a new review and ask for a
+new decision; do not retry the old review automatically. Use one serial owner for all access.</p>
+<h2>Try the local TMS practice window</h2>
+<p>In Umicom TMS, select <strong>FX-forward practice</strong>. Enter a unique trade ID and check the practice account, counterparty, currencies, notional and rates. Select <strong>Capture local draft</strong>. Its ID appears in the review field. Choose the next state, select <strong>Prepare transition review</strong>, inspect all assumptions, tick <strong>I reviewed this local change</strong>, then select <strong>Apply reviewed local change</strong>.</p>
+<p>Editing a field or changing the selected action invalidates the preview. A duplicate ID, an invalid decimal or a skipped lifecycle stage is refused. Decimal entries use a full stop and no grouping separator. <!-- The earlier transient-only description is retained for review: Each window has its own empty book; closing it discards its records. -->Each window begins with its own empty book; closing it discards unsaved changes. The checkbox is a local acknowledgement, not a separate authorised approver. Older Framework SDKs show that the practice feature is unavailable.</p>
+<h2>3. Build the installed-SDK example</h2>
+<p>Install a Framework SDK containing the <code>finance</code> component first. The following
+PowerShell example uses <code>C:\umicom\installed\applications</code>; replace that prefix with your
+actual installation. The example explicitly rejects an accidental source-tree package. Run one
+command at a time and stop if a command fails.</p>
+<pre><code>Set-Location "C:\umicom\Umicom-Applications\framework"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake -S ".\examples\treasury_forward_review" -B ".\build\treasury-forward-review" -G Ninja -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe -DUMICOM_SDK_PREFIX=C:/umicom/installed/applications
+cmake --build ".\build\treasury-forward-review"
+ctest --test-dir ".\build\treasury-forward-review" --output-on-failure --no-tests=error
+&amp; ".\build\treasury-forward-review\treasury-forward-review-consumer.exe" apply
+&amp; ".\build\treasury-forward-review\treasury-forward-review-consumer.exe" stale</code></pre>
+<p>The <code>apply</code> scenario expects one local update and refuses replay. The
+<code>stale</code> scenario changes the quoted rate after preview and expects refusal with the
+trade still in draft. Both scenarios should print <code>PASS: treasury_forward_review</code>.
+These are expected results, not a qualification claim for your machine.</p>
+<h2>4. Keep unavailable prices separate from zero</h2>
+<p><code>umi_open_tms_fx_forward_mark_to_market_checked</code> calculates
+<code>notional × (market forward rate − contract forward rate)</code>. A zero market rate means
+unavailable and returns <code>UMI_STATUS_UNAVAILABLE</code>. An equal valid market and contract
+rate succeeds with a measured zero. Invalid or non-finite values are refused, overflow returns
+<code>UMI_STATUS_CAPACITY_EXCEEDED</code>, and failures leave the output unchanged.</p>
+<p>This simple undiscounted observation is not a production valuation model. It has no discount
+curve, market-data freshness policy, collateral, currency conversion or accounting posting.
+The older scalar API remains available but returns zero on refusal; use the checked API for new displays.</p>
+<h2>Store portable draft values through the SDK</h2>
+<p><code>fx_forward_archive.h</code> binds the existing Framework value archive to the active forward book. Its typed encode/decode functions retain exact finite numeric observations, record order, versions and revisions. They exclude padding, unused rows and unused string tails. The envelope checksum detects accidental damage; it does not authenticate the author or encrypt financial data.</p>
+<p>Measure with a null output buffer, allocate the reported size, then encode. Decode into a separate draft and review its source before adoption. Small-stack hosts can supply separate heap-allocated scratch and destination books through <code>archive_decode_with_workspace</code>. Conditional decoding compares the current destination against an independent reviewed snapshot and refuses a changed destination without writing it. Revoke existing transition reviews whenever the hosting application replaces a book.</p>
+<p>The installed example also accepts <code>archive-roundtrip</code> and <code>archive-stale</code>. CTest exercises these cases alongside <code>apply</code> and <code>stale</code>. <!-- Before the file adapter: These examples operate on private memory buffers, not files. The native TMS practice window still has no save/open controls. -->These SDK examples operate on private memory buffers. The native practice window additionally supports explicit file saving and reviewed loading.</p>
+<h2>Save and open a private treasury archive</h2>
+<ol><li>In the practice window, enter an absolute ordinary path such as <code>C:\umicom\_local\treasury\practice.umiv</code>. Create the parent directory yourself first, in a location you control.</li>
+<li>Select <strong>Save captured records to new file</strong>. This saves the captured book, including its recorded versions and lifecycle labels. Later edits are not part of that save. An existing file is never overwritten: choose a new filename for another snapshot.</li>
+<li>To resume, enter the archive path and select <strong>Open archive for review</strong>. Opening runs on a worker and leaves the current book unchanged.</li>
+<li>Compare the <strong>CURRENT</strong> and <strong>LOADED — NOT APPLIED</strong> sections. They show all identities, financial assumptions, maturity values, versions and lifecycle labels. Check the archive's source yourself; its checksum is not authentication.</li>
+<li>Tick the replacement acknowledgement and select <strong>Replace with reviewed archive</strong>. A field edit or a different action invalidates the review. Open again after an edit. All old transition reviews are revoked when a book is replaced.</li></ol>
+<p>Closing discards unsaved local changes. A save already accepted by the worker finishes from its captured records even after the window closes. A late load cannot replace records in a closed window. Save refuses existing files, including incomplete outputs from an earlier failure; inspect retained partial files and choose a new filename to retry.</p>
+<p>Archives contain private financial observations. They are not encrypted, signed, backed up automatically or a transaction journal. Imported “Confirmed” or “Settled” labels do not authorise an action or prove that cash moved. Invalid UTF-8 text is refused by the native viewer before display.</p>
+<h2>Use the file adapter from another application</h2>
+<p>Link <code>Umicom::treasury_files</code> and include <code>umicom/open_tms/fx_forward_file.h</code>. The separate library keeps portable finance independent of filesystem access. Call <code>umi_open_tms_fx_forward_book_save_new</code> on a worker with an owned, immutable book and inspect its output receipt. Call <code>umi_open_tms_fx_forward_book_load</code> into a separate book; failed loads preserve that destination. Review before replacement. These synchronous APIs follow the platform's ordinary absolute-path contract and are not a workspace confinement boundary.</p>
+<h3>Build the file example with an installed SDK</h3>
+<p>With a freshly installed SDK, run these commands from the Framework checkout. The example creates one synthetic archive and reopens it. It does not remove or overwrite files. Choose a new filename for each run and use a directory you control.</p>
+<pre><code>Set-Location "C:\umicom\Umicom-Applications\framework"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake -S ".\examples\treasury_forward_files" -B ".\build\treasury-forward-files" -G Ninja -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe -DUMICOM_SDK_PREFIX=C:/umicom/installed/applications
+cmake --build ".\build\treasury-forward-files"
+New-Item -ItemType Directory -Force "C:\umicom\_local\treasury"
+&amp; ".\build\treasury-forward-files\treasury-forward-files.exe" "C:\umicom\_local\treasury\example-new.umiv"</code></pre>
+<p>Expected output is <code>Saved and reopened one synthetic local record. No financial action occurred.</code> Running the same filename again should refuse because it already exists. These are expected results for owner qualification, not a claim that this example has been executed.</p>
+<h2>5. Limits and recovery</h2>
+<ul><li>The book holds at most 512 records. Identity fields must terminate inside their arrays and
+contain nonblank, control-free bytes. Currency codes are distinct uppercase three-letter codes.</li>
+<li>Notional and contract rate must be finite and positive. Market rate may be zero for unavailable.
+Maturity zero remains unspecified; the book does not decide whether a date has expired.</li>
+<li>An exhausted revision returns capacity exceeded. Do not wrap or manually reset a revision
+while reviews remain alive.</li>
+<li><!-- The earlier scope description is retained: The API is in-memory. Persistence, authentication, separate reviewer permissions, external
+confirmation and settlement exceptions belong in the hosting workflow. -->The portable finance API is in-memory; the optional treasury_files adapter adds explicit archives. Authentication, separate reviewer permissions, external
+confirmation and settlement exceptions remain hosting responsibilities. A local state called
+“Settled” does not prove that cash moved.</li>
+<li>A configure failure about the package or missing symbol usually means the selected SDK lacks
+this interface. Rebuild and reinstall the intended SDK, then configure this separate consumer again.</li></ul>
+</main><footer>Sammy Hegab · Umicom Foundation · MIT</footer></body></html>

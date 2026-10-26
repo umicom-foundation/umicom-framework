@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_causality.c
+ *
+ * PURPOSE:
+ *   Check that future tokens cannot affect earlier multi-layer decoder logits.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | causal invariance across Transformer layers | Sammy Hegab | MIT */
 #include "stacked_test_fixture.h"
 int main(void)

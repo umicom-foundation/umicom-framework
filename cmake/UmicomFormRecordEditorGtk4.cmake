@@ -280,7 +280,7 @@ if(BUILD_TESTING AND "UMICOM_HAS_SQLITE=1" IN_LIST _native_discovery_definitions
         umicom_target_qualification_inputs(umicom-native-search-discovery-test FILES
             "${_native_discovery_root}/tests/application_experience/structured_form_fixture.h")
     endif()
-    foreach(_native_discovery_case IN ITEMS basic empty pages title key open dirty-record stale-open changed-page unknown-version known-version malformed utf8-title utf8-later-title late-query retire-read dispose-read late-open-filter late-open-query late-open-selection late-open-model model-mutation model-label completion-label model-replacement completion-query completion-model completion-retire open-observer-selection no-page no-next changed-filter invalid-arguments long-query null busy retained-button buttons not-connected)
+    foreach(_native_discovery_case IN ITEMS basic empty pages title key open dirty-record stale-open changed-page unknown-version known-version malformed utf8-title utf8-later-title valid-utf8-title late-query retire-read dispose-read late-open-filter late-open-query late-open-selection late-open-model model-mutation model-label completion-label model-replacement completion-query completion-model completion-retire open-observer-selection no-page no-next changed-filter invalid-arguments long-query null busy retained-button buttons not-connected)
         add_test(NAME framework.structured_forms.editor.discovery.${_native_discovery_case}
             COMMAND umicom-native-search-discovery-test ${_native_discovery_case} "${CMAKE_CURRENT_BINARY_DIR}/native-search-discovery-fixtures")
         set_tests_properties(framework.structured_forms.editor.discovery.${_native_discovery_case} PROPERTIES

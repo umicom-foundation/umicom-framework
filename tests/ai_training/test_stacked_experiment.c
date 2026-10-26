@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_experiment.c
+ *
+ * PURPOSE:
+ *   Check deterministic training epochs and held-out evaluation results.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | deterministic held-out multi-epoch training | Sammy Hegab | MIT */
 #include "stacked_test_fixture.h"
 int main(void)

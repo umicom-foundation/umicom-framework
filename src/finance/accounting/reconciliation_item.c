@@ -14,6 +14,11 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/accounting/reconciliation_item.h"
 #include <string.h>
+
+/* Preserve the former arithmetic for review. Complete validation and checked
+ * exact arithmetic replace unchecked subtraction; valid values retain their
+ * established result without saturation-based matching. */
+#if 0
 /*
  * Initialise accounting reconciliation item from caller-provided values so later
  * operations receive a known state.
@@ -56,4 +61,68 @@ bool umi_accounting_reconciliation_item_matched(const UmiAccountingReconciliatio
      */
     if(value==NULL) return (bool)0;
     return umi_accounting_abs_i64(value->external_minor-value->ledger_minor)<=value->tolerance_minor;
+}
+
+#endif
+
+/* Reconciliation must compare the exact distance even when signed subtraction
+ * cannot represent it. Unsigned subtraction is defined modulo 2^64; ordering
+ * chooses the nonnegative mathematical distance, which fits uint64_t. */
+UmiStatus umi_accounting_reconciliation_item_init(UmiAccountingReconciliationItem *value,
+    const char *id, int64_t external_minor, int64_t ledger_minor, int64_t tolerance_minor)
+{
+    if (value == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    UmiAccountingReconciliationItem next = {0};
+    UmiStatus status = umi_accounting_id_assign(&next.id, id);
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    next.external_minor = external_minor;
+    next.ledger_minor = ledger_minor;
+    next.tolerance_minor = tolerance_minor;
+    if (!umi_accounting_reconciliation_item_valid(&next)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    *value = next;
+    return UMI_STATUS_OK;
+}
+
+bool umi_accounting_reconciliation_item_valid(const UmiAccountingReconciliationItem *value)
+{
+    return value != NULL && umi_financial_id_is_valid(&value->id) && value->tolerance_minor >= 0;
+}
+
+UmiStatus umi_accounting_reconciliation_item_distance_minor_checked(
+    const UmiAccountingReconciliationItem *value, uint64_t *out_distance)
+{
+    if (out_distance == NULL || !umi_accounting_reconciliation_item_valid(value)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    *out_distance = value->external_minor >= value->ledger_minor ?
+        (uint64_t)value->external_minor - (uint64_t)value->ledger_minor :
+        (uint64_t)value->ledger_minor - (uint64_t)value->external_minor;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_accounting_reconciliation_item_difference_minor_checked(
+    const UmiAccountingReconciliationItem *value, int64_t *out_difference)
+{
+    if (out_difference == NULL || !umi_accounting_reconciliation_item_valid(value)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if ((value->ledger_minor > 0 && value->external_minor < INT64_MIN + value->ledger_minor) ||
+        (value->ledger_minor < 0 && value->external_minor > INT64_MAX + value->ledger_minor)) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    *out_difference = value->external_minor - value->ledger_minor;
+    return UMI_STATUS_OK;
+}
+
+bool umi_accounting_reconciliation_item_matched(const UmiAccountingReconciliationItem *value)
+{
+    uint64_t distance = 0U;
+    return umi_accounting_reconciliation_item_distance_minor_checked(value, &distance) == UMI_STATUS_OK &&
+        distance <= (uint64_t)value->tolerance_minor;
 }

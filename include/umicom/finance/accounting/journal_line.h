@@ -46,6 +46,15 @@ bool umi_accounting_journal_line_valid(const UmiAccountingJournalLine *value);
  * client applications.
  */
 int64_t umi_accounting_journal_line_signed_minor(const UmiAccountingJournalLine *value);
+/* Retain the escaped declaration draft as a comment for review. The active
+ * declaration below uses actual source lines, so preprocessing and prototypes
+ * remain visible to every standalone header consumer. */
+// /* Validate identifiers and amount invariants before subtraction. Refusal leaves\n * out_minor unchanged; it must not overlap value. The legacy scalar accessor\n * returns zero on invalid input. Initialization also preserves value on failure. */\nUmiStatus umi_accounting_journal_line_signed_minor_checked(\n    const UmiAccountingJournalLine *value, int64_t *out_minor);\n#ifdef __cplusplus\n}\n#endif
+/* Validate identifiers and amount invariants before subtraction. Refusal leaves
+ * out_minor unchanged; it must not overlap value. The legacy scalar accessor
+ * returns zero on invalid input. Initialization also preserves value on failure. */
+UmiStatus umi_accounting_journal_line_signed_minor_checked(
+    const UmiAccountingJournalLine *value, int64_t *out_minor);
 #ifdef __cplusplus
 }
 #endif

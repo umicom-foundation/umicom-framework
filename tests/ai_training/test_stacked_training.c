@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_training.c
+ *
+ * PURPOSE:
+ *   Check selected-target training and resulting model weight changes.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | selected-target training and weight updates | Sammy Hegab | MIT */
 #include "stacked_test_fixture.h"
 int main(void)

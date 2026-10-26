@@ -30,7 +30,29 @@
 <li>Click <strong>Save board</strong> in its host to persist the change. Applying a form alone does not write a board file.</li>
 </ol>
 <p>If the board changes, a different card is selected, the form is hidden or the host starts file work, load the selected card again before applying. A refused edit keeps the typed draft so you can review it. Loading explicitly replaces that draft; copy text you need to retain first. Titles and blocker reasons allow 255 UTF-8 bytes and descriptions allow 2047. A long multibyte entry is refused without truncating the board.</p>
+<!-- Earlier detail-only boundary retained for review; the separate checklist form now supplies acceptance editing.
 <p>Private detail fields are never substituted for the separate public website fields. Review and include public text explicitly. Checklists, dependency editing, labels, deadlines and list limits remain available through the C23 board API; this form does not expose them yet.</p>
+-->
+<!-- Earlier field boundary retained for review. Explicit prerequisite selectors now expose relationship edits.
+<p>Private detail fields are never substituted for the separate public website fields. Review and include public text explicitly. Checklists have their own form below. Dependency editing, labels, deadlines and list limits remain available through the C23 board API; these forms do not expose them.</p>
+-->
+<p>Private detail fields are never substituted for separate public website fields. Review and include public text explicitly. Acceptance checklists and prerequisite relationships have their own forms below. Label, deadline and list-limit editing remain available through the C23 API but are not exposed by these forms.</p>
+
+<h2>Edit acceptance checklist items</h2>
+<ol><li>Select a card and expand <strong>Edit acceptance checklist</strong>.</li>
+<li>Click <strong>Load selected checklist</strong>. Existing acceptance text and checkmarks appear in up to 16 rows.</li>
+<li>Enter or revise each item. Tick an item only after reviewing that acceptance condition. Empty text removes the row when you apply; unused empty rows are ignored.</li>
+<li>Click <strong>Apply checklist</strong>. The existing card's title, description, assignment and other fields remain unchanged. Nonempty rows keep their displayed order.</li>
+<li>Save the board in its host. If you want to reopen an acceptance item on a Done card, move the card to an earlier list before applying the unchecked item.</li></ol>
+<p>A checkmark records a user's assertion. It does not run a test or authenticate a reviewer. Use the separate <a href="kanban-completion-review.html">completion review</a> workflow to retain evidence or an explicit exception. Stale, hidden or frozen forms need an explicit reload before they can apply; keep any draft text you want before loading again.</p>
+
+<h2>Edit prerequisite cards</h2>
+<ol><li>Select a card and expand <strong>Edit prerequisite cards</strong>.</li>
+<li>Click <strong>Load selected prerequisites</strong>. Both selectors begin with a prompt that performs no edit.</li>
+<li>To add a requirement, select a card in the first selector and click <strong>Add prerequisite</strong>. Labels show titles and IDs so cards with the same title remain distinguishable. Search can help locate a card.</li>
+<li>To remove a requirement, explicitly select it in the second selector and click <strong>Remove prerequisite</strong>.</li>
+<li>Load again before another edit, and save the board through its host after reviewing the results.</li></ol>
+<p>A prerequisite means work that must finish before dependent work enters stages requiring completed dependencies. Adding a prerequisite does not move either card. Cycles, self-links and unfinished prerequisites on a Done card are refused. Already required cards are omitted from the Add selector. A card supports at most 16 prerequisites. If another edit changes the board, reload and review the current choices; old selector positions never authorize a different card.</p>
 
 <h2>3. Save safely and recover from an external change</h2>
 <ol><li><strong>Save board</strong> updates the file opened by the document, even if you have changed the filename field for a later operation.</li>
@@ -86,4 +108,33 @@ if (board != NULL) gtk_window_present(board);</pre>
 <p>An already accepted file operation may still finish after forced removal. Its result is not attached to the removed window. The document lease is then released on a worker, even when the host retains a reference to the window. A create or save that already succeeded remains on disk.</p>
 <ol><li>Keep a reference to the window while coordinating shutdown.</li><li>After removal, use <code>UmiKanbanGtk4WindowBusy(window)</code> on the GTK owner thread to observe pending work and lease cleanup.</li><li>Continue processing the main loop until it returns false, then release the retained window reference. Do not block the owner thread in a polling loop that prevents completion callbacks.</li><li>Reopen the saved board normally to review its contents. A guard file is not permission to bypass the storage service or delete another editor's lease.</li></ol>
 <p>The busy query is a lifetime aid, not proof that a save succeeded. Normal file results appear in the window status. Forced removal has no remaining status surface, and process termination can prevent cleanup callbacks from running.</p>
+<h2>Private labels and list work limits</h2>
+<ol><li>Select an active card and expand <strong>Edit private card labels</strong>.</li>
+<li>Choose <strong>Load selected labels</strong>. Enter up to eight distinct labels. Blank rows are omitted; each retained label allows 63 UTF-8 bytes. Non-ASCII characters can use several bytes. Matching is case-sensitive.</li>
+<li>Choose <strong>Apply labels</strong>, then save the board through its host. This changes only the labels. Assignments, descriptions, checklist rows, deadlines and prerequisites stay as they were. Labels do not automatically appear in the public website.</li></ol>
+<ol><li>Expand <strong>Review list work limits</strong>, choose a list, and select <strong>Load list limit</strong>.</li>
+<li>Review the active-card count and current limit. Enter a whole number up to the displayed board capacity. Zero means unlimited. Archived cards do not count; every other card in that list counts, including a Done or Blocked list.</li>
+<li>Choose <strong>Apply list limit</strong> and save the board. A nonzero limit below the current count is refused. The board never removes or moves cards to make a limit fit.</li></ol>
+<p>A form is bound to the board revision it loaded. If the board changes, reload and review your draft before applying. Selecting another card or list, hiding its form, or a storage operation freezing the board invalidates the old review. Returning to the former selection does not revive it. Rejected edits retain the board and visible draft.</p>
+<p>The shared C23 services are declared in <code>umicom/kanban/card_details.h</code> and <code>umicom/kanban/column_policy.h</code>. They use the existing atomic board transaction and archive. They neither authenticate the named actor nor publish changes to a server.</p>
+<h2>Edit an explicit UTC deadline</h2>
+<ol><li>Select a card, expand <strong>Edit card deadline in UTC</strong>, and choose <strong>Load selected deadline</strong>.</li>
+<li>Check <strong>Use deadline</strong> and enter an exact date and time, for example <code>2026-11-05T17:30:00Z</code>. The final Z means UTC. Convert your intended local time before entering it. The editor does not infer your timezone or daylight-saving rules.</li>
+<li>Choose <strong>Apply deadline</strong> and save the board. To remove an existing deadline, explicitly uncheck <strong>Use deadline</strong> and apply.</li></ol>
+<p>The native editor accepts whole UTC seconds from <code>1970-01-01T00:00:01Z</code> to <code>9999-12-31T23:59:59Z</code>. It rejects offsets, fractions, invalid dates and extra characters. Zero seconds is the board format's no-deadline sentinel. Larger values already present in a portable archive remain unchanged: the form shows that they are outside its display range. Applying with the checkbox still checked and no valid replacement is refused.</p>
+<p>Cards show their private labels and deadline; each list shows its active occupancy and limit. These are planning details and are excluded from the deliberate public website projection. A deadline does not schedule a job or send a reminder. The shared overdue query counts only active, unfinished cards whose deadline is strictly earlier than the caller's supplied time; an exactly due card is not yet overdue.</p>
+<h2>Archive and restore a card</h2>
+<ol><li>Expand <strong>Archive or restore cards</strong> and choose <strong>Load cards for archiving</strong>. The picker lists active and archived cards by status, ID and title. It starts with no selection.</li>
+<li>Choose a card and select <strong>Review archive change</strong>. Read the proposed action and recorded list. An active card will be archived; an archived card will be restored.</li>
+<li>Choose <strong>Apply reviewed archive change</strong>, then save the board through its host. One review permits one change. Reload the list before another change.</li></ol>
+<p>Archiving hides a card from active lists without deleting its description, assignments, labels, checklist, deadline or prerequisites. It does not release the card slot from the board capacity. Restoring returns it to its recorded list and position; it cannot bypass list limits or dependency checks. An active card that depends on the target can prevent archiving. Restore archived prerequisites first, and review list limits before restoring into a full list.</p>
+<p>Changing the picker, loading again, hiding the form or freezing the host invalidates the review. Other board edits make its revision stale. A refusal leaves all card data unchanged: reload and review the current state instead of repeatedly applying an old choice. None of these actions approves private details for the public website.</p>
+<h2>Filter the private board view</h2>
+<ol><li>Expand <strong>Filter board cards</strong>. Enter a case-sensitive title/description fragment or exact private label. A blank field means no restriction.</li>
+<li>Optionally enter a registered developer name or exact ID. Names match without case distinctions. Repeated names are refused; use the exact ID to distinguish those people. Names do not authenticate users or grant access.</li>
+<li>Choose a minimum priority, blocked-only view or overdue-only view. Overdue filtering requires an exact UTC cutoff such as <code>2026-11-05T17:30:00Z</code>. It excludes Done and archived cards, and a card due exactly at the cutoff is not overdue.</li>
+<li>Choose <strong>Apply view filter</strong>. All selected conditions must match. The board records, assignments and public website selections stay unchanged. Select a visible card again before editing it.</li>
+<li>Choose <strong>Show all active cards</strong> to remove view restrictions. The input fields remain a draft, so applying them again restores those restrictions.</li></ol>
+<p>Each list reports cards shown, total active cards and its work limit. Hidden cards still count toward that limit. Filtering cannot admit work into a full list. Refreshing the board keeps the active filter, but filters are local to the panel and are not saved into the portable board archive. Use the archive section to inspect archived cards.</p>
+<p>If a filter is refused, the prior view remains. Check byte limits, the developer directory and the exact UTC cutoff. The form does not guess a timezone, use the host clock or silently select one of several matching developers.</p>
 </body></html>

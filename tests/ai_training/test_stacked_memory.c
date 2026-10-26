@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_memory.c
+ *
+ * PURPOSE:
+ *   Check decoder tape memory bounds and transactional graph rewind.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | multi-layer tape memory and transactional graph rewind | Sammy Hegab | MIT */
 #include "stacked_test_fixture.h"
 int main(void)

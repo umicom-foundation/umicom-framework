@@ -38,6 +38,11 @@ UmiStatus umi_accounting_chart_of_accounts_add(UmiAccountingChartOfAccounts *reg
  * by this module.
  */
 const UmiAccountingLedgerAccount *umi_accounting_chart_of_accounts_find(const UmiAccountingChartOfAccounts *registry,const char *id);
+/* Validate all accounts and unique identifiers before public catalogue reads.
+ * No mutation occurs. Invalid count returns CAPACITY_EXCEEDED; malformed or
+ * duplicate entries return INVALID_STATE. Lookup returns NULL for invalid
+ * catalogues. Failed insertion leaves the complete catalogue unchanged. */
+UmiStatus umi_accounting_chart_of_accounts_validate(const UmiAccountingChartOfAccounts *registry);
 #ifdef __cplusplus
 }
 #endif

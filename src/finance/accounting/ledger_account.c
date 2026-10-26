@@ -16,6 +16,11 @@
 #include "umicom/finance/accounting/ledger_account.h"
 #include "../../base/value_archive_internal.h"
 #include <string.h>
+
+/* Retain the former implementation for review. The replacement validates
+ * complete restored values and bounded containers before lookup or eligibility,
+ * and stages initialization before publication to preserve caller data. */
+#if 0
 /*
  * Initialise accounting ledger account from caller-provided values so later operations
  * receive a known state.
@@ -69,6 +74,61 @@ bool umi_accounting_ledger_account_postable(const UmiAccountingLedgerAccount *va
      */
     if(value==NULL) return (bool)0;
     return value->posting_allowed;
+}
+
+
+#endif
+
+/* Account identity and posting eligibility share one validator. Restored values
+ * must satisfy it before an application treats an account as usable. */
+UmiStatus umi_accounting_ledger_account_init(UmiAccountingLedgerAccount *value,
+    const char *id, const char *name, UmiAccountingAccountClass account_class,
+    UmiAccountingNormalSide normal_side, bool posting_allowed)
+{
+    if (value == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    UmiAccountingLedgerAccount next = {0};
+    UmiStatus status = umi_accounting_id_assign(&next.id, id);
+    if (status == UMI_STATUS_OK) {
+        status = umi_financial_core_copy(next.name, sizeof next.name, name);
+    }
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    next.account_class = account_class;
+    next.normal_side = normal_side;
+    next.posting_allowed = posting_allowed;
+    if (!umi_accounting_ledger_account_valid(&next)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    *value = next;
+    return UMI_STATUS_OK;
+}
+
+bool umi_accounting_ledger_account_valid(const UmiAccountingLedgerAccount *value)
+{
+    if (value == NULL || !umi_financial_id_is_valid(&value->id) ||
+        memchr(value->name, '\0', sizeof value->name) == NULL || value->name[0] == '\0' ||
+        (value->normal_side != UMI_ACCOUNTING_NORMAL_DEBIT &&
+         value->normal_side != UMI_ACCOUNTING_NORMAL_CREDIT)) {
+        return false;
+    }
+    switch (value->account_class) {
+    case UMI_ACCOUNTING_ASSET:
+    case UMI_ACCOUNTING_LIABILITY:
+    case UMI_ACCOUNTING_EQUITY:
+    case UMI_ACCOUNTING_REVENUE:
+    case UMI_ACCOUNTING_EXPENSE:
+        return true;
+    default:
+        return false;
+    }
+}
+
+bool umi_accounting_ledger_account_postable(const UmiAccountingLedgerAccount *value)
+{
+    return umi_accounting_ledger_account_valid(value) && value->posting_allowed;
 }
 
 /* State transfer belongs to this Framework value owner. Explicit fields keep

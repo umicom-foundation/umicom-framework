@@ -111,6 +111,20 @@ int ScLex(ScText *text, const char *data, bool cmake)
                 else ++i;
             }
             if (!closed) goto invalid;
+        } else if (!cmake && (isdigit(c) ||
+                   (c == '.' && i + 1U < text->length && isdigit((unsigned char)data[i + 1U])))) {
+            /* C23 preprocessing numbers may contain apostrophe separators.
+             * They must not be mistaken for an opening character literal. */
+            kind = 1U; ++i;
+            while (i < text->length) {
+                unsigned char next = (unsigned char)data[i];
+                if (isalnum(next) || next == '_' || next == '.' || next >= 0x80U) ++i;
+                else if (next == '\'' && i + 1U < text->length &&
+                    (isalnum((unsigned char)data[i + 1U]) || data[i + 1U] == '_')) i += 2U;
+                else if ((next == '+' || next == '-') && i > 0U &&
+                    (data[i - 1U] == 'e' || data[i - 1U] == 'E' || data[i - 1U] == 'p' || data[i - 1U] == 'P')) ++i;
+                else break;
+            }
         } else if (isalnum(c) || c == '_' || c >= 0x80U) {
             kind = 1U; ++i;
             while (i < text->length && (isalnum((unsigned char)data[i]) || data[i] == '_' || (unsigned char)data[i] >= 0x80U)) ++i;

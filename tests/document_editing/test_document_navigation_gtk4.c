@@ -52,16 +52,26 @@ typedef struct FormObservation {
     unsigned fired;
     UmiStatus nestedStatus;
 } FormObservation;
+/* Flushed phase evidence localises native presentation exceptions without
+ * suppressing GTK diagnostics or changing the lifetime assertions. */
+static void PresentationTrace(const char *mode, const char *phase)
+{
+    if (strncmp(mode, "present-", 8U) != 0) return;
+    fprintf(stderr, "navigation [%s] %s\n", mode, phase);
+    fflush(stderr);
+}
 static void FormPresented(GObject *object, GParamSpec *property, gpointer context)
 {
     (void)property;
     FormObservation *observation = context;
     if (observation->fired || !gtk_widget_get_visible(GTK_WIDGET(object))) return;
     observation->fired = 1U;
+    PresentationTrace(observation->mode, "visible observer entered");
     if (strcmp(observation->mode, "present-close") == 0)
         gtk_window_destroy(GTK_WINDOW(object));
     else
         observation->nestedStatus = UmiGtk4AdapterBindDocumentEditing(observation->adapter, NULL, NULL, NULL);
+    PresentationTrace(observation->mode, "visible observer returned");
 }
 static void FormAdded(GListModel *model, guint position, guint removed, guint added, gpointer context)
 {
@@ -155,7 +165,9 @@ int main(int argc,char **argv)
         observation.mode = argv[1];
         toplevels = gtk_window_get_toplevels();
         addedHandler = g_signal_connect(toplevels, "items-changed", G_CALLBACK(FormAdded), &observation);
+        PresentationTrace(argv[1], "initial prompt starting");
         UmiStatus status = UmiGtk4AdapterPromptDocumentLocation(adapter);
+        PresentationTrace(argv[1], "initial prompt returned");
         g_signal_handler_disconnect(toplevels, addedHandler); addedHandler = 0U;
         REQUIRE(observation.fired == 1U);
         if (strcmp(argv[1], "construction-reenter") == 0) {
@@ -165,8 +177,11 @@ int main(int argc,char **argv)
             REQUIRE(status == UMI_STATUS_CANCELLED);
             REQUIRE(!UmiGtk4WindowIsOpen(observation.observed));
             if (strcmp(argv[1], "present-close") != 0) REQUIRE(observation.nestedStatus == UMI_STATUS_OK);
+            PresentationTrace(argv[1], "replacement binding starting");
             REQUIRE(UmiGtk4AdapterBindDocumentEditing(adapter, documents, Completed, &result) == UMI_STATUS_OK);
+            PresentationTrace(argv[1], "replacement prompt starting");
             REQUIRE(UmiGtk4AdapterPromptDocumentLocation(adapter) == UMI_STATUS_OK);
+            PresentationTrace(argv[1], "replacement prompt returned");
             form = FindForm(); REQUIRE(form != NULL && form != observation.observed);
         }
         REQUIRE(result.count == 0U);
@@ -247,6 +262,7 @@ int main(int argc,char **argv)
     }
     fprintf(stderr,"Unknown native test case: %s\n",argv[1]);failed=1;
 cleanup:
+    PresentationTrace(argv[1], "cleanup starting");
     if (addedHandler != 0U) g_signal_handler_disconnect(toplevels, addedHandler);
     if (observation.visibleHandler != 0U) g_signal_handler_disconnect(observation.observed, observation.visibleHandler);
     if (feedbackHandler != 0U) g_signal_handler_disconnect(observedLabel, feedbackHandler);
@@ -257,9 +273,19 @@ cleanup:
     if(adapter)(void)UmiGtk4AdapterBindDocumentEditing(adapter,NULL,NULL,NULL);
     if(form){gtk_window_destroy(form);g_object_unref(form);}
     if(retained)g_object_unref(retained);
+    /* Preserve the combined step; phase evidence separates queued message
+     * dispatch from native adapter destruction. No cleanup is skipped. */
+#if 0
     Pump();umi_gtk4_adapter_destroy(adapter);
+#endif
+    PresentationTrace(argv[1], "cleanup message dispatch starting");
+    Pump();
+    PresentationTrace(argv[1], "cleanup adapter destruction starting");
+    umi_gtk4_adapter_destroy(adapter);
+    PresentationTrace(argv[1], "cleanup adapter destruction returned");
     umi_document_coordinator_destroy(documents);umi_document_store_destroy(store);
     umi_ui_application_shell_destroy(shell);umi_ui_workbench_destroy(workbench);
     umi_command_registry_destroy(commands);if(application)g_object_unref(application);
+    PresentationTrace(argv[1], "cleanup complete");
     return failed;
 }

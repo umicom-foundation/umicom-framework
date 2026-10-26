@@ -38,6 +38,10 @@ UmiStatus umi_accounting_accounting_calendar_add(UmiAccountingAccountingCalendar
  * its client applications.
  */
 const UmiAccountingAccountingPeriod *umi_accounting_accounting_calendar_find_date(const UmiAccountingAccountingCalendar *value,UmiFinancialDate date);
+/* Validate every period, count, unique ID and non-overlapping inclusive date
+ * range before resolving a date. Failed insertion preserves the calendar.
+ * Lookup returns NULL for an invalid or ambiguous calendar. */
+UmiStatus umi_accounting_accounting_calendar_validate(const UmiAccountingAccountingCalendar *value);
 #ifdef __cplusplus
 }
 #endif

@@ -220,12 +220,25 @@ int main(int argc, char **argv) {
     goto done;
   }
   if (!strcmp(name, "invalid-open-filter")) {
+    /* A populated drop-down may immediately select an item again. Keep the
+     * original model alive and remove it to create a real missing selection;
+     * this exercises draft refusal without depending on selection policy. */
+#if 0
     gtk_drop_down_set_selected(GTK_DROP_DOWN(Find(root, "ctest.report.outcome")), GTK_INVALID_LIST_POSITION);
+#endif
+    GtkDropDown *outcome = GTK_DROP_DOWN(Find(root, "ctest.report.outcome"));
+    GListModel *outcome_model = gtk_drop_down_get_model(outcome);
+    CHECK(outcome_model != NULL);
+    g_object_ref(outcome_model);
+    gtk_drop_down_set_model(outcome, NULL);
+    CHECK(gtk_drop_down_get_selected(outcome) == GTK_INVALID_LIST_POSITION);
     Click(root, "ctest.report.open");
     CHECK(!UmiGtk4CtestReportBusy(root));
     text = Text(buffer);
     CHECK(strstr(text, "Showing 1..64 of 150"));
     g_free(text);
+    gtk_drop_down_set_model(outcome, outcome_model);
+    g_object_unref(outcome_model);
     gtk_drop_down_set_selected(GTK_DROP_DOWN(Find(root, "ctest.report.outcome")), 0);
     gtk_editable_set_text(GTK_EDITABLE(filter), "row-000007");
     Click(root, "ctest.report.apply");

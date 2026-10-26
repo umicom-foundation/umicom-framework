@@ -81,6 +81,10 @@ int UmiSourceContractAudit(const char *const *roots, size_t count,
         char *source = ScRead(path);
         if (source == NULL) { ScFinding(report, path, 1U, "input.read", "Cannot read bounded text source (or embedded NUL found)", true); continue; }
         ++report->files_checked;
+        /* Attribution alone cannot qualify broken source literals. Inspect C
+         * lexical boundaries before metadata, retaining the original checks. */
+        if (ScLiterals(source, path, report) == 2)
+            ScFinding(report, path, 1U, "input.lexical", "Cannot inspect bounded C literals", true);
         if (!IsLocalNotesExercise(path)) {
             (void)ScMetadata(source, strlen(source), path, report);
         }

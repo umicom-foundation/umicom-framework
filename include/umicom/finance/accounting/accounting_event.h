@@ -49,6 +49,12 @@ bool umi_accounting_accounting_event_valid(const UmiAccountingAccountingEvent *v
  * its client applications.
  */
 int64_t umi_accounting_accounting_event_absolute_minor(const UmiAccountingAccountingEvent *value);
+/* Checked magnitude refuses INT64_MIN instead of saturating a financial value.
+ * Failure preserves the distinct output. The legacy scalar accessor retains its
+ * documented saturation for compatibility; posting must use the checked form.
+ * Initialization also preserves the event on failure. */
+UmiStatus umi_accounting_accounting_event_absolute_minor_checked(
+    const UmiAccountingAccountingEvent *value, int64_t *out_minor);
 #ifdef __cplusplus
 }
 #endif

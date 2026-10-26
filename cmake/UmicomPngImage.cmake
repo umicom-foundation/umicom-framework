@@ -1,3 +1,8 @@
+# Umicom Framework
+# File: cmake/UmicomPngImage.cmake
+# PURPOSE: Compose optional PNG services and capability-specific coverage.
+# AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+# LICENCE: MIT
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 # Compose optional PNG decoding behind a stable C interface.
 # This module also supports independent composition; own its SDK registration dependency.
@@ -41,3 +46,6 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomImageEditChecks.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomPngEncodeChecks.cmake")
 
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomPngFileChecks.cmake")
+
+# Exercise the actual disabled provider branch alongside host-dependent checks.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomPngUnavailableChecks.cmake")

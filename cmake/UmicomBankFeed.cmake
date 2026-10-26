@@ -356,3 +356,9 @@ if(BUILD_TESTING)
     endforeach()
     unset(_csv_issue_test)
 endif()
+
+# Compare saved observations through the same shared SDK library.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomBankFeedComparison.cmake")
+
+# Reopen reviewed dates and balances through the same bank-feed SDK owner.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomBankStatementArchive.cmake")

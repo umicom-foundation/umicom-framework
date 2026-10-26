@@ -1,4 +1,17 @@
-/* Umicom Framework | educational scaling demonstration | Sammy Hegab | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: learning/native-ai-scaling/scaling_demo.c
+ *
+ * PURPOSE:
+ *   Demonstrate model parameter and memory estimates without allocating a model.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/model_scaling_plan.h"
 #include <inttypes.h>
 #include <stdio.h>

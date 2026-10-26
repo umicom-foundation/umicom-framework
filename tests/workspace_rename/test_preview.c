@@ -30,11 +30,23 @@ int main(int argc, char **argv) {
                          "metadata-name",   "device",         "colon",         "trailing-dot",
                          "trailing-space",  "stale",          "untrusted",     "closed",
                          "project-root",    "project-parent", "arguments",     "capacity",
-                         "new-folder-backslash", "nested-new-folder"};
+                         "new-folder-backslash", "nested-new-folder", "fixture-isolation"};
   for (size_t i = 0U; i < sizeof cases / sizeof cases[0]; ++i)
     if (strcmp(cases[i], test) == 0)
       known = 1;
   CHECK(known);
+  if (!strcmp(test, "fixture-isolation")) {
+    /* Two live fixtures in one case must not adopt or remove one another. */
+    RenameFixture second = {0};
+    CHECK(PutRename(&f, "retained.txt", "Earlier evidence") == 0);
+    CHECK(StartRename(&second) == 0);
+    CHECK(strcmp(f.root, second.root) != 0);
+    CHECK(StopRename(&second) == 0);
+    char retained[UMI_PATH_CAPACITY];
+    CHECK(umi_path_join(f.root, "retained.txt", retained, sizeof retained) == UMI_STATUS_OK);
+    CHECK(RenameText(retained, "Earlier evidence") == 0);
+    return StopRename(&f);
+  }
   if (!strcmp(test, "nested"))
     source = "src/old.c";
   if (!strcmp(test, "backslash"))

@@ -38,6 +38,10 @@ if(BUILD_TESTING)
     if(COMMAND umicom_register_validation_target)
         umicom_register_validation_target(umicom-local-file-drop-test)
     endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-local-file-drop-test FILES
+            "${_local_drop_root}/tests/support/main_context.h")
+    endif()
     foreach(_local_drop_case IN ITEMS local duplicate limit remote mixed-remote long wrong-type
             null-list unparented hidden insensitive reentry remove close clear-value receiver-error constructor)
         add_test(NAME framework.local_files.drop.gtk4.${_local_drop_case}

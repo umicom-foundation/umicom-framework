@@ -33,6 +33,9 @@ target_sources(umicom_finance PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/accounting/posting.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/accounting/reconciliation.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/accounting_book.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/accounting_review.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/accounting_archive.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/accounting_report.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/cash/account_coverage.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/cash/currency_coverage.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/cash/forecast_net.c"
@@ -61,6 +64,8 @@ target_sources(umicom_finance PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/fx_forward/settlement.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/fx_forward/trade_readiness.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/fx_forward_book.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/fx_forward_review.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/fx_forward_archive.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/liquidity/bucket_coverage.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/liquidity/buffer.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/liquidity/concentration.c"
@@ -608,3 +613,280 @@ if(BUILD_TESTING)
 endif()
 
 message(STATUS "Umicom Open TMS platform enabled")
+
+# Boundary and lifecycle checks remain active in release test binaries too.
+if(BUILD_TESTING)
+    add_executable(umi-open-tms-forward-boundary-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/open_tms/test_fx_forward_boundaries.c")
+    target_link_libraries(umi-open-tms-forward-boundary-test PRIVATE Umicom::finance)
+    set_target_properties(umi-open-tms-forward-boundary-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umi-open-tms-forward-boundary-test)
+    umicom_apply_sanitizers(umi-open-tms-forward-boundary-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umi-open-tms-forward-boundary-test)
+    endif()
+    foreach(case matrix lifecycle full stale-version unknown-state revision-limit not-found
+        corrupt-count corrupt-row uninitialised value-zero value-negative value-unavailable
+        value-overflow value-nan value-infinity value-positive invalid-api
+        add-nan add-infinity add-market-nan add-market-negative add-notional-zero add-rate-zero
+        add-unterminated-id add-unterminated-account add-unterminated-party add-empty add-control
+        add-blank add-currency add-currency-width add-same-currency add-state add-zero-market add-duplicate)
+        set(test framework.open_tms.forward.boundary.${case})
+        add_test(NAME ${test} COMMAND umi-open-tms-forward-boundary-test ${case})
+        set_tests_properties(${test} PROPERTIES TIMEOUT 30
+            LABELS "framework;finance;treasury;lifecycle;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(${test} TARGETS umi-open-tms-forward-boundary-test)
+        endif()
+    endforeach()
+    unset(test)
+endif()
+
+# One owned review crosses preview/application boundaries without borrowed rows.
+if(BUILD_TESTING)
+    add_executable(umi-open-tms-forward-review-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/open_tms/test_fx_forward_review.c")
+    target_link_libraries(umi-open-tms-forward-review-test PRIVATE Umicom::finance)
+    set_target_properties(umi-open-tms-forward-review-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umi-open-tms-forward-review-test)
+    umicom_apply_sanitizers(umi-open-tms-forward-review-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umi-open-tms-forward-review-test)
+    endif()
+    foreach(case apply equivalent snapshot-isolation unused-bytes source-lifetime
+        changed-id changed-account changed-party changed-base changed-quote changed-notional
+        changed-rate changed-market changed-maturity changed-state changed-version changed-revision
+        changed-unrelated changed-order changed-count changed-added changed-corrupt changed-nan changed-duplicate
+        refuse-skip refuse-version refuse-missing refuse-limit refuse-count refuse-duplicate invalid-api)
+        set(test framework.open_tms.forward.review.${case})
+        add_test(NAME ${test} COMMAND umi-open-tms-forward-review-test ${case})
+        set_tests_properties(${test} PROPERTIES TIMEOUT 30
+            LABELS "framework;finance;treasury;review;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(${test} TARGETS umi-open-tms-forward-review-test)
+        endif()
+    endforeach()
+    unset(test)
+endif()
+
+# Consumers use the same public interface in-tree and from an installed SDK.
+if(BUILD_TESTING)
+    add_executable(umi-treasury-forward-consumer
+        "${CMAKE_CURRENT_LIST_DIR}/../examples/treasury_forward_review/main.c")
+    target_link_libraries(umi-treasury-forward-consumer PRIVATE Umicom::finance)
+    set_target_properties(umi-treasury-forward-consumer PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umi-treasury-forward-consumer)
+    umicom_apply_sanitizers(umi-treasury-forward-consumer)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umi-treasury-forward-consumer)
+    endif()
+    # The earlier apply/stale cases remain; archive cases also exercise SDK closure.
+    foreach(scenario apply stale archive-roundtrip archive-stale)
+        set(test framework.open_tms.forward.consumer.${scenario})
+        add_test(NAME ${test} COMMAND umi-treasury-forward-consumer ${scenario})
+        set_tests_properties(${test} PROPERTIES TIMEOUT 30
+            LABELS "framework;finance;treasury;review;sdk;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(${test} TARGETS umi-treasury-forward-consumer)
+        endif()
+    endforeach()
+    unset(test)
+endif()
+install(FILES
+    "${CMAKE_CURRENT_LIST_DIR}/../examples/treasury_forward_review/main.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../examples/treasury_forward_review/CMakeLists.txt"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/examples/treasury_forward_review COMPONENT Learning)
+
+# File services are separately composed so portable finance stays base-only.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomTreasuryFiles.cmake")
+
+# Native composition stays in Framework; headless finance retains no GTK requirement.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomTreasuryForwardUi.cmake")
+
+# Persisted bytes are data, so decode exercises adversarial envelopes and rows.
+if(BUILD_TESTING)
+    add_executable(umi-forward-archive-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/open_tms/test_fx_forward_archive.c")
+    target_link_libraries(umi-forward-archive-test PRIVATE Umicom::finance)
+    set_target_properties(umi-forward-archive-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umi-forward-archive-test)
+    umicom_apply_sanitizers(umi-forward-archive-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umi-forward-archive-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umi-forward-archive-test FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../src/base/value_archive_internal.h")
+    endif()
+    foreach(case roundtrip empty full workspace short tails truncation conditional stale
+        conditional-invalid overlap invalid-api encode-count encode-text encode-nan
+        checksum schema trailing count revision text-length text-nul duplicate state nan negative)
+        set(test framework.open_tms.forward.archive.${case})
+        add_test(NAME ${test} COMMAND umi-forward-archive-test ${case})
+        set_tests_properties(${test} PROPERTIES TIMEOUT 30
+            LABELS "framework;finance;treasury;persistence;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(${test} TARGETS umi-forward-archive-test)
+        endif()
+    endforeach()
+    unset(test)
+endif()
+
+# Accounting approval belongs to the complete validated batch, separately by currency.
+if(BUILD_TESTING)
+    add_executable(umi-accounting-boundary-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/open_tms/test_accounting_boundaries.c")
+    target_link_libraries(umi-accounting-boundary-test PRIVATE Umicom::finance)
+    set_target_properties(umi-accounting-boundary-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umi-accounting-boundary-test)
+    umicom_apply_sanitizers(umi-accounting-boundary-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umi-accounting-boundary-test)
+    endif()
+    foreach(case normal multi cross-currency edit-approved post-unbalanced post-nan post-before-approve
+        post-twice approve-twice approve-posted overflow approve-overflow maximum tiny-one-side
+        tolerance-in tolerance-out count revision-zero approved-flag posted-flag posted-without-approval
+        empty-approved limit empty outputs currency-query revision-add revision-approve revision-post
+        add-nan add-infinity add-negative add-both add-zero add-empty-account add-empty-reference
+        add-blank add-control add-account-bound add-reference-bound add-currency add-currency-width
+        add-currency-bound add-posted negative-zero)
+        set(test framework.open_tms.accounting.boundary.${case})
+        add_test(NAME ${test} COMMAND umi-accounting-boundary-test ${case})
+        set_tests_properties(${test} PROPERTIES TIMEOUT 30
+            LABELS "framework;finance;treasury;accounting;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(${test} TARGETS umi-accounting-boundary-test)
+        endif()
+    endforeach()
+    unset(test)
+endif()
+
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/open_tms/accounting_review.h"
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/open_tms COMPONENT Framework)
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_finance include/umicom/open_tms/accounting_review.h)
+endif()
+if(BUILD_TESTING)
+    add_executable(umi-accounting-review-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/open_tms/test_accounting_review.c")
+    target_link_libraries(umi-accounting-review-test PRIVATE Umicom::finance)
+    set_target_properties(umi-accounting-review-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umi-accounting-review-test)
+    umicom_apply_sanitizers(umi-accounting-review-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umi-accounting-review-test)
+    endif()
+    foreach(case approve post equivalent source-lifetime snapshot line inactive-storage text-tails
+        changed-account changed-reference changed-currency changed-debit changed-credit balanced-edit
+        changed-count changed-order changed-revision changed-approved changed-posted changed-nan
+        changed-text-bound changed-count-bound create-null create-action create-empty create-unbalanced
+        create-unapproved-post create-repeat-approval create-revision-limit outputs)
+        set(test framework.open_tms.accounting.review.${case})
+        add_test(NAME ${test} COMMAND umi-accounting-review-test ${case})
+        set_tests_properties(${test} PROPERTIES TIMEOUT 30 LABELS "framework;finance;treasury;accounting;review;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(${test} TARGETS umi-accounting-review-test)
+        endif()
+    endforeach()
+    unset(test)
+endif()
+
+# The same sample exercises public ownership in-tree and against an installed SDK.
+if(BUILD_TESTING)
+    add_executable(umi-accounting-consumer
+        "${CMAKE_CURRENT_LIST_DIR}/../examples/accounting_review/main.c")
+    target_link_libraries(umi-accounting-consumer PRIVATE Umicom::finance)
+    set_target_properties(umi-accounting-consumer PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umi-accounting-consumer)
+    umicom_apply_sanitizers(umi-accounting-consumer)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umi-accounting-consumer)
+    endif()
+    foreach(scenario apply stale currencies archive-roundtrip archive-stale)
+        set(test framework.open_tms.accounting.consumer.${scenario})
+        add_test(NAME ${test} COMMAND umi-accounting-consumer ${scenario})
+        set_tests_properties(${test} PROPERTIES TIMEOUT 30 LABELS "framework;finance;treasury;accounting;review;sdk;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(${test} TARGETS umi-accounting-consumer)
+        endif()
+    endforeach()
+    unset(test)
+endif()
+install(FILES
+    "${CMAKE_CURRENT_LIST_DIR}/../examples/accounting_review/main.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../examples/accounting_review/CMakeLists.txt"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/examples/accounting_review COMPONENT Learning)
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/guides/accounting-review.html"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/guides COMPONENT Learning)
+
+# Applications compose the optional native accounting surface from Framework.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomAccountingPracticeUi.cmake")
+
+# Archives remain within portable finance; native filesystem ownership is separate.
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/open_tms/accounting_archive.h"
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/open_tms COMPONENT Framework)
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_finance include/umicom/open_tms/accounting_archive.h)
+endif()
+if(BUILD_TESTING)
+    add_executable(umi-accounting-archive-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/open_tms/test_accounting_archive.c")
+    target_link_libraries(umi-accounting-archive-test PRIVATE Umicom::finance)
+    set_target_properties(umi-accounting-archive-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umi-accounting-archive-test)
+    umicom_apply_sanitizers(umi-accounting-archive-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umi-accounting-archive-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umi-accounting-archive-test FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../src/base/value_archive_internal.h"
+            "${CMAKE_CURRENT_LIST_DIR}/../src/base/conditional_archive_internal.h")
+    endif()
+    foreach(case roundtrip empty full multi approved posted maximum-revision draft-unbalanced
+        workspace short tails truncation conditional conditional-stale conditional-row conditional-tail
+        conditional-invalid overlap invalid-api encode-count encode-text encode-nan encode-approved
+        encode-posted checksum schema trailing count revision approved-flag posted-flag
+        posted-without-approval approved-unbalanced approved-cross-currency text-length text-nul
+        text-control nan negative both-sides)
+        set(test framework.open_tms.accounting.archive.${case})
+        add_test(NAME ${test} COMMAND umi-accounting-archive-test ${case})
+        set_tests_properties(${test} PROPERTIES TIMEOUT 30 LABELS "framework;finance;treasury;accounting;persistence;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(${test} TARGETS umi-accounting-archive-test)
+        endif()
+    endforeach()
+    unset(test)
+endif()
+
+# Reports reuse the shared CSV owner and remain usable without native widgets.
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/open_tms/accounting_report.h"
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/open_tms COMPONENT Framework)
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_finance include/umicom/open_tms/accounting_report.h)
+endif()
+if(BUILD_TESTING)
+    add_executable(umi-accounting-report-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/open_tms/test_accounting_report.c")
+    target_link_libraries(umi-accounting-report-test PRIVATE Umicom::finance)
+    set_target_properties(umi-accounting-report-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umi-accounting-report-test)
+    umicom_apply_sanitizers(umi-accounting-report-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umi-accounting-report-test)
+    endif()
+    foreach(case empty balanced unbalanced cross-currency currency-order approved posted maximum-lines formula-account formula-reference quoted-text utf8 invalid-utf8 nonterminated bad-currency nan infinity negative both-sides zero-sides invalid-count invalid-revision invalid-flags unbalanced-approved overflow late-overflow null-book null-output snapshot maximum-revision short-copy)
+        set(test framework.open_tms.accounting.report.${case})
+        add_test(NAME ${test} COMMAND umi-accounting-report-test ${case})
+        set_tests_properties(${test} PROPERTIES TIMEOUT 30
+            LABELS "framework;finance;treasury;accounting;report;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(${test} TARGETS umi-accounting-report-test)
+        endif()
+    endforeach()
+endif()

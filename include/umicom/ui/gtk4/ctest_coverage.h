@@ -32,6 +32,11 @@ extern "C" {
 /* A text notification occurs after acceptance. Hiding or cancelling from that
  * notification does not roll back the accepted review: owned filename/status
  * labels complete on the GTK thread, including when the host is retired. */
+/* The initial page includes all requirements. Filters apply only on explicit
+ * Apply filter, in literal ASCII-insensitive text, host/configuration and outcome
+ * fields. The accepted filter is copied into the page, so later edits cannot
+ * relabel it. Replacement loads retain the last accepted filter. Sorting and
+ * paging never change whole-review counts or the qualification gate. */
 GtkWidget *UmiGtk4CtestCoverageCreate(void);
 gboolean UmiGtk4CtestCoveragePending(GtkWidget *panel);
 #ifdef __cplusplus

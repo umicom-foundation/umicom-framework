@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_generation.c
+ *
+ * PURPOSE:
+ *   Check greedy token generation using the complete retained context.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | full-context stacked greedy generation | Sammy Hegab | MIT */
 #include "stacked_test_fixture.h"
 int main(void)

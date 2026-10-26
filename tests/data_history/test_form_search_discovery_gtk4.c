@@ -92,6 +92,7 @@ int main(int argc, char **argv) {
                          "malformed",
                          "utf8-title",
                          "utf8-later-title",
+                         "valid-utf8-title",
                          "late-query",
                          "retire-read",
                          "dispose-read",
@@ -168,9 +169,25 @@ int main(int argc, char **argv) {
     if (!strcmp(name, "utf8-title") && i == 20)
       strcpy(preset->title, "\xff");
 #endif
+    /* Preserve the accidental valid Unicode fixture for review. A visible
+     * U+00FF is UTF-8 C3 BF, not an isolated FF byte. Assert the actual byte
+     * contract before storage so source encoding cannot reverse this test. */
+#if 0
     if ((!strcmp(name, "utf8-title") && i == 1) ||
         (!strcmp(name, "utf8-later-title") && i == 20))
       strcpy(preset->title, "ÿ");
+#endif
+    if ((!strcmp(name, "utf8-title") && i == 1) ||
+        (!strcmp(name, "utf8-later-title") && i == 20)) {
+      preset->title[0] = (char)0xff;
+      preset->title[1] = '\0';
+      CHECK((unsigned char)preset->title[0] == 0xffU);
+      CHECK(!g_utf8_validate(preset->title, -1, NULL));
+    }
+    if (!strcmp(name, "valid-utf8-title") && (i == 1 || i == 20)) {
+      strcpy(preset->title, "\xc3\xbf");
+      CHECK(g_utf8_validate(preset->title, -1, NULL));
+    }
     if (!strcmp(name, "malformed") && i == 20)
       OK(umi_record_document_append(writer, &metadata, "bad", 3, 0, &saved));
     else
@@ -288,6 +305,15 @@ int main(int argc, char **argv) {
   CHECK(page->matching_count == expected && page->count == (expected < 16 ? expected : 16));
   if (!strcmp(name, "empty")) {
     CHECK(UmiFormRecordEditorGtk4OpenSavedSearchResult(root, 0) != UMI_STATUS_OK);
+    goto cleanup;
+  }
+  if (!strcmp(name, "valid-utf8-title")) {
+    CHECK(!strcmp(page->rows[0].title, "\xc3\xbf"));
+    OK(UmiFormRecordEditorGtk4FindSavedSearches(root, "", 1));
+    CHECK(idle(root));
+    OK(UmiFormRecordEditorGtk4LastStatus(root));
+    OK(UmiFormRecordEditorGtk4SavedSearchPage(root, page));
+    CHECK(page->count == 4U && !strcmp(page->rows[3].title, "\xc3\xbf"));
     goto cleanup;
   }
   if (!strcmp(name, "pages") || !strcmp(name, "changed-page")) {

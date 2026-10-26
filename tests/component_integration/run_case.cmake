@@ -1,3 +1,10 @@
+# Umicom Framework
+# File: tests/component_integration/run_case.cmake
+# PURPOSE: Exercise isolated composition stages and retain exact subprocess evidence.
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+# LICENCE: MIT
 #-----------------------------------------------------------------------------
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 # Exercise real CMake integration in a NEW disposable build directory. Retain
@@ -36,9 +43,16 @@ find_program(_ctest NAMES ctest HINTS "${_cmake_directory}" NO_DEFAULT_PATH REQU
 function(Execute step)
     # Identify the running stage before waiting; retain complete logs below.
     message(STATUS "Integration stage ${step}; logs: ${RUN}")
+    string(TIMESTAMP _started "%s" UTC)
     execute_process(COMMAND ${ARGN}
         RESULT_VARIABLE _status OUTPUT_FILE "${RUN}/${step}.out.txt"
         ERROR_FILE "${RUN}/${step}.err.txt" TIMEOUT 180)
+    string(TIMESTAMP _finished "%s" UTC)
+    math(EXPR _elapsed "${_finished}-${_started}")
+    # Append observations instead of hiding which bounded step consumed time.
+    # The outer CTest deadline remains separate from each subprocess deadline.
+    file(APPEND "${RUN}/stage-times.tsv" "${step}\t${_elapsed}\t${_status}\n")
+    message(STATUS "Integration stage ${step} finished in ${_elapsed}s (${_status})")
     if(NOT "${_status}" STREQUAL "0")
         file(READ "${RUN}/${step}.err.txt" _error LIMIT 4096)
         # Ninja and compiler diagnostics commonly arrive on stdout. Retain the
@@ -59,6 +73,10 @@ function(Execute step)
         message(FATAL_ERROR "${step} failed (${_status}). Full logs: ${RUN}${_diagnostics}")
     endif()
 endfunction()
+# Retain the earlier help-text probe for review. Modern help prints a generic
+# category placeholder rather than enumerating "author", so it cannot establish
+# support. The running interpreter version is the same CMAKE_COMMAND used below.
+if(FALSE)
 # CMake renamed developer warnings to author warnings. Query the running
 # tool so older supported CMake installations retain their accepted spelling
 # without emitting a deprecation warning on newer installations.
@@ -69,6 +87,13 @@ if(NOT "${_help_status}" STREQUAL "0")
 endif()
 set(_author_warning_option -Werror=dev)
 if(_cmake_help MATCHES "-Werror=author")
+    set(_author_warning_option -Werror=author)
+endif()
+endif()
+# CMake 4.4 introduced the author category and deprecated the dev spelling.
+# Use its documented version boundary; older supported interpreters retain dev.
+set(_author_warning_option -Werror=dev)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "4.4")
     set(_author_warning_option -Werror=author)
 endif()
 set(_common -G "${HOST_GENERATOR}" -DCMAKE_BUILD_TYPE=Release)

@@ -52,6 +52,19 @@ int64_t umi_accounting_journal_entry_total_credit(const UmiAccountingJournalEntr
  * client applications.
  */
 bool umi_accounting_journal_entry_balanced(const UmiAccountingJournalEntry *value);
+/* Retain the escaped declaration draft as a comment for review. The active
+ * declaration below uses actual source lines, so preprocessing and prototypes
+ * remain visible to every standalone header consumer. */
+// /* Checked totals leave both distinct outputs unchanged on failure. Outputs must\n * not overlap the input. An invalid structure returns INVALID_ARGUMENT; an\n * unrepresentable sum returns CAPACITY_EXCEEDED. No currency conversion occurs:\n * callers must establish consistent minor units and account currencies first.\n * Legacy scalar total accessors return zero on invalid/overflowed input; use\n * this checked form when zero and refusal must be distinguished. Initialization\n * and line insertion preserve the entire entry when refusing a request. */\nUmiStatus umi_accounting_journal_entry_totals(const UmiAccountingJournalEntry *value,\n    int64_t *out_debit, int64_t *out_credit);\n#ifdef __cplusplus\n}\n#endif
+/* Checked totals leave both distinct outputs unchanged on failure. Outputs must
+ * not overlap the input. An invalid structure returns INVALID_ARGUMENT; an
+ * unrepresentable sum returns CAPACITY_EXCEEDED. No currency conversion occurs:
+ * callers must establish consistent minor units and account currencies first.
+ * Legacy scalar total accessors return zero on invalid/overflowed input; use
+ * this checked form when zero and refusal must be distinguished. Initialization
+ * and line insertion preserve the entire entry when refusing a request. */
+UmiStatus umi_accounting_journal_entry_totals(const UmiAccountingJournalEntry *value,
+    int64_t *out_debit, int64_t *out_credit);
 #ifdef __cplusplus
 }
 #endif

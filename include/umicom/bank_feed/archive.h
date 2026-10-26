@@ -23,6 +23,10 @@ typedef struct UmiBankFeedArchiveInfo {
     UmiBankFeedSourceFormat sourceFormat;
     char sourceSha256[65];
 } UmiBankFeedArchiveInfo;
+/* Validate only the source claim (known format and empty/lowercase SHA-256).
+ * This does not read/encode a feed or establish source authenticity. */
+UmiStatus UmiBankFeedArchiveInfoValidate(const UmiBankFeedArchiveInfo *info);
+
 /* Encode an owned, NUL-terminated UTF-8 JSON snapshot of retained observations.
  * Preserves row order, identifiers, exact amount spelling, timestamp offsets,
  * multiline information, pending/mutable flags and page hints. Unknown provider

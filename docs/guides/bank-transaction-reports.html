@@ -38,4 +38,8 @@ remain supported. Arbitrary provider CSV and PDF layouts still need a separate c
 <h2>For contributors</h2>
 <p>Use <code>Umicom::bank_feed</code> for parsing, row copies, account/currency totals and owned CSV reports. The GTK window adds file selection and asynchronous loading. Keep provider authentication outside this importer: a future connector must establish consent, validate account scope and preserve pagination before handing a response to a reader. Reuse Framework’s exact decimal and file owners when adding adapters.</p>
 <p>Reference: <a href="https://openbankinguk.github.io/read-write-api-site3/v4.0.1/resources-and-data-models/aisp/Transactions.html">Open Banking transaction resource</a>.</p>
+<h2>Compare two imports</h2>
+<p>Retain one accepted import, load a second and inspect exact-ID differences using <a href="compare-bank-imports.html">Compare two imported bank reports</a>. Missing identifiers remain unmatched, and an absent row is never treated as a deletion. Existing statement reconciliation and archive exports remain available.</p>
+<h2>Reopen a saved balance comparison</h2>
+<p>Select <strong>Umicom statement review archive</strong> to reopen saved dates and balances as well as imported rows. The report opens an independent comparison and recalculates its totals. See the <a href="statement-reconciliation.html">statement review guide</a> for saving, reopening and privacy limits.</p>
 </main></body></html>

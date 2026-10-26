@@ -28,6 +28,11 @@ extern "C" {
  * creation and retains no original path. A restored digest is a claim, not
  * provider authentication. CSV reports remain a separate export choice.
  * The native exporter additionally limits output to 2,097,152 characters. */
+/* Retain current import as before captures an independent in-memory snapshot.
+ * It survives changing the current file, format, mapping and Clear report.
+ * Compare retained import opens an immutable review against the current accepted
+ * import, including all accounts. Forget retained import releases that side;
+ * closing releases both. No snapshot is saved automatically and no rows merge. */
 GtkWidget *UmiBankFeedGtk4LauncherCreate(void);
 /** Create an unpresented bank transaction window owned by GTK. parent may be
  * NULL; a removed parent returns NULL. The caller presents it and eventually destroys it. Import

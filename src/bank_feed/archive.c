@@ -27,6 +27,12 @@ static bool ArchiveInfoValid(const UmiBankFeedArchiveInfo *info) {
     }
     return true;
 }
+/* Share claim validation with native constructors without imposing the archive
+ * byte budget on unrelated statement arithmetic. */
+UmiStatus UmiBankFeedArchiveInfoValidate(const UmiBankFeedArchiveInfo *info) {
+    return info != NULL && ArchiveInfoValid(info) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+}
+
 /* The common JSON writer owns escaping and its sticky capacity failure. This
  * adapter supplies only fixed keys and already validated, owned feed values. */
 static void TextField(UmiLanguageRuntimeJsonWriter *writer, const char *key, const char *value) {

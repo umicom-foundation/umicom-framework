@@ -1,3 +1,18 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_forward.c
+ *
+ * PURPOSE:
+ *   Check repeatable multi-layer decoder forward results and depth effects.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 /* Umicom Framework | real multi-layer Transformer forward parity | Sammy Hegab | MIT */
 #include "stacked_test_fixture.h"
 int main(void)

@@ -1,0 +1,5 @@
+account,transaction,reference,information,booking_date,currency,amount,status,mutability
+practice-account,credit-one,receipt,Example credit,2026-10-12,GBP,12.50000,BOOK,Immutable
+practice-account,debit-one,payment,Pending debit,2026-10-12,GBP,-2.25,BOOK,Immutable
+practice-account,,unknown,Observation without ID,2026-10-12,GBP,1,BOOK,Immutable
+practice-account,extra-one,receipt,Additional imported observation,2026-10-13,GBP,3,BOOK,Immutable

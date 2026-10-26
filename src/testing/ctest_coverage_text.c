@@ -17,6 +17,9 @@
 #include <stdio.h>
 #include <string.h>
 
+/* The original formatter helpers remain for engineering comparison. Shared
+ * helpers now give ordinary and filtered coverage identical escaping. */
+#if 0
 typedef struct CoverageWriter {
     char *text;
     size_t used;
@@ -39,6 +42,9 @@ static void Text(CoverageWriter *writer, const char *text)
         Append(writer, escaped);
     }
 }
+#endif
+#include "ctest_coverage_text_private.h"
+
 static void Page(CoverageWriter *writer, const UmiCtestCoverageReview *review,
     const UmiCtestCoverageSummary *summary, size_t offset, size_t end)
 {
@@ -54,6 +60,9 @@ static void Page(CoverageWriter *writer, const UmiCtestCoverageReview *review,
         summary->outstanding, summary->requirements ? offset + 1U : 0U, end, summary->requirements);
     Append(writer, line);
     if (!summary->requirements) Append(writer, "No requirements: empty coverage cannot pass.\n");
+    /* Preserve the original row rendering. Both page types now call the same
+     * shared row formatter so outcome and source details cannot drift. */
+#if 0
     for (size_t i = offset; i < end; ++i) {
         const UmiCtestCoverageRow *row = UmiCtestCoverageReviewAt(review, i);
         Append(writer, "\n[");
@@ -81,6 +90,9 @@ static void Page(CoverageWriter *writer, const UmiCtestCoverageReview *review,
         }
         Append(writer, "\n");
     }
+#endif
+    for (size_t i = offset; i < end; ++i)
+        CoverageTextRow(writer, UmiCtestCoverageReviewAt(review, i));
 }
 UmiStatus UmiCtestCoverageReviewFormat(const UmiCtestCoverageReview *review,
     size_t offset, size_t limit, char *out, size_t capacity, size_t *required)

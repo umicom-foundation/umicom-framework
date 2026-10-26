@@ -37,6 +37,12 @@ UmiStatus umi_accounting_journal_book_post(UmiAccountingJournalBook *value,const
  * this module.
  */
 const UmiAccountingJournalEntry *umi_accounting_journal_book_find(const UmiAccountingJournalBook *value,const char *id);
+/* Validate bounded count, complete posted entries and unique journal IDs.
+ * Find returns NULL for an invalid book. Post refuses without changing the book.
+ * This in-memory storage does not check account currencies, authorize an operator
+ * or commit a durable ledger transaction. Input and output objects must not overlap
+ * except that Post may copy an already existing entry (which then refuses as a duplicate). */
+UmiStatus umi_accounting_journal_book_validate(const UmiAccountingJournalBook *value);
 #ifdef __cplusplus
 }
 #endif
