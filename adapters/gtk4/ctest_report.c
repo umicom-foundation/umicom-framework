@@ -29,6 +29,7 @@ typedef struct SavedReportPanel {
   size_t offset;
   gboolean busy;
   gboolean cancelled;
+  gboolean loading; /* A pending read can cancel; an accepted publication completes. */
 } SavedReportPanel;
 typedef struct SavedReportJob {
   GtkWidget *root;
@@ -219,6 +220,10 @@ static void Page(GtkButton *button, gpointer data) {
   s->busy = FALSE;
   g_object_unref(root);
 }
+/* Cancellation applies to the pending read, before accepted-state publication.
+ * Retain the previous busy-based boundary for review; the replacement completes
+ * owned widget metadata even if a notification hides or retires the host. */
+#if 0
 static void Clear(GtkButton *button, gpointer data) {
   GtkWidget *root = data;
   SavedReportPanel *s = g_object_get_data(G_OBJECT(root), "umicom-saved-report");
@@ -233,6 +238,22 @@ static void Clear(GtkButton *button, gpointer data) {
     gtk_label_set_text(GTK_LABEL(s->source), "No report loaded");
   if (gtk_widget_get_mapped(root))
     gtk_label_set_text(GTK_LABEL(s->status), "Saved report closed; its source file is unchanged.");
+  s->busy = FALSE;
+  g_object_unref(root);
+}
+#endif
+static void Clear(GtkButton *button, gpointer data) {
+  GtkWidget *root = data;
+  SavedReportPanel *s = g_object_get_data(G_OBJECT(root), "umicom-saved-report");
+  if (!Active(s, GTK_WIDGET(button)))
+    return;
+  g_object_ref(root);
+  s->busy = TRUE;
+  RetireView(s);
+  UmiCtestReportDestroy(s->report);
+  s->report = NULL;
+  gtk_label_set_text(GTK_LABEL(s->source), "No report loaded");
+  gtk_label_set_text(GTK_LABEL(s->status), "Saved report closed; its source file is unchanged.");
   s->busy = FALSE;
   g_object_unref(root);
 }
@@ -295,6 +316,10 @@ static void ReadComplete(GObject *source, GAsyncResult *result, gpointer data) {
   s->busy = FALSE;
 }
 #endif
+/* Cancellation applies to the pending read, before accepted-state publication.
+ * Retain the previous busy-based boundary for review; the replacement completes
+ * owned widget metadata even if a notification hides or retires the host. */
+#if 0
 static void ReadComplete(GObject *source, GAsyncResult *result, gpointer data) {
   (void)source;
   (void)data;
@@ -329,12 +354,63 @@ static void ReadComplete(GObject *source, GAsyncResult *result, gpointer data) {
         "Load cancelled; its results were not displayed. The previously accepted report is unchanged.");
   s->busy = FALSE;
 }
+#endif
+static void ReadComplete(GObject *source, GAsyncResult *result, gpointer data) {
+  (void)source;
+  (void)data;
+  (void)g_task_propagate_boolean(G_TASK(result), NULL);
+  SavedReportJob *job = g_task_get_task_data(G_TASK(result));
+  SavedReportPanel *s = g_object_get_data(G_OBJECT(job->root), "umicom-saved-report");
+  s->loading = FALSE;
+  if (!s->cancelled && gtk_widget_get_mapped(job->root)) {
+    UmiCtestReportView *view = NULL;
+    char *text = NULL;
+    UmiStatus status = job->status;
+    if (status == UMI_STATUS_OK)
+      status = PrepareView(job->report, &job->filter, &view, &text);
+    if (status == UMI_STATUS_OK) {
+      /* Commit one accepted replacement before publishing notifications. The
+       * view borrows the report, so retire the old view before the old report. */
+      UmiCtestReport *previous = s->report;
+      s->report = job->report;
+      job->report = NULL;
+      PublishView(s, view, text);
+      UmiCtestReportDestroy(previous);
+      /* The accepted page and metadata finish together. Owned labels survive
+       * reentrant hiding or closure until owner-thread completion releases root. */
+      gtk_label_set_text(GTK_LABEL(s->source), job->path);
+      gtk_label_set_text(GTK_LABEL(s->status),
+            "Saved report loaded with the captured filters. Apply later filter edits explicitly.");
+    } else {
+      gtk_label_set_text(GTK_LABEL(s->status),
+          "Unable to load the selected report. The previous report is unchanged; check the file, format and byte limit.");
+    }
+  }
+  if (s->cancelled && gtk_widget_get_mapped(job->root))
+    gtk_label_set_text(GTK_LABEL(s->status),
+        "Load cancelled; its results were not displayed. The previously accepted report is unchanged.");
+  s->busy = FALSE;
+  /* Destroy GTK-owning task data here on the owner context, not on a worker. */
+  g_task_set_task_data(G_TASK(result), NULL, NULL);
+}
 
+/* Cancellation applies to the pending read, before accepted-state publication.
+ * Retain the previous busy-based boundary for review; the replacement completes
+ * owned widget metadata even if a notification hides or retires the host. */
+#if 0
 static void Unmapped(GtkWidget *widget, gpointer data) {
   (void)widget;
   SavedReportPanel *s = data;
   /* Hiding then showing the same widget must not revive an older load. */
   if (s->busy)
+    s->cancelled = TRUE;
+}
+#endif
+static void Unmapped(GtkWidget *widget, gpointer data) {
+  (void)widget;
+  SavedReportPanel *s = data;
+  /* Hiding then showing the same widget must not revive an older load. */
+  if (s->loading)
     s->cancelled = TRUE;
 }
 /* Accepted report state is now replaced only after complete admission and
@@ -380,6 +456,10 @@ static void Open(GtkButton *button, gpointer data) {
 }
 
 #endif
+/* Cancellation applies to the pending read, before accepted-state publication.
+ * Retain the previous busy-based boundary for review; the replacement completes
+ * owned widget metadata even if a notification hides or retires the host. */
+#if 0
 static void Open(GtkButton *button, gpointer data) {
   GtkWidget *root = data;
   SavedReportPanel *s = g_object_get_data(G_OBJECT(root), "umicom-saved-report");
@@ -415,11 +495,65 @@ static void Open(GtkButton *button, gpointer data) {
   }
   g_object_unref(root);
 }
+#endif
+static void Open(GtkButton *button, gpointer data) {
+  GtkWidget *root = data;
+  SavedReportPanel *s = g_object_get_data(G_OBJECT(root), "umicom-saved-report");
+  if (!Active(s, GTK_WIDGET(button))) return;
+  g_object_ref(root);
+  s->busy = TRUE;
+  s->loading = TRUE;
+  s->cancelled = FALSE;
+  SavedReportJob *job = g_new0(SavedReportJob, 1);
+  job->root = g_object_ref(root);
+  const char *path = gtk_editable_get_text(GTK_EDITABLE(s->path));
+  size_t length = strlen(path);
+  gboolean valid = length < sizeof job->path && umi_path_is_absolute(path);
+  if (valid) memcpy(job->path, path, length + 1U);
+  UmiStatus status = valid ? ReadDraftFilter(s, &job->filter) : UMI_STATUS_INVALID_ARGUMENT;
+  /* The worker request owns the exact path and filter chosen at Open. Editing
+   * controls while it reads cannot silently alter the accepted observation. */
+  if (status == UMI_STATUS_OK && gtk_widget_get_mapped(root)) {
+    gtk_label_set_text(GTK_LABEL(s->status), "Reading the selected saved report; the previous report remains available.");
+    if (!s->cancelled && gtk_widget_get_mapped(root)) {
+      GTask *task = g_task_new(NULL, NULL, ReadComplete, NULL);
+      g_task_set_task_data(task, job, JobFree);
+      g_task_run_in_thread(task, ReadWorker);
+      g_object_unref(task);
+      job = NULL;
+    }
+  } else if (gtk_widget_get_mapped(root)) {
+    gtk_label_set_text(GTK_LABEL(s->status),
+        "Choose an absolute local JUnit path and valid filters. The previous report is unchanged.");
+  }
+  if (job != NULL) {
+    s->loading = FALSE;
+    s->busy = FALSE;
+    JobFree(job);
+  }
+  g_object_unref(root);
+}
 
+/* Cancellation applies to the pending read, before accepted-state publication.
+ * Retain the previous busy-based boundary for review; the replacement completes
+ * owned widget metadata even if a notification hides or retires the host. */
+#if 0
 static void Cancel(GtkButton *button, gpointer data) {
   GtkWidget *root = data;
   SavedReportPanel *s = g_object_get_data(G_OBJECT(root), "umicom-saved-report");
   if (!s->busy || !gtk_widget_get_mapped(root) || !gtk_widget_get_mapped(GTK_WIDGET(button)))
+    return;
+  g_object_ref(root);
+  s->cancelled = TRUE;
+  gtk_label_set_text(GTK_LABEL(s->status),
+                     "Load cancelled. Waiting for the local read to release its resources.");
+  g_object_unref(root);
+}
+#endif
+static void Cancel(GtkButton *button, gpointer data) {
+  GtkWidget *root = data;
+  SavedReportPanel *s = g_object_get_data(G_OBJECT(root), "umicom-saved-report");
+  if (!s->loading || !gtk_widget_get_mapped(root) || !gtk_widget_get_mapped(GTK_WIDGET(button)))
     return;
   g_object_ref(root);
   s->cancelled = TRUE;

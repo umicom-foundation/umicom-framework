@@ -177,6 +177,20 @@ skipped outcomes distinctly. Include a passing test whose name contains that wor
 in parser coverage. Keep colour escapes and malformed counters in the input contract.
 Do not infer successful qualification merely from a percentage summary.
 
+For CTest JUnit fixtures, start from a complete supported report and preserve its
+required attributes. Every positive testcase needs an explicit name, status and time.
+Failure and skipped elements need their message attribute. A runtime skip uses the
+CTest skip reason, such as SKIP_RETURN_CODE=77; an unavailable executable is a
+different not-run outcome. A syntactically valid XML document can still violate the
+importer's contract. Keep deliberately incomplete examples in named negative cases,
+and do not relax production validation merely to admit a broken positive fixture.
+
+Before native fixture interaction, open the relevant collapsed section through the
+public GTK operation. Check the type of a looked-up control before retaining it or
+calling an interface method. Install destructive lifetime observers only after setup,
+so fixture preparation itself cannot unexpectedly retire the object under test.
+
+
 For multi-host qualification, declare which exact test must pass on which host and
 configuration. Match source fingerprints explicitly. A skip, disabled case, missing test
 or stale report cannot satisfy that row. Keep the actual capability prerequisite and

@@ -1,0 +1,25 @@
+# Umicom Framework | Independent native planning service | Sammy Hegab | MIT
+include_guard(GLOBAL)
+get_filename_component(_umicom_scaling_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+if(NOT TARGET umicom_ai_scaling)
+    add_library(umicom_ai_scaling STATIC
+        "${_umicom_scaling_root}/src/ai/training/model_scaling_plan.c")
+    add_library(Umicom::AiScaling ALIAS umicom_ai_scaling)
+    target_compile_features(umicom_ai_scaling PUBLIC c_std_23)
+    target_include_directories(umicom_ai_scaling PUBLIC "${_umicom_scaling_root}/include")
+    if(NOT MSVC)
+        target_compile_options(umicom_ai_scaling PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    endif()
+endif()
+if(BUILD_TESTING AND NOT TARGET umicom-ai-scaling-test)
+    add_executable(umicom-ai-scaling-test "${_umicom_scaling_root}/tests/ai_training/test_training_model_scaling_plan.c")
+    target_link_libraries(umicom-ai-scaling-test PRIVATE Umicom::AiScaling)
+    add_test(NAME framework.ai.scaling.estimate COMMAND umicom-ai-scaling-test)
+    set_tests_properties(framework.ai.scaling.estimate PROPERTIES LABELS "framework;ai;native-training")
+endif()
+
+if(NOT TARGET umicom-ai-scaling-demo)
+    add_executable(umicom-ai-scaling-demo
+        "${_umicom_scaling_root}/learning/native-ai-scaling/scaling_demo.c")
+    target_link_libraries(umicom-ai-scaling-demo PRIVATE Umicom::AiScaling)
+endif()

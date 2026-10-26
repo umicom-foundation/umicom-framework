@@ -59,6 +59,14 @@ UmiStatus UmiCtestReportComparisonReadSummary(const UmiCtestReportComparison *co
 const UmiCtestReportChange *UmiCtestReportComparisonAt(const UmiCtestReportComparison *comparison,
     size_t index);
 
+/** Format a plain escaped page of outcome changes in exact-name order.
+ * limit is 1..128; an empty comparison accepts offset zero. Query bytes with
+ * NULL,0; required excludes NUL. Invalid arguments/offsets leave required
+ * unchanged. A short buffer stays unchanged and returns its required length.
+ * Inputs/output must not overlap. This reports observations, not qualification. */
+UmiStatus UmiCtestReportComparisonFormat(const UmiCtestReportComparison *comparison,
+    size_t offset, size_t limit, char *out, size_t capacity, size_t *required);
+
 /** Release owned names and records. NULL is accepted. */
 void UmiCtestReportComparisonDestroy(UmiCtestReportComparison *comparison);
 #ifdef __cplusplus

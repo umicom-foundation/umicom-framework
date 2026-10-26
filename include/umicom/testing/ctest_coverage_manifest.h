@@ -51,6 +51,12 @@ const UmiCtestCoverageHostFile *UmiCtestCoverageManifestHostAt(
     const UmiCtestCoverageManifest *manifest, size_t index);
 const UmiCtestCoverageRequirement *UmiCtestCoverageManifestRequirementAt(
     const UmiCtestCoverageManifest *manifest, size_t index);
+/* Read an absolute manifest path and its relative saved reports using the
+ * shared byte limits. Anchors reports to the manifest parent, never the process
+ * directory. Caller supplies the expected identity; it is not authenticated.
+ * out becomes NULL on failure. No file writes or subprocesses are performed. */
+UmiStatus UmiCtestCoverageReviewReadFile(const char *absolute_manifest,
+    const char *source_identity, UmiCtestCoverageReview **out);
 void UmiCtestCoverageManifestDestroy(UmiCtestCoverageManifest *manifest);
 
 /* Read declared reports relative to an explicit ordinary absolute directory,

@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "ctest_coverage_manifest_private.h"
+#include "umicom/base/csv_document.h"
 #include "umicom/platform/input_file.h"
 #include "umicom/platform/output_file.h"
 #include <stdlib.h>
@@ -79,5 +80,37 @@ UmiStatus UmiCtestCoverageManifestReviewFiles(const UmiCtestCoverageManifest *ma
     for (size_t i = 0; i < count; ++i) UmiCtestReportDestroy(reports[i]);
     free(reports);
     free(hosts);
+    return status;
+}
+
+/* Keep the complete file boundary shared by CLI and GTK hosts. Every input is
+ * owned through parsing and released before an immutable review is returned. */
+UmiStatus UmiCtestCoverageReviewReadFile(const char *absolute_manifest,
+    const char *source_identity, UmiCtestCoverageReview **out)
+{
+    if (!out) return UMI_STATUS_INVALID_ARGUMENT;
+    *out = NULL;
+    if (!absolute_manifest || !source_identity || !umi_path_is_absolute(absolute_manifest))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    char escaped[UMI_CTEST_EXACT_PATTERN_CAPACITY];
+    size_t n = 0;
+    while (n < UMI_CTEST_COVERAGE_IDENTITY_CAPACITY && source_identity[n]) ++n;
+    if (n == UMI_CTEST_COVERAGE_IDENTITY_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiStatus status = UmiCtestEscapeName(source_identity, escaped, sizeof escaped);
+    char directory[UMI_PATH_CAPACITY];
+    if (status == UMI_STATUS_OK) status = UmiOutputFileValidatePath(absolute_manifest);
+    if (status == UMI_STATUS_OK)
+        status = umi_path_parent(absolute_manifest, directory, sizeof directory);
+    unsigned char *bytes = NULL;
+    size_t length = 0;
+    UmiCtestCoverageManifest *manifest = NULL;
+    if (status == UMI_STATUS_OK)
+        status = UmiInputFileRead(absolute_manifest, UMI_CSV_MAX_BYTES, &bytes, &length);
+    if (status == UMI_STATUS_OK)
+        status = UmiCtestCoverageManifestImport(bytes, length, &manifest);
+    UmiInputFileFree(bytes);
+    if (status == UMI_STATUS_OK)
+        status = UmiCtestCoverageManifestReviewFiles(manifest, directory, source_identity, out);
+    UmiCtestCoverageManifestDestroy(manifest);
     return status;
 }

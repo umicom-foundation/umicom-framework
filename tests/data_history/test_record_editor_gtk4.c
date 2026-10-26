@@ -196,7 +196,15 @@ int main(int argc, char **argv)
         }
         if (strcmp(name, "catalogue-model-close") == 0) {
             observer = (Observer){.root=root, .close=true};
+            /* Report missing controls as a fixture assertion before retaining
+             * a GTK object. This keeps a collapsed-section regression from
+             * becoming an unrelated fatal GObject critical. */
+#if 0
             observed = g_object_ref(find(root, "record-editor-results"));
+#endif
+            GtkWidget *results = find(root, "record-editor-results");
+            CHECK(GTK_IS_DROP_DOWN(results));
+            observed = g_object_ref(results);
             signal = g_signal_connect(observed, "notify::model", G_CALLBACK(retire_on_model), &observer);
         }
         CHECK(click(root, "record-editor-find"));

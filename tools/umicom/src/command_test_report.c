@@ -136,6 +136,9 @@ static int ReportCompareFiles(const char *before_file, const char *after_file)
 
 /* Framework owns manifest grammar, file admission and host/source policy. The
  * command resolves one user path and presents the immutable review. */
+/* Complete manifest admission now belongs to Framework and is shared with
+ * the native coverage panel. Retain the former command composition for review. */
+#if 0
 static int ReportCoverageFiles(const char *identity, const char *manifest_file)
 {
     char current[UMI_PATH_CAPACITY], absolute[UMI_PATH_CAPACITY], directory[UMI_PATH_CAPACITY];
@@ -187,6 +190,52 @@ static int ReportCoverageFiles(const char *identity, const char *manifest_file)
     }
     UmiCtestCoverageReviewDestroy(review);
     UmiCtestCoverageManifestDestroy(manifest);
+    return exit_code;
+}
+
+#endif
+static int ReportCoverageFiles(const char *identity, const char *manifest_file)
+{
+    char current[UMI_PATH_CAPACITY], absolute[UMI_PATH_CAPACITY];
+    UmiStatus status = umi_path_is_absolute(manifest_file)
+        ? umi_path_copy(absolute, sizeof absolute, manifest_file)
+        : umi_fs_current_directory(current, sizeof current);
+    if (status == UMI_STATUS_OK && !umi_path_is_absolute(manifest_file))
+        status = umi_path_absolute(manifest_file, current, absolute, sizeof absolute);
+    UmiCtestCoverageReview *review = NULL;
+    if (status == UMI_STATUS_OK)
+        status = UmiCtestCoverageReviewReadFile(absolute, identity, &review);
+    UmiCtestCoverageSummary summary;
+    if (status == UMI_STATUS_OK) status = UmiCtestCoverageReviewRead(review, &summary);
+    int exit_code = 2;
+    if (status == UMI_STATUS_OK) {
+        puts("Saved host coverage; this command did not run tests or verify source revisions.");
+        fputs("Requested source identity: ", stdout); ReportText(UmiCtestCoverageReviewSourceIdentity(review));
+        printf("\nRequirements: %zu | Passed: %zu | Outstanding: %zu\n",
+            summary.requirements, summary.outcomes[UMI_CTEST_COVERAGE_PASSED], summary.outstanding);
+        for (size_t i = 0; i < summary.requirements; ++i) {
+            const UmiCtestCoverageRow *row = UmiCtestCoverageReviewAt(review, i);
+            printf("[%s] ", UmiCtestCoverageOutcomeText(row->outcome));
+            ReportText(row->requirement.host); fputs(" / ", stdout);
+            ReportText(row->requirement.configuration); fputs(" : ", stdout);
+            ReportText(row->requirement.name);
+            if (row->requirement.capability[0]) {
+                fputs(" | requires ", stdout); ReportText(row->requirement.capability);
+            }
+            if (row->outcome == UMI_CTEST_COVERAGE_SOURCE_MISMATCH) {
+                fputs(" | observed source ", stdout); ReportText(row->observed_source_identity);
+            }
+            putchar('\n');
+        }
+        puts("Only listed requirements are reviewed. Unlisted tests and hosts are outside this gate.");
+        if (!summary.requirements) puts("No requirements: empty coverage cannot pass.");
+        exit_code = UmiCtestCoverageRequirePassed(review) == UMI_STATUS_OK ? 0 : 1;
+    } else {
+        fprintf(stderr, "Cannot review saved host coverage (status %d). Check the seven-column "
+            "CSV manifest, unique hosts/requirements, relative report paths and complete JUnit XML.\n",
+            (int)status);
+    }
+    UmiCtestCoverageReviewDestroy(review);
     return exit_code;
 }
 

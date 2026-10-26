@@ -63,6 +63,16 @@ static void CloseOnText(GtkTextBuffer *buffer, gpointer window) {
   (void)buffer;
   gtk_window_destroy(GTK_WINDOW(window));
 }
+/* Accepted publication completes its metadata even if a synchronous observer
+ * cancels or hides the panel after the worker result has already been admitted. */
+static void CancelOnText(GtkTextBuffer *buffer, GtkWidget *root) {
+  (void)buffer;
+  Click(root, "ctest.report.cancel");
+}
+static void HideOnText(GtkTextBuffer *buffer, GtkWidget *root) {
+  (void)buffer;
+  gtk_widget_set_visible(root, FALSE);
+}
 int main(int argc, char **argv) {
   CHECK(argc == 2);
   const char *name = argv[1],
@@ -70,7 +80,8 @@ int main(int argc, char **argv) {
                          "outcomes",     "missing",       "invalid-filter", "hidden",
                          "retained",     "cancel-load",   "hide-show",      "close-load",
                          "close-render", "captured-path", "clear", "captured-filter",
-                         "replace-report", "cancel-replacement", "missing-second-page", "invalid-open-filter"};
+                         "replace-report", "cancel-replacement", "missing-second-page", "invalid-open-filter",
+                         "cancel-render", "hide-render", "hide-clear", "cancel-page"};
   CHECK(Known(name, names, sizeof names / sizeof names[0]));
   if (!gtk_init_check())
     return 77;
@@ -128,6 +139,10 @@ int main(int argc, char **argv) {
     gtk_editable_set_text(GTK_EDITABLE(entry), missing);
   if (!strcmp(name, "captured-filter"))
     gtk_editable_set_text(GTK_EDITABLE(filter), "no-match");
+  if (!strcmp(name, "cancel-render"))
+    g_signal_connect_object(buffer, "changed", G_CALLBACK(CancelOnText), root, 0);
+  if (!strcmp(name, "hide-render"))
+    g_signal_connect_object(buffer, "changed", G_CALLBACK(HideOnText), root, 0);
   Wait(root);
   char *text = Text(buffer);
   if (!strcmp(name, "cancel-load") || !strcmp(name, "hide-show") || !strcmp(name, "close-load")) {
@@ -137,6 +152,31 @@ int main(int argc, char **argv) {
   }
   CHECK(strstr(text, "Showing 1..64 of 150"));
   g_free(text);
+  if (!strcmp(name, "cancel-render") || !strcmp(name, "hide-render")) {
+    CHECK(!strcmp(gtk_label_get_text(GTK_LABEL(Find(root, "ctest.report.source"))), path));
+    CHECK(strstr(gtk_label_get_text(GTK_LABEL(Find(root, "ctest.report.status"))),
+        "Saved report loaded"));
+    if (!strcmp(name, "hide-render")) CHECK(!gtk_widget_get_visible(root));
+  }
+  if (!strcmp(name, "cancel-page")) {
+    g_signal_connect_object(buffer, "changed", G_CALLBACK(CancelOnText), root, 0);
+    Click(root, "ctest.report.next");
+    text = Text(buffer);
+    CHECK(strstr(text, "Showing 65..128 of 150"));
+    CHECK(!strcmp(gtk_label_get_text(GTK_LABEL(Find(root, "ctest.report.source"))), path));
+    CHECK(!strstr(gtk_label_get_text(GTK_LABEL(Find(root, "ctest.report.status"))), "cancelled"));
+    g_free(text);
+  }
+  if (!strcmp(name, "hide-clear")) {
+    g_signal_connect_object(buffer, "changed", G_CALLBACK(HideOnText), root, 0);
+    Click(root, "ctest.report.clear");
+    text = Text(buffer);
+    CHECK(!text[0] && !gtk_widget_get_visible(root));
+    CHECK(!strcmp(gtk_label_get_text(GTK_LABEL(Find(root, "ctest.report.source"))), "No report loaded"));
+    CHECK(!strcmp(gtk_label_get_text(GTK_LABEL(Find(root, "ctest.report.status"))),
+        "Saved report closed; its source file is unchanged."));
+    g_free(text);
+  }
   if (!strcmp(name, "captured-path"))
     CHECK(!strcmp(gtk_label_get_text(GTK_LABEL(Find(root, "ctest.report.source"))), path));
   if (!strcmp(name, "captured-filter")) {

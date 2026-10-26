@@ -102,6 +102,13 @@ const UmiCtestCoverageRow *UmiCtestCoverageReviewAt(const UmiCtestCoverageReview
 /* OK only for a nonempty requirement list with every row PASSED.
  * This does not replace UmiCtestReportRequirePassed for a complete run. */
 UmiStatus UmiCtestCoverageRequirePassed(const UmiCtestCoverageReview *review);
+/* Format 1..128 rows in requirement order as escaped text. NULL,0 queries
+ * bytes excluding the terminator. Insufficient capacity leaves output unchanged
+ * and reports the needed bytes; invalid arguments leave required unchanged.
+ * Empty reviews accept offset zero. Other out-of-range offsets return NOT_FOUND.
+ * Inputs/output must not overlap. No I/O or execution is performed. */
+UmiStatus UmiCtestCoverageReviewFormat(const UmiCtestCoverageReview *review,
+    size_t offset, size_t limit, char *out, size_t capacity, size_t *required);
 void UmiCtestCoverageReviewDestroy(UmiCtestCoverageReview *review);
 #ifdef __cplusplus
 }

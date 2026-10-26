@@ -23,4 +23,19 @@ If a filter is invalid, the accepted page stays visible. Correct the choices and
 <h2>Embed the reusable service</h2>
 <p>Link the testing SDK and include <code>umicom/testing/ctest_report_file.h</code> and <code>umicom/testing/ctest_report_view.h</code>. Call <code>UmiCtestReportReadFile</code>, initialise a filter with <code>UmiCtestReportFilterInit</code>, then create a view. The view borrows its immutable report: destroy all views before destroying the report. It owns its filter and index. Formatting is measured before writing and supports pages of 1 through 128 records.</p>
 <p>The GTK host uses <code>UmiGtk4CtestReportCreate</code> from <code>umicom/ui/gtk4/ctest_report.h</code>. Create and use this widget on the GTK thread. The shared testing service does not depend on the editor or a Studio project. The existing <code>umicom test-report</code> command uses the same bounded file reader.</p>
+<h2>Compare two saved runs</h2>
+<p>The comparison panel answers which exact test names changed outcome between two completed CTest reports. It does not certify that either report belongs to the current source tree. Keep the source revision, build configuration and console log with each report.</p>
+<ol>
+<li>Finish both test runs and retain each JUnit XML file under a different absolute filename. Do not select a file that another process is still writing.</li>
+<li>In the comparison panel, choose the baseline file and the current file, then select <strong>Compare reports</strong>. Both filenames are captured together; changing the entries while loading affects only the next request.</li>
+<li>Read the accepted filenames and counts. <strong>Recovered</strong> means the same name changed from a non-passing outcome to passed. <strong>Regressed</strong> means it changed from passed to another outcome. Disabled and skipped remain separate outcomes.</li>
+<li>Check <strong>added</strong> and <strong>removed</strong> records before drawing conclusions. Removing a failing test is not a repair. Unchanged outcomes can still be failures; open the current report in the report browser to inspect them.</li>
+<li>Use Next and Previous for 64-record pages or Copy page to copy the displayed text. Close comparison clears the view without modifying either source file.</li>
+</ol>
+<p>Missing, malformed or cancelled replacements retain the previously accepted pair and page. Cancel load stops a pending result from being accepted; it does not interrupt local file reads. Once text has been accepted, its filename labels finish updating together even if a synchronous interface callback hides the panel.</p>
+<p>Each input has the report reader's 64 MiB limit. Files are read sequentially, so the pair is not an atomic filesystem snapshot. Compare immutable completed files. Matching uses decoded names exactly, including letter case. Changed names therefore appear as removed and added records. Empty or unchanged reports never establish that everything passed.</p>
+<h2>Embed saved comparisons</h2>
+<p>Include <code>umicom/testing/ctest_comparison_file.h</code> and link <code>Umicom::testing</code>. <code>UmiCtestReportCompareFiles</code> returns an owned comparison, independent of the two input filenames and temporary report objects. Release it with <code>UmiCtestReportComparisonDestroy</code>. This synchronous file operation belongs on a worker when used by an interactive application.</p>
+<p><code>UmiCtestReportComparisonFormat</code> accepts a page limit from 1 through 128. First pass a null output and zero capacity to obtain the required byte count, then allocate that count plus one for the terminator. Short buffers remain unchanged. The GTK adapter, <code>UmiGtk4CtestComparisonCreate</code> in <code>umicom/ui/gtk4/ctest_comparison.h</code>, owns the worker and publication lifecycle.</p>
+
 </html>

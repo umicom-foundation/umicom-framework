@@ -27,6 +27,11 @@ extern "C" {
  * explicit action. Only mapped controls accept actions. Closing/unmapping the
  * panel prevents late publication. The panel owns report and view lifetimes;
  * its host must not destroy individual controls. No tests or tools execute. */
+/* Cancellation boundary: closing/unmapping before admission prevents late
+ * publication. Once text is accepted, its source/status labels finish updating
+ * even if an observer hides the host from that text notification. Cancel load
+ * cannot undo an already accepted page. The panel retains owned widgets through
+ * completion; callers must not replace or destroy its individual controls. */
 GtkWidget *UmiGtk4CtestReportCreate(void);
 /* GTK-thread observation; cancellation retires publication but an in-progress
  * local file read may still be releasing resources while this returns true. */
