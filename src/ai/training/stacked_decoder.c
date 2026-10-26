@@ -12,6 +12,7 @@
 #include "umicom/ai/training/selected_loss.h"
 #include "umicom/ai/training/transformer.h"
 #include "stacked_decoder_internal.h"
+#include "umicom/ai/training/stacked_projection_trace.h"
 
 #include <math.h>
 #include <stdint.h>
@@ -264,9 +265,51 @@ static UmiStatus StackedValidateInputs(
     return UMI_STATUS_OK;
 }
 
-static UmiStatus StackedForward(
+/* The projection observer sees EXACTLY the tensors used by the canonical
+ * Transformer block. Capturing rows is deliberately not a parallel kernel. */
+typedef struct StackedProjectionObserver {
+    size_t currentLayer;
+    size_t rows;
+    size_t channels;
+    float *keys;
+    float *values;
+    size_t capturedRoles;
+} StackedProjectionObserver;
+
+static UmiStatus StackedObserveProjection(
+    void *context, UmiAiTrainingTape *tape,
+    UmiAiTrainingTransformerProjection projection,
+    const UmiAiTrainingTensor *input,
+    const UmiAiTrainingTensor *weights,
+    UmiAiTrainingTensor **outTensor)
+{
+    StackedProjectionObserver *observer = context;
+    UmiAiTrainingTensor *result = NULL;
+    UmiStatus status = UmiAiTrainingMatmul(tape, input, weights, &result);
+    if (status != UMI_STATUS_OK) return status;
+    if (projection == UMI_AI_TRANSFORMER_PROJECTION_KEY ||
+        projection == UMI_AI_TRANSFORMER_PROJECTION_VALUE) {
+        size_t rows = 0U, channels = 0U;
+        status = UmiAiTrainingTensorShape(result, &rows, &channels);
+        if (status != UMI_STATUS_OK || rows != observer->rows ||
+            channels != observer->channels) return UMI_STATUS_INVALID_STATE;
+        const size_t offset = observer->currentLayer * rows * channels;
+        float *destination = projection == UMI_AI_TRANSFORMER_PROJECTION_KEY
+            ? observer->keys + offset : observer->values + offset;
+        status = UmiAiTrainingTensorValues(result, destination, rows * channels);
+        if (status != UMI_STATUS_OK) return status;
+        observer->capturedRoles |= projection == UMI_AI_TRANSFORMER_PROJECTION_KEY
+            ? 1U : 2U;
+    }
+    *outTensor = result;
+    return UMI_STATUS_OK;
+}
+
+static UmiStatus StackedForwardWithObservation(
     UmiAiTrainingStackedDecoder *model,
-    const size_t *inputs, size_t count, UmiAiTrainingTensor **outLogits)
+    const size_t *inputs, size_t count,
+    StackedProjectionObserver *observer,
+    UmiAiTrainingTensor **outLogits)
 {
     size_t positions[UMI_AI_STACKED_MAX_CONTEXT] = {0};
     UmiAiTrainingTensor *token = NULL, *position = NULL, *state = NULL;
@@ -304,8 +347,20 @@ static UmiStatus StackedForward(
             model->parameters[first + UMI_STACKED_FEED_FORWARD_DOWN],
             model->parameters[first + UMI_STACKED_FEED_FORWARD_DOWN_BIAS]
         };
-        STACKED_CALL(UmiAiTrainingTransformerBlockForward(
-            model->tape, state, &parameters, &blockConfig, &next));
+        if (observer != NULL) {
+            observer->currentLayer = layer;
+            observer->capturedRoles = 0U;
+            STACKED_CALL(UmiAiTrainingTransformerBlockForwardWithProjections(
+                model->tape, state, &parameters, &blockConfig,
+                StackedObserveProjection, observer, &next));
+            if (observer->capturedRoles != 3U)
+                return UMI_STATUS_INVALID_STATE;
+        } else {
+            /* The historical forward retains its exact original entry point
+             * and operation order when observation is not requested. */
+            STACKED_CALL(UmiAiTrainingTransformerBlockForward(
+                model->tape, state, &parameters, &blockConfig, &next));
+        }
         state = next;
     }
     STACKED_CALL(UmiAiTrainingMatmul(model->tape, state,
@@ -313,6 +368,95 @@ static UmiStatus StackedForward(
 #undef STACKED_CALL
     *outLogits = logits;
     return UMI_STATUS_OK;
+}
+
+/* Preserve the existing internal canonical forward for training, evaluation
+ * and all pre-existing inference APIs. No hooks are installed in that path. */
+static UmiStatus StackedForward(
+    UmiAiTrainingStackedDecoder *model,
+    const size_t *inputs, size_t count, UmiAiTrainingTensor **outLogits)
+{
+    return StackedForwardWithObservation(model, inputs, count, NULL, outLogits);
+}
+
+/* Capture copies all outputs privately before publishing. It intentionally
+ * runs the same model with the same positions and heads as DecoderLogits. */
+static int StackedTraceRangesOverlap(
+    const void *a, size_t aBytes, const void *b, size_t bBytes)
+{
+    const uintptr_t x = (uintptr_t)a;
+    const uintptr_t y = (uintptr_t)b;
+    if (x > UINTPTR_MAX - aBytes || y > UINTPTR_MAX - bBytes) return 1;
+    return x < y + bBytes && y < x + aBytes;
+}
+
+UmiStatus UmiAiTrainingStackedDecoderTraceProjections(
+    UmiAiTrainingStackedDecoder *model,
+    const size_t *inputIds, size_t tokenCount,
+    float *outKeys, size_t keyCapacity,
+    float *outValues, size_t valueCapacity,
+    float *outLogits, size_t logitCapacity)
+{
+    UmiAiTrainingTensor *logits = NULL;
+    StackedProjectionObserver observer = {0};
+    UmiStatus status, clean;
+    float *candidate = NULL;
+    size_t keyCount, logitCount;
+    status = StackedValidateInputs(model, inputIds, NULL, NULL, tokenCount, 0);
+    if (status != UMI_STATUS_OK) return status;
+    if (outKeys == NULL || outValues == NULL || outLogits == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    keyCount = (size_t)model->config.transformerLayers * tokenCount *
+               (size_t)model->config.channels;
+    logitCount = tokenCount * (size_t)model->config.vocabularySize;
+    if (keyCapacity < keyCount || valueCapacity < keyCount ||
+        logitCapacity < logitCount) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (StackedTraceRangesOverlap(outKeys, keyCount * sizeof(float),
+                                  outValues, keyCount * sizeof(float)) ||
+        StackedTraceRangesOverlap(outKeys, keyCount * sizeof(float),
+                                  outLogits, logitCount * sizeof(float)) ||
+        StackedTraceRangesOverlap(outValues, keyCount * sizeof(float),
+                                  outLogits, logitCount * sizeof(float)) ||
+        StackedTraceRangesOverlap(inputIds, tokenCount * sizeof(size_t),
+                                  outKeys, keyCount * sizeof(float)) ||
+        StackedTraceRangesOverlap(inputIds, tokenCount * sizeof(size_t),
+                                  outValues, keyCount * sizeof(float)) ||
+        StackedTraceRangesOverlap(inputIds, tokenCount * sizeof(size_t),
+                                  outLogits, logitCount * sizeof(float)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* The model's established bounds make this addition safe. A diagnostic
+     * check also protects future extensions from inadvertent arithmetic. */
+    if (keyCount > (SIZE_MAX / sizeof(float) - logitCount) / 2U)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    candidate = malloc((keyCount * 2U + logitCount) * sizeof(float));
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    observer.rows = tokenCount;
+    observer.channels = (size_t)model->config.channels;
+    observer.keys = candidate;
+    observer.values = candidate + keyCount;
+    status = StackedForwardWithObservation(model, inputIds, tokenCount,
+                                            &observer, &logits);
+    if (status == UMI_STATUS_OK)
+        status = UmiAiTrainingTensorValues(logits,
+                  candidate + keyCount * 2U, logitCount);
+    if (status == UMI_STATUS_OK) {
+        for (size_t index = 0U; index < keyCount * 2U + logitCount; ++index) {
+            if (!isfinite(candidate[index])) {
+                status = UMI_STATUS_INVALID_STATE;
+                break;
+            }
+        }
+    }
+    clean = UmiAiTrainingTapeRollback(model->tape, model->parameterCount);
+    if (clean != UMI_STATUS_OK) status = clean;
+    if (status == UMI_STATUS_OK) {
+        memcpy(outKeys, candidate, keyCount * sizeof(float));
+        memcpy(outValues, candidate + keyCount, keyCount * sizeof(float));
+        memcpy(outLogits, candidate + keyCount * 2U,
+               logitCount * sizeof(float));
+    }
+    free(candidate);
+    return status;
 }
 
 UmiStatus UmiAiTrainingStackedDecoderLogits(

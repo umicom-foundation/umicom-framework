@@ -1,4 +1,17 @@
-/* Umicom Framework | Held-out evaluation rejection tests | Sammy Hegab | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_inference_evaluation_rejections.c
+ *
+ * PURPOSE:
+ *   Held-out evaluation rejection tests
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "stacked_inference_fixture.h"
 int main(void)
 {

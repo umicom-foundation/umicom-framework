@@ -1,4 +1,17 @@
-/* Umicom Framework | Exact byte tokenizer round-trip | Sammy Hegab | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_inference_bytes.c
+ *
+ * PURPOSE:
+ *   Exact byte tokenizer round-trip
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "stacked_inference_fixture.h"
 #include "umicom/ai/training/byte_tokenizer.h"
 int main(void)

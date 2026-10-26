@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: learning/native-ai-stacked-kv/demo.c
- * PURPOSE: Explain actual native K/V row ownership and the full rollover
- *          rebuild requirement without misrepresenting cache throughput.
- * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Explain actual native K/V row ownership and the full rollover rebuild requirement without misrepresenting cache throughput.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/stacked_kv_work.h"
 #include <inttypes.h>

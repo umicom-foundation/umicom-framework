@@ -1,4 +1,17 @@
-/* Umicom Framework | Held-out model selection | Sammy Hegab | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_inference_selection.c
+ *
+ * PURPOSE:
+ *   Held-out model selection
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "stacked_inference_fixture.h"
 #include "umicom/ai/training/stacked_model_selection.h"
 int main(void)

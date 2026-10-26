@@ -1,8 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework | tests/ai_training/test_stacked_prefix_causality.c
- * PURPOSE: Compare all unchanged-prefix vocabulary logits under distinct
- *          FUTURE suffix tokens on the actual multi-layer Transformer.
- * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | LICENCE: MIT
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_prefix_causality.c
+ *
+ * PURPOSE:
+ *   Compare all unchanged-prefix vocabulary logits under distinct FUTURE suffix tokens on the actual multi-layer Transformer.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/stacked_prefix_qualification.h"
 #include <math.h>

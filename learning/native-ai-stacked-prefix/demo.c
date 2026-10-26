@@ -1,8 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework | native multi-layer prefix inference teaching demo
- * PURPOSE: Show real full-context work, causal-prefix evidence and the
- *          separate CONDITIONAL cache work estimate without claiming speedup.
- * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | LICENCE: MIT
+ * Umicom Framework
+ * File: learning/native-ai-stacked-prefix/demo.c
+ *
+ * PURPOSE:
+ *   Show real full-context work, causal-prefix evidence and the separate CONDITIONAL cache work estimate without claiming speedup.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/stacked_prefix_inference.h"
 #include "umicom/ai/training/stacked_prefix_qualification.h"

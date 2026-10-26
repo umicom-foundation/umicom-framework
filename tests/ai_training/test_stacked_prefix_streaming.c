@@ -1,8 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework | tests/ai_training/test_stacked_prefix_streaming.c
- * PURPOSE: Compare one-shot and streaming unpadded generation against the
- *          REAL established stacked decoder and nucleus sampler.
- * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | LICENCE: MIT
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_prefix_streaming.c
+ *
+ * PURPOSE:
+ *   Compare one-shot and streaming unpadded generation against the REAL established stacked decoder and nucleus sampler.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/stacked_prefix_inference.h"
 #include "umicom/ai/training/stacked_prefix_cache_plan.h"

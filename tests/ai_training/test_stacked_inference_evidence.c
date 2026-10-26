@@ -1,4 +1,17 @@
-/* Umicom Framework | Reproducibility evidence | Sammy Hegab | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_inference_evidence.c
+ *
+ * PURPOSE:
+ *   Reproducibility evidence
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "stacked_inference_fixture.h"
 #include "umicom/ai/training/stacked_generation_evidence.h"
 int main(void)

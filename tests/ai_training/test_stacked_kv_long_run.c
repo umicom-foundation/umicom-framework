@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/ai_training/test_stacked_kv_long_run.c
- * PURPOSE: Validate 500 explicit full-layer rollovers, bounded allocation,
- *          stable row addressing and reproducible reset without decoder math.
- * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Validate 500 explicit full-layer rollovers, bounded allocation, stable row addressing and reproducible reset without decoder math.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/stacked_kv_store.h"
 #include <math.h>

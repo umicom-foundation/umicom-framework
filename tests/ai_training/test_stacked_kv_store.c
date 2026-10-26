@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/ai_training/test_stacked_kv_store.c
- * PURPOSE: Exercise actual per-layer K/V storage, prefix appends and
- *          mathematically mandatory full-layer rollover replacement.
- * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Exercise actual per-layer K/V storage, prefix appends and mathematically mandatory full-layer rollover replacement.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/stacked_kv_store.h"
 #include <math.h>

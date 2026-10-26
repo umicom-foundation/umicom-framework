@@ -1,4 +1,17 @@
-/* Umicom Framework | Independent canonical decoder replay | Sammy Hegab | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_inference_reference.c
+ *
+ * PURPOSE:
+ *   Independent canonical decoder replay
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "stacked_inference_fixture.h"
 #include <stdlib.h>
 

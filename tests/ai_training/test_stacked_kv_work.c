@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/ai_training/test_stacked_kv_work.c
- * PURPOSE: Check real cache-storage row counters against the established
- *          Framework conditional work planner for prefix and rollover.
- * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Check real cache-storage row counters against the established Framework conditional work planner for prefix and rollover.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/stacked_kv_work.h"
 #include <stdio.h>

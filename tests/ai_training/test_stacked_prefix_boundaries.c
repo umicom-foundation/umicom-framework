@@ -1,8 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework | tests/ai_training/test_stacked_prefix_boundaries.c
- * PURPOSE: Ensure rejected pulls and stale borrowed models cannot publish
- *          a partial result or modify an established model checkpoint.
- * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | LICENCE: MIT
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_prefix_boundaries.c
+ *
+ * PURPOSE:
+ *   Ensure rejected pulls and stale borrowed models cannot publish a partial result or modify an established model checkpoint.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/stacked_prefix_inference.h"
 #include "umicom/ai/training/stacked_prefix_qualification.h"

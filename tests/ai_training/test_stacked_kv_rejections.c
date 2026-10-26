@@ -1,8 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/ai_training/test_stacked_kv_rejections.c
- * PURPOSE: Test failure-atomic K/V ownership and shape/identity rejection.
- * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Test failure-atomic K/V ownership and shape/identity rejection.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/stacked_kv_store.h"
 #include <math.h>
