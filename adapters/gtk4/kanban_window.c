@@ -109,9 +109,30 @@ static void Work(GTask *task, gpointer source, gpointer task_data, GCancellable 
     g_task_return_boolean(task, TRUE);
 }
 static void Complete(GObject *source, GAsyncResult *result, gpointer data);
+/* Keep the original source-object retention for engineering review. GTask
+ * can finalize its source object on the worker, so the replacement retains the
+ * native window in callback data and explicitly releases it on the owner. */
+#if 0
 static void Dispatch(WindowState *state, Job *job)
 {
     GTask *task = g_task_new(state->window, NULL, Complete, NULL);
+    g_task_set_task_data(task, job, FreeJob);
+    g_task_run_in_thread(task, Work);
+    g_object_unref(task);
+}
+#endif
+static void CompleteOnOwner(GObject *source, GAsyncResult *result, gpointer data)
+{
+    (void)source;
+    GtkWindow *window = data;
+    Complete(G_OBJECT(window), result, NULL);
+    /* Complete can schedule a second document-lease cleanup job. That job
+     * takes its own reference before this callback releases the old one. */
+    g_object_unref(window);
+}
+static void Dispatch(WindowState *state, Job *job)
+{
+    GTask *task = g_task_new(NULL, NULL, CompleteOnOwner, g_object_ref(state->window));
     g_task_set_task_data(task, job, FreeJob);
     g_task_run_in_thread(task, Work);
     g_object_unref(task);

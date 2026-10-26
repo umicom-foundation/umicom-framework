@@ -107,6 +107,16 @@ Run widget operations on their owning UI context. Workers receive immutable inpu
 explicit cancellation and bounded work. Completion must handle cancellation, disposal,
 owner replacement, and a successful mutation followed by failed UI publication.
 
+A `GTask` can be finalized on its worker thread. When task data owns GTK objects,
+release that data on the owner context after the worker has returned; do not rely
+on final task unref to select the right thread. In an ordinary ready callback
+without early return-on-cancel, clear owned task data after all callback accesses.
+If early cancellation allows the worker to continue, separate its remaining inputs
+from UI-owned state and wait for the correct lifetime boundary. Add a regression
+that closes the host and drops every test-held widget reference before completion;
+keeping an extra root reference can hide a finalizer-thread defect. See the
+[GLib task thread-safety contract](https://docs.gtk.org/gio/class.Task.html#thread-safety-considerations).
+
 Use the public API of composite controls. A returned GtkWidget may be a container,
 not its visible button or entry. Tests must open a collapsed section before interacting
 with its controls. Do not alter product defaults solely to make a widget-tree search pass.
@@ -211,6 +221,12 @@ after editing. A declaration found by text search may belong to an existing disa
 block. Determine complete replacement boundaries from the original file, keep them
 non-overlapping, and verify that new helpers and their callers remain active together.
 A balanced count of preprocessor directives alone does not prove this.
+
+Source files must remain text. Write a C null character as the two source characters
+`\0` inside its literal; do not insert an actual zero byte when editing or generating
+source. Inspect the final file bytes, not only the text displayed by an editor. Treat
+a binary-file result from a source search as an encoding defect to investigate. Keep
+byte-level checks separate from compiler and runtime validation.
 
 ## Before requesting review
 

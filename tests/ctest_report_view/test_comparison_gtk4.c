@@ -20,6 +20,7 @@
 #include "../support/main_context.h"
 #include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/ctest_comparison.h"
+#include "umicom/base/sha256.h"
 
 static GtkWidget *Find(GtkWidget *root, const char *tag)
 {
@@ -87,7 +88,7 @@ int main(int argc, char **argv)
     const char *cases[] = {"normal", "paging", "captured-before", "captured-after", "cancel-load",
         "hide-show", "close-load", "hidden", "retained", "replacement-before", "replacement-after",
         "malformed", "relative", "clear", "hide-clear", "cancel-render", "hide-render",
-        "close-render", "reentrant", "empty", "unchanged-failure", "cancel-replacement"};
+        "close-render", "reentrant", "empty", "unchanged-failure", "cancel-replacement", "identity-reload"};
     CHECK(argc == 2 && Known(argv[1], cases, sizeof cases / sizeof cases[0]));
     const char *test = argv[1];
     if (!gtk_init_check()) return 77;
@@ -103,6 +104,13 @@ int main(int argc, char **argv)
     Write(before, !strcmp(test, "unchanged-failure") ? many : empty);
     Write(after, !strcmp(test, "empty") ? empty : many);
     Write(malformed, "<testsuite>");
+    char before_hash[UMI_SHA256_HEX_CAPACITY], after_hash[UMI_SHA256_HEX_CAPACITY];
+    const char *before_xml = !strcmp(test, "unchanged-failure") ? many : empty;
+    const char *after_xml = !strcmp(test, "empty") ? empty : many;
+    OK(UmiSha256Buffer(before_xml, strlen(before_xml), before_hash));
+    OK(UmiSha256Buffer(after_xml, strlen(after_xml), after_hash));
+    char *accepted_identity = g_strdup_printf("Baseline bytes: %zu | SHA-256: %s\nCurrent bytes: %zu | SHA-256: %s\n",
+        strlen(before_xml), before_hash, strlen(after_xml), after_hash);
     free(many);
     GtkApplication *application = gtk_application_new("org.umicom.SavedComparison", G_APPLICATION_NON_UNIQUE);
     CHECK(g_application_register(G_APPLICATION(application), NULL, NULL));
@@ -160,6 +168,7 @@ int main(int argc, char **argv)
     if (!strcmp(test, "cancel-load") || !strcmp(test, "hide-show") || !strcmp(test, "close-load")) {
         CHECK(!accepted[0]); g_free(accepted); goto done;
     }
+    CHECK(strstr(accepted, accepted_identity));
     if (!strcmp(test, "empty") || !strcmp(test, "unchanged-failure")) {
         CHECK(strstr(accepted, "No outcome changes. This does not establish an all-passed result."));
         if (!strcmp(test, "unchanged-failure")) CHECK(strstr(accepted, "Unchanged outcomes: 130"));
@@ -187,6 +196,15 @@ int main(int argc, char **argv)
         CHECK(!strcmp(gtk_label_get_text(GTK_LABEL(Find(root, "ctest.comparison.before-source"))), before));
         CHECK(!strcmp(gtk_label_get_text(GTK_LABEL(Find(root, "ctest.comparison.after-source"))), after));
     }
+    if (!strcmp(test, "identity-reload")) {
+        gtk_editable_set_text(GTK_EDITABLE(left), after);
+        Click(root, "ctest.comparison.open"); Wait(root);
+        char *current = Text(buffer);
+        CHECK(strstr(current, "Unchanged outcomes: 130"));
+        CHECK(!strstr(current, before_hash) && strstr(current, after_hash));
+        CHECK(!strcmp(gtk_label_get_text(GTK_LABEL(Find(root, "ctest.comparison.before-source"))), after));
+        g_free(current);
+    }
     if (!strcmp(test, "relative")) {
         gtk_editable_set_text(GTK_EDITABLE(right), "after.xml");
         Click(root, "ctest.comparison.open");
@@ -203,6 +221,7 @@ int main(int argc, char **argv)
     }
     g_free(accepted);
 done:
+    g_free(accepted_identity);
     gtk_window_destroy(window);
     Wait(root);
     g_object_unref(buffer);

@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Review evidence before completing Kanban cards</title>
+<style>body{max-width:64rem;margin:3rem auto;padding:0 1rem;font:18px/1.6 system-ui;color:#17212b}code,pre{background:#f0f3f6}pre{padding:1rem;overflow:auto}h1,h2{line-height:1.2}</style>
+<h1>Review evidence before completing Kanban cards</h1>
+<p>A Done card is a planning decision. It does not prove that software passed its tests. The Framework completion-plan service lets a host record who reviewed a card, which source and configuration they reviewed, and which evidence they accepted before moving cards to Done.</p>
+<h2>What is available</h2>
+<p>This is a synchronous C23 service in <code>Umicom::kanban</code>, declared in <code>umicom/kanban/completion_plan.h</code>. It creates an owned review plan, checks whether that plan still applies, applies its reviewed card moves atomically, and encodes or decodes private review records. <!-- The original headless-only integration description is retained for review; the native adapter now shares the same checked service. Existing boards and their normal editing API retain their behavior. Native menus, automatic test-result verification and mandatory review enforcement are separate host integrations. -->Existing boards and their normal editing API retain their behavior. The shared GTK4 board now includes a private completion-review section, also available to Studio hosts using that board. Automatic test-result verification and mandatory review enforcement are separate host responsibilities.</p>
+<h2>Review and complete cards</h2>
+<ol>
+<li>Keep the board under one serialized owner. Finish the work and retain the relevant build, test, installation or manual-review evidence. Keep private logs outside public repositories.</li>
+<li>Inspect each card's acceptance criteria against that evidence. Read failures and skipped coverage explicitly. A report with unchanged failures or removed tests is not proof of a repair.</li>
+<li>Choose the target Done column and a local reviewer identifier. Record the source/build identity and configuration you actually reviewed. These values are declared context, not authentication.</li>
+<li>Prepare one <code>UmiKanbanCompletionRecord</code> per selected card. Use <code>UMI_KANBAN_COMPLETION_REVIEWED</code> with a 64-character lowercase SHA-256 evidence digest and a rationale describing what was accepted. For several files, retain a manifest and identify that manifest. A digest identifies bytes; it does not validate their contents.</li>
+<li>If accepting an explicit review exception, use <code>UMI_KANBAN_COMPLETION_EXCEPTION</code> and describe why. A digest is optional for an exception. An exception still cannot bypass incomplete checklists, unresolved dependencies, an explicit blocker, work-in-progress limits or disallowed transitions.</li>
+<li>Call <code>UmiKanbanCompletionPlanCreate</code> with the observed board revision. It checks every record and previews the complete transaction on an independent board copy. Creation changes neither the live board nor its activity.</li>
+<li>Retain the private plan, then explicitly call <code>UmiKanbanCompletionPlanApply</code>. It rechecks the exact board content and revision before applying all moves in one existing board transaction. A failure changes no cards. Successful completion advances the board revision once.</li>
+<li>Save the board through its normal document owner. Keep the review plan as historical evidence. Board saving and plan retention are separate storage operations, not one disk transaction.</li>
+</ol>
+<h2>Use the native board</h2>
+<ol>
+<li>Select the card to review. For the development workflow it must be ready to leave Testing. Open <strong>Review evidence before completing cards</strong> below the board.</li>
+<li>Enter your reviewer identifier, the source and configuration you reviewed, the evidence file's lowercase SHA-256 digest, and an acceptance rationale. Review the evidence yourself. Typing a digest does not verify the evidence or run any tests.</li>
+<li>For a deliberate exception, select <strong>Record an explicit review exception</strong> and state the reason. The digest may then be empty, but normal board completion rules still apply.</li>
+<li>Enter an absolute path ending in <code>.umicompletion</code> inside an existing private directory. Choose a new filename, then click <strong>Save selected card review</strong>. The file operation runs in the background using the selected card and fields captured at the click. Editing the fields during the save does not change that saved decision.</li>
+<li>Inspect the retained preview: card ID, destination, board revision, source, configuration, evidence and rationale. A successful save has not moved the card. Check the approval box and click <strong>Apply reviewed completion</strong> to request the move.</li>
+<li>Save the board through its host. The review file remains historical evidence, even if a later board save fails. Changing selection after saving does not retarget the retained decision to another card.</li>
+</ol>
+<p>To inspect an earlier decision, enter its path and click <strong>Load retained review</strong>. Loading never changes a board. A separate approval and Apply are required, and stale or different board content is refused. The host chooses the first configured Done-stage column when capturing a new review; its identifier appears in the preview.</p>
+<p>Discard removes the displayed review without deleting its file. A refused load or save retains the earlier accepted preview. Existing files are never overwritten. Closing, hiding or retiring the control during a request suppresses its late preview; an already dispatched file write can still finish. If a preview is interrupted, load or save it again before approval.</p>
+<p>This optional control does not replace ordinary drag-and-drop or board editing. It provides a review record rather than authentication or a mandatory approval policy. The private fields and files are separate from the public website export.</p>
+<h2>Reuse a saved test report as evidence</h2>
+<p>When the shared saved-report browser is included in the native build, open <strong>Inspect saved CTest evidence</strong> inside completion review. Choose a completed CTest JUnit XML file, click <strong>Open report</strong>, and inspect its results. The browser identifies the exact bytes it parsed and displays complete outcome counts even when the visible test list is filtered.</p>
+<ol>
+<li>Review the report's scope, failures, timeouts, skipped tests, disabled tests and tests that did not run. Confirm separately which source and configuration produced it; the XML digest cannot establish this.</li>
+<li>Click <strong>Use displayed report digest</strong>. This copies the accepted report's digest into the draft without rereading its filename. It leaves source identity, configuration and rationale for your explicit review.</li>
+<li>Save a new completion review, inspect its retained preview, then approve it separately. Choosing another report revokes readiness of the older displayed decision, even if its preview remains available for inspection.</li>
+</ol>
+<p>A missing or still-loading report cannot supply evidence. A failed or empty report can be inspected and referenced, but is never labeled a successful qualification automatically. Using its digest alone moves no cards, approves no review, saves no board and publishes nothing.</p>
+<h2>Why a plan can become stale</h2>
+<p>The plan captures the board's complete portable archive digest, board ID and live revision. A different board with the same ID and revision is refused if its content differs. Any subsequent board edit, including an unrelated assignment, requires a fresh explicit review. This conservative rule avoids silently applying acceptance to different criteria. No automatic rebase is provided.</p>
+<p>Opening a board archive creates a new live revision starting at 1. A plan from the previous session remains historical evidence and normally needs fresh review. Reapplying a successfully used plan is refused because the live revision has advanced.</p>
+<h2>Keep review records private</h2>
+<p>Use <code>UmiKanbanCompletionPlanEncode</code> to measure and encode the plan. First pass a null buffer and zero capacity, allocate the returned size, then encode. Archives are limited to 256 KiB and at most 128 card decisions. Short buffers remain unchanged. Decode owns its strings independently and refuses damaged or malformed input.</p>
+<p>The archive contains reviewer attribution, private rationale, source context and evidence identifiers. It is plaintext with a corruption checksum; it is neither encrypted nor signed. Store it in a private directory with appropriate permissions. The board archive and reviewed public-roadmap projection do not automatically include these records. Publish only separately reviewed public fields.</p>
+<h2>Retain review files without replacing earlier evidence</h2>
+<p>The optional native adapter in <code>Umicom::kanban_storage</code> declares <code>UmiKanbanCompletionPlanWriteNew</code> and <code>UmiKanbanCompletionPlanLoadFile</code> in <code>umicom/kanban/completion_storage.h</code>. Supply an absolute path ending in <code>.umicompletion</code> inside an existing private directory you control. In an interactive host, call file operations on a worker.</p>
+<ol><li>Write the fully reviewed plan to a new filename. Existing files are refused, including an earlier review. A failed write can leave a partial new file; retain it for diagnosis and choose a new name.</li><li>After a successful write, explicitly apply the plan on the board owner thread and save the board separately. A saved review is evidence of the decision, not proof that the board save succeeded.</li><li>Load a retained plan into an independent candidate. Loading performs no board edits. Call <code>UmiKanbanCompletionPlanCheck</code> against the current board before offering application.</li></ol>
+<p>The file adapter uses the shared bounded input and exclusive output services. It does not create directories, overwrite earlier decisions, authenticate reviewers or publish any data. The complete portable board archive and the separate review file have independent lifetimes.</p>
+<h2>Recover from refusal</h2>
+<ol>
+<li>For a stale plan, reread the current board and review the changed content. Create a fresh plan rather than changing the old plan's identity.</li>
+<li>For a policy refusal, inspect the card's checklist, blocker, dependencies, current column and destination limits. Resolve the actual condition; an exception is not a bypass.</li>
+<li>For malformed evidence fields, use a complete lowercase digest, bounded UTF-8 rationale, a valid reviewer ID, and nonempty source/configuration context. Missing evidence must remain explicit.</li>
+<li>For an archive error, retain the original bytes for diagnosis. A successfully decoded plan still needs a current-board check before application.</li>
+</ol>
+<p>All accepted evidence and review exceptions are supplied by the caller. The core planning service performs no file reads, test execution, signature validation, authentication or network publication. It cannot establish that a report belongs to the declared source without the host's independent evidence.</p>
+</html>

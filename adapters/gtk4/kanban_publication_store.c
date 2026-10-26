@@ -121,6 +121,9 @@ static void Complete(GObject *source, GAsyncResult *result, gpointer data) {
                        "and complete archive.");
   }
   s->pending = FALSE;
+  /* GTK-owning job data must be released on this owner callback, rather
+   * than depending on which thread eventually drops the final GTask ref. */
+  g_task_set_task_data(G_TASK(result), NULL, NULL);
 }
 static void Dispatch(GtkButton *button, gpointer data) {
   PlanPanel *s = State(data);

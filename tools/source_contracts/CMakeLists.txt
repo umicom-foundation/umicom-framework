@@ -48,7 +48,7 @@ if(BUILD_TESTING)
         "${_umicom_contract_root}/src/source_contracts")
     set_target_properties(umicom-source-contract-tests PROPERTIES
         C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
-    foreach(_case metadata lexer identity presets filesystem portfolio rules)
+    foreach(_case metadata lexer identity presets filesystem portfolio rules binary-source)
         file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/fixtures/${_case}")
         add_test(NAME "framework.source_contracts.${_case}"
             COMMAND umicom-source-contract-tests "${_case}"

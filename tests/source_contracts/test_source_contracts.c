@@ -390,6 +390,45 @@ static int rules(const char *base)
     return 0;
 }
 
+
+/* A valid header cannot hide binary data later in a source file. Exercise both
+ * source extensions and public headers, including bytes beyond the read chunk.
+ * The escaped C spelling remains ordinary source text and must still pass. */
+static int binarySource(const char *base)
+{
+    const char *extensions[] = {".c", ".inc", ".h"};
+    const char *banner = "/* File: fixture\nPurpose: Retain source text.\n"
+        "Organisation: Test team\nLicence: MIT\n*/\n";
+    for (size_t kind = 0U; kind < 3U; ++kind) {
+        char folder[32]; CHECK(snprintf(folder, sizeof folder, "binary-%zu", kind) > 0);
+        char *root = ScJoin(base, folder); CHECK(root && directory(root) == 0);
+        char leaf[32]; CHECK(snprintf(leaf, sizeof leaf, "fixture%s", extensions[kind]) > 0);
+        char *path = ScJoin(root, leaf); CHECK(path);
+        char content[512];
+        CHECK(snprintf(content, sizeof content,
+            "%s#ifndef BINARY_FIXTURE_H\n#define BINARY_FIXTURE_H\n"
+            "static const char marker = '\\0';\n#endif\n", banner) > 0);
+        CHECK(writeText(path, content) == 0);
+        const char *roots[] = {root};
+        UmiSourceContractReport report = {0};
+        CHECK(UmiSourceContractAudit(roots, 1U, kind == 2U, &report) == 0);
+        CHECK(report.files_checked == 1U && report.input_errors == 0U);
+        char *read = ScRead(path); CHECK(read && strcmp(read, content) == 0); free(read);
+        /* Append after a complete header and more than one 8192-byte read.
+         * Include trailing ordinary text to catch accidental strlen truncation. */
+        FILE *file = fopen(path, "ab"); CHECK(file);
+        for (size_t i = 0U; i < 9000U; ++i) CHECK(fputc(' ', file) != EOF);
+        CHECK(fputc(0, file) != EOF);
+        CHECK(fputs("/* trailing text */\n", file) >= 0 && fclose(file) == 0);
+        read = ScRead(path); CHECK(read == NULL);
+        report = (UmiSourceContractReport){0};
+        CHECK(UmiSourceContractAudit(roots, 1U, kind == 2U, &report) == 2);
+        CHECK(report.input_errors == 1U && report.files_checked == 0U);
+        free(path); free(root);
+    }
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     if (argc < 2 || argc > 3) return 2;
@@ -398,6 +437,7 @@ int main(int argc, char **argv)
     else if (strcmp(argv[1], "lexer") == 0) result = lexer();
     else if (strcmp(argv[1], "identity") == 0) result = identity();
     else if (strcmp(argv[1], "presets") == 0) result = presets();
+    else if (strcmp(argv[1], "binary-source") == 0 && argc == 3) result = binarySource(argv[2]);
     else if (strcmp(argv[1], "filesystem") == 0 && argc == 3) result = filesystem(argv[2]);
     else if (strcmp(argv[1], "portfolio") == 0 && argc == 3) result = portfolio(argv[2]);
     else if (strcmp(argv[1], "rules") == 0 && argc == 3) result = rules(argv[2]);

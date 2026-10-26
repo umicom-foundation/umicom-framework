@@ -50,3 +50,25 @@ endif()
 install(FILES "${_kanban_root}/docs/guides/saved-publication-plans.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides" COMPONENT Framework)
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomKanbanPublicationPlan.cmake")
+
+# Completion review is optional and retains private evidence outside the board archive.
+install(FILES "${_kanban_root}/include/umicom/kanban/completion_plan.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/kanban" COMPONENT Framework)
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_kanban include/umicom/kanban/completion_plan.h)
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomKanbanCompletion.cmake")
+
+foreach(component Framework FrameworkSDK)
+    install(FILES "${_kanban_root}/docs/guides/kanban-completion-review.html"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides" COMPONENT ${component})
+endforeach()
+unset(component)
+
+# Private detail edits preserve all fields absent from a host form.
+install(FILES "${_kanban_root}/include/umicom/kanban/card_details.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/kanban" COMPONENT Framework)
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_kanban include/umicom/kanban/card_details.h)
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomKanbanCardDetails.cmake")

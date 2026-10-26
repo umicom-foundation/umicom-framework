@@ -11,8 +11,10 @@
 #include "umicom/kanban/developers.h"
 #include "umicom/kanban/publication.h"
 #include "umicom/ui/gtk4/kanban_publication_store.h"
+#include "umicom/ui/gtk4/kanban_completion.h"
 #include "umicom/ui/gtk4/drop_down.h"
 #include "umicom/kanban/view.h"
+#include "umicom/kanban/card_details.h"
 #include <string.h>
 #include "focus_handoff_private.h"
 
@@ -23,6 +25,11 @@ typedef struct Panel {
     GtkWidget *public_title, *public_summary, *public_developer, *site_title, *export_control;
     GtkTextBuffer *html;
     GtkWidget *public_plan_store;
+    GtkWidget *completion_review;
+    GtkWidget *details_form, *details_fields[2], *details_priority, *details_status;
+    GtkTextBuffer *details_description;
+    UmiKanbanCardDetailSnapshot details_snapshot;
+    bool details_ready, details_interrupted;
     UmiKanbanConfig config;
     UmiKanbanPublicCard *publication;
     size_t publication_count;
@@ -76,6 +83,13 @@ static void FreePanel(gpointer data)
         UmiKanbanPublicPlanGtk4Retire(panel->public_plan_store);
         g_object_unref(panel->public_plan_store);
     }
+    if (panel->completion_review != NULL) {
+        UmiKanbanCompletionGtk4Retire(panel->completion_review);
+        g_object_unref(panel->completion_review);
+    }
+    g_clear_object(&panel->details_fields[0]); g_clear_object(&panel->details_fields[1]);
+    g_clear_object(&panel->details_priority); g_clear_object(&panel->details_status);
+    g_clear_object(&panel->details_description);
     g_free(panel->drag_token); g_free(panel->publication); g_free(panel);
 }
 static GtkWidget *Label(const char *text)
@@ -140,6 +154,10 @@ static void SelectCard(GtkWidget *button, gpointer data)
                 g_strlcpy(owner, person.name, sizeof(owner));
             else g_strlcpy(owner, row.card.assignee, sizeof(owner));
         }
+        /* Returning to a formerly selected card must not revive a draft that
+         * was abandoned for another selection, even at the same revision. */
+        if (panel->details_ready && strcmp(panel->details_snapshot.card_id, row.card.id) != 0)
+            panel->details_ready = false;
         g_strlcpy(panel->selected, row.card.id, sizeof(panel->selected));
         panel->selection_revision = binding->revision;
         gtk_editable_set_text(GTK_EDITABLE(panel->title), g_utf8_validate(row.card.title, -1, NULL) ? row.card.title : "");
@@ -408,12 +426,16 @@ static void GeneratePublic(GtkWidget *button,gpointer data)
 }
 /* Shared persistence operates on immutable reviewed fields, never board I/O. */
 #include "kanban_publication_plan.inc"
+#include "kanban_completion_bridge.inc"
 
 static void Button(Panel *panel, GtkWidget *box, const char *text, GCallback callback)
 {
     GtkWidget *button = gtk_button_new_with_label(text); gtk_box_append(GTK_BOX(box), button);
     Bind(button, "clicked", callback, panel, NULL, NULL, 0U);
 }
+/* Reuse the board revision contract for private detail forms in every host. */
+#include "kanban_card_details.inc"
+
 UmiStatus UmiKanbanGtk4Refresh(GtkWidget *root)
 {
     if (!GTK_IS_WIDGET(root)) return UMI_STATUS_INVALID_ARGUMENT;
@@ -502,6 +524,20 @@ GtkWidget *UmiKanbanGtk4Create(UmiKanbanBoard *board)
     gtk_box_append(GTK_BOX(actions), panel->destination); Button(panel, actions, "Move selected", G_CALLBACK(MoveSelected));
     GtkWidget *scroll = gtk_scrolled_window_new(); gtk_widget_set_vexpand(scroll, TRUE); gtk_widget_set_size_request(scroll, -1, 260);
     panel->lanes = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 14); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), panel->lanes); gtk_box_append(GTK_BOX(panel->root), scroll);
+    GtkWidget *details = gtk_expander_new("Edit private card details");
+    gtk_widget_set_name(details, "kanban-card-details-expander");
+    gtk_expander_set_child(GTK_EXPANDER(details), CreateDetailsForm(panel));
+    gtk_box_append(GTK_BOX(panel->root), details);
+    /* Private completion review is separate from the public website fields.
+     * The first Done-stage column is shown in the retained decision preview. */
+    panel->completion_review = CreateCompletionReview(panel);
+    if (panel->completion_review != NULL) {
+        g_object_ref_sink(panel->completion_review);
+        GtkWidget *review = gtk_expander_new("Review evidence before completing cards");
+        gtk_widget_set_name(review, "kanban-completion-review");
+        gtk_expander_set_child(GTK_EXPANDER(review), panel->completion_review);
+        gtk_box_append(GTK_BOX(panel->root), review);
+    }
     GtkWidget *expander = gtk_expander_new("Review a public website snapshot"), *publication = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
     gtk_expander_set_child(GTK_EXPANDER(expander), publication); gtk_box_append(GTK_BOX(panel->root), expander);
     /* The original temporary-selection guidance is retained for review.
@@ -574,8 +610,10 @@ void UmiKanbanGtk4SetBusy(GtkWidget *root, bool busy)
     /* Guard borrowed model access before focus notifications. A reentrant
      * retirement takes precedence over this request to enable the controls. */
     panel->busy = busy;
-    panel->drag_card[0] = ' ';
+    if (busy) { panel->details_ready = false; panel->details_interrupted = true; }
+    panel->drag_card[0] = '\0';
     UmiKanbanPublicPlanGtk4SetBusy(panel->public_plan_store, busy);
+    UmiKanbanCompletionGtk4SetBusy(panel->completion_review, busy);
     if (busy) UmiGtk4ReleaseSubtreeFocus(root);
     gtk_widget_set_sensitive(root, panel->board != NULL && !panel->busy);
     g_object_unref(root);
@@ -588,9 +626,11 @@ void UmiKanbanGtk4Retire(GtkWidget *root)
     g_object_ref(root);
     panel->board = NULL;
     panel->busy = true;
-    panel->drag_card[0] = ' ';
+    panel->details_ready = false; panel->details_interrupted = true;
+    panel->drag_card[0] = '\0';
     UmiGtk4ReleaseSubtreeFocus(root);
     UmiKanbanPublicPlanGtk4Retire(panel->public_plan_store);
+    UmiKanbanCompletionGtk4Retire(panel->completion_review);
     UmiTextExportGtk4Retire(panel->export_control);
     gtk_widget_set_sensitive(root, FALSE);
     g_object_unref(root);

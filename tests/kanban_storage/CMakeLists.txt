@@ -8,6 +8,7 @@ add_subdirectory("${_root}/tests/kanban" "kanban-core")
 add_library(umi_kanban_native_files STATIC
     "${_root}/src/platform/path.c"
     "${_root}/src/platform/output_file.c"
+    "${_root}/src/platform/input_file.c"
     "${_root}/src/platform/file_lease.c"
     "${_root}/src/platform/rooted_files.c")
 add_library(Umicom::platform ALIAS umi_kanban_native_files)

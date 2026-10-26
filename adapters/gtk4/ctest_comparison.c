@@ -26,6 +26,7 @@ typedef struct ComparisonPanel {
     GtkWidget *root, *before, *after, *before_source, *after_source, *status;
     GtkTextBuffer *buffer;
     UmiCtestReportComparison *comparison;
+    UmiCtestReportComparisonIdentity identity;
     char *rendered;
     size_t offset;
     gboolean busy, loading, cancelled;
@@ -34,6 +35,7 @@ typedef struct ComparisonJob {
     GtkWidget *root;
     char before[UMI_PATH_CAPACITY], after[UMI_PATH_CAPACITY];
     UmiCtestReportComparison *comparison;
+    UmiCtestReportComparisonIdentity identity;
     UmiStatus status;
 } ComparisonJob;
 
@@ -55,6 +57,10 @@ static gboolean Active(ComparisonPanel *s, GtkWidget *button)
     return s && !s->busy && gtk_widget_get_mapped(s->root) &&
         gtk_widget_get_mapped(button) && gtk_widget_is_ancestor(button, s->root);
 }
+/* Retain page-only rendering for review. The accepted page now carries the
+ * identities obtained during the same reads as its comparison. Pagination and
+ * clipboard use those stored values without reopening either selected file. */
+#if 0
 static UmiStatus Prepare(const UmiCtestReportComparison *comparison, size_t offset, char **out)
 {
     *out = NULL;
@@ -64,6 +70,30 @@ static UmiStatus Prepare(const UmiCtestReportComparison *comparison, size_t offs
     char *text = g_try_malloc(bytes + 1U);
     if (!text) return UMI_STATUS_OUT_OF_MEMORY;
     status = UmiCtestReportComparisonFormat(comparison, offset, 64U, text, bytes + 1U, &bytes);
+    if (status == UMI_STATUS_OK) *out = text;
+    else g_free(text);
+    return status;
+}
+#endif
+static UmiStatus Prepare(const UmiCtestReportComparison *comparison,
+    const UmiCtestReportComparisonIdentity *identity, size_t offset, char **out)
+{
+    *out = NULL;
+    size_t bytes = 0;
+    UmiStatus status = UmiCtestReportComparisonFormat(comparison, offset, 64U, NULL, 0, &bytes);
+    if (status != UMI_STATUS_OK) return status;
+    char header[512];
+    int prefix = g_snprintf(header, sizeof header,
+        "Baseline bytes: %zu | SHA-256: %s\nCurrent bytes: %zu | SHA-256: %s\n"
+        "Digests identify parsed content, not a source revision or trusted signer.\n\n",
+        identity->before.bytes, identity->before.sha256, identity->after.bytes, identity->after.sha256);
+    if (prefix < 0 || (size_t)prefix >= sizeof header) return UMI_STATUS_CAPACITY_EXCEEDED;
+    size_t start = (size_t)prefix;
+    char *text = g_try_malloc(start + bytes + 1U);
+    if (!text) return UMI_STATUS_OUT_OF_MEMORY;
+    memcpy(text, header, start);
+    status = UmiCtestReportComparisonFormat(comparison, offset, 64U,
+        text + start, bytes + 1U, &bytes);
     if (status == UMI_STATUS_OK) *out = text;
     else g_free(text);
     return status;
@@ -79,7 +109,13 @@ static void Worker(GTask *task, gpointer source, gpointer data, GCancellable *ca
 {
     (void)source; (void)cancel;
     ComparisonJob *job = data;
+    /* Preserve the former call; captured identities now travel with the job
+     * result rather than being recomputed later from potentially replaced paths. */
+#if 0
     job->status = UmiCtestReportCompareFiles(job->before, job->after, &job->comparison);
+#endif
+    job->status = UmiCtestReportCompareFilesWithIdentity(job->before, job->after,
+        &job->comparison, &job->identity);
     g_task_return_boolean(task, TRUE);
 }
 static void Complete(GObject *source, GAsyncResult *result, gpointer data)
@@ -93,10 +129,16 @@ static void Complete(GObject *source, GAsyncResult *result, gpointer data)
     s->loading = FALSE;
     char *text = NULL;
     if (admitted && job->status == UMI_STATUS_OK)
+        /* The pair and its byte identities are accepted as one candidate. */
+#if 0
         job->status = Prepare(job->comparison, 0, &text);
+#else
+        job->status = Prepare(job->comparison, &job->identity, 0, &text);
+#endif
     if (admitted && job->status == UMI_STATUS_OK) {
         UmiCtestReportComparisonDestroy(s->comparison);
         s->comparison = job->comparison;
+        s->identity = job->identity;
         job->comparison = NULL;
         Publish(s, text, 0);
         text = NULL;
@@ -202,7 +244,12 @@ static void Page(GtkButton *button, gpointer data)
     g_object_ref(s->root);
     s->busy = TRUE;
     char *text = NULL;
+    /* Page accepted memory without rereading live path contents. */
+#if 0
     UmiStatus status = Prepare(s->comparison, offset, &text);
+#else
+    UmiStatus status = Prepare(s->comparison, &s->identity, offset, &text);
+#endif
     if (status == UMI_STATUS_OK) Publish(s, text, offset);
     else gtk_label_set_text(GTK_LABEL(s->status), "Unable to prepare that page. The accepted page is unchanged.");
     s->busy = FALSE;
@@ -226,6 +273,7 @@ static void Clear(GtkButton *button, gpointer data)
     s->busy = TRUE;
     UmiCtestReportComparisonDestroy(s->comparison);
     s->comparison = NULL;
+    memset(&s->identity, 0, sizeof s->identity);
     g_clear_pointer(&s->rendered, g_free);
     s->offset = 0;
     gtk_text_buffer_set_text(s->buffer, "", -1);

@@ -18,7 +18,20 @@
 <li>Drag a card onto another list. Alternatively, choose a destination beside <strong>Move selected</strong> and click that button.</li>
 <li>Click <strong>Save board</strong> to persist the board and its developer directory.</li></ol>
 <p>Expected result: moves and assignments either succeed together with a new board revision, or leave the previous state intact. Moving a card does not execute a build or certify tests. Existing checklist, dependency and work-limit rules still apply. A refused stale edit requires selecting the current card again and reviewing the change.</p>
+<!-- Superseded panel limits retained for review. The checked detail form below now supplies descriptions, priorities and blockers.
 <p>The first native panel edits titles, assignments and list positions. The underlying C23 API also supports card descriptions, checklists, blockers, dependencies, priorities and list limits; their editing controls are not yet part of this panel. If an imported card is blocked by one of those rules, use a host that supports the relevant fields instead of weakening the rule.</p>
+-->
+<h2>Edit private card details</h2>
+<ol>
+<li>Select the card, then expand <strong>Edit private card details</strong>.</li>
+<li>Click <strong>Load selected card details</strong>. The status identifies the card and board revision that the form belongs to.</li>
+<li>Edit its title, description, priority and blocker reason. An empty blocker means the card has no explicit blocker; it does not move the card between lists.</li>
+<li>Click <strong>Apply card details</strong>. Expected result: the card changes once while assignments, acceptance checks, dependencies, labels and due date remain intact.</li>
+<li>Click <strong>Save board</strong> in its host to persist the change. Applying a form alone does not write a board file.</li>
+</ol>
+<p>If the board changes, a different card is selected, the form is hidden or the host starts file work, load the selected card again before applying. A refused edit keeps the typed draft so you can review it. Loading explicitly replaces that draft; copy text you need to retain first. Titles and blocker reasons allow 255 UTF-8 bytes and descriptions allow 2047. A long multibyte entry is refused without truncating the board.</p>
+<p>Private detail fields are never substituted for the separate public website fields. Review and include public text explicitly. Checklists, dependency editing, labels, deadlines and list limits remain available through the C23 board API; this form does not expose them yet.</p>
+
 <h2>3. Save safely and recover from an external change</h2>
 <ol><li><strong>Save board</strong> updates the file opened by the document, even if you have changed the filename field for a later operation.</li>
 <li>If another program changes that file, saving refuses the replacement and retains your in-memory edits.</li>
@@ -33,7 +46,10 @@
 <li>Click <strong>Generate website</strong>. Review the displayed HTML source. Use <strong>Save displayed text</strong> to save a new HTML file, for example <code>C:\umicom\_local\public-preview\index.html</code>, inside a folder you created.</li>
 <li>Open the saved file in a browser and inspect the titles, summaries, assignments and list positions before uploading it.</li></ol>
 <p>Only your explicit public fields and each selected card's current list are rendered. Private descriptions, local IDs, developer-directory names, activity, dependency data and storage paths are not copied into the page. All public fields are validated as UTF-8 and escaped as text. An empty selection produces an empty board, not an export of all private cards.</p>
+<!-- Earlier session-only guidance retained for review. Explicit private selection plans now provide persistence.
 <p class="note">The reviewed public selection lasts for the current native window session. Save the HTML before closing. There is no persistent publication catalogue yet. Regenerate and upload a new snapshot after changing the board; an existing website does not update automatically.</p>
+-->
+<p class="note">Use <strong>Save or reopen a private public-selection plan</strong> to retain reviewed public fields. This private plan is separate from the board archive and generated HTML. See <a href="saved-publication-plans.html">saving reviewed publication plans</a>. Regenerate and upload the contributor snapshot after changes; an existing website does not update automatically.</p>
 <h2>5. Host the contributor view</h2>
 <ol><li>Create a clean website folder containing only the reviewed <code>index.html</code>.</li><li>Upload that file to your chosen static website host. Set it as the site's index document.</li><li>Visit the hosted URL in a normal browser and verify the visible cards. Contributors can view the board on desktop and mobile widths without installing GTK.</li></ol>
 <p>Keep the private board, its guard file, development logs and internal planning directory out of the upload. This Framework component does not deploy files or provide authentication. Hosting credentials, HTTPS and access policy belong to your chosen host. The page has embedded styling and does not load external assets or trackers.</p>
@@ -50,7 +66,10 @@ if (board != NULL) gtk_window_present(board);</pre>
 <p>For a host that already owns a board document, use <code>UmiKanbanGtk4Create</code> from <code>umicom/ui/gtk4/kanban.h</code>. That panel borrows the board. Freeze it before a worker accesses the document, refresh it after external edits, and retire it before releasing the document. The window helper manages these steps for ordinary hosts. Use <code>gtk_window_close</code> rather than forcibly destroying an open document window.</p>
 <p>Headless applications can link <code>Umicom::kanban</code> alone and call <code>umi_kanban_publication_html</code> with an explicitly reviewed array of <code>UmiKanbanPublicCard</code>. Measure output first with a null buffer and zero capacity; the returned size includes the terminating NUL byte. Allocate that size, render at the same board revision, and write exactly one byte fewer to the HTML file. The renderer performs no file or network operations.</p>
 <h2>7. Compatibility and limits</h2>
-<ul><li>Saved developer directories use a distinct archive schema. The updated reader accepts older four-list and five-list archives. Older readers refuse named-directory archives; update Framework before opening them.</li><li>Display names can repeat in the C23 directory. The first native assignment form refuses ambiguous matches; it does not guess which person was intended.</li><li>The board supports at most 1,024 cards and 128 named developers. Native title and name limits are byte limits, so long multibyte names may be refused without truncation.</li><li>Drag-and-drop is local to one native board panel. A drag from another application or another board cannot submit a move.</li><li>The contributor site is a snapshot. Registration, permissions, shared editing, persistent publication selections and a C23 web service are separate capabilities, not available here.</li></ul>
+<ul><li>Saved developer directories use a distinct archive schema. The updated reader accepts older four-list and five-list archives. Older readers refuse named-directory archives; update Framework before opening them.</li><li>Display names can repeat in the C23 directory. The first native assignment form refuses ambiguous matches; it does not guess which person was intended.</li><li>The board supports at most 1,024 cards and 128 named developers. Native title and name limits are byte limits, so long multibyte names may be refused without truncation.</li><li>Drag-and-drop is local to one native board panel. A drag from another application or another board cannot submit a move.</li><!-- Earlier capability boundary retained for review; private selection-plan persistence is now supplied separately.
+<li>The contributor site is a snapshot. Registration, permissions, shared editing, persistent publication selections and a C23 web service are separate capabilities, not available here.</li>
+-->
+<li>The contributor site is a snapshot. Registration, permissions, shared editing and a C23 web service are not supplied by this static export. Private selection plans can be retained separately.</li></ul>
 <h2>8. Troubleshooting</h2>
 <table><thead><tr><th>Symptom</th><th>Next step</th></tr></thead><tbody>
 <tr><td>No native board target</td><td>Check that Framework includes its GTK4 adapter, platform storage and native-tool option. A headless build still provides the pure board library.</td></tr>

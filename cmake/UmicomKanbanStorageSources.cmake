@@ -9,6 +9,7 @@ function(umicom_add_kanban_storage_sources target)
         "${_root}/src/kanban/project_binding_archive.c"
         "${_root}/src/kanban/binding_storage.c"
         "${_root}/src/kanban/publication_plan_storage.c"
+        "${_root}/src/kanban/completion_storage.c"
         "${_root}/src/kanban/location.c" "${_root}/src/kanban/document.c" "${_root}/src/kanban/document_save.c")
     set_target_properties("${target}" PROPERTIES
         C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO EXPORT_NAME kanban_storage)

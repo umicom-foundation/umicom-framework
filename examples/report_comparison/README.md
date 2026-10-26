@@ -26,3 +26,11 @@ Exit 0 means this example read and printed the comparison; it does **not** mean 
 Only exact decoded test names and outcomes are compared. A removed failure is not recovered, and an unchanged report may still contain failures. Both files must be complete and stable while reading. Neither source identities nor host capabilities are verified by this example.
 
 Pages contain at most 64 changed records, with totals and explicit limitations. Each report is bounded by the shared reader's 64 MiB limit. For input errors, inspect the retained log and confirm that the inputs are CTest JUnit XML, not console transcripts. See the [saved-report guide](../../docs/guides/saved-test-report-browser.html) for native integration and SDK ownership rules.
+
+The output begins with each input's byte count and SHA-256 digest. These are
+calculated from the exact buffer used to parse that report, including whitespace
+and line endings. The example checks compare them with CMake's independent file
+hash. Different formatting can produce the same outcome comparison with different
+digests. A digest identifies content; it does not identify a trusted author,
+source revision, or the machine that ran the tests. Rejected pairs publish no
+accepted identity.

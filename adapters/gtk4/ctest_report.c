@@ -22,6 +22,9 @@
 #include <string.h>
 typedef struct SavedReportPanel {
   GtkWidget *root, *path, *name, *outcome, *order, *status, *source;
+  GtkWidget *evidence;
+  UmiCtestReportFileIdentity identity;
+  char report_path[UMI_PATH_CAPACITY];
   GtkTextBuffer *buffer;
   UmiCtestReport *report;
   UmiCtestReportView *view;
@@ -35,9 +38,41 @@ typedef struct SavedReportJob {
   GtkWidget *root;
   char path[UMI_PATH_CAPACITY];
   UmiCtestReportFilter filter;
+  UmiCtestReportFileIdentity identity;
   UmiStatus status;
   UmiCtestReport *report;
 } SavedReportJob;
+
+UmiStatus UmiGtk4CtestReportReadEvidence(GtkWidget *panel, UmiCtestReportEvidence *out)
+{
+  if (!GTK_IS_WIDGET(panel) || out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+  SavedReportPanel *s = g_object_get_data(G_OBJECT(panel), "umicom-saved-report");
+  if (s == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+  if (s->busy) return UMI_STATUS_BUSY;
+  if (s->report == NULL) return UMI_STATUS_NOT_FOUND;
+  UmiCtestReportEvidence value = {0};
+  UmiStatus status = UmiCtestReportReadSummary(s->report, &value.summary);
+  if (status != UMI_STATUS_OK) return status;
+  value.identity = s->identity;
+  memcpy(value.path, s->report_path, sizeof value.path);
+  *out = value;
+  return UMI_STATUS_OK;
+}
+static void PublishEvidence(SavedReportPanel *s)
+{
+  UmiCtestReportSummary summary;
+  if (UmiCtestReportReadSummary(s->report, &summary) != UMI_STATUS_OK) return;
+  char *text = g_strdup_printf(
+      "Parsed report: %zu bytes; SHA-256 %s\n"
+      "Whole report: %zu tests; %zu passed; %zu failed; %zu timed out; "
+      "%zu skipped; %zu disabled; %zu not run.\n"
+      "Saved observations only; source identity and execution provenance are not established.",
+      s->identity.bytes, s->identity.sha256, summary.tests, summary.passed,
+      summary.failed, summary.timed_out, summary.skipped, summary.disabled, summary.not_run);
+  gtk_label_set_text(GTK_LABEL(s->evidence), text);
+  g_free(text);
+}
+
 static void RetireView(SavedReportPanel *s) {
   UmiCtestReportViewDestroy(s->view);
   s->view = NULL;
@@ -56,6 +91,7 @@ static void FreePanel(gpointer data) {
   g_object_unref(s->order);
   g_object_unref(s->status);
   g_object_unref(s->source);
+  g_object_unref(s->evidence);
   g_object_unref(s->buffer);
   g_free(s);
 }
@@ -252,6 +288,9 @@ static void Clear(GtkButton *button, gpointer data) {
   RetireView(s);
   UmiCtestReportDestroy(s->report);
   s->report = NULL;
+  memset(&s->identity, 0, sizeof s->identity);
+  s->report_path[0] = '\0';
+  gtk_label_set_text(GTK_LABEL(s->evidence), "No accepted report evidence");
   gtk_label_set_text(GTK_LABEL(s->source), "No report loaded");
   gtk_label_set_text(GTK_LABEL(s->status), "Saved report closed; its source file is unchanged.");
   s->busy = FALSE;
@@ -280,7 +319,12 @@ static void ReadWorker(GTask *task, gpointer source, gpointer data, GCancellable
   (void)source;
   (void)cancel;
   SavedReportJob *job = data;
+  /* The earlier report-only read is retained for review. Bind reusable
+   * evidence to the same owned parser input, never a later path reread. */
+#if 0
   job->status = UmiCtestReportReadFile(job->path, &job->report);
+#endif
+  job->status = UmiCtestReportReadFileWithIdentity(job->path, &job->report, &job->identity);
   g_task_return_boolean(task, TRUE);
 }
 /* Accepted report state is now replaced only after complete admission and
@@ -374,11 +418,15 @@ static void ReadComplete(GObject *source, GAsyncResult *result, gpointer data) {
       UmiCtestReport *previous = s->report;
       s->report = job->report;
       job->report = NULL;
+      /* Commit the identity with its accepted report before any GTK setter. */
+      s->identity = job->identity;
+      memcpy(s->report_path, job->path, sizeof s->report_path);
       PublishView(s, view, text);
       UmiCtestReportDestroy(previous);
       /* The accepted page and metadata finish together. Owned labels survive
        * reentrant hiding or closure until owner-thread completion releases root. */
       gtk_label_set_text(GTK_LABEL(s->source), job->path);
+      PublishEvidence(s);
       gtk_label_set_text(GTK_LABEL(s->status),
             "Saved report loaded with the captured filters. Apply later filter edits explicitly.");
     } else {
@@ -588,6 +636,7 @@ static void Button(SavedReportPanel *s, GtkWidget *row, const char *title, const
 GtkWidget *UmiGtk4CtestReportCreate(void) {
   SavedReportPanel *s = g_new0(SavedReportPanel, 1);
   s->root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+  (void)umi_gtk4_automation_tag_widget(s->root, "ctest.report");
   s->path =
       Entry(s, "Absolute CTest JUnit XML filename", "ctest.report.path", UMI_PATH_CAPACITY - 1);
   GtkWidget *browse = UmiPathPickerGtk4Create(GTK_ENTRY(s->path), UMI_PATH_PICKER_EXISTING_FILE,
@@ -600,6 +649,12 @@ GtkWidget *UmiGtk4CtestReportCreate(void) {
   gtk_label_set_wrap(GTK_LABEL(s->source), TRUE);
   (void)umi_gtk4_automation_tag_widget(s->source, "ctest.report.source");
   gtk_box_append(GTK_BOX(s->root), s->source);
+  s->evidence = gtk_label_new("No accepted report evidence");
+  g_object_ref_sink(s->evidence);
+  gtk_label_set_selectable(GTK_LABEL(s->evidence), TRUE);
+  gtk_label_set_wrap(GTK_LABEL(s->evidence), TRUE);
+  (void)umi_gtk4_automation_tag_widget(s->evidence, "ctest.report.evidence");
+  gtk_box_append(GTK_BOX(s->root), s->evidence);
   s->name = Entry(s, "Test name contains (ASCII case-insensitive)", "ctest.report.name", 255);
   const char *outcomes[] = {"Non-passed", "All outcomes", "Passed",  "Failed", "Timed out",
                             "Skipped",    "Disabled",     "Not run", NULL};

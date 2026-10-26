@@ -112,3 +112,36 @@ endforeach()
 unset(_binding_case)
 unset(_binding_test)
 unset(_binding_work)
+
+# Retaining the window throughout a test conceals final-source-object ownership.
+add_executable(umi-kanban-window-owner-test
+    "${CMAKE_CURRENT_LIST_DIR}/test_window_owner.c")
+target_link_libraries(umi-kanban-window-owner-test PRIVATE Umicom::kanban_gtk4)
+set_target_properties(umi-kanban-window-owner-test PROPERTIES
+    C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+umicom_apply_warnings(umi-kanban-window-owner-test)
+umicom_apply_sanitizers(umi-kanban-window-owner-test)
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umi-kanban-window-owner-test)
+endif()
+if(COMMAND umicom_target_qualification_inputs)
+    umicom_target_qualification_inputs(umi-kanban-window-owner-test FILES
+        "${CMAKE_CURRENT_LIST_DIR}/../kanban/fixture.h"
+        "${CMAKE_CURRENT_LIST_DIR}/../build_log/fixture.h"
+        "${CMAKE_CURRENT_LIST_DIR}/../support/main_context.h")
+endif()
+foreach(_owner_case IN ITEMS create open save missing)
+    set(_owner_test "framework.kanban.window_owner.${_owner_case}")
+    set(_owner_work "${CMAKE_CURRENT_BINARY_DIR}/kanban-window-owner/${_owner_case}")
+    file(MAKE_DIRECTORY "${_owner_work}")
+    add_test(NAME ${_owner_test} COMMAND umi-kanban-window-owner-test ${_owner_case})
+    set_tests_properties(${_owner_test} PROPERTIES WORKING_DIRECTORY "${_owner_work}"
+        TIMEOUT 45 SKIP_RETURN_CODE 77 ENVIRONMENT "G_DEBUG=fatal-warnings"
+        LABELS "framework;kanban;gtk4;storage;lifetime;regression")
+    if(COMMAND umicom_test_impact_owners)
+        umicom_test_impact_owners(${_owner_test} TARGETS umi-kanban-window-owner-test umicom_kanban_gtk4)
+    endif()
+endforeach()
+unset(_owner_case)
+unset(_owner_test)
+unset(_owner_work)

@@ -25,6 +25,10 @@ extern "C" {
  * no live test state is changed. Failed/cancelled candidates retain accepted
  * results. Hiding before admission cancels publication; once admitted, owned
  * source labels finish updating even if a text observer closes the host.
+ * Every page and clipboard copy includes byte counts and SHA-256 identities
+ * captured from parsed input. Paging does not reread paths; digests do not
+ * authenticate a signer or prove a source revision. Failed replacements retain
+ * the accepted identities along with the accepted results.
  * The host must not destroy or replace individual panel controls. */
 GtkWidget *UmiGtk4CtestComparisonCreate(void);
 /* True while a worker or guarded GTK publication is in progress. Cancellation

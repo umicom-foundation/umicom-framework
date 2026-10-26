@@ -36,6 +36,7 @@ if(TARGET umicom_ui_gtk4)
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/ctest_coverage.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/ctest_comparison.c")
     target_link_libraries(umicom_ui_gtk4 PRIVATE Umicom::testing)
+    set_property(TARGET umicom_ui_gtk4 PROPERTY UMICOM_CTEST_REPORT_BROWSER_AVAILABLE TRUE)
     install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/ui/gtk4/ctest_report.h"
         "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/ui/gtk4/ctest_coverage.h"
         "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/ui/gtk4/ctest_comparison.h"
@@ -177,7 +178,7 @@ umicom_saved_report_group(comparison_file Umicom::testing valid same empty malfo
 if(TARGET umicom_ui_gtk4)
     umicom_saved_report_group(comparison_gtk4 Umicom::ui_gtk4 normal paging captured-before captured-after
         cancel-load hide-show close-load hidden retained replacement-before replacement-after malformed relative
-        clear hide-clear cancel-render hide-render close-render reentrant empty unchanged-failure cancel-replacement)
+        clear hide-clear cancel-render hide-render close-render reentrant empty unchanged-failure cancel-replacement identity-reload)
 endif()
 
 # In-tree checks exercise the same public consumer; installed qualification
@@ -207,3 +208,17 @@ foreach(scenario recovered regressed removed unchanged-failure empty malformed)
 endforeach()
 unset(scenario)
 unset(test)
+
+# Identity checks bind evidence to parsed bytes and preserve failed candidate outputs.
+umicom_saved_report_group(file_identity Umicom::testing known empty-suite line-endings malformed
+    empty-file missing relative null-output null-identity ownership unicode)
+umicom_saved_report_group(comparison_identity Umicom::testing known same semantic malformed-before
+    malformed-after missing-before missing-after relative-before relative-after
+    null-before null-after null-output null-identity ownership)
+
+# Accepted evidence remains a whole-report observation even when its view is filtered.
+if(TARGET umicom_ui_gtk4)
+    umicom_saved_report_group(evidence_gtk4 Umicom::ui_gtk4 normal empty-suite mixed filter draft-path
+        file-change cancel-replacement missing-replacement clear busy observer hidden owned null
+        wrong-widget replacement)
+endif()

@@ -41,3 +41,22 @@ install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/kanban/publication_pl
 if(COMMAND umicom_release_inventory_own_headers)
     umicom_release_inventory_own_headers(umicom_kanban_storage include/umicom/kanban/publication_plan_storage.h)
 endif()
+
+# Private completion evidence is retained separately from mutable board files.
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/kanban/completion_storage.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/kanban" COMPONENT Framework)
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_kanban_storage include/umicom/kanban/completion_storage.h)
+endif()
+
+# Public examples use installed exports; private review archives are never installed.
+foreach(component Framework FrameworkSDK)
+    install(FILES
+        "${CMAKE_CURRENT_LIST_DIR}/../examples/kanban_completion/CMakeLists.txt"
+        "${CMAKE_CURRENT_LIST_DIR}/../examples/kanban_completion/main.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../examples/kanban_completion/check.cmake"
+        "${CMAKE_CURRENT_LIST_DIR}/../examples/kanban_completion/README.md"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/kanban_completion"
+        COMPONENT ${component})
+endforeach()
+unset(component)

@@ -257,7 +257,7 @@ int main(int argc, char **argv) {
   if (!strcmp(name, "utf8-later-title")) {
     OK(UmiFormRecordEditorGtk4LastStatus(root));
     OK(UmiFormRecordEditorGtk4SavedSearchPage(root, page));
-    CHECK(page->count == 16U && page->next_after_entity[0] != ' ');
+    CHECK(page->count == 16U && page->next_after_entity[0] != '\0');
     memcpy(before, page, sizeof *before);
     OK(UmiFormRecordEditorGtk4FindSavedSearches(root, "", 1));
     CHECK(idle(root));

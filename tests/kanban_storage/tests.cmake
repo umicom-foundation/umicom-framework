@@ -221,3 +221,6 @@ endforeach()
 unset(_binding_case)
 unset(_binding_test)
 unset(_binding_work)
+
+# Retained completion evidence has a distinct no-overwrite storage contract.
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/UmicomKanbanCompletionStorage.cmake")

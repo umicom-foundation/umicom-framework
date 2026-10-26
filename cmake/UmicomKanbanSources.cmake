@@ -14,7 +14,12 @@ function(umicom_add_kanban_sources target)
         "${_root}/src/kanban/publication_fields.c"
         "${_root}/src/kanban/publication_plan.c"
         "${_root}/src/kanban/publication_plan_archive.c"
-        "${_root}/src/kanban/developers.c")
+        "${_root}/src/kanban/developers.c"
+        "${_root}/src/kanban/card_details.c"
+        "${_root}/src/kanban/completion_plan.c"
+        "${_root}/src/kanban/completion_validation.c"
+        "${_root}/src/kanban/completion_board.c"
+        "${_root}/src/kanban/completion_archive.c")
     set_target_properties("${target}" PROPERTIES
         C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO EXPORT_NAME kanban)
     target_include_directories("${target}" PUBLIC
@@ -29,6 +34,7 @@ function(umicom_add_kanban_sources target)
     if(COMMAND umicom_target_qualification_inputs)
         umicom_target_qualification_inputs("${target}" FILES
             "${_root}/src/kanban/board_internal.h"
+            "${_root}/src/kanban/completion_plan_internal.h"
             "${_root}/src/kanban/publication_plan_internal.h"
             "${_root}/src/base/value_archive_internal.h")
     endif()

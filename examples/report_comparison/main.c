@@ -25,13 +25,31 @@ int main(int argc, char **argv)
         return 2;
     }
     UmiCtestReportComparison *comparison = NULL;
+    /* Keep the earlier read call for review; the replacement captures content
+     * identity with parsing, without reopening files to print their hashes. */
+#if 0
     UmiStatus status = UmiCtestReportCompareFiles(argv[1], argv[2], &comparison);
+#else
+    UmiCtestReportComparisonIdentity identity;
+    UmiStatus status = UmiCtestReportCompareFilesWithIdentity(argv[1], argv[2], &comparison, &identity);
+#endif
     if (status != UMI_STATUS_OK) {
         fprintf(stderr, "Comparison input refused: %s\n", umi_status_text(status));
         return 2;
     }
     UmiCtestReportComparisonSummary summary;
+    /* Check output errors before pagination; a displayed digest is evidence
+     * identity only and never establishes that a source revision passed. */
+#if 0
     status = UmiCtestReportComparisonReadSummary(comparison, &summary);
+#else
+    if (printf("Baseline bytes: %zu | SHA-256: %s\nCurrent bytes: %zu | SHA-256: %s\n"
+        "Digests identify parsed content, not a source revision or trusted signer.\n\n",
+        identity.before.bytes, identity.before.sha256, identity.after.bytes, identity.after.sha256) < 0)
+        status = UMI_STATUS_IO_ERROR;
+    if (status == UMI_STATUS_OK)
+        status = UmiCtestReportComparisonReadSummary(comparison, &summary);
+#endif
     size_t offset = 0;
     /* The immutable comparison owns names after both temporary reports are
      * destroyed. Pagination bounds text allocation without discarding rows. */
