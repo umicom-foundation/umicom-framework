@@ -249,7 +249,19 @@ int main(int argc, char **argv) {
       strcmp(name, "bad-file") == 0 || strcmp(name, "wrong-namespace") == 0) {
     CHECK(state.status != UMI_STATUS_OK && !state.has_review &&
           !g_file_test(database, G_FILE_TEST_EXISTS));
+    /* GObject disposal disconnects signal handlers. Explicit retirement keeps
+     * them connected; both routes must finish without authorizing a restore.
+     * The former shared expectation is retained to explain this distinction. */
+#if 0
     CHECK(auth.calls == 0 && auth.completions == 1);
+#endif
+    CHECK(auth.calls == 0);
+    CHECK(auth.completions == (strcmp(name, "dispose-read") == 0 ? 0 : 1));
+    if (strcmp(name, "dispose-read") == 0 || strcmp(name, "retire-read") == 0) {
+      CHECK(state.retired && !state.busy);
+      CHECK(UmiFormRecordImportGtk4Review(root, file) == UMI_STATUS_INVALID_STATE);
+      CHECK(!g_file_test(database, G_FILE_TEST_EXISTS));
+    }
     goto cleanup;
   }
   OK(state.status);

@@ -20,6 +20,7 @@
 #include "umicom/data/structured_form_record.h"
 #include "umicom/ui/gtk4/form_record_editor.h"
 #include "umicom/ui/gtk4/structured_form_filter.h"
+#include "../support/gtk4_expanders.h"
 #include <glib/gstdio.h>
 #define CHECK(x)                                                                                   \
   do {                                                                                             \
@@ -144,6 +145,7 @@ int main(int argc, char **argv) {
       .schema = &f->schema, .entity_prefix = "search.form.", .source = "Fictional record search"};
   OK(UmiFormRecordEditorGtk4New(&options, &root));
   g_object_ref_sink(root);
+  UmiTestExpandSections(root);
   CHECK(find(root, "form-record-filter"));
   filter->count = 1;
   strcpy(filter->terms[0].field_id, "parcel.mass");

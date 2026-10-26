@@ -76,7 +76,12 @@ int main(int argc, char **argv) {
           !strcmp(choice->language_id, "c"));
   } else if (!strcmp(name, "unselected")) {
     const UmiDocumentLanguageChoice *old = choice;
+/* An absent model establishes an actual empty selection even when GTK auto-selects nonempty models. The former expression remains for review. */
+#if 0
     gtk_drop_down_set_selected(GTK_DROP_DOWN(widget), GTK_INVALID_LIST_POSITION);
+#endif
+    gtk_drop_down_set_model(GTK_DROP_DOWN(widget), NULL);
+    CHECK(gtk_drop_down_get_selected(GTK_DROP_DOWN(widget)) == GTK_INVALID_LIST_POSITION);
     CHECK(UmiGtk4LanguageChoiceRead(widget, &choice) == UMI_STATUS_NOT_FOUND && choice == old);
   } else if (!strcmp(name, "arguments")) {
     CHECK(UmiGtk4LanguageChoiceCreate("c", NULL) == UMI_STATUS_INVALID_ARGUMENT);

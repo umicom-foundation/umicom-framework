@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "binding_fixture.h"
+#include "umicom/platform/path.h"
 int main(int argc, char **argv) {
   CHECK(argc == 2);
   const char *name = argv[1];
@@ -65,7 +66,15 @@ int main(int argc, char **argv) {
   CHECK(UmiKanbanProjectBindingValidate(&value) == UMI_STATUS_OK);
   CHECK(!strcmp(value.filename, "private.umikb"));
   if (!strcmp(name, "normalised")) {
+    /* Bindings store canonical platform paths, not the caller's separators. */
+#if 0
     CHECK(!strcmp(value.project_root, PROJECT) && !strcmp(value.directory, BOARDS));
+#endif
+    char canonical_root[UMI_PATH_CAPACITY], canonical_directory[UMI_PATH_CAPACITY];
+    CHECK(umi_path_normalise(PROJECT, canonical_root, sizeof canonical_root) == UMI_STATUS_OK);
+    CHECK(umi_path_normalise(BOARDS, canonical_directory, sizeof canonical_directory) == UMI_STATUS_OK);
+    CHECK(!strcmp(value.project_root, canonical_root) &&
+          !strcmp(value.directory, canonical_directory));
   } else if (!strcmp(name, "alias")) {
     UmiKanbanProjectBinding copy = value;
     CHECK(UmiKanbanProjectBindingCreate(value.project_root, value.directory, value.filename,

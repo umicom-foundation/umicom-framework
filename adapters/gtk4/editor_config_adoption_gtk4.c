@@ -291,6 +291,15 @@ UmiStatus UmiGtk4AdapterReviewEditorConfig(UmiGtk4Adapter *adapter, const char *
   if (status == UMI_STATUS_OK)
     status = umi_path_relative(scope.project_root, document.path, scope.relative_file,
                                sizeof scope.relative_file);
+  /* Platform paths use native separators, while EditorConfig matching and
+   * ancestor discovery use forward slashes. Translate only the admitted
+   * relative path on Windows; retain the rooted boundary/traversal check. */
+#ifdef _WIN32
+  if (status == UMI_STATUS_OK)
+    for (size_t i = 0U; scope.relative_file[i] != '\0'; ++i)
+      if (scope.relative_file[i] == '\\')
+        scope.relative_file[i] = '/';
+#endif
   if (status == UMI_STATUS_OK)
     status = UmiRootedFileValidatePath(scope.project_root, scope.relative_file);
   if (status == UMI_STATUS_OK && (!g_utf8_validate(scope.project_root, -1, NULL) ||

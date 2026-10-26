@@ -19,6 +19,7 @@
  * Headless display absence is reported as skipped coverage, never a pass. */
 #include "umicom/ui/gtk4/record_editor.h"
 #include "umicom/data/record_draft_files.h"
+#include "../support/gtk4_expanders.h"
 #include <glib/gstdio.h>
 #include <stdio.h>
 #include <string.h>
@@ -82,6 +83,7 @@ static UmiStatus create(GtkWidget **root)
         .entity_prefix = "test.review.", .source = "Native fixture"};
     UmiStatus status = UmiRecordEditorGtk4New(&options, root);
     if (status == UMI_STATUS_OK) g_object_ref_sink(*root);
+    if (status == UMI_STATUS_OK) UmiTestExpandSections(*root);
     return status;
 }
 typedef struct Observer { GtkWidget *root; const char *prefix; bool close; bool fired; } Observer;

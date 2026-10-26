@@ -60,7 +60,12 @@ int main(int argc, char **argv) {
     source = "  abcdef";
     cursor = 3U;
     selection = 3U;
+    /* Replacing [3, 6) removes b, c and d; e and f remain. The old
+     * expectation is retained to make the byte-range correction explicit. */
+#if 0
     expected = "  a\n  f";
+#endif
+    expected = "  a\n  ef";
   }
   if (!strcmp(name, "unicode")) {
     source = "  \xc3\xa9";

@@ -16,6 +16,7 @@
 #include "../build_log/fixture.h"
 #include "umicom/kanban/binding_storage.h"
 #include "umicom/platform/rooted_files.h"
+#include "umicom/platform/path.h"
 #include "umicom/ui/gtk4/kanban_binding.h"
 static GtkWidget *Find(GtkWidget *widget, const char *name) {
   if (!strcmp(gtk_widget_get_name(widget), name))
@@ -142,7 +143,11 @@ int main(int argc, char **argv) {
       CHECK(UmiKanbanBindingStorageLoad(directory, directory, &saved) == UMI_STATUS_NOT_FOUND);
     } else {
       CHECK(UmiKanbanBindingStorageLoad(directory, directory, &saved) == UMI_STATUS_OK);
+      /* Recall returns the canonical platform path; the stored filename stays exact. */
+#if 0
       CHECK(!strcmp(saved.directory, directory) && !strcmp(saved.filename, "chosen.umikb"));
+#endif
+      CHECK(umi_path_equal(saved.directory, directory) && !strcmp(saved.filename, "chosen.umikb"));
     }
   } else {
     if (strcmp(name, "missing"))
@@ -162,7 +167,11 @@ int main(int argc, char **argv) {
       CHECK(!strcmp(gtk_editable_get_text(GTK_EDITABLE(file)), original));
       CHECK(gtk_editable_get_text(GTK_EDITABLE(folder))[0] == '\0');
     } else if (!strcmp(name, "recall")) {
+      /* Recall returns the canonical platform path; the stored filename stays exact. */
+#if 0
       CHECK(!strcmp(gtk_editable_get_text(GTK_EDITABLE(folder)), directory));
+#endif
+      CHECK(umi_path_equal(gtk_editable_get_text(GTK_EDITABLE(folder)), directory));
       CHECK(!strcmp(gtk_editable_get_text(GTK_EDITABLE(file)), "chosen.umikb"));
     }
   }

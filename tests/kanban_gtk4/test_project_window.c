@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/kanban_project.h"
+#include "umicom/platform/path.h"
 #include <stdio.h>
 #include <string.h>
 #define CHECK(x)                                                                                   \
@@ -132,8 +133,13 @@ int main(int argc, char **argv) {
   g_object_ref(window);
   held = 1;
   CHECK(!UmiKanbanGtk4WindowBusy(window));
+  /* Preserve the earlier spelling comparison; native path identity is shared. */
+#if 0
   CHECK(UmiKanbanGtk4ProjectLocation(window, &value) == UMI_STATUS_OK &&
         !strcmp(value.project_root, root));
+#endif
+  CHECK(UmiKanbanGtk4ProjectLocation(window, &value) == UMI_STATUS_OK &&
+        umi_path_equal(value.project_root, root));
   GtkWidget *directory = Find(GTK_WIDGET(window), "kanban-document-directory"),
             *filename = Find(GTK_WIDGET(window), "kanban-document-filename");
   CHECK(GTK_IS_EDITABLE(directory) && GTK_IS_EDITABLE(filename));
@@ -142,8 +148,13 @@ int main(int argc, char **argv) {
   CHECK(!gtk_widget_get_visible(GTK_WIDGET(window)));
   if (!strcmp(name, "copy")) {
     value.project_root[0] = 'x';
+    /* Preserve the earlier spelling comparison; native path identity is shared. */
+#if 0
     CHECK(UmiKanbanGtk4ProjectLocation(window, &value) == UMI_STATUS_OK &&
           !strcmp(value.project_root, root));
+#endif
+    CHECK(UmiKanbanGtk4ProjectLocation(window, &value) == UMI_STATUS_OK &&
+          umi_path_equal(value.project_root, root));
   }
   if (!strcmp(name, "metadata")) {
     gtk_editable_set_text(GTK_EDITABLE(filename), "different.umikb");

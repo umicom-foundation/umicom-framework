@@ -23,7 +23,8 @@ extern "C" {
  * Synchronous; call on a worker in native applications. No process launch,
  * repository inspection or source freshness assertion. out becomes NULL on
  * failure. The complete input is copied before parsing; the file may change
- * later without changing the imported report. */
+ * later without changing the imported report. An empty regular file returns
+ * UMI_STATUS_PARSE_ERROR; invalid path arguments remain INVALID_ARGUMENT. */
 UmiStatus UmiCtestReportReadFile(const char *path, UmiCtestReport **out);
 #ifdef __cplusplus
 }

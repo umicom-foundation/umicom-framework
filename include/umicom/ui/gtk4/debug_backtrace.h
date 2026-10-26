@@ -26,7 +26,10 @@ extern "C" {
  * Copy reviewed text is the only clipboard operation and requires a mapped live
  * review control. No file, protocol, network or debugger mutation occurs.
  * The window closes with owner. Failure sets *out=NULL. On success out is borrowed
- * from GTK; retain it explicitly if polling after destruction. */
+ * from GTK; retain it explicitly if polling after destruction.
+ * An application that rejects attachment should close at notify::application.
+ * GTK emits window-added before its attachment setup is complete; destroying
+ * a window directly inside that signal can reenter incomplete toolkit state. */
 UmiStatus UmiGtk4DebugBacktraceCreateWindow(GtkWindow *owner, const UmiDebugBacktrace *trace,
                                             GtkWindow **out);
 #ifdef __cplusplus

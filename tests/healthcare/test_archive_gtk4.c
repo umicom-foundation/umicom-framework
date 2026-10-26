@@ -31,7 +31,14 @@ static bool click(GtkWidget *root, const char *name)
 static guint count(GtkWidget *root)
 {
     GtkWidget *selector = find(root, "healthcare-requests");
+/* Archive counts describe records, excluding the non-record placeholder. The former expression remains for review. */
+#if 0
     return selector ? g_list_model_get_n_items(gtk_drop_down_get_model(GTK_DROP_DOWN(selector))) : 0U;
+#endif
+    if (!selector) return 0U;
+    GListModel *model = gtk_drop_down_get_model(GTK_DROP_DOWN(selector));
+    guint rows = model ? g_list_model_get_n_items(model) : 0U;
+    return rows > 0U ? rows - 1U : 0U;
 }
 static bool wait_idle(GtkWidget *root)
 {
@@ -103,8 +110,14 @@ int main(int argc, char **argv)
             CHECK(click(root, "healthcare-archive-open")); CHECK(wait_idle(root));
             CHECK(count(root) == 1U);
             GtkDropDown *selector = GTK_DROP_DOWN(find(root, "healthcare-requests"));
+/* Opening an archive requires explicit record selection before actions. The former expression remains for review. */
+#if 0
             CHECK(gtk_drop_down_get_selected(selector) == GTK_INVALID_LIST_POSITION);
             gtk_drop_down_set_selected(selector, 0U);
+#endif
+            CHECK(gtk_drop_down_get_selected(selector) == 0U);
+            CHECK(strstr(gtk_label_get_text(GTK_LABEL(find(root, "healthcare-details"))), "Select a request") != NULL);
+            gtk_drop_down_set_selected(selector, 1U);
             CHECK(strstr(gtk_label_get_text(GTK_LABEL(find(root, "healthcare-details"))), "STF-000001") != NULL);
             CHECK(click(root, "healthcare-request")); CHECK(count(root) == 2U);
         } else if (!strcmp(name, "overwrite")) {

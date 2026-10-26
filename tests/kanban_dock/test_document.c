@@ -32,7 +32,15 @@ int main(int argc, char **argv) {
     Dock(&f);
     Add(&f, "Unsaved docked card");
     if (!strcmp(argv[1], "close-refuses")) {
+      /* Docking leaves the board owner unrealized. GTK's window-manager close
+       * convenience call ignores an unrealized window. Exercise its actual
+       * close-request policy and assert that unsaved content prevents closure. */
+#if 0
       gtk_window_close(f.board);
+#endif
+      gboolean handled = FALSE;
+      g_signal_emit_by_name(f.board, "close-request", &handled);
+      CHECK(handled);
       Wait(&f);
       CHECK(UmiKanbanGtk4WindowDocked(f.board));
       const char *text = gtk_label_get_text(GTK_LABEL(Find(f.content, "kanban-document-status")));

@@ -19,7 +19,7 @@ int main(int argc, char **argv) {
   const char *name = argv[1],
              *cases[] = {"different-names", "in-place",    "unrelated-fields", "owned",
                          "missing",         "ambiguous",   "incomplete",       "legacy",
-                         "invalid-profile", "null-output", "null-profile",     "hidden"};
+                         "invalid-profile", "null-output", "null-profile",     "hidden", "invalid-definitions"};
   bool known = false;
   for (size_t i = 0U; i < sizeof cases / sizeof cases[0]; ++i)
     if (strcmp(name, cases[i]) == 0)
@@ -57,7 +57,12 @@ int main(int argc, char **argv) {
     strcpy(profile.generator, "Ninja");
     strcpy(profile.build_target, "notes");
     strcpy(profile.run_arguments, "--version");
+    /* Definitions use the same explicit -D argument contract as the build
+     * service. Keep the old invalid fixture visible for contract review. */
+#if 0
     strcpy(profile.configure_definitions, "NOTES_FEATURE=ON");
+#endif
+    strcpy(profile.configure_definitions, "-DNOTES_FEATURE=ON");
     profile.parallel_jobs = 3U;
   }
   if (strcmp(name, "legacy") == 0) {
@@ -66,6 +71,10 @@ int main(int argc, char **argv) {
   }
   if (strcmp(name, "invalid-profile") == 0) {
     memset(profile.profile_id, 'x', sizeof profile.profile_id);
+    wanted = UMI_STATUS_INVALID_ARGUMENT;
+  }
+  if (strcmp(name, "invalid-definitions") == 0) {
+    strcpy(profile.configure_definitions, "NOTES_FEATURE=ON");
     wanted = UMI_STATUS_INVALID_ARGUMENT;
   }
   expected = profile;

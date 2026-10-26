@@ -25,6 +25,7 @@ function(umicom_public_plan_group group owner)
             "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../tests/kanban_publication_plan/fixture.h"
             "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../tests/kanban/fixture.h"
             "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../tests/build_log/fixture.h"
+            "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../tests/support/main_context.h"
             "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../src/base/value_archive_internal.h")
     endif()
     foreach(case IN LISTS ARGN)
@@ -49,7 +50,7 @@ if(TARGET Umicom::kanban_storage)
     umicom_public_plan_group(storage Umicom::kanban_storage roundtrip replace missing malformed wrong-suffix nested relative missing-directory short-archive null preserve-invalid unicode)
 endif()
 if(TARGET Umicom::kanban_gtk4)
-    umicom_public_plan_group(native Umicom::kanban_gtk4 normal no-approval load-only save denied busy retired retained close-load hide-show captured-path discard invalid-file capture-retire null)
+    umicom_public_plan_group(native Umicom::kanban_gtk4 normal no-approval load-only save denied busy retired retained close-load hide-show captured-path discard invalid-file capture-retire null dispatch-budget retire-focus retire-other-focus)
 endif()
 if(TARGET Umicom::kanban_gtk4)
     umicom_public_plan_group(integration Umicom::kanban_gtk4 normal wrong-board stale-view review-current archived load-only busy retired)

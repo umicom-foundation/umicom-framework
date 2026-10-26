@@ -6,6 +6,9 @@
 # LICENCE: MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
+if(COMMAND umicom_release_inventory_own_headers AND TARGET umicom_ui)
+    umicom_release_inventory_own_headers(umicom_ui include/umicom/ui/document_identity.h)
+endif()
 if(NOT BUILD_TESTING)
     return()
 endif()
@@ -44,3 +47,27 @@ endforeach()
 if(COMMAND umicom_register_validation_target)
     umicom_register_validation_target(umicom-document-source-files-test)
 endif()
+
+# Identity binding is shared by imported editor views across native hosts.
+add_executable(umicom-document-identity-test
+    "${CMAKE_CURRENT_LIST_DIR}/../tests/ui/test_document_identity.c")
+target_link_libraries(umicom-document-identity-test PRIVATE Umicom::ui)
+set_target_properties(umicom-document-identity-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+umicom_apply_warnings(umicom-document-identity-test)
+umicom_apply_sanitizers(umicom-document-identity-test)
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-document-identity-test)
+endif()
+if(COMMAND umicom_target_qualification_inputs)
+    umicom_target_qualification_inputs(umicom_ui FILES
+        "${CMAKE_CURRENT_LIST_DIR}/../src/ui/document_identity.inc")
+endif()
+foreach(test_case IN ITEMS bind large mixed noop empty stale missing foreign duplicate unterminated invalid-id capacity arguments)
+    add_test(NAME "framework.document_identity.${test_case}"
+        COMMAND umicom-document-identity-test "${test_case}")
+    set_tests_properties("framework.document_identity.${test_case}" PROPERTIES
+        TIMEOUT 30 LABELS "framework;document-content;identity;regression")
+    if(COMMAND umicom_test_impact_owners)
+        umicom_test_impact_owners("framework.document_identity.${test_case}" TARGETS umicom-document-identity-test)
+    endif()
+endforeach()

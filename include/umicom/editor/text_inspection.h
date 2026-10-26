@@ -53,6 +53,9 @@ typedef struct UmiEditorTextInspectionSummary {
 /** Inspect an explicit UTF-8 span, at most 8 MiB, without I/O or mutations.
  * NUL and malformed UTF-8 are refused. Cursor/selection endpoints must be valid
  * scalar boundaries and cannot split CRLF. Input need not be terminated.
+ * Malformed source returns PARSE_ERROR; after source validation, a split scalar
+ * or CRLF endpoint returns INVALID_ARGUMENT. Out-of-range spans are rejected
+ * before reading source bytes.
  * Empty text has one logical line; a terminal line break adds an empty line.
  * "Words" are runs separated by ASCII space, tab, CR, LF, vertical tab or form
  * feed; this is not natural-language segmentation. UTF-16 units include line

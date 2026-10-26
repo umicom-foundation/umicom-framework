@@ -136,9 +136,19 @@ static UmiStatus selected_record(AccessWorkspace *workspace,
     UmiHealthcareAccessRecord *record)
 {
     guint index = gtk_drop_down_get_selected(GTK_DROP_DOWN(workspace->selector));
+/* Map the explicit placeholder separately from authoritative request rows. The former expression remains for review. */
+#if 0
     if (index == GTK_INVALID_LIST_POSITION || (size_t)index >= workspace->worklist.count)
         return UMI_STATUS_NOT_FOUND;
     const UmiHealthcareAccessRecord *displayed = &workspace->worklist.items[index].record;
+#endif
+    /* Row zero is an explicit non-record choice. GTK may automatically select
+     * a populated model; that must never authorize an operation on its first
+     * request after filtering, assignment or archive replacement. */
+    if (index == GTK_INVALID_LIST_POSITION || index == 0U ||
+        (size_t)(index - 1U) >= workspace->worklist.count)
+        return UMI_STATUS_NOT_FOUND;
+    const UmiHealthcareAccessRecord *displayed = &workspace->worklist.items[index - 1U].record;
     UmiStatus status = UmiHealthcareAccessFind(workspace->book, displayed->requestId, record);
     if (status == UMI_STATUS_OK && record->revision != displayed->revision)
         return UMI_STATUS_INVALID_STATE;
@@ -202,6 +212,8 @@ static void refresh_record(AccessWorkspace *workspace)
 /* Projection never expires a reservation. The explicit expiry action owns that
  * transition. Callers hold the controller and block reentry while GTK publishes
  * models and labels; root disposal can occur at any notification boundary. */
+/* Replace implicit unselection with a non-actionable placeholder while preserving the worklist, stable IDs and revision checks. The former expression remains for review. */
+#if 0
 static UmiStatus rebuild_worklist(AccessWorkspace *workspace, const char *preferredId)
 {
     UmiHealthcareAccessWorklist candidate;
@@ -225,6 +237,45 @@ static UmiStatus rebuild_worklist(AccessWorkspace *workspace, const char *prefer
     if (workspace->closed) return UMI_STATUS_OK;
     /* If assignment removes a row from the unassigned view, leave selection
      * empty rather than silently making the next request the action target. */
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(workspace->selector), selection);
+    if (workspace->closed) return UMI_STATUS_OK;
+    char summary[256];
+    (void)snprintf(summary, sizeof(summary),
+        "Showing %zu of %zu requests | Outstanding %zu | Follow-up %zu | Unassigned %zu | Overdue reservations %zu",
+        candidate.count, candidate.totalRequests, candidate.outstandingRequests,
+        candidate.followupRequests, candidate.unassignedFollowups, candidate.overdueReservations);
+    gtk_label_set_text(GTK_LABEL(workspace->workSummary), summary);
+    if (!workspace->closed) refresh_record(workspace);
+    return UMI_STATUS_OK;
+}
+
+#endif
+static UmiStatus rebuild_worklist(AccessWorkspace *workspace, const char *preferredId)
+{
+    UmiHealthcareAccessWorklist candidate;
+    gint64 clockValue = g_get_real_time();
+    uint64_t now = clockValue > 0 ? (uint64_t)(clockValue / G_USEC_PER_SEC) : 0U;
+    UmiStatus status = UmiHealthcareAccessWorklistBuild(workspace->book,
+        (UmiHealthcareAccessFilter)gtk_drop_down_get_selected(GTK_DROP_DOWN(workspace->filter)),
+        gtk_editable_get_text(GTK_EDITABLE(workspace->ownerFilter)), now, &candidate);
+    if (status != UMI_STATUS_OK) return status;
+    GtkStringList *model = gtk_string_list_new(NULL);
+    /* A real model row makes the no-request state portable across GTK
+     * selection policies; no private GTK selection object is accessed. */
+    gtk_string_list_append(model, "Select a request");
+    guint selection = 0U;
+    for (size_t i = 0U; i < candidate.count; ++i) {
+        gtk_string_list_append(model, candidate.items[i].record.requestId);
+        if (preferredId != NULL && strcmp(candidate.items[i].record.requestId, preferredId) == 0)
+            selection = (guint)i + 1U;
+    }
+    workspace->worklist = candidate;
+    g_clear_object(&workspace->requests);
+    workspace->requests = model;
+    gtk_drop_down_set_model(GTK_DROP_DOWN(workspace->selector), G_LIST_MODEL(model));
+    if (workspace->closed) return UMI_STATUS_OK;
+    /* If assignment removes a row from the unassigned view, select the
+     * placeholder so the next request cannot become an implicit action target. */
     gtk_drop_down_set_selected(GTK_DROP_DOWN(workspace->selector), selection);
     if (workspace->closed) return UMI_STATUS_OK;
     char summary[256];
@@ -675,6 +726,7 @@ UmiStatus UmiHealthcareAccessWorkspaceNew(GtkWidget **outWidget)
     gtk_label_set_xalign(GTK_LABEL(workspace->workSummary), 0.0F);
     gtk_box_append(GTK_BOX(root), workspace->workSummary);
     workspace->requests = gtk_string_list_new(NULL);
+    gtk_string_list_append(workspace->requests, "Select a request");
     /* Retain the direct construction for ownership review. The shared helper
      * below now makes the consumed reference explicit for every application. */
 #if 0

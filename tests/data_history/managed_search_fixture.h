@@ -21,6 +21,7 @@
 #undef CHECK
 #include "umicom/data/structured_form_search_preset.h"
 #include "umicom/ui/gtk4/form_record_editor.h"
+#include "../support/gtk4_expanders.h"
 #include "umicom/ui/gtk4/structured_form_search_draft.h"
 #include <glib/gstdio.h>
 typedef struct ManagedSearchFixture {
@@ -111,6 +112,7 @@ static inline UmiStatus managed_new(const char *parent, ManagedSearchFixture **o
     status = UmiFormRecordEditorGtk4New(&options, &f->root);
   if (status == UMI_STATUS_OK) {
     g_object_ref_sink(f->root);
+    UmiTestExpandSections(f->root);
     status = UmiFormRecordEditorGtk4Connect(f->root, f->database);
   }
   if (status == UMI_STATUS_OK)

@@ -184,6 +184,7 @@ if(BUILD_TESTING AND "UMICOM_HAS_SQLITE=1" IN_LIST _form_search_editor_data_defi
     endif()
     if(COMMAND umicom_target_qualification_inputs)
         umicom_target_qualification_inputs(umicom-form-record-search-test FILES
+            "${_form_search_editor_root}/tests/support/gtk4_expanders.h"
             "${_form_search_editor_root}/tests/application_experience/structured_form_fixture.h")
     endif()
     foreach(_form_search_editor_case IN ITEMS basic empty pages metadata state known-version unknown-version damaged invalid-input invalid-filter late-filter late-metadata filter-after-result late-open-filter open-stale changed-head dirty-search mode-to-metadata mode-to-typed no-next busy retire-read dispose-read retired null long-query button completion-filter acceptance-filter retained-button not-connected)
@@ -230,6 +231,7 @@ if(BUILD_TESTING AND "UMICOM_HAS_SQLITE=1" IN_LIST _form_native_preset_definitio
     endif()
     if(COMMAND umicom_target_qualification_inputs)
         umicom_target_qualification_inputs(umicom-form-native-presets-test FILES
+            "${_form_native_preset_root}/tests/support/gtk4_expanders.h"
             "${_form_native_preset_root}/tests/application_experience/structured_form_fixture.h")
     endif()
     foreach(_form_native_preset_case IN ITEMS create write-captured retire-save dispose-save save-feedback-retire collision stale zero-time invalid-title invalid-input invalid-key key-length expected-overflow open missing namespace schema utf8-title utf8-operand late-filter late-metadata late-title late-key retire-open dispose-open dirty-record completion-filter completion-retire completion-title completion-key filter-observer-title button-create button-update button-update-key retained-button null retired)
@@ -328,6 +330,7 @@ if(BUILD_TESTING AND "UMICOM_HAS_SQLITE=1" IN_LIST _managed_search_definitions)
         if(COMMAND umicom_target_qualification_inputs)
             umicom_target_qualification_inputs(${_managed_search_target} FILES
                 "${_managed_search_root}/tests/data_history/managed_search_fixture.h"
+                "${_managed_search_root}/tests/support/gtk4_expanders.h"
                 "${_managed_search_root}/tests/application_experience/structured_form_fixture.h")
         endif()
         foreach(_managed_search_case IN LISTS _managed_search_${_managed_search_group}_cases)

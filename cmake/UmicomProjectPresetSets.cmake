@@ -20,7 +20,7 @@ install(FILES "${_preset_set_root}/docs/guides/related-build-presets.html"
 if(BUILD_TESTING)
     set(_preset_set_inspect_cases related missing-build missing-test ambiguous-build ambiguous-test hidden-configure false-configure hidden-build false-build hidden-test false-test unrelated case-sensitive includes configure-inherits build-inherits hidden-inherits unrelated-inherits configure-condition build-condition wrong-stage invalid-index arguments)
     set(_preset_set_select_cases different-names in-place unrelated-fields owned missing ambiguous
-        incomplete legacy invalid-profile null-output null-profile hidden)
+        incomplete legacy invalid-profile null-output null-profile hidden invalid-definitions)
     set(_preset_set_graph_cases inherited included user false-condition ambiguous)
     foreach(_preset_set_group IN ITEMS inspect select graph)
         set(_preset_set_target "umicom-preset-set-${_preset_set_group}-test")

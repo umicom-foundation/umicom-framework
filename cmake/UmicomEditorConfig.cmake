@@ -82,9 +82,15 @@ if(BUILD_TESTING)
         foreach(_config_case IN LISTS _config_${_config_group}_cases)
             set(_config_test "framework.editor.config.${_config_group}.${_config_case}")
             add_test(NAME ${_config_test} COMMAND ${_config_target} ${_config_case})
-            file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/editor-config/${_config_group}/${_config_case}")
+            # Case directory names are prefixed because NUL is a Windows device name.
+            # The previous path is retained as a comment for portability review.
+            # file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/editor-config/${_config_group}/${_config_case}")
+            file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/editor-config/${_config_group}/case-${_config_case}")
             set_tests_properties(${_config_test} PROPERTIES TIMEOUT 60
-                WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/editor-config/${_config_group}/${_config_case}"
+            # Case directory names are prefixed because NUL is a Windows device name.
+            # The previous path is retained as a comment for portability review.
+            # WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/editor-config/${_config_group}/${_config_case}"
+                WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/editor-config/${_config_group}/case-${_config_case}"
                 LABELS "framework;editor;configuration;regression")
             if(_config_group STREQUAL "gtk4")
                 set_tests_properties(${_config_test} PROPERTIES SKIP_RETURN_CODE 77

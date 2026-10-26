@@ -33,11 +33,31 @@ static void BufferChanged(GtkTextBuffer *buffer, gpointer data) {
   else
     gtk_drop_down_set_selected(GTK_DROP_DOWN(observer->paths), UMI_DEBUG_BACKTRACE_OMIT_PATHS);
 }
+/* window-added is emitted before GTK installs its application shortcut
+ * controller. Destroying the window inside that emission reenters incomplete
+ * toolkit construction. Retain the former fixture for review; the replacement
+ * closes at notify::application, still synchronously before our constructor
+ * returns, after GTK has finished attaching the application. */
+#if 0
 static void Added(GtkApplication *app, GtkWindow *window, gpointer data) {
   (void)app;
   (void)data;
   if (!strcmp(gtk_widget_get_name(GTK_WIDGET(window)), "debug.backtrace.review"))
     gtk_window_destroy(window);
+}
+#endif
+static void AttachmentCompleted(GObject *object, GParamSpec *property, gpointer data) {
+  (void)property;
+  GtkWindow *window = GTK_WINDOW(object);
+  if (gtk_window_get_application(window) == NULL) return;
+  g_signal_handlers_disconnect_by_data(window, data);
+  ++*(unsigned *)data;
+  gtk_window_destroy(window);
+}
+static void Added(GtkApplication *app, GtkWindow *window, gpointer data) {
+  (void)app;
+  if (!strcmp(gtk_widget_get_name(GTK_WIDGET(window)), "debug.backtrace.review"))
+    g_signal_connect(window, "notify::application", G_CALLBACK(AttachmentCompleted), data);
 }
 static char *Text(GtkWidget *view) {
   GtkTextIter first, last;
@@ -67,13 +87,19 @@ int main(int argc, char **argv) {
   g_object_ref(owner);
   GtkWindow *window = NULL;
   gulong added = 0U;
+  unsigned attachment_closes = 0U;
   if (!strcmp(name, "added-close"))
+    /* Capture proof that retirement happened inside the attachment callback. */
+#if 0
     added = g_signal_connect(app, "window-added", G_CALLBACK(Added), NULL);
+#endif
+    added = g_signal_connect(app, "window-added", G_CALLBACK(Added), &attachment_closes);
   UmiStatus status = UmiGtk4DebugBacktraceCreateWindow(owner, trace, &window);
   if (added)
     g_signal_handler_disconnect(app, added);
   if (!strcmp(name, "added-close")) {
     CHECK(status == UMI_STATUS_CANCELLED && window == NULL);
+    CHECK(attachment_closes == 1U);
     goto done;
   }
   OK(status);
@@ -136,6 +162,16 @@ int main(int argc, char **argv) {
     else {
       text = Text(view);
       CHECK(text[0] == '\0');
+      g_free(text);
+      /* Repeated notification of the interrupted mode must remain empty;
+       * choosing a different policy should recover normal review behaviour. */
+      g_object_notify(G_OBJECT(paths), "selected");
+      text = Text(view);
+      CHECK(text[0] == '\0');
+      g_free(text);
+      gtk_drop_down_set_selected(GTK_DROP_DOWN(paths), UMI_DEBUG_BACKTRACE_FILENAMES);
+      text = Text(view);
+      CHECK(strstr(text, "main.c:42:3") != NULL && strstr(text, "/private") == NULL);
       g_free(text);
     }
     g_object_unref(buffer);

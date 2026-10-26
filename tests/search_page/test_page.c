@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
                          "null",         "bounds",          "immutable",
                          "new-request",  "invalid-request", "invalidate",
                          "index-change", "other-session",   "after-owner",
-                         "filter",       "cancel-completed"};
+                         "filter",       "cancel-completed", "index-unchanged"};
   int recognised = 0;
   for (size_t i = 0U; i < sizeof known / sizeof known[0]; ++i)
     if (strcmp(name, known[i]) == 0)
@@ -122,8 +122,25 @@ int main(int argc, char **argv) {
     CHECK(UmiFileSearchPageCreate(session, 0U, 0U, &sentinel) == UMI_STATUS_BUSY &&
           sentinel == page);
   } else if (strcmp(name, "index-change") == 0) {
+    /* An unchanged scan deliberately preserves the published index revision.
+     * Retain the earlier fixture for review; add a real indexed entry before
+     * requiring the search page to reject its now-stale result snapshot. */
+#if 0
     CHECK(umi_file_index_rebuild(index) == UMI_STATUS_OK);
     CHECK(UmiFileSearchPageValidate(page, session) == UMI_STATUS_BUSY);
+#endif
+    char additional[UMI_PATH_CAPACITY];
+    FixturePath(additional, root, "additional.c");
+    CHECK(umi_fs_write_text(additional, "x\n") == UMI_STATUS_OK);
+    CHECK(umi_file_index_rebuild(index) == UMI_STATUS_OK);
+    CHECK(UmiFileSearchPageValidate(page, session) == UMI_STATUS_BUSY);
+    /* Staleness blocks reuse against the owner, not access to the owned copy. */
+    CHECK(UmiFileSearchPageRead(page, &summary) == UMI_STATUS_OK);
+    CHECK(summary.search.stats.matches == matches);
+    CHECK(UmiFileSearchPageMatchAt(page, 0U, &row) == UMI_STATUS_OK);
+  } else if (strcmp(name, "index-unchanged") == 0) {
+    CHECK(umi_file_index_rebuild(index) == UMI_STATUS_OK);
+    CHECK(UmiFileSearchPageValidate(page, session) == UMI_STATUS_OK);
   } else if (strcmp(name, "other-session") == 0) {
     UmiFileSearchSession *other = NULL;
     CHECK(UmiFileSearchCreate(index, &other) == UMI_STATUS_OK);

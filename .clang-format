@@ -1,0 +1,9 @@
+# Umicom Framework
+# File: .clang-format
+# PURPOSE: Match the existing Applications C formatting defaults for new code.
+# AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+# LICENCE: MIT
+BasedOnStyle: LLVM
+IndentWidth: 2
+UseTab: Never
+ColumnLimit: 100

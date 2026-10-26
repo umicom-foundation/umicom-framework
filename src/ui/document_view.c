@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/document_view.h"
+#include "umicom/ui/document_identity.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -1248,3 +1249,5 @@ size_t umi_ui_document_view_model_group_count(
 
 /* Prepared publication is private to shared document ownership. */
 #include "document_text_batch.inc"
+
+#include "document_identity.inc"

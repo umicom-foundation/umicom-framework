@@ -43,8 +43,13 @@ UmiStatus UmiEditorTextInspectionCreate(const char *text, size_t bytes, size_t c
   if (umi_cancellation_token_is_requested(cancel))
     return UMI_STATUS_CANCELLED;
   const char *source = text != NULL ? text : "";
+  /* Retain the former ordering for review. A leading continuation byte is
+   * malformed source, not evidence that a valid character was split. Validate
+   * the owned document before interpreting cursor boundaries below. */
+#if 0
   if (!Boundary(source, bytes, cursor) || !Boundary(source, bytes, cursor + selection))
     return UMI_STATUS_INVALID_ARGUMENT;
+#endif
   UmiEditorTextInspection *value = calloc(1U, sizeof *value);
   if (value == NULL)
     return UMI_STATUS_OUT_OF_MEMORY;
@@ -57,6 +62,10 @@ UmiStatus UmiEditorTextInspectionCreate(const char *text, size_t bytes, size_t c
   memcpy(value->text, source, bytes);
   value->text[bytes] = '\0';
   UmiStatus status = InspectionMeasure(value->text, bytes, cancel, &value->summary.document, value);
+  if (status == UMI_STATUS_OK &&
+      (!Boundary(value->text, bytes, cursor) ||
+       !Boundary(value->text, bytes, cursor + selection)))
+    status = UMI_STATUS_INVALID_ARGUMENT;
   if (status == UMI_STATUS_OK)
     status =
         InspectionMeasure(value->text + cursor, selection, cancel, &value->summary.selection, NULL);

@@ -53,6 +53,10 @@ if(BUILD_TESTING)
     if(COMMAND umicom_register_validation_target)
         umicom_register_validation_target(umicom-record-editor-test)
     endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-record-editor-test FILES
+            "${_record_editor_root}/tests/support/gtk4_expanders.h")
+    endif()
     set(_record_editor_cases options relative-path retired-actions)
     if(SQLite3_FOUND)
         list(APPEND _record_editor_cases roundtrip reopen stale later-edit oversize invalid-attribution

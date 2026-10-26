@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "../build_log/fixture.h"
+#include "../support/main_context.h"
 #include "fixture.h"
 #include "umicom/kanban/publication_plan_storage.h"
 #include "umicom/ui/gtk4/automation.h"
@@ -52,6 +53,9 @@ static GtkWidget *Find(GtkWidget *root, const char *tag) {
 static void Click(GtkWidget *root, const char *tag) {
   g_signal_emit_by_name(Find(root, tag), "clicked");
 }
+/* Retain the former drain for review. Bounded dispatch lets the fixture
+ * observe pending completion even when GTK keeps scheduling native events. */
+#if 0
 static void Drain(void) {
   for (unsigned i = 0U; i < 30U; ++i) {
     while (g_main_context_iteration(NULL, FALSE)) {
@@ -69,14 +73,61 @@ static void Wait(GtkWidget *root) {
   REQUIRE(!UmiKanbanPublicPlanGtk4Pending(root));
   Drain();
 }
+#endif
+static void Drain(void) {
+  for (unsigned i = 0U; i < 30U; ++i) {
+    (void)UmiTestDispatchSlice(NULL, g_get_monotonic_time() + 1000, 32U);
+    g_usleep(1000U);
+  }
+}
+static void Wait(GtkWidget *root) {
+  gint64 end = g_get_monotonic_time() + 10 * G_TIME_SPAN_SECOND;
+  while (UmiKanbanPublicPlanGtk4Pending(root) && g_get_monotonic_time() < end) {
+    (void)UmiTestDispatchSlice(NULL, end, 32U);
+    g_usleep(1000U);
+  }
+  REQUIRE(!UmiKanbanPublicPlanGtk4Pending(root));
+  Drain();
+}
+/* An always-ready source reproduces the starvation hazard without relying on
+ * display timing. The fixture must return after its explicit dispatch budget. */
+static gboolean KeepReady(gpointer data)
+{
+  unsigned *calls = data;
+  ++*calls;
+  return G_SOURCE_CONTINUE;
+}
+static void CheckDispatchBudget(void)
+{
+  GMainContext *context = g_main_context_new();
+  gint64 deadline = g_get_monotonic_time() + G_TIME_SPAN_SECOND;
+  REQUIRE(UmiTestDispatchSlice(context, deadline, 8U) == 0U);
+  unsigned calls = 0U;
+  GSource *source = g_idle_source_new();
+  g_source_set_callback(source, KeepReady, &calls, NULL);
+  REQUIRE(g_source_attach(source, context) != 0U);
+  REQUIRE(UmiTestDispatchSlice(context, deadline, 0U) == 0U);
+  REQUIRE(UmiTestDispatchSlice(context, 0, 8U) == 0U);
+  REQUIRE(calls == 0U);
+  REQUIRE(UmiTestDispatchSlice(context, deadline, 8U) == 8U);
+  REQUIRE(calls == 8U);
+  g_source_destroy(source);
+  g_source_unref(source);
+  REQUIRE(UmiTestDispatchSlice(context, deadline, 8U) == 0U);
+  g_main_context_unref(context);
+}
 int main(int argc, char **argv) {
   REQUIRE(argc == 2);
   const char *name = argv[1],
              *cases[] = {"normal",       "no-approval",    "load-only",     "save",
                          "denied",       "busy",           "retired",       "retained",
                          "close-load",   "hide-show",      "captured-path", "discard",
-                         "invalid-file", "capture-retire", "null"};
+                         "invalid-file", "capture-retire", "null", "dispatch-budget", "retire-focus", "retire-other-focus"};
   CaseKnown(name, cases, sizeof cases / sizeof cases[0]);
+  if (!strcmp(name, "dispatch-budget")) {
+    CheckDispatchBudget();
+    return 0;
+  }
   if (!gtk_init_check())
     return 77;
   Context context = {0};
@@ -94,7 +145,11 @@ int main(int argc, char **argv) {
     REQUIRE(!UmiKanbanPublicPlanGtk4Pending(NULL));
   }
   GtkWindow *window = GTK_WINDOW(gtk_window_new());
-  gtk_window_set_child(window, context.panel);
+  GtkWidget *layout = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
+  GtkWidget *outside = gtk_entry_new();
+  gtk_box_append(GTK_BOX(layout), context.panel);
+  gtk_box_append(GTK_BOX(layout), outside);
+  gtk_window_set_child(window, layout);
   gtk_window_present(window);
   Drain();
   GtkWidget *path = Find(context.panel, "kanban.plan.directory");
@@ -118,8 +173,19 @@ int main(int argc, char **argv) {
   } else {
     if (!strcmp(name, "busy"))
       UmiKanbanPublicPlanGtk4SetBusy(context.panel, TRUE);
-    if (!strcmp(name, "retired"))
+    if (!strcmp(name, "retired") || !strcmp(name, "retire-focus") ||
+        !strcmp(name, "retire-other-focus")) {
+      GtkWidget *target = !strcmp(name, "retire-other-focus") ? outside : path;
+      REQUIRE(gtk_widget_grab_focus(target));
+      GtkWidget *focus = gtk_root_get_focus(GTK_ROOT(window));
+      REQUIRE(focus != NULL &&
+              (focus == target || gtk_widget_is_ancestor(focus, target)));
       UmiKanbanPublicPlanGtk4Retire(context.panel);
+      if (target == outside)
+        REQUIRE(gtk_root_get_focus(GTK_ROOT(window)) == focus);
+      else
+        REQUIRE(gtk_root_get_focus(GTK_ROOT(window)) == NULL);
+    }
     if (!strcmp(name, "retained")) {
       gtk_window_destroy(window);
       destroyed = true;
@@ -138,7 +204,9 @@ int main(int argc, char **argv) {
     if (!strcmp(name, "captured-path"))
       gtk_editable_set_text(GTK_EDITABLE(file), "not-the-loaded-file.umipublic");
     Wait(context.panel);
-    bool blank = !strcmp(name, "busy") || !strcmp(name, "retired") || !strcmp(name, "retained") ||
+    bool blank = !strcmp(name, "busy") || !strcmp(name, "retired") ||
+                 !strcmp(name, "retire-focus") || !strcmp(name, "retire-other-focus") ||
+                 !strcmp(name, "retained") ||
                  !strcmp(name, "close-load") || !strcmp(name, "hide-show") ||
                  !strcmp(name, "invalid-file");
     REQUIRE((gtk_text_buffer_get_char_count(buffer) == 0) == blank);

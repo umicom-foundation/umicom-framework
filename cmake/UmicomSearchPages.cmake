@@ -30,7 +30,7 @@ if(BUILD_TESTING)
             "${_search_page_root}/tests/build_log/fixture.h"
             "${_search_page_root}/tests/support/symbolic_link.h")
     endif()
-    foreach(case IN ITEMS normal default align last overflow empty single maximum limit null bounds immutable new-request invalid-request invalidate index-change other-session after-owner filter cancel-completed)
+    foreach(case IN ITEMS normal default align last overflow empty single maximum limit null bounds immutable new-request invalid-request invalidate index-change index-unchanged other-session after-owner filter cancel-completed)
         set(test "framework.search.page.${case}")
         set(directory "${CMAKE_CURRENT_BINARY_DIR}/qualification/search-page/${case}")
         file(MAKE_DIRECTORY "${directory}")

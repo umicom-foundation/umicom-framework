@@ -68,7 +68,10 @@ UmiStatus UmiFormRecordImportGtk4New(const UmiFormRecordImportGtk4Options *optio
 /* Review loads bounded bytes and validates all revisions on a worker. These
  * functions return admission status; read State or listen for operation-finished
  * (operation integer, UmiStatus integer) to observe completion. Changing either
- * visible path invalidates the review and any pending read result. */
+ * visible path invalidates the review and any pending read result.
+ * Explicit retirement preserves completion handlers. GObject disposal removes
+ * those handlers; a host retaining a disposed instance observes completion
+ * through StateRead instead of expecting a signal from the disposed widget. */
 UmiStatus UmiFormRecordImportGtk4Review(GtkWidget *widget, const char *bundle_path);
 UmiStatus UmiFormRecordImportGtk4Restore(GtkWidget *widget, const char *database_path);
 /* Explicit caller-supplied receipt, captured before authorization. The same

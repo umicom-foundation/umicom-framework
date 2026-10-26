@@ -25,6 +25,8 @@ typedef struct BacktraceWindow {
     GtkTextBuffer *buffer;
     char *rendered;
     gboolean pending;
+    gboolean policy_interrupted;
+    guint interrupted_mode;
 } BacktraceWindow;
 static void BacktraceFree(gpointer data)
 {
@@ -42,6 +44,13 @@ static void BacktraceRefresh(GObject *object, GParamSpec *property, gpointer dat
     GtkWindow *window = data;
     BacktraceWindow *state = g_object_get_data(G_OBJECT(window), "umicom-debug-backtrace");
     if (state->pending || !UmiGtk4WindowIsOpen(window)) return;
+    guint selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(state->paths));
+    /* GObject may restart notify emission after a callback changes this same
+     * property. That queued notification must not repopulate a review which
+     * was cleared during the previous refresh. A different explicit selection
+     * starts a new review; the interrupted mode stays empty and non-copyable. */
+    if (state->policy_interrupted && selected == state->interrupted_mode) return;
+    state->policy_interrupted = FALSE;
     g_object_ref(window);
     state->pending = TRUE;
     guint mode = gtk_drop_down_get_selected(GTK_DROP_DOWN(state->paths));
@@ -72,7 +81,11 @@ static void BacktraceRefresh(GObject *object, GParamSpec *property, gpointer dat
         g_clear_pointer(&state->rendered, g_free);
         gtk_text_buffer_set_text(state->buffer, "", -1);
         if (UmiGtk4WindowIsOpen(window))
-            gtk_label_set_text(GTK_LABEL(state->status), "Path display changed during refresh. Select the desired mode again.");
+            gtk_label_set_text(GTK_LABEL(state->status), "Path display changed during refresh. Select another mode to review again.");
+        if (UmiGtk4WindowIsOpen(window)) {
+            state->policy_interrupted = TRUE;
+            state->interrupted_mode = gtk_drop_down_get_selected(GTK_DROP_DOWN(state->paths));
+        }
     }
     state->pending = FALSE;
     g_object_unref(window);

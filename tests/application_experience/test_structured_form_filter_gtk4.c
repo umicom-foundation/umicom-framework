@@ -299,9 +299,17 @@ int main(int argc, char **argv) {
   }
   if (strcmp(name, "outside-threshold") == 0)
     gtk_drop_down_set_selected(GTK_DROP_DOWN(operation), 2);
+/* Remove the model to establish a missing field, rather than relying on GTK to unselect a populated dropdown. The former expression remains for review. */
+#if 0
   if (strcmp(name, "invalid-selection") == 0)
     gtk_drop_down_set_selected(GTK_DROP_DOWN(named(row, "form-filter-field")),
                                GTK_INVALID_LIST_POSITION);
+#endif
+  if (strcmp(name, "invalid-selection") == 0) {
+    GtkDropDown *field = GTK_DROP_DOWN(named(row, "form-filter-field"));
+    gtk_drop_down_set_model(field, NULL);
+    CHECK(gtk_drop_down_get_selected(field) == GTK_INVALID_LIST_POSITION);
+  }
   else if (strcmp(name, "long-value") == 0) {
     char long_value[600];
     memset(long_value, '1', sizeof long_value - 1);

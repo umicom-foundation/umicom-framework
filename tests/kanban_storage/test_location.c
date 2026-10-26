@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/kanban/location.h"
+#include "umicom/platform/path.h"
 #include <stdio.h>
 #include <string.h>
 #define CHECK(x)                                                                                   \
@@ -26,7 +27,12 @@
 #ifdef _WIN32
 #define ROOT "C:/Projects/editor"
 #define OTHER "C:/Projects/other"
+/* The suggested name hashes the normalized native root. Retain the earlier
+ * forward-slash vector for review; Windows normalization uses backslashes. */
+#if 0
 #define EXPECTED "project-d36450143b792cfed64ac31fd20c253dba75053c68bfa2dcbf047d093dcf9dd9.umikb"
+#endif
+#define EXPECTED "project-f4e46cb0db980e47b055f4f919bd47673a0e935d9096349eda86b2ab82008b8a.umikb"
 #else
 #define ROOT "/projects/editor"
 #define OTHER "/projects/other"
@@ -43,7 +49,13 @@ int main(int argc, char **argv) {
       !strcmp(name, "independent") || !strcmp(name, "filename") || !strcmp(name, "unicode")) {
     const char *root = !strcmp(name, "unicode") ? ROOT "-\xc3\xa9" : ROOT;
     CHECK(UmiKanbanProjectLocationCreate(root, &value) == UMI_STATUS_OK);
+    /* Compare canonical output rather than input separator spelling. */
+#if 0
     CHECK(!strcmp(value.project_root, root));
+#endif
+    char canonical[UMI_PATH_CAPACITY];
+    CHECK(umi_path_normalise(root, canonical, sizeof canonical) == UMI_STATUS_OK);
+    CHECK(!strcmp(value.project_root, canonical));
     CHECK(strlen(value.filename) == 78U && !strncmp(value.filename, "project-", 8U));
     CHECK(!strcmp(value.filename + 72U, ".umikb"));
     if (!strcmp(name, "stable"))
@@ -66,7 +78,11 @@ int main(int argc, char **argv) {
       strcpy(mutable_root, ROOT);
       CHECK(UmiKanbanProjectLocationCreate(mutable_root, &value) == UMI_STATUS_OK);
       mutable_root[3] = 'x';
+      /* The independently owned root retains its normalized representation. */
+#if 0
       CHECK(!strcmp(value.project_root, ROOT));
+#endif
+      CHECK(umi_path_equal(value.project_root, ROOT));
     }
     return 0;
   }

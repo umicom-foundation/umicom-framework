@@ -19,6 +19,7 @@
 #undef CHECK
 #include "umicom/data/structured_form_search_preset.h"
 #include "umicom/ui/gtk4/form_record_editor.h"
+#include "../support/gtk4_expanders.h"
 #include <glib/gstdio.h>
 #define CHECK(x)                                                                                   \
   do {                                                                                             \
@@ -169,6 +170,7 @@ int main(int argc, char **argv) {
       .schema = &f->schema, .entity_prefix = "preset.form.", .source = "Fictional preset editor"};
   OK(UmiFormRecordEditorGtk4New(&options, &root));
   g_object_ref_sink(root);
+  UmiTestExpandSections(root);
   OK(UmiFormRecordEditorGtk4Connect(root, database));
   CHECK(idle(root));
   OK(UmiFormRecordEditorGtk4LastStatus(root));

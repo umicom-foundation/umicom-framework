@@ -60,9 +60,15 @@ if(BUILD_TESTING)
         foreach(_preference_storage_case IN LISTS _preference_storage_${_preference_storage_group}_cases)
             set(_preference_storage_test "framework.editor.preference_storage.${_preference_storage_group}.${_preference_storage_case}")
             add_test(NAME ${_preference_storage_test} COMMAND ${_preference_storage_target} ${_preference_storage_case})
-            file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/preference-storage/${_preference_storage_group}/${_preference_storage_case}")
+            # Case directory names are prefixed because NUL is a Windows device name.
+            # The previous path is retained as a comment for portability review.
+            # file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/preference-storage/${_preference_storage_group}/${_preference_storage_case}")
+            file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/preference-storage/${_preference_storage_group}/case-${_preference_storage_case}")
             set_tests_properties(${_preference_storage_test} PROPERTIES TIMEOUT 30
-                WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/preference-storage/${_preference_storage_group}/${_preference_storage_case}"
+            # Case directory names are prefixed because NUL is a Windows device name.
+            # The previous path is retained as a comment for portability review.
+            # WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/preference-storage/${_preference_storage_group}/${_preference_storage_case}"
+                WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/preference-storage/${_preference_storage_group}/case-${_preference_storage_case}"
                 LABELS "framework;editor;preferences;storage;regression")
             if(COMMAND umicom_test_impact_owners)
                 umicom_test_impact_owners(${_preference_storage_test} TARGETS ${_preference_storage_target})

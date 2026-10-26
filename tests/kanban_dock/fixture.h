@@ -15,6 +15,7 @@
 
 #ifndef UMICOM_KANBAN_DOCK_FIXTURE_H
 #define UMICOM_KANBAN_DOCK_FIXTURE_H
+#include "../support/main_context.h"
 #include "umicom/kanban/document.h"
 #include "umicom/ui/gtk4/kanban_dock.h"
 #include "umicom/ui/gtk4/kanban_project.h"
@@ -60,11 +61,23 @@ static inline void Click(GtkWidget *root, const char *label) {
   CHECK(GTK_IS_BUTTON(b));
   g_signal_emit_by_name(b, "clicked");
 }
+/* The former unbounded drain is retained for review. A busy native event
+ * source must not prevent this fixture from checking worker completion. */
+#if 0
 static inline void Wait(Fixture *f) {
   gint64 end = g_get_monotonic_time() + 20 * G_TIME_SPAN_SECOND;
   while (UmiKanbanGtk4WindowBusy(f->board) && g_get_monotonic_time() < end) {
     while (g_main_context_iteration(NULL, FALSE)) {
     }
+    g_usleep(1000);
+  }
+  CHECK(!UmiKanbanGtk4WindowBusy(f->board));
+}
+#endif
+static inline void Wait(Fixture *f) {
+  gint64 end = g_get_monotonic_time() + 20 * G_TIME_SPAN_SECOND;
+  while (UmiKanbanGtk4WindowBusy(f->board) && g_get_monotonic_time() < end) {
+    (void)UmiTestDispatchSlice(NULL, end, 32U);
     g_usleep(1000);
   }
   CHECK(!UmiKanbanGtk4WindowBusy(f->board));

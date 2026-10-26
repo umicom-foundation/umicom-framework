@@ -55,33 +55,75 @@ int main(int argc, char **argv)
     GtkWidget *details = find(root, "healthcare-details");
     CHECK(filter && selector && details);
     gtk_drop_down_set_selected(filter, UMI_HEALTHCARE_ACCESS_FOLLOWUP);
+/* Count the placeholder separately from stored requests. The former expression remains for review. */
+#if 0
     CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(selector)) == 2U);
+#endif
+    CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(selector)) == 3U);
+    /* Request rows follow the non-actionable placeholder. Preserve the former
+     * zero-based request selection for review of the presentation change. */
+#if 0
     gtk_drop_down_set_selected(selector, 0U);
+#endif
+    gtk_drop_down_set_selected(selector, 1U);
     if (!strcmp(name, "identity")) {
         CHECK(click(root, "healthcare-followup"));
         CHECK(strstr(gtk_label_get_text(GTK_LABEL(details)), "STF-000001") != NULL);
         gtk_drop_down_set_selected(filter, UMI_HEALTHCARE_ACCESS_ALL);
+/* Select the same request after the placeholder. The former expression remains for review. */
+#if 0
         gtk_drop_down_set_selected(selector, 0U);
-        CHECK(strstr(gtk_label_get_text(GTK_LABEL(details)), "Not assigned") != NULL);
+#endif
         gtk_drop_down_set_selected(selector, 1U);
+        CHECK(strstr(gtk_label_get_text(GTK_LABEL(details)), "Not assigned") != NULL);
+/* Select the same request after the placeholder. The former expression remains for review. */
+#if 0
+        gtk_drop_down_set_selected(selector, 1U);
+#endif
+        gtk_drop_down_set_selected(selector, 2U);
         CHECK(strstr(gtk_label_get_text(GTK_LABEL(details)), "STF-000001") != NULL);
     } else if (!strcmp(name, "owner")) {
         CHECK(click(root, "healthcare-followup"));
         gtk_editable_set_text(GTK_EDITABLE(find(root, "healthcare-owner-filter")), "STF-000001");
         CHECK(click(root, "healthcare-worklist-refresh"));
+/* Count the placeholder separately from stored requests. The former expression remains for review. */
+#if 0
         CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(selector)) == 1U);
+#endif
+        CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(selector)) == 2U);
         gtk_editable_set_text(GTK_EDITABLE(find(root, "healthcare-owner-filter")), "a person");
         CHECK(click(root, "healthcare-worklist-refresh"));
+/* Count the placeholder separately from stored requests. The former expression remains for review. */
+#if 0
         CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(selector)) == 1U);
+#endif
+        CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(selector)) == 2U);
         CHECK(strstr(gtk_label_get_text(GTK_LABEL(find(root, "healthcare-feedback"))), "unchanged") != NULL);
     } else if (!strcmp(name, "selection")) {
         gtk_drop_down_set_selected(filter, UMI_HEALTHCARE_ACCESS_UNASSIGNED);
+/* Select the same request after the placeholder. The former expression remains for review. */
+#if 0
         gtk_drop_down_set_selected(selector, 0U);
+#endif
+        gtk_drop_down_set_selected(selector, 1U);
         CHECK(click(root, "healthcare-followup"));
+/* Count the placeholder separately from stored requests. The former expression remains for review. */
+#if 0
         CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(selector)) == 1U);
+#endif
+        CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(selector)) == 2U);
+/* Check the explicit no-request state after assignment removes the selected row. The former expression remains for review. */
+#if 0
         CHECK(gtk_drop_down_get_selected(selector) == GTK_INVALID_LIST_POSITION);
+#endif
+        CHECK(gtk_drop_down_get_selected(selector) == 0U);
+        CHECK(strstr(gtk_label_get_text(GTK_LABEL(details)), "Select a request") != NULL);
         CHECK(click(root, "healthcare-followup"));
+/* Select the same request after the placeholder. The former expression remains for review. */
+#if 0
         gtk_drop_down_set_selected(selector, 0U);
+#endif
+        gtk_drop_down_set_selected(selector, 1U);
         CHECK(strstr(gtk_label_get_text(GTK_LABEL(details)), "Not assigned") != NULL);
     } else if (!strcmp(name, "reentry") || !strcmp(name, "dispose")) {
         Observer observer = {root, !strcmp(name, "dispose"), false};
@@ -94,7 +136,11 @@ int main(int argc, char **argv)
         g_signal_handler_disconnect(summary, signal);
         if (!observer.dispose) {
             gtk_drop_down_set_selected(filter, UMI_HEALTHCARE_ACCESS_ALL);
+/* Count the placeholder separately from stored requests. The former expression remains for review. */
+#if 0
             CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(selector)) == 3U);
+#endif
+            CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(selector)) == 4U);
         } else g_signal_emit_by_name(retained, "clicked");
     } else CHECK(0 && "unknown case");
 cleanup:

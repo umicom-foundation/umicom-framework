@@ -18,6 +18,7 @@
 #include "umicom/document/bookmarks.h"
 #include "umicom/editor/navigation_history.h"
 #include "umicom/document/coordinator.h"
+#include "umicom/ui/document_identity.h"
 #include "umicom/document/indentation.h"
 #include "umicom/document/indentation_override.h"
 #include "umicom/document/search.h"
@@ -536,6 +537,10 @@ static UmiStatus register_entry(UmiDocumentCoordinator *coordinator,
  * Provide the import existing views operation used by this module and its client
  * applications.
  */
+/* The previous importer retained contributed identities after adopting their
+ * text. Keep it for review; the replacement publishes owned identities as one
+ * checked batch, preserving complete text and rollback on failed adoption. */
+#if 0
 static UmiStatus import_existing_views(UmiDocumentCoordinator *coordinator)
 {
     UmiUiDocumentViewModel *views = umi_ui_workbench_documents(coordinator->workbench);
@@ -583,6 +588,56 @@ static UmiStatus import_existing_views(UmiDocumentCoordinator *coordinator)
         (void)umi_ui_document_view_model_upsert(views, &view);
     }
     return UMI_STATUS_OK;
+}
+
+#endif
+static UmiStatus import_existing_views(UmiDocumentCoordinator *coordinator)
+{
+    UmiUiDocumentViewModel *views = umi_ui_workbench_documents(coordinator->workbench);
+    uint64_t revision = umi_ui_document_view_model_revision(views);
+    size_t count = umi_ui_document_view_model_count(views);
+    if (count == 0U) return UMI_STATUS_OK;
+    if (count > UMI_UI_DOCUMENT_VIEW_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiUiDocumentIdentityBinding *bindings = calloc(count, sizeof *bindings);
+    if (bindings == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    UmiStatus status = UMI_STATUS_OK;
+    for (size_t index = 0U; index < count; ++index) {
+        UmiUiDocumentViewSnapshot view;
+        status = umi_ui_document_view_model_at(views, index, &view);
+        if (status != UMI_STATUS_OK) break;
+        UmiDocumentId document_id;
+        status = umi_document_store_new(coordinator->store,
+            view.title[0] != '\0' ? view.title : "Untitled", &document_id);
+        if (status != UMI_STATUS_OK) break;
+        char *text = NULL;
+        size_t length = 0U;
+        status = UmiUiDocumentViewModelCopyText(views, view.view_id, &text, &length);
+        if (status == UMI_STATUS_OK)
+            status = umi_document_store_replace_text(coordinator->store, document_id, text, length);
+        UmiUiDocumentViewModelFreeText(text);
+        size_t entry_index = 0U;
+        if (status == UMI_STATUS_OK)
+            status = register_entry(coordinator, document_id, UMI_DOCUMENT_ENCODING_UTF8,
+                UMI_DOCUMENT_LINE_ENDING_LF, NULL, view.view_id, &entry_index);
+        if (status != UMI_STATUS_OK) {
+            (void)umi_document_store_close(coordinator->store, document_id, 1);
+            break;
+        }
+        coordinator->entries[entry_index].pristine_virtual =
+            !view.dirty && strncmp(view.uri, "umicom://", 9U) == 0;
+        strcpy(bindings[index].view_id, view.view_id);
+        strcpy(bindings[index].expected_document_id, view.document_id);
+        (void)snprintf(bindings[index].document_id, sizeof bindings[index].document_id,
+            "document.%llu", (unsigned long long)document_id);
+    }
+    /* Publish only after every store record exists. On failure the constructor
+     * closes its new records and the caller's view identities/text stay intact.
+     * In particular a Welcome view stays editable without being misidentified
+     * by indentation, selection and other checked editor projections. */
+    if (status == UMI_STATUS_OK)
+        status = UmiUiDocumentViewModelBindIdentities(views, revision, bindings, count);
+    free(bindings);
+    return status;
 }
 
 /*

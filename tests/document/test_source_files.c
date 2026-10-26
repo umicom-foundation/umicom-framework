@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/document/document.h"
+#include "umicom/document/indentation_override.h"
 #include "umicom/editor/search_engine.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -192,16 +193,24 @@ static int Run(Fixture *fixture, const char *name)
     UmiUiDocumentViewSnapshot view;
     size_t offset = 0U, count = 0U;
     if (strncmp(name, "import-", 7U) == 0) {
+        uint64_t initialRevision = umi_ui_document_view_model_revision(fixture->views);
         UmiStatus status = umi_document_coordinator_create(fixture->store, fixture->workbench, NULL, &fixture->documents);
         if (strcmp(name, "import-rollback") == 0) {
             CHECK(status == UMI_STATUS_CAPACITY_EXCEEDED && fixture->documents == NULL);
             CHECK(umi_document_store_count(fixture->store) == UMI_DOCUMENT_STORE_MAX - 1U);
             CHECK(umi_ui_document_view_model_count(fixture->views) == 2U);
+            CHECK(umi_ui_document_view_model_revision(fixture->views) == initialRevision);
+            CHECK(umi_ui_document_view_model_find(fixture->views, "imported-notes", &view) == UMI_STATUS_OK);
+            CHECK(view.document_id[0] == '\0');
         } else {
             CHECK(status == UMI_STATUS_OK);
             strcpy(fixture->viewId, "imported-notes");
             CHECK(umi_ui_workbench_activate_document(fixture->workbench, fixture->viewId) == UMI_STATUS_OK);
             CHECK(FullEquals(fixture, fixture->text, fixture->length) == 0);
+            CHECK(umi_document_coordinator_active_snapshot(fixture->documents, &before) == UMI_STATUS_OK);
+            UmiDocumentIndentationReview review;
+            CHECK(UmiDocumentCoordinatorInspectIndentation(fixture->documents, before.document_id, &review) == UMI_STATUS_OK);
+            CHECK(review.document_id == before.document_id);
             CHECK(umi_document_coordinator_save_active_as(fixture->documents, fixture->path) == UMI_STATUS_OK);
             CHECK(DiskEquals(fixture->path, fixture->text, fixture->length) == 0);
         }
