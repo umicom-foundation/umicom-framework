@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/testing/ctest_report_comparison.h
- * Purpose: Compare saved test outcomes without mistaking missing tests for repairs.
- * Author and Organisation: Sammy Hegab, Umicom Foundation
- * Licence: MIT
+ *
+ * PURPOSE:
+ *   Compare saved test outcomes without mistaking missing tests for repairs.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_TESTING_CTEST_REPORT_COMPARISON_H
 #define UMICOM_TESTING_CTEST_REPORT_COMPARISON_H

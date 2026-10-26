@@ -1,9 +1,17 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/document/line_edit.h
- * PURPOSE: Apply shared line transformations through the document coordinator and its existing Undo history.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Apply shared line transformations through the document coordinator and its existing Undo
+ *   history.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DOCUMENT_LINE_EDIT_H

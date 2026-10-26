@@ -3,11 +3,14 @@
  * File: src/source_contracts/text.c
  *
  * PURPOSE:
- *   Tokenise source without confusing comments, strings, nested calls or casts.
+ *   * Tokenise source without confusing comments, strings, nested calls or casts.
  *
- * Author: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "internal.h"

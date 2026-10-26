@@ -12,9 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Exercise native admission, captured file identity and asynchronous outcomes. */
 #include "readonly_fixture.h"
 #include "umicom/ui/gtk4/database_maintenance.h"
 static GtkWidget *find(GtkWidget *root, const char *name) {

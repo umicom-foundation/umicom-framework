@@ -12,9 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Explicit native record import composes shared file, review and store services. */
 #ifndef UMICOM_UI_GTK4_FORM_RECORD_IMPORT_H
 #define UMICOM_UI_GTK4_FORM_RECORD_IMPORT_H
 #include "umicom/platform/path.h"

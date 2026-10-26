@@ -12,8 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | multi-layer tape memory and transactional graph rewind | Sammy Hegab | MIT */
 #include "stacked_test_fixture.h"
 int main(void)
 {

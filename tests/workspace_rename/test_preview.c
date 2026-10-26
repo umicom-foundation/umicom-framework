@@ -3,8 +3,8 @@
  * File: tests/workspace_rename/test_preview.c
  *
  * PURPOSE:
- *   Check rename authorization, portable names and registered project boundaries without changing
- * entries.
+ *   * Check rename authorization, portable names and registered project boundaries without
+ *   changing entries.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab

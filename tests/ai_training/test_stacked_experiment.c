@@ -12,8 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | deterministic held-out multi-epoch training | Sammy Hegab | MIT */
 #include "stacked_test_fixture.h"
 int main(void)
 {

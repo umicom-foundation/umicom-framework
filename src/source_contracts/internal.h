@@ -3,11 +3,14 @@
  * File: src/source_contracts/internal.h
  *
  * PURPOSE:
- *   Share private implementation helpers for one native qualification engine.
+ *   * Share private implementation helpers for one native qualification engine.
  *
- * Author: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_SOURCE_CONTRACTS_INTERNAL_H

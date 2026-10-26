@@ -12,9 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Native discovery preserves query edits and opens only reviewed definitions. */
 #include "../application_experience/structured_form_fixture.h"
 #undef CHECK
 #include "umicom/data/structured_form_search_preset.h"

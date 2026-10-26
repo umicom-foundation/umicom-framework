@@ -1,11 +1,17 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/document_commands_gtk4.c
+ *
  * PURPOSE:
- *   Route source editing through the document owner and protect asynchronous
- *   clipboard completion with a captured edit plan and an invalidatable token.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *   * Route source editing through the document owner and protect asynchronous clipboard
+ *   completion with a captured edit plan and an invalidatable token.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/document/language_comment.h"
 #include "gtk4_internal.h"

@@ -12,8 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | exact stateless-SGD model checkpoint continuation | Sammy Hegab | MIT */
 #include "stacked_test_fixture.h"
 int main(void)
 {

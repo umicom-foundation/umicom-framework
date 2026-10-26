@@ -12,9 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Native controls must preserve invalid text and distinguish every accepted edit. */
 #include "structured_form_fixture.h"
 #undef CHECK
 #include "umicom/ui/gtk4/structured_form_filter.h"

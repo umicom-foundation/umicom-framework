@@ -695,3 +695,113 @@ if(BUILD_TESTING)
         endif()
     endforeach()
 endif()
+
+# Review complete journal sets with the same ownership and eligibility service.
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_finance
+        include/umicom/finance/accounting/posting_batch.h)
+endif()
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/finance/accounting/posting_batch.h"
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/finance/accounting COMPONENT Framework)
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/guides/journal-batch-review.html"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/guides COMPONENT Framework)
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../examples/journal_batch/main.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../examples/journal_batch/CMakeLists.txt"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/examples/journal_batch COMPONENT Learning)
+if(BUILD_TESTING)
+    add_executable(umi-accounting-posting-batch-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/finance_accounting/test_posting_batch.c")
+    target_link_libraries(umi-accounting-posting-batch-test PRIVATE Umicom::finance)
+    set_target_properties(umi-accounting-posting-batch-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umi-accounting-posting-batch-test)
+    umicom_apply_sanitizers(umi-accounting-posting-batch-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umi-accounting-posting-batch-test)
+    endif()
+    foreach(case apply inspect preview empty too-many null-entries null-chart null-calendar null-book null-output null-inspection null-accessors optional-preview second-unbalanced second-overflow second-account second-closed second-posted duplicate-batch duplicate-book invalid-chart invalid-calendar invalid-book one-slot maximum full-book stale-amount stale-id stale-date stale-state stale-order stale-line-count stale-chart stale-chart-count stale-period stale-calendar-count stale-book stale-book-count stale-length different-entries different-chart different-calendar different-book null-review-apply null-entry-apply null-chart-apply null-calendar-apply null-book-apply tails retry-after-stale captured-immutable inspect-preserves replay)
+        set(test framework.accounting.posting.batch.${case})
+        add_test(NAME ${test} COMMAND umi-accounting-posting-batch-test ${case})
+        set_tests_properties(${test} PROPERTIES TIMEOUT 30 LABELS "framework;finance;accounting;review;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(${test} TARGETS umi-accounting-posting-batch-test)
+        endif()
+    endforeach()
+    add_executable(umi-journal-batch-consumer "${CMAKE_CURRENT_LIST_DIR}/../examples/journal_batch/main.c")
+    target_link_libraries(umi-journal-batch-consumer PRIVATE Umicom::finance)
+    set_target_properties(umi-journal-batch-consumer PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umi-journal-batch-consumer)
+    umicom_apply_sanitizers(umi-journal-batch-consumer)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umi-journal-batch-consumer)
+    endif()
+    foreach(scenario apply draft-change chart-change duplicate later-refusal report report-stale report-after-apply activity activity-range)
+        set(test framework.accounting.journal.batch.consumer.${scenario})
+        add_test(NAME ${test} COMMAND umi-journal-batch-consumer ${scenario})
+        set_tests_properties(${test} PROPERTIES TIMEOUT 30 LABELS "framework;finance;accounting;consumer;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(${test} TARGETS umi-journal-batch-consumer)
+        endif()
+    endforeach()
+endif()
+
+# Share exact captured review reporting with every finance SDK consumer.
+target_sources(umicom_finance PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/posting_batch_report.c")
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_finance
+        include/umicom/finance/accounting/posting_batch_report.h)
+endif()
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/finance/accounting/posting_batch_report.h"
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/finance/accounting COMPONENT Framework)
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/guides/journal-review-reports.html"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/guides COMPONENT Learning)
+if(BUILD_TESTING)
+    add_executable(umi-accounting-posting-batch-report-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/finance_accounting/test_posting_batch_report.c")
+    target_link_libraries(umi-accounting-posting-batch-report-test PRIVATE Umicom::finance)
+    set_target_properties(umi-accounting-posting-batch-report-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umi-accounting-posting-batch-report-test)
+    umicom_apply_sanitizers(umi-accounting-posting-batch-report-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umi-accounting-posting-batch-report-test)
+    endif()
+    foreach(case basic scale-zero scale-nine maximum-amount wide-integer small-amount order formula-text quoted-text unicode invalid-utf8 control-text null-review null-currency lowercase-currency short-currency unterminated-currency invalid-scale null-output zero-budget over-budget short-budget exact-budget late-budget source-edit destroy-review after-apply independent maximum-batch maximum-lines currency-copy)
+        set(test framework.accounting.posting.batch.report.${case})
+        add_test(NAME ${test} COMMAND umi-accounting-posting-batch-report-test ${case})
+        set_tests_properties(${test} PROPERTIES TIMEOUT 30 LABELS "framework;finance;accounting;report;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(${test} TARGETS umi-accounting-posting-batch-report-test)
+        endif()
+    endforeach()
+endif()
+
+# Exact posted-book movement calculation is shared by all financial hosts.
+target_sources(umicom_finance PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/finance/accounting/ledger_activity.c")
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_finance
+        include/umicom/finance/accounting/ledger_activity.h)
+endif()
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/finance/accounting/ledger_activity.h"
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/finance/accounting COMPONENT Framework)
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/guides/ledger-activity.html"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/guides COMPONENT Learning)
+if(BUILD_TESTING)
+    add_executable(umi-accounting-ledger-activity-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/finance_accounting/test_ledger_activity.c")
+    target_link_libraries(umi-accounting-ledger-activity-test PRIVATE Umicom::finance)
+    set_target_properties(umi-accounting-ledger-activity-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umi-accounting-ledger-activity-test)
+    umicom_apply_sanitizers(umi-accounting-ledger-activity-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umi-accounting-ledger-activity-test)
+    endif()
+    foreach(case basic empty-book empty-chart from-inclusive to-inclusive single-day no-matches normal-sides reversal disabled-account chart-order maximum-amount wide-integer account-overflow total-overflow excluded-overflow missing-account missing-excluded-account invalid-chart-count invalid-book-count duplicate-chart duplicate-book malformed-chart malformed-line draft-in-book unbalanced-book null-book null-chart null-output invalid-first-date invalid-last-date reversed-dates immutable empty-accessors unknown-account maximum-accounts maximum-journals)
+        set(test framework.accounting.ledger.activity.${case})
+        add_test(NAME ${test} COMMAND umi-accounting-ledger-activity-test ${case})
+        set_tests_properties(${test} PROPERTIES TIMEOUT 30 LABELS "framework;finance;accounting;ledger;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(${test} TARGETS umi-accounting-ledger-activity-test)
+        endif()
+    endforeach()
+endif()

@@ -1,0 +1,10 @@
+# Umicom Framework | native course navigation review tool | Sammy Hegab | MIT
+cmake_minimum_required(VERSION 3.24)
+project(UmicomNativeCourseNavigation LANGUAGES C)
+set(CMAKE_C_STANDARD 23)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
+include(CTest)
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/UmicomEducationCourseHomeLink.cmake")
+add_executable(umicom-native-course-navigation stage_home_navigation.c)
+target_link_libraries(umicom-native-course-navigation PRIVATE Umicom::EducationCourseHomeLink)

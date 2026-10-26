@@ -3,8 +3,8 @@
  * File: adapters/gtk4/kanban_dock.c
  *
  * PURPOSE:
- *   Keep a single board document owner while its existing native contents move between a host pane
- * and a window.
+ *   * Keep a single board document owner while its existing native contents move between a
+ *   host pane and a window.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab

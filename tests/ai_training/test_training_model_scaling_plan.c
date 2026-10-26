@@ -12,7 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
 #include "umicom/ai/training/model_scaling_plan.h"
 #include <stdio.h>
 #include <stdint.h>

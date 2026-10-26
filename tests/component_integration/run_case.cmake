@@ -6,7 +6,6 @@
 # Umicom Foundation
 # LICENCE: MIT
 #-----------------------------------------------------------------------------
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 # Exercise real CMake integration in a NEW disposable build directory. Retain
 # every log. Never edit the caller's source, cache, installation or broker state.
 #-----------------------------------------------------------------------------

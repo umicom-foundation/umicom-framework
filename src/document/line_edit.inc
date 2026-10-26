@@ -1,9 +1,17 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/document/line_edit.inc
- * PURPOSE: Capture live line-edit intent, prepare complete source and publish through existing document history.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Capture live line-edit intent, prepare complete source and publish through existing
+ *   document history.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/document/line_edit.h"
@@ -74,6 +82,60 @@ UmiStatus UmiDocumentCoordinatorEditLines(UmiDocumentCoordinator *coordinator, U
 }
 
 #endif
+
+
+/* Frontends share admission rules without allocating edit plans or changing
+ * history. This is a current-state hint; execution still validates the full
+ * text transformation and may refuse a changed owner or missing neighbor. */
+UmiStatus UmiDocumentCoordinatorCheckLineEdit(UmiDocumentCoordinator *coordinator,
+    UmiDocumentId documentId, UmiEditorEditCommandKind kind)
+{
+    if (coordinator == NULL || documentId == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    int needsSelection = 0;
+    switch (kind) {
+    case UMI_EDITOR_EDIT_COMMAND_TRANSFORM_UPPERCASE:
+    case UMI_EDITOR_EDIT_COMMAND_TRANSFORM_LOWERCASE:
+    case UMI_EDITOR_EDIT_COMMAND_SORT_LINES_ASCENDING:
+    case UMI_EDITOR_EDIT_COMMAND_SORT_LINES_DESCENDING:
+        needsSelection = 1;
+        break;
+    case UMI_EDITOR_EDIT_COMMAND_DELETE_LINE:
+    case UMI_EDITOR_EDIT_COMMAND_DUPLICATE_LINE:
+    case UMI_EDITOR_EDIT_COMMAND_MOVE_LINE_UP:
+    case UMI_EDITOR_EDIT_COMMAND_MOVE_LINE_DOWN:
+    case UMI_EDITOR_EDIT_COMMAND_JOIN_LINE_WITH_NEXT:
+    case UMI_EDITOR_EDIT_COMMAND_TRIM_TRAILING_WHITESPACE:
+    case UMI_EDITOR_EDIT_COMMAND_INDENT_LINES:
+    case UMI_EDITOR_EDIT_COMMAND_OUTDENT_LINES:
+    case UMI_EDITOR_EDIT_COMMAND_TOGGLE_LINE_COMMENT:
+        break;
+    default:
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (coordinator->save_in_progress || coordinator->reopen_in_progress ||
+        coordinator->navigation_depth != 0U) return UMI_STATUS_BUSY;
+    size_t index = EditDocumentIndex(coordinator, documentId);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    UmiUiDocumentViewModel *views = umi_ui_workbench_documents(coordinator->workbench);
+    UmiUiDocumentViewSnapshot view;
+    UmiUiDocumentTextInfo text;
+    UmiStatus status = umi_ui_document_view_model_find(views,
+        coordinator->entries[index].view_id, &view);
+    if (status != UMI_STATUS_OK) return status;
+    char identity[UMI_UI_ID_CAPACITY];
+    int length = snprintf(identity, sizeof identity, "document.%llu",
+        (unsigned long long)documentId);
+    if (length < 0 || (size_t)length >= sizeof identity ||
+        strcmp(view.document_id, identity) != 0) return UMI_STATUS_INVALID_STATE;
+    status = UmiUiDocumentViewModelTextInfo(views, view.view_id, &text);
+    if (status != UMI_STATUS_OK) return status;
+    if (view.cursor_offset > text.byte_count ||
+        view.selection_length > text.byte_count - view.cursor_offset)
+        return UMI_STATUS_INVALID_STATE;
+    if (view.read_only) return UMI_STATUS_PERMISSION_DENIED;
+    if (needsSelection && view.selection_length == 0U) return UMI_STATUS_NOT_FOUND;
+    return UMI_STATUS_OK;
+}
 
 UmiStatus UmiDocumentCoordinatorEditLinesForDocument(UmiDocumentCoordinator *coordinator,
                                           UmiDocumentId documentId, UmiEditorEditCommandKind kind,

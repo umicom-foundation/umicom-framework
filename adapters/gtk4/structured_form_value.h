@@ -12,9 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Private native value controls; shared answer validation stays in application. */
 #ifndef UMICOM_GTK4_STRUCTURED_FORM_VALUE_H
 #define UMICOM_GTK4_STRUCTURED_FORM_VALUE_H
 #include "umicom/application/experience/structured_form_text.h"

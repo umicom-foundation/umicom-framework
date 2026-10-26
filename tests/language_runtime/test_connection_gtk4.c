@@ -1,11 +1,18 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/language_runtime/test_connection_gtk4.c
- * PURPOSE: Check the native connection panel through actual widgets, worker completion and owner lifetime changes.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Check the native connection panel through actual widgets, worker completion and owner
+ *   lifetime changes.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
-
 #include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/language_connection.h"
 #include <glib/gstdio.h>

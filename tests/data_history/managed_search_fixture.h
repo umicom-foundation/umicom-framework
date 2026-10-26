@@ -12,9 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Fictional query data exercises the public workbench through its real worker. */
 #ifndef UMICOM_MANAGED_SEARCH_FIXTURE_H
 #define UMICOM_MANAGED_SEARCH_FIXTURE_H
 #include "../application_experience/structured_form_fixture.h"

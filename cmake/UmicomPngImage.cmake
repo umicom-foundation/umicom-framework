@@ -3,7 +3,6 @@
 # PURPOSE: Compose optional PNG services and capability-specific coverage.
 # AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
 # LICENCE: MIT
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 # Compose optional PNG decoding behind a stable C interface.
 # This module also supports independent composition; own its SDK registration dependency.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")

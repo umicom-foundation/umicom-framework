@@ -3,8 +3,7 @@
  * File: tests/data_history/test_record_editor_gtk4.c
  *
  * PURPOSE:
- *   Real GTK and SQLite fixtures exercise visible drafts and retained controls.
- *   Headless display absence is reported as skipped coverage, never a pass.
+ *   Real GTK and SQLite fixtures exercise visible drafts and retained controls. Headless display absence is reported as skipped coverage, never a pass.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -13,10 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Real GTK and SQLite fixtures exercise visible drafts and retained controls.
- * Headless display absence is reported as skipped coverage, never a pass. */
 #include "umicom/ui/gtk4/record_editor.h"
 #include "umicom/data/record_draft_files.h"
 #include "../support/gtk4_expanders.h"

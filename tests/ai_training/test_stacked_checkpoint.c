@@ -12,8 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | independent stacked-model snapshot restoration | Sammy Hegab | MIT */
 #include "stacked_test_fixture.h"
 int main(void)
 {

@@ -12,8 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | model configuration and planning checks | Sammy Hegab | MIT */
 #include "stacked_test_fixture.h"
 int main(void)
 {

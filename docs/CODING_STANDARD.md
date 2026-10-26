@@ -296,3 +296,29 @@ entry to make a rerun pass. Preserve evidence left by failed runs and check that
 fixtures remain independent. A fresh directory fixes isolation; it does not prove the
 product operation succeeds. Keep failed-output sentinels separate from semantic preview
 expectations used by later assertions.
+
+## Integer arithmetic and native action availability
+
+Check integer bounds before addition, subtraction, negation or accumulation. An
+absolute difference between two signed 64-bit values may need the full unsigned
+64-bit range. Offer a checked signed result separately; do not saturate silently
+and then use that approximation for a reconciliation decision. Validate populated
+identities, enum values, collection bounds and uniqueness before iterating public
+structs. Keep error outputs unchanged unless the API explicitly promises otherwise.
+
+For byte-preservation assertions, capture the original object with memcpy. Struct
+assignment preserves values but does not promise identical padding bytes. Compare
+semantic fields in stale-state checks, excluding padding and unused capacity.
+
+Native editor controls query Framework for current operation admission. Distinguish
+this hint from a prepared edit or permission to mutate: dispatch must still validate
+the live document. Refresh both disabled and enabled states when selection or
+read-only state changes. Retain widget references before observable property changes,
+and resolve the weak host again after callbacks can remove a panel or close a window.
+Never enable a control whose action binding failed.
+
+UI fixtures keep independent named inventories of required actions. Derive counts
+from that inventory instead of maintaining separate magic totals and array boundaries.
+Assert selection intervals as half-open byte ranges: replacing [start, end) must
+retain the byte at end. Observe slow-test phases before tightening timeouts; an
+unexplained delay is not evidence that a shorter timeout repairs the cause.

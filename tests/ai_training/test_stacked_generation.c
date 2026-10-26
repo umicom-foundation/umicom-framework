@@ -12,8 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | full-context stacked greedy generation | Sammy Hegab | MIT */
 #include "stacked_test_fixture.h"
 int main(void)
 {

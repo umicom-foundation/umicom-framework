@@ -12,9 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Exercise the actual native review/confirmation flow and captured write lifetime. */
 #include "../application_experience/structured_form_fixture.h"
 #undef CHECK
 #include "umicom/data/record_bundle_files.h"

@@ -3,11 +3,14 @@
  * File: src/source_contracts/audit.c
  *
  * PURPOSE:
- *   Audit public include guards and flexible attribution through a shared C engine.
+ *   * Audit public include guards and flexible attribution through a shared C engine.
  *
- * Author: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "internal.h"

@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/application_experience/test_structured_form_controls.c
- * PURPOSE: Cover native multiline, boolean and identifier-backed choice editing.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Cover native multiline, boolean and identifier-backed choice editing.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "structured_form_fixture.h"
 #include "umicom/ui/gtk4/structured_form.h"

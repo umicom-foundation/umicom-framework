@@ -15,6 +15,7 @@
 
 
 #include "umicom/finance/accounting/posting_review.h"
+#include "umicom/finance/accounting/posting_batch.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -249,3 +250,6 @@ UmiStatus umi_accounting_posting_review_apply(UmiAccountingPostingReview *review
     }
     return status;
 }
+
+/* Batch review reuses the same private semantic ownership rules. */
+#include "posting_batch.inc"

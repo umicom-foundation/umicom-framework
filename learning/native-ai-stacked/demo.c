@@ -3,7 +3,7 @@
  * File: learning/native-ai-stacked/demo.c
  *
  * PURPOSE:
- *   Demonstrate stacked-decoder evaluation, training and checkpoint recovery.
+ *   Show genuine multi-layer forward, SGD and snapshot recovery.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -12,7 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
 #include "umicom/ai/training/stacked_decoder.h"
 #include "umicom/ai/training/stacked_checkpoint.h"
 #include <stdio.h>

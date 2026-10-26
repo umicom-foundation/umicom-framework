@@ -12,8 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | portable checkpoint invalid-byte rejection | Sammy Hegab | MIT */
 #include "stacked_test_fixture.h"
 int main(void)
 {

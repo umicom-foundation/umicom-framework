@@ -1,0 +1,53 @@
+<!doctype html>
+<!--
+Umicom Framework
+File: docs/guides/journal-batch-review.html
+PURPOSE: Teach captured journal-batch inspection and conditional local publication.
+AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+LICENCE: MIT
+-->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Review and publish a journal batch — Umicom Framework</title>
+<style>body{font:17px/1.65 system-ui,sans-serif;max-width:850px;margin:40px auto;padding:0 24px;color:#1d2939;background:#f8fafc}h1,h2{line-height:1.25}pre{background:#142033;color:#edf3fc;padding:18px;overflow:auto;border-radius:8px}code{font-size:.9em}a{color:#1555a0}td,th{border-bottom:1px solid #cbd5e1;padding:10px;text-align:left}table{border-collapse:collapse;width:100%}</style>
+</head><body><h1>Review and publish a journal batch</h1>
+<p>A journal records matching debit and credit entries in integer minor units. A batch is an ordered set of journals that should enter the same local book together. If its last journal is invalid, none of its earlier journals should be posted.</p>
+<p>The Framework batch service prepares a private book, captures the inputs used for review, and checks that the live inputs still match before publishing. It uses the same eligibility rules as <a href="journal-posting-review.html">single-journal review</a>.</p>
+<h2>1. Establish the account and amount convention</h2>
+<p>Choose one currency and scale for the relevant accounts before creating journals. The example uses GBP pennies. These journal structures contain integer amounts but no currency or scale metadata; they do not perform currency conversion or infer an account's currency. Keep the live journals, account catalogue, period calendar and book alive and serialize access to them.</p>
+<h2>2. Inspect the complete batch</h2>
+<pre><code>#include "umicom/finance/accounting/posting_batch.h"
+
+UmiAccountingPostingBatchPreview preview;
+UmiStatus status = umi_accounting_posting_batch_inspect(
+    entries, count, &amp;chart, &amp;calendar, &amp;book, &amp;preview);</code></pre>
+<p>If <code>status</code> is OK, inspection produced a preview. Check <code>preview.refusal</code> separately. A refused preview identifies <code>failed_index</code>, the first refused journal, and <code>detail</code>, its posting reason. <code>ready_count</code> and <code>line_count</code> describe the inspected eligible prefix, not journals already posted. The live book remains unchanged.</p>
+<p>The count must be between one and <code>UMI_ACCOUNTING_MAX_ITEMS</code>. Inspection allocates bounded temporary storage and can return OUT_OF_MEMORY. Invalid arguments leave the output preview unchanged.</p>
+<h2>3. Capture what the user will review</h2>
+<pre><code>UmiAccountingPostingBatchReview *review = NULL;
+status = umi_accounting_posting_batch_create(
+    entries, count, &amp;chart, &amp;calendar, &amp;book, &amp;preview, &amp;review);</code></pre>
+<p>Only an eligible complete batch produces a review. Display entries from <code>umi_accounting_posting_batch_entry(review, index)</code> and their eligibility from <code>umi_accounting_posting_batch_entry_preview</code>. These borrowed pointers remain valid until the review is destroyed. They describe the captured values even if an editor changes the live journals later.</p>
+<p>Do not sum amounts across journals without establishing currency and scale agreement. The batch preview supplies counts rather than a misleading cross-currency money total.</p>
+<h2>4. Apply the captured decision</h2>
+<pre><code>status = umi_accounting_posting_batch_apply(
+    review, entries, count, &amp;chart, &amp;calendar, &amp;book);
+
+umi_accounting_posting_batch_destroy(review);
+review = NULL;</code></pre>
+<p>A successful apply appends all journals as POSTED and consumes the review. It leaves the original input journal states unchanged. Repeating Apply is refused. A changed active field, different owner address, changed order or count, closed period, edited account, or modified live book makes the review stale. A refused apply does not change the live book.</p>
+<p>If a review is stale, show the new live state and capture a new review. Do not silently replace the user's captured decision. There is no allocation, provider call, file write or callback during apply.</p>
+<table><thead><tr><th>Result</th><th>Meaning and next action</th></tr></thead><tbody>
+<tr><td>INVALID_ARGUMENT</td><td>Check required pointers and the bounded entry count. Output memory must not overlap an input.</td></tr>
+<tr><td>ALREADY_EXISTS during capture</td><td>A journal ID already exists in the book or appears earlier in this batch. Correct the duplicate before recapturing.</td></tr>
+<tr><td>CAPACITY_EXCEEDED</td><td>The full set cannot fit or an entry total overflows. No prefix is posted.</td></tr>
+<tr><td>INVALID_STATE during apply</td><td>The review is stale, already consumed, or supplied with different owners. Review the current values again.</td></tr>
+</tbody></table>
+<h2>5. Explore the installed example</h2>
+<p>The SDK installs <code>share/umicom/examples/journal_batch</code>. Copy that directory to a writable example folder and replace the prefix below with your actual installed SDK location:</p>
+<pre><code>cmake -S . -B build -DUMICOM_SDK_PREFIX="/absolute/path/to/sdk"
+cmake --build build
+ctest --test-dir build --output-on-failure</code></pre>
+<p>The example uses only exported SDK targets. Its scenarios demonstrate successful publication, stale drafts, changed account permission, duplicate IDs and a refusal in the second journal. On a multi-configuration generator, add the appropriate configuration to build and CTest commands.</p>
+<h2>What this service does not establish</h2>
+<p>This is serialized, all-or-nothing in-memory publication. A struct assignment is not a concurrent atomic operation or a database transaction. The surrounding service still owns authenticated approval, currency agreement, persistence, crash recovery, reconciliation and external posting receipts. Local pointer identity and field equality do not protect against malicious memory writers, address reuse or replay after persistence.</p>
+</body></html>

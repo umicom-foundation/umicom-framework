@@ -1,0 +1,23 @@
+# Umicom Framework | conditional stacked cache planning | Sammy Hegab | MIT
+include_guard(GLOBAL)
+get_filename_component(_umicom_prefix_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+if(NOT TARGET Umicom::AiScaling)
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiScaling.cmake")
+endif()
+if(NOT TARGET umicom_ai_stacked_prefix_cache_plan)
+    add_library(umicom_ai_stacked_prefix_cache_plan STATIC
+        "${_umicom_prefix_root}/src/ai/training/stacked_prefix_cache_plan.c")
+    add_library(Umicom::AiStackedPrefixCachePlan ALIAS umicom_ai_stacked_prefix_cache_plan)
+    target_compile_features(umicom_ai_stacked_prefix_cache_plan PUBLIC c_std_23)
+    target_include_directories(umicom_ai_stacked_prefix_cache_plan PUBLIC "${_umicom_prefix_root}/include")
+    target_link_libraries(umicom_ai_stacked_prefix_cache_plan PUBLIC Umicom::AiScaling)
+    if(NOT MSVC)
+        target_compile_options(umicom_ai_stacked_prefix_cache_plan PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror)
+    endif()
+endif()
+if(BUILD_TESTING AND NOT TARGET umicom-ai-stacked-prefix-cache-plan-test)
+    add_executable(umicom-ai-stacked-prefix-cache-plan-test
+        "${_umicom_prefix_root}/tests/ai_training/test_training_stacked_prefix_cache_plan.c")
+    target_link_libraries(umicom-ai-stacked-prefix-cache-plan-test PRIVATE Umicom::AiStackedPrefixCachePlan)
+    add_test(NAME framework.ai.stacked_prefix_cache.plan COMMAND umicom-ai-stacked-prefix-cache-plan-test)
+endif()

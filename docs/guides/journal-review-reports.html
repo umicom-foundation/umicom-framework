@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Export a captured journal review — Umicom Framework</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:920px;margin:2rem auto;padding:0 1.2rem;color:#182638;background:#fafcfe}pre{padding:1rem;background:#eef3f8;overflow:auto}code{font-family:monospace}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bccad8;padding:.6rem;text-align:left}a{color:#075aa2}h1,h2{line-height:1.2}</style></head>
+<body><main><h1>Export a captured journal review</h1>
+<p>A journal records matching debits and credits. A review captures the journal and the local rules that were inspected before someone chooses Apply. This guide exports that captured view as CSV using the finance SDK. The resulting report is useful for comparison and human review. It is not evidence that a payment settled or that a database transaction committed.</p>
+<h2>1. Establish the amount convention</h2>
+<p>The journal stores integer minor units. For example, with GBP and scale 2, <code>1250</code> means <code>12.50</code> pounds. Currency and scale are explicit inputs to the report. They are not inferred from an account name. All accounts in this review must use the same agreed convention; separate mixed-currency journals before creating a review.</p>
+<p>A three-letter currency code is checked for uppercase syntax only. A valid code does not prove that an account supports it. The surrounding banking or accounting service remains responsible for account currencies, authorization and any conversion.</p>
+<h2>2. Create a complete review</h2>
+<p>Use <code>umi_accounting_posting_batch_create</code> as described in <a href="journal-batch-review.html">Review complete journal batches</a>. A refused batch does not produce a review or post a prefix of its journals. Keep the returned review alive while preparing a report.</p>
+<h2>3. Build an independently owned report</h2>
+<pre><code>#include "umicom/finance/accounting/posting_batch_report.h"
+
+UmiCurrency currency = {{'G', 'B', 'P', '\0'}};
+UmiCsvDocument *report = NULL;
+UmiStatus status = umi_accounting_posting_batch_report(
+    review, &amp;currency, 2U, UMI_CSV_MAX_BYTES, &amp;report);
+if (status == UMI_STATUS_OK) {
+    /* Borrow these bytes only until report is changed or destroyed. */
+    const char *text = UmiCsvDocumentData(report);
+    size_t length = UmiCsvDocumentBytes(report);
+    /* Pass text and length to your existing export service. */
+    (void)text;
+    (void)length;
+}
+UmiCsvDocumentDestroy(report);</code></pre>
+<p>The report owns its text. Destroying the review afterwards does not invalidate the report. The maximum byte argument includes its terminating zero. A too-small limit, invalid UTF-8 or invalid arguments return a failure and leave the report pointer null; a partial journal report is never returned.</p>
+<h2>4. Read the columns</h2>
+<table><thead><tr><th>Columns</th><th>Meaning</th></tr></thead><tbody>
+<tr><td><code>record</code>, <code>review_kind</code></td><td>A line or journal total, always marked <code>captured-eligibility</code>.</td></tr>
+<tr><td><code>journal_index</code>, <code>journal_id</code>, <code>accounting_date</code>, <code>period_id</code></td><td>The captured order, identifier, accounting date and matching period. Indices start at one.</td></tr>
+<tr><td><code>line_index</code>, <code>line_id</code>, <code>account_id</code></td><td>The original line order and identifiers. These fields are empty on journal-total rows.</td></tr>
+<tr><td><code>currency</code>, <code>scale</code></td><td>The caller's stated convention, repeated so each row can be interpreted.</td></tr>
+<tr><td><code>debit_minor</code>, <code>credit_minor</code></td><td>Exact signed 64-bit integer coefficients.</td></tr>
+<tr><td><code>debit</code>, <code>credit</code></td><td>Exact decimal text at the requested scale. No floating-point calculation or rounding occurs.</td></tr>
+</tbody></table>
+<p>Each journal's lines are followed by its total. There is no cross-journal or cross-currency grand total. Shared CSV handling quotes fields, doubles embedded quotes, validates UTF-8 and prefixes potentially executable spreadsheet text with an apostrophe. Spreadsheet import settings still matter: import identifier and decimal columns as text when exact preservation is required. The integer and decimal values in the CSV itself remain exact.</p>
+<h2>5. Try the installed example</h2>
+<p>Install the finance SDK and its learning examples first. Replace the two absolute example paths below with your installed SDK and a separate writable build directory. Stop if any command fails.</p>
+<pre><code>cmake -S "C:/umicom/installed/finance/share/umicom/examples/journal_batch" -B "C:/umicom-build/journal-batch" -G Ninja -DUMICOM_SDK_PREFIX="C:/umicom/installed/finance"
+cmake --build "C:/umicom-build/journal-batch"
+ctest --test-dir "C:/umicom-build/journal-batch" --output-on-failure --no-tests=error
+&amp; "C:/umicom-build/journal-batch/journal-batch.exe" report
+&amp; "C:/umicom-build/journal-batch/journal-batch.exe" report-stale
+&amp; "C:/umicom-build/journal-batch/journal-batch.exe" report-after-apply</code></pre>
+<p>Each report mode prints one header, four line rows and two journal totals. <code>report-stale</code> edits a live draft and confirms that Apply refuses it while the report retains the original captured amounts. <code>report-after-apply</code> applies to the example's local in-memory book; its report still says <code>captured-eligibility</code>. Neither mode produces an authoritative posting receipt.</p>
+<h2>Recover from a refusal</h2>
+<ol><li>For invalid currency or scale, check the explicit convention. Supported scales are 0 through 9; do not silently round to make a value fit.</li>
+<li>For a byte limit refusal, choose a larger bounded report capacity, no greater than <code>UMI_CSV_MAX_BYTES</code>. Do not publish an earlier partial copy.</li>
+<li>For malformed text, correct the original journal identifier before creating a new review. Do not remove arbitrary bytes from the exported identifier.</li>
+<li>For stale review inputs, create and display a new review before another Apply. Exporting the old review does not reauthorize it.</li>
+<li>If the installed package is not found, verify that the finance component was installed to the exact SDK prefix. Do not point the example at a source-tree build by accident.</li></ol>
+</main></body></html>

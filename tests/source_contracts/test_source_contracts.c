@@ -3,13 +3,16 @@
  * File: tests/source_contracts/test_source_contracts.c
  *
  * PURPOSE:
- *   Exercise the native qualification engine with valid and deliberately
- *   damaged attribution, C syntax, window identity, preset graphs and files.
- *   Fixtures are written only under the explicit CTest-owned directory.
+ *   * Exercise the native qualification engine with valid and deliberately damaged
+ *   attribution, C syntax, window identity, preset graphs and files. Fixtures are written only
+ *   under the explicit CTest-owned directory.
  *
- * Author: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "internal.h"
 #include <errno.h>

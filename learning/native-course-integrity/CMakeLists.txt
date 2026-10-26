@@ -1,0 +1,10 @@
+# Umicom Framework | read-only course publishing audit | Sammy Hegab | MIT
+cmake_minimum_required(VERSION 3.24)
+project(UmicomNativeCourseIntegrity LANGUAGES C)
+set(CMAKE_C_STANDARD 23)
+set(CMAKE_C_STANDARD_REQUIRED ON)
+set(CMAKE_C_EXTENSIONS OFF)
+include(CTest)
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/UmicomEducationCourseCompanions.cmake")
+add_executable(umicom-native-course-integrity audit_courses.c)
+target_link_libraries(umicom-native-course-integrity PRIVATE Umicom::EducationCourseCompanions)

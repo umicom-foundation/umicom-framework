@@ -12,8 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | selected-target training and weight updates | Sammy Hegab | MIT */
 #include "stacked_test_fixture.h"
 int main(void)
 {

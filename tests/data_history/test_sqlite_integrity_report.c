@@ -12,9 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * quick_check diagnostics are data rows, not failed SQL execution codes. */
 #include "readonly_fixture.h"
 #include "umicom/data/sqlite.h"
 int main(int argc, char **argv) {

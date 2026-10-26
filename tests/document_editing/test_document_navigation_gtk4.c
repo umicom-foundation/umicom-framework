@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/document_editing/test_document_navigation_gtk4.c
- * PURPOSE: Check real GTK editing-result delivery and the source-location form.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Check real GTK editing-result delivery and the source-location form.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/document_commands.h"
 #include "umicom/ui/gtk4/window_lifecycle.h"

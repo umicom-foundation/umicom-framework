@@ -12,9 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Shared native access to checked SQLite inspection, backup and recovery. */
 #ifndef UMICOM_UI_GTK4_DATABASE_MAINTENANCE_H
 #define UMICOM_UI_GTK4_DATABASE_MAINTENANCE_H
 #include "umicom/data/backup.h"

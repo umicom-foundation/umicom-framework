@@ -12,8 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | causal invariance across Transformer layers | Sammy Hegab | MIT */
 #include "stacked_test_fixture.h"
 int main(void)
 {

@@ -3,11 +3,14 @@
  * File: include/umicom/source_contracts/source_contracts.h
  *
  * PURPOSE:
- *   Expose native source, attribution and workbench qualification contracts.
+ *   * Expose native source, attribution and workbench qualification contracts.
  *
- * Author: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_SOURCE_CONTRACTS_H

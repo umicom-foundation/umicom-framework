@@ -1,9 +1,17 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/kanban_gtk4/test_panel.c
- * PURPOSE: Exercise native assignment, drag movement, stale controls and deliberate website publication.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Exercise native assignment, drag movement, stale controls and deliberate website
+ *   publication.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/kanban.h"

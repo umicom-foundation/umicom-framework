@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Calculate posted account activity — Umicom Framework</title>
+<style>body{font:17px/1.6 system-ui,sans-serif;max-width:900px;margin:2rem auto;padding:0 1.2rem;color:#182638;background:#fafcfe}pre{padding:1rem;background:#eef3f8;overflow:auto}code{font-family:monospace}h1,h2{line-height:1.2}a{color:#075aa2}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bccad8;padding:.6rem;text-align:left}</style></head>
+<body><main><h1>Calculate posted account activity</h1>
+<p>Account activity is the movement recorded by posted journals during a chosen date range. The Framework calculates it from a complete local journal book and chart of accounts, using integer minor units. Bank, Accountant and TMS hosts can call the same service instead of writing separate arithmetic and date filters.</p>
+<p>This result describes the supplied book. It does not prove that the book contains every external transaction. It also does not add an opening balance or convert currencies.</p>
+<h2>1. Check the inputs</h2>
+<ol><li>Use a book containing complete, balanced journals marked as posted. Drafts, duplicate journal identifiers and malformed counts are refused.</li>
+<li>Supply the chart that identifies every account referenced anywhere in the book. A missing account is refused even if its journal is outside the requested dates.</li>
+<li>Establish one currency and minor-unit convention for the entire book. These journal containers do not store that metadata.</li>
+<li>Choose two valid financial dates, with the first no later than the last. Both endpoints are included.</li></ol>
+<p>An account can disallow new posting while retaining historical activity. The service validates the account, but does not discard its past entries because its current posting permission is false.</p>
+<h2>2. Capture the calculation</h2>
+<pre><code>#include "umicom/finance/accounting/ledger_activity.h"
+
+UmiAccountingLedgerActivity *activity = NULL;
+UmiStatus status = umi_accounting_ledger_activity_create(
+    book, chart,
+    (UmiFinancialDate){2026, 10U, 1U},
+    (UmiFinancialDate){2026, 10U, 31U},
+    &amp;activity);
+if (status == UMI_STATUS_OK) {
+    const UmiAccountingLedgerActivitySummary *summary =
+        umi_accounting_ledger_activity_summary(activity);
+    for (size_t i = 0U; i &lt; summary-&gt;account_count; ++i) {
+        const UmiAccountingLedgerActivityRow *row =
+            umi_accounting_ledger_activity_at(activity, i);
+        /* Present row-&gt;account, totals and normal_net_minor here. */
+        (void)row;
+    }
+}
+umi_accounting_ledger_activity_destroy(activity);</code></pre>
+<p>Call while your application owns serialized access to the inputs. The successful result contains its own copies: later edits to the book or chart do not change it, and the inputs can be released after the call. Rows and the summary are borrowed from this result and remain valid until it is destroyed.</p>
+<h2>3. Interpret the result</h2>
+<table><thead><tr><th>Value</th><th>Meaning</th></tr></thead><tbody>
+<tr><td><code>scanned_journals</code></td><td>All journals validated in the supplied book.</td></tr>
+<tr><td><code>selected_journals</code>, <code>line_count</code></td><td>Whole journals and their lines selected by the inclusive date range.</td></tr>
+<tr><td><code>account_count</code>, <code>active_accounts</code></td><td>All chart accounts, and accounts with at least one selected line. A zero net does not necessarily mean no activity.</td></tr>
+<tr><td><code>debit_minor</code>, <code>credit_minor</code></td><td>Separate exact nonnegative totals for each row and the whole selected range.</td></tr>
+<tr><td><code>normal_net_minor</code></td><td>Debit minus credit for a debit-normal account; credit minus debit for a credit-normal account. Opposite-side movements can make this negative.</td></tr>
+</tbody></table>
+<p>Rows retain chart order, including accounts with no selected lines. Use <code>umi_accounting_ledger_activity_find</code> for exact account-ID lookup. Unknown, empty or malformed IDs return null; matching is case-sensitive.</p>
+<p>If you need a closing account balance, supply a separate, verified opening balance and the correct historical coverage in a higher-level financial service. Do not rename an activity total as a closing balance.</p>
+<h2>4. Try the installed example</h2>
+<p>The <a href="journal-batch-review.html">journal batch example</a> posts two local practice journals. After installing the finance SDK and learning examples, use an absolute SDK prefix and a separate build directory:</p>
+<pre><code>cmake -S "C:/umicom/installed/finance/share/umicom/examples/journal_batch" -B "C:/umicom-build/journal-batch" -G Ninja -DUMICOM_SDK_PREFIX="C:/umicom/installed/finance"
+cmake --build "C:/umicom-build/journal-batch"
+ctest --test-dir "C:/umicom-build/journal-batch" --output-on-failure --no-tests=error
+&amp; "C:/umicom-build/journal-batch/journal-batch.exe" activity
+&amp; "C:/umicom-build/journal-batch/journal-batch.exe" activity-range</code></pre>
+<p>Stop on any failed command. The <code>activity</code> mode prints 2000 GBP minor units for both accounts' normal-side activity. The <code>activity-range</code> mode excludes the posted date and prints zero for both accounts. Both retain the accounts in their output.</p>
+<h2>Recover from a refusal</h2>
+<ul><li><code>INVALID_ARGUMENT</code>: check input pointers and both dates.</li>
+<li><code>INVALID_STATE</code>: inspect the whole chart and book for malformed, duplicate, unbalanced or non-posted records.</li>
+<li><code>NOT_FOUND</code>: an account referenced by a stored line is absent from the chart. Restore the account identity; hiding the journal with a date filter does not repair the reference.</li>
+<li><code>CAPACITY_EXCEEDED</code>: a public count is invalid or a debit/credit total exceeds signed 64-bit capacity. A small net does not make an overflowing gross total safe. Do not clamp or silently drop rows.</li>
+<li><code>OUT_OF_MEMORY</code>: no result was published. Release unused application state and retry when resources permit.</li></ul>
+<p>Every refusal leaves inputs unchanged and returns a null activity pointer. No file, provider call, payment, approval or new posting is performed.</p>
+</main></body></html>

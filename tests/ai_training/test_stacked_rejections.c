@@ -12,8 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | failure-atomic selected-loss and capacity contracts | Sammy Hegab | MIT */
 #include "stacked_test_fixture.h"
 int main(void)
 {

@@ -1,8 +1,10 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/document/test_parameter_help_gtk4.c
- * PURPOSE: Check read-only parameter help, literal markup and worker lifetime through actual GTK
- * controls.
+ *
+ * PURPOSE:
+ *   Check read-only parameter help, literal markup and worker lifetime through actual GTK
+ *   controls.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab

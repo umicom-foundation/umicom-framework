@@ -12,9 +12,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Check SQLite result rows rather than treating statement execution as health. */
 #ifndef UMICOM_DATA_SQLITE_HEALTH_H
 #define UMICOM_DATA_SQLITE_HEALTH_H
 #include "umicom/data/data_server.h"
