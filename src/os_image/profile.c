@@ -1,16 +1,17 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/os_image/profile.c
+ *
  * PURPOSE:
- *   Strict native source manifests. Build metadata is data, not executable CMake or shell
- *   text. Every published snapshot is hashed before and after a build.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Validate bounded declarative image profiles and frozen input manifests without executing metadata.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Strict native source manifests. Build metadata is data, not executable CMake
- * or shell text. Every published snapshot is hashed before and after a build. */
 #include "internal.h"
 static char *Line(char **cursor) {
     if(!**cursor)return NULL;
@@ -151,6 +152,9 @@ UmiStatus OiPlanLoad(const char *root,OiPlan *p) {
     }
     return s;
 }
+/* The filesystem-coupled parser is retained for review. Its replacement
+ * below shares one transactional grammar with public read-only inspection. */
+#if 0
 UmiStatus OiProfileLoad(const char *os,OiPlan *p) {
     unsigned char *data=NULL;
     size_t n=0;
@@ -186,4 +190,60 @@ UmiStatus OiProfileLoad(const char *os,OiPlan *p) {
     s=UMI_STATUS_OK;
     end:free(text);
     return s;
+}
+#endif
+
+/* Parsing into private staging separates recipe validation from filesystem
+ * access. The caller's build roots and architecture remain owned by prepare;
+ * only accepted profile fields are published, after the final record passes. */
+UmiStatus OiProfileDecode(const void *data, size_t size, OiPlan *p)
+{
+    if (!p) return UMI_STATUS_INVALID_ARGUMENT;
+    char *text = TextCopy(data, size);
+    if (!text) return UMI_STATUS_PARSE_ERROR;
+    OiPlan *staged = calloc(1, sizeof *staged);
+    if (!staged) { free(text); return UMI_STATUS_OUT_OF_MEMORY; }
+    char *at = text, *v;
+    UmiStatus status = UMI_STATUS_PARSE_ERROR;
+    if (strcmp(Line(&at), "UMICOM_OS_PROFILE\t1")) goto finish;
+    v = Value(&at, "buildroot");
+    if (!OiHash(v, 40)) goto finish;
+    strcpy(staged->commit, v);
+    v = Value(&at, "linux");
+    if (!Version(v)) goto finish;
+    strcpy(staged->linuxVersion, v);
+    v = Value(&at, "linux-sha256");
+    if (!OiHash(v, 64)) goto finish;
+    strcpy(staged->linuxHash, v);
+    while (*at) {
+        v = Value(&at, "file");
+        if (!v || !NativeName(v) || staged->count == UMI_OS_IMAGE_MAX_INPUTS) goto finish;
+        if (staged->count && strcmp(staged->inputs[staged->count - 1U].name, v) >= 0) goto finish;
+        strcpy(staged->inputs[staged->count++].name, v);
+    }
+    if (!staged->count) goto finish;
+    int includesProfile = 0;
+    for (size_t i = 0; i < staged->count; ++i)
+        if (!strcmp(staged->inputs[i].name, "umicomOS/image/native/profile.umi")) includesProfile = 1;
+    if (!includesProfile) goto finish;
+    memcpy(p->commit, staged->commit, sizeof p->commit);
+    memcpy(p->linuxVersion, staged->linuxVersion, sizeof p->linuxVersion);
+    memcpy(p->linuxHash, staged->linuxHash, sizeof p->linuxHash);
+    memcpy(p->inputs, staged->inputs, sizeof p->inputs);
+    p->count = staged->count;
+    status = UMI_STATUS_OK;
+finish:
+    free(staged);
+    free(text);
+    return status;
+}
+UmiStatus OiProfileLoad(const char *os, OiPlan *p)
+{
+    if (!p) return UMI_STATUS_INVALID_ARGUMENT;
+    unsigned char *data = NULL;
+    size_t size = 0;
+    UmiStatus status = OiReadJoined(os, "image/native/profile.umi", OI_META_LIMIT, &data, &size);
+    if (status == UMI_STATUS_OK) status = OiProfileDecode(data, size, p);
+    free(data);
+    return status;
 }

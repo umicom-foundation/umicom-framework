@@ -25,6 +25,7 @@ add_library(umicom_os_image STATIC
     "${_umi_os_image_root}/src/os_image/build.c"
     "${_umi_os_image_root}/src/os_image/bundle.c"
     "${_umi_os_image_root}/src/os_image/boot.c"
+    "${_umi_os_image_root}/src/os_image/firmware.c"
     "${_umi_os_image_root}/src/os_image/cli.c")
 if(WIN32)
     target_sources(umicom_os_image PRIVATE "${_umi_os_image_root}/src/os_image/io_windows.c")
@@ -67,6 +68,8 @@ install(TARGETS umicom-os-image RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMP
 install(DIRECTORY "${_umi_os_image_root}/include/umicom/os_image"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom COMPONENT Framework)
 install(FILES "${_umi_os_image_root}/docs/learning/build-and-check-umicom-os.html"
+    "${_umi_os_image_root}/docs/learning/pinned-os-firmware.html"
+    "${_umi_os_image_root}/docs/learning/inspect-os-source-profile.html"
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)
 if(BUILD_TESTING)
     add_subdirectory("${_umi_os_image_root}/tests/os_image" "${CMAKE_CURRENT_BINARY_DIR}/os-image-tests")
@@ -75,3 +78,6 @@ unset(_umi_os_image_root)
 
 # Share a verified bundle projection without exposing image-parser internals.
 target_sources(umicom_os_image PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../src/os_image/bundle_info.c")
+
+# Public profile inspection shares the production parser and owns accepted data.
+target_sources(umicom_os_image PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../src/os_image/profile_inspect.c")

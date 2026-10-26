@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Inspect an OS source profile | Umicom Framework</title><style>body{font:18px/1.6 system-ui,sans-serif;max-width:58rem;margin:3rem auto;padding:0 1.5rem;color:#162636;background:#f8fafc}pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:1rem;background:#e8eef4}a{color:#164d92}</style></head><body><main>
+<h1>Inspect an OS source profile</h1>
+<p>An image profile lists source files and pins the Buildroot revision, Linux version and kernel archive digest. Framework can inspect that declaration without preparing output, downloading dependencies or launching build tools.</p>
+<h2>Read the declaration</h2>
+<ol><li>Build the native <code>umicom-os-image</code> tool through your configured Framework or Applications build.</li><li>Choose the OS checkout whose declaration you want to inspect. The usual file is <code>image/native/profile.umi</code>.</li><li>Run the command with an absolute file path:</li></ol>
+<pre><code>&amp; "C:\umicom\Umicom-Applications\build\windows-ucrt64-all-debug\bin\umicom-os-image.exe" profile --file "C:\umicom\umicomOS\image\native\profile.umi"</code></pre>
+<p>Expected output starts with <code>UMICOM_OS_PROFILE_INSPECTION 1</code>, followed by declared pins, the profile-text SHA-256 digest, the file count and each source name. The final operation summary says <code>process-launched=0</code>. Your configured build may place the tool elsewhere; use its actual output path.</p>
+<h2>Interpret rejection</h2>
+<p>The parser requires its supported format, canonical lowercase digests, a three-part numeric Linux version, a sorted unique source list, and the profile itself in that list. It rejects unsupported owners, traversal paths, unknown fields, control characters and truncated input. Source names begin with <code>framework/</code> or <code>umicomOS/</code>. Fix the declaration itself and inspect it again; do not suppress an error by removing the validation.</p>
+<p>The file reader requires a bounded regular file at an absolute path and rejects symbolic links or reparse-point paths through the native image I/O adapter. A missing file, rejected path or malformed profile returns a nonzero exit status and does not print an accepted inventory.</p>
+<h2>Use the same service in an application</h2>
+<p>Include <code>umicom/os_image/profile.h</code> and link <code>Umicom::os_image</code>. Open a buffer with <code>UmiOsImageProfileOpen</code>, or read a file with <code>UmiOsImageProfileRead</code>. Read a copied summary with <code>UmiOsImageProfileInfoRead</code> and enumerate borrowed names through <code>UmiOsImageProfileFileAt</code>. Destroy the owner when finished. A failed operation leaves the caller's output unchanged.</p>
+<h2>Understand the evidence boundary</h2>
+<p>This checks declarations. It does not verify that listed files exist, that a Git checkout matches the pin, that dependencies have an approved licence, or that an image boots. The profile-text digest differs from the frozen input-manifest digest created by preparation: changing source contents can change the latter without changing the former.</p>
+<p>Use the normal preparation, build, bundle-verification and guest-boot stages for those additional checks. Keep the resulting evidence with the source identity and tool versions used in that run.</p>
+</main><footer><p>Sammy Hegab · Umicom Foundation · MIT.</p></footer></body></html>

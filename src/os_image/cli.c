@@ -1,17 +1,21 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/os_image/cli.c
+ *
  * PURPOSE:
- *   Native command-line presentation. Domain work remains in the library.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Expose native image workflows and require complete explicit firmware pins.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Native command-line presentation. Domain work remains in the library. */
 #include "internal.h"
+#include "umicom/os_image/profile.h"
 static void Help(void) {
-    puts("Umicom native OS image tool\n" "  prepare --os ABS --framework ABS --buildroot ABS --output NEW --arch riscv64|x86_64 --git ABS\n" "  configure --output ABS --make ABS\n" "  build --output ABS --make ABS [--jobs 2]\n" "  legal-info --output ABS --make ABS\n" "  pack --output ABS --bundle NEW\n" "  verify --bundle ABS\n" "  boot --bundle ABS --qemu ABS --mode normal|recovery --result NEW [--timeout 90]\n" "  archive --file ABS\n" "  elf --file ABS --arch riscv64|x86_64\n" "  kernel --file ABS --arch riscv64|x86_64\n" "  assess --file ABS --source SHA256 --mode normal|recovery --exit NUMBER\n" "  --self-test\n" "All outputs are new paths. No disk writer, mount, network client or shell feature.\n" "prepare/configure/build run on Linux/WSL. Buildroot itself needs its normal host tools.\n" "archive accepts canonical newc or native stored-gzip; it never extracts.\n" "assess checks supplied text only; it never establishes that QEMU ran.");
+    puts("Umicom native OS image tool\n" "  prepare --os ABS --framework ABS --buildroot ABS --output NEW --arch riscv64|x86_64 --git ABS\n" "  configure --output ABS --make ABS\n" "  build --output ABS --make ABS [--jobs 2]\n" "  legal-info --output ABS --make ABS\n" "  pack --output ABS --bundle NEW\n" "  verify --bundle ABS\n" "  boot --bundle ABS --qemu ABS --mode normal|recovery --result NEW [--timeout 90]\n" "  firmware --file ABS --sha256 SHA256 --bytes NUMBER\n" "  boot accepts --firmware ABS --sha256 SHA256 --bytes NUMBER for RISC-V\n" "  profile --file ABS\n" "  archive --file ABS\n" "  elf --file ABS --arch riscv64|x86_64\n" "  kernel --file ABS --arch riscv64|x86_64\n" "  assess --file ABS --source SHA256 --mode normal|recovery --exit NUMBER\n" "  --self-test\n" "All outputs are new paths. No disk writer, mount, network client or shell feature.\n" "prepare/configure/build run on Linux/WSL. Buildroot itself needs its normal host tools.\n" "archive accepts canonical newc or native stored-gzip; it never extracts.\n" "assess checks supplied text only; it never establishes that QEMU ran.");
 }
 int UmiOsImageMainWithCancellation(int argc,char **argv,const UmiCancellationToken *cancel) {
     if(argc==2&&!strcmp(argv[1],"--help")) {
@@ -40,11 +44,11 @@ int UmiOsImageMainWithCancellation(int argc,char **argv,const UmiCancellationTok
         return s==UMI_STATUS_OK?0:1;
     }
     enum {
-        OS,FW,BR,OUTPUT,ARCH,GIT,MAKE,JOBS,BUNDLE,QEMU,MODE,RESULT,TIMEOUT,FILE_PATH,SOURCE,EXIT_CODE,KEY_COUNT
+        OS,FW,BR,OUTPUT,ARCH,GIT,MAKE,JOBS,BUNDLE,QEMU,MODE,RESULT,TIMEOUT,FILE_PATH,SOURCE,EXIT_CODE,FIRMWARE,SHA256,BYTES,KEY_COUNT
     }
     ;
     const char *keys[]= {
-        "--os","--framework","--buildroot","--output","--arch","--git","--make","--jobs","--bundle","--qemu","--mode","--result","--timeout","--file","--source","--exit"
+        "--os","--framework","--buildroot","--output","--arch","--git","--make","--jobs","--bundle","--qemu","--mode","--result","--timeout","--file","--source","--exit","--firmware","--sha256","--bytes"
     }
     ;
     const char *values[KEY_COUNT]= {
@@ -76,8 +80,10 @@ int UmiOsImageMainWithCancellation(int argc,char **argv,const UmiCancellationTok
     else if(!strcmp(cmd,"verify"))required=B(BUNDLE);
     else if(!strcmp(cmd,"boot")) {
         required=B(BUNDLE)|B(QEMU)|B(MODE)|B(RESULT);
-        allowed=B(TIMEOUT);
+        allowed=B(TIMEOUT)|B(FIRMWARE)|B(SHA256)|B(BYTES);
     }
+    else if(!strcmp(cmd,"firmware"))required=B(FILE_PATH)|B(SHA256)|B(BYTES);
+    else if(!strcmp(cmd,"profile"))required=B(FILE_PATH);
     else if(!strcmp(cmd,"archive"))required=B(FILE_PATH);
     else if(!strcmp(cmd,"elf")||!strcmp(cmd,"kernel"))required=B(FILE_PATH)|B(ARCH);
     else if(!strcmp(cmd,"assess"))required=B(FILE_PATH)|B(SOURCE)|B(MODE)|B(EXIT_CODE);
@@ -87,6 +93,11 @@ int UmiOsImageMainWithCancellation(int argc,char **argv,const UmiCancellationTok
     }
     allowed|=required;
     if((seen&required)!=required||(seen&~allowed))return 2;
+    /* A partial pin must never silently fall back to host-default firmware. */
+    if(!strcmp(cmd,"boot")) {
+        uint32_t pinBits=B(FIRMWARE)|B(SHA256)|B(BYTES);
+        if((seen&pinBits)&&(seen&pinBits)!=pinBits)return 2;
+    }
 #undef B
     UmiOsImageArch arch=UMI_OS_IMAGE_RISCV64;
     UmiOsImageMode mode=UMI_OS_IMAGE_NORMAL;
@@ -102,6 +113,14 @@ int UmiOsImageMainWithCancellation(int argc,char **argv,const UmiCancellationTok
     if(values[JOBS]&&(!OiNumber(values[JOBS],&jobs)||jobs<1U||jobs>64U))return 2;
     if(values[TIMEOUT]&&(!OiNumber(values[TIMEOUT],&timeout)||timeout<5U||timeout>600U))return 2;
     if(values[EXIT_CODE]&&(!OiNumber(values[EXIT_CODE],&exitCode)||exitCode>255U))return 2;
+    uint64_t firmwareBytes=0;
+    if(values[SHA256]&&!OiHash(values[SHA256],64))return 2;
+    if(values[BYTES]&&(!OiNumber(values[BYTES],&firmwareBytes)||
+        !firmwareBytes||firmwareBytes>UMI_OS_IMAGE_MAX_FILE))return 2;
+    UmiOsImageFirmware firmware={
+        !strcmp(cmd,"firmware")?values[FILE_PATH]:values[FIRMWARE],
+        values[SHA256],firmwareBytes
+    };
     UmiOsImageReport report;
     OiInit(&report);
     UmiStatus s=UMI_STATUS_INVALID_ARGUMENT;
@@ -111,7 +130,31 @@ int UmiOsImageMainWithCancellation(int argc,char **argv,const UmiCancellationTok
     else if(!strcmp(cmd,"legal-info"))s=UmiOsImageLegalInfo(values[OUTPUT],values[MAKE],cancel,&report);
     else if(!strcmp(cmd,"pack"))s=UmiOsImagePack(values[OUTPUT],values[BUNDLE],&report);
     else if(!strcmp(cmd,"verify"))s=UmiOsImageVerify(values[BUNDLE],&report);
-    else if(!strcmp(cmd,"boot"))s=UmiOsImageBoot(values[BUNDLE],values[QEMU],mode,(unsigned)timeout,values[RESULT],cancel,&report);
+
+    else if(!strcmp(cmd,"profile")) {
+        UmiOsImageProfile *profile=NULL;
+        UmiOsImageProfileInfo info;
+        s=UmiOsImageProfileRead(values[FILE_PATH],&profile);
+        if(s==UMI_STATUS_OK)s=UmiOsImageProfileInfoRead(profile,&info);
+        if(s==UMI_STATUS_OK) {
+            printf("UMICOM_OS_PROFILE_INSPECTION 1\nbuildroot=%s\nlinux=%s\nlinux-sha256=%s\nprofile-sha256=%s\nfiles=%zu\n",
+                info.buildrootCommit,info.linuxVersion,info.linuxSha256,info.profileSha256,info.fileCount);
+            for(size_t i=0;i<info.fileCount;++i)printf("file=%s\n",UmiOsImageProfileFileAt(profile,i));
+            report.files=info.fileCount;
+            report.completed=1;
+        }
+        UmiOsImageProfileDestroy(profile);
+        OiReport(&report,s,s==UMI_STATUS_OK?
+            "Profile syntax and declared pins inspected. Source contents, licensing and build results were not verified.":
+            "Profile inspection failed; no source or output was changed.");
+    }
+    else if(!strcmp(cmd,"firmware"))s=UmiOsImageCheckFirmware(&firmware,&report);
+    else if(!strcmp(cmd,"boot")) {
+        if(values[FIRMWARE])
+            s=UmiOsImageBootWithFirmware(values[BUNDLE],values[QEMU],&firmware,mode,(unsigned)timeout,values[RESULT],cancel,&report);
+        else
+            s=UmiOsImageBoot(values[BUNDLE],values[QEMU],mode,(unsigned)timeout,values[RESULT],cancel,&report);
+    }
     else {
         unsigned char *data=NULL;
         size_t size=0;

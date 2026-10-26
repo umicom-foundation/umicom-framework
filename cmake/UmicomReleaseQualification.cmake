@@ -63,6 +63,10 @@ function(umicom_release_contracts_prepare)
     _umicom_release_declare_pair(umicom_base include/umicom/base/sha256.h src/base/sha256.c)
     _umicom_release_declare_pair(umicom_data include/umicom/data/job_identity.h src/data/job_identity.c)
     _umicom_release_declare_pair(umicom_data include/umicom/data/job_inputs.h src/data/job_inputs.c)
+    # OS host inspection and explicit firmware pins have implementation-owned headers.
+    _umicom_release_declare_pair(umicom_platform include/umicom/platform/boot_report_file.h src/platform/boot_report_file.c)
+    _umicom_release_declare_pair(umicom_os_image include/umicom/os_image/boot_firmware.h src/os_image/firmware.c)
+    _umicom_release_declare_pair(umicom_os_image include/umicom/os_image/profile.h src/os_image/profile_inspect.c)
     # Streaming diagnostics and explicit tool lookup retain narrow owners.
     _umicom_release_declare_pair(umicom_platform include/umicom/platform/process_search_path.h src/platform/process_search_path.c)
     _umicom_release_declare_pair(umicom_platform include/umicom/platform/process_environment.h src/platform/process_environment.c)

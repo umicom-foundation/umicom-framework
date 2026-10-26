@@ -1,16 +1,18 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/os_image/test_files.c
+ *
  * PURPOSE:
- *   Linux filesystem and controlled tool-transport cases. Test directories are private and
- *   contain no user data. The child is explicitly inert, not QEMU.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Exercise exclusive file ownership, firmware pins and explicitly inert process transport.
+ *   Keep synthetic observations distinct from real operating-system boot evidence.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Linux filesystem and controlled tool-transport cases. Test directories are
- * private and contain no user data. The child is explicitly inert, not QEMU. */
 #define _GNU_SOURCE
 #include "fixtures.h"
 #include <unistd.h>
@@ -113,7 +115,7 @@ static int Pipeline(const char *name,const char *root,const char *child,const ch
     CHECK(OiJoin(root,"prepared",prepared)==UMI_STATUS_OK);
     CHECK(OiJoin(root,"bundle",bundle)==UMI_STATUS_OK);
     UmiOsImageReport r;
-    UmiOsImageArch arch=!strcmp(name,"pipeline_riscv")?UMI_OS_IMAGE_RISCV64:UMI_OS_IMAGE_X86_64;
+    UmiOsImageArch arch=(!strcmp(name,"pipeline_riscv")||(!strncmp(name,"pipeline_firmware_",18)&&strcmp(name,"pipeline_firmware_wrong_arch")))?UMI_OS_IMAGE_RISCV64:UMI_OS_IMAGE_X86_64;
     if(!strcmp(name,"pipeline_dirty_buildroot")) {
         CHECK(!Put(br,"untracked","x",1));
         CHECK(UmiOsImagePrepare(os,fw,br,prepared,arch,git,&r)==UMI_STATUS_INVALID_STATE);
@@ -214,6 +216,65 @@ static int Pipeline(const char *name,const char *root,const char *child,const ch
     }
     char result[UMI_OS_IMAGE_PATH];
     CHECK(OiJoin(root,"result",result)==UMI_STATUS_OK);
+
+    if(!strncmp(name,"pipeline_firmware_",18)) {
+        char firmwarePath[UMI_OS_IMAGE_PATH],hash[65];
+        const char *bytes=!strcmp(name,"pipeline_firmware_changed_capture")?
+            "mutate captured firmware\n":"inert firmware fixture\n";
+        CHECK(OiJoin(root,"input firmware.bin",firmwarePath)==UMI_STATUS_OK);
+        CHECK(OiWrite(firmwarePath,bytes,strlen(bytes))==UMI_STATUS_OK);
+        CHECK(UmiNativeSha256Buffer(bytes,strlen(bytes),hash)==UMI_STATUS_OK);
+        UmiOsImageFirmware pin={firmwarePath,hash,(uint64_t)strlen(bytes)};
+        if(!strcmp(name,"pipeline_firmware_wrong_hash"))hash[0]=hash[0]=='0'?'1':'0';
+        if(!strcmp(name,"pipeline_firmware_wrong_size"))++pin.bytes;
+        UmiCancellationToken *stop=NULL;
+        if(!strcmp(name,"pipeline_firmware_precancel")) {
+            CHECK(umi_cancellation_token_create(&stop)==UMI_STATUS_OK);
+            umi_cancellation_token_request(stop);
+        }
+        if(!strcmp(name,"pipeline_firmware_existing"))CHECK(OiDirectory(result,1)==UMI_STATUS_OK);
+        UmiOsImageMode mode=!strcmp(name,"pipeline_firmware_recovery")?
+            UMI_OS_IMAGE_RECOVERY:UMI_OS_IMAGE_NORMAL;
+        status=UmiOsImageBootWithFirmware(bundle,child,&pin,mode,5,result,stop,&r);
+        umi_cancellation_token_destroy(stop);
+        if(!strcmp(name,"pipeline_firmware_wrong_hash")||!strcmp(name,"pipeline_firmware_wrong_size")) {
+            CHECK(status==UMI_STATUS_INVALID_STATE&&!r.outputCreated&&!r.processLaunched);
+            CHECK(access(result,F_OK)!=0);
+            return 0;
+        }
+        if(!strcmp(name,"pipeline_firmware_wrong_arch")) {
+            CHECK(status==UMI_STATUS_INVALID_ARGUMENT&&!r.outputCreated&&!r.processLaunched);
+            return 0;
+        }
+        if(!strcmp(name,"pipeline_firmware_precancel")) {
+            CHECK(status==UMI_STATUS_CANCELLED&&!r.outputCreated&&!r.processLaunched);
+            return 0;
+        }
+        if(!strcmp(name,"pipeline_firmware_existing")) {
+            CHECK(status==UMI_STATUS_ALREADY_EXISTS&&!r.processLaunched);
+            return 0;
+        }
+        int changed=!strcmp(name,"pipeline_firmware_changed_capture");
+        CHECK(status==(changed?UMI_STATUS_INVALID_STATE:UMI_STATUS_OK));
+        CHECK(r.outputCreated&&r.processLaunched&&r.completed==!changed);
+        unsigned char *record=NULL;
+        size_t length=0;
+        CHECK(OiReadJoined(result,"request.umi",8192,&record,&length)==UMI_STATUS_OK);
+        CHECK(strstr((char*)record,"UMICOM_OS_BOOT_REQUEST\t2\n"));
+        CHECK(strstr((char*)record,"firmware-file\tfirmware.bin\n"));
+        CHECK(strstr((char*)record,hash));
+        free(record);
+        CHECK(OiReadJoined(result,"result.umi",8192,&record,&length)==UMI_STATUS_OK);
+        CHECK(strstr((char*)record,changed?"status\tfailed\n":"status\tpassed\n"));
+        CHECK(strstr((char*)record,"firmware-pinned\ttrue\n"));
+        CHECK(strstr((char*)record,"authenticity-tested\tfalse\n"));
+        free(record);
+        /* The transport fixture must only mutate the captured file. */
+        CHECK(UmiOsImageCheckFirmware(&pin,&r)==UMI_STATUS_OK);
+        CHECK(!r.processLaunched);
+        return 0;
+    }
+
     if(!strcmp(name,"pipeline_missing_qemu")) {
         CHECK(UmiOsImageBoot(bundle,"/usr/bin/umicom-no-such-qemu",UMI_OS_IMAGE_NORMAL,5,result,NULL,&r)==UMI_STATUS_UNAVAILABLE);
         CHECK(!r.processLaunched&&!r.completed);
@@ -250,6 +311,34 @@ static int Native(const char *name,const char *root,const char *child,const char
     char path[UMI_OS_IMAGE_PATH],other[UMI_OS_IMAGE_PATH];
     CHECK(OiJoin(root,"file",path)==UMI_STATUS_OK);
     CHECK(OiJoin(root,"other",other)==UMI_STATUS_OK);
+
+    if(!strncmp(name,"firmware_",9)) {
+        const char data[]="firmware fixture";
+        char hash[65];
+        CHECK(UmiNativeSha256Buffer(data,sizeof data-1U,hash)==UMI_STATUS_OK);
+        UmiOsImageFirmware pin={path,hash,sizeof data-1U};
+        UmiOsImageReport report;
+        if(strcmp(name,"firmware_missing"))CHECK(OiWrite(path,data,sizeof data-1U)==UMI_STATUS_OK);
+        if(!strcmp(name,"firmware_zero"))pin.bytes=0;
+        if(!strcmp(name,"firmware_large"))pin.bytes=UMI_OS_IMAGE_MAX_FILE+UINT64_C(1);
+        if(!strcmp(name,"firmware_hash"))hash[0]='Z';
+        if(!strcmp(name,"firmware_size"))++pin.bytes;
+        if(!strcmp(name,"firmware_digest"))hash[0]=hash[0]=='0'?'1':'0';
+        if(!strcmp(name,"firmware_relative"))pin.path="relative.bin";
+        if(!strcmp(name,"firmware_symlink")) {
+            CHECK(!symlink(path,other));
+            pin.path=other;
+        }
+        UmiStatus result=UmiOsImageCheckFirmware(&pin,&report);
+        CHECK(!report.outputCreated&&!report.processLaunched);
+        if(!strcmp(name,"firmware_valid")) {
+            CHECK(result==UMI_STATUS_OK&&report.completed&&report.bytes==sizeof data-1U);
+        } else {
+            CHECK(result!=UMI_STATUS_OK&&!report.completed);
+        }
+        return 0;
+    }
+
     if(!strcmp(name,"io_exclusive")) {
         CHECK(OiWrite(path,"old",3)==UMI_STATUS_OK);
         CHECK(OiWrite(path,"new",3)==UMI_STATUS_ALREADY_EXISTS);

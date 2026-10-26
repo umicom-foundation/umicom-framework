@@ -1,17 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/os_image/boot.c
+ *
  * PURPOSE:
- *   Ordered guest observations, not substring-based success detection. Offline transcript
- *   assessment and actual process execution are separate entry points.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
- *---------------------------------------------------------------------------*/
-
-/*-----------------------------------------------------------------------------
- * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Ordered guest observations, not substring-based success detection. Offline
- * transcript assessment and actual process execution are separate entry points.
+ *   Check ordered guest observations and retain exact firmware identity for explicit runs.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "internal.h"
 UmiStatus UmiOsImageAssessBoot(const void *data,size_t size,const char *source, UmiOsImageMode mode,int exitCode,UmiOsImageReport *r) {
@@ -101,6 +100,10 @@ UmiStatus UmiOsImageAssessBoot(const void *data,size_t size,const char *source, 
     end:free(text);
     return OiReport(r,status,status==UMI_STATUS_OK?"Transcript observations agree. This assessment did not execute QEMU.":"Transcript does not demonstrate the required ordered init-to-poweroff workflow.");
 }
+/* The original default-firmware implementation is retained for engineering
+ * review. BootRun replaces its execution path so both public interfaces share
+ * process ownership and evidence handling; the legacy API remains available. */
+#if 0
 UmiStatus UmiOsImageBoot(const char *root,const char *qemu,UmiOsImageMode mode, unsigned timeout,const char *dest,const UmiCancellationToken *cancel,UmiOsImageReport *r) {
     OiInit(r);
     if((mode!=UMI_OS_IMAGE_NORMAL&&mode!=UMI_OS_IMAGE_RECOVERY)||timeout<5U||timeout>600U|| OiAbsolute(qemu,0)!=UMI_STATUS_OK||OiAbsolute(dest,0)!=UMI_STATUS_OK)return UMI_STATUS_INVALID_ARGUMENT;
@@ -194,4 +197,156 @@ UmiStatus UmiOsImageBoot(const char *root,const char *qemu,UmiOsImageMode mode, 
     OiTextClear(&result);
     OiTextClear(&transcript);
     return OiReport(r,s,s==UMI_STATUS_OK?"Direct-kernel guest run passed its ordered init, service, report and shutdown checks.":"Boot run did not pass. Keep its new result directory and inspect the transcript.");
+}
+#endif
+
+static UmiStatus BootRun(const char *root,const char *qemu,const UmiOsImageFirmware *firmware,UmiOsImageMode mode, unsigned timeout,const char *dest,const UmiCancellationToken *cancel,UmiOsImageReport *r) {
+    OiInit(r);
+    if((mode!=UMI_OS_IMAGE_NORMAL&&mode!=UMI_OS_IMAGE_RECOVERY)||timeout<5U||timeout>600U|| OiAbsolute(qemu,0)!=UMI_STATUS_OK||OiAbsolute(dest,0)!=UMI_STATUS_OK)return OiReport(r,UMI_STATUS_INVALID_ARGUMENT,"Select a valid mode, deadline and absolute QEMU/result paths.");
+    UmiOsImageReport inspected;
+    UmiStatus s=UmiOsImageVerify(root,&inspected);
+    if(s!=UMI_STATUS_OK)return OiReport(r,s,inspected.detail);
+    OiBundle b= {
+        0
+    }
+    ;
+    s=OiBundleLoad(root,&b);
+    if(s!=UMI_STATUS_OK)return OiReport(r,s,"The verified image bundle could not be read consistently.");
+    if(firmware && b.arch != UMI_OS_IMAGE_RISCV64)
+        return OiReport(r,UMI_STATUS_INVALID_ARGUMENT,"Explicit OpenSBI firmware requires a RISC-V virt bundle.");
+    if(OiContains(root,dest)||OiContains(dest,root))return OiReport(r,UMI_STATUS_INVALID_ARGUMENT,"Keep boot results outside the immutable bundle.");
+    s=OiNativeProgram(qemu);
+    if(s==UMI_STATUS_NOT_FOUND||s==UMI_STATUS_UNAVAILABLE)return OiReport(r,UMI_STATUS_UNAVAILABLE,"NOT RUN: the explicit native QEMU executable is unavailable.");
+    if(s!=UMI_STATUS_OK)return OiReport(r,s,"The selected QEMU program is not an accessible native executable.");
+    char qemuHash[65];
+    uint64_t qemuSize=0;
+    s=OiDigest(qemu,qemuHash,&qemuSize);
+    if(s!=UMI_STATUS_OK)return OiReport(r,s,"The selected QEMU executable could not be identified.");
+    if(umi_cancellation_token_is_requested(cancel))return OiReport(r,UMI_STATUS_CANCELLED,"Cancelled before creating boot results or launching a guest.");
+    /* Freeze verified bytes before output creation. Both interfaces share
+     * process ownership, cancellation and transcript assessment. */
+    unsigned char *firmwareData=NULL;
+    size_t firmwareSize=0;
+    if(firmware) {
+        s=OiFirmwareRead(firmware,&firmwareData,&firmwareSize);
+        if(s!=UMI_STATUS_OK)return OiReport(r,s,"Firmware pin does not match an accessible regular file.");
+    }
+    if(umi_cancellation_token_is_requested(cancel)) {
+        free(firmwareData);
+        return OiReport(r,UMI_STATUS_CANCELLED,"Cancelled before creating boot results.");
+    }
+    s=OiDirectory(dest,1);
+    if(s!=UMI_STATUS_OK) {
+        free(firmwareData);
+        return OiReport(r,s,"Use a new result directory with an existing parent.");
+    }
+    if(r)r->outputCreated=1;
+    char firmwarePath[UMI_OS_IMAGE_PATH]={0};
+    if(firmware) {
+        s=OiJoin(dest,"firmware.bin",firmwarePath);
+        if(s==UMI_STATUS_OK)s=OiWrite(firmwarePath,firmwareData,firmwareSize);
+    }
+    free(firmwareData);
+    char kernel[UMI_OS_IMAGE_PATH],initrd[UMI_OS_IMAGE_PATH];
+    if(s==UMI_STATUS_OK)s=OiJoin(root,OiKernelName(b.arch),kernel);
+    if(s==UMI_STATUS_OK)s=OiJoin(root,"umicom-rootfs.cpio.gz",initrd);
+    char command[192];
+    int n=snprintf(command,sizeof command,"console=ttyS0 rdinit=/init panic=-1 umicom.recovery=%u umicom.autopoweroff=1",mode==UMI_OS_IMAGE_RECOVERY?1U:0U);
+    if(n<0||(size_t)n>=sizeof command)s=UMI_STATUS_CAPACITY_EXCEEDED;
+    const char *args[32];
+    size_t count=0;
+    args[count++]="-M";
+    args[count++]=b.arch==UMI_OS_IMAGE_RISCV64?"virt":"q35";
+    if(b.arch==UMI_OS_IMAGE_RISCV64) {
+        args[count++]="-bios";
+        args[count++]=firmware?firmwarePath:"default";
+    }
+    const char *common[]= {
+        "-accel","tcg","-m","256M","-smp","1","-display","none","-monitor","none","-serial","stdio","-nic","none","-no-reboot","-kernel",kernel,"-initrd",initrd,"-append",command
+    }
+    ;
+    for(size_t i=0;i<sizeof common/sizeof common[0];++i)args[count++]=common[i];
+    OiText request;
+    OiTextInit(&request);
+    /* Version two records the additional firmware contract. Legacy callers
+     * retain version-one evidence for existing consumers. */
+    if(firmware) {
+        OiPrint(&request,"UMICOM_OS_BOOT_REQUEST\t2\nsource\t%s\narch\t%s\nmode\t%s\nqemu-sha256\t%s\nqemu-bytes\t%" PRIu64 "\ntimeout-seconds\t%u\nfirmware-file\tfirmware.bin\nfirmware-sha256\t%s\nfirmware-bytes\t%" PRIu64 "\n",b.sourceId,OiArchName(b.arch),mode==UMI_OS_IMAGE_NORMAL?"normal":"recovery",qemuHash,qemuSize,timeout,firmware->sha256,firmware->bytes);
+    } else {
+    OiPrint(&request,"UMICOM_OS_BOOT_REQUEST\t1\nsource\t%s\narch\t%s\nmode\t%s\nqemu-sha256\t%s\nqemu-bytes\t%" PRIu64 "\ntimeout-seconds\t%u\n",b.sourceId,OiArchName(b.arch),mode==UMI_OS_IMAGE_NORMAL?"normal":"recovery",qemuHash,qemuSize,timeout);
+    }
+    char path[UMI_OS_IMAGE_PATH];
+    if(s==UMI_STATUS_OK)s=request.status;
+    if(s==UMI_STATUS_OK)s=OiJoin(dest,"request.umi",path);
+    if(s==UMI_STATUS_OK)s=OiWrite(path,request.data,request.size);
+    OiTextClear(&request);
+    OiText transcript;
+    OiTextInit(&transcript);
+    UmiProcessResult *pr=calloc(1,sizeof *pr);
+    if(!pr)s=UMI_STATUS_OUT_OF_MEMORY;
+    if(s==UMI_STATUS_OK)s=OiCapture(qemu,args,count,root,timeout*1000U,cancel,&transcript,pr);
+    if(r&&pr) {
+        r->processLaunched=pr->launched;
+        r->exitCode=pr->exit_code;
+        r->cancelled=pr->cancelled;
+        r->timedOut=pr->timed_out;
+        strcpy(r->sourceId,b.sourceId);
+    }
+    if(s==UMI_STATUS_OK) {
+        UmiOsImageReport assessed;
+        s=UmiOsImageAssessBoot(transcript.data,transcript.size,b.sourceId,mode,pr->exit_code,&assessed);
+    }
+    if(s==UMI_STATUS_OK) {
+        s=UmiOsImageVerify(root,&inspected);
+        if(s==UMI_STATUS_OK&&strcmp(inspected.sourceId,b.sourceId))s=UMI_STATUS_INVALID_STATE;
+        char after[65];
+        uint64_t length=0;
+        if(s==UMI_STATUS_OK)s=OiDigest(qemu,after,&length);
+        if(s==UMI_STATUS_OK&&(strcmp(after,qemuHash)||length!=qemuSize))s=UMI_STATUS_INVALID_STATE;
+        if(s==UMI_STATUS_OK&&firmware) {
+            s=OiDigest(firmwarePath,after,&length);
+            if(s==UMI_STATUS_OK&&(strcmp(after,firmware->sha256)||length!=firmware->bytes))
+                s=UMI_STATUS_INVALID_STATE;
+        }
+    }
+    UmiStatus saved=OiJoin(dest,"console.log",path);
+    if(saved==UMI_STATUS_OK)saved=OiWrite(path,transcript.data,transcript.size);
+    if(s==UMI_STATUS_OK)s=saved;
+    char logHash[65];
+    UmiStatus hashed=UmiNativeSha256Buffer(transcript.data,transcript.size,logHash);
+    if(s==UMI_STATUS_OK)s=hashed;
+    OiText result;
+    OiTextInit(&result);
+    if(firmware) {
+        OiPrint(&result,"UMICOM_OS_BOOT_RESULT\t2\nsource\t%s\nmode\t%s\nstatus\t%s\nlaunched\t%d\nexit\t%d\ntimed-out\t%d\ncancelled\t%d\nlog-sha256\t%s\nlog-bytes\t%zu\nfirmware-sha256\t%s\nfirmware-bytes\t%" PRIu64 "\nfirmware-pinned\ttrue\nauthenticity-tested\tfalse\nbios-uefi-tested\tfalse\n", b.sourceId,mode==UMI_OS_IMAGE_NORMAL?"normal":"recovery",s==UMI_STATUS_OK?"passed":"failed",pr?pr->launched:0,pr?pr->exit_code:-1,pr?pr->timed_out:0,pr?pr->cancelled:0,hashed==UMI_STATUS_OK?logHash:"unavailable",transcript.size,firmware->sha256,firmware->bytes);
+    } else {
+    OiPrint(&result,"UMICOM_OS_BOOT_RESULT\t1\nsource\t%s\nmode\t%s\nstatus\t%s\nlaunched\t%d\nexit\t%d\ntimed-out\t%d\ncancelled\t%d\nlog-sha256\t%s\nlog-bytes\t%zu\nauthenticity-tested\tfalse\nbios-uefi-tested\tfalse\n", b.sourceId,mode==UMI_OS_IMAGE_NORMAL?"normal":"recovery",s==UMI_STATUS_OK?"passed":"failed",pr?pr->launched:0,pr?pr->exit_code:-1,pr?pr->timed_out:0,pr?pr->cancelled:0,hashed==UMI_STATUS_OK?logHash:"unavailable",transcript.size);
+    }
+    saved=result.status;
+    if(saved==UMI_STATUS_OK)saved=OiJoin(dest,"result.umi",path);
+    if(saved==UMI_STATUS_OK)saved=OiWrite(path,result.data,result.size);
+    if(s==UMI_STATUS_OK)s=saved;
+    if(r)r->completed=s==UMI_STATUS_OK;
+    free(pr);
+    OiTextClear(&result);
+    OiTextClear(&transcript);
+    return OiReport(r,s,s==UMI_STATUS_OK?"Direct-kernel guest run passed its ordered init, service, report and shutdown checks.":"Boot run did not pass. Keep its new result directory and inspect the transcript.");
+}
+
+UmiStatus UmiOsImageBoot(const char *bundle,const char *qemu,UmiOsImageMode mode,
+    unsigned timeout,const char *destination,const UmiCancellationToken *cancel,
+    UmiOsImageReport *report)
+{
+    return BootRun(bundle,qemu,NULL,mode,timeout,destination,cancel,report);
+}
+
+UmiStatus UmiOsImageBootWithFirmware(const char *bundle,const char *qemu,
+    const UmiOsImageFirmware *firmware,UmiOsImageMode mode,unsigned timeout,
+    const char *destination,const UmiCancellationToken *cancel,UmiOsImageReport *report)
+{
+    if(!firmware) {
+        OiInit(report);
+        return OiReport(report,UMI_STATUS_INVALID_ARGUMENT,"An explicit firmware pin is required.");
+    }
+    return BootRun(bundle,qemu,firmware,mode,timeout,destination,cancel,report);
 }

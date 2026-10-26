@@ -33,7 +33,17 @@ endforeach()
 add_test(NAME framework.os_image.cli_help COMMAND umicom-os-image --help)
 add_test(NAME framework.os_image.cli_self_test COMMAND umicom-os-image --self-test)
 add_test(NAME framework.os_image.archive_lesson COMMAND umicom-os-image-archive-example)
-set(_native_targets umicom-os-image-buffer-tests)
+
+# These rejection cases are platform-neutral and perform no filesystem access.
+add_executable(umicom-os-firmware-cli-tests test_firmware_cli.c)
+target_link_libraries(umicom-os-firmware-cli-tests PRIVATE Umicom::os_image)
+set_target_properties(umicom-os-firmware-cli-tests PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+foreach(_case IN ITEMS partial zero overflow uppercase duplicate null-pin report-status)
+    add_test(NAME "framework.os_image.firmware_cli.${_case}" COMMAND umicom-os-firmware-cli-tests "${_case}")
+    set_tests_properties("framework.os_image.firmware_cli.${_case}" PROPERTIES TIMEOUT 15 LABELS "os_image;buffer;firmware")
+endforeach()
+
+set(_native_targets umicom-os-image-buffer-tests umicom-os-firmware-cli-tests)
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     find_program(_umi_image_git NAMES git)
     find_program(_umi_image_gzip NAMES gzip)
@@ -61,7 +71,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         pipeline_changed_kernel_archive pipeline_configuration_duplicate
         pipeline_extra_bundle_file pipeline_changed_archive pipeline_existing_pack
         pipeline_legal_info pipeline_missing_qemu pipeline_boot_precancel
-        pipeline_inert_normal_transport pipeline_inert_recovery_transport pipeline_riscv)
+        pipeline_inert_normal_transport pipeline_inert_recovery_transport pipeline_riscv
+        firmware_valid firmware_zero firmware_large firmware_hash
+        firmware_size firmware_digest firmware_relative firmware_symlink firmware_missing
+        pipeline_firmware_normal pipeline_firmware_recovery pipeline_firmware_wrong_hash
+        pipeline_firmware_wrong_size pipeline_firmware_wrong_arch pipeline_firmware_precancel
+        pipeline_firmware_existing pipeline_firmware_changed_capture)
     foreach(_case IN LISTS _file_cases)
         add_test(NAME framework.os_image.${_case}
             COMMAND umicom-os-image-file-tests ${_case} $<TARGET_FILE:umicom-os-image-inert-child>
@@ -86,3 +101,33 @@ if(COMMAND umicom_register_validation_target)
     umicom_register_validation_target(umicom-os-image)
     umicom_register_validation_target(umicom-os-image-archive-example)
 endif()
+
+# The same parser serves source preparation and public read-only inspection.
+add_executable(umicom-os-profile-tests test_profile.c)
+target_include_directories(umicom-os-profile-tests PRIVATE ../../src/os_image)
+target_link_libraries(umicom-os-profile-tests PRIVATE Umicom::os_image)
+set_target_properties(umicom-os-profile-tests PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+foreach(_profile_case IN ITEMS valid ownership bounds arguments prepare-preservation truncated
+    missing-self duplicate unsorted escape unknown-owner extra-field empty-files
+    uppercase-hash version embedded-nul control)
+    add_test(NAME "framework.os_image.profile.${_profile_case}" COMMAND umicom-os-profile-tests "${_profile_case}")
+    set_tests_properties("framework.os_image.profile.${_profile_case}" PROPERTIES TIMEOUT 15 LABELS "os_image;buffer;profile")
+endforeach()
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-os-profile-tests)
+endif()
+if(COMMAND umicom_apply_warnings)
+    umicom_apply_warnings(umicom-os-profile-tests)
+endif()
+if(COMMAND umicom_apply_sanitizers)
+    umicom_apply_sanitizers(umicom-os-profile-tests)
+endif()
+
+foreach(_profile_cli_case IN ITEMS valid unicode space malformed missing extra-option duplicate)
+    add_test(NAME "framework.os_image.profile_cli.${_profile_cli_case}"
+        COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:umicom-os-image>"
+            "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/profile-cli-${_profile_cli_case}"
+            "-DCASE=${_profile_cli_case}" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_profile.cmake")
+    set_tests_properties("framework.os_image.profile_cli.${_profile_cli_case}"
+        PROPERTIES TIMEOUT 20 LABELS "os_image;profile;cli")
+endforeach()

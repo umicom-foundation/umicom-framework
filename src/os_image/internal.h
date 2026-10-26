@@ -1,8 +1,21 @@
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Private native image implementation. No guest policy or mutable global state. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/os_image/internal.h
+ *
+ * PURPOSE:
+ *   Share bounded native image internals without guest policy or mutable global state.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #ifndef UMICOM_OS_IMAGE_INTERNAL_H
 #define UMICOM_OS_IMAGE_INTERNAL_H
 #include "umicom/os_image/image.h"
+#include "umicom/os_image/boot_firmware.h"
 #include "umicom/native_launcher/sha256.h"
 #include "umicom/platform/process.h"
 #include "umicom/platform/boot_report.h"
@@ -75,11 +88,13 @@ UmiStatus OiBuildroot(const OiPlan *plan);
 UmiStatus OiPlanDecode(const void *data, size_t size, OiPlan *plan);
 UmiStatus OiPlanLoad(const char *root, OiPlan *plan);
 UmiStatus OiReadJoined(const char *root, const char *name, size_t limit, unsigned char **data, size_t *size);
+UmiStatus OiProfileDecode(const void *data, size_t size, OiPlan *plan);
 UmiStatus OiProfileLoad(const char *os, OiPlan *p);
 UmiStatus OiConfigCheck(const char *root, const OiPlan *p, int kernel);
 UmiStatus OiBuildReady(const char *root, const OiPlan *plan, OiText *evidence);
 UmiStatus OiCapturedArtifact(const OiText *evidence, const char *relative,
     const void *data, size_t size);
+UmiStatus OiFirmwareRead(const UmiOsImageFirmware *pin, unsigned char **data, size_t *size);
 UmiStatus OiBundleLoad(const char *root, OiBundle *bundle);
 UmiStatus OiRootfsCheck(UmiOsImageArchive *archive, const OiBundle *b, const OiPlan *p);
 UmiStatus OiPackFiles(const char *target, const char *overlay, const char *kernel,

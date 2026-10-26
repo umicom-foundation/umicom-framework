@@ -1,18 +1,17 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/os_image/inert_child.c
+ *
  * PURPOSE:
- *   INERT TEST EXECUTABLE. It is neither make/Buildroot nor QEMU. It emits small synthetic
- *   files/transcripts to exercise the production process adapter and stage-state checks. It
- *   is never installed or distributed as a guest runtime.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Provide an inert process fixture for native image workflows, never a guest runtime.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * INERT TEST EXECUTABLE. It is neither make/Buildroot nor QEMU. It emits small
- * synthetic files/transcripts to exercise the production process adapter and
- * stage-state checks. It is never installed or distributed as a guest runtime. */
 #ifndef _WIN32
 #define _POSIX_C_SOURCE 200809L
 #endif
@@ -70,11 +69,12 @@ static int MakeFixture(int argc,char **argv) {
     return result;
 }
 static int QemuFixture(int argc,char **argv) {
-    const char *initrd=NULL,*append=NULL;
+    const char *initrd=NULL,*append=NULL,*bios=NULL;
     int noNetwork=0,noMonitor=0,noDisplay=0,tcg=0;
     for(int i=1;i<argc;++i) {
         if(!strcmp(argv[i],"-drive")||!strcmp(argv[i],"-hda")||!strcmp(argv[i],"-virtfs"))return 9;
         if(i+1<argc) {
+            if(!strcmp(argv[i],"-bios"))bios=argv[i+1];
             if(!strcmp(argv[i],"-initrd"))initrd=argv[i+1];
             if(!strcmp(argv[i],"-append"))append=argv[i+1];
             if(!strcmp(argv[i],"-nic")&&!strcmp(argv[i+1],"none"))noNetwork=1;
@@ -83,6 +83,23 @@ static int QemuFixture(int argc,char **argv) {
             if(!strcmp(argv[i],"-accel")&&!strcmp(argv[i+1],"tcg"))tcg=1;
         }
     }
+
+    if(bios && strcmp(bios,"default")) {
+        CHECK(strstr(bios,"/firmware.bin"));
+        unsigned char *firmware=NULL;
+        size_t firmwareSize=0;
+        CHECK(OiRead(bios,UMI_OS_IMAGE_MAX_FILE,&firmware,&firmwareSize)==UMI_STATUS_OK);
+        CHECK(firmwareSize>0);
+        if(firmwareSize>=6U&&!memcmp(firmware,"mutate",6)) {
+            /* Intentional corruption exercises the post-run check.
+             * This executable is an inert fixture, never real firmware. */
+            FILE *f=fopen(bios,"wb");
+            CHECK(f&&fwrite("changed",1,7,f)==7);
+            CHECK(!fclose(f));
+        }
+        free(firmware);
+    }
+
     CHECK(initrd&&append&&noNetwork&&noMonitor&&noDisplay&&tcg&&strstr(append,"umicom.autopoweroff=1"));
     unsigned char *data=NULL;
     size_t size=0;
