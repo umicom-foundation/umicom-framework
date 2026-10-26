@@ -21,7 +21,10 @@
 extern "C" {
 #endif
 /* Floating native panel. File reads and parsing run on a worker after explicit
- * Open report. Only mapped controls accept actions. Closing/unmapping the
+ * Open report. The path and filter are captured together at admission. Invalid
+ * filters, failed reads and cancelled replacements retain the accepted report,
+ * page and source label. Controls edited during a load apply only after another
+ * explicit action. Only mapped controls accept actions. Closing/unmapping the
  * panel prevents late publication. The panel owns report and view lifetimes;
  * its host must not destroy individual controls. No tests or tools execute. */
 GtkWidget *UmiGtk4CtestReportCreate(void);

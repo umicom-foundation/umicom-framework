@@ -78,7 +78,14 @@ UmiStatus UmiWorkspaceRenamePreview(const UmiWorkspaceGraph *graph, uint64_t exp
   status = ValidateRelative(newName, name);
   if (status != UMI_STATUS_OK)
     return status;
+  /* Normalisation uses the host separator. A basename must reject both forms
+   * on every host, so Windows cannot turn a rename into a cross-folder move.
+   * Keep the original single-separator check for engineering review. */
+#if 0
   if (strchr(name, '/') != NULL)
+    return UMI_STATUS_INVALID_ARGUMENT;
+#endif
+  if (strchr(name, '/') != NULL || strchr(name, '\\') != NULL)
     return UMI_STATUS_INVALID_ARGUMENT;
   UmiWorkspaceRenameResult result = {0};
   status = umi_path_join(workspace.root, source, result.source, sizeof result.source);

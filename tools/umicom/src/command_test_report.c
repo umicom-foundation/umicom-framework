@@ -10,6 +10,8 @@
 #include "umicom/testing/ctest_report.h"
 #include "umicom/testing/ctest_report_file.h"
 #include "umicom/testing/ctest_report_comparison.h"
+#include "umicom/testing/ctest_coverage_manifest.h"
+#include "umicom/base/csv_document.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -131,6 +133,63 @@ static int ReportCompareFiles(const char *before_file, const char *after_file)
     return exit_code;
 }
 
+
+/* Framework owns manifest grammar, file admission and host/source policy. The
+ * command resolves one user path and presents the immutable review. */
+static int ReportCoverageFiles(const char *identity, const char *manifest_file)
+{
+    char current[UMI_PATH_CAPACITY], absolute[UMI_PATH_CAPACITY], directory[UMI_PATH_CAPACITY];
+    UmiStatus status = umi_path_is_absolute(manifest_file)
+        ? umi_path_copy(absolute, sizeof absolute, manifest_file)
+        : umi_fs_current_directory(current, sizeof current);
+    if (status == UMI_STATUS_OK && !umi_path_is_absolute(manifest_file))
+        status = umi_path_absolute(manifest_file, current, absolute, sizeof absolute);
+    if (status == UMI_STATUS_OK) status = umi_path_parent(absolute, directory, sizeof directory);
+    unsigned char *bytes = NULL;
+    size_t length = 0;
+    UmiCtestCoverageManifest *manifest = NULL;
+    UmiCtestCoverageReview *review = NULL;
+    if (status == UMI_STATUS_OK)
+        status = UmiInputFileRead(absolute, UMI_CSV_MAX_BYTES, &bytes, &length);
+    if (status == UMI_STATUS_OK) status = UmiCtestCoverageManifestImport(bytes, length, &manifest);
+    UmiInputFileFree(bytes);
+    if (status == UMI_STATUS_OK)
+        status = UmiCtestCoverageManifestReviewFiles(manifest, directory, identity, &review);
+    UmiCtestCoverageSummary summary;
+    if (status == UMI_STATUS_OK) status = UmiCtestCoverageReviewRead(review, &summary);
+    int exit_code = 2;
+    if (status == UMI_STATUS_OK) {
+        puts("Saved host coverage; this command did not run tests or verify source revisions.");
+        fputs("Requested source identity: ", stdout); ReportText(UmiCtestCoverageReviewSourceIdentity(review));
+        printf("\nRequirements: %zu | Passed: %zu | Outstanding: %zu\n",
+            summary.requirements, summary.outcomes[UMI_CTEST_COVERAGE_PASSED], summary.outstanding);
+        for (size_t i = 0; i < summary.requirements; ++i) {
+            const UmiCtestCoverageRow *row = UmiCtestCoverageReviewAt(review, i);
+            printf("[%s] ", UmiCtestCoverageOutcomeText(row->outcome));
+            ReportText(row->requirement.host); fputs(" / ", stdout);
+            ReportText(row->requirement.configuration); fputs(" : ", stdout);
+            ReportText(row->requirement.name);
+            if (row->requirement.capability[0]) {
+                fputs(" | requires ", stdout); ReportText(row->requirement.capability);
+            }
+            if (row->outcome == UMI_CTEST_COVERAGE_SOURCE_MISMATCH) {
+                fputs(" | observed source ", stdout); ReportText(row->observed_source_identity);
+            }
+            putchar('\n');
+        }
+        puts("Only listed requirements are reviewed. Unlisted tests and hosts are outside this gate.");
+        if (!summary.requirements) puts("No requirements: empty coverage cannot pass.");
+        exit_code = UmiCtestCoverageRequirePassed(review) == UMI_STATUS_OK ? 0 : 1;
+    } else {
+        fprintf(stderr, "Cannot review saved host coverage (status %d). Check the seven-column "
+            "CSV manifest, unique hosts/requirements, relative report paths and complete JUnit XML.\n",
+            (int)status);
+    }
+    UmiCtestCoverageReviewDestroy(review);
+    UmiCtestCoverageManifestDestroy(manifest);
+    return exit_code;
+}
+
 int umi_cli_command_test_report(int argc, char **argv)
 {
     if (argc == 1 && (strcmp(argv[0], "--help") == 0 || strcmp(argv[0], "help") == 0)) {
@@ -142,8 +201,14 @@ int umi_cli_command_test_report(int argc, char **argv)
         (void)puts("Comparison: umicom test-report --compare BEFORE_XML AFTER_XML\n"
             "Comparison exit 0 requires unchanged test inventory and a nonempty all-passed current report.\n"
             "Removed, skipped and disabled tests are not repaired tests.");
+        (void)puts("Coverage: umicom test-report --coverage SOURCE_ID MANIFEST.csv\n"
+            "CSV paths are relative to the manifest directory. No files are written.\n"
+            "Coverage exit 0 requires nonempty listed requirements all passed on the exact host/configuration/source.\n"
+            "Exit 1: outstanding or empty requirements; 2: manifest or report input error.");
         return 0;
     }
+    if (argc == 3 && strcmp(argv[0], "--coverage") == 0)
+        return ReportCoverageFiles(argv[1], argv[2]);
     if (argc == 3 && strcmp(argv[0], "--compare") == 0)
         return ReportCompareFiles(argv[1], argv[2]);
     if (argc < 1 || argc > 2 || (argc == 2 && strcmp(argv[1], "--all") != 0)) {

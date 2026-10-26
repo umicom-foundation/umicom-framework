@@ -7,17 +7,24 @@ include_guard(GLOBAL)
 target_sources(umicom_testing PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/testing/ctest_report_view.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/testing/ctest_report_view_text.c"
-    "${CMAKE_CURRENT_LIST_DIR}/../src/testing/ctest_report_file.c")
+    "${CMAKE_CURRENT_LIST_DIR}/../src/testing/ctest_report_file.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/testing/ctest_coverage.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/testing/ctest_coverage_manifest.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/testing/ctest_coverage_manifest_files.c")
 if(COMMAND umicom_target_qualification_inputs)
     umicom_target_qualification_inputs(umicom_testing FILES
-        "${CMAKE_CURRENT_LIST_DIR}/../src/testing/ctest_report_view_private.h")
+        "${CMAKE_CURRENT_LIST_DIR}/../src/testing/ctest_report_view_private.h"
+        "${CMAKE_CURRENT_LIST_DIR}/../src/testing/ctest_coverage_manifest_private.h")
 endif()
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/testing/ctest_report_view.h"
     "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/testing/ctest_report_file.h"
+    "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/testing/ctest_coverage.h"
+    "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/testing/ctest_coverage_manifest.h"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/testing" COMPONENT Framework)
 if(COMMAND umicom_release_inventory_own_headers)
     umicom_release_inventory_own_headers(umicom_testing
-        include/umicom/testing/ctest_report_view.h include/umicom/testing/ctest_report_file.h)
+        include/umicom/testing/ctest_report_view.h include/umicom/testing/ctest_report_file.h
+        include/umicom/testing/ctest_coverage.h include/umicom/testing/ctest_coverage_manifest.h)
 endif()
 if(TARGET umicom_ui_gtk4)
     target_sources(umicom_ui_gtk4 PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/ctest_report.c")
@@ -29,6 +36,7 @@ if(TARGET umicom_ui_gtk4)
     endif()
 endif()
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/guides/saved-test-report-browser.html"
+    "${CMAKE_CURRENT_LIST_DIR}/../docs/guides/test-host-coverage.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs" COMPONENT Framework)
 if(NOT BUILD_TESTING)
     return()
@@ -47,6 +55,10 @@ function(umicom_saved_report_group group owner)
         umicom_target_qualification_inputs(${target} FILES
             "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../tests/ctest_report_view/fixture.h"
             "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../tests/build_log/fixture.h")
+    endif()
+    if(group STREQUAL "gtk4" AND COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(${target} FILES
+            "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../tests/support/main_context.h")
     endif()
     foreach(case IN LISTS ARGN)
         set(test "framework.ctest.saved_view.${group}.${case}")
@@ -67,5 +79,16 @@ umicom_saved_report_group(filter Umicom::testing default all passed failed timeo
 umicom_saved_report_group(format Umicom::testing first middle last empty short query offset bounds unicode controls unchanged-source all-counts)
 umicom_saved_report_group(file Umicom::testing valid empty malformed missing relative null directory ownership unicode)
 if(TARGET umicom_ui_gtk4)
-    umicom_saved_report_group(gtk4 Umicom::ui_gtk4 normal paging filter draft-filter outcomes missing invalid-filter hidden retained cancel-load hide-show close-load close-render captured-path clear)
+    umicom_saved_report_group(gtk4 Umicom::ui_gtk4 normal paging filter draft-filter outcomes missing invalid-filter hidden retained cancel-load hide-show close-load close-render captured-path clear captured-filter replace-report cancel-replacement missing-second-page invalid-open-filter)
 endif()
+
+# Coverage consumes saved observations; these checks launch no test subprocess.
+umicom_saved_report_group(coverage Umicom::testing mixed passed missing-host missing-test stale
+    configuration duplicate-host duplicate-requirement case-sensitive ownership empty null
+    unterminated invalid-utf8 capacity multiple-hosts skipped-other-host order failure-output large)
+
+umicom_saved_report_group(coverage_manifest Umicom::testing valid quoted bom crlf ownership empty header-only
+    columns unknown duplicate-host duplicate-requirement unused-field blank absolute drive parent
+    backslash-parent dot double-separator trailing-separator backslash control invalid-utf8 unterminated capacity null large host-limit)
+umicom_saved_report_group(coverage_files Umicom::testing passed skipped missing malformed empty-report stale
+    missing-host missing-test configuration ownership relative-base null empty-plan second-invalid unicode subdirectory)

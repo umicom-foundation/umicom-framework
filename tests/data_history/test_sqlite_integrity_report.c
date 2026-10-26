@@ -21,13 +21,21 @@ int main(int argc, char **argv) {
   const char *cases[] = {"healthy",     "constraint", "multiple",        "limit",
                          "readonly",    "memory",     "nested",          "null",
                          "null-output", "preserved",  "long-diagnostic", "foreign-key-scope",
-                         "legacy", "checks-disabled"};
+                         "legacy", "checks-disabled", "readonly-healthy", "readonly-multiple",
+                         "readonly-limit", "readonly-long-diagnostic", "readonly-wal",
+                         "readonly-repeat", "readonly-page-size", "readonly-closed-writer",
+                         "readonly-nested"};
   if (argc != 3 || !ro_case(argv[1], cases, sizeof(cases) / sizeof(cases[0])))
     return 2;
   int result = 0;
   const char *name = argv[1];
   UmiDataServer *writer = NULL, *reader = NULL;
   char file[1024];
+  bool readonly = strncmp(name, "readonly", 8) == 0;
+  bool multiple = strcmp(name, "multiple") == 0 || strcmp(name, "readonly-multiple") == 0;
+  bool limited = strcmp(name, "limit") == 0 || strcmp(name, "readonly-limit") == 0;
+  bool long_diagnostic = strcmp(name, "long-diagnostic") == 0 ||
+                         strcmp(name, "readonly-long-diagnostic") == 0;
   UmiSqliteHealthReport report, sentinel;
   memset(&sentinel, 0x4a, sizeof(sentinel));
   report = sentinel;
@@ -45,6 +53,10 @@ int main(int argc, char **argv) {
   CHECK(ro_path(argv[2], name, file, true));
   OK(umi_data_server_create_sqlite(file, &writer));
   OK(umi_data_server_set(writer, "original", "retained"));
+  if (strcmp(name, "readonly-page-size") == 0)
+    OK(umi_data_server_execute(writer, "PRAGMA page_size=8192; VACUUM;"));
+  if (strcmp(name, "readonly-wal") == 0)
+    OK(umi_data_server_execute(writer, "PRAGMA journal_mode=WAL; PRAGMA wal_autocheckpoint=0;"));
   if (strcmp(name, "null-output") == 0) {
     CHECK(umi_sqlite_health_read(writer, NULL) == UMI_STATUS_INVALID_ARGUMENT);
     goto cleanup;
@@ -57,12 +69,20 @@ int main(int argc, char **argv) {
     OK(umi_data_server_rollback(writer));
     goto cleanup;
   }
+  /* Extend the original fixture across private-snapshot boundaries. Keep the
+   * earlier case classification for review; all original cases remain. */
+#if 0
   bool damaged = strcmp(name, "constraint") == 0 || strcmp(name, "multiple") == 0 ||
                  strcmp(name, "limit") == 0 || strcmp(name, "readonly") == 0 ||
                  strcmp(name, "long-diagnostic") == 0 || strcmp(name, "legacy") == 0 ||
                  strcmp(name, "checks-disabled") == 0;
+#endif
+  bool damaged = strcmp(name, "constraint") == 0 || multiple || limited ||
+                 long_diagnostic || strcmp(name, "legacy") == 0 ||
+                 strcmp(name, "checks-disabled") == 0 ||
+                 (readonly && strcmp(name, "readonly-healthy") != 0);
   if (damaged) {
-    if (strcmp(name, "long-diagnostic") == 0) {
+    if (long_diagnostic) {
       char table[650], sql[1800];
       memset(table, 'x', sizeof(table) - 1);
       table[sizeof(table) - 1] = 0;
@@ -77,9 +97,9 @@ int main(int argc, char **argv) {
       OK(umi_data_server_execute(writer,
                                  "CREATE TABLE damaged(value INTEGER CHECK(value>0)); PRAGMA "
                                  "ignore_check_constraints=ON; INSERT INTO damaged VALUES(-1);"));
-      if (strcmp(name, "multiple") == 0)
+      if (multiple)
         OK(umi_data_server_execute(writer, "INSERT INTO damaged VALUES(-2);"));
-      if (strcmp(name, "limit") == 0)
+      if (limited)
         OK(umi_data_server_execute(writer,
                                    "WITH RECURSIVE n(x) AS (SELECT 1 UNION ALL SELECT x+1 FROM n "
                                    "WHERE x<120) INSERT INTO damaged SELECT -x FROM n;"));
@@ -105,9 +125,29 @@ int main(int argc, char **argv) {
     OK(umi_data_server_execute(writer, "PRAGMA ignore_check_constraints=OFF;"));
   }
   UmiDataServer *selected = writer;
+  /* The former single read-only case remains a member of the wider matrix. */
+#if 0
   if (strcmp(name, "readonly") == 0) {
     OK(umi_data_server_open_sqlite_readonly(file, &reader));
     selected = reader;
+  }
+#endif
+  if (readonly) {
+    if (strcmp(name, "readonly-closed-writer") == 0) {
+      umi_data_server_destroy(writer);
+      writer = NULL;
+    }
+    OK(umi_data_server_open_sqlite_readonly(file, &reader));
+    selected = reader;
+    CHECK(umi_data_server_is_readonly(reader));
+    CHECK(umi_data_server_set(reader, "original", "forbidden") == UMI_STATUS_PERMISSION_DENIED);
+    if (strcmp(name, "readonly-nested") == 0) {
+      OK(umi_data_server_begin(reader));
+      CHECK(umi_sqlite_health_read(reader, &report) == UMI_STATUS_BUSY);
+      CHECK(memcmp(&report, &sentinel, sizeof report) == 0);
+      CHECK(umi_data_server_in_transaction(reader));
+      OK(umi_data_server_rollback(reader));
+    }
   }
   OK(umi_sqlite_health_read(selected, &report));
   /* Keep the failing expectation intact. Read-only connection failures need
@@ -126,11 +166,11 @@ int main(int argc, char **argv) {
         (damaged ? UMI_STATUS_INVALID_STATE : UMI_STATUS_OK));
   if (damaged) {
     CHECK(report.diagnostic_count > 0 && report.first_diagnostic[0]);
-    if (strcmp(name, "multiple") == 0)
+    if (multiple)
       CHECK(report.diagnostic_count == 2);
-    if (strcmp(name, "limit") == 0)
+    if (limited)
       CHECK(report.diagnostic_count == 100 && report.diagnostic_limit_reached);
-    if (strcmp(name, "long-diagnostic") == 0)
+    if (long_diagnostic)
       CHECK(report.first_diagnostic_omitted);
   } else
     CHECK(report.diagnostic_count == 0 && !report.diagnostic_limit_reached &&
@@ -139,6 +179,23 @@ int main(int argc, char **argv) {
   OK(umi_data_server_get(selected, "original", value, sizeof(value)));
   CHECK(strcmp(value, "retained") == 0);
   CHECK(!umi_data_server_in_transaction(selected));
+  if (readonly && writer) {
+    /* A writer must be able to commit after the private read transaction ends.
+     * A second reader observation must include the newly committed contents. */
+    OK(umi_data_server_set(writer, "after-health", "committed"));
+    OK(umi_data_server_get(reader, "after-health", value, sizeof value));
+    CHECK(strcmp(value, "committed") == 0);
+  }
+  if (strcmp(name, "readonly-repeat") == 0) {
+    OK(umi_data_server_execute(writer, "DELETE FROM damaged;"));
+    OK(umi_sqlite_health_read(reader, &report));
+    CHECK(report.sound && report.diagnostic_count == 0);
+    OK(umi_data_server_execute(writer,
+        "PRAGMA ignore_check_constraints=ON; INSERT INTO damaged VALUES(-3); "
+        "PRAGMA ignore_check_constraints=OFF;"));
+    OK(umi_sqlite_health_read(reader, &report));
+    CHECK(!report.sound && report.diagnostic_count == 1);
+  }
 cleanup:
   if (writer && umi_data_server_in_transaction(writer))
     (void)umi_data_server_rollback(writer);

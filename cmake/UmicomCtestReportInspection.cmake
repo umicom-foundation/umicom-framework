@@ -57,3 +57,21 @@ if(BUILD_TESTING AND TARGET umicom_testing)
         endforeach()
     endif()
 endif()
+
+# Native saved-coverage review keeps publication and execution separate.
+if(BUILD_TESTING AND TARGET umicom AND TARGET umicom_testing)
+    foreach(scenario passed skipped stale missing-host missing-test configuration empty duplicate
+        parent-path malformed missing-report two-hosts unicode relative-manifest)
+        set(test "framework.ctest.coverage_cli.${scenario}")
+        add_test(NAME ${test}
+            COMMAND "${CMAKE_COMMAND}"
+                "-DUMICOM_COMMAND=$<TARGET_FILE:umicom>"
+                "-DCASE=${scenario}"
+                "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/test-work/coverage-cli/${scenario}"
+                -P "${CMAKE_CURRENT_LIST_DIR}/../tests/ctest_execution/check_coverage_cli.cmake")
+        set_tests_properties(${test} PROPERTIES TIMEOUT 30 LABELS "framework;testing;saved-report;coverage")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(${test} TARGETS umicom umicom_testing)
+        endif()
+    endforeach()
+endif()

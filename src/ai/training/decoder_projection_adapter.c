@@ -22,6 +22,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/decoder_projection_adapter.h"
 #include "umicom/ai/training/checkpoint.h"
+#include "umicom/ai/training/adapter_checkpoint.h"
+#include "umicom/ai/training/decoder_projection_snapshot.h"
 #include "umicom/ai/training/low_rank.h"
 #include "umicom/ai/training/selected_loss.h"
 #include "umicom/ai/training/transformer.h"
@@ -191,7 +193,9 @@ static void AdapterBindProjection(
  * duplicating the Framework random-number implementation. The up matrices
  * start at zero, preserving the original model's first forward output. */
 static UmiStatus AdapterCreateSelectedProjections(
-    UmiAiTrainingDecoderProjectionAdapter *adapter, uint64_t initialSeed)
+    UmiAiTrainingDecoderProjectionAdapter *adapter, uint64_t initialSeed,
+    const void *const *restoredCheckpointBytes,
+    const size_t *restoredCheckpointSizes)
 {
     for (size_t role = 0U; role < ADAPTER_ROLE_COUNT; ++role) {
         if ((adapter->mask & ADAPTER_FLAGS[role]) == 0U) continue;
@@ -211,9 +215,14 @@ static UmiStatus AdapterCreateSelectedProjections(
         if (status == UMI_STATUS_OK) {
             const uint64_t distinctSeed = initialSeed ^
                 (UINT64_C(0x9e3779b97f4a7c15) * (uint64_t)(role + 1U));
-            status = UmiAiTrainingLowRankCreate(adapter->tape,
-                         base, rows, columns, adapter->rank, distinctSeed,
-                         &adapter->projections[role]);
+            if (restoredCheckpointBytes == NULL)
+                status = UmiAiTrainingLowRankCreate(adapter->tape,
+                    base, rows, columns, adapter->rank, distinctSeed,
+                    &adapter->projections[role]);
+            else
+                status = UmiAiTrainingAdapterCheckpointImport(adapter->tape,
+                    base, count, restoredCheckpointBytes[role],
+                    restoredCheckpointSizes[role], &adapter->projections[role]);
         }
         free(base);
         if (status != UMI_STATUS_OK) return status;
@@ -229,9 +238,14 @@ static UmiStatus AdapterCreateSelectedProjections(
                &adapter->trainableCount);
 }
 
-UmiStatus UmiAiTrainingDecoderProjectionAdapterCreate(
+/* Both fresh and restored adapters use ONE canonical construction path.
+ * Restored matrices are imported through the existing portable checkpoint
+ * owner; the original Create semantics are unchanged. */
+static UmiStatus AdapterCreateInternal(
     UmiAiTrainingDecoder *decoder,
     uint32_t selectedProjections, size_t rank, uint64_t initialSeed,
+    const void *const *restoredCheckpointBytes,
+    const size_t *restoredCheckpointSizes,
     UmiAiTrainingDecoderProjectionAdapter **outAdapter)
 {
     UmiAiTrainingDecoderProjectionAdapter *created = NULL;
@@ -267,7 +281,8 @@ UmiStatus UmiAiTrainingDecoderProjectionAdapterCreate(
     if (status != UMI_STATUS_OK) goto failure;
     status = AdapterCopyFrozenParameters(created);
     if (status != UMI_STATUS_OK) goto failure;
-    status = AdapterCreateSelectedProjections(created, initialSeed);
+    status = AdapterCreateSelectedProjections(created, initialSeed,
+                restoredCheckpointBytes, restoredCheckpointSizes);
     if (status != UMI_STATUS_OK) goto failure;
     status = UmiAiTrainingTapeCheckpoint(created->tape, &created->retainedNodes);
     if (status != UMI_STATUS_OK) goto failure;
@@ -282,6 +297,15 @@ UmiStatus UmiAiTrainingDecoderProjectionAdapterCreate(
 failure:
     UmiAiTrainingDecoderProjectionAdapterDestroy(created);
     return status;
+}
+
+UmiStatus UmiAiTrainingDecoderProjectionAdapterCreate(
+    UmiAiTrainingDecoder *decoder,
+    uint32_t selectedProjections, size_t rank, uint64_t initialSeed,
+    UmiAiTrainingDecoderProjectionAdapter **outAdapter)
+{
+    return AdapterCreateInternal(decoder, selectedProjections, rank,
+                                 initialSeed, NULL, NULL, outAdapter);
 }
 
 UmiStatus UmiAiTrainingDecoderProjectionAdapterInspect(
@@ -490,4 +514,289 @@ UmiStatus UmiAiTrainingDecoderProjectionAdapterTrainStep(
     candidate.completedAdapterSteps = adapter->completedAdapterSteps;
     *outReport = candidate;
     return UMI_STATUS_OK;
+}
+
+/* --------------------------------------------------------------------------
+ * Portable, model-bound adapter snapshot composition.
+ * Each child is encoded by the established AdapterCheckpoint owner. We only
+ * provide projection order, decoder identity, SGD step and outer SHA-256.
+ * The original 15-tensor decoder checkpoint format remains untouched.
+ * -------------------------------------------------------------------------- */
+#define UMI_ADAPTER_SNAPSHOT_HEADER_BYTES 112U
+#define UMI_ADAPTER_SNAPSHOT_TRAILER_BYTES 32U
+static const uint8_t UMI_ADAPTER_SNAPSHOT_MAGIC[8] = {
+    'U','M','I','P','R','O','J','!'
+};
+
+static void AdapterSnapshotWriteU32(uint8_t *p, uint32_t value)
+{
+    for (size_t i = 0U; i < 4U; ++i)
+        p[i] = (uint8_t)(value >> (8U * i));
+}
+
+static void AdapterSnapshotWriteU64(uint8_t *p, uint64_t value)
+{
+    for (size_t i = 0U; i < 8U; ++i)
+        p[i] = (uint8_t)(value >> (8U * i));
+}
+
+static uint32_t AdapterSnapshotReadU32(const uint8_t *p)
+{
+    uint32_t value = 0U;
+    for (size_t i = 0U; i < 4U; ++i)
+        value |= (uint32_t)p[i] << (i * 8U);
+    return value;
+}
+
+static uint64_t AdapterSnapshotReadU64(const uint8_t *p)
+{
+    uint64_t value = 0U;
+    for (size_t i = 0U; i < 8U; ++i)
+        value |= (uint64_t)p[i] << (i * 8U);
+    return value;
+}
+
+static UmiStatus AdapterSnapshotDigest(const uint8_t *bytes, size_t count,
+                                       uint8_t outDigest[UMI_SHA256_BYTES])
+{
+    UmiSha256 sha;
+    UmiSha256Init(&sha);
+    UmiStatus status = UmiSha256Update(&sha, bytes, count);
+    if (status != UMI_STATUS_OK) return status;
+    return UmiSha256Final(&sha, outDigest);
+}
+
+UmiStatus UmiAiTrainingDecoderProjectionSnapshotSize(
+    const UmiAiTrainingDecoderProjectionAdapter *adapter,
+    size_t *outBytes)
+{
+    size_t total = UMI_ADAPTER_SNAPSHOT_HEADER_BYTES +
+                   UMI_ADAPTER_SNAPSHOT_TRAILER_BYTES;
+    UmiStatus status;
+    if (outBytes == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = AdapterCheckBorrowedModel(adapter);
+    if (status != UMI_STATUS_OK) return status;
+    for (size_t role = 0U; role < ADAPTER_ROLE_COUNT; ++role) {
+        size_t partBytes = 0U;
+        if ((adapter->mask & ADAPTER_FLAGS[role]) == 0U) continue;
+        status = UmiAiTrainingAdapterCheckpointSize(
+            &adapter->projections[role], &partBytes);
+        if (status != UMI_STATUS_OK) return status;
+        if (total > UMI_AI_PROJECTION_SNAPSHOT_MAX_BYTES - 4U ||
+            partBytes > UMI_AI_PROJECTION_SNAPSHOT_MAX_BYTES - total - 4U)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        total += 4U + partBytes;
+    }
+    *outBytes = total;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiAiTrainingDecoderProjectionSnapshotEncode(
+    const UmiAiTrainingDecoderProjectionAdapter *adapter,
+    uint8_t *outBytes, size_t capacity, size_t *outWritten)
+{
+    UmiAiTrainingDecoderProjectionAdapterInfo identity = {0};
+    size_t needed = 0U, offset = UMI_ADAPTER_SNAPSHOT_HEADER_BYTES;
+    uint8_t *candidate = NULL;
+    UmiStatus status;
+    unsigned roles = 0U;
+    if (outBytes == NULL || outWritten == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = UmiAiTrainingDecoderProjectionSnapshotSize(adapter, &needed);
+    if (status != UMI_STATUS_OK) return status;
+    if (capacity < needed) return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = UmiAiTrainingDecoderProjectionAdapterInspect(adapter, &identity);
+    if (status != UMI_STATUS_OK) return status;
+    if (identity.rank > UINT32_MAX || needed > UINT32_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    candidate = calloc(needed, 1U);
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    memcpy(candidate, UMI_ADAPTER_SNAPSHOT_MAGIC, sizeof(UMI_ADAPTER_SNAPSHOT_MAGIC));
+    AdapterSnapshotWriteU32(candidate + 8U, UINT32_C(1));
+    AdapterSnapshotWriteU32(candidate + 12U, identity.selectedProjections);
+    AdapterSnapshotWriteU32(candidate + 16U, (uint32_t)identity.rank);
+    for (size_t role = 0U; role < ADAPTER_ROLE_COUNT; ++role)
+        roles += (unsigned)((identity.selectedProjections & ADAPTER_FLAGS[role]) != 0U);
+    AdapterSnapshotWriteU32(candidate + 20U, roles);
+    AdapterSnapshotWriteU64(candidate + 24U, identity.completedAdapterSteps);
+    AdapterSnapshotWriteU64(candidate + 32U, identity.frozenDecoderSteps);
+    memcpy(candidate + 40U, identity.frozenCheckpointSha256, 64U);
+    AdapterSnapshotWriteU32(candidate + 104U, (uint32_t)needed);
+    /* Bytes [108,112) are reserved zero by calloc, including on all hosts. */
+    for (size_t role = 0U; role < ADAPTER_ROLE_COUNT; ++role) {
+        size_t required = 0U, actual = 0U;
+        if ((identity.selectedProjections & ADAPTER_FLAGS[role]) == 0U)
+            continue;
+        status = UmiAiTrainingAdapterCheckpointSize(
+            &adapter->projections[role], &required);
+        if (status != UMI_STATUS_OK) goto cleanup;
+        if (required > UINT32_MAX || required > needed - offset -
+                                    UMI_ADAPTER_SNAPSHOT_TRAILER_BYTES - 4U) {
+            status = UMI_STATUS_CAPACITY_EXCEEDED;
+            goto cleanup;
+        }
+        AdapterSnapshotWriteU32(candidate + offset, (uint32_t)required);
+        offset += 4U;
+        status = UmiAiTrainingAdapterCheckpointExport(
+            &adapter->projections[role], candidate + offset, required, &actual);
+        if (status != UMI_STATUS_OK) goto cleanup;
+        if (actual != required) { status = UMI_STATUS_INVALID_STATE; goto cleanup; }
+        offset += actual;
+    }
+    if (offset != needed - UMI_ADAPTER_SNAPSHOT_TRAILER_BYTES) {
+        status = UMI_STATUS_INVALID_STATE;
+        goto cleanup;
+    }
+    status = AdapterSnapshotDigest(candidate, offset, candidate + offset);
+    if (status != UMI_STATUS_OK) goto cleanup;
+    memcpy(outBytes, candidate, needed);
+    *outWritten = needed;
+cleanup:
+    free(candidate);
+    return status;
+}
+
+/* Optional internal part pointers borrow their exact input snapshot lifetime.
+ * The public inspection path passes NULL arrays and exposes no raw weights. */
+static UmiStatus AdapterSnapshotInspectParts(
+    const uint8_t *bytes, size_t count,
+    UmiAiTrainingDecoderProjectionSnapshotInfo *outInfo,
+    const void **outParts, size_t *outPartLengths)
+{
+    UmiAiTrainingDecoderProjectionSnapshotInfo candidate = {0};
+    const uint8_t *p = bytes;
+    uint8_t digest[UMI_SHA256_BYTES];
+    uint32_t roles = 0U;
+    size_t offset = UMI_ADAPTER_SNAPSHOT_HEADER_BYTES;
+    UmiStatus status;
+    if (p == NULL || outInfo == NULL ||
+        count < UMI_ADAPTER_SNAPSHOT_HEADER_BYTES +
+                UMI_ADAPTER_SNAPSHOT_TRAILER_BYTES ||
+        count > UMI_AI_PROJECTION_SNAPSHOT_MAX_BYTES)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (memcmp(p, UMI_ADAPTER_SNAPSHOT_MAGIC, 8U) != 0 ||
+        AdapterSnapshotReadU32(p + 8U) != 1U ||
+        AdapterSnapshotReadU32(p + 104U) != count ||
+        AdapterSnapshotReadU32(p + 108U) != 0U)
+        return UMI_STATUS_PARSE_ERROR;
+    candidate.selectedProjections = AdapterSnapshotReadU32(p + 12U);
+    candidate.rank = AdapterSnapshotReadU32(p + 16U);
+    candidate.completedAdapterSteps = AdapterSnapshotReadU64(p + 24U);
+    candidate.frozenDecoderSteps = AdapterSnapshotReadU64(p + 32U);
+    candidate.byteCount = count;
+    if (candidate.selectedProjections == 0U ||
+        (candidate.selectedProjections & ~UMI_AI_DECODER_ADAPT_ALL) != 0U ||
+        candidate.rank == 0U || candidate.rank > UMI_AI_DECODER_MAX_CHANNELS)
+        return UMI_STATUS_PARSE_ERROR;
+    for (size_t i = 0U; i < 64U; ++i) {
+        const unsigned char c = p[40U + i];
+        if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')))
+            return UMI_STATUS_PARSE_ERROR;
+        candidate.frozenCheckpointSha256[i] = (char)c;
+    }
+    candidate.frozenCheckpointSha256[64] = '\0';
+    for (size_t role = 0U; role < ADAPTER_ROLE_COUNT; ++role) {
+        UmiAiTrainingAdapterCheckpointInfo part = {0};
+        size_t partBytes;
+        if ((candidate.selectedProjections & ADAPTER_FLAGS[role]) == 0U)
+            continue;
+        if (offset > count - UMI_ADAPTER_SNAPSHOT_TRAILER_BYTES - 4U)
+            return UMI_STATUS_PARSE_ERROR;
+        partBytes = (size_t)AdapterSnapshotReadU32(p + offset);
+        offset += 4U;
+        if (partBytes == 0U || partBytes > count - offset -
+                                         UMI_ADAPTER_SNAPSHOT_TRAILER_BYTES)
+            return UMI_STATUS_PARSE_ERROR;
+        status = UmiAiTrainingAdapterCheckpointInspect(p + offset,
+                                                         partBytes, &part);
+        if (status != UMI_STATUS_OK) return status;
+        if (part.rank != candidate.rank)
+            return UMI_STATUS_PARSE_ERROR;
+        if (outParts != NULL && outPartLengths != NULL) {
+            outParts[role] = p + offset;
+            outPartLengths[role] = partBytes;
+        }
+        offset += partBytes;
+        ++roles;
+    }
+    if (roles != AdapterSnapshotReadU32(p + 20U) ||
+        offset != count - UMI_ADAPTER_SNAPSHOT_TRAILER_BYTES)
+        return UMI_STATUS_PARSE_ERROR;
+    status = AdapterSnapshotDigest(p, offset, digest);
+    if (status != UMI_STATUS_OK) return status;
+    if (memcmp(digest, p + offset, sizeof(digest)) != 0)
+        return UMI_STATUS_PARSE_ERROR;
+    candidate.adapterCheckpointCount = roles;
+    *outInfo = candidate;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiAiTrainingDecoderProjectionSnapshotInspect(
+    const uint8_t *bytes, size_t count,
+    UmiAiTrainingDecoderProjectionSnapshotInfo *outInfo)
+{
+    return AdapterSnapshotInspectParts(bytes, count, outInfo, NULL, NULL);
+}
+
+UmiStatus UmiAiTrainingDecoderProjectionSnapshotRestore(
+    UmiAiTrainingDecoder *frozenDecoder,
+    const uint8_t *bytes, size_t count,
+    UmiAiTrainingDecoderProjectionAdapter **outAdapter)
+{
+    const void *parts[ADAPTER_ROLE_COUNT] = {0};
+    size_t lengths[ADAPTER_ROLE_COUNT] = {0};
+    UmiAiTrainingDecoderProjectionSnapshotInfo stored = {0};
+    UmiAiTrainingDecoderProjectionAdapter *candidate = NULL;
+    UmiAiTrainingDecoderProjectionAdapterInfo after = {0};
+    UmiAiTrainingDecoderConfig config = {0};
+    char actualHash[UMI_SHA256_HEX_CAPACITY] = {0};
+    uint8_t *roundtrip = NULL;
+    size_t written = 0U;
+    uint64_t steps = 0U;
+    UmiStatus status;
+
+    if (frozenDecoder == NULL || outAdapter == NULL || *outAdapter != NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = AdapterSnapshotInspectParts(bytes, count, &stored, parts, lengths);
+    if (status != UMI_STATUS_OK) return status;
+    status = UmiAiTrainingDecoderInspect(frozenDecoder, &config, &steps);
+    if (status != UMI_STATUS_OK) return status;
+    if (steps != stored.frozenDecoderSteps ||
+        stored.rank > (size_t)config.channels ||
+        stored.rank > (size_t)config.hiddenChannels)
+        return UMI_STATUS_INVALID_STATE;
+    status = AdapterCheckpointIdentity(frozenDecoder, actualHash);
+    if (status != UMI_STATUS_OK) return status;
+    if (memcmp(actualHash, stored.frozenCheckpointSha256, 64U) != 0)
+        return UMI_STATUS_INVALID_STATE;
+
+    status = AdapterCreateInternal(frozenDecoder,
+        stored.selectedProjections, stored.rank, 0U,
+        parts, lengths, &candidate);
+    if (status != UMI_STATUS_OK) return status;
+    candidate->completedAdapterSteps = stored.completedAdapterSteps;
+    status = UmiAiTrainingDecoderProjectionAdapterInspect(candidate, &after);
+    if (status != UMI_STATUS_OK ||
+        after.completedAdapterSteps != stored.completedAdapterSteps) {
+        status = UMI_STATUS_INVALID_STATE;
+        goto reject;
+    }
+    /* A byte-exact export after import also checks stable projection order,
+     * finite weights, frozen-base digests and the canonical wire format. */
+    roundtrip = malloc(count);
+    if (roundtrip == NULL) { status = UMI_STATUS_OUT_OF_MEMORY; goto reject; }
+    status = UmiAiTrainingDecoderProjectionSnapshotEncode(
+        candidate, roundtrip, count, &written);
+    if (status != UMI_STATUS_OK) goto reject;
+    if (written != count || memcmp(roundtrip, bytes, count) != 0) {
+        status = UMI_STATUS_INVALID_STATE;
+        goto reject;
+    }
+    free(roundtrip);
+    *outAdapter = candidate;
+    return UMI_STATUS_OK;
+reject:
+    free(roundtrip);
+    UmiAiTrainingDecoderProjectionAdapterDestroy(candidate);
+    return status;
 }

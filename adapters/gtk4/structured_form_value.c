@@ -25,6 +25,11 @@ GtkWidget *umi_structured_form_value_new(const UmiStructuredFormSchema *schema, 
   }
   if (field->value_type == UMI_APPLICATION_EXPERIENCE_VALUE_BOOLEAN ||
       field->kind == UMI_APPLICATION_EXPERIENCE_FIELD_CHOICE) {
+    /* GTK may select the first item of a populated dropdown automatically.
+     * Keep the former index mapping for review. A non-answer row now occupies
+     * that position so an unknown answer cannot become false or an option ID
+     * merely because the user marks the answer as known. */
+#if 0
     char **ids = g_new0(char *, UMI_APPLICATION_EXPERIENCE_OPTION_CAPACITY + 1U);
     const char *labels[UMI_APPLICATION_EXPERIENCE_OPTION_CAPACITY + 1U] = {0};
     size_t count = 0U;
@@ -49,6 +54,40 @@ GtkWidget *umi_structured_form_value_new(const UmiStructuredFormSchema *schema, 
       }
     }
     for (size_t i = 0U; i < count; ++i)
+      if (text.state == UMI_FORM_KNOWN && strcmp(ids[i], text.value) == 0)
+        selected = (guint)i;
+    GtkWidget *dropdown = gtk_drop_down_new_from_strings(labels);
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(dropdown), selected);
+    /* Own identifiers with the control; display labels never become stored IDs. */
+    g_object_set_data_full(G_OBJECT(dropdown), VALUE_IDS, ids, (GDestroyNotify)g_strfreev);
+    return dropdown;
+#endif
+    char **ids = g_new0(char *, UMI_APPLICATION_EXPERIENCE_OPTION_CAPACITY + 2U);
+    const char *labels[UMI_APPLICATION_EXPERIENCE_OPTION_CAPACITY + 2U] = {0};
+    ids[0] = g_strdup("");
+    labels[0] = "Select a value";
+    size_t count = 1U;
+    guint selected = 0U;
+    if (field->value_type == UMI_APPLICATION_EXPERIENCE_VALUE_BOOLEAN) {
+      ids[1] = g_strdup("false");
+      ids[2] = g_strdup("true");
+      labels[1] = "False";
+      labels[2] = "True";
+      count = 3U;
+    } else {
+      for (size_t i = 0U; i < field->option_count; ++i) {
+        if (field->options[i].disabled)
+          continue;
+        if (!g_utf8_validate(field->options[i].label, -1, NULL) ||
+            !g_utf8_validate(field->options[i].option_id, -1, NULL)) {
+          g_strfreev(ids);
+          return NULL;
+        }
+        ids[count] = g_strdup(field->options[i].option_id);
+        labels[count++] = field->options[i].label;
+      }
+    }
+    for (size_t i = 1U; i < count; ++i)
       if (text.state == UMI_FORM_KNOWN && strcmp(ids[i], text.value) == 0)
         selected = (guint)i;
     GtkWidget *dropdown = gtk_drop_down_new_from_strings(labels);
@@ -87,7 +126,13 @@ UmiStatus umi_structured_form_value_read(GtkWidget *widget, char *out, size_t ca
   if (GTK_IS_DROP_DOWN(widget)) {
     char **ids = g_object_get_data(G_OBJECT(widget), VALUE_IDS);
     guint selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(widget));
+    /* Retain the previous check; row zero now represents no chosen value. */
+#if 0
     if (ids == NULL || selected == GTK_INVALID_LIST_POSITION || selected >= g_strv_length(ids))
+      return UMI_STATUS_INVALID_STATE;
+#endif
+    if (ids == NULL || selected == 0U || selected == GTK_INVALID_LIST_POSITION ||
+        selected >= g_strv_length(ids))
       return UMI_STATUS_INVALID_STATE;
     return umi_text_replace(out, capacity, ids[selected]);
   }

@@ -29,7 +29,8 @@ int main(int argc, char **argv) {
                          "absolute-source", "absolute-name",  "new-folder",    "metadata-source",
                          "metadata-name",   "device",         "colon",         "trailing-dot",
                          "trailing-space",  "stale",          "untrusted",     "closed",
-                         "project-root",    "project-parent", "arguments",     "capacity"};
+                         "project-root",    "project-parent", "arguments",     "capacity",
+                         "new-folder-backslash", "nested-new-folder"};
   for (size_t i = 0U; i < sizeof cases / sizeof cases[0]; ++i)
     if (strcmp(cases[i], test) == 0)
       known = 1;
@@ -67,6 +68,15 @@ int main(int argc, char **argv) {
     expected = UMI_STATUS_INVALID_ARGUMENT;
   }
   if (!strcmp(test, "new-folder")) {
+    name = "other/new.c";
+    expected = UMI_STATUS_INVALID_ARGUMENT;
+  }
+  if (!strcmp(test, "new-folder-backslash")) {
+    name = "other\\new.c";
+    expected = UMI_STATUS_INVALID_ARGUMENT;
+  }
+  if (!strcmp(test, "nested-new-folder")) {
+    source = "src/old.c";
     name = "other/new.c";
     expected = UMI_STATUS_INVALID_ARGUMENT;
   }
@@ -137,6 +147,13 @@ int main(int argc, char **argv) {
   memset(&result, 0x7f, sizeof result);
   CHECK(UmiWorkspaceRenamePreview(f.graph, revision, source, name, &result) == expected);
   CHECK(!result.renamed && !result.directory);
+  if (!strcmp(test, "new-folder") || !strcmp(test, "new-folder-backslash") ||
+      !strcmp(test, "nested-new-folder")) {
+    /* Execution uses the same basename guard and must refuse before native I/O. */
+    CHECK(UmiWorkspaceRenameEntry(f.graph, revision, source, name, &result) ==
+          UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(!result.renamed && result.source[0] == '\0' && result.destination[0] == '\0');
+  }
   if (expected != UMI_STATUS_OK)
     CHECK(result.source[0] == '\0' && result.destination[0] == '\0');
   else {

@@ -13,6 +13,7 @@
 #include "umicom/kanban/binding_storage.h"
 #include <string.h>
 #include "window_removal_private.h"
+#include "focus_handoff_private.h"
 
 typedef enum JobKind { JOB_CREATE, JOB_OPEN, JOB_SAVE, JOB_CLOSE, JOB_SAVE_COPY,
     JOB_BINDING_SAVE, JOB_BINDING_LOAD } JobKind;
@@ -280,6 +281,8 @@ static void Start(WindowState *state, JobKind kind, bool close_window)
     if (state->panel != NULL) UmiKanbanGtk4SetBusy(state->panel, true);
     if (state->closed) goto abandoned;
     if (kind == JOB_CLOSE) ReleasePanel(state);
+    if (state->closed) goto abandoned;
+    UmiGtk4ReleaseSubtreeFocus(state->controls);
     if (state->closed) goto abandoned;
     gtk_widget_set_sensitive(state->controls, FALSE);
     if (state->closed) goto abandoned;

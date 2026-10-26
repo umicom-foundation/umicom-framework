@@ -61,6 +61,9 @@ UmiStatus UmiDatabaseMaintenanceGtk4New(const UmiDatabaseMaintenanceGtk4Options 
  * never disguises a completed write as a cancellation. CHECK results instead
  * become CANCELLED when inputs change or the widget retires. Keep the GTK main
  * context running until completion. There is no mid-SQLite cancellation.
+ * Retirement preserves connected operation-finished handlers. GObject disposal
+ * disconnects handlers: an owner retaining a disposed widget must inspect State
+ * after busy clears rather than expect a signal. The admitted copy still runs.
  * Recover creates a separate database and never switches the application's
  * current store. These actions do not authenticate data or verify domain rules. */
 UmiStatus UmiDatabaseMaintenanceGtk4Run(GtkWidget *widget,

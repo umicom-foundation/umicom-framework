@@ -29,12 +29,19 @@ int main(int argc, char **argv) {
   CHECK(f != NULL);
   UmiApplicationExperienceFieldOption options[] = {
       {"hidden", "Hidden", 1}, {"ready", "Ready", 0}, {"closed", "Closed", 0}};
-  int boolean = strcmp(name, "boolean") == 0;
+  int boolean = strcmp(name, "boolean") == 0 || strcmp(name, "boolean-true") == 0 ||
+                strcmp(name, "boolean-false") == 0;
   int choice = strcmp(name, "choice") == 0 || strcmp(name, "choice-initial") == 0 ||
-               strcmp(name, "choice-label") == 0 || strcmp(name, "choice-utf8") == 0;
+               strcmp(name, "choice-label") == 0 || strcmp(name, "choice-utf8") == 0 ||
+               strcmp(name, "choice-clear") == 0;
   if (boolean) {
     f->fields[2].kind = UMI_APPLICATION_EXPERIENCE_FIELD_BOOLEAN;
     f->fields[2].value_type = UMI_APPLICATION_EXPERIENCE_VALUE_BOOLEAN;
+    if (strcmp(name, "boolean-true") == 0 || strcmp(name, "boolean-false") == 0) {
+      f->before.answers[2].state = UMI_FORM_KNOWN;
+      f->before.answers[2].value.type = UMI_APPLICATION_EXPERIENCE_VALUE_BOOLEAN;
+      f->before.answers[2].value.boolean_value = strcmp(name, "boolean-true") == 0;
+    }
   } else if (choice) {
     f->fields[2].kind = UMI_APPLICATION_EXPERIENCE_FIELD_CHOICE;
     f->fields[2].options = options;
@@ -61,6 +68,9 @@ int main(int argc, char **argv) {
   gtk_drop_down_set_selected(GTK_DROP_DOWN(state), (guint)UMI_FORM_KNOWN);
   if (boolean || choice) {
     CHECK(GTK_IS_DROP_DOWN(value));
+    /* Preserve the old display positions. The non-answer row now makes the
+     * refusal explicit without depending on GTK allowing an empty selection. */
+#if 0
     CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(GTK_DROP_DOWN(value))) == 2U);
     if (strcmp(name, "choice-initial") == 0)
       CHECK(gtk_drop_down_get_selected(GTK_DROP_DOWN(value)) == 1U);
@@ -69,11 +79,31 @@ int main(int argc, char **argv) {
       CHECK(UmiStructuredFormGtk4Apply(editor, 0) == UMI_STATUS_INVALID_STATE);
       gtk_drop_down_set_selected(GTK_DROP_DOWN(value), 0U);
     }
+#endif
+    CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(GTK_DROP_DOWN(value))) == 3U);
+    if (strcmp(name, "choice-initial") == 0 || strcmp(name, "boolean-true") == 0)
+      CHECK(gtk_drop_down_get_selected(GTK_DROP_DOWN(value)) == 2U);
+    else if (strcmp(name, "boolean-false") == 0)
+      CHECK(gtk_drop_down_get_selected(GTK_DROP_DOWN(value)) == 1U);
+    else {
+      CHECK(gtk_drop_down_get_selected(GTK_DROP_DOWN(value)) == 0U);
+      CHECK(UmiStructuredFormGtk4Apply(editor, 0) == UMI_STATUS_INVALID_STATE);
+      CHECK(UmiStructuredFormGtk4Snapshot(editor, &f->after) == UMI_STATUS_OK);
+      CHECK(memcmp(&f->before, &f->after, sizeof(f->before)) == 0);
+      gtk_drop_down_set_selected(GTK_DROP_DOWN(value), 1U);
+      if (strcmp(name, "choice-clear") == 0) {
+        gtk_drop_down_set_selected(GTK_DROP_DOWN(value), 0U);
+        CHECK(UmiStructuredFormGtk4Apply(editor, 0) == UMI_STATUS_INVALID_STATE);
+        CHECK(UmiStructuredFormGtk4Snapshot(editor, &f->after) == UMI_STATUS_OK);
+        CHECK(memcmp(&f->before, &f->after, sizeof(f->before)) == 0);
+        gtk_drop_down_set_selected(GTK_DROP_DOWN(value), 1U);
+      }
+    }
     CHECK(UmiStructuredFormGtk4Apply(editor, 0) == UMI_STATUS_OK);
     CHECK(UmiStructuredFormGtk4Snapshot(editor, &f->after) == UMI_STATUS_OK);
     if (boolean)
       CHECK(f->after.answers[2].value.type == UMI_APPLICATION_EXPERIENCE_VALUE_BOOLEAN &&
-            f->after.answers[2].value.boolean_value == 0);
+            f->after.answers[2].value.boolean_value == (strcmp(name, "boolean-true") == 0));
     else
       CHECK(strcmp(f->after.answers[2].value.text_value,
                    strcmp(name, "choice-initial") == 0 ? "closed" : "ready") == 0);

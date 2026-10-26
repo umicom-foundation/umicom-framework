@@ -14,6 +14,7 @@
 #include "umicom/ui/gtk4/drop_down.h"
 #include "umicom/kanban/view.h"
 #include <string.h>
+#include "focus_handoff_private.h"
 
 #define PANEL_KEY "umicom-kanban-panel"
 typedef struct Panel {
@@ -542,6 +543,10 @@ GtkWidget *UmiKanbanGtk4Create(UmiKanbanBoard *board)
     if (UmiKanbanGtk4Refresh(panel->root) != UMI_STATUS_OK) { GtkWidget *root = panel->root; g_object_ref_sink(root); g_object_unref(root); return NULL; }
     return panel->root;
 }
+/* The previous transition order is retained for review. The replacement
+ * retains the controller through focus notifications and finishes native text
+ * input before disabling its subtree; model retirement remains irreversible. */
+#if 0
 void UmiKanbanGtk4SetBusy(GtkWidget *root, bool busy)
 {
     if (!GTK_IS_WIDGET(root)) return;
@@ -558,4 +563,35 @@ void UmiKanbanGtk4Retire(GtkWidget *root)
     panel->board = NULL; panel->busy = true; panel->drag_card[0] = '\0';
     UmiKanbanPublicPlanGtk4Retire(panel->public_plan_store);
     UmiTextExportGtk4Retire(panel->export_control); gtk_widget_set_sensitive(root, FALSE);
+}
+#endif
+void UmiKanbanGtk4SetBusy(GtkWidget *root, bool busy)
+{
+    if (!GTK_IS_WIDGET(root)) return;
+    Panel *panel = g_object_get_data(G_OBJECT(root), PANEL_KEY);
+    if (panel == NULL || panel->board == NULL) return;
+    g_object_ref(root);
+    /* Guard borrowed model access before focus notifications. A reentrant
+     * retirement takes precedence over this request to enable the controls. */
+    panel->busy = busy;
+    panel->drag_card[0] = ' ';
+    UmiKanbanPublicPlanGtk4SetBusy(panel->public_plan_store, busy);
+    if (busy) UmiGtk4ReleaseSubtreeFocus(root);
+    gtk_widget_set_sensitive(root, panel->board != NULL && !panel->busy);
+    g_object_unref(root);
+}
+void UmiKanbanGtk4Retire(GtkWidget *root)
+{
+    if (!GTK_IS_WIDGET(root)) return;
+    Panel *panel = g_object_get_data(G_OBJECT(root), PANEL_KEY);
+    if (panel == NULL || panel->board == NULL) return;
+    g_object_ref(root);
+    panel->board = NULL;
+    panel->busy = true;
+    panel->drag_card[0] = ' ';
+    UmiGtk4ReleaseSubtreeFocus(root);
+    UmiKanbanPublicPlanGtk4Retire(panel->public_plan_store);
+    UmiTextExportGtk4Retire(panel->export_control);
+    gtk_widget_set_sensitive(root, FALSE);
+    g_object_unref(root);
 }

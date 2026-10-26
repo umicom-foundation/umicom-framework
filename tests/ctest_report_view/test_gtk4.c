@@ -19,6 +19,7 @@
 #include "umicom/testing/ctest_report_file.h"
 #include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/ctest_report.h"
+#include "../support/main_context.h"
 static GtkWidget *Find(GtkWidget *root, const char *tag) {
   return umi_gtk4_automation_find_tagged_widget(root, tag);
 }
@@ -27,10 +28,21 @@ static void Click(GtkWidget *root, const char *tag) {
   CHECK(GTK_IS_BUTTON(b));
   g_signal_emit_by_name(b, "clicked");
 }
+/* Bound dispatch so a perpetually ready source cannot hide the fixture deadline.
+ * Retain the former idle-draining loop for review. */
+#if 0
 static void Drain(void) {
   for (unsigned i = 0; i < 40U; ++i) {
     while (g_main_context_iteration(NULL, FALSE)) {
     }
+    g_usleep(1000U);
+  }
+}
+#endif
+static void Drain(void) {
+  gint64 end = g_get_monotonic_time() + 40 * G_TIME_SPAN_MILLISECOND;
+  while (g_get_monotonic_time() < end) {
+    (void)UmiTestDispatchSlice(NULL, end, 32U);
     g_usleep(1000U);
   }
 }
@@ -57,7 +69,8 @@ int main(int argc, char **argv) {
              *names[] = {"normal",       "paging",        "filter",         "draft-filter",
                          "outcomes",     "missing",       "invalid-filter", "hidden",
                          "retained",     "cancel-load",   "hide-show",      "close-load",
-                         "close-render", "captured-path", "clear"};
+                         "close-render", "captured-path", "clear", "captured-filter",
+                         "replace-report", "cancel-replacement", "missing-second-page", "invalid-open-filter"};
   CHECK(Known(name, names, sizeof names / sizeof names[0]));
   if (!gtk_init_check())
     return 77;
@@ -113,6 +126,8 @@ int main(int argc, char **argv) {
     gtk_window_destroy(window);
   if (!strcmp(name, "captured-path"))
     gtk_editable_set_text(GTK_EDITABLE(entry), missing);
+  if (!strcmp(name, "captured-filter"))
+    gtk_editable_set_text(GTK_EDITABLE(filter), "no-match");
   Wait(root);
   char *text = Text(buffer);
   if (!strcmp(name, "cancel-load") || !strcmp(name, "hide-show") || !strcmp(name, "close-load")) {
@@ -124,6 +139,59 @@ int main(int argc, char **argv) {
   g_free(text);
   if (!strcmp(name, "captured-path"))
     CHECK(!strcmp(gtk_label_get_text(GTK_LABEL(Find(root, "ctest.report.source"))), path));
+  if (!strcmp(name, "captured-filter")) {
+    Click(root, "ctest.report.apply");
+    text = Text(buffer);
+    CHECK(strstr(text, "Showing 0..0 of 0"));
+    g_free(text);
+    goto done;
+  }
+  if (!strcmp(name, "replace-report") || !strcmp(name, "cancel-replacement")) {
+    char replacement[UMI_PATH_CAPACITY];
+    FixturePath(replacement, directory, "replacement.xml");
+    char *new_xml = ManyXml(3);
+    UmiOutputFile *replacement_file = NULL;
+    OK(UmiOutputFileCreate(replacement, &replacement_file));
+    OK(UmiOutputFileWrite(replacement_file, new_xml, strlen(new_xml)));
+    OK(UmiOutputFileClose(replacement_file));
+    UmiOutputFileDestroy(replacement_file);
+    free(new_xml);
+    gtk_editable_set_text(GTK_EDITABLE(entry), replacement);
+    Click(root, "ctest.report.open");
+    if (!strcmp(name, "cancel-replacement")) Click(root, "ctest.report.cancel");
+    Wait(root);
+    text = Text(buffer);
+    CHECK(strstr(text, !strcmp(name, "replace-report") ? "Showing 1..3 of 3" : "Showing 1..64 of 150"));
+    CHECK(!strcmp(gtk_label_get_text(GTK_LABEL(Find(root, "ctest.report.source"))),
+        !strcmp(name, "replace-report") ? replacement : path));
+    g_free(text);
+    goto done;
+  }
+  if (!strcmp(name, "missing-second-page")) {
+    Click(root, "ctest.report.next");
+    char *accepted = Text(buffer);
+    CHECK(strstr(accepted, "Showing 65..128 of 150"));
+    gtk_editable_set_text(GTK_EDITABLE(entry), missing);
+    Click(root, "ctest.report.open");
+    Wait(root);
+    text = Text(buffer);
+    CHECK(!strcmp(text, accepted));
+    g_free(text); g_free(accepted);
+    goto done;
+  }
+  if (!strcmp(name, "invalid-open-filter")) {
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(Find(root, "ctest.report.outcome")), GTK_INVALID_LIST_POSITION);
+    Click(root, "ctest.report.open");
+    CHECK(!UmiGtk4CtestReportBusy(root));
+    text = Text(buffer);
+    CHECK(strstr(text, "Showing 1..64 of 150"));
+    g_free(text);
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(Find(root, "ctest.report.outcome")), 0);
+    gtk_editable_set_text(GTK_EDITABLE(filter), "row-000007");
+    Click(root, "ctest.report.apply");
+    text = Text(buffer); CHECK(strstr(text, "Showing 1..1 of 1")); g_free(text);
+    goto done;
+  }
   if (!strcmp(name, "paging") || !strcmp(name, "draft-filter")) {
     if (!strcmp(name, "draft-filter"))
       gtk_editable_set_text(GTK_EDITABLE(filter), "no-match");
@@ -156,7 +224,12 @@ int main(int argc, char **argv) {
     Click(root, "ctest.report.open");
     Wait(root);
     text = Text(buffer);
+    /* A rejected candidate now retains the accepted page; the former
+     * clear-on-failure expectation is kept for behavior review. */
+#if 0
     CHECK(!text[0]);
+#endif
+    CHECK(strstr(text, "Showing 1..64 of 150"));
     g_free(text);
   } else if (!strcmp(name, "invalid-filter")) {
     char wide[511];
@@ -168,7 +241,12 @@ int main(int argc, char **argv) {
     gtk_editable_set_text(GTK_EDITABLE(filter), wide);
     Click(root, "ctest.report.apply");
     text = Text(buffer);
+    /* A rejected candidate now retains the accepted page; the former
+     * clear-on-failure expectation is kept for behavior review. */
+#if 0
     CHECK(!text[0]);
+#endif
+    CHECK(strstr(text, "Showing 1..64 of 150"));
     g_free(text);
   } else if (!strcmp(name, "close-render")) {
     g_signal_connect_object(buffer, "changed", G_CALLBACK(CloseOnText), window, 0);

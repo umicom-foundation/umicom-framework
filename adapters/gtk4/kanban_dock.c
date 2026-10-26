@@ -16,6 +16,7 @@
 
 #include "umicom/ui/gtk4/kanban_dock.h"
 #include "window_removal_private.h"
+#include "focus_handoff_private.h"
 #define DOCK_KEY "umicom-kanban-dock"
 #define WINDOW_DOCK_KEY "umicom-kanban-window-dock"
 typedef struct DockState {
@@ -49,6 +50,8 @@ static UmiStatus Return(DockState *state, bool present) {
   state->moving = true;
   state->attached = false;
   g_object_set_data(G_OBJECT(state->window), WINDOW_DOCK_KEY, NULL);
+  /* The old native root must release text input before reparenting. */
+  UmiGtk4ReleaseSubtreeFocus(state->content);
   if (gtk_widget_get_parent(state->content) == state->root)
     gtk_box_remove(GTK_BOX(state->root), state->content);
   UmiStatus status = UMI_STATUS_CANCELLED;
@@ -183,6 +186,8 @@ UmiStatus UmiKanbanGtk4DockWindow(GtkWindow *host, GtkWindow *board, GtkWidget *
   g_object_set_data_full(G_OBJECT(board), WINDOW_DOCK_KEY, weak, FreeWeak);
   state->attached = true;
   state->moving = true;
+  /* Publish the movement guard before focus observers can request a return. */
+  UmiGtk4ReleaseSubtreeFocus(content);
   gtk_widget_set_visible(GTK_WIDGET(board), FALSE);
   if (Live(state) && !state->return_requested)
     gtk_window_set_child(board, NULL);

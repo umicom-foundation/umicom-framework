@@ -224,7 +224,20 @@ int main(int argc, char **argv) {
   CHECK(idle(root));
   OK(UmiDatabaseMaintenanceGtk4StateRead(root, &state));
   CHECK(!state.busy && UmiDatabaseMaintenanceGtk4CanClose(root));
+  /* Disposal disconnects GObject signal handlers. The task still owns the
+   * widget until its captured copy completes; verify that result below instead
+   * of requiring delivery to a handler that no longer exists. Retire keeps
+   * the live signal contract. Retain the former assertion for review. */
+#if 0
   CHECK(a->completions == (strcmp(name, "completion-reentry") == 0 ? 2 : 1));
+#endif
+  CHECK(a->completions == (strcmp(name, "disposed-copy") == 0 ? 0 :
+                            strcmp(name, "completion-reentry") == 0 ? 2 : 1));
+  if (strcmp(name, "disposed-copy") == 0 || strcmp(name, "retired-copy") == 0) {
+    CHECK(state.retired);
+    CHECK(UmiDatabaseMaintenanceGtk4Run(root, operation, a->source, a->destination) ==
+          UMI_STATUS_INVALID_STATE);
+  }
   if (strcmp(name, "reenter-authorize") == 0)
     CHECK(a->nested == UMI_STATUS_BUSY);
   if (strcmp(name, "changed-check") == 0 || strcmp(name, "retired-check") == 0) {

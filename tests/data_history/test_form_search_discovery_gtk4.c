@@ -91,6 +91,7 @@ int main(int argc, char **argv) {
                          "known-version",
                          "malformed",
                          "utf8-title",
+                         "utf8-later-title",
                          "late-query",
                          "retire-read",
                          "dispose-read",
@@ -160,8 +161,16 @@ int main(int argc, char **argv) {
   for (size_t i = 1; i <= count; ++i) {
     (void)snprintf(metadata.entity_id, sizeof metadata.entity_id, "form.search.%03zu", i);
     strcpy(preset->title, i % 2 ? "Bulk parcels" : "Small parcels");
+    /* Native UTF-8 validation applies to rows about to be displayed. Keep the
+     * earlier off-page setup for review; test visible and later-page refusal
+     * separately without broadening the byte-preserving storage contract. */
+#if 0
     if (!strcmp(name, "utf8-title") && i == 20)
       strcpy(preset->title, "\xff");
+#endif
+    if ((!strcmp(name, "utf8-title") && i == 1) ||
+        (!strcmp(name, "utf8-later-title") && i == 20))
+      strcpy(preset->title, "ÿ");
     if (!strcmp(name, "malformed") && i == 20)
       OK(umi_record_document_append(writer, &metadata, "bad", 3, 0, &saved));
     else
@@ -245,6 +254,20 @@ int main(int argc, char **argv) {
   if (!strcmp(name, "dispose-read"))
     g_object_run_dispose(G_OBJECT(root));
   CHECK(idle(root));
+  if (!strcmp(name, "utf8-later-title")) {
+    OK(UmiFormRecordEditorGtk4LastStatus(root));
+    OK(UmiFormRecordEditorGtk4SavedSearchPage(root, page));
+    CHECK(page->count == 16U && page->next_after_entity[0] != ' ');
+    memcpy(before, page, sizeof *before);
+    OK(UmiFormRecordEditorGtk4FindSavedSearches(root, "", 1));
+    CHECK(idle(root));
+    CHECK(UmiFormRecordEditorGtk4LastStatus(root) == UMI_STATUS_PARSE_ERROR);
+    /* Refused presentation must retain the previously reviewed page and its
+     * model binding; no partial row list may replace it. */
+    OK(UmiFormRecordEditorGtk4SavedSearchPage(root, page));
+    CHECK(memcmp(page, before, sizeof *page) == 0);
+    goto cleanup;
+  }
   bool failed = !strcmp(name, "unknown-version") || !strcmp(name, "malformed") ||
                 !strcmp(name, "utf8-title") || !strcmp(name, "late-query") ||
                 !strcmp(name, "retire-read") || !strcmp(name, "dispose-read") ||

@@ -19,6 +19,7 @@
 #include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/path_picker.h"
 #include <string.h>
+#include "focus_handoff_private.h"
 typedef struct PlanPanel {
   GtkWidget *root, *directory, *filename, *status, *approval;
   GtkTextBuffer *preview;
@@ -208,7 +209,9 @@ void UmiKanbanPublicPlanGtk4Retire(GtkWidget *root) {
   g_object_ref(root);
   s->retired = TRUE;
   s->abandoned = TRUE;
-  /* Callback retirement does not undo a save already dispatched to storage. */
+  /* Callback retirement does not undo a save already dispatched to storage.
+   * End input focus while the original text hierarchy is still sensitive. */
+  UmiGtk4ReleaseSubtreeFocus(root);
   gtk_widget_set_sensitive(root, FALSE);
   g_object_unref(root);
 }

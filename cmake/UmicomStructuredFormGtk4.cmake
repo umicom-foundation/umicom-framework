@@ -75,7 +75,7 @@ if(BUILD_TESTING)
             "${_structured_form_gtk_root}/tests/application_experience/structured_form_fixture.h"
             "${_structured_form_gtk_root}/adapters/gtk4/structured_form_value.h")
     endif()
-    foreach(_structured_form_control_case IN ITEMS multiline boolean choice choice-initial choice-label choice-utf8 capacity retired-buffer)
+    foreach(_structured_form_control_case IN ITEMS multiline boolean boolean-true boolean-false choice choice-initial choice-clear choice-label choice-utf8 capacity retired-buffer)
         add_test(NAME framework.structured_forms.gtk.controls.${_structured_form_control_case}
             COMMAND umicom-form-controls-test ${_structured_form_control_case})
         set_tests_properties(framework.structured_forms.gtk.controls.${_structured_form_control_case} PROPERTIES

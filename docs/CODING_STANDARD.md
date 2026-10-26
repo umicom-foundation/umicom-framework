@@ -112,6 +112,24 @@ not its visible button or entry. Tests must open a collapsed section before inte
 with its controls. Do not alter product defaults solely to make a widget-tree search pass.
 A missing display or privilege is skipped coverage, never a successful behavioural test.
 
+Use an explicit non-answer item for a dropdown when choosing the first value would
+invent data. Keep display positions separate from stored identifiers. Test unknown
+answers, the first valid value, later valid values, and returning to no selection.
+A toolkit may select its first item automatically even if a fixture requests an
+invalid position.
+
+Before disabling or reparenting focused text controls, finish focus through the
+current native root. Set the controller's busy, moving or retired guard first, retain
+the objects across focus notifications, and recheck lifetime afterwards. Leave focus
+in unrelated controls alone. Cancellation during native construction must use a
+toolkit boundary that has completed attachment, not an earlier notification that
+still has unfinished toolkit setup.
+
+An asynchronous fixture must check both its domain completion condition and its
+deadline between bounded event-dispatch slices. Do not drain until the main context
+is empty: an always-ready source can prevent that loop from returning. A callback
+that itself blocks still needs an outer process timeout.
+
 ## Revisions and persistence
 
 A revision identifies a meaningful published state. A rescan that finds no change may
@@ -152,6 +170,33 @@ Static review, formatting checks, compilation, executed tests, installation and 
 use are different evidence. Report each separately. Tests marked Not Run, timed out or
 skipped remain outstanding until their underlying cause or required environment is
 accounted for. A clean log without a captured exit status is limited evidence.
+
+When parsing test logs, recognize complete result rows instead of searching for a
+word such as "Failed". Preserve failed, exception, timeout, not-run, disabled and
+skipped outcomes distinctly. Include a passing test whose name contains that word
+in parser coverage. Keep colour escapes and malformed counters in the input contract.
+Do not infer successful qualification merely from a percentage summary.
+
+For multi-host qualification, declare which exact test must pass on which host and
+configuration. Match source fingerprints explicitly. A skip, disabled case, missing test
+or stale report cannot satisfy that row. Keep the actual capability prerequisite and
+owner evidence; result metadata alone does not authenticate a host or a source revision.
+
+A path restriction must remain valid after normalization on every supported host.
+Reject both slash forms when an operation accepts only a basename. Exercise preview
+and execution so a platform separator cannot silently widen the permitted operation.
+
+SQLite inspection must account for connection mode. A successful read-only quick_check
+can omit CHECK expressions in the loaded schema. Preserve original-file checks and use
+a private writable snapshot when full CHECK coverage is required; never reopen the source
+with write permission just to inspect it. Test transaction release, WAL contents and
+unchanged outputs on errors. Temporary verification is not a saved backup.
+
+When retaining superseded implementations, inspect the active preprocessor regions
+after editing. A declaration found by text search may belong to an existing disabled
+block. Determine complete replacement boundaries from the original file, keep them
+non-overlapping, and verify that new helpers and their callers remain active together.
+A balanced count of preprocessor directives alone does not prove this.
 
 ## Before requesting review
 

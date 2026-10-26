@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Review test coverage across hosts</title>
+<style>body{font:17px/1.6 system-ui;max-width:900px;margin:3rem auto;padding:0 1rem;color:#182b40}pre{background:#edf3f8;padding:1rem;overflow:auto}table{border-collapse:collapse}th,td{border:1px solid #bac9d8;padding:.6rem;text-align:left}</style>
+<main>
+<h1>Review test coverage across hosts</h1>
+<p>A test skipped on Windows may still need a passing Linux observation. A saved pass from older source must not close that gap. Framework's coverage review connects exact test names to required hosts, configurations and a requested source identity.</p>
+<h2>Prepare the observations</h2>
+<ol>
+<li>Build the intended source on each required host. Record the source fingerprint, toolchain, configuration, command and exit status alongside the test evidence. A branch name such as <code>main</code> is not a stable fingerprint.</li>
+<li>Capture a complete CTest JUnit report and import it with <code>UmiCtestReportImport</code> or the existing saved-report file service. Keep runtime skips, disabled tests and missing executables separate.</li>
+<li>Describe each required test, host and configuration. The capability description explains why that host is required, such as a GTK display or a Linux filesystem operation.</li>
+<li>Create a coverage review. Inspect every outstanding row before deciding which environment or test needs attention.</li>
+</ol>
+<h2>Use the shared C23 service</h2>
+<p>The following fragment assumes <code>report</code> is an already imported report owned by the caller. The identity is illustrative; supply the real fingerprint captured with the run.</p>
+<pre><code>#include &lt;umicom/testing/ctest_coverage.h&gt;
+
+UmiCtestCoverageRequirement required[] = {{
+    .name = "application.editor.open",
+    .host = "windows-desktop",
+    .configuration = "Debug",
+    .capability = "GTK display"
+}};
+UmiCtestCoverageHost hosts[] = {{
+    .host = "windows-desktop",
+    .configuration = "Debug",
+    .source_identity = "source-fingerprint-from-the-run",
+    .report = report
+}};
+UmiCtestCoverageReview *review = NULL;
+UmiStatus status = UmiCtestCoverageReviewCreate(
+    "source-fingerprint-from-the-run",
+    required, 1, hosts, 1, &amp;review);
+if (status == UMI_STATUS_OK) {
+    UmiCtestCoverageSummary summary;
+    status = UmiCtestCoverageReviewRead(review, &amp;summary);
+    if (status == UMI_STATUS_OK) {
+        for (size_t i = 0; i &lt; summary.requirements; ++i) {
+            const UmiCtestCoverageRow *row =
+                UmiCtestCoverageReviewAt(review, i);
+            /* Present the requirement and outcome as plain text.
+             * Read observation only when has_observation is true. */
+            (void)row;
+        }
+    }
+    /* This gate covers only the explicitly required rows. */
+    status = UmiCtestCoverageRequirePassed(review);
+}
+UmiCtestCoverageReviewDestroy(review);</code></pre>
+<p>The review copies its rows and the requested identity. After creation, it does not borrow the input arrays or reports. Rows remain valid until the review is destroyed. It keeps requirement order so a board or checklist can retain its planned ordering.</p>
+<h2>Interpret outstanding coverage</h2>
+<table>
+<tr><th>Outcome</th><th>Next step</th></tr>
+<tr><td>Failed or timed out</td><td>Inspect the saved diagnostic and repair the failure. A timeout remains a failure even when some work completed.</td></tr>
+<tr><td>Skipped or disabled</td><td>Identify the prerequisite or deliberate exclusion. Add and run the required host coverage explicitly; a pass elsewhere does not silently replace this row.</td></tr>
+<tr><td>Not run</td><td>Check the executable, working directory, fixtures and completed build before rerunning.</td></tr>
+<tr><td>Missing host</td><td>Supply the exact host/configuration observation. A Release result does not satisfy a Debug requirement.</td></tr>
+<tr><td>Missing test</td><td>Check the discovered test inventory and exact decoded test name. A removed test is not a repaired test.</td></tr>
+<tr><td>Source mismatch</td><td>Compare the requested identity with the row's observed identity. Run the intended source instead of relabelling old evidence.</td></tr>
+</table>
+<p>Duplicate host/configuration observations and duplicate test/host/configuration requirements are rejected. Choose the intended observation explicitly instead of relying on whichever report appears first. Empty requirements can be reviewed but never satisfy the passing gate.</p>
+<h2>Review a saved plan with the native command</h2>
+<ol>
+<li>Keep the complete JUnit reports in one evidence directory, for example <code>C:\umicom\_local\logs\testing</code>. Save the source fingerprint and host configuration with each run. Do not rename old metadata to make it match a new build.</li>
+<li>Create <code>coverage.csv</code> in that directory. Use the exact header below. A <code>host</code> row identifies one report. A <code>require</code> row identifies one test that must pass on that host and configuration. This example uses illustrative names and fingerprints; replace them with values from your own runs.</li>
+</ol>
+<pre><code>kind,host,configuration,source_identity,test,capability,report
+host,windows-desktop,Debug,source-fingerprint-from-the-run,,,windows.xml
+host,linux-desktop,Debug,source-fingerprint-from-the-run,,,linux.xml
+require,windows-desktop,Debug,,application.editor.open,GTK display,
+require,linux-desktop,Debug,,filesystem.exchange,Linux filesystem operation,</code></pre>
+<p>Every record has seven fields. Empty fields still need their commas. Quote a field containing a comma, and double a quote inside a quoted field. Names are case-sensitive and whitespace is significant. UTF-8 with or without a byte-order mark, LF and CRLF are accepted. Blank records, extra columns, unknown row kinds, control characters and duplicate identities are rejected.</p>
+<ol start="3">
+<li>Run the installed native command, or the executable from your Applications build:</li>
+</ol>
+<pre><code>&amp; "C:\umicom\Umicom-Applications\build\windows-ucrt64-all-debug\bin\umicom.exe" test-report --coverage "source-fingerprint-from-the-run" "C:\umicom\_local\logs\testing\coverage.csv"
+$LASTEXITCODE</code></pre>
+<p>Exit <strong>0</strong> means every listed requirement has a passing saved result for the exact host, configuration and requested source identity. Exit <strong>1</strong> means a requirement remains outstanding, or the plan has no requirements. Exit <strong>2</strong> means an input could not be admitted. The command prints each requirement and outcome; it does not run tests or write files.</p>
+<p>Report paths are relative to the manifest directory, even when the command runs from another directory. Child folders are supported with either slash. Absolute paths, drive prefixes, empty path components, <code>.</code> and <code>..</code> components are refused. A missing declared report is an input error. A requirement whose host has no declared report row produces <em>missing host</em>.</p>
+<h2>Reuse the manifest in an application</h2>
+<p>Include <code>umicom/testing/ctest_coverage_manifest.h</code>. Call <code>UmiCtestCoverageManifestImport</code> with the complete CSV byte span, then inspect its host and requirement accessors. Import copies input and performs no file reads. Call <code>UmiCtestCoverageManifestReviewFiles</code> with an explicit absolute evidence directory and requested source identity to obtain the same immutable review used by the CLI. Destroy the manifest and review separately.</p>
+<p>CSV input is limited to 4 MiB, with up to 256 host reports and 100,000 requirements. The aggregate report input limit is 64 MiB; the existing XML parser limits also apply. Parsed records and copied review rows require additional memory. File reading can block, so native applications should perform it on a worker and present results as plain text.</p>
+<p>Use a trusted evidence directory. Final report files must be ordinary local files; parent directory aliases may still be followed. This service is not filesystem confinement and does not authenticate a report. Resolve input errors before using its review to make a release decision.</p>
+<h2>Limits</h2>
+<p>This service compares supplied metadata and saved results. It does not execute tests, discover host capabilities, authenticate identities, verify timestamps, inspect logs or prove that a report was built from the claimed source. Keep that provenance in the calling application's evidence workflow. A passing coverage gate does not imply that unlisted tests passed; use <code>UmiCtestReportRequirePassed</code> when the complete report must pass.</p>
+<p>Requirements and observations are bounded by the public capacity constants. Allocation, malformed text and capacity failures return an error with a null review. Summary reads leave their output unchanged on invalid arguments. Link consumers against <code>Umicom::testing</code>.</p>
+</main>
+</html>

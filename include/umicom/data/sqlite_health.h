@@ -44,7 +44,12 @@ typedef struct UmiSqliteCheckpointReport {
  * INVALID_STATE rejects connections with ignore_check_constraints enabled,
  * leaving both output and connection policy unchanged. Disable that pragma
  * explicitly before requesting a complete CHECK-constraint scan.
- * It can run on a read-only connection. Existing owned transactions are BUSY;
+ * Read-only connections also scan a private writable SQLite temporary snapshot
+ * because SQLite may omit CHECK expressions from a read-only schema. The source
+ * remains read-only; a private read transaction gives both scans one snapshot.
+ * This may require temporary disk space proportional to the database size.
+ * SQLite removes its unnamed temporary database on close. A failed copy or
+ * cleanup returns an error, never a healthy report. Existing owned transactions are BUSY;
  * no operation silently commits, rolls back or includes pending caller edits.
  * Output is unchanged for admission, engine or completion errors. Runs on the
  * caller's worker; the diagnostic bound does not bound the database scan time. */

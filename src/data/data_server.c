@@ -1650,6 +1650,10 @@ static UmiStatus DataHealthChecksEnabled(UmiDataServer *server)
 
 /* Health queries stay beside the opaque SQLite handle so every read and
  * checkpoint respects the same transaction owner and re-entry rules. */
+/* The original direct scan is retained for review. On read-only connections,
+ * SQLite may omit CHECK expressions from its schema; the replacement below
+ * verifies a private writable snapshot in addition to the original file. */
+#if 0
 UmiStatus umi_sqlite_health_read(UmiDataServer *server, UmiSqliteHealthReport *out)
 {
     if (server == NULL || out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
@@ -1702,6 +1706,149 @@ UmiStatus umi_sqlite_health_read(UmiDataServer *server, UmiSqliteHealthReport *o
     }
     candidate.diagnostic_limit_reached = candidate.diagnostic_count == UMI_SQLITE_HEALTH_DIAGNOSTIC_LIMIT;
     if (status == UMI_STATUS_OK) *out = candidate;
+#endif
+    server_unlock(server);
+    return status;
+}
+#endif
+
+#ifdef UMICOM_HAS_SQLITE
+static UmiStatus DataBackupError(UmiDataServer *source, sqlite3 *destination, int code);
+
+/* The scan consumes every diagnostic before publishing a report. It is shared
+ * by the original file and the private writable snapshot, without reacquiring
+ * a Data Server lock or changing the caller's constraint policy. */
+static UmiStatus DataHealthScanLocked(UmiDataServer *server, UmiSqliteHealthReport *out)
+{
+    UmiStatus status = UMI_STATUS_OK;
+    UmiSqliteHealthReport candidate = { .sound = true };
+    sqlite3_stmt *statement = NULL;
+    size_t rows = 0;
+    bool ok_seen = false;
+    if (status == UMI_STATUS_OK) status = DataHealthChecksEnabled(server);
+    if (status == UMI_STATUS_OK) {
+        int code = sqlite3_prepare_v2(server->sqlite, "PRAGMA main.quick_check(100);", -1, &statement, NULL);
+        if (code != SQLITE_OK) status = DataSqlError(server, code);
+        else while ((code = sqlite3_step(statement)) == SQLITE_ROW) {
+            if (++rows > UMI_SQLITE_HEALTH_DIAGNOSTIC_LIMIT || sqlite3_column_count(statement) != 1) {
+                status = UMI_STATUS_PARSE_ERROR; break;
+            }
+            const unsigned char *text = sqlite3_column_text(statement, 0);
+            int bytes = sqlite3_column_bytes(statement, 0);
+            if (text == NULL || bytes < 1 || memchr(text, '\0', (size_t)bytes) != NULL) {
+                status = UMI_STATUS_PARSE_ERROR; break;
+            }
+            if (bytes == 2 && memcmp(text, "ok", 2) == 0) {
+                if (ok_seen) { status = UMI_STATUS_PARSE_ERROR; break; }
+                ok_seen = true;
+            } else {
+                candidate.sound = false;
+                if (candidate.diagnostic_count++ == 0U) {
+                    if ((size_t)bytes >= sizeof candidate.first_diagnostic) {
+                        candidate.first_diagnostic_omitted = true;
+                        (void)snprintf(candidate.first_diagnostic, sizeof candidate.first_diagnostic,
+                            "%s", "SQLite diagnostic exceeds this report's text capacity.");
+                    } else {
+                        memcpy(candidate.first_diagnostic, text, (size_t)bytes);
+                        candidate.first_diagnostic[bytes] = '\0';
+                    }
+                }
+            }
+        }
+        if (status == UMI_STATUS_OK && code != SQLITE_DONE) status = DataSqlError(server, code);
+        if (status == UMI_STATUS_OK && (rows == 0U || (ok_seen && candidate.diagnostic_count != 0U)))
+            status = UMI_STATUS_PARSE_ERROR;
+    }
+    if (statement != NULL) {
+        int code = sqlite3_finalize(statement);
+        if (status == UMI_STATUS_OK && code != SQLITE_OK) status = DataSqlError(server, code);
+    }
+    candidate.diagnostic_limit_reached = candidate.diagnostic_count == UMI_SQLITE_HEALTH_DIAGNOSTIC_LIMIT;
+    if (status == UMI_STATUS_OK) *out = candidate;
+    return status;
+}
+
+
+/* SQLite omits CHECK expressions when loading a read-only schema. A writable
+ * temporary snapshot restores their evaluation without granting write access
+ * to the source. The original-file scan remains necessary for its page layout.
+ * A private read transaction keeps both scans on the same committed version.
+ * SQLite owns the unnamed temporary database and removes it when closed. */
+static UmiStatus DataHealthReadonlyLocked(UmiDataServer *server, UmiSqliteHealthReport *out)
+{
+    if (!sqlite3_get_autocommit(server->sqlite)) return UMI_STATUS_BUSY;
+    int code = sqlite3_exec(server->sqlite, "BEGIN;", NULL, NULL, NULL);
+    if (code != SQLITE_OK) return DataSqlError(server, code);
+    UmiSqliteHealthReport candidate;
+    UmiStatus status = DataHealthScanLocked(server, &candidate);
+    UmiDataServer *snapshot = NULL;
+    if (status == UMI_STATUS_OK && candidate.sound)
+        status = allocate_server(UMI_DATA_BACKEND_SQLITE, &snapshot);
+    if (status == UMI_STATUS_OK && snapshot != NULL) {
+        code = sqlite3_open_v2("", &snapshot->sqlite,
+            SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX |
+            SQLITE_OPEN_PRIVATECACHE, NULL);
+        if (code != SQLITE_OK) status = DataBackupError(server, snapshot->sqlite, code);
+        else if (sqlite3_db_readonly(snapshot->sqlite, "main") != 0)
+            status = UMI_STATUS_PERMISSION_DENIED;
+        else {
+            sqlite3_backup *copy = sqlite3_backup_init(snapshot->sqlite, "main", server->sqlite, "main");
+            if (copy == NULL)
+                status = DataBackupError(server, snapshot->sqlite, sqlite3_errcode(snapshot->sqlite));
+            else {
+                code = sqlite3_backup_step(copy, -1);
+                if (code != SQLITE_DONE) status = DataBackupError(server, snapshot->sqlite, code);
+                int finish = sqlite3_backup_finish(copy);
+                if (status == UMI_STATUS_OK && finish != SQLITE_OK)
+                    status = DataBackupError(server, snapshot->sqlite, finish);
+            }
+        }
+        if (status == UMI_STATUS_OK) {
+            status = DataHealthScanLocked(snapshot, &candidate);
+            if (status != UMI_STATUS_OK && snapshot->last_error[0] != '\0')
+                DataMessage(server, snapshot->last_error);
+        }
+    }
+    if (snapshot != NULL) {
+        if (snapshot->sqlite != NULL) {
+            code = sqlite3_close(snapshot->sqlite);
+            if (code != SQLITE_OK) {
+                if (status == UMI_STATUS_OK) status = DataBackupError(server, snapshot->sqlite, code);
+                (void)sqlite3_close_v2(snapshot->sqlite);
+            }
+        }
+        free(snapshot);
+    }
+    /* Only our private read transaction is released. If an engine failure
+     * prevents release, preserve recovery ownership rather than admitting a
+     * later caller into an unknown transaction. Existing Rollback can recover. */
+    if (!sqlite3_get_autocommit(server->sqlite)) {
+        code = sqlite3_exec(server->sqlite, "ROLLBACK;", NULL, NULL, NULL);
+        if (code != SQLITE_OK) {
+            if (status == UMI_STATUS_OK) status = DataSqlError(server, code);
+            if (!sqlite3_get_autocommit(server->sqlite)) {
+                server->transaction_active = 1;
+                server->transaction_owner = DataThreadToken();
+                server->rollback_failed = 1;
+            }
+        }
+    }
+    if (status == UMI_STATUS_OK) *out = candidate;
+    return status;
+}
+#endif
+
+UmiStatus umi_sqlite_health_read(UmiDataServer *server, UmiSqliteHealthReport *out)
+{
+    if (server == NULL || out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = DataEnter(server, 0);
+    if (status != UMI_STATUS_OK) return status;
+    if (server->backend != UMI_DATA_BACKEND_SQLITE) status = UMI_STATUS_UNAVAILABLE;
+    else if (server->transaction_active) status = UMI_STATUS_BUSY;
+#ifdef UMICOM_HAS_SQLITE
+    if (status == UMI_STATUS_OK)
+        status = server->read_only ? DataHealthReadonlyLocked(server, out)
+                                   : DataHealthScanLocked(server, out);
 #endif
     server_unlock(server);
     return status;

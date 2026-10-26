@@ -33,6 +33,7 @@ typedef struct SavedReportPanel {
 typedef struct SavedReportJob {
   GtkWidget *root;
   char path[UMI_PATH_CAPACITY];
+  UmiCtestReportFilter filter;
   UmiStatus status;
   UmiCtestReport *report;
 } SavedReportJob;
@@ -80,6 +81,10 @@ static void Render(SavedReportPanel *s) {
                                                    "explicitly; Copy page copies the current page."
                                                  : "Unable to format this selection.");
 }
+/* Accepted report state is now replaced only after complete admission and
+ * formatting. The prior clear-before-validation implementation is retained
+ * for engineering review of the ownership change. */
+#if 0
 static UmiStatus ApplyDraft(SavedReportPanel *s) {
   UmiCtestReportFilter filter;
   UmiCtestReportFilterInit(&filter);
@@ -112,6 +117,89 @@ static void Apply(GtkButton *button, gpointer data) {
   s->busy = FALSE;
   g_object_unref(root);
 }
+#endif
+static UmiStatus ReadDraftFilter(SavedReportPanel *s, UmiCtestReportFilter *out) {
+  UmiCtestReportFilter filter;
+  UmiCtestReportFilterInit(&filter);
+  guint outcome = gtk_drop_down_get_selected(GTK_DROP_DOWN(s->outcome));
+  guint order = gtk_drop_down_get_selected(GTK_DROP_DOWN(s->order));
+  const unsigned masks[] = {
+      UMI_CTEST_VIEW_ALL & ~(unsigned)UMI_CTEST_VIEW_PASSED, UMI_CTEST_VIEW_ALL,
+      UMI_CTEST_VIEW_PASSED, UMI_CTEST_VIEW_FAILED, UMI_CTEST_VIEW_TIMED_OUT,
+      UMI_CTEST_VIEW_SKIPPED, UMI_CTEST_VIEW_DISABLED, UMI_CTEST_VIEW_NOT_RUN};
+  const char *name = gtk_editable_get_text(GTK_EDITABLE(s->name));
+  size_t length = strlen(name);
+  if (outcome >= G_N_ELEMENTS(masks) || order > 3U || length >= sizeof filter.name_contains)
+    return UMI_STATUS_INVALID_ARGUMENT;
+  filter.outcomes = masks[outcome];
+  filter.order = (UmiCtestReportOrder)order;
+  memcpy(filter.name_contains, name, length + 1U);
+  UmiStatus status = UmiCtestReportFilterValidate(&filter);
+  if (status == UMI_STATUS_OK) *out = filter;
+  return status;
+}
+
+/* Prepare both the model projection and its text before releasing the accepted
+ * page. Invalid drafts and allocation failures must not erase reviewed evidence. */
+static UmiStatus PrepareView(const UmiCtestReport *report, const UmiCtestReportFilter *filter,
+                             UmiCtestReportView **out_view, char **out_text) {
+  *out_view = NULL;
+  *out_text = NULL;
+  UmiCtestReportView *view = NULL;
+  UmiStatus status = UmiCtestReportViewCreate(report, filter, &view);
+  size_t bytes = 0;
+  if (status == UMI_STATUS_OK)
+    status = UmiCtestReportViewFormat(view, 0U, 64U, NULL, 0U, &bytes);
+  char *text = status == UMI_STATUS_OK ? g_try_malloc(bytes + 1U) : NULL;
+  if (status == UMI_STATUS_OK && !text) status = UMI_STATUS_OUT_OF_MEMORY;
+  if (status == UMI_STATUS_OK)
+    status = UmiCtestReportViewFormat(view, 0U, 64U, text, bytes + 1U, &bytes);
+  if (status == UMI_STATUS_OK) {
+    *out_view = view;
+    *out_text = text;
+  } else {
+    UmiCtestReportViewDestroy(view);
+    g_free(text);
+  }
+  return status;
+}
+
+static void PublishView(SavedReportPanel *s, UmiCtestReportView *view, char *text) {
+  UmiCtestReportView *previous = s->view;
+  char *previous_text = s->rendered;
+  s->view = view;
+  s->rendered = text;
+  s->offset = 0U;
+  UmiCtestReportViewDestroy(previous);
+  g_free(previous_text);
+  /* The caller retains root and holds busy across notifying GTK operations.
+   * All owned fields are consistent before a changed handler can close it. */
+  gtk_text_buffer_set_text(s->buffer, text, -1);
+}
+
+static void Apply(GtkButton *button, gpointer data) {
+  GtkWidget *root = data;
+  SavedReportPanel *s = g_object_get_data(G_OBJECT(root), "umicom-saved-report");
+  if (!Active(s, GTK_WIDGET(button)) || s->report == NULL) return;
+  g_object_ref(root);
+  s->busy = TRUE;
+  UmiCtestReportFilter filter;
+  UmiCtestReportView *view = NULL;
+  char *text = NULL;
+  UmiStatus status = ReadDraftFilter(s, &filter);
+  if (status == UMI_STATUS_OK) status = PrepareView(s->report, &filter, &view, &text);
+  if (status == UMI_STATUS_OK) {
+    PublishView(s, view, text);
+    if (gtk_widget_get_mapped(root))
+      gtk_label_set_text(GTK_LABEL(s->status), "Filters applied to the saved report.");
+  } else if (gtk_widget_get_mapped(root)) {
+    gtk_label_set_text(GTK_LABEL(s->status),
+        "Filter not applied; the previous page is unchanged. Check the name and choices.");
+  }
+  s->busy = FALSE;
+  g_object_unref(root);
+}
+
 static void Page(GtkButton *button, gpointer data) {
   GtkWidget *root = data;
   SavedReportPanel *s = g_object_get_data(G_OBJECT(root), "umicom-saved-report");
@@ -174,6 +262,10 @@ static void ReadWorker(GTask *task, gpointer source, gpointer data, GCancellable
   job->status = UmiCtestReportReadFile(job->path, &job->report);
   g_task_return_boolean(task, TRUE);
 }
+/* Accepted report state is now replaced only after complete admission and
+ * formatting. The prior clear-before-validation implementation is retained
+ * for engineering review of the ownership change. */
+#if 0
 static void ReadComplete(GObject *source, GAsyncResult *result, gpointer data) {
   (void)source;
   (void)data;
@@ -202,6 +294,42 @@ static void ReadComplete(GObject *source, GAsyncResult *result, gpointer data) {
         "Load cancelled; the local read has finished and its results were not displayed.");
   s->busy = FALSE;
 }
+#endif
+static void ReadComplete(GObject *source, GAsyncResult *result, gpointer data) {
+  (void)source;
+  (void)data;
+  SavedReportJob *job = g_task_get_task_data(G_TASK(result));
+  SavedReportPanel *s = g_object_get_data(G_OBJECT(job->root), "umicom-saved-report");
+  if (!s->cancelled && gtk_widget_get_mapped(job->root)) {
+    UmiCtestReportView *view = NULL;
+    char *text = NULL;
+    UmiStatus status = job->status;
+    if (status == UMI_STATUS_OK)
+      status = PrepareView(job->report, &job->filter, &view, &text);
+    if (status == UMI_STATUS_OK) {
+      /* Commit one accepted replacement before publishing notifications. The
+       * view borrows the report, so retire the old view before the old report. */
+      UmiCtestReport *previous = s->report;
+      s->report = job->report;
+      job->report = NULL;
+      PublishView(s, view, text);
+      UmiCtestReportDestroy(previous);
+      if (!s->cancelled && gtk_widget_get_mapped(job->root))
+        gtk_label_set_text(GTK_LABEL(s->source), job->path);
+      if (!s->cancelled && gtk_widget_get_mapped(job->root))
+        gtk_label_set_text(GTK_LABEL(s->status),
+            "Saved report loaded with the captured filters. Apply later filter edits explicitly.");
+    } else {
+      gtk_label_set_text(GTK_LABEL(s->status),
+          "Unable to load the selected report. The previous report is unchanged; check the file, format and byte limit.");
+    }
+  }
+  if (s->cancelled && gtk_widget_get_mapped(job->root))
+    gtk_label_set_text(GTK_LABEL(s->status),
+        "Load cancelled; its results were not displayed. The previously accepted report is unchanged.");
+  s->busy = FALSE;
+}
+
 static void Unmapped(GtkWidget *widget, gpointer data) {
   (void)widget;
   SavedReportPanel *s = data;
@@ -209,6 +337,10 @@ static void Unmapped(GtkWidget *widget, gpointer data) {
   if (s->busy)
     s->cancelled = TRUE;
 }
+/* Accepted report state is now replaced only after complete admission and
+ * formatting. The prior clear-before-validation implementation is retained
+ * for engineering review of the ownership change. */
+#if 0
 static void Open(GtkButton *button, gpointer data) {
   GtkWidget *root = data;
   SavedReportPanel *s = g_object_get_data(G_OBJECT(root), "umicom-saved-report");
@@ -240,6 +372,43 @@ static void Open(GtkButton *button, gpointer data) {
     }
   } else if (gtk_widget_get_mapped(root))
     gtk_label_set_text(GTK_LABEL(s->status), "Choose an absolute local JUnit report path.");
+  if (job != NULL) {
+    s->busy = FALSE;
+    JobFree(job);
+  }
+  g_object_unref(root);
+}
+
+#endif
+static void Open(GtkButton *button, gpointer data) {
+  GtkWidget *root = data;
+  SavedReportPanel *s = g_object_get_data(G_OBJECT(root), "umicom-saved-report");
+  if (!Active(s, GTK_WIDGET(button))) return;
+  g_object_ref(root);
+  s->busy = TRUE;
+  s->cancelled = FALSE;
+  SavedReportJob *job = g_new0(SavedReportJob, 1);
+  job->root = g_object_ref(root);
+  const char *path = gtk_editable_get_text(GTK_EDITABLE(s->path));
+  size_t length = strlen(path);
+  gboolean valid = length < sizeof job->path && umi_path_is_absolute(path);
+  if (valid) memcpy(job->path, path, length + 1U);
+  UmiStatus status = valid ? ReadDraftFilter(s, &job->filter) : UMI_STATUS_INVALID_ARGUMENT;
+  /* The worker request owns the exact path and filter chosen at Open. Editing
+   * controls while it reads cannot silently alter the accepted observation. */
+  if (status == UMI_STATUS_OK && gtk_widget_get_mapped(root)) {
+    gtk_label_set_text(GTK_LABEL(s->status), "Reading the selected saved report; the previous report remains available.");
+    if (!s->cancelled && gtk_widget_get_mapped(root)) {
+      GTask *task = g_task_new(NULL, NULL, ReadComplete, NULL);
+      g_task_set_task_data(task, job, JobFree);
+      g_task_run_in_thread(task, ReadWorker);
+      g_object_unref(task);
+      job = NULL;
+    }
+  } else if (gtk_widget_get_mapped(root)) {
+    gtk_label_set_text(GTK_LABEL(s->status),
+        "Choose an absolute local JUnit path and valid filters. The previous report is unchanged.");
+  }
   if (job != NULL) {
     s->busy = FALSE;
     JobFree(job);

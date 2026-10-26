@@ -55,7 +55,8 @@ if(COMMAND umicom_target_qualification_inputs)
     umicom_target_qualification_inputs(umicom_kanban_gtk4 FILES
         "${_kanban_gtk_root}/adapters/gtk4/kanban_project.inc"
         "${_kanban_gtk_root}/adapters/gtk4/kanban_publication_plan.inc"
-        "${_kanban_gtk_root}/adapters/gtk4/kanban_binding.inc")
+        "${_kanban_gtk_root}/adapters/gtk4/kanban_binding.inc"
+        "${_kanban_gtk_root}/adapters/gtk4/focus_handoff_private.h")
 endif()
 
 install(FILES "${_kanban_gtk_root}/include/umicom/ui/gtk4/kanban_publication_store.h"
