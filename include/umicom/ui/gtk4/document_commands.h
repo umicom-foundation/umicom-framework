@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/ui/gtk4/document_commands.h
- * PURPOSE: Bind native editing and the system clipboard to DocumentCoordinator.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Bind native editing and the system clipboard to DocumentCoordinator.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_UI_GTK4_DOCUMENT_COMMANDS_H
 #define UMICOM_UI_GTK4_DOCUMENT_COMMANDS_H
@@ -44,7 +51,9 @@ UmiStatus UmiGtk4AdapterBindDocumentEditing(UmiGtk4Adapter *adapter,
  * Returns NOT_FOUND without a source document and UNAVAILABLE when its native
  * editor is hidden or cannot accept focus. Owner-thread only. */
 /* CANCELLED also covers synchronous host retirement during a focus observer.
- * No adapter access follows that observer without checking its editing token. */
+ * No adapter access follows that observer without checking its editing token.
+ * INVALID_STATE reports a different active document selected by a focus
+ * observer. That newer selection is preserved; the operation does not retry. */
 UmiStatus UmiGtk4AdapterFocusActiveDocument(UmiGtk4Adapter *adapter);
 
 /** Check the active source document, not an arbitrary focused entry field.

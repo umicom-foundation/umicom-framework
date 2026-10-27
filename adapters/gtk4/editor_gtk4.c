@@ -1527,19 +1527,43 @@ UmiStatus UmiGtk4AdapterFocusActiveDocument(UmiGtk4Adapter *adapter)
         if (parent == NULL || !gtk_widget_get_visible(parent) ||
             !gtk_widget_get_child_visible(parent)) return UMI_STATUS_UNAVAILABLE;
     }
-    /* Focus observers may release the embedding host. Retain only native
-     * objects across that notification and do not revisit the adapter. The
-     * actual root also supports an editor detached into a floating window. */
+    /* Focus observers may release the embedding host. Retain native objects
+     * across notification and resolve the editing token before inspecting
+     * adapter state again. The actual root also supports a floating editor. */
     GObject *focusLifetime = g_object_ref(adapter->edit_lifetime);
     g_object_ref(view);
     g_object_ref(root);
     gtk_window_set_focus(GTK_WINDOW(root), view);
     GtkWidget *focused = gtk_window_get_focus(GTK_WINDOW(root));
     gboolean accepted = focused == view || (focused != NULL && gtk_widget_is_ancestor(focused, view));
+/* A live adapter alone does not prove the originally requested document is still active after native focus callbacks. The previous implementation is retained for review. */
+#if 0
     gboolean ownerAlive = g_object_get_data(focusLifetime, "adapter") == adapter;
     g_object_unref(root);
     g_object_unref(view);
     g_object_unref(focusLifetime);
     if (!ownerAlive) return UMI_STATUS_CANCELLED;
     return accepted ? UMI_STATUS_OK : UMI_STATUS_UNAVAILABLE;
+#endif
+    /* A focus notification can activate another document without destroying
+     * the adapter. Verify both binding lifetime and document identity before
+     * reporting success; never undo the observer's newer selection. */
+    UmiGtk4Adapter *live = g_object_get_data(focusLifetime, "adapter");
+    UmiStatus focusStatus = UMI_STATUS_CANCELLED;
+    if (live == adapter) {
+        UmiDocumentWorkingCopySnapshot focusedDocument;
+        focusStatus = umi_document_coordinator_active_snapshot(
+            live->edit_coordinator, &focusedDocument);
+        if (focusStatus == UMI_STATUS_OK &&
+            (focusedDocument.document_id != active.document_id ||
+             strcmp(focusedDocument.view_id, active.view_id) != 0))
+            focusStatus = UMI_STATUS_INVALID_STATE;
+        if (focusStatus == UMI_STATUS_OK &&
+            (!accepted || gtk_widget_get_root(view) != root))
+            focusStatus = UMI_STATUS_UNAVAILABLE;
+    }
+    g_object_unref(root);
+    g_object_unref(view);
+    g_object_unref(focusLifetime);
+    return focusStatus;
 }

@@ -1,11 +1,19 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/provider_chat_window_gtk4.c
- * PURPOSE: Give selected-connection chat a transient window whose controller retires on unrealize.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Give selected-connection chat a transient window whose controller retires on unrealize.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
+#include "window_input_lifetime_private.h"
 #include "umicom/provider_connections/chat_gtk4.h"
 static void Release(gpointer data) { UmiProviderChatGtkDestroy(data); }
 static void Retire(GtkWidget *window, gpointer data)
@@ -60,6 +68,7 @@ UmiStatus UmiProviderChatGtkPresentWithContext(GtkWindow *parent, const UmiProvi
     /* Empty legacy chat remains a clean window; a captured context requires
      * explicit discard when closing without sending. */
     GtkWidget *window = gtk_window_new();
+    UmiGtk4PrepareWindowInputLifetime(GTK_WINDOW(window));
     gtk_window_set_title(GTK_WINDOW(window), "Chat with saved connection");
     gtk_window_set_default_size(GTK_WINDOW(window), 760, 800);
     if (parent != NULL)

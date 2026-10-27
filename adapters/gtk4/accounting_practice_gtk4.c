@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 
+#include "window_input_lifetime_private.h"
 #include "umicom/ui/gtk4/accounting_practice.h"
 #include "umicom/ui/gtk4/accounting_report.h"
 #include "umicom/ui/gtk4/automation.h"
@@ -284,6 +285,7 @@ GtkWindow *UmiGtk4AccountingPracticeCreate(GtkWindow *parent) {
     panel->generation = 1U; panel->busy = TRUE;
     umi_open_tms_accounting_book_init(&panel->book);
     GtkWindow *window = GTK_WINDOW(gtk_window_new()); g_object_ref(window);
+    UmiGtk4PrepareWindowInputLifetime(window);
     g_object_set_data_full(G_OBJECT(window), "umicom-accounting-practice", panel, Destroy);
     gtk_widget_set_name(GTK_WIDGET(window), "treasury.accounting.window");
     gtk_window_set_title(window, "Accounting batch — local practice");

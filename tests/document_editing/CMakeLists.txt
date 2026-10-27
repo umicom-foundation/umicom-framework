@@ -147,3 +147,23 @@ if(TARGET umicom_ui_gtk4)
             SKIP_RETURN_CODE 77 RUN_SERIAL TRUE LABELS "framework;document;gtk4;native;reload")
     endforeach()
 endif()
+
+# Focus is an explicit document operation. Exercise callback-driven changes
+# separately from source-location dialogs and preserve draft state throughout.
+if(TARGET umicom_ui_gtk4)
+    add_executable(umicom-document-focus-gtk4-test test_document_focus_gtk4.c)
+    target_link_libraries(umicom-document-focus-gtk4-test PRIVATE Umicom::ui_gtk4 Umicom::document)
+    umicom_apply_warnings(umicom-document-focus-gtk4-test)
+    umicom_apply_sanitizers(umicom-document-focus-gtk4-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-document-focus-gtk4-test)
+    endif()
+    foreach(case active changed-document unbind hidden-editor redirect)
+        add_test(NAME framework.document_focus.gtk4.${case}
+            COMMAND umicom-document-focus-gtk4-test ${case})
+        set_tests_properties(framework.document_focus.gtk4.${case} PROPERTIES
+            TIMEOUT 30 SKIP_RETURN_CODE 77 RUN_SERIAL TRUE
+            ENVIRONMENT "G_DEBUG=fatal-criticals"
+            LABELS "framework;document;gtk4;native;focus")
+    endforeach()
+endif()

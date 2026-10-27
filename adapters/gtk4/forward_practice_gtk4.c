@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "window_input_lifetime_private.h"
 #include "umicom/ui/gtk4/forward_practice.h"
 #include "umicom/ui/gtk4/automation.h"
 #include "umicom/open_tms/fx_forward_review.h"
@@ -318,6 +319,7 @@ GtkWindow *UmiGtk4ForwardPracticeCreate(GtkWindow *parent) {
     panel->generation = 1U; panel->busy = TRUE;
     umi_open_tms_fx_forward_book_init(&panel->book);
     GtkWindow *window = GTK_WINDOW(gtk_window_new());
+    UmiGtk4PrepareWindowInputLifetime(window);
     /* Keep construction alive if a native removal observer closes the host. */
     g_object_ref(window);
     g_object_set_data_full(G_OBJECT(window), "umicom-forward-practice", panel, Destroy);

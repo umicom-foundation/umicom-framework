@@ -111,6 +111,9 @@ if(NOT COMMAND umicom_apply_warnings)
     endfunction()
 endif()
 
+# The shared module checks compile/link support and carries sanitizer runtimes
+# through static-library consumers. Retain the former fallback for review.
+if(FALSE)
 # Define the local fallback only when the parent build did not provide the shared helper.
 if(NOT COMMAND umicom_apply_sanitizers)
     # Define the apply sanitizers build helper so parent and application projects apply one
@@ -128,6 +131,10 @@ if(NOT COMMAND umicom_apply_sanitizers)
         endif()
     endfunction()
 endif()
+
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/cmake/UmicomSanitizers.cmake")
+umicom_check_sanitizers()
 
 # -----------------------------------------------------------------------------
 # Base library
@@ -6256,3 +6263,12 @@ include(cmake/UmicomSourceSelection.cmake)
 # Reuse the finance SDK for logical financial messages and synthetic exercises.
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomFinancialMessaging.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomFinancialInbox.cmake")
+
+# Qualify the instrumentation policy without coupling it to GTK availability.
+if(BUILD_TESTING)
+    include("${CMAKE_CURRENT_LIST_DIR}/cmake/UmicomSanitizerTests.cmake")
+endif()
+
+if(BUILD_TESTING)
+    include("${CMAKE_CURRENT_LIST_DIR}/cmake/UmicomWindowInputLifetimeTests.cmake")
+endif()

@@ -13,6 +13,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "window_input_lifetime_private.h"
 #include "umicom/document/language_comment.h"
 #include "gtk4_internal.h"
 #include "umicom/ui/gtk4/automation.h"
@@ -799,6 +800,7 @@ UmiStatus UmiGtk4AdapterPromptDocumentLocation(UmiGtk4Adapter *adapter)
         g_object_unref(window);
         return UMI_STATUS_CANCELLED;
     }
+    UmiGtk4PrepareWindowInputLifetime(GTK_WINDOW(window));
     /* Keep the content alive until construction ends, even if a window observer
      * destroys the form before it becomes visible. The form owns it afterwards. */
     GtkWidget *root = g_object_ref_sink(gtk_box_new(GTK_ORIENTATION_VERTICAL, 12));
