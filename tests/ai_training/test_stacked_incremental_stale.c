@@ -1,4 +1,17 @@
-/* Umicom Framework | invalidate every cache session on model update. | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_incremental_stale.c
+ *
+ * PURPOSE:
+ *   Invalidate every cache session on model update.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "stacked_incremental_fixture.h"
 
 int main(void)

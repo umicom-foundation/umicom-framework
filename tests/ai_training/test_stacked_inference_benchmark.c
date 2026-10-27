@@ -1,6 +1,18 @@
-/* Umicom Framework | C23 paired benchmark acceptance | MIT
- * Includes rejection atomicity and first/repeated learned-position rollover.
- * AUTHOR: Sammy Hegab / Umicom Foundation */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_inference_benchmark.c
+ *
+ * PURPOSE:
+ *   C23 paired benchmark acceptance.
+ *   Includes rejection atomicity and first/repeated learned-position rollover.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "stacked_incremental_fixture.h"
 #include "umicom/ai/training/stacked_inference_benchmark.h"
 

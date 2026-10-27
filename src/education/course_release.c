@@ -1,8 +1,17 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework | Native C23 course publication quality gate
+ * Umicom Framework
  * File: src/education/course_release.c
- * Reuse Umicom Education's companion inspector; never rewrite published files.
- * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Native C23 course publication quality gate.
+ *   Reuse Umicom Education's companion inspector; never rewrite published files.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/education/course_release.h"
 

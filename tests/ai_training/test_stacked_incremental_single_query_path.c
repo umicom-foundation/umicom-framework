@@ -1,7 +1,18 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework | Multi-layer single-query session qualification
- * Covers growing prefix, first and repeated rollover, exact sampled IDs and
- * the observed query-row counter. Author: Sammy Hegab | MIT
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_incremental_single_query_path.c
+ *
+ * PURPOSE:
+ *   Multi-layer single-query session qualification.
+ *   Covers growing prefix, first and repeated rollover, exact sampled IDs and
+ *   the observed query-row counter.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "stacked_incremental_fixture.h"
 

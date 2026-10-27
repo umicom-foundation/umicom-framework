@@ -71,8 +71,19 @@ int main(int argc, char **argv)
     CHECK(gtk_widget_get_mapped(GTK_WIDGET(window)));
     gtk_window_set_focus(window, entry);
     CHECK(gtk_window_get_focus(window) != NULL);
+    /* Destroy-with-parent observes parent disposal. Keeping our extra parent
+     * reference prevented that signal; retain the old fixture for review.
+     * The child remains owned while its retired input is inspected. */
+#if 0
     if (parent != NULL) gtk_window_destroy(parent);
     else gtk_window_destroy(window);
+#endif
+    if (parent != NULL) {
+        gtk_window_destroy(parent);
+        g_clear_object(&parent);
+    } else gtk_window_destroy(window);
+    fprintf(stderr, "unrealize calls=%u surface=%d focus-cleared=%d\n",
+        observation.calls, observation.had_surface, observation.focus_cleared);
     CHECK(observation.calls == 1U && observation.had_surface && observation.focus_cleared);
     CHECK(!gtk_widget_get_realized(GTK_WIDGET(window)));
     CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(entry)), "retained input") == 0);

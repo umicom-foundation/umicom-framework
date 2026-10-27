@@ -285,6 +285,11 @@ GtkWidget *UmiTextExportGtk4CreateForBuffer(GtkTextBuffer *source, const char *s
     return ExportCreate(G_OBJECT(source), suggestedFilename);
 }
 
+/* Retained children can leave their original container. Retire their own
+ * controls as well as inherited sensitivity, and hold the composite through
+ * synchronous notifications that may release its last application reference.
+ * Keep the container-only implementation for review of the original contract. */
+#if 0
 void UmiTextExportGtk4Retire(GtkWidget *widget)
 {
     if (widget == NULL) return;
@@ -294,6 +299,22 @@ void UmiTextExportGtk4Retire(GtkWidget *widget)
     g_weak_ref_set(&export->source, NULL);
     g_signal_handlers_disconnect_by_data(export->save, export->root);
     gtk_widget_set_sensitive(widget, FALSE);
+}
+
+#endif
+void UmiTextExportGtk4Retire(GtkWidget *widget)
+{
+    if (widget == NULL) return;
+    TextExport *export = g_object_get_data(G_OBJECT(widget), "umicom-text-export");
+    if (export == NULL || export->retired) return;
+    g_object_ref(widget);
+    export->retired = true;
+    g_weak_ref_set(&export->source, NULL);
+    g_signal_handlers_disconnect_by_data(export->save, export->root);
+    gtk_widget_set_sensitive(export->save, FALSE);
+    gtk_widget_set_sensitive(export->path, FALSE);
+    gtk_widget_set_sensitive(widget, FALSE);
+    g_object_unref(widget);
 }
 
 bool UmiTextExportGtk4Busy(GtkWidget *widget)

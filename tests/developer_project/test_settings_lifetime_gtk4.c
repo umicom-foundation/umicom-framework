@@ -114,6 +114,13 @@ static void VisibilityChanged(GObject *object, GParamSpec *property, gpointer co
     if (!gtk_widget_get_visible(GTK_WIDGET(object)))
         Dispose(context);
 }
+/* Flush each boundary so a killed test retains its last completed phase.
+ * This is diagnostic evidence, not a timeout workaround or behaviour change. */
+static void Phase(const char *name)
+{
+    fprintf(stderr, "settings-lifetime phase: %s\n", name);
+    fflush(stderr);
+}
 int main(int argc, char **argv)
 {
     Probe probe = {0};
@@ -124,8 +131,10 @@ int main(int argc, char **argv)
     int failed = 0;
     CHECK(argc == 2);
     probe.mode = argv[1];
+    Phase("before-gtk-init");
     if (!gtk_init_check())
         return 77;
+    Phase("gtk-initialized");
     parent = GTK_WINDOW(gtk_window_new());
     g_object_ref(parent);
     umi_build_profile_init(&probe.profile);
@@ -142,7 +151,9 @@ int main(int argc, char **argv)
     else
     {
         if (strncmp(probe.mode, "prepare-", 8U) == 0) {
+            Phase("before-prepare");
             CHECK(UmiGtk4BuildSettingsDialogPrepare(parent, &probe.profile, 0, Applied, &probe, &probe.dialog) == UMI_STATUS_OK);
+            Phase("prepared");
             /* Prepared windows exist but cannot submit results before show. */
             GListModel *windows = gtk_window_get_toplevels();
             for (guint i = 0U; i < g_list_model_get_n_items(windows); ++i) {
@@ -162,13 +173,16 @@ int main(int argc, char **argv)
                 if (strcmp(probe.mode, "prepare-owner-close") == 0) CHECK(probe.dialog == NULL);
                 goto cleanup;
             }
+            Phase("before-present");
             CHECK(UmiGtk4DeveloperDialogPresent(probe.dialog) == UMI_STATUS_OK);
+            Phase("presented");
             g_clear_object(&form);
         } else {
         CHECK(UmiGtk4BuildSettingsDialogCreate(parent, &probe.profile, 0, Applied, &probe, &probe.dialog) ==
               UMI_STATUS_OK);
         }
     }
+    Phase("before-form-lookup");
     form = Form(parent);
     CHECK(form != NULL);
     probe.accept = Find(GTK_WIDGET(form), "developer.dialog.accept");
@@ -200,6 +214,7 @@ int main(int argc, char **argv)
             gtk_editable_set_text(GTK_EDITABLE(field), names[i]);
         }
     }
+    Phase("fields-populated");
     if (strcmp(probe.mode, "retained") == 0 || strcmp(probe.mode, "project-retained") == 0)
     {
         Dispose(&probe);
@@ -269,6 +284,7 @@ int main(int argc, char **argv)
         CHECK(probe.profile.preset[0] == '\0' && !probe.trusted);
     }
 cleanup:
+    Phase("cleanup");
     if (chooseParent != NULL) g_object_unref(chooseParent);
     if (form != NULL)
         g_signal_handlers_disconnect_by_data(form, &probe);
@@ -288,5 +304,6 @@ cleanup:
         failed = 1;
     g_free(projectRoot);
     g_free(scratch);
+    Phase("complete");
     return failed ? EXIT_FAILURE : EXIT_SUCCESS;
 }

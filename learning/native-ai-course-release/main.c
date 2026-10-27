@@ -1,4 +1,17 @@
-/* Native Umicom educational publishing preflight | Sammy Hegab | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: learning/native-ai-course-release/main.c
+ *
+ * PURPOSE:
+ *   Native Umicom educational publishing preflight.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/education/course_release.h"
 #include <stdio.h>
 #include <stdint.h>

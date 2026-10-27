@@ -1893,6 +1893,7 @@ add_library(umicom_browser STATIC
     src/browser/headless.c
     src/browser/policy.c
     src/browser/document_preview.c
+    src/browser/local_document.c
     src/browser/source_preview.c
 )
 add_library(Umicom::browser ALIAS umicom_browser)
@@ -1901,6 +1902,8 @@ target_link_libraries(umicom_browser PUBLIC
     Umicom::base
     Umicom::web
 )
+# Local previews reuse the platform file budget and stable-handle checks.
+target_link_libraries(umicom_browser PRIVATE Umicom::platform)
 target_include_directories(umicom_browser PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
@@ -4400,6 +4403,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-browser-tests framework.browser tests/test_browser.c)
     umicom_add_framework_test(umicom-browser-policy-tests framework.browser_policy tests/test_browser_policy.c)
     umicom_add_framework_test(umicom-browser-document-preview-tests framework.browser_document_preview tests/test_browser_document_preview.c)
+    umicom_add_framework_test(umicom-browser-local-document-tests framework.browser.local_document tests/browser/test_local_document.c)
     umicom_add_framework_test(umicom-browser-source-preview-tests framework.browser_source_preview tests/test_browser_source_preview.c)
     umicom_add_framework_test(umicom-chart-model-tests framework.chart_model tests/test_chart_model.c)
     umicom_add_framework_test(umicom-chart-indicator-tests framework.chart_indicator tests/test_chart_indicator.c)

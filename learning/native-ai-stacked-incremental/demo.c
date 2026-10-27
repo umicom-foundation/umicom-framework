@@ -1,6 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework | Native incremental-stack teaching demonstration
- * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation | MIT
+ * Umicom Framework
+ * File: learning/native-ai-stacked-incremental/demo.c
+ *
+ * PURPOSE:
+ *   Native incremental-stack teaching demonstration.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/stacked_kv_incremental.h"
 #include "umicom/ai/training/stacked_prefix_inference.h"

@@ -1,5 +1,18 @@
-/* Umicom Framework | compare true retained-K/V step logits AND projected K/V
- * against two independent calls to the original stacked decoder. | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_incremental_step_parity.c
+ *
+ * PURPOSE:
+ *   Compare true retained-K/V step logits AND projected K/V
+ *   against two independent calls to the original stacked decoder.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "stacked_incremental_fixture.h"
 
 static int TestLayerCount(uint32_t layers)

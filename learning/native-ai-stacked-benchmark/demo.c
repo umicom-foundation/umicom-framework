@@ -1,6 +1,18 @@
-/* Umicom Foundation / Sammy Hegab | MIT
- * Native comparative inference lab: identical model, prompt, seed and policy.
- * The times represent entire generation calls, not time to first token. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: learning/native-ai-stacked-benchmark/demo.c
+ *
+ * PURPOSE:
+ *   Native comparative inference lab: identical model, prompt, seed and policy.
+ *   The times represent entire generation calls, not time to first token.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/stacked_inference_benchmark.h"
 #include <inttypes.h>
 #include <stdio.h>

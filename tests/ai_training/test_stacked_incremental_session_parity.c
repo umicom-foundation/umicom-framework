@@ -1,5 +1,18 @@
-/* Umicom Framework | actual C23 stacked incremental vs unchanged canonical
- * growing-prefix sampler, including seeded nucleus policy. | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_incremental_session_parity.c
+ *
+ * PURPOSE:
+ *   Compare actual C23 stacked incremental sampling with the unchanged canonical
+ *   growing-prefix sampler, including seeded nucleus policy.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "stacked_incremental_fixture.h"
 
 static int Compare(uint32_t layers, size_t prefixCount,

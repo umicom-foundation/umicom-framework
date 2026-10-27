@@ -1,5 +1,18 @@
-/* Umicom Framework | atomic rejection of malformed requests and short buffers.
- * Existing model/output memory must remain unchanged. | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_incremental_rejections.c
+ *
+ * PURPOSE:
+ *   Atomic rejection of malformed requests and short buffers.
+ *   Existing model/output memory must remain unchanged.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "stacked_incremental_fixture.h"
 
 int main(void)

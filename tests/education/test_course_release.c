@@ -1,4 +1,17 @@
-/* Umicom Foundation / Sammy Hegab | Native C23 course gate acceptance | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/education/test_course_release.c
+ *
+ * PURPOSE:
+ *   Native C23 course gate acceptance.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/education/course_release.h"
 #include <stdio.h>
 #include <stdlib.h>

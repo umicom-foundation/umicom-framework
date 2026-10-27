@@ -17,3 +17,26 @@ if (field) {
   field.addEventListener("input", filterSources);
   filterSources();
 }
+
+/* Progressive enhancement: the teaching route stays readable without scripting.
+ * Filtering only changes visibility and never stores or transmits learner input. */
+{
+  const learningSearch = document.getElementById("learning-search");
+  const learningCount = document.getElementById("learning-count");
+  if (learningSearch && learningCount) {
+    const topics = Array.from(document.querySelectorAll("[data-learning-topic]"));
+    const filterLearning = () => {
+      const query = learningSearch.value.trim().toLocaleLowerCase("en-GB");
+      let shown = 0;
+      for (const topic of topics) {
+        const matches = !query || topic.textContent.toLocaleLowerCase("en-GB").includes(query);
+        topic.hidden = !matches;
+        if (matches) shown += 1;
+      }
+      learningCount.textContent = shown ? `${shown} of ${topics.length} topics shown` :
+        "No matching topics. Try a shorter word or clear the search.";
+    };
+    learningSearch.addEventListener("input", filterLearning);
+    filterLearning();
+  }
+}

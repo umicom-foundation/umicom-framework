@@ -46,6 +46,9 @@ GtkWidget *UmiTextExportGtk4CreateForBuffer(GtkTextBuffer *source, const char *s
  * @param widget Export control, or NULL.
  * @details Idempotent, main-thread operation. An already accepted immutable write
  * may finish; it cannot access the source widget or an application service.
+ * The Save button and destination entry are explicitly disabled, including
+ * retained controls moved outside the composite. Their capture callback is
+ * disconnected before notifications; programmatic clicks cannot restart work.
  */
 void UmiTextExportGtk4Retire(GtkWidget *widget);
 

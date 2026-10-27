@@ -123,7 +123,7 @@ if(COMMAND umicom_apply_sanitizers)
     umicom_apply_sanitizers(umicom-os-profile-tests)
 endif()
 
-foreach(_profile_cli_case IN ITEMS valid unicode space malformed missing extra-option duplicate)
+foreach(_profile_cli_case IN ITEMS valid unicode space crlf malformed missing extra-option duplicate)
     add_test(NAME "framework.os_image.profile_cli.${_profile_cli_case}"
         COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:umicom-os-image>"
             "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/profile-cli-${_profile_cli_case}"

@@ -1,4 +1,17 @@
-/* Umicom Framework | learned-position rollover must rebuild every layer. | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: tests/ai_training/test_stacked_incremental_rollover.c
+ *
+ * PURPOSE:
+ *   Learned-position rollover must rebuild every layer.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "stacked_incremental_fixture.h"
 
 int main(void)

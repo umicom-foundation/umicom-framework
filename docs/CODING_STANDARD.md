@@ -350,3 +350,43 @@ unbound. Check current availability at dispatch and recheck the weak owner after
 observable callbacks. If the API reports cancellation when a callback closes its
 host, regression tests must expect that native completion while still checking
 that rejected work neither changed source files nor launched a process.
+
+## Bounded reads, native retirement and qualification evidence
+
+Enforce input limits on the open handle used for reading. A pathname size check
+followed by a separate unbounded read can allocate more than the reviewed budget.
+Specify whether parent aliases are trusted and which observable file changes are
+detected. Do not describe metadata comparison as proof against every concurrent writer.
+For text APIs, reject embedded zero bytes rather than accepting silent truncation.
+
+UTF-8 repair can increase byte length. Keep repaired output valid through every
+subsequent formatting step; a fixed-size snprintf can split a repaired character.
+Use a bounded allocation or an explicitly character-safe truncation operation.
+Cover a title whose repaired form is larger than the original capacity, and check
+the final native label as well as the intermediate buffer.
+
+Retiring a composite control must revoke child action authority, even if a caller
+retains or reparents a child. The child's own sensitivity and its inherited
+effective sensitivity are different states. Set the retirement guard before
+observable setters, retain needed objects through notifications and disconnect or
+reject late callbacks. Tests should cover reentrant retirement and moved controls.
+
+A retained native parent reference can delay object disposal after window
+destruction. Release fixture-owned references at the documented boundary before
+asserting disposal-dependent behavior. Keep a separate reference to the object
+whose post-disposal behavior the test intentionally examines.
+
+Write protocol fixtures using explicit line-ending rules. A host's native text
+newline may be invalid input to a deliberately LF-only format. Check both the
+accepted canonical bytes and the separate CRLF refusal without weakening the
+production parser.
+
+For nested qualification, budget the enclosing test for every bounded subprocess
+it invokes. Preserve a deadline on each subprocess; increasing only the outer
+limit does not cure a genuinely stuck inner command. An unexplained delay still
+needs phase evidence and a root-cause investigation.
+
+Source and artifact manifests must inventory only their owned outputs. Recursive
+searches can accidentally capture temporary contract fixtures during parallel
+tests and create false identity mismatches. Test parallel fixture isolation and
+keep source identity, successful linking and executed runtime results separate.

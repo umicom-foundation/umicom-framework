@@ -57,6 +57,21 @@ UmiStatus umi_browser_document_preview_from_html(
     size_t html_size,
     UmiBrowserDocumentPreview *out_preview);
 
+/**
+ * Read one ordinary local HTML file through the bounded platform reader, then
+ * extract its visible preview. The path must be absolute and maximum_bytes
+ * must be nonzero. The open file is checked before allocation and after reading;
+ * observable changes are rejected; undetectable concurrent writes remain outside
+ * this guarantee. Embedded NUL bytes are refused as invalid input.
+ * Failures preserve out_preview. Parent directories must be trusted: this is
+ * not a workspace sandbox. Text is byte-oriented; native views must validate
+ * or repair UTF-8 before displaying it. Reading may block the calling thread.
+ */
+UmiStatus umi_browser_document_preview_read_file(
+    const char *absolute_path,
+    size_t maximum_bytes,
+    UmiBrowserDocumentPreview *out_preview);
+
 #ifdef __cplusplus
 }
 #endif

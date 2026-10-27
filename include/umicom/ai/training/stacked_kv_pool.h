@@ -52,6 +52,16 @@ typedef struct UmiAiTrainingStackedKvPoolStats {
     size_t rawKvBudgetBytes;
     uint64_t totalAcquisitions;
     uint64_t totalReleases;
+    /* Appended fields preserve the existing source-level statistic names.
+     * Physical raw bytes include active and retained idle K/V stores; they
+     * exclude allocator overhead, metadata, and model/tape allocations. */
+    size_t idleStores;
+    size_t idleRawKvBytes;
+    size_t physicalRawKvBytes;
+    size_t peakPhysicalRawKvBytes;
+    size_t maximumIdleStores;
+    uint64_t newStoreAllocations;
+    uint64_t idleStoreReuses;
 } UmiAiTrainingStackedKvPoolStats;
 
 /* Validate the bounded stacked-model shape, real storage implementation and
@@ -72,8 +82,26 @@ UmiStatus UmiAiTrainingStackedKvPoolAcquire(
     UmiAiTrainingStackedKvPool *pool,
     UmiAiTrainingStackedKvLease *outLease);
 
-/* Release the owned store, invalidate the lease and free its reservation.
- * A stale, already-released or foreign-pool lease cannot release another. */
+/* Configure opt-in idle retention on an EXISTING pool. The default is zero,
+ * preserving the original allocate-on-acquire/destroy-on-release behaviour.
+ * A released store is reset by the existing Framework K/V store before it
+ * becomes idle. Idle stores retain their heap allocation but NO token/K/V
+ * state, do not have a valid active lease, and can be reused by subsequent
+ * Acquire calls. The pool remains caller-serialised; borrowed store pointers
+ * must not be retained after Release, even when memory stays allocated.
+ *
+ * Lowering the limit discards excess idle stores without touching active
+ * sessions. Zero disables retention and trims all idle stores. Rejected
+ * limits leave the pool and all its stores unchanged. Standard C memset in
+ * the store is not a guaranteed secure erase against memory forensics. */
+UmiStatus UmiAiTrainingStackedKvPoolSetIdleRetention(
+    UmiAiTrainingStackedKvPool *pool, size_t maximumIdleStores);
+
+/* Release the owned store, invalidate the lease and free its ACTIVE
+ * reservation. If idle retention is enabled, a successfully reset store may
+ * keep its physical allocation under the same pool K/V budget. Otherwise the
+ * existing physical deallocation behaviour is unchanged. A stale,
+ * already-released or foreign-pool lease cannot release another. */
 UmiStatus UmiAiTrainingStackedKvPoolRelease(
     UmiAiTrainingStackedKvPool *pool,
     UmiAiTrainingStackedKvLease lease);

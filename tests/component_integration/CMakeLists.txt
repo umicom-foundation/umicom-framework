@@ -33,6 +33,9 @@ foreach(_case IN ITEMS deferred immediate mixed repeated missing partial tests_o
     set_tests_properties(framework.component_integration.${_case} PROPERTIES
         TIMEOUT 240 PROCESSORS 2 LABELS "component-integration;configure;native")
     endif()
+    # All workflows need a budget for each bounded stage. Retain the earlier
+    # exception-based deadlines for review.
+    if(FALSE)
     set(_case_timeout 240)
     # The original exception handled repeated explicit reconfiguration only.
     # Keep it for review; automatic regeneration also adds a second build and
@@ -46,8 +49,24 @@ foreach(_case IN ITEMS deferred immediate mixed repeated missing partial tests_o
     if(_case STREQUAL "reconfigure" OR _case STREQUAL "regenerate")
         set(_case_timeout 900)
     endif()
+    endif()
+    # Ordinary cases configure, build, inspect inventory and run nested tests.
+    # Extra operations each keep their 180-second subprocess deadline. Sum
+    # those bounds and add cleanup slack instead of terminating passing stages.
+    set(_stage_count 4)
+    if(_case STREQUAL "missing" OR _case STREQUAL "tests_off")
+        set(_stage_count 3)
+    elseif(_case STREQUAL "reconfigure")
+        math(EXPR _stage_count "4 + 4 * 3")
+    elseif(_case STREQUAL "regenerate")
+        math(EXPR _stage_count "4 + 3")
+    elseif(_case STREQUAL "installed")
+        math(EXPR _stage_count "4 + 4")
+    endif()
+    math(EXPR _case_timeout "${_stage_count} * 180 + 30")
     set_tests_properties(framework.component_integration.${_case} PROPERTIES
         TIMEOUT ${_case_timeout} PROCESSORS 2 LABELS "component-integration;configure;native")
 endforeach()
+unset(_stage_count)
 unset(_case_timeout)
 unset(_umi_composition_root)

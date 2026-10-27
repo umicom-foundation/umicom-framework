@@ -12,7 +12,7 @@ install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/ui/gtk4/text_export.h
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/guides/saving-displayed-reports.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides" COMPONENT Framework)
 if(BUILD_TESTING)
-    foreach(kind IN ITEMS native failures)
+    foreach(kind IN ITEMS native failures retirement)
         add_executable(umicom-text-export-${kind}-test
             "${CMAKE_CURRENT_LIST_DIR}/../tests/text_export/test_${kind}.c")
         target_link_libraries(umicom-text-export-${kind}-test PRIVATE Umicom::ui_gtk4 Umicom::platform)

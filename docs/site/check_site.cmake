@@ -13,7 +13,7 @@ function(RequireText text needle)
     endif()
 endfunction()
 if(CASE STREQUAL "pages")
-    foreach(_path IN ITEMS DEVELOPMENT_WORKFLOW.html wiki/development-workflow.html CLOSING_MULTIPLE_DOCUMENTS.html wiki/closing-multiple-documents.html CLOSING_DOCUMENTS.html wiki/closing-documents.html wiki/save-progress.html WORKFLOW_TOOLS.html wiki/workflow-tools.html studio/WORKFLOW_TOOLS.html trader/WORKFLOW_TOOLS.html desktop/WORKFLOW_TOOLS.html bank/WORKFLOW_TOOLS.html tms/WORKFLOW_TOOLS.html index.html getting-started.html products.html downloads.html
+    foreach(_path IN ITEMS sdk.html learning.html wiki/local-document-preview.html wiki/introduction-to-framework.html wiki/introduction-to-c.html wiki/introduction-to-cmake.html wiki/introduction-to-gtk4.html DEVELOPMENT_WORKFLOW.html wiki/development-workflow.html CLOSING_MULTIPLE_DOCUMENTS.html wiki/closing-multiple-documents.html CLOSING_DOCUMENTS.html wiki/closing-documents.html wiki/save-progress.html WORKFLOW_TOOLS.html wiki/workflow-tools.html studio/WORKFLOW_TOOLS.html trader/WORKFLOW_TOOLS.html desktop/WORKFLOW_TOOLS.html bank/WORKFLOW_TOOLS.html tms/WORKFLOW_TOOLS.html index.html getting-started.html products.html downloads.html
             publishing.html contributing.html SAVING_DOCUMENTS.html wiki/saving-documents.html source-map.html wiki/index.html wiki/source-navigation.html wiki/action-recovery.html wiki/command-feedback.html COMMAND_FEEDBACK.html wiki/editing-documents.html EDITING_DOCUMENTS.html studio/EDIT_COMMANDS.html
             GUI_RECORDING.html GUI_CONTROL_CHECKS.html GUI_CHECK_SESSIONS.html wiki/gui-check-sessions.html wiki/gui-control-checks.html wiki/gui-recording.html wiki/reloading-files.html wiki/comparing-saved-files.html wiki/working-copies.html wiki/compiler-diagnostics.html wiki/components.html wiki/project-files.html wiki/file-refresh.html wiki/find-in-files.html
             studio/index.html trader/index.html desktop/index.html bank/index.html
@@ -39,6 +39,7 @@ elseif(CASE STREQUAL "catalogue")
     RequireText("${_map}" "include/umicom/ui/components/component.h")
 elseif(CASE STREQUAL "examples")
     foreach(_pair IN ITEMS "build_diagnostics/main.c|compiler-diagnostics.html"
+            "document_preview/main.c|local-document-preview.html"
             "editor_workflow/complete_document.c|working-copies.html"
             "project_files/main.c|project-files.html"
             "project_files/refresh.c|file-refresh.html"

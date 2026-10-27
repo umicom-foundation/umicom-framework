@@ -24,6 +24,9 @@
 typedef struct KvPoolSlot {
     UmiAiTrainingStackedKvStore *store;
     uint64_t generation;
+    /* A retained but inactive store is invisible to every active lease.
+     * The original default remains inactive == missing store. */
+    int active;
 } KvPoolSlot;
 
 struct UmiAiTrainingStackedKvPool {
@@ -60,8 +63,14 @@ static KvPoolSlot *PoolLookup(UmiAiTrainingStackedKvPool *pool,
         lease.generation == 0U ||
         lease.slotIndex >= pool->config.maximumSessions) return NULL;
     KvPoolSlot *slot = &pool->slots[lease.slotIndex];
+    /* Historical lookup did not require an active flag because every
+     * released slot was immediately destroyed. Retained for code review. */
+#if 0
     return slot->store != NULL && slot->generation == lease.generation ?
            slot : NULL;
+#endif
+    return slot->store != NULL && slot->active &&
+           slot->generation == lease.generation ? slot : NULL;
 }
 
 static const KvPoolSlot *PoolLookupConst(
@@ -72,8 +81,14 @@ static const KvPoolSlot *PoolLookupConst(
         lease.generation == 0U ||
         lease.slotIndex >= pool->config.maximumSessions) return NULL;
     const KvPoolSlot *slot = &pool->slots[lease.slotIndex];
+    /* Historical lookup did not require an active flag because every
+     * released slot was immediately destroyed. Retained for code review. */
+#if 0
     return slot->store != NULL && slot->generation == lease.generation ?
            slot : NULL;
+#endif
+    return slot->store != NULL && slot->active &&
+           slot->generation == lease.generation ? slot : NULL;
 }
 
 UmiStatus UmiAiTrainingStackedKvPoolCreate(
@@ -150,6 +165,11 @@ void UmiAiTrainingStackedKvPoolDestroy(UmiAiTrainingStackedKvPool *pool)
     free(pool);
 }
 
+/* Claim an idle store BEFORE allocating another one. Release has already
+ * called the canonical store Reset, so its previous K/V and prompt rows are
+ * no longer available. No other code may use a borrowed pointer past Release.
+ * Physical bytes remain reserved while idle; active bytes only rise when a
+ * lease is published. No shared-prefix or cross-session state is reused. */
 UmiStatus UmiAiTrainingStackedKvPoolAcquire(
     UmiAiTrainingStackedKvPool *pool,
     UmiAiTrainingStackedKvLease *outLease)
@@ -161,6 +181,41 @@ UmiStatus UmiAiTrainingStackedKvPoolAcquire(
         bytes > SIZE_MAX - pool->stats.reservedRawKvBytes ||
         (pool->config.rawKvBudgetBytes != 0U &&
          bytes > pool->config.rawKvBudgetBytes - pool->stats.reservedRawKvBytes))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    /* All stores share immutable shape and checkpoint-binding configuration.
+     * Reusing an idle store consumes no additional physical K/V payload. */
+    for (size_t i = 0U; i < pool->config.maximumSessions; ++i) {
+        KvPoolSlot *slot = &pool->slots[i];
+        if (slot->store == NULL || slot->active ||
+            slot->generation == UINT64_MAX) continue;
+        if (pool->stats.idleStoreReuses == UINT64_MAX)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        --pool->stats.idleStores;
+        pool->stats.idleRawKvBytes -= bytes;
+        pool->stats.reservedRawKvBytes += bytes;
+        ++pool->stats.activeSessions;
+        ++pool->stats.totalAcquisitions;
+        ++pool->stats.idleStoreReuses;
+        ++slot->generation;
+        slot->active = 1;
+        if (pool->stats.activeSessions > pool->stats.peakActiveSessions)
+            pool->stats.peakActiveSessions = pool->stats.activeSessions;
+        if (pool->stats.reservedRawKvBytes >
+            pool->stats.peakReservedRawKvBytes)
+            pool->stats.peakReservedRawKvBytes =
+                pool->stats.reservedRawKvBytes;
+        *outLease = (UmiAiTrainingStackedKvLease){
+            pool->identity, slot->generation, i};
+        return UMI_STATUS_OK;
+    }
+
+    /* With no suitable idle store, physical memory can only increase. Check
+     * ACTIVE + IDLE payload against the raw budget BEFORE allocating. */
+    if (pool->stats.newStoreAllocations == UINT64_MAX ||
+        bytes > SIZE_MAX - pool->stats.physicalRawKvBytes ||
+        (pool->config.rawKvBudgetBytes != 0U &&
+         bytes > pool->config.rawKvBudgetBytes - pool->stats.physicalRawKvBytes))
         return UMI_STATUS_CAPACITY_EXCEEDED;
 
     for (size_t i = 0U; i < pool->config.maximumSessions; ++i) {
@@ -177,22 +232,51 @@ UmiStatus UmiAiTrainingStackedKvPoolAcquire(
                 return UMI_STATUS_INVALID_STATE;
             }
             slot->store = created;
+            slot->active = 1;
             ++slot->generation;
             ++pool->stats.activeSessions;
             ++pool->stats.totalAcquisitions;
+            ++pool->stats.newStoreAllocations;
             pool->stats.reservedRawKvBytes += bytes;
+            pool->stats.physicalRawKvBytes += bytes;
             if (pool->stats.activeSessions > pool->stats.peakActiveSessions)
                 pool->stats.peakActiveSessions = pool->stats.activeSessions;
             if (pool->stats.reservedRawKvBytes >
                 pool->stats.peakReservedRawKvBytes)
                 pool->stats.peakReservedRawKvBytes =
                     pool->stats.reservedRawKvBytes;
+            if (pool->stats.physicalRawKvBytes >
+                pool->stats.peakPhysicalRawKvBytes)
+                pool->stats.peakPhysicalRawKvBytes =
+                    pool->stats.physicalRawKvBytes;
             *outLease = (UmiAiTrainingStackedKvLease){
                 pool->identity, slot->generation, i};
             return UMI_STATUS_OK;
         }
     }
     return UMI_STATUS_CAPACITY_EXCEEDED;
+}
+
+/* An explicit retention change never invalidates an ACTIVE lease. All idle
+ * stores are already reset; there are no outstanding leases to their slots. */
+UmiStatus UmiAiTrainingStackedKvPoolSetIdleRetention(
+    UmiAiTrainingStackedKvPool *pool, size_t maximumIdleStores)
+{
+    if (pool == NULL || maximumIdleStores > pool->config.maximumSessions)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    pool->stats.maximumIdleStores = maximumIdleStores;
+    for (size_t i = pool->config.maximumSessions;
+         i > 0U && pool->stats.idleStores > maximumIdleStores; --i) {
+        KvPoolSlot *slot = &pool->slots[i - 1U];
+        if (slot->store != NULL && !slot->active) {
+            UmiAiTrainingStackedKvStoreDestroy(slot->store);
+            slot->store = NULL;
+            --pool->stats.idleStores;
+            pool->stats.idleRawKvBytes -= pool->stats.rawKvBytesPerSession;
+            pool->stats.physicalRawKvBytes -= pool->stats.rawKvBytesPerSession;
+        }
+    }
+    return UMI_STATUS_OK;
 }
 
 UmiStatus UmiAiTrainingStackedKvPoolRelease(
@@ -203,8 +287,22 @@ UmiStatus UmiAiTrainingStackedKvPoolRelease(
     if (slot == NULL) return UMI_STATUS_INVALID_STATE;
     if (pool->stats.totalReleases == UINT64_MAX)
         return UMI_STATUS_CAPACITY_EXCEEDED;
-    UmiAiTrainingStackedKvStoreDestroy(slot->store);
-    slot->store = NULL;
+    /* A reset makes every previous token, K/V row and prefix-work counter
+     * inaccessible before this store is made available for another lease.
+     * Release remains failure-atomic if the underlying Reset ever rejects. */
+    const int retain = pool->stats.idleStores < pool->stats.maximumIdleStores &&
+                       slot->generation != UINT64_MAX;
+    if (retain) {
+        const UmiStatus resetStatus = UmiAiTrainingStackedKvStoreReset(slot->store);
+        if (resetStatus != UMI_STATUS_OK) return resetStatus;
+        ++pool->stats.idleStores;
+        pool->stats.idleRawKvBytes += pool->stats.rawKvBytesPerSession;
+    } else {
+        UmiAiTrainingStackedKvStoreDestroy(slot->store);
+        slot->store = NULL;
+        pool->stats.physicalRawKvBytes -= pool->stats.rawKvBytesPerSession;
+    }
+    slot->active = 0;
     --pool->stats.activeSessions;
     ++pool->stats.totalReleases;
     pool->stats.reservedRawKvBytes -= pool->stats.rawKvBytesPerSession;
@@ -317,3 +415,72 @@ UmiStatus UmiAiTrainingStackedKvPoolRead(
            UmiAiTrainingStackedKvStoreRead(slot->store, layerIndex, tokenIndex,
                outKey, keyCapacity, outValue, valueCapacity);
 }
+
+/* The original allocate-on-Acquire and destroy-on-Release implementation is
+ * preserved verbatim below for review. Opt-in idle retention needs an active
+ * flag, Reset-before-publish and physical active+idle accounting. With idle
+ * retention == 0, the public lifecycle preserves this original behaviour.
+ * Do not enable these duplicate legacy definitions in a normal build. */
+#if 0
+UmiStatus UmiAiTrainingStackedKvPoolAcquire(
+    UmiAiTrainingStackedKvPool *pool,
+    UmiAiTrainingStackedKvLease *outLease)
+{
+    if (pool == NULL || outLease == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    const size_t bytes = pool->stats.rawKvBytesPerSession;
+    if (pool->stats.activeSessions == pool->config.maximumSessions ||
+        pool->stats.totalAcquisitions == UINT64_MAX ||
+        bytes > SIZE_MAX - pool->stats.reservedRawKvBytes ||
+        (pool->config.rawKvBudgetBytes != 0U &&
+         bytes > pool->config.rawKvBudgetBytes - pool->stats.reservedRawKvBytes))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    for (size_t i = 0U; i < pool->config.maximumSessions; ++i) {
+        KvPoolSlot *slot = &pool->slots[i];
+        if (slot->store == NULL && slot->generation != UINT64_MAX) {
+            UmiAiTrainingStackedKvStore *created = NULL;
+            UmiAiTrainingStackedKvStoreInfo info = {0};
+            UmiStatus status = UmiAiTrainingStackedKvStoreCreate(
+                &pool->config.store, &created);
+            if (status != UMI_STATUS_OK) return status;
+            status = UmiAiTrainingStackedKvStoreInspect(created, &info);
+            if (status != UMI_STATUS_OK || info.reservedKvBytes != bytes) {
+                UmiAiTrainingStackedKvStoreDestroy(created);
+                return UMI_STATUS_INVALID_STATE;
+            }
+            slot->store = created;
+            ++slot->generation;
+            ++pool->stats.activeSessions;
+            ++pool->stats.totalAcquisitions;
+            pool->stats.reservedRawKvBytes += bytes;
+            if (pool->stats.activeSessions > pool->stats.peakActiveSessions)
+                pool->stats.peakActiveSessions = pool->stats.activeSessions;
+            if (pool->stats.reservedRawKvBytes >
+                pool->stats.peakReservedRawKvBytes)
+                pool->stats.peakReservedRawKvBytes =
+                    pool->stats.reservedRawKvBytes;
+            *outLease = (UmiAiTrainingStackedKvLease){
+                pool->identity, slot->generation, i};
+            return UMI_STATUS_OK;
+        }
+    }
+    return UMI_STATUS_CAPACITY_EXCEEDED;
+}
+
+UmiStatus UmiAiTrainingStackedKvPoolRelease(
+    UmiAiTrainingStackedKvPool *pool,
+    UmiAiTrainingStackedKvLease lease)
+{
+    KvPoolSlot *slot = PoolLookup(pool, lease);
+    if (slot == NULL) return UMI_STATUS_INVALID_STATE;
+    if (pool->stats.totalReleases == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiAiTrainingStackedKvStoreDestroy(slot->store);
+    slot->store = NULL;
+    --pool->stats.activeSessions;
+    ++pool->stats.totalReleases;
+    pool->stats.reservedRawKvBytes -= pool->stats.rawKvBytesPerSession;
+    return UMI_STATUS_OK;
+}
+
+#endif /* Historical pool acquisition and release implementation. */

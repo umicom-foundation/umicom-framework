@@ -37,7 +37,7 @@ if(NOT TARGET umicom_ai_stacked_kv_pool)
     endif()
 endif()
 if(BUILD_TESTING)
-    foreach(_case IN ITEMS lifecycle budget rollover rejections)
+    foreach(_case IN ITEMS lifecycle budget rollover rejections idle_reuse idle_trim idle_budget idle_stale)
         set(_test "umicom-ai-stacked-kv-pool-${_case}-test")
         if(NOT TARGET "${_test}")
             add_executable("${_test}"

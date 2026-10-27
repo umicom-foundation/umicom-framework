@@ -265,6 +265,12 @@ UmiSiteEscape("${_example}" UMICOM_SITE_EDITOR_LINK_EXAMPLE)
 configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/LIBRARY_LINK_CHECKS.html"
     "${UMICOM_SITE_OUTPUT}/LIBRARY_LINK_CHECKS.html" COPYONLY)
 
+# Include the actual SDK caller so the guide cannot silently drift from its source.
+set(_local_document_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/document_preview/main.c")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_local_document_example}")
+file(READ "${_local_document_example}" _example)
+UmiSiteEscape("${_example}" UMICOM_SITE_LOCAL_DOCUMENT_EXAMPLE)
+
 file(GLOB_RECURSE _pages CONFIGURE_DEPENDS LIST_DIRECTORIES FALSE
     RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}/pages" "${CMAKE_CURRENT_SOURCE_DIR}/pages/*")
 foreach(_page IN LISTS _pages)

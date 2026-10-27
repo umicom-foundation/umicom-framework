@@ -1,7 +1,16 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework | Single-query versus real canonical tape forward
- * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation
- * LICENCE: MIT
+ * Umicom Framework
+ * File: tests/ai_training/test_single_query_tape_parity.c
+ *
+ * PURPOSE:
+ *   Single-query versus real canonical tape forward.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/single_query_attention.h"
 #include "umicom/ai/training/tape.h"
