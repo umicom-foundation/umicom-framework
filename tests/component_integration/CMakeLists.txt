@@ -9,6 +9,7 @@
 #-----------------------------------------------------------------------------
 # Use include(), not add_subdirectory(): this registration may itself be late.
 include_guard(GLOBAL)
+include("${CMAKE_CURRENT_LIST_DIR}/../support/qualification_deadlines.cmake")
 get_filename_component(_umi_composition_root "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
 foreach(_case IN ITEMS deferred immediate mixed repeated missing partial tests_off reconfigure regenerate installed)
     add_test(NAME framework.component_integration.${_case}
@@ -50,6 +51,9 @@ foreach(_case IN ITEMS deferred immediate mixed repeated missing partial tests_o
         set(_case_timeout 900)
     endif()
     endif()
+    # Retain the uniform stage model for review. Builds and nested suites
+    # now use separate budgets shared with the executing subprocesses.
+    #[=[
     # Ordinary cases configure, build, inspect inventory and run nested tests.
     # Extra operations each keep their 180-second subprocess deadline. Sum
     # those bounds and add cleanup slack instead of terminating passing stages.
@@ -64,9 +68,23 @@ foreach(_case IN ITEMS deferred immediate mixed repeated missing partial tests_o
         math(EXPR _stage_count "4 + 4")
     endif()
     math(EXPR _case_timeout "${_stage_count} * 180 + 30")
+    ]=]
+    umicom_component_integration_timeout(_case_timeout "${_case}")
     set_tests_properties(framework.component_integration.${_case} PROPERTIES
         TIMEOUT ${_case_timeout} PROCESSORS 2 LABELS "component-integration;configure;native")
 endforeach()
 unset(_stage_count)
 unset(_case_timeout)
 unset(_umi_composition_root)
+# Policy regression checks do not invoke a compiler or a nested build.
+foreach(_policy IN ITEMS valid unknown-stage unknown-case empty-workflow)
+    add_test(NAME framework.component_integration.deadlines.${_policy}
+        COMMAND "${CMAKE_COMMAND}" "-DMODE=${_policy}"
+        -P "${CMAKE_CURRENT_LIST_DIR}/check_deadlines.cmake")
+    set_tests_properties(framework.component_integration.deadlines.${_policy}
+        PROPERTIES TIMEOUT 10 LABELS "component-integration;deadline;native")
+    if(NOT _policy STREQUAL "valid")
+        set_tests_properties(framework.component_integration.deadlines.${_policy}
+            PROPERTIES WILL_FAIL TRUE)
+    endif()
+endforeach()

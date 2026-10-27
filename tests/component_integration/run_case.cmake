@@ -39,18 +39,27 @@ set(_build "${RUN}/b p")
 file(COPY "${CMAKE_CURRENT_LIST_DIR}/probe/" DESTINATION "${_source}")
 get_filename_component(_cmake_directory "${CMAKE_COMMAND}" DIRECTORY)
 find_program(_ctest NAMES ctest HINTS "${_cmake_directory}" NO_DEFAULT_PATH REQUIRED)
+include("${CMAKE_CURRENT_LIST_DIR}/../support/qualification_deadlines.cmake")
 function(Execute step)
+    umicom_qualification_stage_timeout(_deadline "${step}")
     # Identify the running stage before waiting; retain complete logs below.
-    message(STATUS "Integration stage ${step}; logs: ${RUN}")
+    message(STATUS "Integration stage ${step}; deadline ${_deadline}s; logs: ${RUN}")
     string(TIMESTAMP _started "%s" UTC)
+    # A build with hundreds of compile/link operations needs its own budget.
+    # Retain the former uniform deadline for review.
+    #[=[
     execute_process(COMMAND ${ARGN}
         RESULT_VARIABLE _status OUTPUT_FILE "${RUN}/${step}.out.txt"
         ERROR_FILE "${RUN}/${step}.err.txt" TIMEOUT 180)
+    ]=]
+    execute_process(COMMAND ${ARGN}
+        RESULT_VARIABLE _status OUTPUT_FILE "${RUN}/${step}.out.txt"
+        ERROR_FILE "${RUN}/${step}.err.txt" TIMEOUT ${_deadline})
     string(TIMESTAMP _finished "%s" UTC)
     math(EXPR _elapsed "${_finished}-${_started}")
     # Append observations instead of hiding which bounded step consumed time.
     # The outer CTest deadline remains separate from each subprocess deadline.
-    file(APPEND "${RUN}/stage-times.tsv" "${step}\t${_elapsed}\t${_status}\n")
+    file(APPEND "${RUN}/stage-times.tsv" "${step}\t${_elapsed}\t${_status}\tdeadline=${_deadline}\n")
     message(STATUS "Integration stage ${step} finished in ${_elapsed}s (${_status})")
     if(NOT "${_status}" STREQUAL "0")
         file(READ "${RUN}/${step}.err.txt" _error LIMIT 4096)

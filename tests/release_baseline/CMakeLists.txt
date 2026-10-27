@@ -44,3 +44,14 @@ if(UMICOM_RELEASE_BASELINE_COMPOSITION_TESTS)
     endforeach()
 endif()
 set_tests_properties(${_release_test_names} PROPERTIES TIMEOUT 90 LABELS "framework;release-baseline;FW-01")
+# Ordinary checks keep the 90-second limit above. Composition additionally
+# configures and builds a standalone product before running its nested suite.
+include("${CMAKE_CURRENT_LIST_DIR}/../support/qualification_deadlines.cmake")
+if(UMICOM_RELEASE_BASELINE_COMPOSITION_TESTS)
+    umicom_qualification_workflow_timeout(_release_composition_timeout configure build tests)
+    foreach(_mode IN ITEMS OFF ON)
+        set_tests_properties(framework.release_baseline.composition.${_mode}
+            PROPERTIES TIMEOUT ${_release_composition_timeout} PROCESSORS 2)
+    endforeach()
+    unset(_release_composition_timeout)
+endif()

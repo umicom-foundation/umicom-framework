@@ -413,6 +413,23 @@ inspect:
                                                             : "pu";
     CHECK(length == strlen(expected) && strcmp(text, expected) == 0);
 cleanup:
+    /* Report the owning review's transport result before retirement removes
+     * its widgets. A missing dropdown alone cannot distinguish peer startup,
+     * protocol rejection, stale source and shutdown failures. Keep assertions
+     * strict: diagnostic output is not a retry or a successful navigation. */
+    if (failed && dialog != NULL)
+    {
+        GtkWidget *message = Find(GTK_WIDGET(dialog), "document.completion.message");
+        GtkWidget *choices = Find(GTK_WIDGET(dialog), "document.completion.choice");
+        GListModel *model = GTK_IS_DROP_DOWN(choices)
+                               ? gtk_drop_down_get_model(GTK_DROP_DOWN(choices)) : NULL;
+        fprintf(stderr, "Navigation fixture mode=%s completed=%u callback-status=%d pending=%d model=%s\n",
+                mode, result.count, (int)result.status,
+                g_object_get_data(G_OBJECT(dialog), "umicom-completion-pending") != NULL,
+                model == NULL ? "absent" : "present");
+        if (GTK_IS_LABEL(message))
+            fprintf(stderr, "Navigation review: %s\n", gtk_label_get_text(GTK_LABEL(message)));
+    }
     UmiUiDocumentViewModelFreeText(text);
     if (adapter != NULL)
         (void)UmiGtk4AdapterBindDocumentEditing(adapter, NULL, NULL, NULL);
