@@ -9,15 +9,21 @@
  *   without eviction, the tape-owned KvStepPropose reuses genuinely retained
  *   keys/values to calculate the next token's Q/K/V and output logits.
  *   The existing Framework nucleus sampler decides the output token.
- *   The existing KV store owns all row data. No new attention numerical
- *   kernel, tokenizer, sampler, checkpoint format or script is introduced.
+ *   The existing KV store owns all row data. No new tokenizer, sampler,
+ *   checkpoint format or script is introduced.
+ *
+ *   The previous approach calculated placeholder earlier query rows through
+ *   the canonical tape attention operator. That implementation remains in a
+ *   disabled historical block. The current growing-prefix inference path
+ *   invokes Framework's forward-only single-query attention kernel, yielding
+ *   one actual query row per layer, and continues to use the canonical tape
+ *   for the rest of the Transformer block.
  *
  * CAUTION:
- *   The tape's causal-attention operator currently computes placeholder
- *   earlier query rows: fewer Q/K/V projections do NOT imply faster wall-
- *   clock inference. Rollover always falls back to a complete model forward.
- *   This is a bounded opt-in research path, NOT a production LLM runtime.
- *   The older full-context and prefix generators remain unchanged.
+ *   A reduction in executed query rows does NOT imply faster whole-model
+ *   wall-clock inference. Rollover always falls back to a complete model
+ *   forward. This is a bounded opt-in research path rather than a production
+ *   LLM runtime. The older full-context and prefix generators are unchanged.
  *
  * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation
  * LICENCE: MIT
@@ -44,6 +50,8 @@ typedef struct UmiAiTrainingStackedKvIncrementalStats {
     uint64_t referenceFullContextTokenLayerRows;
     uint64_t observedFullContextTokenLayerRows;
     uint64_t observedIncrementalProjectionTokenLayerRows;
+    /* Includes full-context rows from prefill/rollover plus actual one-query
+     * rows from growing-prefix steps. Not a latency or FLOP counter. */
     uint64_t observedAttentionQueryTokenLayerRows;
     uint64_t observedFullWindowRebuilds;
     uint64_t observedIncrementalAppends;

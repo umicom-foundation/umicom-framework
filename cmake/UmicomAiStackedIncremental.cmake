@@ -17,6 +17,12 @@ if(NOT TARGET Umicom::AiStackedPrefixInference)
     include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeStackedPrefixInference.cmake")
 endif()
 
+# The forward-only attention kernel belongs to Framework and is shared with
+# its standalone numerical and canonical-tape parity tests.
+if(NOT TARGET Umicom::AiSingleQueryAttention)
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiSingleQueryAttention.cmake")
+endif()
+
 if(NOT TARGET umicom_ai_stacked_incremental)
     add_library(umicom_ai_stacked_incremental STATIC
         "${UMICOM_AI_INCREMENTAL_ROOT}/src/ai/training/stacked_kv_step.c"
@@ -26,7 +32,8 @@ if(NOT TARGET umicom_ai_stacked_incremental)
     target_include_directories(umicom_ai_stacked_incremental PUBLIC
         "${UMICOM_AI_INCREMENTAL_ROOT}/include")
     target_link_libraries(umicom_ai_stacked_incremental PUBLIC
-        Umicom::AiStackedKvStore Umicom::AiStackedPrefixInference)
+        Umicom::AiStackedKvStore Umicom::AiStackedPrefixInference
+        Umicom::AiSingleQueryAttention)
     target_compile_features(umicom_ai_stacked_incremental PUBLIC c_std_23)
     if(MSVC)
         target_compile_options(umicom_ai_stacked_incremental PRIVATE /W4)
@@ -38,7 +45,8 @@ endif()
 
 if(BUILD_TESTING)
     foreach(test_case IN ITEMS
-            step_parity session_parity rollover rejections stale work)
+            step_parity session_parity rollover rejections stale work
+            single_query_path)
         set(test_target "umicom-ai-stacked-incremental-${test_case}-test")
         if(NOT TARGET "${test_target}")
             add_executable("${test_target}"

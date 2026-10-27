@@ -5,17 +5,22 @@
  * PURPOSE:
  *   Evaluate the NEXT genuine stacked-Transformer token using previously
  *   captured, checkpoint-bound key/value projections. Compose the original
- *   Framework tape primitives, without introducing a second attention,
- *   normalisation, matrix or automatic-differentiation implementation.
+ *   Framework tape primitives for projections, normalisation, residual
+ *   connections and the feed-forward path. The inference-only attention row
+ *   is now calculated by the Framework-owned single-query forward kernel.
  *
  * MATHEMATICAL CONTRACT:
  *   The new token occupies the next unchanged learned-absolute position.
- *   Earlier causal Q/K/V remain valid while the prefix only grows. A single
- *   new query uses the existing multi-head causal-attention operator against
- *   copied previous K/V rows and its own new K/V. Previous query rows are
- *   harmless zero placeholders; only the last attended row is selected.
- *   This deliberately performs more attention-query work than an optimised
- *   fused kernel. There is no throughput or whole-model speedup guarantee.
+ *   Earlier causal K/V remain valid while the prefix only grows. The newest
+ *   query attends to cached historical K/V and its own freshly projected
+ *   K/V. The kernel outputs one [1, channels] row which becomes a nontrainable
+ *   tape-owned leaf for the remaining forward computation.
+ *
+ *   HISTORICAL NOTE: the earlier implementation manufactured zero query rows,
+ *   ran the canonical multi-head attention operator for every prefix row and
+ *   selected the last row. The historical calculation and comments are
+ *   retained in stacked_kv_step.c in an explicit disabled block. The normal
+ *   Transformer training path still uses the differentiable attention tape.
  *
  *   This API refuses a FULL cache; learned-absolute positions and retained
  *   upper-layer histories must all be recomputed after context eviction.
@@ -51,6 +56,8 @@ typedef struct UmiAiTrainingStackedKvStepReport {
     size_t transformerLayers;
     size_t cachedKeyValueRowsRead;
     uint64_t newlyProjectedTokenLayerRows;
+    /* Counts only actual computed query rows, not scored keys or channels.
+     * One growing-prefix append executes one query per Transformer layer. */
     uint64_t attentionQueryLayerRowsExecuted;
     uint64_t canonicalFullContextTokenLayerRows;
 } UmiAiTrainingStackedKvStepReport;

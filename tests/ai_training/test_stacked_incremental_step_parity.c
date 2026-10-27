@@ -47,9 +47,16 @@ static int TestLayerCount(uint32_t layers)
         VERIFY(UmiAiTrainingStackedKvStepPropose(model, store,
             ids[retained], proposedKeys, layers * 8U,
             proposedValues, layers * 8U, logits, 260U, &report) == UMI_STATUS_OK);
+#if 0
+        /* Historical placeholder-query count per layer, before native
+         * single-query attention replaced multi-row inference composition. */
         VERIFY(report.retainedBefore == retained &&
                report.newlyProjectedTokenLayerRows == (uint64_t)layers &&
                report.attentionQueryLayerRowsExecuted == (uint64_t)(layers * (retained+1U)));
+#endif
+        VERIFY(report.retainedBefore == retained &&
+               report.newlyProjectedTokenLayerRows == (uint64_t)layers &&
+               report.attentionQueryLayerRowsExecuted == (uint64_t)layers);
         for (size_t t = 0U; t < 5U; ++t)
             padded[t] = t <= retained ? ids[t] : 1U;
         VERIFY(UmiAiTrainingStackedDecoderTraceProjections(model,

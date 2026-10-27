@@ -27,10 +27,16 @@ int main(void)
     VERIFY(report.observedIncrementalProjectionTokenLayerRows == 8U);
     VERIFY(report.observedFullWindowRebuilds == 2U);
     VERIFY(report.observedIncrementalAppends == 4U);
+#if 0
+    /* Historical multi-row attention used 72 token-layer query rows. */
     VERIFY(report.observedAttentionQueryTokenLayerRows == 72U);
+#endif
+    /* One forward query per layer for each accepted prefix append:
+     * 36 full-context token-layer rows + 4*2 incremental query rows. */
+    VERIFY(report.observedAttentionQueryTokenLayerRows == 44U);
     VERIFY(report.reservedKvBytes == 768U);
     UmiAiTrainingStackedKvIncrementalSessionDestroy(session);
     UmiAiTrainingStackedDecoderDestroy(model);
-    puts("Projected K/V work and full attention-query work reported separately");
+    puts("Projected K/V work and actual single-query attention reported separately");
     return 0;
 }

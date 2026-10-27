@@ -8,6 +8,7 @@
  * LICENCE: MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/stacked_kv_step.h"
+#include "umicom/ai/training/single_query_attention.h"
 #include "umicom/ai/training/transformer.h"
 #include "stacked_decoder_internal.h"
 
@@ -47,11 +48,17 @@ static UmiStatus KvStepLayer(
     float qRows[KV_STEP_ROW_ELEMENTS] = {0};
     float kRows[KV_STEP_ROW_ELEMENTS] = {0};
     float vRows[KV_STEP_ROW_ELEMENTS] = {0};
-    float selected[UMI_AI_STACKED_MAX_CONTEXT] = {0};
     UmiAiTrainingTensor *norm = NULL, *query = NULL, *key = NULL;
-    UmiAiTrainingTensor *value = NULL, *qLeaf = NULL, *kLeaf = NULL;
+    UmiAiTrainingTensor *value = NULL, *lastAttended = NULL;
+    UmiAiTrainingTensor *projected = NULL;
+#if 0
+    /* Original multi-row tape-composition handles are retained with the
+     * previous implementation below. Training still uses the differentiable
+     * canonical attention operator. */
+    float selected[UMI_AI_STACKED_MAX_CONTEXT] = {0};
+    UmiAiTrainingTensor *qLeaf = NULL, *kLeaf = NULL;
     UmiAiTrainingTensor *vLeaf = NULL, *attended = NULL, *selector = NULL;
-    UmiAiTrainingTensor *lastAttended = NULL, *projected = NULL;
+#endif
     UmiAiTrainingTensor *residual = NULL, *norm2 = NULL, *expanded = NULL;
     UmiAiTrainingTensor *expandedBias = NULL, *activated = NULL;
     UmiAiTrainingTensor *contracted = NULL, *contractedBias = NULL;
@@ -84,11 +91,30 @@ static UmiStatus KvStepLayer(
     memcpy(kRows + oldRows * width, newKey, width * sizeof(float));
     memcpy(vRows + oldRows * width, newValue, width * sizeof(float));
 
+    /* One incremental query uses every admitted key and value row. The
+     * Framework-owned inference operator performs the last-row attention
+     * arithmetic, while the established tape still owns all projections,
+     * normalisation, residual operations, MLP and temporary lifetimes.
+     * This forward-only leaf is never used for gradient calculation. */
+    const size_t values = rows * width;
+    float attendedRow[UMI_AI_STACKED_MAX_CHANNELS] = {0};
+    KV_STEP_TRY(UmiAiTrainingSingleQueryAttentionForward(
+        qRows + oldRows * width, width,
+        kRows, values, vRows, values,
+        rows, width, (size_t)model->config.attentionHeads,
+        attendedRow, width, NULL));
+    KV_STEP_TRY(UmiAiTrainingTensorCreate(tape, 1U, width,
+        attendedRow, width, 0, &lastAttended));
+
+#if 0
+    /* Historical multi-query composition preserved for review. Inference
+     * formerly built zero-query prefix placeholders, processed all rows,
+     * then selected the last row. The replacement above avoids this work;
+     * the canonical training-time tape operator remains unchanged. */
     /* A causal output at row oldRows cannot depend on any earlier query row.
      * The ORIGINAL multi-head operator owns softmax and FP32 rounding.
      * This intentionally computes unused earlier query rows: the measured
      * attention work is rows, NOT a claimed one-query fused kernel. */
-    const size_t values = rows * width;
     KV_STEP_TRY(UmiAiTrainingTensorCreate(tape,
         rows, width, qRows, values, 0, &qLeaf));
     KV_STEP_TRY(UmiAiTrainingTensorCreate(tape,
@@ -103,6 +129,8 @@ static UmiStatus KvStepLayer(
         selected, rows, 0, &selector));
     KV_STEP_TRY(UmiAiTrainingMatmul(tape,
         selector, attended, &lastAttended));
+
+#endif
 
     KV_STEP_TRY(UmiAiTrainingMatmul(tape, lastAttended,
         model->parameters[first + UMI_STACKED_ATTENTION_OUTPUT], &projected));
@@ -230,7 +258,14 @@ restore:
     report.transformerLayers = layers;
     report.cachedKeyValueRowsRead = layers * rows;
     report.newlyProjectedTokenLayerRows = (uint64_t)layers;
+    /* Exactly one causal query per Transformer layer on the growing prefix;
+     * prefill and every learned-position rollover are separately counted
+     * by the unchanged full-context decoder. */
+#if 0
+    /* Historical full-tape row count, retained for review. */
     report.attentionQueryLayerRowsExecuted = (uint64_t)(layers * (rows + 1U));
+#endif
+    report.attentionQueryLayerRowsExecuted = (uint64_t)layers;
     report.canonicalFullContextTokenLayerRows = (uint64_t)(layers * context);
     memcpy(outKeys, keys, kvCount * sizeof(float));
     memcpy(outValues, values, kvCount * sizeof(float));
