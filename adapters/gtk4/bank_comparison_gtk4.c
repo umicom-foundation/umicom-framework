@@ -83,9 +83,17 @@ static void ComparisonSelection(GObject *object, GParamSpec *spec, gpointer data
     if (ui != NULL && !ui->publishing) {
         GString *text = g_string_new("Choose an observation to inspect both imported sides.\n");
         guint selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->rows));
+/* Row zero is an explicit empty choice because GtkDropDown may restore an automatic selection when given an invalid position. The previous implementation is retained for review. */
+#if 0
         if ((size_t)selected < ui->count) {
+#endif
+        if (selected != 0U && (size_t)selected <= ui->count) {
             UmiBankFeedComparisonRow row;
+/* Translate the visible row after the prompt to the immutable comparison index. The previous implementation is retained for review. */
+#if 0
             if (UmiBankFeedComparisonAt(ui->comparison, ui->displayed[selected], &row) == UMI_STATUS_OK) {
+#endif
+            if (UmiBankFeedComparisonAt(ui->comparison, ui->displayed[selected - 1U], &row) == UMI_STATUS_OK) {
                 g_string_assign(text, UmiBankFeedComparisonKindName(row.kind));
                 g_string_append_c(text, '\n');
                 ComparisonAppendChanges(text, row.changes);
@@ -121,6 +129,9 @@ static void ComparisonFilter(GObject *object, GParamSpec *spec, gpointer data) {
         g_object_unref(window); return;
     }
     GtkStringList *choices = gtk_string_list_new(NULL);
+    /* A real prompt row gives users and accessibility clients a stable way
+     * to clear details without depending on automatic-selection policy. */
+    gtk_string_list_append(choices, "Choose an observation");
     ui->count = 0U;
     for (size_t i = 0U; i < summary.rows; ++i) {
         UmiBankFeedComparisonRow row;
@@ -140,7 +151,11 @@ static void ComparisonFilter(GObject *object, GParamSpec *spec, gpointer data) {
     ui = ComparisonOwner(window);
     if (ui != NULL) {
         gtk_drop_down_set_selected(GTK_DROP_DOWN(ui->rows),
+/* Select the first observation when present and the prompt for an empty comparison. The previous implementation is retained for review. */
+#if 0
             ui->count == 0U ? GTK_INVALID_LIST_POSITION : 0U);
+#endif
+            ui->count == 0U ? 0U : 1U);
         ui = ComparisonOwner(window);
         if (ui != NULL) {
             if (gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->filter)) != filter) {

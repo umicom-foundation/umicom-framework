@@ -27,6 +27,9 @@ extern "C" {
  * not proven chronology. The view includes every account in both imports.
  * Rows keep exact identities, original indices and explicit unmatched/unknown
  * states. Read-only filtering never changes the underlying comparison.
+ * The observation dropdown has an explicit neutral prompt at index zero.
+ * Selecting it clears the details; financial rows start at index one.
+ * Reentrant GTK notifications settle on the latest selected filter and row.
  * CSV export includes both sides, even when the visible view hides same rows.
  * Export limits may refuse a large report without hiding the native review.
  * No bank contact, posting, import merging or balance calculation occurs.

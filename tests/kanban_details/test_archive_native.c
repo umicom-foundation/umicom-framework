@@ -27,7 +27,12 @@ static void Changed(GObject *object, GParamSpec *property, gpointer data)
         gtk_widget_set_visible(o->form, FALSE); gtk_widget_set_visible(o->form, TRUE);
     } else if (!strcmp(o->mode, "review-selection")) {
         guint saved = gtk_drop_down_get_selected(GTK_DROP_DOWN(o->picker));
+        /* Re-enter through the explicit prompt, which works with a nonempty
+         * dropdown on each supported GTK version. Preserve the earlier probe. */
+#if 0
         gtk_drop_down_set_selected(GTK_DROP_DOWN(o->picker), GTK_INVALID_LIST_POSITION);
+#endif
+        gtk_drop_down_set_selected(GTK_DROP_DOWN(o->picker), 0U);
         gtk_drop_down_set_selected(GTK_DROP_DOWN(o->picker), saved);
     } else Click(o->panel, "Apply reviewed archive change");
 }
@@ -97,8 +102,19 @@ int main(int argc, char **argv)
 #if 0
     REQUIRE(gtk_drop_down_get_selected(GTK_DROP_DOWN(picker)) == GTK_INVALID_LIST_POSITION);
 #endif
+    /* A completed load now selects a prompt rather than requesting an empty
+     * selection from GTK. Retain the earlier assertion and check the actual
+     * model row as well as its index so a real card cannot become the prompt. */
+#if 0
     if (strcmp(name, "load-retire"))
         REQUIRE(gtk_drop_down_get_selected(GTK_DROP_DOWN(picker)) == GTK_INVALID_LIST_POSITION);
+#endif
+    if (strcmp(name, "load-retire")) {
+        REQUIRE(gtk_drop_down_get_selected(GTK_DROP_DOWN(picker)) == 0U);
+        GtkStringObject *prompt = gtk_drop_down_get_selected_item(GTK_DROP_DOWN(picker));
+        REQUIRE(GTK_IS_STRING_OBJECT(prompt));
+        REQUIRE(!strcmp(gtk_string_object_get_string(prompt), "Choose a card"));
+    }
     if (!empty && strcmp(name, "no-selection") && strcmp(name, "load-retire")) SelectCardChoice(picker);
     if (!strcmp(name, "stale-review")) { Create(edit, "external"); Apply(board, edit, 1U); }
     if (!strcmp(name, "review-hide") || !strcmp(name, "review-retire") || !strcmp(name, "review-selection") ||
@@ -109,7 +125,12 @@ int main(int argc, char **argv)
     if (!strcmp(name, "stale")) {
         Create(edit, "external"); Apply(board, edit, 1U); REQUIRE(UmiKanbanGtk4Refresh(panel) == UMI_STATUS_OK);
     } else if (!strcmp(name, "selection-roundtrip")) {
+        /* Selecting the prompt and returning to the same card must invalidate
+         * the earlier review. Keep the original empty-selection probe visible. */
+#if 0
         gtk_drop_down_set_selected(GTK_DROP_DOWN(picker), GTK_INVALID_LIST_POSITION); SelectCardChoice(picker);
+#endif
+        gtk_drop_down_set_selected(GTK_DROP_DOWN(picker), 0U); SelectCardChoice(picker);
     } else if (!strcmp(name, "busy")) { UmiKanbanGtk4SetBusy(panel, true); UmiKanbanGtk4SetBusy(panel, false); }
     else if (!strcmp(name, "hidden")) { gtk_widget_set_visible(form, FALSE); gtk_widget_set_visible(form, TRUE); }
     else if (!strcmp(name, "retired")) UmiKanbanGtk4Retire(panel);

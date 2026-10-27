@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/working_tree_gtk4.c
- * PURPOSE: Keep repository inspection responsive and release workers after the panel closes.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Keep repository inspection responsive and release workers after the panel closes.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/platform/threading.h"
@@ -304,6 +311,9 @@ UmiStatus UmiVcsWorkingTreeGtk4Create(const char *repository_root, void **out_wi
     /* The captured root stays visible even if the host application changes workspace. */
     char *root_display = g_utf8_make_valid(review->root, -1);
     location = gtk_label_new(root_display);
+    /* Give native hosts a stable way to inspect the displayed repository
+     * identity without matching unrelated status or action labels. */
+    (void)umi_gtk4_automation_tag_widget(location, "vcs.review.root");
     g_free(root_display);
     gtk_label_set_selectable(GTK_LABEL(location), TRUE);
     gtk_label_set_xalign(GTK_LABEL(location), 0.0F);

@@ -24,6 +24,7 @@
 
 static GtkWidget *Find(GtkWidget *root, const char *name) {
     GtkWidget *widget = umi_gtk4_automation_find_named_widget(root, name);
+    if (!widget) fprintf(stderr, "Missing named widget: %s\n", name);
     CHECK(widget); return widget;
 }
 static void Fill(UmiOpenTmsAccountingBook *book) {
@@ -107,8 +108,17 @@ int main(int argc, char **argv) {
         gtk_expander_set_expanded(GTK_EXPANDER(export), TRUE);
 #endif
         UmiTestExpandSections(export);
+        /* Export controls publish automation IDs, not GTK styling names.
+         * Keep the former lookup for review; do not change the product's
+         * naming contract to make a fixture pass. */
+#if 0
         GtkWidget *save = g_object_ref(Find(export, "text.export.save"));
         GtkWidget *entry = Find(export, "text.export.path");
+#endif
+        GtkWidget *save = umi_gtk4_automation_find_tagged_widget(export, "text.export.save");
+        GtkWidget *entry = umi_gtk4_automation_find_tagged_widget(export, "text.export.path");
+        CHECK(GTK_IS_BUTTON(save) && GTK_IS_EDITABLE(entry));
+        g_object_ref(save);
         if (!strcmp(mode, "save") || !strcmp(mode, "existing") || !strcmp(mode, "retired") ||
             !strcmp(mode, "parent-close") || !strcmp(mode, "accepted-close")) {
             char root[UMI_PATH_CAPACITY], path[UMI_PATH_CAPACITY]; FixtureDirectory(root);

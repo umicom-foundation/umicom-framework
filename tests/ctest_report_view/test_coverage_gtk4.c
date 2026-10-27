@@ -166,9 +166,23 @@ int main(int argc, char **argv)
         goto done;
     }
     if (!strcmp(test, "empty")) {
+        /* The filtered view reports whole-review counts and matching rows.
+         * Keep the old full-review wording for comparison, without weakening
+         * the requirement that an empty review cannot certify a pass. */
+#if 0
         CHECK(strstr(accepted, "No requirements: empty coverage cannot pass."));
+#endif
+        CHECK(strstr(accepted, "Whole review: 0 requirements | Passed: 0 | Outstanding: 0"));
+        CHECK(strstr(accepted, "No matching rows. This is not a passing qualification."));
     } else {
+        /* Paging now describes the shared filtered view, while retaining the
+         * independent whole-review denominator. Preserve the former wording. */
+#if 0
         CHECK(strstr(accepted, "Showing 1..64 of 130 required records."));
+#endif
+        CHECK(strstr(accepted, "Showing 1..64 of 130 matching records."));
+        CHECK(strstr(accepted, "Whole review: 130 requirements"));
+        CHECK(strstr(accepted, "Filtered rows cannot certify the whole review."));
         if (!strcmp(test, "stale")) {
             CHECK(strstr(accepted, "Passed: 0 | Outstanding: 130"));
             CHECK(strstr(accepted, "[source mismatch]"));

@@ -322,3 +322,31 @@ from that inventory instead of maintaining separate magic totals and array bound
 Assert selection intervals as half-open byte ranges: replacing [start, end) must
 retain the byte at end. Observe slow-test phases before tightening timeouts; an
 unexplained delay is not evidence that a shorter timeout repairs the cause.
+
+## Freestanding boundaries and native test synchronization
+
+A freestanding target runs without the usual hosted C runtime. Aggregate zeroing
+and structure assignment may cause the compiler to emit memory-helper calls even
+when the source contains no explicit call. Qualify the actual translation units at
+both debug and optimized settings with no standard library. Do not rely only on a
+hosted unit test or on dead-section removal to hide an unresolved runtime dependency.
+Use the component's bounded boot-memory operations where its runtime is unavailable;
+normal hosted code should continue to use the standard library where appropriate.
+
+A native widget name and an automation tag are separate identity mechanisms. Read
+the constructor contract, use the matching lookup, and check the returned widget
+type. If an operation requires an explicit choice, represent the prompt as a model
+row with no action identity. Reject that row before index conversion or mutation;
+do not assume every toolkit configuration can clear a nonempty dropdown selection.
+
+Tests that inspect native controls must synchronize the native workspace after
+changing application models. A document projection refresh alone does not establish
+that search pages, toolbars or command availability have been updated. Await the
+actual asynchronous request and then synchronize; an arbitrary delay is not a
+completion contract. Keep model assertions and presentation assertions distinct.
+
+A retained button is not authority to act after it becomes hidden, insensitive or
+unbound. Check current availability at dispatch and recheck the weak owner after
+observable callbacks. If the API reports cancellation when a callback closes its
+host, regression tests must expect that native completion while still checking
+that rejected work neither changed source files nor launched a process.

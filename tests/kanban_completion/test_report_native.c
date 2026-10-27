@@ -82,7 +82,12 @@ int main(int argc, char **argv)
     REQUIRE(root); g_object_ref_sink(root);
     GtkWidget *expander = Named(root, "kanban-completion-report");
     REQUIRE(GTK_IS_EXPANDER(expander)); gtk_expander_set_expanded(GTK_EXPANDER(expander), TRUE);
+    /* The shared saved-report constructor publishes ctest.report.panel.
+     * Preserve the historical selector while checking the current root ID. */
+#if 0
     GtkWidget *report = Tagged(root, "ctest.report"); g_object_ref(report);
+#endif
+    GtkWidget *report = Tagged(root, "ctest.report.panel"); g_object_ref(report);
     GtkWindow *window = GTK_WINDOW(gtk_window_new());
     gtk_window_set_child(window, root); gtk_window_present(window); NativeDrain();
     FillReview(root, file);

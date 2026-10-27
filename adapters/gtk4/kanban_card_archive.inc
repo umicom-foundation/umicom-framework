@@ -57,6 +57,10 @@ static void LoadArchiveCards(GtkWidget *button, gpointer data)
         /* Own the complete list before changing any observable native property.
          * The string model is retained locally until the dropdown takes a ref. */
         GtkStringList *names = gtk_string_list_new(NULL);
+        /* An explicit prompt is a real model row but never a card identity.
+         * This keeps review admission independent of whether the installed
+         * GTK dropdown can clear its selection while its model is nonempty. */
+        gtk_string_list_append(names, "Choose a card");
         for (size_t i = 0U; i < count; ++i) {
             char *label = g_strdup_printf("%s | %s | %s", rows[i].archived ? "Archived" : "Active",
                 rows[i].card.id, g_utf8_validate(rows[i].card.title, -1, NULL) ? rows[i].card.title : "Unsupported text encoding");
@@ -68,7 +72,12 @@ static void LoadArchiveCards(GtkWidget *button, gpointer data)
         /* Model replacement may invalidate a review. That is intentional. A
          * subsequent explicit Review is the only way to authorize an edit. */
         if (panel->board && !panel->busy && gtk_widget_get_mapped(panel->archive_form)) {
+            /* The old empty-selection request is retained for comparison.
+             * The prompt row replaces it without silently choosing a card. */
+#if 0
             gtk_drop_down_set_selected(GTK_DROP_DOWN(panel->archive_card), GTK_INVALID_LIST_POSITION);
+#endif
+            gtk_drop_down_set_selected(GTK_DROP_DOWN(panel->archive_card), 0U);
             gtk_label_set_text(GTK_LABEL(panel->archive_status),
                 count ? "Choose a card, then review its archive or restore action. No card has changed." : "This board has no cards to archive or restore.");
         }
@@ -86,8 +95,15 @@ static void ReviewArchiveCard(GtkWidget *button, gpointer data)
     guint selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(panel->archive_card));
     UmiStatus status = UMI_STATUS_INVALID_STATE;
     UmiKanbanCardSnapshot row;
+    /* Row zero is the prompt. Preserve the original direct mapping for review;
+     * real card rows now start at one and map to the copied IDs at row minus one. */
+#if 0
     if (selected < panel->archive_count && umi_kanban_board_revision(panel->board) == panel->archive_revision)
         status = umi_kanban_board_find(panel->board, panel->archive_ids[selected], &row);
+#endif
+    if (selected > 0U && (size_t)selected <= panel->archive_count &&
+        umi_kanban_board_revision(panel->board) == panel->archive_revision)
+        status = umi_kanban_board_find(panel->board, panel->archive_ids[selected - 1U], &row);
     if (status == UMI_STATUS_OK) {
         panel->archive_snapshot = row;
         char message[640];
@@ -114,7 +130,14 @@ static void ApplyArchiveCard(GtkWidget *button, gpointer data)
     panel->applying = true;
     guint selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(panel->archive_card));
     UmiStatus status = UMI_STATUS_INVALID_STATE;
+    /* Apply uses the same prompt-aware identity mapping as Review. The former
+     * condition is retained so the offset change can be inspected. */
+#if 0
     if (selected < panel->archive_count && !strcmp(panel->archive_ids[selected], panel->archive_snapshot.card.id)) {
+#else
+    if (selected > 0U && (size_t)selected <= panel->archive_count &&
+        !strcmp(panel->archive_ids[selected - 1U], panel->archive_snapshot.card.id)) {
+#endif
         UmiKanbanEdit edit = {0}; UmiKanbanProblem problem;
         edit.kind = panel->archive_snapshot.archived ? UMI_KANBAN_RESTORE_CARD : UMI_KANBAN_ARCHIVE_CARD;
         g_strlcpy(edit.card.id, panel->archive_snapshot.card.id, sizeof edit.card.id);
