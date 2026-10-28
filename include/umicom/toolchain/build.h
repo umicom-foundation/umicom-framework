@@ -50,7 +50,10 @@ typedef enum UmiBuildAction {
     UMI_BUILD_INSTALL = 7,
     UMI_BUILD_PACKAGE = 8,
     UMI_BUILD_DELIVER = 9,
-    UMI_BUILD_COMMAND = 10
+    UMI_BUILD_COMMAND = 10,
+    /* Compile a reviewed target, then test its scope in an existing build tree.
+     * No configure, clean, install or publication phase is requested. */
+    UMI_BUILD_COMPILE_TEST = 11
 } UmiBuildAction;
 
 /**

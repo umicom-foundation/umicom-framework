@@ -98,6 +98,7 @@ const char *umi_build_action_text(UmiBuildAction action)
         case UMI_BUILD_INSTALL: return "install";
         case UMI_BUILD_PACKAGE: return "package";
         case UMI_BUILD_DELIVER: return "deliver";
+        case UMI_BUILD_COMPILE_TEST: return "build-test";
         case UMI_BUILD_COMMAND: return "command";
         default: return "unknown";
     }
@@ -168,6 +169,26 @@ UmiStatus umi_build_request_validate(UmiBuildAction action,
                     out_message,
                     message_capacity,
                     "Configure requires a build directory when no preset is used.");
+                return UMI_STATUS_INVALID_ARGUMENT;
+            }
+            break;
+
+        /* Require a named build tree and reviewed scope. A missing filter must
+         * never silently become the entire suite. Cache changes remain an
+         * explicit configure operation separate from the incremental cycle. */
+        case UMI_BUILD_COMPILE_TEST:
+            if (!umi_build_has_text(request->build_directory) ||
+                !umi_build_has_text(request->target) ||
+                !umi_build_has_text(request->test_expression) ||
+                uses_preset || request->clean ||
+                umi_build_has_text(request->install_prefix) ||
+                umi_build_has_text(request->install_component) ||
+                umi_build_has_text(request->package_target) ||
+                umi_build_has_text(request->executable) ||
+                request->run_argument_count != 0U) {
+                umi_build_message(out_message, message_capacity,
+                    "Build-test requires --build, --target and --tests; configure, "
+                    "clean, preset, installation and launch options are not supported.");
                 return UMI_STATUS_INVALID_ARGUMENT;
             }
             break;
@@ -1352,6 +1373,11 @@ UmiStatus UmiBuildExecuteWithOptions(
         report->last_status = UMI_STATUS_INVALID_ARGUMENT;
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Native callers receive the same configure-free guarantee as CLI users. */
+    if (action == UMI_BUILD_COMPILE_TEST && options && options->configure_definition_count != 0U) {
+        report->last_status = UMI_STATUS_INVALID_ARGUMENT;
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
     if (options) {
         if ((options->explicit_build_directory && (!request ||
                 !umi_build_has_text(request->build_directory))) ||
@@ -1377,6 +1403,16 @@ UmiStatus UmiBuildExecuteWithOptions(
         report->last_action = action;
         report->last_status = status;
         return status;
+    }
+
+    /* Reuse the compiler's dependency graph in the same build directory.
+     * Framework owns ordering, cancellation, literal arguments, log capture
+     * and the stop-on-build-failure boundary for both CLI and IDE callers.
+     * CMake/Ninja may regenerate their graph when build inputs change. */
+    if (action == UMI_BUILD_COMPILE_TEST) {
+        status = umi_build_compile_internal(profile, environment, request, report, options);
+        if (status != UMI_STATUS_OK) return status;
+        return umi_build_test_internal(profile, environment, request, report, options);
     }
 
     /* Preview is descriptive and must never enter the legacy clean operation. */

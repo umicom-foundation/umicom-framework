@@ -299,6 +299,10 @@ static void build_command(UmiBuildAction action, const UmiProcessRequest *comman
 int umi_cli_command_build(UmiCliContext *context, UmiBuildAction action, int argc, char **argv)
 {
     if (argc == 1 && (strcmp(argv[0], "--help") == 0 || strcmp(argv[0], "help") == 0)) {
+        (void)puts("Incremental: umicom build-test --build PATH --target NAME --tests REGEX [options]\n"
+            "Build-test compiles, then tests; it does not request configure, clean or install.\n"
+            "The target must build every executable/fixture needed by the selected tests.\n"
+            "Use an existing build tree; --preset and --define are not accepted.\n");
         (void)puts("Usage: umicom configure|build|test|install|package|make|deliver|run|launch [options]\n"
             "  --source PATH      Project root (default: current directory)\n"
             "  --preset NAME      CMake configure/build/test preset\n"

@@ -153,6 +153,7 @@ void umi_cli_print_help(void)
         "  umicom deliver [--source PATH] [--preset NAME] [--prefix PATH]\n"
 #endif
         "  umicom deliver [--source PATH] [--preset NAME] --build PATH --prefix PATH\n"
+        "  umicom build-test --build PATH --target NAME --tests REGEX [--jobs N] [--log PATH]\n"
         "  umicom make [--source PATH] [--preset NAME | --build PATH] [--jobs N]\n"
         "  umicom automate plan|run|watch [PATH] [--all] [--no-tests] [--deploy]\n"
         /* Retained old alias example; binaryDir is no longer guessed. */

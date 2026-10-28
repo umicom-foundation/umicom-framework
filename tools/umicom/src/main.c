@@ -286,6 +286,10 @@ static int RunNativeCommand(int argc, char **argv)
     /* Saved test evidence is inspected through Framework without a toolchain or test launch. */
     /* Selection is computed by Framework; this route only displays its evidence. */
     /* Archive inspection is read-only and retains historical provenance. */
+    /* Check/doctor retain environment inspection. Build-test is the explicit
+     * incremental execution route through the shared Framework service. */
+    if (strcmp(command, "build-test") == 0)
+        return umi_cli_command_build(&context, UMI_BUILD_COMPILE_TEST, argc - 2, argv + 2);
     if (strcmp(command, "qualification-report") == 0)
         return umi_cli_command_qualification_report(argc - 2, argv + 2);
     if (strcmp(command, "impact") == 0)

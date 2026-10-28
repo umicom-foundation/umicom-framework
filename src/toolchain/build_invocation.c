@@ -50,8 +50,14 @@ UmiStatus UmiBuildInvocationParse(UmiBuildAction action, int argc,
     const char *alias = NULL;
     uint32_t seen = 0U;
     int configure = action == UMI_BUILD_CONFIGURE || action == UMI_BUILD_MAKE || action == UMI_BUILD_DELIVER;
+    /* Preserve the original action classification for comparison. Build-test
+     * shares build/test options but never accepts configure options. */
+#if 0
     int compile = action == UMI_BUILD_COMPILE || action == UMI_BUILD_MAKE || action == UMI_BUILD_DELIVER;
     int test = action == UMI_BUILD_TEST || action == UMI_BUILD_MAKE || action == UMI_BUILD_DELIVER;
+#endif
+    int compile = action == UMI_BUILD_COMPILE || action == UMI_BUILD_MAKE || action == UMI_BUILD_DELIVER || action == UMI_BUILD_COMPILE_TEST;
+    int test = action == UMI_BUILD_TEST || action == UMI_BUILD_MAKE || action == UMI_BUILD_DELIVER || action == UMI_BUILD_COMPILE_TEST;
     int install = action == UMI_BUILD_INSTALL || action == UMI_BUILD_DELIVER;
     int package = action == UMI_BUILD_PACKAGE || action == UMI_BUILD_DELIVER;
     int run = action == UMI_BUILD_RUN || action == UMI_BUILD_COMMAND;
@@ -138,6 +144,8 @@ UmiStatus UmiBuildInvocationParse(UmiBuildAction action, int argc,
     }
     if ((install && (!binary || !prefix)) || ((action == UMI_BUILD_CLEAN || inv->request.clean) && !binary))
         return invalid(message, capacity, "Install/deliver need --build and --prefix; clean needs --build.");
+    if (action == UMI_BUILD_COMPILE_TEST && !binary)
+        return invalid(message, capacity, "Build-test requires an existing explicit --build directory.");
     if (run && (inv->request.preset || inv->request.configuration))
         return invalid(message, capacity, "Launch uses --build pointing to the actual binary folder or --executable; no preset/config inference.");
     if (alias && executable) return invalid(message, capacity, "Choose either an application alias or --executable.");

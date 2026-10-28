@@ -3,6 +3,7 @@
 <h1>Inspect affected builds and tests</h1>
 <p>An incremental build reuses outputs whose inputs have not changed. Selecting tests is a different job: a change to a shared library can affect applications and tests that depend on it. Umicom's <code>impact</code> command previews this relationship using a configured build inventory.</p>
 <aside><strong>This command is a preview.</strong> It reads selected metadata and, when requested, Git status. It does not configure, compile, run tests, install software, change branches or publish commits. A preview is not qualification evidence. The source tree and build metadata must describe the same configuration.</aside>
+<p>For a practical component build and test cycle, see <a href="incremental-builds.html">Build and test a changed component</a>. That explicit execution workflow is separate from this impact preview.</p>
 <h2>1. Capture the configured inventory</h2>
 <p>From a Framework source checkout, configure the desired preset with inventory capture enabled. Keep build output separate from source and do not reconfigure the same build directory concurrently.</p>
 <pre>cmake --preset windows-ucrt64-debug -DUMICOM_RELEASE_INVENTORY_CAPTURE=ON</pre>

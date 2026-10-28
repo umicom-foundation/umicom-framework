@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Build and test a changed component</title>
+<style>body{max-width:980px;margin:36px auto;padding:0 24px;font:17px/1.65 system-ui,sans-serif;color:#213247;background:#f8fafc}h1,h2{line-height:1.25}pre{background:#172539;color:#eef5ff;padding:18px;overflow:auto;border-radius:8px}code{font-family:Consolas,monospace}table{width:100%;border-collapse:collapse}td,th{border:1px solid #b9c9d7;padding:10px;text-align:left}aside{padding:18px;border-left:5px solid #28739b;background:#e8f2f8}a{color:#075c90}</style></head>
+<body>
+<h1>Build and test a changed component</h1>
+<p>A compiler turns source files into object files. A linker joins those objects and libraries into a program. Ninja remembers the inputs needed for each output, so an ordinary build in an existing build folder reuses work that is still current. You do not need a different compiler to get incremental builds.</p>
+<p>Tests are separate. Running CTest without a selection asks for the whole configured suite, even when the build had nothing to compile. Use a component build and a reviewed test selection while developing; run broader integration and release qualification at agreed checkpoints.</p>
+<h2>1. Keep one configured build folder</h2>
+<ol>
+<li>Open PowerShell in the Applications checkout and make the compiler tools available.</li>
+<li>Configure once for the chosen compiler and options. Configure again after adding targets, changing options, or merging files whose original timestamps were preserved. An ordinary Ninja build can also regenerate changed CMake inputs.</li>
+<li>Keep this build folder between edits. A different folder starts with no reusable objects. Changing the compiler, compiler flags or shared headers may legitimately invalidate many outputs.</li>
+</ol>
+<pre>Set-Location "C:\umicom\Umicom-Applications"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+New-Item -ItemType Directory -Force "C:\umicom\_local\logs\repository-publication"
+
+cmake --preset windows-ucrt64-all-debug -DBUILD_TESTING=ON -DUMICOM_BUILD_NATIVE_TOOL=ON 2>&amp;1 | Tee-Object "C:\umicom\_local\logs\repository-publication\incremental-configure-01.log"</pre>
+<aside>Run each step separately and stop on an error. PowerShell pipelines do not automatically stop later commands when a compiler fails. Use new log names for subsequent runs. Do not run concurrent builds or configuration operations in the same build directory.</aside>
+<h2>2. Build a selected target and its dependencies</h2>
+<p>A <em>target</em> is a named output or group of outputs in the build configuration. For a document fingerprint change, this target builds its test executable and the libraries needed by it:</p>
+<pre>cmake --build --preset windows-ucrt64-all-debug --target umicom-document-fingerprint-tests --parallel 2 2>&amp;1 | Tee-Object "C:\umicom\_local\logs\repository-publication\document-build-01.log"</pre>
+<p>After a source edit, expect only the affected objects and dependent link steps. When everything is current, Ninja normally reports no work. A shared public header can affect more than one source file. The selected target is a build boundary, not a claim that one test covers every consequence of a change.</p>
+<h2>3. Run the matching tests</h2>
+<p>Run this only after the selected build succeeds:</p>
+<pre>ctest --preset windows-ucrt64-all-debug -R "^framework[.]document[.]fingerprint$" --parallel 2 --output-on-failure --no-tests=error --output-log "C:\umicom\_local\logs\repository-publication\document-tests-01.log"</pre>
+<p><code>-R</code> selects test names using a regular expression. Here, <code>^</code> means the beginning of the name, <code>[.]</code> means a literal dot, and <code>$</code> means its end. <code>--no-tests=error</code> catches an empty selection. Review failed, skipped and disabled tests separately; an exit code of zero does not prove every configured check executed.</p>
+<h2>4. Work on a whole application</h2>
+<p>The Applications build provides product and test groups. For Studio, build both groups, then select Studio-owned checks:</p>
+<pre>cmake --build --preset windows-ucrt64-all-debug --target umicom-product-studio umicom-tests-studio --parallel 2 2>&amp;1 | Tee-Object "C:\umicom\_local\logs\repository-publication\studio-build-01.log"
+
+ctest --preset windows-ucrt64-all-debug -R "^studio[.]" --parallel 2 --output-on-failure --no-tests=error --output-log "C:\umicom\_local\logs\repository-publication\studio-tests-01.log"</pre>
+<p>These groups depend on the enabled application configuration. Shared application-integration tests are a separate scope. They may need additional application binaries or fixtures. Build those dependencies when the selected tests require them. A shared Framework change can affect other products, so add their checks or use the full suite; the name filter alone does not discover dependency impact.</p>
+<p>To inspect which test names a filter selects without running them, add <code>-N</code> to the CTest command. To retry failures from the previous run, use <code>ctest --preset windows-ucrt64-all-debug --rerun-failed --output-on-failure --no-tests=error</code>. That uses the previous failure list and ignores name-selection filters. It is a recovery step, not complete regression coverage.</p>
+<h2>5. Use the native Umicom command</h2>
+<p>A CLI containing the <code>build-test</code> command performs the two phases in order and stops if the build fails. Framework owns argument validation, execution, cancellation and output capture, so native applications can use the same service. The target and test expression are explicit; this command does not automatically determine affected tests.</p>
+<p>Run the CLI from a separate tools installation when rebuilding Umicom itself. Windows cannot replace a running executable. The command must not be inside a build or installation destination that it will overwrite. First use <code>umicom build-test --help</code> to check that the installed CLI supports the command.</p>
+<pre>umicom build-test --source C:\umicom\Umicom-Applications --build build\windows-ucrt64-all-debug --target umicom-document-fingerprint-tests --tests "^framework[.]document[.]fingerprint$" --jobs 2 --dry-run
+
+umicom build-test --source C:\umicom\Umicom-Applications --build build\windows-ucrt64-all-debug --target umicom-document-fingerprint-tests --tests "^framework[.]document[.]fingerprint$" --jobs 2 --log C:\umicom\_local\logs\repository-publication\document-cycle-01.log</pre>
+<p>The command requires an existing configured <code>--build</code> directory, one <code>--target</code> and a non-empty <code>--tests</code> expression. An aggregate target can group several outputs. Choose a target that builds the selected tests and their fixtures. <code>--preset</code>, <code>--clean</code>, <code>--define</code> and installation/launch options are rejected. Configure separately when changing the build configuration. CMake/Ninja can still regenerate their own graph during a build.</p>
+<p>A preview starts no tools and writes no log. An execution log needs an existing parent directory and a fresh filename; an existing log is not overwritten. The log captures child output. The CLI displays command descriptions and discovery diagnostics separately. The older <code>make</code> command still configures, builds and tests, and <code>check</code> still performs toolchain diagnosis.</p>
+<h2>6. Understand automatic selection</h2>
+<p>The <a href="affected-builds.html">impact inventory guide</a> describes <code>umicom impact</code>. It previews target/test relationships from configured source ownership. Inventory capture must be enabled for that build. Missing ownership, configuration changes or changed submodules can require a full selection. Do not discard that fallback simply to shorten a run.</p>
+<p>Git working-tree changes disappear after a commit. A reliable selection must compare against a known, successfully qualified immutable revision as well as current staged, unstaged and untracked changes. Use the documented <code>--since</code> option or explicit changed paths when appropriate. An impact preview does not itself compile or test, and <code>build-test</code> does not yet consume that preview automatically.</p>
+<h2>7. Investigate a surprisingly large build</h2>
+<table><thead><tr><th>Observation</th><th>Check</th></tr></thead><tbody>
+<tr><td>Many objects rebuild after one header change</td><td>Inspect the header's consumers and compiler definitions. Framework currently carries a shared public-contract fingerprint through its base target; a changed fingerprint can invalidate many compile commands. This also protects content changes copied with preserved timestamps. Disabling that protection can leave stale objects.</td></tr>
+<tr><td>A source-only edit rebuilds unrelated objects</td><td>Check compiler/options changes, generated inputs, timestamps and command-line differences. Ask Ninja to explain a pending target: <code>cmake --build --preset windows-ucrt64-all-debug --target umicom-document-fingerprint-tests -- -n -d explain</code>. This is a dry-run diagnostic and does not compile the target.</td></tr>
+<tr><td>Build is short but tests take hours</td><td>Check the selected test names, durations and nested configure/build tests. Use a reviewed component filter during development. A small number of slow tests can dominate total time.</td></tr>
+<tr><td>The same Framework compiles in several folders</td><td>Applications includes Framework. Reuse that build for integrated development. Keep separate standalone SDK, OS and release configurations when those distinct environments need qualification.</td></tr>
+<tr><td>More parallel jobs make the machine slower</td><td>Memory, storage and nested compiler work may be saturated. Start with two jobs and measure before increasing. CTest observes declared resource locks; undeclared shared state still needs review.</td></tr>
+<tr><td>Tests report missing executables</td><td>Build the test targets first and resolve compiler or quarantine errors. Do not accept an old binary or skip the failing coverage.</td></tr>
+</tbody></table>
+<h2>8. Run broader qualification before a release</h2>
+<pre>cmake --build --preset windows-ucrt64-all-debug --parallel 2 2>&amp;1 | Tee-Object "C:\umicom\_local\logs\repository-publication\full-build-01.log"
+
+ctest --preset windows-ucrt64-all-debug --parallel 2 --output-on-failure --no-tests=error --output-log "C:\umicom\_local\logs\repository-publication\full-tests-01.log"</pre>
+<p>A focused run provides evidence for its selected scope. Shared interfaces, configuration changes, packaging, installation and platform-specific behavior need their corresponding integration checks. Keep successful qualification records with source revisions, configuration and selected tests so later changes can be compared with a meaningful baseline.</p>
+<p>Continue with <a href="development-command.html">the development command guide</a> or <a href="affected-builds.html">affected-build inspection</a>.</p>
+</body></html>
