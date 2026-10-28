@@ -13,6 +13,7 @@
  *---------------------------------------------------------------------------*/
 #include "window_removal_private.h"
 #include "umicom/broker_connectivity/access_gtk4.h"
+#include "umicom/broker_connectivity/access_profiles.h"
 #include "umicom/broker_connectivity/connection_gtk4.h"
 #include "umicom/ui/gtk4/path_picker.h"
 #include "umicom/broker_connectivity/connection.h"
@@ -65,6 +66,8 @@ typedef struct ConnectionUi {
     UmiIbkrConnection *connection;
     UmiIbkrConnectionSnapshot snapshot;
     GtkWidget *mode, *program, *port, *client, *ack;
+    GtkWidget *profilePath, *profileLoad, *profileSave, *profileStatus;
+    gboolean profileBusy;
     GtkWidget *connect, *disconnect, *read, *accounts, *status, *output;
     /* Report selection is captured at Read; changing it never sends a request. */
     GtkWidget *accountReportKind, *accountReportCurrency;
@@ -211,7 +214,13 @@ static gboolean Connected(const ConnectionUi *ui)
 static void Controls(ConnectionUi *ui)
 {
     gboolean active = Connected(ui);
+    /* Include persistence controls in connection ownership. The prior list
+     * is retained for review; settings workers temporarily own the fields. */
+#if 0
     GtkWidget *profile[] = {ui->mode, ui->program, ui->port, ui->client};
+#endif
+    GtkWidget *profile[] = {ui->mode, ui->program, ui->port, ui->client,
+        ui->profilePath, ui->profileLoad, ui->profileSave};
     /* A sensitivity observer may close the window. The former loop is kept
      * for review; the replacement stops before accessing another child. */
 #if 0
@@ -221,13 +230,21 @@ static void Controls(ConnectionUi *ui)
     for (size_t i = 0; i < G_N_ELEMENTS(profile); ++i)
     {
         if (ui->closed) return;
-        gtk_widget_set_sensitive(profile[i], !active);
+        gtk_widget_set_sensitive(profile[i], !active && !ui->profileBusy);
     }
     if (ui->closed) return;
     gboolean live = gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->mode)) == 1U;
+    /* A loaded profile must never race a Live acknowledgement. */
+#if 0
     gtk_widget_set_sensitive(ui->ack, !active && live);
+#endif
+    gtk_widget_set_sensitive(ui->ack, !active && live && !ui->profileBusy);
     if (ui->closed) return;
+    /* A settings operation completes before another connection decision. */
+#if 0
     gtk_widget_set_sensitive(ui->connect, !active);
+#endif
+    gtk_widget_set_sensitive(ui->connect, !active && !ui->profileBusy);
     if (ui->closed) return;
     gtk_widget_set_sensitive(ui->disconnect, active);
     if (ui->closed) return;
@@ -431,6 +448,9 @@ static gboolean Poll(gpointer data)
     g_object_unref(window);
     return keep ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
 }
+/* Preserve the earlier synchronous handler for review. A settings worker
+ * now owns field projection, and a notification may retire this window. */
+#if 0
 static void ProfileChanged(GObject *object, GParamSpec *spec, gpointer data)
 {
     (void)object; (void)spec;
@@ -442,11 +462,27 @@ static void ProfileChanged(GObject *object, GParamSpec *spec, gpointer data)
     gtk_check_button_set_active(GTK_CHECK_BUTTON(ui->ack), FALSE);
     Controls(ui);
 }
+#endif
+static void ProfileChanged(GObject *object, GParamSpec *spec, gpointer data)
+{
+    (void)object; (void)spec;
+    GtkWindow *window = GTK_WINDOW(data);
+    ConnectionUi *ui = Owner(window);
+    if (ui == NULL || Connected(ui) || ui->profileBusy) return;
+    g_object_ref(window);
+    UmiTradingEnvironment mode = gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->mode)) == 1U ? UMI_TRADING_LIVE : UMI_TRADING_PAPER;
+    UmiIbkrProgram program = gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->program)) == 1U ? UMI_IBKR_GATEWAY : UMI_IBKR_TWS;
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->port), UmiIbkrDefaultPort(program, mode));
+    if (!ui->closed) gtk_check_button_set_active(GTK_CHECK_BUTTON(ui->ack), FALSE);
+    if (!ui->closed) Controls(ui);
+    g_object_unref(window);
+}
 static void ConnectClicked(GtkButton *button, gpointer data)
 {
     (void)button;
     ConnectionUi *ui = Owner(GTK_WINDOW(data));
-    if (ui == NULL || Connected(ui)) return;
+    /* A worker owns the pending settings; synthetic clicks also respect it. */
+    if (ui == NULL || Connected(ui) || ui->profileBusy) return;
 #ifdef UMI_IBKR_HAS_FILTERED_CHOICES
     if (PositionReviewBusy(ui)) return;
     /* A catalogue identity never crosses into a newly created connection. */
@@ -614,6 +650,7 @@ static void Field(GtkGrid *grid, const char *name, GtkWidget *widget, int row, c
     gtk_widget_set_name(widget, id);
 }
 /* The native adapter only collects fields and paints shared policy results. */
+#include "ibkr_profiles.inc"
 #include "ibkr_fill_policy.inc"
 #include "ibkr_contract_details.inc"
 #include "ibkr_market_rule.inc"
@@ -837,6 +874,7 @@ GtkWindow *UmiIbkrGtkCreate(GtkWindow *parent)
     ui->status = Text("Not connected. Opening this window does not open a socket.");
     gtk_widget_set_name(ui->status, "ibkr-status");
     gtk_box_append(GTK_BOX(root), ui->status);
+    ProfileControls(window, ui, root);
     /* Connection choices stay visible while the optional inspection tools are
      * collapsed. The same widgets and callbacks retain their owner; moving their
      * parent changes presentation without creating another broker session. */

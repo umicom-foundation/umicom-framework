@@ -41,3 +41,6 @@ add_executable(umicom-broker-access-example
     "${CMAKE_CURRENT_LIST_DIR}/../examples/ibkr_connection/access_plan.c")
 target_link_libraries(umicom-broker-access-example PRIVATE Umicom::ibkr_connection)
 umicom_ibkr_target(umicom-broker-access-example)
+
+# Persistence is shared by native and future web/mobile clients.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomBrokerProfiles.cmake")

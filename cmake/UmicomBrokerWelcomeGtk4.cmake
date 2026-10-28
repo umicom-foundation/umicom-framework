@@ -56,3 +56,23 @@ if(BUILD_TESTING)
         umicom_register_validation_target(umicom-broker-access-native-test)
     endif()
 endif()
+
+# Exercise asynchronous settings with isolated fixture paths, never user profiles.
+if(BUILD_TESTING)
+    add_executable(umicom-broker-profile-native-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ibkr_connection/test_profile_native.c")
+    target_link_libraries(umicom-broker-profile-native-test PRIVATE
+        Umicom::ibkr_connection_gtk4 Umicom::platform)
+    umicom_ibkr_target(umicom-broker-profile-native-test)
+    foreach(case save-load missing damaged endpoint-ack stale-fields retired)
+        set(fixture "${CMAKE_CURRENT_BINARY_DIR}/broker-profile-native-fixtures/${case}")
+        file(MAKE_DIRECTORY "${fixture}")
+        add_test(NAME framework.broker_profile_native.${case}
+            COMMAND umicom-broker-profile-native-test ${case} "${fixture}")
+        set_tests_properties(framework.broker_profile_native.${case} PROPERTIES
+            TIMEOUT 20 SKIP_RETURN_CODE 77 LABELS "framework;broker;settings;gtk4;ownership;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-broker-profile-native-test)
+    endif()
+endif()

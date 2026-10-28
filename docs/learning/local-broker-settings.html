@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Saving local broker connection settings — Umicom Framework</title>
+<style>body{max-width:60rem;margin:2rem auto;padding:0 1rem;font:1.05rem/1.65 system-ui,sans-serif;color:#203247}h1,h2{line-height:1.25}code{background:#eef2f5;padding:.1rem .25rem}pre{padding:1rem;overflow:auto;background:#eef2f5}table{border-collapse:collapse;width:100%}th,td{border:1px solid #c9d3dc;padding:.65rem;text-align:left}a{color:#066b79}.note{padding:1rem;border-left:4px solid #087784;background:#edf6f6}</style>
+</head><body>
+<h1>Saving local broker connection settings</h1>
+<p>A connection setting tells one program how to reach another program. In Umicom Trader, a <strong>port</strong> identifies the local broker endpoint and a <strong>client ID</strong> identifies this API connection. These values are different from your broker username and password.</p>
+<p>The shared Framework broker window can save separate Paper and Live settings. It stores the selected program, port and client ID on your computer. A saved file never contains broker credentials, an authentication code, an account balance or permission to connect automatically.</p>
+<h2>Save your selected mode</h2>
+<ol>
+<li>Open the broker connection window in Umicom Trader. Select Paper or Live and check which program you are using.</li>
+<li>While disconnected, enter the API port configured in your broker program and an unused client ID.</li>
+<li>Expand <strong>Saved Paper and Live settings</strong>.</li>
+<li>Review the <strong>Settings file</strong> field. Its default is <code>umicom-broker-profiles.txt</code> in your operating system's user configuration directory. You may enter another absolute path in an existing directory you control.</li>
+<li>Choose <strong>Save selected mode</strong>. Wait for the confirmation. The other mode's saved settings are preserved.</li>
+</ol>
+<p>On Windows, an absolute path includes a drive and directory, such as <code>C:\Users\YourName\AppData\Roaming\umicom-broker-profiles.txt</code>. The actual default depends on your operating system configuration; use the path displayed by the application. Do not put this personal settings file in a source repository.</p>
+<h2>Load settings before connecting</h2>
+<ol>
+<li>Select the mode you intend to use. Loading Paper settings does not switch the window to Live.</li>
+<li>Choose <strong>Load selected mode</strong> and wait for the result.</li>
+<li>Check the program, port and client ID. Loading Live settings clears the acknowledgement checkbox.</li>
+<li>Authenticate in the broker program itself. Check the actual Paper or Live login there.</li>
+<li>When you are ready, explicitly choose <strong>Connect read-only</strong>. Saving or loading alone never connects.</li>
+</ol>
+<p class="note">The existing broker inspector reads observations. It does not place, modify or cancel orders. A saved Live mode describes intent; it does not prove which account the broker program has authenticated.</p>
+<h2>Understand a settings file</h2>
+<pre>UMICOM-BROKER-PROFILES 1
+paper 0 7497 35
+live 0 7496 35
+</pre>
+<p>The first line identifies the format and its version. Each following line contains a mode, program number, port and client ID. Program <code>0</code> means TWS and <code>1</code> means IB Gateway. The format uses decimal digits and newline separators. It deliberately rejects unknown fields and unsupported versions rather than guessing what they mean.</p>
+<p>Use the application to edit settings. Adding a password or an acknowledgement field makes the file invalid; it cannot enable authentication or bypass the connection policy.</p>
+<h2>When an operation fails</h2>
+<table><thead><tr><th>Message</th><th>What to do</th></tr></thead><tbody>
+<tr><td>No saved settings found</td><td>The current fields stay unchanged. Check the path or save your settings for the first time.</td></tr>
+<tr><td>Parent directory must already exist</td><td>Choose an existing directory you control. The service does not create directories.</td></tr>
+<tr><td>Settings are in use</td><td>Wait for the other application to finish. Do not delete the <code>.umi-guard</code> file: its presence alone does not mean the settings are busy.</td></tr>
+<tr><td>Damaged, too large or unsupported</td><td>Keep the file for investigation. Choose a different filename to save a new profile. The application refuses to replace the damaged file.</td></tr>
+<tr><td>Fields changed while loading</td><td>Review the current fields and load again if desired. A stale result is not applied over changed connection settings.</td></tr>
+<tr><td>Operation failed after saving</td><td>Reload and inspect the result before retrying. A late I/O error may occur after the replacement was published.</td></tr>
+</tbody></table>
+<h2>Use the Framework service</h2>
+<p>The public header is <code>umicom/broker_connectivity/access_profiles.h</code>. <code>UmiBrokerAccessProfilesLoad</code> reads a complete pair of settings without changing files. <code>UmiBrokerAccessProfilesStore</code> updates one mode under a cooperative file lease and publishes a complete replacement. Calls may block, so graphical applications call them from a worker.</p>
+<p>A <strong>cooperative lease</strong> is an operating-system handle that participating writers agree to hold while they update a file. All writers must use the same guard path. It does not stop arbitrary programs that ignore the protocol. The parent directory must remain trusted and stable.</p>
+<p>A <strong>complete-file replacement</strong> prepares and flushes a new file before publishing it. It reduces partial-write risk, but is not a guarantee against power loss. The Framework preserves the established platform storage contracts and their limits.</p>
+<p>Closing the broker window does not cancel a save already running. Its completion cannot repaint the closed window. Reopen and load to inspect the saved result.</p>
+<p>Continue with <a href="paper-live-connections.html">Paper and Live connections</a>.</p>
+</body></html>
