@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/broker_connectivity/welcome_gtk4.h"
+#include <stdio.h>
 
 struct UmiBrokerWelcomeGtk {
     unsigned references;
@@ -62,6 +63,8 @@ static void Choose(GtkButton *button, gpointer data)
         if (status == UMI_STATUS_OK)
             status = welcome->config.openMode(welcome->config.userData, &plan);
     }
+    if (status != UMI_STATUS_OK)
+        (void)fprintf(stderr, "Broker workspace startup failed: %s\n", umi_status_text(status));
     /* Product callbacks may replace the complete start screen. Holding this
      * reference until return protects that transition without extending authority. */
     if (!welcome->closed) {
