@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Automatic builds and test selection — Umicom Framework</title>
+<style>body{font:18px/1.65 system-ui,sans-serif;max-width:960px;margin:3rem auto;padding:0 1.25rem;color:#14283b;background:#fafcfe}h1,h2{line-height:1.2}pre{padding:1rem;background:#eaf0f5;overflow:auto}code{font-size:.9em}aside{border-left:4px solid #26788b;padding:1rem;background:#eef8fa}table{border-collapse:collapse;width:100%}td,th{padding:.7rem;border:1px solid #bbcbd8;text-align:left}a{color:#15567d}</style></head><body>
+<nav><a href="incremental-builds.html">Incremental builds</a> · <a href="development-command.html">Development command</a></nav>
+<h1>Automatic builds and test selection</h1>
+<p>An incremental build keeps previously compiled work. The configured build generator follows source and header dependencies, recompiles the parts that need updating, and links the programs that depend on them. Keep the same build folder between runs so that this information remains available.</p>
+<p>Automatic qualification adds a second decision: which tests need to execute. Framework retains an individual result for each supported self-contained test. A passing result can be reused while its built executable and recorded execution context remain unchanged. Reused evidence is reported separately from newly executed tests.</p>
+<h2>Use a configured project</h2>
+<ol><li>Configure and build the project once with testing enabled. The initial build creates the native command and test-receipt helper. A first qualification has no passing receipts to reuse.</li>
+<li>Use an installed Umicom command outside the build folder you are updating. On Windows, a running executable cannot overwrite its own program file. This also applies when using Studio to build Studio itself.</li>
+<li>Run verification for the existing project build folder. You select the project configuration, not individual targets or test names:</li></ol>
+<pre><code>Set-Location "C:\umicom\Umicom-Applications"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+&amp; "C:\umicom\installed\applications\bin\umicom.exe" verify --source . --build ".\build\windows-ucrt64-all-debug" --config Debug</code></pre>
+<p>The installed command must include the automatic verification implementation. Stop on an error and read the reported log. The command uses the existing cache, refreshes configuration in supported Umicom build trees, builds incrementally, and runs the automatically selected tests. It never cleans the build directory.</p>
+<h2>Use Studio</h2>
+<ol><li>Open the project and select its existing build profile. The source and build folders belong to that project.</li><li>Enable testing in the profile when you want Build to include test qualification.</li><li>Choose Build or Test. Framework performs the work on Studio's existing worker, so Output, Problems, cancellation and operation history keep their existing behaviour.</li></ol>
+<p>Building a separate application against an installed SDK uses its installed libraries. Building a project that includes Framework source lets the generator follow those source dependencies. Automatic testing does not itself make every Framework source dirty.</p>
+<h2>How a previous result is treated</h2>
+<table><thead><tr><th>Previous evidence</th><th>Next verification</th></tr></thead><tbody>
+<tr><td>Passing self-contained test; matching executable and execution context</td><td>Reuse the historical result.</td></tr>
+<tr><td>Failure, timeout, cancellation, skip, disabled or missing result</td><td>Keep the test selected; a skip is not a pass.</td></tr>
+<tr><td>Changed executable, runtime dependency, CTest catalogue, environment or configured cache</td><td>Invalidate affected receipts; shared context changes conservatively invalidate all cached receipts.</td></tr>
+<tr><td>New test, unknown inputs, external service, fixture or dependency group</td><td>Execute normally through CTest.</td></tr>
+<tr><td>Interrupted run or invalid report</td><td>Selected tests remain due. Older passing receipts cannot silently replace an incomplete attempt.</td></tr>
+</tbody></table>
+<p>Each test has its own outcome. One failing case does not discard unrelated unchanged passing receipts. The driver also consults CTest's latest failure lists so a failure seen outside the automatic workflow can override an older cached pass.</p>
+<h2>What is supported first</h2>
+<p>The in-memory snapshot contract cases are registered as self-contained tests. Their executable and linked runtime libraries contain their test inputs. The driver resolves and hashes those runtime dependencies; incomplete runtime information disables reuse. Most other suites retain ordinary execution until their complete inputs have been reviewed and declared. You do not need to maintain a list of changed files.</p>
+<p>CMake and CTest 3.29 or newer are required for the generated automatic driver. Native Windows and Linux builds with an available runtime dependency scanner support receipt reuse. Other configurations preserve ordinary testing. Profiles with explicit presets retain their existing CTest preset semantics; automatic reuse is currently available through a resolved build-directory profile.</p>
+<p>Projects using an installed SDK without a generated automatic driver also retain full CTest execution. Package, deploy and ordinary test commands keep their established full-qualification path. A full release test run remains useful for environmental and integration problems that cannot safely be cached.</p>
+<h2>Find the records</h2>
+<p>The command prints its verification log path. Automatic driver records live below <code>BUILD/.umicom/qualification/CONFIG/</code>. Every run keeps configuration and incremental-build logs, CTest discovery and the list of reused tests. When tests execute, it also saves their transcript and JUnit results. A run that reuses every result does not invent a new test report. <code>receipts.tsv</code> is a versioned table of test names, input digests and outcomes. The native parser rejects malformed or duplicate rows; an unreadable previous table widens selection instead of assuming success.</p>
+<p>Records describe the executable tested, not subsequent edits to source files. Continue development in a separate checkout while qualification is running, or run verification again after editing the tested project. Before-and-after checks reject observable changes to the built artifacts and execution context.</p>
+<h2>Why a build can still be large</h2>
+<p>A shared header or compiler-option change may affect many source files. Framework currently also exports a public-header fingerprint to protect against timestamp-preserving file copies. Changing a public header can therefore cause broad recompilation. The automatic test driver preserves this safeguard. Replacing it requires dependency-complete content tracking, not simply disabling freshness checks.</p>
+<p>A new compiler is not required for incremental builds. Framework coordinates the existing compiler, generator and CTest while retaining evidence. Compiler development is a separate project; it would still need correct dependency tracking and test-input contracts.</p>
+<h2>Declare another eligible test</h2>
+<p>Contributors may register a test only after checking that it reads no external files, plugins, network services, clocks, mutable fixtures or undeclared state. Runtime-linked libraries are fingerprinted automatically. Tests with fixture, environment, resource or ordering requirements are excluded from reuse by the final registration check.</p>
+<pre><code>add_test(NAME example.value-rules COMMAND example-value-tests)
+if(COMMAND umicom_test_closed_inputs)
+    umicom_test_closed_inputs(example.value-rules example-value-tests)
+endif()</code></pre>
+<p>Do not apply this declaration to an entire directory merely to reduce test counts. Missing knowledge must result in execution. Adding a new input to a previously self-contained test requires removing or extending its reuse contract before accepting cached results.</p>
+</body></html>

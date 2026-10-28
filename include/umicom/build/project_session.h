@@ -72,6 +72,13 @@ void umi_build_project_session_destroy(UmiBuildProjectSession *session);
  * Test failure or an empty test suite blocks Package and Deploy. */
 UmiStatus umi_build_project_session_submit(UmiBuildProjectSession *session,
     const UmiBuildProfile *profile, UmiBuildPhase phase, bool trusted);
+/** Queue automatic project qualification. Build requests compile incrementally
+ * and, when build_testing is enabled, select tests from retained input evidence.
+ * Test requests require build_testing. Configure, build and output remain on the
+ * existing worker; package/install/deploy retain their explicit full-test path.
+ * Only BUILD and TEST are accepted. log_path may be NULL. */
+UmiStatus UmiBuildProjectSessionSubmitAutomatic(UmiBuildProjectSession *session,
+    const UmiBuildProfile *profile, UmiBuildPhase phase, bool trusted, const char *log_path);
 /** Poll copied state/results; calls do not invoke owner callbacks or wait for
  * compiler completion. A result is readable only after its phase completes. */
 UmiStatus umi_build_project_session_snapshot(UmiBuildProjectSession *session,

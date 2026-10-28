@@ -35,6 +35,8 @@ static int umi_cli_command_dev(
             "package, deliver, run, automate, workflow");
         return 0;
     }
+    if (strcmp(argv[0], "verify") == 0)
+        return umi_cli_command_verify(argc - 1, argv + 1);
     /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(argv[0], "doctor") == 0 || strcmp(argv[0], "check") == 0) {
         return umi_cli_command_check(context, argc - 1, argv + 1);
@@ -286,6 +288,8 @@ static int RunNativeCommand(int argc, char **argv)
     /* Saved test evidence is inspected through Framework without a toolchain or test launch. */
     /* Selection is computed by Framework; this route only displays its evidence. */
     /* Archive inspection is read-only and retains historical provenance. */
+    if (strcmp(command, "verify") == 0)
+        return umi_cli_command_verify(argc - 2, argv + 2);
     /* Check/doctor retain environment inspection. Build-test is the explicit
      * incremental execution route through the shared Framework service. */
     if (strcmp(command, "build-test") == 0)

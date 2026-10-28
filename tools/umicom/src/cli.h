@@ -38,6 +38,7 @@ typedef struct UmiCliContext {
  * Provide the cli print help operation used by this module and its client applications.
  */
 void umi_cli_print_help(void);
+int umi_cli_command_verify(int argc, char **argv);
 /**
  * Provide the cli print repo help operation used by this module and its client
  * applications.

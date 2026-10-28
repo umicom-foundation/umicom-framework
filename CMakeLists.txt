@@ -1235,6 +1235,7 @@ target_include_directories(umicom_testing PUBLIC
 )
 umicom_apply_warnings(umicom_testing)
 umicom_apply_sanitizers(umicom_testing)
+include(cmake/UmicomAutomaticTests.cmake)
 
 # -----------------------------------------------------------------------------
 # Terminal sessions and prepared shells
@@ -3385,6 +3386,7 @@ if(UMICOM_BUILD_NATIVE_TOOL)
         tools/umicom/src/common.c
         tools/umicom/src/command_check.c
         tools/umicom/src/command_build.c
+        tools/umicom/src/command_verify.c
         tools/umicom/src/command_automation.c
         tools/umicom/src/command_repository.c
         tools/umicom/src/command_application_module.c

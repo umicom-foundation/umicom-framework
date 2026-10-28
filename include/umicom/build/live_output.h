@@ -45,6 +45,12 @@ typedef struct UmiBuildOutputSnapshot {
 UmiStatus UmiBuildRunnerRunObserved(UmiBuildRunner *runner, UmiBuildPhase phase,
     UmiProcessOutputObserver observer, void *context, UmiBuildResult *out_result);
 
+/* Execute automatic tests with the same output, cancellation and process-tree
+ * ownership as ordinary CTest. The configured driver builds incrementally,
+ * retains individual outcomes and reuses only qualifying previous passes. */
+UmiStatus UmiBuildRunnerRunAutomaticTests(UmiBuildRunner *runner,
+    UmiProcessOutputObserver observer, void *context, UmiBuildResult *out_result);
+
 /* Optional executor for hosts providing their own build transport. Emit bytes
  * synchronously before returning, honour cancellation, and do not retain the
  * observer/context. The session copies bytes before each callback returns.

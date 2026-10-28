@@ -16,6 +16,7 @@
 #include "umicom/build/project_session.h"
 #include "umicom/build/run_current.h"
 #include "umicom/build/directory_guard.h"
+#include "umicom/build/ctest_provider.h"
 #include "umicom/build/live_output.h"
 #include "umicom/build/live_diagnostics.h"
 #include "umicom/build/parser.h"
@@ -36,6 +37,7 @@ struct UmiBuildProjectSession {
     UmiMutex *mutex;
     UmiCancellationToken *cancellation;
     UmiBuildProfile profile;
+    bool automatic_tests;
     UmiBuildPhase phases[UMI_BUILD_PROJECT_SESSION_MAX_PHASES];
     size_t phase_count;
     UmiBuildResult *results;
@@ -278,7 +280,14 @@ static UmiStatus run_phase(UmiBuildProjectSession *session, UmiBuildPhase phase,
     config.clock = session->config.clock;
     config.cancellation = session->cancellation;
     status = umi_build_runner_create(&config, &runner);
+/* Automatic selection reuses the Framework runner rather than creating another Studio worker. The previous statement is retained for review. */
+#if 0
     if (status == UMI_STATUS_OK) status = UmiBuildRunnerRunObserved(runner, phase, observe_output, session, result);
+#endif
+    if (status == UMI_STATUS_OK)
+        status = session->automatic_tests && phase == UMI_BUILD_PHASE_TEST
+            ? UmiBuildRunnerRunAutomaticTests(runner, observe_output, session, result)
+            : UmiBuildRunnerRunObserved(runner, phase, observe_output, session, result);
     umi_build_runner_destroy(runner);
     return status;
 }
@@ -926,8 +935,13 @@ UmiStatus UmiBuildProjectSessionSubmitLogged(UmiBuildProjectSession *session,
     return status;
 }
 #endif
+/* Automatic submission adds a test-selection policy without changing legacy phase entry points. The previous statement is retained for review. */
+#if 0
 static UmiStatus ProjectSessionSubmitMode(UmiBuildProjectSession *session,
     const UmiBuildProfile *profile, UmiBuildPhase phase, bool trusted, const char *log_path, bool run_current)
+#endif
+static UmiStatus ProjectSessionSubmitMode(UmiBuildProjectSession *session,
+    const UmiBuildProfile *profile, UmiBuildPhase phase, bool trusted, const char *log_path, bool run_current, bool automatic)
 {
     UmiTaskQueueStats stats;
     UmiTaskConfig task_config = {0};
@@ -957,6 +971,7 @@ static UmiStatus ProjectSessionSubmitMode(UmiBuildProjectSession *session,
     status = umi_task_create(&task_config, &session->task);
     if (status != UMI_STATUS_OK) { free(launch_profile); return status; }
     session->profile = run_current ? *launch_profile : *profile;
+    session->automatic_tests = automatic;
     free(launch_profile);
     /* Freeze the source root before queuing. Each phase may run much later;
      * using the process cwd again could build or launch a different project. */
@@ -980,7 +995,27 @@ static UmiStatus ProjectSessionSubmitMode(UmiBuildProjectSession *session,
     session->phase_count = 0U;
     /* Launch-only execution shares the worker lifecycle but intentionally has
      * no prerequisite stages. The established Run plan still builds first. */
-    if (run_current) {
+    if (automatic) {
+        /* Test prerequisites are built by the configured generator. Asking for
+         * its default project target still compiles only dirty dependencies. */
+        if (profile->build_testing) session->profile.build_target[0] = '\0';
+        char driver[UMI_BUILD_PATH_CAPACITY];
+        UmiStatus discovery = profile->build_testing
+            ? UmiBuildAutomaticTestDriver(&session->profile, driver, sizeof(driver))
+            : UMI_STATUS_NOT_FOUND;
+        if (discovery != UMI_STATUS_OK && discovery != UMI_STATUS_NOT_FOUND) return discovery;
+        if (discovery == UMI_STATUS_OK) {
+            /* The configured driver owns configure, incremental build and tests.
+             * Keep one worker stage rather than executing its prerequisites twice. */
+            session->phases[session->phase_count++] = UMI_BUILD_PHASE_TEST;
+        } else {
+            /* A new build tree or an explicit preset retains the bootstrap plan.
+             * The first configure can generate the driver for subsequent runs. */
+            session->phases[session->phase_count++] = UMI_BUILD_PHASE_CONFIGURE;
+            session->phases[session->phase_count++] = UMI_BUILD_PHASE_BUILD;
+            if (profile->build_testing) session->phases[session->phase_count++] = UMI_BUILD_PHASE_TEST;
+        }
+    } else if (run_current) {
         session->phases[session->phase_count++] = UMI_BUILD_PHASE_RUN;
     } else if (phase == UMI_BUILD_PHASE_REBUILD) {
         session->phases[session->phase_count++] = UMI_BUILD_PHASE_CONFIGURE;
@@ -1080,13 +1115,21 @@ static UmiStatus ProjectSessionSubmitMode(UmiBuildProjectSession *session,
 UmiStatus UmiBuildProjectSessionSubmitLogged(UmiBuildProjectSession *session,
     const UmiBuildProfile *profile, UmiBuildPhase phase, bool trusted, const char *log_path)
 {
+/* Legacy submission keeps full qualification behaviour. The previous statement is retained for review. */
+#if 0
     return ProjectSessionSubmitMode(session, profile, phase, trusted, log_path, false);
+#endif
+    return ProjectSessionSubmitMode(session, profile, phase, trusted, log_path, false, false);
 }
 
 UmiStatus UmiBuildProjectSessionRunCurrent(UmiBuildProjectSession *session,
     const UmiBuildProfile *profile, bool trusted, const char *log_path)
 {
+/* Run-current remains launch-only. The previous statement is retained for review. */
+#if 0
     return ProjectSessionSubmitMode(session, profile, UMI_BUILD_PHASE_RUN, trusted, log_path, true);
+#endif
+    return ProjectSessionSubmitMode(session, profile, UMI_BUILD_PHASE_RUN, trusted, log_path, true, false);
 }
 
 /* Preserve the unlogged API through the same submission and phase planner. */
@@ -1330,4 +1373,13 @@ UmiStatus UmiBuildProjectSessionReadDirectoryGuard(UmiBuildProjectSession *sessi
     *outSnapshot = session->directory_guard;
     (void)umi_mutex_unlock(session->mutex);
     return UMI_STATUS_OK;
+}
+
+UmiStatus UmiBuildProjectSessionSubmitAutomatic(UmiBuildProjectSession *session,
+    const UmiBuildProfile *profile, UmiBuildPhase phase, bool trusted, const char *log_path)
+{
+    if (profile == NULL || (phase != UMI_BUILD_PHASE_BUILD && phase != UMI_BUILD_PHASE_TEST))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (phase == UMI_BUILD_PHASE_TEST && !profile->build_testing) return UMI_STATUS_INVALID_STATE;
+    return ProjectSessionSubmitMode(session, profile, phase, trusted, log_path, false, true);
 }

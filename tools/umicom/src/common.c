@@ -122,6 +122,8 @@ void umi_cli_print_help(void)
         "  umicom deliver --preset NAME --build PATH --prefix PATH [--log NEW_FILE]\n"
         "  umicom launch studio --build PATH [-- ARGUMENTS]\n"
         "  --dry-run previews each action; --log records complete child output.\n");
+    (void)puts("Automatic project qualification: umicom verify --build PATH [--source PATH] [--config Debug]\n"
+        "  No targets or test filters are required. Use verify --help; this command executes and logs work.\n");
     /* Keep each help section within the portable string-literal limit.
      * fputs does not append a newline, so splitting the output preserves
      * the exact command list and the final newline supplied by puts. */

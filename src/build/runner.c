@@ -485,8 +485,13 @@ UmiStatus UmiBuildRunnerRunObserved(UmiBuildRunner *runner, UmiBuildPhase phase,
     return status;
 }
 #endif
+/* Keep one execution path for both ordinary phases and automatic test selection. The previous statement is retained for review. */
+#if 0
 UmiStatus UmiBuildRunnerRunObserved(UmiBuildRunner *runner, UmiBuildPhase phase,
     UmiProcessOutputObserver observer, void *context, UmiBuildResult *out_result)
+#endif
+static UmiStatus RunnerObservedMode(UmiBuildRunner *runner, UmiBuildPhase phase,
+    UmiProcessOutputObserver observer, void *context, UmiBuildResult *out_result, bool automatic)
 {
     UmiBuildProvider provider;
     UmiBuildCommand command;
@@ -574,7 +579,12 @@ UmiStatus UmiBuildRunnerRunObserved(UmiBuildRunner *runner, UmiBuildPhase phase,
             return status;
         }
     }
+/* Automatic tests change command preparation; output, cancellation and history retain their existing owner. The previous statement is retained for review. */
+#if 0
     provider = provider_for_phase(phase);
+#endif
+    provider = automatic && phase == UMI_BUILD_PHASE_TEST
+        ? UmiBuildAutomaticTestProvider() : provider_for_phase(phase);
     status = umi_build_provider_create_command(&provider,
                                                &profile,
                                                phase,
@@ -678,6 +688,17 @@ UmiStatus UmiBuildRunnerRunObserved(UmiBuildRunner *runner, UmiBuildPhase phase,
     return status;
 }
 /* Reuse one execution path so adding progress cannot change build semantics. */
+UmiStatus UmiBuildRunnerRunObserved(UmiBuildRunner *runner, UmiBuildPhase phase,
+    UmiProcessOutputObserver observer, void *context, UmiBuildResult *out_result)
+{
+    return RunnerObservedMode(runner, phase, observer, context, out_result, false);
+}
+UmiStatus UmiBuildRunnerRunAutomaticTests(UmiBuildRunner *runner,
+    UmiProcessOutputObserver observer, void *context, UmiBuildResult *out_result)
+{
+    return RunnerObservedMode(runner, UMI_BUILD_PHASE_TEST, observer, context, out_result, true);
+}
+
 UmiStatus umi_build_runner_run(UmiBuildRunner *runner, UmiBuildPhase phase,
     UmiBuildResult *out_result)
 {
