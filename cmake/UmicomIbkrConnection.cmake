@@ -245,3 +245,6 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomIbkrRuleReports.cmake")
 
 # Account report choices share existing transport and exact provider values.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomIbkrAccountReports.cmake")
+
+# Entry modes share the established read-only connection defaults.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomBrokerAccess.cmake")

@@ -420,3 +420,6 @@ if(TARGET Umicom::ibkr_rule_report)
         endif()
     endif()
 endif()
+
+# Products share one credential-free broker welcome controller.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomBrokerWelcomeGtk4.cmake")

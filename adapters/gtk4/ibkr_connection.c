@@ -12,6 +12,7 @@
  * Paper/Live connection controls. This window never offers order execution.
  *---------------------------------------------------------------------------*/
 #include "window_removal_private.h"
+#include "umicom/broker_connectivity/access_gtk4.h"
 #include "umicom/broker_connectivity/connection_gtk4.h"
 #include "umicom/ui/gtk4/path_picker.h"
 #include "umicom/broker_connectivity/connection.h"
@@ -924,7 +925,11 @@ GtkWindow *UmiIbkrGtkCreate(GtkWindow *parent)
     return window;
 }
 
-typedef struct ParentLink { GWeakRef parent; gulong destroyed; } ParentLink;
+typedef struct ParentLink {
+    GWeakRef parent; gulong destroyed;
+    /* A copied local plan keeps mode selection stable across window reopening. */
+    UmiBrokerAccessPlan plan; gboolean hasPlan;
+} ParentLink;
 static void ParentDestroyed(GtkWidget *widget, gpointer data)
 {
     (void)widget;
@@ -955,6 +960,10 @@ static void OpenClicked(GtkButton *button, gpointer data)
     g_object_unref(parent);
 }
 #endif
+/* The general launcher remains available. Plan-aware launchers use the same
+ * weak owner while preserving selected settings; the original callback stays
+ * here for review of the earlier default-only behaviour. */
+#if 0
 static void OpenClicked(GtkButton *button, gpointer data)
 {
     (void)button;
@@ -962,6 +971,19 @@ static void OpenClicked(GtkButton *button, gpointer data)
     GObject *parent = g_weak_ref_get(&link->parent);
     if (parent == NULL) return;
     GtkWindow *window = UmiIbkrGtkCreate(GTK_WINDOW(parent));
+    if (window != NULL) gtk_window_present(window);
+    g_object_unref(parent);
+}
+#endif
+static void OpenClicked(GtkButton *button, gpointer data)
+{
+    (void)button;
+    ParentLink *link = data;
+    GObject *parent = g_weak_ref_get(&link->parent);
+    if (parent == NULL) return;
+    GtkWindow *window = link->hasPlan
+        ? UmiIbkrGtkCreateForPlan(GTK_WINDOW(parent), &link->plan)
+        : UmiIbkrGtkCreate(GTK_WINDOW(parent));
     if (window != NULL) gtk_window_present(window);
     g_object_unref(parent);
 }
@@ -1028,4 +1050,39 @@ GtkWindow *UmiIbkrGtkCreateForEnvironment(GtkWindow *parent, int live)
     ConnectionUi *ui = Owner(window);
     if (ui != NULL) gtk_drop_down_set_selected(GTK_DROP_DOWN(ui->mode), live ? 1U : 0U);
     return window;
+}
+
+/* Program changes reset the port. Apply the custom port last and always
+ * clear consent so window construction cannot authorise a connection. */
+GtkWindow *UmiIbkrGtkCreateForPlan(GtkWindow *parent, const UmiBrokerAccessPlan *plan)
+{
+    if (UmiBrokerAccessPlanValidate(plan) != UMI_STATUS_OK ||
+        plan->mode == UMI_BROKER_ACCESS_GUEST ||
+        (parent != NULL && !GTK_IS_WINDOW(parent))) return NULL;
+    GtkWindow *window = UmiIbkrGtkCreateForEnvironment(parent,
+        plan->mode == UMI_BROKER_ACCESS_LIVE ? 1 : 0);
+    if (window == NULL) return NULL;
+    ConnectionUi *ui = Owner(window);
+    if (ui == NULL) { gtk_window_destroy(window); return NULL; }
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(ui->program),
+        plan->program == UMI_IBKR_GATEWAY ? 1U : 0U);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->port), plan->port);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->client), plan->clientId);
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(ui->ack), FALSE);
+    Controls(ui);
+    return window;
+}
+
+GtkWidget *UmiIbkrGtkLauncherCreateForPlan(GtkWindow *parent, const UmiBrokerAccessPlan *plan)
+{
+    if (UmiBrokerAccessPlanValidate(plan) != UMI_STATUS_OK ||
+        plan->mode == UMI_BROKER_ACCESS_GUEST) return NULL;
+    GtkWidget *button = UmiIbkrGtkLauncherCreate(parent);
+    if (button == NULL) return NULL;
+    ParentLink *link = g_object_get_data(G_OBJECT(button), "umicom-broker-parent");
+    link->plan = *plan;
+    link->hasPlan = TRUE;
+    gtk_button_set_label(GTK_BUTTON(button), plan->mode == UMI_BROKER_ACCESS_LIVE
+        ? "Live broker connection" : "Paper broker connection");
+    return button;
 }
