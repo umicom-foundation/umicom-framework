@@ -50,3 +50,9 @@ endif()
 install(FILES "${_reading_root}/examples/reading_document/main.c"
     "${_reading_root}/examples/reading_document/CMakeLists.txt"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/examples/reading_document" COMPONENT FrameworkSDK)
+
+# This standalone example composes the existing reading and editor services.
+# Its own CTest verifies navigation when the owner builds the installed example.
+install(FILES "${_reading_root}/examples/reading_search/main.c"
+    "${_reading_root}/examples/reading_search/CMakeLists.txt"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/examples/reading_search" COMPONENT FrameworkSDK)
