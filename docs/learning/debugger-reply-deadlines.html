@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Waiting for debugger replies</title>
+<style>body{font:17px/1.65 system-ui;max-width:960px;margin:36px auto;padding:0 24px;color:#18363f}pre{background:#eef3f5;padding:16px;overflow:auto}code{font-size:.92em}svg{max-width:100%;height:auto}th,td{text-align:left;padding:10px;border:1px solid #c6d5dc}table{border-collapse:collapse;width:100%}</style></head><body>
+<h1>Waiting for debugger replies</h1>
+<p>A debugger is another program. Studio asks it to pause a program, list threads or inspect a value. The answer travels through a byte stream. A <em>request sequence</em> is the number that connects an answer to the original question. Other answers and events can arrive first, so Framework keeps separate queues for responses and events.</p>
+<h2>A deadline is a boundary, not a new allowance for every read</h2>
+<p>A positive wait timeout starts one elapsed-time budget. Framework uses a monotonic clock: a clock intended for measuring duration rather than the date on a wall calendar. Each read receives only the remaining budget. A complete answer is checked again after the read returns. An answer at or beyond the deadline is late even if its sequence matches.</p>
+<svg viewBox="0 0 880 200" role="img" aria-labelledby="timeline-title timeline-description">
+<title id="timeline-title">Two six-millisecond reads exceed a ten-millisecond budget</title>
+<desc id="timeline-description">The first read ends at six milliseconds. The second ends at twelve, beyond the original ten-millisecond deadline. Its reply is retained, and the original wait reports a timeout.</desc>
+<rect x="1" y="1" width="878" height="198" rx="14" fill="#eef3f5"/>
+<path d="M70 110H810" stroke="#18363f" stroke-width="3"/>
+<rect x="70" y="55" width="300" height="34" fill="#266778"/><rect x="370" y="55" width="300" height="34" fill="#a84739"/>
+<path d="M570 25V150" stroke="#a84739" stroke-width="3" stroke-dasharray="6 4"/>
+<g font-family="sans-serif" font-size="18" fill="#18363f"><text x="70" y="140">0 ms</text><text x="345" y="140">6 ms</text><text x="540" y="178">10 ms deadline</text><text x="650" y="140">12 ms</text><text x="90" y="40">First read</text><text x="390" y="40">Second read</text></g>
+</svg>
+<p>The clock cannot interrupt a synchronous callback. If a transport or event observer blocks, Framework can detect that it returned late, but cannot guarantee a hard wall-clock return time. Run these operations on the connection’s worker, not the graphical interface thread. Do not concurrently access the same adapter from several workers.</p>
+<h2>What happens to a late answer?</h2>
+<ol>
+<li>The transport receives and decodes a frame. The frame has already been consumed from the stream.</li>
+<li>If the positive wait budget has expired, Framework does not replace the caller’s response output.</li>
+<li>A response is placed in the bounded response queue. An event is placed in the event queue without starting an event observer after expiry.</li>
+<li>The wait reports <code>UMI_STATUS_TIMEOUT</code>. A later, explicit wait can inspect the retained answer. This does not change the outcome of the earlier timed-out operation.</li>
+<li>If the destination queue is full, the wait reports the capacity error. It does not claim that it retained a message it could not store.</li>
+</ol>
+<p>A timeout does not prove that the debugger failed to perform the requested action. Do not automatically send the same request again: launching, restarting or assigning a variable may already have happened. Decide whether to inspect the existing request, close the session or report uncertainty.</p>
+<h2>Choose the wait contract deliberately</h2>
+<table><thead><tr><th>API</th><th>Explicit zero timeout</th><th>Positive timeout</th></tr></thead><tbody>
+<tr><td><code>umi_debug_runtime_adapter_wait_response</code></td><td>Checks a queued response and performs bounded immediate polling, retaining interleaved events.</td><td>Checks the budget before and after receiving, without replacing output on timeout.</td></tr>
+<tr><td><code>UmiDebugRuntimeAdapterWaitObserved</code></td><td>Checks only an already queued response; starts no transport read.</td><td>Includes observer work and nested configuration waits in the enclosing budget.</td></tr>
+</tbody></table>
+<p>A nested request can receive the original answer before its own answer. The response queue preserves this ordering situation. If the observer finishes after the outer deadline, the original answer stays queued for later inspection. An observer must not destroy the adapter or recursively wait for the same sequence. It must consume a triggering event when issuing a nested request, as described in <code>adapter.h</code>.</p>
+<h2>Read the status without losing your previous result</h2>
+<p>This fragment illustrates the decision after sending a request. The adapter, sequence and response storage must already be valid. It does not start a debugger or provide a complete application.</p>
+<pre><code>/* candidate is fresh zeroed, heap-owned envelope storage. */
+UmiStatus status = umi_debug_runtime_adapter_wait_response(
+    adapter, sequence, 1000U, candidate);
+
+if (status == UMI_STATUS_OK) {
+    /* Inspect the matching successful response. */
+} else if (status == UMI_STATUS_UNAVAILABLE &amp;&amp;
+           candidate-&gt;kind == UMI_DEBUG_RUNTIME_MESSAGE_RESPONSE &amp;&amp;
+           candidate-&gt;request_sequence == sequence) {
+    /* Inspect the newly received unsuccessful response. */
+} else if (status == UMI_STATUS_TIMEOUT) {
+    /* Keep the previous accepted result. Do not resend automatically. */
+} else {
+    /* Report transport, decoding or queue-capacity failure. */
+}</code></pre>
+<p>Use a fresh zeroed candidate for each operation and keep your previous accepted result separately. <code>UMI_STATUS_UNAVAILABLE</code> can mean a remote unsuccessful response or a transport refusal. The status alone does not prove that an error envelope was received. Verify the candidate’s kind and request sequence before reading remote error details.</p>
+<p>The wait budget starts when the wait begins. The convenience invoke operation sends first and then waits; its synchronous write is not covered by the wait timeout. Transport ownership, sending policy and session cleanup are separate decisions.</p>
+<h2>Inspect a conversation through the installed SDK</h2>
+<p><code>examples/debug_reply_queue</code> uses public SDK APIs and an in-memory transport. Choose <code>ordered</code> for replies in request order, <code>interleaved</code> for a later response arriving first with two events, or <code>remote-error</code> for a received refusal. The program checks sequence identity, event order, drained pending requests and unchanged output after an empty poll. It does not start a debugger, grant project trust or execute a target program.</p>
+<p>Its standalone CMake project requires an explicit <code>UMICOM_EXPECTED_SDK_PREFIX</code> and the installed <code>developer</code> component. It checks that imports belong to that SDK. The three <code>sdk.debug_reply_queue.*</code> cases complement the clock-controlled source regressions; replay success alone cannot qualify native process transport.</p>
+<h2>Follow the implementation</h2>
+<p>The private <code>src/debug_runtime/deadline.h</code> calculates the remaining duration. <code>adapter_wait.inc</code> handles ordinary waits; <code>adapter_observed_wait.inc</code> adds event observation. Both use <code>adapter_wait_private.h</code> to retain late messages. Large candidate envelopes live on the heap so nested requests do not add large protocol records to normal thread stacks.</p>
+<p><code>tests/debug_runtime/test_wait_deadline.c</code> supplies a deterministic clock while linking the real transport, framer, decoder and queues. Its cases cover the exact boundary, partial frames, late events and replies, unchanged output, nested observers and capacity refusal. These cases complement native debugger and Studio workflow checks; they cannot establish compatibility with every debugger.</p>
+<p><a href="saved-debug-setups.html">Choose a saved debugger setup</a> · <a href="native-language-processes.html">Understand language-server connections</a></p>
+</body></html>

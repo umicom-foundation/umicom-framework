@@ -234,8 +234,18 @@ if(NOT _before STREQUAL _after)
     message(FATAL_ERROR "Inputs changed during testing. Selected receipts remain unqualified; retry with stable inputs.")
 endif()
 if(EXISTS "${_run}/results.xml")
+    # Keep the report-only call for review. The process result is now part of
+    # receipt admission: failed/unknown runner exits cannot bless fresh passes.
+    if(FALSE)
     execute_process(COMMAND "${UMICOM_AUTOMATIC_RECEIPTS}" record "${_home}/receipts.tsv"
         "${_run}/results.xml" RESULT_VARIABLE _recorded)
+    endif()
+    set(_runner_state failure)
+    if(_tested STREQUAL "0")
+        set(_runner_state success)
+    endif()
+    execute_process(COMMAND "${UMICOM_AUTOMATIC_RECEIPTS}" record-result "${_home}/receipts.tsv"
+        "${_run}/results.xml" "${_runner_state}" RESULT_VARIABLE _recorded)
     if(NOT _recorded STREQUAL "0")
         message(FATAL_ERROR "Test report could not be recorded; selected tests remain due")
     endif()

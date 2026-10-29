@@ -184,3 +184,22 @@ const char *UmiReleaseSourceObservationInventoryFingerprint(const UmiReleaseSour
 {
     return observation == NULL ? NULL : observation->inventoryDigest;
 }
+
+/* Reopened data must reproduce the exact live-observation encoding. Reuse the
+ * length-prefix and number helpers above; callers validate membership and bounds
+ * before this private operation. No path is opened while checking the identity. */
+UmiStatus UmiSourceObservationFingerprint(UmiReleaseSourceObservation *observation)
+{
+    UmiSha256 hash;
+    UmiSha256Init(&hash);
+    UmiStatus status = Field(&hash, "umicom-source-observation-1");
+    if (status == UMI_STATUS_OK) status = Field(&hash, observation->inventoryDigest);
+    if (status == UMI_STATUS_OK) status = Number(&hash, (uint64_t)observation->count);
+    for (size_t i = 0U; status == UMI_STATUS_OK && i < observation->count; ++i) {
+        const UmiReleaseSourceItem *item = &observation->items[i];
+        status = Field(&hash, item->path);
+        if (status == UMI_STATUS_OK) status = Number(&hash, (uint64_t)item->bytes);
+        if (status == UMI_STATUS_OK) status = Field(&hash, item->sha256);
+    }
+    return status == UMI_STATUS_OK ? Finish(&hash, observation->fingerprint) : status;
+}

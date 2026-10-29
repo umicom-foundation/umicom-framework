@@ -64,6 +64,14 @@ static inline void CoverageTextRow(CoverageWriter *writer, const UmiCtestCoverag
             (void)snprintf(line, sizeof line, "\n  Saved duration: %llu ms",
                 (unsigned long long)row->observation.duration_ms);
             Append(writer, line);
+            /* A result message is saved evidence, not an inferred cause.
+             * Reuse escaped text for both CLI and native pages so a newline
+             * in imported metadata cannot impersonate another result row. */
+            Append(writer, "\n  Saved result message: ");
+            if (row->observation.message[0] != '\0')
+                Text(writer, row->observation.message);
+            else
+                Append(writer, "not recorded");
         } else {
             Append(writer, "\n  No matching observation for the requested source.");
         }

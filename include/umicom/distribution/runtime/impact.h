@@ -28,7 +28,9 @@ typedef enum UmiReleaseImpactReason {
     UMI_RELEASE_IMPACT_FULL = 16U,
     UMI_RELEASE_IMPACT_TEST_PREREQUISITE = 32U,
     /** Related setup, cleanup or ordered tests selected as a conservative group. */
-    UMI_RELEASE_IMPACT_TEST_DEPENDENCY = 64U
+    UMI_RELEASE_IMPACT_TEST_DEPENDENCY = 64U,
+    /** Explicit retry selection, independent of changed source bytes. */
+    UMI_RELEASE_IMPACT_REQUIRED_TEST = 128U
 } UmiReleaseImpactReason;
 /** Version-two test metadata can identify related test registrations. Selection
  * includes the entire connected group and every declared executable prerequisite.
@@ -43,7 +45,8 @@ typedef enum UmiReleaseImpactFallback {
     UMI_RELEASE_IMPACT_BUILD_CONFIGURATION = 4U,
     UMI_RELEASE_IMPACT_INCOMPLETE_GRAPH = 8U,
     UMI_RELEASE_IMPACT_UNOWNED_TEST = 16U,
-    UMI_RELEASE_IMPACT_UNRESOLVED_SOURCE = 32U
+    UMI_RELEASE_IMPACT_UNRESOLVED_SOURCE = 32U,
+    UMI_RELEASE_IMPACT_UNMAPPED_TEST = 64U
 } UmiReleaseImpactFallback;
 typedef struct UmiReleaseImpactSummary {
     size_t changedPaths, targets, tests;
@@ -73,6 +76,24 @@ typedef struct UmiReleaseImpactItem {
 UmiStatus UmiReleaseImpactCreate(const UmiReleaseInventory *inventory,
     const char *const *changedPaths, size_t changedCount, bool forceFull,
     UmiReleaseImpactPlan **outPlan);
+
+/** Add exact required test names to source-driven selection. This allows a host
+ * to retain earlier failures, missing evidence or an explicit retry independently
+ * of source edits. Names are literals, never regular expressions or commands.
+ * Duplicates are harmless. Empty/NULL names are invalid; bounded names and counts
+ * use the inventory field limit and IMPACT_CHANGE_LIMIT respectively. Total
+ * requested name bytes cannot exceed the inventory text limit, including repeats.
+ * An unknown name selects the full configured graph with UNMAPPED_TEST: it is
+ * not silently discarded as though a deleted/renamed test had passed.
+ * Related test groups and every declared executable prerequisite are included.
+ * Inputs are borrowed until return; output ownership/failure rules match Create.
+ * The host still owns outcome provenance, freshness, scheduling and execution.
+ * This function reads no report and grants no cached pass or launch authority. */
+UmiStatus UmiReleaseImpactCreateWithTests(const UmiReleaseInventory *inventory,
+    const char *const *changedPaths, size_t changedCount,
+    const char *const *requiredTests, size_t requiredCount, bool forceFull,
+    UmiReleaseImpactPlan **outPlan);
+
 /** Destroy an owned immutable plan; NULL is safe. */
 void UmiReleaseImpactDestroy(UmiReleaseImpactPlan *plan);
 /** Copy the selection summary; invalid arguments leave it unchanged. */

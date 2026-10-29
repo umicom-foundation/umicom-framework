@@ -202,8 +202,105 @@ function(umicom_add_developer_capability_tests)
     umicom_add_framework_test(umicom-test-explorer-model-tests framework.test.explorer_model tests/test_test_explorer_model.c)
     umicom_add_framework_test(umicom-test-rerun-policy-tests framework.test.rerun_policy tests/test_test_rerun_policy.c)
     umicom_add_framework_test(umicom-test-coverage-analysis-tests framework.test.coverage_analysis tests/test_test_coverage_analysis.c)
+    foreach(_coverage_case IN ITEMS
+        ratio-boundaries
+        null-lookup
+        long-session
+        bad-policy
+        bad-baseline
+        arguments
+        overflow-lines-file
+        overflow-lines-aggregate
+        overflow-branches-file
+        overflow-branches-aggregate
+        invalid-lines
+        invalid-branches
+        maximum-sum
+        large-ratio
+        empty-unknown
+        empty-allowed
+        mixed-unknown
+        unknown-warning
+        unknown-failed
+        session-filter)
+        add_test(NAME "framework.test.coverage_analysis.${_coverage_case}"
+            COMMAND umicom-test-coverage-analysis-tests "${_coverage_case}")
+        set_tests_properties("framework.test.coverage_analysis.${_coverage_case}" PROPERTIES
+            TIMEOUT 30 LABELS "framework;testing;coverage;ownership;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.test.coverage_analysis.${_coverage_case}"
+                TARGETS umicom-test-coverage-analysis-tests)
+        endif()
+    endforeach()
+
     umicom_add_framework_test(umicom-test-benchmark-analysis-tests framework.test.benchmark_analysis tests/test_test_benchmark_analysis.c)
+    foreach(_benchmark_case IN ITEMS
+        nan-value
+        infinite-value
+        nan-baseline
+        infinite-baseline
+        policy-nan-regression
+        policy-infinite-improvement
+        maximum-constant
+        small-scale
+        large-scale
+        extreme-signed
+        cancelled-baseline
+        opposite-baseline
+        delta-overflow
+        baseline-absent
+        provider-regression
+        provider-disabled
+        negative-values
+        higher-direction
+        short-samples
+        late-invalid-metric
+        arguments)
+        add_test(NAME "framework.test.benchmark_analysis.${_benchmark_case}"
+            COMMAND umicom-test-benchmark-analysis-tests "${_benchmark_case}")
+        set_tests_properties("framework.test.benchmark_analysis.${_benchmark_case}" PROPERTIES
+            TIMEOUT 30 LABELS "framework;testing;benchmark;ownership;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.test.benchmark_analysis.${_benchmark_case}"
+                TARGETS umicom-test-benchmark-analysis-tests)
+        endif()
+    endforeach()
+
     umicom_add_framework_test(umicom-test-history-analysis-tests framework.test.history_analysis tests/test_test_history_analysis.c)
+    foreach(_history_case IN ITEMS
+        nan-duration
+        infinite-duration
+        negative-duration
+        unknown-outcome
+        policy-nan-slow
+        policy-infinite-slow
+        policy-nan-trend
+        policy-infinite-trend
+        skipped-only
+        cancelled-only
+        not-run-only
+        latest-skipped
+        minimum-completed
+        completed-timing
+        maximum-duration
+        trend-overflow
+        trend-drop
+        trend-rise
+        timed-out-streak
+        zero-minimum-empty
+        unrelated-invalid
+        late-invalid-item
+        arguments)
+        add_test(NAME "framework.test.history_analysis.${_history_case}"
+            COMMAND umicom-test-history-analysis-tests "${_history_case}")
+        set_tests_properties("framework.test.history_analysis.${_history_case}" PROPERTIES
+            TIMEOUT 30 LABELS "framework;testing;history;ownership;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.test.history_analysis.${_history_case}"
+                TARGETS umicom-test-history-analysis-tests)
+        endif()
+    endforeach()
+
     umicom_add_framework_test(umicom-test-explorer-session-tests framework.test.explorer_session tests/test_test_explorer_session.c)
     umicom_add_framework_test(umicom-test-platform-command-tests framework.test.commands tests/test_test_platform_command.c)
 

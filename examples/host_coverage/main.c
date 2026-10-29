@@ -15,6 +15,7 @@
 #include <umicom/testing/ctest_coverage.h>
 #include <umicom/testing/ctest_coverage_manifest.h>
 #include <stdio.h>
+#include <umicom/platform/native_arguments.h>
 #include <stdlib.h>
 
 #include <umicom/testing/ctest_coverage_view.h>
@@ -65,7 +66,12 @@ int main(int argc, char **argv)
 
 #endif
 
+/* Retain the original entry declaration for review. Framework captures
+ * native Unicode arguments before these UTF-8 file APIs consume paths. */
+#if 0
 int main(int argc, char **argv)
+#endif
+static int ConsumerMain(int argc, char **argv)
 {
     if (argc < 3 || argc > 5 ||
         (argc >= 4 && strcmp(argv[3], "--outstanding") && strcmp(argv[3], "--passed"))) {
@@ -119,5 +125,16 @@ int main(int argc, char **argv)
     else fprintf(stderr, "Coverage output failed: %s\n", umi_status_text(status));
     UmiCtestCoverageViewDestroy(view);
     UmiCtestCoverageReviewDestroy(review);
+    return result;
+}
+
+int main(int argc, char **argv)
+{
+    int result = 2;
+    UmiStatus status = UmiNativeArgumentsDispatch(argc, argv, ConsumerMain, &result);
+    if (status != UMI_STATUS_OK) {
+        fprintf(stderr, "Cannot capture native arguments: %s\n", umi_status_text(status));
+        return 2;
+    }
     return result;
 }

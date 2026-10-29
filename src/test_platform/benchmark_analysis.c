@@ -16,6 +16,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/test_platform/benchmark_analysis.h"
 
+#include <float.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -57,6 +59,8 @@ static double absolute_value(double value)
 }
 
 /* Provide the square root operation used by this module and its client applications. */
+/* Preserve the fixed-iteration approximation for review. Standard sqrt on scaled variance replaces it to cover tiny and large finite samples. */
+#if 0
 static double square_root(double value)
 {
     double estimate;
@@ -73,6 +77,8 @@ static double square_root(double value)
     }
     return estimate;
 }
+#endif
+
 
 /* Provide the compare double operation used by this module and its client applications. */
 static int compare_double(const void *left_value, const void *right_value)
@@ -87,6 +93,8 @@ static int compare_double(const void *left_value, const void *right_value)
 }
 
 /* Provide the percentile operation used by this module and its client applications. */
+/* Preserve the original interpolation. Weighted opposite-sign endpoints avoid overflowing a representable percentile. */
+#if 0
 static double percentile(const double *values, size_t count, uint32_t basis_points)
 {
     uint64_t scaled;
@@ -104,6 +112,21 @@ static double percentile(const double *values, size_t count, uint32_t basis_poin
     lower = (size_t)(scaled / 10000U);
     upper = lower + 1U < count ? lower + 1U : lower;
     fraction = (double)(scaled % 10000U) / 10000.0;
+    return values[lower] + (values[upper] - values[lower]) * fraction;
+}
+#endif
+static double percentile(const double *values, size_t count, uint32_t basis_points)
+{
+    if (values == NULL || count == 0U) return 0.0;
+    if (count == 1U) return values[0];
+    uint64_t scaled = (uint64_t)(count - 1U) * (uint64_t)basis_points;
+    size_t lower = (size_t)(scaled / 10000U);
+    size_t upper = lower + 1U < count ? lower + 1U : lower;
+    double fraction = (double)(scaled % 10000U) / 10000.0;
+    /* Opposite signs can overflow a subtraction even though interpolation is
+     * within the endpoints. Their weighted sum has no overflowing addition. */
+    if (values[lower] < 0.0 && values[upper] > 0.0)
+        return values[lower] * (1.0 - fraction) + values[upper] * fraction;
     return values[lower] + (values[upper] - values[lower]) * fraction;
 }
 
@@ -230,6 +253,8 @@ static UmiTestBenchmarkGateState evaluate_metric(
 }
 
 /* Provide the analyse metric operation used by this module and its client applications. */
+/* Preserve the original raw-sum statistics. Scaled signed measurements, finite inputs and explicit baseline availability replace them. */
+#if 0
 static UmiStatus analyse_metric(
     UmiTestBenchmarkMetricAnalysis *metric_analysis,
     const UmiTestPlatformBenchmarkRegistry *benchmarks,
@@ -301,6 +326,89 @@ static UmiStatus analyse_metric(
         baseline_count > 0U);
     return UMI_STATUS_OK;
 }
+#endif
+/* Compute means in a bounded scale. Signed measurements remain supported;
+ * no raw sample sum or squared unscaled difference is formed. */
+static UmiStatus analyse_metric(UmiTestBenchmarkMetricAnalysis *metric_analysis,
+    const UmiTestPlatformBenchmarkRegistry *benchmarks,
+    const UmiTestBenchmarkPolicy *policy, double *values, size_t value_capacity)
+{
+    size_t count = 0U, baseline_count = 0U;
+    double scale = 0.0, baseline_scale = 0.0;
+    for (size_t i = 0U; i < umi_test_platform_benchmark_registry_count(benchmarks); ++i) {
+        UmiTestPlatformBenchmarkSnapshot sample;
+        UmiStatus status = umi_test_platform_benchmark_registry_at(benchmarks,i,&sample);
+        if (status != UMI_STATUS_OK) return status;
+        if (strcmp(sample.metric,metric_analysis->metric) != 0 ||
+            strcmp(sample.unit,metric_analysis->unit) != 0) continue;
+        if (!isfinite(sample.value) || !isfinite(sample.baseline)) return UMI_STATUS_INVALID_ARGUMENT;
+        if (count >= value_capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+        values[count++] = sample.value;
+        if (absolute_value(sample.value) > scale) scale = absolute_value(sample.value);
+        if (absolute_value(sample.baseline) > baseline_scale) baseline_scale = absolute_value(sample.baseline);
+        if (sample.baseline != 0.0) ++baseline_count;
+        if (sample.regression) ++metric_analysis->provider_regression_count;
+    }
+    if (count == 0U) return UMI_STATUS_NOT_FOUND;
+    qsort(values,count,sizeof(values[0]),compare_double);
+    double mean = 0.0, variance = 0.0;
+    for (size_t i = 0U; i < count; ++i) {
+        double normalized = scale == 0.0 ? 0.0 : values[i] / scale;
+        mean += (normalized - mean) / (double)(i + 1U);
+    }
+    /* Rounding must not turn a bounded normalized statistic into overflow
+     * when it is rescaled near DBL_MAX. */
+    if (mean > 1.0) mean = 1.0;
+    if (mean < -1.0) mean = -1.0;
+    for (size_t i = 0U; i < count; ++i) {
+        double difference = (scale == 0.0 ? 0.0 : values[i] / scale) - mean;
+        double square = difference * difference;
+        variance += (square - variance) / (double)(i + 1U);
+    }
+    /* Population variance of values bounded by [-1,1] is at most one. */
+    if (variance > 1.0) variance = 1.0;
+    if (variance < 0.0) variance = 0.0;
+    metric_analysis->sample_count = count;
+    metric_analysis->minimum = values[0];
+    metric_analysis->maximum = values[count - 1U];
+    metric_analysis->mean = mean * scale;
+    metric_analysis->median = percentile(values,count,5000U);
+    metric_analysis->percentile_90 = percentile(values,count,9000U);
+    metric_analysis->percentile_95 = percentile(values,count,9500U);
+    metric_analysis->percentile_99 = percentile(values,count,9900U);
+    metric_analysis->standard_deviation = sqrt(variance) * scale;
+
+    double baseline_mean = 0.0;
+    size_t seen = 0U;
+    if (baseline_count > 0U) {
+        for (size_t i = 0U; i < umi_test_platform_benchmark_registry_count(benchmarks); ++i) {
+            UmiTestPlatformBenchmarkSnapshot sample;
+            UmiStatus status = umi_test_platform_benchmark_registry_at(benchmarks,i,&sample);
+            if (status != UMI_STATUS_OK) return status;
+            if (strcmp(sample.metric,metric_analysis->metric) != 0 ||
+                strcmp(sample.unit,metric_analysis->unit) != 0 || sample.baseline == 0.0) continue;
+            ++seen;
+            double normalized = sample.baseline / baseline_scale;
+            baseline_mean += (normalized - baseline_mean) / (double)seen;
+        }
+        if (baseline_mean > 1.0) baseline_mean = 1.0;
+        if (baseline_mean < -1.0) baseline_mean = -1.0;
+        metric_analysis->baseline = baseline_mean * baseline_scale;
+    }
+    int has_baseline = baseline_count > 0U && metric_analysis->baseline != 0.0;
+    if (has_baseline) {
+        double value = metric_analysis->mean, baseline = metric_analysis->baseline;
+        double denominator = absolute_value(baseline);
+        double relative = ((value < 0.0 && baseline > 0.0) || (value > 0.0 && baseline < 0.0)) ?
+            value / denominator - baseline / denominator : (value - baseline) / denominator;
+        if (!isfinite(relative) || absolute_value(relative) > DBL_MAX / 100.0)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        metric_analysis->delta_percent = relative * 100.0;
+    }
+    metric_analysis->gate_state = evaluate_metric(metric_analysis->delta_percent,count,
+        metric_analysis->provider_regression_count,policy,has_baseline);
+    return UMI_STATUS_OK;
+}
 
 /* Provide the compare metric operation used by this module and its client applications. */
 static int compare_metric(const void *left_value, const void *right_value)
@@ -323,6 +431,8 @@ static int compare_metric(const void *left_value, const void *right_value)
  * Provide the test benchmark analysis build operation used by this module and its client
  * applications.
  */
+/* Preserve the previous in-place publication. Candidate ownership keeps a failed metric from replacing earlier complete evidence. */
+#if 0
 UmiStatus umi_test_benchmark_analysis_build(
     UmiTestBenchmarkAnalysis *analysis,
     const UmiTestPlatformBenchmarkRegistry *benchmarks,
@@ -439,6 +549,146 @@ UmiStatus umi_test_benchmark_analysis_build(
     }
     analysis->snapshot.revision = ++analysis->revision;
     return UMI_STATUS_OK;
+}
+#endif
+static UmiStatus PopulateBenchmarks(
+    UmiTestBenchmarkAnalysis *analysis,
+    const UmiTestPlatformBenchmarkRegistry *benchmarks,
+    const UmiTestBenchmarkPolicy *policy)
+{
+    UmiTestBenchmarkPolicy effective_policy;
+    double *values;
+    size_t index;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (analysis == NULL || benchmarks == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (policy == NULL) {
+        umi_test_benchmark_policy_init(&effective_policy);
+        policy = &effective_policy;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (policy->struct_size != (uint32_t)sizeof(*policy) ||
+        policy->api_version != UMI_TEST_BENCHMARK_ANALYSIS_API_VERSION ||
+        policy->direction < UMI_TEST_BENCHMARK_LOWER_IS_BETTER ||
+        policy->direction > UMI_TEST_BENCHMARK_HIGHER_IS_BETTER ||
+        !isfinite(policy->regression_tolerance_percent) ||
+        !isfinite(policy->improvement_threshold_percent) ||
+        policy->regression_tolerance_percent < 0.0 ||
+        policy->improvement_threshold_percent < 0.0) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    values = (double *)calloc(BENCHMARK_METRIC_CAPACITY, sizeof(values[0]));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (values == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    analysis->count = 0U;
+    (void)memset(&analysis->snapshot, 0, sizeof(analysis->snapshot));
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U;
+         index < umi_test_platform_benchmark_registry_count(benchmarks);
+         ++index) {
+        UmiTestPlatformBenchmarkSnapshot sample;
+        UmiStatus status = umi_test_platform_benchmark_registry_at(
+            benchmarks, index, &sample);
+        size_t metric_index;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) {
+            free(values);
+            return status;
+        }
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (sample.metric[0] == '\0') continue;
+        metric_index = find_metric(analysis, sample.metric, sample.unit);
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (metric_index == (size_t)-1) {
+            UmiTestBenchmarkMetricAnalysis *metric;
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+            if (analysis->count >= BENCHMARK_METRIC_CAPACITY) {
+                free(values);
+                return UMI_STATUS_CAPACITY_EXCEEDED;
+            }
+            metric_index = analysis->count++;
+            metric = &analysis->metrics[metric_index];
+            (void)memset(metric, 0, sizeof(*metric));
+            metric->struct_size = (uint32_t)sizeof(*metric);
+            metric->api_version = UMI_TEST_BENCHMARK_ANALYSIS_API_VERSION;
+            copy_text(metric->metric, sizeof(metric->metric), sample.metric);
+            copy_text(metric->unit, sizeof(metric->unit), sample.unit);
+        }
+    }
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < analysis->count; ++index) {
+        UmiStatus status = analyse_metric(&analysis->metrics[index], benchmarks,
+                                          policy, values,
+                                          BENCHMARK_METRIC_CAPACITY);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) {
+            free(values);
+            return status;
+        }
+    }
+    free(values);
+    qsort(analysis->metrics, analysis->count, sizeof(analysis->metrics[0]),
+          compare_metric);
+
+    analysis->snapshot.struct_size = (uint32_t)sizeof(analysis->snapshot);
+    analysis->snapshot.api_version = UMI_TEST_BENCHMARK_ANALYSIS_API_VERSION;
+    analysis->snapshot.metric_count = analysis->count;
+    analysis->snapshot.source_revision =
+        umi_test_platform_benchmark_registry_revision(benchmarks);
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < analysis->count; ++index) {
+        const UmiTestBenchmarkMetricAnalysis *metric = &analysis->metrics[index];
+        analysis->snapshot.sample_count += metric->sample_count;
+        /* Select the behaviour associated with the requested command or state value. */
+        switch (metric->gate_state) {
+            case UMI_TEST_BENCHMARK_GATE_PASSED:
+                ++analysis->snapshot.passed_metric_count;
+                break;
+            case UMI_TEST_BENCHMARK_GATE_IMPROVED:
+                ++analysis->snapshot.improved_metric_count;
+                break;
+            case UMI_TEST_BENCHMARK_GATE_REGRESSED:
+                ++analysis->snapshot.regressed_metric_count;
+                break;
+            case UMI_TEST_BENCHMARK_GATE_UNKNOWN:
+            default:
+                break;
+        }
+    }
+    analysis->snapshot.revision = ++analysis->revision;
+    return UMI_STATUS_OK;
+}
+/* Publish only complete statistics. Failure leaves the previous report and
+ * revision intact, including when a later metric contains invalid evidence. */
+UmiStatus umi_test_benchmark_analysis_build(UmiTestBenchmarkAnalysis *analysis,
+    const UmiTestPlatformBenchmarkRegistry *benchmarks, const UmiTestBenchmarkPolicy *policy)
+{
+    if (analysis == NULL || benchmarks == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (analysis->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiTestBenchmarkAnalysis *candidate = NULL;
+    UmiStatus status = umi_test_benchmark_analysis_create(&candidate);
+    if (status != UMI_STATUS_OK) return status;
+    candidate->revision = analysis->revision;
+    status = PopulateBenchmarks(candidate,benchmarks,policy);
+    if (status == UMI_STATUS_OK) {
+        UmiTestBenchmarkAnalysis previous = *analysis;
+        *analysis = *candidate;
+        *candidate = previous;
+    }
+    umi_test_benchmark_analysis_destroy(candidate);
+    return status;
 }
 
 /*

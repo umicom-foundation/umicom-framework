@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "learning_catalogue_private.h"
+#include "umicom/ui/gtk4/drop_down.h"
 #include "umicom/base/text.h"
 #include "umicom/platform/output_file.h"
 #include "umicom/ui/gtk4/path_picker.h"
@@ -33,9 +34,12 @@ static void CatalogueFree(gpointer data)
     /* Worker requests own independent C objects and only a weak root reference.
      * Finalizing this widget therefore never waits for a filesystem operation. */
     UmiBrowserReadingDocumentDestroy(owner->reading_document);
+    g_free(owner->reading_source);
     UmiLearningReaderDestroy(owner->reader);
     UmiLearningLibraryChoicesDestroy(owner->library_choices);
     UmiLearningSearchDestroy(owner->search);
+    UmiLearningTextSearchDestroy(owner->text_results);
+    UmiLearningTextIndexDestroy(owner->text_index);
     UmiLearningShelfDestroy(owner->shelf);
     UmiLearningShelfDestroy(owner->replacement_shelf);
     UmiLearningPackChangesDestroy(owner->replacement_changes);
@@ -519,11 +523,17 @@ GtkWidget *UmiLearningCatalogueGtk4Create(UmiVersion host)
     Tag(owner->query, "learning.catalogue.query");
     gtk_box_append(GTK_BOX(owner->controls), owner->query);
     Button(owner, owner->controls, "Search catalogue", "search");
+    /* Preserve direct construction for review. The shared helper makes the
+     * model ownership transfer explicit and enforces the native panel contract. */
+#if 0
     owner->results = gtk_drop_down_new(G_LIST_MODEL(gtk_string_list_new(NULL)), NULL);
+#endif
+    owner->results = umi_ui_gtk4_drop_down_new_take_string_list(gtk_string_list_new(NULL));
     gtk_drop_down_set_enable_search(GTK_DROP_DOWN(owner->results), TRUE);
     Tag(owner->results, "learning.catalogue.results");
     gtk_box_append(GTK_BOX(owner->controls), owner->results);
     Button(owner, owner->controls, "Open selected", "open");
+    LearningCatalogueBodyControls(owner);
     GtkWidget *navigation = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
     gtk_box_append(GTK_BOX(owner->controls), navigation);
     Button(owner, navigation, "Back", "back");

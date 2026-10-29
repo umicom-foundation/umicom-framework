@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "learning_catalogue_private.h"
+#include "umicom/ui/gtk4/drop_down.h"
 #include <string.h>
 
 static UmiStatus Ready(LearningCatalogue *owner)
@@ -106,6 +107,9 @@ static UmiStatus PositionAnchor(LearningCatalogue *owner, const char *identifier
         gtk_text_view_scroll_to_iter(GTK_TEXT_VIEW(owner->content), &first, 0.1, FALSE, 0.0, 0.0);
     return UMI_STATUS_OK;
 }
+/* Preserve structured-only publication for review. The replacement also owns
+ * verified source text, giving Find the same immutable bytes as the display. */
+#if 0
 void LearningCatalogueReadingPublish(LearningCatalogue *owner, LearningCatalogueJob *job)
 {
     /* Publish model ownership before any buffer/model notification. Callback
@@ -118,6 +122,66 @@ void LearningCatalogueReadingPublish(LearningCatalogue *owner, LearningCatalogue
     if (owner->state.retired) return;
     GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(owner->content));
     gtk_text_buffer_set_text(buffer, job->display != NULL ? job->display : "", -1);
+    if (owner->state.retired) return;
+    ApplyReadingTags(owner);
+    if (owner->state.retired) return;
+    GtkStringList *rows = gtk_string_list_new(NULL);
+    UmiBrowserReadingSummary summary = {0};
+    if (owner->reading_document != NULL)
+        (void)UmiBrowserReadingDocumentSummary(owner->reading_document, &summary);
+    const char *text = UmiBrowserReadingDocumentText(owner->reading_document);
+    for (size_t i = 0U; i < summary.links; ++i) {
+        UmiBrowserReadingLink link;
+        (void)UmiBrowserReadingDocumentLinkAt(owner->reading_document, i, &link);
+        char *caption = g_strndup(text + link.byte_start, link.byte_length);
+        char *row = g_strdup_printf("%s — %s", caption[0] != '\0' ? caption : "(empty link)", link.target);
+        gtk_string_list_append(rows, row); g_free(row); g_free(caption);
+    }
+    gtk_drop_down_set_model(GTK_DROP_DOWN(owner->reading_links), G_LIST_MODEL(rows));
+    g_object_unref(rows);
+    if (owner->state.retired) return;
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(owner->reading_links),
+        summary.links != 0U ? 0U : GTK_INVALID_LIST_POSITION);
+    if (owner->state.retired) return;
+    GtkStringList *images = gtk_string_list_new(NULL);
+    for (size_t i = 0U; i < summary.image_descriptions; ++i) {
+        UmiBrowserReadingImage image;
+        (void)UmiBrowserReadingDocumentImageAt(owner->reading_document, i, &image);
+        char *caption = g_strndup(text + image.byte_start, image.byte_length);
+        char *row = g_strdup_printf("%s — %s", caption,
+            image.target_status == UMI_STATUS_OK ? image.target : "source unavailable");
+        gtk_string_list_append(images, row); g_free(row); g_free(caption);
+    }
+    gtk_drop_down_set_model(GTK_DROP_DOWN(owner->reading_images), G_LIST_MODEL(images));
+    g_object_unref(images);
+    if (owner->state.retired) return;
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(owner->reading_images),
+        summary.image_descriptions != 0U ? 0U : GTK_INVALID_LIST_POSITION);
+    if (!owner->state.retired && owner->state.reader.selection.fragment[0] != '\0')
+        (void)PositionAnchor(owner, owner->state.reader.selection.fragment);
+}
+#endif
+
+void LearningCatalogueReadingPublish(LearningCatalogue *owner, LearningCatalogueJob *job)
+{
+    /* Publish model ownership before any buffer/model notification. Callback
+     * queries therefore see metadata for the same reader snapshot. Dispatch
+     * keeps busy true until all publication callbacks have finished. */
+    UmiBrowserReadingDocumentDestroy(owner->reading_document);
+    owner->reading_document = job->reading_document; job->reading_document = NULL;
+    owner->state.has_reading_structure = owner->reading_document != NULL;
+    /* Transfer the already verified source before publication callbacks. The
+     * next successful selection releases it; a refused read keeps it intact. */
+    g_free(owner->reading_source);
+    owner->reading_source = NULL;
+    if (job->display_is_source) {
+        owner->reading_source = job->display; job->display = NULL;
+    }
+    LearningCatalogueImagePublish(owner, job);
+    if (owner->state.retired) return;
+    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(owner->content));
+    const char *display = owner->reading_source != NULL ? owner->reading_source : job->display;
+    gtk_text_buffer_set_text(buffer, display != NULL ? display : "", -1);
     if (owner->state.retired) return;
     ApplyReadingTags(owner);
     if (owner->state.retired) return;
@@ -290,12 +354,22 @@ void LearningCatalogueReadingControls(LearningCatalogue *owner)
     Tag(section, "learning.catalogue.reading-section");
     GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
     Label(box, "Links from this guide. Only declared local resources can be opened.");
+    /* Preserve direct construction for review. The shared helper makes the
+     * model ownership transfer explicit and enforces the native panel contract. */
+#if 0
     owner->reading_links = gtk_drop_down_new(G_LIST_MODEL(gtk_string_list_new(NULL)), NULL);
+#endif
+    owner->reading_links = umi_ui_gtk4_drop_down_new_take_string_list(gtk_string_list_new(NULL));
     gtk_drop_down_set_enable_search(GTK_DROP_DOWN(owner->reading_links), TRUE);
     Tag(owner->reading_links, "learning.catalogue.reading-links"); gtk_box_append(GTK_BOX(box), owner->reading_links);
     Button(owner, box, "Open selected reading link", "link", "learning.catalogue.reading-open-link");
     Label(box, "Illustrations described in this guide. Opening one is an explicit local request.");
+    /* Preserve direct construction for review. The shared helper makes the
+     * model ownership transfer explicit and enforces the native panel contract. */
+#if 0
     owner->reading_images = gtk_drop_down_new(G_LIST_MODEL(gtk_string_list_new(NULL)), NULL);
+#endif
+    owner->reading_images = umi_ui_gtk4_drop_down_new_take_string_list(gtk_string_list_new(NULL));
     gtk_drop_down_set_enable_search(GTK_DROP_DOWN(owner->reading_images), TRUE);
     Tag(owner->reading_images, "learning.catalogue.reading-images");
     gtk_box_append(GTK_BOX(box), owner->reading_images);

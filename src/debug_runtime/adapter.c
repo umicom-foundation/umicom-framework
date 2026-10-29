@@ -21,6 +21,9 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* The original layout remains for review. Its private header now supplies one
+ * definition to production and the clock-controlled wait regression seam. */
+#if 0
 struct UmiDebugRuntimeAdapter {
     char adapter_id[UMI_DEBUG_RUNTIME_ID_CAPACITY];
     UmiDebugRuntimeTransport transport;
@@ -36,6 +39,9 @@ struct UmiDebugRuntimeAdapter {
     uint64_t bytes_received;
     uint64_t revision;
 };
+#endif
+#include "adapter_private.h"
+
 
 /* Provide the copy text operation used by this module and its client applications. */
 static UmiStatus copy_text(
@@ -565,6 +571,9 @@ UmiStatus umi_debug_runtime_adapter_receive(
  * Provide the debug runtime adapter wait response operation used by this module and its
  * client applications.
  */
+/* Retain the earlier wait for review. The replacement enforces both sides of
+ * the receive boundary and keeps late messages in their existing owner queues. */
+#if 0
 UmiStatus umi_debug_runtime_adapter_wait_response(
     UmiDebugRuntimeAdapter *adapter,
     uint64_t request_sequence,
@@ -652,6 +661,8 @@ UmiStatus umi_debug_runtime_adapter_wait_response(
 
     return UMI_STATUS_TIMEOUT;
 }
+#endif
+#include "adapter_wait.inc"
 
 /*
  * Provide the debug runtime adapter invoke operation used by this module and its client

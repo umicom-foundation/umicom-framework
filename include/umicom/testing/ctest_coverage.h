@@ -106,6 +106,8 @@ UmiStatus UmiCtestCoverageRequirePassed(const UmiCtestCoverageReview *review);
  * bytes excluding the terminator. Insufficient capacity leaves output unchanged
  * and reports the needed bytes; invalid arguments leave required unchanged.
  * Empty reviews accept offset zero. Other out-of-range offsets return NOT_FOUND.
+ * Saved result messages are escaped as plain text; absent messages are named
+ * explicitly. A message is not a diagnosed cause or captured process output.
  * Inputs/output must not overlap. No I/O or execution is performed. */
 UmiStatus UmiCtestCoverageReviewFormat(const UmiCtestCoverageReview *review,
     size_t offset, size_t limit, char *out, size_t capacity, size_t *required);

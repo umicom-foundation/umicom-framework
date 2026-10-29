@@ -58,4 +58,78 @@ set_tests_properties(storage.cleanup PROPERTIES FIXTURES_CLEANUP storage)</pre>
 <p>If a commit comparison is unavailable, check the full baseline ID and local object availability, and use a Git version supporting <code>--no-lazy-fetch</code>. See the <a href="https://git-scm.com/docs/git">Git global-option reference</a>. If the preview widens unexpectedly, read the printed reason. Add missing ownership to CMake rather than suppressing the fallback. If the inventory belongs to another checkout, recapture it locally. If metadata changed while reviewing a selection, discard that selection and preview again.</p>
 <p>For the Git format used by the revision reader, see the <a href="https://git-scm.com/docs/git-diff#_raw_output_format">official raw diff format documentation</a>.</p>
 <section><h2>Inspect input coverage and retain results</h2><p>Add <code>--list-inputs</code> to the normal impact command to observe and list every inventory input. Each row contains its digest, byte count and escaped path. This remains a read-only preview. Targets can declare private headers and resources with <code>umicom_target_qualification_inputs(target FILES ...)</code>. Missing inputs remain unresolved rather than being silently omitted.</p><p><a href="scoped-qualification.html">Record scoped qualification evidence</a> explains how hosts bind a selection to source observations, preserve exact outcomes, and retain a private report and database history. These APIs do not automatically run builds or tests.</p></section>
+<section id="observed-change-selection"><h2>Derive changed paths from recorded source bytes</h2>
+<p>Hosts can include <code>umicom/distribution/runtime/observed_impact.h</code> and call
+<code>UmiReleaseImpactFromObservations</code>. It compares an earlier source observation
+with a current observation, then passes changed paths to the existing dependency and
+test-ownership selector. The caller does not need to assemble that path list manually.
+The existing Git-based preview and automatic test receipt workflow retain their behavior.</p>
+<ol><li>Capture a complete, trusted configured inventory. Declare private headers,
+templates and runtime resources with their target owners before capturing it.</li>
+<li>Keep the earlier owned source observation and capture a current one. A current
+observation must belong to the exact inventory passed to this function.</li>
+<li>Pass both observations, a null plan pointer and a summary output. Check the returned
+status before using either output.</li>
+<li>Inspect the observation summary and the plan summary. The first explains how changes
+were derived; the second describes selected targets, tests and graph fallbacks.</li>
+<li>Release the plan with <code>UmiReleaseImpactDestroy</code>. It owns its selected
+names, so successful construction does not extend the lifetime of the input observations.</li></ol>
+<pre><code>UmiReleaseImpactPlan *plan = NULL;
+UmiObservedImpactSummary observation;
+UmiStatus status = UmiReleaseImpactFromObservations(
+    inventory, baseline, current, &amp;plan, &amp;observation);
+if (status == UMI_STATUS_OK) {
+    UmiReleaseImpactSummary selection;
+    status = UmiReleaseImpactDescribe(plan, &amp;selection);
+    /* Review selection and observation before using a separate executor. */
+}
+UmiReleaseImpactDestroy(plan);</code></pre>
+<table><thead><tr><th>Condition</th><th>Result</th></tr></thead><tbody>
+<tr><td>Matching inventory and changed listed bytes</td><td>Map the changes to owners,
+dependents, tests and related fixture groups.</td></tr>
+<tr><td>Matching inventory and unchanged listed bytes</td><td>A no-work plan for this
+observation comparison; not a passing result and not authority to reuse artifacts.</td></tr>
+<tr><td>No earlier observation</td><td>Select all configured work and report
+<code>BASELINE_MISSING</code>.</td></tr>
+<tr><td>Earlier observation from another generation or inventory</td><td>Select all work
+and report <code>INVENTORY_CHANGED</code>; the changed-file count is unknown.</td></tr>
+<tr><td>Current observation does not match the supplied inventory</td><td>Return
+<code>INVALID_STATE</code> and preserve both caller outputs.</td></tr>
+<tr><td>A changed observed path is outside the exact source root</td><td>Select all work
+and report <code>OUTSIDE_ROOT</code>, rather than silently excluding the input.</td></tr>
+</tbody></table>
+<p>When <code>changesKnown</code> is false, zero in <code>changedFiles</code> is storage
+for an unknown count. Do not display it as “no files changed”. Graph-level uncertainties
+such as missing owners still use the existing planner's broader selection. Malformed
+metadata and exhausted limits return errors without a partial plan.</p>
+<p>The independent <code>examples/observed_impact</code> consumer demonstrates an unchanged
+input set, a library edit that affects a dependent, and the missing-baseline fallback.
+Its CMake project requires an explicit installed SDK. Its fixtures use in-memory sample
+bytes and do not read or build a real project. Follow its README to configure and run
+the example against your installation.</p>
+<aside><strong>Automatic execution still needs a host policy.</strong> This bridge does not
+persist baselines, detect new files omitted from the inventory, inspect compiler/environment
+changes, monitor a workspace or schedule earlier failed tests. Refresh metadata after file
+membership or configuration changes, account for external inputs, and retain failed or
+missing qualification independently. A comment-only edit still changes observed bytes.
+Before/after reads are not an atomic snapshot and cannot prove compiler inputs stayed
+stable during an execution.</aside></section>
+
+<section id="required-retries"><h2>Keep earlier nonpasses in the selection</h2>
+<p>A source change and a required retry are different inputs. A test can fail because a runtime dependency was unavailable, then need another run after that dependency is restored without changing a C file. Keep those retry identities alongside the source-derived selection.</p>
+<p>Framework provides <code>UmiReleaseImpactCreateWithTests</code> for explicit changed paths plus required test names, and <code>UmiReleaseImpactFromObservationsWithTests</code> for captured source observations plus required names. Both use the existing ownership graph. They include related setup, cleanup and ordered tests, and the executable prerequisites declared for the selected group.</p>
+<pre><code>const char *retry[] = {"example.reader"};
+UmiReleaseImpactPlan *plan = NULL;
+UmiObservedImpactSummary observation;
+UmiStatus status = UmiReleaseImpactFromObservationsWithTests(
+    inventory, baseline, current, retry, 1U, &amp;plan, &amp;observation);
+/* On success, inspect both summaries before scheduling authorized work. */
+UmiReleaseImpactDestroy(plan);</code></pre>
+<ol><li>Determine required names from separately checked failure, timeout, skipped or missing-coverage evidence. A report's filename or a passing row alone does not establish its source revision and environment.</li><li>Pass literal, exact CTest names. They are not regular expressions. Duplicate names do not duplicate work.</li><li>Read each selected item's reasons. <code>REQUIRED_TEST</code> identifies an explicit retry, <code>TEST_DEPENDENCY</code> a related registration, and <code>TEST_PREREQUISITE</code> an executable needed by a selected test.</li><li>If a name is absent from the current inventory, selection widens to all configured targets and tests with <code>UNMAPPED_TEST</code>. Investigate a rename, missing registration or stale evidence; do not silently discard it.</li><li>Build and execute through the appropriate host, retain new logs and verify success. Selection itself does not update a test result.</li></ol>
+<p>For a read-only command preview, add an exact retry name:</p>
+<pre><code>umicom impact --inventory "C:/work/project/build/release-inventory/inventory-Debug.tsv" --retry-test "example.reader" --expression</code></pre>
+<p>Repeat <code>--retry-test</code> to request another name, or combine it with the existing <code>--working-tree</code>, <code>--since</code> or <code>--changed</code> selection. This command remains a preview: it neither runs tests nor searches for a report automatically. The normal automatic verification workflow continues to select due tests from its checked receipts without requiring these preview flags.</p>
+<p>Zero changed source files can now accompany a nonempty retry selection. Conversely, an empty selection is still not proof of successful qualification. The host must account for unknown evidence, changed environments and unlisted inputs before considering any historical pass reusable.</p>
+</section>
+
 </body></html>

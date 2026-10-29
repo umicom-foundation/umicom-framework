@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Manage local recent history | Umicom Framework</title><style>body{font:1.05rem/1.65 system-ui,sans-serif;max-width:60rem;margin:2rem auto;padding:0 1rem;color:#203348}pre{padding:1rem;background:#edf3f7;overflow:auto}code{overflow-wrap:anywhere}table{border-collapse:collapse;width:100%}th,td{text-align:left;border:1px solid #acbdcc;padding:.6rem}a{color:#006b83}</style></head><body><main>
+<h1>Manage local recent history</h1>
+<p>A recent-item registry holds small descriptions of resources such as project folders and lessons. Removing a description is different from deleting the resource. Studio uses the shared registry for its Welcome page, and other applications can use the same model while choosing their own local storage and presentation.</p>
+<h2>Choose ownership before adding buttons</h2>
+<ol><li>Create or load one <code>UmiRecentItemRegistry</code> for the feature. Its owner destroys it after all users have finished.</li><li>Choose an absolute metadata path in an existing trusted local directory. Resolve that path once; do not let a later working-directory change redirect writes.</li><li>Copy a record with <code>umi_platform_recent_items_registry_find</code>. Store its ID and revision in the displayed action, rather than retaining a pointer into private registry storage.</li><li>Serialize mutations through one owner. The registry and saved file do not implement multi-writer conflict resolution.</li><li>On removal, call <code>UmiRecentItemsRemoveLocal</code> with the displayed ID, revision and metadata path. Update the visible list only after inspecting its status.</li></ol>
+<h2>Why both an ID and a revision?</h2>
+<p>The ID identifies a record. The revision identifies its state within the live registry. If the same record was touched, pinned or replaced after a button was displayed, the old revision is stale. Removal returns <code>UMI_STATUS_INVALID_STATE</code>; refresh the list and let the user review the current entry. A change to an unrelated record does not invalidate this item’s revision. Revisions are live model counters, not hashes of the saved file and not persistent cross-process lock tokens.</p>
+<pre><code>UmiRecentItemSnapshot displayed;
+UmiStatus status = umi_platform_recent_items_registry_find(
+    registry, selected_id, &amp;displayed);
+if (status == UMI_STATUS_OK) {
+    status = UmiRecentItemsRemoveLocal(registry, displayed.id,
+        displayed.revision, absolute_metadata_path);
+    /* Inspect status before changing the user-visible list. */
+}</code></pre>
+<p>This fragment assumes that the registry, selected ID and path already belong to a valid application operation. A real interface copies the snapshot while rendering and uses that earlier revision when the user activates the button.</p>
+<h2>What the shared operation does</h2>
+<ol><li>Validate the arguments, find the item and check its revision.</li><li>Allocate a private copy of the bounded registry.</li><li>Remove the entry from that candidate.</li><li>Serialize and replace the metadata file through the native local-file service.</li><li>Publish the candidate into the existing live registry address only if saving succeeded.</li><li>Release the temporary candidate on every path.</li></ol>
+<p>The listed URI is never opened or deleted by this operation. Pinned entries can be removed explicitly. The old live registry remains unchanged on failure. Other records retain their values, and the registry address stays stable for borrowers. This operation may block on file I/O; arrange ownership and worker completion carefully in a responsive application.</p>
+<table><thead><tr><th>Status</th><th>Meaning and response</th></tr></thead><tbody><tr><td>OK</td><td>Refresh the visible history from the live registry.</td></tr><tr><td>INVALID_STATE</td><td>The displayed item changed. Refresh and request a new deliberate selection.</td></tr><tr><td>NOT_FOUND</td><td>The item is no longer present. Refresh without inventing a deletion.</td></tr><tr><td>INVALID_ARGUMENT</td><td>Check the supplied identity, nonzero revision and ordinary absolute file path. A directory destination is refused.</td></tr><tr><td>Other error</td><td>Report storage, capacity or allocation failure. Keep the live row and allow a deliberate retry after the cause is understood.</td></tr></tbody></table>
+<h2>Build the standalone SDK example</h2>
+<p>First install a compatible Framework SDK containing the <code>platform</code> component. The commands below assume that installation is at <code>C:\umicom\installed\framework</code>; substitute your actual installation path. The example deliberately consumes that SDK rather than compiling a second Framework source tree. Run one command at a time and stop on an error.</p>
+<pre><code>Set-Location "C:\umicom\Umicom-Applications\framework"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+
+cmake -S ".\examples\recent_history" -B ".\build\recent-history-example" -G Ninja -DCMAKE_BUILD_TYPE=Debug -DUMICOM_EXPECTED_SDK_PREFIX="C:/umicom/installed/framework"
+cmake --build ".\build\recent-history-example" --parallel 2
+ctest --test-dir ".\build\recent-history-example" --output-on-failure --no-tests=error</code></pre>
+<p>Configure checks the package location and SDK environment metadata. A stale cached package outside your chosen prefix is rejected. Use a new example build directory or explicitly correct the cache; do not bypass the origin check. Compiler success and the seven console cases do not qualify the Studio GUI.</p>
+<h2>Run a sample you can inspect</h2>
+<p>Use a dedicated sample metadata file. Do not point this demonstration at Studio’s own preferences: the program writes two named teaching entries. It preserves other valid records but is not a general history editor. A malformed existing file is refused.</p>
+<pre><code>New-Item -ItemType Directory -Force "C:\umicom\_local\practice\recent-history"
+&amp; ".\build\recent-history-example\umicom-recent-history.exe" "C:\umicom\_local\practice\recent-history\sample-history" remove
+&amp; ".\build\recent-history-example\umicom-recent-history.exe" "C:\umicom\_local\practice\recent-history\sample-history" stale
+&amp; ".\build\recent-history-example\umicom-recent-history.exe" "C:\umicom\_local\practice\recent-history\sample-history" storage-refusal</code></pre>
+<p><code>remove</code> confirms that the sample project entry was removed while a lesson entry remained, then reloads the saved file. <code>stale</code> changes the live item after capturing its revision and confirms refusal. <code>storage-refusal</code> deliberately supplies the parent directory as the destination, checks refusal and compares the original metadata bytes. Each mode seeds its two sample entries first, so it can be repeated in this dedicated file.</p>
+<h2>Keep a project near the top with a pin</h2>
+<p><code>UmiRecentItemsSetPinnedLocal</code> accepts the registry, copied item ID, copied item revision, an integer pin value and the absolute metadata path. Zero means unpinned; any nonzero value means pinned. It saves a candidate before publishing the preference, just like removal. A stale revision is refused even when the requested value matches the current value.</p>
+<pre><code>UmiStatus status = UmiRecentItemsSetPinnedLocal(registry,
+    displayed.id, displayed.revision, 1, absolute_metadata_path);</code></pre>
+<p>Pinning preserves the resource URI, last-opened time and open count. It does not open a project or grant trust. Queries place pinned entries ahead of unpinned ones; automatic trimming keeps pinned entries. Explicit history removal remains possible.</p>
+<pre><code>&amp; ".\build\recent-history-example\umicom-recent-history.exe" "C:\umicom\_local\practice\recent-history\sample-history" pin
+&amp; ".\build\recent-history-example\umicom-recent-history.exe" "C:\umicom\_local\practice\recent-history\sample-history" unpin
+&amp; ".\build\recent-history-example\umicom-recent-history.exe" "C:\umicom\_local\practice\recent-history\sample-history" pin-stale
+&amp; ".\build\recent-history-example\umicom-recent-history.exe" "C:\umicom\_local\practice\recent-history\sample-history" pin-storage-refusal</code></pre>
+<p>The first two modes reload the saved preference and confirm that resource metadata was kept. The refusal modes verify that a stale selection or directory destination cannot publish the new pin. Each run uses only the dedicated teaching file.</p>
+<h2>Review the limits</h2>
+<p>Native replacement avoids publishing a partially serialized file during normal operation. It does not guarantee survival of power loss or provide a transaction with a second process. Another writer can replace the metadata file without changing your in-memory item revision. Use one writer and a trusted directory. The path checks reject a final link or device; they are not a filesystem sandbox against changes to parent directories.</p>
+<p>Metadata contains resource paths and labels. Keep real history local and outside public commits. Example state is also separate from source: do not copy its generated files into an SDK or a lesson package.</p>
+<h2>Follow the source</h2>
+<p>The public contract is <code>include/umicom/platform/recent_items.h</code>. The private transaction is <code>src/platform/recent_items_remove.inc</code>, included by <code>recent_items.c</code>. The source regressions in <code>tests/platform/test_recent_items_remove.c</code> cover stale selection, unrelated changes, pinned entries, native paths and failed-save preservation. The corresponding pin transaction is <code>src/platform/recent_items_pin.inc</code>, with ordering and failed-save cases in <code>tests/platform/test_recent_items_pin.c</code>. The standalone consumer lives in <code>examples/recent_history</code>.</p>
+<p>Studio’s <code>UmiStudioServicesForgetRecentWorkspace</code> restricts removal to workspace records. Welcome uses copied action identities and weak window references so retained controls do not reach a destroyed host. Its user guide is <code>docs/recent-projects.html</code> in the Studio module.</p>
+</main><footer><p>Sammy Hegab · Umicom Foundation · MIT</p></footer></body></html>

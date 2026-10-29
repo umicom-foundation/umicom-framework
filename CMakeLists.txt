@@ -3013,6 +3013,16 @@ target_include_directories(umicom_test_platform PUBLIC
 )
 umicom_apply_warnings(umicom_test_platform)
 umicom_apply_sanitizers(umicom_test_platform)
+# Benchmark population deviation uses the standard math implementation.
+# Keep the static SDK link dependency explicit for standalone consumers.
+if(NOT WIN32)
+    target_link_libraries(umicom_test_platform PUBLIC m)
+endif()
+# Report encoding depends on shared byte validation as well as its C source.
+if(COMMAND umicom_target_qualification_inputs)
+    umicom_target_qualification_inputs(umicom_test_platform FILES
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/base/utf8_text_private.h")
+endif()
 
 # Framework-owned Test Explorer presentation shared by Studio and every future
 # application.  The factories expose ordinary toolkit-neutral view models.
@@ -3804,6 +3814,24 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-test-platform-operation-tests framework.test_platform.operation tests/test_test_platform_operation.c)
     umicom_add_framework_test(umicom-test-platform-artifact-tests framework.test_platform.artifact tests/test_test_platform_artifact.c)
     umicom_add_framework_test(umicom-test-platform-structured-report-tests framework.test_platform.structured_report tests/test_test_platform_structured_report.c)
+    foreach(_report_case controls unicode maximum-escapes short-result exact-result nan infinity
+            negative-duration maximum-duration locale-duration outcome empty-id
+            unterminated-id unterminated-session unterminated-item unterminated-message
+            unterminated-details unterminated-attachment utf8-overlong utf8-surrogate utf8-range
+            utf8-truncated skipped-result session-controls session-maximum session-short
+            session-exact session-unterminated session-utf8 session-skipped arguments)
+        add_test(NAME "framework.test_platform.structured_report.${_report_case}"
+            COMMAND umicom-test-platform-structured-report-tests "${_report_case}")
+        set_tests_properties("framework.test_platform.structured_report.${_report_case}" PROPERTIES
+            TIMEOUT 30 LABELS "framework;testing;report;ownership;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.test_platform.structured_report.${_report_case}"
+                TARGETS umicom-test-platform-structured-report-tests)
+        endif()
+    endforeach()
+    set_tests_properties(framework.test_platform.structured_report.locale-duration
+        PROPERTIES SKIP_RETURN_CODE 77)
+
     umicom_add_framework_test(umicom-test-platform-execution-tests framework.test_platform.execution tests/test_test_platform_execution.c)
     # Provider evidence and execution plans share one bounded native fixture.
     add_executable(umicom-test-execution-boundaries-test
@@ -6581,3 +6609,6 @@ endif()
 if(BUILD_TESTING)
     include("${CMAKE_CURRENT_LIST_DIR}/cmake/UmicomWindowInputLifetimeTests.cmake")
 endif()
+
+# Shared history mutations carry their persistence and qualification contract.
+include("${CMAKE_CURRENT_LIST_DIR}/cmake/UmicomRecentItemsRemoval.cmake")

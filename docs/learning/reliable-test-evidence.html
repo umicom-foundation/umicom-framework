@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Build reliable test reports | Umicom Framework</title>
+<style>body{max-width:960px;margin:3rem auto;padding:0 1.5rem;font:17px/1.65 system-ui,sans-serif;color:#1d2835}pre{background:#eef2f6;padding:1rem;overflow:auto}code{font-family:Consolas,monospace}h1,h2{line-height:1.2}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccd4dc;padding:.6rem;text-align:left}aside{border-left:4px solid #247b80;background:#eef7f7;padding:1rem}svg{width:100%;height:auto}a{color:#17606d}</style></head>
+<body><main>
+<h1>Build reliable test reports</h1>
+<p>A test result describes one observation: what ran, what happened and how long it took. A report puts that observation into a form another program can read. This lesson uses the same Framework services available to Umicom Studio IDE and other applications. It teaches how to keep a failed export from damaging a previous report and how to avoid misleading coverage percentages.</p>
+<p>You will use <code>examples/test_evidence/main.c</code>. Its data is invented for a small exercise; it does not claim that any Umicom product passed qualification. You need an installed Framework SDK with the <code>test_platform</code> component, a matching C compiler, CMake and Ninja. If these tools are unfamiliar, start with <a href="headers-and-tests.html">headers and tests</a>.</p>
+<h2>1. Understand the three owners</h2>
+<p>An <em>owner</em> is the part of a program responsible for keeping something alive and releasing it. A <em>snapshot</em> is a copied set of values describing one moment. In this example, the application owns the input snapshot and output buffer. The formatter creates temporary storage, validates the input, and copies a complete report to the output only when everything succeeds.</p>
+<svg viewBox="0 0 900 160" role="img" aria-labelledby="flow-title flow-desc">
+<title id="flow-title">Publish a complete report</title><desc id="flow-desc">Input values go to a temporary candidate. Successful validation replaces the output. A refusal leaves the previous output unchanged.</desc>
+<rect x="5" y="30" width="210" height="65" rx="8" fill="#e9f2fa" stroke="#648699"/><text x="110" y="69" text-anchor="middle" font-size="18">Input snapshot</text>
+<path d="M215 62H315" stroke="#247b80" stroke-width="3"/><polygon points="315,62 303,55 303,69" fill="#247b80"/>
+<rect x="320" y="30" width="240" height="65" rx="8" fill="#edf7ef" stroke="#648699"/><text x="440" y="69" text-anchor="middle" font-size="18">Validate and prepare</text>
+<path d="M560 62H660" stroke="#247b80" stroke-width="3"/><polygon points="660,62 648,55 648,69" fill="#247b80"/>
+<rect x="665" y="30" width="230" height="65" rx="8" fill="#edf7ef" stroke="#648699"/><text x="780" y="69" text-anchor="middle" font-size="18">Complete output</text>
+<text x="440" y="135" text-anchor="middle" font-size="17">On refusal: keep the previous output</text>
+</svg>
+<p>This is atomic replacement at the API boundary: callers never receive half of a successful report. It is not a lock, a database transaction or a promise of safe concurrent calls. The caller must serialize access and keep the input and output memory separate.</p>
+<h2>2. Copy and build the installed example</h2>
+<p>Use a new exercise folder so an earlier edited example is not overwritten. The commands below assume the SDK is installed at <code>C:\umicom\installed\framework</code>. Stop after any command reports an error. This small consumer links installed libraries; it does not build the Framework source tree.</p>
+<pre><code>New-Item -ItemType Directory "C:\umicom\examples\test-evidence"
+Copy-Item "C:\umicom\installed\framework\share\umicom\framework\examples\test_evidence\*" "C:\umicom\examples\test-evidence"
+Set-Location "C:\umicom\examples\test-evidence"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+New-Item -ItemType Directory -Force "C:\umicom\_local\logs\test-evidence"
+cmake -S . -B build -G Ninja -DCMAKE_C_COMPILER="C:/msys64/ucrt64/bin/gcc.exe" -DUMICOM_EXPECTED_SDK_PREFIX="C:/umicom/installed/framework" -DBUILD_TESTING=ON 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\test-evidence\configure.log"
+$LASTEXITCODE
+cmake --build build --parallel 2 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\test-evidence\build.log"
+$LASTEXITCODE
+ctest --test-dir build --output-on-failure --no-tests=error --output-log "C:\umicom\_local\logs\test-evidence\tests.log"
+$LASTEXITCODE</code></pre>
+<p>Configuration checks that the selected package comes from the requested SDK directory. A missing component or environment-contract error means the SDK needs attention. Do not point the consumer at a random source build to conceal a missing installation. Use a fresh log folder for a later exercise if you want to retain these logs.</p>
+<h2>3. Export one result</h2>
+<pre><code>&amp; ".\build\umicom-test-evidence.exe" result 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\test-evidence\result.log"
+$LASTEXITCODE</code></pre>
+<p>JSON is a text format made of named fields. For example, <code>"outcome":"failed"</code> pairs a field name with a string. A JSON string cannot contain a literal line break. The formatter writes <code>\n</code> for that break and <code>\"</code> for a quote inside the string. It also escapes other control characters and rejects invalid UTF-8, the encoding used for international text.</p>
+<p>The output includes <code>"durationMs":12.500</code> and an outcome of <code>failed</code>. The program exits with zero when the exercise behaves as designed. That zero means the example's checks succeeded; it does not turn the invented failed result into a pass.</p>
+<pre><code>UmiStatus status = umi_test_platform_report_result_json(
+    &amp;result, json, UMI_TEST_PLATFORM_RESULT_JSON_CAPACITY);
+if (status == UMI_STATUS_OK) {
+    puts(json);
+}</code></pre>
+<p><code>UmiStatus</code> tells the caller whether the operation succeeded. The capacity is the number of bytes available, including space for the terminating zero byte that ends a C string. Use the published capacity constant rather than guessing a buffer size. Escaping can make output longer than the original text.</p>
+<h2>4. Refuse a short output without losing prior work</h2>
+<pre><code>&amp; ".\build\umicom-test-evidence.exe" short-output 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\test-evidence\short-output.log"
+$LASTEXITCODE</code></pre>
+<p>The example first writes <code>previous complete report</code> into its output buffer. It then deliberately offers only eight bytes to the formatter. The expected message is <code>Short output refused; previous report retained.</code> The caller can now show the error and keep the previous report visible. It must not claim that the old report belongs to the newly refused input.</p>
+<p>The formatter also refuses unterminated fixed fields, unknown outcomes, negative durations and nonfinite values such as infinity. It does not silently shorten messages. JSON numbers use a dot as their decimal separator; export does not change the process locale. Do not change the numeric locale concurrently with formatting.</p>
+<h2>5. Read coverage without confusing it with test success</h2>
+<pre><code>&amp; ".\build\umicom-test-evidence.exe" coverage 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\test-evidence\coverage.log"
+$LASTEXITCODE</code></pre>
+<p>Coverage counts which instrumented lines or branches were exercised. A branch is one possible route through a decision. The example reports 90 of 100 lines and eight of ten branches. With the default policy it prints <code>Line coverage: 90.00% | gate: Passed</code>. A gate is a rule that compares measurements with thresholds. A passing coverage gate does not prove the assertions are good or the application is correct.</p>
+<p>The API stores percentages as <em>basis points</em>: one point is one hundredth of a percent. Thus 9000 points means 90.00%. Integer arithmetic keeps threshold comparisons stable. The ratio calculation avoids multiplying a large counter by 10,000, which could exceed the largest value an unsigned 64-bit integer can hold.</p>
+<table><thead><tr><th>Evidence</th><th>Interpretation</th></tr></thead><tbody>
+<tr><td>Covered lines exceed total lines</td><td>Invalid input. The new analysis is refused.</td></tr>
+<tr><td>No measured lines</td><td>Unknown by default. A caller may explicitly allow empty coverage, but should explain that policy.</td></tr>
+<tr><td>Skipped test</td><td>The test did not exercise its intended behavior. This is separate from a coverage percentage.</td></tr>
+<tr><td>Repeated fragments</td><td>Fragments are added. Replace a prior revision using its stable registry ID; do not append it as new data.</td></tr>
+</tbody></table>
+<h2>6. Try a counter overflow</h2>
+<pre><code>&amp; ".\build\umicom-test-evidence.exe" overflow 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\test-evidence\overflow.log"
+$LASTEXITCODE</code></pre>
+<p>The expected message is <code>Overflow refused; previous analysis retained.</code> The exercise first publishes a report whose line total is the maximum 64-bit unsigned value. It then adds another fragment with one line. The second total cannot be represented. The analyzer refuses it before publication, preserving the earlier report and its revision.</p>
+<p>A revision is a number identifying a retained state. Here it belongs to the registry or analysis, not to Git. Keep source revisions, configuration, host identity and original logs separately when recording real qualification evidence. Do not combine reports from unrelated sessions merely because their file names match.</p>
+<h2>Read history without turning skips into success</h2>
+<p>The Framework history analyzer keeps every selected observation in <code>sample_count</code>. Passed, failed and timed-out results supply completed sample counts and duration statistics. Skipped, cancelled and unrun observations remain visible, but they do not satisfy the minimum completed-sample rule. If the latest observation is one of those incomplete outcomes, stability remains Unknown even when earlier executions passed.</p>
+<p>Timing means and trends use completed observations. A long skipped setup therefore cannot make a later execution appear dramatically faster. Durations and numeric policy thresholds must be finite and nonnegative. An unrepresentable derived trend refuses the candidate and preserves the previous analysis. The default near-zero baseline rule does not calculate a percentage against times at or below one billionth of a millisecond.</p>
+<p>Include <code>umicom/test_platform/history_analysis.h</code>, create a <code>UmiTestHistoryAnalysis</code>, and call <code>umi_test_history_analysis_build</code> with the item and result registries. Read the copied snapshot and item rows after success, then destroy the analysis when finished. Stable is a classification of retained observations under a policy, not proof of complete product qualification.</p>
+<h2>Compare benchmark measurements</h2>
+<p>A benchmark measures a property such as latency, the time required to finish an operation. Run the example with <code>benchmark</code> to analyze three invented measurements: 11, 12 and 13 milliseconds against a baseline of 10. A baseline is the reference measurement used for comparison.</p>
+<pre><code>&amp; ".\build\umicom-test-evidence.exe" benchmark 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\test-evidence\benchmark.log"
+$LASTEXITCODE</code></pre>
+<p>The expected mean is 12 milliseconds, population standard deviation is approximately 0.816497 milliseconds, and change is 20%. The mean is the arithmetic average. Standard deviation describes how far measurements spread around that average. Because lower latency is better, this increase exceeds the default tolerance and the example reports a regression. The example itself still returns zero when this expected behavior is observed.</p>
+<p>The analyzer scales finite measurements before calculating statistics, so large sums and unscaled squared differences do not overflow. Signed measurements are supported. A zero baseline means absent evidence; nonzero baselines that cancel to a zero mean also leave the comparison unknown. An explicitly honored provider regression remains visible even without a baseline. Invalid numbers or unrepresentable percentage changes refuse the new report while retaining the previous one.</p>
+<p>On systems that use a separate standard math library, the SDK exports that link dependency. Use its CMake target rather than listing archive files by hand. Floating-point results can round differently between compiler and hardware combinations; compare measurements with suitable tolerances and record the environment.</p>
+<h2>Extend the exercise</h2>
+<ol><li>Change the result outcome to <code>UMI_TEST_PLATFORM_OUTCOME_SKIPPED</code>. The serialized outcome should remain <code>skipped</code>.</li><li>Change covered lines from 90 to 50. Inspect the gate and explain why the default line threshold is no longer met.</li><li>Set both line counters to zero. Inspect Unknown without enabling <code>allow_empty</code>.</li><li>Read <code>src/test_platform/structured_report.c</code> and <code>src/test_platform/coverage_analysis.c</code>. Follow the validation, temporary storage, publication and cleanup paths.</li></ol>
+<p>Related: <a href="inspect-test-reports.html">inspect saved CTest reports</a>, <a href="private-test-archives.html">retain test evidence privately</a> and <a href="test-design.html">design meaningful tests</a>. This example exports Framework snapshot JSON; the CTest importer reads its documented XML format. They are different interfaces.</p>
+<footer><p>Sammy Hegab · Umicom Foundation · MIT</p></footer>
+</main></body></html>

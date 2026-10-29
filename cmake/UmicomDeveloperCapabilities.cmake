@@ -293,3 +293,10 @@ if(BUILD_TESTING)
     add_test(NAME framework.toolchain.lifecycle.discovery_defaults
         COMMAND umicom-toolchain-discovery-defaults-test)
 endif()
+
+# Install the independent consumer next to other SDK learning examples.
+install(FILES
+    "${CMAKE_CURRENT_LIST_DIR}/../examples/test_evidence/main.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../examples/test_evidence/CMakeLists.txt"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/examples/test_evidence"
+    COMPONENT FrameworkSDK)

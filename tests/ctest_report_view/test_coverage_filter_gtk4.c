@@ -63,7 +63,7 @@ static void Changed(GtkTextBuffer *buffer, gpointer data) {
 }
 int main(int argc, char **argv) {
     const char *cases[] = {"passed", "outstanding", "host", "configuration", "text", "capability", "empty",
-        "paging", "edit-render", "close-render", "clear-render", "reload", "failed-reload", "retained", "oversize"};
+        "paging", "edit-render", "close-render", "clear-render", "reload", "failed-reload", "retained", "oversize", "messages"};
     CHECK(argc == 2 && Known(argv[1], cases, sizeof cases / sizeof cases[0]));
     if (!gtk_init_check()) return 77;
     const char *mode = argv[1];
@@ -109,6 +109,10 @@ int main(int argc, char **argv) {
         char longText[257]; memset(longText, 'x', 256U); longText[256] = '\0';
         Entry(root, "ctest.coverage.filter.text", longText);
     }
+    if (!strcmp(mode, "messages")) {
+        CHECK(strstr(before, "Saved result message: SKIP_RETURN_CODE=77"));
+        Entry(root, "ctest.coverage.filter.text", "notes.skip");
+    }
     GtkWidget *apply = Find(root, "ctest.coverage.filter.apply"); g_object_ref(apply);
     Probe probe = {root, window, mode, 0U};
     gulong signal = 0U;
@@ -142,6 +146,11 @@ int main(int argc, char **argv) {
             Click(root, "ctest.coverage.open"); Wait(root);
             char *reloaded = Text(buffer); CHECK(!strcmp(after, reloaded)); g_free(reloaded);
         }
+    }
+    if (!strcmp(mode, "messages")) {
+        CHECK(strstr(after, "[skipped] Windows / Debug : notes.skip"));
+        CHECK(strstr(after, "Saved result message: SKIP_RETURN_CODE=77"));
+        CHECK(!strstr(after, "Saved result message: Failed"));
     }
     g_free(after); g_free(before);
     gtk_window_destroy(window); g_object_unref(apply); g_object_unref(buffer); g_object_unref(root); g_object_unref(window);

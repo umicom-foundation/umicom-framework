@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/language_runtime/test_server_lifecycle.c
- * PURPOSE: Exercise handshake correlation, cancellation, timeout budgets and manager ownership without external tools.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Exercise handshake correlation, cancellation, timeout budgets and manager ownership without external tools.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language_runtime/server_manager.h"
@@ -140,6 +147,11 @@ static int ContractCase(const char *mode)
         {"contract-init-capabilities-duplicate", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"capabilities\":{},\"capabilities\":{}}}", UMI_STATUS_ALREADY_EXISTS},
         {"contract-init-capabilities-missing", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{}}", UMI_STATUS_PARSE_ERROR},
         {"contract-init-extension", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"capabilities\":{\"hoverProvider\":true},\"future\":{\"enabled\":true}},\"extension\":1}", UMI_STATUS_OK},
+        {"contract-init-provider-array", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"capabilities\":{\"hoverProvider\":[]}}}", UMI_STATUS_PARSE_ERROR},
+        {"contract-init-provider-number", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"capabilities\":{\"hoverProvider\":1}}}", UMI_STATUS_PARSE_ERROR},
+        {"contract-init-provider-duplicate", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"capabilities\":{\"hoverProvider\":true,\"hoverProvider\":false}}}", UMI_STATUS_ALREADY_EXISTS},
+        {"contract-init-sync-unknown", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"capabilities\":{\"textDocumentSync\":3}}}", UMI_STATUS_PARSE_ERROR},
+        {"contract-init-late-provider", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"capabilities\":{\"hoverProvider\":true,\"foldingRangeProvider\":[]}}}", UMI_STATUS_PARSE_ERROR},
         {"contract-shutdown-object", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{}}", UMI_STATUS_PARSE_ERROR},
         {"contract-shutdown-false", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":false}", UMI_STATUS_PARSE_ERROR},
         {"contract-shutdown-string", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"null\"}", UMI_STATUS_PARSE_ERROR},

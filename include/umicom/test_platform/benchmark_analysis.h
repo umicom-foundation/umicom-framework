@@ -124,6 +124,15 @@ void umi_test_benchmark_analysis_destroy(UmiTestBenchmarkAnalysis *analysis);
  * Provide the test benchmark analysis build operation used by this module and its client
  * applications.
  */
+/* On failure the retained metrics, snapshot and revision remain unchanged.
+ * Samples, baselines and thresholds must be finite; signed samples are valid.
+ * Zero baseline values retain the compatibility meaning of absent evidence.
+ * Nonzero baselines whose mean cancels to zero also leave the gate Unknown
+ * unless an honoured provider regression marks it Regressed. Unrepresentable
+ * percentage changes are refused. Statistics use scaled floating-point math,
+ * so rounding is not promised bit-identical across compilers/architectures.
+ * Serialize analysis and registry mutation. Grouping by metric/unit does not
+ * certify comparable source revisions, hosts or measurement procedures. */
 UmiStatus umi_test_benchmark_analysis_build(
     UmiTestBenchmarkAnalysis *analysis,
     const UmiTestPlatformBenchmarkRegistry *benchmarks,

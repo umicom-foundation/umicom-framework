@@ -15,6 +15,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/test_platform/history_analysis.h"
 
+#include <float.h>
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -168,6 +170,8 @@ void umi_test_history_analysis_destroy(UmiTestHistoryAnalysis *analysis)
 }
 
 /* Provide the collect results operation used by this module and its client applications. */
+/* Preserve the original collector. Validate numeric provider evidence before analytics, while unrelated item results remain outside this selection. */
+#if 0
 static size_t collect_results(
     const UmiTestPlatformResultRegistry *results,
     const char *item_id,
@@ -202,6 +206,47 @@ static size_t collect_results(
     qsort(buffer, count, sizeof(buffer[0]), compare_result_sequence);
     return count;
 }
+#endif
+static size_t collect_results(
+    const UmiTestPlatformResultRegistry *results,
+    const char *item_id,
+    UmiTestPlatformResultSnapshot *buffer,
+    size_t capacity,
+    UmiStatus *out_status)
+{
+    size_t index;
+    size_t count = 0U;
+    *out_status = UMI_STATUS_OK;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U;
+         index < umi_test_platform_result_registry_count(results);
+         ++index) {
+        UmiTestPlatformResultSnapshot result;
+        UmiStatus status = umi_test_platform_result_registry_at(results, index,
+                                                                 &result);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) {
+            *out_status = status;
+            return 0U;
+        }
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (strcmp(result.item_id, item_id) != 0) continue;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (count >= capacity) {
+            *out_status = UMI_STATUS_CAPACITY_EXCEEDED;
+            return 0U;
+        }
+        if (!isfinite(result.duration_ms) || result.duration_ms < 0.0 ||
+            result.outcome < UMI_TEST_PLATFORM_OUTCOME_NOT_RUN ||
+            result.outcome > UMI_TEST_PLATFORM_OUTCOME_TIMED_OUT) {
+            *out_status = UMI_STATUS_INVALID_ARGUMENT;
+            return 0U;
+        }
+        buffer[count++] = result;
+    }
+    qsort(buffer, count, sizeof(buffer[0]), compare_result_sequence);
+    return count;
+}
 
 /*
  * Provide the ratio basis points operation used by this module and its client
@@ -221,6 +266,8 @@ static uint32_t ratio_basis_points(size_t numerator, size_t denominator)
  * Provide the calculate duration trend operation used by this module and its client
  * applications.
  */
+/* Preserve the sum-based trend for review. Completed-result means replace overflowing sums; skipped and unfinished work are not timing samples. */
+#if 0
 static void calculate_duration_trend(
     const UmiTestPlatformResultSnapshot *results,
     size_t count,
@@ -259,8 +306,49 @@ static void calculate_duration_trend(
         }
     }
 }
+#endif
+static int HistoryCompletedOutcome(int outcome)
+{
+    return outcome == UMI_TEST_PLATFORM_OUTCOME_PASSED ||
+        outcome == UMI_TEST_PLATFORM_OUTCOME_FAILED ||
+        outcome == UMI_TEST_PLATFORM_OUTCOME_TIMED_OUT;
+}
+static double HistoryMean(double mean, double sample, size_t count)
+{
+    /* Nonnegative finite samples keep the difference representable. Updating
+     * a mean avoids overflowing a sum even when every sample is DBL_MAX. */
+    return mean + (sample - mean) / (double)count;
+}
+static UmiStatus calculate_duration_trend(
+    const UmiTestPlatformResultSnapshot *results, size_t count, double *out_trend)
+{
+    *out_trend = 0.0;
+    size_t completed = 0U;
+    for (size_t i = 0U; i < count; ++i)
+        if (HistoryCompletedOutcome(results[i].outcome)) ++completed;
+    if (completed < 2U) return UMI_STATUS_OK;
+    size_t midpoint = completed / 2U, older_count = 0U, newer_count = 0U;
+    double older = 0.0, newer = 0.0;
+    for (size_t i = 0U; i < count; ++i) {
+        if (!HistoryCompletedOutcome(results[i].outcome)) continue;
+        if (older_count < midpoint)
+            older = HistoryMean(older, results[i].duration_ms, ++older_count);
+        else
+            newer = HistoryMean(newer, results[i].duration_ms, ++newer_count);
+    }
+    /* Preserve the existing near-zero baseline policy. No useful percentage
+     * is reported against a duration at or below this resolution. */
+    if (absolute_value(older) <= 0.000000001) return UMI_STATUS_OK;
+    double relative = (newer - older) / older;
+    if (!isfinite(relative) || relative > DBL_MAX / 100.0)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    *out_trend = relative * 100.0;
+    return UMI_STATUS_OK;
+}
 
 /* Provide the analyse item operation used by this module and its client applications. */
+/* Preserve the prior classification. Only completed outcomes meet the sample threshold; retained skips remain visible and cannot establish Stable. */
+#if 0
 static void analyse_item(
     UmiTestHistoryItemAnalysis *analysis,
     const UmiTestPlatformItemSnapshot *item,
@@ -382,11 +470,141 @@ static void analyse_item(
         analysis->stability = UMI_TEST_STABILITY_STABLE;
     }
 }
+#endif
+static UmiStatus analyse_item(
+    UmiTestHistoryItemAnalysis *analysis,
+    const UmiTestPlatformItemSnapshot *item,
+    const UmiTestPlatformResultSnapshot *results,
+    size_t count,
+    const UmiTestHistoryPolicy *policy)
+{
+    size_t index;
+    size_t running_failure_streak = 0U;
+    size_t first_pass_or_failure = 0U;
+    double duration_mean = 0.0;
+    size_t duration_count = 0U;
+    int mixed_outcomes = 0;
+
+    (void)memset(analysis, 0, sizeof(*analysis));
+    analysis->struct_size = (uint32_t)sizeof(*analysis);
+    analysis->api_version = UMI_TEST_HISTORY_ANALYSIS_API_VERSION;
+    copy_text(analysis->item_id, sizeof(analysis->item_id), item->id);
+    copy_text(analysis->item_name, sizeof(analysis->item_name), item->name);
+    analysis->sample_count = count;
+    analysis->stability = UMI_TEST_STABILITY_UNKNOWN;
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < count; ++index) {
+        const UmiTestPlatformOutcome outcome =
+            (UmiTestPlatformOutcome)results[index].outcome;
+        if (HistoryCompletedOutcome(results[index].outcome)) {
+            duration_mean = HistoryMean(duration_mean, results[index].duration_ms, ++duration_count);
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+            if (duration_count == 1U || results[index].duration_ms < analysis->minimum_duration_ms) {
+                analysis->minimum_duration_ms = results[index].duration_ms;
+            }
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+            if (results[index].duration_ms > analysis->maximum_duration_ms) {
+                analysis->maximum_duration_ms = results[index].duration_ms;
+            }
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        }
+        if (results[index].flaky) ++analysis->flaky_result_count;
+        /* Select the behaviour associated with the requested command or state value. */
+        switch (outcome) {
+            case UMI_TEST_PLATFORM_OUTCOME_PASSED:
+                ++analysis->passed_count;
+                running_failure_streak = 0U;
+                break;
+            case UMI_TEST_PLATFORM_OUTCOME_FAILED:
+                ++analysis->failed_count;
+                ++running_failure_streak;
+                break;
+            case UMI_TEST_PLATFORM_OUTCOME_TIMED_OUT:
+                ++analysis->timed_out_count;
+                ++running_failure_streak;
+                break;
+            case UMI_TEST_PLATFORM_OUTCOME_SKIPPED:
+                ++analysis->skipped_count;
+                running_failure_streak = 0U;
+                break;
+            case UMI_TEST_PLATFORM_OUTCOME_CANCELLED:
+                ++analysis->cancelled_count;
+                running_failure_streak = 0U;
+                break;
+            case UMI_TEST_PLATFORM_OUTCOME_NOT_RUN:
+            default:
+                running_failure_streak = 0U;
+                break;
+        }
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (running_failure_streak > analysis->longest_failure_streak) {
+            analysis->longest_failure_streak = running_failure_streak;
+        }
+    }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (count > 0U) {
+        const UmiTestPlatformResultSnapshot *latest = &results[count - 1U];
+        analysis->latest_outcome = (UmiTestPlatformOutcome)latest->outcome;
+        analysis->latest_duration_ms = latest->duration_ms;
+        analysis->latest_sequence = latest->sequence;
+        analysis->average_duration_ms = duration_mean;
+    }
+    index = count;
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
+    while (index > 0U) {
+        const UmiTestPlatformOutcome outcome =
+            (UmiTestPlatformOutcome)results[index - 1U].outcome;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (outcome != UMI_TEST_PLATFORM_OUTCOME_FAILED &&
+            outcome != UMI_TEST_PLATFORM_OUTCOME_TIMED_OUT) break;
+        ++analysis->current_failure_streak;
+        --index;
+    }
+    first_pass_or_failure = analysis->passed_count + analysis->failed_count +
+                            analysis->timed_out_count;
+    analysis->pass_rate_basis_points = ratio_basis_points(
+        analysis->passed_count, first_pass_or_failure);
+    UmiStatus trend_status = calculate_duration_trend(results, count, &analysis->duration_trend_percent);
+    if (trend_status != UMI_STATUS_OK) return trend_status;
+    mixed_outcomes = analysis->passed_count > 0U &&
+        (analysis->failed_count + analysis->timed_out_count) > 0U;
+
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (first_pass_or_failure == 0U || first_pass_or_failure < policy->minimum_samples ||
+        !HistoryCompletedOutcome(analysis->latest_outcome)) {
+        analysis->stability = UMI_TEST_STABILITY_UNKNOWN;
+    } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (analysis->current_failure_streak >=
+               policy->failing_streak_threshold) {
+        analysis->stability = UMI_TEST_STABILITY_FAILING;
+    } else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (analysis->flaky_result_count > 0U ||
+               (mixed_outcomes &&
+                ratio_basis_points(analysis->failed_count +
+                                       analysis->timed_out_count,
+                                   first_pass_or_failure) >=
+                    policy->flaky_failure_ratio_basis_points)) {
+        analysis->stability = UMI_TEST_STABILITY_FLAKY;
+    } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (analysis->duration_trend_percent >=
+               policy->duration_regression_percent) {
+        analysis->stability = UMI_TEST_STABILITY_REGRESSED;
+    } else /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (analysis->average_duration_ms >= policy->slow_duration_ms &&
+               policy->slow_duration_ms > 0.0) {
+        analysis->stability = UMI_TEST_STABILITY_SLOW;
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
+        analysis->stability = UMI_TEST_STABILITY_STABLE;
+    }
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the test history analysis build operation used by this module and its client
  * applications.
  */
+/* Preserve the in-place analysis for review. Independent candidate storage replaces it so failures cannot publish partial history. */
+#if 0
 UmiStatus umi_test_history_analysis_build(
     UmiTestHistoryAnalysis *analysis,
     const UmiTestPlatformItemRegistry *items,
@@ -501,6 +719,148 @@ UmiStatus umi_test_history_analysis_build(
     }
     analysis->snapshot.revision = ++analysis->revision;
     return UMI_STATUS_OK;
+}
+#endif
+static UmiStatus PopulateHistory(
+    UmiTestHistoryAnalysis *analysis,
+    const UmiTestPlatformItemRegistry *items,
+    const UmiTestPlatformResultRegistry *results,
+    const UmiTestHistoryPolicy *policy)
+{
+    UmiTestHistoryPolicy effective_policy;
+    UmiTestPlatformResultSnapshot *buffer;
+    size_t item_index;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (analysis == NULL || items == NULL || results == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (policy == NULL) {
+        umi_test_history_policy_init(&effective_policy);
+        policy = &effective_policy;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (policy->struct_size != (uint32_t)sizeof(*policy) ||
+        policy->api_version != UMI_TEST_HISTORY_ANALYSIS_API_VERSION ||
+        policy->flaky_failure_ratio_basis_points > 10000U ||
+        policy->failing_streak_threshold == 0U ||
+        !isfinite(policy->slow_duration_ms) || !isfinite(policy->duration_regression_percent) ||
+        policy->slow_duration_ms < 0.0 ||
+        policy->duration_regression_percent < 0.0) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    buffer = (UmiTestPlatformResultSnapshot *)calloc(
+        HISTORY_RESULT_CAPACITY, sizeof(buffer[0]));
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (buffer == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    analysis->count = 0U;
+    (void)memset(&analysis->snapshot, 0, sizeof(analysis->snapshot));
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (item_index = 0U;
+         item_index < umi_test_platform_item_registry_count(items);
+         ++item_index) {
+        UmiTestPlatformItemSnapshot item;
+        UmiStatus status;
+        size_t sample_count;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (analysis->count >= HISTORY_ITEM_CAPACITY) {
+            free(buffer);
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        status = umi_test_platform_item_registry_at(items, item_index, &item);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) {
+            free(buffer);
+            return status;
+        }
+        sample_count = collect_results(results, item.id, buffer,
+                                       HISTORY_RESULT_CAPACITY, &status);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) {
+            free(buffer);
+            return status;
+        }
+        status = analyse_item(&analysis->items[analysis->count], &item, buffer,
+                     sample_count, policy);
+        if (status != UMI_STATUS_OK) { free(buffer); return status; }
+        ++analysis->count;
+    }
+    free(buffer);
+    qsort(analysis->items, analysis->count, sizeof(analysis->items[0]),
+          compare_analysis);
+
+    analysis->snapshot.struct_size = (uint32_t)sizeof(analysis->snapshot);
+    analysis->snapshot.api_version = UMI_TEST_HISTORY_ANALYSIS_API_VERSION;
+    analysis->snapshot.item_count = analysis->count;
+    analysis->snapshot.item_revision =
+        umi_test_platform_item_registry_revision(items);
+    analysis->snapshot.result_revision =
+        umi_test_platform_result_registry_revision(results);
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (item_index = 0U; item_index < analysis->count; ++item_index) {
+        const UmiTestStabilityState stability = analysis->items[item_index].stability;
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (analysis->items[item_index].sample_count > 0U) {
+            ++analysis->snapshot.analysed_item_count;
+        }
+        /* Select the behaviour associated with the requested command or state value. */
+        switch (stability) {
+            case UMI_TEST_STABILITY_STABLE:
+                ++analysis->snapshot.stable_count;
+                break;
+            case UMI_TEST_STABILITY_FLAKY:
+                ++analysis->snapshot.flaky_count;
+                break;
+            case UMI_TEST_STABILITY_FAILING:
+                ++analysis->snapshot.failing_count;
+                break;
+            case UMI_TEST_STABILITY_SLOW:
+                ++analysis->snapshot.slow_count;
+                break;
+            case UMI_TEST_STABILITY_REGRESSED:
+                ++analysis->snapshot.regressed_count;
+                break;
+            case UMI_TEST_STABILITY_UNKNOWN:
+            default:
+                break;
+        }
+    }
+    analysis->snapshot.revision = ++analysis->revision;
+    return UMI_STATUS_OK;
+}
+
+/* Keep the previous complete history visible while candidate storage is
+ * checked. Inputs and analysis must be externally serialized by their owner. */
+UmiStatus umi_test_history_analysis_build(UmiTestHistoryAnalysis *analysis,
+    const UmiTestPlatformItemRegistry *items,
+    const UmiTestPlatformResultRegistry *results, const UmiTestHistoryPolicy *policy)
+{
+    if (analysis == NULL || items == NULL || results == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (analysis->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiTestHistoryAnalysis *candidate = NULL;
+    UmiStatus status = umi_test_history_analysis_create(&candidate);
+    if (status != UMI_STATUS_OK) return status;
+    candidate->revision = analysis->revision;
+    status = PopulateHistory(candidate, items, results, policy);
+    if (status == UMI_STATUS_OK) {
+        UmiTestHistoryAnalysis previous = *analysis;
+        *analysis = *candidate;
+        *candidate = previous;
+    }
+    umi_test_history_analysis_destroy(candidate);
+    return status;
 }
 
 /* Provide the find item operation used by this module and its client applications. */

@@ -139,6 +139,13 @@ void umi_test_coverage_analysis_destroy(UmiTestCoverageAnalysis *analysis);
  * Provide the test coverage analysis build operation used by this module and its client
  * applications.
  */
+/* Replaces retained evidence only on success. Fragments are additive; providers
+ * must replace revisions under stable registry IDs before analysis. Covered
+ * counts may not exceed totals. Integer sums must fit uint64_t. A nonempty
+ * session filter must fit 127 bytes plus NUL without truncation. No-line files
+ * remain Unknown unless allow_empty is explicitly enabled. Serialize calls and
+ * registry mutation. source_revision is a registry revision, not proof that
+ * separate source trees or hosts were tested together. */
 UmiStatus umi_test_coverage_analysis_build(
     UmiTestCoverageAnalysis *analysis,
     const UmiTestPlatformCoverageRegistry *coverage,
@@ -178,6 +185,8 @@ size_t umi_test_coverage_analysis_count(
  * Provide the test coverage basis points operation used by this module and its client
  * applications.
  */
+/* Exact floor of covered * 10000 / total without intermediate overflow.
+ * A zero total gives zero; covered >= total saturates at 10000. */
 uint32_t umi_test_coverage_basis_points(uint64_t covered, uint64_t total);
 /**
  * Provide the test coverage gate state text operation used by this module and its client

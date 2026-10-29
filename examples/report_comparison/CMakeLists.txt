@@ -22,7 +22,7 @@ else()
 endif()
 include(CTest)
 if(BUILD_TESTING)
-    foreach(scenario recovered regressed removed unchanged-failure empty malformed)
+    foreach(scenario recovered regressed removed unchanged-failure empty malformed unicode-path)
         add_test(NAME installed.comparison.${scenario} COMMAND "${CMAKE_COMMAND}"
             "-DPROGRAM=$<TARGET_FILE:report-comparison-consumer>"
             "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/evidence/${scenario}"

@@ -48,6 +48,29 @@
     umicom_add_framework_test(umicom-workspace-search-pattern-fuzz-tests framework.editor.workspace_search_pattern_fuzz tests/test_workspace_search_pattern_fuzz.c)
     umicom_add_framework_test(umicom-workspace-search-exclusion-tests framework.editor.workspace_search_exclusion tests/test_workspace_search_exclusion.c)
     umicom_add_framework_test(umicom-workspace-search-index-tests framework.editor.workspace_search_index tests/test_workspace_search_index.c)
+    # Isolated implementation fixture reaches revision exhaustion without a public test hook.
+    add_executable(umicom-workspace-search-index-limits-test tests/test_workspace_search_index_limits.c)
+    target_link_libraries(umicom-workspace-search-index-limits-test PRIVATE Umicom::base)
+    set_target_properties(umicom-workspace-search-index-limits-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-workspace-search-index-limits-test)
+    umicom_apply_sanitizers(umicom-workspace-search-index-limits-test)
+    foreach(_index_limit IN ITEMS clear remove upsert new-document final-clear final-remove
+            final-upsert missing-remove allocation-refusal)
+        add_test(NAME "framework.editor.workspace_search_index.${_index_limit}"
+            COMMAND umicom-workspace-search-index-limits-test "${_index_limit}")
+        set_tests_properties("framework.editor.workspace_search_index.${_index_limit}" PROPERTIES
+            TIMEOUT 30 LABELS "framework;editor;search;ownership;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.editor.workspace_search_index.${_index_limit}"
+                TARGETS umicom-workspace-search-index-limits-test)
+        endif()
+    endforeach()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-workspace-search-index-limits-test FILES
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/editor/workspace_search_index.c")
+    endif()
+
     umicom_add_framework_test(umicom-workspace-search-query-tests framework.editor.workspace_search_query tests/test_workspace_search_query.c)
     umicom_add_framework_test(umicom-workspace-search-preview-tests framework.editor.workspace_search_preview tests/test_workspace_search_preview.c)
     umicom_add_framework_test(umicom-workspace-replace-plan-tests framework.editor.workspace_replace_plan tests/test_workspace_replace_plan.c)

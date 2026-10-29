@@ -190,6 +190,7 @@ install(FILES
     "${_umicom_pack_root}/examples/learning_pack_inspector/history.c"
     "${_umicom_pack_root}/examples/learning_pack_inspector/practice.c"
     "${_umicom_pack_root}/examples/learning_pack_inspector/search.c"
+    "${_umicom_pack_root}/examples/learning_pack_inspector/body_search.c"
     "${_umicom_pack_root}/examples/learning_pack_inspector/help.c"
     "${_umicom_pack_root}/examples/learning_pack_inspector/progress.c"
     "${_umicom_pack_root}/examples/learning_pack_inspector/archive.c"
@@ -313,3 +314,6 @@ endif()
 
 # Remembered roots remain separate from pack admission and execution trust.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomLearningLibraryChoices.cmake")
+
+# Body search extends metadata browsing with explicit verified-resource snapshots.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomLearningText.cmake")

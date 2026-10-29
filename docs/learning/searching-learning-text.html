@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Search inside offline learning resources | Umicom Framework</title>
+<style>body{max-width:960px;margin:3rem auto;padding:0 1.5rem;font:17px/1.65 system-ui,sans-serif;color:#1d2835}pre{background:#eef2f6;padding:1rem;overflow:auto}code{font-family:Consolas,monospace}h1,h2{line-height:1.2}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ccd4dc;padding:.6rem;text-align:left}aside{border-left:4px solid #247b80;background:#eef7f7;padding:1rem}svg{width:100%;height:auto}a{color:#17606d}</style></head>
+<body><main><h1>Search inside offline learning resources</h1>
+<p>A guide can contain a useful explanation even when its title does not contain
+the word you remember. This walkthrough searches the paragraphs of a guide and
+the source text of its examples. It uses the same Framework services that
+applications can embed in their learning tools.</p>
+<p>You need a Framework SDK with the <code>developer</code> component, its
+declared dependencies, CMake, Ninja and a matching C compiler. Start with
+<a href="using-learning-catalogue.html">Use the offline learning catalogue</a>
+to learn about packs. The complete example is
+<code>examples/learning_pack_inspector/body_search.c</code>.</p>
+<aside><strong>Interfaces:</strong> the shared C API and command-line SDK example are accompanied by the native catalogue’s <strong>Search inside guides and examples</strong> section. It offers explicit Search text, Refresh search and verified Read result actions. Metadata search and Find within the current document remain separate controls. Read result verifies the document and selects its first matching passage.</aside>
+<h2>1. Understand a search snapshot</h2>
+<p>A <strong>resource</strong> is one declared guide, lesson, example or image.
+A <strong>manifest</strong> lists resources and the expected digest of each
+file. A <strong>digest</strong> is a fixed-size value calculated from the file's
+bytes; changed bytes should produce a different value. The manifest and files
+must come from a source you have chosen to trust. Matching a digest alone does
+not identify or authenticate their publisher.</p>
+<p>A <strong>snapshot</strong> owns a copy of the searchable text at a particular
+moment. Building the snapshot reads and verifies files. Searching it later
+uses memory. This separation lets an application perform file access on a
+worker and keep the interface responsive. It also explains why search results
+can describe earlier content after a file changes.</p>
+<svg viewBox="0 0 900 210" role="img" aria-labelledby="flow-title flow-description">
+<title id="flow-title">From verified resources to independently owned results</title>
+<desc id="flow-description">The admitted shelf leads to bounded file verification, then an owned text index. Searches copy results; opening a result verifies current content again.</desc>
+<g fill="#edf5f7" stroke="#477582"><rect x="5" y="25" width="180" height="70" rx="8"/><rect x="240" y="25" width="180" height="70" rx="8"/><rect x="475" y="25" width="180" height="70" rx="8"/><rect x="710" y="25" width="180" height="70" rx="8"/></g>
+<g font-family="sans-serif" font-size="17" text-anchor="middle" fill="#183b48"><text x="95" y="56">Admitted shelf</text><text x="95" y="80">Declared metadata</text><text x="330" y="56">Verify file bytes</text><text x="330" y="80">Apply size limits</text><text x="565" y="56">Owned text index</text><text x="565" y="80">No later file reads</text><text x="800" y="56">Copied results</text><text x="800" y="80">Safe to retain</text></g>
+<g stroke="#247b80" stroke-width="3" fill="none"><path d="M185 60H230"/><path d="M420 60H465"/><path d="M655 60H700"/></g>
+<g fill="#247b80"><path d="M230 60l-10 -6v12z"/><path d="M465 60l-10 -6v12z"/><path d="M700 60l-10 -6v12z"/></g>
+<text x="450" y="150" text-anchor="middle" font-size="18">Opening a result checks the selected revision and bytes again.</text>
+<text x="450" y="185" text-anchor="middle" font-size="16">A failed candidate leaves the application's earlier index available.</text>
+</svg>
+<h2>2. Build the installed example</h2>
+<p>Use a new exercise directory. If it already contains work, choose another
+directory instead of overwriting it. These commands assume a matching SDK
+installed at <code>C:\umicom\installed\framework</code>. Stop when any command
+reports an error; the number printed by <code>$LASTEXITCODE</code> should be
+zero after configure, build and test.</p>
+<pre><code>New-Item -ItemType Directory "C:\umicom\examples\learning-text"
+Copy-Item "C:\umicom\installed\framework\share\umicom\framework\examples\learning_pack_inspector\*" "C:\umicom\examples\learning-text"
+Set-Location "C:\umicom\examples\learning-text"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+New-Item -ItemType Directory -Force "C:\umicom\_local\logs\learning-text"
+cmake -S . -B build -G Ninja -DCMAKE_C_COMPILER="C:/msys64/ucrt64/bin/gcc.exe" -DUMICOM_EXPECTED_SDK_PREFIX="C:/umicom/installed/framework" -DBUILD_TESTING=ON 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\learning-text\configure.log"
+$LASTEXITCODE
+cmake --build build --target umicom-learning-pack-text --parallel 2 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\learning-text\build.log"
+$LASTEXITCODE
+ctest --test-dir build -R "^sdk[.]learning_pack[.]text[.]" --output-on-failure --no-tests=error --output-log "C:\umicom\_local\logs\learning-text\tests.log"
+$LASTEXITCODE</code></pre>
+<p>Configuration copies the example resources and calculates their actual hashes.
+The executable links installed libraries; this consumer does not rebuild
+Framework source. The three selected tests check a guide phrase, a source-code
+phrase and a missing phrase. Their exit status is checked along with the
+expected resource selection. The expected result is three passing tests.
+A missing executable is a build or installation problem, not a passing test.</p>
+<h2>3. Search the generated pack</h2>
+<pre><code>&amp; ".\build\umicom-learning-pack-text.exe" "$PWD\build\pack" learning-pack.json "verified body search" 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\learning-text\guide-search.log"
+$LASTEXITCODE
+&amp; ".\build\umicom-learning-pack-text.exe" "$PWD\build\pack" learning-pack.json "argc &lt; 3" 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\learning-text\source-search.log"
+$LASTEXITCODE</code></pre>
+<p>The first command should identify resource <code>guide</code>. The second
+should include <code>inspector</code>, because its C source checks how many
+command-line arguments it received. Each result includes the pack and resource
+IDs, a byte range and a short text preview. A phrase can appear in several
+resources. The service returns the first occurrence in each matching resource.</p>
+<p>Try a word absent from the pack. Zero results with a successful exit means
+the search completed and found nothing. It differs from a refusal, where the
+executable exits unsuccessfully and reports a status.</p>
+<h2>4. Trace the real C API</h2>
+<pre><code>UmiLearningTextIndex *index = NULL;
+UmiLearningTextProblem problem = {0};
+UmiStatus status = UmiLearningTextIndexCreate(
+    shelf, NULL, NULL, NULL, &amp;index, &amp;problem);
+
+UmiLearningTextQuery query;
+UmiLearningTextQueryInit(&amp;query);
+strcpy(query.phrase, "ownership");
+UmiLearningTextSearch *search = NULL;
+if (status == UMI_STATUS_OK)
+    status = UmiLearningTextSearchCreate(index, &amp;query, &amp;search);
+
+/* Read copied results only after a successful search. */
+UmiLearningTextSearchDestroy(search);
+UmiLearningTextIndexDestroy(index);</code></pre>
+<p><code>NULL</code> for limits chooses documented defaults. The two following
+<code>NULL</code> arguments mean no cancellation callback or callback data.
+A callback is a function the service calls at defined boundaries. A graphical
+host can use one to notice a cancellation request, but it must not destroy or
+modify the shelf during construction.</p>
+<p>The <code>&amp;</code> operator passes the address of an output variable.
+A successful create call places a new owner in that variable. Failure leaves
+it null. Use a separate candidate variable when rebuilding: replace an
+application's earlier index only after the candidate succeeds. The destroy
+functions accept null and release each successful object once.</p>
+<p>The complete program checks every status. The short fragment above explains
+the ownership pattern; it is not a standalone program. The source files
+<code>src/teacher/learning_text_index.c</code> and
+<code>src/teacher/learning_text_search.c</code> show how the implementation
+combines the existing verified reader, inert HTML projection and Editor
+literal-search engine.</p>
+<h2>5. Know which text and offsets are searched</h2>
+<table><thead><tr><th>Resource</th><th>Searchable content</th><th>Result offsets</th></tr></thead><tbody>
+<tr><td>HTML or HTM filename</td><td>Shared reading projection. Visible paragraphs, headings and supported structure remain; scripts, styles and other excluded sections do not.</td><td>Bytes in the reading projection.</td></tr>
+<tr><td>Other non-image resource</td><td>Complete UTF-8 source text, including comments and markup if it is not classified as HTML.</td><td>Bytes in the verified source.</td></tr>
+<tr><td>Image resource</td><td>Excluded and counted without reading image bytes.</td><td>No result.</td></tr>
+</tbody></table>
+<p>A <strong>byte offset</strong> counts stored bytes from zero. Some characters
+take several UTF-8 bytes, so an offset is not necessarily a character count.
+The end offset is exclusive: it points just after the matched phrase.
+HTML tags and decoded entities change the reading text; never apply its
+offsets directly to raw HTML or to a newly changed document.</p>
+<p>Phrase matching is literal. Square brackets are ordinary characters, not a
+regular expression. Case-insensitive search folds ASCII letters; it does not
+promise Unicode case folding or normalization. Whole-word boundaries use the
+Editor engine's ASCII identifier rules. Product filters match exactly; locale
+filters fold ASCII but do not fall back from <code>en-GB</code> to <code>en</code>.</p>
+<h2>6. Work within explicit budgets</h2>
+<p>The defaults allow 256 documents, one MiB of source per resource, 64 KiB of
+searchable text per document and eight MiB of searchable text overall. A byte
+is a unit of stored data; one KiB is 1,024 bytes and one MiB is 1,024 KiB.
+Configurable hard bounds are listed in <code>learning_text.h</code>. Zero
+does not disable a limit. The document limit must fit within the total limit.</p>
+<p>An invalid, changed, missing or oversized non-image resource refuses the
+whole candidate. The optional problem record identifies the known pack and
+resource without exposing an absolute filesystem path. This gives the host
+an opportunity to explain the refusal while keeping an earlier index.
+There is no silent “mostly complete” search library.</p>
+<p>A search retains at most 256 results. It still counts all matching documents
+and marks truncation when some were not returned. Results follow shelf and
+manifest order. The current service does not rank relevance, persist an index,
+download resources, scan undeclared files or provide fuzzy matching.</p>
+<h2>7. Reopen results safely</h2>
+<p>A result owns its pack revision, resource digest and preview. The shelf and
+index may be destroyed after the search. Keeping that result does not make
+changed files match it. Use <code>UmiLearningReaderCreateFromShelf</code> with
+the result's pack ID, expected revision, resource ID and expected digest when
+opening it. Apply offsets only after recreating the same reading representation.</p>
+<p>Generation numbers help identify changes in the originating shelf. They are
+not globally unique identities and must not be compared across unrelated
+shelves as proof that two libraries match. A verified example remains source
+to inspect; searching or opening it grants no build or execution permission.</p>
+<section id="search-learning-bodies"><h2>Search inside loaded guides and examples</h2>
+<ol><li>Load the learning packs you want to search, then expand <strong>Search inside guides and examples</strong>.</li>
+<li>Enter a phrase and choose <strong>Search text</strong>. The first search reads and verifies declared non-image resources on a worker. Later searches reuse the prepared text snapshot.</li>
+<li>Optionally enter a <strong>Product ID</strong>, a <strong>Language tag</strong>, or choose a <strong>Resource kind</strong>. Product IDs match exactly: <code>studio</code> differs from <code>Studio</code>. Language tags ignore ASCII letter case but do not fall back: <code>en</code> does not match <code>en-GB</code>. Leave an entry empty and choose <strong>All readable resources</strong> to remove those filters. Use the values declared in your pack manifest.</li>
+<li>Use <strong>Match case</strong> or <strong>Whole word</strong> when needed. These use ASCII case and identifier-boundary rules; they do not perform language-specific normalization.</li>
+<li><!-- Earlier document-only navigation, retained for interface history: Choose a result and select <strong>Read result</strong>. The reader rechecks its revision, digest and current bytes. Use <strong>Find in this resource</strong> or Ctrl+F to navigate to the phrase; opening a body result does not yet highlight it automatically. -->Choose a result and select <strong>Read result</strong>. The reader rechecks its revision, digest and current bytes, then selects and scrolls to the first match. The location is calculated from the verified text, including complete UTF-8 characters. Use <strong>Find in this resource</strong> or Ctrl+F to find later occurrences. A changed or missing file leaves the previous reading selection intact.</li>
+<li>Choose <strong>Refresh search</strong> after editing resource files to rebuild the snapshot deliberately. A changed or missing file refuses the new snapshot and keeps earlier results visible with a failure message. Update the reviewed manifest consistently before retrying.</li></ol>
+<p>Adding or replacing a pack makes the previous body results stale against the shelf. Search again before reading those results; the next search rebuilds automatically. A memory snapshot does not detect disk edits by itself. Image files are excluded, HTML scripts and styles are omitted, and source examples are searched without being executed.</p>
+<p>The default snapshot allows 256 documents, 1 MiB per source file, 64 KiB of searchable text per document and 8 MiB overall. The visible controls retain up to 128 matching documents and reports truncation. Back, Forward and Reload retain their resource-navigation behavior; they do not replay a previous search highlight. Selecting Read result again reapplies that verified location. Empty phrases are refused. There is no automatic search on each keystroke, network request, fuzzy ranking or persisted index.</p></section>
+
+<h2>Filter from a native application</h2>
+<p>A filter narrows the set of resources searched; it does not modify a course or translate its text. Initialize a query before filling its fixed-size arrays, then validate it before dispatch. For example:</p>
+<pre><code>UmiLearningTextQuery query;
+UmiLearningTextQueryInit(&amp;query);
+memcpy(query.phrase, "ownership", sizeof("ownership"));
+memcpy(query.product, "studio", sizeof("studio"));
+memcpy(query.locale, "en-GB", sizeof("en-GB"));
+query.kind = UMI_LEARNING_RESOURCE_EXAMPLE;
+UmiStatus status = UmiLearningTextQueryValidate(&amp;query);
+if (status == UMI_STATUS_OK)
+    status = UmiLearningCatalogueGtk4SearchBodiesWithQuery(panel, &amp;query, 0);</code></pre>
+<p>Include <code>string.h</code> and the native catalogue header in a GTK host. The call copies this query; the caller may release its local storage after acceptance. Observe <code>CopyState</code> until the panel is no longer busy. <code>CopyBodySearchState</code> includes the last successful query alongside its results, so a failed request cannot label older results as a new search. Native queries cannot carry callback pointers or borrowed cancellation state. Direct synchronous core searches retain their separate cancellation contract.</p>
+<h2>8. Diagnose and practise</h2>
+<ol>
+<li><strong>Missing SDK symbol:</strong> check that headers and libraries come
+from the same installed SDK. Reinstall the selected Framework build rather
+than borrowing a header from another checkout.</li>
+<li><strong>Changed resource:</strong> compare the edited file with the source
+used to generate the pack. Reconfigure the example when the change is intended,
+then recreate the index. Do not bypass the hash check.</li>
+<li><strong>Capacity exceeded:</strong> inspect the reported resource and
+limits. Use a smaller reviewed shelf or deliberately choose appropriate
+bounded limits. A larger budget cannot make malformed content valid.</li>
+<li><strong>Unexpected zero results:</strong> check the literal phrase, product,
+locale, kind and case settings. Hidden HTML script text and metadata-only titles
+are not body text.</li>
+<li><strong>Practice:</strong> search for a C function name in an example.
+Find it in the actual source, compare the byte range, then add a sentence to
+the source copy and explain why the old manifest refuses it.</li>
+<li><strong>Design exercise:</strong> draw the lifetime of the shelf, index and
+results. Decide which objects an application must retain while a worker runs
+and which copied objects can safely outlive it.</li>
+</ol>
+<p>Continue with <a href="reliable-test-evidence.html">Build reliable test reports</a>
+to learn how to report checked outcomes without mistaking incomplete evidence
+for success.</p>
+</main></body></html>

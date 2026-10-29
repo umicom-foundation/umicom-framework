@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/language_runtime/completion_query.c
- * PURPOSE: Keep native completion transport, input capture and cleanup in the shared language runtime.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Keep native completion transport, input capture and cleanup in the shared language runtime.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language_runtime/completion_query.h"
@@ -6215,6 +6222,10 @@ static UmiStatus QueryPrepare(const UmiLanguageCompletionRequest *request, const
     *out = wire;
     return UMI_STATUS_OK;
 }
+/* Preserve the earlier wait for review. The shared wait implementation now
+ * checks the positive deadline after receiving a complete frame as well as
+ * before receiving, so a late first response cannot renew the request budget. */
+#if 0
 static UmiStatus QueryAwait(UmiLanguageRuntimeServer *server, uint64_t id, UmiClock *clock, uint64_t started,
                             uint32_t timeout, const UmiCancellationToken *cancel,
                             UmiLanguageRuntimeEnvelope *reply)
@@ -6253,6 +6264,8 @@ static UmiStatus QueryAwait(UmiLanguageRuntimeServer *server, uint64_t id, UmiCl
             (void)clock->sleep_milliseconds(clock, 1U);
     }
 }
+#endif
+#include "reply_wait.inc"
 /* Shared response validation now precedes operation-specific capability negotiation.
  * The former implementation is retained for engineering review. */
 #if 0

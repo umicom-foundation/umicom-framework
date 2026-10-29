@@ -20,5 +20,9 @@ UmiStatus UmiQualificationReadDigest(UmiQualificationField field, bool optional,
 UmiStatus UmiQualificationReadName(UmiQualificationReader *reader, UmiQualificationField field, char **out);
 UmiStatus UmiQualificationReadResult(const UmiQualificationField *fields, size_t count,
     UmiReleaseQualificationResult *result, bool *recorded);
+/* Internal temporary reconstruction shared by display and retry planning.
+ * Never expose this record as a resumed job; callers destroy it after reading. */
+UmiStatus UmiQualificationParseRecord(const char *bytes, size_t length,
+    UmiReleaseQualification **outRun);
 void UmiQualificationViewMarkSaved(UmiQualificationView *view);
 #endif

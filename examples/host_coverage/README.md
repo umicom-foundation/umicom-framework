@@ -13,7 +13,7 @@ This C23 example reads a CSV plan and complete CTest JUnit reports through publi
    ```
 
    Run each command only after the previous one succeeds. The configure step rejects source-built targets, a package outside the selected prefix and mismatched installed headers.
-3. The four checks use synthetic evidence for passed, skipped, mismatched-source and malformed inputs. Each creates a fresh directory beneath the consumer build tree and retains its input files and log. The checks run from a different working directory to exercise manifest-relative report lookup.
+3. The original four checks use synthetic evidence for passed, skipped, mismatched-source and malformed inputs. Each creates a fresh directory beneath the consumer build tree and retains its input files and log. The checks run from a different working directory to exercise manifest-relative report lookup.
 4. Review your own plan with:
 
    ```powershell
@@ -39,3 +39,18 @@ $LASTEXITCODE
 The optional last argument matches literal test-name or capability text, folding ASCII case. Use `--passed` to display saved passes. Every page includes the accepted filter and the original whole-review counts. The exit status still evaluates **all** listed requirements, even when the filtered display contains only passes or no rows.
 
 The additional filtered-passed, filtered-empty and filtered-text checks expect exit 1 from synthetic mixed evidence. This checks that presentation cannot conceal an outstanding qualification requirement. These documented results are expected outcomes, not a claim that a particular SDK build has passed qualification.
+
+## Read result messages without changing the outcome
+
+Observed rows now include the saved result message. A skip return code identifies the outcome rule; it does not explain which prerequisite was missing. Read the original testcase output for that detail. A missing observation or a source mismatch does not borrow a message from another host. An observed result without a message says **not recorded**.
+
+The additional `not-run`, `disabled`, `skip-pattern` and `message-controls` scenarios exercise the same public consumer against synthetic reports. They expect exit 1 because coverage remains outstanding. `message-controls` checks that a newline inside an imported message is displayed as `\x0A`, so its text cannot create a forged result row. The original evidence files must remain byte-for-byte unchanged. These checks are separate from executing the application tests named by a real coverage plan.
+
+## Paths in different languages
+
+The native entry point captures Windows Unicode arguments and converts them to
+UTF-8 before passing paths to Framework. It leaves the process locale and working
+directory unchanged. The unicode-path check places evidence under a directory
+containing accented and Chinese characters, then reads it from another working
+directory. Its expected exit status is zero; it does not run the tests described
+by the saved report. Keep this check when adapting the example into another tool.

@@ -1,7 +1,7 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 # Fixtures use injected observations and outcome records; no tool execution.
 include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/UmicomImpactInventory.cmake")
-foreach(_group IN ITEMS identity recording assessment scale inventory_identity report batch input_coverage view interruption archive_parse archive_file archive_semantics compare)
+foreach(_group IN ITEMS identity recording assessment scale inventory_identity report batch input_coverage view interruption archive_parse archive_file archive_semantics compare retry retry_report source_archive)
     set(_target "umi-qualification-${_group}-test")
     add_executable("${_target}"
         "${CMAKE_CURRENT_LIST_DIR}/test_${_group}.c"
@@ -26,6 +26,9 @@ foreach(_group IN ITEMS identity recording assessment scale inventory_identity r
         umicom_register_validation_target("${_target}")
     endif()
 endforeach()
+set(_qualification_retry_report_cases passed failed skipped partial open changed unknown-tools no-baseline wrong-digest invalid-digest null-digest null-report empty truncated embedded-nul oversized unknown-reason unknown-fallback null-inventory null-current null-output null-summary occupied-output invalid-tools ownership retry-reason unmapped-retry)
+set(_qualification_source_archive_cases roundtrip deterministic unicode many ownership version truncated trailing embedded-nul count count-overflow path path-case duplicate size size-overflow total-overflow file-digest fingerprint inventory receipt bad-receipt null-receipt empty oversized null-inventory null-bytes null-output occupied-output encode-null-source encode-null-output encode-null-length encode-null-digest encode-occupied empty-source)
+set(_qualification_retry_cases passed failed skipped disabled cancelled timed-out not-run missing-test missing-history open missing-build failed-build process-failed process-passed interrupted source-changed source-unstable toolchain-changed toolchain-unstable unknown-toolchain invalid-toolchain baseline-mismatch no-baseline inventory-changed current-stale new-test removed-test scoped-history no-tests null-inventory null-current null-output null-summary occupied-output ownership scale untested-target)
 set(_qualification_identity_cases ownership attempt toolchain context invalid source selection no-work)
 set(_qualification_recording_cases build-first invalid-result duplicate-build unknown-test duplicate-test copy failed-build)
 set(_qualification_assessment_cases passed missing-build missing-test no-tests failed skipped not-run cancelled timed-out
@@ -42,7 +45,7 @@ set(_qualification_archive_parse_cases passed open no-tests process interrupted 
 set(_qualification_archive_file_cases reopen receipt wrong-digest existing malformed missing relative open)
 set(_qualification_archive_semantics_cases mixed names partial failed-build unknown-process integer-boundaries changed-tools)
 set(_qualification_compare_cases same regressed recovered changed added removed missing source-changed log-duration saved open invalid large)
-foreach(_group IN ITEMS identity recording assessment scale report batch input_coverage view interruption archive_parse archive_file archive_semantics compare)
+foreach(_group IN ITEMS identity recording assessment scale report batch input_coverage view interruption archive_parse archive_file archive_semantics compare retry retry_report source_archive)
     foreach(_case IN LISTS _qualification_${_group}_cases)
         set(_name "framework.qualification.${_group}.${_case}")
         add_test(NAME "${_name}" COMMAND "umi-qualification-${_group}-test" "${_case}")

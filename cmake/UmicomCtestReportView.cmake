@@ -169,7 +169,7 @@ umicom_apply_sanitizers(umi-host-coverage-consumer-check)
 if(COMMAND umicom_register_validation_target)
     umicom_register_validation_target(umi-host-coverage-consumer-check)
 endif()
-foreach(scenario passed skipped stale malformed filtered-passed filtered-empty filtered-text)
+foreach(scenario passed skipped stale malformed filtered-passed filtered-empty filtered-text not-run disabled skip-pattern message-controls unicode-path)
     set(test "framework.ctest.coverage_consumer.${scenario}")
     add_test(NAME ${test} COMMAND "${CMAKE_COMMAND}"
         "-DPROGRAM=$<TARGET_FILE:umi-host-coverage-consumer-check>"
@@ -208,7 +208,7 @@ umicom_apply_sanitizers(umi-report-comparison-consumer-check)
 if(COMMAND umicom_register_validation_target)
     umicom_register_validation_target(umi-report-comparison-consumer-check)
 endif()
-foreach(scenario recovered regressed removed unchanged-failure empty malformed)
+foreach(scenario recovered regressed removed unchanged-failure empty malformed unicode-path)
     set(test "framework.ctest.comparison_consumer.${scenario}")
     add_test(NAME ${test} COMMAND "${CMAKE_COMMAND}"
         "-DPROGRAM=$<TARGET_FILE:umi-report-comparison-consumer-check>"
@@ -247,5 +247,10 @@ umicom_saved_report_group(coverage_filter Umicom::testing
 if(TARGET umicom_ui_gtk4)
     umicom_saved_report_group(coverage_filter_gtk4 Umicom::ui_gtk4
         passed outstanding host configuration text capability empty paging edit-render close-render
-        clear-render reload failed-reload retained oversize)
+        clear-render reload failed-reload retained oversize messages)
 endif()
+
+# Result messages retain imported evidence without becoming inferred causes.
+umicom_saved_report_group(coverage_messages Umicom::testing
+    passed failed timeout skip-return skip-pattern disabled not-run empty-message
+    unicode controls markup limit stale missing-host missing-test filtered-out)

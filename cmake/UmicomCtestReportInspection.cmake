@@ -61,7 +61,8 @@ endif()
 # Native saved-coverage review keeps publication and execution separate.
 if(BUILD_TESTING AND TARGET umicom AND TARGET umicom_testing)
     foreach(scenario passed skipped stale missing-host missing-test configuration empty duplicate
-        parent-path malformed missing-report two-hosts unicode relative-manifest)
+        parent-path malformed missing-report two-hosts unicode relative-manifest
+        not-run disabled message-controls paging)
         set(test "framework.ctest.coverage_cli.${scenario}")
         add_test(NAME ${test}
             COMMAND "${CMAKE_COMMAND}"

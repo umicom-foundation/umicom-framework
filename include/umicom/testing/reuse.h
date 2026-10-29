@@ -46,6 +46,17 @@ UmiStatus UmiTestReusePrepare(const UmiTestReuseState *current,
  * for reuse. Caller must check stable inputs before and after execution.
  * This API makes no assertion that a supplied report belongs to a current run. */
 UmiStatus UmiTestReuseRecord(UmiTestReuseState *state, const char *xml, size_t length);
+/* Process-aware recording. runnerSucceeded is true only after the host observed
+ * a completed runner with successful exit status and stable inputs. False also
+ * covers unknown/interrupted execution: reported passes become NOT_RUN, keeping
+ * them due. Reported failures/skips/timeouts remain nonpasses; unreported records
+ * keep their prepared state, including earlier excluded historical passes.
+ * Parse the whole report before mutation. Invalid input preserves the state.
+ * The original Record interface remains for callers that already established
+ * runner success. Neither interface authenticates report origin or timestamps. */
+UmiStatus UmiTestReuseRecordProcess(UmiTestReuseState *state, const char *xml,
+    size_t length, bool runnerSucceeded);
+
 /* Measure with NULL/zero. required includes NUL; insufficient capacity changes
  * neither the buffer nor required. Persist with the platform atomic-file API. */
 UmiStatus UmiTestReuseExport(const UmiTestReuseState *state, char *text,

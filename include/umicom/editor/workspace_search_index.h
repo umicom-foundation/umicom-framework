@@ -150,6 +150,10 @@ void umi_editor_workspace_search_index_destroy(
  * Release or reset state held by editor workspace search index so the same storage can be
  * reused safely.
  */
+/* Revision values never wrap. Once UINT64_MAX is reached, clear/upsert and
+ * removal of an existing document return CAPACITY_EXCEEDED without mutation.
+ * Failed operations preserve documents, borrowed content and revision. Destroy
+ * still releases exhausted indexes. Serialize operations on an index. */
 UmiStatus umi_editor_workspace_search_index_clear(
     UmiEditorWorkspaceSearchIndex *index);
 /**

@@ -1806,3 +1806,52 @@ endif()
 
 # DAP shares byte framing with language services and validates transport ownership.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomDebugReceiveChecks.cmake")
+
+# Private wait dependencies are part of affected-test selection and SDK source identity.
+if(COMMAND umicom_target_qualification_inputs)
+    umicom_target_qualification_inputs(umicom_developer FILES
+        "${CMAKE_CURRENT_LIST_DIR}/../src/debug_runtime/adapter_private.h"
+        "${CMAKE_CURRENT_LIST_DIR}/../src/debug_runtime/adapter_wait.inc"
+        "${CMAKE_CURRENT_LIST_DIR}/../src/debug_runtime/adapter_wait_private.h"
+        "${CMAKE_CURRENT_LIST_DIR}/../src/debug_runtime/adapter_observed_wait.inc"
+        "${CMAKE_CURRENT_LIST_DIR}/../src/debug_runtime/deadline.h")
+endif()
+if(BUILD_TESTING)
+    add_executable(umi-debug-wait-deadline-test "${CMAKE_CURRENT_LIST_DIR}/../tests/debug_runtime/test_wait_deadline.c")
+    target_link_libraries(umi-debug-wait-deadline-test PRIVATE Umicom::developer Umicom::platform)
+    umicom_apply_warnings(umi-debug-wait-deadline-test)
+    umicom_apply_sanitizers(umi-debug-wait-deadline-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umi-debug-wait-deadline-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umi-debug-wait-deadline-test FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../src/debug_runtime/adapter_private.h"
+            "${CMAKE_CURRENT_LIST_DIR}/../src/debug_runtime/adapter_wait.inc"
+            "${CMAKE_CURRENT_LIST_DIR}/../src/debug_runtime/adapter_wait_private.h"
+            "${CMAKE_CURRENT_LIST_DIR}/../src/debug_runtime/adapter_observed_wait.inc"
+            "${CMAKE_CURRENT_LIST_DIR}/../src/debug_runtime/deadline.h")
+    endif()
+    foreach(_wait IN ITEMS ordinary observed)
+        foreach(_case IN ITEMS valid read-expired boundary near empty-expired partial late-event
+                late-unrelated late-error queued queued-cross zero zero-queued invalid-adapter
+                invalid-request invalid-output read-error read-unavailable remote-error response-full event-full)
+            add_test(NAME framework.debug_runtime.wait_deadline.${_wait}.${_case}
+                COMMAND umi-debug-wait-deadline-test "${_wait}-${_case}")
+            set_tests_properties(framework.debug_runtime.wait_deadline.${_wait}.${_case}
+                PROPERTIES TIMEOUT 10 LABELS "framework;debug;deadline;ownership;regression")
+        endforeach()
+    endforeach()
+    foreach(_case IN ITEMS observer-delay observer-nested)
+        add_test(NAME framework.debug_runtime.wait_deadline.observed.${_case}
+            COMMAND umi-debug-wait-deadline-test "observed-${_case}")
+        set_tests_properties(framework.debug_runtime.wait_deadline.observed.${_case}
+            PROPERTIES TIMEOUT 10 LABELS "framework;debug;deadline;ownership;regression")
+    endforeach()
+endif()
+
+# Ship the public replay example without private adapter headers or test seams.
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../examples/debug_reply_queue/main.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../examples/debug_reply_queue/CMakeLists.txt"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/examples/debug_reply_queue"
+    COMPONENT FrameworkSDK)

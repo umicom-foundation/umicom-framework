@@ -121,6 +121,14 @@ UmiStatus umi_debug_runtime_adapter_receive(
  * Provide the debug runtime adapter wait response operation used by this module and its
  * client applications.
  */
+/* A positive budget covers this wait, including receive and queue work.
+ * A response at or beyond its deadline is retained in the response queue and
+ * returns TIMEOUT without publishing caller output. Late events remain queued.
+ * Queue capacity errors remain explicit. Zero preserves the ordinary bounded
+ * immediate polling behavior; it differs from observed wait’s queued-only zero.
+ * UNAVAILABLE may also originate in the transport without publishing a reply;
+ * inspect a fresh candidate’s matching response identity before treating it as
+ * a remote error. The adapter requires exclusive owner-thread use. */
 UmiStatus umi_debug_runtime_adapter_wait_response(
     UmiDebugRuntimeAdapter *adapter,
     uint64_t request_sequence,
@@ -195,6 +203,12 @@ typedef UmiStatus (*UmiDebugRuntimeEventObserver)(void *context,
  * queue the original response; it is checked again before another read. The
  * large receive envelope lives on the heap. A NULL observer uses normal event
  * buffering. Adapter ownership and all input/output storage must survive return. */
+/* For this API, an explicit zero timeout inspects only already queued replies.
+ * An expired positive budget accepts neither a queued nor newly read reply.
+ * Observer work is included; a nested response stays queued after expiry.
+ * A late event is queued without invoking the observer. Timeouts leave output
+ * unchanged; received unsuccessful responses still publish their error envelope.
+ * Synchronous transport/observer calls cannot be interrupted by this budget. */
 UmiStatus UmiDebugRuntimeAdapterWaitObserved(UmiDebugRuntimeAdapter *adapter,uint64_t requestSequence,
     uint32_t timeoutMilliseconds,UmiDebugRuntimeEventObserver observer,void *context,
     UmiDebugRuntimeEnvelope *outResponse);

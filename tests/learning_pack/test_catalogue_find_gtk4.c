@@ -19,6 +19,9 @@
 #include <stdio.h>
 #include <string.h>
 #define CHECK(value) do { if (!(value)) { fprintf(stderr,"%s:%d: %s\n",__FILE__,__LINE__,#value); failed=1; goto cleanup; } } while (0)
+/* Preserve the original two-resource fixture for review. The expanded fixture
+ * exercises source character offsets and refuses to search diagnostic text. */
+#if 0
 static int Fixture(const char *root)
 {
     static const char guide[] = "<h1 id='start'>Find Guide</h1><p>Alpha beta alpha. "
@@ -38,6 +41,40 @@ static int Fixture(const char *root)
         "\"path\":\"guide.html\",\"sha256\":\"%s\"},"
         "{\"id\":\"source\",\"title\":\"Source\",\"topic\":\"reading\",\"kind\":\"example\","
         "\"path\":\"example.c\",\"sha256\":\"%s\"}]}",hash,source_hash);
+    return size>0 && (size_t)size<sizeof(json) &&
+        UmiRootedFileWrite(root,"learning-pack.json",json,(size_t)size)==UMI_STATUS_OK;
+}
+#endif
+static int Fixture(const char *root)
+{
+    static const char guide[] = "<h1 id='start'>Find Guide</h1><p>Alpha beta alpha. "
+        "\xce\xa9 and caf\xc3\xa9.</p><p><code>alpha_call()</code></p>"
+        "<script>hidden_secret</script><a href='example.c'>Source</a>";
+    static const char source[] = "/* \xce\xa9: verified example */\n"
+        "int alpha(void) { return 42; }\n/* alpha is a function. */\n";
+    static const unsigned char invalid[] = {0xc3U, 0x28U};
+    static const char image[] = "not a PNG image";
+    char hash[UMI_SHA256_HEX_CAPACITY], source_hash[UMI_SHA256_HEX_CAPACITY], json[2600], invalid_hash[UMI_SHA256_HEX_CAPACITY], image_hash[UMI_SHA256_HEX_CAPACITY];
+    if (UmiSha256Buffer(guide,sizeof(guide)-1U,hash)!=UMI_STATUS_OK ||
+        UmiSha256Buffer(source,sizeof(source)-1U,source_hash)!=UMI_STATUS_OK ||
+        UmiRootedFileWrite(root,"guide.html",guide,sizeof(guide)-1U)!=UMI_STATUS_OK ||
+        UmiRootedFileWrite(root,"example.c",source,sizeof(source)-1U)!=UMI_STATUS_OK ||
+        UmiSha256Buffer(invalid,sizeof(invalid),invalid_hash)!=UMI_STATUS_OK ||
+        UmiSha256Buffer(image,sizeof(image)-1U,image_hash)!=UMI_STATUS_OK ||
+        UmiRootedFileWrite(root,"invalid.c",invalid,sizeof(invalid))!=UMI_STATUS_OK ||
+        UmiRootedFileWrite(root,"invalid.png",image,sizeof(image)-1U)!=UMI_STATUS_OK) return 0;
+    int size=snprintf(json,sizeof(json),
+        "{\"schema\":\"umicom.learning.pack\",\"version\":1,\"id\":\"find.fixture\","
+        "\"title\":\"Find fixture\",\"product\":\"framework\",\"locale\":\"en\",\"revision\":1,"
+        "\"compatibility\":{\"minimum\":[0,9,0],\"maximum\":[0,9,0]},\"resources\":["
+        "{\"id\":\"guide\",\"title\":\"Guide\",\"topic\":\"reading\",\"kind\":\"guide\","
+        "\"path\":\"guide.html\",\"sha256\":\"%s\"},"
+        "{\"id\":\"source\",\"title\":\"Source\",\"topic\":\"reading\",\"kind\":\"example\","
+        "\"path\":\"example.c\",\"sha256\":\"%s\"},"
+        "{\"id\":\"invalid\",\"title\":\"Invalid text\",\"topic\":\"reading\",\"kind\":\"example\","
+        "\"path\":\"invalid.c\",\"sha256\":\"%s\"},"
+        "{\"id\":\"image\",\"title\":\"Image\",\"topic\":\"reading\",\"kind\":\"image\","
+        "\"path\":\"invalid.png\",\"sha256\":\"%s\"}]}",hash,source_hash,invalid_hash,image_hash);
     return size>0 && (size_t)size<sizeof(json) &&
         UmiRootedFileWrite(root,"learning-pack.json",json,(size_t)size)==UMI_STATUS_OK;
 }
@@ -104,6 +141,93 @@ static void MarkSet(GtkTextBuffer *buffer,const GtkTextIter *location,GtkTextMar
 { (void)buffer;(void)location;(void)mark;Observe(data); }
 static void Notice(GObject *object,GParamSpec *property,gpointer data)
 { (void)object;(void)property;Observe(data); }
+
+/* Source search uses the same native controls, but its bytes are owned by the
+ * reader instead of the HTML model. These cases exercise that ownership at
+ * history, failed reload, diagnostic and synchronous callback boundaries. */
+static int SourceCase(const char *name, const char *directory, GtkWidget *panel, GtkTextBuffer *buffer)
+{
+    int failed=0;
+    char *text=NULL;
+    UmiLearningCatalogueGtkState before,after;
+    UmiLearningCatalogueFindMatch result={71U,72U,73U,1},sentinel=result;
+    CHECK(UmiLearningCatalogueGtk4Follow(panel,"example.c")==UMI_STATUS_OK);
+    if(strcmp(name,"source-busy")==0) {
+        CHECK(UmiLearningCatalogueGtk4FindText(panel,"alpha",1,0,&result)==UMI_STATUS_BUSY);
+        CHECK(result.byte_start==sentinel.byte_start);
+    }
+    CHECK(Finish());
+    CHECK(UmiLearningCatalogueGtk4CopyState(panel,&before)==UMI_STATUS_OK);
+    CHECK(before.last_status==UMI_STATUS_OK && !before.has_reading_structure);
+    text=Text(buffer);CHECK(text!=NULL && strstr(text,"int alpha")!=NULL);
+    GtkTextIter start;gtk_text_buffer_get_start_iter(buffer,&start);
+    gtk_text_buffer_place_cursor(buffer,&start);
+    if(strcmp(name,"source-invalid")==0 || strcmp(name,"source-image")==0) {
+        CHECK(UmiLearningCatalogueGtk4Follow(panel,strcmp(name,"source-invalid")==0?
+            "invalid.c":"invalid.png")==UMI_STATUS_OK && Finish());
+        CHECK(UmiLearningCatalogueGtk4CopyState(panel,&after)==UMI_STATUS_OK);
+        CHECK(after.last_status==UMI_STATUS_OK && !after.has_reading_structure);
+        CHECK(UmiLearningCatalogueGtk4FindText(panel,"alpha",1,0,&result)==UMI_STATUS_NOT_FOUND);
+        CHECK(UmiLearningCatalogueGtk4FindText(panel,"verified",0,0,&result)==UMI_STATUS_NOT_FOUND);
+        CHECK(result.byte_start==sentinel.byte_start && result.reader_revision==sentinel.reader_revision);
+        goto cleanup;
+    }
+    if(strcmp(name,"source-history")==0) {
+        CHECK(UmiLearningCatalogueGtk4Back(panel)==UMI_STATUS_OK && Finish());
+        CHECK(UmiLearningCatalogueGtk4FindText(panel,"Alpha",1,0,&result)==UMI_STATUS_OK);
+        CHECK(Selected(buffer,"Alpha"));
+        CHECK(UmiLearningCatalogueGtk4Forward(panel)==UMI_STATUS_OK && Finish());
+        CHECK(UmiLearningCatalogueGtk4CopyState(panel,&before)==UMI_STATUS_OK);
+        CHECK(!before.has_reading_structure && before.last_status==UMI_STATUS_OK);
+    } else if(strcmp(name,"source-reload-refusal")==0 || strcmp(name,"source-snapshot")==0) {
+        CHECK(UmiRootedFileWrite(directory,"example.c","replacement",11U)==UMI_STATUS_OK);
+        if(strcmp(name,"source-reload-refusal")==0) {
+            CHECK(UmiLearningCatalogueGtk4Reload(panel)==UMI_STATUS_OK && Finish());
+            CHECK(UmiLearningCatalogueGtk4CopyState(panel,&after)==UMI_STATUS_OK);
+            CHECK(after.last_status!=UMI_STATUS_OK && after.reader.revision==before.reader.revision);
+        }
+    }
+    if(strcmp(name,"source-unicode")==0) {
+        CHECK(UmiLearningCatalogueGtk4FindText(panel,"\xce\xa9",1,0,&result)==UMI_STATUS_OK);
+        CHECK(Selected(buffer,"\xce\xa9") && result.byte_length==2U);
+        CHECK(result.byte_start==(size_t)(strstr(text,"\xce\xa9")-text));
+    } else if(strcmp(name,"source-reentrant")==0 || strcmp(name,"source-retire")==0) {
+        Observer observer={panel,0U,strcmp(name,"source-retire")==0,0,UMI_STATUS_OK};
+        gulong signal=g_signal_connect(buffer,"mark-set",G_CALLBACK(MarkSet),&observer);
+        UmiStatus status=UmiLearningCatalogueGtk4FindText(panel,"alpha",1,0,&result);
+        g_signal_handler_disconnect(buffer,signal);
+        CHECK(status==UMI_STATUS_OK && observer.calls>0U && observer.busy && observer.nested==UMI_STATUS_BUSY);
+        CHECK(UmiLearningCatalogueGtk4CopyState(panel,&after)==UMI_STATUS_OK && after.retired==observer.retire && !after.busy);
+    } else if(strcmp(name,"source-controls")==0) {
+        GtkWidget *entry=Find(panel,"learning.catalogue.find-query");CHECK(GTK_IS_ENTRY(entry));
+        gtk_editable_set_text(GTK_EDITABLE(entry),"alpha");g_signal_emit_by_name(entry,"activate");
+        CHECK(Selected(buffer,"alpha"));
+    } else {
+        CHECK(UmiLearningCatalogueGtk4FindText(panel,"alpha",1,0,&result)==UMI_STATUS_OK);
+        CHECK(Selected(buffer,"alpha") && !result.wrapped);
+        CHECK(result.byte_start==(size_t)(strstr(text,"alpha")-text));
+        if(strcmp(name,"source-next")==0 || strcmp(name,"source-previous")==0 || strcmp(name,"source-wrap")==0) {
+            CHECK(UmiLearningCatalogueGtk4FindText(panel,"alpha",1,0,&result)==UMI_STATUS_OK);
+            CHECK(Selected(buffer,"alpha") && !result.wrapped);
+            CHECK(result.byte_start==(size_t)(strstr(strstr(text,"alpha")+5,"alpha")-text));
+            if(strcmp(name,"source-previous")==0 || strcmp(name,"source-wrap")==0) {
+                int backwards=strcmp(name,"source-previous")==0;
+                CHECK(UmiLearningCatalogueGtk4FindText(panel,"alpha",1,backwards,&result)==UMI_STATUS_OK);
+                CHECK(result.byte_start==(size_t)(strstr(text,"alpha")-text) && result.wrapped==!backwards);
+            }
+        } else if(strcmp(name,"source-no-match")==0) {
+            sentinel=result;
+            CHECK(UmiLearningCatalogueGtk4FindText(panel,"absent",1,0,&result)==UMI_STATUS_NOT_FOUND);
+            CHECK(Selected(buffer,"alpha") && result.byte_start==sentinel.byte_start && result.byte_length==sentinel.byte_length);
+        }
+    }
+    CHECK(UmiLearningCatalogueGtk4CopyState(panel,&after)==UMI_STATUS_OK);
+    CHECK(after.reader.revision==before.reader.revision && after.reader.history_count==before.reader.history_count);
+    CHECK(UmiLearningCatalogueGtk4PendingReads()==0U);
+cleanup:
+    g_free(text);return failed;
+}
+
 int main(int argc,char **argv)
 {
     if(argc!=3)return 2;
@@ -135,6 +259,9 @@ int main(int argc,char **argv)
     CHECK(Finish());CHECK(UmiLearningCatalogueGtk4GoToAnchor(panel,"start")==UMI_STATUS_OK);
     CHECK(UmiLearningCatalogueGtk4CopyState(panel,&before)==UMI_STATUS_OK && before.has_reading_structure);
     text=Text(buffer);CHECK(text!=NULL);
+    if(strncmp(name,"source-",7U)==0) {
+        matched=1;CHECK(SourceCase(name,argv[2],panel,buffer)==0);goto cleanup;
+    }
     if(strcmp(name,"invalid-query")==0 || strcmp(name,"capacity")==0) {
         matched=1;
         if(strcmp(name,"capacity")==0) {
@@ -193,7 +320,12 @@ int main(int argc,char **argv)
         CHECK(Selected(buffer,"beta") && result.byte_start==sentinel.byte_start && result.byte_length==sentinel.byte_length);
     } else if(strcmp(name,"history")==0) {
         matched=1;CHECK(UmiLearningCatalogueGtk4Follow(panel,"example.c")==UMI_STATUS_OK && Finish());
+        /* Source Find now uses the verified snapshot; retain the old expectation for review. */
+#if 0
         CHECK(UmiLearningCatalogueGtk4FindText(panel,"alpha",0,0,&result)==UMI_STATUS_NOT_FOUND);
+#endif
+        CHECK(UmiLearningCatalogueGtk4FindText(panel,"alpha",0,0,&result)==UMI_STATUS_OK);
+        CHECK(Selected(buffer,"alpha"));
         CHECK(UmiLearningCatalogueGtk4Back(panel)==UMI_STATUS_OK && Finish());
         CHECK(UmiLearningCatalogueGtk4FindText(panel,"alpha",0,0,&result)==UMI_STATUS_OK);
         CHECK(Selected(buffer,"Alpha"));goto cleanup;

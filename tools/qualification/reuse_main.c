@@ -99,6 +99,10 @@ static int RunReceipts(int argc, char **argv)
 }
 #endif
 
+/* Protocol 2 could not carry aggregate runner failure into receipt recording.
+ * Retain that adapter for review. Protocol 3 adds record-result while preserving
+ * legacy commands for callers that already validate their runner separately. */
+#if 0
 static int RunReceipts(int argc, char **argv)
 {
     UmiTestReuseState *current = NULL, *previous = NULL, *next = NULL;
@@ -146,6 +150,72 @@ static int RunReceipts(int argc, char **argv)
         if (status == UMI_STATUS_OK) status = Save(argv[2], current);
         UmiInputFileFree(xml);
     } else {
+        fprintf(stderr, "Also: umicom-test-receipts protocol | verify-inputs REGISTRY DISCOVERY\n");
+        fprintf(stderr, "Usage: umicom-test-receipts prepare MANIFEST STATE EXCLUSIONS | record STATE JUNIT\n");
+    }
+    UmiTestReuseDestroy(next); UmiTestReuseDestroy(previous); UmiTestReuseDestroy(current);
+    if (status != UMI_STATUS_OK) fprintf(stderr, "Test receipt operation failed (%d).\n", (int)status);
+    return status == UMI_STATUS_OK ? 0 : 1;
+}
+#endif
+static int RunReceipts(int argc, char **argv)
+{
+    UmiTestReuseState *current = NULL, *previous = NULL, *next = NULL;
+    UmiStatus status = UMI_STATUS_INVALID_ARGUMENT;
+    /* The driver owns the directory lease and fresh run directory. This tool
+     * never launches tests or trusts instructions embedded in a result file. */
+    if (argc == 2 && strcmp(argv[1], "protocol") == 0) {
+        status = puts("UMICOM-TEST-RECEIPTS 3") < 0 ? UMI_STATUS_IO_ERROR : UMI_STATUS_OK;
+    } else if (argc == 4 && strcmp(argv[1], "verify-inputs") == 0) {
+        status = VerifyReceiptInputs(argv[2], argv[3]);
+    } else if (argc == 5 && strcmp(argv[1], "prepare") == 0) {
+        status = Load(argv[2], &current);
+        if (status == UMI_STATUS_OK && umi_fs_exists(argv[3])) {
+            UmiStatus old = Load(argv[3], &previous);
+            if (old != UMI_STATUS_OK)
+                fprintf(stderr, "Test receipts unavailable (%d); all tests remain selected.\n", (int)old);
+        }
+        if (status == UMI_STATUS_OK) status = UmiTestReusePrepare(current, previous, &next);
+        size_t length = 1U;
+        for (size_t i = 0U; i < UmiTestReuseCount(next); ++i)
+            if (UmiTestReuseOutcome(next, i) == UMI_TEST_STATE_PASSED)
+                length += strlen(UmiTestReuseName(next, i)) + 1U;
+        char *excluded = status == UMI_STATUS_OK ? malloc(length) : NULL;
+        if (status == UMI_STATUS_OK && excluded == NULL) status = UMI_STATUS_OUT_OF_MEMORY;
+        size_t used = 0U, reused = 0U;
+        if (status == UMI_STATUS_OK) {
+            excluded[0] = '\0';
+            for (size_t i = 0U; i < UmiTestReuseCount(next); ++i)
+                if (UmiTestReuseOutcome(next, i) == UMI_TEST_STATE_PASSED) {
+                    const char *name = UmiTestReuseName(next, i); size_t size = strlen(name);
+                    memcpy(excluded + used, name, size); used += size; excluded[used++] = '\n'; ++reused;
+                }
+            /* Invalidate selected receipts first. A failed write cannot leave
+             * an exclusion file that accidentally blesses an interrupted run. */
+            status = Save(argv[3], next);
+            if (status == UMI_STATUS_OK) status = umi_atomic_file_write(argv[4], excluded, used);
+            if (status == UMI_STATUS_OK) printf("Reusing %zu unchanged passing test receipts.\n", reused);
+        }
+        free(excluded);
+    } else if (argc == 5 && strcmp(argv[1], "record-result") == 0 &&
+        (strcmp(argv[4], "success") == 0 || strcmp(argv[4], "failure") == 0)) {
+        status = Load(argv[2], &current);
+        unsigned char *xml = NULL; size_t length = 0U;
+        if (status == UMI_STATUS_OK) status = UmiInputFileRead(argv[3], UMI_CTEST_COLLECTION_MAX_BYTES, &xml, &length);
+        if (status == UMI_STATUS_OK)
+            status = UmiTestReuseRecordProcess(current, (const char *)xml, length,
+                strcmp(argv[4], "success") == 0);
+        if (status == UMI_STATUS_OK) status = Save(argv[2], current);
+        UmiInputFileFree(xml);
+    } else if (argc == 4 && strcmp(argv[1], "record") == 0) {
+        status = Load(argv[2], &current);
+        unsigned char *xml = NULL; size_t length = 0U;
+        if (status == UMI_STATUS_OK) status = UmiInputFileRead(argv[3], UMI_CTEST_COLLECTION_MAX_BYTES, &xml, &length);
+        if (status == UMI_STATUS_OK) status = UmiTestReuseRecord(current, (const char *)xml, length);
+        if (status == UMI_STATUS_OK) status = Save(argv[2], current);
+        UmiInputFileFree(xml);
+    } else {
+        fprintf(stderr, "Also: umicom-test-receipts record-result STATE JUNIT success|failure\n");
         fprintf(stderr, "Also: umicom-test-receipts protocol | verify-inputs REGISTRY DISCOVERY\n");
         fprintf(stderr, "Usage: umicom-test-receipts prepare MANIFEST STATE EXCLUSIONS | record STATE JUNIT\n");
     }

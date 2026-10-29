@@ -38,9 +38,20 @@ struct UmiEditorWorkspaceSearchIndex {
 };
 
 /* Provide the next revision operation used by this module and its client applications. */
+/* Preserve the wraparound helper for review. A stale search observation must
+ * never become current again through a reused revision. Mutations reserve the
+ * next revision before changing owned documents. */
+#if 0
 static uint64_t next_revision(uint64_t revision)
 {
     return revision == UINT64_MAX ? 1U : revision + 1U;
+}
+#endif
+static UmiStatus next_revision(uint64_t revision, uint64_t *out_revision)
+{
+    if (revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    *out_revision = revision + 1U;
+    return UMI_STATUS_OK;
 }
 
 /* Provide the copy text operation used by this module and its client applications. */
@@ -400,6 +411,9 @@ void umi_editor_workspace_search_index_destroy(
  * Release or reset state held by editor workspace search index so the same storage can be
  * reused safely.
  */
+/* Preserve the original mutation for comparison. Revision exhaustion now
+ * refuses before releasing content, allocating a replacement or changing rows. */
+#if 0
 UmiStatus umi_editor_workspace_search_index_clear(
     UmiEditorWorkspaceSearchIndex *index)
 {
@@ -418,11 +432,36 @@ UmiStatus umi_editor_workspace_search_index_clear(
     index->revision = next_revision(index->revision);
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_editor_workspace_search_index_clear(
+    UmiEditorWorkspaceSearchIndex *index)
+{
+    size_t position;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (index == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    uint64_t revision;
+    UmiStatus status = next_revision(index->revision, &revision);
+    if (status != UMI_STATUS_OK) return status;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (position = 0U; position < index->count; ++position) {
+        release_document(&index->documents[position]);
+    }
+    index->count = 0U;
+    index->total_bytes = 0U;
+    index->revision = revision;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the editor workspace search index upsert operation used by this module and its
  * client applications.
  */
+/* Preserve the original mutation for comparison. Revision exhaustion now
+ * refuses before releasing content, allocating a replacement or changing rows. */
+#if 0
 UmiStatus umi_editor_workspace_search_index_upsert(
     UmiEditorWorkspaceSearchIndex *index,
     const UmiEditorWorkspaceSearchDocumentInput *input)
@@ -525,11 +564,120 @@ UmiStatus umi_editor_workspace_search_index_upsert(
     index->revision = next_revision(index->revision);
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_editor_workspace_search_index_upsert(
+    UmiEditorWorkspaceSearchIndex *index,
+    const UmiEditorWorkspaceSearchDocumentInput *input)
+{
+    StoredDocument replacement;
+    size_t position;
+    size_t existing_length = 0U;
+    size_t projected_total;
+    UmiStatus status;
+
+    status = validate_input(index, input);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    uint64_t revision;
+    status = next_revision(index->revision, &revision);
+    if (status != UMI_STATUS_OK) return status;
+    position = find_document(index, input->uri);
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (position != SIZE_MAX) {
+        existing_length = index->documents[position].view.content_length;
+    }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (input->content_length > SIZE_MAX - (index->total_bytes - existing_length)) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    projected_total = index->total_bytes - existing_length +
+                      input->content_length;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (projected_total > index->config.maximum_total_bytes) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    (void)memset(&replacement, 0, sizeof(replacement));
+    replacement.owned_content = (char *)malloc(input->content_length + 1U);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (replacement.owned_content == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (input->content_length > 0U) {
+        (void)memcpy(replacement.owned_content,
+                     input->content,
+                     input->content_length);
+    }
+    replacement.owned_content[input->content_length] = '\0';
+    replacement.view.struct_size = (uint32_t)sizeof(replacement.view);
+    replacement.view.api_version =
+        UMI_EDITOR_WORKSPACE_SEARCH_INDEX_API_VERSION;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (!copy_text(replacement.view.uri,
+                   sizeof(replacement.view.uri),
+                   input->uri) ||
+        !copy_text(replacement.view.relative_path,
+                   sizeof(replacement.view.relative_path),
+                   input->relative_path) ||
+        !derive_file_name(replacement.view.file_name,
+                          sizeof(replacement.view.file_name),
+                          input->relative_path,
+                          input->file_name) ||
+        !derive_extension(replacement.view.extension,
+                          sizeof(replacement.view.extension),
+                          replacement.view.file_name,
+                          input->extension) ||
+        !copy_text(replacement.view.language_id,
+                   sizeof(replacement.view.language_id),
+                   input->language_id)) {
+        release_document(&replacement);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    replacement.view.content = replacement.owned_content;
+    replacement.view.content_length = input->content_length;
+    replacement.view.document_revision = input->document_revision;
+    replacement.view.modified_nanoseconds = input->modified_nanoseconds;
+    replacement.view.fingerprint = fingerprint_content(
+        replacement.owned_content, input->content_length);
+    replacement.view.hidden = input->hidden != 0;
+    replacement.view.generated = input->generated != 0;
+    replacement.view.binary = input->binary != 0 ||
+        content_looks_binary(replacement.owned_content, input->content_length);
+    replacement.view.read_only = input->read_only != 0;
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (position == SIZE_MAX) {
+        status = reserve_documents(index, index->count + 1U);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) {
+            release_document(&replacement);
+            return status;
+        }
+        position = index->count++;
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
+        release_document(&index->documents[position]);
+    }
+    index->documents[position] = replacement;
+    index->total_bytes = projected_total;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index->count > 1U) {
+        qsort(index->documents,
+              index->count,
+              sizeof(*index->documents),
+              compare_documents);
+    }
+    index->revision = revision;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Remove editor workspace search index while keeping the remaining records in a valid and
  * discoverable state.
  */
+/* Preserve the original mutation for comparison. Revision exhaustion now
+ * refuses before releasing content, allocating a replacement or changing rows. */
+#if 0
 UmiStatus umi_editor_workspace_search_index_remove(
     UmiEditorWorkspaceSearchIndex *index,
     const char *uri)
@@ -558,6 +706,40 @@ UmiStatus umi_editor_workspace_search_index_remove(
     --index->count;
     index->total_bytes -= removed_length;
     index->revision = next_revision(index->revision);
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_editor_workspace_search_index_remove(
+    UmiEditorWorkspaceSearchIndex *index,
+    const char *uri)
+{
+    size_t position;
+    size_t removed_length;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (index == NULL || uri == NULL || uri[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    position = find_document(index, uri);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (position == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    uint64_t revision;
+    UmiStatus status = next_revision(index->revision, &revision);
+    if (status != UMI_STATUS_OK) return status;
+    removed_length = index->documents[position].view.content_length;
+    release_document(&index->documents[position]);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (position + 1U < index->count) {
+        (void)memmove(&index->documents[position],
+                      &index->documents[position + 1U],
+                      (index->count - position - 1U) *
+                          sizeof(*index->documents));
+    }
+    --index->count;
+    index->total_bytes -= removed_length;
+    index->revision = revision;
     return UMI_STATUS_OK;
 }
 

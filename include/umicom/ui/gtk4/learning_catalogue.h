@@ -18,6 +18,7 @@
 #include "umicom/browser/reading_document.h"
 #include "umicom/teacher/learning_reader.h"
 #include "umicom/teacher/learning_search.h"
+#include "umicom/teacher/learning_text.h"
 #include "umicom/teacher/learning_help.h"
 #include "umicom/teacher/learning_pack_changes.h"
 #include "umicom/teacher/learning_progress_local.h"
@@ -274,12 +275,61 @@ UmiStatus UmiLearningCatalogueGtk4OpenReadingImage(GtkWidget *widget, size_t ind
 UmiStatus UmiLearningCatalogueGtk4GoToAnchor(GtkWidget *widget, const char *identifier);
 UmiStatus UmiLearningCatalogueGtk4SetReadingZoom(GtkWidget *widget, unsigned int percent);
 
+
+typedef struct UmiLearningCatalogueBodySearchState {
+    UmiLearningTextIndexInfo index;
+    UmiLearningTextSearchInfo results;
+    /* Last successful query, copied with results; refused requests do not replace it. */
+    UmiLearningTextQuery query;
+    UmiLearningTextProblem problem;
+    UmiStatus last_status;
+    int has_index, has_results, index_current, results_current;
+} UmiLearningCatalogueBodySearchState;
+/* Explicit asynchronous phrase search. First use, refresh=1, or a changed
+ * shelf builds a verified text index on a worker from an independent shelf
+ * clone. Otherwise the worker receives the existing immutable index, avoiding
+ * resource I/O. case_sensitive, whole_word and refresh are each 0 or 1.
+ * Defaults use the core index budgets and retain at most 128 matching documents.
+ * There is no implicit search on every keystroke or resource execution.
+ *
+ * OK means accepted; observe CopyState busy/last_status for completion.
+ * Refusal keeps earlier results and a usable earlier index. Disk changes alone
+ * do not invalidate a memory snapshot: Refresh search explicitly rechecks files.
+ * Current flags compare against this panel's shelf generation, not disk state.
+ * Every selected result is reopened with the captured revision and digest.
+ * Earlier ReadBodySearchResult opened only the document. It now validates the
+ * copied byte range before committing the reader and selects the first match
+ * using GTK character offsets. Refused verification or location validation keeps
+ * the prior reader/history/selection. Ordinary Back/Forward/Reload do not replay
+ * search highlights. If an external callback edits the displayed buffer during
+ * publication, location selection refuses while the verified reader stays open.
+ *
+ * All calls are GTK-thread operations. Mutations refuse busy/retired panels.
+ * Retiring or destroying a panel discards late results; the existing application
+ * hold and PendingReads shutdown contract also cover these read-only jobs. */
+UmiStatus UmiLearningCatalogueGtk4SearchBodies(GtkWidget *widget, const char *phrase,
+    int case_sensitive, int whole_word, int refresh);
+/* Extended copied-query entry point. Product, locale and resource-kind filters
+ * follow LearningTextSearch semantics; maximum_results may be 1..256. Both
+ * cancellation fields must be NULL because native workers cannot borrow host
+ * callbacks or their user state. Invalid fields refuse synchronously. */
+UmiStatus UmiLearningCatalogueGtk4SearchBodiesWithQuery(GtkWidget *widget,
+    const UmiLearningTextQuery *query, int refresh);
+UmiStatus UmiLearningCatalogueGtk4CopyBodySearchState(GtkWidget *widget,
+    UmiLearningCatalogueBodySearchState *out_state);
+UmiStatus UmiLearningCatalogueGtk4BodySearchResultAt(GtkWidget *widget, size_t position,
+    UmiLearningTextHit *out_hit);
+UmiStatus UmiLearningCatalogueGtk4ReadBodySearchResult(GtkWidget *widget, size_t position);
+
 #define UMI_LEARNING_READING_FIND_CAPACITY 256U
 typedef struct UmiLearningCatalogueFindMatch {
     uint64_t reader_revision;
     size_t byte_start, byte_length;
     int wrapped;
 } UmiLearningCatalogueFindMatch;
+/* Preserve the earlier guide-only contract for review. The replacement
+ * expands supported content without changing selection or ownership rules. */
+#if 0
 /* Find a literal in the displayed structured guide, using Framework's shared
  * editor search engine. The nonempty query is valid UTF-8, at most 255 bytes.
  * case_sensitive and backwards are 0 or 1. Insensitive matching folds ASCII
@@ -290,6 +340,23 @@ typedef struct UmiLearningCatalogueFindMatch {
  * and visible; byte offsets refer to the immutable displayed text, not HTML
  * source. No file is read, history added, document edited or pack searched.
  * NOT_FOUND covers no match, no open guide and the plain-text/image fallback.
+ * Refusal preserves selection and output. The optional output is a copied
+ * receipt tied to reader revision. Queries are not retained. Mutating calls
+ * refuse busy/retired panels; selection observers cannot start another action.
+ * Use the catalogue's controls or its Ctrl+F shortcut for interactive search. */
+#endif
+/* Find a literal in the displayed structured guide or verified UTF-8 source, using Framework's shared
+ * editor search engine. The nonempty query is valid UTF-8, at most 255 bytes.
+ * case_sensitive and backwards are 0 or 1. Insensitive matching folds ASCII
+ * letters only; other Unicode bytes compare exactly, without normalization.
+ *
+ * Forward starts after a selection or at the cursor; backward starts before
+ * a selection or cursor. Both wrap once. A successful match becomes selected
+ * and visible; byte offsets refer to the immutable displayed text, not HTML
+ * source. For source examples the offsets refer to the complete source bytes.
+ * No file is read, history added, document edited or pack searched.
+ * NOT_FOUND covers no match, no open resource, unsupported HTML fallback,
+ * invalid-text notices and image selections. These notices are not content.
  * Refusal preserves selection and output. The optional output is a copied
  * receipt tied to reader revision. Queries are not retained. Mutating calls
  * refuse busy/retired panels; selection observers cannot start another action.

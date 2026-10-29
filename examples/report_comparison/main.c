@@ -16,9 +16,15 @@
 
 #include <umicom/testing/ctest_comparison_file.h>
 #include <stdio.h>
+#include <umicom/platform/native_arguments.h>
 #include <stdlib.h>
 
+/* Retain the original entry declaration for review. Framework captures
+ * native Unicode arguments before these UTF-8 file APIs consume paths. */
+#if 0
 int main(int argc, char **argv)
+#endif
+static int ConsumerMain(int argc, char **argv)
 {
     if (argc != 3) {
         fprintf(stderr, "Usage: report-comparison-consumer <absolute baseline.xml> <absolute current.xml>\n");
@@ -73,4 +79,15 @@ int main(int argc, char **argv)
     /* This example's exit status reports input/output success, never whether
      * a source revision passed tests. Unchanged failures remain failures. */
     return status == UMI_STATUS_OK ? 0 : 2;
+}
+
+int main(int argc, char **argv)
+{
+    int result = 2;
+    UmiStatus status = UmiNativeArgumentsDispatch(argc, argv, ConsumerMain, &result);
+    if (status != UMI_STATUS_OK) {
+        fprintf(stderr, "Cannot capture native arguments: %s\n", umi_status_text(status));
+        return 2;
+    }
+    return result;
 }

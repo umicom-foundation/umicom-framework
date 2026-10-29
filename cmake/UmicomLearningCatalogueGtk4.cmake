@@ -26,6 +26,9 @@ add_library(umicom_learning_catalogue_gtk4 STATIC
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_jobs.c"
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_reading.c"
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_find.c"
+    "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_body.c"
+    "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_body_navigation.c"
+    "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_body_controls.c"
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_images.c"
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_replacement.c"
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_progress.c"
@@ -374,7 +377,10 @@ if(BUILD_TESTING)
     endif()
     foreach(_case empty next previous wrapped ascii-insensitive case-sensitive unicode
             nonascii-case no-match hidden-content invalid-query capacity busy retired history
-            controls enter key modified-key reentrant retire-selection notice-reentrant retained)
+            controls enter key modified-key reentrant retire-selection notice-reentrant retained
+            source-next source-previous source-wrap source-unicode source-no-match source-busy
+            source-history source-reload-refusal source-snapshot source-reentrant source-retire
+            source-controls source-invalid source-image)
         set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-catalogue-find/${_case}")
         file(MAKE_DIRECTORY "${_directory}")
         add_test(NAME "framework.learning_pack.native_find.${_case}"
@@ -385,6 +391,141 @@ if(BUILD_TESTING)
         if(COMMAND umicom_test_impact_owners)
             umicom_test_impact_owners("framework.learning_pack.native_find.${_case}"
                 TARGETS umicom-learning-catalogue-find-test)
+        endif()
+    endforeach()
+endif()
+
+# The same catalogue is embedded by Studio and other native product hosts.
+if(BUILD_TESTING)
+    add_executable(umicom-learning-catalogue-body-gtk4-test
+        "${_learning_catalogue_root}/tests/learning_pack/test_catalogue_body_gtk4.c")
+    set_target_properties(umicom-learning-catalogue-body-gtk4-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-learning-catalogue-body-gtk4-test PRIVATE Umicom::learning_catalogue_gtk4)
+    umicom_apply_warnings(umicom-learning-catalogue-body-gtk4-test)
+    umicom_apply_sanitizers(umicom-learning-catalogue-body-gtk4-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-learning-catalogue-body-gtk4-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-learning-catalogue-body-gtk4-test FILES
+            "${_learning_catalogue_root}/tests/learning_pack/text_fixture.h"
+            "${_learning_catalogue_root}/tests/support/gtk4_expanders.h")
+    endif()
+    foreach(_case default controls arguments retired empty-shelf busy cached refresh-missing
+            refresh-changed open open-changed buttons shelf-changed case whole-word missing outputs
+            reentrant retire-publication retire-dispatch retire-pending destroy-pending retained-button
+            cached-retire-pending cached-destroy-pending)
+        set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-catalogue-body/${_case}")
+        file(MAKE_DIRECTORY "${_directory}")
+        add_test(NAME "framework.learning_pack.gtk4_body.${_case}"
+            COMMAND umicom-learning-catalogue-body-gtk4-test "${_case}" "${_directory}")
+        set_tests_properties("framework.learning_pack.gtk4_body.${_case}" PROPERTIES
+            TIMEOUT 60 SKIP_RETURN_CODE 77 WORKING_DIRECTORY "${_directory}"
+            LABELS "framework;learning;search;gtk4;ownership;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.learning_pack.gtk4_body.${_case}"
+                TARGETS umicom-learning-catalogue-body-gtk4-test)
+        endif()
+    endforeach()
+endif()
+
+# These location checks do not create a GTK display; they exercise copied
+# identity and byte-to-character validation before the reader transaction commits.
+if(BUILD_TESTING)
+    add_executable(umicom-learning-body-location-test
+        "${_learning_catalogue_root}/tests/learning_pack/test_body_location.c")
+    set_target_properties(umicom-learning-body-location-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-learning-body-location-test PRIVATE Umicom::learning_catalogue_gtk4)
+    umicom_apply_warnings(umicom-learning-body-location-test)
+    umicom_apply_sanitizers(umicom-learning-body-location-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-learning-body-location-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-learning-body-location-test FILES
+            "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_private.h")
+    endif()
+    foreach(_case source projection unicode-prefix unicode-match end empty-range reversed
+            end-past start-past oversize invalid-utf8 start-split end-split missing-document
+            revision pack resource digest projection-flag projection-missing source-projection
+            source-flag missing-display no-hit null)
+        add_test(NAME "framework.learning_pack.body_location.${_case}"
+            COMMAND umicom-learning-body-location-test "${_case}")
+        set_tests_properties("framework.learning_pack.body_location.${_case}" PROPERTIES
+            TIMEOUT 20 LABELS "framework;learning;search;ownership;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.learning_pack.body_location.${_case}"
+                TARGETS umicom-learning-body-location-test)
+        endif()
+    endforeach()
+endif()
+
+if(BUILD_TESTING)
+    add_executable(umicom-learning-body-navigation-gtk4-test
+        "${_learning_catalogue_root}/tests/learning_pack/test_body_navigation_gtk4.c")
+    set_target_properties(umicom-learning-body-navigation-gtk4-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-learning-body-navigation-gtk4-test PRIVATE Umicom::learning_catalogue_gtk4)
+    umicom_apply_warnings(umicom-learning-body-navigation-gtk4-test)
+    umicom_apply_sanitizers(umicom-learning-body-navigation-gtk4-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-learning-body-navigation-gtk4-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-learning-body-navigation-gtk4-test FILES
+            "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_private.h"
+            "${_learning_catalogue_root}/tests/learning_pack/text_fixture.h"
+            "${_learning_catalogue_root}/tests/support/gtk4_expanders.h")
+    endif()
+    foreach(_case guide source note unicode-guide unicode-source last-byte uppercase-html
+            changed-source missing-source invalid-location wrong-identity reentrant
+            retire-selection visible-mutated retire-pending destroy-pending history reload)
+        set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-body-navigation/${_case}")
+        file(MAKE_DIRECTORY "${_directory}")
+        add_test(NAME "framework.learning_pack.body_navigation.${_case}"
+            COMMAND umicom-learning-body-navigation-gtk4-test "${_case}" "${_directory}")
+        set_tests_properties("framework.learning_pack.body_navigation.${_case}" PROPERTIES
+            TIMEOUT 60 SKIP_RETURN_CODE 77 WORKING_DIRECTORY "${_directory}"
+            LABELS "framework;learning;search;gtk4;ownership;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.learning_pack.body_navigation.${_case}"
+                TARGETS umicom-learning-body-navigation-gtk4-test)
+        endif()
+    endforeach()
+endif()
+
+if(BUILD_TESTING)
+    add_executable(umicom-learning-body-filters-gtk4-test
+        "${_learning_catalogue_root}/tests/learning_pack/test_body_filters_gtk4.c")
+    set_target_properties(umicom-learning-body-filters-gtk4-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-learning-body-filters-gtk4-test PRIVATE Umicom::learning_catalogue_gtk4)
+    umicom_apply_warnings(umicom-learning-body-filters-gtk4-test)
+    umicom_apply_sanitizers(umicom-learning-body-filters-gtk4-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-learning-body-filters-gtk4-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-learning-body-filters-gtk4-test FILES
+            "${_learning_catalogue_root}/tests/learning_pack/text_fixture.h"
+            "${_learning_catalogue_root}/tests/support/gtk4_expanders.h")
+    endif()
+    foreach(_case product product-case locale locale-fallback guide example lesson image combined
+            limit maximum callback callback-user unterminated invalid-kind zero-limit empty null
+            refresh snapshot cached control-product control-locale control-kind control-reset
+            control-notice control-utf8-capacity)
+        set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-body-filters/${_case}")
+        file(MAKE_DIRECTORY "${_directory}")
+        add_test(NAME "framework.learning_pack.body_filters.${_case}"
+            COMMAND umicom-learning-body-filters-gtk4-test "${_case}" "${_directory}")
+        set_tests_properties("framework.learning_pack.body_filters.${_case}" PROPERTIES
+            TIMEOUT 60 SKIP_RETURN_CODE 77 WORKING_DIRECTORY "${_directory}"
+            LABELS "framework;learning;search;gtk4;ownership;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.learning_pack.body_filters.${_case}"
+                TARGETS umicom-learning-body-filters-gtk4-test)
         endif()
     endforeach()
 endif()

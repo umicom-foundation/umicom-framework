@@ -290,6 +290,10 @@ const UmiReleaseImpactItem *UmiReleaseImpactAt(const UmiReleaseImpactPlan *plan,
 {
     return plan != NULL && index < plan->count ? &plan->items[index] : NULL;
 }
+/* Retain the source-only constructor for review. The replacement also seeds
+ * required test identities into the existing graph so retries keep fixtures
+ * and executable prerequisites without fabricating a source edit. */
+#if 0
 UmiStatus UmiReleaseImpactCreate(const UmiReleaseInventory *inventory,
     const char *const *changedPaths, size_t changedCount, bool forceFull, UmiReleaseImpactPlan **outPlan)
 {
@@ -365,6 +369,113 @@ UmiStatus UmiReleaseImpactCreate(const UmiReleaseInventory *inventory,
     free(changes); free(work.reasons); free(work.edges); free(work.headerPath);
     return status;
 }
+#endif
+UmiStatus UmiReleaseImpactCreateWithTests(const UmiReleaseInventory *inventory,
+    const char *const *changedPaths, size_t changedCount,
+    const char *const *requiredTests, size_t requiredCount,
+    bool forceFull, UmiReleaseImpactPlan **outPlan)
+{
+    if (inventory == NULL || outPlan == NULL || *outPlan != NULL ||
+        (changedCount != 0U && changedPaths == NULL) ||
+        (requiredCount != 0U && requiredTests == NULL)) return UMI_STATUS_INVALID_ARGUMENT;
+    if (changedCount > UMI_RELEASE_IMPACT_CHANGE_LIMIT ||
+        requiredCount > UMI_RELEASE_IMPACT_CHANGE_LIMIT) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Validate every request before graph allocation or publication. Unknown
+     * but well-formed names widen selection; malformed requests are errors. */
+    size_t nameBytes = 0U;
+    for (size_t i = 0U; i < requiredCount; ++i) {
+        const char *name = requiredTests[i];
+        if (name == NULL || name[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+        size_t length = 0U;
+        while (length <= UMI_RELEASE_INVENTORY_FIELD_LIMIT && name[length] != '\0') ++length;
+        if (length > UMI_RELEASE_INVENTORY_FIELD_LIMIT ||
+            length > UMI_RELEASE_INVENTORY_TEXT_LIMIT - nameBytes)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        nameBytes += length;
+    }
+    if (strcmp(UmiReleaseInventoryProducer(inventory), "cmake") != 0) return UMI_STATUS_INVALID_STATE;
+    Work work = {0}; work.inventory = inventory; work.count = UmiReleaseInventoryCount(inventory);
+    Changed *changes = calloc(changedCount == 0U ? 1U : changedCount, sizeof(*changes));
+    work.reasons = calloc(work.count == 0U ? 1U : work.count, sizeof(*work.reasons));
+    UmiReleaseImpactPlan *plan = calloc(1U, sizeof(*plan));
+    UmiStatus status = changes == NULL || work.reasons == NULL || plan == NULL ? UMI_STATUS_OUT_OF_MEMORY : UMI_STATUS_OK;
+    size_t accepted = 0U;
+    for (size_t i = 0U; i < changedCount && status == UMI_STATUS_OK; ++i) {
+        status = UmiImpactChangedPath(changedPaths[i], &changes[accepted].path);
+        if (status == UMI_STATUS_OK) ++accepted;
+    }
+    if (status == UMI_STATUS_OK) {
+        if (accepted > 1U) qsort(changes, accepted, sizeof(*changes), ChangedOrder);
+        size_t distinct = 0U;
+        for (size_t i = 0U; i < accepted; ++i) {
+            if (distinct != 0U && strcmp(changes[distinct - 1U].path, changes[i].path) == 0) free(changes[i].path);
+            else changes[distinct++] = changes[i];
+        }
+        accepted = distinct;
+        for (size_t i = 0U; i < work.count; ++i) {
+            if (Row(&work, i)->kind == UMI_RELEASE_INVENTORY_TARGET) {
+                if (work.targetCount == 0U) work.targetStart = i;
+                ++work.targetCount;
+            } else if (Row(&work, i)->kind == UMI_RELEASE_INVENTORY_TEST) {
+                if (work.testCount == 0U) work.testStart = i;
+                ++work.testCount;
+            }
+        }
+        if (accepted != 0U || requiredCount != 0U || forceFull) {
+            status = ReadGraph(&work, changes, accepted);
+            for (size_t i = 0U; i < requiredCount && status == UMI_STATUS_OK; ++i) {
+                size_t row = Test(&work, requiredTests[i]);
+                if (row == SIZE_MAX) work.fallback |= UMI_RELEASE_IMPACT_UNMAPPED_TEST;
+                else work.reasons[row] |= UMI_RELEASE_IMPACT_REQUIRED_TEST;
+            }
+            if (forceFull) work.fallback |= UMI_RELEASE_IMPACT_REQUESTED_FULL;
+            for (size_t i = 0U; i < accepted; ++i) {
+                if (!changes[i].matched) work.fallback |= UMI_RELEASE_IMPACT_UNMAPPED_PATH;
+                if (UmiImpactBuildConfiguration(changes[i].path)) work.fallback |= UMI_RELEASE_IMPACT_BUILD_CONFIGURATION;
+            }
+            if (status == UMI_STATUS_OK && work.fallback != 0U) {
+                for (size_t i = 0U; i < work.count; ++i)
+                    if (Row(&work, i)->kind == UMI_RELEASE_INVENTORY_TARGET || Row(&work, i)->kind == UMI_RELEASE_INVENTORY_TEST)
+                        work.reasons[i] |= UMI_RELEASE_IMPACT_FULL;
+            } else if (status == UMI_STATUS_OK) status = Propagate(&work);
+        }
+    }
+    if (status == UMI_STATUS_OK) {
+        plan->items = calloc(work.count == 0U ? 1U : work.count, sizeof(*plan->items));
+        if (plan->items == NULL) status = UMI_STATUS_OUT_OF_MEMORY;
+    }
+    for (size_t i = 0U; i < work.count && status == UMI_STATUS_OK; ++i) {
+        if (work.reasons[i] == 0U) continue;
+        const UmiReleaseInventoryRecord *row = Row(&work, i);
+        char *name = Copy(row->identity);
+        if (name == NULL) { status = UMI_STATUS_OUT_OF_MEMORY; break; }
+        plan->items[plan->count++] = (UmiReleaseImpactItem){row->kind, name, work.reasons[i]};
+        if (row->kind == UMI_RELEASE_INVENTORY_TARGET) ++plan->summary.targets;
+        else ++plan->summary.tests;
+    }
+    /* Bind the completed selection before publishing it to another service. */
+    if (status == UMI_STATUS_OK)
+        status = UmiReleaseInventoryFingerprint(inventory, plan->inventoryFingerprint);
+    if (status == UMI_STATUS_OK) {
+        plan->summary.changedPaths = accepted;
+        plan->summary.fallbackReasons = work.fallback;
+        plan->summary.noWork = accepted == 0U && requiredCount == 0U && !forceFull;
+        plan->summary.missingTestCoverage = !plan->summary.noWork && plan->summary.tests == 0U;
+        *outPlan = plan;
+    } else UmiReleaseImpactDestroy(plan);
+    for (size_t i = 0U; i < accepted; ++i) free(changes[i].path);
+    free(changes); free(work.reasons); free(work.edges); free(work.headerPath);
+    return status;
+}
+UmiStatus UmiReleaseImpactCreate(const UmiReleaseInventory *inventory,
+    const char *const *changedPaths, size_t changedCount, bool forceFull,
+    UmiReleaseImpactPlan **outPlan)
+{
+    /* Keep source-only callers on the same graph and fallback implementation. */
+    return UmiReleaseImpactCreateWithTests(inventory, changedPaths, changedCount,
+        NULL, 0U, forceFull, outPlan);
+}
+
 
 const char *UmiReleaseImpactInventoryFingerprint(const UmiReleaseImpactPlan *plan)
 {

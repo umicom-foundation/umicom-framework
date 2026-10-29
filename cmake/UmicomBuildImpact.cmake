@@ -64,6 +64,19 @@ if(TARGET umicom)
             umicom_test_impact_owners("${_name}" TARGETS umicom)
         endforeach()
 
+
+        foreach(_case IN ITEMS single duplicate related-reverse union unknown literal unicode missing-name invalid-option)
+            set(_name "framework.build_impact.retry_cli.${_case}")
+            add_test(NAME "${_name}" COMMAND "${CMAKE_COMMAND}"
+                "-DTOOL=$<TARGET_FILE:umicom>" "-DROOT=${CMAKE_CURRENT_LIST_DIR}/.."
+                "-DDEST=${CMAKE_CURRENT_BINARY_DIR}/impact-retry-cli/${_case}"
+                "-DCASE=${_case}"
+                -P "${CMAKE_CURRENT_LIST_DIR}/../tests/release_impact/check_retry_cli.cmake")
+            set_tests_properties("${_name}" PROPERTIES TIMEOUT 45
+                LABELS "framework;build-impact;cli;regression")
+            umicom_test_impact_owners("${_name}" TARGETS umicom)
+        endforeach()
+
         # Exercise metadata production and the C23 parser together, preserving
         # an independent exact-name expectation in the fixture driver.
         if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.28")

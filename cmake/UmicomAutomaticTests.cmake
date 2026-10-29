@@ -234,7 +234,7 @@ endif()
 
 # Check both transport compatibility and the actual built helper. A negative
 # ownership case cannot pass merely because an unknown command returned 1.
-foreach(_case native lf crlf stale-usage old-version empty extra-output failed-query timeout bare-cr)
+foreach(_case native lf crlf stale-usage old-version previous-version empty extra-output failed-query timeout bare-cr)
     add_test(NAME framework.testing.reuse.protocol.${_case}
         COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:umicom-test-receipts>"
             "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/qualification/receipt-protocol"
@@ -246,4 +246,31 @@ foreach(_case native lf crlf stale-usage old-version empty extra-output failed-q
         umicom_test_impact_owners(framework.testing.reuse.protocol.${_case}
             TARGETS umicom-test-receipts)
     endif()
+endforeach()
+
+# A runner's process status and its report rows are separate observations.
+# Keep portable state tests independent of native process/file integration.
+add_executable(umicom-test-reuse-process-result
+    "${CMAKE_CURRENT_LIST_DIR}/../tests/test_reuse/test_process_result.c")
+target_link_libraries(umicom-test-reuse-process-result PRIVATE Umicom::testing)
+set_target_properties(umicom-test-reuse-process-result PROPERTIES
+    C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+umicom_apply_warnings(umicom-test-reuse-process-result)
+umicom_apply_sanitizers(umicom-test-reuse-process-result)
+foreach(_case success runner-failed reported-history unreported-history assertion
+        assertion-success-status timeout skip-return skip-pattern disabled not-run
+        unknown mixed both-pass bad-count truncated duplicate empty legacy null-state
+        null-report retry-success)
+    add_test(NAME framework.testing.reuse.process.${_case}
+        COMMAND umicom-test-reuse-process-result "${_case}")
+    set_tests_properties(framework.testing.reuse.process.${_case} PROPERTIES
+        TIMEOUT 30 LABELS "framework;testing;regression")
+endforeach()
+foreach(_case success failure unicode invalid-state malformed missing-report legacy)
+    add_test(NAME framework.testing.reuse.process-file.${_case}
+        COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:umicom-test-receipts>"
+            "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/qualification/receipt-process/${_case}"
+            "-DCASE=${_case}" -P "${CMAKE_CURRENT_LIST_DIR}/../tests/test_reuse/check_process_result.cmake")
+    set_tests_properties(framework.testing.reuse.process-file.${_case} PROPERTIES
+        TIMEOUT 45 LABELS "framework;testing;regression;filesystem")
 endforeach()

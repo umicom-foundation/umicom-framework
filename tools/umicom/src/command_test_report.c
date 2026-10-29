@@ -20,6 +20,7 @@
 #include "umicom/testing/ctest_coverage_manifest.h"
 #include "umicom/base/csv_document.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 static const char *ReportOutcome(const UmiCtestReportEntry *entry)
@@ -201,6 +202,9 @@ static int ReportCoverageFiles(const char *identity, const char *manifest_file)
 }
 
 #endif
+/* The original CLI row printer is retained for review. Shared Framework
+ * formatting now supplies identical result evidence to native and CLI hosts. */
+#if 0
 static int ReportCoverageFiles(const char *identity, const char *manifest_file)
 {
     char current[UMI_PATH_CAPACITY], absolute[UMI_PATH_CAPACITY];
@@ -242,6 +246,54 @@ static int ReportCoverageFiles(const char *identity, const char *manifest_file)
             "CSV manifest, unique hosts/requirements, relative report paths and complete JUnit XML.\n",
             (int)status);
     }
+    UmiCtestCoverageReviewDestroy(review);
+    return exit_code;
+}
+#endif
+static int ReportCoverageFiles(const char *identity, const char *manifest_file)
+{
+    char current[UMI_PATH_CAPACITY], absolute[UMI_PATH_CAPACITY];
+    UmiStatus status = umi_path_is_absolute(manifest_file)
+        ? umi_path_copy(absolute, sizeof absolute, manifest_file)
+        : umi_fs_current_directory(current, sizeof current);
+    if (status == UMI_STATUS_OK && !umi_path_is_absolute(manifest_file))
+        status = umi_path_absolute(manifest_file, current, absolute, sizeof absolute);
+    UmiCtestCoverageReview *review = NULL;
+    if (status == UMI_STATUS_OK)
+        status = UmiCtestCoverageReviewReadFile(absolute, identity, &review);
+    UmiCtestCoverageSummary summary;
+    if (status == UMI_STATUS_OK) status = UmiCtestCoverageReviewRead(review, &summary);
+    if (status != UMI_STATUS_OK) {
+        fprintf(stderr, "Cannot review saved host coverage (status %d). Check the seven-column "
+            "CSV manifest, unique hosts/requirements, relative report paths and complete JUnit XML.\n",
+            (int)status);
+        UmiCtestCoverageReviewDestroy(review);
+        return 2;
+    }
+    puts("Saved host coverage; this command did not run tests or verify source revisions.");
+    size_t offset = 0U;
+    /* Framework owns row text, escaping and evidence messages. Keep bounded
+     * pages here so the command needs no second presentation implementation. */
+    do {
+        size_t bytes = 0U;
+        status = UmiCtestCoverageReviewFormat(review, offset, 64U, NULL, 0U, &bytes);
+        char *text = status == UMI_STATUS_OK ? malloc(bytes + 1U) : NULL;
+        if (status == UMI_STATUS_OK && text == NULL) status = UMI_STATUS_OUT_OF_MEMORY;
+        if (status == UMI_STATUS_OK)
+            status = UmiCtestCoverageReviewFormat(review, offset, 64U, text, bytes + 1U, &bytes);
+        if (status == UMI_STATUS_OK && fwrite(text, 1U, bytes, stdout) != bytes)
+            status = UMI_STATUS_IO_ERROR;
+        free(text);
+        if (status != UMI_STATUS_OK || summary.requirements - offset <= 64U) break;
+        offset += 64U;
+    } while (1);
+    if (status == UMI_STATUS_OK && (ferror(stdout) || fflush(stdout) != 0))
+        status = UMI_STATUS_IO_ERROR;
+    int exit_code = 2;
+    if (status == UMI_STATUS_OK)
+        exit_code = UmiCtestCoverageRequirePassed(review) == UMI_STATUS_OK ? 0 : 1;
+    else
+        fprintf(stderr, "Cannot write saved host coverage (status %d).\n", (int)status);
     UmiCtestCoverageReviewDestroy(review);
     return exit_code;
 }

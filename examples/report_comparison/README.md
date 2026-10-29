@@ -34,3 +34,12 @@ hash. Different formatting can produce the same outcome comparison with differen
 digests. A digest identifies content; it does not identify a trusted author,
 source revision, or the machine that ran the tests. Rejected pairs publish no
 accepted identity.
+
+## Paths in different languages
+
+The native entry point captures Windows Unicode arguments and converts them to
+UTF-8 before passing paths to Framework. It leaves the process locale and working
+directory unchanged. The unicode-path check places evidence under a directory
+containing accented and Chinese characters, then reads it from another working
+directory. Its expected exit status is zero; it does not run the tests described
+by the saved report. Keep this check when adapting the example into another tool.

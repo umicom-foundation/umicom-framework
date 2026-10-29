@@ -1,13 +1,21 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/language_runtime/server_lifecycle.c
- * PURPOSE: Coordinate a cancellable native language handshake and deterministic direct-child cleanup.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Coordinate a cancellable native language handshake and deterministic direct-child cleanup.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language_runtime/server_manager.h"
 #include "umicom/platform/clock.h"
+#include "reply_deadline_private.h"
 #include "umicom/language_runtime/response_tree.h"
 #include <stdlib.h>
 #include <string.h>
@@ -90,6 +98,10 @@ static UmiStatus LanguageReplyContract(const UmiLanguageRuntimeEnvelope *reply,
     return status;
 }
 
+/* Preserve first-reply grace for review. A positive deadline now includes
+ * time spent sending and receiving the first response. Zero still performs
+ * one immediate correlated-response poll rather than becoming an infinite wait. */
+#if 0
 static UmiStatus LanguageAwaitReply(UmiLanguageRuntimeServer *server, uint64_t request, UmiClock *clock,
                                     uint64_t start, uint32_t timeoutMs, const UmiCancellationToken *cancel,
                                     UmiLanguageRuntimeEnvelope *reply, int initialize)
@@ -107,6 +119,47 @@ static UmiStatus LanguageAwaitReply(UmiLanguageRuntimeServer *server, uint64_t r
         UmiStatus status = umi_language_runtime_server_receive(server, slice, reply);
         if (status == UMI_STATUS_OK)
         {
+            ++messages;
+            if (reply->request_id == request && (reply->kind == UMI_LANGUAGE_RUNTIME_MESSAGE_RESPONSE ||
+                                                 reply->kind == UMI_LANGUAGE_RUNTIME_MESSAGE_ERROR))
+                return LanguageReplyContract(reply, request, initialize, cancel);
+            /* Bound floods even if a clock or synthetic transport cannot
+             * advance. This does not turn unrelated messages into success. */
+            if (messages >= 4096U)
+                return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        else if (status != UMI_STATUS_NOT_FOUND)
+            return status;
+        if (!umi_language_runtime_server_is_running(server))
+            return UMI_STATUS_UNAVAILABLE;
+        elapsed = (clock->monotonic_nanoseconds(clock) - start) / 1000000U;
+        if (elapsed >= timeoutMs)
+            return UMI_STATUS_TIMEOUT;
+        if (status == UMI_STATUS_NOT_FOUND)
+            (void)clock->sleep_milliseconds(clock, 1U);
+    }
+}
+#endif
+static UmiStatus LanguageAwaitReply(UmiLanguageRuntimeServer *server, uint64_t request, UmiClock *clock,
+                                    uint64_t start, uint32_t timeoutMs, const UmiCancellationToken *cancel,
+                                    UmiLanguageRuntimeEnvelope *reply, int initialize)
+{
+    unsigned messages = 0U;
+    for (;;)
+    {
+        if (umi_cancellation_token_is_requested(cancel))
+            return UMI_STATUS_CANCELLED;
+        uint64_t elapsed = (clock->monotonic_nanoseconds(clock) - start) / 1000000U;
+        if (UmiLanguageReplyBudgetReached(clock, start, timeoutMs) ||
+            (timeoutMs == 0U && messages != 0U))
+            return UMI_STATUS_TIMEOUT;
+        uint32_t remaining = elapsed >= timeoutMs ? 0U : timeoutMs - (uint32_t)elapsed;
+        uint32_t slice = remaining > 50U ? 50U : remaining;
+        UmiStatus status = umi_language_runtime_server_receive(server, slice, reply);
+        if (status == UMI_STATUS_OK)
+        {
+            if (UmiLanguageReplyBudgetReached(clock, start, timeoutMs))
+                return UMI_STATUS_TIMEOUT;
             ++messages;
             if (reply->request_id == request && (reply->kind == UMI_LANGUAGE_RUNTIME_MESSAGE_RESPONSE ||
                                                  reply->kind == UMI_LANGUAGE_RUNTIME_MESSAGE_ERROR))

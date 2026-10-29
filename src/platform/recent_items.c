@@ -34,11 +34,16 @@
 #define UMI_RECENT_ITEMS_FILE_HEADER UMI_RECENT_ITEMS_FILE_MARKER "\n"
 #define UMI_RECENT_ITEMS_FILE_LIMIT (4U * 1024U * 1024U)
 
+/* Keep the original layout visible for review. The private header supplies
+ * the same layout to this implementation and boundary-state regression fixtures. */
+#if 0
 struct UmiRecentItemRegistry {
     UmiRecentItemSnapshot items[UMI_PLATFORM_RECENT_ITEMS_CAPACITY];
     size_t count;
     uint64_t revision;
 };
+#endif
+#include "recent_items_internal.h"
 
 /* Derive the shared lookup key used when several frontends record one URI. */
 UmiStatus umi_platform_recent_item_id_from_uri(
@@ -148,6 +153,8 @@ UmiStatus umi_platform_recent_items_registry_upsert(UmiRecentItemRegistry *regis
         !bounded_text_valid(item->kind, sizeof(item->kind), 1)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Revisions identify observed state; wrapping would make an old row current. */
+    if (registry->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     index = find_index(registry, item->id);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) {
@@ -180,6 +187,7 @@ UmiStatus umi_platform_recent_items_registry_remove(UmiRecentItemRegistry *regis
     index = find_index(registry, id);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    if (registry->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index + 1U < registry->count) {
         memmove(&registry->items[index], &registry->items[index + 1U],
@@ -243,6 +251,7 @@ UmiStatus umi_platform_recent_items_registry_touch(UmiRecentItemRegistry *regist
     index = find_index(registry, id);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    if (registry->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     registry->items[index].last_opened = opened_at;
     /* A saturated counter stays meaningful and never wraps back to zero. */
     if (registry->items[index].open_count < UINT64_MAX) {
@@ -270,10 +279,30 @@ UmiStatus umi_platform_recent_items_registry_set_pinned(UmiRecentItemRegistry *r
     index = find_index(registry, id);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    if (registry->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     registry->items[index].pinned = pinned != 0;
     registry->revision += 1U;
     registry->items[index].revision = registry->revision;
     return UMI_STATUS_OK;
+}
+
+/* Trimming is a multi-record mutation. Count its complete revision budget
+ * before removing anything so exhaustion cannot leave a partly trimmed list.
+ * A pinned-only list and a limit already satisfied need no new revisions. */
+static UmiStatus recent_items_trim_budget(const UmiRecentItemRegistry *registry,
+    const char *kind, size_t maximum)
+{
+    size_t matching=0U, unpinned=0U;
+    for (size_t index=0U; index<registry->count; ++index) {
+        const UmiRecentItemSnapshot *item=&registry->items[index];
+        if (kind != NULL && strcmp(item->kind,kind)!=0) continue;
+        ++matching;
+        if (item->pinned==0) ++unpinned;
+    }
+    size_t removals=matching>maximum ? matching-maximum : 0U;
+    if (removals>unpinned) removals=unpinned;
+    return (uint64_t)removals>UINT64_MAX-registry->revision ?
+        UMI_STATUS_CAPACITY_EXCEEDED : UMI_STATUS_OK;
 }
 
 /* Enforce a normal history limit without discarding explicitly pinned work. */
@@ -282,6 +311,8 @@ UmiStatus umi_platform_recent_items_registry_trim(
     size_t maximum_count)
 {
     if (registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus budget = recent_items_trim_budget(registry, NULL, maximum_count);
+    if (budget != UMI_STATUS_OK) return budget;
 
     while (registry->count > maximum_count) {
         size_t index;
@@ -298,8 +329,15 @@ UmiStatus umi_platform_recent_items_registry_trim(
             }
         }
         if (oldest_index == SIZE_MAX) break;
+        /* Preserve the former unchecked removal for review. Propagating failure
+         * prevents a non-progressing loop if a mutation cannot advance. */
+#if 0
         (void)umi_platform_recent_items_registry_remove(
             registry, registry->items[oldest_index].id);
+#endif
+        UmiStatus status = umi_platform_recent_items_registry_remove(
+            registry, registry->items[oldest_index].id);
+        if (status != UMI_STATUS_OK) return status;
     }
     return UMI_STATUS_OK;
 }
@@ -788,6 +826,8 @@ UmiStatus UmiRecentItemsLoadLocal(const char *path, UmiRecentItemRegistry **out_
 UmiStatus UmiRecentItemsTrimKind(UmiRecentItemRegistry *registry, const char *kind, size_t maximumCount)
 {
     if (registry == NULL || kind == NULL || kind[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus budget = recent_items_trim_budget(registry, kind, maximumCount);
+    if (budget != UMI_STATUS_OK) return budget;
     for (;;) {
         size_t count = 0U, oldest = SIZE_MAX;
         for (size_t index = 0U; index < registry->count; ++index) {
@@ -802,3 +842,7 @@ UmiStatus UmiRecentItemsTrimKind(UmiRecentItemRegistry *registry, const char *ki
         if (status != UMI_STATUS_OK) return status;
     }
 }
+
+/* Transactional metadata changes share the private bounded registry layout. */
+#include "recent_items_remove.inc"
+#include "recent_items_pin.inc"

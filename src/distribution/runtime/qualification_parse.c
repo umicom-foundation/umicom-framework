@@ -34,6 +34,18 @@ static UmiStatus ResultRow(UmiQualificationReader *reader, const char *name,
         return UMI_STATUS_PARSE_ERROR;
     return UmiQualificationReadResult(fields + 1, count - 1U, result, recorded);
 }
+/* Protocol masks name the supported public flags. Keeping these tied to the
+ * planner avoids rejecting its own saved reports when a new reason is added,
+ * while unknown future bits still require an explicit reader update. */
+static UmiStatus ReadMask(UmiQualificationField field, uint32_t allowed, uint64_t *output)
+{
+    uint64_t value = 0U;
+    UmiStatus status = UmiQualificationReadNumber(field, UINT32_MAX, &value);
+    if (status != UMI_STATUS_OK) return status;
+    if (((uint32_t)value & ~allowed) != 0U) return UMI_STATUS_PARSE_ERROR;
+    *output = value;
+    return UMI_STATUS_OK;
+}
 static UmiStatus Prefix(UmiQualificationReader *reader, UmiReleaseQualification *run,
     uint64_t summary[16], char expectedPlan[65])
 {
@@ -54,7 +66,16 @@ static UmiStatus Prefix(UmiQualificationReader *reader, UmiReleaseQualification 
     if (status == UMI_STATUS_OK) status = UmiQualificationReadNumber(fields[1], UMI_STATUS_BUSY, &executionStatus);
     if (status == UMI_STATUS_OK) status = Row(reader, "selection", fields, 3U);
     if (status == UMI_STATUS_OK) status = UmiQualificationReadNumber(fields[1], UMI_RELEASE_IMPACT_CHANGE_LIMIT, &changed);
+    /* Retain the former numeric limit for review; named flags also admit an
+     * unresolved required test while continuing to refuse unknown bits. */
+#if 0
     if (status == UMI_STATUS_OK) status = UmiQualificationReadNumber(fields[2], 63U, &fallback);
+#endif
+    if (status == UMI_STATUS_OK) status = ReadMask(fields[2],
+        UMI_RELEASE_IMPACT_REQUESTED_FULL | UMI_RELEASE_IMPACT_UNMAPPED_PATH |
+        UMI_RELEASE_IMPACT_BUILD_CONFIGURATION | UMI_RELEASE_IMPACT_INCOMPLETE_GRAPH |
+        UMI_RELEASE_IMPACT_UNOWNED_TEST | UMI_RELEASE_IMPACT_UNRESOLVED_SOURCE |
+        UMI_RELEASE_IMPACT_UNMAPPED_TEST, &fallback);
     if (status == UMI_STATUS_OK) status = Row(reader, "summary", fields, 17U);
     for (size_t i = 0U; status == UMI_STATUS_OK && i < 16U; ++i)
         status = UmiQualificationReadNumber(fields[i + 1U], i >= 12U ? 1U :
@@ -94,7 +115,16 @@ static UmiStatus Items(UmiQualificationReader *reader, UmiReleaseQualification *
         run->items[run->count++] = (UmiReleaseImpactItem){
             test ? UMI_RELEASE_INVENTORY_TEST : UMI_RELEASE_INVENTORY_TARGET, name, 0U};
         uint64_t reasons = 0U;
+        /* Required-test selections add a reason beyond the former range.
+         * Preserve that range below and read the current symbolic mask. */
+#if 0
         status = UmiQualificationReadNumber(fields[2], 127U, &reasons);
+#endif
+        status = ReadMask(fields[2], UMI_RELEASE_IMPACT_CHANGED_SOURCE |
+            UMI_RELEASE_IMPACT_DEPENDENT | UMI_RELEASE_IMPACT_TEST_OWNER |
+            UMI_RELEASE_IMPACT_ALWAYS | UMI_RELEASE_IMPACT_FULL |
+            UMI_RELEASE_IMPACT_TEST_PREREQUISITE | UMI_RELEASE_IMPACT_TEST_DEPENDENCY |
+            UMI_RELEASE_IMPACT_REQUIRED_TEST, &reasons);
         run->items[i].reasons = (uint32_t)reasons;
         if (status == UMI_STATUS_OK && test) {
             UmiQualificationTest *entry = &run->tests[i - run->testStart];
@@ -142,6 +172,10 @@ static UmiStatus Validate(UmiReleaseQualification *run, const uint64_t expected[
     for (size_t i = 0U; i < 16U; ++i) if (expected[i] != actual[i]) return UMI_STATUS_PARSE_ERROR;
     return UMI_STATUS_OK;
 }
+/* Preserve the earlier display-only reconstruction for review. The shared
+ * private parser now checks the same invariants for display and retry planning;
+ * neither public path can resume or mutate a saved execution. */
+#if 0
 UmiStatus UmiQualificationArchiveParse(const char *bytes, size_t length,
     UmiQualificationView **outView, UmiQualificationArchiveReceipt *outReceipt)
 {
@@ -164,4 +198,44 @@ UmiStatus UmiQualificationArchiveParse(const char *bytes, size_t length,
         UmiQualificationViewMarkSaved(view); *outView = view; *outReceipt = receipt;
     }
     UmiReleaseQualificationDestroy(run); return status;
+}
+#endif
+
+UmiStatus UmiQualificationParseRecord(const char *bytes, size_t length,
+    UmiReleaseQualification **outRun)
+{
+    if (bytes == NULL || outRun == NULL || *outRun != NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (length >= UMI_QUALIFICATION_REPORT_LIMIT) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (length == 0U || memchr(bytes, '\0', length) != NULL) return UMI_STATUS_PARSE_ERROR;
+    UmiReleaseQualification *run = calloc(1U, sizeof(*run));
+    if (run == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    UmiQualificationReader reader = {.next = bytes, .end = bytes + length};
+    uint64_t summary[16] = {0};
+    char expectedPlan[65] = "";
+    UmiStatus status = Prefix(&reader, run, summary, expectedPlan);
+    if (status == UMI_STATUS_OK) status = Items(&reader, run);
+    if (status == UMI_STATUS_OK) status = Validate(run, summary, expectedPlan);
+    if (status == UMI_STATUS_OK) *outRun = run;
+    else UmiReleaseQualificationDestroy(run);
+    return status;
+}
+
+UmiStatus UmiQualificationArchiveParse(const char *bytes, size_t length,
+    UmiQualificationView **outView, UmiQualificationArchiveReceipt *outReceipt)
+{
+    if (outView == NULL || *outView != NULL || outReceipt == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiReleaseQualification *run = NULL;
+    UmiStatus status = UmiQualificationParseRecord(bytes, length, &run);
+    if (status != UMI_STATUS_OK) return status;
+    UmiQualificationArchiveReceipt receipt = {.identity = run->identity, .bytes = length};
+    UmiQualificationView *view = NULL;
+    status = UmiSha256Buffer(bytes, length, receipt.reportSha256);
+    if (status == UMI_STATUS_OK) status = UmiQualificationViewCapture(run, &view);
+    if (status == UMI_STATUS_OK) {
+        UmiQualificationViewMarkSaved(view);
+        *outView = view;
+        *outReceipt = receipt;
+    }
+    UmiReleaseQualificationDestroy(run);
+    return status;
 }

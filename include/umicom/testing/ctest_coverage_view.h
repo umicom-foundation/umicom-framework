@@ -62,6 +62,8 @@ const char *UmiCtestCoverageViewSourceIdentity(const UmiCtestCoverageView *view)
 /* 1..128 escaped rows per page, with whole-review counts and filter scope.
  * NULL/0 queries length excluding NUL. A short buffer is unchanged. Invalid
  * arguments preserve required; empty views accept only offset zero.
+ * Saved result messages are escaped as plain text; absent messages are named
+ * explicitly. A message is not a diagnosed cause or captured process output.
  * Caller outputs and borrowed review storage must not overlap. */
 UmiStatus UmiCtestCoverageViewFormat(const UmiCtestCoverageView *view,
     size_t offset, size_t limit, char *out, size_t capacity, size_t *required);

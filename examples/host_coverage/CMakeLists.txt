@@ -24,7 +24,7 @@ else()
 endif()
 include(CTest)
 if(BUILD_TESTING)
-    foreach(scenario passed skipped stale malformed filtered-passed filtered-empty filtered-text)
+    foreach(scenario passed skipped stale malformed filtered-passed filtered-empty filtered-text not-run disabled skip-pattern message-controls unicode-path)
         add_test(NAME installed.coverage.${scenario} COMMAND "${CMAKE_COMMAND}"
             "-DPROGRAM=$<TARGET_FILE:host-coverage-consumer>"
             "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/evidence/${scenario}"

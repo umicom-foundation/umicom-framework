@@ -265,3 +265,25 @@ if(BUILD_TESTING)
         COMMAND umicom-learning-library-choices "${CMAKE_CURRENT_BINARY_DIR}/pack")
     set_tests_properties(sdk.learning_pack.libraries.reopen PROPERTIES TIMEOUT 30)
 endif()
+
+# Body search is a separate explicit I/O operation; the metadata-only example
+# above remains available when a caller does not want to read resources.
+add_executable(umicom-learning-pack-text body_search.c)
+target_link_libraries(umicom-learning-pack-text PRIVATE Umicom::developer)
+set_target_properties(umicom-learning-pack-text PROPERTIES
+    C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+if(MSVC)
+    target_compile_options(umicom-learning-pack-text PRIVATE /W4)
+else()
+    target_compile_options(umicom-learning-pack-text PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME sdk.learning_pack.text.guide COMMAND umicom-learning-pack-text
+        "${CMAKE_CURRENT_BINARY_DIR}/pack" learning-pack.json "verified body search" guide)
+    add_test(NAME sdk.learning_pack.text.source COMMAND umicom-learning-pack-text
+        "${CMAKE_CURRENT_BINARY_DIR}/pack" learning-pack.json "argc < 3" inspector)
+    add_test(NAME sdk.learning_pack.text.missing COMMAND umicom-learning-pack-text
+        "${CMAKE_CURRENT_BINARY_DIR}/pack" learning-pack.json "no-such-body-token-924183" none)
+    set_tests_properties(sdk.learning_pack.text.guide sdk.learning_pack.text.source
+        sdk.learning_pack.text.missing PROPERTIES TIMEOUT 45)
+endif()

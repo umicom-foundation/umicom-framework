@@ -485,4 +485,23 @@ owned reader exactly once. A candidate can temporarily double the content
 allocation, so keep the configured byte limit practical. The native reader's
 local-link action and <strong>Read linked example</strong> use the same verified
 navigation path and retain Back/Forward history for this pack.</p>
+<h2 id="body-search">Search inside a guide or source example</h2>
+<p>A title search can find a guide by its name. A verified body search can find a
+phrase inside the guide's paragraphs or an example's source code. The
+<code>body_search.c</code> example uses <code>UmiLearningTextIndexCreate</code> to
+read and verify the declared resources, then <code>UmiLearningTextSearchCreate</code>
+to search its owned snapshot. No source example is compiled or executed by this search.</p>
+<pre><code>.\umicom-learning-pack-text.exe "$PWD\pack" learning-pack.json "verified body search"
+.\umicom-learning-pack-text.exe "$PWD\pack" learning-pack.json "ownership"</code></pre>
+<p>The output identifies matching resources, the first match's byte range, and
+a short preview. HTML results refer to the reading text, which omits scripts
+and styles, rather than byte positions in the original HTML. Source examples
+retain their original text. One result is returned per matching document.</p>
+<p>Index creation reads files; subsequent queries use memory. A changed or
+missing resource, malformed supported HTML, invalid text encoding or exhausted
+size budget refuses the complete index. Images are excluded. Existing metadata
+search remains available without these file reads. Rebuild the index after
+changing a library, and verify the selected resource again before opening an
+old result. See <code>docs/learning/searching-learning-text.html</code> for a
+step-by-step guide, ownership diagram, limits and troubleshooting.</p>
 </body></html>

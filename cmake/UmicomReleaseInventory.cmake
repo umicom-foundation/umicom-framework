@@ -240,6 +240,8 @@ function(umicom_release_inventory_complete)
         "${_root}/src/distribution/runtime/qualification.c"
         "${_root}/src/distribution/runtime/qualification_identity.c"
         "${_root}/src/distribution/runtime/qualification_assessment.c"
+        "${_root}/src/distribution/runtime/qualification_retry.c"
+        "${_root}/src/distribution/runtime/qualification_retry_report.c"
         "${_root}/src/distribution/runtime/qualification_report.c"
         "${_root}/src/distribution/runtime/qualification_batch.c"
         "${_root}/src/distribution/runtime/qualification_view.c"
@@ -248,12 +250,14 @@ function(umicom_release_inventory_complete)
         "${_root}/src/distribution/runtime/qualification_parse.c"
         "${_root}/src/distribution/runtime/qualification_archive.c")
     umicom_release_inventory_own_headers(umicom_distribution include/umicom/distribution/runtime/qualification.h
+        include/umicom/distribution/runtime/qualification_retry.h
         include/umicom/distribution/runtime/qualification_report.h
         include/umicom/distribution/runtime/qualification_view.h
         include/umicom/distribution/runtime/qualification_archive.h
         include/umicom/distribution/runtime/qualification_compare.h)
     include(GNUInstallDirs)
     install(FILES "${_root}/include/umicom/distribution/runtime/qualification.h"
+        "${_root}/include/umicom/distribution/runtime/qualification_retry.h"
         "${_root}/include/umicom/distribution/runtime/qualification_archive.h"
         "${_root}/include/umicom/distribution/runtime/qualification_compare.h"
         "${_root}/include/umicom/distribution/runtime/qualification_view.h"
@@ -268,16 +272,36 @@ function(umicom_release_inventory_complete)
         "${_root}/src/distribution/runtime/source_observation_internal.h"
         "${_root}/src/distribution/runtime/qualification_internal.h"
         "${_root}/src/distribution/runtime/qualification_parse_internal.h")
+    # Reuse source observations to derive changed paths without duplicating the graph selector.
+    target_sources(umicom_distribution PRIVATE "${_root}/src/distribution/runtime/observed_impact.c")
+    umicom_release_inventory_own_headers(umicom_distribution
+        include/umicom/distribution/runtime/observed_impact.h)
+    install(FILES "${_root}/include/umicom/distribution/runtime/observed_impact.h"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/distribution/runtime" COMPONENT Framework)
+    # Install only the example's reviewed source, never a local consumer build.
+    foreach(_component IN ITEMS Framework FrameworkSDK)
+        install(FILES
+            "${_root}/examples/observed_impact/CMakeLists.txt"
+            "${_root}/examples/observed_impact/main.c"
+            "${_root}/examples/observed_impact/check.cmake"
+            "${_root}/examples/observed_impact/README.md"
+            DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/examples/observed_impact"
+            COMPONENT "${_component}")
+    endforeach()
     # Observation uses the same bounded native reader as other Framework tools.
     # Declare its static-library dependency explicitly for installed SDK consumers.
     target_sources(umicom_distribution PRIVATE
         "${_root}/src/distribution/runtime/source_observation.c"
-        "${_root}/src/distribution/runtime/source_observation_paths.c")
+        "${_root}/src/distribution/runtime/source_observation_paths.c"
+        "${_root}/src/distribution/runtime/source_observation_archive.c"
+        "${_root}/src/distribution/runtime/source_observation_file.c")
     target_link_libraries(umicom_distribution PRIVATE Umicom::platform)
     umicom_release_inventory_own_headers(umicom_distribution
-        include/umicom/distribution/runtime/source_observation.h)
+        include/umicom/distribution/runtime/source_observation.h
+        include/umicom/distribution/runtime/source_observation_archive.h)
     include(GNUInstallDirs)
     install(FILES "${_root}/include/umicom/distribution/runtime/source_observation.h"
+        "${_root}/include/umicom/distribution/runtime/source_observation_archive.h"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/distribution/runtime" COMPONENT Framework)
     install(FILES "${_root}/docs/guides/scoped-qualification.html"
         DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/guides" COMPONENT Framework)

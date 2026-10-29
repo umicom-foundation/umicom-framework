@@ -22,6 +22,16 @@
 #include "umicom/test_platform/result.h"
 #include "umicom/test_platform/run_session.h"
 
+#define UMI_TEST_PLATFORM_RESULT_JSON_CAPACITY 24576U
+#define UMI_TEST_PLATFORM_SESSION_JSON_CAPACITY 4096U
+
+/* These capacities include NUL and cover maximally escaped snapshot fields.
+ * Both exporters preserve output on every refusal, including short buffers.
+ * Text fields must be terminated inside their arrays; exported fields must be valid UTF-8.
+ * All JSON control bytes are escaped; result durations must be finite and
+ * nonnegative and retain three decimal places with a dot decimal separator.
+ * Serialize calls against locale changes and keep inputs separate from output.
+ * Export does not authenticate outcomes or turn skipped coverage into passes. */
 #ifdef __cplusplus
 extern "C" {
 #endif

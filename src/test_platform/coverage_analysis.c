@@ -53,6 +53,9 @@ static void copy_text(char *destination, size_t capacity, const char *source)
  * Provide the test coverage basis points operation used by this module and its client
  * applications.
  */
+/* Preserve the earlier ratio for review. Its remainder multiplication could
+ * overflow; decimal long division supplies the floor ratio for all uint64_t values. */
+#if 0
 uint32_t umi_test_coverage_basis_points(uint64_t covered, uint64_t total)
 {
     /* Apply this branch only when its contract condition is satisfied. */
@@ -62,6 +65,32 @@ uint32_t umi_test_coverage_basis_points(uint64_t covered, uint64_t total)
     /* Split the multiplication to avoid overflow for very large reports. */
     return (uint32_t)(((covered / total) * 10000U) +
                       (((covered % total) * 10000U) / total));
+}
+#endif
+uint32_t umi_test_coverage_basis_points(uint64_t covered, uint64_t total)
+{
+    if (total == 0U) return 0U;
+    if (covered >= total) return 10000U;
+    /* Compute four decimal digits of covered / total. Each remainder stays
+     * below total. Subtraction before addition avoids both multiplication
+     * overflow and a wider-integer dependency on small or portable targets. */
+    uint64_t remainder = covered;
+    uint32_t value = 0U;
+    for (unsigned place = 0U; place < 4U; ++place) {
+        uint64_t next = 0U;
+        uint32_t digit = 0U;
+        for (unsigned addition = 0U; addition < 10U; ++addition) {
+            if (next >= total - remainder) {
+                next -= total - remainder;
+                ++digit;
+            } else {
+                next += remainder;
+            }
+        }
+        value = value * 10U + digit;
+        remainder = next;
+    }
+    return value;
 }
 
 /*
@@ -241,6 +270,9 @@ static void finalise_file(UmiTestCoverageFileAnalysis *file,
  * Provide the test coverage analysis build operation used by this module and its client
  * applications.
  */
+/* Preserve the prior in-place aggregation for review. The replacement checks
+ * each addition and publishes complete candidate evidence only on success. */
+#if 0
 UmiStatus umi_test_coverage_analysis_build(
     UmiTestCoverageAnalysis *analysis,
     const UmiTestPlatformCoverageRegistry *coverage,
@@ -388,6 +420,205 @@ UmiStatus umi_test_coverage_analysis_build(
     analysis->snapshot.revision = ++analysis->revision;
     return UMI_STATUS_OK;
 }
+#endif
+static UmiStatus PopulateAnalysis(
+    UmiTestCoverageAnalysis *analysis,
+    const UmiTestPlatformCoverageRegistry *coverage,
+    const char *session_id,
+    const UmiTestCoveragePolicy *policy,
+    const UmiTestCoverageBaseline *baseline)
+{
+    size_t index;
+    UmiTestCoveragePolicy effective_policy;
+    UmiTestCoverageBaseline effective_baseline;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (analysis == NULL || coverage == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (policy == NULL) {
+        umi_test_coverage_policy_init(&effective_policy);
+        policy = &effective_policy;
+    }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (baseline == NULL) {
+        umi_test_coverage_baseline_init(&effective_baseline);
+        baseline = &effective_baseline;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (policy->struct_size != (uint32_t)sizeof(*policy) ||
+        policy->api_version != UMI_TEST_COVERAGE_ANALYSIS_API_VERSION ||
+        baseline->struct_size != (uint32_t)sizeof(*baseline) ||
+        baseline->api_version != UMI_TEST_COVERAGE_ANALYSIS_API_VERSION ||
+        policy->minimum_line_basis_points > 10000U ||
+        policy->minimum_branch_basis_points > 10000U ||
+        baseline->line_basis_points > 10000U ||
+        baseline->branch_basis_points > 10000U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    analysis->count = 0U;
+    (void)memset(&analysis->snapshot, 0, sizeof(analysis->snapshot));
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U;
+         index < umi_test_platform_coverage_registry_count(coverage);
+         ++index) {
+        UmiTestPlatformCoverageSnapshot snapshot;
+        size_t file_index;
+        UmiStatus status = umi_test_platform_coverage_registry_at(
+            coverage, index, &snapshot);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
+        if (session_id != NULL && session_id[0] != '\0' &&
+            strcmp(snapshot.session_id, session_id) != 0) continue;
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (snapshot.uri[0] == '\0') continue;
+        if (snapshot.lines_covered > snapshot.lines_total ||
+            snapshot.branches_covered > snapshot.branches_total)
+            return UMI_STATUS_INVALID_ARGUMENT;
+        file_index = find_file(analysis, snapshot.uri);
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (file_index == (size_t)-1) {
+            UmiTestCoverageFileAnalysis *file;
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+            if (analysis->count >= COVERAGE_FILE_CAPACITY) {
+                return UMI_STATUS_CAPACITY_EXCEEDED;
+            }
+            file_index = analysis->count++;
+            file = &analysis->files[file_index];
+            (void)memset(file, 0, sizeof(*file));
+            file->struct_size = (uint32_t)sizeof(*file);
+            file->api_version = UMI_TEST_COVERAGE_ANALYSIS_API_VERSION;
+            copy_text(file->uri, sizeof(file->uri), snapshot.uri);
+            copy_text(file->session_id, sizeof(file->session_id),
+                      snapshot.session_id);
+        }
+        /* Multiple instrumentation fragments for the same URI and session are
+         * additive. If providers emit revisions of one record, callers should
+         * use stable ids and replace them in the canonical registry first. */
+        if (snapshot.lines_total > UINT64_MAX - analysis->files[file_index].lines_total)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        analysis->files[file_index].lines_total += snapshot.lines_total;
+        if (snapshot.lines_covered > UINT64_MAX - analysis->files[file_index].lines_covered)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        analysis->files[file_index].lines_covered += snapshot.lines_covered;
+        if (snapshot.branches_total > UINT64_MAX - analysis->files[file_index].branches_total)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        analysis->files[file_index].branches_total += snapshot.branches_total;
+        if (snapshot.branches_covered > UINT64_MAX - analysis->files[file_index].branches_covered)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        analysis->files[file_index].branches_covered += snapshot.branches_covered;
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (snapshot.revision > analysis->files[file_index].source_revision) {
+            analysis->files[file_index].source_revision = snapshot.revision;
+        }
+    }
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < analysis->count; ++index) {
+        finalise_file(&analysis->files[index], policy, baseline);
+    }
+    qsort(analysis->files, analysis->count, sizeof(analysis->files[0]),
+          compare_file);
+
+    analysis->snapshot.struct_size = (uint32_t)sizeof(analysis->snapshot);
+    analysis->snapshot.api_version = UMI_TEST_COVERAGE_ANALYSIS_API_VERSION;
+    copy_text(analysis->snapshot.session_id,
+              sizeof(analysis->snapshot.session_id), session_id);
+    analysis->snapshot.file_count = analysis->count;
+    analysis->snapshot.source_revision =
+        umi_test_platform_coverage_registry_revision(coverage);
+    analysis->snapshot.gate_state = analysis->count == 0U
+        ? (policy->allow_empty ? UMI_TEST_COVERAGE_GATE_PASSED
+                               : UMI_TEST_COVERAGE_GATE_UNKNOWN)
+        : UMI_TEST_COVERAGE_GATE_PASSED;
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < analysis->count; ++index) {
+        const UmiTestCoverageFileAnalysis *file = &analysis->files[index];
+        if (file->lines_total > UINT64_MAX - analysis->snapshot.lines_total)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        analysis->snapshot.lines_total += file->lines_total;
+        if (file->lines_covered > UINT64_MAX - analysis->snapshot.lines_covered)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        analysis->snapshot.lines_covered += file->lines_covered;
+        if (file->branches_total > UINT64_MAX - analysis->snapshot.branches_total)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        analysis->snapshot.branches_total += file->branches_total;
+        if (file->branches_covered > UINT64_MAX - analysis->snapshot.branches_covered)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        analysis->snapshot.branches_covered += file->branches_covered;
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (file->gate_state == UMI_TEST_COVERAGE_GATE_FAILED) {
+            ++analysis->snapshot.failed_file_count;
+            analysis->snapshot.gate_state = UMI_TEST_COVERAGE_GATE_FAILED;
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (file->gate_state == UMI_TEST_COVERAGE_GATE_WARNING) {
+            ++analysis->snapshot.warning_file_count;
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
+            if (analysis->snapshot.gate_state != UMI_TEST_COVERAGE_GATE_FAILED) {
+                analysis->snapshot.gate_state = UMI_TEST_COVERAGE_GATE_WARNING;
+            }
+        } else /* Apply this branch only when its contract condition is satisfied. */ if (file->gate_state == UMI_TEST_COVERAGE_GATE_PASSED) {
+            ++analysis->snapshot.passed_file_count;
+        } else if (analysis->snapshot.gate_state == UMI_TEST_COVERAGE_GATE_PASSED) {
+            /* Unknown files cannot become a successful aggregate. */
+            analysis->snapshot.gate_state = UMI_TEST_COVERAGE_GATE_UNKNOWN;
+        }
+    }
+    analysis->snapshot.line_basis_points = umi_test_coverage_basis_points(
+        analysis->snapshot.lines_covered, analysis->snapshot.lines_total);
+    analysis->snapshot.branch_basis_points = umi_test_coverage_basis_points(
+        analysis->snapshot.branches_covered, analysis->snapshot.branches_total);
+    analysis->snapshot.line_delta_basis_points =
+        (int32_t)analysis->snapshot.line_basis_points -
+        (int32_t)baseline->line_basis_points;
+    analysis->snapshot.branch_delta_basis_points =
+        (int32_t)analysis->snapshot.branch_basis_points -
+        (int32_t)baseline->branch_basis_points;
+    analysis->snapshot.revision = ++analysis->revision;
+    return UMI_STATUS_OK;
+}
+
+/* Analyse into independently owned storage. Readers keep the last complete
+ * evidence on invalid input, exhausted counters or allocation failure.
+ * Callers serialize registry mutations with this operation. */
+UmiStatus umi_test_coverage_analysis_build(UmiTestCoverageAnalysis *analysis,
+    const UmiTestPlatformCoverageRegistry *coverage, const char *session_id,
+    const UmiTestCoveragePolicy *policy, const UmiTestCoverageBaseline *baseline)
+{
+    if (analysis == NULL || coverage == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (session_id != NULL) {
+        size_t length = 0U;
+        while (length < sizeof(analysis->snapshot.session_id) && session_id[length] != '\0')
+            ++length;
+        if (length == sizeof(analysis->snapshot.session_id)) return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    if (analysis->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiTestCoverageAnalysis *candidate = NULL;
+    UmiStatus status = umi_test_coverage_analysis_create(&candidate);
+    if (status != UMI_STATUS_OK) return status;
+    candidate->revision = analysis->revision;
+    status = PopulateAnalysis(candidate, coverage, session_id, policy, baseline);
+    if (status == UMI_STATUS_OK) {
+        UmiTestCoverageAnalysis previous = *analysis;
+        *analysis = *candidate;
+        *candidate = previous;
+    }
+    umi_test_coverage_analysis_destroy(candidate);
+    return status;
+}
 
 /*
  * Find test coverage analysis while leaving the underlying catalogue or model owned by
@@ -413,6 +644,9 @@ UmiStatus umi_test_coverage_analysis_at(
  * Find test coverage analysis while leaving the underlying catalogue or model owned by
  * this module.
  */
+/* Preserve the original lookup order. Check the borrowed URI before comparing
+ * it with retained file names, including when the analysis is nonempty. */
+#if 0
 UmiStatus umi_test_coverage_analysis_find(
     const UmiTestCoverageAnalysis *analysis,
     const char *uri,
@@ -427,6 +661,25 @@ UmiStatus umi_test_coverage_analysis_find(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (position == (size_t)-1) return UMI_STATUS_NOT_FOUND;
+    *out_file = analysis->files[position];
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_test_coverage_analysis_find(
+    const UmiTestCoverageAnalysis *analysis,
+    const char *uri,
+    UmiTestCoverageFileAnalysis *out_file)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (analysis == NULL || uri == NULL || out_file == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    const size_t position = find_file(analysis, uri);
     if (position == (size_t)-1) return UMI_STATUS_NOT_FOUND;
     *out_file = analysis->files[position];
     return UMI_STATUS_OK;

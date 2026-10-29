@@ -17,6 +17,9 @@
  * This contract stores bounded snapshots by value. The registry owns those
  * copies; it does not take ownership of strings or external resources.
  * Coordinate cross-thread mutation at the product/service boundary.
+ * Mutations that exhaust the uint64_t registry revision return CAPACITY_EXCEEDED
+ * without changing state. Trimming checks the entire removal budget first;
+ * a no-op trim still succeeds. Revisions never wrap to zero.
  */
 #ifndef UMICOM_PLATFORM_RECENT_ITEMS_H
 #define UMICOM_PLATFORM_RECENT_ITEMS_H
@@ -189,6 +192,28 @@ UmiStatus UmiRecentItemsLoadLocal(const char *path, UmiRecentItemRegistry **out_
  * if they alone exceed the limit. No filesystem operation is performed.
  */
 UmiStatus UmiRecentItemsTrimKind(UmiRecentItemRegistry *registry, const char *kind, size_t maximumCount);
+
+/**
+ * Remove one displayed recent entry and persist the candidate before publishing
+ * it into the existing registry. expectedItemRevision must match the current
+ * entry; a stale view returns INVALID_STATE. Failure leaves the live registry intact.
+ * The absolute metadata path and existing trusted parent follow SaveLocal.
+ * No listed resource is opened, deleted or modified. Pinned entries may be
+ * removed explicitly. Coordinate a single writer; this is not an external
+ * file-version check. May block on file I/O; call from an owned operation.
+ */
+UmiStatus UmiRecentItemsRemoveLocal(UmiRecentItemRegistry *registry,
+    const char *id, uint64_t expectedItemRevision, const char *metadataPath);
+
+/**
+ * Persist a displayed item pin/unpin decision before changing the live registry.
+ * A nonzero pinned value means pinned. expectedItemRevision must match even when
+ * the requested value already matches; stale views return INVALID_STATE.
+ * Other metadata is unchanged. Failure preserves the live registry and follows
+ * RemoveLocal storage/ownership rules. Pinning does not open or trust a resource.
+ */
+UmiStatus UmiRecentItemsSetPinnedLocal(UmiRecentItemRegistry *registry,
+    const char *id, uint64_t expectedItemRevision, int pinned, const char *metadataPath);
 
 #ifdef __cplusplus
 }

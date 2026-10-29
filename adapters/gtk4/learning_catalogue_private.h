@@ -26,8 +26,15 @@ typedef struct LearningCatalogue {
     UmiLearningPackChanges *replacement_changes;
     uint64_t review_serial;
     UmiLearningSearch *search;
+    UmiLearningTextIndex *text_index;
+    UmiLearningTextSearch *text_results;
+    UmiLearningCatalogueBodySearchState text_state;
+    GtkWidget *text_query, *text_case, *text_word, *text_rows, *text_status;
+    GtkWidget *text_product, *text_locale, *text_kind;
     UmiLearningReader *reader;
     UmiBrowserReadingDocument *reading_document;
+    /* Owned verified UTF-8 source; transferred from the worker, never a diagnostic notice. */
+    char *reading_source;
     GtkWidget *reading_links, *reading_anchor, *reading_zoom;
     GtkWidget *reading_images;
     GtkWidget *find_section, *find_query, *find_case;
@@ -61,7 +68,8 @@ typedef enum LearningCatalogueAction {
     LEARNING_CATALOGUE_PROGRESS,
     LEARNING_CATALOGUE_LIBRARIES_LOAD,
     LEARNING_CATALOGUE_LIBRARIES_SAVE,
-    LEARNING_CATALOGUE_LIBRARY_REOPEN
+    LEARNING_CATALOGUE_LIBRARY_REOPEN,
+    LEARNING_CATALOGUE_TEXT_SEARCH
 } LearningCatalogueAction;
 typedef struct LearningCatalogueJob {
     GWeakRef root;
@@ -69,6 +77,15 @@ typedef struct LearningCatalogueJob {
     GApplication *application;
     LearningCatalogueAction action;
     int continues_reader;
+    int text_index_reused;
+    /* Copied search location; validated against the worker-owned display before publication. */
+    int selects_text_hit;
+    UmiLearningTextHit text_hit;
+    gint text_first_character, text_last_character;
+    UmiLearningTextQuery text_query;
+    UmiLearningTextIndex *text_index;
+    UmiLearningTextSearch *text_results;
+    UmiLearningTextProblem text_problem;
     UmiVersion host;
     char directory[UMI_PATH_CAPACITY];
     char link[UMI_TEACHER_PATH_CAPACITY + UMI_LEARNING_FRAGMENT_CAPACITY];
@@ -89,6 +106,7 @@ typedef struct LearningCatalogueJob {
     UmiStatus image_status;
     GBytes *image_pixels;
     guint image_width, image_height;
+    int display_is_source;
     char *display;
     char notice[256];
 } LearningCatalogueJob;
@@ -116,4 +134,11 @@ void LearningCatalogueReadingPublish(LearningCatalogue *owner, LearningCatalogue
 void LearningCataloguePrepareImage(LearningCatalogueJob *job, const unsigned char *bytes, size_t size);
 void LearningCatalogueImageControls(LearningCatalogue *owner);
 void LearningCatalogueImagePublish(LearningCatalogue *owner, LearningCatalogueJob *job);
+UmiStatus LearningCatalogueOpenTextHit(LearningCatalogue *owner, const UmiLearningTextHit *hit);
+UmiStatus LearningCataloguePrepareBodySelection(LearningCatalogueJob *job);
+UmiStatus LearningCataloguePublishBodySelection(LearningCatalogue *owner, const LearningCatalogueJob *job);
+void LearningCatalogueBodyControls(LearningCatalogue *owner);
+void LearningCatalogueBodyWorker(LearningCatalogueJob *job);
+void LearningCatalogueBodyComplete(LearningCatalogue *owner, LearningCatalogueJob *job);
+void LearningCatalogueBodyShelfChanged(LearningCatalogue *owner);
 #endif

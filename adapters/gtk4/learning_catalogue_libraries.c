@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "learning_catalogue_private.h"
+#include "umicom/ui/gtk4/drop_down.h"
 #include "umicom/ui/gtk4/path_picker.h"
 #include "umicom/platform/output_file.h"
 #include <inttypes.h>
@@ -256,7 +257,12 @@ void LearningCatalogueLibraryControls(LearningCatalogue *owner)
     LibraryLabel(box, "Remember the displayed pack's folder, then save the list in a private file. "
         "Loading a list does not open folders. Reopening checks each chosen manifest again.");
     LibraryButton(owner, box, "Remember displayed library", "remember", 1U);
+    /* Preserve direct construction for review. The shared helper makes the
+     * model ownership transfer explicit and enforces the native panel contract. */
+#if 0
     owner->library_rows = gtk_drop_down_new(G_LIST_MODEL(gtk_string_list_new(NULL)), NULL);
+#endif
+    owner->library_rows = umi_ui_gtk4_drop_down_new_take_string_list(gtk_string_list_new(NULL));
     LibraryTag(owner->library_rows, "choices");
     gtk_box_append(GTK_BOX(box), owner->library_rows);
     LibraryButton(owner, box, "Reopen selected library", "reopen", 5U);

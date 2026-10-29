@@ -37,3 +37,10 @@ if(BUILD_TESTING AND TARGET Umicom::ui_gtk4)
         umicom_register_validation_target(umicom-report-export-orders-native-test)
     endif()
 endif()
+
+# CSV and structured reports share Unicode validity, with format-specific controls.
+if(COMMAND umicom_target_qualification_inputs)
+    umicom_target_qualification_inputs(umicom_base FILES
+        "${CMAKE_CURRENT_LIST_DIR}/../src/base/csv_text_private.h"
+        "${CMAKE_CURRENT_LIST_DIR}/../src/base/utf8_text_private.h")
+endif()

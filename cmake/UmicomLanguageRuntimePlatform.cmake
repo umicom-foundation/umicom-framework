@@ -231,6 +231,22 @@ if(BUILD_TESTING)
         umicom_apply_sanitizers(umicom-language-runtime-decoder-initialize)
     endif()
     add_test(NAME framework.language_runtime.decoder-initialize COMMAND umicom-language-runtime-decoder-initialize)
+    foreach(_case empty disabled null-disabled all-options all-booleans sync-none sync-full
+            sync-incremental hover-array hover-number hover-string completion-true signature-true
+            semantic-true sync-true sync-fraction sync-negative sync-unknown sync-overflow
+            duplicate-field escaped-duplicate duplicate-result duplicate-capabilities cap-array
+            cap-null result-array missing-result missing-capabilities invalid-json late-invalid
+            unknown-extension unrelated-duplicate arguments byte-limit)
+        add_test(NAME "framework.language_runtime.decoder-initialize.${_case}"
+            COMMAND umicom-language-runtime-decoder-initialize "${_case}")
+        set_tests_properties("framework.language_runtime.decoder-initialize.${_case}" PROPERTIES
+            TIMEOUT 30 LABELS "framework;language;protocol;ownership;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.language_runtime.decoder-initialize.${_case}"
+                TARGETS umicom-language-runtime-decoder-initialize)
+        endif()
+    endforeach()
+
     add_executable(umicom-language-runtime-decoder-inlay-hints
         "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/test_decoder_inlay_hints.c"
     )

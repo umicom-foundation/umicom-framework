@@ -126,6 +126,14 @@ void umi_test_history_analysis_destroy(UmiTestHistoryAnalysis *analysis);
  * Provide the test history analysis build operation used by this module and its client
  * applications.
  */
+/* Publish only a complete analysis; any refusal preserves the previous report.
+ * Durations and policy thresholds must be finite and nonnegative. Completed
+ * outcomes (passed, failed, timed out) supply timing statistics and the minimum
+ * sample count. Skipped, cancelled and not-run observations remain in counts;
+ * if latest, they leave stability Unknown. All sample_count entries are retained.
+ * A trend beyond finite double range is refused. Near-zero baseline durations
+ * (at or below 1e-9 ms) retain a zero trend. Serialize input and report access;
+ * registry revisions do not certify equal source or host identities. */
 UmiStatus umi_test_history_analysis_build(
     UmiTestHistoryAnalysis *analysis,
     const UmiTestPlatformItemRegistry *items,

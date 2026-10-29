@@ -17,4 +17,6 @@ struct UmiReleaseSourceObservation {
 };
 UmiStatus UmiSourceObservationCollect(const UmiReleaseInventory *inventory,
     UmiReleaseSourceObservation *observation, const char **problemIdentity);
+/* Recompute the live format identity when reopening historical values. */
+UmiStatus UmiSourceObservationFingerprint(UmiReleaseSourceObservation *observation);
 #endif

@@ -22,6 +22,11 @@ if(BUILD_TESTING)
         contract-init-capabilities-duplicate
         contract-init-capabilities-missing
         contract-init-extension
+        contract-init-provider-array
+        contract-init-provider-number
+        contract-init-provider-duplicate
+        contract-init-sync-unknown
+        contract-init-late-provider
         contract-shutdown-object
         contract-shutdown-false
         contract-shutdown-string
@@ -44,3 +49,41 @@ foreach(_language_example IN ITEMS language_lifecycle protocol_frames)
         DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/examples/${_language_example}"
         COMPONENT FrameworkSDK)
 endforeach()
+
+# Private includes participate in change-impact qualification as source inputs.
+if(COMMAND umicom_target_qualification_inputs)
+    umicom_target_qualification_inputs(umicom_developer FILES
+        "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/reply_deadline_private.h"
+        "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/reply_wait.inc")
+endif()
+
+if(BUILD_TESTING)
+    add_executable(umicom-language-reply-deadline-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/test_reply_deadline.c")
+    target_link_libraries(umicom-language-reply-deadline-test PRIVATE Umicom::developer Umicom::platform)
+    umicom_apply_warnings(umicom-language-reply-deadline-test)
+    umicom_apply_sanitizers(umicom-language-reply-deadline-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-language-reply-deadline-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-language-reply-deadline-test FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/server_lifecycle.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/reply_deadline_private.h"
+            "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/reply_wait.inc")
+    endif()
+    foreach(_boundary IN ITEMS init shutdown query)
+        foreach(_case IN ITEMS valid read-expired boundary near zero zero-empty zero-notification fragments)
+            add_test(NAME framework.language_runtime.reply_deadline.${_boundary}.${_case}
+                COMMAND umicom-language-reply-deadline-test "${_boundary}-${_case}")
+            set_tests_properties(framework.language_runtime.reply_deadline.${_boundary}.${_case}
+                PROPERTIES TIMEOUT 10 LABELS "framework;language;deadline;regression")
+        endforeach()
+    endforeach()
+    foreach(_case IN ITEMS init-send-expired shutdown-send-expired init-cancel query-cancel query-before)
+        add_test(NAME framework.language_runtime.reply_deadline.${_case}
+            COMMAND umicom-language-reply-deadline-test "${_case}")
+        set_tests_properties(framework.language_runtime.reply_deadline.${_case}
+            PROPERTIES TIMEOUT 10 LABELS "framework;language;deadline;regression")
+    endforeach()
+endif()

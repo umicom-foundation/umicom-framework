@@ -167,6 +167,9 @@ UmiStatus UmiTestReusePrepare(const UmiTestReuseState *current,
     *out = next;
     return UMI_STATUS_OK;
 }
+/* Preserve the earlier report-only recorder for review. The shared replacement
+ * keeps passing rows due when the aggregate test runner failed or was interrupted. */
+#if 0
 UmiStatus UmiTestReuseRecord(UmiTestReuseState *state, const char *xml, size_t length)
 {
     if (state == NULL) return UMI_STATUS_INVALID_ARGUMENT;
@@ -185,6 +188,40 @@ UmiStatus UmiTestReuseRecord(UmiTestReuseState *state, const char *xml, size_t l
     UmiCtestReportDestroy(report);
     return status;
 }
+#endif
+UmiStatus UmiTestReuseRecordProcess(UmiTestReuseState *state, const char *xml,
+    size_t length, bool runnerSucceeded)
+{
+    if (state == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiCtestReport *report = NULL;
+    UmiStatus status = UmiCtestReportImport(xml, length, &report);
+    if (status != UMI_STATUS_OK) return status;
+    UmiCtestReportSummary summary;
+    status = UmiCtestReportReadSummary(report, &summary);
+    if (status == UMI_STATUS_OK) {
+        for (size_t i = 0U; i < summary.tests; ++i) {
+            const UmiCtestReportEntry *entry = UmiCtestReportEntryAt(report, i);
+            Receipt *item = Find(state, entry->name);
+            if (item != NULL) {
+                UmiTestState outcome = entry->disabled ? UMI_TEST_STATE_SKIPPED : entry->result.state;
+                /* A successful testcase row cannot certify an unsuccessful
+                 * runner invocation. Keep its retry due while preserving every
+                 * recorded nonpass and earlier excluded historical evidence. */
+                item->outcome = !runnerSucceeded && outcome == UMI_TEST_STATE_PASSED ?
+                    UMI_TEST_STATE_NOT_RUN : outcome;
+            }
+        }
+    }
+    UmiCtestReportDestroy(report);
+    return status;
+}
+UmiStatus UmiTestReuseRecord(UmiTestReuseState *state, const char *xml, size_t length)
+{
+    /* Compatibility entry: the caller must already have checked the runner.
+     * Automatic qualification uses the explicit process-aware entry instead. */
+    return UmiTestReuseRecordProcess(state, xml, length, true);
+}
+
 UmiStatus UmiTestReuseExport(const UmiTestReuseState *state, char *text,
     size_t capacity, size_t *required)
 {
