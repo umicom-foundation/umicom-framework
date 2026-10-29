@@ -24,7 +24,9 @@ get_filename_component(_learning_catalogue_root "${CMAKE_CURRENT_LIST_DIR}/.." A
 add_library(umicom_learning_catalogue_gtk4 STATIC
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_gtk4.c"
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_jobs.c"
-    "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_window.c")
+    "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_window.c"
+    "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_practice.c"
+    "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_selection.c")
 add_library(Umicom::learning_catalogue_gtk4 ALIAS umicom_learning_catalogue_gtk4)
 set_target_properties(umicom_learning_catalogue_gtk4 PROPERTIES
     EXPORT_NAME learning_catalogue_gtk4 C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
@@ -54,7 +56,10 @@ if(BUILD_TESTING)
         umicom_register_validation_target(umicom-learning-catalogue-gtk4-test)
     endif()
     foreach(_case controls load duplicate missing-pack search open history changed-content
-            binary retire-idle retire-pending destroy-pending reentrant-busy invalid-query-load)
+            binary retire-idle retire-pending destroy-pending reentrant-busy invalid-query-load
+            copy copy-existing copy-changed copy-no-example copy-retired copy-reentrant
+            copy-arguments copy-destination-captured
+            help-open help-missing help-wrong-kind help-changed help-retired help-reentrant)
         set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-catalogue/${_case}")
         file(MAKE_DIRECTORY "${_directory}")
         add_test(NAME "framework.learning_pack.gtk4.${_case}"
@@ -65,6 +70,35 @@ if(BUILD_TESTING)
         if(COMMAND umicom_test_impact_owners)
             umicom_test_impact_owners("framework.learning_pack.gtk4.${_case}"
                 TARGETS umicom-learning-catalogue-gtk4-test)
+        endif()
+    endforeach()
+endif()
+
+# A real GtkApplication run verifies that closing its last window cannot strand
+# accepted asynchronous reads. These cases are distinct from panel-only tests.
+if(BUILD_TESTING)
+    add_executable(umicom-learning-catalogue-application-test
+        "${_learning_catalogue_root}/tests/learning_pack/test_catalogue_application_gtk4.c")
+    set_target_properties(umicom-learning-catalogue-application-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-learning-catalogue-application-test PRIVATE
+        Umicom::learning_catalogue_gtk4)
+    umicom_apply_warnings(umicom-learning-catalogue-application-test)
+    umicom_apply_sanitizers(umicom-learning-catalogue-application-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-learning-catalogue-application-test)
+    endif()
+    foreach(_case close-idle close-pending parent-pending application-hold copy-application-hold)
+        set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-window/${_case}")
+        file(MAKE_DIRECTORY "${_directory}")
+        add_test(NAME "framework.learning_pack.window.${_case}"
+            COMMAND umicom-learning-catalogue-application-test "${_case}" "${_directory}")
+        set_tests_properties("framework.learning_pack.window.${_case}" PROPERTIES
+            TIMEOUT 60 SKIP_RETURN_CODE 77 WORKING_DIRECTORY "${_directory}"
+            LABELS "framework;learning;gtk4;ownership;shutdown;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.learning_pack.window.${_case}"
+                TARGETS umicom-learning-catalogue-application-test)
         endif()
     endforeach()
 endif()

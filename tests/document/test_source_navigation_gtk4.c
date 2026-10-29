@@ -95,6 +95,28 @@ static int Wait(GtkWidget *window)
     }
     return g_object_get_data(G_OBJECT(window), "umicom-completion-pending") == NULL;
 }
+/* Report the actual asynchronous outcome when a catalogue was not published.
+ * A missing dropdown model alone cannot distinguish a refused captured draft,
+ * a server/protocol failure or a timeout. Use synthetic fixture metadata and
+ * the product's existing status text; do not print document contents. */
+static void ReportMissingLocations(GtkWindow *dialog, UmiUiDocumentViewModel *views,
+    const char *view_id, const char *mode, gint64 requested_at)
+{
+    GtkWidget *message = Find(GTK_WIDGET(dialog), "document.completion.message");
+    fprintf(stderr, "Navigation case=%s elapsed-ms=%" G_GINT64_FORMAT " pending=%d\n",
+        mode, (g_get_monotonic_time() - requested_at) / 1000,
+        g_object_get_data(G_OBJECT(dialog), "umicom-completion-pending") != NULL);
+    if (GTK_IS_LABEL(message))
+        fprintf(stderr, "Navigation result: %s\n", gtk_label_get_text(GTK_LABEL(message)));
+    UmiUiDocumentViewSnapshot current;
+    UmiStatus status = umi_ui_document_view_model_find(views, view_id, &current);
+    if (status == UMI_STATUS_OK)
+        fprintf(stderr, "Current fixture selection: cursor=%zu bytes=%zu active=%d dirty=%d\n",
+            current.cursor_offset, current.selection_length, current.active, current.dirty);
+    else
+        fprintf(stderr, "Current fixture selection unavailable: %s\n", umi_status_text(status));
+}
+
 static int ProgramMain(int argc, char **argv)
 {
     if (argc != 3)
@@ -156,6 +178,7 @@ static int ProgramMain(int argc, char **argv)
     UmiUiDocumentViewSnapshot view;
     char *text = NULL, *directory = g_get_current_dir();
     size_t length = 0U;
+    gint64 requested_at = 0;
     application = gtk_application_new("org.umicom.completion.test", G_APPLICATION_NON_UNIQUE);
     CHECK(g_application_register(G_APPLICATION(application), NULL, NULL));
     CHECK(umi_command_registry_create(&commands) == UMI_STATUS_OK);
@@ -201,6 +224,13 @@ static int ProgramMain(int argc, char **argv)
     /* UpsertText copies its input; reload the owned preview before later
      * metadata edits so this fixture cannot restore the previous draft. */
     CHECK(umi_ui_document_view_model_find(views, view.view_id, &view) == UMI_STATUS_OK);
+    }
+    /* Confirm fixture setup before the asynchronous product path starts.
+     * Keep the original result assertion: diagnostics do not turn refusal
+     * into a successful navigation result. */
+    if (strcmp(mode, "selection") == 0 || strcmp(mode, "multiline") == 0) {
+        CHECK(view.cursor_offset == 0U);
+        CHECK(view.selection_length == (strcmp(mode, "multiline") == 0 ? 3U : 2U));
     }
     if (strcmp(mode, "invalid-kind") == 0)
     {
@@ -283,6 +313,7 @@ static int ProgramMain(int argc, char **argv)
                        : strcmp(mode, "remote") == 0                ? "navigation-remote"
                                                                     : "navigation-current";
     gtk_editable_set_text(GTK_EDITABLE(arguments), peer);
+    requested_at = g_get_monotonic_time();
     g_signal_emit_by_name(request, "clicked");
     if (strcmp(mode, "invalid-path") == 0)
     {
@@ -324,6 +355,7 @@ static int ProgramMain(int argc, char **argv)
         goto inspect;
     }
     GListModel *locations = gtk_drop_down_get_model(GTK_DROP_DOWN(choice));
+    if (locations == NULL) ReportMissingLocations(dialog, views, view.view_id, mode, requested_at);
     CHECK(locations != NULL);
     CHECK(g_list_model_get_n_items(locations) == (strcmp(mode, "empty") == 0 ? 0U : 1U));
     CHECK(gtk_widget_get_sensitive(preview) == (strcmp(mode, "empty") != 0));

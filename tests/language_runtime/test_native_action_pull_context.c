@@ -18,6 +18,8 @@
             return 1;                                                                                        \
         }                                                                                                    \
     } while (0)
+#include "query_failure_report.h"
+
 static int ProgramMain(int argc, char **argv)
 {
     CHECK(argc == 3);
@@ -54,9 +56,19 @@ static int ProgramMain(int argc, char **argv)
         expected = UMI_STATUS_INVALID_STATE;
     if (strcmp(mode, "related-report") == 0)
         expected = UMI_STATUS_NOT_IMPLEMENTED;
+    /* Retain the original assertion for review; the active equivalent captures
+     * its single call result before reporting stage failures. */
+#if 0
     CHECK(UmiLanguageCodeActionQueryNativeWithContext(&profile, NULL, &request, sources, 2U,
                                                       UMI_LANGUAGE_ACTION_DIAGNOSTICS_PULL, NULL, &report,
                                                       &catalogue) == expected);
+#endif
+    UmiStatus actual = UmiLanguageCodeActionQueryNativeWithContext(&profile, NULL, &request, sources, 2U,
+                                                      UMI_LANGUAGE_ACTION_DIAGNOSTICS_PULL, NULL, &report,
+                                                      &catalogue);
+    LanguageQueryFailureReport(mode, actual, expected, report.started, report.initialized,
+        report.document_opened, report.query_status, report.close_status, report.shutdown_status);
+    CHECK(actual == expected);
     CHECK(report.started && report.initialized && report.document_opened &&
           report.close_status == UMI_STATUS_OK);
     if (expected == UMI_STATUS_OK)

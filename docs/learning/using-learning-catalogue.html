@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Using the learning catalogue</title>
+<style>body{max-width:65rem;margin:2rem auto;padding:0 1rem;font:1rem/1.65 system-ui;color:#173047}h1,h2,h3{line-height:1.25}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#edf3f7;padding:1rem}table{border-collapse:collapse;width:100%}th,td{border:1px solid #aabac9;padding:.65rem;text-align:left;vertical-align:top}svg{max-width:100%;height:auto}.note{border-left:4px solid #25708d;background:#eff7fa;padding:1rem}</style>
+</head><body>
+<h1>Using the learning catalogue</h1>
+<p>The learning catalogue is a local reader for product guides, lessons and source
+examples. A <em>learning pack</em> is a folder containing those files and a small
+catalogue named <code>learning-pack.json</code>. That catalogue is also called a
+manifest. It names the resources, describes their topics and records a hash for
+each file. A hash is a value calculated from the file's exact bytes. The reader
+checks it before displaying a resource so a changed file is not silently shown
+as the version named by the pack.</p>
+<p>Umicom Framework supplies the catalogue and reader. Umicom Studio IDE supplies
+a button that opens the shared window. Other native applications can use the same
+Framework adapter. The first presentation is a text reader: HTML is converted
+to a bounded text preview, source examples appear as text, and images receive an
+explicit notice. It does not render interactive web pages, run examples or grant
+permission to build a project.</p>
+
+<h2>1. Prepare a pack you can inspect</h2>
+<p>A folder of unrelated files is not automatically a learning pack. Start with
+the complete example under <code>examples/learning_pack_inspector</code> in the
+Framework source. Its CMake configuration copies the supplied guide and C
+examples to a <code>pack</code> folder and hashes those copied bytes. The output
+includes a real <code>learning-pack.json</code>; the source template ending in
+<code>.json.in</code> is not the completed manifest.</p>
+<p>The example can also be installed under
+<code>share/umicom/framework/examples/learning_pack_inspector</code>. Follow its
+<code>guide.html</code> to select an installed developer SDK and configure the
+example. Creating the sample pack is part of that example configuration. There
+is no need to rebuild the entire application set just to read an already
+prepared pack.</p>
+<p>The sample pack uses Framework compatibility version <code>0.9.0</code>.
+Studio's shared catalogue explicitly supplies the Framework version compiled
+into its reader. A different embedding application can supply another version;
+the pack service never guesses it from the executable name. Compatibility
+bounds in a manifest are inclusive.</p>
+
+<h2>2. Open it from Studio</h2>
+<ol>
+<li>Start Studio and open <strong>Guided Learning</strong>.</li>
+<li>Select <strong>Open local learning catalogue</strong>. A separate
+<strong>Learning catalogue</strong> window appears. Existing lesson-library and
+practicum controls remain available in Guided Learning.</li>
+<li>In <strong>Learning pack folder</strong>, choose the sample's generated
+<code>pack</code> folder, or type its absolute path. An absolute path identifies a
+folder independently of the directory that launched Studio.</li>
+<li>Select <strong>Load learning pack</strong>. Wait for the reading message to
+finish. The controls temporarily stop accepting another operation while that
+request is in progress.</li>
+<li>Choose a result and select <strong>Open selected</strong>. The title and
+verified text appear below the controls.</li>
+</ol>
+<p>For example, if the generated manifest is
+<code>C:\umicom\practice\learning-inspector\pack\learning-pack.json</code>, select
+<code>C:\umicom\practice\learning-inspector\pack</code>. Do not select its parent
+build folder. No project needs to be open in Studio to read this pack.</p>
+<div class="note">Loading records the manifest's description. Opening verifies
+the selected resource's bytes. Neither operation proves who authored the pack.
+Review where content came from before treating its examples as trusted code.</div>
+
+<h2>3. Find a guide or example</h2>
+<p>Type a title word or topic in the search field and select
+<strong>Search catalogue</strong>. Leave it empty to browse. Search covers
+resource identifiers, titles, topics and pack titles. It does not search every
+paragraph inside the files.</p>
+<p>Up to eight words separated by ordinary spaces can be entered. Every word
+must match somewhere in those metadata fields. ASCII letters ignore case; other
+characters match their stored bytes. There are no wildcard or regular-expression
+operators. If results are shortened, refine the query. The panel displays up to
+128 results, and the search summary reports the total matching resources.</p>
+<p>Several packs can share a catalogue, up to the shelf's limit of 32. Their
+identifiers must be different. Loading the same identifier again reports that
+it already exists and keeps the earlier pack. To use an edited replacement,
+close this catalogue window, open a new one and load the replacement. This
+version does not provide an in-place pack replacement control or persist a list
+of loaded packs between windows.</p>
+
+<h2>4. Move through reading history</h2>
+<svg viewBox="0 0 880 150" role="img" aria-labelledby="history-title history-desc">
+<title id="history-title">Reading history stays with one verified pack</title>
+<desc id="history-desc">Opening a guide and then its source example creates two history entries. Back returns to the guide and Forward returns to the example. Each selection is read and verified before it replaces the visible document.</desc>
+<g fill="#eef5f8" stroke="#25708d" stroke-width="2"><rect x="10" y="25" width="240" height="100" rx="10"/><rect x="320" y="25" width="240" height="100" rx="10"/><rect x="630" y="25" width="240" height="100" rx="10"/></g>
+<g fill="#173047" font-family="sans-serif" font-size="18" text-anchor="middle"><text x="130" y="66">Open guide</text><text x="130" y="98">Verified selection 1</text><text x="440" y="66">Open source example</text><text x="440" y="98">Verified selection 2</text><text x="750" y="66">Back or Forward</text><text x="750" y="98">Verify before display</text><text x="285" y="83">→</text><text x="595" y="83">→</text></g>
+</svg>
+<p>Open two resources from the same pack, then use <strong>Back</strong> and
+<strong>Forward</strong>. History belongs to the current reading session and
+retains at most 64 selections. Opening a resource from another pack starts a
+reader for that pack; history across different packs is not combined. Search
+results can change without modifying the current document.</p>
+<p><strong>Reload and verify</strong> reads the current selection again. If its
+file no longer matches the manifest, the reader reports a failure and keeps the
+previous verified content. It does not overwrite the manifest hash to make a
+changed file appear valid. Close the window and load a reviewed, newly generated
+pack when you intentionally revise its content.</p>
+
+<h2>5. Make a practice copy</h2>
+<p>A practice copy is a new file that you can inspect and edit without changing
+the supplied example. This action copies one declared example; it does not copy
+an entire project, open a project or grant permission to run code.</p>
+<ol>
+<li>Open a source example in the reader, or a guide whose manifest explicitly
+links to an example.</li>
+<li>Select <strong>Preview example details</strong>. Check the example identifier and
+relative filename in the status message. A guide without an example link reports
+that no example was found; no destination is written.</li>
+<li>Choose an existing practice folder that you control. In the destination
+field, enter an absolute filename which does not exist, such as
+<code>C:\umicom\practice\my-learning-example.c</code>. The parent folder
+must already exist. The file chooser also allows you to choose a new filename.</li>
+<li>Select <strong>Copy example to new file</strong>. This explicit action
+captures the current example and destination before work starts. Wait until the
+controls become available again.</li>
+<li>Expand <strong>Last example copy</strong>. Check the captured path,
+<strong>Verified source</strong>, <strong>Created</strong>, bytes written and
+<strong>Complete</strong>. A complete result means the byte copy finished; it
+is not a compiler, test or security result.</li>
+<li>Review the new file in Studio before building it. Follow the example's guide
+for its required headers, libraries and build settings. A single copied source
+file may depend on other project files.</li>
+</ol>
+<p>The worker rechecks the source against the pack's hash before creating the
+new file. An existing destination is refused without overwriting it. A source
+that has changed is also refused. Changing search text or the selected document
+after completion does not relabel the saved receipt: it continues to identify
+the example and path used for that copy.</p>
+<p>If a write fails after creating a file, the receipt identifies the partial
+new file. Inspect it before choosing another destination. The catalogue does
+not remove it automatically. Closing the window after accepting a copy does
+not cancel or undo that write. Let orderly application shutdown finish and
+inspect the destination before retrying.</p>
+
+<h2>6. Understand display and shutdown limits</h2>
+<table><thead><tr><th>Situation</th><th>Reader behaviour</th></tr></thead><tbody>
+<tr><td>UTF-8 source or plain text</td><td>Shown as text after byte verification; no compilation or execution.</td></tr>
+<tr><td>HTML guide</td><td>A bounded plain-text preview. Layout, interactive controls and illustrations are not rendered.</td></tr>
+<tr><td>Image or binary content</td><td>An explicit limitation notice; it is not interpreted as a program.</td></tr>
+<tr><td>Resource larger than 1 MiB</td><td>The native reader refuses the read. The host's allocation budget is separate from pack metadata limits.</td></tr>
+<tr><td>Close during reading</td><td>New operations are refused. An accepted native file read finishes privately and its result is discarded.</td></tr>
+</tbody></table>
+<p>A native filesystem read can block, particularly on an unavailable mounted
+drive. Closing a panel does not promise to interrupt that operating-system
+operation. With a GtkApplication host, an accepted read keeps the application's
+event loop alive until its completion is handled. This prevents the last window
+from closing before callback cleanup. A host with its own main loop must keep
+that loop running until <code>UmiLearningCatalogueGtk4PendingReads()</code>
+returns zero. An explicit <code>g_application_quit()</code> ignores application
+holds; an embedding host must drain accepted jobs before calling it. This
+requirement applies to accepted reads and practice copies. Forced process
+termination is not orderly cleanup.</p>
+
+<h2>7. Diagnose a refusal</h2>
+<ol>
+<li><strong>No manifest found:</strong> check the selected folder contains
+<code>learning-pack.json</code>, including its exact filename. Select the
+generated pack rather than the source-template folder.</li>
+<li><strong>Incompatible version:</strong> compare the manifest's compatibility
+bounds with the embedding reader's documented version. Do not widen them without
+reviewing the material against that version.</li>
+<li><strong>Changed content:</strong> compare the file against its reviewed
+source. Reconfigure the example to generate a consistent copied pack. Loading
+a new window is necessary to adopt its new manifest.</li>
+<li><strong>Too many search terms:</strong> use no more than eight words, or
+clear the field and browse.</li>
+<li><strong>Path refused:</strong> use an ordinary absolute root. Resources must
+use declared relative paths below it; links and reparse points below the root
+are not followed.</li>
+</ol>
+<p>When reporting a problem, include the operation, status text, application and
+Framework revisions, and a small non-private example that reproduces it. A
+passing command-line reader check does not prove the Studio interface works;
+verify the actual load, search, history and close workflow in the native host.</p>
+</body></html>

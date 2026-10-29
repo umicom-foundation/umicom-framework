@@ -54,6 +54,8 @@ configure_file(main.c "${CMAKE_CURRENT_BINARY_DIR}/pack/main.c" COPYONLY)
 configure_file(history.c "${CMAKE_CURRENT_BINARY_DIR}/pack/history.c" COPYONLY)
 configure_file(practice.c "${CMAKE_CURRENT_BINARY_DIR}/pack/practice.c" COPYONLY)
 file(SHA256 "${CMAKE_CURRENT_BINARY_DIR}/pack/practice.c" _practice_hash)
+configure_file(help.c "${CMAKE_CURRENT_BINARY_DIR}/pack/help.c" COPYONLY)
+file(SHA256 "${CMAKE_CURRENT_BINARY_DIR}/pack/help.c" _help_hash)
 configure_file(search.c "${CMAKE_CURRENT_BINARY_DIR}/pack/search.c" COPYONLY)
 file(SHA256 "${CMAKE_CURRENT_BINARY_DIR}/pack/search.c" _search_hash)
 file(SHA256 "${CMAKE_CURRENT_BINARY_DIR}/pack/guide.html" _guide_hash)
@@ -64,7 +66,7 @@ include(CTest)
 if(BUILD_TESTING)
     add_test(NAME sdk.learning_pack.list
         COMMAND umicom-learning-pack-inspect "${CMAKE_CURRENT_BINARY_DIR}/pack" learning-pack.json)
-    foreach(_resource guide inspector reader-history practice-copy catalogue-search)
+    foreach(_resource guide inspector reader-history practice-copy catalogue-search contextual-help)
         add_test(NAME "sdk.learning_pack.verify.${_resource}"
             COMMAND umicom-learning-pack-inspect "${CMAKE_CURRENT_BINARY_DIR}/pack"
                 learning-pack.json "${_resource}")
@@ -159,5 +161,27 @@ if(BUILD_TESTING)
                 "-DCASE=${_case}"
                 -P "${CMAKE_CURRENT_SOURCE_DIR}/check_search.cmake")
         set_tests_properties("sdk.learning_pack.search.${_case}" PROPERTIES TIMEOUT 45)
+    endforeach()
+endif()
+
+# Route policy remains application-owned; the shared reader verifies the chosen bytes.
+add_executable(umicom-learning-pack-help help.c)
+target_link_libraries(umicom-learning-pack-help PRIVATE Umicom::developer)
+set_target_properties(umicom-learning-pack-help PROPERTIES
+    C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+if(MSVC)
+    target_compile_options(umicom-learning-pack-help PRIVATE /W4)
+else()
+    target_compile_options(umicom-learning-pack-help PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    foreach(_case command diagnostic topic missing)
+        add_test(NAME "sdk.learning_pack.help.${_case}"
+            COMMAND "${CMAKE_COMMAND}"
+                "-DPROGRAM=$<TARGET_FILE:umicom-learning-pack-help>"
+                "-DPACK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/pack"
+                "-DCASE=${_case}" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_help.cmake")
+        set_tests_properties("sdk.learning_pack.help.${_case}" PROPERTIES TIMEOUT 45)
     endforeach()
 endif()

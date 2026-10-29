@@ -26,7 +26,8 @@ target_sources(umicom_developer PRIVATE
     "${_umicom_pack_root}/src/teacher/learning_reader.c"
     "${_umicom_pack_root}/src/teacher/learning_reader_selection.c"
     "${_umicom_pack_root}/src/teacher/learning_practice.c"
-    "${_umicom_pack_root}/src/teacher/learning_search.c")
+    "${_umicom_pack_root}/src/teacher/learning_search.c"
+    "${_umicom_pack_root}/src/teacher/learning_help.c")
 if(COMMAND umicom_target_qualification_inputs)
     umicom_target_qualification_inputs(umicom_developer
         FILES "${_umicom_pack_root}/src/teacher/learning_pack_internal.h")
@@ -194,3 +195,30 @@ install(FILES
 
 # Native hosts share the same catalogue and verified reader owners.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomLearningCatalogueGtk4.cmake")
+
+# Explicit help identities use current admitted metadata; no file access is needed.
+if(BUILD_TESTING)
+    add_executable(umicom-learning-pack-help-test
+        "${_umicom_pack_root}/tests/learning_pack/test_help.c")
+    set_target_properties(umicom-learning-pack-help-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-learning-pack-help-test PRIVATE Umicom::developer)
+    umicom_apply_warnings(umicom-learning-pack-help-test)
+    umicom_apply_sanitizers(umicom-learning-pack-help-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-learning-pack-help-test)
+    endif()
+    foreach(_case command diagnostic topic kind-separation product-case key-case locale-case
+            locale-no-fallback target-locale missing-route missing-pack missing-resource wrong-kind
+            request-invalid outputs snapshot removed-pack replacement arguments duplicate
+            duplicate-locale unterminated invalid-identities capacity empty)
+        add_test(NAME "framework.learning_pack.help.${_case}"
+            COMMAND umicom-learning-pack-help-test "${_case}" "${_umicom_pack_root}")
+        set_tests_properties("framework.learning_pack.help.${_case}" PROPERTIES
+            TIMEOUT 30 LABELS "framework;learning;help;ownership;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.learning_pack.help.${_case}"
+                TARGETS umicom-learning-pack-help-test)
+        endif()
+    endforeach()
+endif()

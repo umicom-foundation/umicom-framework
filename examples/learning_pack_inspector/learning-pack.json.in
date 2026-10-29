@@ -59,6 +59,14 @@
       "kind": "example",
       "path": "search.c",
       "sha256": "@_search_hash@"
+    },
+    {
+      "id": "contextual-help",
+      "title": "Resolve a command to its verified guide",
+      "topic": "learning-packs",
+      "kind": "example",
+      "path": "help.c",
+      "sha256": "@_help_hash@"
     }
   ]
 }

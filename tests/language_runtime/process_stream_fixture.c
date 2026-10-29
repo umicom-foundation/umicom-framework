@@ -53,7 +53,12 @@ static void Hex(const char *text)
 #include "diagnostic_server_fixture.inc"
 #include "pull_diagnostic_server_fixture.inc"
 
+/* Keep the independent peer implementation and report its exit at the entry
+ * boundary. Its stderr stays separate from framed protocol output. */
+#if 0
 static int ProgramMain(int argc, char **argv)
+#endif
+static int ProtocolFixtureMain(int argc, char **argv)
 {
     if (argc < 2)
         return 2;
@@ -187,5 +192,14 @@ static int ProgramMain(int argc, char **argv)
     if (strcmp(mode, "exit-active") == 0)
         return 259;
     return 2;
+}
+static int ProgramMain(int argc, char **argv)
+{
+    int result = ProtocolFixtureMain(argc, argv);
+    if (result != 0) {
+        fprintf(stderr, "Native peer scenario: %s; exit: %d\n", argc > 1 ? argv[1] : "missing", result);
+        fflush(stderr);
+    }
+    return result;
 }
 #include "../native_process/utf8_entry.inc"

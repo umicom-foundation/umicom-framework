@@ -9,6 +9,11 @@ if(BUILD_TESTING)
         target_link_options(umicom-native-action-pull-context-test PRIVATE -municode)
     endif()
     add_dependencies(umicom-native-action-pull-context-test umicom-language-process-fixture)
+    # Failure-report headers affect qualification even though they are not translation units.
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-native-action-pull-context-test FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/query_failure_report.h")
+    endif()
     if(COMMAND umicom_register_validation_target)
         umicom_register_validation_target(umicom-native-action-pull-context-test)
     endif()
@@ -16,5 +21,10 @@ if(BUILD_TESTING)
         add_test(NAME framework.language_runtime.native_action_pull_context.${case} COMMAND umicom-native-action-pull-context-test ${case} "$<TARGET_FILE:umicom-language-process-fixture>")
         set_tests_properties(framework.language_runtime.native_action_pull_context.${case} PROPERTIES TIMEOUT 40
             LABELS "framework;language;rename;native;ownership;regression")
+        # The independent peer is a runtime dependency, not a linked library.
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.language_runtime.native_action_pull_context.${case}
+                TARGETS umicom-native-action-pull-context-test umicom-language-process-fixture)
+        endif()
     endforeach()
 endif()

@@ -412,10 +412,30 @@ longer appears in a new query. An older result remains a historical snapshot.
 Discard or relabel it when the catalogue changes. Before opening a hit, resolve
 its current pack and resource identity again, then verify the resource bytes.
 A search match is not permission to open an external link, copy a file or run code.</p>
+<!-- The console-only description predates the shared GTK catalogue. Keep it for historical review; the active paragraph describes the separate frontend.
 <p>This metadata service is the first part of catalogue search. It does not
 index body text, extract glossary entries, produce exact paragraph anchors or
 supply a Studio search panel. Those require additional indexing and interface
 work; the current console example demonstrates only the contracts described
 here.</p>
+-->
+<p>The metadata service does not index body text, extract glossary entries or
+produce exact paragraph anchors. The separate Framework GTK catalogue now
+provides metadata search and text reading, and Studio exposes it from Guided
+Learning. This console example remains useful without GTK.</p>
 
+<h2 id="studio-catalogue">Use this pack in Studio</h2>
+<p>After configuring this example, open Studio’s Guided Learning surface and
+select <strong>Open local learning catalogue</strong>. Choose the generated
+<code>pack</code> folder, select <strong>Load learning pack</strong>, choose a
+resource and select <strong>Open selected</strong>. Search for <code>history</code>
+to find the reader example. Open the guide and another resource in this pack,
+then use Back and Forward to review them. The first native reader presents HTML
+as plain text; it does not display illustrations or run code.</p>
+<p>Studio passes the version of its shared Framework reader. A pack cannot
+bypass that explicit compatibility check. If you edit the examples, configure
+this example again to regenerate its copied pack and hashes. Close and reopen
+the catalogue window before loading a replacement with the same pack ID.
+The complete reader guide is <code>docs/learning/using-learning-catalogue.html</code>
+in the Framework source.</p>
 </body></html>

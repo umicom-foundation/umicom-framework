@@ -143,6 +143,9 @@ UmiStatus UmiLearningCatalogueGtk4Search(GtkWidget *widget, const char *query)
     g_object_unref(widget);
     return status;
 }
+/* Preserve index-only opening for review. Shared selection dispatch now also
+ * accepts exact help routes while retaining the same reader ownership. */
+#if 0
 UmiStatus UmiLearningCatalogueGtk4Open(GtkWidget *widget, size_t index)
 {
     LearningCatalogue *owner = LearningCatalogueOwner(widget);
@@ -169,7 +172,18 @@ UmiStatus UmiLearningCatalogueGtk4Open(GtkWidget *widget, size_t index)
     status = LearningCatalogueDispatch(owner, job);
     g_object_unref(widget);
     return status;
+}#endif
+UmiStatus UmiLearningCatalogueGtk4Open(GtkWidget *widget, size_t index)
+{
+    LearningCatalogue *owner = LearningCatalogueOwner(widget);
+    UmiStatus status = CanStart(owner);
+    if (status != UMI_STATUS_OK) return status;
+    if (owner->search == NULL) return UMI_STATUS_NOT_FOUND;
+    UmiLearningSearchHit hit;
+    status = UmiLearningSearchResultAt(owner->search, index, &hit);
+    return status == UMI_STATUS_OK ? LearningCatalogueOpenSelection(owner, &hit.pack, &hit.resource) : status;
 }
+
 static UmiStatus Navigate(GtkWidget *widget, LearningCatalogueAction action)
 {
     LearningCatalogue *owner = LearningCatalogueOwner(widget);
@@ -230,6 +244,27 @@ static void Action(GtkButton *button, gpointer data)
         } else if (strcmp(action, "back") == 0) status = UmiLearningCatalogueGtk4Back(widget);
         else if (strcmp(action, "forward") == 0) status = UmiLearningCatalogueGtk4Forward(widget);
         else if (strcmp(action, "reload") == 0) status = UmiLearningCatalogueGtk4Reload(widget);
+        else if (strcmp(action, "example") == 0) {
+            UmiLearningPackResource example;
+            status = UmiLearningCatalogueGtk4PreviewExample(widget, &example);
+            if (status == UMI_STATUS_OK) {
+                char *title = g_utf8_make_valid(example.title, -1);
+                char *detail = g_strdup_printf("Example: %s [%s], source %s. "
+                    "Choose a NEW destination filename, then explicitly copy.", title, example.id, example.path);
+                LearningCatalogueMessage(owner, status, detail);
+                g_free(detail);
+                g_free(title);
+            }
+        } else if (strcmp(action, "copy") == 0) {
+            const char *filename = gtk_editable_get_text(GTK_EDITABLE(owner->destination));
+            char directory[UMI_PATH_CAPACITY], name[UMI_PATH_CAPACITY];
+            status = umi_path_is_absolute(filename) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+            if (status == UMI_STATUS_OK) status = umi_path_parent(filename, directory, sizeof(directory));
+            if (status == UMI_STATUS_OK) status = umi_path_basename(filename, name, sizeof(name));
+            if (status == UMI_STATUS_OK)
+                status = UmiLearningCatalogueGtk4CopyExample(widget, directory, name);
+        }
+
         if (status != UMI_STATUS_OK && !owner->state.retired)
             LearningCatalogueMessage(owner, status, "Check the selected pack, result and local path.");
     }
@@ -271,7 +306,20 @@ GtkWidget *UmiLearningCatalogueGtk4Create(UmiVersion host)
     Caption(owner->root, "Choose a folder containing learning-pack.json, then load it. "
         "Only declared, verified resources are read. No source example is run.");
     owner->controls = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+    /* A long catalogue should not force the reading window taller than the
+     * available display. Preserve the earlier direct placement for review;
+     * controls now scroll independently while the document remains visible. */
+#if 0
     gtk_box_append(GTK_BOX(owner->root), owner->controls);
+#endif
+    GtkWidget *control_scroll = gtk_scrolled_window_new();
+    gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(control_scroll),
+        GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_scrolled_window_set_min_content_height(GTK_SCROLLED_WINDOW(control_scroll), 160);
+    gtk_scrolled_window_set_max_content_height(GTK_SCROLLED_WINDOW(control_scroll), 340);
+    gtk_scrolled_window_set_propagate_natural_height(GTK_SCROLLED_WINDOW(control_scroll), TRUE);
+    gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(control_scroll), owner->controls);
+    gtk_box_append(GTK_BOX(owner->root), control_scroll);
     Caption(owner->controls, "Learning pack folder");
     owner->path = gtk_entry_new();
     gtk_entry_set_max_length(GTK_ENTRY(owner->path), (int)UMI_PATH_CAPACITY - 1);
@@ -298,6 +346,25 @@ GtkWidget *UmiLearningCatalogueGtk4Create(UmiVersion host)
     Button(owner, navigation, "Back", "back");
     Button(owner, navigation, "Forward", "forward");
     Button(owner, navigation, "Reload and verify", "reload");
+    Caption(owner->controls, "Copy one example from the current reading selection");
+    Button(owner, owner->controls, "Preview example details", "example");
+    owner->destination = gtk_entry_new();
+    gtk_entry_set_max_length(GTK_ENTRY(owner->destination), (int)UMI_PATH_CAPACITY - 1);
+    gtk_entry_set_placeholder_text(GTK_ENTRY(owner->destination), "Absolute NEW destination filename");
+    Tag(owner->destination, "learning.catalogue.destination");
+    gtk_box_append(GTK_BOX(owner->controls), owner->destination);
+    GtkWidget *choose_destination = UmiPathPickerGtk4Create(GTK_ENTRY(owner->destination),
+        UMI_PATH_PICKER_NEW_FILE, "Choose a new practice filename", NULL);
+    if (choose_destination != NULL) gtk_box_append(GTK_BOX(owner->controls), choose_destination);
+    Caption(owner->controls, "The parent folder must exist. Copying never overwrites a file, "
+        "opens a project or runs code. Closing does not undo an accepted copy.");
+    Button(owner, owner->controls, "Copy example to new file", "copy");
+    GtkWidget *receipt = gtk_expander_new("Last example copy");
+    GtkWidget *receipt_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
+    owner->copy_status = Caption(receipt_box, "No example copy has completed.");
+    Tag(owner->copy_status, "learning.catalogue.copy-result");
+    gtk_expander_set_child(GTK_EXPANDER(receipt), receipt_box);
+    gtk_box_append(GTK_BOX(owner->controls), receipt);
     owner->heading = Caption(owner->root, "No resource opened");
     Tag(owner->heading, "learning.catalogue.heading");
     owner->status = Caption(owner->root, "No learning pack loaded.");

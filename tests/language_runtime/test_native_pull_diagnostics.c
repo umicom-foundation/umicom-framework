@@ -12,6 +12,8 @@
 #include "../build_log/fixture.h"
 #include "umicom/language_runtime/diagnostic_query.h"
 
+#include "query_failure_report.h"
+
 static int ProgramMain(int argc, char **argv)
 {
     CHECK(argc == 3);
@@ -76,8 +78,16 @@ static int ProgramMain(int argc, char **argv)
     }
     UmiLanguageDiagnosticReport report;
     UmiLanguageDiagnosticCatalogue *catalogue = NULL;
+    /* Retain the original assertion for review; the active equivalent captures
+     * its single call result before reporting stage failures. */
+#if 0
     CHECK(UmiLanguageDiagnosticQueryPullNative(&profile, NULL, &request, cancel, &report, &catalogue) ==
           expected);
+#endif
+    UmiStatus actual = UmiLanguageDiagnosticQueryPullNative(&profile, NULL, &request, cancel, &report, &catalogue);
+    LanguageQueryFailureReport(mode, actual, expected, report.started, report.initialized,
+        report.document_opened, report.query_status, report.close_status, report.shutdown_status);
+    CHECK(actual == expected);
     if (expected == UMI_STATUS_OK)
     {
         size_t count = strcmp(mode, "empty") == 0 ? 0U : strcmp(mode, "choices") == 0 ? 2U : 1U;

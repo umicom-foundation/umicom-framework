@@ -24,15 +24,17 @@ typedef struct LearningCatalogue {
     UmiLearningSearch *search;
     UmiLearningReader *reader;
     UmiLearningCatalogueGtkState state;
+    UmiLearningCatalogueCopyReceipt copy;
     GtkWidget *root, *controls, *path, *query, *results;
-    GtkWidget *heading, *status, *content;
+    GtkWidget *heading, *status, *content, *destination, *copy_status;
 } LearningCatalogue;
 typedef enum LearningCatalogueAction {
     LEARNING_CATALOGUE_LOAD,
     LEARNING_CATALOGUE_OPEN,
     LEARNING_CATALOGUE_BACK,
     LEARNING_CATALOGUE_FORWARD,
-    LEARNING_CATALOGUE_RELOAD
+    LEARNING_CATALOGUE_RELOAD,
+    LEARNING_CATALOGUE_COPY
 } LearningCatalogueAction;
 typedef struct LearningCatalogueJob {
     GWeakRef root;
@@ -47,6 +49,7 @@ typedef struct LearningCatalogueJob {
     UmiLearningPack *pack;
     UmiLearningReader *reader;
     UmiLearningReaderSnapshot snapshot;
+    UmiLearningCatalogueCopyReceipt copy;
     UmiStatus status;
     char *display;
     char notice[256];
@@ -56,4 +59,6 @@ void LearningCatalogueMessage(LearningCatalogue *owner, UmiStatus status, const 
 UmiStatus LearningCatalogueRefresh(LearningCatalogue *owner, const char *query);
 UmiStatus LearningCatalogueDispatch(LearningCatalogue *owner, LearningCatalogueJob *job);
 void LearningCatalogueJobFree(gpointer data);
+UmiStatus LearningCatalogueOpenSelection(LearningCatalogue *owner,
+    const UmiLearningPackInfo *pack, const UmiLearningPackResource *resource);
 #endif
