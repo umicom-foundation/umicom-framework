@@ -169,6 +169,49 @@ int main(int argc, char **argv)
         CHECK(reader == NULL && UmiLearningShelfCount(shelf) == 1U);
         goto cleanup;
     }
+    if (strncmp(name, "reader-selection", strlen("reader-selection")) == 0) {
+        CHECK(UmiLearningReaderCreateFromShelf(shelf, "selection.fixture", 1U,
+            "first", selected.sha256, 4096U, &reader) == UMI_STATUS_OK);
+        CHECK(UmiLearningShelfFindResource(shelf, "selection.fixture", "next", &resource) == UMI_STATUS_OK);
+        UmiStatus expected = UMI_STATUS_OK;
+        const char *pack_id = "selection.fixture", *resource_id = "next", *digest = resource.sha256;
+        uint64_t revision = 1U;
+        if (strcmp(name, "reader-selection-pack") == 0) {
+            pack_id = "another.pack"; expected = UMI_STATUS_INVALID_STATE;
+        } else if (strcmp(name, "reader-selection-revision") == 0) {
+            revision = 2U; expected = UMI_STATUS_INVALID_STATE;
+        } else if (strcmp(name, "reader-selection-digest") == 0) {
+            digest = selected.sha256; expected = UMI_STATUS_INVALID_STATE;
+        } else if (strcmp(name, "reader-selection-missing") == 0) {
+            resource_id = "absent"; expected = UMI_STATUS_NOT_FOUND;
+        } else if (strcmp(name, "reader-selection-bytes") == 0) {
+            CHECK(UmiRootedFileWrite(root, "next.html", "changed", 7U) == UMI_STATUS_OK);
+            expected = UMI_STATUS_INVALID_STATE;
+        } else if (strcmp(name, "reader-selection-arguments") == 0) {
+            CHECK(UmiLearningReaderOpenSelection(NULL, pack_id, revision, resource_id, digest) == UMI_STATUS_INVALID_ARGUMENT);
+            CHECK(UmiLearningReaderOpenSelection(reader, NULL, revision, resource_id, digest) == UMI_STATUS_INVALID_ARGUMENT);
+            CHECK(UmiLearningReaderOpenSelection(reader, pack_id, 0U, resource_id, digest) == UMI_STATUS_INVALID_ARGUMENT);
+            CHECK(UmiLearningReaderOpenSelection(reader, pack_id, revision, NULL, digest) == UMI_STATUS_INVALID_ARGUMENT);
+            CHECK(UmiLearningReaderOpenSelection(reader, pack_id, revision, resource_id, NULL) == UMI_STATUS_INVALID_ARGUMENT);
+            goto verify_content;
+        } else CHECK(strcmp(name, "reader-selection") == 0);
+        CHECK(UmiLearningReaderOpenSelection(reader, pack_id, revision, resource_id, digest) == expected);
+        CHECK(UmiLearningReaderCopySnapshot(reader, &state) == UMI_STATUS_OK);
+        if (expected == UMI_STATUS_OK) {
+            CHECK(state.history_count == 2U && state.can_go_back &&
+                strcmp(state.selection.resource.id, "next") == 0);
+            CHECK(UmiLearningReaderBack(reader) == UMI_STATUS_OK);
+            CHECK(UmiLearningReaderForward(reader) == UMI_STATUS_OK);
+        } else {
+            CHECK(state.history_count == 1U && state.revision == 1U &&
+                strcmp(state.selection.resource.id, "first") == 0);
+            unsigned char content[sizeof(lesson)];
+            size_t length = 0U;
+            CHECK(UmiLearningReaderCopyContent(reader, content, sizeof(content), &length) == UMI_STATUS_OK);
+            CHECK(length == sizeof(lesson) - 1U && memcmp(content, lesson, length) == 0);
+        }
+        goto cleanup;
+    }
     if (strcmp(name, "search-open") == 0) {
         UmiLearningSearchQuery query = {0};
         memcpy(query.text, "First", sizeof("First"));

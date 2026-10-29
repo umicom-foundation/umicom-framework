@@ -151,7 +151,7 @@ if(BUILD_TESTING)
                 TARGETS umicom-learning-pack-capacity-test)
         endif()
     endforeach()
-    foreach(_case clone clone-lifetime clone-arguments open reader-lifetime two-readers search-open changed-revision changed-digest removed missing-resource changed-content missing-file bounded empty binary short-hash long-hash upper-hash invalid-hash arguments)
+    foreach(_case clone clone-lifetime clone-arguments open reader-lifetime two-readers search-open changed-revision changed-digest removed missing-resource changed-content missing-file bounded empty binary short-hash long-hash upper-hash invalid-hash arguments reader-selection reader-selection-pack reader-selection-revision reader-selection-digest reader-selection-missing reader-selection-bytes reader-selection-arguments)
         set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-pack-selection/${_case}")
         file(MAKE_DIRECTORY "${_directory}")
         add_test(NAME "framework.learning_pack.selection.${_case}"
@@ -191,3 +191,6 @@ install(FILES
     "${_umicom_pack_root}/examples/learning_pack_inspector/learning-pack.json.in"
     DESTINATION "share/umicom/framework/examples/learning_pack_inspector"
     COMPONENT FrameworkSDK)
+
+# Native hosts share the same catalogue and verified reader owners.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomLearningCatalogueGtk4.cmake")

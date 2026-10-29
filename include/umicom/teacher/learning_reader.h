@@ -64,6 +64,13 @@ UmiStatus UmiLearningReaderCreateFromShelf(const UmiLearningShelf *shelf,
  * oldest entry is evicted. Reopening the current selection rechecks its bytes
  * without duplicating history or discarding a forward branch. */
 UmiStatus UmiLearningReaderOpen(UmiLearningReader *reader, const char *resource_id);
+/* Open another result in this reader while retaining its history. The supplied
+ * pack ID/revision and resource digest must match this reader's admitted pack.
+ * A mismatch returns INVALID_STATE; a missing resource returns NOT_FOUND.
+ * Failure preserves selection, bytes and history. All string arguments must
+ * be valid terminated strings. The digest must exactly match its manifest. */
+UmiStatus UmiLearningReaderOpenSelection(UmiLearningReader *reader, const char *pack_id,
+    uint64_t expected_revision, const char *resource_id, const char *expected_sha256);
 UmiStatus UmiLearningReaderFollow(UmiLearningReader *reader, const char *local_link);
 UmiStatus UmiLearningReaderBack(UmiLearningReader *reader);
 UmiStatus UmiLearningReaderForward(UmiLearningReader *reader);

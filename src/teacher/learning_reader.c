@@ -164,3 +164,19 @@ UmiStatus UmiLearningReaderCopyContent(const UmiLearningReader *reader,
     memcpy(out, reader->content, reader->snapshot.content_size + 1U);
     return UMI_STATUS_OK;
 }
+
+/* A catalogue result may outlive a shelf refresh. Compare its immutable
+ * identity against the owned pack before extending the current history. */
+UmiStatus UmiLearningReaderOpenSelection(UmiLearningReader *reader, const char *pack_id,
+    uint64_t expected_revision, const char *resource_id, const char *expected_sha256)
+{
+    if (reader == NULL || pack_id == NULL || resource_id == NULL || expected_sha256 == NULL ||
+        expected_revision == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    if (strcmp(reader->snapshot.pack.id, pack_id) != 0 ||
+        reader->snapshot.pack.revision != expected_revision) return UMI_STATUS_INVALID_STATE;
+    UmiLearningPackResource selected;
+    UmiStatus status = UmiLearningPackFindResource(reader->pack, resource_id, &selected);
+    if (status != UMI_STATUS_OK) return status;
+    if (strcmp(selected.sha256, expected_sha256) != 0) return UMI_STATUS_INVALID_STATE;
+    return UmiLearningReaderOpen(reader, resource_id);
+}

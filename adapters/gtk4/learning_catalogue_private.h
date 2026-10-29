@@ -36,7 +36,10 @@ typedef enum LearningCatalogueAction {
 } LearningCatalogueAction;
 typedef struct LearningCatalogueJob {
     GWeakRef root;
+    /* Held/released only on the GTK thread; never used by the worker. */
+    GApplication *application;
     LearningCatalogueAction action;
+    int continues_reader;
     UmiVersion host;
     char directory[UMI_PATH_CAPACITY];
     UmiLearningSearchHit selected;

@@ -39,6 +39,14 @@ typedef struct UmiLearningCatalogueGtkState {
  * Rich illustrated rendering is a separate capability, not implied here. */
 GtkWidget *UmiLearningCatalogueGtk4Create(UmiVersion host_version);
 
+/* Present a new catalogue window tied to parent and its GtkApplication.
+ * Return a borrowed window, or NULL for invalid parent/allocation failure.
+ * Closing either window retires the panel. No pack is loaded implicitly.
+ * For application-backed windows, each accepted read holds the application
+ * until GTK completion so closing the last window cannot strand cleanup.
+ * Hosts without GtkApplication must drain PendingReads themselves. */
+GtkWindow *UmiLearningCatalogueGtk4Present(GtkWindow *parent, UmiVersion host_version);
+
 /* Accept a copied absolute root and asynchronously load learning-pack.json.
  * One job is admitted per panel. Duplicate IDs preserve the existing pack and
  * return ALREADY_EXISTS through last_status. Loading additional packs retains
@@ -64,6 +72,11 @@ UmiStatus UmiLearningCatalogueGtk4Reload(GtkWidget *widget);
  * Repeated Retire is harmless; a retired panel cannot be reopened. */
 UmiStatus UmiLearningCatalogueGtk4CopyState(GtkWidget *widget, UmiLearningCatalogueGtkState *out);
 void UmiLearningCatalogueGtk4Retire(GtkWidget *widget);
+
+/* Count accepted reads whose GTK completion has not finished, across catalogue
+ * panels. A host can retire its panels and keep iterating the GTK context until
+ * this reaches zero during orderly shutdown. Call on the GTK owner thread. */
+size_t UmiLearningCatalogueGtk4PendingReads(void);
 
 #ifdef __cplusplus
 }

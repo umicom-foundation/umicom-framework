@@ -159,6 +159,12 @@ UmiStatus UmiLearningCatalogueGtk4Open(GtkWidget *widget, size_t index)
     if (status == UMI_STATUS_OK) status = UmiLearningShelfAdopt(job->selection_shelf, &pack);
     UmiLearningPackDestroy(pack);
     if (status != UMI_STATUS_OK) { LearningCatalogueJobFree(job); return status; }
+    if (owner->reader != NULL && owner->state.reader.pack.revision == job->selected.pack.revision &&
+        strcmp(owner->state.reader.pack.id, job->selected.pack.id) == 0) {
+        job->continues_reader = 1;
+        job->reader = owner->reader;
+        owner->reader = NULL;
+    }
     g_object_ref(widget);
     status = LearningCatalogueDispatch(owner, job);
     g_object_unref(widget);

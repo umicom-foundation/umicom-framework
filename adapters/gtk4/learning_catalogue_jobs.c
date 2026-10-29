@@ -16,6 +16,10 @@
 #include "umicom/browser/document_preview.h"
 #include <string.h>
 
+/* Only GTK-thread dispatch/completion accesses this shutdown count. */
+static size_t pending_reads;
+size_t UmiLearningCatalogueGtk4PendingReads(void) { return pending_reads; }
+
 void LearningCatalogueJobFree(gpointer data)
 {
     LearningCatalogueJob *job = data;
@@ -89,9 +93,14 @@ static void CatalogueWorker(GTask *task, gpointer source, gpointer data, GCancel
         job->status = UmiLearningPackLoad(job->directory, "learning-pack.json", job->host, &job->pack);
         break;
     case LEARNING_CATALOGUE_OPEN:
+        if (job->continues_reader)
+            job->status = UmiLearningReaderOpenSelection(job->reader, job->selected.pack.id,
+                job->selected.pack.revision, job->selected.resource.id, job->selected.resource.sha256);
+        else {
         job->status = UmiLearningReaderCreateFromShelf(job->selection_shelf,
             job->selected.pack.id, job->selected.pack.revision, job->selected.resource.id,
             job->selected.resource.sha256, UMI_LEARNING_CATALOGUE_BYTES, &job->reader);
+        }
         break;
     case LEARNING_CATALOGUE_BACK:
         job->status = UmiLearningReaderBack(job->reader);
@@ -107,6 +116,10 @@ static void CatalogueWorker(GTask *task, gpointer source, gpointer data, GCancel
     g_task_return_boolean(task, job->status == UMI_STATUS_OK);
 }
 
+/* Completion previously counted pending requests without retaining the GTK
+ * application event loop. Preserve it for review; the active implementation
+ * also balances the dispatch hold after late or retired results. */
+#if 0
 static void CatalogueComplete(GObject *source, GAsyncResult *result, gpointer data)
 {
     (void)source;
@@ -115,18 +128,33 @@ static void CatalogueComplete(GObject *source, GAsyncResult *result, gpointer da
     (void)g_task_propagate_boolean(task, NULL);
     LearningCatalogueJob *job = g_task_get_task_data(task);
     GObject *root = g_weak_ref_get(&job->root);
-    if (root == NULL) return;
+    if (root == NULL) { --pending_reads; return; }
     LearningCatalogue *owner = LearningCatalogueOwner(GTK_WIDGET(root));
-    if (owner == NULL || owner->state.retired) { g_object_unref(root); return; }
+    if (owner == NULL || owner->state.retired) {
+        if (owner != NULL) owner->state.busy = 0;
+        g_object_unref(root);
+        --pending_reads;
+        return;
+    }
 
     /* The weak root resolves only on the GTK thread. The job owns every C
      * object it used; no worker has borrowed a widget, shelf or application. */
     if (job->action == LEARNING_CATALOGUE_LOAD) {
+        UmiLearningPackInfo added;
+        int adopted = 0;
         if (job->status == UMI_STATUS_OK)
+            job->status = UmiLearningPackCopyInfo(job->pack, &added);
+        if (job->status == UMI_STATUS_OK) {
             job->status = UmiLearningShelfAdopt(owner->shelf, &job->pack);
+            adopted = job->status == UMI_STATUS_OK;
+        }
         if (job->status == UMI_STATUS_OK)
             job->status = LearningCatalogueRefresh(owner,
                 gtk_editable_get_text(GTK_EDITABLE(owner->query)));
+        /* A bad current query or failed search allocation must not leave a
+         * newly admitted pack hidden behind an unchanged result list. */
+        if (adopted && job->status != UMI_STATUS_OK)
+            (void)UmiLearningShelfRemove(owner->shelf, added.id);
         if (!owner->state.retired)
             LearningCatalogueMessage(owner, job->status,
                 "Pack added. Select a result and choose Open selected.");
@@ -158,6 +186,90 @@ static void CatalogueComplete(GObject *source, GAsyncResult *result, gpointer da
     owner->state.busy = 0;
     if (!owner->state.retired) gtk_widget_set_sensitive(owner->controls, TRUE);
     g_object_unref(root);
+    --pending_reads;
+}
+#endif
+/* Complete the application hold on the GTK thread, including retired or
+ * destroyed panels. GTask data destruction may run elsewhere, so it must not
+ * own application lifecycle operations. */
+static void CatalogueReadFinished(LearningCatalogueJob *job)
+{
+    --pending_reads;
+    if (job->application != NULL) {
+        GApplication *application = job->application;
+        job->application = NULL;
+        g_application_release(application);
+        g_object_unref(application);
+    }
+}
+
+static void CatalogueComplete(GObject *source, GAsyncResult *result, gpointer data)
+{
+    (void)source;
+    (void)data;
+    GTask *task = G_TASK(result);
+    (void)g_task_propagate_boolean(task, NULL);
+    LearningCatalogueJob *job = g_task_get_task_data(task);
+    GObject *root = g_weak_ref_get(&job->root);
+    if (root == NULL) { CatalogueReadFinished(job); return; }
+    LearningCatalogue *owner = LearningCatalogueOwner(GTK_WIDGET(root));
+    if (owner == NULL || owner->state.retired) {
+        if (owner != NULL) owner->state.busy = 0;
+        g_object_unref(root);
+        CatalogueReadFinished(job);
+        return;
+    }
+
+    /* The weak root resolves only on the GTK thread. The job owns every C
+     * object it used; no worker has borrowed a widget, shelf or application. */
+    if (job->action == LEARNING_CATALOGUE_LOAD) {
+        UmiLearningPackInfo added;
+        int adopted = 0;
+        if (job->status == UMI_STATUS_OK)
+            job->status = UmiLearningPackCopyInfo(job->pack, &added);
+        if (job->status == UMI_STATUS_OK) {
+            job->status = UmiLearningShelfAdopt(owner->shelf, &job->pack);
+            adopted = job->status == UMI_STATUS_OK;
+        }
+        if (job->status == UMI_STATUS_OK)
+            job->status = LearningCatalogueRefresh(owner,
+                gtk_editable_get_text(GTK_EDITABLE(owner->query)));
+        /* A bad current query or failed search allocation must not leave a
+         * newly admitted pack hidden behind an unchanged result list. */
+        if (adopted && job->status != UMI_STATUS_OK)
+            (void)UmiLearningShelfRemove(owner->shelf, added.id);
+        if (!owner->state.retired)
+            LearningCatalogueMessage(owner, job->status,
+                "Pack added. Select a result and choose Open selected.");
+    } else {
+        /* Navigation temporarily transfers the existing reader to the worker.
+         * Return it even when navigation failed: its prior bytes/history were
+         * preserved by the core service. A new-open failure keeps the old reader. */
+        if (job->reader != NULL) {
+            UmiLearningReaderDestroy(owner->reader);
+            owner->reader = job->reader;
+            job->reader = NULL;
+        }
+        if (job->snapshot.has_document) {
+            owner->state.reader = job->snapshot;
+            char *title = g_utf8_make_valid(job->snapshot.selection.resource.title, -1);
+            gtk_label_set_text(GTK_LABEL(owner->heading), title);
+            g_free(title);
+            if (!owner->state.retired) {
+                GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(owner->content));
+                gtk_text_buffer_set_text(buffer, job->display != NULL ? job->display : "", -1);
+            }
+        }
+        if (!owner->state.retired)
+            LearningCatalogueMessage(owner, job->status,
+                job->notice[0] != '\0' ? job->notice : "The previous reading selection was kept.");
+    }
+    /* Notifications may retire the owner. busy stays true until publication is
+     * finished, so callbacks cannot dispatch a second job halfway through it. */
+    owner->state.busy = 0;
+    if (!owner->state.retired) gtk_widget_set_sensitive(owner->controls, TRUE);
+    g_object_unref(root);
+    CatalogueReadFinished(job);
 }
 
 UmiStatus LearningCatalogueDispatch(LearningCatalogue *owner, LearningCatalogueJob *job)
@@ -171,7 +283,7 @@ UmiStatus LearningCatalogueDispatch(LearningCatalogue *owner, LearningCatalogueJ
         owner->state.busy = 0;
         /* A transferred navigation reader belongs back to its closed owner
          * until final disposal; do not leak it if a notification retired us. */
-        if (job->action >= LEARNING_CATALOGUE_BACK) {
+        if (job->action >= LEARNING_CATALOGUE_BACK || job->continues_reader) {
             owner->reader = job->reader;
             job->reader = NULL;
         }
@@ -180,6 +292,15 @@ UmiStatus LearningCatalogueDispatch(LearningCatalogue *owner, LearningCatalogueJ
     }
     GTask *task = g_task_new(NULL, NULL, CatalogueComplete, NULL);
     g_task_set_task_data(task, job, LearningCatalogueJobFree);
+    GtkRoot *native_root = gtk_widget_get_root(owner->root);
+    if (GTK_IS_WINDOW(native_root)) {
+        GtkApplication *application = gtk_window_get_application(GTK_WINDOW(native_root));
+        if (application != NULL) {
+            job->application = G_APPLICATION(g_object_ref(application));
+            g_application_hold(job->application);
+        }
+    }
+    ++pending_reads;
     g_task_run_in_thread(task, CatalogueWorker);
     g_object_unref(task);
     return UMI_STATUS_OK;
