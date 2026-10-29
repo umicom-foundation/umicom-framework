@@ -183,6 +183,14 @@ void LearningCatalogueReadingPublish(LearningCatalogue *owner, LearningCatalogue
     const char *display = owner->reading_source != NULL ? owner->reading_source : job->display;
     gtk_text_buffer_set_text(buffer, display != NULL ? display : "", -1);
     if (owner->state.retired) return;
+    /* Replacing a buffer leaves its insert mark after the inserted text. A new
+     * reading snapshot begins at the start; an explicit anchor below may move
+     * it afterward. Find therefore starts from a visible, deterministic cursor
+     * on Open, Back and Forward instead of wrapping from the end by accident. */
+    GtkTextIter start;
+    gtk_text_buffer_get_start_iter(buffer, &start);
+    gtk_text_buffer_place_cursor(buffer, &start);
+    if (owner->state.retired) return;
     ApplyReadingTags(owner);
     if (owner->state.retired) return;
     GtkStringList *rows = gtk_string_list_new(NULL);
@@ -217,8 +225,20 @@ void LearningCatalogueReadingPublish(LearningCatalogue *owner, LearningCatalogue
     if (owner->state.retired) return;
     gtk_drop_down_set_selected(GTK_DROP_DOWN(owner->reading_images),
         summary.image_descriptions != 0U ? 0U : GTK_INVALID_LIST_POSITION);
+    /* Keep the original silent anchor request for review. Navigation already
+     * opened verified content, so a missing section is a visible navigation
+     * notice, not a failed read or permission to discard the new snapshot. */
+#if 0
     if (!owner->state.retired && owner->state.reader.selection.fragment[0] != '\0')
         (void)PositionAnchor(owner, owner->state.reader.selection.fragment);
+#endif
+    if (!owner->state.retired && owner->state.reader.selection.fragment[0] != '\0') {
+        UmiStatus anchor_status = PositionAnchor(owner, owner->state.reader.selection.fragment);
+        if (anchor_status != UMI_STATUS_OK)
+            g_strlcpy(job->notice,
+                "Verified resource opened, but the requested anchor was not found in the displayed text.",
+                sizeof(job->notice));
+    }
 }
 UmiStatus UmiLearningCatalogueGtk4CopyReadingSummary(GtkWidget *widget, UmiBrowserReadingSummary *out_summary)
 {

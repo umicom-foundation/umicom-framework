@@ -112,6 +112,16 @@ int main(int argc, char **argv)
     UmiLearningPackChangeSummary summary = {0};
     UmiLearningResourceChange change;
     const char *fixture = strcmp(name, "allocation") == 0 || strcmp(name, "independent") == 0 ? "mixed" : name;
+    /* A published pack must contain at least one resource. Exercise rejection
+     * at that admission boundary; identical valid packs below still exercise
+     * an empty change set. Do not relax the public parser for a test fixture. */
+    if (strcmp(fixture, "empty") == 0) {
+        CHECK(Fixture(argv[2], fixture, 0, &previous) == UMI_STATUS_PARSE_ERROR);
+        CHECK(previous == NULL);
+        CHECK(Fixture(argv[2], fixture, 1, &proposed) == UMI_STATUS_PARSE_ERROR);
+        CHECK(proposed == NULL && changes == NULL);
+        goto cleanup;
+    }
     CHECK(Fixture(argv[2], fixture, 0, &previous) == UMI_STATUS_OK);
     CHECK(Fixture(argv[2], fixture, 1, &proposed) == UMI_STATUS_OK);
     if (strcmp(name, "arguments") == 0) {

@@ -101,6 +101,9 @@ int umi_cli_command_shell(UmiCliContext *context, int argc, char **argv);
 int umi_cli_command_test_report(int argc, char **argv);
 /* Preview affected targets and tests without executing the proposed plan. */
 int umi_cli_command_impact(int argc, char **argv);
+/* Private baseline capture and history-aware selection use Framework services. */
+int umi_cli_command_source_observation(int argc, char **argv);
+int umi_cli_command_qualification_plan(int argc, char **argv);
 int umi_cli_command_qualification_report(int argc, char **argv);
 /** Inspect an explicitly selected installed SDK without executing its package. */
 int umi_cli_command_sdk(int argc, char **argv);

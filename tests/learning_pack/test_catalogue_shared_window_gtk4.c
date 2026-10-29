@@ -72,6 +72,12 @@ static void WindowAdded(GtkApplication *application, GtkWindow *window, gpointer
     CallbackCase *context = data;
     if (window == context->parent) return;
     ++context->calls;
+    /* Flush the boundary before the deliberate reentrant close. If the toolkit
+     * faults while adding its application shortcut controller, the log must
+     * distinguish that callback from later catalogue or IME destruction. */
+    fprintf(stderr, "Window-added callback: %s, GTK runtime %u.%u.%u\n",
+        context->name, gtk_get_major_version(), gtk_get_minor_version(), gtk_get_micro_version());
+    fflush(stderr);
     if (strcmp(context->name, "callback-child") == 0) gtk_window_destroy(window);
     else if (strcmp(context->name, "callback-parent") == 0) gtk_window_destroy(context->parent);
     else {

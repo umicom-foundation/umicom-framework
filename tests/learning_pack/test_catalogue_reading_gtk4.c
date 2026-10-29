@@ -243,6 +243,11 @@ int main(int argc, char **argv)
         matched = 1;
         CHECK(UmiLearningCatalogueGtk4Follow(panel,"#unknown") == UMI_STATUS_OK && Finish());
         CHECK(strstr(gtk_label_get_text(GTK_LABEL(Find(panel,"learning.catalogue.status"))),"anchor was not found") != NULL);
+        CHECK(UmiLearningCatalogueGtk4CopyState(panel, &after) == UMI_STATUS_OK);
+        CHECK(after.last_status == UMI_STATUS_OK && after.reader.has_document && after.has_reading_structure);
+        CHECK(strcmp(after.reader.selection.fragment, "unknown") == 0);
+        CHECK(Cursor(buffer) == 0);
+        after_text = Text(buffer); CHECK(after_text != NULL && strcmp(after_text, text) == 0);
     }
     CHECK(matched);
 cleanup:

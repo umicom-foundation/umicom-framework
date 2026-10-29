@@ -58,6 +58,8 @@ void umi_cli_print_help(void)
         "  umicom dependencies audit [PATH] [--strict] [--dry-run]\n"
         "  umicom workflow plan|verify|build|test|publish|update|complete [options]\n"
         "  umicom repo help\n"
+        "  umicom source-observation --inventory ABSOLUTE.tsv --output NEW-ABSOLUTE.tsv\n"
+        "  umicom qualification-plan --inventory ABSOLUTE.tsv [--help] (preview only)\n"
         "  umicom sdk inspect SDK_PREFIX\n"
         "  umicom repo inspect-module MANIFEST\n"
         "  umicom repo modules [SUITE_DIRECTORY]\n"

@@ -117,9 +117,19 @@ static void Activate(GApplication *application, gpointer data)
          * both windows must leave the accepted read's application hold active. */
         REQUIRE(context, UmiLearningCatalogueGtk4PendingReads() == 1U);
     } else REQUIRE(context, strcmp(context->name, "close-idle") == 0);
+    /* Preserve the earlier teardown for review. The fixture owns an extra
+     * parent reference; release it so GTK can emit parent destruction and
+     * retire the transient child while that child and its panel stay retained. */
+#if 0
     if (strcmp(context->name, "parent-pending") == 0)
         gtk_window_destroy(context->parent);
     else
+        gtk_window_close(context->window);
+#endif
+    if (strcmp(context->name, "parent-pending") == 0) {
+        gtk_window_destroy(context->parent);
+        g_clear_object(&context->parent);
+    } else
         gtk_window_close(context->window);
     UmiLearningCatalogueGtkState state;
     REQUIRE(context, UmiLearningCatalogueGtk4CopyState(context->panel, &state) == UMI_STATUS_OK);

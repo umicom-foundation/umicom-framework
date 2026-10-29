@@ -179,6 +179,12 @@ static int SourceCase(const char *name, const char *directory, GtkWidget *panel,
         CHECK(UmiLearningCatalogueGtk4Forward(panel)==UMI_STATUS_OK && Finish());
         CHECK(UmiLearningCatalogueGtk4CopyState(panel,&before)==UMI_STATUS_OK);
         CHECK(!before.has_reading_structure && before.last_status==UMI_STATUS_OK);
+        /* A restored source snapshot owns a fresh cursor. Find must use its
+         * first occurrence without inheriting the previous guide selection. */
+        GtkTextIter restored;
+        gtk_text_buffer_get_iter_at_mark(buffer, &restored, gtk_text_buffer_get_insert(buffer));
+        CHECK(gtk_text_iter_get_offset(&restored) == 0);
+        CHECK(!gtk_text_buffer_get_has_selection(buffer));
     } else if(strcmp(name,"source-reload-refusal")==0 || strcmp(name,"source-snapshot")==0) {
         CHECK(UmiRootedFileWrite(directory,"example.c","replacement",11U)==UMI_STATUS_OK);
         if(strcmp(name,"source-reload-refusal")==0) {

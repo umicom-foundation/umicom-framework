@@ -27,6 +27,15 @@ headers and libraries      selected when the process starts  actual behavior</pr
 </tbody></table>
 <p>Review the <a href="https://github.com/GNOME/gtk/commit/30727f8a524dbaa69118a60d6bbef4b3447245b1">upstream stable-branch correction</a> and the vendor package's source or backport record. Upgrading to version 4.24.1 alone does not establish that this correction is included.</p>
 <p>Framework reports the known-version advisory when its GTK adapter is configured for Windows. The check uses package metadata and leaves all tests enabled. An unlisted version receives no matching advisory; that is not a certification of safety.</p>
+<h2>Destruction inside an application callback</h2>
+<p>A separate failure can occur when an application's <code>window-added</code> callback destroys the very window being added. GTK 4.24.0's <code>gtk_window_set_application</code> calls that callback before constructing its application shortcut controller. Destruction can clear the application pointer and try to remove a controller that has not been created. The caller's extra object reference does not restore those internal fields.</p>
+<p>A diagnostic mentioning <code>gtk_widget_remove_controller</code> during <code>window-added</code> therefore needs a separate investigation from input-method disposal. The IME correction above does not repair this association sequence. Review the <a href="https://github.com/GNOME/gtk/blob/4.24.0/gtk/gtkwindow.c">toolkit window implementation</a> and preserve a debugger trace with the selected runtime. The shared catalogue callback regression remains enabled so the capability is not silently reported as passing.</p>
+<p>In application-owned event handlers, request closure after the current callback returns rather than destroying an object while the toolkit is still associating it. Such scheduling is an application policy, not proof that the toolkit supports immediate destruction. Shared Framework APIs must keep their documented lifecycle guarantees explicit.</p>
+<h2>Identify the installed Windows package</h2>
+<p>Read the package version without changing an active build environment:</p>
+<pre><code>&amp; "C:\msys64\usr\bin\pacman.exe" -Q mingw-w64-ucrt-x86_64-gtk4
+Get-FileHash "C:\msys64\ucrt64\bin\libgtk-4-1.dll" -Algorithm SHA256</code></pre>
+<p>Compare the package's source recipe with the required correction, including any distributor backports. A package-manager update is not evidence that a particular fix was included. Finish the current build and test attempt before replacing its toolchain or runtime; otherwise the saved result describes a mixture of environments.</p>
 <h2>Recheck the affected host workflow</h2>
 <p>From a configured Umicom Applications checkout, after building the changed targets and installing the intended runtime, run the focused host checks:</p>
 <pre><code>ctest --test-dir build/windows-ucrt64-all-debug --output-on-failure --no-tests=error -R "tms[.](forward_host|accounting_host)[.]independent$"</code></pre>

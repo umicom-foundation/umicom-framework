@@ -13,6 +13,55 @@ if(TARGET umicom)
 
     # Saved qualification inspection reuses Framework parsing; the CLI owns no ledger.
     target_sources(umicom PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../tools/umicom/src/command_qualification_report.c")
+    target_sources(umicom PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../tools/umicom/src/command_qualification_plan.c")
+    if(BUILD_TESTING)
+        # Exercise the CLI adapter with isolated source files and synthetic
+        # outcomes. These fixtures never launch a build or product workflow.
+        add_executable(umi-qualification-plan-cli-test
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/release_qualification/test_plan_cli.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/release_qualification/fixture.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/release_impact/fixture.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tools/umicom/src/command_qualification_plan.c")
+        target_link_libraries(umi-qualification-plan-cli-test PRIVATE Umicom::distribution)
+        umicom_target_qualification_inputs(umi-qualification-plan-cli-test FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../tools/umicom/src/cli.h"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/release_qualification/fixture.h"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/release_impact/fixture.h"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/build_log/fixture.h"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/support/symbolic_link.h"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/release_qualification/check_plan_cli.cmake")
+        set_target_properties(umi-qualification-plan-cli-test PROPERTIES
+            C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(umi-qualification-plan-cli-test)
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(umi-qualification-plan-cli-test)
+        endif()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umi-qualification-plan-cli-test)
+        endif()
+        foreach(_case IN ITEMS capture existing passed failed changed summary no-history unknown-tools
+                wrong-baseline wrong-report duplicate-option duplicate-summary unknown-option missing-value
+                baseline-pair report-pair relative no-tests capture-relative capture-duplicate capture-missing null-arguments)
+            set(_name "framework.qualification.plan_cli.${_case}")
+            add_test(NAME "${_name}" COMMAND "${CMAKE_COMMAND}"
+                "-DTOOL=$<TARGET_FILE:umi-qualification-plan-cli-test>" "-DCASE=${_case}"
+                -P "${CMAKE_CURRENT_LIST_DIR}/../tests/release_qualification/check_plan_cli.cmake")
+            set_tests_properties("${_name}" PROPERTIES TIMEOUT 50
+                LABELS "framework;qualification;source-observation;cli;regression")
+            umicom_test_impact_owners("${_name}" TARGETS umi-qualification-plan-cli-test)
+        endforeach()
+        foreach(_case IN ITEMS source-help plan-help)
+            set(_name "framework.qualification.plan_cli.${_case}")
+            add_test(NAME "${_name}" COMMAND "${CMAKE_COMMAND}"
+                "-DTOOL=$<TARGET_FILE:umicom>" "-DCASE=${_case}"
+                -P "${CMAKE_CURRENT_LIST_DIR}/../tests/release_qualification/check_plan_cli.cmake")
+            set_tests_properties("${_name}" PROPERTIES TIMEOUT 30 LABELS "framework;qualification;cli")
+            umicom_test_impact_owners("${_name}" TARGETS umicom)
+        endforeach()
+    endif()
+
     if(BUILD_TESTING)
         add_test(NAME framework.qualification.archive_cli.help COMMAND umicom qualification-report --help)
         set_tests_properties(framework.qualification.archive_cli.help PROPERTIES TIMEOUT 20
