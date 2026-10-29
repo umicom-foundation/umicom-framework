@@ -332,10 +332,15 @@ if(BUILD_TESTING)
     if(COMMAND umicom_target_qualification_inputs)
         umicom_target_qualification_inputs(umicom-learning-catalogue-images-test FILES
             "${_learning_catalogue_root}/tests/media/png_fixture.h"
+            "${_learning_catalogue_root}/tests/support/gtk4_expanders.h"
             "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_private.h")
     endif()
     foreach(_case image rgba-bytes rgb changed history linked-image bad-crc oversize
-        unsupported retire-pending destroy-pending retire-publication arguments)
+        unsupported retire-pending destroy-pending retire-publication arguments
+        reference-open reference-control reference-missing reference-remote reference-wrong-kind
+        reference-traversal reference-fragment reference-ambiguous reference-no-source
+        reference-empty-source reference-empty-fragment reference-changed reference-history reference-busy
+        reference-retired reference-arguments reference-retire-publication reference-notice)
         set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-catalogue-images/${_case}")
         file(MAKE_DIRECTORY "${_directory}")
         add_test(NAME "framework.learning_pack.native_images.${_case}"

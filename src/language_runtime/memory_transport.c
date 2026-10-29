@@ -18,7 +18,25 @@
 #include <string.h>
 struct UmiLanguageRuntimeMemoryTransport{char rb[UMI_LANGUAGE_RUNTIME_FRAME_CAPACITY];size_t rn,ro;char wb[UMI_LANGUAGE_RUNTIME_FRAME_CAPACITY];size_t wn;int run;};
 /* Provide the mw operation used by this module and its client applications. */
-static UmiStatus mw(void*i,const void*b,size_t n){UmiLanguageRuntimeMemoryTransport*m=i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(!m||(b==NULL&&n))return UMI_STATUS_INVALID_ARGUMENT;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(m->wn+n>=sizeof(m->wb))return UMI_STATUS_CAPACITY_EXCEEDED;memcpy(m->wb+m->wn,b,n);m->wn+=n;m->wb[m->wn]=0;return UMI_STATUS_OK;}static UmiStatus mr(void*i,void*out,size_t cap,uint32_t t,size_t*n){UmiLanguageRuntimeMemoryTransport*m=i;size_t av,c;(void)t;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(!m||!out||!cap||!n)return UMI_STATUS_INVALID_ARGUMENT;av=m->rn>m->ro?m->rn-m->ro:0;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(!av){*n=0;return UMI_STATUS_NOT_FOUND;}c=av<cap?av:cap;memcpy(out,m->rb+m->ro,c);m->ro+=c;*n=c;return UMI_STATUS_OK;}static UmiStatus ms(void*i,uint32_t t){(void)t;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(!i)return UMI_STATUS_INVALID_ARGUMENT;((UmiLanguageRuntimeMemoryTransport*)i)->run=0;return UMI_STATUS_OK;}static int mq(void*i){return i&&((UmiLanguageRuntimeMemoryTransport*)i)->run;}static void md(void*i){free(i);}
+/* The former append tested a potentially wrapped sum. Keep it for review;
+ * the active implementation checks remaining storage before any input access. */
+#if 0
+static UmiStatus mw(void*i,const void*b,size_t n){UmiLanguageRuntimeMemoryTransport*m=i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(!m||(b==NULL&&n))return UMI_STATUS_INVALID_ARGUMENT;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(m->wn+n>=sizeof(m->wb))return UMI_STATUS_CAPACITY_EXCEEDED;memcpy(m->wb+m->wn,b,n);m->wn+=n;m->wb[m->wn]=0;return UMI_STATUS_OK;}
+#endif
+static UmiStatus mw(void *instance, const void *bytes, size_t count)
+{
+    UmiLanguageRuntimeMemoryTransport *memory = instance;
+    if (memory == NULL || (bytes == NULL && count != 0U)) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memory->wn >= sizeof(memory->wb)) return UMI_STATUS_INVALID_STATE;
+    /* Leave room for the inspection API's terminating NUL. Subtraction proves
+     * both the copy span and following addition before touching caller bytes. */
+    if (count >= sizeof(memory->wb) - memory->wn) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (count != 0U) memcpy(memory->wb + memory->wn, bytes, count);
+    memory->wn += count;
+    memory->wb[memory->wn] = '\0';
+    return UMI_STATUS_OK;
+}
+static UmiStatus mr(void*i,void*out,size_t cap,uint32_t t,size_t*n){UmiLanguageRuntimeMemoryTransport*m=i;size_t av,c;(void)t;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(!m||!out||!cap||!n)return UMI_STATUS_INVALID_ARGUMENT;av=m->rn>m->ro?m->rn-m->ro:0;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(!av){*n=0;return UMI_STATUS_NOT_FOUND;}c=av<cap?av:cap;memcpy(out,m->rb+m->ro,c);m->ro+=c;*n=c;return UMI_STATUS_OK;}static UmiStatus ms(void*i,uint32_t t){(void)t;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(!i)return UMI_STATUS_INVALID_ARGUMENT;((UmiLanguageRuntimeMemoryTransport*)i)->run=0;return UMI_STATUS_OK;}static int mq(void*i){return i&&((UmiLanguageRuntimeMemoryTransport*)i)->run;}static void md(void*i){free(i);}
 /*
  * Initialise language runtime memory transport from caller-provided values so later
  * operations receive a known state.
@@ -28,7 +46,23 @@ UmiStatus umi_language_runtime_memory_transport_create(UmiLanguageRuntimeMemoryT
  * Read language runtime memory transport push into validated module state and return a
  * status when input cannot be used.
  */
+/* Preserve the previous input append for review. The replacement applies
+ * the same checked span rule as output; refusal retains queued input bytes. */
+#if 0
 UmiStatus umi_language_runtime_memory_transport_push_read(UmiLanguageRuntimeMemoryTransport*m,const void*b,size_t n){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(!m||(b==NULL&&n))return UMI_STATUS_INVALID_ARGUMENT;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(m->rn+n>=sizeof(m->rb))return UMI_STATUS_CAPACITY_EXCEEDED;memcpy(m->rb+m->rn,b,n);m->rn+=n;m->rb[m->rn]=0;return UMI_STATUS_OK;}
+#endif
+UmiStatus umi_language_runtime_memory_transport_push_read(
+    UmiLanguageRuntimeMemoryTransport *memory, const void *bytes, size_t count)
+{
+    if (memory == NULL || (bytes == NULL && count != 0U)) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memory->rn >= sizeof(memory->rb)) return UMI_STATUS_INVALID_STATE;
+    if (count >= sizeof(memory->rb) - memory->rn) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (count != 0U) memcpy(memory->rb + memory->rn, bytes, count);
+    memory->rn += count;
+    memory->rb[memory->rn] = '\0';
+    return UMI_STATUS_OK;
+}
+
 /*
  * Provide the language runtime memory transport written operation used by this module and
  * its client applications.

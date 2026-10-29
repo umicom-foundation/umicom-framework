@@ -257,6 +257,16 @@ UmiStatus UmiLearningCatalogueGtk4CopyReadingSummary(GtkWidget *widget,
 UmiStatus UmiLearningCatalogueGtk4ReadingLinkAt(GtkWidget *widget, size_t index,
     UmiBrowserReadingLink *out_link);
 UmiStatus UmiLearningCatalogueGtk4OpenReadingLink(GtkWidget *widget, size_t index);
+/* Copy inert image-reference metadata from the displayed structured guide.
+ * Indices run through CopyReadingSummary().image_descriptions. The source
+ * status in a copied entry is independent of this metadata-copy status.
+ * OpenReadingImage accepts only a nonempty local reference resolving to a
+ * manifest IMAGE without a fragment, then uses the existing verified worker
+ * read. Other resources and remote/undeclared paths are refused. No automatic
+ * image fetching occurs. OK means admission, not completed PNG rendering. */
+UmiStatus UmiLearningCatalogueGtk4ReadingImageAt(GtkWidget *widget, size_t index,
+    UmiBrowserReadingImage *out_image);
+UmiStatus UmiLearningCatalogueGtk4OpenReadingImage(GtkWidget *widget, size_t index);
 /* Position the text cursor at an exact admitted anchor without reading a file
  * or adding history. Missing IDs preserve the current cursor. Mutating reading
  * controls refuse busy/retired panels. Zoom accepts 50..200 percent and affects

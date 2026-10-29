@@ -16,6 +16,7 @@
 <tr><td>Links from this guide</td><td>Lists the link caption and its target from the current structured document. Selecting a row alone does not navigate.</td></tr>
 <tr><td>Open selected reading link</td><td>Requests that one link through the existing manifest policy. Remote addresses, undeclared files and paths escaping the pack are refused.</td></tr>
 <tr><td>Go to an exact section identifier</td><td>Enter an identifier such as <code>ownership</code>, without a leading hash, then choose <strong>Go to section</strong>. The text cursor moves to that admitted section.</td></tr>
+<tr><td>Illustrations described in this guide</td><td>Lists inert image descriptions and sources. Open selected illustration requires an explicit action and a declared local image resource; no image is fetched when the guide first opens.</td></tr>
 <tr><td>Text size, percent</td><td>Choose a value from 50 to 200. The initial value is 100. This changes only this catalogue's text and is not saved across restart.</td></tr>
 </tbody></table>
 <p>A section identifier is the value of an HTML <code>id</code> attribute. For example, <code>&lt;h2 id="ownership"&gt;Ownership&lt;/h2&gt;</code> can be reached using <code>ownership</code>. IDs are exact and case-sensitive. A missing ID reports a refusal and leaves the current cursor unchanged. A followed link whose document exists but whose requested section is absent shows the verified document with a missing-anchor message.</p>

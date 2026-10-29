@@ -56,3 +56,27 @@ install(FILES "${_reading_root}/examples/reading_document/main.c"
 install(FILES "${_reading_root}/examples/reading_search/main.c"
     "${_reading_root}/examples/reading_search/CMakeLists.txt"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/examples/reading_search" COMPONENT FrameworkSDK)
+
+if(BUILD_TESTING)
+    add_executable(umicom-browser-reading-images-test
+        "${_reading_root}/tests/browser/test_reading_images.c")
+    set_target_properties(umicom-browser-reading-images-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-browser-reading-images-test PRIVATE Umicom::browser)
+    umicom_apply_warnings(umicom-browser-reading-images-test)
+    umicom_apply_sanitizers(umicom-browser-reading-images-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-browser-reading-images-test)
+    endif()
+    foreach(_case local remote entity missing empty decorative missing-alt duplicate-source
+            invalid-entity owned-metadata range oversized hidden capacity arguments)
+        add_test(NAME "framework.browser.reading_images.${_case}"
+            COMMAND umicom-browser-reading-images-test "${_case}")
+        set_tests_properties("framework.browser.reading_images.${_case}" PROPERTIES
+            TIMEOUT 30 LABELS "framework;browser;learning;ownership;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.browser.reading_images.${_case}"
+                TARGETS umicom-browser-reading-images-test)
+        endif()
+    endforeach()
+endif()

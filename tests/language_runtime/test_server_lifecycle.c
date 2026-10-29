@@ -117,11 +117,88 @@ static UmiLanguageRuntimeServerState State(UmiLanguageRuntimeServer *server)
     return snapshot.state;
 }
 
+/* Literal peer messages deliberately bypass the production response writer.
+ * These cases distinguish protocol acceptance from a request-ID match and
+ * verify that refusal preserves caller output while shutdown still cleans up. */
+static int ContractCase(const char *mode)
+{
+    static const struct
+    {
+        const char *name, *json;
+        UmiStatus expected;
+    } cases[] = {
+        {"contract-init-version-missing", "{\"id\":1,\"result\":{\"capabilities\":{}}}", UMI_STATUS_PARSE_ERROR},
+        {"contract-init-version-wrong", "{\"jsonrpc\":\"1.0\",\"id\":1,\"result\":{\"capabilities\":{}}}", UMI_STATUS_PARSE_ERROR},
+        {"contract-init-version-duplicate", "{\"jsonrpc\":\"2.0\",\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"capabilities\":{}}}", UMI_STATUS_ALREADY_EXISTS},
+        {"contract-init-id-duplicate", "{\"jsonrpc\":\"2.0\",\"id\":1,\"id\":1,\"result\":{\"capabilities\":{}}}", UMI_STATUS_ALREADY_EXISTS},
+        {"contract-init-result-duplicate", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"capabilities\":{}},\"result\":{\"capabilities\":{}}}", UMI_STATUS_ALREADY_EXISTS},
+        {"contract-init-result-error", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"capabilities\":{}},\"error\":{\"code\":-1,\"message\":\"no\"}}", UMI_STATUS_PARSE_ERROR},
+        {"contract-init-result-missing", "{\"jsonrpc\":\"2.0\",\"id\":1}", UMI_STATUS_PARSE_ERROR},
+        {"contract-init-error-shape", "{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":{}}", UMI_STATUS_PARSE_ERROR},
+        {"contract-init-capabilities-null", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"capabilities\":null}}", UMI_STATUS_PARSE_ERROR},
+        {"contract-init-capabilities-array", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"capabilities\":[]}}", UMI_STATUS_PARSE_ERROR},
+        {"contract-init-capabilities-duplicate", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"capabilities\":{},\"capabilities\":{}}}", UMI_STATUS_ALREADY_EXISTS},
+        {"contract-init-capabilities-missing", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{}}", UMI_STATUS_PARSE_ERROR},
+        {"contract-init-extension", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"capabilities\":{\"hoverProvider\":true},\"future\":{\"enabled\":true}},\"extension\":1}", UMI_STATUS_OK},
+        {"contract-shutdown-object", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{}}", UMI_STATUS_PARSE_ERROR},
+        {"contract-shutdown-false", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":false}", UMI_STATUS_PARSE_ERROR},
+        {"contract-shutdown-string", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":\"null\"}", UMI_STATUS_PARSE_ERROR},
+        {"contract-shutdown-result-missing", "{\"jsonrpc\":\"2.0\",\"id\":1}", UMI_STATUS_PARSE_ERROR},
+        {"contract-shutdown-result-duplicate", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":null,\"result\":null}", UMI_STATUS_ALREADY_EXISTS},
+        {"contract-shutdown-error-shape", "{\"jsonrpc\":\"2.0\",\"id\":1,\"error\":{\"code\":\"-1\",\"message\":\"no\"}}", UMI_STATUS_PARSE_ERROR},
+        {"contract-shutdown-result-error", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":null,\"error\":{\"code\":-1,\"message\":\"no\"}}", UMI_STATUS_PARSE_ERROR},
+        {"contract-shutdown-extension", "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":null,\"extension\":{\"enabled\":true}}", UMI_STATUS_OK}
+    };
+    size_t selected = sizeof(cases) / sizeof(cases[0]);
+    for (size_t i = 0U; i < sizeof(cases) / sizeof(cases[0]); ++i)
+        if (strcmp(mode, cases[i].name) == 0) selected = i;
+    if (selected == sizeof(cases) / sizeof(cases[0])) return 2;
+    Fixture fixture = {0};
+    UmiLanguageRuntimeServer *server = Server(&fixture, "file:///project");
+    Push(&fixture, cases[selected].json);
+    int shutdown = strncmp(mode, "contract-shutdown-", 18U) == 0;
+    if (shutdown)
+    {
+        CHECK(umi_language_runtime_server_transition(server,
+            UMI_LANGUAGE_RUNTIME_SERVER_INITIALIZING) == UMI_STATUS_OK);
+        CHECK(umi_language_runtime_server_transition(server,
+            UMI_LANGUAGE_RUNTIME_SERVER_READY) == UMI_STATUS_OK);
+        CHECK(UmiLanguageRuntimeServerShutdown(server, 0U) == cases[selected].expected);
+        CHECK(fixture.stops == 1U && !fixture.running);
+        CHECK(State(server) == UMI_LANGUAGE_RUNTIME_SERVER_STOPPED);
+        CHECK((strstr(fixture.written, "\"method\":\"exit\"") != NULL) ==
+            (cases[selected].expected == UMI_STATUS_OK));
+    }
+    else
+    {
+        UmiLanguageRuntimeInitializeResult capabilities, before;
+        memset(&before, 0x39, sizeof(before));
+        capabilities = before;
+        CHECK(UmiLanguageRuntimeServerInitialize(server, "file:///project", 0U,
+            NULL, &capabilities) == cases[selected].expected);
+        if (cases[selected].expected == UMI_STATUS_OK)
+        {
+            CHECK(capabilities.hover && State(server) == UMI_LANGUAGE_RUNTIME_SERVER_READY);
+            CHECK(strstr(fixture.written, "\"method\":\"initialized\"") != NULL);
+        }
+        else
+        {
+            CHECK(memcmp(&capabilities, &before, sizeof(before)) == 0);
+            CHECK(State(server) == UMI_LANGUAGE_RUNTIME_SERVER_FAILED);
+            CHECK(strstr(fixture.written, "\"method\":\"initialized\"") == NULL);
+        }
+    }
+    umi_language_runtime_server_destroy(server);
+    CHECK(fixture.destroys == 1U);
+    return 0;
+}
+
 int main(int argc, char **argv)
 {
     if (argc != 2)
         return 2;
     const char *mode = argv[1];
+    if (strncmp(mode, "contract-", 9U) == 0) return ContractCase(mode);
     const char *known[] = {"valid",
                            "zero",
                            "fragmented",

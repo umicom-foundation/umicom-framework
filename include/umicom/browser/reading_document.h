@@ -46,6 +46,18 @@ typedef struct UmiBrowserReadingLink {
     size_t byte_length;
     char target[UMI_BROWSER_READING_TARGET_CAPACITY];
 } UmiBrowserReadingLink;
+/* Image references remain inert document data. Their text range covers the
+ * retained alternative-text description, including its displayed prefix.
+ * target_status is OK only for a complete nonempty decoded src attribute;
+ * missing/empty, ambiguous and oversized values remain visible descriptions
+ * with NOT_FOUND, INVALID_ARGUMENT or CAPACITY_EXCEEDED metadata respectively.
+ * Even an OK target still needs the host's manifest and resource-kind policy. */
+typedef struct UmiBrowserReadingImage {
+    size_t byte_start, byte_length;
+    char target[UMI_BROWSER_READING_TARGET_CAPACITY];
+    UmiStatus target_status;
+    int description_missing, decorative;
+} UmiBrowserReadingImage;
 typedef struct UmiBrowserReadingSummary {
     size_t source_bytes, text_bytes, spans, links, anchors;
     size_t image_descriptions, missing_image_descriptions;
@@ -82,6 +94,12 @@ UmiStatus UmiBrowserReadingDocumentSpanAt(const UmiBrowserReadingDocument *docum
     size_t index, UmiBrowserReadingSpan *out_span);
 UmiStatus UmiBrowserReadingDocumentLinkAt(const UmiBrowserReadingDocument *document,
     size_t index, UmiBrowserReadingLink *out_link);
+/* There is one copied image entry per summary.image_descriptions, at most
+ * UMI_BROWSER_READING_SPANS_MAX. Source attributes are never fetched. A malformed
+ * src does not discard an otherwise readable guide or expose a partial target.
+ * Missing indices and invalid arguments preserve output. */
+UmiStatus UmiBrowserReadingDocumentImageAt(const UmiBrowserReadingDocument *document,
+    size_t index, UmiBrowserReadingImage *out_image);
 /* Exact decoded ID lookup; duplicate nonempty IDs are refused during admission.
  * A missing anchor never silently jumps to the beginning of a document. */
 UmiStatus UmiBrowserReadingDocumentAnchor(const UmiBrowserReadingDocument *document,

@@ -8,12 +8,17 @@
 
 #include "umicom/language_runtime/server_manager.h"
 #include "umicom/platform/clock.h"
+#include "umicom/language_runtime/response_tree.h"
 #include <stdlib.h>
 #include <string.h>
 
 /* Replies share one monotonic deadline. A short read slice lets a GUI's worker
  * observe cancellation even when the child is quiet. A memory/test transport
  * may return immediately, so yield after an empty read to avoid spinning. */
+/* The former handshake accepted an envelope classification as proof of a
+ * valid response. Retain it for review; the active path below validates the
+ * response contract before publishing capabilities or acknowledging shutdown. */
+#if 0
 static UmiStatus LanguageAwaitReply(UmiLanguageRuntimeServer *server, uint64_t request, UmiClock *clock,
                                     uint64_t start, uint32_t timeoutMs, const UmiCancellationToken *cancel,
                                     UmiLanguageRuntimeEnvelope *reply)
@@ -36,6 +41,76 @@ static UmiStatus LanguageAwaitReply(UmiLanguageRuntimeServer *server, uint64_t r
                                                  reply->kind == UMI_LANGUAGE_RUNTIME_MESSAGE_ERROR))
                 return reply->kind == UMI_LANGUAGE_RUNTIME_MESSAGE_ERROR ? UMI_STATUS_UNAVAILABLE
                                                                          : UMI_STATUS_OK;
+            /* Bound floods even if a clock or synthetic transport cannot
+             * advance. This does not turn unrelated messages into success. */
+            if (messages >= 4096U)
+                return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        else if (status != UMI_STATUS_NOT_FOUND)
+            return status;
+        if (!umi_language_runtime_server_is_running(server))
+            return UMI_STATUS_UNAVAILABLE;
+        elapsed = (clock->monotonic_nanoseconds(clock) - start) / 1000000U;
+        if (elapsed >= timeoutMs)
+            return UMI_STATUS_TIMEOUT;
+        if (status == UMI_STATUS_NOT_FOUND)
+            (void)clock->sleep_milliseconds(clock, 1U);
+    }
+}
+#endif
+
+/* Correlation identifies which request a message belongs to; it does not make
+ * the message a valid response. Reuse the owned response reader before changing
+ * lifecycle state, then require the result shape for this specific operation.
+ * Extension fields remain available to future clients without executing them. */
+static UmiStatus LanguageReplyContract(const UmiLanguageRuntimeEnvelope *reply,
+    uint64_t request, int initialize, const UmiCancellationToken *cancel)
+{
+    UmiJsonTree *tree = NULL;
+    const UmiJsonTreeLimits limits = {UMI_LANGUAGE_RUNTIME_JSON_CAPACITY, 16384U, 64U};
+    int result = -1;
+    UmiStatus status = UmiLanguageResponseTreeRead(reply->json, strlen(reply->json),
+        request, &limits, cancel, &tree, &result);
+    if (status == UMI_STATUS_OK && initialize)
+    {
+        int capabilities = -1;
+        if (UmiJsonTreeKind(tree, result) != UMI_LANGUAGE_RUNTIME_JSON_OBJECT)
+            status = UMI_STATUS_PARSE_ERROR;
+        else
+        {
+            status = UmiJsonTreeMember(tree, result, "capabilities", &capabilities);
+            if (status == UMI_STATUS_NOT_FOUND || (status == UMI_STATUS_OK &&
+                UmiJsonTreeKind(tree, capabilities) != UMI_LANGUAGE_RUNTIME_JSON_OBJECT))
+                status = UMI_STATUS_PARSE_ERROR;
+        }
+    }
+    else if (status == UMI_STATUS_OK && !UmiJsonTreeIsNull(tree, result))
+        status = UMI_STATUS_PARSE_ERROR;
+    UmiJsonTreeDestroy(tree);
+    return status;
+}
+
+static UmiStatus LanguageAwaitReply(UmiLanguageRuntimeServer *server, uint64_t request, UmiClock *clock,
+                                    uint64_t start, uint32_t timeoutMs, const UmiCancellationToken *cancel,
+                                    UmiLanguageRuntimeEnvelope *reply, int initialize)
+{
+    unsigned messages = 0U;
+    for (;;)
+    {
+        if (umi_cancellation_token_is_requested(cancel))
+            return UMI_STATUS_CANCELLED;
+        uint64_t elapsed = (clock->monotonic_nanoseconds(clock) - start) / 1000000U;
+        if (elapsed >= timeoutMs && messages != 0U)
+            return UMI_STATUS_TIMEOUT;
+        uint32_t remaining = elapsed >= timeoutMs ? 0U : timeoutMs - (uint32_t)elapsed;
+        uint32_t slice = remaining > 50U ? 50U : remaining;
+        UmiStatus status = umi_language_runtime_server_receive(server, slice, reply);
+        if (status == UMI_STATUS_OK)
+        {
+            ++messages;
+            if (reply->request_id == request && (reply->kind == UMI_LANGUAGE_RUNTIME_MESSAGE_RESPONSE ||
+                                                 reply->kind == UMI_LANGUAGE_RUNTIME_MESSAGE_ERROR))
+                return LanguageReplyContract(reply, request, initialize, cancel);
             /* Bound floods even if a clock or synthetic transport cannot
              * advance. This does not turn unrelated messages into success. */
             if (messages >= 4096U)
@@ -77,7 +152,7 @@ UmiStatus UmiLanguageRuntimeServerInitialize(UmiLanguageRuntimeServer *server, c
     if (status == UMI_STATUS_OK)
         status = umi_language_runtime_request_initialize(server, rootUri, &request);
     if (status == UMI_STATUS_OK)
-        status = LanguageAwaitReply(server, request, &clock, start, timeoutMs, cancel, reply);
+        status = LanguageAwaitReply(server, request, &clock, start, timeoutMs, cancel, reply, 1);
     if (status == UMI_STATUS_OK)
         status = umi_language_runtime_decode_initialize(reply->json, &capabilities);
     if (status == UMI_STATUS_OK && umi_cancellation_token_is_requested(cancel))
@@ -110,7 +185,7 @@ UmiStatus UmiLanguageRuntimeServerShutdown(UmiLanguageRuntimeServer *server, uin
         {
             status = umi_language_runtime_request_shutdown(server, &request);
             if (status == UMI_STATUS_OK)
-                status = LanguageAwaitReply(server, request, &clock, start, timeoutMs, NULL, reply);
+                status = LanguageAwaitReply(server, request, &clock, start, timeoutMs, NULL, reply, 0);
             if (status == UMI_STATUS_OK)
                 status = umi_language_runtime_request_exit(server);
             free(reply);

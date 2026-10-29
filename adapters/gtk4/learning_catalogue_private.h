@@ -29,6 +29,7 @@ typedef struct LearningCatalogue {
     UmiLearningReader *reader;
     UmiBrowserReadingDocument *reading_document;
     GtkWidget *reading_links, *reading_anchor, *reading_zoom;
+    GtkWidget *reading_images;
     GtkWidget *find_section, *find_query, *find_case;
     GtkWidget *illustration_view;
     GtkWidget *illustration_scroll;

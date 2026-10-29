@@ -72,3 +72,12 @@ UmiStatus UmiBrowserReadingDocumentAnchor(const UmiBrowserReadingDocument *docum
         }
     return UMI_STATUS_NOT_FOUND;
 }
+
+UmiStatus UmiBrowserReadingDocumentImageAt(const UmiBrowserReadingDocument *document,
+    size_t index, UmiBrowserReadingImage *out_image)
+{
+    if (document == NULL || out_image == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (index >= document->summary.image_descriptions) return UMI_STATUS_NOT_FOUND;
+    *out_image = document->images[index];
+    return UMI_STATUS_OK;
+}

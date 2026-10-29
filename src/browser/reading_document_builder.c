@@ -194,6 +194,10 @@ static UmiStatus Style(ReadingBuilder *builder, const ReadingTag *tag)
     }
     return UMI_STATUS_OK;
 }
+/* Retain the text-only image implementation for review. The active version
+ * keeps exactly that description and adds inert, bounded source metadata so
+ * hosts can offer an explicit illustration action under their own policy. */
+#if 0
 static UmiStatus Image(ReadingBuilder *builder, const ReadingTag *tag)
 {
     char alternative[4096]; int found;
@@ -210,6 +214,42 @@ static UmiStatus Image(ReadingBuilder *builder, const ReadingTag *tag)
     if (status == UMI_STATUS_OK) status = Append(builder, label, strlen(label));
     if (status == UMI_STATUS_OK) status = Append(builder, "]", 1U);
     if (status == UMI_STATUS_OK) status = Span(builder, &frame);
+    return status;
+}
+#endif
+static UmiStatus Image(ReadingBuilder *builder, const ReadingTag *tag)
+{
+    char alternative[4096]; int found;
+    UmiStatus status = ReadingAttribute(tag, "alt", alternative, sizeof(alternative), &found);
+    if (status != UMI_STATUS_OK) return status;
+    status = Space(builder);
+    if (status != UMI_STATUS_OK) return status;
+    ReadingFrame frame = {0}; frame.kind = UMI_BROWSER_READING_IMAGE_DESCRIPTION;
+    frame.link = (size_t)-1; frame.start = builder->document->summary.text_bytes;
+    ++builder->document->summary.image_descriptions;
+    if (!found) ++builder->document->summary.missing_image_descriptions;
+    status = Append(builder, "[Image: ", 8U);
+    const char *label = !found ? "description missing" : alternative[0] == '\0' ? "decorative" : alternative;
+    if (status == UMI_STATUS_OK) status = Append(builder, label, strlen(label));
+    if (status == UMI_STATUS_OK) status = Append(builder, "]", 1U);
+    if (status == UMI_STATUS_OK) status = Span(builder, &frame);
+    if (status == UMI_STATUS_OK) {
+        /* Metadata is owned by the same immutable projection as its caption.
+         * Preserve readable text when src is unusable, but never keep a clipped
+         * or first-of-two target that could name a different resource. */
+        UmiBrowserReadingImage *image = &builder->document->images[
+            builder->document->summary.image_descriptions - 1U];
+        image->byte_start = frame.start;
+        image->byte_length = builder->document->summary.text_bytes - frame.start;
+        image->description_missing = !found;
+        image->decorative = found && alternative[0] == '\0';
+        int target_found = 0;
+        image->target_status = ReadingAttribute(tag, "src", image->target,
+            sizeof(image->target), &target_found);
+        if (image->target_status == UMI_STATUS_OK && (!target_found || image->target[0] == '\0'))
+            image->target_status = UMI_STATUS_NOT_FOUND;
+        if (image->target_status != UMI_STATUS_OK) memset(image->target, 0, sizeof(image->target));
+    }
     return status;
 }
 UmiStatus ReadingBuild(const char *html, size_t size, UmiBrowserReadingDocument *document)

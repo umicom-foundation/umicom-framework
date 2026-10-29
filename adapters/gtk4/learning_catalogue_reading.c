@@ -138,6 +138,21 @@ void LearningCatalogueReadingPublish(LearningCatalogue *owner, LearningCatalogue
     if (owner->state.retired) return;
     gtk_drop_down_set_selected(GTK_DROP_DOWN(owner->reading_links),
         summary.links != 0U ? 0U : GTK_INVALID_LIST_POSITION);
+    if (owner->state.retired) return;
+    GtkStringList *images = gtk_string_list_new(NULL);
+    for (size_t i = 0U; i < summary.image_descriptions; ++i) {
+        UmiBrowserReadingImage image;
+        (void)UmiBrowserReadingDocumentImageAt(owner->reading_document, i, &image);
+        char *caption = g_strndup(text + image.byte_start, image.byte_length);
+        char *row = g_strdup_printf("%s — %s", caption,
+            image.target_status == UMI_STATUS_OK ? image.target : "source unavailable");
+        gtk_string_list_append(images, row); g_free(row); g_free(caption);
+    }
+    gtk_drop_down_set_model(GTK_DROP_DOWN(owner->reading_images), G_LIST_MODEL(images));
+    g_object_unref(images);
+    if (owner->state.retired) return;
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(owner->reading_images),
+        summary.image_descriptions != 0U ? 0U : GTK_INVALID_LIST_POSITION);
     if (!owner->state.retired && owner->state.reader.selection.fragment[0] != '\0')
         (void)PositionAnchor(owner, owner->state.reader.selection.fragment);
 }
@@ -162,6 +177,37 @@ UmiStatus UmiLearningCatalogueGtk4OpenReadingLink(GtkWidget *widget, size_t inde
     UmiBrowserReadingLink link;
     status = UmiLearningCatalogueGtk4ReadingLinkAt(widget, index, &link);
     return status == UMI_STATUS_OK ? UmiLearningCatalogueGtk4Follow(widget, link.target) : status;
+}
+UmiStatus UmiLearningCatalogueGtk4ReadingImageAt(GtkWidget *widget, size_t index,
+    UmiBrowserReadingImage *out_image)
+{
+    LearningCatalogue *owner = LearningCatalogueOwner(widget);
+    if (owner == NULL || out_image == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (owner->reading_document == NULL) return UMI_STATUS_NOT_FOUND;
+    return UmiBrowserReadingDocumentImageAt(owner->reading_document, index, out_image);
+}
+UmiStatus UmiLearningCatalogueGtk4OpenReadingImage(GtkWidget *widget, size_t index)
+{
+    LearningCatalogue *owner = LearningCatalogueOwner(widget);
+    UmiStatus status = Ready(owner);
+    if (status != UMI_STATUS_OK) return status;
+    UmiBrowserReadingImage image;
+    status = UmiLearningCatalogueGtk4ReadingImageAt(widget, index, &image);
+    if (status != UMI_STATUS_OK) return status;
+    if (image.target_status != UMI_STATUS_OK) return image.target_status;
+    /* Resolve against the displayed reader's owned pack, never a newer shelf
+     * revision. Only IMAGE resources enter this action; an img tag cannot turn
+     * a declared source file or guide into a different navigation command. */
+    UmiLearningPack *pack = NULL;
+    status = UmiLearningReaderCopyPack(owner->reader, &pack);
+    UmiLearningPackLink selected;
+    if (status == UMI_STATUS_OK)
+        status = UmiLearningPackResolveLink(pack, owner->state.reader.selection.resource.id,
+            image.target, &selected);
+    if (status == UMI_STATUS_OK && (selected.resource.kind != UMI_LEARNING_RESOURCE_IMAGE ||
+        selected.fragment[0] != '\0' || strchr(image.target, '#') != NULL)) status = UMI_STATUS_INVALID_ARGUMENT;
+    UmiLearningPackDestroy(pack);
+    return status == UMI_STATUS_OK ? UmiLearningCatalogueGtk4Follow(widget, image.target) : status;
 }
 UmiStatus UmiLearningCatalogueGtk4GoToAnchor(GtkWidget *widget, const char *identifier)
 {
@@ -197,10 +243,24 @@ static void ReadingAction(GtkButton *button, gpointer data)
             guint index = gtk_drop_down_get_selected(GTK_DROP_DOWN(owner->reading_links));
             status = index == GTK_INVALID_LIST_POSITION ? UMI_STATUS_NOT_FOUND :
                 UmiLearningCatalogueGtk4OpenReadingLink(widget, (size_t)index);
+        } else if (strcmp(action, "image") == 0) {
+            guint index = gtk_drop_down_get_selected(GTK_DROP_DOWN(owner->reading_images));
+            status = index == GTK_INVALID_LIST_POSITION ? UMI_STATUS_NOT_FOUND :
+                UmiLearningCatalogueGtk4OpenReadingImage(widget, (size_t)index);
         } else status = UmiLearningCatalogueGtk4GoToAnchor(widget,
             gtk_editable_get_text(GTK_EDITABLE(owner->reading_anchor)));
+        /* Preserve the earlier notice for review. Refused illustration, link
+         * and anchor actions now share a catalogue-wide notification boundary. */
+#if 0
         if (status != UMI_STATUS_OK && !owner->state.retired)
             LearningCatalogueMessage(owner, status, "This reading link or anchor is not available under the local guide policy.");
+#endif
+        if (status != UMI_STATUS_OK && !owner->state.retired && !owner->state.busy) {
+            owner->state.busy = 1;
+            LearningCatalogueMessage(owner, status,
+                "This reading link, illustration or anchor is not available under the local guide policy.");
+            owner->state.busy = 0;
+        }
     }
     g_object_unref(widget);
 }
@@ -234,6 +294,12 @@ void LearningCatalogueReadingControls(LearningCatalogue *owner)
     gtk_drop_down_set_enable_search(GTK_DROP_DOWN(owner->reading_links), TRUE);
     Tag(owner->reading_links, "learning.catalogue.reading-links"); gtk_box_append(GTK_BOX(box), owner->reading_links);
     Button(owner, box, "Open selected reading link", "link", "learning.catalogue.reading-open-link");
+    Label(box, "Illustrations described in this guide. Opening one is an explicit local request.");
+    owner->reading_images = gtk_drop_down_new(G_LIST_MODEL(gtk_string_list_new(NULL)), NULL);
+    gtk_drop_down_set_enable_search(GTK_DROP_DOWN(owner->reading_images), TRUE);
+    Tag(owner->reading_images, "learning.catalogue.reading-images");
+    gtk_box_append(GTK_BOX(box), owner->reading_images);
+    Button(owner, box, "Open selected illustration", "image", "learning.catalogue.reading-open-image");
     Label(box, "Go to an exact section identifier");
     owner->reading_anchor = gtk_entry_new();
     gtk_entry_set_max_length(GTK_ENTRY(owner->reading_anchor), (int)UMI_BROWSER_READING_ANCHOR_CAPACITY - 1);

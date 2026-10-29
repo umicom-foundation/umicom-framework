@@ -15,6 +15,7 @@
 #include "umicom/ui/gtk4/learning_catalogue.h"
 #include "umicom/platform/rooted_files.h"
 #include "../media/png_fixture.h"
+#include "../support/gtk4_expanders.h"
 #include "../../adapters/gtk4/learning_catalogue_private.h"
 #include <stdio.h>
 #include <string.h>
@@ -41,7 +42,21 @@ static GtkWidget *Find(GtkWidget *root,const char *id)
 }
 static int Fixture(const char *root,const unsigned char *bytes,size_t size)
 {
+    /* Keep the original link fixture while adding explicit img references.
+     * Existing link navigation still exercises the same first anchor. */
+#if 0
     const char *guide="<h1>Image guide</h1><p><a href='image.png'>Open the illustration</a></p>";
+#endif
+    const char *guide="<h1>Image guide</h1><p><a href='image.png'>Open the illustration</a></p>"
+        "<img src='image.png' alt='Owned colours'>"
+        "<img src='https://invalid.example/image.png' alt='Remote'>"
+        "<img src='guide.html' alt='Wrong kind'>"
+        "<img src='absent.png' alt='Missing'>"
+        "<img src='../outside.png' alt='Outside'>"
+        "<img src='image.png#part' alt='Fragment'>"
+        "<img src='image.png' SRC='other.png' alt='Ambiguous'>"
+        "<img alt='No source'><img src='' alt='Empty source'>"
+        "<img src='image.png#' alt='Empty fragment'>";
     char image_hash[UMI_SHA256_HEX_CAPACITY],guide_hash[UMI_SHA256_HEX_CAPACITY],json[2048];
     if(UmiSha256Buffer(bytes,size,image_hash)!=UMI_STATUS_OK ||
        UmiSha256Buffer(guide,strlen(guide),guide_hash)!=UMI_STATUS_OK) return 0;
@@ -68,13 +83,26 @@ static void PaintableChanged(GObject *object,GParamSpec *property,gpointer data)
     observer->mutation=UmiLearningCatalogueGtk4SetReadingZoom(observer->root,120U);
     UmiLearningCatalogueGtk4Retire(observer->root);
 }
+static void ReadingImagesChanged(GObject *object,GParamSpec *property,gpointer data)
+{
+    (void)object;(void)property;
+    Observer *observer=data;++observer->calls;
+    UmiBrowserReadingImage image;
+    observer->status=UmiLearningCatalogueGtk4ReadingImageAt(observer->root,0U,&image);
+    observer->mutation=UmiLearningCatalogueGtk4OpenReadingImage(observer->root,0U);
+    UmiLearningCatalogueGtk4Retire(observer->root);
+}
 int main(int argc,char **argv)
 {
     if(argc!=3)return 2;
     if(!gtk_init_check())return 77;
     const char *mode=argv[1];
     const char *known[]={"image","rgba-bytes","rgb","changed","history","linked-image",
-        "bad-crc","oversize","unsupported","retire-pending","destroy-pending","retire-publication","arguments"};
+        "bad-crc","oversize","unsupported","retire-pending","destroy-pending","retire-publication","arguments",
+        "reference-open","reference-control","reference-missing","reference-remote","reference-wrong-kind",
+        "reference-traversal","reference-fragment","reference-ambiguous","reference-no-source",
+        "reference-empty-source","reference-empty-fragment","reference-changed","reference-history","reference-busy",
+        "reference-retired","reference-arguments","reference-retire-publication","reference-notice"};
     int matched=0;for(size_t i=0U;i<sizeof(known)/sizeof(known[0]);++i)if(strcmp(mode,known[i])==0)matched=1;
     if(!matched)return 2;
     int failed=0,available=UmiLearningCatalogueGtk4PngAvailable();
@@ -128,6 +156,97 @@ int main(int argc,char **argv)
         goto cleanup;
     }
     CHECK(UmiLearningCatalogueGtk4Load(panel,argv[2])==UMI_STATUS_OK && Finish());
+    if(g_str_has_prefix(mode,"reference-")) {
+        UmiTestExpandSections(panel);
+        GtkWidget *image_rows=Find(panel,"learning.catalogue.reading-images");CHECK(GTK_IS_DROP_DOWN(image_rows));
+        UmiBrowserReadingImage reference;
+        CHECK(UmiLearningCatalogueGtk4ReadingImageAt(panel,0U,&reference)==UMI_STATUS_NOT_FOUND);
+        CHECK(UmiLearningCatalogueGtk4Search(panel,"guide")==UMI_STATUS_OK);
+        Observer publication={panel,0U,UMI_STATUS_NOT_FOUND,UMI_STATUS_OK};
+        gulong published_signal=strcmp(mode,"reference-retire-publication")==0?
+            g_signal_connect(image_rows,"notify::model",G_CALLBACK(ReadingImagesChanged),&publication):0U;
+        UmiStatus opened=UmiLearningCatalogueGtk4Open(panel,0U);
+        int finished=Finish();
+        if(published_signal!=0U)g_signal_handler_disconnect(image_rows,published_signal);
+        CHECK(opened==UMI_STATUS_OK && finished);
+        if(strcmp(mode,"reference-retire-publication")==0) {
+            CHECK(publication.calls>0U && publication.status==UMI_STATUS_OK && publication.mutation==UMI_STATUS_BUSY);
+            CHECK(UmiLearningCatalogueGtk4CopyState(panel,&state)==UMI_STATUS_OK && state.retired && !state.busy);
+            goto cleanup;
+        }
+        CHECK(UmiLearningCatalogueGtk4CopyState(panel,&before)==UMI_STATUS_OK && before.has_reading_structure);
+        CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(GTK_DROP_DOWN(image_rows)))==10U);
+        CHECK(UmiLearningCatalogueGtk4ReadingImageAt(panel,0U,&reference)==UMI_STATUS_OK &&
+            reference.target_status==UMI_STATUS_OK && strcmp(reference.target,"image.png")==0);
+        if(strcmp(mode,"reference-arguments")==0) {
+            UmiBrowserReadingImage saved=reference;
+            CHECK(UmiLearningCatalogueGtk4ReadingImageAt(NULL,0U,&reference)==UMI_STATUS_INVALID_ARGUMENT);
+            CHECK(UmiLearningCatalogueGtk4ReadingImageAt(panel,0U,NULL)==UMI_STATUS_INVALID_ARGUMENT);
+            CHECK(UmiLearningCatalogueGtk4ReadingImageAt(panel,99U,&reference)==UMI_STATUS_NOT_FOUND);
+            CHECK(strcmp(reference.target,saved.target)==0 && reference.byte_start==saved.byte_start);
+            CHECK(UmiLearningCatalogueGtk4OpenReadingImage(NULL,0U)==UMI_STATUS_INVALID_ARGUMENT);
+            CHECK(UmiLearningCatalogueGtk4OpenReadingImage(panel,99U)==UMI_STATUS_NOT_FOUND);
+            goto cleanup;
+        }
+        if(strcmp(mode,"reference-retired")==0) {
+            UmiLearningCatalogueGtk4Retire(panel);
+            CHECK(UmiLearningCatalogueGtk4OpenReadingImage(panel,0U)==UMI_STATUS_INVALID_STATE);goto cleanup;
+        }
+        if(strcmp(mode,"reference-notice")==0) {
+            GtkWidget *button=Find(panel,"learning.catalogue.reading-open-image");CHECK(GTK_IS_BUTTON(button));
+            GtkWidget *label=Find(panel,"learning.catalogue.status");CHECK(GTK_IS_LABEL(label));
+            gtk_drop_down_set_selected(GTK_DROP_DOWN(image_rows),1U);
+            Observer notice={panel,0U,UMI_STATUS_NOT_FOUND,UMI_STATUS_OK};
+            gulong notice_signal=g_signal_connect(label,"notify::label",G_CALLBACK(ReadingImagesChanged),&notice);
+            g_signal_emit_by_name(button,"clicked");
+            g_signal_handler_disconnect(label,notice_signal);
+            CHECK(notice.calls>0U && notice.status==UMI_STATUS_OK && notice.mutation==UMI_STATUS_BUSY);
+            CHECK(UmiLearningCatalogueGtk4CopyState(panel,&state)==UMI_STATUS_OK && state.retired && !state.busy);
+            CHECK(state.reader.revision==before.reader.revision && UmiLearningCatalogueGtk4PendingReads()==0U);
+            goto cleanup;
+        }
+        const struct {const char *mode;size_t index;UmiStatus expected;} refusals[]={
+            {"reference-remote",1U,UMI_STATUS_INVALID_ARGUMENT},
+            {"reference-wrong-kind",2U,UMI_STATUS_INVALID_ARGUMENT},
+            {"reference-missing",3U,UMI_STATUS_NOT_FOUND},
+            {"reference-traversal",4U,UMI_STATUS_INVALID_ARGUMENT},
+            {"reference-fragment",5U,UMI_STATUS_INVALID_ARGUMENT},
+            {"reference-ambiguous",6U,UMI_STATUS_INVALID_ARGUMENT},
+            {"reference-no-source",7U,UMI_STATUS_NOT_FOUND},
+            {"reference-empty-source",8U,UMI_STATUS_NOT_FOUND},
+            {"reference-empty-fragment",9U,UMI_STATUS_INVALID_ARGUMENT}
+        };
+        for(size_t i=0U;i<sizeof(refusals)/sizeof(refusals[0]);++i)if(strcmp(mode,refusals[i].mode)==0) {
+            CHECK(UmiLearningCatalogueGtk4OpenReadingImage(panel,refusals[i].index)==refusals[i].expected);
+            CHECK(UmiLearningCatalogueGtk4PendingReads()==0U);
+            CHECK(UmiLearningCatalogueGtk4CopyState(panel,&state)==UMI_STATUS_OK &&
+                state.reader.revision==before.reader.revision && state.reader.history_count==before.reader.history_count);
+            goto cleanup;
+        }
+        if(strcmp(mode,"reference-changed")==0)
+            CHECK(UmiRootedFileWrite(argv[2],"image.png","changed",7U)==UMI_STATUS_OK);
+        if(strcmp(mode,"reference-control")==0) {
+            GtkWidget *button=Find(panel,"learning.catalogue.reading-open-image");CHECK(GTK_IS_BUTTON(button));
+            g_signal_emit_by_name(button,"clicked");
+        } else CHECK(UmiLearningCatalogueGtk4OpenReadingImage(panel,0U)==UMI_STATUS_OK);
+        if(strcmp(mode,"reference-busy")==0)
+            CHECK(UmiLearningCatalogueGtk4OpenReadingImage(panel,0U)==UMI_STATUS_BUSY);
+        CHECK(Finish());CHECK(UmiLearningCatalogueGtk4CopyState(panel,&state)==UMI_STATUS_OK);
+        if(strcmp(mode,"reference-changed")==0) {
+            CHECK(state.last_status==UMI_STATUS_INVALID_STATE && state.reader.revision==before.reader.revision);
+            CHECK(state.has_reading_structure && strcmp(state.reader.selection.resource.id,"guide")==0);
+        } else {
+            CHECK(state.last_status==UMI_STATUS_OK && strcmp(state.reader.selection.resource.id,"image")==0);
+            CHECK(UmiLearningCatalogueGtk4CopyIllustration(panel,&image)==UMI_STATUS_OK && image.has_pixels==available);
+            CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(GTK_DROP_DOWN(image_rows)))==0U);
+            if(strcmp(mode,"reference-history")==0) {
+                CHECK(UmiLearningCatalogueGtk4Back(panel)==UMI_STATUS_OK && Finish());
+                CHECK(UmiLearningCatalogueGtk4ReadingImageAt(panel,0U,&reference)==UMI_STATUS_OK);
+                CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(GTK_DROP_DOWN(image_rows)))==10U);
+            }
+        }
+        goto cleanup;
+    }
     if(strcmp(mode,"linked-image")==0) {
         CHECK(UmiLearningCatalogueGtk4Search(panel,"guide")==UMI_STATUS_OK);
         CHECK(UmiLearningCatalogueGtk4Open(panel,0U)==UMI_STATUS_OK && Finish());

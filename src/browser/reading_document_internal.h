@@ -26,6 +26,7 @@ struct UmiBrowserReadingDocument {
     UmiBrowserReadingSpan spans[UMI_BROWSER_READING_SPANS_MAX];
     UmiBrowserReadingLink links[UMI_BROWSER_READING_LINKS_MAX];
     ReadingAnchor anchors[UMI_BROWSER_READING_ANCHORS_MAX];
+    UmiBrowserReadingImage images[UMI_BROWSER_READING_SPANS_MAX];
 };
 typedef struct ReadingTag {
     char name[32];

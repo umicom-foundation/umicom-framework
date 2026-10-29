@@ -67,7 +67,10 @@ UmiStatus umi_language_runtime_server_manager_stop_all(UmiLanguageRuntimeServerM
  */
 size_t umi_language_runtime_server_manager_count(const UmiLanguageRuntimeServerManager*m);
 /* Initialize one STARTING server and publish capabilities only after its
- * matching response and the initialized notification succeed. Timeout is one
+ * matching response and the initialized notification succeed. The response
+ * must satisfy the shared JSON-RPC contract and contain one capabilities
+ * object; malformed or duplicate required fields cannot make a server READY.
+ * This boundary does not implement every optional capability extension. Timeout is one
  * elapsed read budget, not a fresh interval for each notification or fragment.
  * Cancellation is checked between reads (at most 50 ms per native read).
  * Launch and synchronous writes are not interruptible through this token.
@@ -80,6 +83,9 @@ UmiStatus UmiLanguageRuntimeServerInitialize(UmiLanguageRuntimeServer *server,
     UmiLanguageRuntimeInitializeResult *outCapabilities);
 /* Request protocol shutdown, then close the direct child even when the reply
  * fails or times out. The first protocol failure is returned after cleanup.
+ * A success reply must contain JSON null as its result; wrong result kinds,
+ * duplicate required fields and malformed errors are refused. Cleanup still
+ * runs after refusal, and the first protocol failure remains the return value.
  * timeoutMs bounds reply waits, not synchronous writes or OS termination. */
 UmiStatus UmiLanguageRuntimeServerShutdown(UmiLanguageRuntimeServer *server,
     uint32_t timeoutMs);
