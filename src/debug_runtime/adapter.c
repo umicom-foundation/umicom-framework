@@ -415,6 +415,10 @@ UmiStatus umi_debug_runtime_adapter_send_request(
  * Provide the debug runtime adapter receive operation used by this module and its client
  * applications.
  */
+/* The former receive path is retained for review. The implementation below
+ * validates transport byte ownership and stages decoded output before
+ * publishing it, using the shared framer for buffered successor errors. */
+#if 0
 UmiStatus umi_debug_runtime_adapter_receive(
     UmiDebugRuntimeAdapter *adapter,
     uint32_t timeout_ms,
@@ -497,6 +501,63 @@ UmiStatus umi_debug_runtime_adapter_receive(
 
     adapter->messages_received += 1U;
     adapter->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_debug_runtime_adapter_receive(
+    UmiDebugRuntimeAdapter *adapter,
+    uint32_t timeout_ms,
+    UmiDebugRuntimeEnvelope *out_envelope)
+{
+    if (adapter == NULL || out_envelope == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = umi_language_runtime_framer_status(&adapter->framer);
+    if (status == UMI_STATUS_NOT_FOUND)
+    {
+        unsigned char bytes[8192];
+        size_t count = 0U;
+        status = adapter->transport.read(adapter->transport.instance, bytes,
+            sizeof(bytes), timeout_ms, &count);
+        if (status != UMI_STATUS_OK) return status;
+        /* A transport owns only the supplied span. Validate its reported
+         * length before inspecting bytes or advancing received-byte metrics. */
+        if (count > sizeof(bytes)) return UMI_STATUS_INVALID_STATE;
+        if (count == 0U) return UMI_STATUS_NOT_FOUND;
+        adapter->bytes_received += count;
+        status = umi_language_runtime_framer_feed(&adapter->framer, bytes, count);
+        if (status != UMI_STATUS_OK) return status;
+        status = umi_language_runtime_framer_status(&adapter->framer);
+    }
+    if (status != UMI_STATUS_OK) return status;
+
+    char *json = malloc(UMI_DEBUG_RUNTIME_JSON_CAPACITY);
+    UmiDebugRuntimeEnvelope *candidate = malloc(sizeof(*candidate));
+    if (json == NULL || candidate == NULL)
+    { free(json); free(candidate); return UMI_STATUS_OUT_OF_MEMORY; }
+    size_t length = 0U;
+    status = umi_language_runtime_framer_pop(&adapter->framer, json,
+        UMI_DEBUG_RUNTIME_JSON_CAPACITY, &length);
+    if (status == UMI_STATUS_OK)
+        status = umi_debug_runtime_message_parse(json, candidate);
+    free(json);
+    if (status != UMI_STATUS_OK) { free(candidate); return status; }
+
+    /* Protocol decoding stages a complete candidate. Malformed or incomplete
+     * messages cannot replace the caller's last good event or consume a pending
+     * request. Large protocol records live on the heap, not a GUI callback stack. */
+    if (candidate->kind == UMI_DEBUG_RUNTIME_MESSAGE_RESPONSE &&
+        candidate->request_sequence != 0U)
+    {
+        UmiDebugRuntimePendingRequest pending;
+        if (umi_debug_runtime_pending_take(&adapter->pending,
+                candidate->request_sequence, &pending) == UMI_STATUS_OK &&
+            candidate->command[0] == '\0')
+            (void)snprintf(candidate->command, sizeof(candidate->command), "%s", pending.command);
+    }
+    adapter->messages_received += 1U;
+    adapter->revision += 1U;
+    *out_envelope = *candidate;
+    free(candidate);
     return UMI_STATUS_OK;
 }
 

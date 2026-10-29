@@ -108,6 +108,10 @@ UmiStatus umi_debug_runtime_adapter_send_request(
  * Provide the debug runtime adapter receive operation used by this module and its client
  * applications.
  */
+/* Receive one frame. A partial frame returns NOT_FOUND and remains buffered.
+ * Errors preserve out_envelope and pending requests. A valid frame preceding
+ * a malformed header is delivered; the next receive reports that buffered
+ * error without another read. Recreate the adapter after malformed framing. */
 UmiStatus umi_debug_runtime_adapter_receive(
     UmiDebugRuntimeAdapter *adapter,
     uint32_t timeout_ms,

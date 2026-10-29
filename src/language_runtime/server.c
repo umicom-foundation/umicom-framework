@@ -183,6 +183,10 @@ UmiStatus umi_language_runtime_server_receive(UmiLanguageRuntimeServer *server,
      * custom nonblocking transport that returns tiny chunks without yielding. */
     while (!umi_language_runtime_framer_has_message(&server->f))
     {
+        /* A preceding pop can expose a malformed successor already buffered.
+         * Report it before invoking a transport that might wait for new bytes. */
+        UmiStatus buffered = umi_language_runtime_framer_status(&server->f);
+        if (buffered != UMI_STATUS_NOT_FOUND) return buffered;
         uint64_t elapsed = (clock.monotonic_nanoseconds(&clock) - start) / 1000000U;
         if ((reads != 0U && timeoutMs != 0U && elapsed >= timeoutMs) ||
             reads >= UMI_LANGUAGE_RUNTIME_FRAME_CAPACITY) return UMI_STATUS_NOT_FOUND;

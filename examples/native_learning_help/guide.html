@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Use the local help example</title></head>
+<body><h1 id="start">Use the local help example</h1>
+<p>This small C application demonstrates one shared help policy. A policy is a
+reviewed connection between a product topic and a guide. The button and F1 both
+request this guide; they do not construct a URL from private application data.</p>
+<h2 id="steps">Try the complete journey</h2>
+<ol><li>Start the example and choose Help before loading this pack. The catalogue
+explains that the matching local pack is missing. It keeps your existing document.</li>
+<li>Enter the absolute path of the <code>pack</code> directory generated beside
+the example's build files, then choose the catalogue's load action.</li>
+<li>Wait until loading completes. Choose <strong>Help for this example</strong>.
+This guide should appear. Put keyboard focus in the catalogue and press F1:
+the same route should select the same guide.</li>
+<li>Read the source with the <a href="main.c">example source link</a>.
+That action displays declared, verified source; it does not compile or run it.
+Press F1 to return to the guide.</li>
+<li>Close the window. Accepted file jobs retain the application until their
+completion cleanup, so normal window closing cannot strand their ownership.</li></ol>
+<h2 id="source">Follow the real source</h2>
+<p><code>Activate</code> creates a catalogue and a containing context. It fills a
+<code>UmiLearningHelpRoute</code> with literal, reviewed identities and passes it
+to <code>UmiLearningHelpGtk4Bind</code>. The binding copies that policy and keeps
+a weak reference to its catalogue. A weak reference can report that the target
+has gone; it does not keep a closed destination alive.</p>
+<p>The <code>Help</code> callback calls <code>UmiLearningHelpGtk4Open</code> with
+its own button. The service walks through that button's parent widgets to find
+the nearest binding. A missing nearest topic never silently selects a broader
+ancestor's guide. The keyboard controller uses the same copied route.</p>
+<pre><code>UmiStatus status = UmiLearningHelpGtk4Open(GTK_WIDGET(button));
+if (status != UMI_STATUS_OK)
+    fprintf(stderr, "Help admission: %s\n", umi_status_text(status));</code></pre>
+<p><code>OK</code> means a read was accepted. The catalogue's busy flag and final
+status describe completion. Neither acceptance nor a displayed title proves
+that arbitrary content is trustworthy: the admitted pack and resource digest
+must still match the bytes that were read.</p>
+<h2 id="recovery">If something fails</h2>
+<p>For a missing pack, choose the generated pack directory rather than the
+source directory containing this HTML. For a changed-content refusal, regenerate
+the pack through CMake so its manifest hashes describe its staged files.
+For a busy reader, wait for completion and choose Help again. A closed or retired
+catalogue must be recreated by its host; a retained button cannot revive it.</p>
+<p>This example reads local files and has no automatic network navigation, script
+execution, credential storage or default settings file. Its structured reader
+supports a bounded subset of HTML; it is not a full web browser.</p>
+</body></html>

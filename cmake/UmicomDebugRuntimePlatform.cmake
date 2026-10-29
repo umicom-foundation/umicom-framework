@@ -1803,3 +1803,6 @@ if(BUILD_TESTING)
         umicom_register_validation_target(umicom-debug-observed-wait-test)
     endif()
 endif()
+
+# DAP shares byte framing with language services and validates transport ownership.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDebugReceiveChecks.cmake")

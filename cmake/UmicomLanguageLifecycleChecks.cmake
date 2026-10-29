@@ -8,7 +8,7 @@ if(BUILD_TESTING)
     if(COMMAND umicom_register_validation_target)
         umicom_register_validation_target(umicom-language-lifecycle-test)
     endif()
-    foreach(case valid zero fragmented notification wrong-id request-id cancel-before cancel-during timeout write-error read-error server-error invalid-result receive-atomic receive-oversize receive-deadline attach-starting attach-ready attach-duplicate attach-root attach-failed configured-disabled configured-invalid configured-cancel shutdown-ok shutdown-timeout shutdown-write shutdown-error create-root-long create-id-long create-invalid-profile create-ownership configured-preserved)
+    foreach(case valid zero fragmented notification wrong-id request-id cancel-before cancel-during timeout write-error read-error server-error invalid-result receive-atomic receive-oversize receive-deadline receive-buffered-error receive-buffered-pair attach-starting attach-ready attach-duplicate attach-root attach-failed configured-disabled configured-invalid configured-cancel shutdown-ok shutdown-timeout shutdown-write shutdown-error create-root-long create-id-long create-invalid-profile create-ownership configured-preserved)
         add_test(NAME framework.language_runtime.lifecycle.${case} COMMAND umicom-language-lifecycle-test ${case})
         set_tests_properties(framework.language_runtime.lifecycle.${case} PROPERTIES TIMEOUT 30
             LABELS "framework;language;lifecycle;ownership;regression")

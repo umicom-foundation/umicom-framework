@@ -1279,3 +1279,6 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomSecureRandom.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomRecoveryDraft.cmake")
 
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomRecoveryStorage.cmake")
+
+# Incremental byte framing is qualified independently of native process timing.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomLanguageFramingChecks.cmake")

@@ -138,6 +138,8 @@ int main(int argc, char **argv)
                            "receive-atomic",
                            "receive-oversize",
                            "receive-deadline",
+                           "receive-buffered-error",
+                           "receive-buffered-pair",
                            "attach-starting",
                            "attach-ready",
                            "attach-duplicate",
@@ -332,6 +334,41 @@ int main(int argc, char **argv)
         CHECK(fixture.stops == 1U && !fixture.running);
         CHECK(State(server) == UMI_LANGUAGE_RUNTIME_SERVER_STOPPED);
         CHECK((strstr(fixture.written, "\"method\":\"exit\"") != NULL) == (expected == UMI_STATUS_OK));
+    }
+    else if (strcmp(mode, "receive-buffered-error") == 0 ||
+             strcmp(mode, "receive-buffered-pair") == 0)
+    {
+        UmiLanguageRuntimeEnvelope *output = malloc(sizeof(*output)), *old = malloc(sizeof(*old));
+        CHECK(output != NULL && old != NULL);
+        Push(&fixture, "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":null}");
+        if (strcmp(mode, "receive-buffered-pair") == 0)
+            Push(&fixture, "{\"jsonrpc\":\"2.0\",\"id\":2,\"result\":null}");
+        else
+        {
+            const char *bad = "Content-Length: -2\r\n\r\n{}";
+            CHECK(strlen(bad) < sizeof(fixture.input) - fixture.size);
+            memcpy(fixture.input + fixture.size, bad, strlen(bad));
+            fixture.size += strlen(bad);
+        }
+        CHECK(umi_language_runtime_server_receive(server, 0U, output) == UMI_STATUS_OK);
+        CHECK(output->request_id == 1U);
+        unsigned reads = fixture.reads;
+        if (strcmp(mode, "receive-buffered-pair") == 0)
+        {
+            CHECK(umi_language_runtime_server_receive(server, 0U, output) == UMI_STATUS_OK);
+            CHECK(output->request_id == 2U);
+        }
+        else
+        {
+            memset(old, 0x47, sizeof(*old)); *output = *old;
+            CHECK(umi_language_runtime_server_receive(server, 100U, output) == UMI_STATUS_PARSE_ERROR);
+            CHECK(memcmp(old, output, sizeof(*old)) == 0);
+            CHECK(umi_language_runtime_server_receive(server, 100U, output) == UMI_STATUS_PARSE_ERROR);
+        }
+        /* A coalesced successor is already owned by the framer. Neither a
+         * valid message nor its buffered error needs another transport read. */
+        CHECK(fixture.reads == reads);
+        free(old); free(output);
     }
     else if (strcmp(mode, "receive-atomic") == 0 || strcmp(mode, "receive-oversize") == 0 ||
              strcmp(mode, "receive-deadline") == 0)

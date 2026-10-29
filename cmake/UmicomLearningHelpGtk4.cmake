@@ -52,3 +52,11 @@ if(BUILD_TESTING)
         endif()
     endforeach()
 endif()
+
+install(FILES
+    "${_learning_help_root}/examples/native_learning_help/main.c"
+    "${_learning_help_root}/examples/native_learning_help/CMakeLists.txt"
+    "${_learning_help_root}/examples/native_learning_help/guide.html"
+    "${_learning_help_root}/examples/native_learning_help/learning-pack.json.in"
+    DESTINATION "share/umicom/framework/examples/native_learning_help"
+    COMPONENT FrameworkSDK)

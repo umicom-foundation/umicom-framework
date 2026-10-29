@@ -106,4 +106,65 @@ application has passed its help interaction checks.</p>
 Do not retain pointers into temporary route arrays, and do not replace a
 failed verification with an unchecked filename open.</p>
 <p>For explicit local checkpoints tied to the document revision, see <a href="learning-checkpoints.html">learning checkpoint records</a>.</p>
+
+<section id="native-context"><h2>6. Give F1 and the Help button one policy</h2>
+<p>The optional native catalogue exports
+<code>umicom/ui/gtk4/learning_help_binding.h</code>. A <em>context widget</em> is
+a panel that contains controls sharing one topic. Binding a route to that panel
+adds an unmodified F1 action and makes the route available to explicit Help
+buttons inside it.</p>
+<pre><code>UmiStatus status = UmiLearningHelpGtk4Bind(context, catalogue, &amp;route);
+/* In the explicit button callback: */
+status = UmiLearningHelpGtk4Open(GTK_WIDGET(button));</code></pre>
+<p>The binding owns an independent copy of the route. It holds the catalogue
+weakly, so it can detect a released destination without extending that
+destination's lifetime. The caller may release its original route after a
+successful bind. Keep GTK operations on the main thread. A context has one
+binding; call <code>UmiLearningHelpGtk4Unbind</code> explicitly before assigning
+a different route.</p>
+<p><code>Open</code> searches from the origin widget towards its parents and uses
+the nearest binding. If a nested editor has its own help policy, a missing editor
+topic stays a missing topic. It does not accidentally open the containing
+workspace's unrelated guide. Shift, Control, Alt and other command modifiers
+leave F1 available to the host's other shortcuts.</p>
+<p>The binding does not present a window, select a default directory, read a
+pack automatically or grant execution trust. A missing pack or locale receives
+a notice in a live idle catalogue. The current document stays visible. Admit
+the intended local pack and request Help again. Closed or retired catalogues
+return <code>INVALID_STATE</code>; the host decides whether to create a new one.</p>
+<p><code>UmiLearningHelpGtk4CopyState</code> returns the copied request, attempt
+count and last admission status. During synchronous observers,
+<code>dispatching</code> is true and another action returns
+<code>BUSY</code>. An accepted read may finish later: use the catalogue's own
+state for completion. A help receipt alone is not a rendering result.</p>
+<h3>Try the complete native example</h3>
+<ol>
+<li>Install a Framework SDK that includes <code>learning_catalogue_gtk4</code>.
+A core-only SDK intentionally cannot build this graphical example.</li>
+<li>Use the installed directory
+<code>share/umicom/framework/examples/native_learning_help</code>, or the same
+example in the Framework source tree. Choose a separate build directory.</li>
+<li>Configure and build against that explicit SDK. For example, substitute your
+SDK directory for <code>C:/umicom/installed/framework</code>:
+<pre><code>cmake -S . -B build -G Ninja -DUMICOM_EXPECTED_SDK_PREFIX=C:/umicom/installed/framework
+cmake --build build --target umicom-native-learning-help</code></pre></li>
+<li>Start <code>build/umicom-native-learning-help.exe</code> on Windows or
+<code>./build/umicom-native-learning-help</code> on Linux. The program presents
+a catalogue and a Help button. This is a manual interaction, not an automatic
+CTest pass.</li>
+<li>Choose Help before loading a pack and read the missing-pack notice.
+Enter the absolute path of <code>build/pack</code> in the catalogue, load it,
+then choose Help again. The sample guide should appear.</li>
+<li>Follow its source link, then press F1 with focus in the catalogue. Confirm
+the guide returns and the project or source files remain unchanged.</li>
+<li>Close the window normally. The example retires its catalogue; accepted file
+jobs hold the application until GTK completion cleanup finishes.</li>
+</ol>
+<p>If the SDK component is missing, install the native component rather than
+linking against a source-tree archive by hand. If a staged file has changed,
+reconfigure to refresh its manifest hash. Do not bypass a failed digest check.
+Review <code>examples/native_learning_help/main.c</code> to follow window
+ownership and <code>adapters/gtk4/learning_help_binding.c</code> to see why
+callbacks cannot borrow a released route.</p></section>
+
 </body></html>
