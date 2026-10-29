@@ -108,9 +108,19 @@ UmiStatus UmiLearningShelfCreate(UmiLearningShelf **out_shelf);
 void UmiLearningShelfDestroy(UmiLearningShelf *shelf);
 UmiStatus UmiLearningShelfAdopt(UmiLearningShelf *shelf, UmiLearningPack **pack);
 UmiStatus UmiLearningShelfRemove(UmiLearningShelf *shelf, const char *pack_id);
+/* Copy one admitted pack, including its resource metadata and root, without
+ * removing it from the shelf. The caller owns the independent copy on OK;
+ * failure clears *out_pack. No file is read and no new trust is granted.
+ * Serialize this call against shelf mutation. The copy may subsequently be
+ * transferred to a worker or reader, with no further shelf lifetime dependency. */
+UmiStatus UmiLearningShelfCopyPack(const UmiLearningShelf *shelf, const char *pack_id,
+    UmiLearningPack **out_pack);
 size_t UmiLearningShelfCount(const UmiLearningShelf *shelf);
 UmiStatus UmiLearningShelfPackAt(const UmiLearningShelf *shelf, size_t index,
     UmiLearningPackInfo *out);
+/* Enumerate one admitted pack using the same copied-output contract. */
+UmiStatus UmiLearningShelfResourceAt(const UmiLearningShelf *shelf, const char *pack_id,
+    size_t index, UmiLearningPackResource *out);
 UmiStatus UmiLearningShelfFindResource(const UmiLearningShelf *shelf, const char *pack_id,
     const char *resource_id, UmiLearningPackResource *out);
 UmiStatus UmiLearningShelfReadResource(const UmiLearningShelf *shelf, const char *pack_id,

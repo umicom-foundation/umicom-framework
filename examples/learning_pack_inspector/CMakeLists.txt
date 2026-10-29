@@ -54,6 +54,8 @@ configure_file(main.c "${CMAKE_CURRENT_BINARY_DIR}/pack/main.c" COPYONLY)
 configure_file(history.c "${CMAKE_CURRENT_BINARY_DIR}/pack/history.c" COPYONLY)
 configure_file(practice.c "${CMAKE_CURRENT_BINARY_DIR}/pack/practice.c" COPYONLY)
 file(SHA256 "${CMAKE_CURRENT_BINARY_DIR}/pack/practice.c" _practice_hash)
+configure_file(search.c "${CMAKE_CURRENT_BINARY_DIR}/pack/search.c" COPYONLY)
+file(SHA256 "${CMAKE_CURRENT_BINARY_DIR}/pack/search.c" _search_hash)
 file(SHA256 "${CMAKE_CURRENT_BINARY_DIR}/pack/guide.html" _guide_hash)
 file(SHA256 "${CMAKE_CURRENT_BINARY_DIR}/pack/main.c" _example_hash)
 file(SHA256 "${CMAKE_CURRENT_BINARY_DIR}/pack/history.c" _history_hash)
@@ -62,7 +64,7 @@ include(CTest)
 if(BUILD_TESTING)
     add_test(NAME sdk.learning_pack.list
         COMMAND umicom-learning-pack-inspect "${CMAKE_CURRENT_BINARY_DIR}/pack" learning-pack.json)
-    foreach(_resource guide inspector reader-history practice-copy)
+    foreach(_resource guide inspector reader-history practice-copy catalogue-search)
         add_test(NAME "sdk.learning_pack.verify.${_resource}"
             COMMAND umicom-learning-pack-inspect "${CMAKE_CURRENT_BINARY_DIR}/pack"
                 learning-pack.json "${_resource}")
@@ -115,4 +117,47 @@ if(BUILD_TESTING)
             "-DTEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}"
             -P "${CMAKE_CURRENT_SOURCE_DIR}/check_practice.cmake")
     set_tests_properties(sdk.learning_pack.practice.copy PROPERTIES TIMEOUT 120)
+endif()
+
+# Search only admitted metadata. It does not open any resource file.
+add_executable(umicom-learning-pack-search search.c)
+target_link_libraries(umicom-learning-pack-search PRIVATE Umicom::developer)
+set_target_properties(umicom-learning-pack-search PROPERTIES
+    C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+if(MSVC)
+    target_compile_options(umicom-learning-pack-search PRIVATE /W4)
+else()
+    target_compile_options(umicom-learning-pack-search PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+# The earlier output-only assertions are disabled because process status must
+# also determine the result; the checked wrapper below replaces them.
+if(FALSE)
+if(BUILD_TESTING)
+    add_test(NAME sdk.learning_pack.search.browse
+        COMMAND umicom-learning-pack-search "${CMAKE_CURRENT_BINARY_DIR}/pack" learning-pack.json)
+    add_test(NAME sdk.learning_pack.search.history
+        COMMAND umicom-learning-pack-search "${CMAKE_CURRENT_BINARY_DIR}/pack" learning-pack.json history framework en)
+    add_test(NAME sdk.learning_pack.search.missing
+        COMMAND umicom-learning-pack-search "${CMAKE_CURRENT_BINARY_DIR}/pack" learning-pack.json no-such-topic)
+    set_tests_properties(sdk.learning_pack.search.history PROPERTIES PASS_REGULAR_EXPRESSION "reader-history")
+    set_tests_properties(sdk.learning_pack.search.missing PROPERTIES PASS_REGULAR_EXPRESSION "Matches: 0")
+    set_tests_properties(sdk.learning_pack.search.browse sdk.learning_pack.search.history
+        sdk.learning_pack.search.missing PROPERTIES TIMEOUT 30)
+endif()
+endif()
+
+# Matching output alone ignores a normal nonzero process exit in CTest.
+# Retain the previous registration above for review; the wrapper requires both
+# successful execution and the expected metadata result before passing.
+if(BUILD_TESTING)
+    foreach(_case browse history missing)
+        add_test(NAME "sdk.learning_pack.search.${_case}"
+            COMMAND "${CMAKE_COMMAND}"
+                "-DPROGRAM=$<TARGET_FILE:umicom-learning-pack-search>"
+                "-DPACK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/pack"
+                "-DCASE=${_case}"
+                -P "${CMAKE_CURRENT_SOURCE_DIR}/check_search.cmake")
+        set_tests_properties("sdk.learning_pack.search.${_case}" PROPERTIES TIMEOUT 45)
+    endforeach()
 endif()

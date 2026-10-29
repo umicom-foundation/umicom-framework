@@ -43,6 +43,20 @@ UmiStatus UmiLearningReaderCreate(UmiLearningPack **pack, size_t maximum_bytes,
     UmiLearningReader **out_reader);
 void UmiLearningReaderDestroy(UmiLearningReader *reader);
 
+/* Open a copied catalogue selection in a new, independent reader. Supply the
+ * pack revision and lowercase SHA-256 from the displayed search result. A
+ * replaced pack or changed resource digest returns INVALID_STATE; a removed
+ * pack/resource returns NOT_FOUND. Verify file bytes before publishing the
+ * reader. Failure clears *out_reader and leaves the shelf unchanged.
+ * expected_revision must be positive and expected_sha256 must contain exactly
+ * 64 lowercase hexadecimal characters. Serialize shelf access for this call,
+ * which may block on reading. The result does not depend on shelf lifetime.
+ * Revision/digest checks detect a stale selection, not publisher authenticity;
+ * applications still decide which pack roots and manifests they admit. */
+UmiStatus UmiLearningReaderCreateFromShelf(const UmiLearningShelf *shelf,
+    const char *pack_id, uint64_t expected_revision, const char *resource_id,
+    const char *expected_sha256, size_t maximum_bytes, UmiLearningReader **out_reader);
+
 /* Open an explicit resource ID or follow this pack's restricted local-link
  * profile. Read and verify the candidate bytes before replacing the current
  * document or history. Failure preserves the previous selection and content.

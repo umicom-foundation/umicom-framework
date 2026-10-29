@@ -348,4 +348,74 @@ destination. Framework's focused creation tests also cover native I/O failures
 and competing writers. These command-line checks do not replace testing the
 actual Studio learning interface.</p>
 
+
+<h2 id="catalogue-search">Search titles and topics offline</h2>
+<p>A catalogue search helps a reader find a guide without opening every document.
+The Framework service searches the metadata already admitted to a
+<code>UmiLearningShelf</code>. It does not scan the disk, download content or
+read resource bodies. This distinction makes the work bounded and keeps a
+search separate from later content verification.</p>
+<p>The complete <code>search.c</code> example loads one pack, transfers it to a
+shelf, makes a query and prints copied results. A product can adopt several
+packs into the same shelf. Each pack must have a distinct identifier and must
+already have passed its host-version compatibility check.</p>
+<pre><code>&amp; ".\umicom-learning-pack-search.exe" "$PWD\pack" learning-pack.json
+&amp; ".\umicom-learning-pack-search.exe" "$PWD\pack" learning-pack.json history framework en
+&amp; ".\umicom-learning-pack-search.exe" "$PWD\pack" learning-pack.json no-such-topic</code></pre>
+<p>The first command browses the resources because it supplies no query text.
+The second finds the reader-history example, restricting results to product
+<code>framework</code> and locale <code>en</code>. The third should report zero
+matches and exit successfully: finding no matching resource is a valid search
+result, not a process failure.</p>
+<h3>Choose explicit matching rules</h3>
+<p><code>UmiLearningSearchQuery</code> starts with all fields zeroed. Put text in
+its bounded <code>text</code> array, or leave it empty to browse. Words separated
+by ASCII spaces form up to eight terms. Every term must occur in a resource ID,
+resource title, topic or pack title. Different terms may match different fields.
+The characters <code>*</code> and <code>?</code> have no special meaning.</p>
+<p>ASCII letters match without regard to case. Other bytes match exactly.
+For example, a UTF-8 query containing <code>café</code> can match that spelling,
+but this service does not normalize different Unicode representations or fold
+every language's uppercase letters. A frontend validates its query's encoding
+and should explain these matching limits. Control characters and unterminated
+input arrays are refused.</p>
+<p>Product filtering uses the exact stable identifier. Locale filtering ignores
+ASCII letter case but does not fall back from a region-specific locale to a
+language-only locale. The optional kind selects lessons, guides, examples or
+images. A zero kind accepts all of them. Empty product and locale arrays leave
+those filters disabled.</p>
+<h3>Keep result ownership separate from the shelf</h3>
+<pre><code>#include "umicom/teacher/learning_search.h"
+
+UmiLearningSearchQuery query = {0};
+UmiLearningSearch *search = NULL;
+/* Fill query using checked bounded copies if filters are needed. */
+UmiStatus status = UmiLearningSearchCreate(shelf, &amp;query, 64U, &amp;search);
+if (status == UMI_STATUS_OK) {
+    UmiLearningSearchInfo info;
+    status = UmiLearningSearchCopyInfo(search, &amp;info);
+    /* Read complete copied hits with UmiLearningSearchResultAt. */
+}
+UmiLearningSearchDestroy(search);</code></pre>
+<p>A result contains the pack description, the resource description and flags
+showing which metadata fields matched. It owns copies, so removing or destroying
+the shelf cannot leave dangling text pointers in the result. The application
+must still serialize the shelf while a search is being created. Once created,
+the immutable search can be read while its owner keeps it alive.</p>
+<p>A search can retain between one and 256 hits. The summary reports how many
+resources matched and whether results were truncated. Results follow shelf
+order and manifest order; there is no relevance score. For example, a request
+limited to one hit can report five matches, one retained result and
+<code>truncated = true</code>. Do not show that result as the entire catalogue.</p>
+<p>Each new search reads the current admitted metadata, so a removed pack no
+longer appears in a new query. An older result remains a historical snapshot.
+Discard or relabel it when the catalogue changes. Before opening a hit, resolve
+its current pack and resource identity again, then verify the resource bytes.
+A search match is not permission to open an external link, copy a file or run code.</p>
+<p>This metadata service is the first part of catalogue search. It does not
+index body text, extract glossary entries, produce exact paragraph anchors or
+supply a Studio search panel. Those require additional indexing and interface
+work; the current console example demonstrates only the contracts described
+here.</p>
+
 </body></html>

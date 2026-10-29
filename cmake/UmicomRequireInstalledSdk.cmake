@@ -56,7 +56,20 @@ function(umicom_require_installed_sdk_layout prefix out_header_root)
             if(NOT IS_DIRECTORY "${_include}")
                 message(FATAL_ERROR "Installed public header path is not a directory: ${_include}")
             endif()
+            # The identifying header must itself be an ordinary contained file.
+            # Keep the previous directory-only check for review; a directory or
+            # an escaping header link must not certify a selected SDK layout.
+            #[=[
             if(_target STREQUAL "Umicom::base" AND EXISTS "${_include}/umicom/base/version.h")
+                file(REAL_PATH "${_include}" _header_root)
+            endif()
+            ]=]
+            if(_target STREQUAL "Umicom::base" AND EXISTS "${_include}/umicom/base/version.h")
+                _umicom_require_sdk_file("${_prefix}" "${_include}/umicom/base/version.h"
+                    "Installed base version header")
+                if(IS_DIRECTORY "${_include}/umicom/base/version.h")
+                    message(FATAL_ERROR "Installed base version header is a directory")
+                endif()
                 file(REAL_PATH "${_include}" _header_root)
             endif()
         endforeach()

@@ -20,7 +20,20 @@ else()
     set(_sdk "${CMAKE_CURRENT_BINARY_DIR}/sdk-${_run}")
 endif()
 file(MAKE_DIRECTORY "${_sdk}/include/umicom/base" "${_sdk}/lib")
+# Omitted and wrong-type marker fixtures exercise layout admission separately
+# from public fingerprint equality. Retain the earlier unconditional fixture.
+#[=[
 file(WRITE "${_sdk}/include/umicom/base/version.h" "/* Public fixture identity. */\n#define FIXTURE_ABI 2\n")
+]=]
+if(TEST_CASE STREQUAL "directory-version-header")
+    file(MAKE_DIRECTORY "${_sdk}/include/umicom/base/version.h")
+elseif(NOT TEST_CASE STREQUAL "missing-version-header")
+    file(WRITE "${_sdk}/include/umicom/base/version.h" "/* Public fixture identity. */\n#define FIXTURE_ABI 2\n")
+endif()
+# A real base subset can contain status.h while omitting version.h. Keep that
+# unrelated header present so the negative case reaches layout validation,
+# rather than failing earlier because the fingerprint input set is empty.
+file(WRITE "${_sdk}/include/umicom/base/status.h" "/* Configure-only status contract. */\n")
 file(WRITE "${_sdk}/lib/base.a" "configure-only library location fixture\n")
 if(TEST_CASE STREQUAL "source-target")
     add_library(fixture_base INTERFACE)
@@ -35,7 +48,8 @@ else()
 endif()
 set(UMICOM_FRAMEWORK_INSTALL_PREFIX "${_sdk}")
 umicom_compute_public_contract_fingerprint(_fingerprint "${_sdk}/include")
-if(NOT TEST_CASE STREQUAL "source-target" AND NOT TEST_CASE STREQUAL "missing-identity")
+if(NOT TEST_CASE STREQUAL "source-target" AND NOT TEST_CASE STREQUAL "missing-identity"
+   AND NOT TEST_CASE STREQUAL "layout-only")
     set_property(TARGET Umicom::base PROPERTY UMICOM_PUBLIC_CONTRACT_FINGERPRINT "${_fingerprint}")
 endif()
 if(TEST_CASE STREQUAL "changed-header")
@@ -110,7 +124,15 @@ elseif(TEST_CASE STREQUAL "aggregate-headers")
 elseif(TEST_CASE STREQUAL "missing-base-headers")
     set_property(TARGET Umicom::base PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
 endif()
-if(TEST_CASE STREQUAL "missing-component")
+if(TEST_CASE STREQUAL "layout-only" OR TEST_CASE STREQUAL "missing-version-header" OR
+   TEST_CASE STREQUAL "directory-version-header")
+    umicom_require_installed_sdk_layout("${_sdk}" _layout_headers Umicom::base)
+    file(REAL_PATH "${_sdk}/include" _expected_headers)
+    if(NOT _layout_headers STREQUAL _expected_headers)
+        message(FATAL_ERROR "Installed layout returned the wrong include root")
+    endif()
+    message(STATUS "Installed subset layout verified without full SDK identity")
+elseif(TEST_CASE STREQUAL "missing-component")
     umicom_require_installed_sdk("${_sdk}" Umicom::absent)
 else()
     umicom_require_installed_sdk("${_sdk}" Umicom::base ${_extra_components})

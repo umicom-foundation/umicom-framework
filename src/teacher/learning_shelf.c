@@ -90,3 +90,43 @@ UmiStatus UmiLearningShelfReadResource(const UmiLearningShelf *shelf, const char
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     return UmiLearningPackReadResource(shelf->packs[index], resource_id, maximum_bytes, out_bytes, out_size);
 }
+
+/* Metadata enumeration lets catalogue views reuse the shelf's ownership rules.
+ * Returning a complete value keeps a UI independent of later shelf removal. */
+UmiStatus UmiLearningShelfResourceAt(const UmiLearningShelf *shelf, const char *pack_id,
+    size_t index, UmiLearningPackResource *out)
+{
+    if (shelf == NULL || pack_id == NULL || out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t pack_index = ShelfFind(shelf, pack_id);
+    if (pack_index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    return UmiLearningPackResourceAt(shelf->packs[pack_index], index, out);
+}
+
+/* Independent pack ownership lets catalogue and reader lifetimes differ.
+ * Keep the deep copy here, beside shelf ownership, so frontends never borrow
+ * private arrays or remove a catalogue entry merely to open its first lesson. */
+UmiStatus UmiLearningShelfCopyPack(const UmiLearningShelf *shelf, const char *id,
+    UmiLearningPack **out)
+{
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out = NULL;
+    if (shelf == NULL || id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index = ShelfFind(shelf, id);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    const UmiLearningPack *source = shelf->packs[index];
+    UmiLearningPack *copy = calloc(1U, sizeof(*copy));
+    if (copy == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    memcpy(copy->root, source->root, sizeof(copy->root));
+    memcpy(&copy->info, &source->info, sizeof(copy->info));
+    if (source->info.resource_count != 0U) {
+        copy->resources = calloc(source->info.resource_count, sizeof(*copy->resources));
+        if (copy->resources == NULL) {
+            free(copy);
+            return UMI_STATUS_OUT_OF_MEMORY;
+        }
+        memcpy(copy->resources, source->resources,
+            source->info.resource_count * sizeof(*copy->resources));
+    }
+    *out = copy;
+    return UMI_STATUS_OK;
+}

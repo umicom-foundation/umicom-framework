@@ -24,6 +24,9 @@ set(_sdk_transitive-missing "component target is unavailable")
 set(_sdk_transitive-source "rejects source-built target")
 list(APPEND _sdk_cases inherited-headers aggregate-headers transitive-inherited-headers missing-base-headers)
 set(_sdk_missing-base-headers "base component has no public header directory")
+list(APPEND _sdk_cases layout-only missing-version-header directory-version-header)
+set(_sdk_missing-version-header "Installed base headers were not found")
+set(_sdk_directory-version-header "Installed base version header is a directory")
 foreach(_case IN LISTS _sdk_cases)
     add_test(NAME "framework.sdk.installed_contract.${_case}"
         COMMAND "${CMAKE_COMMAND}" "-DTEST_CASE=${_case}"

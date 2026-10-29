@@ -51,6 +51,14 @@
       "kind": "example",
       "path": "practice.c",
       "sha256": "@_practice_hash@"
+    },
+    {
+      "id": "catalogue-search",
+      "title": "Search an offline learning catalogue",
+      "topic": "learning-packs",
+      "kind": "example",
+      "path": "search.c",
+      "sha256": "@_search_hash@"
     }
   ]
 }

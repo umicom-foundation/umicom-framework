@@ -61,12 +61,18 @@ int main(int argc, char **argv)
     UmiLearningPracticeResult report;
     UmiLearningPackResource resource, before;
     memset(&resource, 0x5a, sizeof(resource));
+    /* Representation checks need byte copies: ordinary struct assignment
+     * does not promise to preserve padding. Retain the prior snapshots for review. */
+#if 0
     before = resource;
+    resource = before;
+#endif
+    memcpy(&before, &resource, sizeof(before));
     if (strcmp(mode, "resolve") == 0) {
         CHECK(UmiLearningPracticeResolveExample(pack, "lesson", &resource) == UMI_STATUS_OK);
         CHECK(strcmp(resource.id, "source") == 0 && resource.kind == UMI_LEARNING_RESOURCE_EXAMPLE);
         CHECK(UmiLearningPracticeResolveExample(pack, "source", &resource) == UMI_STATUS_OK);
-        resource = before;
+        memcpy(&resource, &before, sizeof(resource));
         CHECK(UmiLearningPracticeResolveExample(pack, "plain", &resource) == UMI_STATUS_NOT_FOUND);
         CHECK(memcmp(&resource, &before, sizeof(resource)) == 0);
         CHECK(UmiLearningPracticeResolveExample(pack, "missing", &resource) == UMI_STATUS_NOT_FOUND);

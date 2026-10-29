@@ -146,6 +146,11 @@ if(NOT MODE STREQUAL "missing")
         get_filename_component(_dir "${_header}" DIRECTORY)
         install(FILES "${FRAMEWORK}/include/umicom/${_header}" DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/${_dir}")
     endforeach()
+    # The installed SDK layout contract identifies the base include root through
+    # its public version header, even when this composition exports a subset.
+    # Install the real header; do not relax the consumer to source-tree paths.
+    install(FILES "${FRAMEWORK}/include/umicom/base/version.h"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/base")
     # These transitive public contracts are needed by installed consumers too.
     foreach(_header IN ITEMS base/value_archive.h finance/decimal.h
         trading/price_increment.h broker_connectivity/order_observation.h
