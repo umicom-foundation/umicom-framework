@@ -55,9 +55,29 @@ UmiStatus umi_master_controller_create(
  * safely.
  */
 void umi_master_controller_destroy(UmiMasterController *controller);
+
+/** Release an exclusively owned composition only after module cleanup succeeds.
+ * A failed quiesce/stop retains the pointer and required dependency services.
+ * Retry stop or release; completed phases are not repeated. Calls from a
+ * lifecycle/destruction callback are refused. This is a synchronous, serial
+ * owner contract, not a concurrent or forced-shutdown API. Empty owner is OK.
+ * Descriptors and module_state remain borrowed until successful destruction.
+ * After destruction starts, only release may resume a retained controller.
+ * Calls from owned service destructors are also refused before any teardown. */
+UmiStatus UmiMasterControllerRelease(UmiMasterController **inOutController);
+
+/** Observe whether successful startup or failed rollback still requires stop.
+ * Use only under the controller's serial ownership contract. This neither
+ * stops work nor promises a future state; NULL returns zero. */
+int UmiMasterControllerNeedsStop(const UmiMasterController *controller);
 /**
  * Add master controller only after its inputs and available capacity have been checked.
  */
+/* Registration is serialized by the owner. Failure leaves module/capability
+ * membership unchanged, so corrected input can be retried. Descriptors and
+ * NULL-terminated capability arrays remain borrowed and must stay alive and
+ * unchanged while registered. Diagnostics may inspect but not mutate/release
+ * the controller from a registration callback. */
 UmiStatus umi_master_controller_register(
     UmiMasterController *controller,
     const UmiModuleDescriptor *module
@@ -83,6 +103,8 @@ void *umi_master_controller_authority(
 /**
  * Check that master controller satisfies its contract before another service relies on it.
  */
+/* Validation rewrites dependency order. Call before startup, outside callbacks
+ * and pending cleanup. It is refused while the controller is active. */
 UmiStatus umi_master_controller_validate(
     UmiMasterController *controller,
     const char **out_missing_capability
@@ -96,6 +118,9 @@ UmiStatus umi_master_controller_start(UmiMasterController *controller);
  * Provide the master controller stop operation used by this module and its client
  * applications.
  */
+/* Reverse shutdown stops at the first failed quiesce/stop, retaining providers.
+ * Retrying skips completed modules and completed quiesce phases. A failed
+ * startup with incomplete rollback is also eligible for stop. */
 UmiStatus umi_master_controller_stop(UmiMasterController *controller);
 /**
  * Provide the master controller module state operation used by this module and its client

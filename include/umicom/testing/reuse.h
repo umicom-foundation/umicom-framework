@@ -25,6 +25,9 @@ typedef struct UmiTestReuseState UmiTestReuseState;
  * code: header "UMICOM-TEST-REUSE 1 <context SHA256>\n", then name<TAB>input
  * SHA256<TAB>state-number\n. Names are printable ASCII, at most 255 bytes.
  * Sorted unique names give deterministic exports and bounded lookup costs. */
+/* Import also accepts CRLF terminators. Bare CR and embedded NUL remain
+ * invalid. Output ownership transfers only after the complete input validates.
+ * Export always uses LF; newline spelling never grants a reusable pass. */
 UmiStatus UmiTestReuseImport(const char *text, size_t length, UmiTestReuseState **out);
 void UmiTestReuseDestroy(UmiTestReuseState *state);
 size_t UmiTestReuseCount(const UmiTestReuseState *state);

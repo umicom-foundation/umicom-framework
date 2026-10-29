@@ -25,8 +25,57 @@ static const char current_text[] = HEAD "alpha\t" A "\t0\nbeta\t" B "\t0\n";
 static const char prior_text[] = HEAD "alpha\t" A "\t2\nbeta\t" B "\t3\n";
 static int Import(const char *text, UmiTestReuseState **state)
 { return UmiTestReuseImport(text, strlen(text), state) == UMI_STATUS_OK; }
+
+static int CheckLineEndings(void)
+{
+    static const char crlf[] =
+        "UMICOM-TEST-REUSE 1 " A "\r\nalpha\t" A "\t0\r\nbeta\t" B "\t0\r\n";
+    static const char mixed[] =
+        "UMICOM-TEST-REUSE 1 " A "\r\nalpha\t" A "\t0\nbeta\t" B "\t0\r\n";
+    static const char *const accepted[] = {current_text, crlf, mixed};
+    for (size_t i = 0U; i < sizeof(accepted) / sizeof(accepted[0]); ++i) {
+        UmiTestReuseState *state = NULL;
+        CHECK(Import(accepted[i], &state));
+        size_t required = 0U;
+        char exported[512];
+        CHECK(UmiTestReuseExport(state, exported, sizeof(exported), &required) == UMI_STATUS_OK);
+        CHECK(strcmp(exported, current_text) == 0 && required == sizeof(current_text));
+        CHECK(memchr(exported, '\r', required) == NULL);
+        UmiTestReuseDestroy(state);
+    }
+    /* Malformed terminators must not repair a damaged name, digest or record.
+     * Incomplete input cannot publish even the valid prefix into the output. */
+    static const char *const rejected[] = {
+        "UMICOM-TEST-REUSE 1 " A "\r",
+        "UMICOM-TEST-REUSE 1 " A "\r\r\n",
+        HEAD "al\rpha\t" A "\t0\r\n",
+        HEAD "alpha\t" A "\r\t0\n",
+        HEAD "alpha\t" A "\t0\r",
+        HEAD "alpha\t" A "\t0\r\n\r\n",
+        HEAD "alpha\t" A "\t0\r\nalpha\t" B "\t0\n",
+        HEAD "alpha\t" A "\t9\r\n"
+    };
+    for (size_t i = 0U; i < sizeof(rejected) / sizeof(rejected[0]); ++i) {
+        UmiTestReuseState *state = NULL;
+        CHECK(!Import(rejected[i], &state) && state == NULL);
+    }
+    UmiTestReuseState *state = NULL;
+    CHECK(Import("UMICOM-TEST-REUSE 1 " A "\r\n", &state));
+    CHECK(UmiTestReuseCount(state) == 0U);
+    UmiTestReuseDestroy(state); state = NULL;
+    char binary[sizeof(crlf)];
+    memcpy(binary, crlf, sizeof(binary));
+    binary[sizeof(binary) - 5U] = '\0';
+    CHECK(UmiTestReuseImport(binary, sizeof(binary) - 1U, &state) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(state == NULL);
+    CHECK(UmiTestReuseImport(crlf, UMI_TEST_REUSE_MAX_BYTES + 1U, &state) == UMI_STATUS_CAPACITY_EXCEEDED);
+    CHECK(state == NULL);
+    return 0;
+}
+
 int main(void)
 {
+    CHECK(CheckLineEndings() == 0);
     UmiTestReuseState *current = NULL, *prior = NULL, *next = NULL;
     CHECK(Import(current_text, &current) && Import(prior_text, &prior));
     CHECK(UmiTestReusePrepare(current, prior, &next) == UMI_STATUS_OK);

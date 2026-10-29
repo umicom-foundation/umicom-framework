@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Own background process lifetimes</title>
+<style>body{max-width:56rem;margin:2rem auto;padding:0 1rem;font:1rem/1.65 system-ui;color:#162130}pre{white-space:pre-wrap;background:#eef2f6;padding:1rem}code{overflow-wrap:anywhere}a{color:#075a82}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bdc8d4;padding:.5rem;text-align:left}</style></head><body>
+<h1>Own background process lifetimes</h1>
+<p>A build command starts another program and waits for its result. While that
+program runs, the editor should still respond to input. Framework's process
+supervisor owns background jobs so Studio can observe output and completion
+without placing every process directly in its user-interface code.</p>
+<p>A <em>job</em> is the supervisor's record of one submitted request. It includes
+a job identifier, a worker, cancellation state and a result snapshot. A terminal
+job state means the result has been published. It does not by itself mean every
+native thread handle has been released.</p>
+<h2>Separate three obligations</h2>
+<table><thead><tr><th>Obligation</th><th>Meaning</th><th>What it does not establish</th></tr></thead><tbody>
+<tr><td>Close admission</td><td>Refuse new jobs and request cancellation for active jobs.</td><td>Workers may still be running.</td></tr>
+<tr><td>Join workers</td><td>Wait until workers have returned and acknowledge their native thread completion.</td><td>A native handle may still need release.</td></tr>
+<tr><td>Release ownership</td><td>Close native handles and free the supervisor's job storage.</td><td>Separate application payloads and borrowed aliases are not automatically managed.</td></tr>
+</tbody></table>
+<p><code>umi_process_supervisor_shutdown</code> closes admission, requests
+cancellation and waits for occupied jobs. A second call checks any unfinished
+join obligations. It must not return success merely because an earlier call
+already closed admission. Call it from an external lifecycle controller, not
+from work whose completion it must wait for.</p>
+<h2>Keep the owner until release succeeds</h2>
+<ol>
+<li>Prevent new UI commands from submitting jobs.</li>
+<li>Stop other application users of the supervisor and exclude concurrent calls.</li>
+<li>Call <code>UmiProcessSupervisorRelease(&amp;supervisor)</code>.</li>
+<li>If it returns <code>UMI_STATUS_OK</code>, the pointer is cleared. Release
+separate application state only when its other background owners have also stopped.</li>
+<li>If it returns an error, retain the pointer, record the status and investigate
+the failing operation. Retry shutdown or release from the same exclusive owner.
+Do not resume submission after shutdown has closed admission.</li>
+</ol>
+<pre><code>UmiStatus status = UmiProcessSupervisorRelease(&amp;supervisor);
+if (status != UMI_STATUS_OK) {
+    /* supervisor remains owned here. Report the error and keep its
+     * dependent data alive until shutdown can be completed. */
+    return status;
+}
+/* supervisor is now NULL. */</code></pre>
+<p>This fragment belongs in a controller that already owns the pointer.
+Passing a borrowed copy does not make the caller the owner. Clearing one
+pointer cannot clear other aliases elsewhere in the application.</p>
+<p>The established <code>umi_process_supervisor_destroy</code> function remains
+available. Because it returns no status, new lifecycle code should use checked
+release. The compatibility function retains memory if shutdown fails; a caller
+must not infer successful cleanup simply because that void function returned.</p>
+<h2>Release completed jobs without closing the supervisor</h2>
+<p><code>UmiProcessSupervisorReleaseJob</code> acknowledges a terminal job and
+makes its slot reusable. It refuses an active job or a slot pinned by a waiter.
+If joining or native-handle release fails, the identifier and result remain
+available. Retry the same job release instead of submitting another job into
+storage that may still be owned.</p>
+<p>A joined worker whose handle could not close must not be joined twice.
+Framework records join progress separately from handle ownership. A native
+thread that finished without an ordinary integer result may return
+<code>UMI_STATUS_UNAVAILABLE</code>; that diagnostic is retained while the
+consumed join obligation is recorded.</p>
+<h2>Read and qualify the implementation</h2>
+<p>Start with <code>include/umicom/platform/process_supervisor.h</code>, then
+follow <code>src/platform/process_supervisor_lifecycle.inc</code> and
+<code>tests/test_process_supervisor_lifecycle.c</code>. The regression fixture
+launches its own executable as a small child, captures its output and examines
+terminal state. It does not invoke a shell or an arbitrary external command.</p>
+<p>After configuring a Framework build with testing enabled, build the target
+<code>umicom-process-supervisor-lifecycle-test</code> and run CTest with
+<code>-R "^framework[.]process_supervisor[.]lifecycle[.]" --output-on-failure --no-tests=error</code>.
+On Linux with GNU or Clang, the additional
+<code>umicom-process-supervisor-lifecycle-fault-test</code> target injects a
+single join or release error; its tests use the
+<code>framework.process_supervisor.lifecycle-fault.</code> prefix.
+These fault cases verify retained ownership and retry progress; they are
+separate from ordinary process execution tests.</p>
+<h2>Apply the same reasoning to other background owners</h2>
+<p>A window, file index or document model can be used by several workers.
+Stopping one owner is not enough if another callback still references the same
+model. Read <a href="watch-file-lifetimes.html">Watch files without releasing
+live callbacks</a> and <a href="../guides/check-sdk-shutdown.html">Check queue
+shutdown through an installed SDK</a> before composing these services.</p>
+<p>For application modules that depend on those services, see <a href="module-lifecycle-retries.html">Design retryable module lifecycles</a>.</p>
+</body></html>

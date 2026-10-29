@@ -94,3 +94,22 @@ const UmiModuleDescriptor *umi_module_registry_at(const UmiModuleRegistry *regis
 {
     return registry != 0 && index < registry->count ? registry->items[index] : 0;
 }
+
+/* Remove catalogue membership only. The caller still owns the descriptor and
+ * module state; lifecycle shutdown belongs to its owning controller. Serial
+ * ownership is required, as for the existing module registry operations. */
+UmiStatus UmiModuleRegistryRemove(UmiModuleRegistry *registry, const char *module_id)
+{
+    if (registry == NULL || module_id == NULL || module_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t index = 0U; index < registry->count; ++index) {
+        if (strcmp(registry->items[index]->module_id, module_id) != 0) continue;
+        size_t remaining = registry->count - index - 1U;
+        if (remaining != 0U)
+            (void)memmove(&registry->items[index], &registry->items[index + 1U],
+                          remaining * sizeof(registry->items[0]));
+        registry->items[--registry->count] = NULL;
+        return UMI_STATUS_OK;
+    }
+    return UMI_STATUS_NOT_FOUND;
+}

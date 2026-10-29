@@ -38,7 +38,10 @@ execute_process(COMMAND "${CMAKE_COMMAND}" -S "${FIXTURE}" -B "${OUTPUT_ROOT}/bu
 file(WRITE "${OUTPUT_ROOT}/configure.log" "${_out}\n${_err}")
 file(WRITE "${OUTPUT_ROOT}/configure-${_attempt}.log" "${_out}\n${_err}")
 string(REGEX REPLACE "[ \t\r\n]+" " " _error_text "${_err}")
-if(TEST_CASE STREQUAL "valid" OR TEST_CASE STREQUAL "spaced-prefix")
+if(TEST_CASE STREQUAL "valid" OR TEST_CASE STREQUAL "spaced-prefix" OR
+    TEST_CASE STREQUAL "transitive-cycle" OR TEST_CASE STREQUAL "transitive-link-only" OR
+    TEST_CASE STREQUAL "external-target" OR TEST_CASE STREQUAL "inherited-headers" OR
+    TEST_CASE STREQUAL "aggregate-headers" OR TEST_CASE STREQUAL "transitive-inherited-headers")
     if(NOT _result STREQUAL "0" OR NOT _out MATCHES "Installed Framework layout and public-header identity verified")
         message(FATAL_ERROR "Valid SDK fixture was not accepted; see ${OUTPUT_ROOT}/configure.log")
     endif()

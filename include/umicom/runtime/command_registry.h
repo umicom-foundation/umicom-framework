@@ -94,9 +94,34 @@ typedef struct UmiCommandBatchReport {
     uint32_t api_version;
     size_t requested_count;
     size_t registered_count;
+    /* Zero-based rejected descriptor; SIZE_MAX on success or a batch-wide
+     * error such as invalid registry, excessive count or insufficient room. */
     size_t failed_index;
     UmiStatus status;
 } UmiCommandBatchReport;
+
+
+/* Declaration counts from one locked observation. These flags describe command
+ * policy; summary capture neither runs enablement callbacks nor executes commands.
+ * Keep the registry alive throughout capture. Output is unchanged on failure. */
+typedef struct UmiCommandRegistrySummary {
+    size_t command_count;
+    size_t mutating_command_count;
+    size_t background_command_count;
+    size_t audited_command_count;
+    size_t trusted_command_count;
+} UmiCommandRegistrySummary;
+
+/* Operations that return UmiStatus propagate mutex acquisition failures before
+ * reading or changing entries. The legacy boolean/count queries return false/zero
+ * on that failure; use snapshot or summary APIs when the distinction matters.
+ * Execute clears a supplied message buffer before lookup, including failure.
+ * Snapshot and prefix outputs otherwise remain unchanged on pre-copy failure.
+ * Keep the registry and callback user_data alive throughout an operation;
+ * destroy/unload must exclude concurrent readers and executing callbacks. */
+
+UmiStatus UmiCommandRegistryCopySummary(const UmiCommandRegistry *registry,
+    UmiCommandRegistrySummary *out_summary);
 
 /**
  * Initialise command registry from caller-provided values so later operations receive a

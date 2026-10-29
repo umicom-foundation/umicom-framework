@@ -165,7 +165,12 @@ if(_mode STREQUAL "partial" AND NOT _name MATCHES "^framework[.]ibkr_")
 #[=[
 if(_mode STREQUAL "partial" AND NOT _name MATCHES "^framework[.](ibkr_|market_tape[.])")
 ]=]
+# Broker entry and persisted profiles use the same partial-host owners.
+# Preserve the earlier family filter for review; exact-name comparison remains.
+#[=[
 if(_mode STREQUAL "partial" AND NOT _name MATCHES "^framework[.](ibkr_|market_tape[.]|full_quantity[.]|price_increment[.])")
+]=]
+if(_mode STREQUAL "partial" AND NOT _name MATCHES "^framework[.](ibkr_|broker_access[.]|broker_profiles[.]|broker_profile_store[.]|market_tape[.]|full_quantity[.]|price_increment[.])")
                     continue()
                 endif()
                 if(_kind STREQUAL "COMMON" OR
@@ -187,7 +192,31 @@ if(_mode STREQUAL "partial" AND NOT _name MATCHES "^framework[.](ibkr_|market_ta
     if(NOT "${_actual}" STREQUAL "${_expected}")
         file(WRITE "${RUN}/expected-inventory.txt" "${_expected}\n")
         file(WRITE "${RUN}/actual-inventory.txt" "${_actual}\n")
+        # Retain both complete sets and their difference. A missing registration
+        # must remain a failure even when a new component adds other cases.
+        set(_missing "${_expected}")
+        set(_unexpected "${_actual}")
+        if(_actual)
+            list(REMOVE_ITEM _missing ${_actual})
+        endif()
+        if(_expected)
+            list(REMOVE_ITEM _unexpected ${_expected})
+        endif()
+        file(WRITE "${RUN}/missing-inventory.txt" "${_missing}\n")
+        file(WRITE "${RUN}/unexpected-inventory.txt" "${_unexpected}\n")
+        list(LENGTH _missing _missing_count)
+        list(LENGTH _unexpected _unexpected_count)
+        if(_missing_count GREATER 20)
+            list(SUBLIST _missing 0 20 _missing)
+        endif()
+        if(_unexpected_count GREATER 20)
+            list(SUBLIST _unexpected 0 20 _unexpected)
+        endif()
+        # Retain the original diagnostic for review.
+        if(FALSE)
         message(FATAL_ERROR "Test inventory changed. Expected and actual lists retained in ${RUN}")
+        endif()
+        message(FATAL_ERROR "Test inventory changed: ${_missing_count} missing, ${_unexpected_count} unexpected (first 20 shown). Missing=[${_missing}] Unexpected=[${_unexpected}]. Full lists: ${RUN}")
     endif()
     message(STATUS "${stage}: exact ${_count}-test inventory agrees")
 endfunction()
@@ -222,7 +251,7 @@ if(CASE STREQUAL "installed")
     set(_client "${RUN}/client build")
     Execute(client-configure "${CMAKE_COMMAND}"
         -S "${FRAMEWORK}/examples/component_integration/client" -B "${_client}" ${_common}
-        "-DCMAKE_PREFIX_PATH=${_prefix}" ${_author_warning_option})
+        "-DCMAKE_PREFIX_PATH=${_prefix}" "-DUMICOM_EXPECTED_SDK_PREFIX=${_prefix}" ${_author_warning_option})
     Execute(client-build "${CMAKE_COMMAND}" --build "${_client}" --config Release --parallel 2)
     if(NOT HOST_CROSSCOMPILING)
         Execute(client-test "${_ctest}" --test-dir "${_client}" -C Release --no-tests=error --output-on-failure)

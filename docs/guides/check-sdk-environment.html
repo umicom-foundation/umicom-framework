@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Check a Framework SDK with an independent application</title>
+<style>body{max-width:58rem;margin:2rem auto;padding:0 1rem;font:1rem/1.65 system-ui;color:#162130}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#eef2f6;padding:1rem}code{overflow-wrap:anywhere}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:.6rem;text-align:left}a{color:#075a82}</style></head>
+<body><nav><a href="inspecting-an-installed-sdk.html">Choose an installed SDK</a></nav>
+<h1>Check a Framework SDK with an independent application</h1>
+<p>A header tells a compiler how to call a library. The library contains the compiled implementation.
+An SDK packages these files together. Finding both files is necessary, but it does not establish
+that they describe the same binary interface or were built for your target computer.</p>
+<p>This guide uses the small <code>sdk_environment</code> example shipped with Framework.
+It asks CMake to check the package declarations, compiles assertions against the installed
+headers, links one real base-library function, and provides a runnable test.
+Each step answers a different question.</p>
+<h2>Understand the three checks</h2>
+<table><thead><tr><th>Check</th><th>What it establishes</th><th>What remains to check</th></tr></thead><tbody>
+<tr><td>Package origin</td><td>The selected configuration and Framework library paths belong to the requested installation.</td><td>The contents may still be incomplete or incompatible.</td></tr>
+<tr><td>Environment declarations</td><td>The required ABI number, operating-system identifier, pointer size and C compiler family agree.</td><td>Instruction set, runtime-library model, packing, calling conventions and compiler options need separate qualification.</td></tr>
+<tr><td>Independent consumer</td><td>If compilation, linking and execution succeed, this consumer can use the selected base API.</td><td>Other components, public structures, application shutdown and every supported target still need their own tests.</td></tr>
+</tbody></table>
+<p>ABI means <em>application binary interface</em>: the agreement compiled pieces use when
+calling each other. Two processors can both use eight-byte pointers and still execute
+different instructions. Equal metadata is an early check, not proof that arbitrary binaries
+can be combined. Compiler versions are reported for review; equal family names alone do not
+certify compatibility between versions.</p>
+<h2>Prepare the example</h2>
+<ol><li>Install a current Framework SDK with its base library, public headers and CMake package.
+The example is installed at <code>share/umicom-framework/examples/sdk_environment</code>
+under that SDK. It is also available in the source tree at <code>examples/sdk_environment</code>.</li>
+<li>Use the compiler and target environment for which that SDK was built. The commands below
+use a Windows UCRT64 GNU toolchain. Replace <code>C:/SDKs/Umicom</code> with your actual
+installation prefix. A prefix is the common root folder of the SDK.</li>
+<li>Use a new consumer build directory when changing compiler, target or SDK.
+This keeps cached settings from a previous configuration out of the comparison.
+Keep the SDK installation itself unchanged while the consumer is being qualified.</li>
+<li>Create a directory for the command logs:
+<pre><code>New-Item -ItemType Directory -Force "C:\umicom\_local\logs\sdk-environment"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"</code></pre></li></ol>
+<h2>Configure, build and run</h2>
+<p>Run one command at a time and stop if it fails. PowerShell does not automatically stop
+after every failed native command. <code>$LASTEXITCODE</code> reports that command's exit code;
+zero means success. A log records output, but its existence does not prove success.</p>
+<ol><li>Configure the independent application:
+<pre><code>cmake -S "C:/SDKs/Umicom/share/umicom-framework/examples/sdk_environment" -B "C:/umicom/_local/build/sdk-environment" -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe -DUMICOM_EXPECTED_SDK_PREFIX=C:/SDKs/Umicom -DBUILD_TESTING=ON 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\sdk-environment\configure.log"</code></pre>
+CMake should report the agreeing environment identifiers and the producer and consumer
+compiler versions. It must finish configuration and generation successfully before you continue.</li>
+<li>Compile and link:
+<pre><code>cmake --build "C:/umicom/_local/build/sdk-environment" --parallel 2 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\sdk-environment\build.log"</code></pre>
+This builds the small consumer. It does not rebuild Framework source.</li>
+<li>Run the registered test:
+<pre><code>ctest --test-dir "C:/umicom/_local/build/sdk-environment" --output-on-failure --no-tests=error --output-log "C:/umicom/_local/logs/sdk-environment/tests.log"</code></pre>
+The expected test name is <code>sdk.environment.consumer</code>.</li>
+<li>Run the program directly when you want to read its output:
+<pre><code>&amp; "C:\umicom\_local\build\sdk-environment\umicom-sdk-environment-example.exe" 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\sdk-environment\run.log"</code></pre>
+It prints the header version, required ABI, actual pointer size and the status text
+returned by the linked base library. These are expected behaviours of the example,
+not evidence that your installation has already passed.</li></ol>
+<h2>Use the checks in your own CMake project</h2>
+<pre><code>project(MyFrameworkApplication LANGUAGES C)
+find_package(UmicomFramework CONFIG REQUIRED COMPONENTS base)
+umicom_require_sdk_environment(2)
+umicom_require_installed_sdk_layout("C:/SDKs/Umicom" sdk_headers Umicom::base)</code></pre>
+<p>Declare the ABI your application was written against; do not copy the installed
+package's value into that requirement. Otherwise the comparison would always agree.
+Call the environment helper after <code>project(... LANGUAGES C)</code>, when CMake knows
+the consumer compiler and pointer size. Use
+<code>umicom_require_installed_sdk</code> when you also require the complete SDK's
+public-header contract rather than this example's component layout check.</p>
+<p>The example uses C23 <code>static_assert</code> to compare the installed header ABI
+with its independent requirement and <code>sizeof(void *)</code> with the package's
+declared pointer size. It then calls <code>umi_status_text(UMI_STATUS_OK)</code>.
+The real symbol makes a successful link more informative than printing only header constants.</p>
+<h2>Recover from a refusal</h2>
+<table><thead><tr><th>Diagnostic</th><th>Next action</th></tr></thead><tbody>
+<tr><td>Package outside the expected prefix</td><td>Inspect the cached <code>UmicomFramework_DIR</code>.
+Use a fresh consumer build directory and the intended prefix. Do not borrow archives from another SDK.</td></tr>
+<tr><td>Environment metadata unavailable</td><td>Install the current package files together with their matching headers and libraries.</td></tr>
+<tr><td>ABI or header assertion differs</td><td>Review the API and ABI changes, then select a compatible SDK or adapt the application.
+Changing only the number hides the disagreement.</td></tr>
+<tr><td>System, pointer size or compiler family differs</td><td>Build/select an SDK for the intended consumer toolchain and target.
+This conservative helper does not approve cross-family combinations.</td></tr>
+<tr><td>Compile, link or runtime failure after metadata agrees</td><td>Keep the first diagnostic and compiler versions.
+Investigate the actual archive, target architecture, options and runtime dependencies. Metadata agreement is not a repair.</td></tr>
+</tbody></table>
+<h2>Maintain one Framework identity</h2>
+<p>Framework's numeric version fields, version string and ABI identifier are published in
+<code>include/umicom/base/version.h</code>. The package generator and passive
+<code>sdk.properties</code> receipt now read that same source. The package generator
+refuses duplicate definitions, unsupported numeric forms, out-of-range values,
+a conflicting version string, or a project version that disagrees with the header.</p>
+<p>The parser expects the canonical plain decimal definitions used by that header;
+it is deliberately not a C preprocessor. The version components fit the public
+<code>UmiVersion</code> fields. An ABI number is a release-maintained contract identifier,
+not a computed proof that every exported function remains compatible.</p>
+<p>Metadata regressions are registered as <code>framework.sdk.identity.*</code> and
+<code>framework.sdk.environment.*</code>. Their synthetic fixtures exercise refusals
+without compiling libraries. Keep those results separate from this real installed consumer
+and from the product's complete runtime qualification.</p>
+<p>Continue with <a href="check-sdk-shutdown.html">background-task ownership and shutdown through the installed SDK</a> to exercise lifecycle contracts beyond the base-library call.</p>
+</body></html>

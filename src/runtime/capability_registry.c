@@ -173,6 +173,10 @@ void umi_capability_registry_destroy(UmiCapabilityRegistry *registry)
 }
 
 /* Add capability registry only after its inputs and available capacity have been checked. */
+/* Retain the former single-entry algorithm for review. Batch admission now
+ * validates every provider before mutation and enforces singleton ownership
+ * regardless of which provider was registered first. */
+#if 0
 UmiStatus umi_capability_registry_register(
     UmiCapabilityRegistry *registry,
     const UmiCapabilityDescriptor *descriptor)
@@ -242,6 +246,75 @@ UmiStatus umi_capability_registry_register(
     umi_capability_lock_leave(&registry->lock);
     return UMI_STATUS_OK;
 }
+#endif
+
+/* Register a group while holding the registry's write lock. Validation finishes
+ * before the first write, so a rejected module cannot leave partial providers.
+ * Descriptor strings and provider objects remain caller-owned during the call. */
+UmiStatus UmiCapabilityRegistryRegisterBatch(
+    UmiCapabilityRegistry *registry,
+    const UmiCapabilityDescriptor *descriptors,
+    size_t count)
+{
+    if (registry == NULL || (count != 0U && descriptors == NULL))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (count > UMI_CAPABILITY_REGISTRY_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    umi_capability_lock_enter(&registry->lock);
+    UmiStatus status = UMI_STATUS_OK;
+    for (size_t index = 0U; index < count; ++index) {
+        const UmiCapabilityDescriptor *candidate = &descriptors[index];
+        if (candidate->structure_size < sizeof(*candidate) ||
+            candidate->capability_id == NULL || candidate->capability_id[0] == '\0' ||
+            candidate->provider_module_id == NULL || candidate->provider_module_id[0] == '\0') {
+            status = UMI_STATUS_INVALID_ARGUMENT;
+            goto finish;
+        }
+        if (strlen(candidate->capability_id) >= UMI_CAPABILITY_ID_CAPACITY ||
+            strlen(candidate->provider_module_id) >= UMI_CAPABILITY_PROVIDER_CAPACITY) {
+            status = UMI_STATUS_CAPACITY_EXCEEDED;
+            goto finish;
+        }
+        for (size_t previous = 0U; previous < registry->count + index; ++previous) {
+            const UmiCapabilityDescriptor *other = previous < registry->count
+                ? &registry->entries[previous].descriptor
+                : &descriptors[previous - registry->count];
+            if (strcmp(candidate->capability_id, other->capability_id) == 0 &&
+                (strcmp(candidate->provider_module_id, other->provider_module_id) == 0 ||
+                 ((candidate->flags | other->flags) & UMI_CAPABILITY_SINGLETON) != 0U)) {
+                status = UMI_STATUS_ALREADY_EXISTS;
+                goto finish;
+            }
+        }
+    }
+    if (count > UMI_CAPABILITY_REGISTRY_MAX - registry->count) {
+        status = UMI_STATUS_CAPACITY_EXCEEDED;
+        goto finish;
+    }
+    for (size_t index = 0U; index < count; ++index) {
+        const UmiCapabilityDescriptor *descriptor = &descriptors[index];
+        UmiCapabilityEntry *entry = &registry->entries[registry->count + index];
+        (void)memset(entry, 0, sizeof(*entry));
+        (void)snprintf(entry->capability_id, sizeof(entry->capability_id),
+                       "%s", descriptor->capability_id);
+        (void)snprintf(entry->provider_module_id, sizeof(entry->provider_module_id),
+                       "%s", descriptor->provider_module_id);
+        entry->descriptor = *descriptor;
+        entry->descriptor.capability_id = entry->capability_id;
+        entry->descriptor.provider_module_id = entry->provider_module_id;
+    }
+    registry->count += count;
+finish:
+    umi_capability_lock_leave(&registry->lock);
+    return status;
+}
+
+UmiStatus umi_capability_registry_register(
+    UmiCapabilityRegistry *registry,
+    const UmiCapabilityDescriptor *descriptor)
+{
+    return UmiCapabilityRegistryRegisterBatch(registry, descriptor, 1U);
+}
+
 
 /*
  * Remove capability registry while keeping the remaining records in a valid and
@@ -278,6 +351,16 @@ UmiStatus umi_capability_registry_unregister(
                               move_count * sizeof(registry->entries[0]));
             }
             registry->count -= 1U;
+            /* Entries own their identifier arrays. Moving an entry copies its
+             * old self-pointers too, so rebind each descriptor before exposing
+             * the compacted registry or reusing its vacated tail slot. */
+            for (size_t moved = index; moved < registry->count; ++moved) {
+                UmiCapabilityEntry *entry = &registry->entries[moved];
+                entry->descriptor.capability_id = entry->capability_id;
+                entry->descriptor.provider_module_id = entry->provider_module_id;
+            }
+            (void)memset(&registry->entries[registry->count], 0,
+                         sizeof(registry->entries[0]));
             umi_capability_lock_leave(&registry->lock);
             return UMI_STATUS_OK;
         }

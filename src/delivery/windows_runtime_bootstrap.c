@@ -87,6 +87,47 @@ static void UmiWindowsRuntimeSet(const wchar_t *name, const wchar_t *root,
     free(path);
 }
 
+/* Keep dynamic media lookup inside the same private package as GTK and GLib.
+ * This process-local setup does not change the machine environment or trust
+ * arbitrary plugin directories inherited from a developer's shell. A package
+ * without media plugins retains the existing unavailable-preview behaviour. */
+static void UmiWindowsRuntimePrepareMedia(const wchar_t *root)
+{
+    wchar_t *path = malloc(UMI_RUNTIME_PATH_CAPACITY * sizeof(*path));
+    if (path == NULL ||
+        !UmiWindowsRuntimeJoin(path, UMI_RUNTIME_PATH_CAPACITY, root,
+                              L"lib\\gstreamer-1.0")) {
+        free(path);
+        UmiWindowsRuntimeFail(L"The private media plugin path could not be prepared.");
+    }
+    DWORD attributes = GetFileAttributesW(path);
+    if (attributes == INVALID_FILE_ATTRIBUTES) {
+        free(path);
+        return;
+    }
+    if ((attributes & FILE_ATTRIBUTE_DIRECTORY) == 0U ||
+        !UmiWindowsRuntimeJoin(path, UMI_RUNTIME_PATH_CAPACITY, root,
+                              L"libexec\\gstreamer-1.0\\gst-plugin-scanner.exe")) {
+        free(path);
+        UmiWindowsRuntimeFail(L"The private media runtime has an invalid plugin layout.");
+    }
+    attributes = GetFileAttributesW(path);
+    if (attributes == INVALID_FILE_ATTRIBUTES ||
+        (attributes & FILE_ATTRIBUTE_DIRECTORY) != 0U) {
+        free(path);
+        UmiWindowsRuntimeFail(L"The private media plugin scanner is missing. Rebuild the runtime target or reinstall the complete package.");
+    }
+    free(path);
+    UmiWindowsRuntimeSet(L"GST_PLUGIN_PATH", root, L"lib\\gstreamer-1.0", 1);
+    UmiWindowsRuntimeSet(L"GST_PLUGIN_PATH_1_0", root, L"lib\\gstreamer-1.0", 1);
+    UmiWindowsRuntimeSet(L"GST_PLUGIN_SYSTEM_PATH", root, L"lib\\gstreamer-1.0", 1);
+    UmiWindowsRuntimeSet(L"GST_PLUGIN_SYSTEM_PATH_1_0", root, L"lib\\gstreamer-1.0", 1);
+    UmiWindowsRuntimeSet(L"GST_PLUGIN_SCANNER", root,
+                        L"libexec\\gstreamer-1.0\\gst-plugin-scanner.exe", 1);
+    UmiWindowsRuntimeSet(L"GST_PLUGIN_SCANNER_1_0", root,
+                        L"libexec\\gstreamer-1.0\\gst-plugin-scanner.exe", 1);
+}
+
 static void UmiWindowsRuntimePrepareCache(const wchar_t *root)
 {
     wchar_t *path = malloc(UMI_RUNTIME_PATH_CAPACITY * sizeof(*path));
@@ -229,6 +270,7 @@ static void UmiWindowsRuntimeInitialise(void)
     UmiWindowsRuntimeSet(L"FONTCONFIG_FILE", root, L"etc\\fonts\\fonts.conf", 1);
     UmiWindowsRuntimeSet(L"UMICOM_FRAMEWORK_RESOURCE_ROOT", root,
                          L"share\\umicom\\framework\\resources", 1);
+    UmiWindowsRuntimePrepareMedia(root);
     UmiWindowsRuntimePrepareCache(root);
     free(marker);
     free(root);

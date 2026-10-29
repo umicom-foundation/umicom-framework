@@ -67,4 +67,50 @@ A failed temporary-file cleanup may leave a sibling named <code>.umicom-write-..
 Do not treat that file as an applied patch. Power-loss durability of the parent directory
 is not guaranteed. The synchronous APIs belong on an application worker when used by a GUI.</p>
 <p>For general filesystem operations, see <a href="unicode-project-paths.html">Unicode project paths</a>.</p>
+
+<h2>Create an export without replacing an existing file</h2>
+<p>Saving an edited document and creating a new practice copy have different
+requirements. <code>UmiRootedFileWrite</code> deliberately supports replacement.
+Use <code>UmiRootedFileCreate</code> when a selected destination must be new,
+such as a lesson example, an export or a separate evidence file.</p>
+<pre><code>#include "umicom/platform/rooted_files.h"
+
+UmiRootedFileCreation report;
+UmiStatus status = UmiRootedFileCreate(
+    selected_root, "practice/example.c", verified_bytes, byte_count, &amp;report);
+if (status == UMI_STATUS_OK) {
+    /* The new file was written, flushed and closed. */
+} else if (report.created) {
+    /* A partial new file remains. Show its path and report.bytes_written. */
+} else {
+    /* Creation was refused or failed before a new leaf was opened. */
+}</code></pre>
+<p>This fragment assumes that the application already owns a selected absolute
+root and the input bytes. The <code>practice</code> directory must exist.
+The service checks relative path syntax and opens checked parent directories.
+The native create operation refuses an existing leaf, including a symbolic
+link. There is no earlier existence check followed by an overwrite, no shell
+invocation and no automatic parent creation.</p>
+<p>The report is initialized on every call. <code>created</code> records a
+successful exclusive open; it does not promise a complete file.
+<code>bytes_written</code> counts bytes accepted by native writes.
+<code>complete</code> becomes true only after writing, flushing and closing
+succeed. A later failure leaves the new file in place for inspection.
+Unlike the replacement writer's staged publication, exclusive creation may
+expose an incomplete new file to other readers on some platforms. Use the
+reported status rather than file existence to decide whether copying succeeded.</p>
+<p>New POSIX files start with mode <code>0600</code>, restricted further by the
+process umask. Windows uses the parent directory's inherited access policy.
+No original permissions or extended metadata are copied. Ancestors above the
+chosen root remain trusted. Concurrent callers can compete for one destination;
+only one may create it, and refused callers must choose a different name.
+A successful flush and close still cannot guarantee survival of every
+power failure or later external edit.</p>
+<p>For a complete learning example, read
+<code>examples/learning_pack_inspector/practice.c</code>. Its
+<code>UmiLearningPracticeCopy</code> service verifies a manifest-declared
+example's bytes before calling rooted exclusive creation. The application
+previews the choice and requests copying explicitly; neither operation grants
+permission to build or execute the copied code.</p>
+
 </main></body></html>

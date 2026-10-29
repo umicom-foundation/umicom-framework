@@ -47,8 +47,10 @@ typedef struct RootedParent
 
 #ifdef _WIN32
 #include "rooted_files_win32.inc"
+#include "rooted_create_win32.inc"
 #else
 #include "rooted_files_posix.inc"
+#include "rooted_create_posix.inc"
 #endif
 
 /* Roots are existing absolute directories, including drive/share roots.
@@ -214,5 +216,22 @@ UmiStatus UmiRootedFileExists(const char *root, const char *relativePath, int *o
         return UMI_STATUS_OK;
     if (status == UMI_STATUS_OK)
         *outExists = 1;
+    return status;
+}
+
+/* New-file export shares the rooted parent guards, but deliberately does not
+ * call the replacement writer: a learning example must not replace user work. */
+UmiStatus UmiRootedFileCreate(const char *root, const char *relativePath,
+    const void *bytes, size_t size, UmiRootedFileCreation *report)
+{
+    if (report == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *report = (UmiRootedFileCreation){0};
+    report->status = UMI_STATUS_INVALID_ARGUMENT;
+    if (bytes == NULL && size != 0U) return report->status;
+    RootedParent *parent = NULL;
+    UmiStatus status = RootedOpen(root, relativePath, &parent);
+    if (status == UMI_STATUS_OK) status = RootedCreateNew(parent, bytes, size, report);
+    RootedDispose(parent);
+    report->status = status;
     return status;
 }

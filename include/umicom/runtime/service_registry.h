@@ -63,6 +63,51 @@ typedef struct UmiServiceDescriptor {
  */
 typedef struct UmiServiceRegistry UmiServiceRegistry;
 
+
+/* Copied metadata contains no service, callback or registry pointers. It remains
+ * readable after registry mutation or release; it does not keep a service alive. */
+typedef struct UmiServiceSnapshot {
+    char service_id[UMI_SERVICE_ID_CAPACITY];
+    char provider_module_id[UMI_SERVICE_PROVIDER_CAPACITY];
+    UmiVersion service_version;
+    uint32_t flags;
+} UmiServiceSnapshot;
+
+/* Copy one entry under the registry mutex. NULL provider selects the first
+ * matching provider in registration order. A missing entry leaves output
+ * unchanged. Keep registry lifetime valid throughout the call. */
+UmiStatus UmiServiceRegistryCopySnapshot(const UmiServiceRegistry *registry,
+    const char *service_id, const char *provider_module_id,
+    UmiServiceSnapshot *out_snapshot);
+
+/* Copy one consistent metadata list in registration order. out_total receives
+ * the entire count, including entries beyond capacity. A short non-NULL output
+ * receives a valid prefix and CAPACITY_EXCEEDED. NULL output with zero capacity
+ * is a successful count query. Errors before copying leave items unchanged and
+ * reset a supplied out_total to zero. These calls serialize with registry
+ * writes; exclude all concurrent operations before registry release. */
+UmiStatus UmiServiceRegistryCopySnapshots(const UmiServiceRegistry *registry,
+    UmiServiceSnapshot *out_snapshots, size_t capacity, size_t *out_total);
+
+
+/* Counts from one locked registry observation; no allocation or service calls. */
+typedef struct UmiServiceRegistrySummary {
+    size_t service_count;
+    size_t singleton_service_count;
+    size_t owned_service_count;
+    size_t thread_safe_service_count;
+    size_t replaceable_service_count;
+} UmiServiceRegistrySummary;
+
+UmiStatus UmiServiceRegistryCopySummary(const UmiServiceRegistry *registry,
+    UmiServiceRegistrySummary *out_summary);
+
+/* Empty prefix matches all registered providers. Count rows, not distinct
+ * service names: two providers of one service contribute two matches.
+ * On failure a supplied out_count is reset to zero. */
+UmiStatus UmiServiceRegistryCountPrefix(const UmiServiceRegistry *registry,
+    const char *prefix, size_t *out_count);
+
 /**
  * Initialise service registry from caller-provided values so later operations receive a
  * known state.
@@ -73,9 +118,28 @@ UmiStatus umi_service_registry_create(UmiServiceRegistry **out_registry);
  * safely.
  */
 void umi_service_registry_destroy(UmiServiceRegistry *registry);
+
+/* Checked owner release. Empty owners succeed; destructor reentry is refused
+ * without changing the pointer. Exclude all concurrent operations for release;
+ * read-only destructor callbacks run under that exclusive owner.
+ * Destructors run outside the write mutex and must return normally. During a
+ * destructor, registry mutation/release returns INVALID_STATE; read-only
+ * discovery can observe the composition after the retired entry was detached. */
+UmiStatus UmiServiceRegistryRelease(UmiServiceRegistry **inOutRegistry);
+
+/* Observe the destructor interval while holding a valid owner reference. This
+ * is a reentry guard for enclosing owners, not permission to race destruction.
+ * NULL returns zero. */
+int UmiServiceRegistryIsInCallback(const UmiServiceRegistry *registry);
 /**
  * Add service registry only after its inputs and available capacity have been checked.
  */
+/* Identifiers are copied, service pointers are borrowed unless OWNED. Replace
+ * requires the existing entry to be REPLACEABLE. Replacing with the same object
+ * changes metadata without destroying it; the new ownership/destructor applies
+ * at later removal. Either provider declaring SINGLETON forbids a second
+ * provider. Input may be a currently borrowed descriptor when serialized.
+ * Reacquire find/at pointers after mutation; serialize reads against writes. */
 UmiStatus umi_service_registry_register(UmiServiceRegistry *registry,
                                         const UmiServiceDescriptor *descriptor);
 /**

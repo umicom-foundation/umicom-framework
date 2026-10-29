@@ -544,3 +544,10 @@ UmiStatus UmiTaskQueueReleaseStopped(UmiTaskQueue **inOutQueue)
     umi_task_queue_destroy(queue); /* stopped; all handles already released */
     return UMI_STATUS_OK;
 }
+
+/* Enclosing service owners need a side-effect-free self-wait guard before
+ * stopping other services. Keep the identity beside the canonical worker TLS. */
+int UmiTaskQueueIsCurrentWorker(const UmiTaskQueue *queue)
+{
+    return queue != NULL && umiExecutingQueue == queue;
+}

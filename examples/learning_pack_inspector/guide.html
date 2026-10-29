@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Use offline learning packs</title>
+<style>body{max-width:62rem;margin:2rem auto;padding:0 1rem;font:1rem/1.65 system-ui;color:#173047}h1,h2{line-height:1.25}pre{padding:1rem;background:#edf3f7;white-space:pre-wrap;overflow-wrap:anywhere}code{overflow-wrap:anywhere}table{border-collapse:collapse}th,td{border:1px solid #aabac9;padding:.6rem;text-align:left;vertical-align:top}svg{width:100%;height:auto}.note{border-left:4px solid #25708d;padding:.5rem 1rem;background:#f0f7fa}</style></head><body>
+<h1>Use offline learning packs</h1>
+<p>A learning pack is a directory containing reading material, practice examples
+and a small catalogue called a <em>manifest</em>. The manifest describes what each
+file is for. A reader can use that description to show a title, find a topic or
+link a lesson to its example. Keeping these details together lets the same pack
+serve a desktop application, a documentation website or a mobile reader.</p>
+<p>This guide uses the real C example in <code>main.c</code> beside this page. It
+loads the manifest through Umicom Framework, prints its resources and can verify
+one resource's contents. The example uses an installed Framework SDK containing
+the developer component. The current Studio foundations-library chooser remains
+available; it does not automatically discover these manifests.</p>
+
+<h2>1. Understand the four pieces</h2>
+<svg viewBox="0 0 900 180" role="img" aria-labelledby="flow-title flow-desc">
+<title id="flow-title">Reading a versioned learning pack</title>
+<desc id="flow-desc">An explicitly selected directory contains a manifest and files. Framework validates the manifest, reads a selected file below the directory and checks its hash. The application receives copied metadata and verified bytes.</desc>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10Z" fill="#25708d"/></marker></defs>
+<g fill="#eef5f8" stroke="#25708d" stroke-width="2"><rect x="5" y="30" width="205" height="110" rx="12"/><rect x="240" y="30" width="190" height="110" rx="12"/><rect x="460" y="30" width="195" height="110" rx="12"/><rect x="685" y="30" width="210" height="110" rx="12"/></g>
+<g stroke="#25708d" stroke-width="2" marker-end="url(#arrow)"><path d="M211 85H236"/><path d="M431 85H456"/><path d="M656 85H681"/></g>
+<g fill="#173047" text-anchor="middle" font-family="sans-serif" font-size="18"><text x="108" y="65">Chosen directory</text><text x="108" y="95">manifest + files</text><text x="335" y="65">Validate catalogue</text><text x="335" y="95">IDs and versions</text><text x="558" y="65">Read and verify</text><text x="558" y="95">path + SHA-256</text><text x="790" y="65">Application reader</text><text x="790" y="95">metadata + bytes</text></g>
+</svg>
+<table><thead><tr><th>Piece</th><th>Responsibility</th></tr></thead><tbody>
+<tr><td>Pack directory</td><td>Owns the manifest and its declared files. The reader receives its absolute location explicitly.</td></tr>
+<tr><td>Manifest</td><td>Names the product, locale, content revision, compatible product versions and resources.</td></tr>
+<tr><td>Framework pack service</td><td>Checks the catalogue, bounds allocations and reads declared files through rooted storage.</td></tr>
+<tr><td>Application reader</td><td>Chooses what to display, how to render it and whether a learner may copy an example into a practice project.</td></tr>
+</tbody></table>
+<p>A <em>resource</em> is one declared file. Its identifier is a stable name such
+as <code>guide</code>; its path is a location such as <code>guide.html</code>.
+Using an identifier in navigation allows a publisher to reorganise a directory
+without changing every lesson link that refers to that identifier.</p>
+
+<h2>2. Build the real inspection example</h2>
+<p>Install a current Framework SDK with the developer component first, using the
+same compiler and target platform as the consumer. The example checks the chosen
+SDK's origin, environment metadata and installed headers. A core-only SDK does
+not supply the learning service.</p>
+<p>Run each stage separately. Stop if a command fails and keep its log. PowerShell
+does not automatically stop after a native program returns an error.</p>
+<pre><code>Set-Location "C:\umicom\Umicom-Applications\framework"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+New-Item -ItemType Directory -Force "C:\umicom\_local\logs\learning-pack"
+
+cmake -S ".\examples\learning_pack_inspector" -B "C:\umicom\_local\learning\pack-inspector" -G Ninja -DCMAKE_C_COMPILER="C:/msys64/ucrt64/bin/gcc.exe" -DCMAKE_BUILD_TYPE=Debug -DUMICOM_EXPECTED_SDK_PREFIX="C:/umicom/installed/framework" -DBUILD_TESTING=ON 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\learning-pack\configure.log"
+
+cmake --build "C:\umicom\_local\learning\pack-inspector" --parallel 2 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\learning-pack\build.log"
+
+ctest --test-dir "C:\umicom\_local\learning\pack-inspector" --output-on-failure --no-tests=error --output-log "C:\umicom\_local\logs\learning-pack\tests.log"</code></pre>
+<p>The three example checks list the pack, verify its guide and verify its C
+example. Successful configuration also creates a <code>pack</code> directory
+inside the chosen build directory. It copies this guide and <code>main.c</code>,
+calculates their hashes and fills <code>learning-pack.json.in</code> to produce a
+complete manifest. Hashing the staged bytes avoids assuming that every checkout
+has identical line endings.</p>
+<pre><code>&amp; "C:\umicom\_local\learning\pack-inspector\umicom-learning-pack-inspect.exe" "C:\umicom\_local\learning\pack-inspector\pack" "learning-pack.json"
+
+&amp; "C:\umicom\_local\learning\pack-inspector\umicom-learning-pack-inspect.exe" "C:\umicom\_local\learning\pack-inspector\pack" "learning-pack.json" "guide" 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\learning-pack\inspect.log"</code></pre>
+<p>Expect the title, product, locale and two resources. The second command also
+prints <code>Verified guide:</code> followed by its byte count. The inspector
+reports verification; an application document renderer is responsible for
+displaying the HTML and its illustration.</p>
+
+<h2>3. Read the manifest</h2>
+<p>JSON represents an object with braces, named fields and values. A quoted value
+is text. An array uses square brackets and keeps its values in order. In this
+format, <code>[0, 9, 0]</code> is a major, minor and patch version.</p>
+<pre><code>{
+  "schema": "umicom.learning.pack",
+  "version": 1,
+  "id": "framework.learning-packs",
+  "title": "Learning offline documentation packs",
+  "product": "framework",
+  "locale": "en",
+  "revision": 1,
+  "compatibility": {
+    "minimum": [0, 9, 0],
+    "maximum": [0, 9, 0]
+  },
+  "resources": [
+    {
+      "id": "guide",
+      "title": "Use offline learning packs",
+      "topic": "learning-packs",
+      "kind": "guide",
+      "path": "guide.html",
+      "sha256": "THE_64_HEXADECIMAL_CHARACTERS_FOR_THE_ACTUAL_FILE",
+      "example": "inspector"
+    }
+  ]
+}</code></pre>
+<p>This shortened illustration omits the second resource and uses a hash
+placeholder. Use the generated complete manifest for a working input. The
+<code>example</code> field must name another resource whose kind is
+<code>example</code>. A missing reference is rejected. Valid kinds are
+<code>lesson</code>, <code>guide</code>, <code>example</code> and <code>image</code>.</p>
+<p>The schema version describes the manifest format. The content revision
+describes this pack's edition. Compatibility bounds describe the embedding
+product version and include both endpoints. The example uses the Framework
+version because it reads a Framework guide. A Trader or Studio adapter must
+supply its own product version for product-specific packs.</p>
+<p>Version one rejects unknown fields and duplicate field names, including names
+spelled with JSON escapes. It accepts at most 256 resources and a 256 KiB
+manifest. Pack and resource identifiers use letters, digits, dots, hyphens and
+underscores, starting with a letter or digit. Locale names use alphanumeric
+segments separated by hyphens; this checks spelling, not the existence of a
+translation. Labels must contain visible text and no ASCII control characters.</p>
+
+<h2>4. Follow the C ownership</h2>
+<pre><code>UmiLearningPack *pack = NULL;
+UmiVersion host = {0, 9, 0};
+UmiStatus status = UmiLearningPackLoad(root, "learning-pack.json", host, &amp;pack);
+if (status == UMI_STATUS_OK) {
+    UmiLearningPackInfo info;
+    status = UmiLearningPackCopyInfo(pack, &amp;info);
+    /* Use info only after checking status. */
+}
+UmiLearningPackDestroy(pack);</code></pre>
+<p>A pointer such as <code>pack</code> names an object owned by the application.
+The ampersand in <code>&amp;pack</code> passes the address of that pointer so the
+loader can publish the new owner. A failed load leaves it null. Destroying a null
+pack is safe. Release an existing owner before reusing its output variable.</p>
+<p>Metadata snapshots contain their own character arrays. They can outlive the
+pack. Resource bytes have separate ownership: call
+<code>UmiLearningPackFreeBytes</code> after the reader finishes using them.
+Keep the pack alive during a read. Immutable metadata supports concurrent reads
+while the owner prevents destruction.</p>
+<p><code>UmiLearningShelfAdopt</code> transfers a pack into a shelf. On success it
+clears the caller's pack pointer. On failure the caller still owns the pack.
+A shelf can own up to 32 packs and requires unique pack IDs. Resource identifiers
+are qualified by a pack ID, so two products can both have a resource called
+<code>guide</code>. Serialize shelf changes against reads and removal.</p>
+
+<h2>5. Understand integrity and trust</h2>
+<p>SHA-256 calculates a fixed-size digest from file bytes. A changed byte normally
+produces a different digest. The reader checks the digest of the exact buffer it
+returns. It therefore avoids checking one file read and then displaying a later,
+potentially different read.</p>
+<p>A hash does not establish who published the pack. Someone able to replace both
+a file and its manifest can recalculate it. Review the source of a pack before
+adopting it. The rooted-files service rejects traversal, reserved device names
+and links or reparse points beneath the chosen root. Ancestors above that root
+remain trusted. This service does not establish a content-revision lock against
+other writers.</p>
+<p>Each resource read has a caller-chosen maximum byte count. Images and examples
+may be binary; an embedded zero byte is retained. The renderer must apply its own
+content-type, script and link policy. Reading an example never grants workspace
+trust or permission to execute it. Copying examples into a practice project is a
+separate operation with its own destination and overwrite rules.</p>
+
+<h2>6. Investigate an error</h2>
+<ul>
+<li><strong>Unavailable:</strong> check the reader's product version against both compatibility endpoints.</li>
+<li><strong>Already exists:</strong> look for duplicate manifest keys, resource IDs or an adopted pack ID.</li>
+<li><strong>Not found:</strong> check a required field, referenced example, pack ID or the physical file named in the manifest.</li>
+<li><strong>Invalid state while reading:</strong> the selected file no longer matches its declared hash. Inspect the change and regenerate the pack intentionally.</li>
+<li><strong>Capacity exceeded:</strong> check field lengths, resource count, manifest limits and the chosen resource byte limit.</li>
+<li><strong>Invalid argument or permission denied:</strong> inspect the absolute root and relative path. Moving a pack requires selecting its new root explicitly.</li>
+</ul>
+<p>After editing either example file, reconfigure to regenerate the staged pack
+and its hashes. Keep the configure, build and test logs together with the source
+revision used. The Framework tests under <code>framework.learning_pack</code>
+cover schema refusal, copied ownership, compatibility boundaries, changed bytes
+and two independent pack directories. Their result applies to the source and
+environment actually tested.</p>
+
+<h2 id="navigation">Follow links within the same pack</h2>
+<p>A resource identifier names an entry in the manifest. A filename says where its bytes are stored. These are different things: the identifier <code>inspector</code> names the file <code>main.c</code> in this example. A lesson reader should resolve a link through the pack before opening it, so an arbitrary filename cannot silently become part of the learning library.</p>
+<ol>
+<li>Keep the identifier of the resource currently displayed. For this guide it is <code>guide</code>.</li>
+<li>Pass that identifier and the lesson's local link to <code>UmiLearningPackResolveLink</code>. A link such as <code>main.c</code> is relative to the current resource's containing folder.</li>
+<li>Check the returned status. On success, the result contains copied resource metadata and an optional anchor. On failure, your previous selection stays unchanged.</li>
+<li>Read the selected resource using <code>UmiLearningPackReadResource</code>. This checks the actual bytes against the manifest before your reader displays them. Resolving a name alone does not check the file.</li>
+</ol>
+<pre><code>#include "umicom/teacher/learning_navigation.h"
+
+UmiLearningPackLink next = {0};
+UmiStatus status = UmiLearningPackResolveLink(
+    pack, "guide", "main.c", &amp;next);
+if (status == UMI_STATUS_OK) {
+    unsigned char *bytes = NULL;
+    size_t size = 0;
+    status = UmiLearningPackReadResource(
+        pack, next.resource.id, 4U * 1024U * 1024U, &amp;bytes, &amp;size);
+    if (status == UMI_STATUS_OK) {
+        /* Render these checked bytes as source text.
+         * Opening a source example does not grant permission to run it. */
+    }
+    UmiLearningPackFreeBytes(bytes);
+}</code></pre>
+<p>The <code>#navigation</code> suffix is an <em>anchor</em>: a named place inside a document. The resolver returns that name; the renderer must still find the matching heading. An empty link or a link starting with <code>#</code> stays in the current resource. An image link such as <code>images/diagram.svg</code> is permitted only when the manifest declares that relative path.</p>
+<p>This first offline link profile accepts literal filenames and forward slashes. It refuses parent traversal (<code>..</code>), dot segments, absolute paths, network addresses, query strings, percent escapes and backslashes in links. It does not download external pages. Use portable filenames and keep related lessons and assets beneath an appropriate common folder. A future broader URL policy must be explicit; a frontend must not bypass a refusal by sending the same text to a browser or shell.</p>
+<p><code>UmiLearningPackFindPath</code> is available when an adapter already has a pack-relative filename. It compares the manifest's slash spelling consistently. If two resource identifiers declare the same path, path lookup reports <code>ALREADY_EXISTS</code> rather than selecting one by array order. Direct identifier lookup remains unambiguous.</p>
+<h3>Try the navigation example</h3>
+<p>After configuring and building the inspector as shown above, run these commands from its build folder:</p>
+<pre><code>&amp; ".\umicom-learning-pack-inspect.exe" "$PWD\pack" learning-pack.json guide main.c
+&amp; ".\umicom-learning-pack-inspect.exe" "$PWD\pack" learning-pack.json guide "#navigation"</code></pre>
+<p>The first command reports that the selected identifier is <code>inspector</code> and verifies its bytes. The second selects <code>guide</code> and reports the requested anchor. The inspector deliberately prints metadata rather than rendering a document, running JavaScript or executing the example. Its source shows the same ownership and status checks a desktop reader needs.</p>
+
+
+<h2 id="reader-history">Keep a reading session with Back and Forward</h2>
+<p>A single verified read gives an application some bytes. A reading session also needs to remember which lesson is open and how the learner arrived there. <code>UmiLearningReader</code> owns that session. It holds one pack, the current verified content and up to 64 history entries. A history entry records a resource identifier and its anchor. It does not retain a second copy of every document.</p>
+<svg viewBox="0 0 900 170" role="img" aria-labelledby="reader-title reader-description">
+<title id="reader-title">Commit navigation only after verification</title>
+<desc id="reader-description">The current lesson remains displayed while a candidate link is resolved and its bytes are checked. Success replaces the content and commits the history. Failure keeps the current lesson and history unchanged.</desc>
+<g fill="#eef5f8" stroke="#25708d" stroke-width="2"><rect x="5" y="25" width="220" height="110" rx="12"/><rect x="285" y="25" width="245" height="110" rx="12"/><rect x="590" y="25" width="305" height="110" rx="12"/></g>
+<g fill="#173047" text-anchor="middle" font-family="sans-serif" font-size="18">
+<text x="115" y="60">Current lesson</text><text x="115" y="90">and history stay visible</text>
+<text x="407" y="60">Resolve + read + verify</text><text x="407" y="90">a temporary candidate</text>
+<text x="742" y="60">Success: commit the selection</text><text x="742" y="90">Failure: retain the current page</text></g>
+<g stroke="#25708d" stroke-width="2" marker-end="url(#arrow)"><path d="M226 80H280"/><path d="M531 80H585"/></g>
+</svg>
+<h3>Ownership means one place is responsible for cleanup</h3>
+<p>Load a pack as before, then pass its pointer by address to <code>UmiLearningReaderCreate</code>. On success, the reader takes ownership and clears your pack pointer. Destroying the reader later also destroys its pack and frees its current content. If creation fails, your original pack remains yours. This rule lets the same cleanup code handle both outcomes.</p>
+<pre><code>#include "umicom/teacher/learning_reader.h"
+
+UmiLearningPack *pack = NULL;
+UmiLearningReader *reader = NULL;
+UmiStatus status = UmiLearningPackLoad(
+    selected_directory, "learning-pack.json", host_version, &amp;pack);
+if (status == UMI_STATUS_OK) {
+    status = UmiLearningReaderCreate(
+        &amp;pack, 4U * 1024U * 1024U, &amp;reader);
+}
+if (status == UMI_STATUS_OK) {
+    status = UmiLearningReaderOpen(reader, "guide");
+}
+/* Use reader here while it remains alive. */
+UmiLearningReaderDestroy(reader);
+UmiLearningPackDestroy(pack);</code></pre>
+<p>The address operator <code>&amp;</code> gives the function access to your pointer variable. It can set that variable to <code>NULL</code> after a successful transfer. The size limit is four mebibytes: four groups of 1,024 × 1,024 bytes. This bounds each content allocation. The API accepts limits from one byte up to 16 mebibytes; a file larger than your chosen limit is refused.</p>
+<h3>A failed navigation is not a new page</h3>
+<p><code>Open</code> selects an explicit resource identifier. <code>Follow</code> resolves a local link relative to the current document. Both read and verify the candidate before changing the session. A missing file, invalid path, changed hash or allocation failure leaves the old content and history in place. A UI can show an error beside the existing page instead of displaying a blank panel or a mismatched title.</p>
+<p><code>Back</code> and <code>Forward</code> also verify the requested document again. If a file changed on disk after an earlier visit, the operation fails and the history cursor stays where it was. <code>Reload</code> rechecks the current page without creating another history entry. Reopening the same resource and anchor has that same history behaviour.</p>
+<table><thead><tr><th>Action</th><th>History result after success</th></tr></thead><tbody>
+<tr><td>Open A, then follow B</td><td>A and B are recorded; B is current.</td></tr>
+<tr><td>Back from B</td><td>A becomes current; Forward can return to B.</td></tr>
+<tr><td>Open C while at A</td><td>C replaces the forward branch. The new path is A → C.</td></tr>
+<tr><td>Try to open an invalid link from A</td><td>A stays current and the forward branch remains available.</td></tr>
+<tr><td>Visit a 65th distinct entry</td><td>The oldest entry is evicted; the most recent 64 remain.</td></tr>
+</tbody></table>
+<p>Use <code>UmiLearningReaderCopySnapshot</code> to obtain the current title, identifier, anchor, byte count and Back/Forward availability. The snapshot is a copy. A successful content commit increments its revision, so a frontend can distinguish a newly loaded document from an earlier display update.</p>
+<h3>Transfer content to the display safely</h3>
+<p>Disk access can take time. Run reader operations on a worker owned by your application. Serialize access to that reader: one operation must finish before another changes or destroys it. The reader does not add its own background thread or call a UI callback.</p>
+<ol><li>Query the content size with <code>UmiLearningReaderCopyContent(reader, NULL, 0, &amp;size)</code>.</li><li>Allocate <code>size + 1</code> bytes and check the allocation. The extra byte holds a terminating zero.</li><li>Copy the content while the same owner still controls the reader. If an application changes the reader between the query and copy, it must handle a capacity error and repeat the operation.</li><li>Transfer that independent allocation and its metadata to the UI using your application's existing message or event mechanism.</li><li>Let the UI release its copy when it no longer needs it. Do not share mutable reader state across threads.</li></ol>
+<p>Use the explicit byte count even though a terminating zero is supplied: examples and images may contain binary zero bytes. A renderer must choose how to handle each resource kind, validate text encoding and refuse implicit script or source execution. This session service does not render images, execute HTML, open external websites or compile practice code.</p>
+<h3>Read and run the complete example</h3>
+<p>The file <code>history.c</code> beside this guide is a complete C application. It opens a lesson, follows another resource, goes Back and Forward, then copies the selected bytes into an independent allocation. It demonstrates cleanup after both success and failure.</p>
+<pre><code>&amp; ".\umicom-learning-pack-history.exe" "$PWD\pack" learning-pack.json guide main.c</code></pre>
+<p>Expected output describes Open on <code>guide</code>, Follow on <code>inspector</code>, Back on <code>guide</code>, and Forward on <code>inspector</code>. The final line reports the independent copy's byte count. Your count depends on the source file's exact contents. If the command reports an incompatible host version or changed resource, correct the pack or SDK selection; do not alter the stored digest simply to suppress a failure.</p>
+<p>The source regression cases under <code>tests/learning_pack/</code> cover history limits, forward-branch replacement, missing files, changed content, binary copying and failed navigation. These are separate from a product's GUI qualification. Integrating this reader into Studio still requires an adapter, a safe document renderer, keyboard navigation and tests of the actual user workflow.</p>
+
+
+<h2 id="practice">Copy an example into your own practice file</h2>
+<p>A lesson is easier to understand when you can change its example. Keep the
+learning pack as a reference and make a separate practice copy. A <em>copy</em>
+contains the same bytes at the time of copying, but later edits to that file do
+not change the original. The Framework operation here creates one new file. It
+does not assemble a multi-file project or decide that the code is safe to run.</p>
+<p>The complete application in <code>practice.c</code> uses
+<code>UmiLearningPracticeResolveExample</code> to find the example linked to a
+lesson. A manifest's <code>example</code> field contains a resource identifier,
+not a command. Selecting an example directly also works. A guide without an
+example link returns <code>NOT_FOUND</code>; the reader should explain that no
+practice file is provided.</p>
+<h3>Choose a destination and preview it</h3>
+<ol>
+<li>Build the inspection example using the earlier SDK instructions. It also
+builds <code>umicom-learning-pack-practice</code>.</li>
+<li>Create an empty practice directory that you control. This directory is
+separate from the pack. A <em>root</em> is the directory below which this
+operation is allowed to select a file.</li>
+<li>Run the preview command below from the example's build directory. Replace
+the practice directory with your chosen absolute path.</li>
+<li>Check the example title, destination root and new filename. Preview checks
+manifest metadata and path syntax. It does not open the destination or promise
+that the directory is writable.</li>
+</ol>
+<pre><code>New-Item -ItemType Directory -Force "C:\umicom\practice\learning-packs"
+&amp; ".\umicom-learning-pack-practice.exe" "$PWD\pack" learning-pack.json guide "C:\umicom\practice\learning-packs" my-inspector.c</code></pre>
+<p>The output includes “Preview only.” No file named <code>my-inspector.c</code>
+should appear. The root is an absolute path. The filename is relative to that
+root, so <code>my-inspector.c</code> means a file inside the chosen directory.
+Nested relative names are allowed only when their parent directories already
+exist. Dot segments, device names, links beneath the root and <code>.git</code>
+paths are refused by the rooted storage service.</p>
+<h3>Request the copy explicitly</h3>
+<pre><code>&amp; ".\umicom-learning-pack-practice.exe" "$PWD\pack" learning-pack.json guide "C:\umicom\practice\learning-packs" my-inspector.c --copy</code></pre>
+<p>The additional <code>--copy</code> argument requests creation. Framework reads
+the example under a caller-selected size limit, checks the manifest digest and
+passes those exact bytes to an exclusive file writer. <em>Exclusive</em> means
+that an existing destination is refused as part of opening the new file. An
+earlier “does this file exist?” check alone would be unsafe: another writer
+could create the name between that check and the write.</p>
+<p>Expected output reports the number of copied verified bytes. Open the new file
+in your editor and compare it with <code>pack/main.c</code>. Edit only your
+practice copy. Running the copy command again should report
+<code>ALREADY_EXISTS</code> on an ordinary existing destination. Choose another
+new filename if you want a fresh copy; the service does not overwrite your edits.</p>
+<svg viewBox="0 0 900 210" role="img" aria-labelledby="practice-title practice-desc">
+<title id="practice-title">Verified example copying</title>
+<desc id="practice-desc">The lesson identifies an example in its manifest. Framework reads and verifies its bytes, then creates a new file under the chosen practice root. Existing files are refused. Copying does not run code.</desc>
+<g fill="#eef5f8" stroke="#25708d" stroke-width="2">
+<rect x="5" y="30" width="200" height="105" rx="12"/>
+<rect x="240" y="30" width="195" height="105" rx="12"/>
+<rect x="470" y="30" width="210" height="105" rx="12"/>
+<rect x="715" y="30" width="180" height="105" rx="12"/></g>
+<g stroke="#25708d" stroke-width="2" marker-end="url(#arrow)">
+<path d="M206 82H235"/><path d="M436 82H465"/><path d="M681 82H710"/></g>
+<g fill="#173047" text-anchor="middle" font-family="sans-serif" font-size="17">
+<text x="105" y="65">Lesson → example</text><text x="105" y="94">Copied metadata</text>
+<text x="337" y="65">Bounded read</text><text x="337" y="94">Check SHA-256</text>
+<text x="575" y="65">Create new file</text><text x="575" y="94">Never replace a leaf</text>
+<text x="805" y="65">Your practice copy</text><text x="805" y="94">No execution</text>
+<text x="450" y="180">Keep the original pack available for comparison.</text></g></svg>
+<h3>Understand failure without losing work</h3>
+<table><thead><tr><th>Result</th><th>Meaning</th><th>Next step</th></tr></thead><tbody>
+<tr><td>Source hash mismatch</td><td>The source bytes differ from the manifest.
+No destination creation was attempted.</td><td>Obtain or rebuild the intended
+pack and investigate why it changed.</td></tr>
+<tr><td>Destination already exists</td><td>The existing file was not
+opened for replacement.</td><td>Keep it and choose a different name.</td></tr>
+<tr><td>Missing destination parent</td><td>The operation does not create
+directories for you.</td><td>Create the intended directory yourself, then retry.</td></tr>
+<tr><td>Failure after new-file creation</td><td>A new, possibly partial file
+remains. Its accepted byte count is reported.</td><td>Inspect that file before
+choosing a new destination. File existence alone does not establish success.</td></tr>
+</tbody></table>
+<p>The C result separates <code>source_verified</code>,
+<code>destination_attempted</code> and <code>destination.created</code>.
+The writer sets <code>destination.complete</code> only after all bytes, the
+flush and the close succeed. Flushing asks the operating system to commit its
+buffered output; it is not a guarantee against every power failure or storage
+fault. The writer retains a partial file on failure and never removes it by
+pathname. This avoids deleting a file that another process might have replaced.</p>
+<p>For an application interface, perform copying on a worker, then send the
+copied result to the UI. Display the error and the chosen destination. Do not
+automatically compile or run an example after copying: use the application's
+separate project-opening and execution-trust workflow. Framework's built-in
+project generators remain available when a lesson needs a complete buildable
+project rather than one source file.</p>
+<p>The installed example's <code>sdk.learning_pack.practice.copy</code> test
+checks preview, copying, preserved source bytes and refusal of an existing
+destination. Framework's focused creation tests also cover native I/O failures
+and competing writers. These command-line checks do not replace testing the
+actual Studio learning interface.</p>
+
+</body></html>

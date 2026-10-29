@@ -85,6 +85,11 @@ if(NOT MODE STREQUAL "missing")
         "${FRAMEWORK}/src/platform/input_file.c"
         "${FRAMEWORK}/src/platform/filesystem.c"
         "${FRAMEWORK}/src/platform/path.c")
+    # Broker profile persistence needs real replacement and lease implementations
+    # in isolated consumers as well as the complete Framework build.
+    target_sources(umicom_platform PRIVATE
+        "${FRAMEWORK}/src/platform/local_replace.c"
+        "${FRAMEWORK}/src/platform/file_lease.c")
     set(_owners base trading platform)
     if(NOT MODE STREQUAL "partial")
         add_library(umicom_trading_ui STATIC "${FRAMEWORK}/src/strategy_research/backtest_engine.c")

@@ -31,6 +31,9 @@ typedef struct UmiModuleRuntimeEntry {
     const UmiModuleDescriptor *descriptor;
     UmiModuleContext context;
     UmiModuleState state;
+    int needs_stop;
+    int quiesce_required;
+    int quiesce_complete;
 } UmiModuleRuntimeEntry;
 
 typedef struct UmiMasterAuthorityEntry {
@@ -63,6 +66,9 @@ struct UmiMasterController {
     size_t module_count;
     size_t authority_count;
     int started;
+    int cleanup_pending;
+    int release_pending; /* Only release may resume after destruction starts. */
+    int lifecycle_busy; /* Serial owner and callback reentry guard, not a mutex. */
 };
 
 /* Provide the master now operation used by this module and its client applications. */
@@ -323,6 +329,9 @@ UmiStatus umi_master_controller_create(
  * Release or reset state held by master controller so the same storage can be reused
  * safely.
  */
+/* Preserve the previous lifecycle for review. Checked lifecycle ownership
+ * retains failed cleanup and keeps dependencies alive until retries succeed. */
+#if 0
 void umi_master_controller_destroy(UmiMasterController *controller)
 {
     size_t index;
@@ -391,6 +400,7 @@ void umi_master_controller_destroy(UmiMasterController *controller)
     umi_event_bus_destroy(controller->events);
     free(controller);
 }
+#endif
 
 /*
  * Provide the master controller register authority operation used by this module and its
@@ -415,7 +425,8 @@ UmiStatus umi_master_controller_register_authority(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     /* Apply this branch only when its contract condition is satisfied. */
-    if (controller->started) {
+    if (controller->started || controller->cleanup_pending || controller->release_pending ||
+        controller->lifecycle_busy || UmiServiceRegistryIsInCallback(controller->services)) {
         return UMI_STATUS_INVALID_STATE;
     }
     /* Visit each bounded item once so every record receives the same rule. */
@@ -475,6 +486,9 @@ void *umi_master_controller_authority(
  * Provide the master register module capabilities operation used by this module and its
  * client applications.
  */
+/* Retain the former per-capability mutation for comparison. Atomic batch
+ * admission prevents a rejected module from leaving usable-looking providers. */
+#if 0
 static UmiStatus umi_master_register_module_capabilities(
     UmiMasterController *controller,
     const UmiModuleDescriptor *module)
@@ -510,8 +524,41 @@ static UmiStatus umi_master_register_module_capabilities(
     }
     return UMI_STATUS_OK;
 }
+#endif
+
+static UmiStatus umi_master_register_module_capabilities(
+    UmiMasterController *controller,
+    const UmiModuleDescriptor *module)
+{
+    size_t count = 0U;
+    if (module->provided_capabilities == NULL) return UMI_STATUS_OK;
+    while (module->provided_capabilities[count] != NULL) {
+        if (count == UMI_CAPABILITY_REGISTRY_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+        ++count;
+    }
+    if (count == 0U) return UMI_STATUS_OK;
+    UmiCapabilityDescriptor *descriptors = calloc(count, sizeof(*descriptors));
+    if (descriptors == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    for (size_t index = 0U; index < count; ++index) {
+        descriptors[index].structure_size = (uint32_t)sizeof(descriptors[index]);
+        descriptors[index].capability_id = module->provided_capabilities[index];
+        descriptors[index].capability_version = module->module_version;
+        descriptors[index].provider_module_id = module->module_id;
+        descriptors[index].provider = module->module_state;
+        descriptors[index].flags = UMI_CAPABILITY_SINGLETON;
+    }
+    UmiStatus status = UmiCapabilityRegistryRegisterBatch(
+        controller->capabilities, descriptors, count);
+    free(descriptors);
+    return status;
+}
+
 
 /* Add master controller only after its inputs and available capacity have been checked. */
+/* Retain the earlier registration sequence for review. Failed capability
+ * admission now rolls back catalogue membership, and diagnostic callbacks
+ * cannot release the controller while its registration call is active. */
+#if 0
 UmiStatus umi_master_controller_register(
     UmiMasterController *controller,
     const UmiModuleDescriptor *module)
@@ -579,6 +626,85 @@ UmiStatus umi_master_controller_register(
     umi_master_report(controller,
                       UMI_DIAGNOSTIC_INFO,
                       "Slave Controller registered");
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_master_controller_register(
+    UmiMasterController *controller,
+    const UmiModuleDescriptor *module)
+{
+    UmiModuleRuntimeEntry *entry;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (controller == NULL || module == NULL ||
+        module->module_id == NULL || module->module_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (controller->started || controller->cleanup_pending || controller->release_pending ||
+        controller->lifecycle_busy || UmiServiceRegistryIsInCallback(controller->services)) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (controller->module_count >= UMI_MASTER_MAX_MODULES) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (module->structure_size < sizeof(UmiModuleDescriptor) ||
+        module->abi_version != UMICOM_FRAMEWORK_ABI_VERSION) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    status = umi_module_registry_add(controller->registry, module);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    status = umi_master_register_module_capabilities(controller, module);
+    if (status != UMI_STATUS_OK) {
+        /* No callback has run and controller access is serialized. Remove only
+         * the provisional registry membership; batch capability admission left
+         * the provider catalogue unchanged. The caller still owns the module. */
+        (void)UmiModuleRegistryRemove(controller->registry, module->module_id);
+        return status;
+    }
+
+    entry = &controller->modules[controller->module_count++];
+    (void)memset(entry, 0, sizeof(*entry));
+    entry->descriptor = module;
+    entry->state = UMI_MODULE_DISCOVERED;
+    entry->context.module_state = module->module_state;
+    entry->context.events = controller->events;
+    entry->context.commands = controller->commands;
+    entry->context.queries = controller->queries;
+    entry->context.data_server = controller->data_server;
+    entry->context.config = controller->config;
+    entry->context.clock = &controller->clock;
+    entry->context.scheduler = controller->scheduler;
+    entry->context.capabilities = controller->capabilities;
+    entry->context.services = controller->services;
+    entry->context.command_registry = controller->command_registry;
+    entry->context.health = controller->health;
+    entry->context.policy = controller->policy;
+    entry->context.diagnostic_sink = controller->diagnostic_sink;
+    entry->context.diagnostic_user_data = controller->diagnostic_user_data;
+
+    /* The completed composition is visible to diagnostics, but callbacks may
+     * not mutate or destroy it before registration returns to its owner. */
+    controller->start_order_count = 0U;
+    controller->lifecycle_busy = 1;
+    umi_master_health(controller,
+                      module->module_id,
+                      UMI_HEALTH_STOPPED,
+                      "Module discovered");
+    umi_master_report(controller,
+                      UMI_DIAGNOSTIC_INFO,
+                      "Slave Controller registered");
+    controller->lifecycle_busy = 0;
     return UMI_STATUS_OK;
 }
 
@@ -676,6 +802,11 @@ UmiStatus umi_master_controller_validate(
     if (controller == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Validation rewrites dependency order; do it only outside a live or
+     * pending lifecycle, including callbacks invoked during startup/teardown. */
+    if (controller->started || controller->cleanup_pending || controller->release_pending ||
+        controller->lifecycle_busy || UmiServiceRegistryIsInCallback(controller->services))
+        return UMI_STATUS_INVALID_STATE;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -770,6 +901,9 @@ static UmiStatus umi_master_run_phase(
  * Provide the master rollback start operation used by this module and its client
  * applications.
  */
+/* Preserve the previous lifecycle for review. Checked lifecycle ownership
+ * retains failed cleanup and keeps dependencies alive until retries succeed. */
+#if 0
 static void umi_master_rollback_start(UmiMasterController *controller,
                                       size_t completed_entries)
 {
@@ -800,11 +934,15 @@ static void umi_master_rollback_start(UmiMasterController *controller,
                           "Module rolled back after startup failure");
     }
 }
+#endif
 
 /*
  * Provide the master controller start operation used by this module and its client
  * applications.
  */
+/* Preserve the previous lifecycle for review. Checked lifecycle ownership
+ * retains failed cleanup and keeps dependencies alive until retries succeed. */
+#if 0
 UmiStatus umi_master_controller_start(UmiMasterController *controller)
 {
     size_t order_index;
@@ -901,11 +1039,15 @@ UmiStatus umi_master_controller_start(UmiMasterController *controller)
                       "All Slave Controllers started");
     return UMI_STATUS_OK;
 }
+#endif
 
 /*
  * Provide the master controller stop operation used by this module and its client
  * applications.
  */
+/* Preserve the previous lifecycle for review. Checked lifecycle ownership
+ * retains failed cleanup and keeps dependencies alive until retries succeed. */
+#if 0
 UmiStatus umi_master_controller_stop(UmiMasterController *controller)
 {
     size_t order_index;
@@ -1005,6 +1147,7 @@ UmiStatus umi_master_controller_stop(UmiMasterController *controller)
     }
     return first_failure;
 }
+#endif
 
 /*
  * Provide the master controller module state operation used by this module and its client
@@ -1142,3 +1285,6 @@ UmiHealthRegistry *umi_master_controller_health(
  */
 UmiPolicyEngine *umi_master_controller_policy(UmiMasterController *controller)
 { return controller != NULL ? controller->policy : NULL; }
+
+/* Shared owner-level lifecycle and retry bookkeeping. */
+#include "master_controller_lifecycle.inc"

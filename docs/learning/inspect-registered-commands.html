@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Inspect registered commands</title><style>body{max-width:56rem;margin:2rem auto;padding:0 1rem;font:1rem/1.65 system-ui;color:#162130}pre{white-space:pre-wrap;background:#eef2f6;padding:1rem}code{overflow-wrap:anywhere}a{color:#075a82}</style></head><body>
+<h1>Inspect registered commands</h1>
+<p>A command is a named application action. Menus, keyboard shortcuts, palettes
+and console adapters can refer to the same command identifier. The registry
+stores descriptive metadata and callbacks, while the application owns the state
+used by those callbacks.</p>
+<p>Discovery must not accidentally perform the action it describes. Framework's
+command snapshots, prefix queries and policy summary read registered metadata
+without calling a handler or enablement callback. A command appearing in a list
+does not prove that it is currently enabled or that a user has permission to run
+it. Those are separate execution decisions.</p>
+<h2>Read policy totals</h2>
+<pre><code>UmiCommandRegistrySummary summary;
+UmiStatus status = UmiCommandRegistryCopySummary(registry, &amp;summary);
+if (status == UMI_STATUS_OK) {
+    printf("%zu commands; %zu marked as background work\n",
+        summary.command_count, summary.background_command_count);
+}</code></pre>
+<p>The total and the counts for state mutation, background work, auditing and
+trust requirements come from one mutex-protected observation. A command can have
+several flags and contribute to several counts. Do not add the flag counts
+together to calculate the number of commands. This operation needs no metadata
+array and leaves the output unchanged on failure.</p>
+<h2>Count a namespace</h2>
+<pre><code>size_t count = 0U;
+UmiStatus status = umi_command_registry_find_prefix(
+    registry, "document.", NULL, 0U, &amp;count);
+if (status == UMI_STATUS_OK)
+    printf("%zu document commands\n", count);</code></pre>
+<p>A namespace prefix is a shared beginning of command identifiers. For example,
+<code>document.open</code> and <code>document.save</code> begin with
+<code>document.</code>. A count-only request passes no output array and uses zero
+capacity. An empty prefix matches every identifier. The runtime inventory prefix
+helper delegates to this existing registry operation.</p>
+<h2>Copy a list for a view</h2>
+<pre><code>UmiCommandSnapshot rows[4];
+size_t total = 0U;
+UmiStatus status = umi_command_registry_find_prefix(
+    registry, "document.", rows, 4U, &amp;total);
+if (status == UMI_STATUS_OK || status == UMI_STATUS_CAPACITY_EXCEEDED) {
+    size_t copied = total &lt; 4U ? total : 4U;
+    for (size_t index = 0U; index &lt; copied; ++index)
+        printf("%s: %s\n", rows[index].command_id, rows[index].title);
+}</code></pre>
+<p>A short array receives a valid prefix of the matching rows and an insufficient
+capacity status. The reported total can exceed the array size; read only the
+copied rows. Snapshot character arrays belong to the caller and remain readable
+after registration changes. They do not retain handler payloads, and old
+snapshots do not guarantee that the command remains registered.</p>
+<h2>Keep observation separate from execution</h2>
+<p><code>umi_command_registry_is_enabled</code> asks application code whether a
+command is enabled. Unlike metadata discovery, it invokes the registered
+enablement callback. <code>umi_command_registry_execute</code> also checks that
+callback before invoking the handler. Follow the application's permission and
+trust policy when exposing execution; descriptive flags and permission names
+are not a substitute for that policy.</p>
+<p>Keep the registry and borrowed callback payloads alive for their respective
+operations. A summary mutex coordinates registry reads with writes but cannot
+make concurrent registry destruction safe. Runtime inventory obtains separate
+command and service observations. It is not one atomic transaction across the
+whole application, and capability mutation still needs owner serialization.</p>
+<h2>Review the checks</h2>
+<p><code>tests/test_command_discovery.c</code> registers all sixteen combinations
+of the four policy flags, checks mutation and prefix counts, and verifies that
+metadata capture never calls enablement or execution callbacks. Build
+<code>umicom-command-discovery-test</code> and select
+<code>^framework[.]command[.]discovery[.]</code> in CTest. Existing
+<code>framework.runtime.inventory_queries</code> and
+<code>framework.runtime.inventory_flag_matrix</code> checks cover the combined
+inventory adapter. These names identify coverage to execute, not evidence of a
+pass on an untested build.</p>
+<p>Continue with <a href="inspect-shared-services.html">service metadata discovery</a>
+and <a href="register-services-safely.html">transactional registration</a>.</p>
+<h2>Distinguish an empty registry from a failed observation</h2>
+<p>A mutex protects the registry while a reader copies its entries. If the
+platform cannot acquire that mutex, status-returning queries report the failure
+before reading the registry. Their output remains unchanged on that pre-copy
+failure. Do not display an old report as a fresh successful observation.</p>
+<p>The older count and boolean interfaces cannot carry an error code; they
+return zero or false when acquisition fails. Use a summary or snapshot when
+your application must distinguish that result from an empty registry or a missing
+command. Keep the registry owner alive during either form of query.</p>
+<p>The <code>framework.command.lock_failure</code> cases compile the real command
+registry with a small test-only mutex implementation. They inject one failure
+and check unchanged registrations, unchanged copied metadata, no callback and
+no unlock of an unacquired mutex. This verifies the error boundary; it does not
+establish the behaviour of concurrent threads or replace platform testing.</p>
+</body></html>

@@ -10,6 +10,11 @@ include(CMakePackageConfigHelpers)
 include("${FRAMEWORK_ROOT}/cmake/UmicomEducationInspection.cmake")
 install(EXPORT UmicomFrameworkTargets FILE UmicomFrameworkTargets.cmake
     NAMESPACE Umicom:: DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework")
+# The production package declares its header identity and build environment.
+# Derive the same identity in this focused producer rather than substituting the
+# fixture project name or a hand-maintained ABI number.
+include("${FRAMEWORK_ROOT}/cmake/UmicomFrameworkIdentity.cmake")
+umicom_read_framework_identity("${FRAMEWORK_ROOT}/include/umicom/base/version.h" UMICOM_FRAMEWORK_PACKAGE)
 configure_package_config_file(
     "${FRAMEWORK_ROOT}/cmake/UmicomFrameworkConfig.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/UmicomFrameworkConfig.cmake"
@@ -23,6 +28,7 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/UmicomFrameworkConfig.cmake"
     # their helper dependency in this isolated package too, so relocation tests
     # exercise the real configuration without requiring unrelated libraries.
     "${FRAMEWORK_ROOT}/cmake/UmicomRequireInstalledSdk.cmake"
+    "${FRAMEWORK_ROOT}/cmake/UmicomRequireSdkEnvironment.cmake"
     "${FRAMEWORK_ROOT}/cmake/UmicomPublicContractFingerprint.cmake"
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework")
 

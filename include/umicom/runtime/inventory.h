@@ -62,6 +62,9 @@ typedef struct UmiRuntimeInventorySnapshot {
  * Registry arguments are independently optional.  A NULL registry contributes
  * zero items to the snapshot, which makes the API useful to partial/headless
  * compositions without manufacturing placeholder registries.
+ * Command and service totals each come from one locked registry observation.
+ * The combined report is not atomic across registries. Serialize capability
+ * mutation with capture and keep every registry alive throughout the call.
  */
 UmiStatus umi_runtime_inventory_snapshot(
     const UmiCommandRegistry *commands,

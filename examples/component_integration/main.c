@@ -17,6 +17,7 @@
 #include "umicom/strategy_research/research_replay.h"
 #include "umicom/broker_connectivity/connection.h"
 #include "umicom/trading/fill_watch.h"
+#include "umicom/broker_connectivity/access_profiles.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -68,6 +69,50 @@ static UmiStatus CheckLocalLiquidityWatch(void)
         status = UMI_STATUS_INTERNAL_ERROR;
     UmiFullQuantityWatchDestroy(watch);
     return status;
+}
+
+/* An installed consumer owns these small values and their encoded bytes.
+ * Reloading connection settings cannot restore Live consent or create a session.
+ * This exercises the public profile API without touching a settings directory. */
+static UmiStatus CheckLocalAccessProfiles(void)
+{
+    UmiBrokerAccessProfiles profiles = {0}, decoded = {0};
+    UmiBrokerAccessPlan guest = {0};
+    UmiIbkrConnectionOptions options = {0};
+    char text[UMI_BROKER_PROFILES_TEXT_CAPACITY];
+    size_t size = 0U;
+    UmiStatus status = UmiBrokerAccessProfilesDefault(&profiles);
+    if (status == UMI_STATUS_OK)
+        status = UmiBrokerAccessPlanSetProgram(&profiles.paper, UMI_IBKR_GATEWAY);
+    profiles.paper.clientId = 17;
+    profiles.live.clientId = 23;
+    if (status == UMI_STATUS_OK)
+        status = UmiBrokerAccessProfilesEncode(&profiles, text, sizeof(text), &size);
+    if (status == UMI_STATUS_OK)
+        status = UmiBrokerAccessProfilesDecode(text, size, &decoded);
+    if (status != UMI_STATUS_OK) return status;
+    if (decoded.paper.mode != UMI_BROKER_ACCESS_PAPER ||
+        decoded.paper.program != UMI_IBKR_GATEWAY ||
+        decoded.paper.port != UmiIbkrDefaultPort(UMI_IBKR_GATEWAY, UMI_TRADING_PAPER) ||
+        decoded.paper.clientId != 17 || decoded.live.mode != UMI_BROKER_ACCESS_LIVE ||
+        decoded.live.port != profiles.live.port || decoded.live.clientId != 23)
+        return UMI_STATUS_INTERNAL_ERROR;
+    if (UmiBrokerAccessPlanConnectionOptions(&decoded.live, false, &options) !=
+        UMI_STATUS_PERMISSION_DENIED)
+        return UMI_STATUS_INTERNAL_ERROR;
+    status = UmiBrokerAccessPlanConnectionOptions(&decoded.live, true, &options);
+    if (status != UMI_STATUS_OK) return status;
+    if (!options.adapter.readOnly) return UMI_STATUS_INTERNAL_ERROR;
+    status = UmiBrokerAccessPlanCreate(UMI_BROKER_ACCESS_GUEST, &guest);
+    if (status != UMI_STATUS_OK) return status;
+    if (UmiBrokerAccessPlanConnectionOptions(&guest, false, &options) != UMI_STATUS_UNAVAILABLE)
+        return UMI_STATUS_INTERNAL_ERROR;
+    /* Guest is rejected before path validation or lease acquisition. Keeping
+     * this public call in the consumer also checks the storage object's actual
+     * transitive link dependencies; no file is created for this invalid plan. */
+    if (UmiBrokerAccessProfilesStore(NULL, &guest) != UMI_STATUS_INVALID_ARGUMENT)
+        return UMI_STATUS_INTERNAL_ERROR;
+    return UMI_STATUS_OK;
 }
 
 int main(void)
@@ -144,6 +189,8 @@ int main(void)
         status = UMI_STATUS_INTERNAL_ERROR;
         goto finished;
     }
+    status = CheckLocalAccessProfiles();
+    if (status != UMI_STATUS_OK) goto finished;
     status = CheckLocalLiquidityWatch();
     if (status != UMI_STATUS_OK) goto finished;
     printf("WORKSHOP bar: open %.2f, high %.2f, low %.2f, close %.2f, volume %.0f\n",
@@ -152,6 +199,7 @@ int main(void)
     printf("Historical replay: %zu observations; final equity %.2f; no open position.\n",
         processed, result.equity);
     puts("Paper and Live configuration: read-only; Live acknowledgement required.");
+    puts("Reloaded broker profiles: distinct Paper/Live settings; fresh Live consent; Guest has no connection.");
     puts("Practice complete. No broker connection, file write or real order was made.");
     exitCode = 0;
 finished:

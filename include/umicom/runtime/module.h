@@ -92,6 +92,15 @@ typedef void (*UmiModuleDestroyFn)(UmiModuleContext *context);
 /**
  * Represent the module lifecycle data shared with callers of this public contract.
  */
+/* Callbacks return normally under the Master Controller's serial ownership.
+ * A failed configure must unwind its own partial operation. After configure
+ * succeeds, stop must also support cleanup after failed initialise/start.
+ * Quiesce is used only after successful start. If quiesce or stop returns an
+ * error, keep the unfinished obligation represented for retry; completed
+ * quiesce is not repeated after a later stop error. Destroy is a final void
+ * cleanup and must tolerate a registered module which never completed startup.
+ * Do not release the controller or mutate its module/authority registrations
+ * from lifecycle callbacks. Shared service registration uses its own contract. */
 typedef struct UmiModuleLifecycle {
     UmiModulePhaseFn configure;
     UmiModulePhaseFn initialise;

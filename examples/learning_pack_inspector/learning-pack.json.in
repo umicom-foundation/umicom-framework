@@ -1,0 +1,56 @@
+{
+  "schema": "umicom.learning.pack",
+  "version": 1,
+  "id": "framework.learning-packs",
+  "title": "Learning offline documentation packs",
+  "product": "framework",
+  "locale": "en",
+  "revision": 1,
+  "compatibility": {
+    "minimum": [
+      0,
+      9,
+      0
+    ],
+    "maximum": [
+      0,
+      9,
+      0
+    ]
+  },
+  "resources": [
+    {
+      "id": "guide",
+      "title": "Use offline learning packs",
+      "topic": "learning-packs",
+      "kind": "guide",
+      "path": "guide.html",
+      "sha256": "@_guide_hash@",
+      "example": "inspector"
+    },
+    {
+      "id": "inspector",
+      "title": "Inspect a pack in C",
+      "topic": "learning-packs",
+      "kind": "example",
+      "path": "main.c",
+      "sha256": "@_example_hash@"
+    },
+    {
+      "id": "reader-history",
+      "title": "Keep a lesson navigation history",
+      "topic": "learning-packs",
+      "kind": "example",
+      "path": "history.c",
+      "sha256": "@_history_hash@"
+    },
+    {
+      "id": "practice-copy",
+      "title": "Copy an example into a practice file",
+      "topic": "learning-packs",
+      "kind": "example",
+      "path": "practice.c",
+      "sha256": "@_practice_hash@"
+    }
+  ]
+}

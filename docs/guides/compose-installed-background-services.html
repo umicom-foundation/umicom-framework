@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Compose background services from an installed SDK</title>
+<style>body{max-width:56rem;margin:2rem auto;padding:0 1rem;font:1rem/1.65 system-ui;color:#162130}pre{white-space:pre-wrap;background:#eef2f6;padding:1rem}code{overflow-wrap:anywhere}a{color:#075a82}</style></head><body>
+<h1>Compose background services from an installed SDK</h1>
+<p>This small C23 application combines three services used by Studio: a task
+queue, a file watcher and a process supervisor. Its purpose is to check the
+installed public API and ownership boundaries together. It builds against
+installed headers and libraries rather than compiling Framework sources.</p>
+<p>The watcher uses its deterministic fake backend. The example delivers one
+explicit file event and does not monitor or modify your project. The process
+supervisor launches the example executable itself in child mode; that child
+prints a fixed message and exits. No shell, broker connection or network
+service is involved.</p>
+<h2>Follow the service graph</h2>
+<pre>main controller owns ExampleServices
+  ├─ task queue retains the submitted task
+  │    └─ task borrows ExampleServices and emits one file event
+  ├─ watcher borrows ExampleServices as its sink payload
+  │    └─ sink requests stop; it cannot release its own active watcher
+  └─ process supervisor owns one child job
+       └─ child output and terminal result are copied into a snapshot
+
+controller waits for results → stops owners → checks releases → frees payload</pre>
+<p><em>Borrowing</em> means temporary use without taking ownership. The queue
+retains a reference to the task object, but it does not own the example's separate
+heap payload. That payload must stay alive until the callback returns and its
+worker has been joined. <em>Joining</em> waits for native thread completion;
+reading an ordinary result counter is not a replacement for it.</p>
+<p>The callback deliberately tries checked release on a borrowed watcher pointer.
+The expected result is <code>UMI_STATUS_INVALID_STATE</code>, with the pointer
+unchanged. It then requests cancellation and returns. The main controller owns
+the later blocking stop and release operations.</p>
+<h2>Prepare one installed package</h2>
+<p>First build and install the updated Framework platform SDK using your normal
+repository workflow. This example is installed at
+<code>share/umicom-framework/examples/background_services</code>. A previous
+SDK lacking the new lifecycle APIs will not satisfy the example. Reinstall
+matching headers, libraries and package metadata together.</p>
+<p>The following PowerShell commands use
+<code>C:\umicom\installed\framework</code> as the SDK prefix. Replace that
+prefix if your chosen installation lives elsewhere. Run each step separately,
+inspect <code>$LASTEXITCODE</code> and stop after an error. Keep a consumer build
+directory dedicated to this compiler and SDK.</p>
+<ol>
+<li>Make log storage and select the same compiler environment used for the SDK:
+<pre><code>New-Item -ItemType Directory -Force "C:\umicom\_local\logs\sdk-background-services"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"</code></pre></li>
+<li>Configure the independent project:
+<pre><code>cmake -S "C:/umicom/installed/framework/share/umicom-framework/examples/background_services" -B "C:/umicom/_local/build/sdk-background-services" -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe -DUMICOM_EXPECTED_SDK_PREFIX=C:/umicom/installed/framework -DBUILD_TESTING=ON 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\sdk-background-services\configure.log"</code></pre></li>
+<li>Build just the example:
+<pre><code>cmake --build "C:/umicom/_local/build/sdk-background-services" --parallel 2 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\sdk-background-services\build.log"</code></pre></li>
+<li>Run its single registered contract check and capture the output:
+<pre><code>ctest --test-dir "C:/umicom/_local/build/sdk-background-services" -V --no-tests=error --output-log "C:/umicom/_local/logs/sdk-background-services/tests.log"</code></pre></li>
+</ol>
+<p>This consumer build does not rebuild Framework. Its CMake project imports
+<code>Umicom::platform</code> from the chosen prefix and rejects a cached
+Framework configuration outside that prefix. Environment metadata checks the
+declared ABI, operating system, compiler family and pointer size; native build
+and execution still need to succeed.</p>
+<h2>Read the result</h2>
+<p>A successful program prints
+<code>Installed watcher, queue and process lifecycle completed.</code>.
+The CTest name is <code>sdk.background_services.consumer</code>. A timeout,
+failed native process start, unexpected child result, callback error or
+incomplete release produces failure. There is no skip code for this example.</p>
+<p>The supervisor result must have a successful terminal state, exit code zero
+and the expected child text. The completed job is explicitly released before
+the supervisor closes. This demonstrates consuming one result and returning
+its slot, rather than keeping every job until application exit.</p>
+<p>The owner remains allocated if a native stop or release fails. The example
+then exits unsuccessfully; it never frees callback data beneath a retained
+worker. In a long-running application, retain that owner for investigation and
+retry. Do not hide a cleanup failure by changing it into a successful exit.</p>
+<h2>Troubleshoot without replacing the package boundary</h2>
+<ul>
+<li><strong>Configuration comes from another prefix:</strong> choose a fresh
+consumer build directory. Do not add source-tree include paths to make the
+check pass.</li>
+<li><strong>A lifecycle function is undeclared or missing during linking:</strong>
+check that both the installed headers and platform archive came from the
+updated SDK. Reinstall them together rather than copying only a header.</li>
+<li><strong>The child cannot start:</strong> inspect the operating system's
+reported loader or security event and the executable path in the verbose CTest
+log. Do not disable protection or treat a missing executable as a test pass.</li>
+<li><strong>Release fails:</strong> keep the operation name and status from
+standard error. The source retains owners intentionally so this error cannot
+silently become a use-after-free.</li>
+</ul>
+<p>Continue with <a href="../learning/process-lifetimes.html">Own background
+process lifetimes</a>,
+<a href="../learning/watch-file-lifetimes.html">Watch files without releasing
+live callbacks</a> and
+<a href="check-sdk-shutdown.html">Check the installed queue shutdown contracts</a>.
+These focused examples complement application, graphical and sanitizer
+qualification; they do not establish that every product workflow is ready.</p>
+</body></html>

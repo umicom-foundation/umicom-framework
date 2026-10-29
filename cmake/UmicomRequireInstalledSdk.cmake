@@ -16,6 +16,90 @@ function(_umicom_require_sdk_file prefix candidate purpose)
     endif()
 endfunction()
 
+# Inspect component paths without claiming a complete public-header identity.
+# Small composition fixtures export a deliberate subset; full SDK qualification
+# calls this same traversal and then checks the complete header fingerprint.
+function(umicom_require_installed_sdk_layout prefix out_header_root)
+    if(NOT IS_ABSOLUTE "${prefix}" OR NOT IS_DIRECTORY "${prefix}")
+        message(FATAL_ERROR "Installed SDK qualification requires an absolute existing prefix")
+    endif()
+    file(REAL_PATH "${prefix}" _prefix)
+    set(_targets Umicom::base ${ARGN})
+    list(REMOVE_DUPLICATES _targets)
+    set(_header_root "")
+    set(_visited)
+    while(_targets)
+        list(POP_FRONT _targets _target)
+        if(_target IN_LIST _visited)
+            continue()
+        endif()
+        list(APPEND _visited "${_target}")
+        if(NOT _target MATCHES "^Umicom::[A-Za-z0-9_]+$" OR NOT TARGET "${_target}")
+            message(FATAL_ERROR "Installed SDK component target is unavailable: ${_target}")
+        endif()
+        get_target_property(_imported "${_target}" IMPORTED)
+        if(NOT _imported)
+            message(FATAL_ERROR "Installed SDK qualification rejects source-built target: ${_target}")
+        endif()
+        get_target_property(_includes "${_target}" INTERFACE_INCLUDE_DIRECTORIES)
+        # Libraries and interface aggregates may inherit their includes through
+        # imported Framework dependencies. Validate every path they do publish;
+        # the base component must still identify the installed public headers.
+        if(NOT _includes)
+            if(_target STREQUAL "Umicom::base")
+                message(FATAL_ERROR "Installed base component has no public header directory")
+            endif()
+            set(_includes "")
+        endif()
+        foreach(_include IN LISTS _includes)
+            _umicom_require_sdk_file("${_prefix}" "${_include}" "${_target} public headers")
+            if(NOT IS_DIRECTORY "${_include}")
+                message(FATAL_ERROR "Installed public header path is not a directory: ${_include}")
+            endif()
+            if(_target STREQUAL "Umicom::base" AND EXISTS "${_include}/umicom/base/version.h")
+                file(REAL_PATH "${_include}" _header_root)
+            endif()
+        endforeach()
+        # Validate all advertised configurations, not merely the current one.
+        # Interface-only aggregates have no archive of their own.
+        get_target_property(_type "${_target}" TYPE)
+        get_target_property(_configurations "${_target}" IMPORTED_CONFIGURATIONS)
+        set(_location_properties IMPORTED_LOCATION IMPORTED_IMPLIB)
+        foreach(_configuration IN LISTS _configurations)
+            string(TOUPPER "${_configuration}" _configuration)
+            list(APPEND _location_properties "IMPORTED_LOCATION_${_configuration}" "IMPORTED_IMPLIB_${_configuration}")
+        endforeach()
+        set(_has_library FALSE)
+        foreach(_property IN LISTS _location_properties)
+            get_target_property(_location "${_target}" "${_property}")
+            if(_location)
+                _umicom_require_sdk_file("${_prefix}" "${_location}" "${_target} library")
+                if(IS_DIRECTORY "${_location}")
+                    message(FATAL_ERROR "Installed library is a directory: ${_location}")
+                endif()
+                set(_has_library TRUE)
+            endif()
+        endforeach()
+        if(NOT _type STREQUAL "INTERFACE_LIBRARY" AND NOT _has_library)
+            message(FATAL_ERROR "Installed component has no library location: ${_target}")
+        endif()
+        # Follow Framework references in link interfaces, including LINK_ONLY.
+        # Every advertised Framework dependency is checked even when conditional;
+        # system libraries and external package targets keep their own contracts.
+        # The visited set bounds shared dependencies and cycles.
+        get_target_property(_links "${_target}" INTERFACE_LINK_LIBRARIES)
+        if(_links)
+            string(REGEX MATCHALL "Umicom::[A-Za-z0-9_]+" _dependencies "${_links}")
+            list(APPEND _targets ${_dependencies})
+        endif()
+    endwhile()
+    if(NOT _header_root)
+        message(FATAL_ERROR "Installed base headers were not found below the selected prefix")
+    endif()
+    set(${out_header_root} "${_header_root}" PARENT_SCOPE)
+
+endfunction()
+
 # Call after find_package, passing an explicit install prefix and exported
 # component target names. No source library, build-tree fallback, download or
 # generated replacement is accepted as an installed Framework component.
@@ -31,6 +115,9 @@ function(umicom_require_installed_sdk prefix)
     if(NOT _prefix STREQUAL _package_prefix)
         message(FATAL_ERROR "The resolved Framework package is not from the requested SDK prefix")
     endif()
+    # The direct-target layout scan is retained for review. The shared traversal
+    # below also checks transitive Framework owners and prevents build-tree leaks.
+    #[=[
     set(_targets Umicom::base ${ARGN})
     list(REMOVE_DUPLICATES _targets)
     set(_header_root "")
@@ -79,6 +166,8 @@ function(umicom_require_installed_sdk prefix)
             message(FATAL_ERROR "Installed component has no library location: ${_target}")
         endif()
     endforeach()
+    ]=]
+    umicom_require_installed_sdk_layout("${_prefix}" _header_root ${ARGN})
     if(NOT _header_root)
         message(FATAL_ERROR "Installed base headers were not found below the selected prefix")
     endif()

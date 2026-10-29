@@ -16,6 +16,14 @@ set(_sdk_missing-library "missing or not absolute")
 set(_sdk_outside-headers "outside the selected installed SDK")
 set(_sdk_wrong-prefix "not from the requested SDK prefix")
 set(_sdk_missing-component "component target is unavailable")
+list(APPEND _sdk_cases transitive-outside-library transitive-outside-headers
+    transitive-missing transitive-source transitive-cycle transitive-link-only external-target)
+set(_sdk_transitive-outside-library "outside the selected installed SDK")
+set(_sdk_transitive-outside-headers "outside the selected installed SDK")
+set(_sdk_transitive-missing "component target is unavailable")
+set(_sdk_transitive-source "rejects source-built target")
+list(APPEND _sdk_cases inherited-headers aggregate-headers transitive-inherited-headers missing-base-headers)
+set(_sdk_missing-base-headers "base component has no public header directory")
 foreach(_case IN LISTS _sdk_cases)
     add_test(NAME "framework.sdk.installed_contract.${_case}"
         COMMAND "${CMAKE_COMMAND}" "-DTEST_CASE=${_case}"

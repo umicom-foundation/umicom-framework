@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/runtime/service_registry.h"
 
+#include <stdatomic.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -31,6 +32,7 @@ struct UmiServiceRegistry {
     UmiServiceEntry entries[UMI_SERVICE_REGISTRY_MAX];
     size_t count;
     UmiMutex *mutex;
+    atomic_int callback_active;
 };
 
 /* Provide the service matches operation used by this module and its client applications. */
@@ -90,6 +92,7 @@ UmiStatus umi_service_registry_create(UmiServiceRegistry **out_registry)
         free(registry);
         return UMI_STATUS_OUT_OF_MEMORY;
     }
+    atomic_init(&registry->callback_active, 0);
     *out_registry = registry;
     return UMI_STATUS_OK;
 }
@@ -98,6 +101,10 @@ UmiStatus umi_service_registry_create(UmiServiceRegistry **out_registry)
  * Release or reset state held by service registry so the same storage can be reused
  * safely.
  */
+/* Retain the former ownership path for review. The checked implementation
+ * below snapshots aliased input, rebinds relocated identifiers and calls
+ * destructors outside the write mutex with mutation/release reentry refused. */
+#if 0
 void umi_service_registry_destroy(UmiServiceRegistry *registry)
 {
     size_t index;
@@ -113,8 +120,14 @@ void umi_service_registry_destroy(UmiServiceRegistry *registry)
     umi_mutex_destroy(registry->mutex);
     free(registry);
 }
+#endif
+
 
 /* Add service registry only after its inputs and available capacity have been checked. */
+/* Retain the former ownership path for review. The checked implementation
+ * below snapshots aliased input, rebinds relocated identifiers and calls
+ * destructors outside the write mutex with mutation/release reentry refused. */
+#if 0
 UmiStatus umi_service_registry_register(UmiServiceRegistry *registry,
                                         const UmiServiceDescriptor *descriptor)
 {
@@ -186,11 +199,17 @@ store:
     (void)umi_mutex_unlock(registry->mutex);
     return UMI_STATUS_OK;
 }
+#endif
+
 
 /*
  * Remove service registry while keeping the remaining records in a valid and discoverable
  * state.
  */
+/* Retain the former ownership path for review. The checked implementation
+ * below snapshots aliased input, rebinds relocated identifiers and calls
+ * destructors outside the write mutex with mutation/release reentry refused. */
+#if 0
 UmiStatus umi_service_registry_unregister(UmiServiceRegistry *registry,
                                           const char *service_id,
                                           const char *provider_module_id)
@@ -227,6 +246,8 @@ UmiStatus umi_service_registry_unregister(UmiServiceRegistry *registry,
     (void)umi_mutex_unlock(registry->mutex);
     return UMI_STATUS_NOT_FOUND;
 }
+#endif
+
 
 /*
  * Find service registry while leaving the underlying catalogue or model owned by this
@@ -302,3 +323,8 @@ const UmiServiceDescriptor *umi_service_registry_at(
         ? &registry->entries[index].descriptor
         : NULL;
 }
+
+#include "service_registry_ownership.inc"
+
+/* Diagnostic consumers receive owned metadata instead of registry entry pointers. */
+#include "service_registry_snapshots.inc"

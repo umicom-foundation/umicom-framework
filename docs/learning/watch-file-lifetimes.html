@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Watch files without releasing live callbacks</title>
+<style>body{max-width:56rem;margin:2rem auto;padding:0 1rem;font:1rem/1.65 system-ui;color:#162130}pre{white-space:pre-wrap;background:#eef2f6;padding:1rem}code{overflow-wrap:anywhere}a{color:#075a82}</style></head><body>
+<h1>Watch files without releasing live callbacks</h1>
+<p>A file watcher notices changes in a folder and calls a function supplied by the
+application. Studio uses this pattern to update its project file index.
+Framework owns the polling worker and the watcher data; the application owns the
+callback's separate <code>sink_user_data</code> payload.</p>
+<h2>Know when the callback can still run</h2>
+<p>The polling backend scans the folder in a background thread. The fake backend
+delivers explicit events synchronously and is useful for deterministic tests.
+An explicit polling scan can also call the sink before the scan function returns.
+Even a watcher with no background thread can therefore have a live callback.</p>
+<p>A callback must return normally. It must not release its watcher, change the
+watcher's root, start or stop its lifecycle, or recursively scan the same watcher.
+Those operations return <code>UMI_STATUS_INVALID_STATE</code>. Framework tracks
+nested sink calls too: if watcher A calls watcher B's sink, B cannot release A
+while A's callback is still on the call stack.</p>
+<h2>Request a stop from a callback</h2>
+<p>Use <code>UmiWatcherRequestStop</code> to request cancellation. It does not join
+the worker or free memory. The controller that owns the watcher must later call
+<code>umi_watcher_stop</code> or <code>UmiWatcherRelease</code>.</p>
+<pre><code>/* Inside a sink, while its watcher is still borrowed and alive: */
+UmiStatus status = UmiWatcherRequestStop(watcher);
+/* Report a failure through the application's existing diagnostic route.
+ * Do not free watcher or sink_user_data here. */</code></pre>
+<p>This is a fragment illustrating the API boundary, not a complete application.
+The complete regression example is
+<code>tests/test_watcher_lifecycle.c</code>. It exercises a real polling worker
+and nested fake events without replacing the production watcher.</p>
+<h2>Release from the lifecycle controller</h2>
+<pre><code>UmiStatus status = UmiWatcherRelease(&amp;owned_watcher);
+if (status == UMI_STATUS_OK) {
+    /* owned_watcher is now NULL. The callback can no longer use its payload. */
+} else {
+    /* Keep owned_watcher and the payload alive. Record the status and retry
+     * only after investigating the native lifecycle failure. */
+}</code></pre>
+<p>The controller must exclude other users before release. Serialise start, stop,
+root changes, explicit scans and release. Do not explicitly scan while the polling
+worker is scanning. Cancellation-token requests may come from the sink, but the
+borrowed pointer must not race release or a new start.</p>
+<p><code>umi_watcher_stop</code> blocks until the worker is joined. A failed join
+or native handle close leaves the owner available. If joining succeeded but handle
+release failed, a retry closes the remaining handle without joining twice.
+The running flag remains set until the controller completes stop; it is not a
+measurement of whether the worker is executing an instruction at that moment.</p>
+<p>The older <code>umi_watcher_destroy</code> interface remains available.
+Because it cannot return an error, it retains the watcher when stopping fails.
+Use the checked release when the owner needs to observe failure and retain a
+pointer for retry. Do not destroy the enclosing application services merely
+because a void child-destruction function returned.</p>
+<h2>Review the targeted regressions</h2>
+<p>After configuring your normal Framework build, the watcher ownership target
+can be built separately. For the Applications build on Windows:</p>
+<pre><code>cmake --build "C:/umicom/Umicom-Applications/build/windows-ucrt64-all-debug" --target umicom-watcher-lifecycle-test --parallel 2
+ctest --test-dir "C:/umicom/Umicom-Applications/build/windows-ucrt64-all-debug" -R "^framework\.watcher\.lifecycle$" --output-on-failure --no-tests=error</code></pre>
+<p>This target links the shared platform library. It checks nested callbacks,
+refused reentrant destruction, stop requests, a real polling event, restart after
+join, and pointer clearing. Linux GNU/Clang builds additionally register
+<code>framework.watcher.lifecycle-fault.join</code>,
+<code>framework.watcher.lifecycle-fault.release</code> and
+<code>framework.watcher.lifecycle-fault.legacy</code>. They inject one failure at
+the native join or handle-release boundary, then require a successful retry.</p>
+<p>These checks are authored regression coverage. Their presence is not a claim
+that your build has executed them. Preserve the actual test results and any
+platform-specific omissions. A graphical close operation needs its own UI
+qualification because a blocking stop should not freeze the event thread.</p>
+<p>Continue with <a href="../guides/check-sdk-shutdown.html">the installed SDK
+shutdown consumer</a> and
+<a href="close-a-background-queue.html">background queue ownership</a>.</p>
+<p>For supervised builds and commands, continue with <a href="process-lifetimes.html">Own background process lifetimes</a>.</p>
+</body></html>

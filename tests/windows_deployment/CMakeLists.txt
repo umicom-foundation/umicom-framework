@@ -96,7 +96,9 @@ if(WIN32)
     add_test(NAME windows_deployment.native.startup-environment
         COMMAND umicom-windows-startup-test)
     set_tests_properties(windows_deployment.native.startup-environment PROPERTIES
-        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+        # Inherited developer overrides must not redirect a private package.
+        ENVIRONMENT "GST_PLUGIN_PATH=wrong-plugins;GST_PLUGIN_PATH_1_0=wrong-versioned-plugins;GST_PLUGIN_SYSTEM_PATH=wrong-system;GST_PLUGIN_SYSTEM_PATH_1_0=wrong-versioned-system;GST_PLUGIN_SCANNER=wrong-scanner;GST_PLUGIN_SCANNER_1_0=wrong-versioned-scanner")
 endif()
 
 # Exercise the real staging script in a child cmake -P process. The probe stops
@@ -110,4 +112,18 @@ foreach(_mode IN ITEMS default inherited-old)
             "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/runtime-policy/${_mode}"
             "-DMODE=${_mode}"
             -P "${CMAKE_CURRENT_LIST_DIR}/test_runtime_policy.cmake")
+endforeach()
+
+# Select dynamic media payloads independently of the Windows PE loader.
+set(_media_cases no-runtime no-plugins plugins ignore-registry missing-scanner directory-scanner file-plugin-root)
+if(NOT WIN32)
+    list(APPEND _media_cases linked-plugin)
+endif()
+foreach(_case IN LISTS _media_cases)
+    add_test(NAME windows_deployment.media.${_case}
+        COMMAND "${CMAKE_COMMAND}" "-DFRAMEWORK=${UMI_FRAMEWORK}"
+            "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/media/${_case}" "-DCASE=${_case}"
+            -P "${CMAKE_CURRENT_LIST_DIR}/test_gstreamer_resources.cmake")
+    set_tests_properties(windows_deployment.media.${_case} PROPERTIES TIMEOUT 30
+        LABELS "framework;deployment;media;regression")
 endforeach()

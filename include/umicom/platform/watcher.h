@@ -94,6 +94,32 @@ typedef struct UmiWatcherStats {
  */
 typedef struct UmiWatcher UmiWatcher;
 
+/* Lifecycle ownership: serialize start, stop, set-root, explicit scans and
+ * release from one controller. Do not scan concurrently with the background
+ * polling worker. Exclude all external users before release. The sink and its
+ * user_data are borrowed through callback completion; callbacks must return
+ * normally. A callback cannot start, stop, release, change the root or recursively
+ * scan its own watcher (including one active earlier in a nested sink chain).
+ * These calls return INVALID_STATE and leave ownership intact.
+ *
+ * stop is blocking. A join/handle-release error preserves the watcher for
+ * retry, including successful join progress. running remains set until the
+ * controller finishes stop. destroy retains its void compatibility interface
+ * and does not free a watcher after failed stop; use checked release to observe
+ * that failure. A request to stop is not evidence that callbacks have finished. */
+
+/** Request cooperative cancellation without joining or releasing anything.
+ * Safe from an event callback while its borrowed watcher remains alive.
+ * The lifecycle controller must later stop/join and release the watcher.
+ * Do not race this borrowed access with release or a new start. */
+UmiStatus UmiWatcherRequestStop(UmiWatcher *watcher);
+
+/** Stop, join and release the caller's watcher, clearing its pointer on success.
+ * Failure retains the pointer and any uncompleted lifecycle obligations.
+ * NULL pointer storage is invalid; an already-empty owner is an OK no-op.
+ * No forced thread termination or implicit ownership of sink_user_data. */
+UmiStatus UmiWatcherRelease(UmiWatcher **inOutWatcher);
+
 /**
  * Provide the watcher config default operation used by this module and its client
  * applications.

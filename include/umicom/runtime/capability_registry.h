@@ -74,6 +74,17 @@ void umi_capability_registry_destroy(UmiCapabilityRegistry *registry);
 /**
  * Add capability registry only after its inputs and available capacity have been checked.
  */
+/* Register all descriptors or leave the registry unchanged on failure. Count
+ * zero accepts NULL descriptors. Identifiers are copied; provider pointers are
+ * borrowed. Either existing or incoming SINGLETON forbids another provider.
+ * Writes are locked. Callers must serialize borrowed-pointer reads against
+ * mutation; find/at results must be reacquired after register or unregister. */
+UmiStatus UmiCapabilityRegistryRegisterBatch(
+    UmiCapabilityRegistry *registry,
+    const UmiCapabilityDescriptor *descriptors,
+    size_t count
+);
+
 UmiStatus umi_capability_registry_register(
     UmiCapabilityRegistry *registry,
     const UmiCapabilityDescriptor *descriptor

@@ -13,6 +13,11 @@
 # MIT
 #-----------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.29)
+# Use canonical dependency paths on CMake versions which provide this policy.
+# Older supported versions retain their existing dependency discovery.
+if(POLICY CMP0207)
+    cmake_policy(SET CMP0207 NEW)
+endif()
 if(NOT DEFINED UMICOM_AUTOMATIC_CONFIGURATION)
     set(UMICOM_AUTOMATIC_CONFIGURATION "Debug")
 endif()
@@ -51,6 +56,15 @@ if(NOT EXISTS "${UMICOM_AUTOMATIC_RECEIPTS}")
     message(FATAL_ERROR "The native test-receipt helper was not built")
 endif()
 
+# The script and executable may have been integrated at different times. Check
+# their command contract before any previous passing result can exclude a test.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomTestReceiptProtocol.cmake")
+umicom_check_test_receipt_protocol("${UMICOM_AUTOMATIC_RECEIPTS}"
+    "${_run}/receipt-helper-protocol" _protocol_error)
+if(NOT _protocol_error STREQUAL "")
+    message(FATAL_ERROR "${_protocol_error}; no tests or receipts were accepted")
+endif()
+
 function(_fingerprint output discovery)
     execute_process(COMMAND "${_ctest}" --test-dir "${_build}" -C "${_config}" --show-only=json-v1
         OUTPUT_FILE "${discovery}" ERROR_FILE "${discovery}.errors.txt" RESULT_VARIABLE _discovered)
@@ -83,10 +97,14 @@ function(_fingerprint output discovery)
     list(REMOVE_DUPLICATES _owners)
     list(SORT _owners)
     set(_runtime "")
+    set(_unresolved "")
+    set(_conflicting_FILENAMES "")
     set(_can_reuse TRUE)
+    set(_reuse_reason "complete runtime input closure")
     if(UMICOM_AUTOMATIC_TEST_FULL OR UMICOM_AUTOMATIC_RUNTIME_PLATFORM STREQUAL ""
             OR NOT EXISTS "${UMICOM_AUTOMATIC_OBJDUMP}")
         set(_can_reuse FALSE)
+        set(_reuse_reason "full execution requested or runtime inspection unavailable")
     elseif(_owners)
         # Bind dynamically loaded link dependencies as well as the executable.
         # Runtime plugins/data not visible to the linker cannot use this contract.
@@ -99,8 +117,20 @@ function(_fingerprint output discovery)
             CONFLICTING_DEPENDENCIES_PREFIX _conflicting)
         if(_unresolved OR _conflicting_FILENAMES)
             message(STATUS "Runtime dependencies are incomplete; executing all tests")
+            set(_reuse_reason "unresolved or conflicting runtime dependencies")
             set(_can_reuse FALSE)
         endif()
+    endif()
+    # The owner target is not proof that CTest launches it. Check decoded argv[0]
+    # against the complete registry before admitting any historical pass. A
+    # wrapper or missing/ambiguous command keeps every test selected.
+    execute_process(COMMAND "${UMICOM_AUTOMATIC_RECEIPTS}" verify-inputs
+        "${_build}/umicom/closed-tests-${_config}.tsv" "${discovery}"
+        OUTPUT_FILE "${discovery}.owners.log" ERROR_FILE "${discovery}.owners.log"
+        RESULT_VARIABLE _owners_verified TIMEOUT 60)
+    if(NOT _owners_verified STREQUAL "0")
+        set(_can_reuse FALSE)
+        set(_reuse_reason "registered executable ownership could not be verified")
     endif()
     file(SHA256 "${discovery}" _catalogue_hash)
     file(SHA256 "${_build}/CMakeCache.txt" _cache_hash)
@@ -129,6 +159,7 @@ function(_fingerprint output discovery)
                 if(_line MATCHES "^[0-9]+:(.+)$")
                     list(APPEND _failures "${CMAKE_MATCH_1}")
                 else()
+                    set(_reuse_reason "malformed external failure history")
                     set(_can_reuse FALSE)
                 endif()
             endforeach()
@@ -155,6 +186,15 @@ function(_fingerprint output discovery)
             string(APPEND _manifest "${_name}\t${_binary_${_key}}\t${_outcome}\n")
         endforeach()
     endif()
+    # Explain conservative fallback without exposing environment values. These
+    # records are evidence, never an allow-list that grants permission to skip.
+    file(WRITE "${output}.runtime.txt"
+        "reason=${_reuse_reason}\nresolved=${_runtime}\nunresolved=${_unresolved}\nconflicts=${_conflicting_FILENAMES}\n")
+    set(_reuse_mode full)
+    if(_can_reuse)
+        set(_reuse_mode eligible)
+    endif()
+    file(WRITE "${output}.policy.txt" "${_reuse_mode}\n")
     file(WRITE "${output}" "${_manifest}")
 endfunction()
 

@@ -88,3 +88,13 @@ foreach(_policy IN ITEMS valid unknown-stage unknown-case empty-workflow)
             PROPERTIES WILL_FAIL TRUE)
     endif()
 endforeach()
+
+# A displayed source listing must track the executable used by both the
+# complete product and installed SDK consumer; earlier teaching examples stay.
+get_filename_component(_umi_lesson_root "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
+add_test(NAME framework.component_integration.lesson_source
+    COMMAND "${CMAKE_COMMAND}" "-DFRAMEWORK=${_umi_lesson_root}"
+        -P "${CMAKE_CURRENT_LIST_DIR}/check_lesson_source.cmake")
+set_tests_properties(framework.component_integration.lesson_source PROPERTIES
+    TIMEOUT 10 LABELS "component-integration;documentation;source")
+unset(_umi_lesson_root)

@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/test_platform/ctest.h"
+#include "umicom/test_platform/ctest_commands.h"
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -31,6 +32,10 @@
  */
 #include "ctest_json_reader.inc"
 #include "ctest_json_metadata.inc"
+
+/* Executable ownership uses the same validated protocol, without constructing
+ * UI registries or treating display command strings as executable instructions. */
+#include "ctest_commands.inc"
 
 static UmiStatus UmiCtestImportJson(const char *json, size_t length,
     const UmiTestPlatformCtestImportOptions *options, size_t maximumTests, int strictEnvelope,

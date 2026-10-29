@@ -27,10 +27,34 @@ if(CMAKE_CROSSCOMPILING OR NOT BUILD_TESTING)
     return()
 endif()
 add_executable(umicom-test-receipts "${CMAKE_CURRENT_LIST_DIR}/../tools/qualification/reuse_main.c")
-target_link_libraries(umicom-test-receipts PRIVATE Umicom::testing)
+target_link_libraries(umicom-test-receipts PRIVATE Umicom::testing Umicom::test_platform)
 set_target_properties(umicom-test-receipts PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
 umicom_apply_warnings(umicom-test-receipts)
 umicom_apply_sanitizers(umicom-test-receipts)
+
+# Full-file integration may preserve an old modification time. Bind this
+# small command adapter and its private includes to their content at configure
+# time so an older object cannot survive solely because of timestamps.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomImplementationFingerprint.cmake")
+get_filename_component(_umicom_automatic_source_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
+umicom_attach_implementation_fingerprint(umicom-test-receipts "${_umicom_automatic_source_root}")
+if(COMMAND umicom_target_qualification_inputs)
+    umicom_target_qualification_inputs(umicom-test-receipts
+        FILES "${_umicom_automatic_source_root}/tools/qualification/verify_inputs.inc"
+            "${CMAKE_CURRENT_LIST_DIR}/UmicomTestReceiptProtocol.cmake"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/test_reuse/check_protocol.cmake")
+endif()
+
+# Command identity parsing is shared with the test platform rather than a
+# second JSON scanner in the build driver. The target is defined later in the
+# root graph and resolves before generation.
+add_executable(umicom-test-command-catalogue "${CMAKE_CURRENT_LIST_DIR}/../tests/test_reuse/test_command_catalogue.c")
+target_link_libraries(umicom-test-command-catalogue PRIVATE Umicom::test_platform)
+set_target_properties(umicom-test-command-catalogue PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+umicom_apply_warnings(umicom-test-command-catalogue)
+umicom_apply_sanitizers(umicom-test-command-catalogue)
+add_test(NAME framework.testing.reuse.command-catalogue COMMAND umicom-test-command-catalogue)
+set_tests_properties(framework.testing.reuse.command-catalogue PROPERTIES TIMEOUT 60 LABELS "framework;testing;regression")
 
 # A contract is a developer assertion about the test, never a user-maintained
 # list of changes. Do not register network, clock, hardware, mutable fixture or
@@ -159,6 +183,31 @@ if(BUILD_TESTING)
     endforeach()
 endif()
 
+# Exercise the native helper through actual file boundaries independently of
+# host runtime discovery. Rejected manifests must preserve prior receipts.
+foreach(_case lf crlf empty bare-cr duplicate unicode damaged-previous)
+    add_test(NAME framework.testing.reuse.file.${_case}
+        COMMAND "${CMAKE_COMMAND}"
+            "-DPROGRAM=$<TARGET_FILE:umicom-test-receipts>"
+            "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/qualification/receipt-files/${_case}"
+            "-DCASE=${_case}"
+            -P "${CMAKE_CURRENT_LIST_DIR}/../tests/test_reuse/check_receipt_file.cmake")
+    set_tests_properties(framework.testing.reuse.file.${_case} PROPERTIES
+        TIMEOUT 45 LABELS "framework;build;testing;regression;filesystem")
+endforeach()
+
+# The native verifier reads both files without launching any discovered command.
+foreach(_case matching crlf empty wrong-program wrong-name duplicate wrapper
+        missing-command relative malformed-row duplicate-catalogue)
+    add_test(NAME framework.testing.reuse.owners.${_case}
+        COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:umicom-test-receipts>"
+            "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/qualification/command-owners/${_case}"
+            "-DCASE=${_case}"
+            -P "${CMAKE_CURRENT_LIST_DIR}/../tests/test_reuse/check_command_owners.cmake")
+    set_tests_properties(framework.testing.reuse.owners.${_case} PROPERTIES
+        TIMEOUT 45 LABELS "framework;build;testing;regression;filesystem")
+endforeach()
+
 # A small independent project checks the real configure/build/discovery/receipt
 # sequence. It does not rebuild the Framework from inside its own test suite.
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.29" AND EXISTS "${CMAKE_OBJDUMP}"
@@ -182,3 +231,19 @@ if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.29" AND EXISTS "${CMAKE_OBJDUMP}"
     set_tests_properties(framework.testing.reuse.driver PROPERTIES
         TIMEOUT 240 LABELS "framework;build;testing;regression;integration")
 endif()
+
+# Check both transport compatibility and the actual built helper. A negative
+# ownership case cannot pass merely because an unknown command returned 1.
+foreach(_case native lf crlf stale-usage old-version empty extra-output failed-query timeout bare-cr)
+    add_test(NAME framework.testing.reuse.protocol.${_case}
+        COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:umicom-test-receipts>"
+            "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/qualification/receipt-protocol"
+            "-DCASE=${_case}"
+            -P "${CMAKE_CURRENT_LIST_DIR}/../tests/test_reuse/check_protocol.cmake")
+    set_tests_properties(framework.testing.reuse.protocol.${_case} PROPERTIES
+        TIMEOUT 30 LABELS "framework;build;testing;regression")
+    if(COMMAND umicom_test_impact_owners)
+        umicom_test_impact_owners(framework.testing.reuse.protocol.${_case}
+            TARGETS umicom-test-receipts)
+    endif()
+endforeach()

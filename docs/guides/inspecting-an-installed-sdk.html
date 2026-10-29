@@ -71,4 +71,46 @@ Trusted parent-directory aliases may still be followed; this is not a filesystem
 Presence inspection does not qualify optional SDK components, dependencies or every exported target.</p>
 <p>When adding SDK metadata fields, update the producer, bounded parser, inspection
 consumer and regression fixtures together. Keep executable package logic out of the receipt.</p>
+<h2>Check the complete Framework dependency chain</h2>
+<p>A component can depend on another Framework library. This is called a
+<em>transitive dependency</em>: your program requests the first component, and the
+linker also needs the libraries that component uses. A broker connection component,
+for example, uses shared platform services to read and replace local settings files.</p>
+<ol>
+<li>Configure your consumer against the intended installation, using the exact
+<code>UmicomFramework_DIR</code> package folder.</li>
+<li>After <code>find_package</code>, request the installed-SDK contract check:
+<pre><code>umicom_require_installed_sdk("C:/SDKs/Umicom"
+    Umicom::market_tape
+    Umicom::research_replay
+    Umicom::ibkr_connection)</code></pre>
+The package exposes this helper. It checks the selected prefix, imported
+Framework targets, their include folders, library files for every advertised
+configuration, and the complete public-header identity.</li>
+<li>Read the first refusal before building. A transitive Framework library outside
+the prefix can indicate a mixed installation. Install the matching SDK into a
+fresh folder rather than borrowing that archive from a source build.</li>
+<li>Build and run the independent consumer after configuration succeeds.
+Path and header checks cannot establish binary compatibility or runtime correctness.</li>
+</ol>
+<p>The traversal follows Framework target names in link interfaces, including
+static-library link-only dependencies. A visited set prevents repeated visits
+and handles dependency cycles. All advertised Framework references are checked,
+including conditional references. Third-party packages and system libraries have
+separate locations and are not required to live inside the Framework prefix.</p>
+<p>A library can inherit its public include directory from another Framework
+component. Such a library does not need to repeat that directory in its own
+exported properties. The contract follows its Framework dependencies and checks
+every header path they publish. The base component must still identify the
+installed base headers. Interface aggregates may have no archive, while an
+ordinary library must identify an existing archive or shared-library file.</p>
+<p>The smaller component-integration laboratory installs a deliberate subset of
+Framework. Its consumer uses <code>UMICOM_EXPECTED_SDK_PREFIX</code> to restrict
+package discovery and <code>umicom_require_installed_sdk_layout</code> to check
+component paths. Its <code>sdk-origin.txt</code> records the selected package.
+That subset check does not replace the full SDK public-header identity check.</p>
+<p>See <a href="../learning/build-integrated-components.html">the integrated
+component lesson</a> for the executable example and its ownership rules.</p>
+<section aria-labelledby="runtime-help"><h2 id="runtime-help">If a native window fails after linking</h2><p>An SDK origin check identifies headers and link libraries. It does not prove which shared toolkit a process loads or that the toolkit has no defects. Follow <a href="windows-gtk-runtime.html">Diagnose GTK runtime failures on Windows</a> to separate compiler metadata, loaded versions and known input-method lifetime issues.</p></section>
+<p>Next, <a href="check-sdk-environment.html">check the SDK environment with an independent C23 application</a>. This separates package declarations, compiler facts and a real base-library call.</p>
 </body></html>

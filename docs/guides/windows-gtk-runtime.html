@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Diagnose GTK runtime failures on Windows | Umicom Framework</title>
+<style>body{max-width:66rem;margin:2rem auto;padding:0 1.2rem;font:1.05rem/1.65 system-ui,sans-serif;color:#193347}h1,h2{line-height:1.25}code,pre{font-family:Consolas,monospace}pre{overflow:auto;padding:1rem;background:#edf3f6}table{border-collapse:collapse;width:100%}th,td{border:1px solid #bacbd5;padding:.65rem;text-align:left;vertical-align:top}a{color:#006a87}</style>
+</head><body><main>
+<h1>Diagnose GTK runtime failures on Windows</h1>
+<p>Umicom's native windows use GTK. GTK is a toolkit: it supplies controls such as text entries, menus and windows. A successful C compilation does not prove that the toolkit loaded by a running program has no defects. Investigate the application's source and its runtime dependencies together.</p>
+<h2>Understand the three identities</h2>
+<pre>Build configuration        Application process              Test evidence
+package metadata     →     executable + loaded GTK DLL  →   version, backend, result
+headers and libraries      selected when the process starts  actual behavior</pre>
+<p>A DLL is a shared library loaded into a Windows process. Package metadata describes the libraries the build discovered. A copied application can load a different DLL from its own directory, so changing the toolchain's package does not automatically replace every installed application's runtime.</p>
+<ol>
+<li>Save the complete failing test or application output, including the exception and the action immediately before it.</li>
+<li>Read the GTK runtime version printed by native qualification tests. The TMS host tests also print their header version and display backend. The header version describes compilation; the runtime version comes from the loaded toolkit.</li>
+<li>Inspect the runtime copies beside the executable and compare their origins with the toolchain package. Retain file hashes when comparing two deployments.</li>
+<li>Rebuild or reinstall through the repository's normal workflow after selecting a verified dependency package. Re-run the failing workflow with the intended runtime.</li>
+</ol>
+<h2>Windows input-method disposal advisory</h2>
+<p>An input method helps turn keyboard input into text, including composition and language-specific input. GTK's Windows implementation registers a callback for native input messages. A callback is a function the operating system can invoke later. If its associated input context has already been destroyed, invoking that callback can access an object that is no longer valid.</p>
+<p>The GTK 4.24.0 and 4.24.1 release sources lack an upstream correction that removes this callback during context disposal. A matching diagnostic can mention <code>gtk_im_context_ime_message_filter</code> and <code>GTK_IS_IM_CONTEXT_IME</code> when a native window is closed or another window becomes active. This diagnostic supports investigation of the toolkit defect; it does not prove that every similar crash has the same cause.</p>
+<table><thead><tr><th>Evidence</th><th>What it establishes</th></tr></thead><tbody>
+<tr><td>GTK package version 4.24.0 or 4.24.1</td><td>The upstream release source needs review. A distributor may have backported a fix without changing this version.</td></tr>
+<tr><td>Stable-branch commit <code>30727f8a524dbaa69118a60d6bbef4b3447245b1</code></td><td>The upstream correction tracks the display that owns the message filter and removes the filter during disposal.</td></tr>
+<tr><td>A vendor package containing that correction</td><td>The package includes the source repair. Its loaded runtime and the application workflow still need qualification.</td></tr>
+<tr><td>A successful rerun with identified runtime files</td><td>The observed workflow passed in that environment. Other workflows remain separate coverage.</td></tr>
+</tbody></table>
+<p>Review the <a href="https://github.com/GNOME/gtk/commit/30727f8a524dbaa69118a60d6bbef4b3447245b1">upstream stable-branch correction</a> and the vendor package's source or backport record. Upgrading to version 4.24.1 alone does not establish that this correction is included.</p>
+<p>Framework reports the known-version advisory when its GTK adapter is configured for Windows. The check uses package metadata and leaves all tests enabled. An unlisted version receives no matching advisory; that is not a certification of safety.</p>
+<h2>Recheck the affected host workflow</h2>
+<p>From a configured Umicom Applications checkout, after building the changed targets and installing the intended runtime, run the focused host checks:</p>
+<pre><code>ctest --test-dir build/windows-ucrt64-all-debug --output-on-failure --no-tests=error -R "tms[.](forward_host|accounting_host)[.]independent$"</code></pre>
+<p>Both tests open independent native child windows, dispose one and inspect the surviving host. Preserve the printed toolkit version, backend and disposal-stage messages with the result. A missing display is a skipped test, not a successful host check.</p>
+<p>If the exception remains, retain the new output and obtain a native debugger stack with the exact executable and DLL identities. Do not suppress GTK critical diagnostics or change the crash into a skip. Framework's early focus-release safeguard remains useful defensive behavior, but it does not replace the toolkit's responsibility to unregister its own callbacks.</p>
+<h2>Continue</h2>
+<p>Use <a href="inspecting-an-installed-sdk.html">installed SDK inspection</a> for package and library origins, and <a href="automatic-builds.html">automatic builds</a> to distinguish selected test evidence from a complete qualification run.</p>
+</main><footer><p>Umicom Foundation · Public engineering guide · MIT</p></footer></body></html>

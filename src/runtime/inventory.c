@@ -67,6 +67,9 @@ UmiStatus umi_runtime_inventory_snapshot(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
+    /* Retain the earlier per-entry command traversal for review. The registry
+     * now captures counts and flags under one lock without enablement callbacks. */
+#if 0
     if (commands != NULL) {
         out_snapshot->command_count = umi_command_registry_count(commands);
         /* Visit each bounded item once so every record receives the same rule. */
@@ -95,11 +98,26 @@ UmiStatus umi_runtime_inventory_snapshot(
             }
         }
     }
+#endif
+    if (commands != NULL) {
+        UmiCommandRegistrySummary summary;
+        UmiStatus status = UmiCommandRegistryCopySummary(commands, &summary);
+        if (status != UMI_STATUS_OK) return status;
+        out_snapshot->command_count = summary.command_count;
+        out_snapshot->mutating_command_count = summary.mutating_command_count;
+        out_snapshot->background_command_count = summary.background_command_count;
+        out_snapshot->audited_command_count = summary.audited_command_count;
+        out_snapshot->trusted_command_count = summary.trusted_command_count;
+    }
 
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
+    /* Retain the earlier per-entry observation for review. The registry now
+     * counts service policy flags under one lock, without borrowed entries or
+     * a metadata-array allocation in frequently captured operational reports. */
+#if 0
     if (services != NULL) {
         out_snapshot->service_count = umi_service_registry_count(services);
         /* Visit each bounded item once so every record receives the same rule. */
@@ -129,6 +147,17 @@ UmiStatus umi_runtime_inventory_snapshot(
                 ++out_snapshot->replaceable_service_count;
             }
         }
+    }
+#endif
+    if (services != NULL) {
+        UmiServiceRegistrySummary summary;
+        UmiStatus status = UmiServiceRegistryCopySummary(services, &summary);
+        if (status != UMI_STATUS_OK) return status;
+        out_snapshot->service_count = summary.service_count;
+        out_snapshot->singleton_service_count = summary.singleton_service_count;
+        out_snapshot->owned_service_count = summary.owned_service_count;
+        out_snapshot->thread_safe_service_count = summary.thread_safe_service_count;
+        out_snapshot->replaceable_service_count = summary.replaceable_service_count;
     }
 
     /*
@@ -187,12 +216,25 @@ int umi_runtime_inventory_has_command(const UmiCommandRegistry *registry,
  * Provide the runtime inventory has service operation used by this module and its client
  * applications.
  */
+/* Preserve the former borrowed-entry traversal for review. Shared registry
+ * discovery now supplies a locked observation without leaking entry pointers. */
+#if 0
 int umi_runtime_inventory_has_service(const UmiServiceRegistry *registry,
                                       const char *service_id)
 {
     return registry != NULL && text_is_present(service_id) &&
            umi_service_registry_find(registry, service_id) != NULL;
 }
+#endif
+int umi_runtime_inventory_has_service(const UmiServiceRegistry *registry,
+                                      const char *service_id)
+{
+    if (registry == NULL || !text_is_present(service_id)) return 0;
+    UmiServiceSnapshot snapshot;
+    return UmiServiceRegistryCopySnapshot(registry, service_id, NULL, &snapshot)
+        == UMI_STATUS_OK;
+}
+
 
 /*
  * Provide the runtime inventory has capability operation used by this module and its
@@ -210,6 +252,9 @@ int umi_runtime_inventory_has_capability(
  * Provide the runtime inventory count command prefix operation used by this module and its
  * client applications.
  */
+/* Keep the former repeated-lock loop for comparison. The existing registry
+ * prefix operation already counts a consistent list without allocating rows. */
+#if 0
 UmiStatus umi_runtime_inventory_count_command_prefix(
     const UmiCommandRegistry *registry,
     const char *prefix,
@@ -242,11 +287,23 @@ UmiStatus umi_runtime_inventory_count_command_prefix(
     *out_count = count;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_runtime_inventory_count_command_prefix(
+    const UmiCommandRegistry *registry,
+    const char *prefix,
+    size_t *out_count)
+{
+    return umi_command_registry_find_prefix(registry, prefix, NULL, 0U, out_count);
+}
+
 
 /*
  * Provide the runtime inventory count service prefix operation used by this module and its
  * client applications.
  */
+/* Preserve the former borrowed-entry traversal for review. Shared registry
+ * discovery now supplies a locked observation without leaking entry pointers. */
+#if 0
 UmiStatus umi_runtime_inventory_count_service_prefix(
     const UmiServiceRegistry *registry,
     const char *prefix,
@@ -281,6 +338,15 @@ UmiStatus umi_runtime_inventory_count_service_prefix(
     *out_count = count;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_runtime_inventory_count_service_prefix(
+    const UmiServiceRegistry *registry,
+    const char *prefix,
+    size_t *out_count)
+{
+    return UmiServiceRegistryCountPrefix(registry, prefix, out_count);
+}
+
 
 /*
  * Provide the runtime inventory count capability prefix operation used by this module and

@@ -24,3 +24,6 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomCodingLocalFiles.cmake")
 
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/reviewed-workspace-files.html"
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)
+
+# Exclusive practice copies retain the same parent ownership as rooted edits.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomRootedFileCreation.cmake")

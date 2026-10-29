@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Design retryable module lifecycles</title>
+<style>body{max-width:56rem;margin:2rem auto;padding:0 1rem;font:1rem/1.65 system-ui;color:#162130}pre{white-space:pre-wrap;background:#eef2f6;padding:1rem}code{overflow-wrap:anywhere}a{color:#075a82}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bdc8d4;padding:.5rem;text-align:left}</style></head><body>
+<h1>Design retryable module lifecycles</h1>
+<p>A Framework module is a named piece of an application with declared
+capabilities and lifecycle callbacks. A capability describes a service the
+module provides or needs. For example, an editor can need a document service,
+and the document service can need storage. The Master Controller uses those
+dependencies to start providers before their consumers.</p>
+<pre>startup:  storage → documents → editor
+shutdown: editor → documents → storage</pre>
+<p>The direction changes during shutdown because an editor may still use
+documents while it closes. If the editor cannot stop, stopping documents and
+storage anyway would remove services that the editor still needs.</p>
+<h2>Define what each callback owns</h2>
+<table><thead><tr><th>Callback</th><th>Responsibility</th><th>Failure contract</th></tr></thead><tbody>
+<tr><td>configure</td><td>Prepare the module's configuration.</td><td>A failed configure must unwind its own partial operation. The controller has not yet established successful configuration for this entry.</td></tr>
+<tr><td>initialise</td><td>Create resources for a configured module.</td><td>Preserve a state that stop can clean after successful configuration. Do not leave an undocumented background owner.</td></tr>
+<tr><td>start</td><td>Begin the module's ordinary work.</td><td>Return an error for incomplete startup. The controller still calls stop for the successfully configured entry.</td></tr>
+<tr><td>quiesce</td><td>Prevent or settle new work before stopping a started module.</td><td>Keep unfinished work represented and allow a later quiesce retry. Stop and provider shutdown do not proceed past this error.</td></tr>
+<tr><td>stop</td><td>Finish cleanup that can fail.</td><td>Retain unfinished obligations for retry. Do not report success while required workers or resources remain active.</td></tr>
+<tr><td>destroy</td><td>Release final state after checked cleanup.</td><td>This void callback cannot report failure. It must tolerate a registered module that never completed startup and must return normally.</td></tr>
+</tbody></table>
+<p>A callback is a function supplied by the module. Framework calls it with a
+context containing shared services and the module's own state pointer.
+The descriptor, its strings and module state remain borrowed by the controller
+until destruction finishes. Keep them alive; a pointer is not a copy.</p>
+<h2>Separate progress from a visible failure state</h2>
+<p>A module can be marked <code>UMI_MODULE_FAILED</code> after its stop callback
+fails even though quiesce already succeeded. The next stop attempt should not
+repeat successful quiesce. Similarly, a module whose initialise callback failed
+can still have a completed configure phase that requires cleanup.</p>
+<p>Framework retains those obligations independently of the public state enum.
+It records whether an entry still needs stop, whether a started module needs
+quiesce, and whether quiesce has completed. A failure report remains visible
+without erasing that progress.</p>
+<ol>
+<li>Stop the last started dependent first.</li>
+<li>If quiesce fails, retain that module and all earlier providers.</li>
+<li>If quiesce succeeds but stop fails, retain the module and providers while
+remembering completed quiesce.</li>
+<li>On retry, skip modules already stopped and skip completed quiesce.</li>
+<li>Continue toward providers only after the dependent's stop succeeds.</li>
+</ol>
+<p>This conservative order can also retain an unrelated earlier module until
+the failed module is handled. It favours preserving required services over
+trying to optimise partial shutdown. It does not force termination or promise
+a time limit for application callbacks.</p>
+<h2>Handle failed startup</h2>
+<p>Startup returns the original configure, initialise or start error.
+The controller then attempts reverse cleanup of successfully configured
+entries. If that cleanup also fails, the original startup error remains the
+return value and cleanup remains pending. Health and diagnostic records
+identify the additional rollback problem.</p>
+<p>Use <code>UmiMasterControllerNeedsStop</code> to observe whether startup or
+rollback still requires stop under the controller's serial ownership contract.
+Do not assume that a failed start means no resources exist. Retry stop or
+checked release before starting a new lifecycle.</p>
+<pre><code>UmiStatus status = umi_master_controller_start(master);
+if (status != UMI_STATUS_OK) {
+    /* Preserve the startup status in diagnostics. */
+    UmiStatus cleanup = UmiMasterControllerRelease(&amp;master);
+    if (cleanup != UMI_STATUS_OK) {
+        /* master remains owned. Report cleanup too and retain all
+         * borrowed descriptors and dependent application data. */
+    }
+}</code></pre>
+<p>The snippet illustrates two independent results: the startup error and its
+cleanup result. A successful rollback does not turn failed startup into a
+successful application launch.</p>
+<h2>Release the owner explicitly</h2>
+<p><code>UmiMasterControllerRelease(&amp;master)</code> stops outstanding modules,
+then invokes destruction callbacks and frees shared authorities and registries.
+It clears the pointer only on success. With a complete validated dependency
+order, module destruction follows its reverse order; a never-started or
+incompletely validated composition retains reverse registration as its fallback.</p>
+<p>The existing void destroy function remains available, but retains the owner
+if checked cleanup fails. New lifecycle code should use checked release and
+handle its result. A parent must keep its own payload alive when a child owner
+has not been released.</p>
+<p>Controller operations belong to one serial owner. These functions are not
+concurrent container APIs. Start, stop, release, module/authority registration
+and dependency validation are refused during a lifecycle callback. Read-only
+observations do not grant ownership. Never escape a callback using a nonlocal
+jump or native thread termination.</p>
+<h2>Study the real regression fixture</h2>
+<p><code>tests/test_master_lifecycle.c</code> registers three modules in the
+opposite order to their dependencies. It verifies ordinary restart cycles,
+failed quiesce, failed stop, retained legacy destruction, callback reentry and
+startup rollback. The rollback cases distinguish a failed configure from a
+failure after configuration and check a second failure during rollback.</p>
+<p>With Framework tests configured, build
+<code>umicom-master-lifecycle-test</code> and run CTest using
+<code>-R "^framework[.]master[.]lifecycle[.]" --output-on-failure --no-tests=error</code>.
+Record the compiler, source revision and individual results. These synchronous
+fixtures do not qualify every application's asynchronous module callback.</p>
+<p>Studio propagates this contract through its bootstrap: pending Framework
+cleanup is handled even when Studio never reached its own started flag.
+The general ownership pattern is the same as
+<a href="process-lifetimes.html">background process lifetimes</a> and
+<a href="watch-file-lifetimes.html">file watcher lifetimes</a>.</p>
+<p>Before startup, <a href="register-services-safely.html">register complete modules and service capabilities safely</a>. Failed admission must leave the original composition intact.</p>
+</body></html>

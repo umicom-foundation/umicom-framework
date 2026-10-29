@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Register application services safely | Umicom Framework</title>
+<style>body{max-width:58rem;margin:2rem auto;padding:0 1rem;font:1.1rem/1.65 system-ui;color:#203347;background:#fafcfd}pre{overflow:auto;background:#eaf1f5;padding:1rem;border-radius:.5rem}code{font-size:.9em}a{color:#006578}svg{max-width:100%;height:auto}aside{border-left:.3rem solid #a65c16;padding-left:1rem}table{border-collapse:collapse;width:100%}td,th{border:1px solid #bccbd6;padding:.5rem;text-align:left}</style></head>
+<body><nav><a href="module-lifecycle-retries.html">Module startup and shutdown</a> · <a href="process-lifetimes.html">Background process ownership</a></nav>
+<main><h1>Register application services safely</h1>
+<p>A module is a named part of an application. A capability describes something that part can provide, such as a document store or a price feed. Registration makes the capability discoverable. It does not start a worker, authenticate a customer, or open a file. Those actions belong to later lifecycle operations.</p>
+<p>Umicom Framework owns the common registration rules. Studio and other applications supply module descriptions and service objects. This separation lets an application change its composition without implementing another service catalogue.</p>
+<h2>1. Understand the two catalogues</h2>
+<p>The Master Controller records modules and their capabilities. Both catalogues must agree. Suppose a module provides a document reader and a document writer. If the writer name conflicts with another provider, the module must be rejected as a whole. Keeping only the reader would make the catalogue describe an application that was never accepted.</p>
+<svg viewBox="0 0 800 170" role="img" aria-labelledby="diagram-title"><title id="diagram-title">A proposed module is validated before both catalogues accept it; rejection leaves the original catalogues unchanged.</title><g fill="#e4eef5" stroke="#52758c"><rect x="10" y="35" width="190" height="90" rx="10"/><rect x="265" y="35" width="220" height="90" rx="10"/><rect x="550" y="10" width="240" height="65" rx="10"/><rect x="550" y="95" width="240" height="65" rx="10"/></g><g font-family="system-ui" font-size="18" text-anchor="middle" fill="#203347"><text x="105" y="73">Proposed module</text><text x="105" y="101">and capabilities</text><text x="375" y="73">Check every entry</text><text x="375" y="101">before admission</text><text x="670" y="38">Accepted:</text><text x="670" y="62">complete composition</text><text x="670" y="122">Rejected:</text><text x="670" y="146">original state retained</text></g><g stroke="#52758c" stroke-width="3" fill="none"><path d="M200 80H265 M485 80L550 43 M485 80L550 128"/></g></svg>
+<h2>2. Describe providers before publishing them</h2>
+<p>A <code>UmiCapabilityDescriptor</code> contains the capability identifier, version, provider module identifier and a borrowed provider pointer. “Borrowed” means the registry can refer to the object but does not own or free it. The object must remain alive while a consumer can use it.</p>
+<pre><code>UmiCapabilityDescriptor capabilities[] = {
+    {
+        .structure_size = sizeof(UmiCapabilityDescriptor),
+        .capability_id = "example.documents.read",
+        .capability_version = {1U, 0U, 0U},
+        .provider_module_id = "example.documents",
+        .provider = document_store,
+        .flags = UMI_CAPABILITY_SINGLETON
+    },
+    {
+        .structure_size = sizeof(UmiCapabilityDescriptor),
+        .capability_id = "example.documents.write",
+        .capability_version = {1U, 0U, 0U},
+        .provider_module_id = "example.documents",
+        .provider = document_store,
+        .flags = UMI_CAPABILITY_SINGLETON
+    }
+};
+UmiStatus status = UmiCapabilityRegistryRegisterBatch(
+    registry, capabilities, 2U);</code></pre>
+<p>This fragment assumes that <code>registry</code> and <code>document_store</code> already exist. Check <code>status</code> before offering these capabilities to the rest of the application. On failure, neither entry from this call is added. Existing entries remain intact. On success, identifiers are copied into registry storage; the service object itself remains borrowed.</p>
+<h2>3. Choose single or multiple providers deliberately</h2>
+<p><code>UMI_CAPABILITY_SINGLETON</code> means that a capability has one provider. A second provider cannot evade that rule by omitting the flag. The existing entry and incoming entry both participate in the conflict check. Multiple providers are allowed only when neither entry requires singleton ownership and their provider identifiers differ.</p>
+<table><thead><tr><th>Result</th><th>Meaning</th><th>Next action</th></tr></thead><tbody>
+<tr><td><code>UMI_STATUS_OK</code></td><td>Every entry was accepted.</td><td>Continue with dependency validation.</td></tr>
+<tr><td><code>UMI_STATUS_INVALID_ARGUMENT</code></td><td>A required value is absent or malformed.</td><td>Correct the descriptor; retry the complete group.</td></tr>
+<tr><td><code>UMI_STATUS_ALREADY_EXISTS</code></td><td>A provider or singleton conflicts.</td><td>Inspect the existing owner; do not silently replace it.</td></tr>
+<tr><td><code>UMI_STATUS_CAPACITY_EXCEEDED</code></td><td>An identifier or group exceeds the bounded catalogue.</td><td>Reduce the composition or use an explicitly reviewed capacity change.</td></tr>
+</tbody></table>
+<h2>4. Let the controller register complete modules</h2>
+<p>Application composition normally calls <code>umi_master_controller_register</code> with a <code>UmiModuleDescriptor</code>. Its <code>provided_capabilities</code> is an array of string pointers terminated by <code>NULL</code>. The controller uses batch capability admission. If that step fails, it removes the provisional module catalogue entry without calling the module destructor. A corrected description can be retried under the same module identifier.</p>
+<p>The module descriptor, its capability arrays and its module state remain borrowed. Do not edit them while registered. Complete registration before starting the controller. Diagnostic callbacks can inspect the composition, but cannot start, mutate or release the controller during the active registration call.</p>
+<h2>5. Reacquire descriptors after changes</h2>
+<p>Removing an entry compacts the capability catalogue. The implementation rebinds moved descriptors to their own identifier arrays. A caller must still reacquire a descriptor through <code>find</code> or <code>at</code> after mutation. A pointer into a catalogue is not a permanent identity.</p>
+<aside><p>Write operations use a registry lock. This does not make borrowed pointers safe for concurrent use after the lock is released. Serialize catalogue reading and mutation at the application ownership boundary. Removing a catalogue entry also does not stop a running module: stop its users and follow its lifecycle contract first.</p></aside>
+<h2>6. Follow the implementation and regression cases</h2>
+<p>Read <code>src/runtime/capability_registry.c</code> for batch validation and identifier relocation, <code>src/runtime/master_controller.c</code> for module admission, and <code>tests/test_registration_transactions.c</code> for corrected retries. The tests fill a bounded catalogue, reject a group without partial insertion, remove an entry, and register another entry in the vacated space.</p>
+<p>After configuring the Framework build, the following commands build and run this focused test target. Stop if a command fails; read its diagnostic before proceeding.</p>
+<pre><code>cmake --build build/windows-ucrt64-debug --target umicom-registration-transactions-test --parallel 2
+ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]registration[.]transaction[.]" --output-on-failure --no-tests=error</code></pre>
+<p>Each selected case must report a pass. These commands exercise registration contracts, not a complete application startup or shutdown. Continue with the lifecycle tests and application workflows before release.</p>
+<h2>Read command batch failures precisely</h2>
+<p>Commands use a related atomic registration API, <code>umi_command_registry_register_many</code>. Its <code>UmiCommandBatchReport</code> identifies the rejected descriptor with a zero-based index: 0 means the first command, 1 means the second. A duplicate inside the proposed group must identify the duplicate entry itself, not the entry after it.</p>
+<p><code>SIZE_MAX</code> means that no single rejected entry is identified, including a successful call or a batch-wide error such as insufficient registry space. Never use this sentinel as an array index. Check the returned status and then compare <code>failed_index</code> with the requested count before selecting an entry to display.</p>
+<p>The cases in <code>tests/test_command_batch_failures.c</code> check duplicates at different positions, an existing command conflict, invalid input, capacity errors and corrected retries. All rejected groups leave membership unchanged.</p>
+<p>Continue with <a href="own-shared-services.html">owning and replacing shared services</a> to connect catalogue entries to object lifetime.</p>
+</main></body></html>

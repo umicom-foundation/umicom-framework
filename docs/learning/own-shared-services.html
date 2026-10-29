@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Own and replace shared services | Umicom Framework</title>
+<style>body{max-width:56rem;margin:2rem auto;padding:0 1rem;font:1.1rem/1.65 system-ui;color:#203347;background:#fafcfd}pre{overflow:auto;background:#eaf1f5;padding:1rem}a{color:#006578}aside{border-left:.3rem solid #a65c16;padding-left:1rem}</style></head>
+<body><nav><a href="register-services-safely.html">Register capabilities</a> · <a href="module-lifecycle-retries.html">Module lifecycle</a></nav>
+<main><h1>Own and replace shared services</h1>
+<p>A service is an object that several parts of an application use. Studio's document model is an example of shared state: commands and views need access to the same documents. A service registry helps a composition discover such objects. Ownership answers a separate question: who is responsible for ending each object's lifetime?</p>
+<h2>1. Separate discovery from ownership</h2>
+<p><code>UmiServiceDescriptor</code> describes one service registration. Its identifiers are copied into the registry. Its <code>service</code> field points to the actual object. Without <code>UMI_SERVICE_OWNED</code>, the caller owns that object and must keep it alive while the registration can be used. With the flag and a destroy callback, the registry invokes the callback when the registration is removed or the registry is released.</p>
+<p>A destroy callback is an ordinary C function. The registry cannot guess whether an object was allocated on the heap, opened through another library, or borrowed from a parent. Supply a callback that follows the object's real ownership contract. Do not register the same object as independently owned entries unless its explicit lifetime scheme supports those separate obligations.</p>
+<pre><code>Fixture fixture;
+Prepare(&amp;fixture);
+UmiServiceDescriptor descriptor = Describe(
+    &amp;fixture.objects[0], "example.service", "example.provider",
+    UMI_SERVICE_OWNED | UMI_SERVICE_REPLACEABLE);
+UmiStatus status = umi_service_registry_register(
+    fixture.registry, &amp;descriptor);</code></pre>
+<p>This fragment uses the real <code>Fixture</code>, <code>Prepare</code> and <code>Describe</code> helpers in <code>tests/test_service_registry_ownership.c</code>. They are test helpers, not public Framework APIs. <code>Describe</code> fills the descriptor fields and supplies a <code>Destroy</code> callback that counts each object's completed destruction obligation. Its small fixture objects live in the test; a production callback must instead release the resources its own object owns. Check the returned status before assuming that ownership has transferred.</p>
+<h2>2. Replace an object only through an accepted registration</h2>
+<p>The existing entry must have <code>UMI_SERVICE_REPLACEABLE</code>. A replacement has the same service and provider identifiers. The registry validates its complete input and checks singleton conflicts before changing the catalogue. Rejected input leaves the current object alive.</p>
+<p>When a different object is accepted, the registry publishes the replacement and then destroys the retired owned object. When the object pointer is unchanged, it updates metadata without destroying that object. The new flags and destructor apply to its later removal. This includes an explicit change from owned to borrowed registration: the caller then takes responsibility for the object's remaining lifetime.</p>
+<p>A replacement may use identifier strings obtained from the current descriptor. The implementation snapshots those strings before overwriting an entry or destroying its former object. This protects the input from changes made by the operation itself; it does not permit concurrent unsynchronised access.</p>
+<h2>3. Keep destructor callbacks bounded</h2>
+<p>Destructors run outside the registry's write mutex. A mutex is a lock used to keep writers from modifying shared storage simultaneously. Calling arbitrary cleanup code while holding that lock can deadlock if the callback attempts another registry operation.</p>
+<p>While a destructor is active, registry register, unregister and release operations return <code>UMI_STATUS_INVALID_STATE</code>. The callback may inspect the updated catalogue under the owner's serial access discipline. It must return normally. It must not use a nonlocal jump or terminate its native thread to escape cleanup.</p>
+<p><code>UmiServiceRegistryIsInCallback</code> lets a valid enclosing owner detect this interval. The Master Controller uses it to refuse teardown from an owned service destructor. Studio's bootstrap checks it before closing background services or releasing its UI. A callback cannot turn a service cleanup notification into recursive destruction of its parent graph.</p>
+<h2>4. Release the owner explicitly</h2>
+<pre><code>UmiStatus status = UmiServiceRegistryRelease(&amp;registry);
+if (status != UMI_STATUS_OK) {
+    /* Keep registry and its enclosing owner alive; report the failure. */
+    return status;
+}
+/* registry is now NULL. */</code></pre>
+<p>An empty owner pointer succeeds. Passing no pointer storage is invalid. A refused call leaves the owner pointer unchanged. The legacy void destroy function remains available, but checked release makes a refusal visible to its caller.</p>
+<p>Registry release destroys owned entries in reverse registration order. It detaches each entry before invoking its callback. This order is not a substitute for application dependency ordering: stop users first, then release their service owners through the controller.</p>
+<aside><p>Exclude every concurrent registry operation before destroying it. Read-only destructor callbacks run under that same exclusive owner. Lookups return borrowed descriptors. Reacquire them after register or unregister. The registry copies names; it does not make service objects thread-safe, stop their workers, or extend the lifetime of arbitrary borrowed pointers.</p></aside>
+<h2>5. Observe partial closure accurately</h2>
+<p>The Master Controller retains its remaining graph if a checked child release fails. Once module destruction has started, the controller cannot be restarted or given new modules. Its owner can retry release. Previously destroyed modules and authorities must not be destroyed again.</p>
+<p>Study <code>src/runtime/service_registry_ownership.inc</code> for the shared service rules, <code>src/runtime/master_controller_lifecycle.inc</code> for the enclosing owner, and Studio's <code>src/app/bootstrap.c</code> for application integration. The regression files use real registry operations to check same-object replacement, identifier compaction, singleton conflicts, destructor reentry and parent retention.</p>
+<p>With Framework tests configured, build <code>umicom-service-ownership-test</code> and select <code>^framework[.]service[.]ownership[.]</code> in CTest. The separate Master Controller child-release failure case uses Linux linker wrapping; it does not prove a Windows native failure path. Studio's <code>studio.services.lifecycle.service-destructor</code> case checks the application boundary. Compiler and runtime results must be collected on each supported environment before release.</p>
+<h2>6. Build a small composition</h2>
+<p>The <a href="../guides/compose-installed-service-modules.html">installed module composition example</a> puts these rules into one application. Follow its counter provider and consumer to see dependency-ordered startup, failed registration without partial membership, rollback, shutdown retry and restart. Its source qualification target is <code>umicom-service-composition-test</code>; the separate installed example also checks package origin and exported runtime dependencies.</p>
+<p>For diagnostic views, <a href="inspect-shared-services.html">copy service metadata</a> instead of retaining registry entry pointers. The copy records names and policy without extending the service lifetime.</p>
+</main></body></html>

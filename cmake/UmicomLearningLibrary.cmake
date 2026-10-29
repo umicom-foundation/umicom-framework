@@ -17,3 +17,9 @@ if(BUILD_TESTING AND TARGET umicom_developer)
             TIMEOUT 20 LABELS "framework;teacher;studio;regression")
     endforeach()
 endif()
+
+# Versioned packs extend the foundations catalogue; existing library selection
+# and resource lookup retain their published behaviour.
+if(TARGET umicom_developer)
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomLearningPacks.cmake")
+endif()

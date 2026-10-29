@@ -34,6 +34,9 @@ static int Link(const char *alias, const char *target, int directory) {
   if (CreateSymbolicLinkW(a, t, flags | 2U) || CreateSymbolicLinkW(a, t, flags))
     return 0;
   DWORD error = GetLastError();
+  /* Keep absent fixture permission distinct from a product rename result. */
+  fprintf(stderr, "Symbolic-link fixture could not be created (Windows error %lu).\n",
+          (unsigned long)error);
   return error == ERROR_PRIVILEGE_NOT_HELD || error == ERROR_NOT_SUPPORTED ||
                  error == ERROR_INVALID_FUNCTION
              ? 77
@@ -65,6 +68,7 @@ int main(int argc, char **argv) {
   UmiStatus status =
       UmiWorkspaceRenameEntry(f.graph, 0U, parent ? "alias/old.c" : "alias", "new.c", &result);
   if (status == UMI_STATUS_NOT_IMPLEMENTED) {
+    fprintf(stderr, "SKIP: this filesystem adapter does not implement protected rename.\n");
     CHECK(StopRename(&f) == 0);
     return 77;
   }

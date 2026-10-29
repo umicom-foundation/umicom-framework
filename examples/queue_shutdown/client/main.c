@@ -12,14 +12,22 @@
 #include "umicom/platform/task_queue.h"
 #include "umicom/platform/threading.h"
 #include <stdio.h>
+#include "lifecycle_cases.h"
 static UmiStatus Count(UmiTaskContext *context, void *data)
 {
     (void)context;
     ++*(unsigned *)data;
     return UMI_STATUS_OK;
 }
-int main(void)
+int main(int argc, char **argv)
 {
+    /* Named cases add installed ownership checks while keeping the original
+     * no-argument nonblocking demonstration intact. */
+    if (argc == 2) return UmiShutdownConsumerRunCase(argv[1]);
+    if (argc != 1) {
+        fputs("Pass one scenario name, or no arguments for the polling example.\n", stderr);
+        return 2;
+    }
     unsigned completed = 0;
     UmiTask *task = NULL;
     UmiTaskQueue *queue = NULL;

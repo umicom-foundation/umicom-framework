@@ -102,6 +102,18 @@ UmiStatus umi_process_supervisor_create(
  * safely.
  */
 void umi_process_supervisor_destroy(UmiProcessSupervisor *supervisor);
+/** Stop and release an exclusively owned supervisor, clearing its pointer only
+ * on success. NULL owner storage is invalid; an empty owner is an OK no-op.
+ * A failed wait, join or handle release preserves the supervisor for retry.
+ * Successful partial joins and handle releases are not repeated.
+ *
+ * Exclude all concurrent API users before release, including snapshot readers
+ * and waiters. This is a blocking lifecycle operation, not a UI-thread polling
+ * operation. Job completion and supervisor shutdown do not imply job success.
+ * The void destroy interface remains compatible but retains an owner if stop
+ * fails; use this checked interface when the caller must observe that failure. */
+UmiStatus UmiProcessSupervisorRelease(UmiProcessSupervisor **inOutSupervisor);
+
 /**
  * Provide the process supervisor submit operation used by this module and its client
  * applications.

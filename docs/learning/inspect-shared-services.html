@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Inspect shared services safely</title><style>body{max-width:56rem;margin:2rem auto;padding:0 1rem;font:1rem/1.65 system-ui;color:#162130}pre{white-space:pre-wrap;background:#eef2f6;padding:1rem}code{overflow-wrap:anywhere}a{color:#075a82}</style></head><body>
+<h1>Inspect shared services safely</h1>
+<p>A registry lookup and a diagnostic report have different lifetimes.
+<code>umi_service_registry_find</code> returns a borrowed descriptor: the registry
+owns its storage. A later register or unregister can replace or move that storage.
+A panel which keeps the pointer can therefore display a different record or read
+released memory. Serialize borrowed lookups with mutations and reacquire them
+after a change.</p>
+<p>For diagnostic views, use copied metadata. <code>UmiServiceSnapshot</code>
+contains the service identifier, provider identifier, version and flags in the
+caller's own storage. It contains no service object, callback or registry pointer.
+It remains readable when the registry changes or is released. The copy records
+what was registered at capture time; it does not promise that the service still
+exists or is healthy.</p>
+<h2>Copy one service</h2>
+<pre><code>UmiServiceSnapshot description;
+UmiStatus status = UmiServiceRegistryCopySnapshot(
+    registry, "example.counter", "example.counter.provider", &amp;description);
+if (status == UMI_STATUS_OK) {
+    printf("%s comes from %s\n",
+        description.service_id, description.provider_module_id);
+}</code></pre>
+<p>The last argument points to your output object. The registry copies the
+metadata while holding its mutex, then releases the mutex before returning.
+A missing entry returns <code>UMI_STATUS_NOT_FOUND</code> and leaves the output
+unchanged. Do not read an uninitialised output when the call failed.</p>
+<p>Use a provider identifier when the choice matters. A <code>NULL</code> provider
+chooses the first matching provider in registration order. It does not choose
+the newest version, healthiest instance or most trusted implementation.</p>
+<h2>Copy a bounded list</h2>
+<pre><code>UmiServiceSnapshot rows[8];
+size_t total = 0U;
+UmiStatus status = UmiServiceRegistryCopySnapshots(
+    registry, rows, 8U, &amp;total);
+if (status == UMI_STATUS_OK || status == UMI_STATUS_CAPACITY_EXCEEDED) {
+    size_t visible = total &lt; 8U ? total : 8U;
+    for (size_t index = 0U; index &lt; visible; ++index)
+        printf("%s\n", rows[index].service_id);
+    /* If total exceeds visible, tell the user the list is incomplete. */
+}</code></pre>
+<p>The count and copied rows come from the same locked observation. If more than
+eight entries exist, the first eight rows are valid and the status is
+<code>UMI_STATUS_CAPACITY_EXCEEDED</code>. <code>total</code> reports the whole
+count, not the number copied. Never use <code>total</code> as an array bound when
+your capacity is smaller. Zero capacity with a non-NULL output also reports
+insufficient room for a nonempty registry.</p>
+<p>For a count-only query, pass <code>NULL, 0U, &amp;total</code>. That query succeeds
+without writing rows. A later allocation and second call are separate
+observations: a permitted writer may add entries between them. Handle a larger
+second count or allocate the documented maximum for a complete bounded list.</p>
+<h2>Summarise without allocating a list</h2>
+<p><code>UmiServiceRegistryCopySummary</code> fills a small <code>UmiServiceRegistrySummary</code> with the total and counts of singleton, owned, thread-safe and replaceable registrations. All five counts come from the same locked observation. Use it for a status bar that only needs totals; copying every name would add unnecessary storage and work.</p>
+<p><code>UmiServiceRegistryCountPrefix</code> counts identifiers beginning with a supplied prefix under the same lock. An empty prefix matches every row. Two providers registered under one identifier count as two rows, not one distinct service name. Runtime inventory delegates its service queries to these operations.</p>
+<p>Command totals also come from their own locked observation. Capability mutation still needs owner serialization. Separate observations do not make the entire multi-registry report atomic.</p>
+<h2>Keep ownership explicit</h2>
+<ul>
+<li>Keep the registry alive throughout each call. A mutex cannot protect a
+registry which another owner has already freed.</li>
+<li>Copies serialize against registration and removal. Exclude all concurrent
+operations before releasing the registry.</li>
+<li>Owned-service destructors may read metadata under the registry's exclusive
+release owner. The retiring entry is detached before its destructor runs.</li>
+<li>Snapshots do not retain service objects or make them thread-safe. Invoke a
+service only through an established owner and dependency contract.</li>
+<li>Flags describe registration policy. <code>OWNED</code> identifies destruction
+responsibility, <code>SINGLETON</code> excludes other providers,
+<code>REPLACEABLE</code> permits replacement, and <code>THREAD_SAFE</code> is a
+provider declaration. None is a current health result.</li>
+</ul>
+<h2>Follow the application example</h2>
+<p>Studio's <code>UmiStudioStateCopyServices</code> delegates to this API.
+Its native <code>umicom-studio-state --services</code> command prints copied names,
+providers, versions and flags. The application formats the report; Framework owns
+discovery. This also supports a desktop panel or web response without returning
+process addresses to the presentation layer.</p>
+<p>Review <code>src/runtime/service_registry_snapshots.inc</code> and
+<code>tests/test_service_snapshots.c</code>. The target is
+<code>umicom-service-snapshots-test</code>; select
+<code>^framework[.]service[.]snapshot[.]</code> in CTest. Cases cover count queries,
+missing providers, bounded output, mutation, release and destructor inspection.
+Source review does not replace executing checks in the environment you ship.</p>
+<p>Continue with <a href="own-shared-services.html">shared service ownership</a>
+and the <a href="../guides/compose-installed-service-modules.html">installed
+module composition example</a>.</p>
+<p><a href="inspect-registered-commands.html">Inspect registered commands</a> explains policy totals and discovery without invoking application callbacks.</p>
+</body></html>

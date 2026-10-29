@@ -38,6 +38,8 @@ struct UmiWatcher {
     size_t entry_count;
     size_t entry_capacity;
     UmiThread *thread;
+    /* Join progress survives a later native handle-release failure. */
+    int thread_joined;
     UmiMutex *mutex;
     UmiCancellationToken *cancellation;
     UmiWatcherStats stats;

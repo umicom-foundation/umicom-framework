@@ -22,3 +22,8 @@ file(MAKE_DIRECTORY "${ROOT}/share/umicom/runtime"
 file(WRITE "${ROOT}/share/umicom/runtime/deployment.marker" "UMICOM_WINDOWS_RUNTIME=1\n")
 file(WRITE "${ROOT}/share/umicom/runtime/gdk-pixbuf-loaders.cache.in"
     "\"@UMICOM_RUNTIME_ROOT@/lib/fixture-loader.dll\"\n")
+
+# The startup fixture only checks environment ownership. This scanner-shaped
+# file is never loaded or executed; real playback has separate native tests.
+file(MAKE_DIRECTORY "${ROOT}/lib/gstreamer-1.0" "${ROOT}/libexec/gstreamer-1.0")
+file(WRITE "${ROOT}/libexec/gstreamer-1.0/gst-plugin-scanner.exe" "environment fixture only\n")

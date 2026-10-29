@@ -104,6 +104,13 @@ UmiStatus UmiTaskQueueCancelAll(UmiTaskQueue *queue);
 UmiStatus UmiTaskQueueRequestShutdown(UmiTaskQueue *queue,
     int cancelPending, int cancelRunning);
 
+/** Return nonzero only while the calling thread is one of this queue's workers.
+ * NULL returns zero. This performs no wait, stop or state transition and can be
+ * used by an enclosing service to refuse self-destruction before stopping other
+ * children. It does not retain the queue or prove exclusive lifecycle ownership;
+ * the caller must already hold a live, non-racing borrowed or owned pointer. */
+int UmiTaskQueueIsCurrentWorker(const UmiTaskQueue *queue);
+
 /** Phase of the queue's existing lifecycle, not a task outcome. */
 typedef enum UmiTaskQueuePhase {
     UMI_TASK_QUEUE_ACCEPTING = 0,

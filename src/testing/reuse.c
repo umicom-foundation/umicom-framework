@@ -58,7 +58,9 @@ void UmiTestReuseDestroy(UmiTestReuseState *state)
 {
     if (state != NULL) { free(state->items); free(state); }
 }
-UmiStatus UmiTestReuseImport(const char *text, size_t length, UmiTestReuseState **out)
+/* Keep the canonical LF parser as the sole structural validator. The public
+ * boundary below accepts native Windows text without weakening field checks. */
+static UmiStatus ImportLf(const char *text, size_t length, UmiTestReuseState **out)
 {
     const size_t head = sizeof(prefix) - 1U + 64U;
     if (text == NULL || out == NULL || *out != NULL)
@@ -105,6 +107,33 @@ UmiStatus UmiTestReuseImport(const char *text, size_t length, UmiTestReuseState 
         }
     *out = state;
     return UMI_STATUS_OK;
+}
+/* CMake and text editors may emit CRLF on Windows. Remove only CR immediately
+ * followed by LF; a bare CR, including one inside a digest or name, is invalid.
+ * Allocate a bounded private copy so failures never alter caller input/output.
+ * Exports stay canonical LF regardless of the imported file's line endings. */
+UmiStatus UmiTestReuseImport(const char *text, size_t length, UmiTestReuseState **out)
+{
+    if (text == NULL || out == NULL || *out != NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (length > UMI_TEST_REUSE_MAX_BYTES) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (memchr(text, '\r', length) == NULL) return ImportLf(text, length, out);
+    char *normalized = malloc(length);
+    if (normalized == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    size_t used = 0U;
+    for (size_t i = 0U; i < length; ++i) {
+        if (text[i] == '\r') {
+            if (i + 1U == length || text[i + 1U] != '\n') {
+                free(normalized);
+                return UMI_STATUS_INVALID_ARGUMENT;
+            }
+        } else {
+            normalized[used++] = text[i];
+        }
+    }
+    UmiStatus status = ImportLf(normalized, used, out);
+    free(normalized);
+    return status;
 }
 size_t UmiTestReuseCount(const UmiTestReuseState *state) { return state == NULL ? 0U : state->count; }
 const char *UmiTestReuseName(const UmiTestReuseState *state, size_t index)

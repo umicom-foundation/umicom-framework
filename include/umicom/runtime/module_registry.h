@@ -44,6 +44,11 @@ UmiStatus umi_module_registry_add(UmiModuleRegistry *registry,
  * Find module registry while leaving the underlying catalogue or model owned by this
  * module.
  */
+/* Remove membership without running lifecycle callbacks or freeing borrowed
+ * state. The owner must serialize operations and retain descriptors until
+ * removal or registry destruction. This is not a running-module unload API. */
+UmiStatus UmiModuleRegistryRemove(UmiModuleRegistry *registry, const char *module_id);
+
 const UmiModuleDescriptor *umi_module_registry_find(const UmiModuleRegistry *registry,
                                                     const char *module_id);
 /**

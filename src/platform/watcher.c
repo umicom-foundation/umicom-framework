@@ -22,6 +22,23 @@
 #include "include/watcher_internal.h"
 #include "umicom/platform/filesystem.h"
 
+/* A sink can synchronously trigger another watcher's sink. Track the whole
+ * callback chain so neither an inner nor an outer active watcher can be freed. */
+typedef struct UmiWatcherCallbackFrame {
+    const UmiWatcher *watcher;
+    struct UmiWatcherCallbackFrame *previous;
+} UmiWatcherCallbackFrame;
+static _Thread_local UmiWatcherCallbackFrame *watcherCallbacks;
+
+static int WatcherHasActiveCallback(const UmiWatcher *watcher)
+{
+    for (const UmiWatcherCallbackFrame *frame = watcherCallbacks;
+         frame != NULL; frame = frame->previous) {
+        if (frame->watcher == watcher) return 1;
+    }
+    return 0;
+}
+
 /*
  * Provide the watcher thread entry operation used by this module and its client
  * applications.
@@ -109,6 +126,9 @@ UmiStatus umi_watcher_create(const UmiWatcherConfig *config,
 }
 
 /* Release or reset state held by watcher so the same storage can be reused safely. */
+/* The checked lifecycle below replaces this implementation so failed joins
+ * cannot discard live ownership. Retained for engineering comparison. */
+#if 0
 void umi_watcher_destroy(UmiWatcher *watcher)
 {
     /*
@@ -122,6 +142,7 @@ void umi_watcher_destroy(UmiWatcher *watcher)
     umi_mutex_destroy(watcher->mutex);
     free(watcher);
 }
+#endif
 
 /* Provide the watcher set root operation used by this module and its client applications. */
 UmiStatus umi_watcher_set_root(UmiWatcher *watcher,
@@ -137,6 +158,7 @@ UmiStatus umi_watcher_set_root(UmiWatcher *watcher,
     if (watcher == NULL || root == NULL || root[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    if (WatcherHasActiveCallback(watcher)) return UMI_STATUS_INVALID_STATE;
     status = umi_path_normalise(root, normalised, sizeof(normalised));
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
@@ -168,6 +190,9 @@ UmiStatus umi_watcher_set_root(UmiWatcher *watcher,
 }
 
 /* Provide the watcher start operation used by this module and its client applications. */
+/* The checked lifecycle below replaces this implementation so failed joins
+ * cannot discard live ownership. Retained for engineering comparison. */
+#if 0
 UmiStatus umi_watcher_start(UmiWatcher *watcher)
 {
     UmiStatus status;
@@ -199,8 +224,12 @@ UmiStatus umi_watcher_start(UmiWatcher *watcher)
     }
     return status;
 }
+#endif
 
 /* Provide the watcher stop operation used by this module and its client applications. */
+/* The checked lifecycle below replaces this implementation so failed joins
+ * cannot discard live ownership. Retained for engineering comparison. */
+#if 0
 UmiStatus umi_watcher_stop(UmiWatcher *watcher)
 {
     /*
@@ -223,6 +252,7 @@ UmiStatus umi_watcher_stop(UmiWatcher *watcher)
     watcher->stats.running = 0;
     return UMI_STATUS_OK;
 }
+#endif
 
 /* Provide the watcher scan once operation used by this module and its client applications. */
 UmiStatus umi_watcher_scan_once(UmiWatcher *watcher)
@@ -232,6 +262,7 @@ UmiStatus umi_watcher_scan_once(UmiWatcher *watcher)
      * used.
      */
     if (watcher == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (WatcherHasActiveCallback(watcher)) return UMI_STATUS_INVALID_STATE;
     /* Apply this branch only when its contract condition is satisfied. */
     if (watcher->config.backend == UMI_WATCHER_FAKE) {
         return UMI_STATUS_OK;
@@ -300,7 +331,13 @@ UmiStatus umi_watcher_emit(UmiWatcher *watcher,
      * used.
      */
     if (watcher->config.sink != NULL) {
+        UmiWatcherCallbackFrame frame = {watcher, watcherCallbacks};
+        watcherCallbacks = &frame;
         watcher->config.sink(&event, watcher->config.sink_user_data);
+        watcherCallbacks = frame.previous;
     }
     return UMI_STATUS_OK;
 }
+
+/* Shared lifecycle ownership is implemented beside the canonical watcher. */
+#include "watcher_lifecycle.inc"

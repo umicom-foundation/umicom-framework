@@ -8,6 +8,9 @@ include(CTest)
 # for the wrong SDK.
 find_package(UmicomFramework CONFIG REQUIRED COMPONENTS education_inspection
     PATHS "${INSPECTION_PREFIX}" NO_DEFAULT_PATH)
+# Exercise the production environment helper from the copied installation.
+# This requirement belongs to the consumer, independently of package metadata.
+umicom_require_sdk_environment(2)
 file(REAL_PATH "${INSPECTION_PREFIX}" _prefix)
 get_target_property(_imported Umicom::education_inspection IMPORTED)
 if(NOT _imported)

@@ -14,6 +14,25 @@
 <li>Describe each required test, host and configuration. The capability description explains why that host is required, such as a GTK display or a Linux filesystem operation.</li>
 <li>Create a coverage review. Inspect every outstanding row before deciding which environment or test needs attention.</li>
 </ol>
+<section id="skip-prerequisites"><h2>Turn a skipped result into a qualification task</h2>
+<p>A prerequisite is something a test needs before it can exercise its intended behaviour. A symbolic-link test needs permission to create a link. A playback test needs a decoder. Returning the configured skip code records that the test could not perform its check; it does not prove that the application behaviour is correct.</p>
+<ol><li>Find the exact test name in the CTest summary or JUnit report. Read its captured output for the missing prerequisite.</li>
+<li>Keep the result as skipped. A phrase such as “Test Passed” in the low-level temporary log can describe process acceptance under a skip rule; use the reported test outcome, including the JUnit skipped element, when counting coverage.</li>
+<li>Assign that exact test to a host and configuration capable of exercising it. Record why, rather than deleting the requirement or changing its expected return code.</li>
+<li>Repair the prerequisite or use the appropriate host, then rebuild only what that change requires and rerun the affected cases. Keep the original observation and the new result.</li>
+<li>Accept the requirement only when the new report identifies the intended source and records a real pass. A missing capability on one host cannot be replaced by an unrelated passing test.</li></ol>
+<table><thead><tr><th>Observed prerequisite</th><th>Example from Framework</th><th>Next check</th></tr></thead><tbody>
+<tr><td>Link creation is unavailable</td><td><code>framework.document.copy.output.symlink</code></td><td>Use a test host whose account and filesystem support creating symbolic links. Windows error 1314 means a required privilege is unavailable. Do not change the application's link-rejection policy to make the test pass.</td></tr>
+<tr><td>Platform-specific filesystem or process behaviour</td><td><code>framework.platform.input_file.fifo</code></td><td>Run the POSIX FIFO fixture on its supported host. A Windows named pipe is a different interface and needs separate tests.</td></tr>
+<tr><td>Provider enabled in this build</td><td><code>framework.media.png.unavailable</code></td><td>Keep a separate configuration without PNG support for the unavailable-provider contract, as well as the normal decoder/encoder configuration.</td></tr>
+<tr><td>Native media plugins absent</td><td><code>framework.creative_audition.gtk.load</code></td><td>Check the selected and deployed GStreamer runtime. See <a href="../windows-installation.html#media-runtime">media deployment</a>. Preparation, decoding and audible playback remain distinct checks.</td></tr>
+<tr><td>No real virtual-machine process selected</td><td><code>framework.vm_manager.real_qemu_protocol</code></td><td>Set <code>UMICOM_VM_TEST_QEMU</code> to an explicitly trusted QEMU executable for that configuration. The test exercises the QMP control protocol without a guest kernel; it does not qualify booting Umicom Kernel.</td></tr>
+<tr><td>Native debugger missing or unable to start</td><td><code>framework.development_workflow.native_debug.lldb</code></td><td>Inspect the debugger probe and its runtime dependencies. Inert adapter tests and a pass with another debugger do not establish LLDB coverage.</td></tr>
+<tr><td>Native ISO-production tools unavailable</td><td><code>framework.setup_centre.media.iso_structure</code></td><td>Use the supported Linux GRUB production workflow. Prepared-media tests cover different behaviour.</td></tr>
+</tbody></table>
+<p>The capability text in a coverage manifest is a description, not a machine probe. “Windows with link permission” does not enable that permission, and “media plugins” does not install anything. Keep setup and result evidence alongside the manifest.</p>
+<p>CTest defines <a href="https://cmake.org/cmake/help/latest/prop_test/SKIP_RETURN_CODE.html">skip return codes</a> separately from failing assertions and timeouts. Keep a <a href="https://cmake.org/cmake/help/latest/manual/ctest.1.html#cmdoption-ctest-output-junit">JUnit result report</a> when saving observations for the coverage service.</p>
+</section>
 <h2>Use the shared C23 service</h2>
 <p>The following fragment assumes <code>report</code> is an already imported report owned by the caller. The identity is illustrative; supply the real fingerprint captured with the run.</p>
 <pre><code>#include &lt;umicom/testing/ctest_coverage.h&gt;

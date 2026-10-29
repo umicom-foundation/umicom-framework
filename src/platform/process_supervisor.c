@@ -185,6 +185,9 @@ static UmiProcessJob *find_job(UmiProcessSupervisor *supervisor,
     return NULL;
 }
 
+/* Lifecycle operations share the canonical job slots and join progress. */
+#include "process_supervisor_lifecycle.inc"
+
 /* Preserve live captured output without sharing the executor's mutable buffer.
  * The observer runs on the job worker; readers copy under this same mutex. */
 static void PublishProcessOutput(const UmiProcessResult *result, void *context)
@@ -302,6 +305,9 @@ UmiStatus umi_process_supervisor_create(
  * Release or reset state held by process supervisor so the same storage can be reused
  * safely.
  */
+/* Retained for comparison: checked lifecycle operations now distinguish
+ * admission closure from completed joins and preserve owners after failure. */
+#if 0
 void umi_process_supervisor_destroy(UmiProcessSupervisor *supervisor)
 {
     size_t index;
@@ -321,6 +327,7 @@ void umi_process_supervisor_destroy(UmiProcessSupervisor *supervisor)
     free(supervisor->jobs);
     free(supervisor);
 }
+#endif
 
 /*
  * Provide the process supervisor submit operation used by this module and its client
@@ -493,10 +500,15 @@ UmiStatus umi_process_supervisor_wait(UmiProcessSupervisor *supervisor,
     /* A terminal worker has already published its result and released this
      * mutex. Serialising join here prevents two waiters joining one thread,
      * and pins the slot against explicit release until this call completes. */
+    /* Preserve the former join block; the shared helper also records a
+     * consumed join when native exit supplied no integer result. */
+#if 0
     if (status == UMI_STATUS_OK && job->thread != NULL && !job->joined) {
         status = umi_thread_join(job->thread, NULL);
         if (status == UMI_STATUS_OK) job->joined = 1;
     }
+#endif
+    if (status == UMI_STATUS_OK) status = SupervisorJoinJob(job);
     --job->waiters;
     (void)umi_mutex_unlock(supervisor->mutex);
     return status;
@@ -504,6 +516,9 @@ UmiStatus umi_process_supervisor_wait(UmiProcessSupervisor *supervisor,
 
 /* Release only acknowledged, terminal work. No compaction is allowed while
  * another slot still contains a worker or self-referencing request pointers. */
+/* Retained for comparison: checked lifecycle operations now distinguish
+ * admission closure from completed joins and preserve owners after failure. */
+#if 0
 UmiStatus UmiProcessSupervisorReleaseJob(UmiProcessSupervisor *supervisor,
     UmiProcessJobId jobId)
 {
@@ -531,6 +546,7 @@ UmiStatus UmiProcessSupervisorReleaseJob(UmiProcessSupervisor *supervisor,
     (void)umi_mutex_unlock(supervisor->mutex);
     return status;
 }
+#endif
 
 /* Provide the copy snapshot operation used by this module and its client applications. */
 static void copy_snapshot(const UmiProcessJob *job,
@@ -628,6 +644,9 @@ UmiStatus umi_process_supervisor_at(const UmiProcessSupervisor *supervisor,
  * Provide the process supervisor shutdown operation used by this module and its client
  * applications.
  */
+/* Retained for comparison: checked lifecycle operations now distinguish
+ * admission closure from completed joins and preserve owners after failure. */
+#if 0
 UmiStatus umi_process_supervisor_shutdown(UmiProcessSupervisor *supervisor)
 {
     size_t index;
@@ -664,6 +683,7 @@ UmiStatus umi_process_supervisor_shutdown(UmiProcessSupervisor *supervisor)
     }
     return UMI_STATUS_OK;
 }
+#endif
 
 /*
  * Provide the process supervisor stats operation used by this module and its client

@@ -163,6 +163,26 @@ umicom_apply_sanitizers(umicom_base)
 
 # Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    # Dynamic plugins are not present in an executable import table. Qualify
+    # payload selection in the full suite as well as the small deployment project.
+    set(_media_payload_cases no-runtime no-plugins plugins ignore-registry missing-scanner directory-scanner file-plugin-root)
+    if(NOT CMAKE_HOST_WIN32)
+        list(APPEND _media_payload_cases linked-plugin)
+    endif()
+    foreach(_media_case IN LISTS _media_payload_cases)
+        add_test(NAME framework.windows_deployment.media.${_media_case}
+            COMMAND "${CMAKE_COMMAND}" "-DFRAMEWORK=${CMAKE_CURRENT_SOURCE_DIR}"
+                "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/media-payload-tests/${_media_case}"
+                "-DCASE=${_media_case}"
+                -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/windows_deployment/test_gstreamer_resources.cmake")
+        set_tests_properties(framework.windows_deployment.media.${_media_case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;deployment;media;regression")
+    endforeach()
+    add_test(NAME framework.gtk4.runtime-advisories
+        COMMAND "${CMAKE_COMMAND}" "-DFRAMEWORK_ROOT=${CMAKE_CURRENT_SOURCE_DIR}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/cmake/test_gtk_runtime_diagnostics.cmake")
+    set_tests_properties(framework.gtk4.runtime-advisories PROPERTIES
+        TIMEOUT 30 LABELS "framework;gtk4;configuration;regression")
     add_test(
         NAME framework.build.public-contract-fingerprint
         COMMAND "${CMAKE_COMMAND}"
@@ -519,6 +539,14 @@ target_include_directories(umicom_runtime PUBLIC
 )
 umicom_apply_warnings(umicom_runtime)
 umicom_apply_sanitizers(umicom_runtime)
+# These private implementation includes also belong to affected qualification.
+umicom_target_qualification_inputs(umicom_runtime FILES
+    src/runtime/service_registry_ownership.inc
+    src/runtime/service_registry_snapshots.inc
+    src/runtime/master_controller_lifecycle.inc)
+umicom_target_qualification_inputs(umicom_platform FILES
+    src/platform/watcher_lifecycle.inc
+    src/platform/process_supervisor_lifecycle.inc)
 
 # -----------------------------------------------------------------------------
 # Portable reflection and runtime discovery
@@ -830,6 +858,10 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
     # GtkFileDialog replaced deprecated GtkFileChooser APIs in GTK 4.10.  Make
     # the API floor explicit so strict builds never fall back to deprecated UI.
     pkg_check_modules(UMICOM_FRAMEWORK_GTK4 REQUIRED IMPORTED_TARGET gtk4>=4.10)
+    # Identify known runtime defects before expensive native qualification.
+    # This advisory preserves test coverage and does not claim a vendor backport.
+    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomGtkRuntimeDiagnostics.cmake")
+    umicom_report_gtk_runtime_advisories("${UMICOM_FRAMEWORK_GTK4_VERSION}" "${CMAKE_SYSTEM_NAME}")
     pkg_check_modules(UMICOM_FRAMEWORK_SOURCEVIEW5 QUIET IMPORTED_TARGET gtksourceview-5)
     add_library(umicom_ui_gtk4 STATIC
         adapters/gtk4/gtk4_adapter.c
@@ -3449,6 +3481,132 @@ if(BUILD_TESTING)
         add_test(NAME ${test_name} COMMAND ${target})
         umicom_test_impact_owners("${test_name}" TARGETS "${target}")
     endfunction()
+    # Exercise the same public-API example in source qualification; its standalone
+    # project separately checks installed SDK origin and exported dependencies.
+    add_executable(umicom-service-composition-test
+        examples/service_composition/main.c examples/service_composition/services.c)
+    target_link_libraries(umicom-service-composition-test PRIVATE Umicom::runtime)
+    umicom_apply_warnings(umicom-service-composition-test)
+    umicom_apply_sanitizers(umicom-service-composition-test)
+    foreach(_case IN ITEMS normal corrected-registration startup-failure stop-retry restart)
+        add_test(NAME framework.service.composition.${_case}
+            COMMAND umicom-service-composition-test ${_case})
+        set_tests_properties(framework.service.composition.${_case} PROPERTIES TIMEOUT 30)
+        umicom_test_impact_owners("framework.service.composition.${_case}"
+            TARGETS umicom-service-composition-test)
+    endforeach()
+
+    # Compile the real registry with a test-only mutex boundary. This keeps
+    # failure injection portable without changing the production threading API.
+    add_executable(umicom-command-lock-failure-test
+        tests/test_command_lock_failures.c src/runtime/command_registry.c)
+    target_include_directories(umicom-command-lock-failure-test PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/include")
+    set_target_properties(umicom-command-lock-failure-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-command-lock-failure-test)
+    umicom_apply_sanitizers(umicom-command-lock-failure-test)
+    foreach(_case register unregister snapshot at count contains enabled execute batch prefix summary)
+        add_test(NAME "framework.command.lock_failure.${_case}"
+            COMMAND umicom-command-lock-failure-test "${_case}")
+        set_tests_properties("framework.command.lock_failure.${_case}" PROPERTIES TIMEOUT 30)
+        umicom_test_impact_owners("framework.command.lock_failure.${_case}"
+            TARGETS umicom-command-lock-failure-test)
+    endforeach()
+
+    add_executable(umicom-command-discovery-test tests/test_command_discovery.c)
+    target_link_libraries(umicom-command-discovery-test PRIVATE Umicom::runtime)
+    umicom_apply_warnings(umicom-command-discovery-test)
+    umicom_apply_sanitizers(umicom-command-discovery-test)
+    foreach(_case IN ITEMS empty invalid flag-matrix mutation prefix)
+        add_test(NAME framework.command.discovery.${_case}
+            COMMAND umicom-command-discovery-test ${_case})
+        set_tests_properties(framework.command.discovery.${_case} PROPERTIES TIMEOUT 30)
+        umicom_test_impact_owners("framework.command.discovery.${_case}"
+            TARGETS umicom-command-discovery-test)
+    endforeach()
+
+    add_executable(umicom-command-batch-failures-test tests/test_command_batch_failures.c)
+    target_link_libraries(umicom-command-batch-failures-test PRIVATE Umicom::Framework)
+    umicom_apply_warnings(umicom-command-batch-failures-test)
+    umicom_apply_sanitizers(umicom-command-batch-failures-test)
+    foreach(_case IN ITEMS duplicate-second duplicate-middle duplicate-last existing-first
+            invalid-last without-report global-errors)
+        add_test(NAME framework.command.batch_failure.${_case}
+            COMMAND umicom-command-batch-failures-test ${_case})
+        set_tests_properties(framework.command.batch_failure.${_case} PROPERTIES TIMEOUT 30)
+        umicom_test_impact_owners("framework.command.batch_failure.${_case}"
+            TARGETS umicom-command-batch-failures-test)
+    endforeach()
+
+    add_executable(umicom-service-snapshots-test tests/test_service_snapshots.c)
+    target_link_libraries(umicom-service-snapshots-test PRIVATE Umicom::runtime)
+    umicom_apply_warnings(umicom-service-snapshots-test)
+    umicom_apply_sanitizers(umicom-service-snapshots-test)
+    foreach(_case IN ITEMS empty lookup missing-provider multiple-providers truncation
+            invalid-arguments compaction replacement after-release destructor-metadata summary-flags prefix)
+        add_test(NAME framework.service.snapshot.${_case}
+            COMMAND umicom-service-snapshots-test ${_case})
+        set_tests_properties(framework.service.snapshot.${_case} PROPERTIES TIMEOUT 30)
+        umicom_test_impact_owners("framework.service.snapshot.${_case}"
+            TARGETS umicom-service-snapshots-test)
+    endforeach()
+
+    add_executable(umicom-service-ownership-test tests/test_service_registry_ownership.c)
+    target_link_libraries(umicom-service-ownership-test PRIVATE Umicom::Framework)
+    umicom_apply_warnings(umicom-service-ownership-test)
+    umicom_apply_sanitizers(umicom-service-ownership-test)
+    foreach(_case IN ITEMS empty compaction same-object metadata-only invalid-replacement
+            owned-replacement replace-callback singleton-existing singleton-incoming
+            singleton-promotion unregister-callback release-callback master-callback)
+        add_test(NAME framework.service.ownership.${_case}
+            COMMAND umicom-service-ownership-test ${_case})
+        set_tests_properties(framework.service.ownership.${_case} PROPERTIES TIMEOUT 30)
+        umicom_test_impact_owners("framework.service.ownership.${_case}"
+            TARGETS umicom-service-ownership-test)
+    endforeach()
+
+    add_executable(umicom-registration-transactions-test tests/test_registration_transactions.c)
+    target_link_libraries(umicom-registration-transactions-test PRIVATE Umicom::Framework)
+    umicom_apply_warnings(umicom-registration-transactions-test)
+    umicom_apply_sanitizers(umicom-registration-transactions-test)
+    foreach(_case IN ITEMS empty batch invalid-last duplicate-last batch-duplicate
+            singleton-existing singleton-incoming multiple-providers compaction capacity
+            master-invalid master-duplicate master-capacity master-callback membership)
+        add_test(NAME framework.registration.transaction.${_case}
+            COMMAND umicom-registration-transactions-test ${_case})
+        set_tests_properties(framework.registration.transaction.${_case} PROPERTIES TIMEOUT 30)
+        umicom_test_impact_owners("framework.registration.transaction.${_case}"
+            TARGETS umicom-registration-transactions-test)
+    endforeach()
+
+    add_executable(umicom-master-lifecycle-test tests/test_master_lifecycle.c)
+    target_link_libraries(umicom-master-lifecycle-test PRIVATE Umicom::Framework)
+    umicom_apply_warnings(umicom-master-lifecycle-test)
+    umicom_apply_sanitizers(umicom-master-lifecycle-test)
+    foreach(_case IN ITEMS empty cycles callback-reentry stop-retry quiesce-retry
+            legacy-retain release-retry rollback-configure rollback-initialise rollback-start rollback-stop-retry)
+        add_test(NAME framework.master.lifecycle.${_case}
+            COMMAND umicom-master-lifecycle-test ${_case})
+        set_tests_properties(framework.master.lifecycle.${_case} PROPERTIES TIMEOUT 30)
+        umicom_test_impact_owners("framework.master.lifecycle.${_case}"
+            TARGETS umicom-master-lifecycle-test)
+    endforeach()
+
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        add_executable(umicom-master-release-fault-test tests/test_master_lifecycle.c)
+        target_link_libraries(umicom-master-release-fault-test PRIVATE Umicom::Framework)
+        target_compile_definitions(umicom-master-release-fault-test PRIVATE UMICOM_MASTER_RELEASE_FAULTS=1)
+        target_link_options(umicom-master-release-fault-test PRIVATE "-Wl,--wrap=UmiServiceRegistryRelease")
+        umicom_apply_warnings(umicom-master-release-fault-test)
+        umicom_apply_sanitizers(umicom-master-release-fault-test)
+        add_test(NAME framework.master.lifecycle.release-child-retry
+            COMMAND umicom-master-release-fault-test release-child-retry)
+        set_tests_properties(framework.master.lifecycle.release-child-retry PROPERTIES TIMEOUT 30)
+        umicom_test_impact_owners("framework.master.lifecycle.release-child-retry"
+            TARGETS umicom-master-release-fault-test)
+    endif()
+
     # Reflection tests exercise owned metadata and durable change publication.
     umicom_add_framework_test(
         umicom-reflection-registry-test
@@ -3984,6 +4142,16 @@ if(BUILD_TESTING)
         framework.task_queue
         tests/test_task_queue.c
     )
+
+    add_executable(umicom-queue-worker-identity-test tests/test_queue_worker_identity.c)
+    target_link_libraries(umicom-queue-worker-identity-test PRIVATE Umicom::platform)
+    umicom_apply_warnings(umicom-queue-worker-identity-test)
+    umicom_apply_sanitizers(umicom-queue-worker-identity-test)
+    add_test(NAME framework.task_queue.worker_identity COMMAND umicom-queue-worker-identity-test)
+    set_tests_properties(framework.task_queue.worker_identity PROPERTIES TIMEOUT 30)
+    umicom_test_impact_owners("framework.task_queue.worker_identity"
+        TARGETS umicom-queue-worker-identity-test)
+
     umicom_add_framework_test(
         umicom-service-registry-tests
         framework.service_registry
@@ -4029,11 +4197,68 @@ if(BUILD_TESTING)
         framework.watcher
         tests/test_watcher.c
     )
+    # These cases exercise the canonical platform library without pulling every
+    # Framework component into the executable's link graph.
+    add_executable(umicom-watcher-lifecycle-test tests/test_watcher_lifecycle.c)
+    target_link_libraries(umicom-watcher-lifecycle-test PRIVATE Umicom::platform)
+    umicom_apply_warnings(umicom-watcher-lifecycle-test)
+    umicom_apply_sanitizers(umicom-watcher-lifecycle-test)
+    add_test(NAME framework.watcher.lifecycle COMMAND umicom-watcher-lifecycle-test)
+    set_tests_properties(framework.watcher.lifecycle PROPERTIES TIMEOUT 30)
+    umicom_test_impact_owners("framework.watcher.lifecycle" TARGETS umicom-watcher-lifecycle-test)
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        add_executable(umicom-watcher-lifecycle-fault-test tests/test_watcher_lifecycle_faults.c)
+        target_link_libraries(umicom-watcher-lifecycle-fault-test PRIVATE Umicom::platform)
+        target_link_options(umicom-watcher-lifecycle-fault-test PRIVATE
+            -Wl,--wrap=umi_thread_join -Wl,--wrap=UmiThreadRelease)
+        umicom_apply_warnings(umicom-watcher-lifecycle-fault-test)
+        umicom_apply_sanitizers(umicom-watcher-lifecycle-fault-test)
+        foreach(_fault IN ITEMS join release legacy joined-without-result)
+            add_test(NAME framework.watcher.lifecycle-fault.${_fault}
+                COMMAND umicom-watcher-lifecycle-fault-test ${_fault})
+            set_tests_properties(framework.watcher.lifecycle-fault.${_fault}
+                PROPERTIES TIMEOUT 30)
+            umicom_test_impact_owners("framework.watcher.lifecycle-fault.${_fault}"
+                TARGETS umicom-watcher-lifecycle-fault-test)
+        endforeach()
+    endif()
     umicom_add_framework_test(
         umicom-process-supervisor-tests
         framework.process_supervisor
         tests/test_process_supervisor.c
     )
+    add_executable(umicom-process-supervisor-lifecycle-test tests/test_process_supervisor_lifecycle.c)
+    target_link_libraries(umicom-process-supervisor-lifecycle-test PRIVATE Umicom::platform)
+    umicom_apply_warnings(umicom-process-supervisor-lifecycle-test)
+    umicom_apply_sanitizers(umicom-process-supervisor-lifecycle-test)
+    foreach(_case IN ITEMS empty completed)
+        add_test(NAME framework.process_supervisor.lifecycle.${_case}
+            COMMAND umicom-process-supervisor-lifecycle-test ${_case}
+                "$<TARGET_FILE:umicom-process-supervisor-lifecycle-test>")
+        set_tests_properties(framework.process_supervisor.lifecycle.${_case}
+            PROPERTIES TIMEOUT 30)
+        umicom_test_impact_owners("framework.process_supervisor.lifecycle.${_case}"
+            TARGETS umicom-process-supervisor-lifecycle-test)
+    endforeach()
+    if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        add_executable(umicom-process-supervisor-lifecycle-fault-test tests/test_process_supervisor_lifecycle.c)
+        target_compile_definitions(umicom-process-supervisor-lifecycle-fault-test
+            PRIVATE UMICOM_SUPERVISOR_LIFECYCLE_FAULTS=1)
+        target_link_libraries(umicom-process-supervisor-lifecycle-fault-test PRIVATE Umicom::platform)
+        target_link_options(umicom-process-supervisor-lifecycle-fault-test PRIVATE
+            -Wl,--wrap=umi_thread_join -Wl,--wrap=UmiThreadRelease)
+        umicom_apply_warnings(umicom-process-supervisor-lifecycle-fault-test)
+        umicom_apply_sanitizers(umicom-process-supervisor-lifecycle-fault-test)
+        foreach(_case IN ITEMS shutdown-retry release-retry legacy-retry job-release-retry joined-without-result)
+            add_test(NAME framework.process_supervisor.lifecycle-fault.${_case}
+                COMMAND umicom-process-supervisor-lifecycle-fault-test ${_case}
+                    "$<TARGET_FILE:umicom-process-supervisor-lifecycle-fault-test>")
+            set_tests_properties(framework.process_supervisor.lifecycle-fault.${_case}
+                PROPERTIES TIMEOUT 30)
+            umicom_test_impact_owners("framework.process_supervisor.lifecycle-fault.${_case}"
+                TARGETS umicom-process-supervisor-lifecycle-fault-test)
+        endforeach()
+    endif()
     umicom_add_framework_test(
         umicom-workspace-graph-tests
         framework.workspace_graph
@@ -5435,6 +5660,14 @@ if(TARGET umicom_ui_gtk4 AND TARGET PkgConfig::UMICOM_FRAMEWORK_SOURCEVIEW5)
         "\nfind_dependency(PkgConfig)\npkg_check_modules(UMICOM_FRAMEWORK_SOURCEVIEW5 REQUIRED IMPORTED_TARGET gtksourceview-5)")
 endif()
 
+# Package identity and passive receipt identity share the public header.
+# A release must not publish a CMake version that disagrees with C callers.
+include(cmake/UmicomFrameworkIdentity.cmake)
+umicom_read_framework_identity("${CMAKE_CURRENT_SOURCE_DIR}/include/umicom/base/version.h" UMICOM_FRAMEWORK_PACKAGE)
+if(NOT "${UMICOM_FRAMEWORK_PACKAGE_VERSION}" STREQUAL "${PROJECT_VERSION}")
+    message(FATAL_ERROR "Framework project version differs from the public version header")
+endif()
+
 configure_package_config_file(
     cmake/UmicomFrameworkConfig.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/UmicomFrameworkConfig.cmake
@@ -5443,6 +5676,28 @@ configure_package_config_file(
 
 # Install passive identity/layout evidence alongside the SDK package.
 include(cmake/UmicomInstalledSdkMetadata.cmake)
+
+# Metadata checks exercise malformed declarations and incompatible identifiers;
+# they do not certify a compiler/architecture combination.
+if(BUILD_TESTING)
+    foreach(_case current maximum zero-version duplicate missing negative leading-zero
+            abi-zero abi-overflow version-overflow string-mismatch)
+        add_test(NAME framework.sdk.identity.${_case} COMMAND "${CMAKE_COMMAND}"
+            "-DFRAMEWORK=${CMAKE_CURRENT_SOURCE_DIR}"
+            "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/qualification/sdk-identity/${_case}"
+            "-DCASE=${_case}" -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/sdk_environment/check_identity.cmake")
+        set_tests_properties(framework.sdk.identity.${_case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;sdk;cmake;regression")
+    endforeach()
+    foreach(_case matching version-reporting abi system pointer compiler
+            missing-producer missing-consumer invalid-pointer argument)
+        add_test(NAME framework.sdk.environment.${_case} COMMAND "${CMAKE_COMMAND}"
+            "-DFRAMEWORK=${CMAKE_CURRENT_SOURCE_DIR}" "-DCASE=${_case}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/sdk_environment/check_environment.cmake")
+        set_tests_properties(framework.sdk.environment.${_case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;sdk;cmake;regression")
+    endforeach()
+endif()
 
 write_basic_package_version_file(
     ${CMAKE_CURRENT_BINARY_DIR}/UmicomFrameworkConfigVersion.cmake
@@ -5456,6 +5711,7 @@ install(FILES
     cmake/UmicomApplicationBranding.cmake
     cmake/UmicomApplicationModules.cmake
     cmake/UmicomRequireInstalledSdk.cmake
+    cmake/UmicomRequireSdkEnvironment.cmake
     cmake/UmicomPublicContractFingerprint.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework
 )
@@ -5466,9 +5722,54 @@ install(FILES
     cmake/UmicomApplicationBranding.cmake
     cmake/UmicomApplicationModules.cmake
     cmake/UmicomRequireInstalledSdk.cmake
+    cmake/UmicomRequireSdkEnvironment.cmake
     cmake/UmicomPublicContractFingerprint.cmake
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework
 
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
+
+# Ship the small independent consumer beside the advertised examples root.
+# It uses only an installed package, so source-tree include paths cannot mask
+# a missing SDK header or a mismatched archive during qualification.
+install(FILES examples/sdk_environment/CMakeLists.txt examples/sdk_environment/main.c
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/sdk_environment)
+install(FILES examples/sdk_environment/CMakeLists.txt examples/sdk_environment/main.c
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/sdk_environment
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
+
+# The same shutdown consumer can qualify the full installed platform library.
+# Its focused laboratory mode remains available as a separate explicit option.
+install(FILES examples/queue_shutdown/client/CMakeLists.txt
+    examples/queue_shutdown/client/main.c
+    examples/queue_shutdown/client/lifecycle_cases.c
+    examples/queue_shutdown/client/lifecycle_cases.h
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/queue_shutdown/client)
+install(FILES examples/queue_shutdown/client/CMakeLists.txt
+    examples/queue_shutdown/client/main.c
+    examples/queue_shutdown/client/lifecycle_cases.c
+    examples/queue_shutdown/client/lifecycle_cases.h
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/queue_shutdown/client
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
+
+# Keep the composed lifecycle consumer independent of the source tree in both
+# ordinary and SDK-only installations.
+install(FILES examples/background_services/CMakeLists.txt
+    examples/background_services/main.c
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/background_services)
+install(FILES examples/background_services/CMakeLists.txt
+    examples/background_services/main.c
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/background_services
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
+
+# Ship dependency-ordered lifecycle checks as an independent runtime SDK consumer.
+install(FILES examples/service_composition/CMakeLists.txt
+    examples/service_composition/main.c examples/service_composition/services.c
+    examples/service_composition/composition.h
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/service_composition)
+install(FILES examples/service_composition/CMakeLists.txt
+    examples/service_composition/main.c examples/service_composition/services.c
+    examples/service_composition/composition.h
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/service_composition
     COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
 
 # Install the canonical resources once so independently built applications can

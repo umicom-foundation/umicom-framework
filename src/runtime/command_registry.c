@@ -160,6 +160,10 @@ void umi_command_registry_destroy(UmiCommandRegistry *registry)
 }
 
 /* Add command registry only after its inputs and available capacity have been checked. */
+/* Retain the former operation for implementation review. The active version
+ * checks lock acquisition before accessing entries or copying callback state.
+ * This keeps registry ownership valid when the platform reports a lock error. */
+#if 0
 UmiStatus umi_command_registry_register(
     UmiCommandRegistry *registry,
     const UmiCommandDescriptor *descriptor)
@@ -243,11 +247,101 @@ UmiStatus umi_command_registry_register(
     (void)umi_mutex_unlock(registry->mutex);
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_command_registry_register(
+    UmiCommandRegistry *registry,
+    const UmiCommandDescriptor *descriptor)
+{
+    UmiCommandEntry *entry;
+
+    /*
+     * required_permission predates the command palette and automation layers.
+     * A number of valid early descriptors intentionally left it NULL. Preserve
+     * that source compatibility by treating NULL as an empty permission rather
+     * than rejecting an otherwise complete command descriptor.
+     */
+    if (registry != NULL && descriptor != NULL &&
+        descriptor->structure_size >= sizeof(*descriptor) &&
+        descriptor->required_permission == NULL) {
+        UmiCommandDescriptor compatible_descriptor = *descriptor;
+        compatible_descriptor.required_permission = "";
+        return umi_command_registry_register(registry, &compatible_descriptor);
+    }
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (registry == NULL || descriptor == NULL ||
+        descriptor->structure_size < sizeof(*descriptor) ||
+        descriptor->command_id == NULL || descriptor->command_id[0] == '\0' ||
+        descriptor->title == NULL || descriptor->category == NULL ||
+        descriptor->description == NULL ||
+        descriptor->required_permission == NULL ||
+        descriptor->handler == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (!umi_command_strings_fit(descriptor)) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    UmiStatus lock_status = umi_mutex_lock(registry->mutex);
+    if (lock_status != UMI_STATUS_OK) return lock_status;
+
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (umi_command_find_index(registry, descriptor->command_id) != SIZE_MAX) {
+        (void)umi_mutex_unlock(registry->mutex);
+        return UMI_STATUS_ALREADY_EXISTS;
+    }
+
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (registry->count >= UMI_COMMAND_REGISTRY_MAX) {
+        (void)umi_mutex_unlock(registry->mutex);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    entry = &registry->entries[registry->count++];
+    (void)memset(entry, 0, sizeof(*entry));
+    (void)snprintf(entry->command_id,
+                   sizeof(entry->command_id),
+                   "%s",
+                   descriptor->command_id);
+    (void)snprintf(entry->title,
+                   sizeof(entry->title),
+                   "%s",
+                   descriptor->title);
+    (void)snprintf(entry->category,
+                   sizeof(entry->category),
+                   "%s",
+                   descriptor->category);
+    (void)snprintf(entry->description,
+                   sizeof(entry->description),
+                   "%s",
+                   descriptor->description);
+    (void)snprintf(entry->required_permission,
+                   sizeof(entry->required_permission),
+                   "%s",
+                   descriptor->required_permission);
+    entry->flags = descriptor->flags;
+    entry->handler = descriptor->handler;
+    entry->enabled = descriptor->enabled;
+    entry->user_data = descriptor->user_data;
+
+    (void)umi_mutex_unlock(registry->mutex);
+    return UMI_STATUS_OK;
+}
 
 /*
  * Remove command registry while keeping the remaining records in a valid and discoverable
  * state.
  */
+/* Retain the former operation for implementation review. The active version
+ * checks lock acquisition before accessing entries or copying callback state.
+ * This keeps registry ownership valid when the platform reports a lock error. */
+#if 0
 UmiStatus umi_command_registry_unregister(UmiCommandRegistry *registry,
                                           const char *command_id)
 {
@@ -285,11 +379,55 @@ UmiStatus umi_command_registry_unregister(UmiCommandRegistry *registry,
     (void)umi_mutex_unlock(registry->mutex);
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_command_registry_unregister(UmiCommandRegistry *registry,
+                                          const char *command_id)
+{
+    size_t index;
+    size_t move_count;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (registry == NULL || command_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    UmiStatus lock_status = umi_mutex_lock(registry->mutex);
+    if (lock_status != UMI_STATUS_OK) return lock_status;
+    index = umi_command_find_index(registry, command_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == SIZE_MAX) {
+        (void)umi_mutex_unlock(registry->mutex);
+        return UMI_STATUS_NOT_FOUND;
+    }
+
+    move_count = registry->count - index - 1U;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (move_count > 0U) {
+        (void)memmove(&registry->entries[index],
+                      &registry->entries[index + 1U],
+                      move_count * sizeof(registry->entries[0]));
+    }
+    registry->count -= 1U;
+    (void)memset(&registry->entries[registry->count],
+                 0,
+                 sizeof(registry->entries[0]));
+
+    (void)umi_mutex_unlock(registry->mutex);
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the command registry snapshot operation used by this module and its client
  * applications.
  */
+/* Retain the former operation for implementation review. The active version
+ * checks lock acquisition before accessing entries or copying callback state.
+ * This keeps registry ownership valid when the platform reports a lock error. */
+#if 0
 UmiStatus umi_command_registry_snapshot(
     const UmiCommandRegistry *registry,
     const char *command_id,
@@ -318,11 +456,46 @@ UmiStatus umi_command_registry_snapshot(
     (void)umi_mutex_unlock(mutable_registry->mutex);
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_command_registry_snapshot(
+    const UmiCommandRegistry *registry,
+    const char *command_id,
+    UmiCommandSnapshot *out_snapshot)
+{
+    size_t index;
+    UmiCommandRegistry *mutable_registry;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (registry == NULL || command_id == NULL || out_snapshot == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    mutable_registry = (UmiCommandRegistry *)registry;
+    UmiStatus lock_status = umi_mutex_lock(mutable_registry->mutex);
+    if (lock_status != UMI_STATUS_OK) return lock_status;
+    index = umi_command_find_index(registry, command_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == SIZE_MAX) {
+        (void)umi_mutex_unlock(mutable_registry->mutex);
+        return UMI_STATUS_NOT_FOUND;
+    }
+    umi_command_copy_snapshot(&registry->entries[index], out_snapshot);
+    (void)umi_mutex_unlock(mutable_registry->mutex);
+    return UMI_STATUS_OK;
+}
 
 /*
  * Find command registry while leaving the underlying catalogue or model owned by this
  * module.
  */
+/* Retain the former operation for implementation review. The active version
+ * checks lock acquisition before accessing entries or copying callback state.
+ * This keeps registry ownership valid when the platform reports a lock error. */
+#if 0
 UmiStatus umi_command_registry_at(const UmiCommandRegistry *registry,
                                   size_t index,
                                   UmiCommandSnapshot *out_snapshot)
@@ -348,11 +521,43 @@ UmiStatus umi_command_registry_at(const UmiCommandRegistry *registry,
     (void)umi_mutex_unlock(mutable_registry->mutex);
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_command_registry_at(const UmiCommandRegistry *registry,
+                                  size_t index,
+                                  UmiCommandSnapshot *out_snapshot)
+{
+    UmiCommandRegistry *mutable_registry;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (registry == NULL || out_snapshot == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    mutable_registry = (UmiCommandRegistry *)registry;
+    UmiStatus lock_status = umi_mutex_lock(mutable_registry->mutex);
+    if (lock_status != UMI_STATUS_OK) return lock_status;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index >= registry->count) {
+        (void)umi_mutex_unlock(mutable_registry->mutex);
+        return UMI_STATUS_NOT_FOUND;
+    }
+    umi_command_copy_snapshot(&registry->entries[index], out_snapshot);
+    (void)umi_mutex_unlock(mutable_registry->mutex);
+    return UMI_STATUS_OK;
+}
 
 /*
  * Return the number of records represented by command registry without changing their
  * state.
  */
+/* Retain the former operation for implementation review. The active version
+ * checks lock acquisition before accessing entries or copying callback state.
+ * This keeps registry ownership valid when the platform reports a lock error. */
+#if 0
 size_t umi_command_registry_count(const UmiCommandRegistry *registry)
 {
     size_t count;
@@ -372,11 +577,37 @@ size_t umi_command_registry_count(const UmiCommandRegistry *registry)
     (void)umi_mutex_unlock(mutable_registry->mutex);
     return count;
 }
+#endif
+
+size_t umi_command_registry_count(const UmiCommandRegistry *registry)
+{
+    size_t count;
+    UmiCommandRegistry *mutable_registry;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (registry == NULL) {
+        return 0U;
+    }
+
+    mutable_registry = (UmiCommandRegistry *)registry;
+    UmiStatus lock_status = umi_mutex_lock(mutable_registry->mutex);
+    if (lock_status != UMI_STATUS_OK) return 0U;
+    count = registry->count;
+    (void)umi_mutex_unlock(mutable_registry->mutex);
+    return count;
+}
 
 /*
  * Provide the command registry is enabled operation used by this module and its client
  * applications.
  */
+/* Retain the former operation for implementation review. The active version
+ * checks lock acquisition before accessing entries or copying callback state.
+ * This keeps registry ownership valid when the platform reports a lock error. */
+#if 0
 int umi_command_registry_is_enabled(const UmiCommandRegistry *registry,
                                     const char *command_id,
                                     const char *argument)
@@ -408,11 +639,49 @@ int umi_command_registry_is_enabled(const UmiCommandRegistry *registry,
 
     return enabled == NULL || enabled(user_data, argument != NULL ? argument : "");
 }
+#endif
+
+int umi_command_registry_is_enabled(const UmiCommandRegistry *registry,
+                                    const char *command_id,
+                                    const char *argument)
+{
+    size_t index;
+    UmiRegisteredCommandEnabledFn enabled;
+    void *user_data;
+    UmiCommandRegistry *mutable_registry;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (registry == NULL || command_id == NULL) {
+        return 0;
+    }
+
+    mutable_registry = (UmiCommandRegistry *)registry;
+    UmiStatus lock_status = umi_mutex_lock(mutable_registry->mutex);
+    if (lock_status != UMI_STATUS_OK) return 0;
+    index = umi_command_find_index(registry, command_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == SIZE_MAX) {
+        (void)umi_mutex_unlock(mutable_registry->mutex);
+        return 0;
+    }
+    enabled = registry->entries[index].enabled;
+    user_data = registry->entries[index].user_data;
+    (void)umi_mutex_unlock(mutable_registry->mutex);
+
+    return enabled == NULL || enabled(user_data, argument != NULL ? argument : "");
+}
 
 /*
  * Perform command registry through the module contract so client applications do not
  * duplicate its policy.
  */
+/* Retain the former operation for implementation review. The active version
+ * checks lock acquisition before accessing entries or copying callback state.
+ * This keeps registry ownership valid when the platform reports a lock error. */
+#if 0
 UmiStatus umi_command_registry_execute(UmiCommandRegistry *registry,
                                        const char *command_id,
                                        const char *argument,
@@ -467,12 +736,73 @@ UmiStatus umi_command_registry_execute(UmiCommandRegistry *registry,
                    out_message,
                    message_capacity);
 }
+#endif
+
+UmiStatus umi_command_registry_execute(UmiCommandRegistry *registry,
+                                       const char *command_id,
+                                       const char *argument,
+                                       char *out_message,
+                                       size_t message_capacity)
+{
+    size_t index;
+    UmiRegisteredCommandHandler handler;
+    UmiRegisteredCommandEnabledFn enabled;
+    void *user_data;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (registry == NULL || command_id == NULL ||
+        (out_message == NULL && message_capacity > 0U)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (out_message != NULL && message_capacity > 0U) {
+        out_message[0] = '\0';
+    }
+
+    UmiStatus lock_status = umi_mutex_lock(registry->mutex);
+    if (lock_status != UMI_STATUS_OK) return lock_status;
+    index = umi_command_find_index(registry, command_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == SIZE_MAX) {
+        (void)umi_mutex_unlock(registry->mutex);
+        return UMI_STATUS_NOT_FOUND;
+    }
+    handler = registry->entries[index].handler;
+    enabled = registry->entries[index].enabled;
+    user_data = registry->entries[index].user_data;
+    (void)umi_mutex_unlock(registry->mutex);
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (enabled != NULL &&
+        !enabled(user_data, argument != NULL ? argument : "")) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+
+    return handler(user_data,
+                   argument != NULL ? argument : "",
+                   out_message,
+                   message_capacity);
+}
 
 
 /*
  * Provide the command registry contains operation used by this module and its client
  * applications.
  */
+/* Retain the former operation for implementation review. The active version
+ * checks lock acquisition before accessing entries or copying callback state.
+ * This keeps registry ownership valid when the platform reports a lock error. */
+#if 0
 int umi_command_registry_contains(const UmiCommandRegistry *registry,
                                   const char *command_id)
 {
@@ -489,6 +819,29 @@ int umi_command_registry_contains(const UmiCommandRegistry *registry,
 
     mutable_registry = (UmiCommandRegistry *)registry;
     (void)umi_mutex_lock(mutable_registry->mutex);
+    contains = umi_command_find_index(registry, command_id) != SIZE_MAX;
+    (void)umi_mutex_unlock(mutable_registry->mutex);
+    return contains;
+}
+#endif
+
+int umi_command_registry_contains(const UmiCommandRegistry *registry,
+                                  const char *command_id)
+{
+    UmiCommandRegistry *mutable_registry;
+    int contains;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (registry == NULL || command_id == NULL || command_id[0] == '\0') {
+        return 0;
+    }
+
+    mutable_registry = (UmiCommandRegistry *)registry;
+    UmiStatus lock_status = umi_mutex_lock(mutable_registry->mutex);
+    if (lock_status != UMI_STATUS_OK) return 0;
     contains = umi_command_find_index(registry, command_id) != SIZE_MAX;
     (void)umi_mutex_unlock(mutable_registry->mutex);
     return contains;
@@ -580,6 +933,10 @@ static void umi_command_batch_report_init(UmiCommandBatchReport *report,
  * Provide the command registry register many operation used by this module and its client
  * applications.
  */
+/* Retain the earlier admission algorithm for review. The active version
+ * records the rejected descriptor separately from loop progress, preserving
+ * accurate zero-based failure reports for intra-batch duplicates. */
+#if 0
 UmiStatus umi_command_registry_register_many(
     UmiCommandRegistry *registry,
     const UmiCommandDescriptor *descriptors,
@@ -698,11 +1055,146 @@ UmiStatus umi_command_registry_register_many(
     }
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_command_registry_register_many(
+    UmiCommandRegistry *registry,
+    const UmiCommandDescriptor *descriptors,
+    size_t descriptor_count,
+    UmiCommandBatchReport *out_report)
+{
+    size_t index;
+    size_t previous;
+    size_t failed_index = SIZE_MAX;
+    UmiStatus status = UMI_STATUS_OK;
+
+    index = SIZE_MAX;
+    umi_command_batch_report_init(out_report, descriptor_count);
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (registry == NULL ||
+        (descriptor_count > 0U && descriptors == NULL)) {
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
+        if (out_report != NULL) out_report->status = UMI_STATUS_INVALID_ARGUMENT;
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (descriptor_count == 0U) {
+        return UMI_STATUS_OK;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (descriptor_count > UMI_COMMAND_REGISTRY_MAX) {
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
+        if (out_report != NULL) out_report->status = UMI_STATUS_CAPACITY_EXCEEDED;
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    /* A registry-wide acquisition error has no rejected descriptor. The report
+     * retains SIZE_MAX and no registration is attempted without ownership. */
+    status = umi_mutex_lock(registry->mutex);
+    if (status != UMI_STATUS_OK) {
+        if (out_report != NULL) out_report->status = status;
+        return status;
+    }
+
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (descriptor_count > UMI_COMMAND_REGISTRY_MAX - registry->count) {
+        status = UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; status == UMI_STATUS_OK && index < descriptor_count; ++index) {
+        UmiCommandDescriptor compatible_descriptor = {0};
+
+        status = umi_command_validate_batch_descriptor(
+            &descriptors[index], &compatible_descriptor);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) {
+            failed_index = index;
+            break;
+        }
+
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (umi_command_find_index(registry,
+                                   compatible_descriptor.command_id) != SIZE_MAX) {
+            status = UMI_STATUS_ALREADY_EXISTS;
+            failed_index = index;
+            break;
+        }
+
+        /* Visit each bounded item once so every record receives the same rule. */
+        for (previous = 0U; previous < index; ++previous) {
+            /*
+             * Protect caller-owned memory by checking that required state is available before it is
+             * used.
+             */
+            if (descriptors[previous].command_id != NULL &&
+                strcmp(descriptors[previous].command_id,
+                       compatible_descriptor.command_id) == 0) {
+                status = UMI_STATUS_ALREADY_EXISTS;
+                failed_index = index;
+                break;
+            }
+        }
+        /* Leave the outer loop before its increment can move past the actual
+         * rejected descriptor. Capacity failure has no descriptor index. */
+        if (status != UMI_STATUS_OK) break;
+    }
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) {
+        (void)umi_mutex_unlock(registry->mutex);
+        /*
+         * Protect caller-owned memory by checking that required state is available before it is
+         * used.
+         */
+        if (out_report != NULL) {
+            out_report->failed_index = failed_index;
+            out_report->status = status;
+        }
+        return status;
+    }
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < descriptor_count; ++index) {
+        UmiCommandDescriptor compatible_descriptor = {0};
+        (void)umi_command_validate_batch_descriptor(
+            &descriptors[index], &compatible_descriptor);
+        umi_command_copy_descriptor_to_entry(
+            &compatible_descriptor,
+            &registry->entries[registry->count + index]);
+    }
+    registry->count += descriptor_count;
+
+    (void)umi_mutex_unlock(registry->mutex);
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (out_report != NULL) {
+        out_report->registered_count = descriptor_count;
+        out_report->status = UMI_STATUS_OK;
+    }
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the command registry find prefix operation used by this module and its client
  * applications.
  */
+/* Retain the former operation for implementation review. The active version
+ * checks lock acquisition before accessing entries or copying callback state.
+ * This keeps registry ownership valid when the platform reports a lock error. */
+#if 0
 UmiStatus umi_command_registry_find_prefix(
     const UmiCommandRegistry *registry,
     const char *prefix,
@@ -756,5 +1248,86 @@ UmiStatus umi_command_registry_find_prefix(
     if (out_items != NULL && match_count > capacity) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_command_registry_find_prefix(
+    const UmiCommandRegistry *registry,
+    const char *prefix,
+    UmiCommandSnapshot *out_items,
+    size_t capacity,
+    size_t *out_match_count)
+{
+    UmiCommandRegistry *mutable_registry;
+    size_t prefix_length;
+    size_t index;
+    size_t match_count = 0U;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (registry == NULL || prefix == NULL || out_match_count == NULL ||
+        (capacity > 0U && out_items == NULL)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    prefix_length = strlen(prefix);
+    mutable_registry = (UmiCommandRegistry *)registry;
+    UmiStatus lock_status = umi_mutex_lock(mutable_registry->mutex);
+    if (lock_status != UMI_STATUS_OK) return lock_status;
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < registry->count; ++index) {
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (prefix_length == 0U ||
+            strncmp(registry->entries[index].command_id,
+                    prefix, prefix_length) == 0) {
+            /*
+             * Protect caller-owned memory by checking that required state is available before it is
+             * used.
+             */
+            if (out_items != NULL && match_count < capacity) {
+                umi_command_copy_snapshot(&registry->entries[index],
+                                          &out_items[match_count]);
+            }
+            match_count += 1U;
+        }
+    }
+
+    (void)umi_mutex_unlock(mutable_registry->mutex);
+    *out_match_count = match_count;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (out_items != NULL && match_count > capacity) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    return UMI_STATUS_OK;
+}
+
+/* Operational views need coherent policy totals without running application
+ * callbacks or allocating the much larger command metadata list. */
+UmiStatus UmiCommandRegistryCopySummary(const UmiCommandRegistry *registry,
+    UmiCommandRegistrySummary *out_summary)
+{
+    if (registry == NULL || out_summary == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiCommandRegistry *mutable_registry = (UmiCommandRegistry *)registry;
+    UmiStatus status = umi_mutex_lock(mutable_registry->mutex);
+    if (status != UMI_STATUS_OK) return status;
+    UmiCommandRegistrySummary summary = {0};
+    summary.command_count = registry->count;
+    for (size_t index = 0U; index < registry->count; ++index) {
+        uint32_t flags = registry->entries[index].flags;
+        if ((flags & UMI_COMMAND_MUTATES_STATE) != 0U) ++summary.mutating_command_count;
+        if ((flags & UMI_COMMAND_BACKGROUND) != 0U) ++summary.background_command_count;
+        if ((flags & UMI_COMMAND_AUDITED) != 0U) ++summary.audited_command_count;
+        if ((flags & UMI_COMMAND_REQUIRES_TRUST) != 0U) ++summary.trusted_command_count;
+    }
+    *out_summary = summary;
+    (void)umi_mutex_unlock(mutable_registry->mutex);
     return UMI_STATUS_OK;
 }

@@ -100,10 +100,22 @@ file(GLOB _gtk_modules
     "${UMI_DEPLOY_PREFIX}/lib/gtk-4.0/*/media/*.dll"
     "${UMI_DEPLOY_PREFIX}/lib/gtk-4.0/*/printbackends/*.dll")
 list(APPEND _modules ${_pixbuf_modules} ${_gio_modules} ${_gtk_modules})
+# GStreamer discovers playback elements dynamically, outside the PE import
+# table. Stage its available plugins and scanner from this same prefix so a
+# relocated GTK media backend does not depend on the development machine.
+include("${CMAKE_CURRENT_LIST_DIR}/GStreamerResources.cmake")
+umicom_windows_gstreamer_resources("${UMI_DEPLOY_PREFIX}"
+    _gstreamer_modules _gstreamer_scanners)
+list(APPEND _modules ${_gstreamer_modules})
 foreach(_module IN LISTS _modules)
     umicom_windows_require_pe("${_module}")
     file(RELATIVE_PATH _relative "${UMI_DEPLOY_PREFIX}" "${_module}")
     umicom_stage_owned_file("${_module}" "${_runtime_root}/${_relative}" "${_relative}")
+endforeach()
+foreach(_scanner IN LISTS _gstreamer_scanners)
+    umicom_windows_require_pe("${_scanner}")
+    file(RELATIVE_PATH _relative "${UMI_DEPLOY_PREFIX}" "${_scanner}")
+    umicom_stage_owned_file("${_scanner}" "${_runtime_root}/${_relative}" "${_relative}")
 endforeach()
 set(_extra_dirs "")
 foreach(_module IN LISTS UMI_DEPLOY_EXTRA_MODULES)
@@ -131,7 +143,10 @@ if(_modules)
     list(APPEND _module_arguments LIBRARIES ${_modules})
 endif()
 file(GET_RUNTIME_DEPENDENCIES
-    EXECUTABLES "${_scan}/${_executable_name}"
+    # The former single-executable root is retained below. Scanner imports
+    # must join the same dependency graph before the package is accepted.
+    #[=[ EXECUTABLES "${_scan}/${_executable_name}" ]=]
+    EXECUTABLES "${_scan}/${_executable_name}" ${_gstreamer_scanners}
     ${_module_arguments}
     DIRECTORIES "${UMI_DEPLOY_PREFIX}/bin" "${_binary_dir}"
         "${UMI_DEPLOY_BUILD_ROOT}/lib" ${_extra_dirs}

@@ -1127,3 +1127,24 @@ COMMON|framework.price_increment.decimal.multiple
 COMMON|framework.price_increment.decimal.precision
 COMMON|framework.price_increment.decimal.scientific
 COMMON|framework.price_increment.decimal.wide
+# Broker entry and settings belong to every host supplying broker/platform owners.
+COMMON|framework.broker_access.guest
+COMMON|framework.broker_access.paper
+COMMON|framework.broker_access.live-consent
+COMMON|framework.broker_access.gateway
+COMMON|framework.broker_access.invalid
+COMMON|framework.broker_access.endpoint
+COMMON|framework.broker_access.guidance
+COMMON|framework.broker_profiles.defaults
+COMMON|framework.broker_profiles.roundtrip
+COMMON|framework.broker_profiles.capacity
+COMMON|framework.broker_profiles.truncation
+COMMON|framework.broker_profiles.binary
+COMMON|framework.broker_profiles.malformed
+COMMON|framework.broker_profiles.oversize
+COMMON|framework.broker_profiles.invalid
+COMMON|framework.broker_profile_store.missing
+COMMON|framework.broker_profile_store.preserve
+COMMON|framework.broker_profile_store.damaged
+COMMON|framework.broker_profile_store.busy
+COMMON|framework.broker_profile_store.invalid

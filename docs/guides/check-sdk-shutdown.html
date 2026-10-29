@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Check background work through an installed SDK</title>
+<style>body{max-width:58rem;margin:2rem auto;padding:0 1rem;font:1rem/1.65 system-ui;color:#162130}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#eef2f6;padding:1rem}code{overflow-wrap:anywhere}td,th{border:1px solid #bbb;padding:.6rem;text-align:left}table{border-collapse:collapse}a{color:#075a82}</style></head><body>
+<nav><a href="check-sdk-environment.html">Check the SDK environment</a></nav>
+<h1>Check background work through an installed SDK</h1>
+<p>A background task continues while another part of an application handles input.
+Closing its window must not release memory that the task still uses. Framework
+provides task references, cooperative cancellation and queue shutdown as separate
+operations. This consumer exercises those public contracts through installed libraries.</p>
+<p>The existing queue-shutdown laboratory builds a small subset of the actual
+Framework sources. Its independent client now also has an explicit mode for a
+complete installed Framework SDK. The two modes answer different packaging questions;
+neither requires a replacement queue implementation.</p>
+<h2>Choose the package</h2>
+<p>For the full SDK, use the client installed at
+<code>share/umicom-framework/examples/queue_shutdown/client</code>.
+Replace <code>C:/SDKs/Umicom</code> below with your actual SDK prefix. Use the matching
+compiler and target environment. The SDK must contain the platform library and
+the environment checks described in <a href="check-sdk-environment.html">the SDK environment guide</a>.</p>
+<ol><li>Prepare separate output and log locations:
+<pre><code>New-Item -ItemType Directory -Force "C:\umicom\_local\logs\sdk-shutdown"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"</code></pre></li>
+<li>Configure the independent client:
+<pre><code>cmake -S "C:/SDKs/Umicom/share/umicom-framework/examples/queue_shutdown/client" -B "C:/umicom/_local/build/sdk-shutdown" -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe -DUMICOM_SHUTDOWN_USE_FRAMEWORK_SDK=ON -DUMICOM_EXPECTED_SDK_PREFIX=C:/SDKs/Umicom -DBUILD_TESTING=ON 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\sdk-shutdown\configure.log"</code></pre>
+The package configuration, Framework headers and imported libraries must belong
+to that prefix. Metadata agreement is not a substitute for the following build and execution.</li>
+<li>Build only this client:
+<pre><code>cmake --build "C:/umicom/_local/build/sdk-shutdown" --parallel 2 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\sdk-shutdown\build.log"</code></pre></li>
+<li>Run its registered checks:
+<pre><code>ctest --test-dir "C:/umicom/_local/build/sdk-shutdown" --output-on-failure --no-tests=error --output-log "C:/umicom/_local/logs/sdk-shutdown/tests.log"</code></pre>
+Run each command separately and stop on an error. Check <code>$LASTEXITCODE</code>;
+PowerShell does not automatically stop after a failed native command.</li></ol>
+<p>For the original focused laboratory package, keep
+<code>UMICOM_SHUTDOWN_USE_FRAMEWORK_SDK=OFF</code> and select its
+<code>UmicomQueueShutdown_DIR</code>. Install that subset into a separate prefix;
+do not overlay it on a complete Framework SDK.</p>
+<h2>Read each result separately</h2>
+<table><thead><tr><th>CTest name</th><th>Contract exercised</th></tr></thead><tbody>
+<tr><td>installed.shutdown.client</td><td>The original nonblocking demonstration drains one task, observes joined workers and releases the stopped queue. Return code 77 means nonblocking join is unsupported; it is a skip, not a pass.</td></tr>
+<tr><td>installed.shutdown.drain</td><td>A portable blocking controller finishes accepted work and checks stopped-queue counters.</td></tr>
+<tr><td>installed.shutdown.cancel-running-and-pending</td><td>One callback has entered before a second task is queued. Cancellation reaches the running task and prevents the queued callback from starting.</td></tr>
+<tr><td>installed.shutdown.rejected-reusable</td><td>A queue that closed admission refuses a new task without consuming or cancelling it. The caller can still run its own task.</td></tr>
+<tr><td>installed.shutdown.caller-release</td><td>The queue retains an accepted task after the caller releases its reference. The callback payload remains alive until join.</td></tr>
+<tr><td>installed.shutdown.callback-error</td><td>The callback's error remains visible after successful shutdown. A stopped queue does not mean all jobs succeeded.</td></tr>
+<tr><td>installed.shutdown.worker-self</td><td>A callback cannot join or wait for idleness of its own queue.</td></tr>
+</tbody></table>
+<p>The six named cases use blocking shutdown on their command-line controller.
+They do not claim that blocking the graphical event thread is safe. GUI code should
+use the existing polling lifecycle where supported, or an explicitly owned lifecycle
+worker. Never silently replace a nonblocking operation with a blocking join.</p>
+<h2>Understand the memory boundary</h2>
+<pre>caller owns task reference ---- submit ----&gt; queue retains another reference
+caller owns callback payload -----------------------&gt; keep alive
+request cancellation ----&gt; callback observes it ----&gt; callback returns
+request stop ----&gt; workers finish native teardown ----&gt; join succeeds
+release stopped queue ----&gt; release caller task references ----&gt; free payload</pre>
+<p>A reference keeps the task object alive. It does not automatically retain
+<code>user_data</code>, the application's payload pointer. The client allocates its
+payload independently and frees it only after the queue is joined and released.
+Counters shared with the worker are atomic, so reading them does not create a data race.</p>
+<p>Each gated fixture has a finite escape path and CTest has a process timeout.
+A timeout is failure evidence, not permission to free data still borrowed by a worker.
+If native cleanup fails, this failed client retains its heap owners until process exit;
+it does not report success or use forced thread termination as a repair.</p>
+<h2>Extend the qualification</h2>
+<p>Start with <code>examples/queue_shutdown/client/lifecycle_cases.c</code>.
+Follow the public declarations in <code>platform/task.h</code>,
+<code>platform/task_queue.h</code> and <code>platform/threading.h</code>.
+Keep all scenarios independent of private structure layouts and source-tree include paths.</p>
+<p>Run the consumer for every supported compiler, target architecture and runtime
+combination you intend to release. Sanitizer and GUI lifecycle runs provide additional
+evidence. These small cases do not certify every public ABI, every application shutdown
+path, or malicious/uncooperative callback behaviour.</p>
+<p>The expected outcomes above describe the authored checks. Record the actual
+configuration, compiler, SDK revision and test results when you run them.</p>
+<p>File-watcher callbacks have a similar ownership boundary. See <a href="../learning/watch-file-lifetimes.html">Watch files without releasing live callbacks</a> for checked release and retry behaviour.</p>
+<p>To exercise watchers, tasks and a child process together, use <a href="compose-installed-background-services.html">Compose background services from an installed SDK</a>.</p>
+</body></html>

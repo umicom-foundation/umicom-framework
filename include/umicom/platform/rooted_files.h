@@ -51,6 +51,30 @@ extern "C"
  * Power-loss durability of the containing directory is not guaranteed. */
     UmiStatus UmiRootedFileWrite(const char *root, const char *relativePath, const void *bytes, size_t size);
 
+    /* Exclusive new-file creation is separate from replacement writes. The
+ * caller supplies an existing root and existing relative parents. Existing
+ * leaves (including links) are never opened or overwritten. No directory is
+ * created and no file is deleted. POSIX files start with mode 0600, subject
+ * to the process umask; Windows uses the parent's inherited access policy.
+ *
+ * report is required and is initialized on every call. created becomes true
+ * immediately after the native exclusive open succeeds, even if inspection,
+ * writing, flushing or closing later fails. bytes_written counts accepted
+ * bytes; complete is true only when writing, flushing and closing succeed.
+ * On failure with created=true, retain and inspect the partial file before
+ * retrying with a new name. A successful close is not a power-loss guarantee.
+ * This operation does not hide an incomplete new file from other readers on
+ * every platform. It grants no project execution trust. Input must remain
+ * valid for the call and must not alias the report. */
+    typedef struct UmiRootedFileCreation {
+        size_t bytes_written;
+        int created;
+        int complete;
+        UmiStatus status;
+    } UmiRootedFileCreation;
+    UmiStatus UmiRootedFileCreate(const char *root, const char *relativePath,
+        const void *bytes, size_t size, UmiRootedFileCreation *report);
+
     /* Remove one regular leaf. A missing file returns NOT_FOUND; links and
  * directories are refused. Existence returns OK/false only for a missing leaf
  * or parent, never for denied access or an invalid path. */

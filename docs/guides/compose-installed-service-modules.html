@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Compose application modules with the Framework SDK</title>
+<style>body{max-width:58rem;margin:2rem auto;padding:0 1rem;font:1rem/1.65 system-ui;color:#162130}pre{white-space:pre-wrap;background:#eef2f6;padding:1rem}code{overflow-wrap:anywhere}a{color:#075a82}table{border-collapse:collapse;width:100%}td,th{border:1px solid #b8c8d6;padding:.6rem;text-align:left}svg{width:100%;height:auto}</style></head><body>
+<h1>Compose application modules with the Framework SDK</h1>
+<p>An application often has one part that supplies data and another that uses it.
+A document editor supplies text to a search panel; a market-data connection supplies
+prices to a chart. Each part needs to know when its dependency is available and
+when it is safe to stop using it. Framework's module controller and service
+registry keep these responsibilities explicit.</p>
+<p>This example uses a small counter instead of files or a financial account.
+One module creates the counter and publishes it as a shared service. A second
+module borrows it and changes its value. The example needs no graphical session,
+credentials or network. It demonstrates ownership and lifecycle contracts, not
+a complete editor or trading application.</p>
+<h2>Understand the two kinds of registration</h2>
+<p>A <strong>capability</strong> names something a module can provide.
+A <strong>service</strong> is the actual object another module can use.
+The provider declares the capability <code>example.counter</code> when its module
+is registered. Its configure callback allocates and registers the real counter.
+The consumer declares the same capability as a requirement. Framework therefore
+starts the provider before configuring the consumer.</p>
+<svg viewBox="0 0 840 210" role="img" aria-labelledby="graph-title graph-description">
+<title id="graph-title">A controller owns the composition; a service owns its counter</title>
+<desc id="graph-description">Main keeps the module descriptors and callback payload alive. The controller orders a provider and a dependent consumer. The service registry owns a counter, and the consumer borrows that counter until it stops.</desc>
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="#315675"/></marker></defs>
+<g fill="#edf4f8" stroke="#315675" stroke-width="2"><rect x="10" y="20" width="235" height="66" rx="7"/><rect x="300" y="20" width="235" height="66" rx="7"/><rect x="590" y="20" width="235" height="66" rx="7"/><rect x="300" y="135" width="235" height="66" rx="7"/></g>
+<g fill="#162130" font-family="system-ui" font-size="16" text-anchor="middle"><text x="127" y="48">Main owns descriptors</text><text x="127" y="70">and application state</text><text x="417" y="48">Controller orders</text><text x="417" y="70">module lifecycle</text><text x="707" y="48">Provider publishes</text><text x="707" y="70">an owned counter</text><text x="417" y="163">Consumer borrows</text><text x="417" y="185">the counter</text></g>
+<g stroke="#315675" stroke-width="2" fill="none" marker-end="url(#arrow)"><path d="M245 53 H295"/><path d="M535 53 H585"/><path d="M417 86 V130"/><path d="M590 75 L540 140"/></g>
+</svg>
+<p>Registration order is deliberately reversed in <code>services.c</code>: the
+consumer is registered first. This lets the example check that declared
+dependencies, rather than incidental registration order, control startup.</p>
+<p>The example also copies provider metadata before stopping. The names remain readable after the owned counter is destroyed, while a fresh lookup reports that the service was removed. This separates a diagnostic observation from a live dependency.</p>
+<h2>Read the four source files</h2>
+<table><thead><tr><th>File</th><th>Responsibility</th></tr></thead><tbody>
+<tr><td><code>composition.h</code></td><td>Declares the application-owned state and its two borrowed module descriptors.</td></tr>
+<tr><td><code>services.c</code></td><td>Defines provider and consumer callbacks, ownership transfer and capability admission.</td></tr>
+<tr><td><code>main.c</code></td><td>Selects a scenario, checks observable results and always attempts checked release.</td></tr>
+<tr><td><code>CMakeLists.txt</code></td><td>Selects one installed SDK and registers five focused checks.</td></tr>
+</tbody></table>
+<p>The provider passes <code>UMI_SERVICE_OWNED</code> when registering the counter.
+If registration succeeds, the registry calls <code>DestroyCounter</code> when the
+service is removed. If registration fails, ownership never transferred, so the
+provider frees its allocation itself. The descriptor strings are copied by the
+service registry; the counter and callback payload have separate lifetimes.</p>
+<p>The consumer stores a borrowed counter pointer. Its successful stop clears
+that pointer before the provider removes the service. A failed stop leaves the
+pointer and provider alive so the owner can retry. Do not free the application
+state merely because a stop call returned an error.</p>
+<h2>Build against an installed SDK</h2>
+<p>Install an updated Framework SDK containing the runtime component using the
+repository's build and install instructions. The example is installed under
+<code>share/umicom-framework/examples/service_composition</code>. An older SDK
+without the checked release and registration contracts cannot run this example.</p>
+<p>The following PowerShell commands assume the SDK is installed at
+<code>C:\umicom\installed\framework</code>. Replace that path consistently if your
+installation is elsewhere. These commands compile the small consumer and link
+installed libraries; they do not add Framework's source directory to the build.
+Run each command separately and stop if it reports an error.</p>
+<pre><code>New-Item -ItemType Directory -Force "C:\umicom\_local\logs\service-composition"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+
+cmake -S "C:\umicom\installed\framework\share\umicom-framework\examples\service_composition" -B "C:\umicom\_local\build\service-composition" -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER="C:/msys64/ucrt64/bin/gcc.exe" -DUMICOM_EXPECTED_SDK_PREFIX="C:/umicom/installed/framework" -DBUILD_TESTING=ON 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\service-composition\configure.log"
+
+cmake --build "C:\umicom\_local\build\service-composition" --parallel 2 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\service-composition\build.log"
+
+ctest --test-dir "C:\umicom\_local\build\service-composition" --output-on-failure --no-tests=error --output-log "C:\umicom\_local\logs\service-composition\tests.log"
+
+&amp; "C:\umicom\_local\build\service-composition\umicom-service-composition-example.exe" stop-retry 2&gt;&amp;1 | Tee-Object "C:\umicom\_local\logs\service-composition\run.log"</code></pre>
+<p>A successful configure must use the requested installation. The example
+checks the resolved package configuration, installed header layout and SDK
+environment metadata. A cached package from another prefix is refused. Use a
+separate build directory when changing SDK installations or compiler families;
+do not bypass an environment mismatch by adding unrelated include paths.</p>
+<h2>Understand each check</h2>
+<table><thead><tr><th>Scenario</th><th>Expected behaviour</th></tr></thead><tbody>
+<tr><td><code>normal</code></td><td>The provider starts first, the consumer changes its counter to one, and shutdown releases everything in dependency order.</td></tr>
+<tr><td><code>corrected-registration</code></td><td>A duplicate capability rejects the whole module admission. No partial marker remains. Corrected input can register the same module identity.</td></tr>
+<tr><td><code>startup-failure</code></td><td>A deliberate consumer start error causes rollback. The configured consumer releases its borrowed pointer before the counter is destroyed. A later start can succeed.</td></tr>
+<tr><td><code>stop-retry</code></td><td>The first consumer stop returns an error. Its counter remains alive, restart is refused, and a second stop completes cleanup.</td></tr>
+<tr><td><code>restart</code></td><td>Two start/stop cycles create separate counter lifetimes. Stopping does not destroy reusable module descriptors.</td></tr>
+</tbody></table>
+<p>Successful runs print <code>Service composition passed: </code> followed by
+the scenario name and exit with code zero. CTest should report five passing
+checks. This is an expected result to verify on your installation, not a claim
+about an unexecuted build. Checks use explicit conditions rather than
+<code>assert</code>, so release-build settings do not remove them.</p>
+<h2>Investigate a failure</h2>
+<ol>
+<li>Read the first reported configure or link error. A missing checked-release
+symbol usually means the selected archive predates the header used by the
+consumer. Confirm that the SDK's headers and libraries came from the same build.</li>
+<li>For a scenario failure, read its named condition. Compare the provider's
+registration and destruction counters before changing callback order.</li>
+<li>For a retained controller, keep application state alive and investigate the
+failed phase. Real applications should expose a retry or a controlled shutdown
+error. Do not repeatedly call a void destroy function and assume cleanup happened.</li>
+<li>For new modules, declare real requirements, make failed configure unwind its
+own partial work, and make stop support configured but not fully started state.
+Keep successfully registered descriptors and capability arrays unchanged until
+the controller has been released.</li>
+</ol>
+<p>This example uses serial callbacks which return normally. It does not prove
+thread safety, force a blocked callback to return, or provide concurrent service
+snapshots. Applications with workers must first stop and join those workers.
+Continue with <a href="compose-installed-background-services.html">background service composition</a>,
+<a href="../learning/module-lifecycle-retries.html">module lifecycle retries</a>
+and <a href="../learning/own-shared-services.html">shared service ownership</a>.</p>
+</body></html>

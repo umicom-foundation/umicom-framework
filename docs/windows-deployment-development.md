@@ -281,6 +281,47 @@ avoids pretending that first-install copying is a safe in-place upgrade engine.
 To change the application selection, uninstall and reinstall. Projects should
 remain outside the application installation directory throughout this process.
 
+## Dynamic media dependencies
+
+A linked media backend is only part of a playback runtime. Elements such as
+`playbin3` are selected by name from GStreamer plugins, so they do not appear
+as imports of the application executable.
+
+The shared staging service selects the plugin DLLs under the configured
+runtime's `lib/gstreamer-1.0` directory and its
+`libexec/gstreamer-1.0/gst-plugin-scanner.exe` helper. Plugin imports and scanner
+imports join the same PE dependency graph as GTK and the application. Every
+copied file is recorded with its digest for installation and packaging.
+Machine-specific plugin registries are not copied.
+
+At startup, a packaged application sets its own plugin and scanner paths before
+GTK starts. This replaces inherited plugin search overrides for that process;
+it does not edit the user's global environment. A media-free runtime remains
+supported, with preview reporting unavailable. If plugins are selected but their
+scanner is missing, staging refuses the incomplete runtime.
+
+To review a media-related skip:
+
+1. Read the exact missing factory name from the native test output.
+2. Compare the selected runtime prefix with the staged `lib/gstreamer-1.0`
+   directory. Installed development plugins do not help a relocated DLL unless
+   the package includes them.
+3. Rebuild `umicom-windows-runtime` after correcting the selected runtime.
+4. Rerun `framework.creative_audition.gtk.*` and the relevant video cases.
+   Retain skips separately from passes.
+5. Exercise the relocated release without development paths. Check preparation,
+   explicit Play, pause, device errors, window hiding and closure.
+
+The `framework.windows_deployment.media.*` cases validate payload selection in
+the full Framework suite. The small deployment project also registers
+`windows_deployment.media.*` and a real Windows startup environment test.
+Selection fixtures are ordinary inert files; they never establish PE validity,
+plugin loadability, codec support or audible playback. Those remain separate
+staging and native application checks.
+
+References: [GStreamer playback plugins](https://gstreamer.freedesktop.org/documentation/playback/index.html)
+and [plugin search configuration](https://gstreamer.freedesktop.org/documentation/gstreamer/running.html).
+
 ## References
 
 - GTK on Windows: <https://www.gtk.org/docs/installations/windows/>
