@@ -48,3 +48,6 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomPngFileChecks.cmake")
 
 # Exercise the actual disabled provider branch alongside host-dependent checks.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomPngUnavailableChecks.cmake")
+
+# Retry the optional illustration connection after this owner exists.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomLearningPngGtk4.cmake")

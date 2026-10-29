@@ -118,6 +118,14 @@ int main(int argc,char **argv)
             CHECK(UmiLearningCatalogueGtk4Open(panel,1U)==UMI_STATUS_OK && Drain());
     }
     CHECK(UmiLearningCatalogueGtk4CopyState(panel,&before)==UMI_STATUS_OK && before.last_status==UMI_STATUS_OK);
+    /* Successful setup must have traversed the structured preparation path,
+     * not only the legacy text preview that can mask a missing integration. */
+    if (before.reader.has_document) {
+        UmiBrowserReadingSummary structure;
+        CHECK(before.has_reading_structure);
+        CHECK(UmiLearningCatalogueGtk4CopyReadingSummary(panel,&structure)==UMI_STATUS_OK);
+        CHECK(structure.spans>0U);
+    }
     before_text=Content(panel);CHECK(before_text!=NULL);
     atomic_store(&fail_buffer,strcmp(argv[1],"follow-buffer")==0);
     atomic_store(&fail_preview,strcmp(argv[1],"follow-buffer")!=0);

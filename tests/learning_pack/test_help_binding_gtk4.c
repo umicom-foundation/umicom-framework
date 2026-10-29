@@ -96,6 +96,52 @@ static void StatusChanged(GObject *object, GParamSpec *property, gpointer data)
     else if (strcmp(observer->mode,"retire-observer") == 0)
         UmiLearningCatalogueGtk4Retire(observer->panel);
 }
+typedef struct RouteObserver {
+    GtkWidget *panel;
+    UmiLearningHelpRoute route;
+    UmiStatus nested;
+    unsigned calls;
+    int retire;
+} RouteObserver;
+static void RouteNoticeChanged(GObject *object,GParamSpec *property,gpointer data)
+{
+    (void)object;(void)property;
+    RouteObserver *observer=data;
+    if(++observer->calls!=1U)return;
+    observer->nested=UmiLearningHelpGtk4OpenRoute(observer->panel,&observer->route);
+    if(observer->retire)UmiLearningCatalogueGtk4Retire(observer->panel);
+}
+typedef struct SharedNoticeObserver {
+    GtkWidget *context, *inner, *button, *panel;
+    const char *root, *mode;
+    UmiLearningHelpRoute valid_route;
+    UmiStatus nested, rebound;
+    unsigned calls;
+    int busy_seen;
+} SharedNoticeObserver;
+static void SharedNoticeChanged(GObject *object, GParamSpec *property, gpointer data)
+{
+    (void)object; (void)property;
+    SharedNoticeObserver *observer = data;
+    if (++observer->calls != 1U) return;
+    UmiLearningCatalogueGtkState state;
+    observer->busy_seen = UmiLearningCatalogueGtk4CopyState(observer->panel, &state) ==
+        UMI_STATUS_OK && state.busy;
+    if (strcmp(observer->mode, "notice-route") == 0)
+        observer->nested = UmiLearningHelpGtk4OpenRoute(observer->panel, &observer->valid_route);
+    else if (strcmp(observer->mode, "notice-load") == 0)
+        observer->nested = UmiLearningCatalogueGtk4Load(observer->panel, observer->root);
+    else if (strcmp(observer->mode, "notice-binding") == 0) {
+        observer->rebound = UmiLearningHelpGtk4Bind(observer->inner, observer->panel,
+            &observer->valid_route);
+        observer->nested = UmiLearningHelpGtk4Open(observer->button);
+    } else if (strcmp(observer->mode, "notice-rebind") == 0) {
+        UmiLearningHelpGtk4Unbind(observer->context);
+        observer->rebound = UmiLearningHelpGtk4Bind(observer->context, observer->panel,
+            &observer->valid_route);
+        observer->nested = UmiLearningHelpGtk4Open(observer->button);
+    }
+}
 int main(int argc, char **argv)
 {
     if (argc!=3) return 2;
@@ -115,6 +161,89 @@ int main(int argc, char **argv)
     inner=gtk_box_new(GTK_ORIENTATION_VERTICAL,0); gtk_box_append(GTK_BOX(context),inner);
     button=gtk_button_new_with_label("Help"); gtk_box_append(GTK_BOX(inner),button);
     panel=UmiLearningCatalogueGtk4Create((UmiVersion){0,9,0}); CHECK(panel!=NULL); g_object_ref_sink(panel);
+    if (g_str_has_prefix(name, "notice-")) {
+        matched = 1;
+        CHECK(strcmp(name,"notice-route")==0 || strcmp(name,"notice-load")==0 ||
+            strcmp(name,"notice-binding")==0 || strcmp(name,"notice-rebind")==0);
+        CHECK(UmiLearningCatalogueGtk4Load(panel,argv[2])==UMI_STATUS_OK && Finish());
+        SharedNoticeObserver shared = {context,inner,button,panel,argv[2],name,route,
+            UMI_STATUS_OK,UMI_STATUS_OK,0U,0};
+        strcpy(route.resource_id,"absent");
+        CHECK(UmiLearningHelpGtk4Bind(context,panel,&route)==UMI_STATUS_OK);
+        label=Find(panel,"learning.catalogue.status");CHECK(label!=NULL);
+        gulong notice_signal=g_signal_connect(label,"notify::label",G_CALLBACK(SharedNoticeChanged),&shared);
+        UmiStatus result=UmiLearningHelpGtk4Open(button);
+        g_signal_handler_disconnect(label,notice_signal);
+        CHECK(result==UMI_STATUS_NOT_FOUND && shared.calls==1U && shared.busy_seen);
+        CHECK(shared.nested==UMI_STATUS_BUSY && shared.rebound==UMI_STATUS_OK);
+        CHECK(UmiLearningCatalogueGtk4PendingReads()==0U);
+        CHECK(UmiLearningCatalogueGtk4CopyState(panel,&catalogue)==UMI_STATUS_OK);
+        CHECK(!catalogue.busy && !catalogue.retired && !catalogue.reader.has_document &&
+            catalogue.pack_count==1U && catalogue.last_status==UMI_STATUS_NOT_FOUND);
+        if(strcmp(name,"notice-binding")==0 || strcmp(name,"notice-rebind")==0) {
+            CHECK(UmiLearningHelpGtk4CopyState(button,&state)==UMI_STATUS_OK);
+            CHECK(state.last_status==UMI_STATUS_BUSY && state.attempts==1U && !state.dispatching);
+        }
+        /* Refusal is temporary. After notice publication the same destination
+         * remains usable, including when its original policy was unbound. */
+        CHECK(UmiLearningHelpGtk4OpenRoute(panel,&shared.valid_route)==UMI_STATUS_OK && Finish());
+        CHECK(UmiLearningCatalogueGtk4CopyState(panel,&catalogue)==UMI_STATUS_OK &&
+            catalogue.reader.has_document && catalogue.last_status==UMI_STATUS_OK);
+        goto cleanup;
+    }
+    if(g_str_has_prefix(name,"route-")) {
+        matched=1;
+        const char *known[]={"route-open","route-copied","route-missing","route-invalid",
+            "route-busy","route-retired","route-reentrant","route-retire-notice","route-binding"};
+        int valid=0;
+        for(size_t i=0U;i<sizeof(known)/sizeof(known[0]);++i)if(strcmp(name,known[i])==0)valid=1;
+        CHECK(valid);
+        CHECK(UmiLearningHelpGtk4Bind(context,panel,&route)==UMI_STATUS_OK);
+        if(strcmp(name,"route-invalid")==0) {
+            CHECK(UmiLearningHelpGtk4OpenRoute(NULL,&route)==UMI_STATUS_INVALID_ARGUMENT);
+            CHECK(UmiLearningHelpGtk4OpenRoute(panel,NULL)==UMI_STATUS_INVALID_ARGUMENT);
+            strcpy(route.request.key,"https://invalid.example/private");
+            CHECK(UmiLearningHelpGtk4OpenRoute(panel,&route)==UMI_STATUS_INVALID_ARGUMENT);
+            CHECK(UmiLearningCatalogueGtk4PendingReads()==0U);
+            goto cleanup;
+        }
+        if(strcmp(name,"route-missing")==0 || strcmp(name,"route-reentrant")==0 ||
+            strcmp(name,"route-retire-notice")==0) {
+            RouteObserver direct={panel,route,UMI_STATUS_OK,0U,strcmp(name,"route-retire-notice")==0};
+            label=Find(panel,"learning.catalogue.status");CHECK(GTK_IS_LABEL(label));
+            gulong notice_signal=g_signal_connect(label,"notify::label",G_CALLBACK(RouteNoticeChanged),&direct);
+            UmiStatus result=UmiLearningHelpGtk4OpenRoute(panel,&route);
+            g_signal_handler_disconnect(label,notice_signal);
+            CHECK(result==UMI_STATUS_NOT_FOUND && direct.calls>0U && direct.nested==UMI_STATUS_BUSY);
+            CHECK(UmiLearningCatalogueGtk4CopyState(panel,&catalogue)==UMI_STATUS_OK);
+            CHECK(!catalogue.busy && catalogue.retired==direct.retire && !catalogue.reader.has_document);
+            CHECK(UmiLearningHelpGtk4CopyState(button,&state)==UMI_STATUS_OK && state.attempts==0U);
+            goto cleanup;
+        }
+        CHECK(UmiLearningCatalogueGtk4Load(panel,argv[2])==UMI_STATUS_OK && Finish());
+        if(strcmp(name,"route-retired")==0) {
+            UmiLearningCatalogueGtk4Retire(panel);
+            CHECK(UmiLearningHelpGtk4OpenRoute(panel,&route)==UMI_STATUS_INVALID_STATE);
+            goto cleanup;
+        }
+        strcpy(route.request.key,"help.explicit");
+        CHECK(UmiLearningHelpGtk4OpenRoute(panel,&route)==UMI_STATUS_OK);
+        if(strcmp(name,"route-busy")==0)
+            CHECK(UmiLearningHelpGtk4OpenRoute(panel,&route)==UMI_STATUS_BUSY);
+        if(strcmp(name,"route-copied")==0)memset(&route,0,sizeof(route));
+        CHECK(Finish());
+        CHECK(UmiLearningCatalogueGtk4CopyState(panel,&catalogue)==UMI_STATUS_OK);
+        CHECK(catalogue.last_status==UMI_STATUS_OK && catalogue.reader.has_document &&
+            strcmp(catalogue.reader.selection.resource.id,"guide")==0);
+        CHECK(UmiLearningHelpGtk4CopyState(button,&state)==UMI_STATUS_OK && state.attempts==0U &&
+            strcmp(state.request.key,"help.local")==0);
+        if(strcmp(name,"route-binding")==0) {
+            keys=Keys(context);CHECK(keys!=NULL && Key(keys,GDK_KEY_F1,0));
+            CHECK(Finish());
+            CHECK(UmiLearningHelpGtk4CopyState(button,&state)==UMI_STATUS_OK && state.attempts==1U);
+        }
+        goto cleanup;
+    }
     if (strcmp(name,"arguments")==0) {
         matched=1;
         CHECK(UmiLearningHelpGtk4Bind(NULL,panel,&route)==UMI_STATUS_INVALID_ARGUMENT);

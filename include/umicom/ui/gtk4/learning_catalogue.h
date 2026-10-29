@@ -48,11 +48,13 @@ typedef struct UmiLearningCatalogueGtkState {
  * functions on the GTK owner thread. Keep the internal widget hierarchy intact.
  * host_version is the embedding product's compatibility version. No directory
  * is scanned, file read, project opened or command run during creation.
- * The initial presentation is a text reader: HTML gets a bounded plain-text
+ * Earlier presentation policy, retained for review: the initial reader was text-only: HTML gets a bounded plain-text
  * preview; images and binary/invalid UTF-8 content receive explicit notices.
  * Rich illustrated rendering is a separate capability, not implied here.
  * Structured HTML now retains headings, code spacing, image descriptions and
- * explicit link metadata when admitted; the earlier text fallback remains. */
+ * explicit link metadata when admitted; the earlier text fallback remains.
+ * Explicit IMAGE selections now use the optional bounded Media PNG service,
+ * described by CopyIllustration below. Inline HTML images remain descriptions. */
 GtkWidget *UmiLearningCatalogueGtk4Create(UmiVersion host_version);
 
 /* Present a new catalogue window tied to parent and its GtkApplication.
@@ -262,6 +264,29 @@ UmiStatus UmiLearningCatalogueGtk4OpenReadingLink(GtkWidget *widget, size_t inde
 UmiStatus UmiLearningCatalogueGtk4GoToAnchor(GtkWidget *widget, const char *identifier);
 UmiStatus UmiLearningCatalogueGtk4SetReadingZoom(GtkWidget *widget, unsigned int percent);
 
+#define UMI_LEARNING_READING_FIND_CAPACITY 256U
+typedef struct UmiLearningCatalogueFindMatch {
+    uint64_t reader_revision;
+    size_t byte_start, byte_length;
+    int wrapped;
+} UmiLearningCatalogueFindMatch;
+/* Find a literal in the displayed structured guide, using Framework's shared
+ * editor search engine. The nonempty query is valid UTF-8, at most 255 bytes.
+ * case_sensitive and backwards are 0 or 1. Insensitive matching folds ASCII
+ * letters only; other Unicode bytes compare exactly, without normalization.
+ *
+ * Forward starts after a selection or at the cursor; backward starts before
+ * a selection or cursor. Both wrap once. A successful match becomes selected
+ * and visible; byte offsets refer to the immutable displayed text, not HTML
+ * source. No file is read, history added, document edited or pack searched.
+ * NOT_FOUND covers no match, no open guide and the plain-text/image fallback.
+ * Refusal preserves selection and output. The optional output is a copied
+ * receipt tied to reader revision. Queries are not retained. Mutating calls
+ * refuse busy/retired panels; selection observers cannot start another action.
+ * Use the catalogue's controls or its Ctrl+F shortcut for interactive search. */
+UmiStatus UmiLearningCatalogueGtk4FindText(GtkWidget *widget, const char *query,
+    int case_sensitive, int backwards, UmiLearningCatalogueFindMatch *out_match);
+
 /* Metadata copies remain valid independently of widgets. Refusal preserves out.
  * busy remains set during result publication to refuse reentrant operations.
  * Retire before destroying a host that externally retains this widget. It
@@ -275,6 +300,26 @@ void UmiLearningCatalogueGtk4Retire(GtkWidget *widget);
  * panels. A host can retire its panels and keep iterating the GTK context until
  * this reaches zero during orderly shutdown. Call on the GTK owner thread. */
 size_t UmiLearningCatalogueGtk4PendingReads(void);
+
+
+/* One explicitly opened manifest IMAGE resource. Static noninterlaced PNG is
+ * optional through Framework Media; other formats retain an explanatory text
+ * result. Encoded input follows the catalogue's 1 MiB read limit. Decoding is
+ * limited to 2048 per dimension and 1,048,576 pixels before allocation.
+ * No filename is reopened by the renderer, no remote content is fetched and
+ * no SVG/script/animation is executed. Text zoom does not alter image pixels. */
+typedef struct UmiLearningCatalogueIllustrationState {
+    UmiStatus status;
+    size_t width, height;
+    int has_pixels;
+} UmiLearningCatalogueIllustrationState;
+/* Capability query only. A true result does not admit a particular image. */
+int UmiLearningCatalogueGtk4PngAvailable(void);
+/* NOT_FOUND for a non-image selection. Refusal preserves output. A successful
+ * copy may contain a non-OK rendering status while verified bytes and reading
+ * history remain available. Allocation failure preserves the prior reader. */
+UmiStatus UmiLearningCatalogueGtk4CopyIllustration(GtkWidget *widget,
+    UmiLearningCatalogueIllustrationState *out_state);
 
 #ifdef __cplusplus
 }

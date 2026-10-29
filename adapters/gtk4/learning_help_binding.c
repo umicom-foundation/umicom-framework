@@ -42,6 +42,19 @@ static HelpBinding *Nearest(GtkWidget *origin)
     }
     return NULL;
 }
+/* A catalogue is shared by several Help contexts and direct guide actions.
+ * Protect notice publication at that shared owner, not only at one binding:
+ * synchronous label observers may otherwise enter through a different route.
+ * Callers hold the root while this helper publishes. Retirement remains valid. */
+static void MissingNotice(LearningCatalogue *owner, UmiStatus status)
+{
+    if (owner == NULL || owner->state.retired || owner->state.busy ||
+        (status != UMI_STATUS_NOT_FOUND && status != UMI_STATUS_UNAVAILABLE)) return;
+    owner->state.busy = 1;
+    LearningCatalogueMessage(owner, status,
+        "This help topic is not available. Load its matching local learning pack, then choose Help again.");
+    owner->state.busy = 0;
+}
 static UmiStatus OpenBinding(HelpBinding *binding)
 {
     /* A status or dispatch observer may remove this binding. Keep its policy
@@ -57,10 +70,15 @@ static UmiStatus OpenBinding(HelpBinding *binding)
         UMI_STATUS_INVALID_STATE;
     binding->state.last_status = status;
     LearningCatalogue *owner = catalogue != NULL ? LearningCatalogueOwner(catalogue) : NULL;
+    /* Retain the former binding-only notice for review. The shared owner
+     * boundary below also protects other bindings and explicit routes. */
+#if 0
     if (owner != NULL && !owner->state.retired && !owner->state.busy &&
         (status == UMI_STATUS_NOT_FOUND || status == UMI_STATUS_UNAVAILABLE))
         LearningCatalogueMessage(owner, status,
             "This help topic is not available. Load its matching local learning pack, then choose Help again.");
+#endif
+    MissingNotice(owner, status);
     g_clear_object(&catalogue);
     binding->state.dispatching = 0;
     Release(binding);
@@ -141,4 +159,37 @@ UmiStatus UmiLearningHelpGtk4CopyState(GtkWidget *origin, UmiLearningHelpGtkStat
     if (binding == NULL) return UMI_STATUS_NOT_FOUND;
     *out = binding->state;
     return UMI_STATUS_OK;
+}
+
+UmiStatus UmiLearningHelpGtk4OpenRoute(GtkWidget *catalogue,
+    const UmiLearningHelpRoute *route)
+{
+    LearningCatalogue *owner=LearningCatalogueOwner(catalogue);
+    if(owner==NULL || route==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    if(owner->state.retired)return UMI_STATUS_INVALID_STATE;
+    if(owner->state.busy)return UMI_STATUS_BUSY;
+    UmiLearningHelpMap *map=NULL;
+    UmiStatus status=UmiLearningHelpMapCreate(route,1U,&map);
+    if(status!=UMI_STATUS_OK)return status;
+    /* Admission copies the selected pack/resource identity into its worker.
+     * Neither the transient map nor the product's route is borrowed by it. */
+    g_object_ref(catalogue);
+    status=UmiLearningCatalogueGtk4OpenHelp(catalogue,map,&route->request);
+    UmiLearningHelpMapDestroy(map);
+    /* Keep the former direct-route boundary for review. Both entry points
+     * now share MissingNotice so their callback guarantees cannot diverge. */
+#if 0
+    if(!owner->state.retired && !owner->state.busy &&
+        (status==UMI_STATUS_NOT_FOUND || status==UMI_STATUS_UNAVAILABLE)) {
+        /* A missing route does not dispatch a worker, but its local notice can
+         * still invoke synchronous observers. Hold the same mutation boundary. */
+        owner->state.busy=1;
+        LearningCatalogueMessage(owner,status,
+            "This help topic is not available. Load its matching local learning pack, then choose Help again.");
+        owner->state.busy=0;
+    }
+#endif
+    MissingNotice(owner, status);
+    g_object_unref(catalogue);
+    return status;
 }

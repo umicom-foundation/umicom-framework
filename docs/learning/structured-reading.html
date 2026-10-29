@@ -35,7 +35,10 @@
 <h2>Troubleshooting</h2><ul>
 <li><strong>A remote link is refused:</strong> this is an offline local-content workflow. It does not launch a browser or send context to a remote server.</li>
 <li><strong>A guide uses fallback:</strong> inspect tag nesting, duplicate IDs and capacity limits. Do not claim full layout support for that page.</li>
+<!-- Earlier text-only policy is retained for review; explicit image resources now use the optional PNG service.
 <li><strong>The image appears as a description:</strong> pixel rendering is not implemented in this view. The description remains available as reading text.</li>
+-->
+<li><strong>An inline image appears as a description:</strong> HTML images retain their alternative text. To view pixels, explicitly open a declared PNG resource or follow a declared image link. See <a href="view-learning-illustrations.html">View learning illustrations</a> for format and size limits.</li>
 <li><strong>Characters do not display:</strong> resources must be valid UTF-8 for native text presentation. Binary and invalid text receive an explicit notice.</li>
 <li><strong>A link no longer matches after an update:</strong> reload and verify the intended guide revision; do not silently combine metadata from one version with bytes from another.</li>
 </ul>

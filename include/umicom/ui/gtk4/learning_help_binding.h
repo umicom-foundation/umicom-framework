@@ -44,6 +44,18 @@ UmiStatus UmiLearningHelpGtk4Bind(GtkWidget *context, GtkWidget *catalogue,
     const UmiLearningHelpRoute *route);
 void UmiLearningHelpGtk4Unbind(GtkWidget *context);
 
+/* Open one explicit product route without changing any keyboard binding. This
+ * is for a product's guide menu or Help button. The route is validated and
+ * copied during admission; no caller storage is retained after return. The
+ * catalogue must already exist and packs are still admitted explicitly.
+ * OK accepts background reading, not completed rendering. Missing routes show
+ * the same local notice as bound Help. Notifications cannot recursively start
+ * another operation. No binding receipt or F1 policy is changed. */
+UmiStatus UmiLearningHelpGtk4OpenRoute(GtkWidget *catalogue,
+    const UmiLearningHelpRoute *route);
+
+
+
 /* Find the nearest bound ancestor, including origin, and use the same route as
  * F1. This lets an explicit Help button call Open(button) without storing an
  * application pointer. The nearest binding is authoritative even when its
@@ -57,7 +69,10 @@ void UmiLearningHelpGtk4Unbind(GtkWidget *context);
  * used. Call only in response to an explicit help action.
  *
  * Refusal does not change the current reader/history. Notification callbacks
- * may unbind/close controls: the in-flight request owns its copied policy. */
+ * may unbind/close controls: the in-flight request owns its copied policy.
+ * During missing-topic notice publication, all catalogue mutations return BUSY,
+ * including actions through another binding or a newly rebound context.
+ * Retirement is still allowed. The returned status remains the outer refusal. */
 UmiStatus UmiLearningHelpGtk4Open(GtkWidget *origin);
 /* Copy nearest binding's last admission result. attempts saturates at UINT64_MAX.
  * dispatching is set while admission/status observers run; nested Open returns

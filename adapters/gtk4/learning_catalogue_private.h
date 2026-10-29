@@ -29,6 +29,10 @@ typedef struct LearningCatalogue {
     UmiLearningReader *reader;
     UmiBrowserReadingDocument *reading_document;
     GtkWidget *reading_links, *reading_anchor, *reading_zoom;
+    GtkWidget *find_section, *find_query, *find_case;
+    GtkWidget *illustration_view;
+    GtkWidget *illustration_scroll;
+    UmiLearningCatalogueIllustrationState illustration;
     unsigned int reading_zoom_percent;
     UmiLearningCatalogueGtkState state;
     UmiLearningCatalogueCopyReceipt copy;
@@ -81,6 +85,9 @@ typedef struct LearningCatalogueJob {
     UmiLearningCatalogueReplacement replacement;
     UmiLearningPackChanges *replacement_changes;
     UmiStatus status;
+    UmiStatus image_status;
+    GBytes *image_pixels;
+    guint image_width, image_height;
     char *display;
     char notice[256];
 } LearningCatalogueJob;
@@ -103,5 +110,9 @@ void LearningCatalogueLibraryControls(LearningCatalogue *owner);
 void LearningCatalogueLibraryWorker(LearningCatalogueJob *job);
 void LearningCatalogueLibraryComplete(LearningCatalogue *owner, LearningCatalogueJob *job);
 void LearningCatalogueReadingControls(LearningCatalogue *owner);
+void LearningCatalogueFindControls(LearningCatalogue *owner);
 void LearningCatalogueReadingPublish(LearningCatalogue *owner, LearningCatalogueJob *job);
+void LearningCataloguePrepareImage(LearningCatalogueJob *job, const unsigned char *bytes, size_t size);
+void LearningCatalogueImageControls(LearningCatalogue *owner);
+void LearningCatalogueImagePublish(LearningCatalogue *owner, LearningCatalogueJob *job);
 #endif

@@ -114,6 +114,7 @@ void LearningCatalogueReadingPublish(LearningCatalogue *owner, LearningCatalogue
     UmiBrowserReadingDocumentDestroy(owner->reading_document);
     owner->reading_document = job->reading_document; job->reading_document = NULL;
     owner->state.has_reading_structure = owner->reading_document != NULL;
+    LearningCatalogueImagePublish(owner, job);
     if (owner->state.retired) return;
     GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(owner->content));
     gtk_text_buffer_set_text(buffer, job->display != NULL ? job->display : "", -1);
@@ -245,4 +246,5 @@ void LearningCatalogueReadingControls(LearningCatalogue *owner)
     g_signal_connect_object(owner->reading_zoom, "value-changed", G_CALLBACK(ZoomChanged), owner->root, 0);
     gtk_box_append(GTK_BOX(box), owner->reading_zoom);
     gtk_expander_set_child(GTK_EXPANDER(section), box); gtk_box_append(GTK_BOX(owner->controls), section);
+    LearningCatalogueFindControls(owner);
 }

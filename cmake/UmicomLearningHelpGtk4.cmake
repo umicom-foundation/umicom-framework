@@ -38,7 +38,10 @@ if(BUILD_TESTING)
     endif()
     foreach(_case arguments explicit copied-policy f1 modified-f1 unrelated-key missing-pack
             missing-topic locale busy retired dead-destination nearest unbind destroy-context
-            reentrant unbind-observer retire-observer)
+            reentrant unbind-observer retire-observer
+            route-open route-copied route-missing route-invalid route-busy route-retired
+            route-reentrant route-retire-notice route-binding
+            notice-route notice-load notice-binding notice-rebind)
         set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-help-binding/${_case}")
         file(MAKE_DIRECTORY "${_directory}")
         add_test(NAME "framework.learning_pack.native_help.${_case}"

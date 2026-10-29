@@ -25,6 +25,21 @@ static void Help(GtkButton *button, gpointer unused)
     if (status != UMI_STATUS_OK)
         fprintf(stderr, "Help admission: %s\n", umi_status_text(status));
 }
+static void ExplicitGuide(GtkButton *button,gpointer catalogue)
+{
+    (void)button;
+    UmiLearningHelpRoute route={0};
+    strcpy(route.request.product,"learning-example");
+    strcpy(route.request.locale,"en");
+    route.request.kind=UMI_LEARNING_HELP_TOPIC;
+    strcpy(route.request.key,"explicit-guide");
+    strcpy(route.pack_id,"framework.native-help-example");
+    strcpy(route.resource_id,"guide");
+    /* A short-lived product route need not alter the surrounding F1 policy. */
+    UmiStatus status=UmiLearningHelpGtk4OpenRoute(GTK_WIDGET(catalogue),&route);
+    if(status!=UMI_STATUS_OK)
+        fprintf(stderr,"Guide admission: %s\n",umi_status_text(status));
+}
 static gboolean Closing(GtkWindow *window, gpointer panel)
 {
     (void)window;
@@ -52,6 +67,8 @@ static void Activate(GtkApplication *application, gpointer unused)
     GtkWidget *context = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
     GtkWidget *help = gtk_button_new_with_label("Help for this example");
     gtk_box_append(GTK_BOX(context), help);
+    GtkWidget *explicit_guide=gtk_button_new_with_label("Open guide without changing F1");
+    gtk_box_append(GTK_BOX(context),explicit_guide);
     gtk_box_append(GTK_BOX(context), panel);
     gtk_window_set_child(GTK_WINDOW(window), context);
     gtk_window_set_default_size(GTK_WINDOW(window), 900, 720);
@@ -74,6 +91,8 @@ static void Activate(GtkApplication *application, gpointer unused)
     /* The button looks up its nearest bound ancestor. No callback borrows a
      * stack route or application controller. F1 uses that same copied policy. */
     g_signal_connect(help, "clicked", G_CALLBACK(Help), NULL);
+    /* The object connection disconnects when its catalogue is released. */
+    g_signal_connect_object(explicit_guide,"clicked",G_CALLBACK(ExplicitGuide),panel,0);
     g_signal_connect_object(window, "close-request", G_CALLBACK(Closing), panel, 0);
     g_signal_connect_object(window, "destroy", G_CALLBACK(Destroying), panel, 0);
     gtk_window_present(GTK_WINDOW(window));

@@ -573,6 +573,7 @@ GtkWidget *UmiLearningCatalogueGtk4Create(UmiVersion host)
     gtk_widget_set_size_request(scroll, -1, 280);
     gtk_widget_set_vexpand(scroll, TRUE);
     gtk_box_append(GTK_BOX(owner->root), scroll);
+    LearningCatalogueImageControls(owner);
     LearningCatalogueReadingControls(owner);
     return owner->root;
 }

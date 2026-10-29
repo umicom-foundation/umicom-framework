@@ -32,6 +32,7 @@ void LearningCatalogueJobFree(gpointer data)
     UmiLearningReaderDestroy(job->progress_reader);
     UmiLearningLibraryChoicesDestroy(job->library_choices);
     UmiBrowserReadingDocumentDestroy(job->reading_document);
+    g_clear_pointer(&job->image_pixels, g_bytes_unref);
     g_free(job->display);
     g_free(job);
 }
@@ -46,6 +47,10 @@ static int IsHtml(const char *path)
 /* Render from the verified buffer, never by reopening a filename. This first
  * adapter is deliberately a text presentation; it cannot execute markup,
  * fetch a remote image or grant permission to run a source example. */
+/* Retain the original plain-text-only preparation for review. The active
+ * worker below prepares structured reading and a copied display together;
+ * its fallback still uses the original preview service. */
+#if 0
 static void PrepareDisplay(LearningCatalogueJob *job)
 {
     size_t size = 0U;
@@ -86,6 +91,71 @@ static void PrepareDisplay(LearningCatalogueJob *job)
     }
     g_free(bytes);
 }
+#endif
+
+static void PrepareDisplay(LearningCatalogueJob *job)
+{
+    size_t size = 0U;
+    job->status = UmiLearningReaderCopySnapshot(job->reader, &job->snapshot);
+    if (job->status == UMI_STATUS_OK)
+        job->status = UmiLearningReaderCopyContent(job->reader, NULL, 0U, &size);
+    if (job->status != UMI_STATUS_OK) return;
+    unsigned char *bytes = g_try_malloc(size + 1U);
+    if (bytes == NULL) { job->status = UMI_STATUS_OUT_OF_MEMORY; return; }
+    job->status = UmiLearningReaderCopyContent(job->reader, bytes, size + 1U, &size);
+    if (job->status != UMI_STATUS_OK) { g_free(bytes); return; }
+    if (job->snapshot.selection.resource.kind == UMI_LEARNING_RESOURCE_IMAGE) {
+        /* Retain the original limitation notice; the Media-backed path below
+         * now attempts a bounded decode of the already verified bytes. */
+#if 0
+        job->display = g_strdup("The image bytes were verified. Image rendering is not available in this text reader.");
+        g_strlcpy(job->notice, "Verified image; text-reader limitation.", sizeof(job->notice));
+#endif
+        LearningCataloguePrepareImage(job, bytes, size);
+    } else if (!g_utf8_validate((const char *)bytes, (gssize)size, NULL)) {
+        job->display = g_strdup("The bytes were verified, but this resource is not valid UTF-8 text. It has not been executed.");
+        g_strlcpy(job->notice, "Verified content cannot be shown as UTF-8 text.", sizeof(job->notice));
+    } else if (IsHtml(job->snapshot.selection.resource.path)) {
+        /* Prepare the immutable semantic model on the same worker as the
+         * verified reader. Publication transfers both, so headings, links and
+         * offsets describe exactly the displayed bytes and reader revision. */
+        job->status = UmiBrowserReadingDocumentCreate(bytes, size, &job->reading_document);
+        if (job->status == UMI_STATUS_OK) {
+            const char *text = UmiBrowserReadingDocumentText(job->reading_document);
+            size_t length = strlen(text);
+            job->display = g_try_malloc(length + 1U);
+            if (job->display == NULL) job->status = UMI_STATUS_OUT_OF_MEMORY;
+            else {
+                memcpy(job->display, text, length + 1U);
+                g_strlcpy(job->notice,
+                    "Verified HTML shown with reading structure. Images use descriptions; scripts are not executed.",
+                    sizeof(job->notice));
+            }
+        } else if (job->status != UMI_STATUS_OUT_OF_MEMORY) {
+            /* Unsupported or over-capacity structure retains the existing
+             * plain-text fallback. Allocation failure must instead preserve
+             * the previous reader rather than silently changing presentation. */
+            UmiBrowserDocumentPreview *preview = g_try_new(UmiBrowserDocumentPreview, 1U);
+            if (preview == NULL) job->status = UMI_STATUS_OUT_OF_MEMORY;
+            else {
+                job->status = umi_browser_document_preview_from_html((const char *)bytes, size, preview);
+                if (job->status == UMI_STATUS_OK) {
+                    job->display = g_utf8_make_valid(preview->text, (gssize)preview->text_bytes);
+                    g_strlcpy(job->notice, preview->truncated ?
+                        "Verified HTML uses a shortened plain-text fallback; structured reading is unavailable." :
+                        "Verified HTML uses the plain-text fallback; structured reading is unavailable.",
+                        sizeof(job->notice));
+                }
+                g_free(preview);
+            }
+        }
+    } else {
+        job->display = (char *)bytes; bytes = NULL;
+        g_strlcpy(job->notice, "Verified UTF-8 text. Source examples have not been executed.", sizeof(job->notice));
+    }
+    g_free(bytes);
+}
+
 
 /* Retain the read-only worker for review. The active worker also performs an
  * explicitly accepted verified copy without borrowing a reader or widget. */

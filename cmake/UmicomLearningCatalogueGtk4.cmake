@@ -25,6 +25,8 @@ add_library(umicom_learning_catalogue_gtk4 STATIC
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_gtk4.c"
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_jobs.c"
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_reading.c"
+    "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_find.c"
+    "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_images.c"
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_replacement.c"
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_progress.c"
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_libraries.c"
@@ -36,7 +38,7 @@ set_target_properties(umicom_learning_catalogue_gtk4 PROPERTIES
     EXPORT_NAME learning_catalogue_gtk4 C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
 target_link_libraries(umicom_learning_catalogue_gtk4
     PUBLIC Umicom::ui_gtk4 Umicom::developer
-    PRIVATE Umicom::browser Umicom::platform)
+    PRIVATE Umicom::browser Umicom::platform Umicom::editor)
 umicom_apply_warnings(umicom_learning_catalogue_gtk4)
 umicom_apply_sanitizers(umicom_learning_catalogue_gtk4)
 if(COMMAND umicom_target_qualification_inputs)
@@ -311,3 +313,73 @@ endif()
 
 # Contextual keyboard and explicit Help actions share one native route binding.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomLearningHelpGtk4.cmake")
+
+# Retry the optional illustration connection after this owner exists.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomLearningPngGtk4.cmake")
+
+# Explicit image selections share Media's optional bounded PNG codec.
+if(BUILD_TESTING)
+    add_executable(umicom-learning-catalogue-images-test
+        "${_learning_catalogue_root}/tests/learning_pack/test_catalogue_images_gtk4.c")
+    set_target_properties(umicom-learning-catalogue-images-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-learning-catalogue-images-test PRIVATE Umicom::learning_catalogue_gtk4)
+    umicom_apply_warnings(umicom-learning-catalogue-images-test)
+    umicom_apply_sanitizers(umicom-learning-catalogue-images-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-learning-catalogue-images-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-learning-catalogue-images-test FILES
+            "${_learning_catalogue_root}/tests/media/png_fixture.h"
+            "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_private.h")
+    endif()
+    foreach(_case image rgba-bytes rgb changed history linked-image bad-crc oversize
+        unsupported retire-pending destroy-pending retire-publication arguments)
+        set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-catalogue-images/${_case}")
+        file(MAKE_DIRECTORY "${_directory}")
+        add_test(NAME "framework.learning_pack.native_images.${_case}"
+            COMMAND umicom-learning-catalogue-images-test "${_case}" "${_directory}")
+        set_tests_properties("framework.learning_pack.native_images.${_case}" PROPERTIES
+            TIMEOUT 60 SKIP_RETURN_CODE 77 WORKING_DIRECTORY "${_directory}"
+            LABELS "framework;learning;gtk4;media;ownership;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.learning_pack.native_images.${_case}"
+                TARGETS umicom-learning-catalogue-images-test)
+        endif()
+    endforeach()
+endif()
+
+# Guide navigation uses the same literal matcher as document editors. This
+# fixture exercises native selection ownership rather than duplicating core tests.
+if(BUILD_TESTING)
+    add_executable(umicom-learning-catalogue-find-test
+        "${_learning_catalogue_root}/tests/learning_pack/test_catalogue_find_gtk4.c")
+    set_target_properties(umicom-learning-catalogue-find-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-learning-catalogue-find-test PRIVATE Umicom::learning_catalogue_gtk4)
+    umicom_apply_warnings(umicom-learning-catalogue-find-test)
+    umicom_apply_sanitizers(umicom-learning-catalogue-find-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-learning-catalogue-find-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-learning-catalogue-find-test FILES
+            "${_learning_catalogue_root}/tests/support/gtk4_expanders.h")
+    endif()
+    foreach(_case empty next previous wrapped ascii-insensitive case-sensitive unicode
+            nonascii-case no-match hidden-content invalid-query capacity busy retired history
+            controls enter key modified-key reentrant retire-selection notice-reentrant retained)
+        set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-catalogue-find/${_case}")
+        file(MAKE_DIRECTORY "${_directory}")
+        add_test(NAME "framework.learning_pack.native_find.${_case}"
+            COMMAND umicom-learning-catalogue-find-test "${_case}" "${_directory}")
+        set_tests_properties("framework.learning_pack.native_find.${_case}" PROPERTIES
+            TIMEOUT 60 SKIP_RETURN_CODE 77 WORKING_DIRECTORY "${_directory}"
+            LABELS "framework;learning;gtk4;editor;ownership;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.learning_pack.native_find.${_case}"
+                TARGETS umicom-learning-catalogue-find-test)
+        endif()
+    endforeach()
+endif()
