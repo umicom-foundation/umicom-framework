@@ -26,6 +26,7 @@ typedef struct LearningCatalogue {
     UmiLearningCatalogueGtkState state;
     UmiLearningCatalogueCopyReceipt copy;
     GtkWidget *root, *controls, *path, *query, *results;
+    GtkWidget *link;
     GtkWidget *heading, *status, *content, *destination, *copy_status;
 } LearningCatalogue;
 typedef enum LearningCatalogueAction {
@@ -34,7 +35,8 @@ typedef enum LearningCatalogueAction {
     LEARNING_CATALOGUE_BACK,
     LEARNING_CATALOGUE_FORWARD,
     LEARNING_CATALOGUE_RELOAD,
-    LEARNING_CATALOGUE_COPY
+    LEARNING_CATALOGUE_COPY,
+    LEARNING_CATALOGUE_FOLLOW
 } LearningCatalogueAction;
 typedef struct LearningCatalogueJob {
     GWeakRef root;
@@ -44,6 +46,7 @@ typedef struct LearningCatalogueJob {
     int continues_reader;
     UmiVersion host;
     char directory[UMI_PATH_CAPACITY];
+    char link[UMI_TEACHER_PATH_CAPACITY + UMI_LEARNING_FRAGMENT_CAPACITY];
     UmiLearningSearchHit selected;
     UmiLearningShelf *selection_shelf;
     UmiLearningPack *pack;

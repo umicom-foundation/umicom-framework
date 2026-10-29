@@ -61,9 +61,86 @@ static int SameSelection(const UmiLearningReaderSnapshot *a, const UmiLearningRe
         strcmp(a->selection.resource.id, b->selection.resource.id) == 0 &&
         strcmp(a->selection.fragment, b->selection.fragment) == 0;
 }
+
+/* Clones keep previously verified bytes even when the source file changes.
+ * Independent navigation still reads and verifies the original admitted pack. */
+static int CloneCase(const char *name, const char *root)
+{
+    int result=0;
+    UmiLearningPack *pack=NULL,*pack_copy=NULL;
+    UmiLearningReader *reader=NULL,*clone=NULL;
+    UmiLearningReaderSnapshot before,after;
+    unsigned char bytes[256];
+    size_t size=0U;
+    CHECK(CreatePack(root,&pack)==UMI_STATUS_OK);
+    if(strcmp(name,"clone-pack")==0) {
+        CHECK(UmiLearningPackClone(pack,&pack_copy)==UMI_STATUS_OK);
+        UmiLearningPackDestroy(pack); pack=NULL;
+        UmiLearningPackResource resource;
+        CHECK(UmiLearningPackFindResource(pack_copy,"second",&resource)==UMI_STATUS_OK);
+        CHECK(strcmp(resource.path,"second.html")==0);
+        goto cleanup;
+    }
+    if(strcmp(name,"clone-invalid")==0) {
+        CHECK(UmiLearningPackClone(NULL,&pack_copy)==UMI_STATUS_INVALID_ARGUMENT && pack_copy==NULL);
+        CHECK(UmiLearningPackClone(pack,NULL)==UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(UmiLearningReaderClone(NULL,&clone)==UMI_STATUS_INVALID_ARGUMENT && clone==NULL);
+        goto cleanup;
+    }
+    CHECK(UmiLearningReaderCreate(&pack,strcmp(name,"clone-bound")==0?4U:4096U,&reader)==UMI_STATUS_OK);
+    if(strcmp(name,"clone-empty")==0 || strcmp(name,"clone-bound")==0) {
+        CHECK(UmiLearningReaderClone(reader,&clone)==UMI_STATUS_OK);
+        CHECK(UmiLearningReaderCopySnapshot(clone,&after)==UMI_STATUS_OK && !after.has_document);
+        if(strcmp(name,"clone-bound")==0) {
+            CHECK(UmiLearningReaderOpen(clone,"first")==UMI_STATUS_CAPACITY_EXCEEDED);
+            CHECK(UmiLearningReaderOpen(clone,"example")==UMI_STATUS_OK);
+            CHECK(UmiLearningReaderCopySnapshot(reader,&after)==UMI_STATUS_OK && !after.has_document);
+        }
+        goto cleanup;
+    }
+    CHECK(UmiLearningReaderOpen(reader,strcmp(name,"clone-binary")==0?"example":"first")==UMI_STATUS_OK);
+    if(strcmp(name,"clone-history")==0 || strcmp(name,"clone-independent")==0) {
+        CHECK(UmiLearningReaderFollow(reader,"second.html#details")==UMI_STATUS_OK);
+        CHECK(UmiLearningReaderBack(reader)==UMI_STATUS_OK);
+    }
+    CHECK(UmiLearningReaderCopySnapshot(reader,&before)==UMI_STATUS_OK);
+    if(strcmp(name,"clone-stale-disk")==0)
+        CHECK(UmiRootedFileWrite(root,"first.html","changed",7U)==UMI_STATUS_OK);
+    CHECK(UmiLearningReaderClone(reader,&clone)==UMI_STATUS_OK);
+    CHECK(UmiLearningReaderCopySnapshot(clone,&after)==UMI_STATUS_OK && SameSelection(&before,&after));
+    CHECK(UmiLearningReaderCopyContent(clone,bytes,sizeof(bytes),&size)==UMI_STATUS_OK);
+    if(strcmp(name,"clone-binary")==0) {
+        CHECK(size==sizeof(example) && memcmp(bytes,example,size)==0);
+    } else {
+        CHECK(size==sizeof(first)-1U && memcmp(bytes,first,size)==0);
+        if(strcmp(name,"clone-stale-disk")==0) {
+            CHECK(UmiLearningReaderReload(clone)==UMI_STATUS_INVALID_STATE);
+            CHECK(UmiLearningReaderCopySnapshot(clone,&after)==UMI_STATUS_OK && SameSelection(&before,&after));
+        } else if(strcmp(name,"clone-source-gone")==0) {
+            UmiLearningReaderDestroy(reader); reader=NULL;
+            CHECK(UmiLearningReaderOpen(clone,"second")==UMI_STATUS_OK);
+        } else if(strcmp(name,"clone-history")==0 || strcmp(name,"clone-independent")==0) {
+            CHECK(UmiLearningReaderForward(clone)==UMI_STATUS_OK);
+            CHECK(UmiLearningReaderCopySnapshot(clone,&after)==UMI_STATUS_OK);
+            CHECK(strcmp(after.selection.fragment,"details")==0 && after.history_index==1U);
+            CHECK(UmiLearningReaderCopySnapshot(reader,&after)==UMI_STATUS_OK && SameSelection(&before,&after));
+            if(strcmp(name,"clone-independent")==0) {
+                CHECK(UmiLearningReaderOpen(reader,"example")==UMI_STATUS_OK);
+                CHECK(UmiLearningReaderCopySnapshot(clone,&after)==UMI_STATUS_OK);
+                CHECK(strcmp(after.selection.resource.id,"second")==0);
+            }
+        } else CHECK(0 && "Unknown clone case");
+    }
+cleanup:
+    UmiLearningReaderDestroy(reader); UmiLearningReaderDestroy(clone);
+    UmiLearningPackDestroy(pack); UmiLearningPackDestroy(pack_copy);
+    return result;
+}
+
 int main(int argc, char **argv)
 {
     if (argc != 3) return 2;
+    if (strncmp(argv[1], "clone-", 6U) == 0) return CloneCase(argv[1], argv[2]);
     int result = 0;
     const char *name = argv[1], *root = argv[2];
     UmiLearningPack *pack = NULL;

@@ -21,6 +21,7 @@ get_filename_component(_umicom_pack_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE
 target_sources(umicom_developer PRIVATE
     "${_umicom_pack_root}/src/teacher/learning_pack.c"
     "${_umicom_pack_root}/src/teacher/learning_pack_files.c"
+    "${_umicom_pack_root}/src/teacher/learning_pack_copy.c"
     "${_umicom_pack_root}/src/teacher/learning_shelf.c"
     "${_umicom_pack_root}/src/teacher/learning_navigation.c"
     "${_umicom_pack_root}/src/teacher/learning_reader.c"
@@ -90,7 +91,9 @@ if(BUILD_TESTING)
         endif()
     endforeach()
     foreach(_case invalid-create empty bounded copy binary invalid-link missing-id
-            changed-reload history-limit changed-back missing-back branch history same-selection)
+            changed-reload history-limit changed-back missing-back branch history same-selection
+            clone-empty clone-history clone-independent clone-source-gone clone-stale-disk
+            clone-binary clone-bound clone-invalid clone-pack)
         set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-pack-reader/${_case}")
         file(MAKE_DIRECTORY "${_directory}")
         add_test(NAME "framework.learning_pack.reader.${_case}"
@@ -190,6 +193,8 @@ install(FILES
     "${_umicom_pack_root}/examples/learning_pack_inspector/progress.c"
     "${_umicom_pack_root}/examples/learning_pack_inspector/archive.c"
     "${_umicom_pack_root}/examples/learning_pack_inspector/check_help.cmake"
+    "${_umicom_pack_root}/examples/learning_pack_inspector/transaction.c"
+    "${_umicom_pack_root}/examples/learning_pack_inspector/check_transaction.cmake"
     "${_umicom_pack_root}/examples/learning_pack_inspector/check_practice.cmake"
     "${_umicom_pack_root}/examples/learning_pack_inspector/check_search.cmake"
     "${_umicom_pack_root}/examples/learning_pack_inspector/guide.html"

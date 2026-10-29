@@ -43,6 +43,15 @@ UmiStatus UmiLearningReaderCreate(UmiLearningPack **pack, size_t maximum_bytes,
     UmiLearningReader **out_reader);
 void UmiLearningReaderDestroy(UmiLearningReader *reader);
 
+/* Copy the admitted pack, verified in-memory bytes, history and byte limit.
+ * No filesystem access occurs; a clone describes the same previously verified
+ * snapshot, not freshly checked disk contents. Serialize source access while
+ * cloning. Source and clone then have independent lifetimes and navigation.
+ * Failure clears out_reader and preserves source.
+ * Supply separate output storage; do not overwrite the source owning pointer. Cloning may temporarily
+ * double the reader's content allocation; keep the configured bound practical. */
+UmiStatus UmiLearningReaderClone(const UmiLearningReader *source, UmiLearningReader **out_reader);
+
 /* Open a copied catalogue selection in a new, independent reader. Supply the
  * pack revision and lowercase SHA-256 from the displayed search result. A
  * replaced pack or changed resource digest returns INVALID_STATE; a removed

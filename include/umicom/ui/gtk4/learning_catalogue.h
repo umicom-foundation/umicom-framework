@@ -53,6 +53,16 @@ GtkWidget *UmiLearningCatalogueGtk4Create(UmiVersion host_version);
  * call. Practice-copy jobs follow the same hold and completion contract. */
 GtkWindow *UmiLearningCatalogueGtk4Present(GtkWindow *parent, UmiVersion host_version);
 
+/* Re-present one catalogue per live parent, retaining its admitted packs and
+ * reading history. The parent holds a weak window reference, not ownership of
+ * a closed window. A closed/retired catalogue is replaced. Different parents
+ * remain independent. A different host version while the cached window is live
+ * is refused with NULL; close it explicitly before changing that version.
+ * Reentrant presentation, destroyed parents and callback-driven closure return
+ * NULL. The returned handle is borrowed as for Present. No pack is autoloaded
+ * or persisted across process restart. Call on the GTK owner thread. */
+GtkWindow *UmiLearningCatalogueGtk4PresentShared(GtkWindow *parent, UmiVersion host_version);
+
 /* Accept a copied absolute root and asynchronously load learning-pack.json.
  * One job is admitted per panel. Duplicate IDs preserve the existing pack and
  * return ALREADY_EXISTS through last_status. Loading additional packs retains
@@ -76,6 +86,20 @@ UmiStatus UmiLearningCatalogueGtk4OpenHelp(GtkWidget *widget, const UmiLearningH
 UmiStatus UmiLearningCatalogueGtk4Back(GtkWidget *widget);
 UmiStatus UmiLearningCatalogueGtk4Forward(GtkWidget *widget);
 UmiStatus UmiLearningCatalogueGtk4Reload(GtkWidget *widget);
+
+/* Follow an explicit local link from the currently displayed resource. Syntax
+ * and manifest membership are checked before dispatch; verified bytes are read
+ * on the worker. The link is copied before return and uses the restricted
+ * learning-navigation profile, not browser URL processing. Search results and
+ * last-copy receipts remain unchanged. Failure preserves the reading history.
+ * A fragment records a requested anchor; the text preview does not scroll to it.
+ * OK means accepted; inspect CopyState for the completed status. */
+UmiStatus UmiLearningCatalogueGtk4Follow(GtkWidget *widget, const char *local_link);
+
+/* Open the example declared by the current guide, or reverify the current
+ * example. Uses the same per-pack reader/history without copying a file or
+ * granting build/run trust. A guide without a declared example is refused. */
+UmiStatus UmiLearningCatalogueGtk4OpenExample(GtkWidget *widget);
 
 
 typedef struct UmiLearningCatalogueCopyReceipt {

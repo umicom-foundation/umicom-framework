@@ -460,4 +460,29 @@ refusal handling and the boundary between admission and asynchronous completion.
 <p>A checkpoint is an explicit local action, not a qualification. Its pack revision and content hash must match a future query. Older events remain in history, while a changed lesson requires a separate checkpoint. Exact duplicates return <code>ALREADY_EXISTS</code>; commit uncertainty requires reopening storage before a retry.</p>
 <h2>Transfer a private learning record</h2>
 <p>The optional <code>archive.c</code> consumer exports an existing SQLite journal to a new file or imports that file into an empty journal for the same learner. Run <code>umicom-learning-pack-archive</code> without arguments for its explicit database, learner, archive-root and relative-filename parameters. Existing archive files and nonempty journals are refused. A failed import may leave a newly selected empty database. Keep these records private; the archive is not a course resource, credential store or authenticated assessment.</p>
+<h2 id="reader-transaction">Prepare a candidate before changing the reader</h2>
+<p>The <code>transaction.c</code> example makes the ownership boundary visible.
+It opens an initial resource, creates an independent reader, verifies a candidate
+resource and then follows the explicit <code>accept</code> or <code>reject</code>
+decision. A rejected candidate leaves the original reader's content and history
+intact. No file is copied, edited or executed.</p>
+<p>From the example build directory, after building against a matching installed SDK:</p>
+<pre><code>.\umicom-learning-reader-transaction.exe "$PWD\pack" learning-pack.json guide inspector reject
+.\umicom-learning-reader-transaction.exe "$PWD\pack" learning-pack.json guide inspector accept</code></pre>
+<p>The first command should retain resource <code>guide</code> with one history
+entry. The second starts a fresh process and accepts <code>inspector</code> with
+two entries. Replacing <code>inspector</code> with <code>missing-resource</code>
+must fail while still reporting the original guide. Check both the process
+status and output; a familiar line alone does not establish success.</p>
+<p><code>UmiLearningReaderClone</code> copies already verified in-memory bytes,
+pack metadata, history and the read limit. It does not reverify the disk or
+authenticate a publisher. Navigating the candidate performs the next byte
+verification. A graphical host also prepares its display before accepting the
+candidate. The native catalogue uses that boundary to retain the previous
+document after recoverable preview allocation failures.</p>
+<p>Keep source access serialized while cloning and release each independently
+owned reader exactly once. A candidate can temporarily double the content
+allocation, so keep the configured byte limit practical. The native reader's
+local-link action and <strong>Read linked example</strong> use the same verified
+navigation path and retain Back/Forward history for this pack.</p>
 </body></html>

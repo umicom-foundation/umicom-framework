@@ -65,12 +65,14 @@ file(SHA256 "${CMAKE_CURRENT_BINARY_DIR}/pack/search.c" _search_hash)
 file(SHA256 "${CMAKE_CURRENT_BINARY_DIR}/pack/guide.html" _guide_hash)
 file(SHA256 "${CMAKE_CURRENT_BINARY_DIR}/pack/main.c" _example_hash)
 file(SHA256 "${CMAKE_CURRENT_BINARY_DIR}/pack/history.c" _history_hash)
+configure_file(transaction.c "${CMAKE_CURRENT_BINARY_DIR}/pack/transaction.c" COPYONLY)
+file(SHA256 "${CMAKE_CURRENT_BINARY_DIR}/pack/transaction.c" _transaction_hash)
 configure_file(learning-pack.json.in "${CMAKE_CURRENT_BINARY_DIR}/pack/learning-pack.json" @ONLY)
 include(CTest)
 if(BUILD_TESTING)
     add_test(NAME sdk.learning_pack.list
         COMMAND umicom-learning-pack-inspect "${CMAKE_CURRENT_BINARY_DIR}/pack" learning-pack.json)
-    foreach(_resource guide inspector reader-history practice-copy catalogue-search contextual-help checkpoint-records checkpoint-archive)
+    foreach(_resource guide inspector reader-history practice-copy catalogue-search contextual-help checkpoint-records checkpoint-archive reader-transaction)
         add_test(NAME "sdk.learning_pack.verify.${_resource}"
             COMMAND umicom-learning-pack-inspect "${CMAKE_CURRENT_BINARY_DIR}/pack"
                 learning-pack.json "${_resource}")
@@ -222,4 +224,27 @@ if(TARGET Umicom::learning_progress)
         target_compile_options(umicom-learning-pack-archive PRIVATE
             -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
     endif()
+endif()
+
+# Candidate readers let native clients prepare presentation before replacing
+# the current session. This small executable demonstrates that commit boundary.
+add_executable(umicom-learning-reader-transaction transaction.c)
+target_link_libraries(umicom-learning-reader-transaction PRIVATE Umicom::developer)
+set_target_properties(umicom-learning-reader-transaction PROPERTIES
+    C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+if(MSVC)
+    target_compile_options(umicom-learning-reader-transaction PRIVATE /W4)
+else()
+    target_compile_options(umicom-learning-reader-transaction PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    foreach(_case accept reject missing invalid-decision)
+        add_test(NAME "sdk.learning_pack.transaction.${_case}"
+            COMMAND "${CMAKE_COMMAND}"
+                "-DPROGRAM=$<TARGET_FILE:umicom-learning-reader-transaction>"
+                "-DPACK_ROOT=${CMAKE_CURRENT_BINARY_DIR}/pack"
+                "-DCASE=${_case}" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_transaction.cmake")
+        set_tests_properties("sdk.learning_pack.transaction.${_case}" PROPERTIES TIMEOUT 30)
+    endforeach()
 endif()

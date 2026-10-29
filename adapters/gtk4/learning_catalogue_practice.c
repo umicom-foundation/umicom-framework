@@ -102,3 +102,16 @@ UmiStatus UmiLearningCatalogueGtk4CopyLastReceipt(GtkWidget *widget,
     *out = owner->copy;
     return UMI_STATUS_OK;
 }
+
+/* Reading and copying are separate actions. Reuse metadata admission and the
+ * catalogue's existing verified reader path; no destination is involved. */
+UmiStatus UmiLearningCatalogueGtk4OpenExample(GtkWidget *widget)
+{
+    LearningCatalogue *owner = NULL;
+    UmiStatus status = PracticeOwner(widget, &owner);
+    UmiLearningPackResource example;
+    if (status == UMI_STATUS_OK)
+        status = UmiLearningCatalogueGtk4PreviewExample(widget, &example);
+    return status == UMI_STATUS_OK ?
+        LearningCatalogueOpenSelection(owner, &owner->state.reader.pack, &example) : status;
+}

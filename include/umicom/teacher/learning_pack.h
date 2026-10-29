@@ -80,6 +80,13 @@ UmiStatus UmiLearningPackLoad(const char *root, const char *manifest_path,
     UmiVersion host_version, UmiLearningPack **out_pack);
 void UmiLearningPackDestroy(UmiLearningPack *pack);
 
+/* Deep-copy admitted metadata and its root without reading any files. The
+ * caller owns the new immutable pack and may transfer it to another serialized
+ * reader. This does not refresh manifests, verify current bytes or grant trust.
+ * Keep source alive through the call. Failure clears out_pack.
+ * Supply separate output storage; do not overwrite the source owning pointer. */
+UmiStatus UmiLearningPackClone(const UmiLearningPack *source, UmiLearningPack **out_pack);
+
 /* Copy pointer-free metadata. Invalid/missing results leave output unchanged. */
 UmiStatus UmiLearningPackCopyInfo(const UmiLearningPack *pack, UmiLearningPackInfo *out);
 UmiStatus UmiLearningPackResourceAt(const UmiLearningPack *pack, size_t index,

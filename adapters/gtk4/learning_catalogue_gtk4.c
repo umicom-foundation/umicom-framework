@@ -172,7 +172,8 @@ UmiStatus UmiLearningCatalogueGtk4Open(GtkWidget *widget, size_t index)
     status = LearningCatalogueDispatch(owner, job);
     g_object_unref(widget);
     return status;
-}#endif
+}
+#endif
 UmiStatus UmiLearningCatalogueGtk4Open(GtkWidget *widget, size_t index)
 {
     LearningCatalogue *owner = LearningCatalogueOwner(widget);
@@ -207,6 +208,44 @@ UmiStatus UmiLearningCatalogueGtk4Forward(GtkWidget *widget)
 { return Navigate(widget, LEARNING_CATALOGUE_FORWARD); }
 UmiStatus UmiLearningCatalogueGtk4Reload(GtkWidget *widget)
 { return Navigate(widget, LEARNING_CATALOGUE_RELOAD); }
+
+
+/* Resolve against copied admitted metadata before handing the reader to a
+ * worker. A malformed or undeclared link cannot interrupt the visible session. */
+UmiStatus UmiLearningCatalogueGtk4Follow(GtkWidget *widget, const char *local_link)
+{
+    LearningCatalogue *owner = LearningCatalogueOwner(widget);
+    UmiStatus status = CanStart(owner);
+    if (status != UMI_STATUS_OK) return status;
+    if (local_link == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (owner->reader == NULL || !owner->state.reader.has_document) return UMI_STATUS_INVALID_STATE;
+    LearningCatalogueJob *job = NewJob(owner, LEARNING_CATALOGUE_FOLLOW);
+    if (job == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = umi_text_copy(job->link, sizeof(job->link), local_link);
+    if (status == UMI_STATUS_OK && !g_utf8_validate(job->link, -1, NULL))
+        status = UMI_STATUS_INVALID_ARGUMENT;
+    UmiLearningPack *pack = NULL;
+    UmiLearningPackInfo info;
+    UmiLearningPackLink resolved;
+    if (status == UMI_STATUS_OK)
+        status = UmiLearningShelfCopyPack(owner->shelf, owner->state.reader.pack.id, &pack);
+    if (status == UMI_STATUS_OK) status = UmiLearningPackCopyInfo(pack, &info);
+    if (status == UMI_STATUS_OK && info.revision != owner->state.reader.pack.revision)
+        status = UMI_STATUS_INVALID_STATE;
+    if (status == UMI_STATUS_OK)
+        status = UmiLearningPackResolveLink(pack, owner->state.reader.selection.resource.id,
+            job->link, &resolved);
+    UmiLearningPackDestroy(pack);
+    if (status != UMI_STATUS_OK) { LearningCatalogueJobFree(job); return status; }
+    /* Dispatch restores this transferred reader if a host retires during admission. */
+    job->continues_reader = 1;
+    job->reader = owner->reader;
+    owner->reader = NULL;
+    g_object_ref(widget);
+    status = LearningCatalogueDispatch(owner, job);
+    g_object_unref(widget);
+    return status;
+}
 
 UmiStatus UmiLearningCatalogueGtk4CopyState(GtkWidget *widget, UmiLearningCatalogueGtkState *out)
 {
@@ -244,6 +283,10 @@ static void Action(GtkButton *button, gpointer data)
         } else if (strcmp(action, "back") == 0) status = UmiLearningCatalogueGtk4Back(widget);
         else if (strcmp(action, "forward") == 0) status = UmiLearningCatalogueGtk4Forward(widget);
         else if (strcmp(action, "reload") == 0) status = UmiLearningCatalogueGtk4Reload(widget);
+        else if (strcmp(action, "follow") == 0)
+            status = UmiLearningCatalogueGtk4Follow(widget, gtk_editable_get_text(GTK_EDITABLE(owner->link)));
+        else if (strcmp(action, "open-example") == 0)
+            status = UmiLearningCatalogueGtk4OpenExample(widget);
         else if (strcmp(action, "example") == 0) {
             UmiLearningPackResource example;
             status = UmiLearningCatalogueGtk4PreviewExample(widget, &example);
@@ -346,6 +389,15 @@ GtkWidget *UmiLearningCatalogueGtk4Create(UmiVersion host)
     Button(owner, navigation, "Back", "back");
     Button(owner, navigation, "Forward", "forward");
     Button(owner, navigation, "Reload and verify", "reload");
+    Caption(owner->controls, "Local link from the current guide");
+    owner->link = gtk_entry_new();
+    gtk_entry_set_max_length(GTK_ENTRY(owner->link),
+        (int)(UMI_TEACHER_PATH_CAPACITY + UMI_LEARNING_FRAGMENT_CAPACITY - 1U));
+    gtk_entry_set_placeholder_text(GTK_ENTRY(owner->link), "Example: next-lesson.html or example.c");
+    Tag(owner->link, "learning.catalogue.link");
+    gtk_box_append(GTK_BOX(owner->controls), owner->link);
+    Button(owner, owner->controls, "Open local link", "follow");
+    Button(owner, owner->controls, "Read linked example", "open-example");
     Caption(owner->controls, "Copy one example from the current reading selection");
     Button(owner, owner->controls, "Preview example details", "example");
     owner->destination = gtk_entry_new();

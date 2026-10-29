@@ -119,6 +119,9 @@ static void CatalogueWorker(GTask *task, gpointer source, gpointer data, GCancel
     g_task_return_boolean(task, job->status == UMI_STATUS_OK);
 }
 #endif
+/* Extend the copied-job reader path with explicit local links. Preserve the
+ * earlier action set for review; the worker still owns all navigation state. */
+#if 0
 static void CatalogueWorker(GTask *task, gpointer source, gpointer data, GCancellable *cancel)
 {
     (void)source;
@@ -155,6 +158,107 @@ static void CatalogueWorker(GTask *task, gpointer source, gpointer data, GCancel
     }
     if (job->action != LEARNING_CATALOGUE_LOAD && job->action != LEARNING_CATALOGUE_COPY &&
         job->status == UMI_STATUS_OK) PrepareDisplay(job);
+    g_task_return_boolean(task, job->status == UMI_STATUS_OK);
+}
+#endif
+/* Preserve direct reader mutation for review. The active worker prepares a
+ * candidate reader and preview together before publishing either one. */
+#if 0
+static void CatalogueWorker(GTask *task, gpointer source, gpointer data, GCancellable *cancel)
+{
+    (void)source;
+    (void)cancel;
+    LearningCatalogueJob *job = data;
+    switch (job->action) {
+    case LEARNING_CATALOGUE_LOAD:
+        job->status = UmiLearningPackLoad(job->directory, "learning-pack.json", job->host, &job->pack);
+        break;
+    case LEARNING_CATALOGUE_OPEN:
+        if (job->continues_reader)
+            job->status = UmiLearningReaderOpenSelection(job->reader, job->selected.pack.id,
+                job->selected.pack.revision, job->selected.resource.id, job->selected.resource.sha256);
+        else {
+        job->status = UmiLearningReaderCreateFromShelf(job->selection_shelf,
+            job->selected.pack.id, job->selected.pack.revision, job->selected.resource.id,
+            job->selected.resource.sha256, UMI_LEARNING_CATALOGUE_BYTES, &job->reader);
+        }
+        break;
+    case LEARNING_CATALOGUE_FOLLOW:
+        job->status = UmiLearningReaderFollow(job->reader, job->link);
+        break;
+    case LEARNING_CATALOGUE_BACK:
+        job->status = UmiLearningReaderBack(job->reader);
+        break;
+    case LEARNING_CATALOGUE_FORWARD:
+        job->status = UmiLearningReaderForward(job->reader);
+        break;
+    case LEARNING_CATALOGUE_COPY:
+        job->status = UmiLearningPracticeCopy(job->pack, job->copy.selection.id,
+            job->copy.destination_root, job->copy.destination_path,
+            UMI_LEARNING_CATALOGUE_BYTES, &job->copy.result);
+        break;
+    case LEARNING_CATALOGUE_RELOAD:
+        job->status = UmiLearningReaderReload(job->reader);
+        break;
+    }
+    if (job->action != LEARNING_CATALOGUE_LOAD && job->action != LEARNING_CATALOGUE_COPY &&
+        job->status == UMI_STATUS_OK) PrepareDisplay(job);
+    g_task_return_boolean(task, job->status == UMI_STATUS_OK);
+}
+#endif
+static void CatalogueWorker(GTask *task, gpointer source, gpointer data, GCancellable *cancel)
+{
+    (void)source;
+    (void)cancel;
+    LearningCatalogueJob *job = data;
+    /* The transferred reader is the last complete visible state. Navigate a
+     * deep copy so a later preview allocation failure cannot advance history
+     * while the UI still shows the old text. No widget is borrowed here. */
+    UmiLearningReader *previous = job->reader;
+    job->reader = NULL;
+    job->status = previous == NULL ? UMI_STATUS_OK : UmiLearningReaderClone(previous, &job->reader);
+    if (job->status != UMI_STATUS_OK) goto publish;
+    switch (job->action) {
+    case LEARNING_CATALOGUE_LOAD:
+        job->status = UmiLearningPackLoad(job->directory, "learning-pack.json", job->host, &job->pack);
+        break;
+    case LEARNING_CATALOGUE_OPEN:
+        if (job->continues_reader)
+            job->status = UmiLearningReaderOpenSelection(job->reader, job->selected.pack.id,
+                job->selected.pack.revision, job->selected.resource.id, job->selected.resource.sha256);
+        else {
+        job->status = UmiLearningReaderCreateFromShelf(job->selection_shelf,
+            job->selected.pack.id, job->selected.pack.revision, job->selected.resource.id,
+            job->selected.resource.sha256, UMI_LEARNING_CATALOGUE_BYTES, &job->reader);
+        }
+        break;
+    case LEARNING_CATALOGUE_FOLLOW:
+        job->status = UmiLearningReaderFollow(job->reader, job->link);
+        break;
+    case LEARNING_CATALOGUE_BACK:
+        job->status = UmiLearningReaderBack(job->reader);
+        break;
+    case LEARNING_CATALOGUE_FORWARD:
+        job->status = UmiLearningReaderForward(job->reader);
+        break;
+    case LEARNING_CATALOGUE_COPY:
+        job->status = UmiLearningPracticeCopy(job->pack, job->copy.selection.id,
+            job->copy.destination_root, job->copy.destination_path,
+            UMI_LEARNING_CATALOGUE_BYTES, &job->copy.result);
+        break;
+    case LEARNING_CATALOGUE_RELOAD:
+        job->status = UmiLearningReaderReload(job->reader);
+        break;
+    }
+    if (job->action != LEARNING_CATALOGUE_LOAD && job->action != LEARNING_CATALOGUE_COPY &&
+        job->status == UMI_STATUS_OK) PrepareDisplay(job);
+publish:
+    if (job->status == UMI_STATUS_OK) UmiLearningReaderDestroy(previous);
+    else {
+        UmiLearningReaderDestroy(job->reader);
+        job->reader = previous;
+        memset(&job->snapshot, 0, sizeof(job->snapshot));
+    }
     g_task_return_boolean(task, job->status == UMI_STATUS_OK);
 }
 

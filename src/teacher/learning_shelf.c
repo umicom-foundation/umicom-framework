@@ -105,6 +105,9 @@ UmiStatus UmiLearningShelfResourceAt(const UmiLearningShelf *shelf, const char *
 /* Independent pack ownership lets catalogue and reader lifetimes differ.
  * Keep the deep copy here, beside shelf ownership, so frontends never borrow
  * private arrays or remove a catalogue entry merely to open its first lesson. */
+/* Centralise deep-copy ownership for shelf readers and reader transactions.
+ * Preserve the earlier shelf-local copy for review. */
+#if 0
 UmiStatus UmiLearningShelfCopyPack(const UmiLearningShelf *shelf, const char *id,
     UmiLearningPack **out)
 {
@@ -130,3 +133,14 @@ UmiStatus UmiLearningShelfCopyPack(const UmiLearningShelf *shelf, const char *id
     *out = copy;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus UmiLearningShelfCopyPack(const UmiLearningShelf *shelf, const char *id,
+    UmiLearningPack **out)
+{
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out = NULL;
+    if (shelf == NULL || id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index = ShelfFind(shelf, id);
+    return index == SIZE_MAX ? UMI_STATUS_NOT_FOUND : UmiLearningPackClone(shelf->packs[index], out);
+}
+

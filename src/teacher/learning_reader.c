@@ -180,3 +180,26 @@ UmiStatus UmiLearningReaderOpenSelection(UmiLearningReader *reader, const char *
     if (strcmp(selected.sha256, expected_sha256) != 0) return UMI_STATUS_INVALID_STATE;
     return UmiLearningReaderOpen(reader, resource_id);
 }
+
+/* A native renderer can navigate a candidate and prepare its display before
+ * replacing the visible reader. Copy only owned data, never reopen its source. */
+UmiStatus UmiLearningReaderClone(const UmiLearningReader *source, UmiLearningReader **out)
+{
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out = NULL;
+    if (source == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiLearningReader *copy = calloc(1U, sizeof(*copy));
+    if (copy == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    UmiStatus status = UmiLearningPackClone(source->pack, &copy->pack);
+    if (status == UMI_STATUS_OK && source->snapshot.has_document) {
+        copy->content = malloc(source->snapshot.content_size + 1U);
+        if (copy->content == NULL) status = UMI_STATUS_OUT_OF_MEMORY;
+        else memcpy(copy->content, source->content, source->snapshot.content_size + 1U);
+    }
+    if (status != UMI_STATUS_OK) { UmiLearningReaderDestroy(copy); return status; }
+    copy->maximum_bytes = source->maximum_bytes;
+    copy->snapshot = source->snapshot;
+    memcpy(copy->history, source->history, sizeof(copy->history));
+    *out = copy;
+    return UMI_STATUS_OK;
+}

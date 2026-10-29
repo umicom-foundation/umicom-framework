@@ -83,6 +83,14 @@
       "kind": "example",
       "path": "archive.c",
       "sha256": "@_archive_hash@"
+    },
+    {
+      "id": "reader-transaction",
+      "title": "Prepare navigation before publishing it",
+      "topic": "learning-packs",
+      "kind": "example",
+      "path": "transaction.c",
+      "sha256": "@_transaction_hash@"
     }
   ]
 }

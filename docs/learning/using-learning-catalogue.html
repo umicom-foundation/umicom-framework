@@ -60,6 +60,7 @@ build folder. No project needs to be open in Studio to read this pack.</p>
 the selected resource's bytes. Neither operation proves who authored the pack.
 Review where content came from before treating its examples as trusted code.</div>
 
+<p>Choose <strong>Open local learning catalogue</strong> again to bring the same live catalogue to the front. Its loaded packs, search results and reading history remain available. Each Studio window has its own catalogue. Closing a catalogue discards that reading session; reopening after closing starts empty. Nothing is restored automatically when Studio restarts.</p>
 <h2>3. Find a guide or example</h2>
 <p>Type a title word or topic in the search field and select
 <strong>Search catalogue</strong>. Leave it empty to browse. Search covers
@@ -94,6 +95,32 @@ file no longer matches the manifest, the reader reports a failure and keeps the
 previous verified content. It does not overwrite the manifest hash to make a
 changed file appear valid. Close the window and load a reviewed, newly generated
 pack when you intentionally revise its content.</p>
+
+
+<h3>Read a linked example or another local lesson</h3>
+<p>After opening a guide, select <strong>Read linked example</strong> to read the
+source example named by that guide's manifest entry. This reads and verifies the
+example without creating a destination file. Use <strong>Back</strong> to return
+to the guide. A guide without an explicit example link reports that none was
+found; the reader does not guess from similar filenames.</p>
+<p>For another declared resource, enter its relative filename in
+<strong>Local link from the current guide</strong> and select
+<strong>Open local link</strong>. For example, a guide and a source file in the
+same folder can use <code>example.c</code>. A nested lesson can use
+<code>lessons/next.html</code> if that path is declared in the pack. The path is
+relative to the current resource's folder. A resource identifier used by the
+search service is not necessarily its filename.</p>
+<p>This offline link profile refuses parent traversal, absolute paths, web
+addresses, query strings and percent-encoded paths. It never starts a browser
+or downloads content. A fragment such as <code>#details</code> is retained in
+reading history, but this text preview does not scroll to that anchor or prove
+that it exists. Leave the link empty to reverify the current resource.</p>
+<p>A link is copied when you select the action. Editing the field while a read
+is pending does not change that accepted request. Invalid links, changed source
+bytes and recoverable display allocation failures preserve the earlier reading
+selection and history. Other search results and the last-copy receipt stay
+unchanged. Source verification and prepared display must both complete before
+new reading state is published.</p>
 
 <h2>5. Make a practice copy</h2>
 <p>A practice copy is a new file that you can inspect and edit without changing
