@@ -64,7 +64,7 @@ if(BUILD_TESTING)
     target_link_libraries(umicom-broker-profile-native-test PRIVATE
         Umicom::ibkr_connection_gtk4 Umicom::platform)
     umicom_ibkr_target(umicom-broker-profile-native-test)
-    foreach(case save-load missing damaged endpoint-ack stale-fields retired)
+    foreach(case save-load missing damaged endpoint-ack stale-fields retired collapsed-settings)
         set(fixture "${CMAKE_CURRENT_BINARY_DIR}/broker-profile-native-fixtures/${case}")
         file(MAKE_DIRECTORY "${fixture}")
         add_test(NAME framework.broker_profile_native.${case}

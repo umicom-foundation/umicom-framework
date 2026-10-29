@@ -15,10 +15,14 @@
 #ifndef UMICOM_UI_GTK4_LEARNING_CATALOGUE_H
 #define UMICOM_UI_GTK4_LEARNING_CATALOGUE_H
 #include <gtk/gtk.h>
+#include "umicom/browser/reading_document.h"
 #include "umicom/teacher/learning_reader.h"
 #include "umicom/teacher/learning_search.h"
 #include "umicom/teacher/learning_help.h"
+#include "umicom/teacher/learning_pack_changes.h"
+#include "umicom/teacher/learning_progress_local.h"
 #include "umicom/teacher/learning_practice.h"
+#include "umicom/teacher/learning_library_choices.h"
 #include "umicom/platform/path.h"
 #ifdef __cplusplus
 extern "C" {
@@ -32,6 +36,12 @@ typedef struct UmiLearningCatalogueGtkState {
     int busy;
     int retired;
     int has_copy_result;
+    int has_progress_result;
+    int progress_write_blocked;
+    size_t library_choice_count;
+    int has_library_result;
+    int has_reading_structure;
+    unsigned int reading_zoom_percent;
 } UmiLearningCatalogueGtkState;
 
 /* Return a floating widget, or NULL on controller allocation failure. Call all
@@ -40,7 +50,9 @@ typedef struct UmiLearningCatalogueGtkState {
  * is scanned, file read, project opened or command run during creation.
  * The initial presentation is a text reader: HTML gets a bounded plain-text
  * preview; images and binary/invalid UTF-8 content receive explicit notices.
- * Rich illustrated rendering is a separate capability, not implied here. */
+ * Rich illustrated rendering is a separate capability, not implied here.
+ * Structured HTML now retains headings, code spacing, image descriptions and
+ * explicit link metadata when admitted; the earlier text fallback remains. */
 GtkWidget *UmiLearningCatalogueGtk4Create(UmiVersion host_version);
 
 /* Present a new catalogue window tied to parent and its GtkApplication.
@@ -70,6 +82,41 @@ GtkWindow *UmiLearningCatalogueGtk4PresentShared(GtkWindow *parent, UmiVersion h
  * OK means dispatched, not completed; inspect CopyState after busy becomes zero.
  * Native reads can block. There is no promise to interrupt an accepted read. */
 UmiStatus UmiLearningCatalogueGtk4Load(GtkWidget *widget, const char *absolute_root);
+
+
+/* A replacement is a reviewable candidate, not an automatic library update.
+ * Prepare reads only the chosen manifest on a worker and keeps the current
+ * shelf, search and reader intact. Same ID/product/locale and a newer revision
+ * are required. OK means dispatched; inspect last_status after busy clears.
+ * A failed preparation retains any earlier pending review. */
+typedef struct UmiLearningCatalogueReplacement {
+    uint64_t review_serial;
+    uint64_t shelf_generation;
+    UmiLearningPackInfo previous;
+    UmiLearningPackInfo proposed;
+    UmiLearningPackChangeSummary changes;
+} UmiLearningCatalogueReplacement;
+UmiStatus UmiLearningCatalogueGtk4PrepareReplacement(GtkWidget *widget,
+    const char *absolute_root);
+/* Copy metadata for the last successful pending preparation. NOT_FOUND means
+ * none is pending. Refusal preserves output. Metadata does not authenticate a
+ * publisher or verify all resource bytes; each later open still verifies them. */
+UmiStatus UmiLearningCatalogueGtk4CopyReplacement(GtkWidget *widget,
+    UmiLearningCatalogueReplacement *out_review);
+/* Copy one resource metadata change from that exact pending review. A stale
+ * serial returns BUSY; an out-of-range index returns NOT_FOUND. Counts are in
+ * CopyReplacement's changes value. No files are opened by either copy API. */
+UmiStatus UmiLearningCatalogueGtk4ReplacementChangeAt(GtkWidget *widget,
+    uint64_t review_serial, size_t index, UmiLearningResourceChange *out_change);
+/* Explicitly accept the copied review serial. A different serial or changed
+ * shelf generation returns BUSY, preserving the pending review. Search for the
+ * current query is prepared before committing the candidate shelf. Allocation
+ * or query failure preserves the previous shelf, search, reader and review.
+ * Existing readers keep their admitted revision and history. Explicitly open a
+ * result to begin reading the new revision; no disk files are overwritten. */
+UmiStatus UmiLearningCatalogueGtk4AcceptReplacement(GtkWidget *widget, uint64_t review_serial);
+/* Discard only the matching pending review; never remove an admitted pack. */
+UmiStatus UmiLearningCatalogueGtk4DiscardReplacement(GtkWidget *widget, uint64_t review_serial);
 
 /* Search copied metadata synchronously, then explicitly open a displayed index
  * asynchronously. Indices belong to the current result set, not persistent IDs.
@@ -133,6 +180,87 @@ UmiStatus UmiLearningCatalogueGtk4CopyExample(GtkWidget *widget,
  * A subsequent read/search does not relabel or discard this receipt. */
 UmiStatus UmiLearningCatalogueGtk4CopyLastReceipt(GtkWidget *widget,
     UmiLearningCatalogueCopyReceipt *out_receipt);
+
+/* Optional local checkpoint capability. A build without the progress service
+ * reports unavailable; it never substitutes temporary in-memory storage.
+ * Available reports service composition only; opening storage can still return
+ * UNAVAILABLE when the SQLite backend is absent. */
+int UmiLearningCatalogueGtk4ProgressAvailable(void);
+/* Capture an explicit INSPECT or RECORD request for the displayed GUIDE/LESSON.
+ * The request and reader snapshot are independently owned before dispatch.
+ * OK means accepted, not stored. Observe busy/last_status, then copy the receipt.
+ * No automatic completion, assessment or network operation occurs. The chosen
+ * database and receipts are plaintext private learner data.
+ *
+ * Closing does not cancel or undo an accepted write. Its connection is opened
+ * and closed on one worker; orderly application shutdown waits for completion.
+ * A result after retirement is discarded. On commit/rollback uncertainty this
+ * panel blocks further records until explicit INSPECT succeeds for that same
+ * captured database and learner (including a valid no-checkpoint result).
+ * Reading another document never changes or relabels the last receipt. */
+UmiStatus UmiLearningCatalogueGtk4Progress(GtkWidget *widget,
+    const UmiLearningProgressLocalRequest *request);
+UmiStatus UmiLearningCatalogueGtk4CopyProgressReceipt(GtkWidget *widget,
+    UmiLearningProgressLocalReceipt *out_receipt);
+
+
+typedef enum UmiLearningCatalogueLibraryAction {
+    UMI_LEARNING_CATALOGUE_LIBRARIES_LOAD = 1,
+    UMI_LEARNING_CATALOGUE_LIBRARIES_SAVE_NEW = 2,
+    UMI_LEARNING_CATALOGUE_LIBRARY_REOPEN = 3
+} UmiLearningCatalogueLibraryAction;
+typedef struct UmiLearningCatalogueLibraryReceipt {
+    UmiLearningCatalogueLibraryAction action;
+    char settings_root[UMI_PATH_CAPACITY];
+    char settings_path[UMI_TEACHER_PATH_CAPACITY];
+    size_t choice_count;
+    size_t choice_index;
+    UmiLearningLibraryChoice choice;
+    UmiRootedFileCreation creation;
+    UmiStatus status;
+} UmiLearningCatalogueLibraryReceipt;
+
+/* Remember the currently displayed pack's locator, without writing settings.
+ * The reader keeps its own admitted revision even after shelf replacement.
+ * Forget removes a locator only: shelves, readers and files remain intact.
+ * All mutation refuses busy/retired panels; indices belong to the current list. */
+UmiStatus UmiLearningCatalogueGtk4RememberLibrary(GtkWidget *widget);
+UmiStatus UmiLearningCatalogueGtk4ForgetLibrary(GtkWidget *widget, size_t index);
+UmiStatus UmiLearningCatalogueGtk4LibraryChoiceAt(GtkWidget *widget, size_t index,
+    UmiLearningLibraryChoice *out_choice);
+
+/* Explicit asynchronous settings operations. Load replaces only the remembered
+ * choices after complete decoding; it does not open packs or grant trust.
+ * Save creates a NEW private settings file, never overwrites one, and may finish
+ * after close. Paths and the saved list are captured before dispatch. Choose an
+ * existing private folder outside repositories; no default path is inferred.
+ * Reopen reads one remembered manifest and atomically adds its pack/search to
+ * the catalogue on success. It leaves the current reading history unchanged.
+ * A duplicate shelf ID is refused; use the existing explicit replacement review.
+ * OK means accepted. Inspect busy/last_status and the captured receipt later. */
+UmiStatus UmiLearningCatalogueGtk4LoadLibraries(GtkWidget *widget, const char *absolute_file);
+UmiStatus UmiLearningCatalogueGtk4SaveLibrariesNew(GtkWidget *widget, const char *absolute_file);
+UmiStatus UmiLearningCatalogueGtk4ReopenLibrary(GtkWidget *widget, size_t index);
+UmiStatus UmiLearningCatalogueGtk4CopyLibraryReceipt(GtkWidget *widget,
+    UmiLearningCatalogueLibraryReceipt *out_receipt);
+
+
+/* Structured reading metadata belongs to the displayed verified snapshot.
+ * NOT_FOUND means the current resource uses the retained plain-text fallback.
+ * Copy calls do not navigate and preserve outputs on refusal. Links remain
+ * untrusted data; OpenReadingLink applies the same local manifest policy as
+ * Follow, so schemes/remote URLs never become implicit browser launches. */
+UmiStatus UmiLearningCatalogueGtk4CopyReadingSummary(GtkWidget *widget,
+    UmiBrowserReadingSummary *out_summary);
+UmiStatus UmiLearningCatalogueGtk4ReadingLinkAt(GtkWidget *widget, size_t index,
+    UmiBrowserReadingLink *out_link);
+UmiStatus UmiLearningCatalogueGtk4OpenReadingLink(GtkWidget *widget, size_t index);
+/* Position the text cursor at an exact admitted anchor without reading a file
+ * or adding history. Missing IDs preserve the current cursor. Mutating reading
+ * controls refuse busy/retired panels. Zoom accepts 50..200 percent and affects
+ * this panel only; it is neither persisted nor an operating-system preference. */
+UmiStatus UmiLearningCatalogueGtk4GoToAnchor(GtkWidget *widget, const char *identifier);
+UmiStatus UmiLearningCatalogueGtk4SetReadingZoom(GtkWidget *widget, unsigned int percent);
 
 /* Metadata copies remain valid independently of widgets. Refusal preserves out.
  * busy remains set during result publication to refuse reentrant operations.

@@ -74,9 +74,15 @@ operators. If results are shortened, refine the query. The panel displays up to
 <p>Several packs can share a catalogue, up to the shelf's limit of 32. Their
 identifiers must be different. Loading the same identifier again reports that
 it already exists and keeps the earlier pack. To use an edited replacement,
+<!-- Earlier replacement guidance is retained for review. Explicit review now preserves the current reader.
 close this catalogue window, open a new one and load the replacement. This
 version does not provide an in-place pack replacement control or persist a list
-of loaded packs between windows.</p>
+of loaded packs between windows.
+-->
+use <strong>Replace a learning pack</strong> to prepare and review its newer revision, then accept explicitly.
+The existing reader keeps its earlier pack until you open a new result.
+See <a href="updating-learning-packs.html">Update a learning pack without losing your place</a>.
+Loaded packs are still not persisted between windows.</p>
 
 <h2>4. Move through reading history</h2>
 <svg viewBox="0 0 880 150" role="img" aria-labelledby="history-title history-desc">
@@ -93,8 +99,10 @@ results can change without modifying the current document.</p>
 <p><strong>Reload and verify</strong> reads the current selection again. If its
 file no longer matches the manifest, the reader reports a failure and keeps the
 previous verified content. It does not overwrite the manifest hash to make a
-changed file appear valid. Close the window and load a reviewed, newly generated
-pack when you intentionally revise its content.</p>
+changed file appear valid. <!-- Earlier full-window replacement remains a supported manual alternative.
+Close the window and load a reviewed, newly generated pack when you intentionally revise its content.
+-->
+Prepare and explicitly accept a reviewed newer pack when you intentionally revise its content.</p>
 
 
 <h3>Read a linked example or another local lesson</h3>
@@ -187,7 +195,8 @@ bounds with the embedding reader's documented version. Do not widen them without
 reviewing the material against that version.</li>
 <li><strong>Changed content:</strong> compare the file against its reviewed
 source. Reconfigure the example to generate a consistent copied pack. Loading
-a new window is necessary to adopt its new manifest.</li>
+<!-- Retained earlier guidance: a new window is necessary to adopt its new manifest. -->
+a reviewed replacement can adopt a strictly newer manifest without closing the current reader.</li>
 <li><strong>Too many search terms:</strong> use no more than eight words, or
 clear the field and browse.</li>
 <li><strong>Path refused:</strong> use an ordinary absolute root. Resources must
@@ -199,5 +208,8 @@ Framework revisions, and a small non-private example that reproduces it. A
 passing command-line reader check does not prove the Studio interface works;
 verify the actual load, search, history and close workflow in the native host.</p>
 <p>For application developers, <a href="contextual-help.html">Connect application help to verified learning packs</a> explains exact command and diagnostic routes through this reader.</p>
-<p>Applications can record explicit, revision-bound learning checkpoints through the separate <a href="learning-checkpoints.html">Framework progress service</a>. Progress controls are not yet part of this catalogue window.</p>
+<p>Applications can record explicit, revision-bound learning checkpoints through the separate <a href="learning-checkpoints.html">Framework progress service</a>. <!-- Retained earlier limitation, superseded by explicit local progress controls: Progress controls are not yet part of this catalogue window. -->
+Expand <strong>Private learning checkpoints</strong> to select a private database and record deliberately.
+Follow <a href="record-private-checkpoints.html">the checkpoint walkthrough</a> before creating learner records.</p>
+<section><h2>Keep your chosen library folders</h2><p>The <strong>Remembered learning libraries</strong> section captures the displayed pack's folder and identity. Save a private choices file, load it later, and explicitly reopen a selected library with fresh manifest checks. See <a href="remember-learning-libraries.html">Remember learning libraries</a> for exact steps, limits and recovery guidance.</p></section>
 </body></html>

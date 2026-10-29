@@ -19,6 +19,7 @@
 struct UmiLearningShelf {
     UmiLearningPack *packs[UMI_LEARNING_SHELF_MAX_PACKS];
     size_t count;
+    uint64_t generation;
 };
 /* The application serializes shelf changes, then renders copied metadata.
  * Packs own their text and paths, so callers never borrow manifest buffers. */
@@ -40,6 +41,9 @@ void UmiLearningShelfDestroy(UmiLearningShelf *shelf)
     for (size_t i = 0U; i < shelf->count; ++i) UmiLearningPackDestroy(shelf->packs[i]);
     free(shelf);
 }
+/* Preserve the earlier mutation for review. Advance a checked generation so
+ * later reviewed replacements can detect an intervening catalogue change. */
+#if 0
 UmiStatus UmiLearningShelfAdopt(UmiLearningShelf *shelf, UmiLearningPack **pack)
 {
     if (shelf == NULL || pack == NULL || *pack == NULL) return UMI_STATUS_INVALID_ARGUMENT;
@@ -49,6 +53,21 @@ UmiStatus UmiLearningShelfAdopt(UmiLearningShelf *shelf, UmiLearningPack **pack)
     *pack = NULL;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus UmiLearningShelfAdopt(UmiLearningShelf *shelf, UmiLearningPack **pack)
+{
+    if (shelf == NULL || pack == NULL || *pack == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (ShelfFind(shelf, (*pack)->info.id) != SIZE_MAX) return UMI_STATUS_ALREADY_EXISTS;
+    if (shelf->count == UMI_LEARNING_SHELF_MAX_PACKS) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (shelf->generation == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    shelf->packs[shelf->count++] = *pack;
+    ++shelf->generation;
+    *pack = NULL;
+    return UMI_STATUS_OK;
+}
+/* Preserve the earlier mutation for review. Advance a checked generation so
+ * later reviewed replacements can detect an intervening catalogue change. */
+#if 0
 UmiStatus UmiLearningShelfRemove(UmiLearningShelf *shelf, const char *id)
 {
     if (shelf == NULL || id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
@@ -57,6 +76,19 @@ UmiStatus UmiLearningShelfRemove(UmiLearningShelf *shelf, const char *id)
     UmiLearningPackDestroy(shelf->packs[index]);
     for (size_t i = index + 1U; i < shelf->count; ++i) shelf->packs[i - 1U] = shelf->packs[i];
     shelf->packs[--shelf->count] = NULL;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus UmiLearningShelfRemove(UmiLearningShelf *shelf, const char *id)
+{
+    if (shelf == NULL || id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index = ShelfFind(shelf, id);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    if (shelf->generation == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiLearningPackDestroy(shelf->packs[index]);
+    for (size_t i = index + 1U; i < shelf->count; ++i) shelf->packs[i - 1U] = shelf->packs[i];
+    shelf->packs[--shelf->count] = NULL;
+    ++shelf->generation;
     return UMI_STATUS_OK;
 }
 size_t UmiLearningShelfCount(const UmiLearningShelf *shelf)
@@ -144,3 +176,60 @@ UmiStatus UmiLearningShelfCopyPack(const UmiLearningShelf *shelf, const char *id
     return index == SIZE_MAX ? UMI_STATUS_NOT_FOUND : UmiLearningPackClone(shelf->packs[index], out);
 }
 
+
+UmiStatus UmiLearningShelfCopySnapshot(const UmiLearningShelf *shelf, UmiLearningShelfSnapshot *out)
+{
+    if (shelf == NULL || out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out = (UmiLearningShelfSnapshot){shelf->generation, shelf->count};
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiLearningShelfClone(const UmiLearningShelf *source, UmiLearningShelf **out)
+{
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out = NULL;
+    if (source == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiLearningShelf *copy = NULL;
+    UmiStatus status = UmiLearningShelfCreate(&copy);
+    if (status != UMI_STATUS_OK) return status;
+    for (size_t i = 0U; i < source->count; ++i) {
+        status = UmiLearningPackClone(source->packs[i], &copy->packs[i]);
+        if (status != UMI_STATUS_OK) { UmiLearningShelfDestroy(copy); return status; }
+        ++copy->count;
+    }
+    copy->generation = source->generation;
+    *out = copy;
+    return UMI_STATUS_OK;
+}
+
+static int ShelfLocaleEqual(const char *a, const char *b)
+{
+    for (size_t i = 0U;; ++i) {
+        unsigned char left = (unsigned char)a[i], right = (unsigned char)b[i];
+        if (left >= 'A' && left <= 'Z') left = (unsigned char)(left + ('a' - 'A'));
+        if (right >= 'A' && right <= 'Z') right = (unsigned char)(right + ('a' - 'A'));
+        if (left != right) return 0;
+        if (left == 0U) return 1;
+    }
+}
+
+UmiStatus UmiLearningShelfReplace(UmiLearningShelf *shelf, uint64_t expected_generation,
+    UmiLearningPack **candidate)
+{
+    if (shelf == NULL || candidate == NULL || *candidate == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (shelf->generation != expected_generation) return UMI_STATUS_BUSY;
+    size_t index = ShelfFind(shelf, (*candidate)->info.id);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    const UmiLearningPackInfo *old = &shelf->packs[index]->info, *next = &(*candidate)->info;
+    if (strcmp(old->product, next->product) != 0 || !ShelfLocaleEqual(old->locale, next->locale) ||
+        next->revision <= old->revision) return UMI_STATUS_INVALID_STATE;
+    if (shelf->generation == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* No allocation or filesystem work remains at this publication point.
+     * Independently copied readers continue owning their admitted old pack. */
+    UmiLearningPack *previous = shelf->packs[index];
+    shelf->packs[index] = *candidate;
+    *candidate = NULL;
+    ++shelf->generation;
+    UmiLearningPackDestroy(previous);
+    return UMI_STATUS_OK;
+}

@@ -160,6 +160,9 @@ static void ProfileEndpointChanged(GtkSpinButton *button, gpointer data)
 static void ProfileControls(GtkWindow *window, ConnectionUi *ui, GtkWidget *root)
 {
     GtkWidget *expander = gtk_expander_new("Saved Paper and Live settings");
+    /* Give the optional group a stable identity so hosts and fixtures can reveal
+     * it explicitly without relying on captions or changing its default state. */
+    gtk_widget_set_name(expander, "ibkr-profile-settings");
     GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
     gtk_expander_set_child(GTK_EXPANDER(expander), box);
     gtk_box_append(GTK_BOX(root), expander);

@@ -31,15 +31,26 @@ static gpointer ControlledPreview(gsize count,gsize size)
     if(atomic_load(&fail_preview)) { atomic_fetch_add(&failures,1); return NULL; }
     return g_try_malloc_n(count,size);
 }
+/* Structured HTML uses an independently allocated core model. Preserve the
+ * same allocation-refusal contract when that model replaces the plain preview. */
+static UmiStatus ControlledReading(const void *bytes, size_t size, UmiBrowserReadingDocument **out)
+{
+    if (atomic_load(&fail_preview)) {
+        atomic_fetch_add(&failures, 1); *out = NULL; return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    return UmiBrowserReadingDocumentCreate(bytes, size, out);
+}
 /* Compile the actual worker in this test object with two narrow allocation
  * substitutions. The linked archive supplies the other catalogue objects;
  * its worker object is not needed. No production failure switch is introduced. */
+#define UmiBrowserReadingDocumentCreate ControlledReading
 #define g_try_malloc ControlledBuffer
 #undef g_try_new
 #define g_try_new(type,count) ((type *)ControlledPreview((count),sizeof(type)))
 #include "../../adapters/gtk4/learning_catalogue_jobs.c"
 #undef g_try_new
 #undef g_try_malloc
+#undef UmiBrowserReadingDocumentCreate
 
 #define CHECK(x) do { if(!(x)) { fprintf(stderr,"%s:%d: %s\n",__FILE__,__LINE__,#x); \
     failed=1;goto cleanup; } } while(0)

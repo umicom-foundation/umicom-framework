@@ -22,7 +22,8 @@ get_filename_component(_learning_progress_root "${CMAKE_CURRENT_LIST_DIR}/.." AB
 add_library(umicom_learning_progress STATIC
     "${_learning_progress_root}/src/teacher/learning_progress.c"
     "${_learning_progress_root}/src/teacher/learning_progress_storage.c"
-    "${_learning_progress_root}/src/teacher/learning_progress_archive.c")
+    "${_learning_progress_root}/src/teacher/learning_progress_archive.c"
+    "${_learning_progress_root}/src/teacher/learning_progress_local.c")
 add_library(Umicom::learning_progress ALIAS umicom_learning_progress)
 set_target_properties(umicom_learning_progress PROPERTIES
     EXPORT_NAME learning_progress C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
@@ -37,6 +38,7 @@ install(TARGETS umicom_learning_progress EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Framework)
 umicom_register_sdk_libraries(umicom_learning_progress)
 install(FILES "${_learning_progress_root}/include/umicom/teacher/learning_progress.h"
+    "${_learning_progress_root}/include/umicom/teacher/learning_progress_local.h"
     DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/teacher" COMPONENT Framework)
 if(BUILD_TESTING)
     add_executable(umicom-learning-pack-progress-test
@@ -138,3 +140,48 @@ if(BUILD_TESTING)
         endif()
     endforeach()
 endif()
+
+# Local requests own a fresh SQLite connection for one explicit operation.
+if(BUILD_TESTING)
+    add_executable(umicom-learning-progress-local-test
+        "${_learning_progress_root}/tests/learning_pack/test_progress_local.c")
+    set_target_properties(umicom-learning-progress-local-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-learning-progress-local-test PRIVATE Umicom::learning_progress)
+    umicom_apply_warnings(umicom-learning-progress-local-test)
+    umicom_apply_sanitizers(umicom-learning-progress-local-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-learning-progress-local-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-learning-progress-local-test FILES
+            "${_learning_progress_root}/tests/learning_pack/progress_reader_fixture.h")
+    endif()
+    foreach(_case arguments wrong-kind action relative path-control unterminated-path learner
+            checkpoint evidence unterminated-id inspect-evidence read-missing empty-journal
+            corrupt-journal duplicate new-evidence reader-snapshot record-reopen revision learner-separation)
+        set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-progress-local/${_case}")
+        file(MAKE_DIRECTORY "${_directory}")
+        add_test(NAME "framework.learning_pack.progress_local.${_case}"
+            COMMAND umicom-learning-progress-local-test "${_case}" "${_directory}")
+        set_tests_properties("framework.learning_pack.progress_local.${_case}" PROPERTIES
+            TIMEOUT 90 SKIP_RETURN_CODE 77 WORKING_DIRECTORY "${_directory}"
+            LABELS "framework;learning;storage;ownership;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.learning_pack.progress_local.${_case}"
+                TARGETS umicom-learning-progress-local-test)
+        endif()
+    endforeach()
+endif()
+
+# Preserve the earlier order-dependent binding for review. Both target owners
+# now retry one guarded composition module, so either include order is supported.
+if(FALSE)
+# The catalogue remains usable without persistence. Enable its optional controls
+# only after the core progress owner exists; no dependency cycle is introduced.
+if(TARGET umicom_learning_catalogue_gtk4)
+    target_link_libraries(umicom_learning_catalogue_gtk4 PRIVATE Umicom::learning_progress)
+    target_compile_definitions(umicom_learning_catalogue_gtk4 PRIVATE UMICOM_LEARNING_PROGRESS_AVAILABLE=1)
+endif()
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomLearningProgressGtk4.cmake")

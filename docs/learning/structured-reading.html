@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Read structured product guides · Umicom Framework</title>
+<style>body{font:18px/1.6 system-ui,sans-serif;max-width:900px;margin:auto;padding:2rem;color:#203047}pre{background:#f2f5f8;padding:1rem;overflow:auto}code{font-family:monospace}a{color:#12647b}table{border-collapse:collapse}td,th{border:1px solid #bbc7d1;padding:.5rem;text-align:left}svg{max-width:100%;height:auto}</style></head>
+<body><main><h1>Read structured product guides</h1>
+<p>The offline learning catalogue reads guides from an admitted learning pack. A pack names its resources and their content digests. Opening a resource checks its bytes against that digest before presenting it. A digest detects changed bytes; it does not prove who published the guide.</p>
+<p>The reading view preserves headings, emphasis, code indentation, list markers and simple table-cell boundaries. It offers explicit local links, section navigation and a text-size control. Images are represented by their alternative-text descriptions. This is a limited document reader: it does not run scripts, apply page CSS, submit forms or fetch remote content.</p>
+<h2>Open a guide</h2><ol>
+<li>Open your application's guided learning catalogue. In Studio, use the existing Guided Learning entry.</li>
+<li>Choose an absolute folder containing <code>learning-pack.json</code>, then choose <strong>Load learning pack</strong>. Wait until the reading operation finishes.</li>
+<li>Search for a title or topic, select a guide and choose <strong>Open selected</strong>. The result message explains whether structured reading or the plain-text fallback was used.</li>
+<li>Read the code examples as text. Merely opening an example does not build or run it. Copying an example remains a separate explicit operation.</li>
+</ol>
+<h2>Use reading controls</h2><p>Expand <strong>Reading controls</strong> above the document. All controls are ordinary keyboard-focusable controls; press Tab to move between them and use their normal activation keys.</p>
+<table><thead><tr><th>Control</th><th>What it does</th></tr></thead><tbody>
+<tr><td>Links from this guide</td><td>Lists the link caption and its target from the current structured document. Selecting a row alone does not navigate.</td></tr>
+<tr><td>Open selected reading link</td><td>Requests that one link through the existing manifest policy. Remote addresses, undeclared files and paths escaping the pack are refused.</td></tr>
+<tr><td>Go to an exact section identifier</td><td>Enter an identifier such as <code>ownership</code>, without a leading hash, then choose <strong>Go to section</strong>. The text cursor moves to that admitted section.</td></tr>
+<tr><td>Text size, percent</td><td>Choose a value from 50 to 200. The initial value is 100. This changes only this catalogue's text and is not saved across restart.</td></tr>
+</tbody></table>
+<p>A section identifier is the value of an HTML <code>id</code> attribute. For example, <code>&lt;h2 id="ownership"&gt;Ownership&lt;/h2&gt;</code> can be reached using <code>ownership</code>. IDs are exact and case-sensitive. A missing ID reports a refusal and leaves the current cursor unchanged. A followed link whose document exists but whose requested section is absent shows the verified document with a missing-anchor message.</p>
+<h2>Understand what the reader retains</h2>
+<svg viewBox="0 0 800 160" role="img" aria-labelledby="flow-title flow-description"><title id="flow-title">Reading ownership</title><desc id="flow-description">Verified bytes become an owned reading model. The model supplies copied ranges and link data to a native text view. A link is followed only after an explicit action and policy check.</desc>
+<g fill="#edf5f8" stroke="#315c74" stroke-width="2"><rect x="5" y="25" width="210" height="85" rx="8"/><rect x="295" y="25" width="210" height="85" rx="8"/><rect x="585" y="25" width="210" height="85" rx="8"/></g>
+<g fill="#203047" font-size="20" text-anchor="middle"><text x="110" y="60">Verified bytes</text><text x="110" y="88">source stays intact</text><text x="400" y="60">Reading model</text><text x="400" y="88">text and ranges</text><text x="690" y="60">Native view</text><text x="690" y="88">explicit actions</text></g><g stroke="#315c74" stroke-width="3"><path d="M215 68H290m-12-8 12 8-12 8"/><path d="M505 68H580m-12-8 12 8-12 8"/></g></svg>
+<p>The reader owns its admitted source and navigation history. The structured reading model separately owns the displayed text and its ranges. Reopening another guide replaces the model only after a candidate is ready. A failed read or recoverable model-allocation failure keeps the previous selection and reading history. Closing a panel prevents late worker results from updating it.</p>
+<h2>Author compatible guides</h2><ol>
+<li>Write well-nested headings, paragraphs, links, emphasis and code. Encode a literal less-than sign as <code>&amp;lt;</code> when it is part of displayed code.</li>
+<li>Place code inside <code>&lt;pre&gt;&lt;code&gt;...&lt;/code&gt;&lt;/pre&gt;</code>. Spaces and line breaks inside this block are retained.</li>
+<li>Use unique, portable section IDs. Use local literal filenames and fragments for navigable links, and declare linked files in the pack manifest.</li>
+<li>Give meaningful images an <code>alt</code> description. An empty description identifies a decorative image. A missing attribute is reported as <em>description missing</em>.</li>
+<li>Keep tables simple. Cells are separated in reading order; complex spanning cells and visual page layouts are not reproduced.</li>
+</ol>
+<p>The model accepts at most 1 MiB of source, 64 KiB of reading text, 512 semantic ranges, 128 links, 128 anchors and 64 nested styled elements. It never publishes a partial structured model. Unsupported or malformed structure uses the earlier bounded plain-text fallback. Its notice distinguishes that fallback from structured reading. Original source bytes remain available through the reader's existing copy workflow.</p>
+<h2>Troubleshooting</h2><ul>
+<li><strong>A remote link is refused:</strong> this is an offline local-content workflow. It does not launch a browser or send context to a remote server.</li>
+<li><strong>A guide uses fallback:</strong> inspect tag nesting, duplicate IDs and capacity limits. Do not claim full layout support for that page.</li>
+<li><strong>The image appears as a description:</strong> pixel rendering is not implemented in this view. The description remains available as reading text.</li>
+<li><strong>Characters do not display:</strong> resources must be valid UTF-8 for native text presentation. Binary and invalid text receive an explicit notice.</li>
+<li><strong>A link no longer matches after an update:</strong> reload and verify the intended guide revision; do not silently combine metadata from one version with bytes from another.</li>
+</ul>
+<h2>Developer entry points</h2><p>The reusable model is declared in <code>umicom/browser/reading_document.h</code>. <code>UmiBrowserReadingDocumentCreate</code> owns a projection from a bounded byte buffer. The native adapter translates byte ranges into GTK character positions, then styles a text buffer. Link metadata does not grant permission to follow a link.</p>
+<p>A complete, small C program is installed with the SDK under <code>share/umicom/framework/examples/reading_document</code>. Its CMake project requests the <code>browser</code> component and an explicit <code>UMICOM_EXPECTED_SDK_PREFIX</code>. It prints text and inspects copied link and anchor metadata without opening any file or network connection.</p>
+<p><a href="using-learning-catalogue.html">Return to the learning catalogue guide</a> · <a href="remember-learning-libraries.html">Remember local libraries</a></p>
+</main><footer><p>Sammy Hegab · Umicom Foundation · MIT</p></footer></body></html>

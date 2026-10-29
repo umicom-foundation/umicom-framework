@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/learning_catalogue.h"
+#include "../support/gtk4_expanders.h"
 #include "umicom/platform/rooted_files.h"
 #include "umicom/platform/path.h"
 #include <stdio.h>
@@ -140,6 +141,33 @@ static int CopyCase(GtkWidget *root, const char *name, const char *directory)
         CHECK(UmiLearningCatalogueGtk4CopyExample(root, NULL, relative) == UMI_STATUS_INVALID_ARGUMENT);
         CHECK(UmiLearningCatalogueGtk4PreviewExample(root, NULL) == UMI_STATUS_INVALID_ARGUMENT);
         CHECK(UmiLearningCatalogueGtk4CopyLastReceipt(root, NULL) == UMI_STATUS_INVALID_ARGUMENT);
+        goto inspect;
+    }
+    /* Exercise admission through the visible entry and action. Construct the
+     * original spelling without path helpers, which would hide the defect by
+     * normalizing the very components this boundary is required to reject. */
+    if (g_str_has_prefix(name, "copy-path-")) {
+        const char *component = strcmp(name, "copy-path-dot") == 0 ? "/./" :
+            strcmp(name, "copy-path-parent") == 0 ? "/unused/../" :
+            strcmp(name, "copy-path-empty") == 0 ? "//" : "/";
+        char *spelling = strcmp(name, "copy-path-relative") == 0 ?
+            g_strdup(relative) : g_strdup_printf("%s%s%s%s", directory,
+                component, relative, strcmp(name, "copy-path-trailing") == 0 ? "/" : "");
+        CHECK(spelling != NULL);
+        GtkWidget *entry = Find(root, "learning.catalogue.destination");
+        GtkWidget *button = Find(root, "learning.catalogue.copy");
+        CHECK(entry != NULL && button != NULL);
+        gtk_editable_set_text(GTK_EDITABLE(entry), spelling);
+        g_free(spelling);
+        spelling = NULL;
+        CHECK(UmiLearningCatalogueGtk4PendingReads() == 0U);
+        g_signal_emit_by_name(button, "clicked");
+        CHECK(UmiLearningCatalogueGtk4CopyState(root, &after) == UMI_STATUS_OK);
+        CHECK(after.last_status == UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(!after.busy && !after.has_copy_result);
+        CHECK(UmiLearningCatalogueGtk4PendingReads() == 0U);
+        CHECK(UmiLearningCatalogueGtk4CopyLastReceipt(root, &receipt) == UMI_STATUS_NOT_FOUND);
+        CHECK(!g_file_test(absolute, G_FILE_TEST_EXISTS));
         goto inspect;
     }
     if (strcmp(name, "copy-existing") == 0)
@@ -307,6 +335,8 @@ int main(int argc, char **argv)
     root = UmiLearningCatalogueGtk4Create((UmiVersion){0U, 9U, 0U});
     CHECK(root != NULL);
     g_object_ref_sink(root);
+    /* Open fixture sections before lookup and before installing observers. */
+    UmiTestExpandSections(root);
     if (strcmp(name, "controls") == 0) {
         const char *ids[] = {"path", "query", "results", "load", "search", "open", "back",
             "forward", "reload", "content", "heading", "status", "example", "copy", "destination", "copy-result"};

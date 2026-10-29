@@ -73,3 +73,19 @@ foreach(_testing IN ITEMS ON OFF)
             PROPERTIES TIMEOUT 90 LABELS "framework;cmake;composition;regression")
     endforeach()
 endforeach()
+
+# Configure the real optional learning modules in both orders and in isolation.
+foreach(_testing IN ITEMS ON OFF)
+    foreach(_order IN ITEMS progress-first catalogue-first progress-only catalogue-only)
+        set(_case "learning_progress.${_testing}.${_order}")
+        add_test(NAME framework.build_configuration.${_case}
+            COMMAND "${CMAKE_COMMAND}"
+                "-DROOT=${CMAKE_CURRENT_LIST_DIR}/.."
+                "-DDEST=${CMAKE_CURRENT_BINARY_DIR}/configuration-${_case}"
+                "-DGENERATOR=${CMAKE_GENERATOR}" "-DCOMPILER=${CMAKE_C_COMPILER}"
+                "-DTESTING=${_testing}" "-DORDER=${_order}" "-DKIND=learning-progress"
+                -P "${CMAKE_CURRENT_LIST_DIR}/../tests/build_configuration/check.cmake")
+        set_tests_properties(framework.build_configuration.${_case}
+            PROPERTIES TIMEOUT 90 LABELS "framework;cmake;composition;learning;regression")
+    endforeach()
+endforeach()

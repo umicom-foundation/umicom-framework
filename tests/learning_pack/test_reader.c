@@ -88,6 +88,22 @@ static int CloneCase(const char *name, const char *root)
         goto cleanup;
     }
     CHECK(UmiLearningReaderCreate(&pack,strcmp(name,"clone-bound")==0?4U:4096U,&reader)==UMI_STATUS_OK);
+    if(strcmp(name,"clone-reader-pack")==0 || strcmp(name,"clone-reader-pack-arguments")==0) {
+        if(strcmp(name,"clone-reader-pack-arguments")==0) {
+            CHECK(UmiLearningReaderCopyPack(NULL,&pack_copy)==UMI_STATUS_INVALID_ARGUMENT && pack_copy==NULL);
+            CHECK(UmiLearningReaderCopyPack(reader,NULL)==UMI_STATUS_INVALID_ARGUMENT);
+        } else {
+            CHECK(UmiLearningReaderOpen(reader,"first")==UMI_STATUS_OK);
+            CHECK(UmiLearningReaderCopyPack(reader,&pack_copy)==UMI_STATUS_OK);
+            UmiLearningReaderDestroy(reader); reader=NULL;
+            UmiLearningPackResource resource;
+            CHECK(UmiLearningPackFindResource(pack_copy,"second",&resource)==UMI_STATUS_OK);
+            CHECK(strcmp(resource.path,"second.html")==0);
+            CHECK(UmiLearningReaderCreate(&pack_copy,4096U,&clone)==UMI_STATUS_OK && pack_copy==NULL);
+            CHECK(UmiLearningReaderOpen(clone,"second")==UMI_STATUS_OK);
+        }
+        goto cleanup;
+    }
     if(strcmp(name,"clone-empty")==0 || strcmp(name,"clone-bound")==0) {
         CHECK(UmiLearningReaderClone(reader,&clone)==UMI_STATUS_OK);
         CHECK(UmiLearningReaderCopySnapshot(clone,&after)==UMI_STATUS_OK && !after.has_document);

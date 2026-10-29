@@ -25,6 +25,9 @@ static UmiStatus PracticeOwner(GtkWidget *widget, LearningCatalogue **out)
     *out = owner;
     return UMI_STATUS_OK;
 }
+/* Preserve shelf-based practice selection for review. Copies must use the
+ * exact pack admitted by the displayed reader even after catalogue replacement. */
+#if 0
 static UmiStatus CopySelectedPack(LearningCatalogue *owner, UmiLearningPack **out)
 {
     const UmiLearningReaderSnapshot *selected = &owner->state.reader;
@@ -44,6 +47,11 @@ static UmiStatus CopySelectedPack(LearningCatalogue *owner, UmiLearningPack **ou
         *out = NULL;
     }
     return status;
+}
+#endif
+static UmiStatus CopySelectedPack(LearningCatalogue *owner, UmiLearningPack **out)
+{
+    return UmiLearningReaderCopyPack(owner->reader, out);
 }
 
 UmiStatus UmiLearningCatalogueGtk4PreviewExample(GtkWidget *widget,

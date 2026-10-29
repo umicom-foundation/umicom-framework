@@ -16,10 +16,15 @@
 #include "umicom/broker_connectivity/access_gtk4.h"
 #include "umicom/broker_connectivity/access_profiles.h"
 #include "umicom/platform/filesystem.h"
+#include "umicom/ui/gtk4/automation.h"
 #include <glib/gstdio.h>
 #include <stdio.h>
 #include <string.h>
 #define CHECK(x) do { if (!(x)) { fprintf(stderr, "%d: %s\n", __LINE__, #x); return 1; } } while (0)
+/* Physical child traversal cannot find a collapsed expander's owned content.
+ * Retain that lookup for review; use the shared bounded logical lookup and
+ * explicitly reveal the profile section before exercising its controls. */
+#if 0
 static GtkWidget *Find(GtkWidget *root, const char *name)
 {
     if (strcmp(gtk_widget_get_name(root), name) == 0) return root;
@@ -30,6 +35,14 @@ static GtkWidget *Find(GtkWidget *root, const char *name)
     }
     return NULL;
 }
+#endif
+static GtkWidget *Find(GtkWidget *root, const char *name)
+{
+    GtkWidget *found = umi_gtk4_automation_find_named_widget(root, name);
+    if (found == NULL) fprintf(stderr, "Missing broker control: %s\n", name);
+    return found;
+}
+
 static gboolean WaitEnabled(GtkWidget *button)
 {
     gint64 deadline = g_get_monotonic_time() + 5000000;
@@ -59,15 +72,32 @@ int main(int argc, char **argv)
     CHECK(window != NULL);
     g_object_ref(window);
     GtkWidget *root = GTK_WIDGET(window);
+    GtkWidget *settings = Find(root, "ibkr-profile-settings");
+    CHECK(GTK_IS_EXPANDER(settings));
+    CHECK(!gtk_expander_get_expanded(GTK_EXPANDER(settings)));
+    gtk_expander_set_expanded(GTK_EXPANDER(settings), TRUE);
     GtkWidget *save = Find(root, "ibkr-profile-save"), *load = Find(root, "ibkr-profile-load");
     GtkWidget *entry = Find(root, "ibkr-profile-path"), *notice = Find(root, "ibkr-profile-status");
     GtkWidget *port = Find(root, "ibkr-port"), *ack = Find(root, "ibkr-live-ack");
     GtkWidget *connect = Find(root, "ibkr-connect"), *disconnect = Find(root, "ibkr-disconnect");
+    /* Retain the former combined presence check for review. Typed checks below
+     * identify invalid controls before applying GTK-specific operations. */
+#if 0
     CHECK(save && load && entry && notice && port && ack && connect && disconnect);
+#endif
+    CHECK(GTK_IS_BUTTON(save) && GTK_IS_BUTTON(load) && GTK_IS_ENTRY(entry));
+    CHECK(GTK_IS_LABEL(notice) && GTK_IS_SPIN_BUTTON(port) && GTK_IS_CHECK_BUTTON(ack));
+    CHECK(GTK_IS_BUTTON(connect) && GTK_IS_BUTTON(disconnect));
     gtk_editable_set_text(GTK_EDITABLE(entry), path);
     CHECK(!g_file_test(path, G_FILE_TEST_EXISTS));
     const char *name = argv[1];
-    if (strcmp(name, "save-load") == 0) {
+    if (strcmp(name, "collapsed-settings") == 0) {
+        gtk_expander_set_expanded(GTK_EXPANDER(settings), FALSE);
+        CHECK(Find(root, "ibkr-profile-path") == entry);
+        CHECK(Find(root, "ibkr-profile-save") == save);
+        CHECK(!g_file_test(path, G_FILE_TEST_EXISTS));
+        CHECK(!gtk_widget_get_sensitive(disconnect));
+    } else if (strcmp(name, "save-load") == 0) {
         gtk_check_button_set_active(GTK_CHECK_BUTTON(ack), TRUE);
         g_signal_emit_by_name(save, "clicked");
         CHECK(!gtk_widget_get_sensitive(connect));

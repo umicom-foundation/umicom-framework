@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Update a learning pack without losing your place</title>
+<style>body{max-width:65rem;margin:2rem auto;padding:0 1rem;font:1rem/1.65 system-ui;color:#173047}h1,h2{line-height:1.25}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#edf3f7;padding:1rem}table{border-collapse:collapse;width:100%}th,td{border:1px solid #aabac9;padding:.65rem;text-align:left;vertical-align:top}svg{max-width:100%;height:auto}.note{border-left:4px solid #25708d;background:#eff7fa;padding:1rem}</style>
+</head><body>
+<nav><a href="using-learning-catalogue.html">Learning catalogue guide</a> · <a href="contextual-help.html">Application help</a></nav>
+<h1>Update a learning pack without losing your place</h1>
+<p>A product guide can change while someone is reading it. Replacing the catalogue's
+copy immediately could make a link open a different lesson or cause a practice
+example to come from a revision the reader has never seen. Umicom separates the
+catalogue from each reading session. You review the proposed catalogue update,
+accept it explicitly, then choose when to begin reading that new revision.</p>
+<p>This guide describes the shared Framework catalogue opened from Studio's
+Guided Learning surface. It updates in-memory catalogue metadata. It does not
+install software, download a pack, rewrite a manifest or overwrite course files.
+Start with <a href="using-learning-catalogue.html">Using the learning catalogue</a>
+if you have not loaded and opened a pack before.</p>
+
+<h2>Understand the three records</h2>
+<table><thead><tr><th>Record</th><th>What it means</th><th>What it does not mean</th></tr></thead><tbody>
+<tr><td>Pack revision</td><td>A positive number in the manifest identifying an edition of one pack.</td><td>A larger number does not prove the material is correct or the publisher is trustworthy.</td></tr>
+<tr><td>Shelf generation</td><td>A counter changed whenever this catalogue successfully adds, removes or replaces a pack.</td><td>It is not a global version shared by every application or user.</td></tr>
+<tr><td>Review serial</td><td>A local identifier for one successfully prepared replacement in this window.</td><td>It is not an account credential, signature or permission to run examples.</td></tr>
+</tbody></table>
+<p>A <em>manifest</em> is the pack's <code>learning-pack.json</code> file. It contains
+identifiers, titles, resource filenames, hashes and compatibility bounds. A hash is
+calculated from a file's bytes; a changed file produces a different value. The
+catalogue admits a manifest first. A later resource open reads the file and checks
+its bytes against that admitted hash.</p>
+
+<h2>1. Prepare a separate updated folder</h2>
+<ol>
+<li>Keep the currently loaded pack folder available. Its reader may still need it
+when you select Back, Forward, a local link or Reload and verify.</li>
+<li>Obtain or create an updated pack in a separate folder. For a course you maintain,
+review the source material and regenerate a consistent manifest and file hashes.</li>
+<li>Keep the same pack identifier, product identifier and locale. Increase the pack
+revision. For example, a Framework English guide at revision 1 can be replaced by
+revision 2 of the same guide. A different product or language is a different identity.</li>
+<li>Keep the compatibility bounds accurate for the host application. The replacement
+manifest passes the same compatibility admission as a newly loaded pack.</li>
+</ol>
+<p>Do not edit the loaded folder merely to make a checksum error disappear. An
+existing reader intentionally keeps its admitted hashes. Using a separate folder
+lets the previous reader continue checking the previous edition while new readers
+use the updated edition.</p>
+
+<h2>2. Review the proposed replacement</h2>
+<ol>
+<li>In the catalogue's <strong>Learning pack folder</strong> field, choose the updated
+folder. This changes the path field; it does not change a loaded pack.</li>
+<li>Expand <strong>Replace a learning pack</strong>.</li>
+<li>Select <strong>Review replacement</strong>. Wait for preparation to finish.
+The request owns a copy of the selected path, so changing the field afterward
+cannot redirect the accepted read.</li>
+<li>Read the displayed pack identifier, product, locale and revision transition.
+The proposed revision must be strictly greater than the currently admitted one.</li>
+<li>Expand <strong>Resource changes</strong>. Review added, removed and modified
+resources. Modified entries show previous and proposed filenames and SHA-256 values,
+plus changed titles, topics, resource kinds and linked-example identifiers.
+An unchanged hash means the two manifests declare the same bytes; it is not proof
+that either current file has been checked.</li>
+</ol>
+<p>Preparation reads the manifest in the background and prepares a separate
+catalogue candidate. The displayed document, current search and admitted shelf
+remain unchanged. It does not read every resource in the pack or authenticate its
+author. A missing manifest, incompatible product version, absent pack identifier
+or non-increasing revision is refused.</p>
+<p>There is one pending review per catalogue. A successful new preparation replaces
+the earlier pending review. A failed preparation keeps it. Always read the review
+shown in the window before accepting; a failure message does not imply that an
+earlier review was discarded.</p>
+
+<h2>3. Accept or discard</h2>
+<ol>
+<li>Select <strong>Accept reviewed replacement</strong> only after checking the
+review. The catalogue first prepares results for the current search query.</li>
+<li>If the shelf changed since preparation, acceptance is refused. For example,
+loading another pack changes the shelf generation. Review the replacement again
+against the current catalogue.</li>
+<li>If search preparation fails, the earlier catalogue, search and pending review
+remain available. Correct an invalid query, or address the reported resource
+problem, before retrying.</li>
+<li>Use <strong>Discard replacement</strong> to abandon the pending candidate.
+This does not remove or change an already loaded pack.</li>
+</ol>
+<p>The commit point is deliberately small: once candidate metadata and search
+results are prepared, their ownership is transferred together. A model notification
+cannot expose a new result list backed by the old shelf. Another operation is
+refused while publication is in progress, including one started from a callback.</p>
+
+<h2>4. Choose when to switch your reading session</h2>
+<svg viewBox="0 0 880 210" role="img" aria-labelledby="update-title update-desc">
+<title id="update-title">Catalogue updates and reading sessions have separate owners</title>
+<desc id="update-desc">After accepting revision 2, the catalogue lists revision 2. The existing reader still owns revision 1. Opening a new catalogue result starts a revision 2 reader only after verification succeeds.</desc>
+<g fill="#eef5f8" stroke="#25708d" stroke-width="2"><rect x="10" y="20" width="250" height="80" rx="10"/><rect x="330" y="20" width="250" height="80" rx="10"/><rect x="10" y="125" width="250" height="70" rx="10"/><rect x="620" y="125" width="250" height="70" rx="10"/></g>
+<g fill="#173047" font-family="sans-serif" font-size="18" text-anchor="middle"><text x="135" y="51">Review revision 2</text><text x="135" y="80">No visible replacement</text><text x="455" y="51">Accept catalogue</text><text x="455" y="80">New results: revision 2</text><text x="135" y="155">Existing reader</text><text x="135" y="181">Keeps revision 1</text><text x="745" y="155">Open a result</text><text x="745" y="181">Verify revision 2 bytes</text><text x="295" y="68">→</text><text x="455" y="169">Explicit new selection →</text></g>
+</svg>
+<p>After acceptance, the currently displayed reader still owns its previous pack,
+verified text and history. Back, Forward, local links, linked examples and practice
+copies continue to use that reading session's revision. The original files must
+remain available and match its hashes when read again.</p>
+<p>Select a new catalogue result and choose <strong>Open selected</strong> when you
+want to switch. If that new resource has changed or cannot be read, the previous
+reader is kept. A successful open starts a reading session for the new revision;
+it does not combine old and new histories or re-label earlier practice-copy receipts.</p>
+
+<h2>Use the same service in another application</h2>
+<p>Reusable ownership rules live in Framework. A command-line or non-GTK host can
+use <code>UmiLearningShelfCopySnapshot</code>, <code>UmiLearningShelfClone</code>
+and <code>UmiLearningShelfReplace</code>. Replacement consumes a candidate pack
+only on success. Every refusal leaves the caller responsible for that pack.
+A clone owns independent metadata and does not perform filesystem reads.</p>
+<pre><code>UmiLearningShelfSnapshot observed;
+UmiStatus status = UmiLearningShelfCopySnapshot(shelf, &amp;observed);
+if (status == UMI_STATUS_OK) {
+    /* candidate was admitted against this host's compatibility version. */
+    status = UmiLearningShelfReplace(shelf, observed.generation, &amp;candidate);
+}
+/* On success candidate is NULL; on refusal it remains caller-owned. */</code></pre>
+<p><code>UmiLearningPackCompare</code> provides a copied resource-change list.
+It matches exact resource identifiers rather than array positions: reordering a
+manifest does not itself change a resource. Renaming an identifier is reported as
+a removal and an addition. The comparison performs no file reads.
+The host serializes all shelf operations. A generation check detects an
+intervening mutation; it is not a substitute for thread synchronization. Core
+replacement preserves order and count, advances the counter without wrapping,
+and performs no allocation or filesystem access at its commit point. Native hosts
+also need to prepare their presentation before publishing; the GTK adapter does this
+for its shelf and search results.</p>
+<p>GTK hosts prepare with <code>UmiLearningCatalogueGtk4PrepareReplacement</code>,
+wait until <code>CopyState</code> reports that the operation is no longer busy,
+and inspect <code>CopyReplacement</code>. Pass that review's serial to
+<code>AcceptReplacement</code> or <code>DiscardReplacement</code>. Do not invent a
+serial or reuse one from another window.</p>
+
+<h2>Limits and recovery</h2>
+<ul><li>There is no automatic network update, saved pack registry, publisher signing
+or rich document rendering in this workflow.</li>
+<li>Loaded packs and pending reviews are in-memory window state. Closing discards
+them. Accepted filesystem reads finish privately and require orderly callback cleanup.</li>
+<li>Discarding a review does not undo an already accepted replacement. Reopening a
+catalogue and explicitly loading a chosen older pack is a separate user decision;</nthe replacement operation itself refuses downgrades.</li>
+<li>A text-preview allocation failure keeps the earlier verified reader. It does
+not prove that the resource is unsafe or that more memory is always the right fix.</li>
+<li>Record the operation, exact status and tested source revision when reporting a
+failure. Keep private course content and local paths out of public issue reports.</li></ul>
+<p>Continue with <a href="learning-checkpoints.html">learning checkpoints</a> to
+understand why progress records also carry a pack revision and resource hash.</p>
+</body></html>

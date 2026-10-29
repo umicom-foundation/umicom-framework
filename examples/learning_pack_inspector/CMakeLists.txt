@@ -248,3 +248,20 @@ if(BUILD_TESTING)
         set_tests_properties("sdk.learning_pack.transaction.${_case}" PROPERTIES TIMEOUT 30)
     endforeach()
 endif()
+
+# Settings encode/decode is independent of reopening a selected manifest.
+add_executable(umicom-learning-library-choices libraries.c)
+target_link_libraries(umicom-learning-library-choices PRIVATE Umicom::developer)
+set_target_properties(umicom-learning-library-choices PROPERTIES
+    C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+if(MSVC)
+    target_compile_options(umicom-learning-library-choices PRIVATE /W4)
+else()
+    target_compile_options(umicom-learning-library-choices PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME sdk.learning_pack.libraries.reopen
+        COMMAND umicom-learning-library-choices "${CMAKE_CURRENT_BINARY_DIR}/pack")
+    set_tests_properties(sdk.learning_pack.libraries.reopen PROPERTIES TIMEOUT 30)
+endif()

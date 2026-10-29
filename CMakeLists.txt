@@ -1943,6 +1943,8 @@ target_include_directories(umicom_browser PUBLIC
 )
 umicom_apply_warnings(umicom_browser)
 umicom_apply_sanitizers(umicom_browser)
+# Structured reading reuses the browser component without introducing GUI dependencies.
+include(cmake/UmicomBrowserReadingDocument.cmake)
 
 # -----------------------------------------------------------------------------
 # Toolkit-neutral real-time chart model

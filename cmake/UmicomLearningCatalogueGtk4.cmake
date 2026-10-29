@@ -24,6 +24,10 @@ get_filename_component(_learning_catalogue_root "${CMAKE_CURRENT_LIST_DIR}/.." A
 add_library(umicom_learning_catalogue_gtk4 STATIC
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_gtk4.c"
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_jobs.c"
+    "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_reading.c"
+    "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_replacement.c"
+    "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_progress.c"
+    "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_libraries.c"
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_window.c"
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_practice.c"
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_selection.c")
@@ -59,6 +63,7 @@ if(BUILD_TESTING)
             binary retire-idle retire-pending destroy-pending reentrant-busy invalid-query-load
             copy copy-existing copy-changed copy-no-example copy-retired copy-reentrant
             copy-arguments copy-destination-captured
+            copy-path-dot copy-path-parent copy-path-empty copy-path-trailing copy-path-relative
             help-open help-missing help-wrong-kind help-changed help-retired help-reentrant)
         set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-catalogue/${_case}")
         file(MAKE_DIRECTORY "${_directory}")
@@ -186,3 +191,123 @@ if(BUILD_TESTING)
         endif()
     endforeach()
 endif()
+
+# Candidate replacement is reviewed separately from current reader state.
+if(BUILD_TESTING)
+    add_executable(umicom-learning-catalogue-replacement-test
+        "${_learning_catalogue_root}/tests/learning_pack/test_catalogue_replacement_gtk4.c")
+    set_target_properties(umicom-learning-catalogue-replacement-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-learning-catalogue-replacement-test PRIVATE
+        Umicom::learning_catalogue_gtk4)
+    umicom_apply_warnings(umicom-learning-catalogue-replacement-test)
+    umicom_apply_sanitizers(umicom-learning-catalogue-replacement-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-learning-catalogue-replacement-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-learning-catalogue-replacement-test FILES
+            "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_gtk4.c"
+            "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_private.h")
+    endif()
+    foreach(_case arguments retired dispatch-retirement native-controls busy destroy-pending
+            retire-pending missing-id product-change locale-change same-revision discard
+            failed-prepare-keeps-review stale-shelf superseded-review search-allocation
+            query-refusal accept-retirement accept reader-kept changed-resource)
+        set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-native-replacement/${_case}")
+        file(MAKE_DIRECTORY "${_directory}")
+        add_test(NAME "framework.learning_pack.native_replacement.${_case}"
+            COMMAND umicom-learning-catalogue-replacement-test "${_case}" "${_directory}")
+        set_tests_properties("framework.learning_pack.native_replacement.${_case}" PROPERTIES
+            TIMEOUT 60 SKIP_RETURN_CODE 77 WORKING_DIRECTORY "${_directory}"
+            LABELS "framework;learning;gtk4;ownership;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.learning_pack.native_replacement.${_case}"
+                TARGETS umicom-learning-catalogue-replacement-test)
+        endif()
+    endforeach()
+endif()
+
+# Retry optional checkpoint composition after the native target exists.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomLearningProgressGtk4.cmake")
+
+# Expander setup is part of these native fixtures and their affected-test inputs.
+if(BUILD_TESTING AND COMMAND umicom_target_qualification_inputs)
+    foreach(_target umicom-learning-catalogue-gtk4-test umicom-learning-catalogue-replacement-test)
+        umicom_target_qualification_inputs("${_target}" FILES
+            "${_learning_catalogue_root}/tests/support/gtk4_expanders.h")
+    endforeach()
+endif()
+
+# Saved-library jobs share the catalogue lifecycle but never adopt execution trust.
+if(BUILD_TESTING)
+    add_executable(umicom-learning-catalogue-libraries-gtk4-test
+        "${_learning_catalogue_root}/tests/learning_pack/test_catalogue_libraries_gtk4.c")
+    set_target_properties(umicom-learning-catalogue-libraries-gtk4-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-learning-catalogue-libraries-gtk4-test PRIVATE Umicom::learning_catalogue_gtk4)
+    umicom_apply_warnings(umicom-learning-catalogue-libraries-gtk4-test)
+    umicom_apply_sanitizers(umicom-learning-catalogue-libraries-gtk4-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-learning-catalogue-libraries-gtk4-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-learning-catalogue-libraries-gtk4-test FILES
+            "${_learning_catalogue_root}/tests/learning_pack/library_choices_fixture.h"
+            "${_learning_catalogue_root}/tests/support/gtk4_expanders.h")
+    endif()
+    foreach(_case controls no-selection remember forget duplicate arguments busy
+            destroy-pending retire-pending captured-path existing-save reader-retained
+            duplicate-shelf invalid-settings missing-settings reentrant load-only
+            changed-identity changed-revision invalid-query reopen dispatch-retirement invalid-load-preserves)
+        set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-catalogue-libraries/${_case}")
+        file(MAKE_DIRECTORY "${_directory}")
+        add_test(NAME "framework.learning_pack.native_libraries.${_case}"
+            COMMAND umicom-learning-catalogue-libraries-gtk4-test "${_case}" "${_directory}")
+        set_tests_properties("framework.learning_pack.native_libraries.${_case}" PROPERTIES
+            TIMEOUT 60 SKIP_RETURN_CODE 77 WORKING_DIRECTORY "${_directory}"
+            LABELS "framework;learning;gtk4;ownership;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.learning_pack.native_libraries.${_case}"
+                TARGETS umicom-learning-catalogue-libraries-gtk4-test)
+        endif()
+    endforeach()
+endif()
+
+# Public reading metadata uses the shared browser contract.
+target_link_libraries(umicom_learning_catalogue_gtk4 PUBLIC Umicom::browser)
+
+# Structured reading remains optional with the native catalogue, while its core
+# model is independently usable through the browser SDK component.
+if(BUILD_TESTING)
+    add_executable(umicom-learning-catalogue-reading-gtk4-test
+        "${_learning_catalogue_root}/tests/learning_pack/test_catalogue_reading_gtk4.c")
+    set_target_properties(umicom-learning-catalogue-reading-gtk4-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-learning-catalogue-reading-gtk4-test PRIVATE Umicom::learning_catalogue_gtk4)
+    umicom_apply_warnings(umicom-learning-catalogue-reading-gtk4-test)
+    umicom_apply_sanitizers(umicom-learning-catalogue-reading-gtk4-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-learning-catalogue-reading-gtk4-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-learning-catalogue-reading-gtk4-test FILES
+            "${_learning_catalogue_root}/tests/support/gtk4_expanders.h")
+    endif()
+    foreach(_case empty formatted unicode controls missing-anchor link-anchor link-source link-control history remote invalid-index fallback changed-resource zoom zoom-controls independent-zoom retired missing-requested-anchor busy destroy-pending reentrant retire-publication retire-tag-creation)
+        set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-catalogue-reading/${_case}")
+        file(MAKE_DIRECTORY "${_directory}")
+        add_test(NAME "framework.learning_pack.native_reading.${_case}"
+            COMMAND umicom-learning-catalogue-reading-gtk4-test "${_case}" "${_directory}")
+        set_tests_properties("framework.learning_pack.native_reading.${_case}" PROPERTIES
+            TIMEOUT 60 SKIP_RETURN_CODE 77 WORKING_DIRECTORY "${_directory}"
+            LABELS "framework;learning;gtk4;ownership;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.learning_pack.native_reading.${_case}"
+                TARGETS umicom-learning-catalogue-reading-gtk4-test)
+        endif()
+    endforeach()
+endif()
+
+# Contextual keyboard and explicit Help actions share one native route binding.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomLearningHelpGtk4.cmake")

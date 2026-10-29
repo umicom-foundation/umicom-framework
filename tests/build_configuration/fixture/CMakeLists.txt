@@ -135,6 +135,8 @@ endif()
     elseif(TARGET umicom-quick-open-selection-test OR TARGET umicom-quick-open-native-test OR _discoveries)
         message(FATAL_ERROR "Quick Open tests or discovery leaked into an inactive consumer")
     endif()
+elseif(FIXTURE_KIND STREQUAL "learning-progress")
+    include("${CMAKE_CURRENT_LIST_DIR}/learning_progress.cmake")
 elseif(FIXTURE_KIND STREQUAL "libraries")
     # Real library modules share one configure fixture with the existing owners.
     include("${CMAKE_CURRENT_LIST_DIR}/library_targets.cmake")

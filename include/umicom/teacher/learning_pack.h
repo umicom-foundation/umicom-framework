@@ -108,13 +108,49 @@ void UmiLearningPackFreeBytes(void *bytes);
 /* A shelf owns up to 32 immutable packs. Serialize shelf operations, including
  * reads against removal/destruction. Adoption transfers ownership only on OK,
  * clearing *pack; duplicate pack IDs return ALREADY_EXISTS and preserve it.
- * Pack IDs must be unique even across locales/revisions. Remove before replacing
+ * Pack IDs must be unique even across locales/revisions.
+ * Earlier composition guidance, retained for review: remove before replacing
  * a pack, or prepare a separate shelf and swap it in at an application boundary.
+ * The explicit Replace API now supports a checked newer revision without an
+ * intermediate missing pack; Clone can prepare a complete candidate shelf.
  * The existing foundations curriculum and lesson-library APIs remain available. */
 UmiStatus UmiLearningShelfCreate(UmiLearningShelf **out_shelf);
 void UmiLearningShelfDestroy(UmiLearningShelf *shelf);
 UmiStatus UmiLearningShelfAdopt(UmiLearningShelf *shelf, UmiLearningPack **pack);
 UmiStatus UmiLearningShelfRemove(UmiLearningShelf *shelf, const char *pack_id);
+
+typedef struct UmiLearningShelfSnapshot {
+    uint64_t generation;
+    size_t pack_count;
+} UmiLearningShelfSnapshot;
+
+/* Every successful adopt/remove/replacement advances the generation. Failed
+ * operations preserve it. The counter never wraps. Serialize snapshot and
+ * mutation calls; a generation is an observation of this shelf, not a token
+ * which can be transferred to a different shelf or used as authentication. */
+UmiStatus UmiLearningShelfCopySnapshot(const UmiLearningShelf *shelf,
+    UmiLearningShelfSnapshot *out_snapshot);
+
+/* Deep-copy the shelf and its admitted metadata, retaining the observed
+ * generation without reading files. The clone has independent ownership.
+ * Failure clears out_shelf. Use separate output storage and keep the source
+ * alive, without concurrent mutation, until this call returns. */
+UmiStatus UmiLearningShelfClone(const UmiLearningShelf *source, UmiLearningShelf **out_shelf);
+
+/* Replace one existing pack after explicit application review. The candidate
+ * must have the same ID, product and ASCII-case-insensitive locale, and a
+ * strictly newer pack revision. The host must first admit candidate metadata
+ * against its own compatibility version, for example through PackLoad.
+ * A changed generation returns BUSY, a missing ID NOT_FOUND, and identity or
+ * non-increasing revision changes INVALID_STATE. Counter exhaustion refuses
+ * the operation. On success retain pack order/count, advance generation,
+ * destroy the previous shelf-owned pack and transfer/clear *candidate.
+ * Every refusal preserves the shelf and candidate ownership. Independent
+ * readers retain their own earlier pack; this does not rewrite their history,
+ * reverify resource bytes, overwrite source files or authenticate a publisher. */
+UmiStatus UmiLearningShelfReplace(UmiLearningShelf *shelf, uint64_t expected_generation,
+    UmiLearningPack **candidate);
+
 /* Copy one admitted pack, including its resource metadata and root, without
  * removing it from the shelf. The caller owns the independent copy on OK;
  * failure clears *out_pack. No file is read and no new trust is granted.

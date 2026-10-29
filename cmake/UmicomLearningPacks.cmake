@@ -22,6 +22,7 @@ target_sources(umicom_developer PRIVATE
     "${_umicom_pack_root}/src/teacher/learning_pack.c"
     "${_umicom_pack_root}/src/teacher/learning_pack_files.c"
     "${_umicom_pack_root}/src/teacher/learning_pack_copy.c"
+    "${_umicom_pack_root}/src/teacher/learning_pack_changes.c"
     "${_umicom_pack_root}/src/teacher/learning_shelf.c"
     "${_umicom_pack_root}/src/teacher/learning_navigation.c"
     "${_umicom_pack_root}/src/teacher/learning_reader.c"
@@ -93,7 +94,7 @@ if(BUILD_TESTING)
     foreach(_case invalid-create empty bounded copy binary invalid-link missing-id
             changed-reload history-limit changed-back missing-back branch history same-selection
             clone-empty clone-history clone-independent clone-source-gone clone-stale-disk
-            clone-binary clone-bound clone-invalid clone-pack)
+            clone-binary clone-bound clone-invalid clone-pack clone-reader-pack clone-reader-pack-arguments)
         set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-pack-reader/${_case}")
         file(MAKE_DIRECTORY "${_directory}")
         add_test(NAME "framework.learning_pack.reader.${_case}"
@@ -194,6 +195,7 @@ install(FILES
     "${_umicom_pack_root}/examples/learning_pack_inspector/archive.c"
     "${_umicom_pack_root}/examples/learning_pack_inspector/check_help.cmake"
     "${_umicom_pack_root}/examples/learning_pack_inspector/transaction.c"
+    "${_umicom_pack_root}/examples/learning_pack_inspector/libraries.c"
     "${_umicom_pack_root}/examples/learning_pack_inspector/check_transaction.cmake"
     "${_umicom_pack_root}/examples/learning_pack_inspector/check_practice.cmake"
     "${_umicom_pack_root}/examples/learning_pack_inspector/check_search.cmake"
@@ -234,3 +236,80 @@ endif()
 
 # Progress borrows an explicit Data Server; readers remain usable without storage.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomLearningProgress.cmake")
+
+# Reviewed replacement retains previous readers and rejects stale shelf observations.
+if(BUILD_TESTING)
+    foreach(_kind replacement faults)
+        add_executable("umicom-learning-shelf-${_kind}-test"
+            "${_umicom_pack_root}/tests/learning_pack/test_shelf_${_kind}.c")
+        set_target_properties("umicom-learning-shelf-${_kind}-test" PROPERTIES
+            C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        target_link_libraries("umicom-learning-shelf-${_kind}-test" PRIVATE Umicom::developer)
+        umicom_apply_warnings("umicom-learning-shelf-${_kind}-test")
+        umicom_apply_sanitizers("umicom-learning-shelf-${_kind}-test")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target("umicom-learning-shelf-${_kind}-test")
+        endif()
+        if(COMMAND umicom_target_qualification_inputs)
+            umicom_target_qualification_inputs("umicom-learning-shelf-${_kind}-test" FILES
+                "${_umicom_pack_root}/tests/learning_pack/shelf_fixture.h")
+        endif()
+    endforeach()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-learning-shelf-faults-test FILES
+            "${_umicom_pack_root}/src/teacher/learning_shelf.c"
+            "${_umicom_pack_root}/src/teacher/learning_pack_copy.c"
+            "${_umicom_pack_root}/src/teacher/learning_pack_internal.h")
+    endif()
+    set(_shelf_replacement_cases empty-clone arguments duplicate-adopt missing-remove stale future
+        same-revision older-revision product-change locale-change missing-id clone-lifetime
+        clone-independent full-shelf middle-order replace locale-case reader-kept search-stale)
+    set(_shelf_faults_cases clone-allocation replace-no-allocation exhausted-adopt exhausted-remove
+        exhausted-replace exhausted-clone)
+    foreach(_kind replacement faults)
+        foreach(_case IN LISTS _shelf_${_kind}_cases)
+            set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-shelf-${_kind}/${_case}")
+            file(MAKE_DIRECTORY "${_directory}")
+            add_test(NAME "framework.learning_pack.shelf_${_kind}.${_case}"
+                COMMAND "umicom-learning-shelf-${_kind}-test" "${_case}" "${_directory}")
+            set_tests_properties("framework.learning_pack.shelf_${_kind}.${_case}" PROPERTIES
+                TIMEOUT 30 WORKING_DIRECTORY "${_directory}" LABELS "framework;learning;ownership;regression")
+            if(COMMAND umicom_test_impact_owners)
+                umicom_test_impact_owners("framework.learning_pack.shelf_${_kind}.${_case}"
+                    TARGETS "umicom-learning-shelf-${_kind}-test")
+            endif()
+        endforeach()
+    endforeach()
+endif()
+
+if(BUILD_TESTING)
+    add_executable(umicom-learning-pack-changes-test
+        "${_umicom_pack_root}/tests/learning_pack/test_pack_changes.c")
+    set_target_properties(umicom-learning-pack-changes-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-learning-pack-changes-test PRIVATE Umicom::developer)
+    umicom_apply_warnings(umicom-learning-pack-changes-test)
+    umicom_apply_sanitizers(umicom-learning-pack-changes-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-learning-pack-changes-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-learning-pack-changes-test FILES
+            "${_umicom_pack_root}/src/teacher/learning_pack_changes.c"
+            "${_umicom_pack_root}/src/teacher/learning_pack_internal.h")
+    endif()
+    foreach(_case identical empty reordered added removed renamed mixed title topic kind
+            path digest example all-fields maximum independent arguments allocation)
+        add_test(NAME "framework.learning_pack.changes.${_case}"
+            COMMAND umicom-learning-pack-changes-test "${_case}" "${_umicom_pack_root}")
+        set_tests_properties("framework.learning_pack.changes.${_case}" PROPERTIES
+            TIMEOUT 30 LABELS "framework;learning;ownership;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.learning_pack.changes.${_case}"
+                TARGETS umicom-learning-pack-changes-test)
+        endif()
+    endforeach()
+endif()
+
+# Remembered roots remain separate from pack admission and execution trust.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomLearningLibraryChoices.cmake")

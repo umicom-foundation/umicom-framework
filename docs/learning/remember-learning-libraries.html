@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Remember learning libraries</title><style>body{font:17px/1.65 system-ui,sans-serif;max-width:65rem;margin:2rem auto;padding:0 1rem;color:#173047}h1,h2{line-height:1.25}pre{padding:1rem;background:#edf5fa;overflow:auto}table{border-collapse:collapse;width:100%}td,th{border:1px solid #b4c6d1;padding:.7rem;text-align:left;vertical-align:top}svg{max-width:100%;height:auto}a:focus-visible{outline:3px solid #23617c}figcaption{color:#425a69}</style></head><body>
+<nav><a href="using-learning-catalogue.html">Learning catalogue</a> · <a href="record-private-checkpoints.html">Private checkpoints</a></nav>
+<h1>Remember learning libraries</h1>
+<p>A learning library is a folder containing a <code>learning-pack.json</code>
+manifest and its guides, lessons and examples. A manifest is a small description
+of those files: it names the pack, its revision and the resources it declares.
+Remembering a library saves its location so that you can select it again later.
+It does not copy the course or give its examples permission to run.</p>
+<p>This guide uses the native learning catalogue shared by Studio and other
+Framework hosts. The controls are in <strong>Remembered learning libraries</strong>.
+Open that section by clicking its heading. A newly created catalogue starts with
+an empty list and an empty settings filename. It does not search your computer.</p>
+
+<h2>1. Open and read the library first</h2>
+<ol>
+<li>In Studio, open <strong>Guided Learning</strong> and choose
+<strong>Open local learning catalogue</strong>.</li>
+<li>Choose the folder that contains <code>learning-pack.json</code>, then select
+<strong>Load learning pack</strong>. The manifest must describe a compatible pack.
+If it is missing or invalid, the catalogue reports the failure.</li>
+<li>Select a guide or lesson from the results and choose <strong>Open selected</strong>.
+The reader checks its bytes against the manifest before displaying them.</li>
+<li>Expand <strong>Remembered learning libraries</strong> and choose
+<strong>Remember displayed library</strong>. The list now contains the pack ID,
+locale, revision and absolute folder.</li>
+</ol>
+<p>An <strong>absolute folder</strong> identifies a location without depending on
+the application's current working folder. For example,
+<code>C:\Learning\framework-pack</code> is an absolute Windows folder.
+<code>framework-pack</code> alone is relative and is not accepted here.
+A locale such as <code>en-GB</code> identifies the language/region of the pack.</p>
+<p>Remember captures the pack used by the displayed document. If you replaced a
+pack in the catalogue but are still reading its earlier revision, this button
+remembers that earlier reader's identity. Open a result from the new revision
+before remembering it. The same pack ID cannot appear twice in one choices list.
+To change its recorded folder or revision, explicitly forget its old choice,
+then remember the intended displayed pack.</p>
+
+<h2>2. Save the choices in a private file</h2>
+<ol>
+<li>Create or choose an existing private folder outside your source repositories.
+For example, in PowerShell you can create your own local learning folder:
+<pre><code>New-Item -ItemType Directory -Force "C:\umicom\_local\learning"</code></pre></li>
+<li>Under <strong>Private folder-choices filename</strong>, enter a complete new
+filename, such as <code>C:\umicom\_local\learning\libraries.json</code>.
+The new-file Browse control can fill this field. Browsing alone does not save.</li>
+<li>Choose <strong>Save choices to new file</strong>. Wait for the operation to
+finish and inspect its result. Acceptance of the button press is not proof that
+the file was written successfully.</li>
+<li>Keep this file private. It contains local folder paths and pack identities.
+Do not add it to a public project commit.</li>
+</ol>
+<p>Saving creates a <em>new</em> file. It never overwrites an existing one and does
+not create missing parent folders. To keep an updated list, choose a new filename.
+If an operation reports an incomplete new file, retain and inspect that file
+before trying another name. Closing the window does not undo an accepted save:
+the file worker may finish it while the application is shutting down normally.</p>
+<p>The settings file is ordinary JSON, a text format for structured values.
+It is not encrypted. File access follows the chosen folder's operating-system
+permissions. A remembered entry contains its root, manifest filename, pack ID,
+product, locale and revision. It contains no password, execution permission or
+record of a learner passing an assessment.</p>
+
+<h2>3. Load a saved list, then reopen one library</h2>
+<ol>
+<li>Open a learning catalogue. Enter the saved settings filename or choose it
+with the existing-file Browse control.</li>
+<li>Choose <strong>Load folder choices</strong>. A successful load replaces the
+in-memory choices list. It does not save the previous list, open the remembered
+folders, or change the current reading document.</li>
+<li>Select one item in the choices list and choose <strong>Reopen selected library</strong>.
+Framework reads that library's manifest again. The operation may take time if the
+disk is busy; the native adapter uses a background worker.</li>
+<li>After a successful reopen, select a result in the main catalogue and choose
+<strong>Open selected</strong> to read it. Reopening a library does not itself
+replace your current reading history.</li>
+</ol>
+
+<figure><svg viewBox="0 0 780 220" role="img" aria-labelledby="library-diagram-title library-diagram-description">
+<title id="library-diagram-title">Remembering is separate from opening and running</title>
+<desc id="library-diagram-description">A saved choices file is decoded into folder choices. An explicit reopen reads the manifest. Opening a selected resource verifies its bytes. No step grants execution permission.</desc>
+<g fill="#edf5fa" stroke="#2b657f" stroke-width="2">
+<rect x="10" y="25" width="215" height="90" rx="8"/><rect x="280" y="25" width="215" height="90" rx="8"/><rect x="550" y="25" width="215" height="90" rx="8"/>
+<path d="M225 70h55m-12-8 12 8-12 8M495 70h55m-12-8 12 8-12 8" fill="none"/>
+</g><g fill="#173047" font-family="sans-serif" font-size="18" text-anchor="middle">
+<text x="117" y="61">Load choices</text><text x="117" y="88">No pack opened</text>
+<text x="387" y="61">Explicit reopen</text><text x="387" y="88">Check manifest again</text>
+<text x="657" y="61">Open selected</text><text x="657" y="88">Verify resource bytes</text>
+<text x="390" y="162">The saved location is a convenience, not execution trust.</text>
+<text x="390" y="193">Building or running an example remains a separate decision.</text>
+</g></svg><figcaption>Each step has its own request and result.</figcaption></figure>
+
+<h2>4. Understand refusal and recovery</h2>
+<table><thead><tr><th>Result</th><th>Meaning</th><th>Next step</th></tr></thead><tbody>
+<tr><td>Not found</td><td>The selected settings file, folder or manifest is missing.</td><td>Check its explicit location. Framework will not search another folder for a replacement.</td></tr>
+<tr><td>Invalid state during reopen</td><td>The manifest's ID, product, locale or revision differs from the saved choice.</td><td>Load and review the intended pack through the normal catalogue controls. If replacing an already loaded pack, use its explicit replacement review.</td></tr>
+<tr><td>Already exists</td><td>A pack ID is already in the choices list or shelf, or the settings output file already exists.</td><td>Read which operation failed. Forget a choice before changing it; review a shelf replacement; choose a new settings filename.</td></tr>
+<tr><td>Unavailable</td><td>The manifest does not support the host's version.</td><td>Use a compatible pack. Do not edit its compatibility range merely to hide the refusal.</td></tr>
+<tr><td>Parse error or invalid argument</td><td>Settings are malformed or contain unsupported fields, paths or identities.</td><td>Keep the original file and choose a known-good list. Loading failure preserves the previous in-memory choices.</td></tr>
+<tr><td>Capacity exceeded</td><td>A bounded input, output or choices list is too large.</td><td>The list accepts at most 32 libraries and 256 KiB of settings. Keep a smaller list rather than truncating a file.</td></tr>
+</tbody></table>
+<p>A manifest can use the same revision while changing its content. The settings
+list is not a signature and cannot prove that such a manifest matches a previous
+session. Reopen checks the declared identity and compatibility; each resource
+read then checks the bytes against that newly admitted manifest. Obtain learning
+content from a source you choose to trust and review examples before running them.</p>
+
+<h2>5. Forget a location without deleting learning material</h2>
+<p>Select a choice and choose <strong>Forget selected folder choice</strong>.
+This removes only the entry from the current list. It does not delete files,
+remove a pack already in the catalogue, clear reader history or modify an older
+saved settings file. Save the revised list to a new file if you want to keep it.
+There is no automatic startup reload or automatic overwrite in this workflow.</p>
+
+<h2>Follow the implementation</h2>
+<p>The reusable interfaces are in
+<code>include/umicom/teacher/learning_library_choices.h</code>. The owner, JSON codec
+and file operations are separate source files under <code>src/teacher</code>.
+The native controls are in
+<code>adapters/gtk4/learning_catalogue_libraries.c</code>, which uses the existing
+catalogue worker lifecycle. The small
+<code>examples/learning_pack_inspector/libraries.c</code> program demonstrates
+encoding, decoding and fresh admission without writing settings or executing
+course examples. See <a href="using-learning-catalogue.html">Using the learning catalogue</a>
+for reading, navigation and practice-copy workflows.</p>
+
+</body></html>

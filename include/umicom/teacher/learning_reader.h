@@ -52,6 +52,12 @@ void UmiLearningReaderDestroy(UmiLearningReader *reader);
  * double the reader's content allocation; keep the configured bound practical. */
 UmiStatus UmiLearningReaderClone(const UmiLearningReader *source, UmiLearningReader **out_reader);
 
+/* Copy the reader's admitted pack metadata without reading files or changing
+ * history. This remains the reading session's revision after its catalogue is
+ * updated. The caller owns the copy; failure clears out_pack. Serialize access
+ * to reader and keep it alive through the call. No source bytes are reverified. */
+UmiStatus UmiLearningReaderCopyPack(const UmiLearningReader *reader, UmiLearningPack **out_pack);
+
 /* Open a copied catalogue selection in a new, independent reader. Supply the
  * pack revision and lowercase SHA-256 from the displayed search result. A
  * replaced pack or changed resource digest returns INVALID_STATE; a removed

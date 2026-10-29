@@ -203,3 +203,10 @@ UmiStatus UmiLearningReaderClone(const UmiLearningReader *source, UmiLearningRea
     *out = copy;
     return UMI_STATUS_OK;
 }
+
+UmiStatus UmiLearningReaderCopyPack(const UmiLearningReader *reader, UmiLearningPack **out)
+{
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out = NULL;
+    return reader == NULL ? UMI_STATUS_INVALID_ARGUMENT : UmiLearningPackClone(reader->pack, out);
+}

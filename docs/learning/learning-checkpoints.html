@@ -11,9 +11,14 @@ checkpoint. An older record stays available without becoming completion for a
 different lesson.</p>
 <p>This service is available through <code>Umicom::learning_progress</code> and
 <code>umicom/teacher/learning_progress.h</code>. It supplements the existing
-education workspace, which keeps progress for its own curriculum. The native
+education workspace, which keeps progress for its own curriculum. <!-- The earlier API-only stage is retained for review. Native controls now call the same journal through a worker-owned local request.
+The native
 learning catalogue does not yet provide controls for this journal; use the C
-API or the SDK example. It does not automatically mark a document complete when
+API or the SDK example.
+-->
+The native learning catalogue provides optional explicit checkpoint controls; follow
+<a href="record-private-checkpoints.html">Record a private learning checkpoint</a>
+for the user workflow. The C API and SDK example remain available. It does not automatically mark a document complete when
 a reader opens it.</p>
 <h2>Understand the record</h2>
 <table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody>

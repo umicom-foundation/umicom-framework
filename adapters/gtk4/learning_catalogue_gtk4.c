@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 #include "learning_catalogue_private.h"
 #include "umicom/base/text.h"
+#include "umicom/platform/output_file.h"
 #include "umicom/ui/gtk4/path_picker.h"
 #include <string.h>
 
@@ -31,9 +32,13 @@ static void CatalogueFree(gpointer data)
     LearningCatalogue *owner = data;
     /* Worker requests own independent C objects and only a weak root reference.
      * Finalizing this widget therefore never waits for a filesystem operation. */
+    UmiBrowserReadingDocumentDestroy(owner->reading_document);
     UmiLearningReaderDestroy(owner->reader);
+    UmiLearningLibraryChoicesDestroy(owner->library_choices);
     UmiLearningSearchDestroy(owner->search);
     UmiLearningShelfDestroy(owner->shelf);
+    UmiLearningShelfDestroy(owner->replacement_shelf);
+    UmiLearningPackChangesDestroy(owner->replacement_changes);
     g_free(owner);
 }
 void LearningCatalogueMessage(LearningCatalogue *owner, UmiStatus status, const char *detail)
@@ -46,6 +51,9 @@ void LearningCatalogueMessage(LearningCatalogue *owner, UmiStatus status, const 
     g_free(message);
 }
 
+/* Preserve single-shelf refresh for review. Prepare replacement search data
+ * before publishing its shelf, so a refused query leaves both owners intact. */
+#if 0
 UmiStatus LearningCatalogueRefresh(LearningCatalogue *owner, const char *query)
 {
     UmiLearningSearchQuery request = {0};
@@ -83,6 +91,66 @@ UmiStatus LearningCatalogueRefresh(LearningCatalogue *owner, const char *query)
     UmiLearningSearchDestroy(search);
     return status;
 }
+#endif
+static UmiStatus CatalogueRefreshCandidate(LearningCatalogue *owner,
+    UmiLearningShelf **candidate, const char *query)
+{
+    UmiLearningSearchQuery request = {0};
+    UmiStatus status = umi_text_copy(request.text, sizeof(request.text), query);
+    if (status != UMI_STATUS_OK) return status;
+    UmiLearningSearch *search = NULL;
+    status = UmiLearningSearchCreate(candidate != NULL ? *candidate : owner->shelf, &request, 128U, &search);
+    if (status != UMI_STATUS_OK) return status;
+    UmiLearningSearchInfo info;
+    status = UmiLearningSearchCopyInfo(search, &info);
+    GtkStringList *rows = gtk_string_list_new(NULL);
+    for (size_t i = 0U; status == UMI_STATUS_OK && i < info.result_count; ++i) {
+        UmiLearningSearchHit hit;
+        status = UmiLearningSearchResultAt(search, i, &hit);
+        if (status == UMI_STATUS_OK) {
+            char *title = g_utf8_make_valid(hit.resource.title, -1);
+            char *label = g_strdup_printf("%s — %s [%s]", title, hit.pack.id, hit.pack.locale);
+            gtk_string_list_append(rows, label);
+            g_free(title);
+            g_free(label);
+        }
+    }
+    if (status == UMI_STATUS_OK) {
+        /* Publish the shelf and its prepared search before model notifications.
+         * A callback therefore cannot observe results from a different shelf. */
+        if (candidate != NULL) {
+            UmiLearningShelf *previous = owner->shelf;
+            owner->shelf = *candidate;
+            *candidate = NULL;
+            UmiLearningShelfDestroy(previous);
+        }
+        UmiLearningSearchDestroy(owner->search);
+        owner->search = search;
+        search = NULL;
+        owner->state.search = info;
+        owner->state.pack_count = UmiLearningShelfCount(owner->shelf);
+        gtk_drop_down_set_model(GTK_DROP_DOWN(owner->results), G_LIST_MODEL(rows));
+        if (!owner->state.retired)
+            gtk_drop_down_set_selected(GTK_DROP_DOWN(owner->results),
+                info.result_count != 0U ? 0U : GTK_INVALID_LIST_POSITION);
+    }
+    g_object_unref(rows);
+    UmiLearningSearchDestroy(search);
+    return status;
+}
+
+UmiStatus LearningCatalogueRefresh(LearningCatalogue *owner, const char *query)
+{
+    return CatalogueRefreshCandidate(owner, NULL, query);
+}
+UmiStatus LearningCataloguePublishShelf(LearningCatalogue *owner,
+    UmiLearningShelf **candidate, const char *query)
+{
+    if (owner == NULL || candidate == NULL || *candidate == NULL || query == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    return CatalogueRefreshCandidate(owner, candidate, query);
+}
+
 
 static UmiStatus CanStart(LearningCatalogue *owner)
 {
@@ -212,6 +280,9 @@ UmiStatus UmiLearningCatalogueGtk4Reload(GtkWidget *widget)
 
 /* Resolve against copied admitted metadata before handing the reader to a
  * worker. A malformed or undeclared link cannot interrupt the visible session. */
+/* Preserve catalogue-dependent link admission for review. An existing reader
+ * continues using its own admitted revision after a reviewed pack update. */
+#if 0
 UmiStatus UmiLearningCatalogueGtk4Follow(GtkWidget *widget, const char *local_link)
 {
     LearningCatalogue *owner = LearningCatalogueOwner(widget);
@@ -232,6 +303,37 @@ UmiStatus UmiLearningCatalogueGtk4Follow(GtkWidget *widget, const char *local_li
     if (status == UMI_STATUS_OK) status = UmiLearningPackCopyInfo(pack, &info);
     if (status == UMI_STATUS_OK && info.revision != owner->state.reader.pack.revision)
         status = UMI_STATUS_INVALID_STATE;
+    if (status == UMI_STATUS_OK)
+        status = UmiLearningPackResolveLink(pack, owner->state.reader.selection.resource.id,
+            job->link, &resolved);
+    UmiLearningPackDestroy(pack);
+    if (status != UMI_STATUS_OK) { LearningCatalogueJobFree(job); return status; }
+    /* Dispatch restores this transferred reader if a host retires during admission. */
+    job->continues_reader = 1;
+    job->reader = owner->reader;
+    owner->reader = NULL;
+    g_object_ref(widget);
+    status = LearningCatalogueDispatch(owner, job);
+    g_object_unref(widget);
+    return status;
+}
+#endif
+UmiStatus UmiLearningCatalogueGtk4Follow(GtkWidget *widget, const char *local_link)
+{
+    LearningCatalogue *owner = LearningCatalogueOwner(widget);
+    UmiStatus status = CanStart(owner);
+    if (status != UMI_STATUS_OK) return status;
+    if (local_link == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (owner->reader == NULL || !owner->state.reader.has_document) return UMI_STATUS_INVALID_STATE;
+    LearningCatalogueJob *job = NewJob(owner, LEARNING_CATALOGUE_FOLLOW);
+    if (job == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = umi_text_copy(job->link, sizeof(job->link), local_link);
+    if (status == UMI_STATUS_OK && !g_utf8_validate(job->link, -1, NULL))
+        status = UMI_STATUS_INVALID_ARGUMENT;
+    UmiLearningPack *pack = NULL;
+    UmiLearningPackLink resolved;
+    if (status == UMI_STATUS_OK)
+        status = UmiLearningReaderCopyPack(owner->reader, &pack);
     if (status == UMI_STATUS_OK)
         status = UmiLearningPackResolveLink(pack, owner->state.reader.selection.resource.id,
             job->link, &resolved);
@@ -274,6 +376,13 @@ static void Action(GtkButton *button, gpointer data)
         UmiStatus status = UMI_STATUS_INVALID_ARGUMENT;
         if (strcmp(action, "load") == 0)
             status = UmiLearningCatalogueGtk4Load(widget, gtk_editable_get_text(GTK_EDITABLE(owner->path)));
+        else if (strcmp(action, "review-replacement") == 0)
+            status = UmiLearningCatalogueGtk4PrepareReplacement(widget,
+                gtk_editable_get_text(GTK_EDITABLE(owner->path)));
+        else if (strcmp(action, "accept-replacement") == 0)
+            status = UmiLearningCatalogueGtk4AcceptReplacement(widget, owner->replacement.review_serial);
+        else if (strcmp(action, "discard-replacement") == 0)
+            status = UmiLearningCatalogueGtk4DiscardReplacement(widget, owner->replacement.review_serial);
         else if (strcmp(action, "search") == 0)
             status = UmiLearningCatalogueGtk4Search(widget, gtk_editable_get_text(GTK_EDITABLE(owner->query)));
         else if (strcmp(action, "open") == 0) {
@@ -301,7 +410,16 @@ static void Action(GtkButton *button, gpointer data)
         } else if (strcmp(action, "copy") == 0) {
             const char *filename = gtk_editable_get_text(GTK_EDITABLE(owner->destination));
             char directory[UMI_PATH_CAPACITY], name[UMI_PATH_CAPACITY];
+            /* Validate the spelling supplied by the user before path helpers
+             * normalize separators or remove dot components. Admission must
+             * describe the destination the user actually entered. */
+            status = UmiOutputFileValidatePath(filename);
+            /* The absolute-only admission allowed normalization to conceal
+             * ambiguous components. Retain it for review; the shared output
+             * validator above now owns this boundary. */
+#if 0
             status = umi_path_is_absolute(filename) ? UMI_STATUS_OK : UMI_STATUS_INVALID_ARGUMENT;
+#endif
             if (status == UMI_STATUS_OK) status = umi_path_parent(filename, directory, sizeof(directory));
             if (status == UMI_STATUS_OK) status = umi_path_basename(filename, name, sizeof(name));
             if (status == UMI_STATUS_OK)
@@ -341,6 +459,9 @@ GtkWidget *UmiLearningCatalogueGtk4Create(UmiVersion host)
     LearningCatalogue *owner = g_try_new0(LearningCatalogue, 1U);
     if (owner == NULL) return NULL;
     if (UmiLearningShelfCreate(&owner->shelf) != UMI_STATUS_OK) { g_free(owner); return NULL; }
+    if (UmiLearningLibraryChoicesCreate(&owner->library_choices) != UMI_STATUS_OK) {
+        UmiLearningShelfDestroy(owner->shelf); g_free(owner); return NULL;
+    }
     owner->host = host;
     owner->root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
     g_object_set_data_full(G_OBJECT(owner->root), UMI_LEARNING_CATALOGUE_DATA, owner, CatalogueFree);
@@ -373,6 +494,25 @@ GtkWidget *UmiLearningCatalogueGtk4Create(UmiVersion host)
         UMI_PATH_PICKER_DIRECTORY, "Choose a learning pack folder", NULL);
     if (browse != NULL) gtk_box_append(GTK_BOX(owner->controls), browse);
     Button(owner, owner->controls, "Load learning pack", "load");
+    GtkWidget *replacement = gtk_expander_new("Replace a learning pack");
+    GtkWidget *replacement_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
+    Caption(replacement_box, "Choose the updated pack folder above, then review its identity and revision. "
+        "Accepting changes the catalogue entry. Existing reading history is kept until you open a new result.");
+    Button(owner, replacement_box, "Review replacement", "review-replacement");
+    owner->replacement_status = Caption(replacement_box, "No pending replacement.");
+    Tag(owner->replacement_status, "learning.catalogue.replacement-status");
+    GtkWidget *change_expander = gtk_expander_new("Resource changes");
+    owner->replacement_details = gtk_label_new("No resource comparison prepared.");
+    gtk_label_set_selectable(GTK_LABEL(owner->replacement_details), TRUE);
+    gtk_label_set_wrap(GTK_LABEL(owner->replacement_details), TRUE);
+    gtk_label_set_xalign(GTK_LABEL(owner->replacement_details), 0.0F);
+    Tag(owner->replacement_details, "learning.catalogue.replacement-details");
+    gtk_expander_set_child(GTK_EXPANDER(change_expander), owner->replacement_details);
+    gtk_box_append(GTK_BOX(replacement_box), change_expander);
+    Button(owner, replacement_box, "Accept reviewed replacement", "accept-replacement");
+    Button(owner, replacement_box, "Discard replacement", "discard-replacement");
+    gtk_expander_set_child(GTK_EXPANDER(replacement), replacement_box);
+    gtk_box_append(GTK_BOX(owner->controls), replacement);
     Caption(owner->controls, "Search resource titles, topics and identifiers");
     owner->query = gtk_entry_new();
     gtk_entry_set_max_length(GTK_ENTRY(owner->query), (int)UMI_LEARNING_SEARCH_TEXT_CAPACITY - 1);
@@ -417,6 +557,8 @@ GtkWidget *UmiLearningCatalogueGtk4Create(UmiVersion host)
     Tag(owner->copy_status, "learning.catalogue.copy-result");
     gtk_expander_set_child(GTK_EXPANDER(receipt), receipt_box);
     gtk_box_append(GTK_BOX(owner->controls), receipt);
+    LearningCatalogueProgressControls(owner);
+    LearningCatalogueLibraryControls(owner);
     owner->heading = Caption(owner->root, "No resource opened");
     Tag(owner->heading, "learning.catalogue.heading");
     owner->status = Caption(owner->root, "No learning pack loaded.");
@@ -431,5 +573,6 @@ GtkWidget *UmiLearningCatalogueGtk4Create(UmiVersion host)
     gtk_widget_set_size_request(scroll, -1, 280);
     gtk_widget_set_vexpand(scroll, TRUE);
     gtk_box_append(GTK_BOX(owner->root), scroll);
+    LearningCatalogueReadingControls(owner);
     return owner->root;
 }

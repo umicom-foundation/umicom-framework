@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Record a private learning checkpoint</title>
+<style>body{font:17px/1.65 system-ui,sans-serif;max-width:65rem;margin:2rem auto;padding:0 1rem;color:#173047}h1,h2{line-height:1.25}pre{background:#eef4f7;padding:1rem;overflow:auto}table{border-collapse:collapse;width:100%}td,th{border:1px solid #b4c6d1;padding:.7rem;text-align:left;vertical-align:top}svg{max-width:100%;height:auto}.note{border-left:4px solid #25708d;background:#eef6f9;padding:1rem}a:focus-visible{outline:3px solid #23617c}</style>
+</head><body>
+<nav><a href="using-learning-catalogue.html">Learning catalogue</a> · <a href="learning-checkpoints.html">Checkpoint API</a></nav>
+<h1>Record a private learning checkpoint</h1>
+<p>A checkpoint is a short record of something you deliberately chose to note about
+a lesson. For example, after reading a guide and discussing its example, you might
+record <code>reviewed</code>. This is different from opening the guide. The reader
+does not decide that opening a page means you understood it.</p>
+<p>The native learning catalogue can keep these records in a local database.
+A database is a file designed to store and retrieve structured records. Here it
+holds learner identifiers, lesson identities, checkpoint names and references to
+your evidence. It does not contain a password-protected account, an encrypted
+notebook or a teacher's assessment. Choose where to store it before recording.</p>
+<h2>1. Open the lesson you mean to record</h2>
+<ol><li>In Studio, open <strong>Guided Learning</strong>, then
+<strong>Open local learning catalogue</strong>.</li>
+<li>Choose a prepared learning pack, select <strong>Load learning pack</strong>,
+then open a lesson or guide from its results. Follow the
+<a href="using-learning-catalogue.html">catalogue guide</a> if this is your first pack.</li>
+<li>Check the displayed title and content. A source example or image cannot receive
+a checkpoint. If you have opened a guide's example, use <strong>Back</strong> to return
+to the guide before recording progress.</li>
+<li>Expand <strong>Private learning checkpoints</strong>. These controls are available
+when the native build includes Framework's learning-progress service. A missing
+SQLite backend is reported when storage is requested; temporary storage is not
+silently substituted.</li></ol>
+<p>The current reader holds the pack revision and content hash that it verified.
+A revision is the pack publisher's version number. A hash is calculated from the
+exact file bytes. Together with the pack and resource identifiers, these values
+identify what you actually read. Accepting a newer pack in the catalogue does not
+change an already open reader; open the new result explicitly when you want it.</p>
+<h2>2. Choose private storage</h2>
+<p>Create a private folder that you control, outside your course and project
+repositories. For example, this PowerShell command creates a folder under the
+local working area:</p>
+<pre><code>New-Item -ItemType Directory -Force "C:\umicom\_local\learning"</code></pre>
+<ol><li>In <strong>Private database filename (absolute path)</strong>, type
+<code>C:\umicom\_local\learning\practice.sqlite3</code>, or use the new-file chooser.
+An absolute path identifies the file without depending on Studio's launch folder.
+The parent folder must already exist.</li>
+<li>To continue a database from an earlier session, use the existing-file chooser
+or enter its complete path. The database is not copied into your learning pack.</li>
+<li>Enter a <strong>Local learner ID</strong>, such as <code>learner-1</code>.
+This is a label within your local database, not a sign-in identity.
+Choose the same label when inspecting earlier records.</li>
+<li>Enter a <strong>Checkpoint ID</strong>, such as <code>reviewed</code>.
+Use a term that describes the action honestly. The application does not verify
+that a self-recorded checkpoint was approved by an instructor.</li>
+<li>For recording, enter an <strong>Evidence reference</strong>, such as
+<code>practice-1</code>. This is a short label for your own supporting work,
+not a filename to open and not the work itself.</li></ol>
+<p>Identifiers start with an ASCII letter or digit and can then contain letters,
+digits, dots, hyphens and underscores. Their maximum length is 95 bytes.
+Do not enter personal notes, messages, passwords or filesystem paths in them.
+These controls do not inspect repository membership or protect the chosen folder's
+permissions. You are responsible for selecting private storage and keeping it out
+of public commits. An ignore rule alone does not untrack an already committed file.</p>
+<h2>3. Inspect before recording again</h2>
+<p>Select <strong>Inspect checkpoint</strong>. The operation opens an existing
+database read-only. It never creates a missing file. The evidence field is ignored
+for inspection because the query finds the latest event for the current document
+and checkpoint, whatever evidence reference that event used.</p>
+<table><thead><tr><th>Result</th><th>Meaning</th></tr></thead><tbody>
+<tr><td>A matching event and sequence</td><td>This learner already has that checkpoint for the exact pack revision and content hash.</td></tr>
+<tr><td>No match, journal loaded</td><td>The database was read successfully, but no event matches this exact document and checkpoint. An earlier lesson revision may still have records.</td></tr>
+<tr><td>Database could not be opened</td><td>Check the path, permissions and whether the file exists. This is not a successful empty-history result.</td></tr>
+<tr><td>Journal could not be read</td><td>Preserve the file for investigation. Malformed records are not replaced with an empty journal.</td></tr>
+</tbody></table>
+<p>The status area captures the database, learner, checkpoint, document revision,
+event count and matching sequence used by that operation. Changing an entry field
+after clicking does not redirect it. Reading another lesson later does not relabel
+the receipt. The next explicit checkpoint operation replaces the displayed receipt.</p>
+<h2>4. Record one deliberate checkpoint</h2>
+<ol><li>Finish the learning action you want to record.</li>
+<li>Check the lesson, private path, learner, checkpoint and evidence reference.</li>
+<li>Select <strong>Record checkpoint</strong> once. Wait until the controls become
+available again. Accepting a request starts background work; it is not yet proof
+that the record was stored.</li>
+<li>Inspect the result. A successful new event has a sequence number and reports
+a matching event. The first event for a learner has sequence one.</li>
+<li>Select <strong>Inspect checkpoint</strong> to reopen the database and read the
+stored result through a fresh connection.</li></ol>
+<svg viewBox="0 0 900 160" role="img" aria-labelledby="flow-title flow-desc">
+<title id="flow-title">A checkpoint keeps the selected lesson's identity</title>
+<desc id="flow-desc">The reader supplies verified lesson bytes and revision. An explicit record action captures them with the chosen learner and database path. A worker stores one event and returns a receipt. The visible lesson remains unchanged.</desc>
+<g fill="#eef6f9" stroke="#25708d" stroke-width="2"><rect x="5" y="20" width="260" height="120" rx="8"/><rect x="320" y="20" width="260" height="120" rx="8"/><rect x="635" y="20" width="260" height="120" rx="8"/></g>
+<g font-family="sans-serif" font-size="18" text-anchor="middle" fill="#173047"><text x="135" y="57">Verified lesson</text><text x="135" y="87">Revision + hash</text><text x="135" y="117">Reader keeps its state</text><text x="450" y="57">Explicit Record</text><text x="450" y="87">Copied path + IDs</text><text x="450" y="117">Worker owns storage</text><text x="765" y="57">Captured receipt</text><text x="765" y="87">Status + sequence</text><text x="765" y="117">Inspect stored result</text><text x="292" y="88">→</text><text x="607" y="88">→</text></g></svg>
+<p>Repeating the identical event returns <code>ALREADY_EXISTS</code>; it does not
+append another event. A different evidence reference is a new event. The journal
+allows up to 256 events per learner. Records are append-only through this service,
+but an external database editor can change the file. This is not a signed ledger.</p>
+<h2>5. Handle an uncertain write</h2>
+<p>A storage error can occur after a database has accepted data but before the caller
+receives a reliable success result. Retrying automatically might record something
+twice. The catalogue therefore blocks further records when the storage owner
+reports commit or rollback uncertainty.</p>
+<ol><li>Keep the database. Do not delete it to make the error disappear.</li>
+<li>Read the captured database path and learner ID from the receipt. Restore those
+exact values in the controls if you changed them.</li>
+<li>Select <strong>Inspect checkpoint</strong>. A successful fresh journal inspection,
+including a valid no-match result, releases this panel's record block for that
+same database and learner.</li>
+<li>Review what is stored. If the event is already there, no repeat is needed.
+If it is absent, deliberately choose whether to record again.</li></ol>
+<p>Inspecting another database or learner does not resolve the uncertain operation.
+Closing a window is not a recovery procedure: a later window has no memory of the
+earlier warning, so inspect the database before resuming. A damaged journal or failed
+inspection leaves the uncertainty unresolved.</p>
+<h2>6. Close and return later</h2>
+<p>An accepted write can finish after the catalogue closes. Closing does not cancel
+or undo it. In a normal GtkApplication host, accepted work holds the application
+open until completion cleanup; an explicit forced quit can bypass that orderly
+path. Let Studio finish closing, then inspect the database next time before retrying.
+Late results are not published to retired panels.</p>
+<p>The database persists, but the catalogue's chosen fields and open packs currently
+do not persist across restart. Reopen the pack and select the same database and learner.
+For private backup, use the explicit export workflow in
+<a href="learning-checkpoints.html">the checkpoint service guide</a>.
+An export contains learner history; keep it private as well.</p>
+<h2>For application developers</h2>
+<p><code>UmiLearningProgressLocalExecute</code> owns a database connection and journal
+for one operation on the calling thread. Use a worker because file access can block.
+The native adapter clones the verified reader before dispatch, copies the request,
+and publishes only a receipt. It never transfers a live SQLite connection between
+workers. A request accepted by <code>UmiLearningCatalogueGtk4Progress</code> reports
+its eventual status through <code>CopyState</code> and <code>CopyProgressReceipt</code>.</p>
+<p>Read <code>src/teacher/learning_progress_local.c</code>,
+<code>adapters/gtk4/learning_catalogue_progress.c</code> and
+<code>tests/learning_pack/test_catalogue_progress_gtk4.c</code> together.
+The regression source covers copied inputs, refusal before I/O, reader revision
+changes, duplicate events, retirement and uncertain-write recovery. These are
+qualification checks to run on the selected build, not a claim that a particular
+binary has passed them.</p>
+</body></html>
