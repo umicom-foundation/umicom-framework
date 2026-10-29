@@ -33,6 +33,11 @@ UmiStatus umi_language_runtime_memory_transport_create(UmiLanguageRuntimeMemoryT
  * Read language runtime memory transport push into validated module state and return a
  * status when input cannot be used.
  */
+/* Append a caller-owned byte span to the bounded replay input. Total appended
+ * input, including already consumed bytes, must remain below FRAME_CAPACITY.
+ * Each direction reserves one trailing NUL for inspection. Refusal preserves
+ * prior bytes; NULL is valid only with a zero count. Write uses the same rule.
+ * The transport is a finite fixture/replay buffer, not an unbounded queue. */
 UmiStatus umi_language_runtime_memory_transport_push_read(UmiLanguageRuntimeMemoryTransport*m,const void*b,size_t n);
 /**
  * Provide the language runtime memory transport written operation used by this module and

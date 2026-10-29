@@ -35,3 +35,12 @@ if(BUILD_TESTING)
             LABELS "framework;language;lifecycle;ownership;regression")
     endforeach()
 endif()
+
+# Keep lifecycle qualification available to independent installed-SDK clients.
+# These are console replay examples; they neither launch nor trust an external tool.
+foreach(_language_example IN ITEMS language_lifecycle protocol_frames)
+    install(FILES "${CMAKE_CURRENT_LIST_DIR}/../examples/${_language_example}/main.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../examples/${_language_example}/CMakeLists.txt"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/examples/${_language_example}"
+        COMPONENT FrameworkSDK)
+endforeach()

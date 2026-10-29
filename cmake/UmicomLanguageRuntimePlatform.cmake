@@ -427,6 +427,15 @@ if(BUILD_TESTING)
         umicom_apply_sanitizers(umicom-language-runtime-memory-transport)
     endif()
     add_test(NAME framework.language_runtime.memory-transport COMMAND umicom-language-runtime-memory-transport)
+    foreach(_memory_case IN ITEMS write-overflow read-overflow write-large read-large
+            write-exact read-exact write-overfull read-overfull write-empty read-empty
+            write-null read-null write-append read-append copy-small fragment-read)
+        add_test(NAME framework.language_runtime.memory-transport.${_memory_case}
+            COMMAND umicom-language-runtime-memory-transport ${_memory_case})
+        set_tests_properties(framework.language_runtime.memory-transport.${_memory_case}
+            PROPERTIES TIMEOUT 30 LABELS "framework;language;transport;ownership;regression")
+    endforeach()
+
     add_executable(umicom-language-runtime-message
         "${CMAKE_CURRENT_LIST_DIR}/../tests/language_runtime/test_message.c"
     )
