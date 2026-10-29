@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/learning_catalogue.h"
 #include "umicom/platform/rooted_files.h"
+#include "umicom/platform/path.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -181,7 +182,20 @@ static int CopyCase(GtkWidget *root, const char *name, const char *directory)
         goto inspect;
     }
     CHECK(UmiLearningCatalogueGtk4CopyLastReceipt(root, &receipt) == UMI_STATUS_OK);
+    /* The picker splits a normalized absolute path. Windows uses native
+     * separators even when CMake supplied forward slashes. Compare normalized
+     * roots for the picker, and retain exact capture checks for the direct API. */
+#if 0
     CHECK(after.has_copy_result && strcmp(receipt.destination_root, directory) == 0);
+#endif
+    CHECK(after.has_copy_result);
+    if (strcmp(name, "copy") == 0) {
+        char normalized[2048];
+        CHECK(umi_path_normalise(directory, normalized, sizeof(normalized)) == UMI_STATUS_OK);
+        CHECK(strcmp(receipt.destination_root, normalized) == 0);
+    } else {
+        CHECK(strcmp(receipt.destination_root, directory) == 0);
+    }
     CHECK(strcmp(receipt.destination_path, relative) == 0 && strcmp(receipt.selection.id, "next") == 0);
     if (strcmp(name, "copy-existing") == 0) {
         CHECK(receipt.result.status == UMI_STATUS_ALREADY_EXISTS && !receipt.result.destination.created);

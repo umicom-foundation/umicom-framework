@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Connect application help to verified learning packs</title>
+<style>body{font:17px/1.65 system-ui,sans-serif;max-width:960px;margin:2rem auto;padding:0 1rem;color:#173047}pre{overflow:auto;background:#eef3f6;padding:1rem;border-radius:.5rem}code{font-size:.94em}table{border-collapse:collapse;width:100%}th,td{padding:.7rem;border:1px solid #bbcbd4;text-align:left}a:focus-visible{outline:3px solid #23617c}h1,h2{line-height:1.25}</style>
+</head><body>
+<h1>Connect application help to verified learning packs</h1>
+<p>A contextual-help route connects an application command, diagnostic or topic
+to an exact guide identity. The Framework service resolves this policy against
+the packs an application has explicitly loaded. It does not scan folders,
+download documents, execute commands or infer a target from a translated title.</p>
+<p>Read <a href="using-learning-catalogue.html">Using the learning catalogue</a>
+for the native reader and its display limits. The complete console example is
+<code>examples/learning_pack_inspector/help.c</code>. Its command-line workflow
+uses the installed SDK without depending on GTK.</p>
+<h2>1. Define application-owned routes</h2>
+<pre><code>UmiLearningHelpRoute route = {
+    .request = {
+        .product = "studio",
+        .locale = "en",
+        .kind = UMI_LEARNING_HELP_COMMAND,
+        .key = "help.documentation"
+    },
+    .pack_id = "framework.learning-packs",
+    .resource_id = "guide"
+};
+UmiLearningHelpMap *map = NULL;
+UmiStatus status = UmiLearningHelpMapCreate(&amp;route, 1U, &amp;map);</code></pre>
+<p>This uses the sample pack's actual identifiers. The requesting product may
+deliberately point to another product's shared guide. No rule assumes that
+<code>request.product</code> equals the target pack's product. The interface
+owner chooses these routes; guide content does not replace application policy.</p>
+<p>Every request contains four nonempty fields: product, locale, kind and key.
+Kinds distinguish command help, diagnostic help and general topics. Product
+and key compare exactly. Locale ignores ASCII case but has no automatic regional
+or language fallback. If a product offers another language, present that choice
+explicitly and submit a new request.</p>
+<p>The map supports up to 128 copied routes. Duplicate request identities are
+refused, including identical duplicates. Keys and target identifiers use ASCII
+letters and digits with dots, hyphens and underscores after the first character.
+Every fixed-size string must contain a terminator. Creation publishes no partial
+map. On failure the output map is null.</p>
+<h2>2. Resolve the current target</h2>
+<pre><code>UmiLearningHelpSelection selected;
+if (status == UMI_STATUS_OK)
+    status = UmiLearningHelpResolve(map, shelf, &amp;route.request, &amp;selected);</code></pre>
+<p>In this fragment, <code>shelf</code> already owns the loaded sample pack.
+Resolution performs no filesystem operation. It selects the exact route, finds
+its current pack and resource, checks the locale and requires a guide or lesson.
+All returned metadata is copied. Missing data never falls back to a vaguely
+similar title or the current working directory.</p>
+<table><thead><tr><th>Result</th><th>Meaning and response</th></tr></thead><tbody>
+<tr><td><code>NOT_FOUND</code></td><td>A route, pack or resource is missing. Keep the current document and offer catalogue browsing.</td></tr>
+<tr><td><code>UNAVAILABLE</code></td><td>The selected pack has another locale. Explain the mismatch and let the person explicitly choose an available language.</td></tr>
+<tr><td><code>INVALID_STATE</code></td><td>The route targets an example or image rather than a guide or lesson. Correct application routing policy.</td></tr>
+<tr><td><code>INVALID_ARGUMENT</code> or <code>CAPACITY_EXCEEDED</code></td><td>A request violates the bounded identity contract. Do not truncate it into a different request.</td></tr>
+</tbody></table>
+<p>Refusals leave the caller's selection unchanged. Check status before reading
+output; an earlier value is not a new successful result. Serialize shelf
+operations while resolving. A copied selection can outlive the shelf, but it is
+a historical description after the shelf changes.</p>
+<h2>3. Verify bytes before display</h2>
+<pre><code>UmiLearningReader *reader = NULL;
+if (status == UMI_STATUS_OK)
+    status = UmiLearningReaderCreateFromShelf(
+        shelf, selected.pack.id, selected.pack.revision,
+        selected.resource.id, selected.resource.sha256,
+        1024U * 1024U, &amp;reader);</code></pre>
+<p>The reader rechecks the selected edition and digest, then verifies the actual
+file bytes. A stale selection does not silently open a replacement pack.
+Reading may block, so desktop frontends dispatch it away from their UI thread.
+A consistent digest is not publisher authentication, and reading never grants
+permission to execute a source example.</p>
+<h2>4. Use the shared GTK reader</h2>
+<pre><code>status = UmiLearningCatalogueGtk4OpenHelp(panel, map, &amp;route.request);</code></pre>
+<p>The native catalogue must already contain the target pack. This operation
+does not depend on the current search rows and leaves them unchanged. It uses
+the same asynchronous ownership, verified reading and per-pack history as
+opening a search result. A busy or retired panel refuses a new request.</p>
+<p>The map and request are borrowed only during this call. Accepted work owns
+its captured selection and pack data. <code>OK</code> means dispatched, not
+completed: inspect the catalogue state after its busy flag clears. A failure
+keeps the previous reading state. Retire a panel before destroying an externally
+retained host, and drain accepted work before an explicit application quit.
+See the catalogue guide for this shutdown contract.</p>
+<p>This API provides the mechanism. It does not automatically bind every menu,
+keyboard shortcut or diagnostic panel in an application. The application must
+connect an appropriate help action, supply its reviewed route table and loaded
+packs, and test that complete user workflow.</p>
+<h2>5. Build and inspect the example</h2>
+<ol>
+<li>Install an SDK containing the learning-help contract and developer library.</li>
+<li>Configure <code>examples/learning_pack_inspector</code> using its existing
+<code>UMICOM_EXPECTED_SDK_PREFIX</code> option. Configuration stages the example
+pack and calculates hashes from those staged bytes.</li>
+<li>Build the example's <code>umicom-learning-pack-help</code> target.</li>
+<li>Run it with the generated absolute pack root, <code>learning-pack.json</code>,
+the kind <code>command</code>, and key <code>help.documentation</code>.</li>
+<li>Confirm successful output identifies <code>framework.learning-packs::guide</code>
+and its verified byte count. Try <code>absent.command</code> and confirm refusal.</li>
+</ol>
+<p>The example also maps diagnostic <code>learning.content-changed</code> and
+topic <code>learning-packs</code>. Its CTest checks require the expected process
+status and complete identity output. They do not claim that a graphical
+application has passed its help interaction checks.</p>
+<p>Release readers, maps and shelves through their matching destroy functions.
+Do not retain pointers into temporary route arrays, and do not replace a
+failed verification with an unchecked filename open.</p>
+<p>For explicit local checkpoints tied to the document revision, see <a href="learning-checkpoints.html">learning checkpoint records</a>.</p>
+</body></html>

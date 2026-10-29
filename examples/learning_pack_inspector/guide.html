@@ -438,4 +438,26 @@ this example again to regenerate its copied pack and hashes. Close and reopen
 the catalogue window before loading a replacement with the same pack ID.
 The complete reader guide is <code>docs/learning/using-learning-catalogue.html</code>
 in the Framework source.</p>
+<h2 id="contextual-help">Connect commands to a verified guide</h2>
+<p>The <code>help.c</code> example supplies explicit routes for command
+<code>help.documentation</code>, diagnostic <code>learning.content-changed</code>
+and topic <code>learning-packs</code>. Each route selects this guide from the
+loaded pack. It does not execute the named command.</p>
+<p>Run <code>umicom-learning-pack-help</code> with the absolute pack root,
+<code>learning-pack.json</code>, the kind and the exact key. Successful output
+reports this guide's identity and verified byte count. An unregistered key
+returns failure. The application owns route policy; the shared resolver returns
+copied metadata and the reader checks its revision, digest and bytes.</p>
+<p>Products embedding the native catalogue can call
+<code>UmiLearningCatalogueGtk4OpenHelp</code> after loading the required pack.
+The route does not depend on visible search rows. Read
+<code>docs/learning/contextual-help.html</code> for ownership, locale rules,
+refusal handling and the boundary between admission and asynchronous completion.</p>
+<h2>Record an explicit checkpoint</h2>
+<p>The <code>progress.c</code> example adds an optional storage consumer when the SDK exports <code>Umicom::learning_progress</code>. Its memory mode records a checkpoint and reopens the journal while keeping the same Data Server:</p>
+<pre><code>.\umicom-learning-pack-progress.exe memory "$PWD\pack" learning-pack.json guide</code></pre>
+<p>Expected output identifies checkpoint <code>read</code>, this guide at revision one, event one and temporary storage. Memory records disappear when the process ends. The <code>record</code> and <code>show</code> modes accept an explicit absolute SQLite database path, learner ID and checkpoint; run without arguments for the full syntax. <code>show</code> is read-only and never creates a missing database. Do not store learner records in this source pack or a public repository.</p>
+<p>A checkpoint is an explicit local action, not a qualification. Its pack revision and content hash must match a future query. Older events remain in history, while a changed lesson requires a separate checkpoint. Exact duplicates return <code>ALREADY_EXISTS</code>; commit uncertainty requires reopening storage before a retry.</p>
+<h2>Transfer a private learning record</h2>
+<p>The optional <code>archive.c</code> consumer exports an existing SQLite journal to a new file or imports that file into an empty journal for the same learner. Run <code>umicom-learning-pack-archive</code> without arguments for its explicit database, learner, archive-root and relative-filename parameters. Existing archive files and nonempty journals are refused. A failed import may leave a newly selected empty database. Keep these records private; the archive is not a course resource, credential store or authenticated assessment.</p>
 </body></html>

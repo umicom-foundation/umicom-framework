@@ -56,6 +56,10 @@ configure_file(practice.c "${CMAKE_CURRENT_BINARY_DIR}/pack/practice.c" COPYONLY
 file(SHA256 "${CMAKE_CURRENT_BINARY_DIR}/pack/practice.c" _practice_hash)
 configure_file(help.c "${CMAKE_CURRENT_BINARY_DIR}/pack/help.c" COPYONLY)
 file(SHA256 "${CMAKE_CURRENT_BINARY_DIR}/pack/help.c" _help_hash)
+configure_file(progress.c "${CMAKE_CURRENT_BINARY_DIR}/pack/progress.c" COPYONLY)
+configure_file(archive.c "${CMAKE_CURRENT_BINARY_DIR}/pack/archive.c" COPYONLY)
+file(SHA256 "${CMAKE_CURRENT_BINARY_DIR}/pack/archive.c" _archive_hash)
+file(SHA256 "${CMAKE_CURRENT_BINARY_DIR}/pack/progress.c" _progress_hash)
 configure_file(search.c "${CMAKE_CURRENT_BINARY_DIR}/pack/search.c" COPYONLY)
 file(SHA256 "${CMAKE_CURRENT_BINARY_DIR}/pack/search.c" _search_hash)
 file(SHA256 "${CMAKE_CURRENT_BINARY_DIR}/pack/guide.html" _guide_hash)
@@ -66,7 +70,7 @@ include(CTest)
 if(BUILD_TESTING)
     add_test(NAME sdk.learning_pack.list
         COMMAND umicom-learning-pack-inspect "${CMAKE_CURRENT_BINARY_DIR}/pack" learning-pack.json)
-    foreach(_resource guide inspector reader-history practice-copy catalogue-search contextual-help)
+    foreach(_resource guide inspector reader-history practice-copy catalogue-search contextual-help checkpoint-records checkpoint-archive)
         add_test(NAME "sdk.learning_pack.verify.${_resource}"
             COMMAND umicom-learning-pack-inspect "${CMAKE_CURRENT_BINARY_DIR}/pack"
                 learning-pack.json "${_resource}")
@@ -184,4 +188,38 @@ if(BUILD_TESTING)
                 "-DCASE=${_case}" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_help.cmake")
         set_tests_properties("sdk.learning_pack.help.${_case}" PROPERTIES TIMEOUT 45)
     endforeach()
+endif()
+
+# Storage is a separate component; the core inspector remains useful in a
+# composition without it. Require its installed files when it is present.
+if(TARGET Umicom::learning_progress)
+    umicom_require_installed_sdk_layout("${UMICOM_EXPECTED_SDK_PREFIX}" _progress_headers Umicom::learning_progress)
+    add_executable(umicom-learning-pack-progress progress.c)
+    target_link_libraries(umicom-learning-pack-progress PRIVATE Umicom::learning_progress)
+    set_target_properties(umicom-learning-pack-progress PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(MSVC)
+        target_compile_options(umicom-learning-pack-progress PRIVATE /W4)
+    else()
+        target_compile_options(umicom-learning-pack-progress PRIVATE
+            -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    endif()
+    if(BUILD_TESTING)
+        add_test(NAME sdk.learning_pack.progress.memory
+            COMMAND umicom-learning-pack-progress memory "${CMAKE_CURRENT_BINARY_DIR}/pack" learning-pack.json guide)
+        set_tests_properties(sdk.learning_pack.progress.memory PROPERTIES TIMEOUT 45)
+    endif()
+endif()
+
+if(TARGET Umicom::learning_progress)
+    add_executable(umicom-learning-pack-archive archive.c)
+    target_link_libraries(umicom-learning-pack-archive PRIVATE Umicom::learning_progress)
+    set_target_properties(umicom-learning-pack-archive PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(MSVC)
+        target_compile_options(umicom-learning-pack-archive PRIVATE /W4)
+    else()
+        target_compile_options(umicom-learning-pack-archive PRIVATE
+            -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    endif()
 endif()

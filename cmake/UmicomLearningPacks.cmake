@@ -186,6 +186,10 @@ install(FILES
     "${_umicom_pack_root}/examples/learning_pack_inspector/history.c"
     "${_umicom_pack_root}/examples/learning_pack_inspector/practice.c"
     "${_umicom_pack_root}/examples/learning_pack_inspector/search.c"
+    "${_umicom_pack_root}/examples/learning_pack_inspector/help.c"
+    "${_umicom_pack_root}/examples/learning_pack_inspector/progress.c"
+    "${_umicom_pack_root}/examples/learning_pack_inspector/archive.c"
+    "${_umicom_pack_root}/examples/learning_pack_inspector/check_help.cmake"
     "${_umicom_pack_root}/examples/learning_pack_inspector/check_practice.cmake"
     "${_umicom_pack_root}/examples/learning_pack_inspector/check_search.cmake"
     "${_umicom_pack_root}/examples/learning_pack_inspector/guide.html"
@@ -222,3 +226,6 @@ if(BUILD_TESTING)
         endif()
     endforeach()
 endif()
+
+# Progress borrows an explicit Data Server; readers remain usable without storage.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomLearningProgress.cmake")

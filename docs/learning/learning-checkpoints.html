@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Keep learning checkpoints with their source revision</title>
+<style>body{font:17px/1.65 system-ui,sans-serif;max-width:960px;margin:2rem auto;padding:0 1rem;color:#173047}pre{overflow:auto;background:#eef3f6;padding:1rem;border-radius:.5rem}code{font-size:.94em}table{border-collapse:collapse;width:100%}th,td{padding:.7rem;border:1px solid #bbcbd4;text-align:left}a:focus-visible{outline:3px solid #23617c}h1,h2{line-height:1.25}</style>
+</head><body>
+<h1>Keep learning checkpoints with their source revision</h1>
+<p>A checkpoint records a deliberate learning action, such as reviewing an exercise.
+A lesson can change after that action. The Framework progress journal therefore
+keeps the lesson identity, its pack revision and its content hash with every
+checkpoint. An older record stays available without becoming completion for a
+different lesson.</p>
+<p>This service is available through <code>Umicom::learning_progress</code> and
+<code>umicom/teacher/learning_progress.h</code>. It supplements the existing
+education workspace, which keeps progress for its own curriculum. The native
+learning catalogue does not yet provide controls for this journal; use the C
+API or the SDK example. It does not automatically mark a document complete when
+a reader opens it.</p>
+<h2>Understand the record</h2>
+<table><thead><tr><th>Field</th><th>Meaning</th></tr></thead><tbody>
+<tr><td>Learner ID</td><td>A local identifier selected by the application. It is not an authenticated account.</td></tr>
+<tr><td>Pack and resource IDs</td><td>The exact document in the admitted learning pack.</td></tr>
+<tr><td>Pack revision</td><td>The publisher's positive revision number, captured when the reader opened the pack.</td></tr>
+<tr><td>SHA-256</td><td>The content digest verified by the reader. A digest detects changed bytes; it does not prove the publisher is trustworthy.</td></tr>
+<tr><td>Checkpoint</td><td>An application-defined action such as <code>read</code> or <code>exercise-reviewed</code>.</td></tr>
+<tr><td>Evidence reference</td><td>An opaque local identifier for supporting evidence. The service does not open or grade that evidence.</td></tr>
+<tr><td>Sequence</td><td>The record's position in this learner's journal, beginning at one. It is not a timestamp.</td></tr>
+</tbody></table>
+<p>Identifiers use letters and digits, with a dot, dash or underscore after the
+first character. Each is at most 95 bytes. Keep names, conversations, passwords
+and filesystem paths out of them. The database is plaintext local storage.
+Choose a separate private location outside course source and public repositories.</p>
+<h2>Use the service in an application</h2>
+<ol>
+<li><strong>Open a verified reader.</strong> Load an explicit pack and call
+<code>UmiLearningReaderOpen</code>. Only a guide or lesson can receive a checkpoint.
+Example source files and images are refused.</li>
+<li><strong>Select storage explicitly.</strong> A memory Data Server is useful for
+a temporary demonstration. A SQLite Data Server uses a database path chosen by
+the learner. There is no silent fallback from SQLite to memory.</li>
+<li><strong>Open one journal owner.</strong> Pass the Data Server and learner ID to
+<code>UmiLearningProgressOpen</code>. The journal borrows the server; it does not
+take ownership of it.</li>
+<li><strong>Record an explicit action.</strong> After the learner chooses to record
+a checkpoint, pass the reader, checkpoint and evidence ID to
+<code>UmiLearningProgressRecord</code>. Check the returned status before displaying success.</li>
+<li><strong>Query the current document.</strong>
+<code>UmiLearningProgressFindCurrent</code> compares pack ID, revision, resource ID
+and digest. A change to any of them prevents an older event satisfying the query.</li>
+<li><strong>Close in ownership order.</strong> Close the journal before destroying
+its Data Server. Serialize calls on both the journal and reader. Interactive
+applications should perform storage work on their worker thread.</li>
+</ol>
+<pre><code>UmiLearningProgress *progress = NULL;
+UmiLearningProgressEvent event;
+UmiStatus status = UmiLearningProgressOpen(server, "local-learner", &amp;progress);
+if (status == UMI_STATUS_OK) {
+    status = UmiLearningProgressRecord(
+        progress, reader, "exercise-reviewed", "review-001", &amp;event);
+}
+/* Report status; event is published only after a successful commit. */
+UmiLearningProgressClose(progress);
+/* The application still owns server and reader. */</code></pre>
+<p>The application defines what a checkpoint means. This API does not award a
+qualification, grade an exercise, run source code or verify the evidence reference.
+For example, a self-recorded reading checkpoint must not be displayed as a
+teacher-approved assessment.</p>
+<h2>Try the SDK example</h2>
+<p>The installed <code>learning_pack_inspector</code> example includes
+<code>progress.c</code>. Its build creates <code>umicom-learning-pack-progress</code>
+when the selected SDK exports the progress component. Use the configuration steps in the installed example's <code>guide.html</code>
+to select the SDK prefix. From that example's build directory, this temporary
+demonstration records and reopens a checkpoint:</p>
+<pre><code>.\umicom-learning-pack-progress.exe memory "$PWD\pack" learning-pack.json guide</code></pre>
+<p>Expected output:</p>
+<pre><code>Current checkpoint: read
+Document: framework.learning-packs::guide revision 1
+Event: 1
+Storage: temporary</code></pre>
+<p>This memory demonstration loses its Data Server when the process exits.
+For persistent storage, first create a private folder and select its absolute
+database path. Replace the example learner and evidence identifiers with your
+local identifiers:</p>
+<pre><code>New-Item -ItemType Directory -Force "C:\umicom\_local\learning"
+.\umicom-learning-pack-progress.exe record "$PWD\pack" learning-pack.json guide "C:\umicom\_local\learning\practice.sqlite3" learner read review-001
+.\umicom-learning-pack-progress.exe show "$PWD\pack" learning-pack.json guide "C:\umicom\_local\learning\practice.sqlite3" learner read</code></pre>
+<p><code>show</code> opens an existing database read-only. A missing database is
+an error, not an empty new journal. <code>record</code> may create the selected
+database. An exact duplicate returns <code>ALREADY_EXISTS</code> with exit code
+3; a missing current checkpoint returns <code>NOT_FOUND</code> with exit code 4.
+Other failures return a nonzero code. SQLite must be enabled in the SDK.</p>
+<h2>Export and restore private records</h2>
+<p><code>UmiLearningProgressExport</code> copies the current projection into a
+bounded text archive. It does not save a file, refresh another writer's records
+or upload data. <code>UmiLearningProgressImportEmpty</code> accepts an archive
+only for the same learner ID and only when both the current projection and
+stored journal are empty. It does not merge, replace or relabel history.</p>
+<p>The SDK example <code>archive.c</code> supplies explicit file operations.
+Its exporter opens the database read-only and creates a new archive with
+Framework's exclusive file-creation service. An existing destination is refused.
+Its importer reads a bounded archive and may create the selected destination
+database; a refused import can leave that empty database in place.</p>
+<pre><code>.\umicom-learning-pack-archive.exe export "C:\umicom\_local\learning\practice.sqlite3" learner "C:\umicom\_local\learning" "checkpoints.txt"
+.\umicom-learning-pack-archive.exe import "C:\umicom\_local\learning\restored.sqlite3" learner "C:\umicom\_local\learning" "checkpoints.txt"</code></pre>
+<p>For one recorded event, the expected messages are <code>Exported 1 checkpoint
+events. Keep the archive private.</code> and <code>Imported 1 checkpoint events.
+Keep the archive private.</code> Stop if either command returns an error.
+Choose a new archive name when the export file already exists. Inspect a partial
+file or uncertain database result before retrying.</p>
+<p>The archive begins with <code>ULP1</code>, the learner ID and event count,
+followed by the canonical event lines. Export uses LF line endings; import also
+accepts CRLF. Unknown versions, embedded NUL bytes, extra data, incomplete lines,
+duplicate events and invalid fields are refused before a transaction starts.
+Imported events are stored in one transaction. A zero-event archive creates no
+journal records.</p>
+<p>This archive contains local learning history and evidence identifiers.
+Keep it in a private folder and share it only by an explicit user decision.
+It is not signed, encrypted or proof of an assessment. Importing a journal does
+not make its claims more trustworthy. The initial service does not rotate a full
+journal or provide a multi-device account system.</p>
+
+<h2>Handle a conflict or storage failure</h2>
+<table><thead><tr><th>Result</th><th>What to do</th></tr></thead><tbody>
+<tr><td><code>BUSY</code></td><td>Another owner changed the journal, or the server already belongs to a transaction. Finish the existing transaction. For a stale journal, refresh, inspect the new history and let the learner decide whether to submit again.</td></tr>
+<tr><td><code>ALREADY_EXISTS</code></td><td>The identical document/checkpoint/evidence event is already recorded. No second event is added.</td></tr>
+<tr><td><code>PARSE_ERROR</code></td><td>The saved journal is incomplete or unsupported. Preserve it for inspection. Do not replace it with an empty journal.</td></tr>
+<tr><td><code>CAPACITY_EXCEEDED</code></td><td>The journal has reached its 256-event limit or storage cannot accept the record. Existing history is preserved. Export preserves a private copy, but journal rotation is not implemented.</td></tr>
+<tr><td>Commit or rollback error</td><td>The result may be uncertain. Inspect <code>recovery_required</code>; close the journal and establish a new storage connection before reopening. Do not blindly retry an event or treat the old projection as current.</td></tr>
+<tr><td><code>PERMISSION_DENIED</code></td><td>The selected server is read-only. Viewing history does not grant permission to write.</td></tr>
+</tbody></table>
+<p>The service stores one header and numbered events under a learner-specific
+Data Server key prefix. It validates the complete history inside a transaction,
+including orphaned events and unexpected keys. Before appending, it compares the
+canonical saved records with its last projection. Checking only the event count
+would miss a same-length edit to old evidence.</p>
+<p>Records are append-only through this API, but an external database editor can
+change them. This is not an authenticated ledger, encrypted store or protection
+against a malicious local administrator. It also does not coordinate learner
+accounts between devices.</p>
+<h2>Source and regression coverage</h2>
+<p>Read <code>src/teacher/learning_progress.c</code> for transaction ownership and
+<code>src/teacher/learning_progress_storage.c</code> for format validation.
+<code>tests/learning_pack/test_progress.c</code> covers revision changes, duplicate
+records, separate learners, stale writers, damaged histories and SQLite reopen.
+<code>test_progress_archive.c</code> covers private transfers and import refusals.
+<code>test_progress_faults.c</code> injects write, commit and rollback failures,
+including a commit that succeeds internally but reports an error. Running those
+checks on a particular SDK and platform is still necessary before relying on
+that build.</p>
+<p>Continue with <a href="contextual-help.html">contextual help</a> or
+<a href="using-learning-catalogue.html">the native learning catalogue</a>.</p>
+</body></html>

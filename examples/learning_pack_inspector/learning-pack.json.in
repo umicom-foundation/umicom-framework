@@ -67,6 +67,22 @@
       "kind": "example",
       "path": "help.c",
       "sha256": "@_help_hash@"
+    },
+    {
+      "id": "checkpoint-records",
+      "title": "Keep revision-bound learning checkpoints",
+      "topic": "learning-packs",
+      "kind": "example",
+      "path": "progress.c",
+      "sha256": "@_progress_hash@"
+    },
+    {
+      "id": "checkpoint-archive",
+      "title": "Export and import private checkpoint history",
+      "topic": "learning-packs",
+      "kind": "example",
+      "path": "archive.c",
+      "sha256": "@_archive_hash@"
     }
   ]
 }
