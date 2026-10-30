@@ -1,19 +1,19 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/desktop_workspace_gtk4.c
+ *
  * PURPOSE:
- *   A draft editor over the shared desktop-workspace service. The window never reaches into
- *   SQLite and it never owns settings for the rest of the desktop. Storage work completes on
- *   its sole task before explicit close is finalised.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
- *---------------------------------------------------------------------------*/
-
-/*-----------------------------------------------------------------------------
- * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * A draft editor over the shared desktop-workspace service. The window never
- * reaches into SQLite and it never owns settings for the rest of the desktop.
- * Storage work completes on its sole task before explicit close is finalised.
+ *   Present persistent desktop notes, preferences and checkpoint recovery.
+ *   This draft editor never reaches into SQLite or owns settings for the rest
+ *   of the desktop. Storage work completes on its sole task before explicit
+ *   close is finalised.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/desktop_workspace/gtk4.h"
 #include "umicom/desktop_workspace/workspace.h"
@@ -641,6 +641,8 @@ GtkWindow *UmiDesktopWorkspaceGtkCreate(GtkApplication *application, const char 
     gtk_widget_add_css_class(ui->root, ui->cssClass);
     ui->display = g_object_ref(gtk_widget_get_display(GTK_WIDGET(ui->window))); ui->css = gtk_css_provider_new();
     gtk_style_context_add_provider_for_display(ui->display, GTK_STYLE_PROVIDER(ui->css), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+/* The desktop header uses canonical vector artwork; the repeated corner logo is retained only in the historical block. The former implementation is retained for review. */
+#if 0
     GBytes *bytes = g_bytes_new_static(UMICOM_SYSTEM_LOGO, sizeof UMICOM_SYSTEM_LOGO);
     GdkTexture *texture = gdk_texture_new_from_bytes(bytes, NULL); g_bytes_unref(bytes);
     if (texture) { GtkWidget *logo = gtk_picture_new_for_paintable(GDK_PAINTABLE(texture)); g_object_unref(texture);
@@ -652,6 +654,9 @@ GtkWindow *UmiDesktopWorkspaceGtkCreate(GtkApplication *application, const char 
         gtk_widget_set_size_request(icon, 32, 32); gtk_widget_set_halign(icon, GTK_ALIGN_END);
         gtk_widget_set_tooltip_text(icon, "Umicom Desktop Workspace"); gtk_box_append(GTK_BOX(ui->root), icon);
     }
+
+#endif
+    gtk_box_append(GTK_BOX(ui->root), UmiGtkBrandCreate(TRUE, 36));
     GtkWidget *path = gtk_label_new(ui->directory); gtk_label_set_wrap(GTK_LABEL(path), TRUE); gtk_label_set_selectable(GTK_LABEL(path), TRUE);
     gtk_label_set_xalign(GTK_LABEL(path), 0); gtk_box_append(GTK_BOX(ui->root), path);
     ui->open = Button(ui->root, "umicom.workspace.open", "Open workspace", G_CALLBACK(Open), ui);

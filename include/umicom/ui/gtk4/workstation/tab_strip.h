@@ -40,6 +40,9 @@ GtkWidget *UmiGtk4TabStripCreate(UmiGtk4TabStripActivate activate,
  * Input is copied before notification-capable work. IDs are unique nonempty
  * UTF-8 strings (255 bytes maximum); titles 511 bytes, tooltips 4095 bytes.
  * At most one selected item is allowed. Invalid input leaves the strip intact.
+ * Changing the selected ID reveals that button after native allocation without
+ * moving focus or activating it. Refreshing the same selection preserves manual
+ * scrolling. Deferred reveal stops on retirement and has a bounded frame budget.
  * Reentry returns BUSY. Retirement or external reparenting during a notification
  * returns CANCELLED; a partially presented snapshot may remain until next sync.
  * Use only on the GTK owning thread. NULL items is valid when count is zero. */

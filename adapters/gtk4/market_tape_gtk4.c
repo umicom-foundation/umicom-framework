@@ -3,7 +3,7 @@
  * File: adapters/gtk4/market_tape_gtk4.c
  *
  * PURPOSE:
- *   Render one copied market-tape observation across all linked practice views.
+ *   Present linked fictional market observations for trading practice.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -253,6 +253,8 @@ static void AddTab(GtkWidget *notebook, GtkWidget *content, const char *name)
 static GtkWidget *Brand(void)
 {
     GtkWidget *row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
+/* Use the common SVG header instead of embedded raster duplicates. The former implementation is retained for review. */
+#if 0
     GBytes *bytes = g_bytes_new_static(UMICOM_SYSTEM_LOGO, sizeof(UMICOM_SYSTEM_LOGO));
     GdkTexture *texture = gdk_texture_new_from_bytes(bytes, NULL);
     if (texture != NULL) {
@@ -272,6 +274,9 @@ static GtkWidget *Brand(void)
         g_object_unref(texture);
     }
     g_bytes_unref(bytes);
+
+#endif
+    gtk_box_append(GTK_BOX(row), UmiGtkBrandCreate(TRUE, 36));
     gtk_box_append(GTK_BOX(row), Label("Linked market tape\nFictional practice — no live provider or order entry"));
     return row;
 }

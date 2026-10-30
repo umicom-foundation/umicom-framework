@@ -1,20 +1,17 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/desktop_system_gtk4.c
- * PURPOSE:
- *   Present system observations and session controls through the shared desktop services.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
- *---------------------------------------------------------------------------*/
-
-/*-----------------------------------------------------------------------------
- * Umicom Framework
- * File: adapters/gtk4/desktop_system_gtk4.c
  *
- * Author: Sammy Hegab, Umicom Foundation
- * Licence: MIT
+ * PURPOSE:
+ *   Present system observations and session controls through shared desktop services.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
-
 #include "umicom/desktop_system/gtk4.h"
 #include "umicom/desktop_system/monitor.h"
 #include <inttypes.h>
@@ -46,6 +43,8 @@ static const char *Status(UmiStatus status)
     default: return "Unavailable: the source could not be read";
     }
 }
+/* Branding now uses the shared canonical SVG renderer. The former implementation is retained for review. */
+#if 0
 static GtkWidget *Brand(const unsigned char *bytes, size_t size, int height)
 {
     GBytes *data = g_bytes_new_static(bytes, size); GError *error = NULL;
@@ -55,6 +54,8 @@ static GtkWidget *Brand(const unsigned char *bytes, size_t size, int height)
     gtk_widget_set_size_request(picture, -1, height); gtk_widget_set_halign(picture, GTK_ALIGN_START);
     gtk_picture_set_can_shrink(GTK_PICTURE(picture), TRUE); return picture;
 }
+#endif
+
 static GtkWidget *Page(GtkTextBuffer **outBuffer)
 {
     GtkWidget *view = gtk_text_view_new(); gtk_text_view_set_editable(GTK_TEXT_VIEW(view), FALSE);
@@ -172,7 +173,11 @@ GtkWidget *UmiDesktopSystemGtk4PanelNew(void)
     g_object_set_data_full(G_OBJECT(root), "umicom-system-view", view, g_free);
     gtk_widget_set_margin_top(root, 16); gtk_widget_set_margin_bottom(root, 16);
     gtk_widget_set_margin_start(root, 16); gtk_widget_set_margin_end(root, 16);
+/* Use transparent SVG with bounded header dimensions. The former implementation is retained for review. */
+#if 0
     gtk_box_append(GTK_BOX(root), Brand(UMICOM_SYSTEM_LOGO, sizeof UMICOM_SYSTEM_LOGO, 36));
+#endif
+    gtk_box_append(GTK_BOX(root), UmiGtkBrandCreate(TRUE, 36));
     GtkWidget *title = gtk_label_new("System Centre"); gtk_widget_add_css_class(title, "title-2");
     gtk_label_set_xalign(GTK_LABEL(title), 0); gtk_box_append(GTK_BOX(root), title);
     GtkWidget *intro = gtk_label_new("Inspect this host without changing it. Choose Refresh when you need a new observation.");
@@ -217,7 +222,11 @@ UmiStatus UmiDesktopSystemGtk4Attach(GtkWidget *rootBox)
 {
     if (!rootBox || !GTK_IS_BOX(rootBox)) return UMI_STATUS_INVALID_ARGUMENT;
     GtkWidget *button = gtk_button_new(); GtkWidget *row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+/* Use transparent SVG with bounded header dimensions. The former implementation is retained for review. */
+#if 0
     gtk_box_append(GTK_BOX(row), Brand(UMICOM_SYSTEM_ICON, sizeof UMICOM_SYSTEM_ICON, 20));
+#endif
+    gtk_box_append(GTK_BOX(row), UmiGtkBrandCreate(FALSE, 20));
     gtk_box_append(GTK_BOX(row), gtk_label_new("Open System Centre")); gtk_button_set_child(GTK_BUTTON(button), row);
     gtk_widget_set_halign(button, GTK_ALIGN_START);
     gtk_widget_set_tooltip_text(button, "Read-only memory, process, filesystem, network and initial boot observations.");

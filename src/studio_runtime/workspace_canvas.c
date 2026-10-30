@@ -10,7 +10,8 @@
  * Sammy Hegab
  * Umicom Foundation
  *
- * LICENCE: MIT
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/studio_runtime/workspace_canvas.h"
 
@@ -174,9 +175,10 @@ UmiStatus umi_studio_runtime_workspace_seed(UmiUiWorkspaceCustomisation *model)
             status = umi_ui_window_group_assign(&candidate->groups, surface_context(binding->kind),
                 descriptor.tool_id, UMI_UI_WINDOW_GROUP_BIDIRECTIONAL);
     }
-    /* Existing presets define the working tool set. The welcome/default
-     * arrangement starts side tools collapsed so the document area is clear;
-     * other presets retain their established permanent docking defaults. */
+    /* Existing presets define the working tool set. The former default
+     * collapsed all side tools to clear the document area. Only auxiliary
+     * inspectors now start collapsed; the project explorer remains available.
+     * Other presets retain their established permanent docking defaults. */
     for (preset_index = 0U; status == UMI_STATUS_OK && preset_index < umi_studio_layout_catalogue_count(); ++preset_index) {
         const UmiStudioRuntimeLayoutPresetDefinition *preset = umi_studio_layout_catalogue_at(preset_index);
         status = umi_studio_layout_preset_validate(preset);
@@ -187,12 +189,21 @@ UmiStatus umi_studio_runtime_workspace_seed(UmiUiWorkspaceCustomisation *model)
             UmiUiWorkspaceWindow window;
             status = surface_window(binding,
                 umi_studio_layout_preset_contains_surface(preset, binding->kind) != 0, &window);
+            /* Keep the project explorer visible in the first-use editing layout.
+             * Auxiliary inspectors still start on a revealable edge rail. The
+             * earlier broad rule is retained to explain why Explorer disappeared. */
+#if 0
             if (status == UMI_STATUS_OK && strcmp(preset->preset_id,
                     umi_studio_layout_preset_default()->preset_id) == 0 &&
                 (binding->kind == UMI_STUDIO_SURFACE_OUTLINE ||
                  binding->kind == UMI_STUDIO_SURFACE_OBJECT_INSPECTOR ||
                  (window.visible && (binding->region == UMI_APPLICATION_SHELL_REGION_PRIMARY_SIDEBAR ||
                                      binding->region == UMI_APPLICATION_SHELL_REGION_SECONDARY_SIDEBAR)))) {
+#endif
+            if (status == UMI_STATUS_OK && strcmp(preset->preset_id,
+                    umi_studio_layout_preset_default()->preset_id) == 0 &&
+                (binding->kind == UMI_STUDIO_SURFACE_OUTLINE ||
+                 binding->kind == UMI_STUDIO_SURFACE_OBJECT_INSPECTOR)) {
                 const UmiExperiencePanelDefinition *panel = product_panel(binding->kind);
                 const bool left = binding->kind == UMI_STUDIO_SURFACE_OUTLINE ||
                     binding->kind == UMI_STUDIO_SURFACE_OBJECT_INSPECTOR ||

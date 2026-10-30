@@ -144,7 +144,7 @@ if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
     if(COMMAND umicom_register_validation_target)
         umicom_register_validation_target(umicom-provider-chat-history-gtk-test)
     endif()
-    foreach(case capture followup unicode no-selection stale edited-view oversize forget clear failed cancel retire pending full)
+    foreach(case capture followup unicode no-selection stale edited-view oversize forget clear failed cancel retire pending full pump-budget)
         file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/provider-history-tests/${case}")
         add_test(NAME framework.provider_chat.history.gtk4.${case} COMMAND umicom-provider-chat-history-gtk-test ${case})
         set_tests_properties(framework.provider_chat.history.gtk4.${case} PROPERTIES TIMEOUT 40 SKIP_RETURN_CODE 77

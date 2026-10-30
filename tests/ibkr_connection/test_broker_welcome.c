@@ -137,6 +137,29 @@ int main(int argc, char **argv)
         probe.result = UMI_STATUS_OK;
         g_signal_emit_by_name(guest, "clicked");
         CHECK(probe.calls == 2U);
+
+    } else if (strcmp(argv[1], "account-tabs") == 0) {
+        GtkWidget *modes = Find(root, "broker-welcome-modes");
+        GtkWidget *options = Find(root, "broker-welcome-connection-options");
+        CHECK(GTK_IS_STACK(modes) && options != NULL);
+        CHECK(strcmp(gtk_stack_get_visible_child_name(GTK_STACK(modes)), "paper") == 0);
+        CHECK(gtk_widget_get_visible(options));
+        gtk_stack_set_visible_child_name(GTK_STACK(modes), "demo");
+        CHECK(!gtk_widget_get_visible(options) && probe.calls == 0U);
+        gtk_stack_set_visible_child_name(GTK_STACK(modes), "live");
+        CHECK(gtk_widget_get_visible(options) && probe.calls == 0U);
+        CHECK(gtk_widget_get_ancestor(live, GTK_TYPE_STACK) == modes);
+        CHECK(gtk_widget_get_ancestor(paper, GTK_TYPE_STACK) == modes);
+        CHECK(gtk_widget_get_ancestor(guest, GTK_TYPE_STACK) == modes);
+        CHECK(Find(root, "umicom.brand.logo") != NULL);
+        CHECK(strstr(gtk_button_get_label(GTK_BUTTON(guest)), "Demo") != NULL);
+    } else if (strcmp(argv[1], "retained-tabs") == 0) {
+        GtkWidget *modes = Find(root, "broker-welcome-modes");
+        CHECK(GTK_IS_STACK(modes));
+        UmiBrokerWelcomeGtkDestroy(probe.welcome); probe.welcome = NULL;
+        gtk_stack_set_visible_child_name(GTK_STACK(modes), "demo");
+        gtk_stack_set_visible_child_name(GTK_STACK(modes), "live");
+        CHECK(probe.calls == 0U);
     } else if (strcmp(argv[1], "optional-profiles") == 0) {
         UmiBrokerWelcomeGtk *other = NULL;
         config.openLocalProfiles = NULL;

@@ -10,6 +10,8 @@ if(NOT TARGET Umicom::ui_gtk4)
 endif()
 add_library(umicom_desktop_workspace_gtk4 STATIC
     "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/desktop_workspace_gtk4.c")
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomGtkBrandResources.cmake")
+umicom_embed_gtk_brand(umicom_desktop_workspace_gtk4)
 add_library(Umicom::desktop_workspace_gtk4 ALIAS umicom_desktop_workspace_gtk4)
 set_target_properties(umicom_desktop_workspace_gtk4 PROPERTIES EXPORT_NAME desktop_workspace_gtk4
     C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)

@@ -102,6 +102,17 @@ size_t umi_application_shell_registry_count(
 uint64_t umi_application_shell_registry_revision(
     const UmiApplicationShellRegistry *registry);
 
+
+/**
+ * Copy registry indices in presentation order, then stable contribution-ID order.
+ * Registration order remains unchanged. Indices are valid until the next registry
+ * mutation. On insufficient capacity, report the required count without writing
+ * any indices. Hidden contributions are included so each host can apply policy.
+ */
+UmiStatus umi_application_shell_registry_ordered_indices(
+    const UmiApplicationShellRegistry *registry,
+    size_t *indices, size_t capacity, size_t *out_count);
+
 #ifdef __cplusplus
 }
 #endif

@@ -29,7 +29,7 @@ if(BUILD_TESTING)
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ibkr_connection/test_broker_welcome.c")
     target_link_libraries(umicom-broker-welcome-test PRIVATE Umicom::ibkr_connection_gtk4)
     umicom_ibkr_target(umicom-broker-welcome-test)
-    foreach(case modes gateway retained reentrant close-callback close-notify failure optional-profiles)
+    foreach(case modes gateway retained reentrant close-callback close-notify failure optional-profiles account-tabs retained-tabs)
         add_test(NAME framework.broker_welcome.${case}
             COMMAND umicom-broker-welcome-test ${case})
         set_tests_properties(framework.broker_welcome.${case} PROPERTIES

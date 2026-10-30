@@ -26,6 +26,23 @@ static void Pump(void)
         g_usleep(10000U);
     }
 }
+/* Native resize is asynchronous. Wait for the requested allocation rather than
+ * assuming the window manager has delivered it after a fixed half-second. */
+static int WaitForWidth(GtkWidget *window, GtkWidget *group, int previousWidth)
+{
+    gint64 end=g_get_monotonic_time()+5*G_TIME_SPAN_SECOND;
+    do {
+        for (unsigned i=0U; i<32U && g_main_context_pending(NULL); ++i)
+            (void)g_main_context_iteration(NULL,FALSE);
+        if (gtk_widget_get_mapped(group) && gtk_widget_get_width(group)>previousWidth) return 1;
+        g_usleep(10000U);
+    } while (g_get_monotonic_time()<end);
+    fprintf(stderr,"Resize not observed: window=%dx%d group=%dx%d previous-width=%d mapped=%d\n",
+        gtk_widget_get_width(window),gtk_widget_get_height(window),
+        gtk_widget_get_width(group),gtk_widget_get_height(group),previousWidth,
+        gtk_widget_get_mapped(group));
+    return 0;
+}
 static void Count(GtkButton *button, gpointer context)
 {
     (void)button;
@@ -90,8 +107,14 @@ int main(int argc, char **argv)
             CHECK(bounds.origin.x+bounds.size.width<=(float)gtk_widget_get_width(group)+1.0F);
         }
         int narrowWidth=gtk_widget_get_width(group);
+        /* Preserve the fixed-delay probe for review; native allocation now has
+         * a condition-based deadline and reports dimensions on failure. */
+#if 0
         gtk_window_set_default_size(GTK_WINDOW(window),920,700); Pump();
         CHECK(gtk_widget_get_width(group)>narrowWidth);
+#endif
+        gtk_window_set_default_size(GTK_WINDOW(window),920,700);
+        CHECK(WaitForWidth(window,group,narrowWidth));
         graphene_rect_t widerLast;
         CHECK(gtk_widget_compute_bounds(buttons[total-1U],group,&widerLast));
         CHECK(widerLast.origin.y<last.origin.y);

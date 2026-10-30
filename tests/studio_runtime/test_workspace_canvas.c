@@ -10,7 +10,8 @@
  * Sammy Hegab
  * Umicom Foundation
  *
- * LICENCE: MIT
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <math.h>
 #include <stdlib.h>
@@ -221,11 +222,19 @@ int main(void)
             const UmiStudioRuntimeLayoutPresetDefinition *preset = umi_studio_layout_catalogue_at(preset_index);
             const UmiUiWorkspaceLayout *saved = &model->layouts[preset_index];
             const bool preset_visible = umi_studio_layout_preset_contains_surface(preset, binding->kind) != 0;
+            /* Preserve the former all-sidebars expectation for review. Explorer
+             * is now directly available, while optional inspectors use rails. */
+#if 0
             const bool default_rail = strcmp(preset->preset_id,
                 umi_studio_layout_preset_default()->preset_id) == 0 &&
                 (binding->kind == UMI_STUDIO_SURFACE_OUTLINE || binding->kind == UMI_STUDIO_SURFACE_OBJECT_INSPECTOR ||
                  (preset_visible && (binding->region == UMI_APPLICATION_SHELL_REGION_PRIMARY_SIDEBAR ||
                                      binding->region == UMI_APPLICATION_SHELL_REGION_SECONDARY_SIDEBAR)));
+#endif
+            const bool default_rail = strcmp(preset->preset_id,
+                umi_studio_layout_preset_default()->preset_id) == 0 &&
+                (binding->kind == UMI_STUDIO_SURFACE_OUTLINE ||
+                 binding->kind == UMI_STUDIO_SURFACE_OBJECT_INSPECTOR);
             window = umi_ui_workspace_layout_find_window(saved, id);
             UMI_TEST_REQUIRE(window != NULL && strcmp(window->tool_id, id) == 0);
             UMI_TEST_REQUIRE(saved->window_count == umi_studio_surface_catalogue_count());
@@ -240,6 +249,16 @@ int main(void)
     UMI_TEST_REQUIRE(umi_studio_runtime_workspace_select(model, "default") == UMI_STATUS_OK);
     UMI_TEST_REQUIRE(umi_studio_runtime_workspace_select(model, "org.umicom.trader.default") == UMI_STATUS_INVALID_ARGUMENT);
     layout = umi_ui_workspace_customisation_active(model);
+    /* A first-time user must be able to see files and the editor without
+     * discovering the layout editor. Saved custom layouts are not changed. */
+    {
+        const UmiUiWorkspaceWindow *explorer = umi_ui_workspace_layout_find_window(layout, "explorer");
+        const UmiUiWorkspaceWindow *editor = umi_ui_workspace_layout_find_window(layout, "editor");
+        UMI_TEST_REQUIRE(explorer != NULL && explorer->visible && !explorer->floating);
+        UMI_TEST_REQUIRE(strcmp(explorer->placement_id, "left") == 0);
+        UMI_TEST_REQUIRE(editor != NULL && editor->visible && !editor->floating);
+        UMI_TEST_REQUIRE(strcmp(editor->placement_id, "centre") == 0);
+    }
     /* Welcome side tools use real named edge rails, not empty permanently
      * occupied columns. Reveal/collapse remains transient adapter state. */
     {

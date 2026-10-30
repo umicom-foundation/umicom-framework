@@ -15,12 +15,14 @@
 
 #include "umicom/broker_connectivity/welcome_gtk4.h"
 #include <stdio.h>
+#include "brand_widget.h"
 
 struct UmiBrokerWelcomeGtk {
     unsigned references;
     gboolean closed, busy;
     UmiBrokerWelcomeGtkConfig config;
     GtkWidget *root, *buttons[4], *status, *program;
+    GtkWidget *modes, *connectionOptions;
 };
 
 static void Release(UmiBrokerWelcomeGtk *welcome)
@@ -79,6 +81,20 @@ static void Choose(GtkButton *button, gpointer data)
     Release(welcome);
 }
 
+
+/* Selection changes only the relevant connection controls. Retained widgets
+ * cannot call this owner after it has been destroyed. */
+static void ModeChanged(GObject *object, GParamSpec *property, gpointer data)
+{
+    (void)object; (void)property;
+    UmiBrokerWelcomeGtk *welcome = data;
+    if (welcome->closed) return;
+    ++welcome->references;
+    const char *name = gtk_stack_get_visible_child_name(GTK_STACK(welcome->modes));
+    gtk_widget_set_visible(welcome->connectionOptions, g_strcmp0(name, "demo") != 0);
+    Release(welcome);
+}
+
 UmiStatus UmiBrokerWelcomeGtkCreate(const UmiBrokerWelcomeGtkConfig *config,
     UmiBrokerWelcomeGtk **outWelcome)
 {
@@ -96,6 +112,9 @@ UmiStatus UmiBrokerWelcomeGtkCreate(const UmiBrokerWelcomeGtkConfig *config,
     gtk_widget_set_margin_end(welcome->root, 24);
     gtk_widget_set_margin_top(welcome->root, 24);
     gtk_widget_set_margin_bottom(welcome->root, 24);
+    /* The former stacked mode list is retained for review. The tabbed account
+     * surface below keeps authentication guidance beside the selected mode. */
+#if 0
     GtkWidget *title = Note("Choose Guest, Paper or Live");
     gtk_widget_add_css_class(title, "title-1");
     gtk_box_append(GTK_BOX(welcome->root), title);
@@ -125,9 +144,84 @@ UmiStatus UmiBrokerWelcomeGtkCreate(const UmiBrokerWelcomeGtkConfig *config,
     gtk_box_append(GTK_BOX(welcome->root), Note(
         "Current broker access is read-only. The chart workspace uses simulation; "
         "broker observations appear in the separate connection window. Orders are not transmitted."));
+#endif
+
+    /* Account selection is a presentation of the Framework access plan. Merely
+     * switching tabs never opens a socket or grants permission to trade. */
+    gtk_box_append(GTK_BOX(welcome->root), UmiGtkBrandCreate(TRUE, 44));
+    GtkWidget *title = Note("Umicom Trader");
+    gtk_widget_add_css_class(title, "title-1");
+    gtk_box_append(GTK_BOX(welcome->root), title);
+    gtk_box_append(GTK_BOX(welcome->root), Note("Choose an account to get started."));
+    welcome->modes = gtk_stack_new();
+    gtk_widget_set_name(welcome->modes, "broker-welcome-modes");
+    gtk_stack_set_vhomogeneous(GTK_STACK(welcome->modes), FALSE);
+    gtk_stack_set_transition_type(GTK_STACK(welcome->modes), GTK_STACK_TRANSITION_TYPE_NONE);
+    GtkWidget *switcher = gtk_stack_switcher_new();
+    gtk_stack_switcher_set_stack(GTK_STACK_SWITCHER(switcher), GTK_STACK(welcome->modes));
+    gtk_widget_set_halign(switcher, GTK_ALIGN_FILL);
+    gtk_box_append(GTK_BOX(welcome->root), switcher);
+    gtk_box_append(GTK_BOX(welcome->root), welcome->modes);
+    const char *titles[] = {"Umicom Demo", "IBKR Paper", "IBKR Live"};
+    const char *pages[] = {"demo", "paper", "live"};
+    const char *labels[] = {"Start Umicom _Demo", "Continue to _Paper connection", "Continue to _Live connection"};
+    const char *names[] = {"broker-welcome-guest", "broker-welcome-paper", "broker-welcome-live"};
+    const char *descriptions[] = {
+        "Practise with simulated prices and orders on this computer. No broker account is needed.",
+        "Use your Interactive Brokers paper account. Sign in to Paper Trading in TWS or IB Gateway and complete its authentication.",
+        "Use your Interactive Brokers live account. Sign in to Live Trading in TWS or IB Gateway and complete its authentication."
+    };
+    /* Live/Paper/Demo are display positions, not enum values. Preserve the
+     * established mode IDs so saved plans and connection ports remain stable. */
+    const unsigned displayOrder[] = {2U, 1U, 0U};
+    for (size_t position = 0U; position < G_N_ELEMENTS(displayOrder); ++position) {
+        unsigned i = displayOrder[position];
+        GtkWidget *page = gtk_box_new(GTK_ORIENTATION_VERTICAL, 14);
+        gtk_widget_set_margin_top(page, 18);
+        gtk_widget_set_margin_bottom(page, 12);
+        gtk_box_append(GTK_BOX(page), Note(descriptions[i]));
+        if (i != 0U) {
+            GtkWidget *limit = Note("Broker access in this release is read-only. Orders are not sent to Interactive Brokers.");
+            gtk_widget_add_css_class(limit, "dim-label");
+            gtk_box_append(GTK_BOX(page), limit);
+        }
+        GtkWidget *button = gtk_button_new_with_mnemonic(labels[i]);
+        welcome->buttons[i] = button;
+        gtk_widget_set_name(button, names[i]);
+        gtk_widget_add_css_class(button, "suggested-action");
+        g_object_set_data(G_OBJECT(button), "broker-choice", GUINT_TO_POINTER(i));
+        g_signal_connect(button, "clicked", G_CALLBACK(Choose), welcome);
+        gtk_box_append(GTK_BOX(page), button);
+        gtk_stack_add_titled(GTK_STACK(welcome->modes), page, pages[i], titles[i]);
+    }
+    welcome->connectionOptions = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
+    gtk_widget_set_name(welcome->connectionOptions, "broker-welcome-connection-options");
+    gtk_box_append(GTK_BOX(welcome->connectionOptions), Note("Local broker application"));
+    const char *programs[] = {"TWS", "IB Gateway", NULL};
+    welcome->program = gtk_drop_down_new_from_strings(programs);
+    gtk_widget_set_name(welcome->program, "broker-welcome-program");
+    gtk_accessible_update_property(GTK_ACCESSIBLE(welcome->program),
+        GTK_ACCESSIBLE_PROPERTY_LABEL, "Local broker application", -1);
+    gtk_widget_set_tooltip_text(welcome->program, "Choose the application you signed in to. Connection settings follow on the next screen.");
+    gtk_box_append(GTK_BOX(welcome->connectionOptions), welcome->program);
+    gtk_box_append(GTK_BOX(welcome->connectionOptions), Note(
+        "Your broker password and authentication code are entered in the local broker application. "
+        "Umicom Trader connects to that session; it does not store those credentials."));
+    gtk_box_append(GTK_BOX(welcome->root), welcome->connectionOptions);
+    if (config->openLocalProfiles != NULL) {
+        GtkWidget *button = gtk_button_new_with_mnemonic("Open saved _workspace");
+        welcome->buttons[3] = button;
+        gtk_widget_set_name(button, "broker-welcome-profiles");
+        gtk_widget_add_css_class(button, "flat");
+        g_object_set_data(G_OBJECT(button), "broker-choice", GUINT_TO_POINTER(3U));
+        g_signal_connect(button, "clicked", G_CALLBACK(Choose), welcome);
+        gtk_box_append(GTK_BOX(welcome->root), button);
+    }
     welcome->status = Note("");
     gtk_widget_set_name(welcome->status, "broker-welcome-status");
     gtk_box_append(GTK_BOX(welcome->root), welcome->status);
+    gtk_stack_set_visible_child_name(GTK_STACK(welcome->modes), "paper");
+    g_signal_connect(welcome->modes, "notify::visible-child-name", G_CALLBACK(ModeChanged), welcome);
     *outWelcome = welcome;
     return UMI_STATUS_OK;
 }
@@ -141,6 +235,7 @@ void UmiBrokerWelcomeGtkDestroy(UmiBrokerWelcomeGtk *welcome)
 {
     if (welcome == NULL || welcome->closed) return;
     welcome->closed = TRUE;
+    g_signal_handlers_disconnect_by_data(welcome->modes, welcome);
     /* Disconnect before releasing widgets so retained controls cannot call a
      * retired product owner. No credentials or connection survive this owner. */
     for (size_t i = 0; i < G_N_ELEMENTS(welcome->buttons); ++i)

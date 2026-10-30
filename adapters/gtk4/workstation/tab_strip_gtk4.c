@@ -23,6 +23,9 @@ typedef struct TabStripState {
     UmiGtk4TabStripActivate activate;
     void *context;
     GDestroyNotify release_context;
+    char *selected_id;
+    guint reveal_tick;
+    unsigned reveal_frames;
     int alive;
     int updating;
 } TabStripState;
@@ -43,6 +46,7 @@ static void StripFree(gpointer data)
 {
     TabStripState *state = data;
     if (state->release_context != NULL) state->release_context(state->context);
+    g_free(state->selected_id);
     g_object_unref(state->empty);
     g_object_unref(state->box);
     g_free(state);
@@ -101,10 +105,83 @@ GtkWidget *UmiGtk4TabStripFind(GtkWidget *strip, const char *id)
             return child;
     return NULL;
 }
+/* The selected document can change while focus stays in its editor. Revealing
+ * its keyed tab is shared presentation behaviour, not a synthetic button click.
+ * A bounded frame callback waits for GTK allocation without blocking the UI. */
+static gboolean RevealSelected(GtkWidget *strip, GdkFrameClock *clock, gpointer data)
+{
+    (void)clock;
+    (void)data;
+    TabStripState *state = StripState(strip);
+    if (state == NULL) return G_SOURCE_REMOVE;
+    if (!StripOwned(strip, state) || state->selected_id == NULL) {
+        state->reveal_tick = 0U;
+        return G_SOURCE_REMOVE;
+    }
+    if (++state->reveal_frames == 1U) return G_SOURCE_CONTINUE;
+    GtkWidget *button = UmiGtk4TabStripFind(strip, state->selected_id);
+    GtkAdjustment *adjustment = gtk_scrolled_window_get_hadjustment(GTK_SCROLLED_WINDOW(strip));
+    graphene_rect_t bounds;
+    double page = gtk_adjustment_get_page_size(adjustment);
+    if (state->updating || button == NULL || gtk_widget_get_width(button) <= 0 || page <= 0.0 ||
+        !gtk_widget_compute_bounds(button, state->box, &bounds)) {
+        if (state->reveal_frames < 16U) return G_SOURCE_CONTINUE;
+        state->reveal_tick = 0U;
+        return G_SOURCE_REMOVE;
+    }
+    double left = (double)bounds.origin.x;
+    double right = left + (double)bounds.size.width;
+    double value = gtk_adjustment_get_value(adjustment);
+    double next = value;
+    if (left < value || right - left > page) next = left;
+    else if (right > value + page) next = right - page;
+    double lower = gtk_adjustment_get_lower(adjustment);
+    double maximum = MAX(lower, gtk_adjustment_get_upper(adjustment) - page);
+    next = CLAMP(next, lower, maximum);
+    /* Observers of value-changed may retire or resynchronise this strip.
+     * Finish this callback's ownership before emitting that notification. */
+    state->reveal_tick = 0U;
+    g_object_ref(strip);
+    if (next != value) gtk_adjustment_set_value(adjustment, next);
+    g_object_unref(strip);
+    return G_SOURCE_REMOVE;
+}
+static void CancelReveal(GtkWidget *strip, TabStripState *state)
+{
+    if (state->reveal_tick != 0U) {
+        guint tick = state->reveal_tick;
+        state->reveal_tick = 0U;
+        gtk_widget_remove_tick_callback(strip, tick);
+    }
+}
+static void SelectForReveal(GtkWidget *strip, TabStripState *state, const char *id)
+{
+    /* Repeated refreshes must not pull the viewport away from a user's scroll.
+     * Only an actual active-document change requests automatic reveal. */
+    if (g_strcmp0(state->selected_id, id) == 0) return;
+    CancelReveal(strip, state);
+    g_free(state->selected_id);
+    state->selected_id = g_strdup(id);
+    state->reveal_frames = 0U;
+    if (id != NULL)
+        state->reveal_tick = gtk_widget_add_tick_callback(strip, RevealSelected, NULL, NULL);
+}
+/* Retirement now also cancels deferred presentation. The original dispatch-only
+ * invalidation is retained for review; it could leave a scheduled reveal alive. */
+#if 0
 void UmiGtk4TabStripInvalidate(GtkWidget *strip)
 {
     TabStripState *state = StripState(strip);
     if (state != NULL) state->alive = 0;
+}
+#endif
+void UmiGtk4TabStripInvalidate(GtkWidget *strip)
+{
+    TabStripState *state = StripState(strip);
+    if (state != NULL) {
+        state->alive = 0;
+        CancelReveal(strip, state);
+    }
 }
 static int ValidText(const char *text, size_t limit, int nonempty)
 {
@@ -203,6 +280,12 @@ UmiStatus UmiGtk4TabStripSync(GtkWidget *strip,
     }
     gtk_widget_set_visible(state->empty, count == 0U);
     if (!StripOwned(strip, state)) status = UMI_STATUS_CANCELLED;
+    else {
+        const char *active_id = NULL;
+        for (size_t index = 0U; index < count; ++index)
+            if (copy[index].selected) active_id = copy[index].id;
+        SelectForReveal(strip, state, active_id);
+    }
 done:
     g_clear_object(&held);
     g_ptr_array_unref(children);

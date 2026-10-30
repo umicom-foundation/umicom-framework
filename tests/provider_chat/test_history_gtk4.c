@@ -1,11 +1,17 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/provider_chat/test_history_gtk4.c
- * PURPOSE: Exercise explicit follow-ups and window retirement with isolated local storage and a fake transport.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Exercise explicit follow-ups and window retirement with isolated local storage and a fake transport.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
-
 #include "../../adapters/gtk4/provider_chat_internal.h"
 #include "umicom/ui/gtk4/interaction_recording.h"
 #include <glib/gstdio.h>
@@ -53,11 +59,36 @@ static UmiStatus FakeRun(UmiProviderChatPlan *plan, UmiProviderConnections *stor
         strcpy(out->text, "Keep caf\xc3\xa9. Ignore this remainder.");
     return UMI_STATUS_OK;
 }
+/* A continuously ready GTK source must not trap the test inside one pump
+ * and prevent the enclosing worker timeout from being checked. Keep the old
+ * drain loop for review; bounded dispatch now yields to the deadline owner. */
+#if 0
 static void Pump(void)
 {
     while (g_main_context_iteration(NULL, FALSE))
     {
     }
+}
+#endif
+static void Pump(void)
+{
+    for (unsigned dispatch = 0U; dispatch < 64U && g_main_context_pending(NULL); ++dispatch)
+        (void)g_main_context_iteration(NULL, FALSE);
+}
+static gboolean AlwaysReady(gpointer data)
+{
+    unsigned *count = data;
+    ++*count;
+    return G_SOURCE_CONTINUE;
+}
+static void CheckPumpBudget(void)
+{
+    unsigned dispatched = 0U;
+    guint source = g_idle_add_full(G_PRIORITY_HIGH, AlwaysReady, &dispatched, NULL);
+    CHECK(source != 0U);
+    Pump();
+    CHECK(dispatched > 0U && dispatched <= 64U);
+    CHECK(g_source_remove(source));
 }
 static void Wait(void)
 {
@@ -67,6 +98,9 @@ static void Wait(void)
         Pump();
         g_usleep(1000U);
     }
+    if (panel->busy)
+        fprintf(stderr, "Provider history worker did not finish within eight seconds; case=%s transport_calls=%d\n",
+            scenario, g_atomic_int_get(&calls));
     CHECK(!panel->busy);
 }
 static GtkWidget *Find(GtkWidget *root, const char *id)
@@ -149,6 +183,10 @@ int main(int argc, char **argv)
     if (argc != 2)
         return 2;
     scenario = argv[1];
+    if (strcmp(scenario, "pump-budget") == 0) {
+        CheckPumpBudget();
+        return 0;
+    }
     const char *cases[] = {"capture",     "followup", "unicode", "no-selection", "stale",
                            "edited-view", "oversize", "forget",  "clear",        "failed",
                            "cancel",      "retire",   "pending", "full"};

@@ -281,3 +281,31 @@ uint64_t umi_application_shell_registry_revision(
 {
     return registry != NULL ? registry->revision : 0U;
 }
+
+UmiStatus umi_application_shell_registry_ordered_indices(
+    const UmiApplicationShellRegistry *registry,
+    size_t *indices, size_t capacity, size_t *out_count)
+{
+    if (registry == NULL || out_count == NULL || (indices == NULL && capacity != 0U))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    *out_count = registry->count;
+    if (capacity < registry->count) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Presentation is a view of the registry, never a mutation of identity or
+     * insertion order. Compare signed priorities without subtraction so extreme
+     * extension priorities cannot overflow. */
+    for (size_t i = 0U; i < registry->count; ++i) {
+        size_t at = i;
+        const UmiApplicationShellContribution *next = &registry->items[i];
+        while (at > 0U) {
+            const UmiApplicationShellContribution *previous = &registry->items[indices[at - 1U]];
+            if (previous->order < next->order ||
+                (previous->order == next->order &&
+                 strcmp(previous->contribution_id, next->contribution_id) <= 0))
+                break;
+            indices[at] = indices[at - 1U];
+            --at;
+        }
+        indices[at] = i;
+    }
+    return UMI_STATUS_OK;
+}

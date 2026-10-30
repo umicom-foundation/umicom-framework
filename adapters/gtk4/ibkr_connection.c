@@ -1,15 +1,17 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/ibkr_connection.c
+ *
  * PURPOSE:
- *   Paper/Live connection controls. This window never offers order execution.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
- *---------------------------------------------------------------------------*/
-
-/*-----------------------------------------------------------------------------
- * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Paper/Live connection controls. This window never offers order execution.
+ *   Present broker connection, account and market observations through Framework services.
+ *   Paper/Live controls never offer order execution.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "window_removal_private.h"
 #include "umicom/broker_connectivity/access_gtk4.h"
@@ -194,6 +196,8 @@ static void CatalogPaint(ConnectionUi *ui, uint64_t now);
 static void OptionChainPaint(ConnectionUi *ui, uint64_t now);
 static void StreamingRetire(ConnectionUi *ui);
 
+/* Branding now uses the shared canonical SVG renderer. The former implementation is retained for review. */
+#if 0
 static GtkWidget *Brand(const unsigned char *bytes, size_t length, int height)
 {
     GBytes *data = g_bytes_new_static(bytes, length);
@@ -206,6 +210,8 @@ static GtkWidget *Brand(const unsigned char *bytes, size_t length, int height)
     g_object_unref(texture);
     return image;
 }
+#endif
+
 static gboolean Connected(const ConnectionUi *ui)
 {
     return ui->connection != NULL && ui->snapshot.state >= UMI_IBKR_CONNECTING &&
@@ -841,8 +847,16 @@ GtkWindow *UmiIbkrGtkCreate(GtkWindow *parent)
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), root);
     gtk_window_set_child(window, scroll);
     GtkWidget *brand = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 12);
+/* Use transparent SVG with bounded header dimensions. The former implementation is retained for review. */
+#if 0
     gtk_box_append(GTK_BOX(brand), Brand(UMICOM_SYSTEM_ICON, sizeof UMICOM_SYSTEM_ICON, 40));
+#endif
+    gtk_box_append(GTK_BOX(brand), UmiGtkBrandCreate(FALSE, 40));
+/* Use transparent SVG with bounded header dimensions. The former implementation is retained for review. */
+#if 0
     gtk_box_append(GTK_BOX(brand), Brand(UMICOM_SYSTEM_LOGO, sizeof UMICOM_SYSTEM_LOGO, 48));
+#endif
+    gtk_box_append(GTK_BOX(brand), UmiGtkBrandCreate(TRUE, 48));
     gtk_box_append(GTK_BOX(root), brand);
     gtk_box_append(GTK_BOX(root), Text("Choose Paper or Live, then confirm the actual login in TWS / IB Gateway. This window cannot place, cancel or modify orders."));
     gtk_box_append(GTK_BOX(root), Text("Endpoint: 127.0.0.1 only. Keep Read-Only API enabled in TWS. A port number or account prefix does not verify the environment."));

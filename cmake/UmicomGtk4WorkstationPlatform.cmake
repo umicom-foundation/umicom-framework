@@ -818,7 +818,7 @@ if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
     if(COMMAND umicom_register_validation_target)
         umicom_register_validation_target(umicom-gtk4-tab-strip-test)
     endif()
-    foreach(case identity invalid retired reentrant reparented overflow)
+    foreach(case identity invalid retired reentrant reparented overflow reveal)
         add_test(NAME framework.ui_workstation.tab_strip.${case}
             COMMAND umicom-gtk4-tab-strip-test ${case})
         set_tests_properties(framework.ui_workstation.tab_strip.${case} PROPERTIES

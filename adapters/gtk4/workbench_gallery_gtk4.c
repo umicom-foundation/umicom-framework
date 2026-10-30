@@ -1,19 +1,18 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/workbench_gallery_gtk4.c
+ *
  * PURPOSE:
- *   Example consumer: all text and account rows are disposable practice data. No database,
+ *   Demonstrate resizable workbench components and native window ownership.
+ *   Example text and account rows are disposable practice data. No database,
  *   payment provider, file operation or background job is started.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
- *---------------------------------------------------------------------------*/
-
-/*-----------------------------------------------------------------------------
- * Umicom Framework
- * File: adapters/gtk4/workbench_gallery_gtk4.c
- * Author: Sammy Hegab, Umicom Foundation | Licence: MIT
- * Example consumer: all text and account rows are disposable practice data.
- * No database, payment provider, file operation or background job is started.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/workbench_layout/viewport_gtk4.h"
 #include "../../examples/workbench_viewport/practice_layout.h"
@@ -189,6 +188,8 @@ GtkWindow *UmiWorkbenchViewportGallery(GtkApplication *application)
     gtk_window_set_default_size(GTK_WINDOW(window), 1100, 780);
     GtkWidget *body = Column();
     gtk_window_set_child(GTK_WINDOW(window), body);
+/* Render canonical SVG artwork once in the workbench header. The former implementation is retained for review. */
+#if 0
     GBytes *bytes = g_bytes_new_static(UMICOM_SYSTEM_LOGO, sizeof UMICOM_SYSTEM_LOGO);
     GError *error = NULL;
     GdkTexture *texture = gdk_texture_new_from_bytes(bytes, &error);
@@ -214,6 +215,10 @@ GtkWindow *UmiWorkbenchViewportGallery(GtkApplication *application)
         gtk_box_append(GTK_BOX(titleRow), mark);
         g_object_unref(iconTexture);
     }
+
+#endif
+    gtk_box_append(GTK_BOX(body), UmiGtkBrandCreate(TRUE, 36));
+    GtkWidget *titleRow = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
     gtk_box_append(GTK_BOX(titleRow), Label("Arrange a workspace from shared components"));
     gtk_box_append(GTK_BOX(body), titleRow);
     gtk_box_append(GTK_BOX(body), Label(

@@ -1,0 +1,21 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/brand_resources.h.in
+ *
+ * PURPOSE:
+ *   Embed canonical SVG bytes; source artwork remains the single branding authority.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_GTK_BRAND_RESOURCES_H
+#define UMICOM_GTK_BRAND_RESOURCES_H
+static const unsigned char UmiBrandLogoSvg[] = {@UMICOM_BRAND_LOGO_BYTES@};
+static const unsigned char UmiBrandIconSvg[] = {@UMICOM_BRAND_ICON_BYTES@};
+static const unsigned char UmiBrandLogoDarkSvg[] = {@UMICOM_BRAND_LOGO_DARK_BYTES@};
+static const unsigned char UmiBrandIconDarkSvg[] = {@UMICOM_BRAND_ICON_DARK_BYTES@};
+#endif

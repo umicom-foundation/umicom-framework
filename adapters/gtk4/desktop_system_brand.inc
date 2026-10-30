@@ -1,14 +1,22 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/desktop_system_brand.inc
+ *
  * PURPOSE:
- *   Embed the canonical Umicom branding so desktop windows do not depend on the working
- *   directory.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Retain the former bitmap assets for review while native windows use canonical SVG artwork.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
+/* The opaque low-resolution artwork is superseded by brand_widget.h, which
+ * reads canonical SVG assets embedded at configure time. Keep these historical
+ * bytes disabled for source review; no active renderer should use them. */
+#if 0
 
-/* Umicom branding from the supplied canonical guide assets. Embedded for CWD-independent display. */
 static const unsigned char UMICOM_SYSTEM_LOGO[] = {
     0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
     0x00, 0x00, 0x00, 0xca, 0x00, 0x00, 0x00, 0x37, 0x08, 0x06, 0x00, 0x00, 0x00, 0x4d, 0x69, 0xd5,
@@ -299,3 +307,6 @@ static const unsigned char UMICOM_SYSTEM_ICON[] = {
     0x55, 0x3d, 0x98, 0x6e, 0x55, 0x0f, 0xa6, 0x5b, 0xf5, 0x17, 0xb3, 0xb5, 0x6b, 0x9c, 0x0e, 0xab,
     0x5d, 0x38, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e, 0x44, 0xae, 0x42, 0x60, 0x82,
 };
+
+#endif
+#include "brand_widget.h"

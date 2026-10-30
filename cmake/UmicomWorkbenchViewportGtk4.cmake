@@ -16,6 +16,8 @@ add_library(umicom_workbench_viewport_gtk4 STATIC
     "${_umi_viewport_root}/adapters/gtk4/workbench_viewport_gtk4.c"
     "${_umi_viewport_root}/adapters/gtk4/workbench_gallery_gtk4.c"
     "${_umi_viewport_root}/examples/workbench_viewport/practice_layout.c")
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomGtkBrandResources.cmake")
+umicom_embed_gtk_brand(umicom_workbench_viewport_gtk4)
 add_library(Umicom::workbench_viewport_gtk4 ALIAS umicom_workbench_viewport_gtk4)
 set_target_properties(umicom_workbench_viewport_gtk4 PROPERTIES EXPORT_NAME workbench_viewport_gtk4)
 target_link_libraries(umicom_workbench_viewport_gtk4 PUBLIC Umicom::workbench_viewport ${_umi_viewport_gtk_dependency})
