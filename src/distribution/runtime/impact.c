@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/distribution/runtime/impact.c
- * Purpose: Propagate changed-source impact through dependencies and explicit test ownership.
- * Author and Organisation: Sammy Hegab, Umicom Foundation
- * Licence: MIT
+ *
+ * PURPOSE:
+ *   Propagate changed-source impact through dependencies and explicit test ownership.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "impact_internal.h"

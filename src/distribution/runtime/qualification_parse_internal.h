@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/distribution/runtime/qualification_parse_internal.h
- * Purpose: Bound report fields before reconstructing immutable evidence.
- * Author and Organisation: Sammy Hegab, Umicom Foundation
- * Licence: MIT
+ *
+ * PURPOSE:
+ *   Bound report fields before reconstructing immutable evidence.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_QUALIFICATION_PARSE_INTERNAL_H

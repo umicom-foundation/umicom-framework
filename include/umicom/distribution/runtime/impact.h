@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/distribution/runtime/impact.h
- * Purpose: Plan affected targets and tests from explicit configured ownership.
- * Author and Organisation: Sammy Hegab, Umicom Foundation
- * Licence: MIT
+ *
+ * PURPOSE:
+ *   Plan affected targets and tests from explicit configured ownership.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DISTRIBUTION_RUNTIME_IMPACT_H
 #define UMICOM_DISTRIBUTION_RUNTIME_IMPACT_H

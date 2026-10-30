@@ -1,9 +1,16 @@
 #-----------------------------------------------------------------------------
 # Umicom Framework
 # File: tests/development_workflow/CMakeLists.txt
-# PURPOSE: Compile and run production development workflow contracts.
-# AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
-# LICENCE: MIT
+#
+# PURPOSE:
+#   Compile and run production development workflow contracts.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
 #-----------------------------------------------------------------------------
 add_executable(umicom-notes-debug-target notes_debuggee.c)
 if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
@@ -23,11 +30,34 @@ foreach(kind lldb gdb)
         set(_native_tool "${UMICOM_TEST_GDB_DAP}")
         set(_native_probe_args --interpreter=dap --version)
     endif()
+    # Keep the selected tool and its startup diagnostic available even when the
+    # native test must skip. A missing runtime DLL is different from an absent
+    # debugger, and suppressing both streams hid that distinction. Preserve the
+    # former quiet probe below for review. This does not turn a skip into a pass.
+    if(FALSE)
+        if(_native_tool)
+            execute_process(COMMAND "${_native_tool}" ${_native_probe_args}
+                RESULT_VARIABLE _native_probe OUTPUT_QUIET ERROR_QUIET TIMEOUT 5)
+        else()
+            set(_native_probe 1)
+        endif()
+    endif()
+    set(_native_probe_output "")
+    set(_native_probe_error "")
     if(_native_tool)
         execute_process(COMMAND "${_native_tool}" ${_native_probe_args}
-            RESULT_VARIABLE _native_probe OUTPUT_QUIET ERROR_QUIET TIMEOUT 5)
+            RESULT_VARIABLE _native_probe
+            OUTPUT_VARIABLE _native_probe_output ERROR_VARIABLE _native_probe_error
+            TIMEOUT 5)
     else()
-        set(_native_probe 1)
+        set(_native_probe "not-found")
+        set(_native_probe_error "No debugger executable was found; select the corresponding UMICOM_TEST_*_DAP cache entry.")
+    endif()
+    set(_native_probe_log "${CMAKE_CURRENT_BINARY_DIR}/native-debugger-${kind}-probe.txt")
+    file(WRITE "${_native_probe_log}"
+        "Tool: ${_native_tool}\nArguments: ${_native_probe_args}\nResult: ${_native_probe}\nStandard output:\n${_native_probe_output}\nStandard error:\n${_native_probe_error}\n")
+    if(NOT "${_native_probe}" STREQUAL "0")
+        message(STATUS "Native ${kind} debugger probe did not succeed (${_native_probe}); see ${_native_probe_log}")
     endif()
     if(NOT _native_probe EQUAL 0)
         set(_native_tool "unavailable-runtime-dependency")

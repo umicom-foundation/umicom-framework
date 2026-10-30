@@ -29,6 +29,13 @@ add_library(umi-qualification-core STATIC
     "${_root}/src/distribution/runtime/impact_expression.c"
     "${_root}/src/distribution/runtime/source_observation.c"
     "${_root}/src/distribution/runtime/source_observation_paths.c"
+    # The shared registrations now cover reopened baselines and retry planning.
+    # Include their production implementations in this focused link closure.
+    "${_root}/src/distribution/runtime/source_observation_archive.c"
+    "${_root}/src/distribution/runtime/source_observation_file.c"
+    "${_root}/src/distribution/runtime/observed_impact.c"
+    "${_root}/src/distribution/runtime/qualification_retry.c"
+    "${_root}/src/distribution/runtime/qualification_retry_report.c"
     "${_root}/src/distribution/runtime/qualification.c"
     "${_root}/src/distribution/runtime/qualification_identity.c"
     "${_root}/src/distribution/runtime/qualification_assessment.c"

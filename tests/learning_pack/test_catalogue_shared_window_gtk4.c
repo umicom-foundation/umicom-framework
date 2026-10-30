@@ -65,20 +65,23 @@ typedef struct CallbackCase {
     GtkWindow *parent;
     unsigned calls;
     int reentrant_refused;
+    int association_ready;
 } CallbackCase;
 static void WindowAdded(GtkApplication *application, GtkWindow *window, gpointer data)
 {
-    (void)application;
     CallbackCase *context = data;
     if (window == context->parent) return;
     ++context->calls;
+    context->association_ready = gtk_window_get_application(window) == application &&
+        g_list_find(gtk_application_get_windows(application), window) != NULL;
     /* Flush the boundary before the deliberate reentrant close. If the toolkit
      * faults while adding its application shortcut controller, the log must
      * distinguish that callback from later catalogue or IME destruction. */
     fprintf(stderr, "Window-added callback: %s, GTK runtime %u.%u.%u\n",
         context->name, gtk_get_major_version(), gtk_get_minor_version(), gtk_get_micro_version());
     fflush(stderr);
-    if (strcmp(context->name, "callback-child") == 0) gtk_window_destroy(window);
+    if (strcmp(context->name, "callback-child") == 0 ||
+        strcmp(context->name, "callback-after-child") == 0) gtk_window_destroy(window);
     else if (strcmp(context->name, "callback-parent") == 0) gtk_window_destroy(context->parent);
     else {
         /* A repeated action from a host's window-added callback must neither
@@ -99,7 +102,7 @@ int main(int argc, char **argv)
     gulong callback = 0U;
     const UmiVersion host = {0U, 9U, 0U};
     UmiLearningCatalogueGtkState before, after;
-    CallbackCase context = {argv[1], NULL, 0U, 0};
+    CallbackCase context = {argv[1], NULL, 0U, 0, 0};
     CHECK(Fixture(argv[2]));
     application = gtk_application_new("org.umicom.framework.shared-learning-test",
         G_APPLICATION_NON_UNIQUE);
@@ -108,10 +111,18 @@ int main(int argc, char **argv)
     g_object_ref(parent);
     context.parent = parent;
     if (g_str_has_prefix(argv[1], "callback-")) {
+        /* Normal and after handlers must both observe fully associated windows.
+         * Destruction remains immediate so an idle-close workaround cannot hide
+         * a regression in the constructor's callback and ownership contract.
+         * Keep the earlier normal-only registration for comparison. */
+#if 0
         callback = g_signal_connect(application, "window-added", G_CALLBACK(WindowAdded), &context);
+#endif
+        callback = g_signal_connect_data(application, "window-added", G_CALLBACK(WindowAdded),
+            &context, NULL, strcmp(argv[1], "callback-after-child") == 0 ? G_CONNECT_AFTER : 0);
         first = UmiLearningCatalogueGtk4PresentShared(parent, host);
         if (first != NULL) g_object_ref(first);
-        CHECK(context.calls == 1U);
+        CHECK(context.calls == 1U && context.association_ready);
         if (strcmp(argv[1], "callback-reentrant") == 0) {
             CHECK(first != NULL && context.reentrant_refused);
             CHECK(UmiLearningCatalogueGtk4PresentShared(parent, host) == first);

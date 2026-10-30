@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/distribution/runtime/source_observation_internal.h
- * Purpose: Keep source path collection private to immutable observations.
- * Author and Organisation: Sammy Hegab, Umicom Foundation
- * Licence: MIT
+ *
+ * PURPOSE:
+ *   Keep source path collection private to immutable observations.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_SOURCE_OBSERVATION_INTERNAL_H

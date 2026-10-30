@@ -129,7 +129,7 @@ if(BUILD_TESTING)
     endif()
     foreach(_case reuse pending-reuse parent-separation host-version independent-present
             closed-retained retired-replacement destroyed-parent
-            callback-child callback-parent callback-reentrant)
+            callback-child callback-after-child callback-parent callback-reentrant)
         set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-shared-window/${_case}")
         file(MAKE_DIRECTORY "${_directory}")
         add_test(NAME "framework.learning_pack.shared_window.${_case}"

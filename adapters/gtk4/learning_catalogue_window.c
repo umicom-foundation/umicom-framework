@@ -89,7 +89,19 @@ GtkWindow *UmiLearningCatalogueGtk4Present(GtkWindow *parent, UmiVersion host)
     gtk_window_set_transient_for(window, parent);
     gtk_window_set_destroy_with_parent(window, TRUE);
     GtkApplication *application = gtk_window_get_application(parent);
+    /* Let GtkApplication's default window-added handler finish association and
+     * install its shortcut controller before ordinary host callbacks run.
+     * Calling the window-side setter first allows such a callback to destroy
+     * the child while GTK still needs its application pointer. Keep that old
+     * order below for review; object references alone cannot repair its state. */
+#if 0
     if (application != NULL) gtk_window_set_application(window, application);
+#endif
+    if (application != NULL) {
+        g_object_ref(application);
+        gtk_application_add_window(application, window);
+        g_object_unref(application);
+    }
     if (CatalogueWindowAlive(parent) && CatalogueWindowReady(window, panel))
         gtk_window_present(window);
     GtkWindow *result = CatalogueWindowAlive(parent) && CatalogueWindowReady(window, panel) ? window : NULL;

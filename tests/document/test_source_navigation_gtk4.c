@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/document/test_source_navigation_gtk4.c
- * PURPOSE: Check explicit definition and reference navigation, captured drafts and worker lifetime through native controls.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Check explicit definition and reference navigation, captured drafts and worker lifetime through native controls.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/document_commands.h"
