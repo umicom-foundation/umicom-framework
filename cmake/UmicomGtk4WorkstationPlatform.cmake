@@ -115,6 +115,7 @@ if(TARGET umicom_ui_gtk4)
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/split_host_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/status_strip_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/tab_host_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/tab_strip_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/timeline_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/tool_rail_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/transport_gtk4.c"
@@ -141,6 +142,7 @@ if(TARGET umicom_ui_gtk4)
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/split_host_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/status_strip_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/tab_host_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/tab_strip_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/timeline_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/tool_rail_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/transport_gtk4.c"
@@ -795,5 +797,27 @@ if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
             COMMAND umicom-theme-settings-native-test "${_scheme}")
         set_tests_properties(framework.ui_workstation.theme.settings.${_scheme}
             PROPERTIES TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;gtk4;theme;regression")
+    endforeach()
+endif()
+
+# Exercise stable native controls, not just presentation-model snapshots.
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-gtk4-tab-strip-test
+        "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/test_tab_strip_gtk4.c")
+    target_link_libraries(umicom-gtk4-tab-strip-test PRIVATE Umicom::ui_gtk4)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-gtk4-tab-strip-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-gtk4-tab-strip-test)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-gtk4-tab-strip-test)
+    endif()
+    foreach(case identity invalid retired reentrant reparented overflow)
+        add_test(NAME framework.ui_workstation.tab_strip.${case}
+            COMMAND umicom-gtk4-tab-strip-test ${case})
+        set_tests_properties(framework.ui_workstation.tab_strip.${case} PROPERTIES
+            TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;ui-workstation;gtk4;tabs;regression")
     endforeach()
 endif()
