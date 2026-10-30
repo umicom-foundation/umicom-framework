@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/trading_ui/gtk4/trading_panels.h"
+#include "umicom/trading_ui/gtk4/event_calendar.h"
 #include "umicom/trading_ui/gtk4/session_report.h"
 
 #include <inttypes.h>
@@ -2105,6 +2106,10 @@ static GtkWidget *CreateTradingPanelBody(
      * generic property panel used by read-only capability surfaces. */
     if (strcmp(window->tool_id, "time-and-sales") == 0)
         return create_time_and_sales_panel(context);
+    /* The calendar owns its imported snapshot and filters. The earlier
+     * generic provider-readiness view remains above for API compatibility. */
+    if (strcmp(window->tool_id, "economic-calendar") == 0)
+        return UmiGtk4EventCalendarCreate();
     return create_generic_panel(window, context);
 }
 
@@ -2117,6 +2122,7 @@ typedef struct TradingPanelMount {
     GtkWidget *body;
     GWeakRef chart_observer;
     GWeakRef session_observer;
+    GWeakRef calendar_observer;
 } TradingPanelMount;
 
 /* A chart body may be retained separately from its provider mount. Weak
@@ -2132,6 +2138,9 @@ static void TradingPanelMountDestroy(gpointer data)
 #endif
     GtkWidget *session = g_weak_ref_get(&state->session_observer);
     if (session != NULL) { UmiGtk4TradingSessionReportDetach(session); g_object_unref(session); }
+    GtkWidget *calendar = g_weak_ref_get(&state->calendar_observer);
+    if (calendar != NULL) { UmiGtk4EventCalendarDetach(calendar); g_object_unref(calendar); }
+    g_weak_ref_clear(&state->calendar_observer);
     g_weak_ref_clear(&state->session_observer);
     g_weak_ref_clear(&state->chart_observer); g_free(state);
 }
@@ -2146,6 +2155,7 @@ GtkWidget *umi_gtk4_trading_panel_create(const UmiUiWorkspaceWindow *window,
     state->window = *window; state->context = context; state->body = body;
     g_weak_ref_init(&state->chart_observer, strcmp(window->tool_id, "chart") == 0 ? G_OBJECT(body) : NULL);
     g_weak_ref_init(&state->session_observer, NULL);
+    g_weak_ref_init(&state->calendar_observer, strcmp(window->tool_id, "economic-calendar") == 0 ? G_OBJECT(body) : NULL);
     GtkWidget *mount = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
     gtk_widget_set_hexpand(body, TRUE); gtk_widget_set_vexpand(body, TRUE);
     gtk_box_append(GTK_BOX(mount), body);
@@ -2174,6 +2184,9 @@ UmiStatus UmiGtk4TradingPanelRefresh(GtkWidget *panel, int explicit_action)
     if (panel == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     TradingPanelMount *state = g_object_get_data(G_OBJECT(panel), "umicom-trading-panel-mount");
     if (state == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Quotes cannot replace a separately imported calendar or erase its
+     * applied filters. Only an explicit calendar import replaces its data. */
+    if (strcmp(state->window.tool_id, "economic-calendar") == 0) return UMI_STATUS_OK;
     GtkWidget *session = g_weak_ref_get(&state->session_observer);
     if (session != NULL) { UmiGtk4TradingSessionReportMarkStale(session); g_object_unref(session); }
     if (strcmp(state->window.tool_id, "chart") == 0) {
@@ -2219,6 +2232,8 @@ void UmiGtk4TradingPanelDetachChart(GtkWidget *panel)
     /* Existing suite shutdown calls this compatibility entry point for every
      * panel. Report controls must detach while the borrowed workspace lives. */
     if (state != NULL) {
+        GtkWidget *calendar = g_weak_ref_get(&state->calendar_observer);
+        if (calendar != NULL) { UmiGtk4EventCalendarDetach(calendar); g_object_unref(calendar); }
         GtkWidget *session = g_weak_ref_get(&state->session_observer);
         if (session != NULL) { UmiGtk4TradingSessionReportDetach(session); g_object_unref(session); }
     }

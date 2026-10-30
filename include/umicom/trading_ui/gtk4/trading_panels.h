@@ -51,7 +51,9 @@ GtkWidget *umi_gtk4_trading_panel_create(
 UmiStatus UmiGtk4TradingPanelRefresh(GtkWidget *panel, int explicit_action);
 /* Bind only chart bodies; other trading panel types are unchanged. */
 void UmiGtk4TradingPanelBindChartPersistence(GtkWidget *panel, UmiTradingChartPersistence *service);
-/* Disconnect a chart body before the suite's context or storage owner dies. */
+/* Disconnect a chart body before the suite's context or storage owner dies.
+ * This compatibility entry point also retires retained session reports and
+ * calendar imports when their product workspace closes. */
 void UmiGtk4TradingPanelDetachChart(GtkWidget *panel);
 
 

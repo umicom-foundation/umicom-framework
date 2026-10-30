@@ -30,6 +30,8 @@ function(umicom_trading_workstation_attach)
         # Apply this branch only when its contract condition is satisfied.
         if(NOT _umicom_trading_interaction_attached)
             target_sources(umicom_trading_ui PRIVATE
+                "${UMICOM_TRADING_WORKSTATION_ROOT}/src/trading_ui/event_calendar.c"
+                "${UMICOM_TRADING_WORKSTATION_ROOT}/src/trading_ui/event_calendar_csv.c"
                 "${UMICOM_TRADING_WORKSTATION_ROOT}/src/trading_ui/actions.c"
                 "${UMICOM_TRADING_WORKSTATION_ROOT}/src/trading_ui/action_controller.c"
                 "${UMICOM_TRADING_WORKSTATION_ROOT}/src/trading_ui/simulation_market.c"
@@ -49,6 +51,7 @@ function(umicom_trading_workstation_attach)
         # Apply this branch only when its contract condition is satisfied.
         if(NOT _umicom_trading_gtk4_attached)
             target_sources(umicom_ui_gtk4 PRIVATE
+                "${UMICOM_TRADING_WORKSTATION_ROOT}/adapters/gtk4/trading_ui/event_calendar_gtk4.c"
                 "${UMICOM_TRADING_WORKSTATION_ROOT}/adapters/gtk4/trading_ui/trading_panels_gtk4.c"
                 "${UMICOM_TRADING_WORKSTATION_ROOT}/adapters/gtk4/trading_ui/session_report_gtk4.c"
                 "${UMICOM_TRADING_WORKSTATION_ROOT}/adapters/gtk4/trading_ui/interactive_chart_gtk4.c"
@@ -167,6 +170,7 @@ function(umicom_trading_workstation_attach)
             endif()
         endforeach()
     endif()
+    include("${UMICOM_TRADING_WORKSTATION_ROOT}/cmake/UmicomEventCalendarChecks.cmake")
 endfunction()
 
 umicom_trading_workstation_attach()
@@ -174,3 +178,9 @@ umicom_trading_workstation_attach()
 if(COMMAND cmake_language)
     cmake_language(DEFER CALL umicom_trading_workstation_attach)
 endif()
+
+# The native calendar and SDK consumers use the same documented import schema.
+install(FILES
+    "${UMICOM_TRADING_WORKSTATION_ROOT}/docs/learning/economic-earnings-calendar.html"
+    "${UMICOM_TRADING_WORKSTATION_ROOT}/docs/learning/calendar-example.csv"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/learning" COMPONENT Framework)
