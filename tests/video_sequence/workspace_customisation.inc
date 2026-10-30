@@ -12,13 +12,21 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "umicom/ui/gtk4/workstation/focus_cycle.h"
+
+static bool FocusInRegion(GtkWidget *window, GtkWidget *region)
+{
+    GtkWidget *focus = gtk_window_get_focus(GTK_WINDOW(window));
+    return focus != NULL && (focus == region || gtk_widget_is_ancestor(focus, region));
+}
+
 static bool CustomisationCase(const char *mode)
 {
     const char *cases[] = {
         "library-search", "library-selection", "library-empty", "library-reentry",
         "timeline-zoom", "layout-resize", "layout-visibility", "layout-recall",
         "layout-reset", "layout-retirement", "layout-reentry", "layout-retire-notify",
-        "workspace-navigation", "media-brand",
+        "workspace-navigation", "keyboard-regions", "keyboard-hidden", "media-brand",
         "media-mode-retention"
     };
     for (size_t i = 0U; i < G_N_ELEMENTS(cases); ++i)
@@ -160,6 +168,36 @@ static void Customisation(const char *mode, GtkWidget *window, GtkWidget *host,
         CHECK(gtk_widget_get_visible(panel->inspectorBook));
         CHECK(gtk_notebook_get_current_page(GTK_NOTEBOOK(panel->inspectorBook)) == 1);
         CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(panel->rightId)), "unsubmitted-cut") == 0);
+    } else if (strcmp(mode, "keyboard-regions") == 0 || strcmp(mode, "keyboard-hidden") == 0) {
+        gtk_editable_set_text(GTK_EDITABLE(panel->rightId), "unsubmitted-cut");
+        GtkWidget *preview = Find(root, "video.preview-region");
+        CHECK(gtk_widget_grab_focus(panel->search));
+        /* Exercise the action emitted by GTK's own pane F6 binding too. */
+        gboolean handled = FALSE;
+        g_signal_emit_by_name(panel->layoutPanes[0], "cycle-child-focus", FALSE, &handled);
+        CHECK(handled && FocusInRegion(window, preview));
+        CHECK(gtk_widget_grab_focus(panel->search));
+        if (strcmp(mode, "keyboard-hidden") == 0) {
+            gtk_check_button_set_active(GTK_CHECK_BUTTON(panel->layoutChecks[1]), FALSE);
+            gtk_check_button_set_active(GTK_CHECK_BUTTON(panel->layoutChecks[2]), FALSE);
+        }
+        Settle();
+        CHECK(UmiGtk4FocusCycleAdvance(root, FALSE));
+        CHECK(FocusInRegion(window, preview));
+        CHECK(UmiGtk4FocusCycleAdvance(root, FALSE));
+        if (strcmp(mode, "keyboard-regions") == 0) {
+            CHECK(FocusInRegion(window, panel->inspectorBook));
+            CHECK(UmiGtk4FocusCycleAdvance(root, FALSE));
+            CHECK(FocusInRegion(window, panel->layoutRegions[2]));
+            CHECK(UmiGtk4FocusCycleAdvance(root, TRUE));
+            CHECK(FocusInRegion(window, panel->inspectorBook));
+        } else {
+            CHECK(FocusInRegion(window, panel->sourceBook));
+            CHECK(!gtk_widget_get_visible(panel->inspectorBook));
+            CHECK(!gtk_widget_get_visible(panel->layoutRegions[2]));
+        }
+        CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(panel->rightId)), "unsubmitted-cut") == 0);
+        Capture(window, host);
     } else if (strcmp(mode, "media-brand") == 0) {
         GtkWidget *logo = Find(host, "media.brand.logo");
         GtkWidget *icon = Find(host, "media.brand.icon");

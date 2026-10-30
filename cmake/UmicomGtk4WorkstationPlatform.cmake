@@ -99,6 +99,7 @@ if(TARGET umicom_ui_gtk4)
     )
     target_sources(umicom_ui_gtk4 PRIVATE
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/action_group_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/focus_cycle_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/asset_browser_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/chart_surface_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/command_bar_gtk4.c"
@@ -127,6 +128,7 @@ if(TARGET umicom_ui_gtk4)
     if(UMICOM_ENABLE_STRICT_WARNINGS AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
         set_source_files_properties(
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/action_group_gtk4.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/focus_cycle_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/asset_browser_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/chart_surface_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/command_bar_gtk4.c"
@@ -844,4 +846,38 @@ if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
         set_tests_properties(framework.ui_workstation.action_group.${case} PROPERTIES
             TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;ui-workstation;gtk4;layout;regression")
     endforeach()
+endif()
+
+# Native focus navigation must retain drafts and survive notifying callbacks.
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-gtk4-focus-cycle-test
+        "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/test_focus_cycle_gtk4.c")
+    target_link_libraries(umicom-gtk4-focus-cycle-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-gtk4-focus-cycle-test)
+    umicom_apply_sanitizers(umicom-gtk4-focus-cycle-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-gtk4-focus-cycle-test)
+    endif()
+    foreach(case forward reverse wrap hidden disabled notebook single no-target
+        nested reentry redirect detach retire modifiers controller paned)
+        add_test(NAME framework.ui_workstation.focus_cycle.${case}
+            COMMAND umicom-gtk4-focus-cycle-test ${case})
+        set_tests_properties(framework.ui_workstation.focus_cycle.${case} PROPERTIES
+            TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;ui;gtk4;keyboard;ownership")
+    endforeach()
+endif()
+
+# Use the real shared host used by product workstations.
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-gtk4-workspace-focus-test
+        "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/test_workspace_focus_gtk4.c")
+    target_link_libraries(umicom-gtk4-workspace-focus-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-gtk4-workspace-focus-test)
+    umicom_apply_sanitizers(umicom-gtk4-workspace-focus-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-gtk4-workspace-focus-test)
+    endif()
+    add_test(NAME framework.ui_workstation.workspace.focus.gtk4 COMMAND umicom-gtk4-workspace-focus-test)
+    set_tests_properties(framework.ui_workstation.workspace.focus.gtk4 PROPERTIES
+        TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;ui;gtk4;keyboard;retention")
 endif()

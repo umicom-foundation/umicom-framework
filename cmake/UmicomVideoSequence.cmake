@@ -35,6 +35,7 @@ if(TARGET umicom_creative_workspace_gtk4)
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)
 endif()
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/video-sequences.html"
+    "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/workspace-keyboard-navigation.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/learning" COMPONENT Framework)
 
 if(BUILD_TESTING)
@@ -88,13 +89,13 @@ if(BUILD_TESTING)
             library-search library-selection library-empty library-reentry timeline-zoom
             layout-resize layout-visibility layout-recall layout-reset layout-retirement
             layout-reentry layout-retire-notify
-            workspace-navigation media-brand media-mode-retention)
+            workspace-navigation keyboard-regions keyboard-hidden media-brand media-mode-retention)
         target_link_libraries(umicom-video-workspace-gtk-test PRIVATE Umicom::creative_workspace_gtk4)
         foreach(case geometry selection edits retirement composition music-composition
             library-search library-selection library-empty library-reentry timeline-zoom
             layout-resize layout-visibility layout-recall layout-reset layout-retirement
             layout-reentry layout-retire-notify
-            workspace-navigation media-brand media-mode-retention)
+            workspace-navigation keyboard-regions keyboard-hidden media-brand media-mode-retention)
             set_tests_properties(framework.video_sequence.umicom-video-workspace-gtk-test.${case}
                 PROPERTIES ENVIRONMENT "G_DEBUG=fatal-warnings" LABELS "framework;video-sequence;gtk4;workflow;regression")
         endforeach()

@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "umicom/ui/gtk4/workstation/focus_cycle.h"
 #include "umicom/ui/gtk4/workstation/panel_frame.h"
 #include "umicom/ui/gtk4/workstation/shell_header.h"
 #include "umicom/ui/gtk4/workstation/tab_host.h"
@@ -554,6 +555,9 @@ static GtkWidget *create_panel(
      */
     if (host == NULL || window == NULL) return NULL;
     content = create_content(host, window);
+    /* Keyboard navigation follows the retained body through docking,
+     * maximisation and tabs without changing its document or commands. */
+    UmiGtk4FocusCycleMarkRegion(content, TRUE);
     if (!window->floating &&
         (host->retain_content ||
          strcmp(window->placement_id, UMI_UI_WORKSPACE_CANVAS_PLACEMENT) == 0) &&
@@ -860,6 +864,7 @@ UmiStatus umi_gtk4_workspace_layout_host_create_with_options(
         return UMI_STATUS_OUT_OF_MEMORY;
     }
     g_object_ref_sink(host->root);
+    UmiGtk4FocusCycleInstall(host->root);
     host->panel_factory = panel_factory;
     host->panel_user_data = panel_user_data;
     host->action_handler = action_handler;
@@ -1127,6 +1132,8 @@ UmiStatus umi_gtk4_workspace_layout_host_rebuild(
     gtk_widget_set_hexpand(workspace, TRUE);
     gtk_widget_set_vexpand(workspace, TRUE);
     gtk_box_append(GTK_BOX(host->root), workspace);
+    /* Bind newly composed split panes without recreating retained content. */
+    UmiGtk4FocusCycleInstall(host->root);
 
     build_floating_windows(host);
     if (revealed_id[0] != '\0')

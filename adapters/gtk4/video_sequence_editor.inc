@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "media_workspace_style.h"
+#include "umicom/ui/gtk4/workstation/focus_cycle.h"
 
 /* The editor keeps its existing command IDs and model ownership. The desktop
  * surface may add navigation around it without cloning or reloading a recipe. */
@@ -27,6 +28,7 @@ GtkWidget *UmiVideoSequenceGtk4Create(void) {
   panel->saved = initial;
   panel->root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
   Tag(panel->root, "video-sequence");
+  UmiGtk4FocusCycleInstall(panel->root);
   UmiMediaWorkspaceStyle(panel->root);
   g_object_set_data_full(G_OBJECT(panel->root), "umicom-video-sequence", panel, Dispose);
   gtk_widget_set_hexpand(panel->root, TRUE); gtk_widget_set_vexpand(panel->root, TRUE);
@@ -60,6 +62,7 @@ GtkWidget *UmiVideoSequenceGtk4Create(void) {
   panel->layoutRegions[0] = sourceBook;
   Tag(sourceBook, "video.source-pages");
   gtk_widget_add_css_class(sourceBook, "media-region");
+  UmiGtk4FocusCycleMarkRegion(sourceBook, TRUE);
   gtk_notebook_set_scrollable(GTK_NOTEBOOK(sourceBook), TRUE);
   gtk_widget_set_size_request(sourceBook, 220, -1);
   gtk_paned_set_start_child(GTK_PANED(horizontal), sourceBook);
@@ -114,6 +117,7 @@ GtkWidget *UmiVideoSequenceGtk4Create(void) {
   GtkWidget *preview = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
   Tag(preview, "video.preview-region");
   gtk_widget_add_css_class(preview, "media-region");
+  UmiGtk4FocusCycleMarkRegion(preview, TRUE);
   gtk_widget_add_css_class(preview, "media-preview");
   gtk_widget_set_hexpand(preview, TRUE); gtk_widget_set_vexpand(preview, TRUE);
   gtk_widget_set_size_request(preview, 240, 180);
@@ -134,6 +138,7 @@ GtkWidget *UmiVideoSequenceGtk4Create(void) {
   panel->layoutRegions[1] = inspectorBook;
   Tag(inspectorBook, "video.inspector-pages");
   gtk_widget_add_css_class(inspectorBook, "media-region");
+  UmiGtk4FocusCycleMarkRegion(inspectorBook, TRUE);
   gtk_notebook_set_scrollable(GTK_NOTEBOOK(inspectorBook), TRUE);
   gtk_widget_set_size_request(inspectorBook, 260, -1);
   gtk_paned_set_end_child(GTK_PANED(right), inspectorBook);
@@ -199,6 +204,7 @@ GtkWidget *UmiVideoSequenceGtk4Create(void) {
   panel->layoutRegions[2] = timeline;
   gtk_widget_add_css_class(timeline, "media-timeline");
   gtk_widget_add_css_class(timeline, "media-region");
+  UmiGtk4FocusCycleMarkRegion(timeline, TRUE);
   gtk_paned_set_resize_end_child(GTK_PANED(vertical), FALSE);
   gtk_paned_set_shrink_end_child(GTK_PANED(vertical), FALSE);
   gtk_paned_set_end_child(GTK_PANED(vertical), timeline);
@@ -252,6 +258,8 @@ GtkWidget *UmiVideoSequenceGtk4Create(void) {
   gtk_widget_set_sensitive(panel->cancelButton, FALSE);
   panel->status = Label(statusBar, "Add clips, then save the recipe or render a new video.");
   Tag(panel->status, "video.status");
+  /* Layout panes have their own F6 action; join it to the shared regions. */
+  UmiGtk4FocusCycleInstall(panel->root);
   UmiVideoSequenceGtkRefresh(panel);
   return panel->root;
 }
