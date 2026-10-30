@@ -98,6 +98,7 @@ if(TARGET umicom_ui_gtk4)
         Umicom::chart_cairo
     )
     target_sources(umicom_ui_gtk4 PRIVATE
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/action_group_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/asset_browser_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/chart_surface_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/command_bar_gtk4.c"
@@ -125,6 +126,7 @@ if(TARGET umicom_ui_gtk4)
     # Use the stable identifier comparison to choose the matching record or policy.
     if(UMICOM_ENABLE_STRICT_WARNINGS AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
         set_source_files_properties(
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/action_group_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/asset_browser_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/chart_surface_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/command_bar_gtk4.c"
@@ -819,5 +821,27 @@ if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
             COMMAND umicom-gtk4-tab-strip-test ${case})
         set_tests_properties(framework.ui_workstation.tab_strip.${case} PROPERTIES
             TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;ui-workstation;gtk4;tabs;regression")
+    endforeach()
+endif()
+
+# Wrapping controls are qualified with real GTK allocation and retained buttons.
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-gtk4-action-group-test
+        "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/test_action_group_gtk4.c")
+    target_link_libraries(umicom-gtk4-action-group-test PRIVATE Umicom::ui_gtk4)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-gtk4-action-group-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-gtk4-action-group-test)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-gtk4-action-group-test)
+    endif()
+    foreach(case layout activation admission capacity)
+        add_test(NAME framework.ui_workstation.action_group.${case}
+            COMMAND umicom-gtk4-action-group-test ${case})
+        set_tests_properties(framework.ui_workstation.action_group.${case} PROPERTIES
+            TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;ui-workstation;gtk4;layout;regression")
     endforeach()
 endif()
