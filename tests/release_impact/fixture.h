@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/release_impact/fixture.h
- * Purpose: Build small synthetic inventories for impact regression scenarios.
- * Author and Organisation: Sammy Hegab, Umicom Foundation
- * Licence: MIT
+ *
+ * PURPOSE:
+ *   Declare small synthetic and file-backed inventory fixtures for impact regression scenarios.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_IMPACT_TEST_FIXTURE_H
 #define UMICOM_IMPACT_TEST_FIXTURE_H
@@ -12,6 +19,8 @@
 #define REQUIRE(expr) do { if (!(expr)) { (void)fprintf(stderr, "Failed at line %d: %s\n", __LINE__, #expr); return 1; } } while (0)
 typedef struct Fixture { char *text; size_t used, capacity; } Fixture;
 bool FixtureStart(Fixture *fixture);
+/* File-backed cases provide the directory that actually owns their sources. */
+bool FixtureStartAtRoot(Fixture *fixture, const char *sourceRoot);
 bool FixtureRow(Fixture *fixture, const char *kind, const char *name, const char *owner, const char *state, const char *detail);
 bool FixtureTarget(Fixture *fixture, const char *name, const char *dependency);
 bool FixtureTest(Fixture *fixture, const char *name, const char *target, const char *helper, bool always);

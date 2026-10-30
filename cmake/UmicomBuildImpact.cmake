@@ -41,7 +41,7 @@ if(TARGET umicom)
         if(COMMAND umicom_register_validation_target)
             umicom_register_validation_target(umi-qualification-plan-cli-test)
         endif()
-        foreach(_case IN ITEMS capture existing passed failed changed summary no-history unknown-tools
+        foreach(_case IN ITEMS capture existing passed failed changed summary no-history unknown-tools outside-root
                 wrong-baseline wrong-report duplicate-option duplicate-summary unknown-option missing-value
                 baseline-pair report-pair relative no-tests capture-relative capture-duplicate capture-missing null-arguments)
             set(_name "framework.qualification.plan_cli.${_case}")

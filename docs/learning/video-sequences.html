@@ -3,13 +3,39 @@
 <title>Edit a local video sequence — Umicom Framework</title>
 <style>body{font:17px/1.6 system-ui;max-width:900px;margin:40px auto;padding:0 24px;color:#213047}code{background:#edf2f6;padding:2px 5px}h1,h2{line-height:1.2}aside{padding:14px;background:#f3f6fa;border-left:4px solid #276cad}</style></head>
 <body><main><h1>Edit a local video sequence</h1>
-<p>The Video sequence page in Media and Music joins selected parts of local video files.
+<p>The Video editing workspace in Media, and the Video editing view in Music, join selected parts of local video files.
 A recipe records the order, trim ranges and output size. Editing a recipe leaves the source files unchanged.
 The shared Framework service supplies the same editing rules to both applications.</p>
 <aside>This editor supports six clips and a total of ten minutes. Export produces silent H.264 video
 in a fragmented MP4 container at 30 frames per second. Audio is attached in a separate export described below. Transitions, caption burn-in and multi-track
 video composition are not included in the sequence renderer. The separate audio and caption tools remain available.</aside>
+<h2>Find your way around</h2>
+<p>Media opens its <strong>Video editing</strong> view. Clips and project settings are on the left,
+the preview is in the centre, the Inspector and Export pages are on the right, and the clip strip
+is below. Drag the separators to resize these regions. Choose <strong>Design and generators</strong>
+for the other creative tools, or <strong>Workspace layouts</strong> for the product's existing layouts.
+Music starts in its creative workbench; select its <strong>Video editing</strong> view for this editor.</p>
 <h2>Choose clips and make edits</h2><ol>
+<li>In <strong>Clips</strong>, enter a unique clip ID, such as <code>intro</code>, then browse to a local video.
+A clip is a named section of one source file. Use an ordinary absolute file path; web addresses and network shares are not accepted.</li>
+<li>In <strong>Inspector</strong>, set Source start and Source end in milliseconds. One second is 1000 milliseconds.
+For example, 2000 to 6000 selects four seconds beginning two seconds into the file. The end is excluded.</li>
+<li>Choose <strong>Add clip</strong> on the left. A button appears below the preview with the clip ID and its place in the assembled sequence.
+To add another clip, enter a different ID, choose its file, set its source range, and choose Add clip again.</li>
+<li>Select a clip using its button below the preview or the clip list on the left. Selection loads its fields;
+it does not change the recipe, start playback or consume an Undo step.</li>
+<li>Change the source range and choose <strong>Apply trim</strong>. Typing into a field alone does not edit the recipe.</li>
+<li>To split a clip, enter a source time inside its current range, give the right part a new ID, and choose <strong>Split clip</strong>.
+To change its order, enter a New position starting at 1 and choose <strong>Move clip</strong>.</li>
+<li>Use <strong>Undo</strong> and <strong>Redo</strong> to review the last sixteen changes.
+A fresh edit after Undo replaces the redo path. The clip strip updates after each accepted edit.</li>
+<li>Open <strong>Project</strong> on the left to apply a title and even output dimensions.
+The supported dimensions run from 16 by 16 to 1920 by 1080 pixels.</li></ol>
+<p>The clip strip is an ordered sequence, not a multi-track editor. Its buttons are not scaled to duration,
+and clips are reordered with Move clip rather than drag and drop. Expand <strong>Sequence details</strong> for exact timing and source paths.</p>
+<!-- The earlier form instructions are retained as inert design history for review.
+     The workspace above replaces their control locations without removing editing operations. -->
+<template id="previous-video-form-instructions"><h2>Choose clips and make edits</h2><ol>
 <li>Open the creative workspace and select <strong>Video sequence</strong>.</li>
 <li>Enter a unique clip ID, such as <code>intro</code>, then browse to a local video.
 Use an ordinary absolute file path; web addresses and network shares are not accepted.</li>
@@ -22,7 +48,7 @@ Typing alone does not change the saved edit.</li>
 and give the right part a new ID. Move a clip to a position starting at 1. Use Undo and Redo
 to review the last sixteen changes. A fresh edit after Undo replaces the redo path.</li>
 <li>Expand <strong>Sequence settings</strong> to apply a title and even output dimensions.
-The supported dimensions run from 16 by 16 to 1920 by 1080 pixels.</li></ol>
+The supported dimensions run from 16 by 16 to 1920 by 1080 pixels.</li></ol></template>
 <h2>Preview a stored trim</h2>
 <p>Select an added clip and press <strong>Preview selected clip</strong>. Preview is muted to match
 the silent export. Playback depends on the installed GTK GStreamer backend and suitable codecs.
@@ -30,7 +56,7 @@ The editor checks whether the backend can seek and whether the selected end is w
 Press Stop preview before moving on. This is a single-clip preview, not a preview of the entire assembled timeline.
 Backend timing is not a frame-accurate editing guarantee.</p>
 <h2>Save and reopen your recipe</h2><ol>
-<li>Choose a new JSON filename in a directory you control, then press <strong>Save new recipe</strong>.
+<li>Open <strong>Project</strong>, choose a new JSON filename in a directory you control, then press <strong>Save new recipe</strong>.
 Existing files are preserved, so use a new filename for each saved revision.</li>
 <li>To reopen a recipe, enter or choose its existing path and press <strong>Open recipe</strong>.
 If you have unsaved edits, save them first or tick the replacement confirmation.</li>
@@ -57,7 +83,7 @@ returns <code>UMI_STATUS_INVALID_STATE</code>; reload and review the current ref
 retrying. The caller serializes editing on its owning thread. Relink validation performs no
 filesystem or codec inspection.</p>
 <h2>Render a video</h2><ol>
-<li>Select a trusted native FFmpeg executable that includes the <code>libx264</code> encoder.
+<li>Open <strong>Export</strong> on the right and select a trusted native FFmpeg executable that includes the <code>libx264</code> encoder.
 Umicom does not download or install it. Native rendering currently uses the Framework process channel
 on Windows and Linux.</li>
 <li>Choose a new filename ending in <code>.mp4</code> in an existing directory you control.</li>
@@ -109,7 +135,7 @@ and <a href="https://docs.gtk.org/gtk4/class.MediaStream.html">GTK media streams
 <ol><li>Finish trimming and arranging the video. Render it, and add its soundtrack if needed.</li>
 <li>Use the captions editor to create or edit the words and cue timings, then export a UTF-8 SRT file.
 SRT, also called SubRip, stores a start time, end time and text for each caption.</li>
-<li>In <strong>Video sequence</strong>, open <strong>Add captions to a rendered video</strong>.
+<li>In the <strong>Export</strong> page, open <strong>Add captions to a rendered video</strong>.
 Choose the finished video, the SRT file and a new output filename ending in <code>.mp4</code>.</li>
 <li>Check the trusted FFmpeg executable field and select <strong>Export with captions</strong>.
 Wait for the completion message. The operation uses the same Cancel button as rendering.</li>

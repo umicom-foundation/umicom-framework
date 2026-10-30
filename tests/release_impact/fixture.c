@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/release_impact/fixture.c
- * Purpose: Encode synthetic inventory fixtures using the public bounded format.
- * Author and Organisation: Sammy Hegab, Umicom Foundation
- * Licence: MIT
+ *
+ * PURPOSE:
+ *   Encode bounded impact inventories with synthetic or explicit source roots.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "fixture.h"
@@ -35,6 +42,15 @@ bool FixtureStart(Fixture *f)
 {
     memset(f, 0, sizeof(*f));
     return Append(f, "UMICOM-RELEASE-INVENTORY\t1\ncontext\tcmake\t0123456789abcdef0123456789abcdef\t2f7265706f\t2f6275696c64\t4465627567\n");
+}
+/* File-backed scenarios must bind their real fixture root. The original
+ * synthetic /repo root remains appropriate for graph-only scenarios. */
+bool FixtureStartAtRoot(Fixture *f, const char *sourceRoot)
+{
+    if (f == NULL || sourceRoot == NULL || sourceRoot[0] == '\0') return false;
+    memset(f, 0, sizeof(*f));
+    return Append(f, "UMICOM-RELEASE-INVENTORY\t1\ncontext\tcmake\t0123456789abcdef0123456789abcdef\t") &&
+        Hex(f, sourceRoot) && Append(f, "\t") && Hex(f, sourceRoot) && Append(f, "\t4465627567\n");
 }
 bool FixtureRow(Fixture *f, const char *kind, const char *name, const char *owner, const char *state, const char *detail)
 {

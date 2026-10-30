@@ -70,6 +70,13 @@ if(BUILD_TESTING)
         endforeach()
     endif()
     if(TARGET umicom_creative_workspace_gtk4)
+        umicom_video_cases(umicom-video-workspace-gtk-test test_workspace_gtk4.c
+            geometry selection edits retirement composition music-composition)
+        target_link_libraries(umicom-video-workspace-gtk-test PRIVATE Umicom::creative_workspace_gtk4)
+        foreach(case geometry selection edits retirement composition music-composition)
+            set_tests_properties(framework.video_sequence.umicom-video-workspace-gtk-test.${case}
+                PROPERTIES ENVIRONMENT "G_DEBUG=fatal-warnings" LABELS "framework;video-sequence;gtk4;workflow;regression")
+        endforeach()
         umicom_video_cases(umicom-video-relink-gtk-test test_relink_gtk4.c
             selected shared reentry draft invalid busy retired selection-move selection-remove empty)
         target_link_libraries(umicom-video-relink-gtk-test PRIVATE Umicom::creative_workspace_gtk4)

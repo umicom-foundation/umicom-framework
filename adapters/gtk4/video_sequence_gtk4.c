@@ -1,13 +1,22 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/video_sequence_gtk4.c
- * PURPOSE: Expose real sequence edits while keeping source media and recipe storage separate.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Present non-destructive video edits through a workspace with persistent clip selection.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "video_sequence_private.h"
 #include <string.h>
+#include "umicom/ui/gtk4/workstation/action_group.h"
+static void RefreshTimeline(UmiVideoSequencePanel *panel);
 UmiVideoSequencePanel *UmiVideoSequenceGtkState(GtkWidget *root) {
   return g_object_get_data(G_OBJECT(root), "umicom-video-sequence");
 }
@@ -59,6 +68,7 @@ static void Select(GtkDropDown *selector, GParamSpec *spec, gpointer root) {
     return;
   panel->changing = true;
   LoadSelection(panel);
+  if (!panel->closed) RefreshTimeline(panel);
   panel->changing = false;
 }
 /* Replacing the list used to select a different clip after edits. The identity-
@@ -151,6 +161,7 @@ void UmiVideoSequenceGtkRefresh(UmiVideoSequencePanel *panel) {
   gtk_spin_button_set_value(GTK_SPIN_BUTTON(panel->height), sequence->height);
   if (panel->closed) goto finished;
   LoadSelection(panel);
+  if (!panel->closed) RefreshTimeline(panel);
 finished:
   panel->refreshing = false;
 }
@@ -276,9 +287,19 @@ static GtkWidget *Button(UmiVideoSequencePanel *panel, GtkWidget *box, const cha
   Tag(button, id);
   g_object_set_data_full(G_OBJECT(button), "video-action", g_strdup(action), g_free);
   g_signal_connect_object(button, "clicked", callback, panel->root, 0);
+  /* Framework action groups wrap existing command buttons without owning execution.
+   * Ordinary vertical form containers retain their original behaviour. */
+#if 0
   gtk_box_append(GTK_BOX(box), button);
+#endif
+  if (GTK_IS_FLOW_BOX(box)) (void)UmiGtk4ActionGroupAppend(box, button);
+  else gtk_box_append(GTK_BOX(box), button);
   return button;
 }
+/* The vertical form is retained for review. The workspace composition below
+ * exposes the same controls and service callbacks in resizable task regions,
+ * so preview and clip selection remain visible while editing or exporting. */
+#if 0
 GtkWidget *UmiVideoSequenceGtk4Create(void) {
   UmiVideoSequence initial = {0};
   UmiVideoSequencePanel *panel = g_new0(UmiVideoSequencePanel, 1);
@@ -416,3 +437,7 @@ GtkWidget *UmiVideoSequenceGtk4Create(void) {
   UmiVideoSequenceGtkRefresh(panel);
   return panel->root;
 }
+
+#endif
+
+#include "video_sequence_workspace.inc"

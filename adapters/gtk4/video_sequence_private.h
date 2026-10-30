@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/video_sequence_private.h
- * PURPOSE: Separate worker job ownership from GTK video editing state.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Separate worker ownership, persistent sequence state and native workspace controls.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_VIDEO_SEQUENCE_GTK_PRIVATE_H
@@ -20,6 +27,8 @@ typedef struct UmiVideoSequencePanel {
   GtkWidget *soundtrackVideo, *soundtrackAudio, *soundtrackOutput;
   GtkWidget *captionVideo, *captionSource, *captionOutput;
   GtkWidget *relinkPath, *relinkAll;
+  /* Stable clip controls retain focus while the model supplies their identity. */
+  GtkWidget *clipButtons[UMI_VIDEO_SEQUENCE_MAX_CLIPS], *durationLabel, *emptyTimeline;
   GtkMediaStream *stream;
   UmiCancellationToken *cancel; /* Borrowed from the accepted job until completion. */
   uint32_t previewBegin, previewEnd;

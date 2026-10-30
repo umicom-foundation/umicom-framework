@@ -62,7 +62,7 @@ int main(int argc, char **argv)
     REQUIRE(argc == 2);
     const char *mode = argv[1];
     static const char *const modes[] = {"capture", "existing", "passed", "failed", "changed",
-        "summary", "no-history", "unknown-tools", "wrong-baseline", "wrong-report",
+        "summary", "no-history", "unknown-tools", "outside-root", "wrong-baseline", "wrong-report",
         "duplicate-option", "duplicate-summary", "unknown-option", "missing-value",
         "baseline-pair", "report-pair", "relative", "no-tests", "capture-relative",
         "capture-duplicate", "capture-missing", "null-arguments"};
@@ -86,7 +86,13 @@ int main(int argc, char **argv)
     FixturePath(reportPath, directory, "report.tsv");
     REQUIRE(WriteNew(source, "original\n", 9U) == 0);
     Fixture text;
+    /* Retain the old synthetic-root setup for review: real file observations
+     * need their own root to avoid an unrelated conservative full selection. */
+#if 0
     REQUIRE(FixtureStart(&text) && FixtureTarget(&text, "library", NULL));
+#endif
+    REQUIRE(FixtureStartAtRoot(&text, strcmp(mode, "outside-root") == 0 ? "/repo" : directory));
+    REQUIRE(FixtureTarget(&text, "library", NULL));
     REQUIRE(FixtureSource(&text, source, "library"));
     bool noTests = strcmp(mode, "no-tests") == 0;
     if (!noTests) REQUIRE(FixtureTest(&text, "test.one", "library", NULL, false) &&
@@ -120,7 +126,7 @@ int main(int argc, char **argv)
         goto unchanged;
     }
     UmiQualificationArchiveReceipt receipt;
-    REQUIRE(SaveHistory(inventory, baseline, reportPath, strcmp(mode, "failed") == 0, toolchain, &receipt) == 0);
+    REQUIRE(SaveHistory(inventory, baseline, reportPath, (strcmp(mode, "failed") == 0 || strcmp(mode, "outside-root") == 0), toolchain, &receipt) == 0);
     if (strcmp(mode, "changed") == 0)
         REQUIRE(UmiRootedFileWrite(directory, "source-\xc3\xa9.c", "changed!\n", 9U) == UMI_STATUS_OK);
     char *arguments[18] = {"--inventory", inventoryPath, "--baseline", baselinePath,
