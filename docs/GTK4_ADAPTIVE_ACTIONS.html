@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Building adaptable tool panels</title><style>body{font:17px/1.65 system-ui;max-width:900px;margin:2rem auto;padding:0 24px;color:#183442}pre{background:#f1f5f7;padding:1rem;overflow:auto}code{overflow-wrap:anywhere}</style></head><body><main>
+<h1>Building adaptable tool panels</h1>
+<p>A tool panel is an area containing controls for a task, such as building a project. When users make it narrower, its buttons should move onto another row instead of forcing the application wider. Framework provides this layout through <code>UmiGtk4ActionGroupCreate</code>.</p>
+<h2>Keep layout separate from execution</h2>
+<p>The group arranges existing buttons. It does not start builds, save documents, change workspace trust or hold application services. A button keeps the same command binding before and after a resize. Framework build sessions, document services and command admission remain responsible for what an action does.</p>
+<ol><li>Include <code>umicom/ui/gtk4/workstation/action_group.h</code> and link <code>Umicom::ui_gtk4</code>.</li><li>Create the group on the GTK owning thread.</li><li>Create each button and attach its existing checked command binding. Add it with <code>UmiGtk4ActionGroupAppend</code>.</li><li>Place the group inside the panel. If panel height is limited, use a vertically scrolling container so lower rows remain reachable.</li><li>Keep bindings safe when the host closes. The group does not extend a borrowed service's lifetime or make a retained button authoritative.</li></ol>
+<pre><code>#include "umicom/ui/gtk4/workstation/action_group.h"
+
+GtkWidget *actions = UmiGtk4ActionGroupCreate();
+GtkWidget *build = gtk_button_new_with_label("Build");
+/* Bind build to the host's existing checked command before appending it. */
+UmiStatus status = UmiGtk4ActionGroupAppend(actions, build);
+if (status == UMI_STATUS_OK) {
+    gtk_box_append(GTK_BOX(panel), actions);
+} else {
+    /* Both widgets are still unparented after failed admission. */
+    g_object_ref_sink(build);
+    g_object_unref(build);
+    g_object_ref_sink(actions);
+    g_object_unref(actions);
+}
+</code></pre>
+<p>The group supports up to 64 unparented buttons, including toggle buttons. It rejects a button already owned by another container without moving it. Failed admission does not consume the button: the caller must retain or release it according to normal GTK ownership. Creating a button alone does not connect a feature; Studio's <code>runtime_panel_add_commands</code> shows the real integration with checked commands.</p>
+<h2>Check the result</h2><ol><li>Open a panel with several actions and make it narrow. Its actions should occupy multiple rows.</li><li>Move keyboard focus to a button, then resize the panel. Confirm the same control remains focused.</li><li>Activate it once and confirm one operation starts.</li><li>Close and reopen the host. Confirm old retained controls cannot bypass the host's command checks.</li></ol>
+<p>The <code>framework.ui_workstation.action_group.*</code> tests cover allocation, retained identity and focus, single dispatch, ownership admission and the capacity boundary. They require a graphical session; absence of one is a skip. Application workflows need their own tests because layout alone cannot establish that a build, trade or media operation succeeded.</p>
+</main></body></html>
