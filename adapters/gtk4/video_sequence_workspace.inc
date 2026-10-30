@@ -44,6 +44,9 @@ static void TimelineSelect(GtkButton *button, gpointer root) {
   if ((size_t)index < sequence->clip_count)
     gtk_drop_down_set_selected(GTK_DROP_DOWN(panel->selector), index);
 }
+/* Retain the earlier row-only layout for review. The replacement below adds
+ * a searchable library and task navigation without replacing its edit owner. */
+#if 0
 static void RefreshTimeline(UmiVideoSequencePanel *panel) {
   if (panel->closed || panel->durationLabel == NULL) return;
   UmiVideoSequence value = *UmiVideoSequenceEditorRead(panel->editor);
@@ -260,3 +263,9 @@ GtkWidget *UmiVideoSequenceGtk4Create(void) {
   UmiVideoSequenceGtkRefresh(panel);
   return panel->root;
 }
+
+#endif
+
+#include "video_sequence_layout.inc"
+#include "video_sequence_library.inc"
+#include "video_sequence_editor.inc"

@@ -10,6 +10,27 @@ The shared Framework service supplies the same editing rules to both application
 in a fragmented MP4 container at 30 frames per second. Audio is attached in a separate export described below. Transitions, caption burn-in and multi-track
 video composition are not included in the sequence renderer. The separate audio and caption tools remain available.</aside>
 <h2>Find your way around</h2>
+<p>Media starts in <strong>Video Edit</strong>. The Media library is on the left, the preview is in the centre, the Inspector and Export pages are on the right, and the timeline is below. The top bar switches between Video Edit, AI Video, AI Image, Audio, Canvas and the existing Layouts view. Each opens its existing tool; it does not create a second copy of your video recipe. Music keeps its creative workbench as its starting view.</p>
+<h2>Make the workspace comfortable</h2><ol>
+<li>Resize the application window using its borders. Drag the wide dividers between the library, preview and inspector, or the divider above the timeline. Each panel has a minimum size so its controls remain usable.</li>
+<li>Open <strong>Layout</strong> above the editor. Turn Show media library, Show inspector or Show timeline off to make space, and turn them on to bring the same panels back. Hiding a panel keeps its fields and edits.</li>
+<li>Choose <strong>Remember layout (this window)</strong> before changing the arrangement. Use <strong>Focus preview</strong> to hide the side panels and timeline, then <strong>Restore remembered layout</strong> to return. This memory lasts only while this window is open; it is not written into the recipe.</li>
+<li>Use <strong>Reset panel layout</strong> to show all three panels at their starting sizes. This does not clear your clips, fields or Undo history.</li>
+<li>Choose <strong>Project</strong> or <strong>Export</strong> above the editor to reveal the appropriate panel even if it was hidden. These buttons navigate to settings; they do not start a file operation.</li></ol>
+<p>The panels can be resized and hidden within this workspace. Free-floating panels, arbitrary drag docking, named layouts saved across restarts and multi-monitor layout restoration are not supported by this editor yet. The separate Layouts view does not save this editor’s dividers.</p>
+<h2>Choose clips and make edits</h2><ol>
+<li>In the <strong>Media</strong> page on the left, enter a unique clip ID, such as <code>intro</code>, then browse to a local video. A clip is a named section of one source file. Use an ordinary absolute file path; web addresses and network shares are not accepted.</li>
+<li>In <strong>Inspector</strong>, set Source start and Source end in milliseconds. One second is 1000 milliseconds. For example, 2000 to 6000 selects four seconds beginning two seconds into the file. The end is excluded. The editor does not infer the duration of the file for you.</li>
+<li>Choose <strong>Add clip</strong>. Its card appears in the library and its cut appears on the timeline. To add another clip, enter a different ID and its file and range, then choose Add clip again.</li>
+<li>Type part of a clip name or source filename into the library search. Letter case does not matter. Search filters the cards, not the sequence: hidden cards are still included when rendering. Clear the search to show every card.</li>
+<li>Select a library card, timeline clip or entry in the clip list to load its fields. Selection does not edit the recipe, start playback or consume an Undo step. Cards show a file icon and source name; they do not claim to be decoded video thumbnails.</li>
+<li>Change the source range and choose <strong>Apply trim</strong>. Typing alone does not edit the recipe.</li>
+<li>To split a clip, enter a source time inside its range, give the right part a new ID and choose <strong>Split clip</strong>. To reorder it, enter a New position starting at 1 and choose <strong>Move clip</strong>.</li>
+<li>Use <strong>Undo</strong> and <strong>Redo</strong> to review the last sixteen changes. A fresh edit after Undo replaces the redo path.</li>
+<li>Open <strong>Project</strong> to apply a title and even output dimensions, from 16 by 16 to 1920 by 1080 pixels.</li></ol>
+<p>Timeline Zoom changes the widths of the clip controls, not the media timing. Very short cuts keep a minimum clickable width; use the times printed on each clip for exact placement. The timeline is one ordered video track. Clips are reordered with Move clip rather than drag and drop. Expand Sequence details for source paths and timing.</p>
+<!-- The earlier workspace guide is retained for review. The current guide describes the searchable library, zoom and layout controls without removing existing editing operations. -->
+<template id="previous-video-workspace-instructions"><h2>Find your way around</h2>
 <p>Media opens its <strong>Video editing</strong> view. Clips and project settings are on the left,
 the preview is in the centre, the Inspector and Export pages are on the right, and the clip strip
 is below. Drag the separators to resize these regions. Choose <strong>Design and generators</strong>
@@ -33,6 +54,7 @@ A fresh edit after Undo replaces the redo path. The clip strip updates after eac
 The supported dimensions run from 16 by 16 to 1920 by 1080 pixels.</li></ol>
 <p>The clip strip is an ordered sequence, not a multi-track editor. Its buttons are not scaled to duration,
 and clips are reordered with Move clip rather than drag and drop. Expand <strong>Sequence details</strong> for exact timing and source paths.</p>
+</template>
 <!-- The earlier form instructions are retained as inert design history for review.
      The workspace above replaces their control locations without removing editing operations. -->
 <template id="previous-video-form-instructions"><h2>Choose clips and make edits</h2><ol>

@@ -1,18 +1,18 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/ibkr_connection/session.c
+ *
  * PURPOSE:
- *   Read-only IBKR session: an explicit Paper/Live selection is intent, not proof of the
- *   environment running in TWS. No order-submission API exists here.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Own read-only IBKR session lifetimes; Paper/Live is intent, not proof, and order submission remains unavailable.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
-/*-----------------------------------------------------------------------------
- * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Read-only IBKR session: an explicit Paper/Live selection is intent, not proof
- * of the environment running in TWS. No order-submission API exists here.
- *---------------------------------------------------------------------------*/
 #include "internal.h"
 #include <stdlib.h>
 #include <string.h>
@@ -69,6 +69,7 @@ static void CloseIo(UmiIbkrConnection *c)
 {
     UmiIbkrHistoricalConnectionClosed(c);
     UmiIbkrRealtimeConnectionClosed(c);
+    UmiIbkrTimeSalesClosed(c);
     UmiIbkrDiscoveryClosed(c);
     UmiIbkrScannerCatalogClosed(c);
     if (c->ioOpened) { c->io.Close(c->io.context); c->ioOpened = false; }
@@ -235,10 +236,19 @@ UmiStatus UmiIbkrQueueFields(UmiIbkrConnection *c, const char *const *fields, si
                 strcmp(id,"81") && strcmp(id,"92") && strcmp(id,"93") && strcmp(id,"94") && strcmp(id,"95") && strcmp(id,"10") && strcmp(id,"11") && strcmp(id,"5") && strcmp(id,"16") && strcmp(id,"99") && strcmp(id,"20") && strcmp(id,"25") && strcmp(id,"50") && strcmp(id,"51") && strcmp(id,"22") && strcmp(id,"23") && strcmp(id,"78")))
         return UMI_STATUS_PERMISSION_DENIED;
 #endif
+    /* The former gate remains for review. Messages 97 and 98 subscribe and
+     * cancel tick observations; order placement and cancellation stay excluded. */
+#if 0
     if (!id || (strcmp(id,"71") && strcmp(id,"49") && strcmp(id,"62") &&
                 strcmp(id,"63") && strcmp(id,"61") && strcmp(id,"64") &&
                 strcmp(id,"1") && strcmp(id,"2") && strcmp(id,"59") && strcmp(id,"9") && strcmp(id,"91") && strcmp(id,"7") &&
                 strcmp(id,"81") && strcmp(id,"92") && strcmp(id,"93") && strcmp(id,"94") && strcmp(id,"95") && strcmp(id,"10") && strcmp(id,"11") && strcmp(id,"5") && strcmp(id,"16") && strcmp(id,"99") && strcmp(id,"20") && strcmp(id,"25") && strcmp(id,"50") && strcmp(id,"51") && strcmp(id,"22") && strcmp(id,"23") && strcmp(id,"78") && strcmp(id,"24")))
+        return UMI_STATUS_PERMISSION_DENIED;
+#endif
+    if (!id || (strcmp(id,"71") && strcmp(id,"49") && strcmp(id,"62") &&
+                strcmp(id,"63") && strcmp(id,"61") && strcmp(id,"64") &&
+                strcmp(id,"1") && strcmp(id,"2") && strcmp(id,"59") && strcmp(id,"9") && strcmp(id,"91") && strcmp(id,"7") &&
+                strcmp(id,"81") && strcmp(id,"92") && strcmp(id,"93") && strcmp(id,"94") && strcmp(id,"95") && strcmp(id,"10") && strcmp(id,"11") && strcmp(id,"5") && strcmp(id,"16") && strcmp(id,"99") && strcmp(id,"20") && strcmp(id,"25") && strcmp(id,"50") && strcmp(id,"51") && strcmp(id,"22") && strcmp(id,"23") && strcmp(id,"78") && strcmp(id,"24") && strcmp(id,"97") && strcmp(id,"98")))
         return UMI_STATUS_PERMISSION_DENIED;
     size_t length = 0;
     for (size_t i=0; i<count; ++i) {
@@ -423,6 +433,7 @@ void UmiIbkrConnectionDestroy(UmiIbkrConnection *c)
     UmiIbkrCompletedDestroy(c);
     free(c->history);
     UmiIbkrDiscoveryDestroy(c);
+    UmiIbkrTimeSalesDestroy(c);
     UmiIbkrScannerCatalogDestroy(c);
     for (size_t i=0; i<UMI_IBKR_REALTIME_STREAM_LIMIT; ++i) free(c->realtime[i]);
     if(c->DestroyIo)c->DestroyIo(c->io.context);

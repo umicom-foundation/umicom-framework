@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reading Time &amp; Sales with Umicom Framework</title>
+<style>body{max-width:880px;margin:40px auto;padding:0 24px;font:18px/1.65 system-ui;color:#203247}h1,h2{line-height:1.2}pre{padding:20px;background:#f0f4f7;overflow:auto;font-size:14px}code{font-family:monospace}a{color:#086a88}aside{border-left:4px solid #b56417;padding:12px 20px;background:#fff7e8}li{margin-bottom:12px}</style>
+</head><body><nav><a href="broker-market-observations.html">Market observations</a> · <a href="broker-streaming-charts.html">Streaming charts</a></nav>
+<h1>Reading Time &amp; Sales with Umicom Framework</h1>
+<p>Time &amp; Sales lists individual market events. A trade event records a reported price and size. A bid/ask event records prices and quantities offered by buyers and sellers. A midpoint is halfway between a bid and an ask. These observations describe the feed; they are not your account's executions.</p>
+<aside><strong>Current scope.</strong> Framework provides live tick subscriptions through its read-only connection. This service does not place orders, request historical tick backfill or create a Trader window. A compatible running TWS or Gateway session and market-data permissions are required.</aside>
+<h2>1. Resolve an instrument</h2>
+<p>A symbol can identify different instruments on different exchanges. Use the contract-details service, then retain the selected contract ID and route. The connection must reach <code>UMI_IBKR_READY</code>. Paper or Live in connection options records requested intent; confirm the actual account mode in the broker application.</p>
+<h2>2. Choose an event kind</h2>
+<ul><li><code>UMI_IBKR_TICKS_LAST</code>: reported trade ticks.</li>
+<li><code>UMI_IBKR_TICKS_ALL_LAST</code>: a broader trade feed, including reported attributes and conditions.</li>
+<li><code>UMI_IBKR_TICKS_BID_ASK</code>: bid and ask prices and sizes. <code>ignoreSize</code> may omit size-only changes.</li>
+<li><code>UMI_IBKR_TICKS_MIDPOINT</code>: midpoint observations, without a trade size.</li></ul>
+<h2>3. Subscribe through Framework</h2>
+<p>This excerpt belongs inside a host that already owns a ready connection. <code>resolvedContract</code> is the user's selection from contract discovery. Check the returned status before retaining the request ID.</p>
+<pre><code>#include "umicom/broker_connectivity/time_sales.h"
+
+UmiIbkrTimeSalesQuery query = {0};
+query.contract = resolvedContract;
+query.kind = UMI_IBKR_TICKS_LAST;
+
+uint32_t requestId = 0;
+UmiStatus status = UmiIbkrTimeSalesRequest(
+    connection, &amp;query, UmiIbkrMonotonicMilliseconds(), &amp;requestId);
+if (status != UMI_STATUS_OK) {
+    /* Display the failure; requestId is not a subscription. */
+    return status;
+}</code></pre>
+<p>The service retains four subscription slots and applies a conservative 15-second interval between tick requests on the same connection, including retries. Too-early requests return <code>UMI_STATUS_BUSY</code>. Other API clients have their own pacing obligations. A full transmit queue leaves the output ID and previous observations unchanged.</p>
+<h2>4. Copy observations into your view</h2>
+<ol><li>Continue calling <code>UmiIbkrConnectionPump</code> from the connection's owning thread. Pump failure makes retained observations stale.</li>
+<li>Call <code>UmiIbkrTimeSalesCopy</code> with a nonzero maximum receipt age. Inspect <code>active</code>, <code>failed</code>, <code>stale</code> and <code>message</code>.</li>
+<li>For indices zero through <code>count - 1</code>, call <code>UmiIbkrTimeSalesEventCopy</code>. Both functions return owned copies; the UI never borrows a receive buffer.</li>
+<li>Display <code>reportedText</code>. Use the numeric <code>value</code> for arithmetic only if <code>exact</code> is true. Unrepresentable decimals remain text, never silently rounded or replaced with zero.</li></ol>
+<p>The window holds 512 events in receipt order. <code>droppedEvents</code> counts window evictions, not network packet loss. Equal prices and timestamps remain separate events. Exchange timestamps may arrive out of order. Recent receipt does not prove market freshness. Sizes retain provider units.</p>
+<h2>5. Cancel and reconnect deliberately</h2>
+<p>Call <code>UmiIbkrTimeSalesCancel(connection, requestId, now)</code> when the user closes or replaces a subscription. It cancels market data only. If the queue is full, the subscription remains available for a cancellation retry. After successful queueing, late events are ignored. Retained data stays readable and stale until the slot is reused.</p>
+<p>After failure, create a new connection and explicitly subscribe again. Never reuse the old request ID. Framework shares a non-repeating request sequence across its observation services.</p>
+<h2>Troubleshooting</h2>
+<ul><li><strong>No events:</strong> check the request message, broker permissions and market activity. Connection readiness does not establish entitlement.</li>
+<li><strong>Provider error:</strong> inspect <code>providerCode</code> and <code>message</code>. Cancel the failed stream or close the connection before replacing it.</li>
+<li><strong>Unsupported protocol:</strong> this adapter accepts legacy versions 151–176. This service does not add Protobuf support or historical ticks.</li>
+<li><strong>Malformed data:</strong> validation failure on a known tick packet fails the connection. Previous rows remain stale evidence instead of being partly overwritten.</li>
+<li><strong>Zero price or size:</strong> retain the associated flags. These may be broker markers; a zero alone is not a trade decision.</li></ul>
+<h2>Source walkthrough</h2>
+<p>The public contract is <code>include/umicom/broker_connectivity/time_sales.h</code>. Subscription ownership lives in <code>src/ibkr_connection/time_sales.c</code>; packet validation lives in <code>time_sales_decode.c</code>. Synthetic scenarios in <code>tests/ibkr_connection/test_time_sales.c</code> require no broker credentials. Build the <code>umicom-ibkr-time-sales-test</code> target, then run <code>framework.ibkr_time_sales.*</code> cases. Synthetic checks do not replace broker and application qualification.</p>
+</body></html>

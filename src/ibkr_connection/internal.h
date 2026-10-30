@@ -1,8 +1,18 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Read-only IBKR session: an explicit Paper/Live selection is intent, not proof
- * of the environment running in TWS. No order-submission API exists here.
+ * Umicom Framework
+ * File: src/ibkr_connection/internal.h
+ *
+ * PURPOSE:
+ *   Own read-only broker sessions; requested Paper/Live intent does not attest the server environment.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
+
 #ifndef UMICOM_IBKR_CONNECTION_INTERNAL_H
 #define UMICOM_IBKR_CONNECTION_INTERNAL_H
 #include "umicom/broker_connectivity/connection.h"
@@ -19,6 +29,7 @@
 #include "realtime_private.h"
 #include "discovery_private.h"
 #include "scanner_catalog_private.h"
+#include "time_sales_private.h"
 #define UMI_IBKR_FRAME_LIMIT 65536U
 #define UMI_IBKR_TX_LIMIT 8192U
 /* Private injectable I/O permits deterministic failure tests. BUSY means no
@@ -75,6 +86,11 @@ struct UmiIbkrConnection {
     UmiIbkrScannerCatalogStore scannerCatalog;
     unsigned char *catalogFrame;
     size_t catalogFrameSize, catalogFrameCapacity;
+    /* Tick streams allocate only when requested. Their IDs share the same
+     * sequence as other observations; no application owns broker packet data. */
+    UmiIbkrTimeSalesStore *timeSales[UMI_IBKR_TIME_SALES_STREAM_LIMIT];
+    uint64_t lastTimeSalesRequestAt;
+    bool timeSalesRequested;
     size_t marketRuleCount;
     UmiIbkrMarketRuleSnapshot marketRules[UMI_IBKR_MARKET_RULE_LIMIT];
 };

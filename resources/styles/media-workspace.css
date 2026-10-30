@@ -1,0 +1,61 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: resources/styles/media-workspace.css
+ *
+ * PURPOSE:
+ *   Scope the editing palette to Media while preserving other product styles.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+.umicom-media-workspace {
+  color: #e5edf5; background: #111820;
+}
+.umicom-media-workspace .media-brandbar,
+.umicom-media-workspace .media-modebar {
+  background: #17212c; padding: 6px 10px; border-bottom: 1px solid #334354;
+}
+.umicom-media-workspace button,
+.umicom-media-workspace menubutton > button {
+  color: #e5edf5; background: #22303e; border: 1px solid #405164;
+  border-radius: 5px; padding: 6px 10px; box-shadow: none;
+}
+.umicom-media-workspace button:hover { background: #30465a; }
+.umicom-media-workspace button:checked,
+.umicom-media-workspace button.suggested-action {
+  color: #ffffff; background: #155d86; border-color: #4db9f6;
+}
+.umicom-media-workspace button:focus-visible,
+.umicom-media-workspace entry:focus-visible {
+  outline: 2px solid #8ad6ff; outline-offset: -2px;
+}
+.umicom-media-workspace button:disabled { color: #94a0ab; background: #1b242e; }
+.umicom-media-workspace entry,
+.umicom-media-workspace spinbutton,
+.umicom-media-workspace textview,
+.umicom-media-workspace textview text {
+  color: #e5edf5; background: #111820;
+}
+.umicom-media-workspace notebook > header { background: #17212c; color: #d7e4ef; }
+.umicom-media-workspace notebook > header tab:checked {
+  background: #22374a; border-bottom: 2px solid #4db9f6;
+}
+.umicom-media-workspace .media-region {
+  background: #1b252f; border: 1px solid #334354; border-radius: 5px;
+}
+.umicom-media-workspace .media-preview { background: #080d13; }
+.umicom-media-workspace .media-rail { background: #17212c; padding: 6px; }
+.umicom-media-workspace .media-rail button { padding: 8px 4px; }
+.umicom-media-workspace .media-library-card { padding: 10px; }
+.umicom-media-workspace .media-timeline { background: #151f29; padding: 8px; }
+.umicom-media-workspace .media-clip { background: #23475a; border-color: #42778e; }
+.umicom-media-workspace .media-clip.suggested-action { background: #155d86; border-color: #8ad6ff; }
+.umicom-media-workspace .media-muted { color: #acbdcd; }
+.umicom-media-workspace .media-status { padding: 4px 10px; border-top: 1px solid #334354; }
+.umicom-media-workspace paned > separator { background: #334354; min-width: 5px; min-height: 5px; }
+
+.umicom-media-workspace popover > contents { color: #e5edf5; background: #1b252f; }

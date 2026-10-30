@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/creative_workspace_panel_gtk4.c
- * PURPOSE: Build a reusable creative editor with explicit edits, stable control IDs and safe teardown.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Build a reusable creative editor with explicit edits, stable control IDs and safe teardown.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "creative_workspace_private.h"
 #include "umicom/ui/gtk4/video_sequence.h"
@@ -104,6 +111,7 @@ static void BuildForms(UmiCreativeGtkPanel * p, GtkNotebook * notebook)
     static const char * const interpolation[] = {"Hold until next key", "Linear movement", NULL};
     static const char * const exports[] = {"SVG drawing", "Responsive visual page", "Three-frame storyboard", "PCM-WAVE notes", NULL};
     GtkWidget * page = Page(notebook, "Project");
+    Tag(page, "creative.tools.canvas");
     p -> projectId = Entry(page, "Project ID (letters, digits, . _ -)", "creative.project.id", "workshop");
     p -> title = Entry(page, "Project title", "creative.project.title", "Workshop design");
     Button(p, page, "Create new project", "project.create");
@@ -264,6 +272,7 @@ UmiStatus UmiCreativeGtkPanelCreate(UmiDataServer * server, const char * profile
      * hosts. Appending a page preserves existing tools and their tab order. */
     if (strcmp(profile, "media") == 0) {
         GtkWidget *imagePage = Page(GTK_NOTEBOOK(notebook), "Seedream images");
+        Tag(imagePage, "creative.tools.ai-image");
         GtkWidget *imagePanel = NULL;
         UmiStatus imageStatus = UmiSeedreamGtkCreate("umicom-media", "default", &imagePanel);
         if (imageStatus == UMI_STATUS_OK) gtk_box_append(GTK_BOX(imagePage), imagePanel);
@@ -278,6 +287,7 @@ UmiStatus UmiCreativeGtkPanelCreate(UmiDataServer * server, const char * profile
         if (songStatus == UMI_STATUS_OK) gtk_box_append(GTK_BOX(songPage), songPanel);
         else Text(songPage, umi_status_text(songStatus));
         GtkWidget *videoPage = Page(GTK_NOTEBOOK(notebook), "PixVerse videos");
+        Tag(videoPage, "creative.tools.ai-video");
         GtkWidget *videoPanel = NULL;
         const char *application = strcmp(profile, "media") == 0 ? "umicom-media" : "umicom-music";
         UmiStatus videoStatus = UmiPixVerseGtkCreate(application, "default", &videoPanel);
@@ -287,6 +297,7 @@ UmiStatus UmiCreativeGtkPanelCreate(UmiDataServer * server, const char * profile
     /* Every creative profile composes the same portable asset library. Its
      * appended page preserves existing tab indices and scene storage. */
     GtkWidget *libraryPage = Page(GTK_NOTEBOOK(notebook), "Asset library");
+    Tag(libraryPage, "creative.tools.library");
     GtkWidget *libraryPanel = UmiCreativeAssetLibraryGtkCreate(assetEditor);
     if (libraryPanel != NULL) gtk_box_append(GTK_BOX(libraryPage), libraryPanel);
     else Text(libraryPage, "The asset library could not be created.");
@@ -294,6 +305,7 @@ UmiStatus UmiCreativeGtkPanelCreate(UmiDataServer * server, const char * profile
      * compose the native page; other hosts can use the same portable plan. */
     if (strcmp(profile, "media") == 0 || strcmp(profile, "music") == 0) {
         GtkWidget *arrangementPage = Page(GTK_NOTEBOOK(notebook), "Audio arrangement");
+        Tag(arrangementPage, "creative.tools.audio");
         GtkWidget *arrangementPanel = UmiCreativeAudioArrangementGtkCreate();
         if (arrangementPanel != NULL) gtk_box_append(GTK_BOX(arrangementPage), arrangementPanel);
         else Text(arrangementPage, "The audio arrangement could not be created.");
@@ -303,6 +315,7 @@ UmiStatus UmiCreativeGtkPanelCreate(UmiDataServer * server, const char * profile
      * intact; captions are exported explicitly to the user's chosen path. */
     if (strcmp(profile, "media") == 0 || strcmp(profile, "music") == 0) {
         GtkWidget *captionPage = Page(GTK_NOTEBOOK(notebook), "Captions");
+        Tag(captionPage, "creative.tools.captions");
         GtkWidget *captionEditor = NULL;
         if (UmiCaptionsGtkCreate(&captionEditor) == UMI_STATUS_OK)
             gtk_box_append(GTK_BOX(captionPage), captionEditor);

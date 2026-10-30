@@ -1,4 +1,17 @@
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomVideoSequence.cmake
+#
+# PURPOSE:
+#   Compose video editing, rendering and native workspace regression coverage.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 # One creative model supplies native hosts. No encoder download occurs here.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomProcessChannel.cmake")
@@ -71,9 +84,17 @@ if(BUILD_TESTING)
     endif()
     if(TARGET umicom_creative_workspace_gtk4)
         umicom_video_cases(umicom-video-workspace-gtk-test test_workspace_gtk4.c
-            geometry selection edits retirement composition music-composition)
+            geometry selection edits retirement composition music-composition
+            library-search library-selection library-empty library-reentry timeline-zoom
+            layout-resize layout-visibility layout-recall layout-reset layout-retirement
+            layout-reentry layout-retire-notify
+            workspace-navigation media-brand media-mode-retention)
         target_link_libraries(umicom-video-workspace-gtk-test PRIVATE Umicom::creative_workspace_gtk4)
-        foreach(case geometry selection edits retirement composition music-composition)
+        foreach(case geometry selection edits retirement composition music-composition
+            library-search library-selection library-empty library-reentry timeline-zoom
+            layout-resize layout-visibility layout-recall layout-reset layout-retirement
+            layout-reentry layout-retire-notify
+            workspace-navigation media-brand media-mode-retention)
             set_tests_properties(framework.video_sequence.umicom-video-workspace-gtk-test.${case}
                 PROPERTIES ENVIRONMENT "G_DEBUG=fatal-warnings" LABELS "framework;video-sequence;gtk4;workflow;regression")
         endforeach()

@@ -1,0 +1,20 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: adapters/gtk4/media_workspace_resources.h.in
+ *
+ * PURPOSE:
+ *   Embed unchanged SVG and stylesheet bytes from Framework resources at configuration time.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_MEDIA_WORKSPACE_RESOURCES_H
+#define UMICOM_MEDIA_WORKSPACE_RESOURCES_H
+static const unsigned char MediaLogoSvg[] = {@UMICOM_MEDIA_LOGO_BYTES@};
+static const unsigned char MediaIconSvg[] = {@UMICOM_MEDIA_ICON_BYTES@};
+static const unsigned char MediaStyles[] = {@UMICOM_MEDIA_STYLE_BYTES@};
+#endif

@@ -248,3 +248,13 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomIbkrAccountReports.cmake")
 
 # Entry modes share the established read-only connection defaults.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomBrokerAccess.cmake")
+
+# Tick observations share the headless connection, request IDs and exact decimals.
+target_sources(umicom_ibkr_connection PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/time_sales.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/time_sales_decode.c")
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/broker_connectivity/time_sales.h"
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/broker_connectivity COMPONENT Framework)
+
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/broker-time-sales.html"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/learning" COMPONENT Learning)

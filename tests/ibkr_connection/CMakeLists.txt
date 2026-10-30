@@ -482,3 +482,23 @@ foreach(group scanner_catalog catalog_transport)
         umicom_register_validation_target(umicom-ibkr-${group}-test)
     endif()
 endforeach()
+
+# Time & Sales uses synthetic protocol packets and injected I/O; no broker login.
+add_executable(umicom-ibkr-time-sales-test "${CMAKE_CURRENT_LIST_DIR}/test_time_sales.c")
+target_include_directories(umicom-ibkr-time-sales-test PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../../src/ibkr_connection")
+target_link_libraries(umicom-ibkr-time-sales-test PRIVATE Umicom::ibkr_connection)
+umicom_ibkr_target(umicom-ibkr-time-sales-test)
+foreach(case IN ITEMS
+    query-invalid not-ready unsupported request-atomic request-overflow
+    wire-last wire-all-last wire-bid-ask wire-midpoint cancel-wire cancel-atomic
+    pacing capacity request-identity retired trade all-last bid-ask midpoint halt
+    negative-price precision same-tick rolling stale cancel-retained disconnect-retained
+    provider-error foreign bad-price bad-size bad-flags bad-time bad-kind missing-field
+    invalid-utf8 fragmented-read counter-overflow copy-invalid malformed-retained mutation-denied)
+    add_test(NAME framework.ibkr_time_sales.${case} COMMAND umicom-ibkr-time-sales-test ${case})
+    set_tests_properties(framework.ibkr_time_sales.${case} PROPERTIES TIMEOUT 20
+        LABELS "framework;broker;time-sales;read-only;regression")
+endforeach()
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-ibkr-time-sales-test)
+endif()

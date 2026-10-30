@@ -15,6 +15,7 @@
 
 #include "creative_workspace_private.h"
 #include <string.h>
+#include "media_workspace_style.h"
 struct UmiCreativeGtkSurface {
     UmiCreativeGtkPanel *panel;
     GtkWidget *root, *original;
@@ -54,6 +55,8 @@ UmiStatus UmiCreativeGtkSurfaceCreate(GtkWidget * original, const char * profile
 
 #endif
 
+#include "media_surface.inc"
+
 static void ShowVideoWorkspace(GtkButton *button, gpointer pages)
 {
     (void)button;
@@ -80,12 +83,31 @@ UmiStatus UmiCreativeGtkSurfaceCreate(GtkWidget *original, const char *profile,
      * editor. Its widgets and model remain alive when the page is switched. */
     gtk_stack_set_hhomogeneous(surface->pages, FALSE);
     gtk_stack_set_vhomogeneous(surface->pages, FALSE);
+    /* Retain the generic switcher for review; Media now uses task-specific
+     * navigation over the same pages and retained editor instances. */
+#if 0
     GtkWidget *switcher = gtk_stack_switcher_new();
     gtk_stack_switcher_set_stack(GTK_STACK_SWITCHER(switcher), surface->pages);
     gtk_widget_set_halign(switcher, GTK_ALIGN_START);
     gtk_box_append(GTK_BOX(surface->root), switcher);
     gtk_box_append(GTK_BOX(surface->root), GTK_WIDGET(surface->pages));
     bool media = profile != NULL && strcmp(profile, "media") == 0;
+#endif
+    bool media = profile != NULL && strcmp(profile, "media") == 0;
+    if (media) {
+        MediaHeader(surface);
+        GtkWidget *body = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+        gtk_widget_set_vexpand(body, TRUE);
+        gtk_box_append(GTK_BOX(body), MediaRail(surface));
+        gtk_box_append(GTK_BOX(body), GTK_WIDGET(surface->pages));
+        gtk_box_append(GTK_BOX(surface->root), body);
+    } else {
+        GtkWidget *switcher = gtk_stack_switcher_new();
+        gtk_stack_switcher_set_stack(GTK_STACK_SWITCHER(switcher), surface->pages);
+        gtk_widget_set_halign(switcher, GTK_ALIGN_START);
+        gtk_box_append(GTK_BOX(surface->root), switcher);
+        gtk_box_append(GTK_BOX(surface->root), GTK_WIDGET(surface->pages));
+    }
     bool music = profile != NULL && strcmp(profile, "music") == 0;
     GtkWidget *video = surface->panel->videoSequence;
     GtkWidget *previous = video != NULL ? gtk_widget_get_parent(video) : NULL;
@@ -104,6 +126,7 @@ UmiStatus UmiCreativeGtkSurfaceCreate(GtkWidget *original, const char *profile,
     /* Music keeps its audio/design landing view while video editing receives
      * the same full-width workspace instead of enlarging its sidebar. */
     if (music) gtk_stack_set_visible_child_name(surface->pages, "creative-workspace");
+    if (media) MediaBindNavigation(surface);
     surface->original = original;
     *out = surface;
     return UMI_STATUS_OK;
@@ -117,6 +140,8 @@ void UmiCreativeGtkSurfaceDestroy(UmiCreativeGtkSurface * surface)
     if (surface == NULL)return;
     if (surface -> original!= NULL && gtk_widget_get_parent(surface -> original) == GTK_WIDGET(surface -> pages))gtk_stack_remove(surface -> pages, surface -> original);
     surface -> original = NULL;
+    /* Retained navigation becomes inert before its target owners are retired. */
+    gtk_widget_set_sensitive(surface->root, FALSE);
     UmiCreativeGtkPanelDestroy(surface -> panel);
     g_object_unref(surface -> root);
     g_free(surface);

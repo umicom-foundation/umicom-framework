@@ -29,6 +29,14 @@ typedef struct UmiVideoSequencePanel {
   GtkWidget *relinkPath, *relinkAll;
   /* Stable clip controls retain focus while the model supplies their identity. */
   GtkWidget *clipButtons[UMI_VIDEO_SEQUENCE_MAX_CLIPS], *durationLabel, *emptyTimeline;
+  /* Cards and the timeline share the editor; navigation never owns a second recipe. */
+  GtkWidget *libraryButtons[UMI_VIDEO_SEQUENCE_MAX_CLIPS], *libraryLabels[UMI_VIDEO_SEQUENCE_MAX_CLIPS];
+  GtkWidget *sourceBook, *inspectorBook, *search, *zoom, *emptyLibrary;
+  bool browsing;
+  /* Geometry belongs to the workspace, never the media recipe or edit history. */
+  GtkWidget *layoutPanes[3], *layoutRegions[3], *layoutChecks[3];
+  int rememberedPositions[3];
+  bool rememberedVisible[3], rememberedLayout, arranging;
   GtkMediaStream *stream;
   UmiCancellationToken *cancel; /* Borrowed from the accepted job until completion. */
   uint32_t previewBegin, previewEnd;

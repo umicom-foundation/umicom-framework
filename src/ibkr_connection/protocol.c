@@ -1,18 +1,18 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/ibkr_connection/protocol.c
+ *
  * PURPOSE:
- *   Bounded legacy TWS field decoding for a read-only observation connection. Protocol field
- *   layouts are isolated here; no vendor code is redistributed.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Decode bounded legacy TWS fields for read-only observations; wire layouts are isolated and no vendor code is redistributed.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
-/*-----------------------------------------------------------------------------
- * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Bounded legacy TWS field decoding for a read-only observation connection.
- * Protocol field layouts are isolated here; no vendor code is redistributed.
- *---------------------------------------------------------------------------*/
 #include "internal.h"
 #include <string.h>
 #include <stdio.h>
@@ -170,6 +170,7 @@ static UmiStatus ProviderMessage(UmiIbkrConnection *c,char **f,size_t n)
     if (UmiIbkrSymbolSearchProviderMessage(c, f[2], (int)code, f[4])) return UMI_STATUS_OK;
     if (UmiIbkrHistoricalProviderMessage(c, f[2], (int)code, f[4])) return UMI_STATUS_OK;
     if (UmiIbkrRealtimeProviderMessage(c, f[2], (int)code, f[4])) return UMI_STATUS_OK;
+    if (UmiIbkrTimeSalesProviderMessage(c, f[2], (int)code, f[4])) return UMI_STATUS_OK;
     if (UmiIbkrScannerProviderMessage(c, f[2], (int)code, f[4])) return UMI_STATUS_OK;
     if (UmiIbkrOptionChainProviderMessage(c, f[2], (int)code, f[4])) return UMI_STATUS_OK;
     /* Request IDs are never reused on a connection. Once an observation owner
@@ -207,6 +208,9 @@ static UmiStatus Decode(UmiIbkrConnection *c,const unsigned char *body,size_t le
     if (!handshake && (id==75U || id==76U)) return UmiIbkrOptionChainFrame(c,id,body,length,now);
     /* Finite historical bars have their own bounded field decoder. */
     if (id == 17U) return UmiIbkrHistoricalFrame(c, body, length, now);
+    /* Tick events have independent request ownership and preserve each trade,
+     * including equal prices/timestamps that are not proof of duplication. */
+    if (!handshake && id == 99U) return UmiIbkrTimeSalesFrame(c, body, length, now);
     /* Streaming bars retain their own bounded subscriptions and request IDs. */
     if (!handshake && id == 50U) return UmiIbkrRealtimeFrame(c, body, length, now);
     /* Completed history has no request ID; its owner accepts one finite capture. */

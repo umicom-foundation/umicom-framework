@@ -1,9 +1,16 @@
 #-----------------------------------------------------------------------------
 # Umicom Framework
 # File: cmake/UmicomCreativeWorkspace.cmake
-# PURPOSE: Compose shared creative services and thin native product profiles.
-# AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
-# LICENCE: MIT
+#
+# PURPOSE:
+#   Compose shared creative services and thin native product profiles.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
 #-----------------------------------------------------------------------------
 # This module also supports independent composition; own its SDK registration dependency.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
@@ -70,6 +77,7 @@ if(TARGET Umicom::ui_gtk4)
         "${_umicom_creative_root}/adapters/gtk4/creative_workspace_surface_gtk4.c"
         "${_umicom_creative_root}/adapters/gtk4/creative_workspace_application_gtk4.c")
     add_library(Umicom::creative_workspace_gtk4 ALIAS umicom_creative_workspace_gtk4)
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomCreativeMediaResources.cmake")
     target_link_libraries(umicom_creative_workspace_gtk4 PUBLIC Umicom::workspace_library_gtk4)
     set_target_properties(umicom_creative_workspace_gtk4 PROPERTIES EXPORT_NAME creative_workspace_gtk4)
     target_link_libraries(umicom_creative_workspace_gtk4 PUBLIC Umicom::creative_workspace Umicom::ui_gtk4)
