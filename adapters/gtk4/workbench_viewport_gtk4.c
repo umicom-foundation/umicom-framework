@@ -1,20 +1,20 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/workbench_viewport_gtk4.c
+ *
  * PURPOSE:
- *   GTK owns widgets; the shared C projection owns geometry and tree validation. Preview
- *   edits never rebuild leaf content or reach around its controller.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Project shared workbench geometry into owned GTK widgets and preserve panel focus lifetime.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
-/*-----------------------------------------------------------------------------
- * Umicom Framework
- * File: adapters/gtk4/workbench_viewport_gtk4.c
- * Author: Sammy Hegab, Umicom Foundation | Licence: MIT
- * GTK owns widgets; the shared C projection owns geometry and tree validation.
- * Preview edits never rebuild leaf content or reach around its controller.
- *---------------------------------------------------------------------------*/
+/* GTK owns widgets; the shared C projection owns geometry and tree validation.
+ * Preview edits never rebuild leaf content or reach around its controller. */
 #include "umicom/workbench_layout/viewport_gtk4.h"
 #include <math.h>
 #include <stdlib.h>
@@ -32,6 +32,8 @@ typedef struct UmiViewportWidget {
     GtkWidget *decorations[NODES];
     GtkWidget *tabs[NODES][UMI_WORKBENCH_LAYOUT_MAX_CHILDREN];
     bool disposed;
+    bool focusing;
+    bool focusInterrupted;
 } UmiViewportWidget;
 
 typedef struct UmiViewportWidgetClass {
@@ -98,8 +100,12 @@ static UmiStatus Project(UmiViewportWidget *view, int width, int height)
             if (barHeight > options.tabHeight) options.tabHeight = barHeight;
         }
     }
-    return UmiWorkbenchViewportBuild(view->measured,
+    UmiStatus status = UmiWorkbenchViewportBuild(view->measured,
         (UmiWorkbenchLayoutRect){0, 0, width, height}, &options, &view->plan, NULL);
+    /* Layout changes invalidate an older focus order until projection catches
+     * up. Reprojection inside a focus callback must not resume that handoff. */
+    if (status == UMI_STATUS_OK && !view->focusing) view->focusInterrupted = false;
+    return status;
 }
 
 static void Measure(GtkWidget *widget, GtkOrientation orientation, int forSize,
@@ -181,12 +187,17 @@ static void Dispose(GObject *object)
 {
     UmiViewportWidget *view = (UmiViewportWidget *)object;
     view->disposed = true;
+    view->focusInterrupted = true;
     GtkWidget *child;
     while ((child = gtk_widget_get_first_child(GTK_WIDGET(view)))) gtk_widget_unparent(child);
     memset(view->leaves, 0, sizeof view->leaves);
     memset(view->decorations, 0, sizeof view->decorations);
     memset(view->tabs, 0, sizeof view->tabs);
+    /* A disposed viewport must not retain a traversable focus projection. */
+#if 0
     view->plan.nodeCount = 0;
+#endif
+    memset(&view->plan, 0, sizeof view->plan);
     G_OBJECT_CLASS(umi_viewport_widget_parent_class)->dispose(object);
 }
 
@@ -212,6 +223,10 @@ static void umi_viewport_widget_class_init(UmiViewportWidgetClass *klass)
         G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
 }
 
+/* The earlier loop kept borrowed panel pointers across focus callbacks.
+ * Retained for review; the guarded implementation below owns the callback
+ * lifetime and stops when layout identity or host ownership changes. */
+#if 0
 static gboolean Key(GtkEventControllerKey *controller, guint key, guint code,
     GdkModifierType modifiers, gpointer data)
 {
@@ -235,6 +250,57 @@ static gboolean Key(GtkEventControllerKey *controller, guint key, guint code,
             reverse ? GTK_DIR_TAB_BACKWARD : GTK_DIR_TAB_FORWARD)) return TRUE;
     }
     return FALSE;
+}
+
+#endif
+
+/* Panel focus can synchronously close a workspace, change its active tab or
+ * invoke another navigation command. Keep the host and selected leaf alive
+ * until GTK returns, then validate logical ownership before continuing. */
+static gboolean Key(GtkEventControllerKey *controller, guint key, guint code,
+    GdkModifierType modifiers, gpointer data)
+{
+    (void)controller;
+    (void)code;
+    if (key != GDK_KEY_F6) return FALSE;
+    UmiViewportWidget *view = data;
+    if (view->disposed || view->focusing || view->focusInterrupted) return FALSE;
+    GtkRoot *root = gtk_widget_get_root(GTK_WIDGET(view));
+    if (!root) return FALSE;
+    g_object_ref(view);
+    g_object_ref(root);
+    view->focusing = true;
+    GtkWidget *focus = gtk_root_get_focus(root);
+    size_t current = NONE;
+    for (size_t i = 0; i < view->plan.nodeCount; ++i) {
+        if (view->leaves[i] && focus && (focus == view->leaves[i] ||
+            gtk_widget_is_ancestor(focus, view->leaves[i]))) current = i;
+    }
+    bool reverse = (modifiers & GDK_SHIFT_MASK) != 0;
+    const size_t attempts = view->plan.focusCount;
+    gboolean handled = FALSE;
+    for (size_t k = 0; k < attempts; ++k) {
+        current = UmiWorkbenchViewportNextFocus(&view->plan, current, reverse);
+        if (current == NONE || current >= NODES) break;
+        GtkWidget *leaf = view->leaves[current];
+        if (!leaf || gtk_widget_get_parent(leaf) != GTK_WIDGET(view) ||
+            !gtk_widget_get_child_visible(leaf) || !gtk_widget_is_sensitive(leaf))
+            continue;
+        g_object_ref(leaf);
+        gboolean accepted = gtk_widget_child_focus(leaf,
+            reverse ? GTK_DIR_TAB_BACKWARD : GTK_DIR_TAB_FORWARD);
+        bool valid = !view->disposed && !view->focusInterrupted &&
+            gtk_widget_get_root(GTK_WIDGET(view)) == root &&
+            view->leaves[current] == leaf &&
+            gtk_widget_get_parent(leaf) == GTK_WIDGET(view);
+        g_object_unref(leaf);
+        if (!valid) break;
+        if (accepted) { handled = TRUE; break; }
+    }
+    view->focusing = false;
+    g_object_unref(root);
+    g_object_unref(view);
+    return handled;
 }
 
 static void umi_viewport_widget_init(UmiViewportWidget *view)
@@ -297,6 +363,8 @@ static UmiStatus FindEditable(GtkWidget *widget, const char *id,
 
 static void Changed(UmiViewportWidget *view)
 {
+    /* Stop an in-progress traversal before using its old visible-panel order. */
+    view->focusInterrupted = true;
     gtk_widget_queue_resize(GTK_WIDGET(view));
     g_signal_emit(view, changedSignal, 0);
 }

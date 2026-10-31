@@ -1,16 +1,48 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/ibkr_connection/quotes.c
- * PURPOSE: Own read-only market data subscriptions and reject stale or unrelated callbacks.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Own read-only market data subscriptions and reject stale or unrelated callbacks.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
+
 
 #include "internal.h"
 #include <inttypes.h>
 #include <limits.h>
 #include <stdio.h>
 #include <string.h>
+
+/* Native clients share the same contract validation as the transport. Parse
+ * into a temporary value so invalid input cannot replace a selected instrument. */
+UmiStatus UmiIbkrQuoteContractParse(const char *identity, const char *exchange,
+    UmiIbkrQuoteContract *outContract)
+{
+    if (outContract == NULL || !UmiIbkrText(identity, 11U, false) ||
+        !UmiIbkrText(exchange, sizeof(outContract->exchange), false))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    uint32_t number = 0U;
+    for (const char *cursor = identity; *cursor != '\0'; ++cursor) {
+        if (*cursor < '0' || *cursor > '9') return UMI_STATUS_INVALID_ARGUMENT;
+        uint32_t digit = (uint32_t)(*cursor - '0');
+        if (number > ((uint32_t)INT_MAX - digit) / 10U)
+            return UMI_STATUS_INVALID_ARGUMENT;
+        number = number * 10U + digit;
+    }
+    if (number == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiIbkrQuoteContract contract = {0};
+    contract.contractId = number;
+    memcpy(contract.exchange, exchange, strlen(exchange) + 1U);
+    *outContract = contract;
+    return UMI_STATUS_OK;
+}
 
 /* Request identity belongs to the connection, not a table row or a UI pointer.
  * Cancelled slots may be reused, but their wire identifiers never are. */
@@ -22,6 +54,10 @@ static UmiIbkrQuoteSnapshot *Find(UmiIbkrConnection *connection, uint64_t reques
     return NULL;
 }
 
+/* The former real-time-only serializer is retained for review. The shared
+ * implementation below adds an explicit policy while keeping this public
+ * entry point and its default behaviour for existing consumers. */
+#if 0
 UmiStatus UmiIbkrQuoteSubscribe(UmiIbkrConnection *connection,
     const UmiIbkrQuoteContract *contract, uint64_t now, uint32_t *outRequest)
 {
@@ -69,6 +105,73 @@ UmiStatus UmiIbkrQuoteSubscribe(UmiIbkrConnection *connection,
     *outRequest = request;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus UmiIbkrQuoteSubscribe(UmiIbkrConnection *connection,
+    const UmiIbkrQuoteContract *contract, uint64_t now, uint32_t *outRequest)
+{
+    return UmiIbkrQuoteSubscribeWithDataType(connection, contract,
+        UMI_IBKR_DATA_REALTIME, now, outRequest);
+}
+
+UmiStatus UmiIbkrQuoteSubscribeWithDataType(UmiIbkrConnection *connection,
+    const UmiIbkrQuoteContract *contract, UmiIbkrMarketDataType requestedDataType,
+    uint64_t now, uint32_t *outRequest)
+{
+    if (connection == NULL || contract == NULL || outRequest == NULL ||
+        contract->contractId == 0U || contract->contractId > INT_MAX ||
+        !UmiIbkrText(contract->exchange, sizeof(contract->exchange), false) ||
+        now < connection->lastNow || requestedDataType < UMI_IBKR_DATA_REALTIME ||
+        requestedDataType > UMI_IBKR_DATA_DELAYED_FROZEN) return UMI_STATUS_INVALID_ARGUMENT;
+    if (connection->snapshot.state != UMI_IBKR_READY) return UMI_STATUS_INVALID_STATE;
+    UmiIbkrQuoteSnapshot *slot = NULL;
+    for (size_t index = 0U; index < UMI_IBKR_QUOTE_CAPACITY; ++index) {
+        UmiIbkrQuoteSnapshot *item = &connection->quotes[index];
+        if (!item->subscribed) { if (slot == NULL) slot = item; continue; }
+        if (item->contract.contractId == contract->contractId &&
+            strcmp(item->contract.exchange, contract->exchange) == 0)
+            return UMI_STATUS_ALREADY_EXISTS;
+    }
+    /* A mode command affects the connection. Refuse a hidden policy change
+     * while another quote owns an active subscription, including refused data
+     * awaiting explicit cancellation. No transport state changes on this path. */
+    for (size_t index = 0U; index < UMI_IBKR_QUOTE_CAPACITY; ++index)
+        if (connection->quotes[index].subscribed &&
+            connection->quotes[index].requestedDataType != requestedDataType)
+            return UMI_STATUS_BUSY;
+    if (slot == NULL || connection->nextQuoteRequest >= INT_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    uint32_t request = connection->nextQuoteRequest == 0U ? 36000U : connection->nextQuoteRequest;
+    char requestText[24], contractText[24];
+    (void)snprintf(requestText, sizeof(requestText), "%" PRIu32, request);
+    (void)snprintf(contractText, sizeof(contractText), "%" PRIu32, contract->contractId);
+    /* The negotiated legacy protocol uses the same contract fields for every
+     * supported asset. Only conId/exchange are supplied; TWS resolves the exact
+     * security and reports a refusal when the identity or entitlement is invalid.
+     * Streaming flags are false for both ordinary and regulatory snapshots. */
+    const char *dataTypes[] = {"", "1", "2", "3", "4"};
+    const char *type[] = {"59", "1", dataTypes[(unsigned)requestedDataType]};
+    const char *fields[] = {"1", "11", requestText, contractText,
+        "", "", "", "0", "", "", contract->exchange, "", "", "", "",
+        "0", "", "0", "0", ""};
+    size_t before = connection->txSize;
+    UmiStatus status = UmiIbkrQueueFields(connection, type, 3U);
+    if (status == UMI_STATUS_OK)
+        status = UmiIbkrQueueFields(connection, fields, sizeof(fields) / sizeof(fields[0]));
+    if (status != UMI_STATUS_OK) { connection->txSize = before; return status; }
+    memset(slot, 0, sizeof(*slot));
+    slot->requestId = request;
+    slot->contract = *contract;
+    slot->subscribed = true;
+    slot->requestedAtMilliseconds = now;
+    slot->requestedDataType = requestedDataType;
+    (void)snprintf(slot->message, sizeof(slot->message),
+        "Subscribed data requested; waiting for provider type and observations.");
+    connection->nextQuoteRequest = request + 1U;
+    connection->lastNow = now;
+    *outRequest = request;
+    return UMI_STATUS_OK;
+}
 
 UmiStatus UmiIbkrQuoteCancel(UmiIbkrConnection *connection, uint32_t request)
 {
@@ -108,6 +211,7 @@ UmiStatus UmiIbkrQuoteCopy(const UmiIbkrConnection *connection, uint32_t request
             value->dataType != out->dataType || now < value->receivedAtMilliseconds ||
             now - value->receivedAtMilliseconds > maximumAge;
     }
+    UmiIbkrOptionComputationAge(out, connection->snapshot.state == UMI_IBKR_READY, now, maximumAge);
     return UMI_STATUS_OK;
 }
 

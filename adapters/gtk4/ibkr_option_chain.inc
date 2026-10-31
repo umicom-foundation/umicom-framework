@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/ibkr_option_chain.inc
- * PURPOSE: Browse option definitions and resolve one explicit expiry, strike and right.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Browse option definitions and resolve one explicit expiry, strike and right.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* Option lists hold copied display strings. Their indices are valid only for
@@ -13,8 +20,15 @@ static void OptionChoices(ConnectionUi *ui)
     GtkStringList *expiries = gtk_string_list_new(NULL), *strikes = gtk_string_list_new(NULL);
     UmiIbkrOptionChain *row = g_try_malloc(sizeof *row);
     guint index = gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->optionResults));
+/* Framework now checks bounded observations and their age before use.
+ * The earlier unbounded call remains disabled for implementation review. */
+#if 0
     if (row && ui->optionDisplayedRequest == ui->optionRequest &&
         UmiIbkrOptionChainItemCopy(ui->connection, ui->optionRequest, (size_t)index, row) == UMI_STATUS_OK)
+#else
+    if (row && ui->optionDisplayedRequest == ui->optionRequest &&
+        UmiIbkrOptionChainItemCopyChecked(ui->connection, ui->optionRequest, (size_t)index, row) == UMI_STATUS_OK)
+#endif
     {
         for (size_t i = 0; i < row->expiryCount; ++i)
             gtk_string_list_append(expiries, row->expirations[i]);
@@ -31,7 +45,13 @@ static void OptionChoices(ConnectionUi *ui)
 static void OptionChainPublish(ConnectionUi *ui, uint64_t now)
 {
     UmiIbkrOptionChainSnapshot s;
+/* Framework now checks bounded observations and their age before use.
+ * The earlier unbounded call remains disabled for implementation review. */
+#if 0
     if (UmiIbkrOptionChainCopy(ui->connection, ui->optionRequest, now, &s) != UMI_STATUS_OK)
+#else
+    if (UmiIbkrOptionChainCopyWithAge(ui->connection, ui->optionRequest, now, 60000U, &s) != UMI_STATUS_OK)
+#endif
     {
         gtk_label_set_text(
             GTK_LABEL(ui->optionOutput),
@@ -48,6 +68,10 @@ static void OptionChainPublish(ConnectionUi *ui, uint64_t now)
         UmiIbkrOptionChain *row = g_try_malloc(sizeof *row);
         if (row)
         {
+/* Preserve original indices when a row cannot be read; compacting rows
+ * could resolve a different option. The former compacting loop remains
+ * disabled for review; the checked projection keeps one item per index. */
+#if 0
             for (size_t i = 0; i < s.count; ++i)
                 if (UmiIbkrOptionChainItemCopy(ui->connection, s.requestId, i, row) == UMI_STATUS_OK)
                 {
@@ -57,6 +81,23 @@ static void OptionChainPublish(ConnectionUi *ui, uint64_t now)
                     gtk_string_list_append(items, label);
                     g_free(label);
                 }
+#else
+            for (size_t i = 0; i < s.count; ++i)
+            {
+                if (UmiIbkrOptionChainItemCopyChecked(ui->connection, s.requestId, i, row) == UMI_STATUS_OK)
+                {
+                    gchar *label = g_strdup_printf("%s | %s | multiplier %s | %zu expiries | %zu strikes",
+                                                   row->exchange, row->tradingClass, row->multiplier,
+                                                   row->expiryCount, row->strikeCount);
+                    gchar *display = g_utf8_make_valid(label, -1);
+                    gtk_string_list_append(items, display);
+                    g_free(display);
+                    g_free(label);
+                }
+                else
+                    gtk_string_list_append(items, "Definition unavailable");
+            }
+#endif
             ui->optionDisplayedRequest = s.requestId;
         }
         g_free(row);
@@ -68,8 +109,15 @@ static void OptionChainPublish(ConnectionUi *ui, uint64_t now)
     if (ui->optionContractRequest)
     {
         UmiIbkrContractDetailsSnapshot *details = g_try_malloc(sizeof *details);
+/* Framework now checks bounded observations and their age before use.
+ * The earlier unbounded call remains disabled for implementation review. */
+#if 0
         if (details && UmiIbkrContractDetailsCopy(ui->connection, ui->optionContractRequest, now, details) ==
                            UMI_STATUS_OK)
+#else
+        if (details && UmiIbkrContractDetailsCopyWithAge(ui->connection, ui->optionContractRequest, now, 60000U, details) ==
+                           UMI_STATUS_OK)
+#endif
         {
             g_string_append_printf(text, "Contract resolution: %s | %zu matches | %s\n", details->message,
                                    details->count,
@@ -188,7 +236,14 @@ static void OptionResolveClicked(GtkButton *button, gpointer data)
     {
         strcpy(selection.currency, currency);
         strcpy(selection.exchange, exchange);
+/* Framework now checks bounded observations and their age before use.
+ * The earlier unbounded call remains disabled for implementation review. */
+#if 0
         status = UmiIbkrOptionContractRequest(ui->connection, &selection, now, &ui->optionContractRequest);
+#else
+        status = UmiIbkrOptionContractRequestWithAge(ui->connection, &selection, now, 60000U,
+                                                     &ui->optionContractRequest);
+#endif
     }
     if (status == UMI_STATUS_OK)
         OptionChainPublish(ui, now);
@@ -212,7 +267,13 @@ static void OptionApplyClicked(GtkButton *button, gpointer data)
     uint64_t now = UmiIbkrMonotonicMilliseconds();
     bool valid =
         s && !ui->quoteSubscribed &&
+/* Framework now checks bounded observations and their age before use.
+ * The earlier unbounded call remains disabled for implementation review. */
+#if 0
         UmiIbkrContractDetailsCopy(ui->connection, ui->optionContractRequest, now, s) == UMI_STATUS_OK &&
+#else
+        UmiIbkrContractDetailsCopyWithAge(ui->connection, ui->optionContractRequest, now, 60000U, s) == UMI_STATUS_OK &&
+#endif
         s->optionLookup && s->complete && !s->stale && s->count == 1U;
     char id[32] = {0};
     if (valid)

@@ -56,6 +56,11 @@ UmiStatus UmiGtk4AdapterBindDocumentEditing(UmiGtk4Adapter *adapter,
  * observer. That newer selection is preserved; the operation does not retry. */
 UmiStatus UmiGtk4AdapterFocusActiveDocument(UmiGtk4Adapter *adapter);
 
+/** Entering an existing native source editor selects its document for shared
+ * menu commands, including when both editor groups already show a selected
+ * page. Leaving for a toolbar or another field keeps that source selection.
+ * Focus changes do not rebuild pages, save files or change document contents. */
+
 /** Check the active source document, not an arbitrary focused entry field.
  * Keyboard routing is installed on source editors only; other fields retain
  * their toolkit editing behaviour. False includes no document or a busy paste. */

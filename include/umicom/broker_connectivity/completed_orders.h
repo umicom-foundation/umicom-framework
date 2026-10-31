@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/broker_connectivity/completed_orders.h
- * PURPOSE: Recover completed broker orders as bounded, separately qualified evidence.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Recover completed broker orders as bounded, separately qualified evidence.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_BROKER_CONNECTIVITY_COMPLETED_ORDERS_H
@@ -35,6 +42,17 @@ extern "C"
         uint64_t requestedAtMilliseconds, completedAtMilliseconds;
         char message[256];
     } UmiIbkrCompletedOrdersSnapshot;
+    /* Owned value report; allocate on the heap rather than a small callback stack.
+     * Unused rows are zeroed. Copy performs no I/O or native notification.
+     * Call on the connection owner thread without concurrent pumping; all rows
+     * share one observation time and any error leaves the entire output intact. */
+    typedef struct UmiIbkrCompletedOrderReport
+    {
+        UmiIbkrCompletedOrdersSnapshot capture;
+        UmiIbkrCompletedOrder rows[UMI_IBKR_COMPLETED_ORDER_LIMIT];
+    } UmiIbkrCompletedOrderReport;
+    UmiStatus UmiIbkrCompletedOrderReportCopy(const UmiIbkrConnection *connection,
+        uint64_t nowMilliseconds, uint64_t maximumAgeMilliseconds, UmiIbkrCompletedOrderReport *outReport);
     /* apiOnly filters the provider request, not a particular account or API client.
  * The response is the broker's available completed-order window, not an audit
  * of all trading history. One request per connection prevents uncorrelated late

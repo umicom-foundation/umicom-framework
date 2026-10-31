@@ -86,6 +86,9 @@ target_sources(umicom_ui PRIVATE
 
 # Native GTK4 renderers are attached only when the optional canonical adapter exists.
 if(TARGET umicom_ui_gtk4)
+    # Branded startup is Framework-owned and independent of runtime paths.
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomGtkBrandResources.cmake")
+    umicom_embed_gtk_brand(umicom_ui_gtk4)
     # The Windows identity bridge uses LoadImageW and WM_SETICON directly;
     # propagate its platform dependency to every static-adapter consumer.
     if(WIN32)
@@ -880,4 +883,26 @@ if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
     add_test(NAME framework.ui_workstation.workspace.focus.gtk4 COMMAND umicom-gtk4-workspace-focus-test)
     set_tests_properties(framework.ui_workstation.workspace.focus.gtk4 PROPERTIES
         TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;ui;gtk4;keyboard;retention")
+endif()
+
+# Verify the shared startup presentation without relying on external branding paths.
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-gtk4-branded-startup-test
+        "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/test_branded_startup_gtk4.c")
+    target_link_libraries(umicom-gtk4-branded-startup-test PRIVATE Umicom::ui_gtk4)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-gtk4-branded-startup-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-gtk4-branded-startup-test)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-gtk4-branded-startup-test)
+    endif()
+    foreach(case brand status progress retained invalid legacy)
+        add_test(NAME framework.ui_workstation.branded_startup.${case}
+            COMMAND umicom-gtk4-branded-startup-test ${case})
+        set_tests_properties(framework.ui_workstation.branded_startup.${case} PROPERTIES
+            TIMEOUT 20 SKIP_RETURN_CODE 77 LABELS "framework;ui-workstation;gtk4;startup;regression")
+    endforeach()
 endif()

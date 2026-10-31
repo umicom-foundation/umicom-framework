@@ -17,6 +17,9 @@ $env:Path = "C:\msys64\ucrt64\bin;$env:Path"
 <h2>Use Studio</h2>
 <ol><li>Open the project and select its existing build profile. The source and build folders belong to that project.</li><li>Enable testing in the profile when you want Build to include test qualification.</li><li>Choose Build or Test. Framework performs the work on Studio's existing worker, so Output, Problems, cancellation and operation history keep their existing behaviour.</li></ol>
 <p>Building a separate application against an installed SDK uses its installed libraries. Building a project that includes Framework source lets the generator follow those source dependencies. Automatic testing does not itself make every Framework source dirty.</p>
+<h2>First build and later builds</h2>
+<p>Studio fixes the execution plan when you start a request. If the build folder does not yet contain an automatic test driver, Framework runs Configure, Build and ordinary CTest in that order. A driver created by Configure becomes available for the next request; it does not start another build inside the current Test stage. If a driver is already available, that driver owns the complete automatic verification sequence.</p>
+<p>A failed Configure or Build stops its later stages. Test failures remain failures in Output and operation history. Turning off testing in the profile requests Configure and Build only; it does not retain the previous request's test policy.</p>
 <h2>How a previous result is treated</h2>
 <table><thead><tr><th>Previous evidence</th><th>Next verification</th></tr></thead><tbody>
 <tr><td>Passing self-contained test; matching executable and execution context</td><td>Reuse the historical result.</td></tr>

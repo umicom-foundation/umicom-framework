@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/broker_connectivity/order_recovery.h
- * PURPOSE: Recover broker order summaries and status observations without transmitting orders.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Recover broker order summaries and copy complete observation reports.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_BROKER_CONNECTIVITY_ORDER_RECOVERY_H
@@ -80,6 +87,18 @@ extern "C"
      * into all accounts or callback types. It is a hint, not a reservation, persistent allocator or
      * permission to submit. A trading owner must reconcile again before use. */
     } UmiIbkrOrderIdentitySnapshot;
+    /* Heap allocation is recommended for this bounded value report. It owns no
+     * transport pointers. Rows after capture.count are zeroed on success. */
+    typedef struct UmiIbkrOrderReport
+    {
+        UmiIbkrOrderRecoverySnapshot capture;
+        UmiIbkrOrderIdentitySnapshot identity;
+        UmiIbkrRecoveredOrder rows[UMI_IBKR_ORDER_LIMIT];
+    } UmiIbkrOrderReport;
+    /* Copy on the connection owner thread without pumping I/O. Every row uses
+     * the same time and maximum age. Any error preserves the entire output. */
+    UmiStatus UmiIbkrOrderReportCopy(const UmiIbkrConnection *connection,
+        uint64_t nowMilliseconds, uint64_t maximumAgeMilliseconds, UmiIbkrOrderReport *outReport);
     /* Recover once per connection. The protocol's end marker has no request ID:
  * reconnect for a new snapshot rather than confuse a late end with a retry.
  * Queue failures do not consume this opportunity. Client ID zero is refused

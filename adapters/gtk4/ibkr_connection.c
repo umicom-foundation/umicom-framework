@@ -17,6 +17,7 @@
 #include "umicom/broker_connectivity/access_gtk4.h"
 #include "umicom/broker_connectivity/access_profiles.h"
 #include "umicom/broker_connectivity/connection_gtk4.h"
+#include "umicom/broker_connectivity/connection_guidance.h"
 #include "umicom/ui/gtk4/path_picker.h"
 #include "umicom/broker_connectivity/connection.h"
 #include "umicom/broker_connectivity/quotes.h"
@@ -70,16 +71,20 @@ typedef struct ConnectionUi {
     GtkWidget *mode, *program, *port, *client, *ack;
     GtkWidget *profilePath, *profileLoad, *profileSave, *profileStatus;
     gboolean profileBusy;
+    gboolean commandBusy; /* Serialise connection commands across GTK notifications. */
     GtkWidget *connect, *disconnect, *read, *accounts, *status, *output;
     /* Report selection is captured at Read; changing it never sends a request. */
     GtkWidget *accountReportKind, *accountReportCurrency;
     guint source;
     gboolean closed, populated;
+    gboolean constructing; /* No command authority until native association completes. */
     uint64_t lastPaint;
     gchar *lastOutput;
     GtkWidget *quoteContract, *quoteExchange, *quoteStart, *quoteStop, *quoteOutput, *quoteNotice;
+    GtkWidget *quoteDataType;
     uint32_t quoteRequest;
     gboolean quoteSubscribed;
+    gboolean quoteAccessBusy; /* Serialise native quote commands during notifications. */
     GtkWidget *exportPath, *exportReport, *exportStatus;
     gboolean exportBusy;
     /* The connection window owns a local notification watch. It never owns an
@@ -113,6 +118,7 @@ typedef struct ConnectionUi {
     uint32_t symbolSearchRequest,symbolSearchDisplayed;
     GtkWidget *depthRows,*depthSmart,*depthStart,*depthStop,*depthOutput;
     uint32_t depthRequest;
+    uint32_t timeSalesRequest;
     GtkWidget *ordersAll,*ordersRead,*ordersOutput;
     GtkWidget *completedApiOnly,*completedRead,*completedOutput;
     GtkWidget *completedExportPath,*completedExportReport,*completedExportStatus;
@@ -153,7 +159,12 @@ typedef struct ConnectionUi {
 static ConnectionUi *Owner(GtkWindow *window)
 {
     ConnectionUi *ui = g_object_get_data(G_OBJECT(window), UI_KEY);
+    /* A window-added observer can see fully prepared fields, but cannot start
+     * a socket or change a report while the constructor owns those settings. */
+#if 0
     return ui != NULL && !ui->closed ? ui : NULL;
+#endif
+    return ui != NULL && !ui->closed && !ui->constructing ? ui : NULL;
 }
 static GtkWidget *Text(const char *value)
 {
@@ -254,17 +265,35 @@ static void Controls(ConnectionUi *ui)
     if (ui->closed) return;
     gtk_widget_set_sensitive(ui->disconnect, active);
     if (ui->closed) return;
+    /* A completed capture may be refreshed or replaced by another authorised
+     * account. The older one-read admission is retained for review. */
+#if 0
     gboolean canRead = active && ui->snapshot.state == UMI_IBKR_READY &&
         !ui->snapshot.requestIssued && ui->snapshot.accountCount != 0U;
+#endif
+    gboolean captureIdle = !ui->snapshot.requestIssued ||
+        (ui->snapshot.summaryComplete && ui->snapshot.positionsComplete);
+    gboolean canRead = active && ui->snapshot.state == UMI_IBKR_READY &&
+        !ui->snapshot.stale && captureIdle && ui->snapshot.accountCount != 0U;
+    gtk_button_set_label(GTK_BUTTON(ui->read), ui->snapshot.requestIssued ? "Refresh account" : "Read account");
+    if (ui->closed) return;
     gtk_widget_set_sensitive(ui->read, canRead);
     if (ui->closed) return;
     gtk_widget_set_sensitive(ui->accounts, canRead);
     if (ui->closed) return;
+    /* Keep the old one-shot selection freeze for review. Current selectors
+     * configure the next capture; displayed rows retain their received tags
+     * and selected-account identity until that request is accepted. */
+#if 0
     /* Freeze the requested report after capture so a visible selection cannot
      * relabel observations that came from different account-summary tags. */
     gtk_widget_set_sensitive(ui->accountReportKind, !ui->snapshot.requestIssued);
     if (ui->closed) return;
     gtk_widget_set_sensitive(ui->accountReportCurrency, !ui->snapshot.requestIssued);
+#endif
+    gtk_widget_set_sensitive(ui->accountReportKind, captureIdle);
+    if (ui->closed) return;
+    gtk_widget_set_sensitive(ui->accountReportCurrency, captureIdle);
     if (ui->closed) return;
     /* Quote inspection shares the existing connection but has its own request
      * lifetime. A failed quote remains cancellable without closing the account. */
@@ -276,6 +305,8 @@ static void Controls(ConnectionUi *ui)
     gtk_widget_set_sensitive(ui->quoteContract, !ui->quoteSubscribed);
     if (ui->closed) return;
     gtk_widget_set_sensitive(ui->quoteExchange, !ui->quoteSubscribed);
+    if (ui->closed) return;
+    gtk_widget_set_sensitive(ui->quoteDataType, !ui->quoteSubscribed && !ui->quoteAccessBusy);
     if (ui->closed) return;
 }
 /* Show each field's own receipt age. Activity on another side of the market
@@ -296,8 +327,15 @@ static void RenderQuote(ConnectionUi *ui, uint64_t now)
     if (status != UMI_STATUS_OK) return;
     ui->quoteSubscribed = quote.subscribed;
     GString *text = g_string_new(NULL);
+    /* Keep requested policy separate from observed provider evidence. */
+#if 0
     g_string_append_printf(text, "Contract %" PRIu32 " on %s | %s\n%s\n",
         quote.contract.contractId, quote.contract.exchange,
+        UmiIbkrMarketDataTypeName(quote.dataType), quote.message);
+#endif
+    g_string_append_printf(text, "Contract %" PRIu32 " on %s | Requested: %s | Received: %s\n%s\n",
+        quote.contract.contractId, quote.contract.exchange,
+        UmiIbkrMarketDataTypeName(quote.requestedDataType),
         UmiIbkrMarketDataTypeName(quote.dataType), quote.message);
     QuoteValueText(text, "Bid", &quote.bid, now);
     QuoteValueText(text, "Bid size", &quote.bidSize, now);
@@ -365,6 +403,11 @@ static void Render(ConnectionUi *ui, uint64_t now)
     if (ui->closed) return;
     GString *status = g_string_new(UmiIbkrConnectionStateName(s->state));
     g_string_append_printf(status, "\n%s", s->message);
+    /* The shared explanation keeps native clients consistent without changing
+     * the connection state or interpreting a failed report as a balance. */
+    UmiIbkrConnectionGuidance guidance;
+    if (UmiIbkrConnectionExplain(s, &guidance) == UMI_STATUS_OK)
+        g_string_append_printf(status, "\n%s — %s", guidance.title, guidance.detail);
     if (s->summaryComplete && now >= s->summaryAtMilliseconds)
         g_string_append_printf(status, "\nSummary age: %" PRIu64 " ms.", now-s->summaryAtMilliseconds);
     if (s->positionsComplete && now >= s->positionsAtMilliseconds)
@@ -373,6 +416,8 @@ static void Render(ConnectionUi *ui, uint64_t now)
     g_string_free(status, TRUE);
     if (ui->closed) return;
     Controls(ui);
+    /* Sensitivity notifications may retire all child widgets. */
+    if (ui->closed) return;
     ContractDetailsPaint(ui, now);
     if (ui->closed) return;
     MarketRulePaint(ui, now);
@@ -429,6 +474,11 @@ static gboolean Poll(gpointer data)
     return G_SOURCE_CONTINUE;
 }
 #endif
+/* Status publication may invoke application callbacks synchronously. Reserve
+ * the connection command owner until painting completes, so a callback cannot
+ * replace the session or its timer midway through the same observation. The
+ * retained-only timer below is superseded and kept for engineering review. */
+#if 0
 /* Poll owns a temporary window reference while GTK publishes labels. A
  * notification may close the native window; reacquire the logical owner before
  * scheduling or touching state again. This also protects future child panels. */
@@ -438,6 +488,9 @@ static gboolean Poll(gpointer data)
     g_object_ref(window);
     ConnectionUi *ui = Owner(window);
     if (ui == NULL) { g_object_unref(window); return G_SOURCE_REMOVE; }
+    /* Nested main-context iteration cannot pump during command publication. */
+    if (ui->commandBusy || ui->fillBusy || ui->quoteAccessBusy || ui->profileBusy)
+    { g_object_unref(window); return G_SOURCE_CONTINUE; }
     const uint64_t now = UmiIbkrMonotonicMilliseconds();
     UmiStatus status = UmiIbkrConnectionPump(ui->connection, now);
     (void)UmiIbkrConnectionCopy(ui->connection, &ui->snapshot);
@@ -451,6 +504,40 @@ static gboolean Poll(gpointer data)
     }
     const gboolean keep = status == UMI_STATUS_OK && Connected(ui);
     if (!keep) ui->source = 0U;
+    g_object_unref(window);
+    return keep ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
+}
+#endif
+/* Poll owns a temporary window reference while GTK publishes labels. A
+ * notification may close the native window; reacquire the logical owner before
+ * scheduling or touching state again. This also protects future child panels. */
+static gboolean Poll(gpointer data)
+{
+    GtkWindow *window = GTK_WINDOW(data);
+    g_object_ref(window);
+    ConnectionUi *ui = Owner(window);
+    if (ui == NULL) { g_object_unref(window); return G_SOURCE_REMOVE; }
+    /* Nested main-context iteration cannot pump during command publication. */
+    if (ui->commandBusy || ui->fillBusy || ui->quoteAccessBusy || ui->profileBusy)
+    { g_object_unref(window); return G_SOURCE_CONTINUE; }
+    ui->commandBusy = TRUE;
+    const uint64_t now = UmiIbkrMonotonicMilliseconds();
+    UmiStatus status = UmiIbkrConnectionPump(ui->connection, now);
+    (void)UmiIbkrConnectionCopy(ui->connection, &ui->snapshot);
+    if (status != UMI_STATUS_OK && Connected(ui)) UmiIbkrConnectionClose(ui->connection);
+    if (status != UMI_STATUS_OK || now-ui->lastPaint >= 250U)
+    {
+        Render(ui, now);
+        if (Owner(window) == NULL) {
+            ui->commandBusy = FALSE;
+            g_object_unref(window);
+            return G_SOURCE_REMOVE;
+        }
+        ui->lastPaint = now;
+    }
+    const gboolean keep = status == UMI_STATUS_OK && Connected(ui);
+    if (!keep) ui->source = 0U;
+    ui->commandBusy = FALSE;
     g_object_unref(window);
     return keep ? G_SOURCE_CONTINUE : G_SOURCE_REMOVE;
 }
@@ -474,7 +561,7 @@ static void ProfileChanged(GObject *object, GParamSpec *spec, gpointer data)
     (void)object; (void)spec;
     GtkWindow *window = GTK_WINDOW(data);
     ConnectionUi *ui = Owner(window);
-    if (ui == NULL || Connected(ui) || ui->profileBusy) return;
+    if (ui == NULL || Connected(ui) || ui->profileBusy || ui->commandBusy) return;
     g_object_ref(window);
     UmiTradingEnvironment mode = gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->mode)) == 1U ? UMI_TRADING_LIVE : UMI_TRADING_PAPER;
     UmiIbkrProgram program = gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->program)) == 1U ? UMI_IBKR_GATEWAY : UMI_IBKR_TWS;
@@ -483,6 +570,9 @@ static void ProfileChanged(GObject *object, GParamSpec *spec, gpointer data)
     if (!ui->closed) Controls(ui);
     g_object_unref(window);
 }
+/* The retained, serialised command owner below replaces this callback.
+ * Preserve its earlier reconnect and publication behaviour for review. */
+#if 0
 static void ConnectClicked(GtkButton *button, gpointer data)
 {
     (void)button;
@@ -522,6 +612,7 @@ static void ConnectClicked(GtkButton *button, gpointer data)
     ui->pnlRequest = 0U;
     ui->symbolSearchRequest = 0U;
     ui->depthRequest = 0U;
+    ui->timeSalesRequest = 0U;
     ui->symbolSearchDisplayed = 0U;
     ui->ruleId = 0U;
     ui->ruleQuoteRequest = 0U;
@@ -545,8 +636,14 @@ static void ConnectClicked(GtkButton *button, gpointer data)
         if (ui->source == 0U) { UmiIbkrConnectionClose(ui->connection); Render(ui, now); }
     }
 }
+#endif
+#include "ibkr_connection_commands.inc"
+
 /* GTK collects a contract identity; Framework owns validation, framing and
  * subscription lifetime. A click cannot place an order or buy a snapshot. */
+/* Inspector callbacks now use the same command boundary as application
+ * workspaces. Keep the former direct transport calls for ownership review. */
+#if 0
 static void QuoteStartClicked(GtkButton *button, gpointer data)
 {
     (void)button;
@@ -590,6 +687,41 @@ static void QuoteStopClicked(GtkButton *button, gpointer data)
     Render(ui, UmiIbkrMonotonicMilliseconds());
 }
 
+#endif
+
+static void QuoteStartClicked(GtkButton *button, gpointer data)
+{
+    (void)button;
+    GtkWindow *window = GTK_WINDOW(data);
+    ConnectionUi *ui = Owner(window);
+    if (ui == NULL) return;
+    UmiIbkrQuoteContract contract;
+    UmiStatus status = UmiIbkrQuoteContractParse(
+        gtk_editable_get_text(GTK_EDITABLE(ui->quoteContract)),
+        gtk_editable_get_text(GTK_EDITABLE(ui->quoteExchange)), &contract);
+    if (status != UMI_STATUS_OK) {
+        gtk_label_set_text(GTK_LABEL(ui->quoteNotice),
+            "Enter the positive contract ID and exchange from TWS Contract Description.");
+        return;
+    }
+    /* The former default-only call is retained; selection now travels through
+     * the shared policy service before either request frame can be queued. */
+#if 0
+    (void)UmiIbkrGtkQuoteSubscribe(window, &contract);
+#endif
+    guint choice = gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->quoteDataType));
+    UmiIbkrMarketDataType type = choice < 4U ? (UmiIbkrMarketDataType)(choice + 1U) : UMI_IBKR_DATA_UNKNOWN;
+    (void)UmiIbkrGtkQuoteSubscribeWithDataType(window, &contract, type);
+}
+static void QuoteStopClicked(GtkButton *button, gpointer data)
+{
+    (void)button;
+    (void)UmiIbkrGtkQuoteCancel(GTK_WINDOW(data));
+}
+
+/* The command owner above prevents observers from replacing or retiring the
+ * session beneath these callbacks. Keep the former implementation for review. */
+#if 0
 static void DisconnectClicked(GtkButton *button, gpointer data)
 {
     (void)button;
@@ -620,6 +752,7 @@ static void ReadClicked(GtkButton *button, gpointer data)
     Render(ui, UmiIbkrMonotonicMilliseconds());
     if (status != UMI_STATUS_OK) gtk_label_set_text(GTK_LABEL(ui->status), umi_status_text(status));
 }
+#endif
 static void Destroyed(GtkWidget *widget, gpointer data)
 {
     (void)data;
@@ -819,11 +952,26 @@ GtkWindow *UmiIbkrGtkCreate(GtkWindow *parent)
     return window;
 }
 #endif
+/* Keep the original entry-point signature at its former construction boundary.
+ * All public creation variants now prepare their complete settings before the
+ * host can observe application association. */
+#if 0
 GtkWindow *UmiIbkrGtkCreate(GtkWindow *parent)
+#else
+static GtkWindow *CreateConfiguredWindow(GtkWindow *parent, const UmiBrokerAccessPlan *requested)
+#endif
 {
+    if (parent != NULL && (!GTK_IS_WINDOW(parent) || !UmiGtk4WindowRegistered(parent))) return NULL;
+    UmiBrokerAccessPlan plan;
+    if (requested != NULL) plan = *requested;
+    else if (UmiBrokerAccessPlanCreate(UMI_BROKER_ACCESS_PAPER, &plan) != UMI_STATUS_OK) return NULL;
+    if (UmiBrokerAccessPlanValidate(&plan) != UMI_STATUS_OK || plan.mode == UMI_BROKER_ACCESS_GUEST) return NULL;
+    if (parent != NULL) g_object_ref(parent);
     GtkWindow *window = GTK_WINDOW(gtk_window_new());
+    g_object_ref(window);
     ConnectionUi *ui = g_new0(ConnectionUi, 1);
     ui->window = window;
+    ui->constructing = TRUE;
     g_object_set_data_full(G_OBJECT(window), UI_KEY, ui, FreeOwner);
 /* Close the connection at native window removal, including retained windows. The previous implementation remains for engineering review. */
 #if 0
@@ -833,6 +981,11 @@ GtkWindow *UmiIbkrGtkCreate(GtkWindow *parent)
     gtk_window_set_title(window, "Interactive Brokers - Umicom Trader");
     gtk_window_set_default_size(window, 940, 740);
     gtk_window_set_icon_name(window, "org.umicom.trader");
+    /* Association used to expose a partially constructed inspector and allowed
+     * host callbacks to retire it before its controls existed. The replacement
+     * at the end retains both windows, prepares controls first and validates
+     * native ownership after each externally observable transition. */
+#if 0
     if (parent != NULL) {
         gtk_window_set_transient_for(window, parent);
         gtk_window_set_destroy_with_parent(window, TRUE);
@@ -840,6 +993,7 @@ GtkWindow *UmiIbkrGtkCreate(GtkWindow *parent)
         GtkApplication *application = gtk_window_get_application(parent);
         if (application != NULL) gtk_window_set_application(window, application);
     }
+#endif
     GtkWidget *scroll = gtk_scrolled_window_new();
     GtkWidget *root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 12);
     gtk_widget_set_margin_start(root, 18); gtk_widget_set_margin_end(root, 18);
@@ -924,6 +1078,12 @@ GtkWindow *UmiIbkrGtkCreate(GtkWindow *parent)
     gtk_entry_set_placeholder_text(GTK_ENTRY(ui->quoteExchange), "Exchange from TWS");
     Field(GTK_GRID(quoteGrid), "Contract ID", ui->quoteContract, 0, "ibkr-quote-contract");
     Field(GTK_GRID(quoteGrid), "Exchange", ui->quoteExchange, 1, "ibkr-quote-exchange");
+    /* This is a delivery preference, never an assertion of entitlement. */
+    const char *quoteTypes[] = {"Real-time", "Frozen", "Delayed", "Delayed frozen", NULL};
+    ui->quoteDataType = gtk_drop_down_new_from_strings(quoteTypes);
+    Field(GTK_GRID(quoteGrid), "Requested data", ui->quoteDataType, 2, "ibkr-quote-data-type");
+    gtk_widget_set_tooltip_text(ui->quoteDataType,
+        "The provider decides the returned type. Stop the current quote before changing its requested mode.");
     gtk_box_append(GTK_BOX(root), quoteGrid);
     GtkWidget *quoteButtons = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
     ui->quoteStart = gtk_button_new_with_label("Subscribe to quote");
@@ -973,8 +1133,49 @@ GtkWindow *UmiIbkrGtkCreate(GtkWindow *parent)
 #ifdef UMI_IBKR_HAS_FILTERED_CHOICES
     PositionReviewControls(window, ui, root);
 #endif
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(ui->mode),
+        plan.mode == UMI_BROKER_ACCESS_LIVE ? 1U : 0U);
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(ui->program),
+        plan.program == UMI_IBKR_GATEWAY ? 1U : 0U);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->port), plan.port);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(ui->client), plan.clientId);
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(ui->ack), FALSE);
     Controls(ui);
-    return window;
+    /* GtkApplication's default window-added handler must complete the native
+     * shortcut-controller association before ordinary host callbacks. Calling
+     * the window-side setter first leaves that GTK operation partially active
+     * if an observer immediately closes the window. */
+    gboolean associationReady = TRUE;
+    if (parent != NULL && !ui->closed) {
+        UmiGtk4ObserveWindowRemoval(parent, G_OBJECT(window), UmiGtk4CloseRemovedParentChild, window);
+        if (!ui->closed) gtk_window_set_transient_for(window, parent);
+        if (!ui->closed) gtk_window_set_destroy_with_parent(window, TRUE);
+        if (!ui->closed) {
+            GtkApplication *application = gtk_window_get_application(parent);
+            if (application != NULL) {
+                g_object_ref(application);
+                gtk_application_add_window(application, window);
+                associationReady = gtk_window_get_application(window) == application;
+                g_object_unref(application);
+            }
+        }
+    }
+    gboolean ready = associationReady && !ui->closed && UmiGtk4WindowRegistered(window) &&
+        gtk_window_get_child(window) == scroll &&
+        (parent == NULL || (UmiGtk4WindowRegistered(parent) &&
+            gtk_window_get_transient_for(window) == parent));
+    if (!ready && UmiGtk4WindowRegistered(window)) gtk_window_destroy(window);
+    if (ready) ui->constructing = FALSE;
+    GtkWindow *result = ready ? window : NULL;
+    g_object_unref(window);
+    if (parent != NULL) g_object_unref(parent);
+    return result;
+}
+
+/* The default and preselected constructors use the same lifetime boundary. */
+GtkWindow *UmiIbkrGtkCreate(GtkWindow *parent)
+{
+    return CreateConfiguredWindow(parent, NULL);
 }
 
 typedef struct ParentLink {
@@ -1094,6 +1295,9 @@ GtkWidget *UmiIbkrGtkWrap(GtkWidget *child, GtkWindow *parent)
 
 /* Reuse the established inspector and its port/consent update signals. Merely
  * opening the welcome choice must never create a broker socket or approve Live. */
+/* Applying mode after application callbacks could return a retired window.
+ * Keep the original sequence for review; prepare the plan before association. */
+#if 0
 GtkWindow *UmiIbkrGtkCreateForEnvironment(GtkWindow *parent, int live)
 {
     if (live != 0 && live != 1) return NULL;
@@ -1104,8 +1308,22 @@ GtkWindow *UmiIbkrGtkCreateForEnvironment(GtkWindow *parent, int live)
     return window;
 }
 
+#endif
+GtkWindow *UmiIbkrGtkCreateForEnvironment(GtkWindow *parent, int live)
+{
+    if (live != 0 && live != 1) return NULL;
+    UmiBrokerAccessPlan plan;
+    if (UmiBrokerAccessPlanCreate(live ? UMI_BROKER_ACCESS_LIVE :
+        UMI_BROKER_ACCESS_PAPER, &plan) != UMI_STATUS_OK) return NULL;
+    return CreateConfiguredWindow(parent, &plan);
+}
+
 /* Program changes reset the port. Apply the custom port last and always
  * clear consent so window construction cannot authorise a connection. */
+/* The previous post-construction updates remain for review. Preparing the
+ * complete copied plan before host notification removes stale-control access
+ * and ensures observers see the requested endpoint rather than defaults. */
+#if 0
 GtkWindow *UmiIbkrGtkCreateForPlan(GtkWindow *parent, const UmiBrokerAccessPlan *plan)
 {
     if (UmiBrokerAccessPlanValidate(plan) != UMI_STATUS_OK ||
@@ -1125,6 +1343,14 @@ GtkWindow *UmiIbkrGtkCreateForPlan(GtkWindow *parent, const UmiBrokerAccessPlan 
     return window;
 }
 
+#endif
+GtkWindow *UmiIbkrGtkCreateForPlan(GtkWindow *parent, const UmiBrokerAccessPlan *plan)
+{
+    if (UmiBrokerAccessPlanValidate(plan) != UMI_STATUS_OK ||
+        plan->mode == UMI_BROKER_ACCESS_GUEST) return NULL;
+    return CreateConfiguredWindow(parent, plan);
+}
+
 GtkWidget *UmiIbkrGtkLauncherCreateForPlan(GtkWindow *parent, const UmiBrokerAccessPlan *plan)
 {
     if (UmiBrokerAccessPlanValidate(plan) != UMI_STATUS_OK ||
@@ -1138,3 +1364,99 @@ GtkWidget *UmiIbkrGtkLauncherCreateForPlan(GtkWindow *parent, const UmiBrokerAcc
         ? "Live broker connection" : "Paper broker connection");
     return button;
 }
+
+/* Application workspaces consume an owned copy of observations, never the
+ * inspector's connection pointer. Keeping transport ownership here ensures a
+ * window closure still retires polling and the socket in exactly one place. */
+UmiStatus UmiIbkrGtkCopySnapshot(GtkWindow *window,
+    UmiIbkrConnectionSnapshot *outSnapshot)
+{
+    if (window == NULL || !GTK_IS_WINDOW(window) || outSnapshot == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    ConnectionUi *ui = Owner(window);
+    if (ui == NULL || !UmiGtk4WindowRegistered(window)) return UMI_STATUS_CANCELLED;
+    if (ui->connection != NULL)
+        return UmiIbkrConnectionCopy(ui->connection, outSnapshot);
+    UmiIbkrConnectionSnapshot snapshot = {0};
+    snapshot.state = UMI_IBKR_IDLE;
+    snapshot.readOnly = true;
+    snapshot.requestedEnvironment = gtk_drop_down_get_selected(GTK_DROP_DOWN(ui->mode)) == 1U
+        ? UMI_TRADING_LIVE : UMI_TRADING_PAPER;
+    *outSnapshot = snapshot;
+    return UMI_STATUS_OK;
+}
+
+/* Use the same serialisation as inspector buttons. Preserve the former
+ * retained-only entry point for comparison of native lifetime behaviour. */
+#if 0
+UmiStatus UmiIbkrGtkReadAccount(GtkWindow *window, const char *account)
+{
+    if (window == NULL || !GTK_IS_WINDOW(window) || account == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    ConnectionUi *ui = Owner(window);
+    if (ui == NULL || !UmiGtk4WindowRegistered(window)) return UMI_STATUS_CANCELLED;
+    if (ui->connection == NULL) return UMI_STATUS_UNAVAILABLE;
+    /* Rendering emits native notifications. A retained window keeps its data
+     * alive, and reacquiring the owner after publication detects retirement. */
+    g_object_ref(window);
+    UmiStatus status = UmiIbkrConnectionReadAccount(ui->connection,
+        account, UmiIbkrMonotonicMilliseconds());
+    Render(ui, UmiIbkrMonotonicMilliseconds());
+    ui = Owner(window);
+    if (ui == NULL) status = UMI_STATUS_CANCELLED;
+    else if (status != UMI_STATUS_OK)
+        gtk_label_set_text(GTK_LABEL(ui->status), umi_status_text(status));
+    g_object_unref(window);
+    return status;
+}
+
+#endif
+
+UmiStatus UmiIbkrGtkReadAccount(GtkWindow *window, const char *account)
+{
+    if (window == NULL || !GTK_IS_WINDOW(window) || account == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (Owner(window) == NULL || !UmiGtk4WindowRegistered(window)) return UMI_STATUS_CANCELLED;
+    ConnectionUi *ui = ConnectionCommandEnter(window);
+    if (ui == NULL) return UMI_STATUS_BUSY;
+    /* Keep the original one-shot dispatch for review. The Framework refresh
+     * owner accepts another capture only after both prior streams complete. */
+#if 0
+    UmiStatus status = ui->connection == NULL ? UMI_STATUS_UNAVAILABLE :
+        UmiIbkrConnectionReadAccount(ui->connection, account, UmiIbkrMonotonicMilliseconds());
+#endif
+    UmiStatus status = ui->connection == NULL ? UMI_STATUS_UNAVAILABLE :
+        UmiIbkrConnectionRefreshAccountReport(ui->connection, account,
+            UMI_IBKR_ACCOUNT_OVERVIEW, "", UmiIbkrMonotonicMilliseconds());
+    if (ui->connection != NULL) Render(ui, UmiIbkrMonotonicMilliseconds());
+    if (!ui->closed && status != UMI_STATUS_OK)
+        gtk_label_set_text(GTK_LABEL(ui->status), umi_status_text(status));
+    if (ui->closed) status = UMI_STATUS_CANCELLED;
+    ConnectionCommandLeave(ui);
+    return status;
+}
+
+/* Shared quote commands retain the inspector owner across native notifications. */
+#include "ibkr_quote_access.inc"
+
+/* Instrument discovery shares the inspector namespace and publication guard. */
+#include "ibkr_search_access.inc"
+#include "ibkr_contract_access.inc"
+#include "ibkr_option_access.inc"
+
+/* Order views share the inspector lifetime and never acquire a second socket. */
+#include "ibkr_order_access.inc"
+#include "ibkr_completed_access.inc"
+
+#include "ibkr_execution_access.inc"
+
+#include "ibkr_history_access.inc"
+#include "ibkr_realtime_access.inc"
+
+#include "ibkr_depth_access.inc"
+#include "ibkr_time_sales_access.inc"
+
+/* Share account-scoped profit and loss through the existing connection owner. */
+#include "ibkr_pnl_access.inc"
+
+#include "ibkr_scanner_access.inc"

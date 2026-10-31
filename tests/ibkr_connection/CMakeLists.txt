@@ -1,4 +1,17 @@
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: tests/ibkr_connection/CMakeLists.txt
+#
+# PURPOSE:
+#   Register isolated broker protocol and observation regressions.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
 # Resolve test sources beside this list file, not in the deferred
 # caller directory. The prior relative-path command is retained for review.
 if(FALSE)
@@ -331,7 +344,8 @@ set(completed_layout_cases valid legacy peg-threshold precision scientific negat
 set(completed_store_cases duplicate duplicate-overflow conflict capacity age disconnect raw raw-short raw-query raw-invalid raw-empty invalid-copy)
 set(completed_review_cases cancelled-partial below above missing-fee conflicting-fee mixed-fees correction account zero precision unsupported contract side currency completed-pending execution-pending wrong-request age disconnect)
 
-foreach(group completed_capture completed_layout completed_store completed_review)
+set(completed_snapshot_cases invalid backward capacity no-request empty partial rows all-scope row-age age disconnected owned no-io)
+foreach(group completed_capture completed_layout completed_store completed_review completed_snapshot)
     add_executable(umicom-ibkr-${group}-test "${CMAKE_CURRENT_LIST_DIR}/test_${group}.c")
     target_include_directories(umicom-ibkr-${group}-test PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../../src/ibkr_connection")
     target_link_libraries(umicom-ibkr-${group}-test PRIVATE Umicom::ibkr_connection)
@@ -501,4 +515,163 @@ foreach(case IN ITEMS
 endforeach()
 if(COMMAND umicom_register_validation_target)
     umicom_register_validation_target(umicom-ibkr-time-sales-test)
+endif()
+
+# Quote identity validation is reusable by the inspector and product workspaces.
+add_executable(umicom-ibkr-quote-contract-input-test "${CMAKE_CURRENT_LIST_DIR}/test_quote_contract_input.c")
+target_link_libraries(umicom-ibkr-quote-contract-input-test PRIVATE Umicom::ibkr_connection)
+umicom_ibkr_target(umicom-ibkr-quote-contract-input-test)
+foreach(case valid maximum alias invalid-id invalid-exchange unterminated null)
+    add_test(NAME framework.ibkr_connection.quote_input.${case}
+        COMMAND umicom-ibkr-quote-contract-input-test ${case})
+    set_tests_properties(framework.ibkr_connection.quote_input.${case} PROPERTIES
+        TIMEOUT 10 LABELS "framework;ibkr;market-data;input;regression")
+endforeach()
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-ibkr-quote-contract-input-test)
+endif()
+
+# Delivery preferences are distinct from the provider-observed data classification.
+add_executable(umicom-ibkr-quote-data-type-test "${CMAKE_CURRENT_LIST_DIR}/test_quote_data_type.c")
+target_include_directories(umicom-ibkr-quote-data-type-test PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../../src/ibkr_connection")
+target_link_libraries(umicom-ibkr-quote-data-type-test PRIVATE Umicom::ibkr_connection)
+umicom_ibkr_target(umicom-ibkr-quote-data-type-test)
+foreach(case realtime frozen delayed delayed-frozen invalid rollback duplicate same-mode
+    conflict failed-conflict cancel-failure cancel-switch provider-realtime provider-frozen unconfirmed)
+    add_test(NAME framework.ibkr_connection.quote_data_type.${case}
+        COMMAND umicom-ibkr-quote-data-type-test ${case})
+    set_tests_properties(framework.ibkr_connection.quote_data_type.${case} PROPERTIES
+        TIMEOUT 10 LABELS "framework;ibkr;market-data;read-only;regression")
+endforeach()
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-ibkr-quote-data-type-test)
+endif()
+
+# Copy reports are checked with independent broker frames and no network.
+add_executable(umicom-ibkr-order-report-test "${CMAKE_CURRENT_LIST_DIR}/test_order_report.c")
+target_include_directories(umicom-ibkr-order-report-test PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../../src/ibkr_connection")
+target_link_libraries(umicom-ibkr-order-report-test PRIVATE Umicom::ibkr_connection)
+umicom_ibkr_target(umicom-ibkr-order-report-test)
+foreach(case null age-zero backward empty pending partial complete timeout age disconnect capacity ownership)
+    add_test(NAME framework.ibkr_order_report.${case} COMMAND umicom-ibkr-order-report-test ${case})
+    set_tests_properties(framework.ibkr_order_report.${case} PROPERTIES TIMEOUT 10
+        LABELS "framework;broker;orders;read-only;regression")
+endforeach()
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-ibkr-order-report-test)
+endif()
+
+# Instrument descriptions preserve request identity and explicit freshness.
+add_executable(umicom-ibkr-contract-snapshot-test "${CMAKE_CURRENT_LIST_DIR}/test_contract_snapshot.c")
+target_include_directories(umicom-ibkr-contract-snapshot-test PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../../src/ibkr_connection")
+target_link_libraries(umicom-ibkr-contract-snapshot-test PRIVATE Umicom::ibkr_connection)
+umicom_ibkr_target(umicom-ibkr-contract-snapshot-test)
+foreach(case invalid missing partial complete age-boundary age-before-boundary disconnect session-stale
+    clock-backward future-completion completion-before-request capacity timeout owned-copy latest-exact latest-option latest-missing)
+    add_test(NAME framework.ibkr_contract_snapshot.${case} COMMAND umicom-ibkr-contract-snapshot-test ${case})
+    set_tests_properties(framework.ibkr_contract_snapshot.${case} PROPERTIES TIMEOUT 20
+        LABELS "framework;broker;instrument;read-only;regression")
+endforeach()
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-ibkr-contract-snapshot-test)
+endif()
+
+# Option candidates need complete, recent observations and checked row ownership.
+add_executable(umicom-ibkr-option-snapshot-test "${CMAKE_CURRENT_LIST_DIR}/test_option_snapshot.c")
+target_include_directories(umicom-ibkr-option-snapshot-test PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../../src/ibkr_connection")
+target_link_libraries(umicom-ibkr-option-snapshot-test PRIVATE Umicom::ibkr_connection)
+umicom_ibkr_target(umicom-ibkr-option-snapshot-test)
+foreach(case invalid missing partial complete age-boundary age-before-boundary disconnect session-stale clock-backward future-request future-completion completion-before-request capacity timeout abandoned failed latest item-invalid item-replaced item-index item-null-storage item-count item-expiries item-strikes item-identity item-text item-expiry-text item-strike-text item-owned resolve-stale resolve-partial resolve-session-stale resolve-replaced resolve-missing-item resolve-bounds resolve-invalid-right resolve-empty-route resolve-queue-full resolve-unsupported resolve-invalid resolve-put resolve-call)
+    add_test(NAME framework.ibkr_option_snapshot.${case} COMMAND umicom-ibkr-option-snapshot-test ${case})
+    set_tests_properties(framework.ibkr_option_snapshot.${case} PROPERTIES TIMEOUT 20
+        LABELS "framework;broker;options;read-only;regression")
+endforeach()
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-ibkr-option-snapshot-test)
+endif()
+
+# A bounded report is independent of the mutable tick ring and transport.
+add_executable(umicom-ibkr-time-sales-report-test "${CMAKE_CURRENT_LIST_DIR}/test_time_sales_report.c")
+target_include_directories(umicom-ibkr-time-sales-report-test PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../../src/ibkr_connection")
+target_link_libraries(umicom-ibkr-time-sales-report-test PRIVATE Umicom::ibkr_connection)
+umicom_ibkr_target(umicom-ibkr-time-sales-report-test)
+foreach(case invalid age-zero missing clock-backward future-request future-capture future-row row-before-request bad-sequence bad-count bad-first bad-total unterminated-price unterminated-message bad-kind old-row boundary aged session-stale disconnected cancelled failed exchange-order all-last bid-ask midpoint rows owned duplicate window ring empty)
+    add_test(NAME framework.ibkr_time_sales_report.${case} COMMAND umicom-ibkr-time-sales-report-test ${case})
+    set_tests_properties(framework.ibkr_time_sales_report.${case} PROPERTIES TIMEOUT 20 LABELS "framework;broker;time-sales;regression")
+endforeach()
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-ibkr-time-sales-report-test)
+endif()
+
+# Repeat captures have independent summary and position request identities.
+add_executable(umicom-ibkr-account-refresh-test "${CMAKE_CURRENT_LIST_DIR}/test_account_refresh.c")
+target_include_directories(umicom-ibkr-account-refresh-test PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../../src/ibkr_connection")
+target_link_libraries(umicom-ibkr-account-refresh-test PRIVATE Umicom::ibkr_connection)
+umicom_ibkr_target(umicom-ibkr-account-refresh-test)
+foreach(_case IN ITEMS
+    before-ready
+    null
+    invalid
+    unlisted
+    backwards
+    stale
+    version
+    exhausted
+    queue-first
+    queue-second
+    legacy-transition
+    wire
+    pending
+    legacy-after
+    timeout
+    disconnect
+    malformed
+    field-count
+    bad-version
+    active-summary-error
+    active-position-error
+    independent
+    wrong-account
+    wrong-request
+    model
+    wrong-end
+    fragmented
+    empty
+    values
+    cancellation
+    completed-late
+    retired-replies
+    repeat
+    alias
+    snapshot
+    report-choice)
+    add_test(NAME framework.ibkr_account_refresh.${_case}
+        COMMAND umicom-ibkr-account-refresh-test ${_case})
+    set_tests_properties(framework.ibkr_account_refresh.${_case} PROPERTIES TIMEOUT 30)
+endforeach()
+
+# Diagnostic ownership follows the failing transport or frame, not old notices.
+add_executable(umicom-ibkr-failure-diagnostics-test "${CMAKE_CURRENT_LIST_DIR}/test_failure_diagnostics.c")
+target_include_directories(umicom-ibkr-failure-diagnostics-test PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../../src/ibkr_connection")
+target_link_libraries(umicom-ibkr-failure-diagnostics-test PRIVATE Umicom::ibkr_connection)
+umicom_ibkr_target(umicom-ibkr-failure-diagnostics-test)
+foreach(_case IN ITEMS read-error eof write-error zero-write heartbeat-timeout account-timeout zero-frame large-frame frame-counter malformed-frame deferred-frame catalog-identity catalog-body catalog-counter provider-client provider-lost provider-endpoint healthy-farm fragmented-header refresh-advice)
+    add_test(NAME framework.ibkr_failure_diagnostics.${_case} COMMAND umicom-ibkr-failure-diagnostics-test ${_case})
+    set_tests_properties(framework.ibkr_failure_diagnostics.${_case} PROPERTIES TIMEOUT 20 LABELS "framework;broker;connection;regression")
+endforeach()
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-ibkr-failure-diagnostics-test)
+endif()
+
+# Option computations use the same quote request owner across protocol shapes.
+add_executable(umicom-ibkr-option-computation-test "${CMAKE_CURRENT_LIST_DIR}/test_option_computation.c")
+target_include_directories(umicom-ibkr-option-computation-test PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../../src/ibkr_connection")
+target_link_libraries(umicom-ibkr-option-computation-test PRIVATE Umicom::ibkr_connection)
+umicom_ibkr_target(umicom-ibkr-option-computation-test)
+foreach(_case IN ITEMS modern-bid modern-ask modern-last modern-model legacy-full legacy-partial legacy-model delayed-bid delayed-ask delayed-last delayed-model delayed-frozen type-unconfirmed type-switch sentinels normalised-sentinels negative-values zero-values freshness independent-bases cancel reuse provider-error disconnect bad-decimal bad-count bad-attribute bad-request legacy-bad-revision unrelated unknown-tick fragmented copy-isolation)
+    add_test(NAME framework.ibkr_option_computation.${_case} COMMAND umicom-ibkr-option-computation-test ${_case})
+    set_tests_properties(framework.ibkr_option_computation.${_case} PROPERTIES TIMEOUT 20 LABELS "framework;broker;options;regression")
+endforeach()
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-ibkr-option-computation-test)
 endif()

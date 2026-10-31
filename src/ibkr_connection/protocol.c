@@ -120,7 +120,13 @@ static UmiStatus Summary(UmiIbkrConnection *c,char **f,size_t n)
 {
     uint64_t id;
     if(n!=7U||strcmp(f[1],"1")||!UmiIbkrUnsigned(f[2],&id))return UMI_STATUS_PARSE_ERROR;
+    /* Retain the fixed-ID check for the original one-shot interface. Refresh
+     * requests use their own identity and never consume an earlier reply. */
+#if 0
     if(!c->snapshot.requestIssued||id!=35001U||strcmp(f[3],c->snapshot.selectedAccount)||c->snapshot.summaryComplete)return Ignore(c);
+#endif
+    uint32_t expected = c->accountSummaryRequest ? c->accountSummaryRequest : 35001U;
+    if(!c->snapshot.requestIssued||id!=expected||strcmp(f[3],c->snapshot.selectedAccount)||c->snapshot.summaryComplete)return Ignore(c);
     UmiIbkrAccountValue row={0};
     if(!UmiIbkrText(f[4],sizeof row.tag,false)||!UmiIbkrText(f[5],sizeof row.value,true)||!UmiIbkrText(f[6],sizeof row.currency,true))return UMI_STATUS_PARSE_ERROR;
     (void)snprintf(row.tag,sizeof row.tag,"%s",f[4]);
@@ -133,6 +139,10 @@ static UmiStatus Summary(UmiIbkrConnection *c,char **f,size_t n)
     if(index==c->snapshot.valueCount)++c->snapshot.valueCount;
     return UMI_STATUS_OK;
 }
+/* Keep the legacy row decoder for review. Both protocols now share row
+ * validation; request identity and account/model filters remain at the entry
+ * boundary so unrelated captures cannot overwrite the selected portfolio. */
+#if 0
 static UmiStatus Position(UmiIbkrConnection *c,char **f,size_t n)
 {
     if(n!=16U||strcmp(f[1],"3"))return UMI_STATUS_PARSE_ERROR;
@@ -156,6 +166,59 @@ static UmiStatus Position(UmiIbkrConnection *c,char **f,size_t n)
     if(index==c->snapshot.positionCount)++c->snapshot.positionCount;
     return UMI_STATUS_OK;
 }
+#endif
+static UmiStatus PositionRow(UmiIbkrConnection *c,char **fields)
+{
+    UmiIbkrPositionObservation row={0};
+    char *dest[]={row.contractId,row.symbol,row.securityType,row.expiry,row.strike,row.right,row.multiplier,row.exchange,row.currency,row.localSymbol,row.tradingClass,row.quantity,row.averageCost};
+    const size_t cap[]={sizeof row.contractId,sizeof row.symbol,sizeof row.securityType,sizeof row.expiry,sizeof row.strike,sizeof row.right,sizeof row.multiplier,sizeof row.exchange,sizeof row.currency,sizeof row.localSymbol,sizeof row.tradingClass,sizeof row.quantity,sizeof row.averageCost};
+    for(size_t i=0;i<13U;++i){
+        if(!UmiIbkrText(fields[i],cap[i],true))return UMI_STATUS_PARSE_ERROR;
+        memcpy(dest[i],fields[i],strlen(fields[i])+1U);
+    }
+    uint64_t id;
+    if(!UmiIbkrUnsigned(row.contractId,&id)||!row.symbol[0]||!row.securityType[0]||!UmiIbkrDecimalText(row.quantity)||!UmiIbkrDecimalText(row.averageCost))return UMI_STATUS_PARSE_ERROR;
+    size_t index=c->snapshot.positionCount;
+    for(size_t i=0;i<c->snapshot.positionCount;++i){
+        const UmiIbkrPositionObservation *old=&c->snapshot.positions[i];
+        if(!strcmp(row.contractId,old->contractId)&&!strcmp(row.localSymbol,old->localSymbol)&&!strcmp(row.exchange,old->exchange)){index=i;break;}
+    }
+    if(index==UMI_IBKR_POSITION_LIMIT)return UMI_STATUS_CAPACITY_EXCEEDED;
+    c->snapshot.positions[index]=row;
+    if(index==c->snapshot.positionCount)++c->snapshot.positionCount;
+    return UMI_STATUS_OK;
+}
+static UmiStatus Position(UmiIbkrConnection *c,char **f,size_t n)
+{
+    if(n!=16U||strcmp(f[1],"3"))return UMI_STATUS_PARSE_ERROR;
+    if(c->accountPositionsRequest || !c->snapshot.requestIssued ||
+        strcmp(f[2],c->snapshot.selectedAccount) || c->snapshot.positionsComplete) return Ignore(c);
+    return PositionRow(c,f+3U);
+}
+static UmiStatus PositionMulti(UmiIbkrConnection *c,char **f,size_t n)
+{
+    uint64_t request;
+    if(n!=18U||strcmp(f[1],"1")||!UmiIbkrUnsigned(f[2],&request))
+        return UMI_STATUS_PARSE_ERROR;
+    if(!c->snapshot.requestIssued || !c->accountPositionsRequest ||
+        request!=c->accountPositionsRequest || c->snapshot.positionsComplete ||
+        strcmp(f[3],c->snapshot.selectedAccount) || f[17][0]) return Ignore(c);
+    return PositionRow(c,f+4U);
+}
+static UmiStatus PositionMultiEnd(UmiIbkrConnection *c,char **f,size_t n,uint64_t now)
+{
+    uint64_t request;
+    if(n!=3U||strcmp(f[1],"1")||!UmiIbkrUnsigned(f[2],&request))
+        return UMI_STATUS_PARSE_ERROR;
+    if(!c->snapshot.requestIssued || !c->accountPositionsRequest ||
+        request!=c->accountPositionsRequest || c->snapshot.positionsComplete) return Ignore(c);
+    const char *cancel[]={"75","1",f[2]};
+    UmiStatus status=UmiIbkrQueueFields(c,cancel,3U);
+    if(status==UMI_STATUS_OK){
+        c->snapshot.positionsComplete=true;c->snapshot.positionsAtMilliseconds=now;
+    }
+    return status;
+}
 static UmiStatus ProviderMessage(UmiIbkrConnection *c,char **f,size_t n)
 {
     uint64_t code;
@@ -178,8 +241,16 @@ static UmiStatus ProviderMessage(UmiIbkrConnection *c,char **f,size_t n)
      * inspection. Global diagnostics and IDs never issued here keep the existing
      * connection-level error behavior below. */
     uint64_t retiredRequest;
+    /* Active account diagnostics must reach the connection failure path.
+     * Earlier request IDs alone are not proof that a request has retired. */
+#if 0
     if (UmiIbkrUnsigned(f[2], &retiredRequest) && retiredRequest >= 36000U &&
         retiredRequest < c->nextQuoteRequest) return Ignore(c);
+#endif
+    if (UmiIbkrUnsigned(f[2], &retiredRequest) && retiredRequest >= 36000U &&
+        retiredRequest < c->nextQuoteRequest &&
+        !(retiredRequest == c->accountSummaryRequest && !c->snapshot.summaryComplete) &&
+        !(retiredRequest == c->accountPositionsRequest && !c->snapshot.positionsComplete)) return Ignore(c);
     c->snapshot.providerCode=(int)code;
     /* Never crop UTF-8 in the middle of a code point. Long provider text
      * is explicitly omitted, not published as a complete diagnostic. */
@@ -237,7 +308,16 @@ static UmiStatus Decode(UmiIbkrConnection *c,const unsigned char *body,size_t le
 #if 0
     if(!handshake&&id!=4U&&id!=9U&&id!=15U&&id!=49U&&id!=61U&&id!=62U&&id!=63U&&id!=64U)return Ignore(c);
 #endif
+    /* Request-scoped position callbacks extend the previous receive gate. */
+#if 0
     if(!handshake&&id!=1U&&id!=2U&&id!=58U&&id!=4U&&id!=9U&&id!=15U&&id!=49U&&id!=61U&&id!=62U&&id!=63U&&id!=64U)return Ignore(c);
+#endif
+    /* Keep the prior gate for review. Option computations share quote request
+     * ownership and are now decoded before publication to native clients. */
+#if 0
+    if(!handshake&&id!=1U&&id!=2U&&id!=58U&&id!=4U&&id!=9U&&id!=15U&&id!=49U&&id!=61U&&id!=62U&&id!=63U&&id!=64U&&id!=71U&&id!=72U)return Ignore(c);
+#endif
+    if(!handshake&&id!=21U&&id!=1U&&id!=2U&&id!=58U&&id!=4U&&id!=9U&&id!=15U&&id!=49U&&id!=61U&&id!=62U&&id!=63U&&id!=64U&&id!=71U&&id!=72U)return Ignore(c);
     /* One bounded allocation per decoded control/observation message, released
      * before return. An ignored message is never parsed as a known structure. */
     char *copy=malloc(length+1U);if(!copy)return UMI_STATUS_OUT_OF_MEMORY;
@@ -254,6 +334,7 @@ static UmiStatus Decode(UmiIbkrConnection *c,const unsigned char *body,size_t le
         }
     }else switch(id){
     case 1: case 2: case 58: status=UmiIbkrQuoteFrame(c,id,f,n,now);break;
+    case 21: status=UmiIbkrOptionComputationFrame(c,f,n,now);break;
     case 4: status=ProviderMessage(c,f,n);break;
     case 9:{uint64_t order;
         if(n!=3U||strcmp(f[1],"1")||!UmiIbkrUnsigned(f[2],&order)||order>INT_MAX)status=UMI_STATUS_PARSE_ERROR;
@@ -272,17 +353,29 @@ static UmiStatus Decode(UmiIbkrConnection *c,const unsigned char *body,size_t le
         else{c->snapshot.serverEpochSeconds=seconds;c->snapshot.clockReceived=true;c->snapshot.clockReceivedAtMilliseconds=now;c->pingPending=false;}
         break;}
     case 61:status=Position(c,f,n);break;
+    case 71:status=PositionMulti(c,f,n);break;
+    case 72:status=PositionMultiEnd(c,f,n,now);break;
     case 62:
         if(n!=2U||strcmp(f[1],"1"))status=UMI_STATUS_PARSE_ERROR;
+        /* Unscoped end markers cannot finish a request-scoped refresh. */
+#if 0
         else if(!c->snapshot.requestIssued||c->snapshot.positionsComplete)status=Ignore(c);
+#endif
+        else if(c->accountPositionsRequest||!c->snapshot.requestIssued||c->snapshot.positionsComplete)status=Ignore(c);
         else{const char *cancel[]={"64","1"};status=UmiIbkrQueueFields(c,cancel,2);
             if(status==UMI_STATUS_OK){c->snapshot.positionsComplete=true;c->snapshot.positionsAtMilliseconds=now;}}
         break;
     case 63:status=Summary(c,f,n);break;
     case 64:{uint64_t request;
         if(n!=3U||strcmp(f[1],"1")||!UmiIbkrUnsigned(f[2],&request))status=UMI_STATUS_PARSE_ERROR;
+        /* Preserve the one-shot completion branch for review. Cancellation
+         * now follows the validated request identity from this end marker. */
+#if 0
         else if(!c->snapshot.requestIssued||request!=35001U||c->snapshot.summaryComplete)status=Ignore(c);
         else{const char *cancel[]={"63","1","35001"};status=UmiIbkrQueueFields(c,cancel,3);
+#endif
+        else if(!c->snapshot.requestIssued||request!=(c->accountSummaryRequest?c->accountSummaryRequest:35001U)||c->snapshot.summaryComplete)status=Ignore(c);
+        else{const char *cancel[]={"63","1",f[2]};status=UmiIbkrQueueFields(c,cancel,3);
             if(status==UMI_STATUS_OK){c->snapshot.summaryComplete=true;c->snapshot.summaryAtMilliseconds=now;}}
         break;}
     default:status=UMI_STATUS_PARSE_ERROR;break;

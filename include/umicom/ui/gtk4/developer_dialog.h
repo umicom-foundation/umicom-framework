@@ -62,6 +62,29 @@ UmiStatus UmiGtk4BuildSettingsDialogCreate(GtkWindow *parent,
 UmiStatus UmiGtk4BuildSettingsDialogPrepare(GtkWindow *parent,
     const UmiBuildProfile *profile, int trusted, UmiGtk4BuildSettingsApplied onApplied,
     void *context, UmiGtk4DeveloperDialog **outDialog);
+
+/** Build settings keep the same controls while changing visible sections.
+ * Selection only changes presentation: no profile save, trust change, discovery
+ * or process launch occurs. Call on the GTK thread with a live settings handle.
+ * Prepared hidden forms support selection. Invalid calls leave output unchanged.
+ * A selection notification may retire the owner; Select then returns CANCELLED.
+ * Reentrant Select returns BUSY. New-project forms do not have these sections. */
+typedef enum UmiGtk4BuildSettingsSection {
+    UMI_GTK4_BUILD_SETTINGS_BUILD,
+    UMI_GTK4_BUILD_SETTINGS_TOOLS,
+    UMI_GTK4_BUILD_SETTINGS_PRESETS,
+    UMI_GTK4_BUILD_SETTINGS_RUN,
+    UMI_GTK4_BUILD_SETTINGS_TARGETS,
+    UMI_GTK4_BUILD_SETTINGS_SDK,
+    UMI_GTK4_BUILD_SETTINGS_INTELLIGENCE,
+    UMI_GTK4_BUILD_SETTINGS_CONFIGURATIONS,
+    UMI_GTK4_BUILD_SETTINGS_SECTION_COUNT
+} UmiGtk4BuildSettingsSection;
+UmiStatus UmiGtk4BuildSettingsSelectSection(UmiGtk4DeveloperDialog *dialog,
+    UmiGtk4BuildSettingsSection section);
+UmiStatus UmiGtk4BuildSettingsCurrentSection(const UmiGtk4DeveloperDialog *dialog,
+    UmiGtk4BuildSettingsSection *outSection);
+
 /** Present a live form on the GTK thread. Ownership remains with the caller.
  * Presentation can synchronously notify observers that destroy the owner. The
  * function retains internal lifetime and returns CANCELLED if the form closes.

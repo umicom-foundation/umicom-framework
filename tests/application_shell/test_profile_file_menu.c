@@ -54,7 +54,11 @@ int main(void)
 #if 0
     assert(profile->contribution_count == 20U);
 #endif
+    /* Save As exposes the existing host route; all previous contributions remain. */
+#if 0
     assert(profile->contribution_count == 21U);
+#endif
+    assert(profile->contribution_count == 22U);
     assert(umi_application_shell_profile_validate(profile) == UMI_STATUS_OK);
 
     assert(umi_application_shell_registry_create(&registry) == UMI_STATUS_OK);
@@ -107,6 +111,20 @@ int main(void)
         "umicom.shell.file-menu.opening-results", &contribution) == UMI_STATUS_OK);
     assert(strcmp(contribution.command_id, "file.open.results") == 0);
     assert((contribution.flags & UMI_APPLICATION_SHELL_ENABLED) == 0U);
+    assert(umi_application_shell_registry_find(registry,
+        "umicom.shell.file-menu.save-as", &contribution) == UMI_STATUS_OK);
+    assert(strcmp(contribution.command_id, "file.save-as") == 0);
+    assert(strcmp(contribution.group_id, "file.save") == 0);
+    assert((contribution.flags & UMI_APPLICATION_SHELL_ENABLED) == 0U);
+    /* Consumer sections follow semantic groups and retain every existing action. */
+    const char *ids[] = {"new-project", "open", "save", "close", "install", "exit"};
+    const char *groups[] = {"file.open", "file.open", "file.save", "file.close", "delivery", "application"};
+    for (size_t i = 0U; i < sizeof ids / sizeof ids[0]; ++i) {
+        char id[UMI_APPLICATION_SHELL_ID_CAPACITY] = "umicom.shell.file-menu.";
+        strcat(id, ids[i]);
+        assert(umi_application_shell_registry_find(registry, id, &contribution) == UMI_STATUS_OK);
+        assert(strcmp(contribution.group_id, groups[i]) == 0);
+    }
     umi_application_shell_registry_destroy(registry);
     return 0;
 }

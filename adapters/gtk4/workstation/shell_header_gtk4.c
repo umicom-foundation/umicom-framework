@@ -17,6 +17,7 @@
 
 #include "umicom/ui/gtk4/interaction_recording.h"
 #include "umicom/ui/gtk4/workstation/shell_header.h"
+#include "../startup_brand_panel.h"
 
 #include "umicom/application/portfolio.h"
 #include "umicom/ui/gtk4/application_processes.h"
@@ -2466,9 +2467,9 @@ static void startup_splash_apply_icon(
 
 /* Build one calm, centred startup surface. The window may be shown before
  * product services are constructed, ensuring visible feedback during startup. */
-UmiStatus umi_gtk4_ws_startup_splash_create(
+static UmiStatus startup_splash_create_presentation(
     const UmiGtk4WorkstationStartupSplashConfig *config,
-    UmiGtk4WorkstationStartupSplash **out_splash)
+    UmiGtk4WorkstationStartupSplash **out_splash, bool branded)
 {
     UmiGtk4WorkstationStartupSplash *splash;
     GtkWidget *hero;
@@ -2551,7 +2552,7 @@ UmiStatus umi_gtk4_ws_startup_splash_create(
     hero = gtk_box_new(GTK_ORIENTATION_VERTICAL, 18);
     identity = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 14);
     status_group = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
-    splash->icon = gtk_picture_new();
+    splash->icon = branded ? UmiGtkBrandCreate(TRUE, 56) : gtk_picture_new();
     splash->title = gtk_label_new(splash->state.title);
     splash->subtitle = gtk_label_new(splash->state.subtitle);
     splash->status = gtk_label_new(splash->state.status);
@@ -2594,8 +2595,10 @@ UmiStatus umi_gtk4_ws_startup_splash_create(
     gtk_widget_set_hexpand(hero, TRUE);
     gtk_widget_set_vexpand(hero, TRUE);
     gtk_widget_set_halign(identity, GTK_ALIGN_CENTER);
-    gtk_widget_set_size_request(splash->icon, 88, 88);
-    gtk_picture_set_can_shrink(GTK_PICTURE(splash->icon), TRUE);
+    if (!branded) {
+        gtk_widget_set_size_request(splash->icon, 88, 88);
+        gtk_picture_set_can_shrink(GTK_PICTURE(splash->icon), TRUE);
+    }
     gtk_label_set_wrap(GTK_LABEL(splash->subtitle), TRUE);
     gtk_label_set_wrap(GTK_LABEL(splash->status), TRUE);
     gtk_label_set_justify(GTK_LABEL(splash->subtitle), GTK_JUSTIFY_CENTER);
@@ -2608,8 +2611,9 @@ UmiStatus umi_gtk4_ws_startup_splash_create(
     gtk_progress_bar_set_show_text(GTK_PROGRESS_BAR(splash->progress), FALSE);
 
     gtk_box_append(GTK_BOX(identity), splash->icon);
-    gtk_box_append(GTK_BOX(identity), splash->title);
+    if (!branded) gtk_box_append(GTK_BOX(identity), splash->title);
     gtk_box_append(GTK_BOX(hero), identity);
+    if (branded) gtk_box_append(GTK_BOX(hero), splash->title);
     update_optional_label(splash->subtitle, splash->state.subtitle);
     gtk_box_append(GTK_BOX(hero), splash->subtitle);
     gtk_box_append(GTK_BOX(status_group), separator);
@@ -2618,10 +2622,31 @@ UmiStatus umi_gtk4_ws_startup_splash_create(
     gtk_box_append(GTK_BOX(status_group), splash->progress);
     update_optional_label(splash->badge, splash->state.mode_badge);
     gtk_box_append(GTK_BOX(status_group), splash->badge);
-    gtk_box_append(GTK_BOX(hero), status_group);
-    gtk_box_append(GTK_BOX(splash->root), hero);
-
-    startup_splash_apply_icon(splash, splash->state.icon_resource);
+    /* Both presentations share the lifetime and progress contract. The older
+     * centred icon presentation remains available through the existing API.
+     * Products choosing the branded view use embedded canonical SVG artwork,
+     * independent of their executable directory and working directory. */
+    if (branded) {
+        gtk_widget_add_css_class(splash->root, "umicom-session-surface");
+        gtk_widget_set_name(splash->root, "umicom-branded-startup");
+        UmiGtkStartupStyle(splash->root);
+        gtk_widget_add_css_class(splash->title, "session-title");
+        gtk_widget_add_css_class(splash->subtitle, "session-muted");
+        gtk_widget_set_margin_start(hero, 24);
+        gtk_widget_set_margin_end(hero, 24);
+        gtk_widget_set_margin_top(hero, 24);
+        gtk_widget_set_margin_bottom(hero, 24);
+        GtkWidget *backdrop = UmiGtkStartupBackdrop(hero);
+        gtk_widget_set_vexpand(backdrop, TRUE);
+        gtk_box_append(GTK_BOX(splash->root), backdrop);
+        gtk_widget_add_css_class(status_group, "session-footer");
+        gtk_box_append(GTK_BOX(splash->root), status_group);
+        splash->state.icon_visible = 1;
+    } else {
+        gtk_box_append(GTK_BOX(hero), status_group);
+        gtk_box_append(GTK_BOX(splash->root), hero);
+        startup_splash_apply_icon(splash, splash->state.icon_resource);
+    }
     splash->state.progress = 0.0;
     splash->state.progress_visible = 1;
     splash->state.revision = 1U;
@@ -2634,6 +2659,21 @@ UmiStatus umi_gtk4_ws_startup_splash_create(
         -1);
     *out_splash = splash;
     return UMI_STATUS_OK;
+}
+
+/* The original API preserves the established appearance for existing hosts. */
+UmiStatus umi_gtk4_ws_startup_splash_create(
+    const UmiGtk4WorkstationStartupSplashConfig *config,
+    UmiGtk4WorkstationStartupSplash **out_splash)
+{
+    return startup_splash_create_presentation(config, out_splash, false);
+}
+
+UmiStatus umi_gtk4_ws_startup_splash_create_branded(
+    const UmiGtk4WorkstationStartupSplashConfig *config,
+    UmiGtk4WorkstationStartupSplash **out_splash)
+{
+    return startup_splash_create_presentation(config, out_splash, true);
 }
 
 /* Release the controller and its owning root reference. A parent keeps the

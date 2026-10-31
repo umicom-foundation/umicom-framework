@@ -365,6 +365,17 @@ UmiStatus umi_gtk4_ws_startup_splash_create(
     const UmiGtk4WorkstationStartupSplashConfig *config,
     UmiGtk4WorkstationStartupSplash **out_splash);
 
+#define UMICOM_HAS_BRANDED_STARTUP_SPLASH 1
+/**
+ * Create a branded startup view using the embedded transparent Umicom SVG.
+ * The same status, progress, snapshot and ownership operations apply.
+ * Resource path fields remain snapshot metadata; this view uses canonical
+ * embedded artwork instead of resolving an image from those paths.
+ */
+UmiStatus umi_gtk4_ws_startup_splash_create_branded(
+    const UmiGtk4WorkstationStartupSplashConfig *config,
+    UmiGtk4WorkstationStartupSplash **out_splash);
+
 /** Release the startup controller and its retained widget reference. */
 void umi_gtk4_ws_startup_splash_destroy(
     UmiGtk4WorkstationStartupSplash *splash);

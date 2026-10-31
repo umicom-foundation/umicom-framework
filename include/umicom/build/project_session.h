@@ -76,6 +76,9 @@ UmiStatus umi_build_project_session_submit(UmiBuildProjectSession *session,
  * and, when build_testing is enabled, select tests from retained input evidence.
  * Test requests require build_testing. Configure, build and output remain on the
  * existing worker; package/install/deploy retain their explicit full-test path.
+ * Driver selection is fixed when submitted. A fresh tree runs Configure, Build
+ * and ordinary CTest once; a driver produced by that Configure is considered on
+ * the next request. An existing driver owns the whole operation in one stage.
  * Only BUILD and TEST are accepted. log_path may be NULL. */
 UmiStatus UmiBuildProjectSessionSubmitAutomatic(UmiBuildProjectSession *session,
     const UmiBuildProfile *profile, UmiBuildPhase phase, bool trusted, const char *log_path);

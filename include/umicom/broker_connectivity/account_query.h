@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/broker_connectivity/account_query.h
- * PURPOSE: Select bounded TWS account summaries while retaining the established session owner.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Select bounded account reports and repeat captures using independent request identities.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_BROKER_CONNECTIVITY_ACCOUNT_QUERY_H
@@ -34,6 +41,16 @@ UmiStatus UmiIbkrAccountReportTags(UmiIbkrAccountReportKind kind, const char *cu
 UmiStatus UmiIbkrConnectionReadAccountReport(UmiIbkrConnection *connection, const char *account,
                                              UmiIbkrAccountReportKind kind, const char *currency,
                                              uint64_t nowMilliseconds);
+/** Capture or refresh one authorised account. Both earlier streams must have
+ * completed before another capture is accepted. Every capture uses new summary
+ * and position request IDs and clears old rows only after both requests queue.
+ * Late replies cannot change a newer capture. Completion remains independent;
+ * this is not a continuous or atomic portfolio. Failure preserves existing
+ * observations and queued messages. Calls use the connection's owning thread.
+ * The original one-shot ReadAccount/ReadAccountReport interfaces are retained. */
+UmiStatus UmiIbkrConnectionRefreshAccountReport(UmiIbkrConnection *connection,
+    const char *account, UmiIbkrAccountReportKind kind, const char *currency,
+    uint64_t nowMilliseconds);
 #ifdef __cplusplus
 }
 #endif

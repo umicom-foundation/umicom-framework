@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/ibkr_fill_policy.inc
- * PURPOSE: Review and watch full-quantity intent using the shared decimal and quote policy owners.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Review and watch full-quantity intent using shared decimal and quote policy owners.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* Hold the window during signal publication. A retained button is inert after
@@ -11,7 +18,11 @@
 static ConnectionUi *FillEnter(GtkWindow *window)
 {
     ConnectionUi *ui = Owner(window);
-    if (ui == NULL || ui->fillBusy)
+    /* Connection publication owns the session until its callback completes. */
+#if 0
+    if (ui == NULL || ui->fillBusy) return NULL;
+#endif
+    if (ui == NULL || ui->fillBusy || ui->commandBusy || ui->quoteAccessBusy)
         return NULL;
     g_object_ref(window);
     ui->fillBusy = TRUE;

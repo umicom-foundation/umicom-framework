@@ -79,7 +79,17 @@ static UmiStatus Fail(UmiIbkrConnection *c, UmiStatus status, const char *messag
     CloseIo(c); c->snapshot.state = UMI_IBKR_FAILED;
     c->snapshot.stale = true; c->snapshot.lastStatus = status;
     c->txSize = 0; c->rxSize = 0;
+    /* A local transport or timeout failure owns its diagnostic. Keeping an
+     * earlier farm notification's provider code would misclassify this failure.
+     * Decoder failures pass NULL because their current frame owns both fields.
+     * Preserve the old message-only assignment for review. */
+#if 0
     if (message != NULL) (void)snprintf(c->snapshot.message, sizeof c->snapshot.message, "%s", message);
+#endif
+    if (message != NULL) {
+        c->snapshot.providerCode = 0;
+        (void)snprintf(c->snapshot.message, sizeof c->snapshot.message, "%s", message);
+    }
     return status;
 }
 UmiStatus UmiIbkrConnectionCreateWithIo(const UmiIbkrConnectionOptions *o, const UmiIbkrIo *io, UmiIbkrConnection **out)
@@ -245,10 +255,20 @@ UmiStatus UmiIbkrQueueFields(UmiIbkrConnection *c, const char *const *fields, si
                 strcmp(id,"81") && strcmp(id,"92") && strcmp(id,"93") && strcmp(id,"94") && strcmp(id,"95") && strcmp(id,"10") && strcmp(id,"11") && strcmp(id,"5") && strcmp(id,"16") && strcmp(id,"99") && strcmp(id,"20") && strcmp(id,"25") && strcmp(id,"50") && strcmp(id,"51") && strcmp(id,"22") && strcmp(id,"23") && strcmp(id,"78") && strcmp(id,"24")))
         return UMI_STATUS_PERMISSION_DENIED;
 #endif
+    /* Request-scoped position captures permit explicit account refresh.
+     * Keep the previous observation gate for review; these subscriptions do
+     * not place, modify or cancel broker orders. */
+#if 0
     if (!id || (strcmp(id,"71") && strcmp(id,"49") && strcmp(id,"62") &&
                 strcmp(id,"63") && strcmp(id,"61") && strcmp(id,"64") &&
                 strcmp(id,"1") && strcmp(id,"2") && strcmp(id,"59") && strcmp(id,"9") && strcmp(id,"91") && strcmp(id,"7") &&
                 strcmp(id,"81") && strcmp(id,"92") && strcmp(id,"93") && strcmp(id,"94") && strcmp(id,"95") && strcmp(id,"10") && strcmp(id,"11") && strcmp(id,"5") && strcmp(id,"16") && strcmp(id,"99") && strcmp(id,"20") && strcmp(id,"25") && strcmp(id,"50") && strcmp(id,"51") && strcmp(id,"22") && strcmp(id,"23") && strcmp(id,"78") && strcmp(id,"24") && strcmp(id,"97") && strcmp(id,"98")))
+        return UMI_STATUS_PERMISSION_DENIED;
+#endif
+    if (!id || (strcmp(id,"71") && strcmp(id,"49") && strcmp(id,"62") &&
+                strcmp(id,"63") && strcmp(id,"61") && strcmp(id,"64") &&
+                strcmp(id,"1") && strcmp(id,"2") && strcmp(id,"59") && strcmp(id,"9") && strcmp(id,"91") && strcmp(id,"7") &&
+                strcmp(id,"81") && strcmp(id,"92") && strcmp(id,"93") && strcmp(id,"94") && strcmp(id,"95") && strcmp(id,"10") && strcmp(id,"11") && strcmp(id,"5") && strcmp(id,"16") && strcmp(id,"99") && strcmp(id,"20") && strcmp(id,"25") && strcmp(id,"50") && strcmp(id,"51") && strcmp(id,"22") && strcmp(id,"23") && strcmp(id,"78") && strcmp(id,"24") && strcmp(id,"97") && strcmp(id,"98") && strcmp(id,"74") && strcmp(id,"75")))
         return UMI_STATUS_PERMISSION_DENIED;
     size_t length = 0;
     for (size_t i=0; i<count; ++i) {
@@ -271,6 +291,16 @@ static UmiStatus Ping(UmiIbkrConnection *c, uint64_t now)
     if (status==UMI_STATUS_OK) { c->pingPending=true; c->pingAt=now; }
     return status;
 }
+/* Framing and promoted catalogue failures occur before the ordinary decoder.
+ * Give those paths the same diagnostic ownership as a decoded message, so an
+ * old readiness or farm message cannot survive as the reason for failure. */
+static UmiStatus ReceiveError(UmiIbkrConnection *c, UmiStatus status, const char *detail)
+{
+    c->snapshot.providerCode = 0;
+    (void)snprintf(c->snapshot.message, sizeof c->snapshot.message,
+        "%s (%s). Retained observations are stale.", detail, umi_status_text(status));
+    return status;
+}
 static UmiStatus Drain(UmiIbkrConnection *c, uint64_t now, size_t *budget)
 {
     /* A large catalogue is accumulated over multiple pump calls. The usual
@@ -278,14 +308,30 @@ static UmiStatus Drain(UmiIbkrConnection *c, uint64_t now, size_t *budget)
     if (c->catalogFrame) {
         if (c->catalogFrameSize >= 7U &&
             memcmp(c->catalogFrame + 4U, "19\0", 3U))
+            /* Preserve the former status-only return. The receive owner now
+             * reports the failed envelope identity before closing its buffers. */
+#if 0
             return UMI_STATUS_PARSE_ERROR;
+#endif
+            return ReceiveError(c, UMI_STATUS_PARSE_ERROR, "Unexpected large API message");
         if (c->catalogFrameSize < c->catalogFrameCapacity || !*budget)
             return UMI_STATUS_OK;
+        /* Preserve the status-only counter guard for comparison. */
+#if 0
         if (c->snapshot.framesReceived == UINT64_MAX)
             return UMI_STATUS_CAPACITY_EXCEEDED;
+#endif
+        if (c->snapshot.framesReceived == UINT64_MAX)
+            return ReceiveError(c, UMI_STATUS_CAPACITY_EXCEEDED, "API frame counter exhausted");
         UmiStatus status = UmiIbkrScannerCatalogFrame(c, c->catalogFrame + 4U,
             c->catalogFrameCapacity - 4U, now);
+        /* The promoted decoder bypasses UmiIbkrProcessFrame; publish its own
+         * failure instead of retaining a diagnostic from a previous frame. */
+#if 0
         if (status != UMI_STATUS_OK) return status;
+#endif
+        if (status != UMI_STATUS_OK)
+            return ReceiveError(c, status, "Invalid scanner catalogue response");
         free(c->catalogFrame);
         c->catalogFrame = NULL;
         c->catalogFrameSize = c->catalogFrameCapacity = 0U;
@@ -299,11 +345,27 @@ static UmiStatus Drain(UmiIbkrConnection *c, uint64_t now, size_t *budget)
 #if 0
         if (length==0 || length>UMI_IBKR_FRAME_LIMIT) return UMI_STATUS_CAPACITY_EXCEEDED;
 #endif
+        /* Keep the old status-only envelope checks for review. The replacement
+         * identifies local size/allocation failures without a stale broker code. */
+#if 0
         if (!length) return UMI_STATUS_CAPACITY_EXCEEDED;
         if (length > UMI_IBKR_FRAME_LIMIT)
             return UmiIbkrScannerCatalogBeginFrame(c, length);
+#endif
+        if (!length)
+            return ReceiveError(c, UMI_STATUS_CAPACITY_EXCEEDED, "Empty API frame");
+        if (length > UMI_IBKR_FRAME_LIMIT) {
+            UmiStatus status = UmiIbkrScannerCatalogBeginFrame(c, length);
+            return status == UMI_STATUS_OK ? status :
+                ReceiveError(c, status, "API frame exceeds the permitted receive bound");
+        }
         if (c->rxSize<length+4U) return UMI_STATUS_OK;
+        /* Preserve the original counter check; the diagnostic belongs to it. */
+#if 0
         if (c->snapshot.framesReceived==UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+#endif
+        if (c->snapshot.framesReceived == UINT64_MAX)
+            return ReceiveError(c, UMI_STATUS_CAPACITY_EXCEEDED, "API frame counter exhausted");
         UmiStatus status=UmiIbkrProcessFrame(c,c->rx+4U,length,now);
         if (status!=UMI_STATUS_OK) return status;
         ++c->snapshot.framesReceived; --*budget;

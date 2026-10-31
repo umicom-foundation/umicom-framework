@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/broker_connectivity/option_contract.h
- * PURPOSE: Resolve one selected option candidate to a broker contract identity.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Resolve one selected option candidate to a broker contract identity.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_BROKER_CONNECTIVITY_OPTION_CONTRACT_H
@@ -26,6 +33,12 @@ extern "C"
  * partial results or an ambiguous result as permission to quote or trade. */
     UmiStatus UmiIbkrOptionContractRequest(UmiIbkrConnection *, const UmiIbkrOptionSelection *,
                                            uint64_t nowMilliseconds, uint32_t *outRequest);
+
+/* Age is measured from the completed definition capture, not from its last
+ * display. Rejects partial, replaced, stale or invalid selections before queuing. */
+UmiStatus UmiIbkrOptionContractRequestWithAge(UmiIbkrConnection *,
+    const UmiIbkrOptionSelection *, uint64_t nowMilliseconds,
+    uint64_t maximumAgeMilliseconds, uint32_t *outRequest);
 #ifdef __cplusplus
 }
 #endif

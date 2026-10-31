@@ -55,6 +55,10 @@ struct UmiIbkrConnection {
     UmiIbkrQuoteSnapshot quotes[UMI_IBKR_QUOTE_CAPACITY];
     /* Shared observation sequence; retain the established private member name. */
     uint32_t nextQuoteRequest;
+    /* Refresh captures use unique IDs for both streams, so retired replies
+     * cannot be attached to a different selected account. Zero keeps the
+     * original one-shot account decoder for existing API callers. */
+    uint32_t accountSummaryRequest, accountPositionsRequest;
     UmiIbkrContractDetailsSnapshot contractDetails;
     /* Rule IDs cannot be reissued: replies do not carry a query generation. */
     UmiIbkrExecutionSnapshot executions;
@@ -100,6 +104,8 @@ UmiStatus UmiIbkrProcessFrame(UmiIbkrConnection *, const unsigned char *, size_t
 UmiStatus UmiIbkrQueueFields(UmiIbkrConnection *, const char *const *, size_t);
 /* Private wire callbacks share the connection's bounded request ownership. */
 UmiStatus UmiIbkrQuoteFrame(UmiIbkrConnection *, uint64_t, char **, size_t, uint64_t);
+UmiStatus UmiIbkrOptionComputationFrame(UmiIbkrConnection *, char **, size_t, uint64_t);
+void UmiIbkrOptionComputationAge(UmiIbkrQuoteSnapshot *, bool, uint64_t, uint64_t);
 bool UmiIbkrQuoteProviderMessage(UmiIbkrConnection *, const char *, int, const char *);
 UmiStatus UmiIbkrContractDetailsFrame(UmiIbkrConnection *, uint64_t,
     const unsigned char *, size_t, uint64_t);

@@ -425,3 +425,101 @@ endif()
 
 # Products share one credential-free broker welcome controller.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomBrokerWelcomeGtk4.cmake")
+
+# Compile the real adapter with an in-memory transport seam. The fixture owns
+# its translation unit, avoiding a production test hook or a broker connection.
+if(BUILD_TESTING)
+    add_executable(umicom-ibkr-connection-commands-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ibkr_connection/test_connection_commands.c")
+    target_link_libraries(umicom-ibkr-connection-commands-test PRIVATE Umicom::ibkr_connection_gtk4)
+    target_include_directories(umicom-ibkr-connection-commands-test PRIVATE
+        "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection"
+        "$<TARGET_PROPERTY:umicom_ibkr_connection_gtk4,INCLUDE_DIRECTORIES>")
+    target_compile_definitions(umicom-ibkr-connection-commands-test PRIVATE
+        "$<TARGET_PROPERTY:umicom_ibkr_connection_gtk4,COMPILE_DEFINITIONS>")
+    umicom_ibkr_target(umicom-ibkr-connection-commands-test)
+    foreach(case IN ITEMS connect-paper
+        connect-live
+        connect-active
+        connect-invalid-mode
+        connect-invalid-program
+        connect-no-consent
+        connect-profile-busy
+        connect-fill-busy
+        connect-quote-busy
+        connect-close-quote
+        connect-close-notice
+        connect-close-accounts
+        connect-close-output
+        connect-close-status
+        connect-close-controls
+        connect-close-release
+        connect-reenter
+        connect-edit-mode
+        connect-edit-port
+        connect-edit-client
+        connect-edit-ack
+        connect-create-failure
+        connect-failure-close
+        read-close-output
+        read-close-status
+        read-close-controls
+        read-invalid-close
+        read-reenter
+        read-refresh-repeat
+        read-refresh-switch
+        read-refresh-pending
+        read-refresh-report
+        read-refresh-public
+        read-refresh-close-label
+        read-refresh-reenter-label
+        public-read-close
+        public-read-busy
+        disconnect-close-output
+        disconnect-close-status
+        disconnect-reenter
+        poll-reserved
+        poll-ready-status
+        poll-ready-output
+        poll-ready-accounts
+        poll-ready-controls
+        poll-ready-followup
+        poll-failed-status
+        poll-failed-output
+        poll-failed-controls
+        poll-failed-followup
+        poll-close-status
+        poll-close-output
+        poll-close-release
+        retained-controls)
+        add_test(NAME framework.ibkr_connection.commands.${case}
+            COMMAND umicom-ibkr-connection-commands-test ${case})
+        set_tests_properties(framework.ibkr_connection.commands.${case} PROPERTIES
+            TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;broker;gtk4;ownership;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-ibkr-connection-commands-test)
+    endif()
+endif()
+
+# The streaming API shares the same native owner and in-memory transport seam.
+if(BUILD_TESTING)
+    add_executable(umicom-ibkr-realtime-access-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ibkr_connection/test_realtime_access.c")
+    target_link_libraries(umicom-ibkr-realtime-access-test PRIVATE Umicom::ibkr_connection_gtk4)
+    target_include_directories(umicom-ibkr-realtime-access-test PRIVATE
+        "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection"
+        "$<TARGET_PROPERTY:umicom_ibkr_connection_gtk4,INCLUDE_DIRECTORIES>")
+    target_compile_definitions(umicom-ibkr-realtime-access-test PRIVATE
+        "$<TARGET_PROPERTY:umicom_ibkr_connection_gtk4,COMPILE_DEFINITIONS>")
+    umicom_ibkr_target(umicom-ibkr-realtime-access-test)
+    foreach(case IN ITEMS guards retired busy unsupported start-close replacement wrong-request stop stop-close reentry pacing)
+        add_test(NAME framework.ibkr_connection.realtime_access.${case}
+            COMMAND umicom-ibkr-realtime-access-test ${case})
+        set_tests_properties(framework.ibkr_connection.realtime_access.${case} PROPERTIES
+            TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;broker;gtk4;ownership;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-ibkr-realtime-access-test)
+    endif()
+endif()

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reading option risk observations — Umicom Framework</title>
+<style>body{font:18px/1.6 system-ui;max-width:920px;margin:3rem auto;padding:0 1.2rem;color:#183049}code{background:#eef3f7;padding:.1em .3em}table{border-collapse:collapse}td,th{border:1px solid #9aafc0;padding:.5rem;text-align:left}</style>
+<main><h1>Reading option risk observations</h1>
+<p>An option is a contract whose value depends on an underlying instrument. A broker may report estimates describing how that option's value responds to market changes. These estimates are called Greeks. They are observations from a model, not guaranteed prices or instructions to trade.</p>
+<h2>Open the observations</h2><ol>
+<li>Open Umicom Trader and choose the intended Paper or Live connection. Authenticate in your local TWS or IB Gateway application, including its second factor. Umicom does not collect that password.</li>
+<li>Open the broker connection window, enable the configured local socket endpoint and connect. Wait for the account connection to become ready. Keep broker API access read-only while checking observations.</li>
+<li>In the broker workspace, use Options to choose an explicit option candidate, or use the contract ID and exchange from its broker contract description. Confirm the contract on the Instrument page. An underlying share's contract ID identifies a different instrument.</li>
+<li>In Market data choose the data mode and Subscribe. Expand <strong>Option risk observations</strong>. Select Bid, Ask, Last or Model to see the independent calculations. Changing these tabs does not start another subscription.</li>
+<li>Inspect each value's availability and data type. Choose Stop quotes when finished. This stops the subscription; it does not cancel an order.</li></ol>
+<h2>Understand the fields</h2>
+<table><tr><th>Field</th><th>Meaning</th></tr>
+<tr><td>Implied volatility</td><td>The broker model's estimate of variability. Read the displayed return-based or price-based volatility basis before interpreting it.</td></tr>
+<tr><td>Delta</td><td>A model estimate of how the option value changes with the underlying price.</td></tr>
+<tr><td>Gamma</td><td>How that delta changes as the underlying price changes.</td></tr>
+<tr><td>Vega</td><td>Sensitivity to the model's volatility input.</td></tr>
+<tr><td>Theta</td><td>Sensitivity to the passage of time in the broker model.</td></tr>
+<tr><td>Option price, dividends, underlying price</td><td>The values supplied with that calculation. They retain the provider's units and decimal text.</td></tr></table>
+<p>Umicom does not convert these estimates into portfolio currency, percentages or position exposure. Read the provider's unit conventions before comparing different contracts. The four tabs are separate calculation bases; one tab receiving data does not make another tab current.</p>
+<h2>Missing and stale data</h2>
+<p><strong>Not received</strong> means no value for that field has arrived. <strong>Unavailable</strong> means the broker supplied its not-computed marker. Neither means zero. A value becomes <strong>STALE</strong> after 15 seconds without another observation, after disconnection, or when its subscription or data type is no longer current. Delayed and frozen observations remain labelled even if recently received.</p>
+<p>If values remain missing, check the option identity and broker permissions for both the option and its underlying. Inspect the connection diagnostic rather than repeatedly subscribing. A non-option instrument may have no option calculations. Reconnect explicitly after a connection failure; the new connection starts without the old subscription.</p>
+<h2>Follow the Framework source</h2>
+<p>The quote owner in <code>src/ibkr_connection/quotes.c</code> creates and cancels market-data subscriptions. <code>option_computation.c</code> decodes complete packets into bounded values owned by that same subscription. <code>UmiIbkrQuoteCopy</code> returns a copy and computes each field's age. The native workspace displays that copy; it does not open another socket or calculate synthetic Greeks.</p>
+<p>The adapter supports the negotiated legacy field protocol, not protobuf packets. This view does not implement hypothetical option-price requests, portfolio risk calculation or order submission. Both the broker's market-data permissions and protocol compatibility must be checked on the installed environment.</p>
+<p><a href="paper-live-connections.html">Paper and live connections</a></p></main></html>

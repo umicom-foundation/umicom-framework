@@ -795,6 +795,9 @@ static UmiGtk4EditorBinding *editor_binding_new(UmiGtk4Adapter *adapter,
     return binding;
 }
 
+/* Native focus selects the same source identity as tab navigation. */
+#include "editor_focus_activation.inc"
+
 /* GTK iterators count Unicode characters, whereas Framework navigation uses
  * UTF-8 byte positions. Read only the prefix needed for that conversion. */
 static size_t editor_iter_byte_offset(GtkTextBuffer *buffer, const GtkTextIter *iter)
@@ -1328,6 +1331,7 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
             g_signal_connect_data(historyKeys, "key-pressed", G_CALLBACK(EditorHistoryKey),
                 editor_binding_new(adapter, document.view_id), editor_binding_free, 0);
             gtk_widget_add_controller(view, historyKeys);
+            EditorInstallFocusActivation(view, adapter, document.view_id);
             }
             if (new_page) {
                 page_index = gtk_notebook_append_page(GTK_NOTEBOOK(notebook), scroll, tab_box);

@@ -3,10 +3,31 @@
 <title>Choose and review a program launch</title><style>body{font:17px/1.65 system-ui;max-width:980px;margin:3rem auto;padding:0 24px;color:#173747;background:#f8fbfc}h1,h2{line-height:1.25}code{font-family:Consolas,monospace}td,th{border:1px solid #c8d7df;padding:12px;text-align:left}table{border-collapse:collapse;width:100%}a{color:#075c89}</style></head><body><main>
 <h1>Choose and review a program launch</h1>
 <p>Project Settings separates three things: the executable to start, the folder it starts in, and the arguments it receives. Framework can describe these values before you save them. Reviewing settings does not build the project, start a debugger or run the application.</p>
+<section id="settings-sections">
+<h2>Find the settings for your task</h2>
+<p>A build profile is a saved description of how a project should be built and started. Open <strong>Build → Project Settings</strong> in Studio. The left-hand list selects a section. Drag the divider to give that list more or less space, and resize the window to suit your display. Each section scrolls separately.</p>
+<table><thead><tr><th>Section</th><th>What you can review</th></tr></thead><tbody>
+<tr><td>Build</td><td>The project and build folders, configuration, target, extra CMake definitions, parallel jobs and workspace trust.</td></tr>
+<tr><td>Tools</td><td>The CMake generator, C compiler, build-tools folder and tool discovery controls.</td></tr>
+<tr><td>Presets</td><td>Shared or separate Configure, Build and Test preset names, with preset discovery.</td></tr>
+<tr><td>Run and Debug</td><td>The program, arguments, working folder and environment used when starting your application.</td></tr>
+<tr><td>Configured targets</td><td>Targets described by an already configured build. This section does not configure or compile the project just by being opened.</td></tr>
+<tr><td>SDK and Install</td><td>The install destination, SDK discovery and installed-file inspection.</td></tr>
+<tr><td>Code intelligence</td><td>Compiler database controls used to understand the project's source files.</td></tr>
+<tr><td>Saved configurations</td><td>Named settings supplied by the host application. Loading one edits the form; Apply Settings activates it.</td></tr>
+</tbody></table>
+<ol>
+<li>Review the project folder in <strong>Build</strong>. It identifies the open project and cannot be changed in this form. Open a different project from Studio if it is wrong.</li>
+<li>Select <strong>Run and Debug</strong>, then enter the program and its working folder using the steps below.</li>
+<li>Return to <strong>Build</strong>. Your Run and Debug edits remain in the form. Switching sections neither saves settings nor launches tools.</li>
+<li>Use <strong>Apply Settings</strong> when all sections are correct. The button and feedback remain outside the scrolling pages. Cancel closes the form without applying its draft settings.</li>
+</ol>
+<p>If applying fails, read the feedback and correct the relevant section. Selecting another section does not fix an invalid path or grant workspace trust. Discovery, saving a named configuration and applying settings are separate actions.</p>
+</section>
 <h2>Select the program and its working folder</h2>
 <ol>
 <li>Open your project in Studio, then choose <strong>Project Settings</strong> in the Build panel. The project folder identifies the open project and is read-only in this form.</li>
-<li>Choose <strong>Choose program file…</strong> and select the executable produced by your build. On Windows this is normally an <code>.exe</code> file. The chooser copies its complete local path into <strong>Program to run</strong>; it does not start it. If the file has not been built yet, enter its expected project-relative path manually, such as <code>build/bin/notes.exe</code>.</li>
+<li>Select <strong>Run and Debug</strong> in the settings navigation. Choose <strong>Choose program file…</strong> and select the executable produced by your build. On Windows this is normally an <code>.exe</code> file. The chooser copies its complete local path into <strong>Program to run</strong>; it does not start it. If the file has not been built yet, enter its expected project-relative path manually, such as <code>build/bin/notes.exe</code>.</li>
 <li>Choose <strong>Choose working folder…</strong> to use an existing local folder for application data. Leave <strong>Program working folder</strong> empty to start in the project root. You may also enter a project-relative folder such as <code>sample data</code>. The executable path is independent of this folder.</li>
 <li>Use either the single literal argument field or the argument-list field. In the list, spaces separate values and quotes keep spaces within a value. <code>""</code> supplies an empty argument. Clear the single argument before using the list.</li>
 <li>Choose <strong>Review launch settings</strong>. Read the Run program, native Debug program, working folder and numbered argument values. Backslashes, quotes and control characters in arguments are escaped for display so each value has a clear boundary. This description is not a shell command.</li>

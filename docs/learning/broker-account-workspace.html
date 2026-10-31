@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Using the broker account workspace</title><style>body{max-width:960px;margin:2rem auto;padding:0 1rem;font:18px/1.65 system-ui;color:#233649}pre{overflow:auto;background:#eef3f6;padding:1rem}code{font-size:.9em}</style></head><body><main>
+<h1>Using the broker account workspace</h1>
+<p>Framework owns the broker transport and native account presentation. An application supplies its parent window and a copied connection plan, then embeds the returned widget. It must not copy or independently pump the inspector's connection.</p>
+<ol><li>Create a Paper or Live <code>UmiBrokerAccessPlan</code>. A Guest plan belongs to the application's demo workflow and is rejected by this component.</li>
+<li>Call <code>UmiBrokerWorkspaceGtkCreate</code> on the GTK main thread. Keep the returned controller until application disposal.</li>
+<li>Parent the borrowed widget returned by <code>UmiBrokerWorkspaceGtkWidget</code>. Creating it does not present an inspector or open a socket.</li>
+<li>Use the component's connection button, or call <code>UmiBrokerWorkspaceGtkOpenConnection</code> from an explicit user action. Repeated calls reuse the same inspector while it exists.</li>
+<li>Call <code>UmiBrokerWorkspaceGtkDestroy</code> once when disposing the application controller. Closing the parent retires connection activity immediately, but the application still releases its controller ownership through Destroy.</li></ol>
+<pre><code>#include "umicom/broker_connectivity/workspace_gtk4.h"
+
+/* Run on the GTK main thread after creating the parent window. */
+UmiBrokerAccessPlan plan;
+UmiBrokerWorkspaceGtk *workspace = NULL;
+UmiStatus status = UmiBrokerAccessPlanCreate(UMI_BROKER_ACCESS_PAPER, &amp;plan);
+if (status == UMI_STATUS_OK)
+    status = UmiBrokerWorkspaceGtkCreate(parent, &amp;plan, &amp;workspace);
+if (status == UMI_STATUS_OK)
+    gtk_window_set_child(parent, UmiBrokerWorkspaceGtkWidget(workspace));
+
+/* At application disposal, including after closing the parent: */
+UmiBrokerWorkspaceGtkDestroy(workspace);
+workspace = NULL;</code></pre>
+<p>This example illustrates ownership; the disposal call belongs at the end of the application's lifetime, after its event loop or owning controller has finished. Store the workspace pointer in that controller rather than in a short-lived callback variable.</p>
+<h2>Observations and authority</h2><p><code>UmiIbkrGtkCopySnapshot</code> copies observations on the main thread. Before connection it returns an IDLE snapshot; a retired inspector returns CANCELLED and preserves the caller's destination. <code>UmiIbkrGtkReadAccount</code> delegates an explicit selected-account overview request to the existing connection owner. The core service checks membership, readiness and the one-report-per-session rule.</p>
+<p>Account values and quantities remain provider strings. Summary and positions have independent completion markers. A healthy socket does not make an old completed report current. Closing the inspector marks the workspace's retained observation stale; reopening replaces the old rows before another account is read. The selected Paper/Live mode is intent, not broker attestation. These APIs expose no order-submission authority.</p>
+<h2>Share market-data controls</h2>
+<p>The workspace's <strong>Market data</strong> page subscribes to one selected contract through the same inspector. <code>UmiIbkrGtkQuoteSubscribe</code>, <code>UmiIbkrGtkQuoteCancel</code> and <code>UmiIbkrGtkCopyQuote</code> expose that selection to other native clients without transferring transport ownership. Parse form input through <code>UmiIbkrQuoteContractParse</code>; a rejected identifier leaves the destination unchanged.</p>
+<p>Subscribe requires an API-ready connection and no active selected quote. Cancelling a quote never cancels an order. If the outgoing request queue cannot accept cancellation, the stream remains active and Stop remains available. A successful cancellation retains the last observation as stale. A new inspector or connection without a quote clears the old instrument.</p>
+<p>Copy recalculates each field's age even when account data has not changed. The workspace uses a 15-second local receipt threshold and preserves the provider's real-time, delayed or frozen classification. A recently received delayed price remains delayed. Missing and unavailable values have explicit labels, never an invented zero.</p>
+<p>The native command boundary holds the inspector while notifications are published and rejects nested quote commands. A parent or inspector closed by a notification retires the operation. Retained widgets cannot issue requests after their controller is destroyed.</p>
+<h2>Choose a market-data delivery mode</h2>
+<p>The Requested data selector offers Real-time, Frozen, Delayed and Delayed frozen. Real-time asks for streaming current prices; Frozen asks for the last available quote when current streaming data is unavailable. Delayed requests a delayed stream, and Delayed frozen permits the retained delayed quote. Availability depends on the contract and account permissions. None of these selections purchases data or changes an order.</p>
+<ol><li>Enter a broker contract ID and its exchange.</li><li>Choose the requested delivery mode before Subscribe.</li><li>Read both Requested and Received in the status line. A delayed request may receive real-time data when the account is entitled; the request alone never proves that a returned price is delayed or live.</li><li>Choose Stop quotes before changing the mode. If cancellation fails, the controls remain locked to the active subscription.</li></ol>
+<p>Native callers can use <code>UmiIbkrGtkQuoteSubscribeWithDataType</code>. Headless clients use <code>UmiIbkrQuoteSubscribeWithDataType</code>. The original subscribe functions remain available and request real-time data. The core queues the mode and contract frames together, preserving the previous queue if either frame cannot fit. Because the broker setting belongs to the connection, concurrently active quote streams must share a requested mode. A different mode returns BUSY until all prior streams, including refused requests, are cancelled. This prevents one client panel silently changing another panel&#39;s delivery policy.</p>
+<h2>Regression coverage to run</h2><p>The native ownership cases use the real inspector without opening a socket. The projection cases substitute only the inspector boundary with synthetic observations and exercise the actual widget/controller. Run both groups and Trader's startup cases after building their targets. A skipped GTK case means GUI coverage did not run; it is not a pass.</p>
+<p>Real broker compatibility additionally requires an authenticated local Paper session and recorded TWS/Gateway version. Synthetic observations cannot establish API compatibility or trading readiness.</p>
+<h2>Find an instrument by name</h2>
+<ol><li>Connect to the local broker application and open <strong>Market data</strong>.</li>
+<li>In <strong>Find an instrument</strong>, enter a symbol or company name and choose <strong>Search</strong>.</li>
+<li>Wait for the search to complete. Review each candidate's security type, currency, listing exchange and contract ID. Several instruments can share a symbol; no candidate is selected automatically.</li>
+<li>Choose the intended candidate, then <strong>Use selected contract ID</strong>. This prepares the ID field and clears the previous exchange. It does not subscribe or send an order.</li>
+<li>Enter a broker-supported request exchange for that contract. A listing exchange is descriptive information and is not necessarily the route accepted for a market-data request.</li>
+<li>Choose a data mode, then <strong>Subscribe</strong>. Stop an active quote stream before replacing its instrument.</li></ol>
+<p>The search and inspector share one broker connection and one paced search service. Wait at least one second between requests; a pending search must complete or be abandoned first. <strong>Abandon search</strong> marks the local request stale. It does not cancel quotes or orders. An empty completed result means no candidates were returned for that query.</p>
+<p>Results from a closed connection remain labelled stale and cannot be applied. A new connection clears them. If another search replaces the visible result before you apply it, choose a candidate from the current completed result. Malformed display text is made readable without changing the underlying contract identity.</p>
+<p>Native clients share the inspector through <code>UmiIbkrGtkSearchInstruments</code>, <code>UmiIbkrGtkCopyInstrumentSearch</code> and <code>UmiIbkrGtkAbandonInstrumentSearch</code>. Copying observes the current request without pumping transport. Call these APIs on the GTK thread and retain neither widget callbacks nor result pointers beyond their documented owner lifetime.</p>
+
+<h2>Review orders entered through the broker</h2>
+<ol><li>Connect to your local broker application, wait for Ready, then open <strong>Open orders</strong>.</li>
+<li>Choose the scope. Leave <strong>Include all broker-visible clients and accounts</strong> clear for this API client only. Select it to request orders visible from other clients, including orders entered in TWS. Broker access limits still apply.</li>
+<li>Choose <strong>Recover open orders</strong> once. Wait for Complete. Receiving, Failed and STALE are not complete current evidence.</li>
+<li>Read the account on each row. The account selector on the separate account page does not filter this table. Client / order identifies the broker API client and its order ID. Unbound manual orders can share zero API IDs; Permanent ID distinguishes their broker identities.</li>
+<li>Review quantity, limit price, time in force, status, filled and remaining. Values retain the broker's decimal text. Not received means that callback has not arrived; it is not a zero quantity or an order cancellation.</li>
+<li>Reconnect before requesting a fresh capture. An empty completed table applies only to the requested scope. This API client can have no orders while TWS has orders.</li></ol>
+<p>Recovery is a point-in-time observation, not a guaranteed all-orders subscription. Summary and status callbacks have separate ages. Retained results become stale after connection closure, failure or expiry. A partial row remains visible with its missing fields identified. Execution and commission records must be inspected separately for fills and fees.</p>
+<p>This view does not submit, modify, bind or cancel orders. Advanced order fields are retained by the core decoder but are not interpreted as a complete order ticket. A captured broker order is evidence, not permission to trade.</p>
+<p>Reusable clients call <code>UmiIbkrOrderReportCopy</code> on the connection owner thread, or <code>UmiIbkrGtkCopyOrderReport</code> on the GTK thread. The report is a bounded value copy; allocate it on the heap to avoid a large native callback stack. Any copy error preserves the previous output. No copy pumps the socket. Use <code>UmiIbkrGtkRecoverOrders</code> only from an explicit user action; the inspector and embedded workspace share its one-capture lifetime.</p>
+
+<h2>Review recent trades and commissions</h2>
+<ol><li>Authenticate in the local broker application and connect the workspace. Open <strong>Trades</strong>.</li>
+<li>Choose an account from the session's account list, then choose <strong>Read recent trades</strong>. This uses the broker's available recent execution window and default client filter. It does not retrieve a complete account statement.</li>
+<li>Wait for <strong>End marker received</strong>. While Receiving, an empty or partial table is not evidence that no trade occurred. The capture's account label belongs to the returned report; changing the picker does not change that identity.</li>
+<li>Review the execution ID, broker time, instrument, side, quantity, price, currency, exchange and permanent order ID. Time text is preserved as supplied by the broker; the workstation's time zone is not assumed.</li>
+<li>Review Commission and Fee evidence. A fee can arrive after the execution end marker. Not received is unavailable, not zero. Conflicting reports show both the first and latest amount and currency for review.</li>
+<li>Choose <strong>Stop local capture</strong> to abandon an unfinished read. This does not cancel an order. A completed or abandoned capture can be replaced by an explicit new read.</li></ol>
+<p>Execution quantities and prices use exact decimal formatting. The view does not add cumulative quantities to individual fills, combine correction reports, convert currencies or calculate a portfolio balance. Keep correction IDs visible and reconcile them against the broker's authoritative records.</p>
+<p>Closing the connection marks retained evidence stale. Reconnecting clears the old capture before another account is read. If another broker view starts a newer capture, a delayed Stop action cannot abandon it: the expected request ID must still match.</p>
+<p>Native applications use <code>UmiIbkrGtkReadExecutions</code>, <code>UmiIbkrGtkCopyExecutions</code> and <code>UmiIbkrGtkAbandonExecutions</code> on the GTK thread. Copy observes the shared capture without network I/O and leaves the caller's output unchanged on failure. Allocate the bounded <code>UmiIbkrExecutionSnapshot</code> on the heap. The inspector owns the socket, request namespace and late commission matching.</p>
+<h2>Read and navigate a historical chart</h2>
+<ol><li>In <strong>Market data</strong>, select or enter the contract ID and its broker-supported exchange. In <strong>Chart</strong>, choose a bar interval and price source. A bar summarizes prices during one interval.</li>
+<li>Set the duration in seconds. Start with 3,600 seconds and one-minute bars: this asks for about one hour. The bounded reader accepts at most one day and no more than 511 intervals. Increase the interval if the requested duration would exceed that limit.</li>
+<li>Leave End time empty for the latest available history, or enter a UTC time such as <code>20261030 12:00:00 UTC</code>. UTC is a shared time standard; the field does not use your computer's local time zone. Choose Regular hours only if required.</li>
+<li>Choose <strong>Read chart history</strong> and wait for a completed capture. A historical capture is a finite response, not a live-updating chart. The last candle can still be unfinished.</li>
+<li>Use <strong>Visible bars (zoom)</strong> to change how many retained bars are shown. Increase <strong>Bars back (pan)</strong> to view earlier bars. These controls do not request more data.</li>
+<li>Read the captured contract, exchange and interval above the chart. Editing the request fields does not relabel an existing capture. The details retain the broker's reported open, high, low, close and volume text; an unavailable volume is not zero.</li>
+<li>Choose <strong>Cancel chart request</strong> to cancel an unfinished historical request. This leaves orders and quote subscriptions unchanged. If another view replaced the request, the old Cancel action refuses to cancel the newer one.</li></ol>
+<p>Allow at least 15 seconds between bar requests. A busy response preserves the previous capture. On timeout, connection closure or capture expiry, the chart clears and reports unavailable or stale evidence. Reconnect and explicitly request a new capture. Changing zoom does not bypass these checks.</p>
+<p>The chart uses Framework's existing historical-data model and Cairo renderer. A build without the chart adapter can still show reported values and explains why drawing is unavailable. A blank completed capture is shown as no bars; the application does not invent candles. Provider permissions, data availability and supported protocol versions still apply.</p>
+<p>GTK clients share <code>UmiIbkrGtkReadHistory</code>, <code>UmiIbkrGtkCopyHistory</code>, <code>UmiIbkrGtkCopyHistoryBar</code>, <code>UmiIbkrGtkCreateHistoryScene</code> and <code>UmiIbkrGtkCancelHistory</code>. Call them on the GTK thread. Scene creation returns an owned immutable scene; destroy it with <code>umi_chart_render_scene_destroy</code>. Copy and scene operations do not pump the socket. A failed operation preserves its output, and request IDs prevent an old view from reading or cancelling a replacement capture.</p>
+<section><h2>Read a market-depth ladder</h2>
+<p>Market depth shows the bid and ask levels reported by the broker. Each side can arrive independently. These are observations of available liquidity, not a promise that an order will fill.</p>
+<ol>
+<li>Connect the local broker session and select a contract ID and exchange in <strong>Market data</strong>. Use the instrument search to resolve the intended contract.</li>
+<li>Open <strong>Market depth</strong> and choose the maximum levels per side, from 1 to 50. A larger request does not guarantee that the broker will return that many levels.</li>
+<li>For a direct exchange, leave <strong>SMART aggregation</strong> off. To request aggregated depth, set the exchange in Market data to <code>SMART</code> and turn the checkbox on. Mismatched settings are rejected.</li>
+<li>Choose <strong>Subscribe to depth</strong>. The table fills as observations arrive. Prices and sizes retain their exact decimal values. A zero size is displayed as zero; a missing side is marked <strong>Not received</strong>.</li>
+<li>Use <strong>Stop depth</strong> before changing the subscription. This stops the market-data stream; it does not cancel quotes or trading orders.</li>
+</ol>
+<p>Rows retain the provider's position. The venue or market-maker column is shown only when supplied. Each row can age independently; <strong>STALE</strong> means it must not be treated as a current price. A provider reset clears both sides until fresh updates arrive. A failed stream remains visible and can be stopped before retrying.</p>
+<p>Editing an instrument field does not change the identity of an active stream. The heading continues to identify the captured contract and exchange. If another view replaces the request before Stop is processed, the workspace refuses to stop that different request.</p>
+<p>If no levels arrive, check the broker connection, instrument, exchange and market-depth permissions. The adapter supports the existing legacy protocol range 151–176. There is no complete-order-book marker, and the table does not infer missing liquidity. The controls share Framework's existing depth service and native connection; they do not start a second broker session.</p>
+</section>
+
+<section><h2>Follow account and position profit and loss</h2>
+<p>Profit and loss (P&amp;L) describes a reported gain or loss. Daily, unrealized and realized values have different meanings and reset rules. The workspace displays the broker's observations instead of estimating them from the last price.</p>
+<ol>
+<li>Connect the local broker session and open <strong>Profit and loss</strong>. Choose an account from the advertised account list.</li>
+<li>Leave Model empty for the account scope, or enter a model code configured for that account. The workspace does not discover model codes.</li>
+<li>Leave Contract ID empty for account P&amp;L. For a position, enter its positive contract ID. A symbol is not a contract ID: resolve the instrument in Market data first.</li>
+<li>Choose <strong>Subscribe to P&amp;L</strong>. <strong>Waiting</strong> means no observation has arrived; it does not mean a zero balance. A reported zero is displayed as zero.</li>
+<li>Review the captured account, model and contract above the values. Position and Market value apply to a contract subscription. Provider values that cannot be represented exactly show <strong>Unavailable</strong> and retain the reported text in the evidence column.</li>
+<li>Choose <strong>Stop P&amp;L</strong> before selecting another scope. A failed stop leaves the stream active. If another view has replaced the request, the old Stop action refuses to cancel the new one.</li>
+</ol>
+<p>The broker's portfolio P&amp;L reset schedule can differ from its account-update values. These callbacks do not carry a currency field; do not infer the currency from another instrument or add values across accounts. Editing a field never changes the identity of previously received values.</p>
+<p>On disconnection or age expiry, retained observations are marked <strong>STALE</strong>. Reconnect and explicitly subscribe again. Repeated screen refreshes only copy observations; they do not start additional subscriptions. A failed stream can be stopped before retrying. Model permissions, instrument availability and the supported broker protocol still apply.</p>
+</section>
+<p>GTK clients use <code>UmiIbkrGtkSubscribePnl</code>, <code>UmiIbkrGtkCopyPnl</code> and <code>UmiIbkrGtkCancelPnl</code> on the GTK thread. The connection inspector owns the socket and shared request. Copy performs no network I/O and preserves output on failure; cancellation requires the expected request ID.</p>
+
+<section><h2>Find ranked contracts with a market scanner</h2>
+<p>A scanner searches an instrument family, such as stocks, within a market location and ranks the matching contracts. Its results identify instruments; they do not include current bid, ask or last prices.</p>
+<ol>
+<li>Connect the local broker session and open <strong>Scanner</strong>. Enter the instrument family, location code and scan code supported by your broker. The initial stock scan is a starting example, not a guarantee of availability.</li>
+<li>Choose the maximum results, from 1 to 50, and select <strong>Start scan</strong>. Wait for a complete refresh. An empty completed refresh means there were no matching contracts; a waiting response is not an empty market.</li>
+<li>Review the ranked table, including type, currency, listing and contract ID. The captured scan codes remain above the results even if an input field is later changed.</li>
+<li>Choose a result from the selector and select <strong>Use selected contract ID</strong>. Then open <strong>Market data</strong>, enter its broker-supported exchange and choose a data mode before subscribing. The scanner does not start quotes or place an order.</li>
+<li>Choose <strong>Stop scan</strong> before starting another. A rejected cancellation leaves the current subscription visible. If the request changed in another view, the old Stop action does not cancel the replacement.</li>
+</ol>
+<p>Ranked results can change between refreshes. The selection clears when a new refresh arrives so that a different instrument cannot silently occupy the selected row. Stale or failed results remain visible but cannot be applied. Reconnecting clears the previous session's results.</p>
+<p>Allow at least one second between requests. Use <strong>Connection and account tools</strong> for the scanner parameter catalogue and additional filters. Available scans and filter permissions depend on the broker. This workspace shares the inspector's one selected scan, while the underlying service supports up to ten independent scans in a session.</p>
+<p>GTK clients use <code>UmiIbkrGtkStartScanner</code>, <code>UmiIbkrGtkCancelScanner</code>, <code>UmiIbkrGtkCopyScanner</code> and <code>UmiIbkrGtkCopyScannerRow</code> on the GTK thread. Copy calls perform no I/O and preserve output on failure. A row requires the captured request ID and generation, which together identify its ranked refresh.</p>
+</section>
+
+
+<section><h2>Review completed orders</h2>
+<p>A completed order has reached an end state reported by the broker. It may have been filled, cancelled without a fill, or cancelled after some quantity was filled. It is different from a single execution, which records one fill.</p>
+<ol>
+<li>Connect the local broker session, then open <strong>Completed orders</strong>.</li>
+<li>Leave <strong>API-origin orders only</strong> selected to request orders submitted through API clients. Clear it to include other completed orders visible to the logged-in broker session. Neither choice limits the report to the account selected on another page.</li>
+<li>Select <strong>Read completed orders</strong>. The table may receive rows before the end marker arrives. Wait for <strong>End marker received</strong> and inspect the freshness label.</li>
+<li>Review each row's account, permanent order ID, requested and filled quantities, order state and completed status. Prices and quantities retain the broker's spelling. A missing value is shown as <strong>Not reported</strong>, never an invented zero.</li>
+<li>Use <strong>Trades</strong> to review individual executions. For the existing execution comparison and CSV export controls, open <strong>Connection and account tools</strong> and expand <strong>Completed orders and execution review</strong>.</li>
+</ol>
+<p>This is the broker's available completed-order window, not complete account history. The permanent ID is not a client order ID and cannot be used here to repeat a trade. Broker timestamps remain labelled text; the application does not guess their time zone. A row can be old even when a recent end marker completes the report.</p>
+<p>There is one completed-order request per connection. After a timeout or completed capture, reconnect before requesting another. If queuing the first request fails, it remains available to retry. Losing the connection marks retained results stale; a new session clears the previous capture. Opening or refreshing this page does not send another request automatically.</p>
+</section>
+<p>Native clients use <code>UmiIbkrGtkReadCompletedOrders</code> and <code>UmiIbkrGtkCopyCompletedOrders</code> on the GTK thread. Headless clients use <code>UmiIbkrCompletedOrderReportCopy</code> on the connection owner thread. The report owns its values, uses one observation time, performs no I/O, and leaves the destination unchanged on failure. Allocate the bounded report on the heap for native event handlers.</p>
+
+<section><h2>Embed the connection window in a GTK application</h2>
+<p>Create the connection window on the GTK thread with <code>UmiIbkrGtkCreateForPlan</code>, passing a valid Paper or Live plan and an optional native parent window. The constructor copies the settings and prepares the controls before application window observers run. It does not log in or open a socket.</p>
+<p>Check the returned window before presenting it. A parent that has already closed is refused. If a host observer closes the new window or parent, removes the application association, or replaces the window content during construction, the constructor returns <code>NULL</code>. Commands and observation-copy APIs are unavailable until construction returns successfully.</p>
+<p>Use <code>UmiBrokerWorkspaceGtkOpenConnection</code> to reuse one inspector for a workspace. A repeated call during its creation or presentation returns <code>BUSY</code>; it must not open a second socket or window. Closing the parent retires the workspace and inspector even if another component retains their widgets.</p>
+</section>
+<section id="instrument-description">
+<h2>Read an instrument description</h2>
+<p>An instrument description identifies the security returned by the broker. It is separate from a price subscription: opening this page does not start quotes or place orders.</p>
+<ol>
+<li>Open the broker workspace and connect the existing inspector to your local broker session.</li>
+<li>Choose <strong>Instrument</strong>. Enter a positive contract ID and its exchange route. Use an identity returned by instrument search or your broker.</li>
+<li>Alternatively, choose <strong>Use current quote</strong> to copy the quote's contract ID and route into these fields. This fills the form without sending a request.</li>
+<li>Choose <strong>Read description</strong>. The capture heading records the identity actually requested. Editing the fields later does not rename the retained response.</li>
+<li>Read each returned description and its completion status. Missing values appear as “Not reported”; an empty completed response means the broker returned no matching description.</li>
+<li>If a request is no longer needed, choose <strong>Abandon lookup</strong>. A late reply cannot become a new result for the abandoned request.</li>
+</ol>
+<p>The page preserves exact received decimal text and marks a capture stale after 60 seconds or a disconnected session. Incomplete or failed captures remain distinguishable from completed ones. A minimum tick is descriptive metadata, not proof that an order price is valid on every route or price band.</p>
+<p>Option-contract lookups made in the inspector share this request namespace. Their heading retains the requested symbol, expiry, right, strike and exchange instead of displaying a misleading zero contract ID. The currently supported legacy contract-description decoder is limited to server versions 164–176; bond-specific descriptions are not implemented.</p>
+<p>Native clients use <code>UmiIbkrGtkReadContractDetails</code>, <code>UmiIbkrGtkCopyContractDetails</code> and <code>UmiIbkrGtkAbandonContractDetails</code> on the existing inspector. The reusable <code>UmiIbkrContractDetailsCopyWithAge</code> returns an owned copy and performs no network I/O. Failed copies leave the caller's output unchanged.</p>
+</section>
+<section id="option-definitions">
+<h2>Explore option definitions</h2>
+<p>An option is a contract with a particular expiry, strike price and right (call or put). A chain groups candidate definitions for an underlying instrument. The lists do not guarantee that every expiry and strike combination is a tradable contract.</p>
+<ol>
+<li>Connect the existing local broker session and choose <strong>Options</strong>.</li>
+<li>Enter the underlying instrument's positive contract ID, symbol and type. A stock, index and future use different underlying types. The optional Chain exchange filters discovery; it does not choose a quote route.</li>
+<li>Choose <strong>Read option definitions</strong>. Wait for Complete. An incomplete, failed or stale capture cannot be resolved. An empty completed capture means no chains were returned.</li>
+<li>Select the chain and trading class, then select an expiry and strike. No first result is selected for you when the list changes.</li>
+<li>Choose Call or Put and enter its currency and explicit resolution route. Choose <strong>Resolve selected candidate</strong>. This asks for one instrument description.</li>
+<li>Open <strong>Instrument</strong> to inspect the response. Zero matches means the candidate was not resolved; multiple matches need further review. Do not infer a contract ID from a list position.</li>
+</ol>
+<p>Definitions expire after 60 seconds. The heading retains the actual requested underlying, independently of edited input fields. If another view replaces a request, a selection or abandon action for the earlier request cannot operate on the replacement. An unavailable chain stays in its original list position. Abandon definitions retires the local lookup; the broker does not offer a matching chain-cancel request.</p>
+<p>This page does not subscribe to quotes, exercise options or submit orders. Its limits are 32 chains, 128 expiries and 512 strikes per chain. Overflow and unsupported protocol versions remain explicit errors. The current legacy chain decoder supports server versions 151–176; resolving one option requires 164–176. Authentication and permissions belong to the local broker session.</p>
+<p>Framework clients share <code>UmiIbkrGtkReadOptionChains</code>, <code>UmiIbkrGtkCopyOptionChains</code>, <code>UmiIbkrGtkCopyOptionChain</code>, <code>UmiIbkrGtkAbandonOptionChains</code> and <code>UmiIbkrGtkResolveOption</code> on the GTK owner thread. Headless clients can use bounded-age snapshots and <code>UmiIbkrOptionContractRequestWithAge</code>. Copies perform no network I/O, preserve output on failure and own their values. Request IDs retain the identity of a particular capture.</p>
+</section>
+<section id="time-sales">
+<h2>Follow Time &amp; Sales</h2>
+<p>A tick is one market observation. A trade tick reports a price and quantity; a bid/ask tick reports quoted prices and sizes. The midpoint is the centre between bid and ask. These observations are not confirmations that your own order traded.</p>
+<ol>
+<li>Connect the local broker session. In <strong>Market data</strong>, enter the contract ID and broker-supported exchange for the instrument you want to observe.</li>
+<li>Open <strong>Time &amp; Sales</strong>. Choose Last trades, All Last trades, Bid / Ask or Midpoint. Use <strong>Ignore size changes</strong> only with Bid / Ask.</li>
+<li>Choose <strong>Start Time &amp; Sales</strong>. A successful request means it was queued; wait for received ticks. Your broker account needs the appropriate live tick permissions. Selecting delayed quotes elsewhere does not enable delayed ticks.</li>
+<li>Read the table in sequence order. Exchange timestamps are shown in UTC. Equal price/time observations remain separate events; the application does not invent trade identifiers or remove apparent duplicates.</li>
+<li>Review the receipt-state column. A row becomes stale after 15 seconds without a recent receipt, or when its session fails or stops. A recent receipt does not prove a recent exchange event.</li>
+<li>Choose <strong>Stop tick stream</strong> before choosing another subscription. The core spaces requests at least 15 seconds apart. If stopping fails, keep the existing stream visible and retry after reviewing the error.</li>
+</ol>
+<p>The page shows the newest 64 events from a bounded 512-event buffer. Its heading distinguishes older retained events outside the view from events already evicted from the buffer. The buffer is not an archive. Prices and sizes retain the exact reported text, including values too precise for the arithmetic model. Missing fields do not become zero; zero-price trade markers remain visible with their flags.</p>
+<p>Repainting does not subscribe again. Closing the connection retains stale observations; reconnecting clears the previous session's data. No order is submitted, cancelled or modified by these controls. The current legacy tick decoder supports server versions 151–176; support outside that range must be qualified separately.</p>
+<p>Native applications share <code>UmiIbkrGtkStartTimeSales</code>, <code>UmiIbkrGtkStopTimeSales</code> and <code>UmiIbkrGtkCopyTimeSales</code> on the GTK owner thread. Headless clients use <code>UmiIbkrTimeSalesReportCopy</code> on the connection owner thread. The report owns its values, performs no I/O and preserves the destination on failure. Allocate this bounded report on the heap in native callbacks.</p>
+</section>
+<section id="connection-lifetime"><h2>Changing or closing a connection</h2><p>Connect uses the mode, program, port, client ID and Live acknowledgement shown when you choose it. If those settings change while the window prepares the connection, it stops before opening a socket. Review the settings and choose Connect again. Closing the connection window retires the session and its polling timer.</p><p>Connect, Disconnect and account requests share one command owner. A repeated action during an update does not start another session or report. Wait for the current action to finish, then try again. Connecting remains read-only: authentication happens in your local provider application, and these controls do not submit orders.</p></section>
+
+<section id="broker-layout"><h2>Arrange broker pages</h2>
+<p>The broker workspace has two resizable panes. Account and positions starts on the left and Chart starts on the right. Each pane has tabs, so you can keep an account report beside a chart or compare market data with a trade report.</p>
+<ol>
+<li>Choose a page from the page selector and select <strong>Show</strong> to reveal it. The choice refers to the page itself, even after you rearrange its tabs.</li>
+<li>Choose <strong>Move to other pane</strong> to move that page. Its inputs, captured observations and subscription identity stay with it. Moving a page does not open another broker connection.</li>
+<li>Drag a tab within its pane to change its order. Use the move button to transfer it between panes.</li>
+<li>Drag the divider to resize the panes. Choose <strong>Stacked</strong> for one pane above the other, or <strong>Side by side</strong> for left and right. Narrow pages scroll so their controls remain reachable.</li>
+<li>If you move all pages into one pane, the empty pane hides. Moving a page back reveals it again.</li>
+</ol>
+<p>This arrangement lasts for the current workspace. Automatic saving of the broker layout is not provided yet. Application layout-library commands for the separate Umicom Demo workspace do not save this broker page arrangement.</p>
+<p>Framework hosts can capture the arrangement with <code>UmiBrokerWorkspaceGtkCopyLayout</code> and restore a validated copy with <code>UmiBrokerWorkspaceGtkApplyLayout</code>. Page IDs remain stable when tab positions change. Hosts own any persistent storage. Layout operations do not request quotes, submit trades or change broker permissions.</p>
+</section>
+
+
+<section id="live-chart"><h2>Follow live five-second bars</h2>
+<p>A price bar summarizes an interval: its first price, highest price, lowest price and last price.
+The Chart page now offers <strong>Historical</strong> and <strong>Live five-second</strong> views.
+Historical requests have a defined end; a live subscription continues receiving bars until it stops.</p>
+<ol>
+<li>Connect the local broker session. In <strong>Market data</strong>, select a resolved contract ID and exchange route. A symbol alone is not a contract identity.</li>
+<li>Open <strong>Chart</strong>, then <strong>Live five-second</strong>. Choose Trades, Midpoint, Bid or Ask. Decide whether to include only regular trading hours.</li>
+<li>Choose <strong>Start live bars</strong>. The waiting message means a request was queued. It does not prove that the account has market-data permission or that the market is open.</li>
+<li>Read the received, retained, evicted, gap and duplicate counts. Up to 512 bars are retained. The chart advances as new bars arrive, including after the buffer fills.</li>
+<li>Use <strong>Visible bars (zoom)</strong> to change the number of bars shown and <strong>Bars back (pan)</strong> to look earlier in the retained window. Zero offset follows the newest bar. Panning is relative to a moving buffer; it does not pin a timestamp.</li>
+<li>Switch to Historical or move the Chart page between panes without creating another subscription. Both chart views retain their own controls.</li>
+<li>Choose <strong>Stop live bars</strong> before requesting another stream. Allow at least 15 seconds between new historical or live-bar requests. Account-wide broker limits still apply.</li>
+</ol>
+<p>The heading identifies the contract actually requested even if the Market data fields are edited later.
+The last visible bar retains reported decimal text. Missing volume is labelled Unavailable; an observed
+zero remains zero. Volume units come from the broker and are not converted into shares or lots.</p>
+<p>A stopped, failed or stale stream clears its drawing. No receipt for 15 seconds makes this view stale;
+a quiet or closed market can cause that state. Gaps are shown as gaps, with no invented prices.
+After reconnecting, choose Start again explicitly. Use <strong>Connection and account tools</strong>
+for streaming CSV export and the retained raw report.</p>
+<p>These controls share the connection window's single selected stream and request ID. Another view
+cannot silently replace an active subscription. Stop acts only on the request observed when the action
+began. This is an observation workflow; it does not submit, change or cancel trading orders.</p>
+</section>
+<section id="native-live-chart"><h2>Use the native stream boundary</h2>
+<p>GTK applications can call <code>UmiIbkrGtkStartRealtime</code>, <code>UmiIbkrGtkStopRealtime</code>,
+<code>UmiIbkrGtkCopyRealtime</code>, <code>UmiIbkrGtkCopyRealtimeBar</code> and
+<code>UmiIbkrGtkCreateRealtimeScene</code> through <code>connection_gtk4.h</code>. Calls belong on the GTK
+owner thread. The native connection owns one selected stream, even though the headless service supports
+four independent slots.</p><p>Copy calls do no network I/O and leave outputs unchanged on failure.
+Bar, scene and Stop requests require the expected request ID, preventing an old action from targeting a
+replacement. The scene caller owns a successful scene. Cache it by request, received-bar counter and
+visible range, and discard it when stale: the retained count alone stops changing when the buffer fills.
+Closing the window during a notification retires the owner and returns Cancelled.</p></section>
+
+</main></body></html>

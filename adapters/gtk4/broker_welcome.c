@@ -16,6 +16,7 @@
 #include "umicom/broker_connectivity/welcome_gtk4.h"
 #include <stdio.h>
 #include "brand_widget.h"
+#include "startup_brand_panel.h"
 
 struct UmiBrokerWelcomeGtk {
     unsigned references;
@@ -23,6 +24,7 @@ struct UmiBrokerWelcomeGtk {
     UmiBrokerWelcomeGtkConfig config;
     GtkWidget *root, *buttons[4], *status, *program;
     GtkWidget *modes, *connectionOptions;
+    GtkWidget *stage, *begin[2], *back, *authenticationText;
 };
 
 static void Release(UmiBrokerWelcomeGtk *welcome)
@@ -95,6 +97,55 @@ static void ModeChanged(GObject *object, GParamSpec *property, gpointer data)
     Release(welcome);
 }
 
+
+/* This is a local guidance transition, not an authentication request. No
+ * username, password or second-factor value is collected by this controller. */
+static void BeginAuthentication(GtkButton *button, gpointer data)
+{
+    UmiBrokerWelcomeGtk *welcome = data;
+    if (welcome->closed || welcome->busy) return;
+    ++welcome->references;
+    unsigned mode = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(button), "broker-choice"));
+    if (mode != 1U && mode != 2U) { Release(welcome); return; }
+    /* Widget notifications may reenter actions while the stage is changing. */
+    welcome->busy = TRUE;
+    const char *program = gtk_drop_down_get_selected(GTK_DROP_DOWN(welcome->program)) == 1U
+        ? "IB Gateway" : "TWS";
+    char *guide = g_strdup_printf("1. Open %s and choose %s.\n\n"
+        "2. Sign in and complete the broker's second-factor request.\n\n"
+        "3. Enable local socket API access, then continue to Trader and choose Connect.",
+        program, mode == 1U ? "Paper Trading" : "Live Trading");
+    gtk_label_set_text(GTK_LABEL(welcome->authenticationText), guide);
+    g_free(guide);
+    if (!welcome->closed) gtk_widget_set_visible(welcome->buttons[1], mode == 1U);
+    if (!welcome->closed) gtk_widget_set_visible(welcome->buttons[2], mode == 2U);
+    if (!welcome->closed)
+        gtk_stack_set_visible_child_name(GTK_STACK(welcome->stage), "authentication");
+    if (!welcome->closed) gtk_widget_grab_focus(welcome->buttons[mode]);
+    if (!welcome->closed) welcome->busy = FALSE;
+    Release(welcome);
+}
+
+static void BackToAccounts(GtkButton *button, gpointer data)
+{
+    (void)button;
+    UmiBrokerWelcomeGtk *welcome = data;
+    if (welcome->closed || welcome->busy) return;
+    ++welcome->references;
+    welcome->busy = TRUE;
+    gtk_stack_set_visible_child_name(GTK_STACK(welcome->stage), "accounts");
+    if (!welcome->closed) {
+        const char *mode = gtk_stack_get_visible_child_name(GTK_STACK(welcome->modes));
+        GtkWidget *focus = g_strcmp0(mode, "demo") == 0 ? welcome->buttons[0]
+            : welcome->begin[g_strcmp0(mode, "live") == 0 ? 1U : 0U];
+        gtk_widget_grab_focus(focus);
+    }
+    if (!welcome->closed) welcome->busy = FALSE;
+    Release(welcome);
+}
+
+#include "broker_welcome_layout.inc"
+
 UmiStatus UmiBrokerWelcomeGtkCreate(const UmiBrokerWelcomeGtkConfig *config,
     UmiBrokerWelcomeGtk **outWelcome)
 {
@@ -108,6 +159,10 @@ UmiStatus UmiBrokerWelcomeGtkCreate(const UmiBrokerWelcomeGtkConfig *config,
     welcome->root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 14);
     g_object_ref_sink(welcome->root);
     gtk_widget_set_name(welcome->root, "broker-welcome");
+    /* The stacked account view is retained for engineering comparison. The
+     * replacement separates brand and account content with an adjustable divider
+     * and keeps authentication guidance distinct from connection authority. */
+#if 0
     gtk_widget_set_margin_start(welcome->root, 24);
     gtk_widget_set_margin_end(welcome->root, 24);
     gtk_widget_set_margin_top(welcome->root, 24);
@@ -222,6 +277,8 @@ UmiStatus UmiBrokerWelcomeGtkCreate(const UmiBrokerWelcomeGtkConfig *config,
     gtk_box_append(GTK_BOX(welcome->root), welcome->status);
     gtk_stack_set_visible_child_name(GTK_STACK(welcome->modes), "paper");
     g_signal_connect(welcome->modes, "notify::visible-child-name", G_CALLBACK(ModeChanged), welcome);
+#endif
+    BuildSessionLayout(welcome);
     *outWelcome = welcome;
     return UMI_STATUS_OK;
 }
@@ -236,6 +293,9 @@ void UmiBrokerWelcomeGtkDestroy(UmiBrokerWelcomeGtk *welcome)
     if (welcome == NULL || welcome->closed) return;
     welcome->closed = TRUE;
     g_signal_handlers_disconnect_by_data(welcome->modes, welcome);
+    for (size_t i = 0U; i < G_N_ELEMENTS(welcome->begin); ++i)
+        g_signal_handlers_disconnect_by_data(welcome->begin[i], welcome);
+    g_signal_handlers_disconnect_by_data(welcome->back, welcome);
     /* Disconnect before releasing widgets so retained controls cannot call a
      * retired product owner. No credentials or connection survive this owner. */
     for (size_t i = 0; i < G_N_ELEMENTS(welcome->buttons); ++i)

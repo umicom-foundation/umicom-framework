@@ -1,12 +1,18 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/workbench_layout/viewport_gtk4.h
- * PURPOSE: Adapt shared workbench viewport behavior to GTK controls.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Adapt shared workbench viewport geometry, preview editing and panel navigation to GTK.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #ifndef UMICOM_WORKBENCH_LAYOUT_VIEWPORT_GTK4_H
 #define UMICOM_WORKBENCH_LAYOUT_VIEWPORT_GTK4_H
 #include <gtk/gtk.h>
@@ -30,6 +36,10 @@ UmiStatus UmiWorkbenchViewportWidgetCreate(const UmiWorkbenchLayoutDocument *doc
  * Changes below affect the owned PREVIEW only. They never alter the caller's
  * canonical document, persist a layout, recreate a leaf, or clear its text.
  * Successful changes emit "layout-changed" with no additional arguments.
+ * F6 / Shift+F6 traverse visible panel content. Focus callbacks may close or
+ * edit the preview; that ends the current traversal. A recursive F6 request
+ * is ignored until the current handoff returns. No destroyed or detached
+ * preview is treated as a successfully focused workspace.
  */
 UmiStatus UmiWorkbenchViewportWidgetSetSplit(GtkWidget *widget,const char *nodeId,double ratio);
 UmiStatus UmiWorkbenchViewportWidgetSetActive(GtkWidget *widget,const char *nodeId,size_t position);

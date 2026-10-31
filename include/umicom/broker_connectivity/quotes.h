@@ -1,10 +1,18 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/broker_connectivity/quotes.h
- * PURPOSE: Observe bounded, read-only TWS quote subscriptions with explicit freshness and data type.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Observe bounded, read-only TWS quote subscriptions with explicit freshness and data type.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
+
 
 #ifndef UMICOM_BROKER_CONNECTIVITY_QUOTES_H
 #define UMICOM_BROKER_CONNECTIVITY_QUOTES_H
@@ -21,6 +29,13 @@ typedef struct UmiIbkrQuoteContract {
     uint32_t contractId;
     char exchange[64];
 } UmiIbkrQuoteContract;
+
+/* Parse 1..10 ASCII digits in the range 1..INT_MAX and a nonempty exchange
+ * shorter than 64 bytes. No trimming, signs or exponent notation is accepted.
+ * Both strings must be terminated; exchange uses the protocol text rules.
+ * The result is unchanged on failure, including when inputs alias its fields. */
+UmiStatus UmiIbkrQuoteContractParse(const char *identity, const char *exchange,
+    UmiIbkrQuoteContract *outContract);
 
 typedef enum UmiIbkrMarketDataType {
     UMI_IBKR_DATA_UNKNOWN = 0,
@@ -40,6 +55,28 @@ typedef struct UmiIbkrQuoteValue {
     bool received, unavailable, stale;
 } UmiIbkrQuoteValue;
 
+/* Computations belong to the subscribed option, never its underlying quote.
+ * The provider supplies four independent observations. Values are raw decimal
+ * text; an unavailable calculation is not zero and must not become an order
+ * input. Source names identify broker computation bases, not execution prices. */
+typedef enum UmiIbkrOptionBasis {
+    UMI_IBKR_OPTION_BID = 0, UMI_IBKR_OPTION_ASK,
+    UMI_IBKR_OPTION_LAST, UMI_IBKR_OPTION_MODEL,
+    UMI_IBKR_OPTION_BASIS_COUNT
+} UmiIbkrOptionBasis;
+typedef enum UmiIbkrOptionMeasure {
+    UMI_IBKR_OPTION_VOLATILITY = 0, UMI_IBKR_OPTION_DELTA,
+    UMI_IBKR_OPTION_PRICE, UMI_IBKR_OPTION_DIVIDEND,
+    UMI_IBKR_OPTION_GAMMA, UMI_IBKR_OPTION_VEGA,
+    UMI_IBKR_OPTION_THETA, UMI_IBKR_OPTION_UNDERLYING,
+    UMI_IBKR_OPTION_MEASURE_COUNT
+} UmiIbkrOptionMeasure;
+typedef struct UmiIbkrOptionComputation {
+    UmiIbkrQuoteValue values[UMI_IBKR_OPTION_MEASURE_COUNT];
+    uint32_t tickAttribute;
+    bool attributeReceived, received;
+} UmiIbkrOptionComputation;
+
 typedef struct UmiIbkrQuoteSnapshot {
     uint32_t requestId;
     UmiIbkrQuoteContract contract;
@@ -49,6 +86,9 @@ typedef struct UmiIbkrQuoteSnapshot {
     UmiIbkrQuoteValue bid, ask, last, bidSize, askSize, lastSize;
     int providerCode;
     char message[512];
+    /* Requested delivery policy is separate from the provider-reported type. */
+    UmiIbkrMarketDataType requestedDataType;
+    UmiIbkrOptionComputation options[UMI_IBKR_OPTION_BASIS_COUNT];
 } UmiIbkrQuoteSnapshot;
 
 /* The connection must be READY. Requests ask for streaming subscribed data;
@@ -61,6 +101,17 @@ typedef struct UmiIbkrQuoteSnapshot {
 UmiStatus UmiIbkrQuoteSubscribe(UmiIbkrConnection *connection,
     const UmiIbkrQuoteContract *contract, uint64_t nowMilliseconds,
     uint32_t *outRequestId);
+/* Select the permitted delivery policy explicitly. TWS may return a more
+ * current type when the account has the corresponding entitlement. Never use
+ * requestedDataType as evidence of the actual data type or permission.
+ * reqMarketDataType is connection-scoped: active quote subscriptions must use
+ * the same requested mode. A different mode returns BUSY until all active
+ * quotes (including failed ones) are cancelled. Existing observations and
+ * output IDs remain unchanged when this request is refused. The legacy API
+ * above continues requesting real-time data through this same service. */
+UmiStatus UmiIbkrQuoteSubscribeWithDataType(UmiIbkrConnection *connection,
+    const UmiIbkrQuoteContract *contract, UmiIbkrMarketDataType requestedDataType,
+    uint64_t nowMilliseconds, uint32_t *outRequestId);
 /* Cancels market data only, never an order. On queue failure the subscription
  * stays active so the owner can retry or disconnect. */
 UmiStatus UmiIbkrQuoteCancel(UmiIbkrConnection *connection, uint32_t requestId);
@@ -68,7 +119,10 @@ UmiStatus UmiIbkrQuoteCancel(UmiIbkrConnection *connection, uint32_t requestId);
  * cancelled, disconnected, failed, unavailable, of unknown/mismatched data
  * type, or older than maximumAgeMilliseconds (which must be nonzero).
  * Delayed/frozen types remain explicit even when their receipt is recent.
- * A cancelled snapshot is retained until its slot is reused. */
+ * A cancelled snapshot is retained until its slot is reused. Option measures
+ * follow the same per-value freshness policy. Computations require the broker
+ * subscriptions for both the option and its underlying; no calculation or
+ * valuation request is issued automatically by this observer. */
 UmiStatus UmiIbkrQuoteCopy(const UmiIbkrConnection *connection, uint32_t requestId,
     uint64_t nowMilliseconds, uint64_t maximumAgeMilliseconds,
     UmiIbkrQuoteSnapshot *out);

@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/broker_connectivity/option_chain.h
- * PURPOSE: Retain bounded option definitions separately from resolved tradable contracts.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Own finite option definitions and expose checked snapshots for contract selection.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_BROKER_CONNECTIVITY_OPTION_CHAIN_H
@@ -52,6 +59,16 @@ extern "C"
     UmiStatus UmiIbkrOptionChainItemCopy(const UmiIbkrConnection *, uint32_t request, size_t index,
                                          UmiIbkrOptionChain *out);
     UmiStatus UmiIbkrOptionChainAbandon(UmiIbkrConnection *, uint32_t request);
+
+/* Bounded-age copies perform no I/O and preserve output on failure. Latest
+ * reads the actual core-owned request, including requests from another view.
+ * Checked items validate storage bounds while retaining original array indices. */
+UmiStatus UmiIbkrOptionChainCopyWithAge(const UmiIbkrConnection *, uint32_t request,
+    uint64_t nowMilliseconds, uint64_t maximumAgeMilliseconds, UmiIbkrOptionChainSnapshot *);
+UmiStatus UmiIbkrOptionChainCopyLatestWithAge(const UmiIbkrConnection *,
+    uint64_t nowMilliseconds, uint64_t maximumAgeMilliseconds, UmiIbkrOptionChainSnapshot *);
+UmiStatus UmiIbkrOptionChainItemCopyChecked(const UmiIbkrConnection *, uint32_t request,
+    size_t index, UmiIbkrOptionChain *);
 #ifdef __cplusplus
 }
 #endif

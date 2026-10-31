@@ -75,3 +75,27 @@ if(BUILD_TESTING)
 endif()
 unset(_umi_viewport_root)
 unset(_umi_viewport_gtk_dependency)
+
+# Native focus handoffs must retain the selected leaf across user callbacks.
+if(BUILD_TESTING)
+    add_executable(umicom-workbench-focus-lifetime-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/workbench_viewport/test_focus_lifetime.c")
+    target_link_libraries(umicom-workbench-focus-lifetime-test PRIVATE Umicom::workbench_viewport_gtk4)
+    set_target_properties(umicom-workbench-focus-lifetime-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-workbench-focus-lifetime-test)
+    endif()
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-workbench-focus-lifetime-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-workbench-focus-lifetime-test)
+    endif()
+    foreach(_case IN ITEMS forward reverse skip hidden locked detached close-accept close-reject
+            dispose-accept dispose-reject hide-callback tab-callback recursive)
+        add_test(NAME framework.workbench_viewport.focus_lifetime.${_case}
+            COMMAND umicom-workbench-focus-lifetime-test ${_case})
+        set_tests_properties(framework.workbench_viewport.focus_lifetime.${_case} PROPERTIES
+            TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;gtk4;lifetime;focus")
+    endforeach()
+endif()

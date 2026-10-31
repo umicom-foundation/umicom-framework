@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/broker_connectivity/contract_details.h
- * PURPOSE: Inspect instrument metadata without inferring execution permission.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Inspect instrument metadata without inferring execution permission.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_BROKER_CONNECTIVITY_CONTRACT_DETAILS_H
@@ -56,6 +63,16 @@ extern "C"
  * Timeout and disconnection mark the returned copy stale. */
     UmiStatus UmiIbkrContractDetailsCopy(const UmiIbkrConnection *connection, uint32_t request,
                                          uint64_t nowMilliseconds, UmiIbkrContractDetailsSnapshot *out);
+    /* Copy with a maximum observation age. Complete captures age from their
+     * original end marker; partial captures age from their request. Copies never
+     * refresh those timestamps. Failure leaves output unchanged; no I/O occurs. */
+    UmiStatus UmiIbkrContractDetailsCopyWithAge(const UmiIbkrConnection *connection,
+        uint32_t request, uint64_t nowMilliseconds, uint64_t maximumAgeMilliseconds,
+        UmiIbkrContractDetailsSnapshot *out);
+    /* Copy the current description owner, whether requested by exact ID or
+     * option selection. NOT_FOUND means no lookup exists in this session. */
+    UmiStatus UmiIbkrContractDetailsCopyLatestWithAge(const UmiIbkrConnection *connection,
+        uint64_t nowMilliseconds, uint64_t maximumAgeMilliseconds, UmiIbkrContractDetailsSnapshot *out);
     /* Retire the local lookup. This negotiated protocol has no contract-query
  * cancellation command. Late replies are ignored; no order is cancelled. */
     UmiStatus UmiIbkrContractDetailsAbandon(UmiIbkrConnection *connection, uint32_t request);

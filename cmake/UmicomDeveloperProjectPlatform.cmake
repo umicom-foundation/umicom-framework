@@ -523,6 +523,25 @@ function(umicom_attach_developer_dialogs_gtk4)
         if(COMMAND umicom_register_validation_target)
             umicom_register_validation_target(umicom-project-form-preparation-test)
         endif()
+        # Persistent task sections retain the original form and its acceptance contract.
+        add_executable(umicom-developer-settings-sections-test
+            "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../tests/developer_project/test_settings_sections_gtk4.c")
+        target_link_libraries(umicom-developer-settings-sections-test PRIVATE Umicom::ui_gtk4)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(umicom-developer-settings-sections-test)
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(umicom-developer-settings-sections-test)
+        endif()
+        foreach(case IN ITEMS navigation-cycle field-map prepared same-section invalid-section invalid-output null-dialog project-form owner-close parent-close reentrant-selection retained-controls apply-drafts hidden-apply cancel-drafts independent-forms configuration-binding sidebar divider independent-scroll pinned-actions construction-close)
+            add_test(NAME framework.ide_workflow.settings_sections.gtk4.${case}
+                COMMAND umicom-developer-settings-sections-test ${case})
+            set_tests_properties(framework.ide_workflow.settings_sections.gtk4.${case} PROPERTIES
+                SKIP_RETURN_CODE 77 TIMEOUT 45 LABELS "framework;ide-workflow;gtk4;ownership;layout")
+        endforeach()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-developer-settings-sections-test)
+        endif()
         set(dialogTestDirectory "${CMAKE_CURRENT_BINARY_DIR}/qualification/developer_dialog")
         file(MAKE_DIRECTORY "${dialogTestDirectory}")
         add_test(NAME framework.ide_workflow.developer_dialog.gtk4 COMMAND umicom-developer-dialog-gtk4-test)
@@ -600,4 +619,31 @@ if(BUILD_TESTING)
     if(COMMAND umicom_register_validation_target)
         umicom_register_validation_target(umicom-project-tool-catalogue-test)
     endif()
+endif()
+
+# Real CMake/CTest stages record execution independently from session counters.
+if(BUILD_TESTING)
+    add_executable(umicom-automatic-session-plan-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_project/test_automatic_session_plan.c")
+    target_link_libraries(umicom-automatic-session-plan-test PRIVATE Umicom::Framework)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-automatic-session-plan-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-automatic-session-plan-test)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-automatic-session-plan-test)
+    endif()
+    get_filename_component(_automatic_tool_directory "${CMAKE_COMMAND}" DIRECTORY)
+    foreach(_case bootstrap-build bootstrap-test reject-test reject-build existing-driver reject-driver disabled repeat)
+        set(_directory "${CMAKE_CURRENT_BINARY_DIR}/qualification/automatic-plan/${_case}")
+        file(MAKE_DIRECTORY "${_directory}")
+        add_test(NAME framework.build.automatic_plan.${_case}
+            COMMAND umicom-automatic-session-plan-test ${_case}
+                "${_automatic_tool_directory}" "${CMAKE_GENERATOR}" "${CMAKE_MAKE_PROGRAM}")
+        set_tests_properties(framework.build.automatic_plan.${_case} PROPERTIES
+            WORKING_DIRECTORY "${_directory}" TIMEOUT 210
+            LABELS "framework;build;workflow;regression")
+    endforeach()
 endif()

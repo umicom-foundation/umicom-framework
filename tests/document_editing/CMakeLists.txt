@@ -167,3 +167,23 @@ if(TARGET umicom_ui_gtk4)
             LABELS "framework;document;gtk4;native;focus")
     endforeach()
 endif()
+
+# Native focus between visible groups must select the shared command owner.
+if(TARGET umicom_ui_gtk4)
+    add_executable(umicom-editor-group-focus-gtk4-test test_group_focus_gtk4.c)
+    target_link_libraries(umicom-editor-group-focus-gtk4-test PRIVATE Umicom::ui_gtk4 Umicom::document)
+    umicom_apply_warnings(umicom-editor-group-focus-gtk4-test)
+    umicom_apply_sanitizers(umicom-editor-group-focus-gtk4-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-editor-group-focus-gtk4-test)
+    endif()
+    foreach(case primary secondary switch-back menu-target read-only refresh-preserves
+        non-source repeat rows closed-page)
+        add_test(NAME framework.editor_group_focus.gtk4.${case}
+            COMMAND umicom-editor-group-focus-gtk4-test ${case})
+        set_tests_properties(framework.editor_group_focus.gtk4.${case} PROPERTIES
+            TIMEOUT 30 SKIP_RETURN_CODE 77 RUN_SERIAL TRUE
+            ENVIRONMENT "G_DEBUG=fatal-criticals"
+            LABELS "framework;document;gtk4;native;focus")
+    endforeach()
+endif()

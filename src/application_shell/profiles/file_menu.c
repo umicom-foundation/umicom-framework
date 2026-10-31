@@ -16,7 +16,24 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/application_shell/profiles/file_menu.h"
 
+/* Task groups are semantic presentation metadata. Native hosts insert a
+ * separator between visible groups without owning a second File inventory.
+ * The former common group values remain disabled beside their replacements. */
 static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
+    {
+        .structure_size = (uint32_t)sizeof(UmiApplicationShellContribution),
+        .api_version = UMI_APPLICATION_SHELL_API_VERSION,
+        .contribution_id = "umicom.shell.file-menu.save-as",
+        .title = "Save As...",
+        .description = "Save this document under a chosen path and continue editing that file.",
+        .command_id = "file.save-as",
+        .group_id = "file.save",
+        .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
+        .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
+        .order = 205,
+        .flags = UMI_APPLICATION_SHELL_VISIBLE,
+        .revision = 1U
+    },
     /* Separate copies preserve the source document; hosts supply admission. */
     {
         .structure_size = (uint32_t)sizeof(UmiApplicationShellContribution),
@@ -25,7 +42,10 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .title = "Save Copy...",
         .description = "Write the captured draft to a new file and keep the source unchanged.",
         .command_id = "file.save-copy",
+#if 0
         .group_id = "file",
+#endif
+        .group_id = "file.save",
         .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
         .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
         .order = 245,
@@ -40,7 +60,10 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .title = "Cancel Opening Files",
         .description = "Stop pending opens without closing documents that already opened.",
         .command_id = "file.open.cancel",
+#if 0
         .group_id = "file",
+#endif
+        .group_id = "file.open",
         .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
         .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
         .order = 145,
@@ -55,7 +78,10 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .title = "Opening Results",
         .description = "Review each outcome from the latest completed file selection.",
         .command_id = "file.open.results",
+#if 0
         .group_id = "file",
+#endif
+        .group_id = "file.open",
         .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
         .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
         .order = 146,
@@ -71,7 +97,10 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .title = "Reopen Closed Document",
         .description = "Open the latest saved path again without restoring discarded edits.",
         .command_id = "file.reopen-closed",
+#if 0
         .group_id = "file",
+#endif
+        .group_id = "file.close",
         .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
         .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
         .order = 340,
@@ -85,7 +114,10 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .title = "Forget Last Closed Document",
         .description = "Skip the latest closed path without deleting its file.",
         .command_id = "file.forget-closed",
+#if 0
         .group_id = "file",
+#endif
+        .group_id = "file.close",
         .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
         .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
         .order = 350,
@@ -99,7 +131,10 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .title = "Close All Source Documents",
         .description = "Review and close the source documents open when this action starts.",
         .command_id = "file.close-all",
+#if 0
         .group_id = "file",
+#endif
+        .group_id = "file.close",
         .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
         .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
         .order = 310,
@@ -114,7 +149,10 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .title = "Close Other Source Documents",
         .description = "Keep the current source and review the other captured documents.",
         .command_id = "file.close-others",
+#if 0
         .group_id = "file",
+#endif
+        .group_id = "file.close",
         .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
         .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
         .order = 320,
@@ -129,7 +167,10 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .title = "Cancel Closing Documents",
         .description = "Stop remaining closes; previously saved and closed documents stay completed.",
         .command_id = "file.close-all.cancel",
+#if 0
         .group_id = "file",
+#endif
+        .group_id = "file.close",
         .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
         .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
         .order = 330,
@@ -144,7 +185,10 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .title = "New File",
         .description = "New File",
         .command_id = "file.new",
+#if 0
         .group_id = "file",
+#endif
+        .group_id = "file.open",
         .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
         .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
         .order = 105,
@@ -177,7 +221,10 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .description = "Create a project from a Framework application preset.",
         .command_id = "project.new",
         .component_id = "",
+#if 0
         .group_id = "file",
+#endif
+        .group_id = "file.open",
         .icon_id = "",
         .context_key = "",
         .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
@@ -195,7 +242,10 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .description = "Open...",
         .command_id = "file.open",
         .component_id = "",
+#if 0
         .group_id = "file",
+#endif
+        .group_id = "file.open",
         .icon_id = "",
         .context_key = "",
         .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
@@ -213,7 +263,10 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .description = "Open Folder...",
         .command_id = "workspace.open-folder",
         .component_id = "",
+#if 0
         .group_id = "file",
+#endif
+        .group_id = "file.open",
         .icon_id = "",
         .context_key = "",
         .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
@@ -231,7 +284,10 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .description = "Save",
         .command_id = "file.save",
         .component_id = "",
+#if 0
         .group_id = "file",
+#endif
+        .group_id = "file.save",
         .icon_id = "",
         .context_key = "",
         .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
@@ -249,7 +305,10 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .description = "Save All",
         .command_id = "file.save-all",
         .component_id = "",
+#if 0
         .group_id = "file",
+#endif
+        .group_id = "file.save",
         .icon_id = "",
         .context_key = "",
         .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
@@ -267,7 +326,10 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .title = "Reload from Disk...",
         .description = "Compare the saved file with the current draft before replacing it.",
         .command_id = "file.reload",
+#if 0
         .group_id = "file",
+#endif
+        .group_id = "file.save",
         .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
         .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
         .order = 218,
@@ -281,7 +343,10 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .title = "Cancel Save All",
         .description = "Stop the remaining saves; keep saved files and unsaved drafts.",
         .command_id = "file.save-all.cancel",
+#if 0
         .group_id = "file",
+#endif
+        .group_id = "file.save",
         .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
         .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
         .order = 215,
@@ -296,7 +361,10 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .description = "Close Editor",
         .command_id = "file.close",
         .component_id = "",
+#if 0
         .group_id = "file",
+#endif
+        .group_id = "file.close",
         .icon_id = "",
         .context_key = "",
         .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,

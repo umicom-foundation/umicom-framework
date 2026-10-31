@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/action_menu_gtk4.c
- * PURPOSE: Own searchable GTK action groups while leaving command dispatch in the original buttons.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Present searchable action groups and shortcut captions with host-owned dispatch.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/action_menu.h"
@@ -33,6 +40,50 @@ static int ActionMenuText(const char *text, size_t limit, int required)
         ++bytes;
     return bytes <= limit && (!required || bytes != 0U) && g_utf8_validate(text, (gssize)bytes, NULL);
 }
+
+/* Structured command rows retain plain text for search while drawing a native
+ * shortcut beside the caption. This adds presentation only: the host still
+ * installs the same command callback and owns command admission. */
+UmiStatus UmiGtk4ActionMenuButtonCreate(const char *label, guint keyval,
+    GdkModifierType modifiers, GtkWidget **out_button)
+{
+    if (out_button == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_button = NULL;
+    if (!ActionMenuText(label, 512U, 1) ||
+        (keyval == 0U ? modifiers != 0U : !gtk_accelerator_valid(keyval, modifiers)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    GtkWidget *button = gtk_button_new(), *row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 24),
+              *caption = gtk_label_new(label);
+    gtk_label_set_xalign(GTK_LABEL(caption), 0.0F);
+    gtk_widget_set_hexpand(caption, TRUE);
+    gtk_widget_set_halign(caption, GTK_ALIGN_FILL);
+    gtk_widget_set_name(caption, "umicom-action-menu-caption");
+    gtk_box_append(GTK_BOX(row), caption);
+    if (keyval != 0U) {
+        gchar *accelerator = gtk_accelerator_name(keyval, modifiers);
+        GtkWidget *shortcut = gtk_shortcut_label_new(accelerator);
+        gtk_widget_set_name(shortcut, "umicom-action-menu-shortcut");
+        gtk_widget_add_css_class(shortcut, "dim-label");
+        gtk_widget_set_halign(shortcut, GTK_ALIGN_END);
+        gtk_box_append(GTK_BOX(row), shortcut);
+        g_free(accelerator);
+    }
+    gtk_widget_set_halign(button, GTK_ALIGN_FILL);
+    gtk_widget_add_css_class(button, "flat");
+    gtk_button_set_child(GTK_BUTTON(button), row);
+    gtk_accessible_update_property(GTK_ACCESSIBLE(button),
+        GTK_ACCESSIBLE_PROPERTY_LABEL, label, -1);
+    g_object_set_data_full(G_OBJECT(button), "umicom-action-menu-caption",
+        g_strdup(label), g_free);
+    /* Keep the original row identity alive until the button is released.
+     * Replacing its child must not let allocator address reuse admit an
+     * unrelated row with the obsolete caption. This reference owns no host. */
+    g_object_set_data_full(G_OBJECT(button), "umicom-action-menu-row",
+        g_object_ref(row), g_object_unref);
+    *out_button = button;
+    return UMI_STATUS_OK;
+}
+
 static gchar *ActionMenuFold(const char *text)
 {
     /* Normalize compatibility forms before folding case, then compose any
@@ -212,7 +263,12 @@ UmiStatus UmiGtk4ActionMenuAppend(GtkWidget *menu, GtkWidget *button, const char
         return UMI_STATUS_BUSY;
     if (state->count >= 256U)
         return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Ordinary label buttons retain their original search behavior. The
+     * shared structured row supplies its copied caption only while intact. */
     const char *label = gtk_button_get_label(GTK_BUTTON(button));
+    if (label == NULL && gtk_button_get_child(GTK_BUTTON(button)) ==
+            g_object_get_data(G_OBJECT(button), "umicom-action-menu-row"))
+        label = g_object_get_data(G_OBJECT(button), "umicom-action-menu-caption");
     if (!ActionMenuText(label, 512U, 1) || !ActionMenuText(keywords, 2048U, 0))
         return UMI_STATUS_INVALID_ARGUMENT;
     gchar *terms = g_strconcat(label, " ", keywords != NULL ? keywords : "", NULL),

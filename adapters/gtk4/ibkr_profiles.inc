@@ -115,7 +115,11 @@ static void ProfileClicked(GtkButton *button, gpointer data)
 {
     GtkWindow *window = GTK_WINDOW(data);
     ConnectionUi *ui = Owner(window);
+    /* Connection publication owns endpoint selection until it completes. */
+#if 0
     if (ui == NULL || ui->profileBusy || Connected(ui)) return;
+#endif
+    if (ui == NULL || ui->profileBusy || ui->commandBusy || Connected(ui)) return;
     g_object_ref(window);
     BrokerProfileTask *job = g_new0(BrokerProfileTask, 1);
     job->path = g_strdup(gtk_editable_get_text(GTK_EDITABLE(ui->profilePath)));

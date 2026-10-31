@@ -1,4 +1,17 @@
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomIbkrConnection.cmake
+#
+# PURPOSE:
+#   Build the broker connection engine and register its public resources.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
 # The caller supplies the canonical broker mapping owner; no parallel OMS.
 # This module also supports independent composition; own its SDK registration dependency.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
@@ -21,7 +34,14 @@ add_library(umicom_ibkr_connection STATIC
     "${_umi_ibkr_root}/src/ibkr_connection/session.c"
     "${_umi_ibkr_root}/src/ibkr_connection/protocol.c"
     "${_umi_ibkr_root}/src/ibkr_connection/quotes.c"
+    "${_umi_ibkr_root}/src/ibkr_connection/option_computation.c"
     "${_umi_ibkr_root}/src/ibkr_connection/contract_details.c"
+    # Keep the former combined path for review. Each source must be its own
+    # quoted CMake argument so module composition resolves real files.
+    #[[ "${_umi_ibkr_root}/src/ibkr_connection/contract_snapshot.c
+    src/ibkr_connection/option_snapshot.c" ]]
+    "${_umi_ibkr_root}/src/ibkr_connection/contract_snapshot.c"
+    "${_umi_ibkr_root}/src/ibkr_connection/option_snapshot.c"
     "${_umi_ibkr_root}/src/ibkr_connection/contract_route.c"
     "${_umi_ibkr_root}/src/ibkr_connection/market_rule.c"
     "${_umi_ibkr_root}/src/ibkr_connection/fill_policy.c"
@@ -135,6 +155,7 @@ install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/broker-market-observat
 # Broker order recovery shares identity, exact numeric and transport owners.
 target_sources(umicom_ibkr_connection PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/order_observation.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/order_report.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/order_identity.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/order_store.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/order_decode.c")
@@ -148,6 +169,7 @@ install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/recover-broker-orders.
 target_sources(umicom_ibkr_connection PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/order_numbers.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/completed_orders.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/completed_snapshot.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/completed_store.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/completed_layout.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/completed_decode.c"
@@ -251,10 +273,15 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomBrokerAccess.cmake")
 
 # Tick observations share the headless connection, request IDs and exact decimals.
 target_sources(umicom_ibkr_connection PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/time_sales_report.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/time_sales.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/time_sales_decode.c")
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/broker_connectivity/time_sales.h"
+    "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/broker_connectivity/time_sales_report.h"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/broker_connectivity COMPONENT Framework)
 
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/broker-time-sales.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/learning" COMPONENT Learning)
+
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/broker-option-risk.html"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)

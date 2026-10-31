@@ -22,7 +22,9 @@ extern "C" {
 #endif
 /* Create an unpresented inspector using a validated, copied connection plan.
  * Guest has no broker connection and returns NULL. No socket is opened and
- * Live acknowledgement is never inherited. GTK main context only. */
+ * Live acknowledgement is never inherited. GTK main context only.
+ * Settings are ready before application window-added observers run. Invalid
+ * or retired parents, or host removal/replacement during construction, return NULL. */
 GtkWindow *UmiIbkrGtkCreateForPlan(GtkWindow *parent, const UmiBrokerAccessPlan *plan);
 /* The launcher copies plan. Removing its native parent makes retained controls
  * inert. Reopening starts disconnected with fresh, unchecked Live consent. */

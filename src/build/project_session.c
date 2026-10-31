@@ -971,7 +971,13 @@ static UmiStatus ProjectSessionSubmitMode(UmiBuildProjectSession *session,
     status = umi_task_create(&task_config, &session->task);
     if (status != UMI_STATUS_OK) { free(launch_profile); return status; }
     session->profile = run_current ? *launch_profile : *profile;
+    /* Driver selection belongs to admission, before Configure can create new
+     * files. Retain the previous phase-time discovery flag for review: it could
+     * repeat Configure and Build inside the final Test stage of a fresh tree. */
+#if 0
     session->automatic_tests = automatic;
+#endif
+    session->automatic_tests = false;
     free(launch_profile);
     /* Freeze the source root before queuing. Each phase may run much later;
      * using the process cwd again could build or launch a different project. */
@@ -1005,6 +1011,7 @@ static UmiStatus ProjectSessionSubmitMode(UmiBuildProjectSession *session,
             : UMI_STATUS_NOT_FOUND;
         if (discovery != UMI_STATUS_OK && discovery != UMI_STATUS_NOT_FOUND) return discovery;
         if (discovery == UMI_STATUS_OK) {
+            session->automatic_tests = true;
             /* The configured driver owns configure, incremental build and tests.
              * Keep one worker stage rather than executing its prerequisites twice. */
             session->phases[session->phase_count++] = UMI_BUILD_PHASE_TEST;

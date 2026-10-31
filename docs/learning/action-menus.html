@@ -5,4 +5,19 @@
 <p>A retained list widget keeps its independent filter context alive. Retained entry controls cannot queue work against a finalized menu. Replacing the service's popover is unsupported and retires public access safely. The host must not reparent internal rows or children. Build a fresh group if copied labels or keyword metadata need to change.</p>
 <h2>Limits and extension</h2><p>A group accepts at most 256 buttons. Captions are limited to 512 UTF-8 bytes, keywords to 2,048 bytes, and queries to 1,024 bytes and 256 Unicode characters. Invalid input is refused before adoption or field updates. Initial append validation failure leaves an unparented button with its caller; normal GTK floating-reference rules still apply.</p>
 <p>Keep action execution explicit. Filtering and the entry's Enter key do not invoke the first result. Add new action descriptors in a host's grouping list while retaining the original button construction and lifetime binding. This allows the shared service to improve presentation without moving application behavior into a second UI implementation.</p>
+<section id="shortcut-rows"><h2>Show a command's keyboard shortcut</h2>
+<p>A shortcut is a key combination such as Ctrl+S. Use <code>UmiGtk4ActionMenuButtonCreate</code> to place the caption on the reading edge and a native GTK shortcut label on the other edge. Supply the same key and modifier flags that your keyboard handler uses. The function creates presentation; it does not install a keyboard handler or grant permission to execute a command.</p>
+<pre><code>GtkWidget *save = NULL;
+UmiStatus status = UmiGtk4ActionMenuButtonCreate(
+    "Save", GDK_KEY_s, GDK_CONTROL_MASK, &amp;save);
+if (status == UMI_STATUS_OK) {
+    /* Bind the existing Save handler and its lifetime guard here. */
+    UmiStatus appended = UmiGtk4ActionMenuAppend(menu, save, "write document");
+    if (appended != UMI_STATUS_OK) {
+        g_object_ref_sink(save);
+        g_object_unref(save);
+    }
+}</code></pre>
+<ol><li>Pass zero for both key and modifiers when the command has no shortcut. Do not invent a shortcut merely to fill a menu row.</li><li>Keep the button's sensitivity connected to command availability. A displayed shortcut must not bypass workspace trust, document state or pending-operation checks.</li><li>Use the returned button directly in a normal GTK box, or append it to an action menu. Both paths retain its existing activation callback.</li><li>Keep the generated row intact. Search copies its caption during append. To change a group of labels, construct a new group; replacing the child before append is rejected unless it becomes an ordinary labelled GTK button.</li></ol>
+<p>The output is a floating GTK widget. Failed validation clears the output pointer. An empty or invalid UTF-8 caption, a caption over 512 bytes, an invalid accelerator, or modifiers without a key are refused.</p></section>
 </body></html>

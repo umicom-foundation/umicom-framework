@@ -128,6 +128,10 @@ struct UmiGtk4DeveloperDialog {
     /* The module form owns reviewed source; ordinary project forms leave it null. */
     DeveloperApplicationForm *application;
     GtkWidget *acceptButton;
+    /* Persistent sections share this form's existing control ownership. */
+    GtkWidget *settingsStack;
+    GtkWidget *settingsSections[UMI_GTK4_BUILD_SETTINGS_SECTION_COUNT];
+    int settingsSelecting;
     /* SDK observations are owned snapshots, never build or trust authority. */
     UmiSdkInstallationObservation *sdkObservation;
     GtkWidget *sdkPrefix, *sdkRead, *sdkUse, *sdkDetail;
@@ -953,6 +957,8 @@ static UmiStatus CreateForm(GtkWindow *parent, const char *title,
     return UMI_STATUS_OK;
 }
 
+#include "developer_settings_sections_gtk4.inc"
+
 /* Template metadata and file recipes come from the existing Framework catalogue. */
 /* Project creation now requires an explicit destination and offers a parent-folder browser. The home-directory default is retained here so the owner can review the former behaviour. The previous implementation is retained for engineering review. */
 #if 0
@@ -1192,6 +1198,10 @@ UmiStatus UmiGtk4BuildSettingsDialogCreate(GtkWindow *parent,
 }
 
 #endif
+/* Settings now keep their existing inputs in persistent task sections. The
+ * single scrolling inventory is retained for review; all operations still use
+ * the same fields, validation and application callback. */
+#if 0
 UmiStatus UmiGtk4BuildSettingsDialogPrepare(GtkWindow *parent,
     const UmiBuildProfile *profile, int trusted, UmiGtk4BuildSettingsApplied onApplied,
     void *context, UmiGtk4DeveloperDialog **outDialog)
@@ -1285,6 +1295,136 @@ UmiStatus UmiGtk4BuildSettingsDialogPrepare(GtkWindow *parent,
     (void)umi_gtk4_automation_tag_widget(dialog->trust, "developer.build.trusted");
     gtk_box_append(GTK_BOX(dialog->body), dialog->trust);
     DeveloperCompilerDatabaseControls(dialog);
+    *outDialog = dialog;
+    return UMI_STATUS_OK;
+}
+
+#endif
+UmiStatus UmiGtk4BuildSettingsDialogPrepare(GtkWindow *parent,
+    const UmiBuildProfile *profile, int trusted, UmiGtk4BuildSettingsApplied onApplied,
+    void *context, UmiGtk4DeveloperDialog **outDialog)
+{
+    UmiGtk4DeveloperDialog *dialog;
+    UmiStatus status;
+    if (onApplied == NULL || outDialog == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outDialog = NULL;
+    status = umi_build_profile_validate(profile, NULL, 0U);
+    if (status != UMI_STATUS_OK) return status;
+    /* Construction may notify native window observers. Keep source settings
+     * independent of the application service throughout widget creation. */
+    UmiBuildProfile settings = *profile;
+    profile = &settings;
+    status = CreateForm(parent, "Project Build Settings",
+        "Review the build folder, program and install folder. A CMake preset controls configuration when its field is filled. Building a project can execute its scripts: trust only code you have reviewed.",
+        G_CALLBACK(ApplyClicked), "Apply Settings", &dialog);
+    if (status != UMI_STATUS_OK) return status;
+    dialog->profile = *profile;
+    dialog->onApplied = onApplied;
+    dialog->context = context;
+    DeveloperSettingsSectionsBegin(dialog);
+    if (!DeveloperAlive(dialog)) { UmiGtk4DeveloperDialogDestroy(dialog); return UMI_STATUS_CANCELLED; }
+    static const UmiGtk4BuildSettingsSection sections[UMI_DEVELOPER_FORM_FIELDS] = {
+        UMI_GTK4_BUILD_SETTINGS_BUILD, UMI_GTK4_BUILD_SETTINGS_BUILD,
+        UMI_GTK4_BUILD_SETTINGS_BUILD, UMI_GTK4_BUILD_SETTINGS_TOOLS,
+        UMI_GTK4_BUILD_SETTINGS_TOOLS, UMI_GTK4_BUILD_SETTINGS_BUILD,
+        UMI_GTK4_BUILD_SETTINGS_PRESETS, UMI_GTK4_BUILD_SETTINGS_BUILD,
+        UMI_GTK4_BUILD_SETTINGS_RUN, UMI_GTK4_BUILD_SETTINGS_RUN,
+        UMI_GTK4_BUILD_SETTINGS_SDK, UMI_GTK4_BUILD_SETTINGS_TOOLS,
+        UMI_GTK4_BUILD_SETTINGS_BUILD, UMI_GTK4_BUILD_SETTINGS_RUN
+    };
+    for (size_t index = 0U; index < UMI_DEVELOPER_FORM_FIELDS; ++index) {
+        DeveloperSettingsSectionBody(dialog, sections[index]);
+        char id[80];
+        const UmiDeveloperProfileField *field = &PROFILE_FIELDS[index];
+        g_snprintf(id, sizeof(id), "developer.build.field.%zu", index);
+        dialog->fields[index] = AddEntry(dialog, field->title,
+            (const char *)profile + field->offset, id);
+    }
+    /* The profile owns this choice, so GUI and command-line builds can use
+     * the same tools. Opening settings neither changes PATH nor launches tools. */
+    gtk_widget_set_tooltip_text(dialog->fields[11],
+        "Choose the folder containing CMake, CTest, CPack and Ninja. "
+        "For MSYS2 UCRT64 this is usually C:\\msys64\\ucrt64\\bin. "
+        "Only child processes receive this folder in PATH. Leave blank to inherit PATH.");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(dialog->fields[13]), "APP_MODE=development DATA_FOLDER=\"C:/Project Data\"");
+    gtk_widget_set_tooltip_text(dialog->fields[13],
+        "Saved project settings, not secret storage. Quotes group values; no shell or variable expansion. Applies to Run and native Debug, not builds or terminal sessions.");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(dialog->fields[12]),
+        "-DCMAKE_PREFIX_PATH=\"C:/SDKs/Umicom\" -DUMICOM_LESSON_WITH_GTK=ON");
+    gtk_widget_set_tooltip_text(dialog->fields[12],
+        "Extra configure cache definitions, including explicit overrides after a preset. "
+        "Each argument must be -DNAME[:TYPE]=VALUE. Quotes preserve spaces; no shell expansion occurs. "
+        "Use the dedicated fields for compiler, configuration, testing and install choices.");
+    DeveloperSettingsSectionBody(dialog, UMI_GTK4_BUILD_SETTINGS_PRESETS);
+    dialog->configurePreset = AddEntry(dialog, "Configure preset (separate stage)",
+        profile->configure_preset, "developer.build.configure-preset");
+    dialog->buildPreset = AddEntry(dialog, "Build preset (separate stage)",
+        profile->build_preset, "developer.build.build-preset");
+    dialog->testPreset = AddEntry(dialog, "Test preset (separate stage)",
+        profile->test_preset, "developer.build.test-preset");
+    GtkWidget *presetHelp = gtk_label_new(
+        "Clear the shared CMake preset above when using separate stage names. A blank stage uses the ordinary profile fields. Explicit presets control their own options. Set the build folder to the preset's binary directory for diagnostics, install, package and debugger paths.");
+    gtk_label_set_wrap(GTK_LABEL(presetHelp), TRUE);
+    gtk_label_set_xalign(GTK_LABEL(presetHelp), 0.0F);
+    gtk_box_append(GTK_BOX(dialog->body), presetHelp);
+    /* Show explicit override semantics beside the existing preset explanation. */
+    DeveloperSettingsSectionBody(dialog, UMI_GTK4_BUILD_SETTINGS_BUILD);
+    GtkWidget *definitionHelp = gtk_label_new(
+        "The CMake definitions field adds only the options you enter, after the configure preset if one is selected. "
+        "Use it for SDK search prefixes or project features. These settings are saved locally with this project; "
+        "do not put passwords or API keys in build definitions, logs or CMake caches.");
+    gtk_label_set_wrap(GTK_LABEL(definitionHelp), TRUE);
+    gtk_label_set_xalign(GTK_LABEL(definitionHelp), 0.0F);
+    gtk_box_append(GTK_BOX(dialog->body), definitionHelp);
+    DeveloperSettingsSectionBody(dialog, UMI_GTK4_BUILD_SETTINGS_PRESETS);
+    DeveloperPresetControls(dialog);
+    DeveloperSettingsSectionBody(dialog, UMI_GTK4_BUILD_SETTINGS_RUN);
+    dialog->runDirectory = AddEntry(dialog,
+        "Program working folder (blank uses the project folder)",
+        profile->run_working_directory, "developer.build.run-directory");
+    gtk_widget_set_tooltip_text(dialog->runDirectory,
+        "Run and native Debug use this folder. Relative paths start at the project folder; the executable path still starts at the project folder.");
+    dialog->arguments = AddEntry(dialog,
+        "Argument list (clear the single argument above before using this field)",
+        profile->run_arguments, "developer.build.arguments");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(dialog->arguments), "--file \"notes for review.txt\" --mode preview");
+    GtkWidget *argumentHelp = gtk_label_new(
+        "Spaces separate arguments. Quotes keep spaces inside one argument; \"\" passes an empty argument. Backslashes escape quotes, backslashes or spaces. No shell commands or variables are expanded.");
+    gtk_label_set_wrap(GTK_LABEL(argumentHelp), TRUE);
+    gtk_label_set_xalign(GTK_LABEL(argumentHelp), 0.0F);
+    gtk_box_append(GTK_BOX(dialog->body), argumentHelp);
+    DeveloperSettingsSectionBody(dialog, UMI_GTK4_BUILD_SETTINGS_TOOLS);
+    DeveloperToolsControls(dialog);
+    DeveloperSettingsSectionBody(dialog, UMI_GTK4_BUILD_SETTINGS_SDK);
+    DeveloperSdkControls(dialog);
+    DeveloperSettingsSectionBody(dialog, UMI_GTK4_BUILD_SETTINGS_RUN);
+    DeveloperLaunchControls(dialog);
+    DeveloperSettingsSectionBody(dialog, UMI_GTK4_BUILD_SETTINGS_TARGETS);
+    DeveloperTargetControls(dialog);
+    DeveloperSettingsSectionBody(dialog, UMI_GTK4_BUILD_SETTINGS_SDK);
+    DeveloperInstalledControls(dialog);
+    DeveloperSettingsSectionBody(dialog, UMI_GTK4_BUILD_SETTINGS_BUILD);
+    gtk_editable_set_editable(GTK_EDITABLE(dialog->fields[1]), FALSE);
+    dialog->parallel = gtk_spin_button_new_with_range(1.0, 32.0, 1.0);
+    gtk_spin_button_set_value(GTK_SPIN_BUTTON(dialog->parallel), (double)profile->parallel_jobs);
+    gtk_widget_set_tooltip_text(dialog->parallel, "Maximum parallel build jobs");
+    gtk_box_append(GTK_BOX(dialog->body), gtk_label_new("Parallel build jobs"));
+    gtk_box_append(GTK_BOX(dialog->body), dialog->parallel);
+    dialog->trust = gtk_check_button_new_with_label("I trust the code and build scripts in this project folder");
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(dialog->trust), trusted != 0);
+    (void)umi_gtk4_automation_tag_widget(dialog->trust, "developer.build.trusted");
+    gtk_box_append(GTK_BOX(dialog->body), dialog->trust);
+    DeveloperSettingsSectionBody(dialog, UMI_GTK4_BUILD_SETTINGS_INTELLIGENCE);
+    DeveloperCompilerDatabaseControls(dialog);
+    /* Optional configuration bindings append here after Prepare. Keeping the
+     * destination stable avoids rebuilding controls when a host adds them. */
+    DeveloperSettingsSectionBody(dialog, UMI_GTK4_BUILD_SETTINGS_CONFIGURATIONS);
+    GtkWidget *configurationHelp = gtk_label_new(
+        "Save and reuse named build settings when this host provides a configuration store. "
+        "Loading a configuration changes the form; Apply Settings remains a separate action.");
+    gtk_label_set_wrap(GTK_LABEL(configurationHelp), TRUE);
+    gtk_label_set_xalign(GTK_LABEL(configurationHelp), 0.0F);
+    gtk_box_append(GTK_BOX(dialog->body), configurationHelp);
     *outDialog = dialog;
     return UMI_STATUS_OK;
 }

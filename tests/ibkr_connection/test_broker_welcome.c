@@ -76,6 +76,12 @@ static void CloseOnSensitivity(GObject *object, GParamSpec *property, gpointer d
         probe->welcome = NULL;
     }
 }
+static void ReenterOnNotify(GObject *object, GParamSpec *property, gpointer data)
+{
+    (void)object; (void)property;
+    Probe *probe = data;
+    if (probe->reenter != NULL) g_signal_emit_by_name(probe->reenter, "clicked");
+}
 int main(int argc, char **argv)
 {
     if (argc != 2) return 2;
@@ -148,11 +154,108 @@ int main(int argc, char **argv)
         CHECK(!gtk_widget_get_visible(options) && probe.calls == 0U);
         gtk_stack_set_visible_child_name(GTK_STACK(modes), "live");
         CHECK(gtk_widget_get_visible(options) && probe.calls == 0U);
+        /* The final mode actions now belong to the separate guidance stage.
+         * Retain the previous hierarchy assertion for comparison. */
+#if 0
         CHECK(gtk_widget_get_ancestor(live, GTK_TYPE_STACK) == modes);
         CHECK(gtk_widget_get_ancestor(paper, GTK_TYPE_STACK) == modes);
+#endif
+        CHECK(gtk_widget_get_ancestor(live, GTK_TYPE_STACK) == Find(root, "broker-welcome-stage"));
+        CHECK(gtk_widget_get_ancestor(paper, GTK_TYPE_STACK) == Find(root, "broker-welcome-stage"));
         CHECK(gtk_widget_get_ancestor(guest, GTK_TYPE_STACK) == modes);
         CHECK(Find(root, "umicom.brand.logo") != NULL);
         CHECK(strstr(gtk_button_get_label(GTK_BUTTON(guest)), "Demo") != NULL);
+    } else if (strncmp(argv[1], "session-", 8U) == 0) {
+        GtkWidget *stage = Find(root, "broker-welcome-stage");
+        GtkWidget *modes = Find(root, "broker-welcome-modes");
+        GtkWidget *program = Find(root, "broker-welcome-program");
+        GtkWidget *beginPaper = Find(root, "broker-welcome-begin-paper");
+        GtkWidget *beginLive = Find(root, "broker-welcome-begin-live");
+        GtkWidget *back = Find(root, "broker-welcome-back");
+        GtkWidget *guide = Find(root, "broker-welcome-authentication-guide");
+        CHECK(stage && modes && program && beginPaper && beginLive && back && guide);
+        CHECK(strcmp(gtk_stack_get_visible_child_name(GTK_STACK(stage)), "accounts") == 0);
+        if (strcmp(argv[1], "session-layout") == 0) {
+            GtkWidget *split = Find(root, "broker-welcome-split");
+            CHECK(GTK_IS_PANED(split));
+            CHECK(gtk_paned_get_resize_start_child(GTK_PANED(split)));
+            CHECK(gtk_paned_get_resize_end_child(GTK_PANED(split)));
+            CHECK(GTK_IS_SCROLLED_WINDOW(gtk_paned_get_start_child(GTK_PANED(split))));
+            CHECK(GTK_IS_SCROLLED_WINDOW(gtk_paned_get_end_child(GTK_PANED(split))));
+            gtk_paned_set_position(GTK_PANED(split), 260);
+            CHECK(gtk_paned_get_position(GTK_PANED(split)) == 260);
+        } else if (strcmp(argv[1], "session-titles") == 0) {
+            const char *names[] = {"live", "paper", "demo"};
+            const char *titles[] = {"Live Trading", "Paper Trading (Demo)", "Guest"};
+            for (unsigned i = 0U; i < 3U; ++i) {
+                GtkWidget *page = gtk_stack_get_child_by_name(GTK_STACK(modes), names[i]);
+                CHECK(page != NULL);
+                CHECK(strcmp(gtk_stack_page_get_title(gtk_stack_get_page(GTK_STACK(modes), page)), titles[i]) == 0);
+            }
+        } else if (strcmp(argv[1], "session-retired") == 0) {
+            UmiBrokerWelcomeGtkDestroy(probe.welcome); probe.welcome = NULL;
+            g_signal_emit_by_name(beginPaper, "clicked");
+            g_signal_emit_by_name(beginLive, "clicked");
+            g_signal_emit_by_name(back, "clicked");
+            CHECK(strcmp(gtk_stack_get_visible_child_name(GTK_STACK(stage)), "accounts") == 0);
+        } else if (strcmp(argv[1], "session-reentry-begin") == 0) {
+            probe.reenter = beginLive;
+            g_signal_connect(guide, "notify::label", G_CALLBACK(ReenterOnNotify), &probe);
+            g_signal_emit_by_name(beginPaper, "clicked");
+            CHECK(strstr(gtk_label_get_text(GTK_LABEL(guide)), "Paper Trading"));
+            CHECK(gtk_widget_get_visible(paper) && !gtk_widget_get_visible(live));
+            CHECK(probe.calls == 0U);
+            g_signal_handlers_disconnect_by_data(guide, &probe);
+        } else if (strcmp(argv[1], "session-reentry-back") == 0) {
+            g_signal_emit_by_name(beginPaper, "clicked");
+            probe.reenter = guest;
+            g_signal_connect(stage, "notify::visible-child-name", G_CALLBACK(ReenterOnNotify), &probe);
+            g_signal_emit_by_name(back, "clicked");
+            CHECK(strcmp(gtk_stack_get_visible_child_name(GTK_STACK(stage)), "accounts") == 0);
+            CHECK(probe.calls == 0U);
+            g_signal_handlers_disconnect_by_data(stage, &probe);
+        } else if (strcmp(argv[1], "session-close-guide") == 0) {
+            g_signal_connect(guide, "notify::label", G_CALLBACK(CloseOnSensitivity), &probe);
+            g_signal_emit_by_name(beginPaper, "clicked");
+            CHECK(probe.welcome == NULL && probe.calls == 0U);
+            g_signal_handlers_disconnect_by_data(guide, &probe);
+        } else if (strcmp(argv[1], "session-close-stage") == 0) {
+            g_signal_connect(stage, "notify::visible-child-name", G_CALLBACK(CloseOnSensitivity), &probe);
+            g_signal_emit_by_name(beginPaper, "clicked");
+            CHECK(probe.welcome == NULL && probe.calls == 0U);
+            g_signal_handlers_disconnect_by_data(stage, &probe);
+        } else {
+            gboolean isLive = strcmp(argv[1], "session-live") == 0;
+            gboolean gateway = strcmp(argv[1], "session-gateway") == 0;
+            gboolean backCase = strcmp(argv[1], "session-back") == 0;
+            gboolean guestCase = strcmp(argv[1], "session-guest") == 0;
+            CHECK(isLive || gateway || backCase || guestCase || strcmp(argv[1], "session-paper") == 0);
+            gtk_stack_set_visible_child_name(GTK_STACK(modes), isLive ? "live" : "paper");
+            if (gateway || backCase) gtk_drop_down_set_selected(GTK_DROP_DOWN(program), 1U);
+            g_signal_emit_by_name(isLive ? beginLive : beginPaper, "clicked");
+            CHECK(probe.calls == 0U && !HasEntry(root));
+            CHECK(strcmp(gtk_stack_get_visible_child_name(GTK_STACK(stage)), "authentication") == 0);
+            CHECK(strstr(gtk_label_get_text(GTK_LABEL(guide)), isLive ? "Live Trading" : "Paper Trading"));
+            CHECK(strstr(gtk_label_get_text(GTK_LABEL(guide)), gateway || backCase ? "IB Gateway" : "TWS"));
+            CHECK(gtk_widget_get_visible(isLive ? live : paper));
+            CHECK(!gtk_widget_get_visible(isLive ? paper : live));
+            if (backCase || guestCase) {
+                g_signal_emit_by_name(back, "clicked");
+                CHECK(strcmp(gtk_stack_get_visible_child_name(GTK_STACK(stage)), "accounts") == 0);
+                CHECK(gtk_drop_down_get_selected(GTK_DROP_DOWN(program)) == (backCase ? 1U : 0U));
+                CHECK(probe.calls == 0U);
+                if (guestCase) {
+                    gtk_stack_set_visible_child_name(GTK_STACK(modes), "demo");
+                    g_signal_emit_by_name(guest, "clicked");
+                    CHECK(probe.calls == 1U && probe.mode == UMI_BROKER_ACCESS_GUEST);
+                }
+            } else {
+                g_signal_emit_by_name(isLive ? live : paper, "clicked");
+                CHECK(probe.calls == 1U);
+                CHECK(probe.mode == (isLive ? UMI_BROKER_ACCESS_LIVE : UMI_BROKER_ACCESS_PAPER));
+                CHECK(probe.port == (gateway ? 4002U : isLive ? 7496U : 7497U));
+            }
+        }
     } else if (strcmp(argv[1], "retained-tabs") == 0) {
         GtkWidget *modes = Find(root, "broker-welcome-modes");
         CHECK(GTK_IS_STACK(modes));

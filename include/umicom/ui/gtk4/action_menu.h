@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/ui/gtk4/action_menu.h
- * PURPOSE: Group existing action buttons in a searchable native popover without copying their behavior.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Group existing actions and display their native keyboard shortcuts.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_GTK4_ACTION_MENU_H
@@ -20,6 +27,15 @@ extern "C"
  * out_menu. Use all operations on the GTK owner thread. The menu owns its
  * children; no application context, command registry or document is retained. */
     UmiStatus UmiGtk4ActionMenuCreate(const char *label, GtkWidget **out_menu);
+    /* Create an ordinary floating command button with a leading caption and
+     * trailing native shortcut. A zero key and zero modifiers omit the shortcut.
+     * Invalid UTF-8, empty/overlong captions or invalid accelerators clear the
+     * output and return INVALID_ARGUMENT. No shortcut handler is registered.
+     * Hosts own dispatch and supply the binding their keyboard route uses.
+     * The button can be appended to a normal GTK container or ActionMenu.
+     * Do not replace its child before appending it to an ActionMenu. */
+    UmiStatus UmiGtk4ActionMenuButtonCreate(const char *label, guint keyval,
+        GdkModifierType modifiers, GtkWidget **out_button);
     /* Append an unparented GtkButton, preserving its identity, sensitivity,
  * tooltip and existing callbacks. Normal GTK floating-reference rules apply.
  * A successful append parents the button and closes the popover on activation.

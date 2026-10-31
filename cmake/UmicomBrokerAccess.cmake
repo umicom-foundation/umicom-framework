@@ -14,10 +14,13 @@
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 target_sources(umicom_ibkr_connection PRIVATE
-    "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/access_plan.c")
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/access_plan.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ibkr_connection/connection_guidance.c")
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/broker_connectivity/access_plan.h"
+    "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/broker_connectivity/connection_guidance.h"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/broker_connectivity COMPONENT Framework)
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/broker_connectivity/access_plan.h"
+    "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/broker_connectivity/connection_guidance.h"
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/broker_connectivity
     COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
 if(BUILD_TESTING)
@@ -44,3 +47,17 @@ umicom_ibkr_target(umicom-broker-access-example)
 
 # Persistence is shared by native and future web/mobile clients.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomBrokerProfiles.cmake")
+
+# Guidance has no network dependency; retain explicit cases for incomplete reports.
+if(BUILD_TESTING)
+    add_executable(umicom-broker-guidance-test "${CMAKE_CURRENT_LIST_DIR}/../tests/ibkr_connection/test_connection_guidance.c")
+    target_link_libraries(umicom-broker-guidance-test PRIVATE Umicom::ibkr_connection)
+    umicom_ibkr_target(umicom-broker-guidance-test)
+    foreach(case invalid idle waiting endpoint duplicate-client protocol provider stale ready partial complete healthy-code)
+        add_test(NAME framework.broker_guidance.${case} COMMAND umicom-broker-guidance-test ${case})
+        set_tests_properties(framework.broker_guidance.${case} PROPERTIES TIMEOUT 10 LABELS "framework;broker;guidance;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-broker-guidance-test)
+    endif()
+endif()
