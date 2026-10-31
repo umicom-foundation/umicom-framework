@@ -16,7 +16,7 @@
 static const char *const WorkspacePageNames[UMI_BROKER_PAGE_COUNT + 1] = {
     "Account and positions", "Market data", "Instrument", "Options",
     "Open orders", "Completed orders", "Trades", "Chart", "Market depth",
-    "Time & Sales", "Profit and loss", "Scanner", NULL
+    "Time & Sales", "Profit and loss", "Scanner", "Order ticket", "Watchlist", NULL
 };
 const char *UmiBrokerWorkspacePageName(UmiBrokerWorkspacePage page)
 {
@@ -279,6 +279,8 @@ static void WorkspaceLayoutCreate(UmiBrokerWorkspaceGtk *owner, GtkWidget *accou
     content[9] = WorkspaceTapePage(owner);
     content[10] = WorkspacePnlPage(owner);
     content[11] = WorkspaceScannerPage(owner);
+    content[12] = WorkspaceTicketPage(owner);
+    content[13] = WorkspaceWatchPage(owner);
     for (unsigned page = 0U; page < UMI_BROKER_PAGE_COUNT; ++page) {
         /* The page viewport permits narrow panels without clipping their
          * controls. Its stable identity survives tab reordering and relocation. */

@@ -17,8 +17,10 @@
 #include <stdio.h>
 #include "brand_widget.h"
 #include "startup_brand_panel.h"
+#include "umicom/broker_connectivity/gateway_gtk4.h"
 
 struct UmiBrokerWelcomeGtk {
+    UmiIbkrGatewayGtk *gateway;
     unsigned references;
     gboolean closed, busy;
     UmiBrokerWelcomeGtkConfig config;
@@ -117,6 +119,9 @@ static void BeginAuthentication(GtkButton *button, gpointer data)
         program, mode == 1U ? "Paper Trading" : "Live Trading");
     gtk_label_set_text(GTK_LABEL(welcome->authenticationText), guide);
     g_free(guide);
+    if (!welcome->closed)
+        gtk_widget_set_visible(UmiIbkrGatewayGtkWidget(welcome->gateway),
+            gtk_drop_down_get_selected(GTK_DROP_DOWN(welcome->program)) == 1U);
     if (!welcome->closed) gtk_widget_set_visible(welcome->buttons[1], mode == 1U);
     if (!welcome->closed) gtk_widget_set_visible(welcome->buttons[2], mode == 2U);
     if (!welcome->closed)
@@ -292,6 +297,8 @@ void UmiBrokerWelcomeGtkDestroy(UmiBrokerWelcomeGtk *welcome)
 {
     if (welcome == NULL || welcome->closed) return;
     welcome->closed = TRUE;
+    UmiIbkrGatewayGtkDestroy(welcome->gateway);
+    welcome->gateway = NULL;
     g_signal_handlers_disconnect_by_data(welcome->modes, welcome);
     for (size_t i = 0U; i < G_N_ELEMENTS(welcome->begin); ++i)
         g_signal_handlers_disconnect_by_data(welcome->begin[i], welcome);

@@ -36,6 +36,11 @@ extern "C"
         char symbol[96], securityType[24], expiry[9], strike[96], right[2];
         char multiplier[96], exchange[64], currency[16], tradingClass[64];
     } UmiIbkrOptionIdentity;
+    /* Narrow descriptive search. The returned conId must still be selected and
+     * resolved exactly before an order can be reviewed. */
+    typedef struct UmiIbkrInstrumentQuery {
+        char symbol[96], securityType[24], exchange[64], currency[16], expiry[9];
+    } UmiIbkrInstrumentQuery;
     typedef struct UmiIbkrContractDetailsSnapshot
     {
         uint32_t requestId;
@@ -48,7 +53,11 @@ extern "C"
         UmiIbkrContractDescription items[UMI_IBKR_CONTRACT_DETAILS_LIMIT];
         bool optionLookup;
         UmiIbkrOptionIdentity requestedOption;
+        bool instrumentLookup;
+        UmiIbkrInstrumentQuery requestedInstrument;
     } UmiIbkrContractDetailsSnapshot;
+    UmiStatus UmiIbkrInstrumentSearch(UmiIbkrConnection *connection,
+        const UmiIbkrInstrumentQuery *query, uint64_t nowMilliseconds, uint32_t *outRequest);
     /* Queue one read-only exact-ID lookup on a READY connection using protocol
  * size-rule metadata (164..176). A pending lookup is BUSY until completion,
  * failure, timeout or local abandonment. Quotes and contract lookups share

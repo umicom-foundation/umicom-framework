@@ -285,3 +285,7 @@ install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/broker-time-sales.html
 
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/broker-option-risk.html"
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomIbkrNewsProviders.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomIbkrExecution.cmake")

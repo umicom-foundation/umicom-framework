@@ -56,6 +56,8 @@ typedef enum UmiBrokerWorkspacePage {
     UMI_BROKER_PAGE_TIME_SALES,
     UMI_BROKER_PAGE_PNL,
     UMI_BROKER_PAGE_SCANNER,
+    UMI_BROKER_PAGE_ORDER_TICKET,
+    UMI_BROKER_PAGE_WATCHLIST,
     UMI_BROKER_PAGE_COUNT
 } UmiBrokerWorkspacePage;
 typedef struct UmiBrokerWorkspaceLayout {

@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/ibkr_connection/order_store.c
- * PURPOSE: Publish complete order observations atomically and distinguish repeated status callbacks.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Publish complete order observations atomically and distinguish repeated status callbacks.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "internal.h"
@@ -16,6 +23,8 @@ UmiStatus UmiIbkrOrdersStore(UmiIbkrConnection *c, const UmiIbkrRecoveredOrder *
     UmiIbkrOrderStore *store = &c->orders;
     UmiIbkrOrdersObserveId(c, incoming->key.orderId);
     UmiIbkrOrdersExpire(c, now);
+    /* Submitted-order feedback has its own owner even without a recovery capture. */
+    UmiIbkrSubmissionObserve(c, incoming);
     if (!store->snapshot.requested || store->snapshot.failed)
         return UMI_STATUS_OK;
     if (store->snapshot.scope == UMI_IBKR_ORDERS_THIS_CLIENT &&

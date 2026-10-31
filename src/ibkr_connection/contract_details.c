@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/ibkr_connection/contract_details.c
- * PURPOSE: Own bounded exact-contract metadata requests and preserve route uncertainty.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Own bounded instrument metadata requests and preserve route uncertainty.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "internal.h"
@@ -153,6 +160,8 @@ static UmiStatus Description(char **fields, size_t count, UmiIbkrContractDescrip
     *out = row;
     return UMI_STATUS_OK;
 }
+#include "bond_description.inc"
+
 UmiStatus UmiIbkrContractDetailsFrame(UmiIbkrConnection *connection, uint64_t message,
                                       const unsigned char *body, size_t length, uint64_t now)
 {
@@ -186,11 +195,15 @@ UmiStatus UmiIbkrContractDetailsFrame(UmiIbkrConnection *connection, uint64_t me
                    "Provider contract response complete. FOK/AON support remains unconfirmed.");
         }
     }
+    /* Bond metadata now uses a bounded decoder below. Retain the former
+     * unsupported response for review of the protocol expansion. */
+#if 0
     else if (status == UMI_STATUS_OK && message == 18U)
     {
         details->failed = true;
         strcpy(details->message, "Bond-specific descriptions are not supported by this inspector.");
     }
+#endif
     else if (status == UMI_STATUS_OK)
     {
         UmiIbkrContractDescription *row = malloc(sizeof *row);
@@ -198,7 +211,7 @@ UmiStatus UmiIbkrContractDetailsFrame(UmiIbkrConnection *connection, uint64_t me
             status = UMI_STATUS_OUT_OF_MEMORY;
         else
         {
-            status = Description(fields, count, row);
+            status = message == 18U ? BondDescription(fields, count, row) : Description(fields, count, row);
             /* Descriptive option requests have no conId until the broker replies.
              * Verify their complete identity; preserve the exact-ID-only check for review. */
 #if 0

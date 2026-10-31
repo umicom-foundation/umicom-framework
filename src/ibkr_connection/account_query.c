@@ -90,6 +90,7 @@ UmiStatus UmiIbkrConnectionReadAccountReport(UmiIbkrConnection *c, const char *a
     c->txSize = previous;
     return status;
   }
+  UmiIbkrExecutionDisable(c);
   (void)snprintf(c->snapshot.selectedAccount, sizeof c->snapshot.selectedAccount, "%s", account);
   c->snapshot.requestIssued = true;
   c->snapshot.requestedAtMilliseconds = now;
@@ -139,6 +140,7 @@ UmiStatus UmiIbkrConnectionRefreshAccountReport(UmiIbkrConnection *c,
     /* The shared Framework owner commits request identity and observations
      * together. Both subscriptions are cancelled at their own end markers.
      * Applications must never infer completeness from an empty row list. */
+    UmiIbkrExecutionDisable(c);
     c->accountSummaryRequest = sequence;
     c->accountPositionsRequest = sequence + 1U;
     c->nextQuoteRequest = sequence + 2U;

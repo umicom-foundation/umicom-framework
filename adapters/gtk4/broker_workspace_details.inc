@@ -13,6 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+static void WorkspaceInstrumentResults(UmiBrokerWorkspaceGtk *owner);
+
 /* A selected contract is explicit input, separate from an active quote stream.
  * Returned metadata retains every candidate and its own request identity. */
 static gboolean WorkspaceDetailsReady(const UmiBrokerWorkspaceGtk *owner)
@@ -89,7 +91,16 @@ static void WorkspaceDetailsRender(UmiBrokerWorkspaceGtk *owner, gboolean replac
             owner->details.failed ? "Failed" : owner->details.complete ? "Complete" : "Receiving",
             owner->details.stale ? " • STALE" : "", owner->details.message);
     }
+    if (owner->hasDetails && owner->details.instrumentLookup) {
+        g_free(status);
+        status = g_strdup_printf("Instrument search: %s %s on %s • %zu results • %s%s",
+            owner->details.requestedInstrument.symbol,owner->details.requestedInstrument.securityType,
+            owner->details.requestedInstrument.exchange,owner->details.count,
+            owner->details.complete ? "Complete" : owner->details.failed ? "Failed" : "Receiving",
+            owner->details.stale ? " • STALE" : "");
+    }
     LabelText(owner->detailsStatus, status); g_free(status);
+    if (!owner->closed) WorkspaceInstrumentResults(owner);
     if (!owner->closed)
         gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(owner->detailsTable), WorkspaceDetailsTable(owner));
 }
@@ -180,6 +191,9 @@ static void WorkspaceDetailsUseQuote(GtkButton *button, gpointer data)
     if (!owner->closed) WorkspaceDetailsRender(owner, FALSE);
     Release(owner);
 }
+/* Product search composes with the existing exact-ID inspector. */
+#include "broker_workspace_instrument_search.inc"
+
 static GtkWidget *WorkspaceDetailsPage(UmiBrokerWorkspaceGtk *owner)
 {
     GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
@@ -204,6 +218,7 @@ static GtkWidget *WorkspaceDetailsPage(UmiBrokerWorkspaceGtk *owner)
     gtk_grid_attach(GTK_GRID(grid), owner->detailsRead, 2, 0, 1, 1);
     gtk_grid_attach(GTK_GRID(grid), owner->detailsAbandon, 2, 1, 1, 1);
     gtk_grid_attach(GTK_GRID(grid), owner->detailsQuote, 0, 2, 3, 1);
+    gtk_box_append(GTK_BOX(box), WorkspaceInstrumentSearch(owner));
     gtk_box_append(GTK_BOX(box), grid);
     owner->detailsStatus = Cell("", FALSE); owner->detailsNotice = Cell("", FALSE);
     gtk_label_set_wrap(GTK_LABEL(owner->detailsStatus), TRUE);
@@ -215,7 +230,7 @@ static GtkWidget *WorkspaceDetailsPage(UmiBrokerWorkspaceGtk *owner)
     gtk_box_append(GTK_BOX(box), owner->detailsTable);
     GtkWidget *note = Cell("Metadata is a point-in-time description, not permission to trade. Blank values are unknown. "
         "A minimum tick alone does not describe every price band or route; order-type lists do not guarantee combinations. "
-        "Captures older than 60 seconds are labelled stale. Bond descriptions are not supported.", FALSE);
+        "Captures older than 60 seconds are labelled stale. Bond descriptions can be inspected; bond order entry is not yet supported.", FALSE);
     gtk_label_set_wrap(GTK_LABEL(note), TRUE);
     gtk_box_append(GTK_BOX(box), note);
     GtkWidget *widgets[] = {owner->detailsContract, owner->detailsExchange, owner->detailsRead,

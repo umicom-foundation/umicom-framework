@@ -17,6 +17,7 @@
 #include "umicom/broker_connectivity/access_gtk4.h"
 #include "umicom/broker_connectivity/connection_guidance.h"
 #include "window_removal_private.h"
+#include "umicom/broker_connectivity/watchlist.h"
 #include <string.h>
 #include <inttypes.h>
 #include <limits.h>
@@ -48,6 +49,8 @@ struct UmiBrokerWorkspaceGtk {
     UmiIbkrSymbolSearchSnapshot search;
     GtkWidget *detailsContract, *detailsExchange, *detailsRead, *detailsAbandon, *detailsQuote;
     GtkWidget *detailsStatus, *detailsNotice, *detailsTable;
+    GtkWidget *instrumentSymbol, *instrumentType, *instrumentRoute, *instrumentCurrency, *instrumentExpiry;
+    GtkWidget *instrumentFind, *instrumentUse, *instrumentRows;
     gboolean detailsBusy, hasDetails;
     UmiIbkrContractDetailsSnapshot details;
     GtkWidget *optionsContract, *optionsSymbol, *optionsType, *optionsFilter;
@@ -58,6 +61,10 @@ struct UmiBrokerWorkspaceGtk {
     UmiIbkrOptionChainSnapshot options;
     UmiIbkrOptionChain optionsItem;
     GtkWidget *ordersAll, *ordersRead, *ordersStatus, *ordersNotice, *ordersTable;
+    GtkWidget *ticketConfirm, *ticketContract, *ticketExchange, *ticketSide, *ticketQuantity, *ticketPrice;
+    GtkWidget *ticketCancelId, *ticketSubmit, *ticketReview, *ticketNotice, *ticketStatus, *ticketButtons[7];
+    gboolean ticketBusy;
+    uint64_t ticketToken, ticketReviewedAt;
     gboolean ordersBusy, hasOrders;
     UmiIbkrOrderReport orders;
     GtkWidget *completedApiOnly, *completedRead, *completedStatus, *completedNotice, *completedTable;
@@ -79,6 +86,7 @@ struct UmiBrokerWorkspaceGtk {
     UmiIbkrRealtimeSnapshot stream;
     GtkWidget *depthRows, *depthSmart, *depthStart, *depthStop, *depthStatus, *depthNotice;
     GtkWidget *depthCells[UMI_IBKR_DEPTH_ROW_LIMIT][9];
+    GtkWidget *depthTickets[UMI_IBKR_DEPTH_ROW_LIMIT][2], *historyTickets[2];
     gboolean depthBusy, hasDepth;
     UmiIbkrDepthSnapshot depth;
     GtkWidget *pnlAccounts, *pnlModel, *pnlContract, *pnlStart, *pnlStop, *pnlStatus, *pnlNotice;
@@ -94,6 +102,9 @@ struct UmiBrokerWorkspaceGtk {
     GtkWidget *tapeCells[UMI_IBKR_TIME_SALES_VIEW_LIMIT][13];
     gboolean hasTape, tapeBusy;
     UmiIbkrTimeSalesReport tape;
+    GtkWidget *watchName, *watchLabel, *watchPath, *watchRows, *watchNotice, *watchButtons[5];
+    gboolean watchBusy;
+    UmiIbkrWatchlist watchlist;
     gboolean layoutBusy;
     GtkWidget *split, *panes[2], *pageWidgets[UMI_BROKER_PAGE_COUNT];
     GtkWidget *pageChoice, *pageShow, *pageMove, *splitChoice;
@@ -123,7 +134,15 @@ static void Retire(UmiBrokerWorkspaceGtk *owner)
     g_signal_handlers_disconnect_by_data(owner->splitChoice, owner);
     g_signal_handlers_disconnect_by_data(owner->open, owner);
     g_signal_handlers_disconnect_by_data(owner->read, owner);
+    for (size_t i = 0U; i < G_N_ELEMENTS(owner->watchButtons); ++i)
+        g_signal_handlers_disconnect_by_data(owner->watchButtons[i], owner);
     g_signal_handlers_disconnect_by_data(owner->ordersRead, owner);
+    GtkWidget *ticketFields[] = {owner->ticketConfirm, owner->ticketContract, owner->ticketExchange,
+        owner->ticketSide, owner->ticketQuantity, owner->ticketPrice};
+    for (size_t i = 0U; i < G_N_ELEMENTS(ticketFields); ++i)
+        g_signal_handlers_disconnect_by_data(ticketFields[i], owner);
+    for (size_t i = 0U; i < G_N_ELEMENTS(owner->ticketButtons); ++i)
+        g_signal_handlers_disconnect_by_data(owner->ticketButtons[i], owner);
     g_signal_handlers_disconnect_by_data(owner->completedRead, owner);
     g_signal_handlers_disconnect_by_data(owner->tradesRead, owner);
     g_signal_handlers_disconnect_by_data(owner->tradesAbandon, owner);
@@ -131,6 +150,11 @@ static void Retire(UmiBrokerWorkspaceGtk *owner)
     g_signal_handlers_disconnect_by_data(owner->tapeStop, owner);
     g_signal_handlers_disconnect_by_data(owner->depthStart, owner);
     g_signal_handlers_disconnect_by_data(owner->depthStop, owner);
+    for (size_t row = 0U; row < UMI_IBKR_DEPTH_ROW_LIMIT; ++row)
+        for (size_t side = 0U; side < 2U; ++side)
+            g_signal_handlers_disconnect_by_data(owner->depthTickets[row][side], owner);
+    for (size_t side = 0U; side < 2U; ++side)
+        g_signal_handlers_disconnect_by_data(owner->historyTickets[side], owner);
     g_signal_handlers_disconnect_by_data(owner->pnlStart, owner);
     g_signal_handlers_disconnect_by_data(owner->pnlStop, owner);
     g_signal_handlers_disconnect_by_data(owner->scannerStart, owner);
@@ -155,6 +179,8 @@ static void Retire(UmiBrokerWorkspaceGtk *owner)
     g_signal_handlers_disconnect_by_data(owner->searchAbandon, owner);
     g_signal_handlers_disconnect_by_data(owner->searchApply, owner);
     g_signal_handlers_disconnect_by_data(owner->searchResults, owner);
+    g_signal_handlers_disconnect_by_data(owner->instrumentFind, owner);
+    g_signal_handlers_disconnect_by_data(owner->instrumentUse, owner);
     g_signal_handlers_disconnect_by_data(owner->detailsRead, owner);
     g_signal_handlers_disconnect_by_data(owner->detailsAbandon, owner);
     g_signal_handlers_disconnect_by_data(owner->detailsQuote, owner);
@@ -321,7 +347,12 @@ static void Render(UmiBrokerWorkspaceGtk *owner, gboolean replaceValues, gboolea
     char *status = g_strdup_printf("Requested %s • %s • %s • Account values: %s • Positions: %s\n%s",
         s->requestedEnvironment == UMI_TRADING_LIVE ? "LIVE" : "PAPER",
         UmiIbkrConnectionStateName(s->state),
+        /* Preserve the original observation-only badge; permission is now visible. */
+#if 0
         s->stale ? "STALE — reconnect and read again" : "Read-only observation",
+#endif
+        s->stale ? "STALE — reconnect and read again" :
+            s->readOnly ? "Read-only session" : "Order entry enabled — review every ticket",
         s->summaryComplete ? "complete" : "not complete",
         s->positionsComplete ? "complete" : "not complete",
         s->message[0] != '\0' ? s->message :
@@ -348,6 +379,7 @@ static void Render(UmiBrokerWorkspaceGtk *owner, gboolean replaceValues, gboolea
 #include "broker_workspace_options.inc"
 #include "broker_workspace_option_risk.inc"
 #include "broker_workspace_quotes.inc"
+#include "broker_workspace_ticket.inc"
 #include "broker_workspace_orders.inc"
 #include "broker_workspace_completed.inc"
 #include "broker_workspace_trades.inc"
@@ -357,6 +389,7 @@ static void Render(UmiBrokerWorkspaceGtk *owner, gboolean replaceValues, gboolea
 #include "broker_workspace_time_sales.inc"
 #include "broker_workspace_pnl.inc"
 #include "broker_workspace_scanner.inc"
+#include "broker_workspace_watchlist.inc"
 #include "broker_workspace_layout.inc"
 
 static void ConnectionRemoved(GtkWidget *widget, gpointer data)
@@ -477,6 +510,7 @@ UmiStatus UmiBrokerWorkspaceGtkRefresh(UmiBrokerWorkspaceGtk *owner)
         if (!owner->closed) WorkspaceDetailsRefresh(owner);
         if (!owner->closed) WorkspaceOptionsRefresh(owner);
         if (!owner->closed) WorkspaceOrdersRefresh(owner);
+        if (!owner->closed) WorkspaceTicketRefresh(owner);
         if (!owner->closed) WorkspaceCompletedRefresh(owner);
         if (!owner->closed) WorkspaceTradesRefresh(owner);
         if (!owner->closed) WorkspaceHistoryRefresh(owner);

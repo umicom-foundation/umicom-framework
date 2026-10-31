@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/ibkr_connection/option_contract.c
- * PURPOSE: Resolve selected option definitions through the established contract-details owner.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Resolve option identities and validate descriptive instrument search results.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "internal.h"
@@ -104,6 +111,14 @@ UmiStatus UmiIbkrOptionContractRequest(UmiIbkrConnection *c, const UmiIbkrOption
 bool UmiIbkrContractIdentityMatches(const UmiIbkrContractDetailsSnapshot *s,
                                     const UmiIbkrContractDescription *row)
 {
+    /* Search results may have different expiries and conIds; retain all matches
+     * instead of choosing a potentially wrong contract for the caller. */
+    if (s->instrumentLookup) {
+        const UmiIbkrInstrumentQuery *q = &s->requestedInstrument;
+        return !strcmp(q->symbol,row->symbol) && !strcmp(q->securityType,row->securityType) &&
+            !strcmp(q->currency,row->currency) &&
+            (!q->expiry[0] || !strncmp(q->expiry,row->expiry,strlen(q->expiry)));
+    }
     if (!s->optionLookup)
         return row->contractId == s->requestedContract.contractId;
     const UmiIbkrOptionIdentity *q = &s->requestedOption;

@@ -143,6 +143,9 @@ static void BuildSessionLayout(UmiBrokerWelcomeGtk *welcome)
     gtk_label_set_max_width_chars(GTK_LABEL(boundary), 42);
     gtk_widget_add_css_class(boundary, "session-muted");
     gtk_box_append(GTK_BOX(authentication), boundary);
+    /* Framework owns installation discovery for both startup and reconnect. */
+    welcome->gateway = UmiIbkrGatewayGtkCreate(NULL);
+    gtk_box_append(GTK_BOX(authentication), UmiIbkrGatewayGtkWidget(welcome->gateway));
     for (unsigned i = 1U; i <= 2U; ++i) {
         GtkWidget *button = gtk_button_new_with_mnemonic("_Continue to Trader");
         welcome->buttons[i] = button;

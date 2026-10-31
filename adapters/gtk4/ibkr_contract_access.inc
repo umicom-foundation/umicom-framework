@@ -74,3 +74,20 @@ UmiStatus UmiIbkrGtkAbandonContractDetails(GtkWindow *window, uint32_t expectedR
     FillLeave(ui);
     return status;
 }
+
+/* Native hosts share the socket, request namespace and metadata capture. */
+UmiStatus UmiIbkrGtkSearchInstrument(GtkWindow *window, const UmiIbkrInstrumentQuery *query)
+{
+    if (!window || !GTK_IS_WINDOW(window) || !query) return UMI_STATUS_INVALID_ARGUMENT;
+    ConnectionUi *ui = Owner(window);
+    if (!ui || !UmiGtk4WindowRegistered(window)) return UMI_STATUS_CANCELLED;
+    if (!ui->connection) return UMI_STATUS_UNAVAILABLE;
+    UmiIbkrInstrumentQuery requested = *query;
+    ui = FillEnter(window);
+    if (!ui) return UMI_STATUS_BUSY;
+    uint64_t now = UmiIbkrMonotonicMilliseconds();
+    UmiStatus status = UmiIbkrInstrumentSearch(ui->connection, &requested, now, &ui->contractRequest);
+    if (status == UMI_STATUS_OK) ContractDetailsPublish(ui,now);
+    if (ui->closed) status = UMI_STATUS_CANCELLED;
+    FillLeave(ui); return status;
+}

@@ -3,7 +3,7 @@
  * File: src/ibkr_connection/session.c
  *
  * PURPOSE:
- *   Own read-only IBKR session lifetimes; Paper/Live is intent, not proof, and order submission remains unavailable.
+ *   Own IBKR session lifetimes with read-only defaults and separate explicit execution authority.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -59,7 +59,12 @@ const char *UmiIbkrConnectionStateName(UmiIbkrConnectionState state)
     case UMI_IBKR_CONNECTING: return "Opening local socket";
     case UMI_IBKR_HANDSHAKE: return "Negotiating API protocol";
     case UMI_IBKR_WAITING: return "Waiting for accounts, API readiness and clock";
+    /* State describes transport readiness; the execution report owns permission.
+     * Keep the earlier label for review. */
+#if 0
     case UMI_IBKR_READY: return "Read-only API ready";
+#endif
+    case UMI_IBKR_READY: return "API ready";
     case UMI_IBKR_DISCONNECTED: return "Disconnected; observations retained as stale";
     case UMI_IBKR_FAILED: return "Connection failed; observations are stale";
     default: return "Invalid state";
@@ -67,6 +72,7 @@ const char *UmiIbkrConnectionStateName(UmiIbkrConnectionState state)
 }
 static void CloseIo(UmiIbkrConnection *c)
 {
+    UmiIbkrSubmissionClosed(c);
     UmiIbkrHistoricalConnectionClosed(c);
     UmiIbkrRealtimeConnectionClosed(c);
     UmiIbkrTimeSalesClosed(c);
@@ -154,7 +160,14 @@ UmiStatus UmiIbkrQueueFields(UmiIbkrConnection *c, const char *const *fields, si
 #if 0
     if (!c || !fields || count < 2U || count > 20U) return UMI_STATUS_INVALID_ARGUMENT;
 #endif
+    /* News-provider enumeration is the one permitted single-field request.
+     * Preserve the previous minimum; all other read-only messages retain it. */
+#if 0
     if (!c || !fields || count < 2U || count > 32U) return UMI_STATUS_INVALID_ARGUMENT;
+#endif
+    if (!c || !fields || count == 0U || count > 32U) return UMI_STATUS_INVALID_ARGUMENT;
+    if (count == 1U && (!fields[0] || strcmp(fields[0], "85"))) return UMI_STATUS_INVALID_ARGUMENT;
+    if (fields[0] && !strcmp(fields[0], "85") && count != 1U) return UMI_STATUS_INVALID_ARGUMENT;
     const char *id = fields[0];
     /* Contract metadata adds read-only messages 9 and 91. Retain the earlier allowlist
      * for review; order placement and cancellation remain forbidden. */
@@ -265,10 +278,18 @@ UmiStatus UmiIbkrQueueFields(UmiIbkrConnection *c, const char *const *fields, si
                 strcmp(id,"81") && strcmp(id,"92") && strcmp(id,"93") && strcmp(id,"94") && strcmp(id,"95") && strcmp(id,"10") && strcmp(id,"11") && strcmp(id,"5") && strcmp(id,"16") && strcmp(id,"99") && strcmp(id,"20") && strcmp(id,"25") && strcmp(id,"50") && strcmp(id,"51") && strcmp(id,"22") && strcmp(id,"23") && strcmp(id,"78") && strcmp(id,"24") && strcmp(id,"97") && strcmp(id,"98")))
         return UMI_STATUS_PERMISSION_DENIED;
 #endif
+    /* Keep the earlier read-only gate for review. Enumeration adds only 85. */
+#if 0
     if (!id || (strcmp(id,"71") && strcmp(id,"49") && strcmp(id,"62") &&
                 strcmp(id,"63") && strcmp(id,"61") && strcmp(id,"64") &&
                 strcmp(id,"1") && strcmp(id,"2") && strcmp(id,"59") && strcmp(id,"9") && strcmp(id,"91") && strcmp(id,"7") &&
                 strcmp(id,"81") && strcmp(id,"92") && strcmp(id,"93") && strcmp(id,"94") && strcmp(id,"95") && strcmp(id,"10") && strcmp(id,"11") && strcmp(id,"5") && strcmp(id,"16") && strcmp(id,"99") && strcmp(id,"20") && strcmp(id,"25") && strcmp(id,"50") && strcmp(id,"51") && strcmp(id,"22") && strcmp(id,"23") && strcmp(id,"78") && strcmp(id,"24") && strcmp(id,"97") && strcmp(id,"98") && strcmp(id,"74") && strcmp(id,"75")))
+        return UMI_STATUS_PERMISSION_DENIED;
+#endif
+    if ((id == NULL || strcmp(id, "85")) && (!id || (strcmp(id,"71") && strcmp(id,"49") && strcmp(id,"62") &&
+                strcmp(id,"63") && strcmp(id,"61") && strcmp(id,"64") &&
+                strcmp(id,"1") && strcmp(id,"2") && strcmp(id,"59") && strcmp(id,"9") && strcmp(id,"91") && strcmp(id,"7") &&
+                strcmp(id,"81") && strcmp(id,"92") && strcmp(id,"93") && strcmp(id,"94") && strcmp(id,"95") && strcmp(id,"10") && strcmp(id,"11") && strcmp(id,"5") && strcmp(id,"16") && strcmp(id,"99") && strcmp(id,"20") && strcmp(id,"25") && strcmp(id,"50") && strcmp(id,"51") && strcmp(id,"22") && strcmp(id,"23") && strcmp(id,"78") && strcmp(id,"24") && strcmp(id,"97") && strcmp(id,"98") && strcmp(id,"74") && strcmp(id,"75"))))
         return UMI_STATUS_PERMISSION_DENIED;
     size_t length = 0;
     for (size_t i=0; i<count; ++i) {
@@ -451,7 +472,12 @@ UmiStatus UmiIbkrConnectionPump(UmiIbkrConnection *c, uint64_t now)
     }
     if (c->snapshot.state==UMI_IBKR_WAITING && c->accountsReceived && c->nextIdReceived && c->snapshot.clockReceived) {
         c->snapshot.state=UMI_IBKR_READY;c->snapshot.stale=false;
+        /* The session starts read-only; a later ticket may grant explicit authority.
+         * Keep the earlier permanently read-only wording for review. */
+#if 0
         (void)snprintf(c->snapshot.message,sizeof c->snapshot.message,"Read-only API ready. Confirm the account mode in TWS/Gateway; it is not attested here.");
+#endif
+        (void)snprintf(c->snapshot.message,sizeof c->snapshot.message,"API ready; session started read-only. Confirm the account mode in TWS/Gateway; it is not attested here.");
     }
     if (c->snapshot.state==UMI_IBKR_READY && !c->pingPending && now-c->snapshot.clockReceivedAtMilliseconds>=30000U) {
         status=Ping(c,now);if(status!=UMI_STATUS_OK)return Fail(c,status,"Cannot queue heartbeat.");
@@ -472,6 +498,8 @@ UmiStatus UmiIbkrConnectionReadAccount(UmiIbkrConnection *c,const char *account,
     UmiStatus status=UmiIbkrQueueFields(c,summary,5);
     if(status==UMI_STATUS_OK)status=UmiIbkrQueueFields(c,positions,2);
     if(status!=UMI_STATUS_OK){c->txSize=before;return status;}
+    /* A fresh account selection requires fresh execution consent and review. */
+    UmiIbkrExecutionDisable(c);
     (void)snprintf(c->snapshot.selectedAccount,sizeof c->snapshot.selectedAccount,"%s",account);
     c->snapshot.requestIssued=true;c->snapshot.requestedAtMilliseconds=now;c->lastNow=now;
     return UMI_STATUS_OK;

@@ -16,6 +16,7 @@
 #define UMICOM_IBKR_CONNECTION_GTK4_H
 #include <gtk/gtk.h>
 #include "umicom/broker_connectivity/connection.h"
+#include "umicom/broker_connectivity/order_execution.h"
 #include "umicom/broker_connectivity/quotes.h"
 #include "umicom/broker_connectivity/symbol_search.h"
 #include "umicom/broker_connectivity/contract_details.h"
@@ -98,6 +99,7 @@ UmiStatus UmiIbkrGtkAbandonInstrumentSearch(GtkWindow *window);
  * not require a quote subscription. Copy uses bounded age without I/O and leaves
  * output unchanged on failure. Abandon affects only the expected local lookup.
  * These operations are GTK-main-thread only and never submit orders. */
+UmiStatus UmiIbkrGtkSearchInstrument(GtkWindow *window, const UmiIbkrInstrumentQuery *query);
 UmiStatus UmiIbkrGtkReadContractDetails(GtkWindow *window, const UmiIbkrQuoteContract *contract);
 UmiStatus UmiIbkrGtkCopyContractDetails(GtkWindow *window, uint64_t maximumAgeMilliseconds,
     UmiIbkrContractDetailsSnapshot *out);
@@ -207,6 +209,19 @@ UmiStatus UmiIbkrGtkCreateHistoryScene(GtkWindow *window, uint32_t expectedReque
  * content. The button keeps only a weak parent reference. No connection opens
  * until the user explicitly chooses Connect in the separate window. */
 GtkWidget *UmiIbkrGtkWrap(GtkWidget *child, GtkWindow *parent);
+
+/* Session-local execution permission is explicit and never saved in a profile.
+ * Review creates a short-lived immutable ticket; Submit consumes it once. */
+UmiStatus UmiIbkrGtkExecutionEnable(GtkWindow *window, const char *account,
+    UmiTradingEnvironment mode, bool confirmedBrokerMode);
+UmiStatus UmiIbkrGtkExecutionDisable(GtkWindow *window);
+UmiStatus UmiIbkrGtkOrderPrepare(GtkWindow *window, const UmiIbkrOrderDraft *draft,
+    UmiIbkrOrderReview *out);
+UmiStatus UmiIbkrGtkOrderSubmit(GtkWindow *window, uint64_t token, uint32_t *outOrderId);
+UmiStatus UmiIbkrGtkOrderCancelSubmitted(GtkWindow *window, uint32_t orderId);
+UmiStatus UmiIbkrGtkExecutionCopy(GtkWindow *window, UmiIbkrExecutionReport *out);
+UmiStatus UmiIbkrGtkOrderReadPriceRule(GtkWindow *window, const char *exchange);
+
 /**
  * @brief Create a floating broker button for an existing window's toolbar.
  * @param parent Live owner window; the launcher keeps only a weak reference.

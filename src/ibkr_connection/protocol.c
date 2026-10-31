@@ -225,6 +225,8 @@ static UmiStatus ProviderMessage(UmiIbkrConnection *c,char **f,size_t n)
     if((n!=5U&&n!=6U)||strcmp(f[1],"2")||!UmiIbkrUnsigned(f[3],&code)||code>INT_MAX||!UmiIbkrText(f[4],UMI_IBKR_FRAME_LIMIT,true))return UMI_STATUS_PARSE_ERROR;
     /* Quote-scoped refusals belong to their subscription, not the account
      * snapshot. The frame has already passed the diagnostic text bounds. */
+    /* Owned order IDs are reserved outside the observation request range. */
+    if (UmiIbkrSubmissionMessage(c, f[2], (int)code, f[4])) return UMI_STATUS_OK;
     if (UmiIbkrQuoteProviderMessage(c, f[2], (int)code, f[4])) return UMI_STATUS_OK;
     if (UmiIbkrContractDetailsProviderMessage(c, f[2], (int)code, f[4])) return UMI_STATUS_OK;
     if (UmiIbkrExecutionsProviderMessage(c, f[2], (int)code, f[4])) return UMI_STATUS_OK;
@@ -272,6 +274,8 @@ static UmiStatus Decode(UmiIbkrConnection *c,const unsigned char *body,size_t le
     char number[21]={0};memcpy(number,body,(size_t)(first-body));
     if(!UmiIbkrUnsigned(number,&id))return UMI_STATUS_PARSE_ERROR;
     bool handshake=c->snapshot.state==UMI_IBKR_HANDSHAKE;
+    /* Provider enumeration has a bounded atomic decoder, without a request ID. */
+    if (!handshake && id == 85U) return UmiIbkrNewsProvidersFrame(c, body, length, now);
     /* Catalogue XML is inert text with separate ownership and byte limits. */
     if (!handshake && id==19U) return UmiIbkrScannerCatalogFrame(c,body,length,now);
     /* Discovery owns large result packets and request-scoped failures. */

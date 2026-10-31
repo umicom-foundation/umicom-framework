@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/ibkr_connection/observation_export.c
- * PURPOSE: Keep broker evidence formatting and new-file ownership independent of Trader widgets.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Format copied account observations independently of order permission.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/broker_connectivity/observation_export.h"
@@ -54,7 +61,24 @@ static UmiStatus ObservationValidate(const UmiIbkrConnectionSnapshot *snapshot, 
     if (snapshot == NULL || snapshot->accountCount > UMI_IBKR_ACCOUNT_LIMIT ||
         snapshot->valueCount > UMI_IBKR_VALUE_LIMIT || snapshot->positionCount > UMI_IBKR_POSITION_LIMIT)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Observation review and export do not grant order authority. A session
+     * may now enable reviewed orders without invalidating its copied account
+     * data. Keep the previous read-only restriction for contract review. */
+#if 0
     if (!snapshot->readOnly || snapshot->environmentAttested || !snapshot->requestIssued ||
+        (snapshot->requestedEnvironment != UMI_TRADING_PAPER &&
+         snapshot->requestedEnvironment != UMI_TRADING_LIVE) ||
+        (snapshot->state != UMI_IBKR_READY && snapshot->state != UMI_IBKR_DISCONNECTED &&
+         snapshot->state != UMI_IBKR_FAILED) ||
+        now < snapshot->requestedAtMilliseconds ||
+        (snapshot->summaryComplete && (snapshot->summaryAtMilliseconds < snapshot->requestedAtMilliseconds ||
+                                       snapshot->summaryAtMilliseconds > now)) ||
+        (snapshot->positionsComplete &&
+         (snapshot->positionsAtMilliseconds < snapshot->requestedAtMilliseconds ||
+          snapshot->positionsAtMilliseconds > now)))
+        return UMI_STATUS_INVALID_STATE;
+#endif
+    if (snapshot->environmentAttested || !snapshot->requestIssued ||
         (snapshot->requestedEnvironment != UMI_TRADING_PAPER &&
          snapshot->requestedEnvironment != UMI_TRADING_LIVE) ||
         (snapshot->state != UMI_IBKR_READY && snapshot->state != UMI_IBKR_DISCONNECTED &&

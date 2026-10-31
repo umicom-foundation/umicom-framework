@@ -51,6 +51,26 @@ UmiStatus UmiIbkrGtkReadAccount(GtkWindow *window, const char *account)
     return UMI_STATUS_OK;
 }
 
+
+/* New execution controls share this existing synthetic inspector boundary.
+ * Rejection is intentional: projection tests never grant trading authority. */
+UmiStatus UmiIbkrGtkExecutionEnable(GtkWindow *w, const char *a, UmiTradingEnvironment m, bool v)
+{ (void)w; (void)a; (void)m; (void)v; return UMI_STATUS_PERMISSION_DENIED; }
+UmiStatus UmiIbkrGtkExecutionDisable(GtkWindow *w)
+{ (void)w; return UMI_STATUS_OK; }
+UmiStatus UmiIbkrGtkOrderPrepare(GtkWindow *w, const UmiIbkrOrderDraft *d, UmiIbkrOrderReview *r)
+{ (void)w; (void)d; (void)r; return UMI_STATUS_PERMISSION_DENIED; }
+UmiStatus UmiIbkrGtkOrderSubmit(GtkWindow *w, uint64_t t, uint32_t *id)
+{ (void)w; (void)t; (void)id; return UMI_STATUS_PERMISSION_DENIED; }
+UmiStatus UmiIbkrGtkOrderCancelSubmitted(GtkWindow *w, uint32_t id)
+{ (void)w; (void)id; return UMI_STATUS_NOT_FOUND; }
+UmiStatus UmiIbkrGtkExecutionCopy(GtkWindow *w, UmiIbkrExecutionReport *r)
+{ (void)w; memset(r, 0, sizeof *r); return UMI_STATUS_OK; }
+UmiStatus UmiIbkrGtkOrderReadPriceRule(GtkWindow *w, const char *route)
+{ (void)w; (void)route; return UMI_STATUS_NOT_FOUND; }
+UmiStatus UmiIbkrGtkSearchInstrument(GtkWindow *w, const UmiIbkrInstrumentQuery *q)
+{ (void)w; (void)q; return UMI_STATUS_NOT_IMPLEMENTED; }
+
 static UmiIbkrQuoteSnapshot quote;
 static gboolean quoteAvailable;
 static unsigned subscriptions, cancellations;

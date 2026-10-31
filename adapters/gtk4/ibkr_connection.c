@@ -4,7 +4,7 @@
  *
  * PURPOSE:
  *   Present broker connection, account and market observations through Framework services.
- *   Paper/Live controls never offer order execution.
+ *   Paper/Live selection does not grant order permission; the separate reviewed ticket owns execution.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -18,6 +18,7 @@
 #include "umicom/broker_connectivity/access_profiles.h"
 #include "umicom/broker_connectivity/connection_gtk4.h"
 #include "umicom/broker_connectivity/connection_guidance.h"
+#include "umicom/broker_connectivity/gateway_gtk4.h"
 #include "umicom/ui/gtk4/path_picker.h"
 #include "umicom/broker_connectivity/connection.h"
 #include "umicom/broker_connectivity/quotes.h"
@@ -66,6 +67,7 @@
 #define UI_KEY "umicom-ibkr-connection-owner"
 typedef struct HistoricalCanvas HistoricalCanvas;
 typedef struct ConnectionUi {
+    UmiIbkrGatewayGtk *gateway;
     UmiIbkrConnection *connection;
     UmiIbkrConnectionSnapshot snapshot;
     GtkWidget *mode, *program, *port, *client, *ack;
@@ -759,6 +761,8 @@ static void Destroyed(GtkWidget *widget, gpointer data)
     ConnectionUi *ui = g_object_get_data(G_OBJECT(widget), UI_KEY);
     if (ui == NULL || ui->closed) return;
     ui->closed = TRUE;
+    UmiIbkrGatewayGtkDestroy(ui->gateway);
+    ui->gateway = NULL;
     FillWatchRetire(ui);
 #ifdef UMI_IBKR_HAS_FILTERED_CHOICES
     PositionReviewRetire(ui);
@@ -772,6 +776,8 @@ static void Destroyed(GtkWidget *widget, gpointer data)
 static void FreeOwner(gpointer data)
 {
     ConnectionUi *ui = data;
+    UmiIbkrGatewayGtkDestroy(ui->gateway);
+    ui->gateway = NULL;
     if (ui->source != 0U) g_source_remove(ui->source);
     UmiIbkrConnectionDestroy(ui->connection);
     g_free(ui->lastOutput);
@@ -823,7 +829,12 @@ GtkWindow *UmiIbkrGtkCreate(GtkWindow *parent)
     g_signal_connect(window, "destroy", G_CALLBACK(Destroyed), NULL);
 #endif
     UmiGtk4ObserveWindowRemoval(window, G_OBJECT(window), Destroyed, NULL);
+    /* The inspector shares a session with the explicit execution ticket.
+     * Its transport title must not promise a permission state that can change. */
+#if 0
     gtk_window_set_title(window, "Umicom Broker Connections — Read-only");
+#endif
+    gtk_window_set_title(window, "Umicom Broker Connections");
     gtk_window_set_default_size(window, 940, 740);
     gtk_window_set_icon_name(window, "org.umicom.trader");
     if (parent != NULL) {
@@ -1043,6 +1054,11 @@ static GtkWindow *CreateConfiguredWindow(GtkWindow *parent, const UmiBrokerAcces
     gtk_widget_set_name(ui->status, "ibkr-status");
     gtk_box_append(GTK_BOX(root), ui->status);
     ProfileControls(window, ui, root);
+    /* Reuse the startup discovery service when connecting from a guest workspace. */
+    GtkWidget *gatewaySetup = gtk_expander_new("Find or open IB Gateway");
+    ui->gateway = UmiIbkrGatewayGtkCreate(NULL);
+    gtk_expander_set_child(GTK_EXPANDER(gatewaySetup), UmiIbkrGatewayGtkWidget(ui->gateway));
+    gtk_box_append(GTK_BOX(root), gatewaySetup);
     /* Connection choices stay visible while the optional inspection tools are
      * collapsed. The same widgets and callbacks retain their owner; moving their
      * parent changes presentation without creating another broker session. */
@@ -1460,3 +1476,5 @@ UmiStatus UmiIbkrGtkReadAccount(GtkWindow *window, const char *account)
 #include "ibkr_pnl_access.inc"
 
 #include "ibkr_scanner_access.inc"
+
+#include "ibkr_submission_access.inc"

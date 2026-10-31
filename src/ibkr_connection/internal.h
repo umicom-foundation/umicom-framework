@@ -23,7 +23,9 @@
 #include "umicom/broker_connectivity/pnl.h"
 #include "umicom/broker_connectivity/market_depth.h"
 #include "umicom/broker_connectivity/symbol_search.h"
+#include "umicom/broker_connectivity/news_providers.h"
 #include "order_private.h"
+#include "execution_private.h"
 #include "completed_private.h"
 #include "historical_private.h"
 #include "realtime_private.h"
@@ -64,9 +66,11 @@ struct UmiIbkrConnection {
     UmiIbkrExecutionSnapshot executions;
     UmiIbkrPnlSnapshot pnl[UMI_IBKR_PNL_CAPACITY];
     UmiIbkrSymbolSearchSnapshot symbolSearch;
+    UmiIbkrNewsProvidersSnapshot newsProviders;
     UmiIbkrDepthSnapshot depth[UMI_IBKR_DEPTH_STREAM_LIMIT];
     /* Retained broker order evidence shares this connection lifetime. */
     UmiIbkrOrderStore orders;
+    UmiIbkrExecutionStore submission;
     /* Completed history owns separate rows because it has no API order ID. */
     UmiIbkrCompletedStore completed;
     /* The finite bar series is allocated only when requested and belongs to
@@ -102,6 +106,7 @@ UmiStatus UmiIbkrConnectionCreateWithIo(const UmiIbkrConnectionOptions *, const 
 UmiStatus UmiIbkrNativeIo(UmiIbkrIo *outIo, void (**outDestroy)(void *));
 UmiStatus UmiIbkrProcessFrame(UmiIbkrConnection *, const unsigned char *, size_t, uint64_t);
 UmiStatus UmiIbkrQueueFields(UmiIbkrConnection *, const char *const *, size_t);
+UmiStatus UmiIbkrNewsProvidersFrame(UmiIbkrConnection *, const unsigned char *, size_t, uint64_t);
 /* Private wire callbacks share the connection's bounded request ownership. */
 UmiStatus UmiIbkrQuoteFrame(UmiIbkrConnection *, uint64_t, char **, size_t, uint64_t);
 UmiStatus UmiIbkrOptionComputationFrame(UmiIbkrConnection *, char **, size_t, uint64_t);

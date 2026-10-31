@@ -1,9 +1,17 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/ibkr_connection/position_review.c
- * PURPOSE: Keep a position review immutable while its source connection continues receiving observations.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Keep position reviews immutable independently of the session
+ *   permission to submit explicitly reviewed orders.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/broker_connectivity/position_review.h"
@@ -67,7 +75,21 @@ static UmiStatus PositionSnapshotValid(const UmiIbkrConnectionSnapshot *snapshot
         snapshot->accountCount > UMI_IBKR_ACCOUNT_LIMIT ||
         memchr(snapshot->selectedAccount, '\0', sizeof(snapshot->selectedAccount)) == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Observation review and export do not grant order authority. A session
+     * may now enable reviewed orders without invalidating its copied account
+     * data. Keep the previous read-only restriction for contract review. */
+#if 0
     if (!snapshot->requestIssued || !snapshot->readOnly || snapshot->environmentAttested ||
+        snapshot->selectedAccount[0] == '\0' ||
+        (snapshot->requestedEnvironment != UMI_TRADING_PAPER &&
+         snapshot->requestedEnvironment != UMI_TRADING_LIVE) ||
+        (snapshot->state != UMI_IBKR_READY && snapshot->state != UMI_IBKR_DISCONNECTED &&
+         snapshot->state != UMI_IBKR_FAILED) ||
+        (snapshot->positionsComplete &&
+         snapshot->positionsAtMilliseconds < snapshot->requestedAtMilliseconds))
+        return UMI_STATUS_INVALID_STATE;
+#endif
+    if (!snapshot->requestIssued || snapshot->environmentAttested ||
         snapshot->selectedAccount[0] == '\0' ||
         (snapshot->requestedEnvironment != UMI_TRADING_PAPER &&
          snapshot->requestedEnvironment != UMI_TRADING_LIVE) ||

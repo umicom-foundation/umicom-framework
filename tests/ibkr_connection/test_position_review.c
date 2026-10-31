@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/ibkr_connection/test_position_review.c
- * PURPOSE: Reject stale quote choices while retaining exact, independently owned position observations.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Reject stale quote choices while retaining exact, independently owned position observations.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/broker_connectivity/position_review.h"
@@ -82,8 +89,14 @@ int main(int argc, char **argv)
     else if (!strcmp(name, "exchange-control"))
         strcpy(position->exchange, "SMA\nRT");
     UmiStatus created = UmiIbkrPositionReviewCreate(snapshot, &review);
+    /* A writable session still supplies read-only position observations.
+     * Preserve the former authority-coupled expectation for review. */
+#if 0
     if (!strcmp(name, "no-request") || !strcmp(name, "unlisted") || !strcmp(name, "duplicate-account") ||
         !strcmp(name, "attested") || !strcmp(name, "writable"))
+#endif
+    if (!strcmp(name, "no-request") || !strcmp(name, "unlisted") || !strcmp(name, "duplicate-account") ||
+        !strcmp(name, "attested"))
     {
         CHECK(created == UMI_STATUS_INVALID_STATE && review == NULL);
         goto done;

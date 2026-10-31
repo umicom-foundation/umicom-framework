@@ -13,6 +13,7 @@
 # MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomIbkrGateway.cmake")
 target_sources(umicom_ibkr_connection_gtk4 PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/broker_welcome.c"
     "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/broker_workspace.c")
@@ -211,5 +212,23 @@ if(BUILD_TESTING)
     endforeach()
     if(COMMAND umicom_register_validation_target)
         umicom_register_validation_target(umicom-broker-workspace-layout-test)
+    endif()
+endif()
+
+# Order-ticket and watchlist interaction checks use the real widgets without
+# opening a broker connection. The owner runs these with native qualification.
+if(BUILD_TESTING)
+    add_executable(umicom-broker-ticket-controls-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ibkr_connection/test_ticket_controls.c")
+    target_link_libraries(umicom-broker-ticket-controls-test PRIVATE Umicom::ibkr_connection_gtk4)
+    umicom_ibkr_target(umicom-broker-ticket-controls-test)
+    foreach(_case IN ITEMS ticket-default pages watchlist watchlist-roundtrip watchlist-malformed watchlist-oversized retired)
+        add_test(NAME framework.broker_ticket_controls.${_case}
+            COMMAND umicom-broker-ticket-controls-test ${_case})
+        set_tests_properties(framework.broker_ticket_controls.${_case} PROPERTIES
+            TIMEOUT 20 SKIP_RETURN_CODE 77 LABELS "framework;broker;gtk4;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-broker-ticket-controls-test)
     endif()
 endif()

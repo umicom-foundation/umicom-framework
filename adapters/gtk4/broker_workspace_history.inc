@@ -38,6 +38,10 @@ static void WorkspaceHistoryRender(UmiBrokerWorkspaceGtk *owner)
     UmiIbkrHistoricalSnapshot *capture = &owner->history;
     gboolean usable = owner->hasHistory && capture->complete && !capture->stale &&
         !capture->failed && !capture->cancelled && capture->count > 0U;
+    for (size_t side = 0U; side < 2U; ++side) {
+        if (owner->closed) return;
+        gtk_widget_set_sensitive(owner->historyTickets[side], ready && usable);
+    }
     WorkspaceHistoryCanvas *canvas = owner->historyCanvas;
     size_t first = 0U, count = 0U;
     if (usable) {
@@ -214,6 +218,24 @@ static void WorkspaceHistoryField(GtkFlowBox *row, const char *title, GtkWidget 
     gtk_box_append(GTK_BOX(field), control);
     gtk_flow_box_insert(row, field, -1);
 }
+/* The chart's last visible candle supplies a historical reference price.
+ * No click transmits an order, and changing the chart never rewrites a reviewed ticket. */
+static void WorkspaceHistoryTicket(GtkButton *button, gpointer data)
+{
+    UmiBrokerWorkspaceGtk *owner = data;
+    if (owner->closed || owner->connection == NULL) return;
+    ++owner->references;
+    UmiIbkrHistoricalSnapshot capture; UmiIbkrHistoricalBar bar;
+    size_t back = (size_t)gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(owner->historyOffset));
+    if (UmiIbkrGtkCopyHistory(owner->connection, 300000U, &capture) == UMI_STATUS_OK &&
+        capture.complete && !capture.stale && !capture.failed && !capture.cancelled && capture.count > back &&
+        UmiIbkrGtkCopyHistoryBar(owner->connection, capture.requestId, capture.count - back - 1U, &bar) == UMI_STATUS_OK) {
+        gboolean sell = button == GTK_BUTTON(owner->historyTickets[1]);
+        WorkspaceTicketSeed(owner, capture.query.contract.contractId, capture.query.contract.exchange,
+            bar.close.reportedText, sell);
+    }
+    Release(owner);
+}
 static GtkWidget *WorkspaceHistoryPage(UmiBrokerWorkspaceGtk *owner)
 {
     GtkWidget *page = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
@@ -282,6 +304,16 @@ static GtkWidget *WorkspaceHistoryPage(UmiBrokerWorkspaceGtk *owner)
         owner->historyCanvas, WorkspaceHistoryCanvasFree);
     gtk_box_append(GTK_BOX(page), owner->historyDrawing);
     gtk_box_append(GTK_BOX(page), owner->historyDetails);
+    GtkWidget *tickets = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+    for (size_t side = 0U; side < 2U; ++side) {
+        owner->historyTickets[side] = gtk_button_new_with_label(side ?
+            "Sell at last visible close…" : "Buy at last visible close…");
+        gtk_widget_set_name(owner->historyTickets[side], side ? "broker-chart-sell" : "broker-chart-buy");
+        g_signal_connect(owner->historyTickets[side], "clicked", G_CALLBACK(WorkspaceHistoryTicket), owner);
+        gtk_widget_set_sensitive(owner->historyTickets[side], FALSE);
+        gtk_box_append(GTK_BOX(tickets), owner->historyTickets[side]);
+    }
+    gtk_box_append(GTK_BOX(page), tickets);
     g_signal_connect(owner->historyRead, "clicked", G_CALLBACK(WorkspaceHistoryRead), owner);
     g_signal_connect(owner->historyCancel, "clicked", G_CALLBACK(WorkspaceHistoryCancel), owner);
     g_signal_connect(owner->historyVisible, "value-changed", G_CALLBACK(WorkspaceHistoryRange), owner);

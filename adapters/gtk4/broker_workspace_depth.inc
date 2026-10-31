@@ -58,6 +58,11 @@ static void WorkspaceDepthRender(UmiBrokerWorkspaceGtk *owner)
         char level[24], bp[96], bs[96], ap[96], as[96];
         (void)g_snprintf(level, sizeof(level), "%zu", i + 1U);
         const UmiIbkrDepthRow *b = &capture->bids[i], *a = &capture->asks[i];
+        for (size_t side = 0U; side < 2U; ++side) {
+            if (owner->closed) return;
+            gtk_widget_set_sensitive(owner->depthTickets[i][side], ready && active &&
+                !capture->stale && !capture->failed && (side ? bid && !b->stale : ask && !a->stale));
+        }
         const char *values[] = {
             bid && b->hasMarketMaker ? b->marketMaker : "—",
             bid ? WorkspaceDepthNumber(b->size, bs, sizeof(bs)) : "—",
@@ -168,6 +173,27 @@ static void WorkspaceDepthStop(GtkButton *button, gpointer data)
     }
     Release(owner);
 }
+/* A ladder price is an observation, not an execution instruction. Copy the
+ * current row into the shared review ticket; stale or missing sides cannot arm it. */
+static void WorkspaceDepthTicket(GtkButton *button, gpointer data)
+{
+    UmiBrokerWorkspaceGtk *owner = data;
+    if (owner->closed || owner->connection == NULL) return;
+    ++owner->references;
+    guint slot = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(button), "depth-ticket"));
+    size_t row = slot / 2U; gboolean sell = (slot % 2U) != 0U;
+    UmiIbkrDepthSnapshot capture;
+    if (row < UMI_IBKR_DEPTH_ROW_LIMIT &&
+        UmiIbkrGtkCopyDepth(owner->connection, 15000U, &capture) == UMI_STATUS_OK &&
+        !capture.stale && !capture.failed && capture.subscribed &&
+        row < (sell ? capture.bidCount : capture.askCount)) {
+        const UmiIbkrDepthRow *level = sell ? &capture.bids[row] : &capture.asks[row];
+        char price[96];
+        if (!level->stale && UmiDecimalFormat(level->price, price, sizeof price) == UMI_STATUS_OK)
+            WorkspaceTicketSeed(owner, capture.selection.contractId, capture.selection.exchange, price, sell);
+    }
+    Release(owner);
+}
 static GtkWidget *WorkspaceDepthPage(UmiBrokerWorkspaceGtk *owner)
 {
     GtkWidget *page = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
@@ -223,6 +249,18 @@ static GtkWidget *WorkspaceDepthPage(UmiBrokerWorkspaceGtk *owner)
                 gtk_label_set_xalign(GTK_LABEL(cell), 1.0F);
             gtk_grid_attach(GTK_GRID(grid), cell, c, (int)row + 1, 1, 1);
             gtk_widget_set_visible(cell, FALSE);
+        }
+    }
+    for (size_t row = 0U; row < UMI_IBKR_DEPTH_ROW_LIMIT; ++row) {
+        for (size_t side = 0U; side < 2U; ++side) {
+            GtkWidget *button = gtk_button_new_with_label(side ? "Sell at bid…" : "Buy at ask…");
+            owner->depthTickets[row][side] = button;
+            char *name = g_strdup_printf("broker-depth-ticket-%zu-%zu", row, side);
+            gtk_widget_set_name(button, name); g_free(name);
+            g_object_set_data(G_OBJECT(button), "depth-ticket", GUINT_TO_POINTER((guint)(row * 2U + side)));
+            g_signal_connect(button, "clicked", G_CALLBACK(WorkspaceDepthTicket), owner);
+            gtk_grid_attach(GTK_GRID(grid), button, 9 + (int)side, (int)row + 1, 1, 1);
+            gtk_widget_set_sensitive(button, FALSE);
         }
     }
     gtk_box_append(GTK_BOX(page), scroll);
