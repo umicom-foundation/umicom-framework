@@ -13,7 +13,9 @@
 # MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
-set(_umicom_media_root "${CMAKE_CURRENT_LIST_DIR}/..")
+# Keep every CMAKE_CONFIGURE_DEPENDS path canonical across Media and GTK.
+# Using cmake/../resources alongside resources can duplicate a Ninja output.
+get_filename_component(_umicom_media_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
 set(_umicom_media_assets
     "${_umicom_media_root}/resources/brand/umicom-logo-on-dark.svg"
     "${_umicom_media_root}/resources/brand/umicom-icon-on-dark.svg"

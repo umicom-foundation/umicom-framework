@@ -14,7 +14,10 @@
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 function(umicom_embed_gtk_brand target)
-    set(_root "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/..")
+    # Use one normalised absolute Framework root.  A cmake/../resources alias
+    # alongside resources/ can otherwise appear twice in Ninja's regeneration
+    # phony outputs, causing "is defined as an output multiple times".
+    get_filename_component(_root "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/.." ABSOLUTE)
     foreach(_kind IN ITEMS LOGO ICON LOGO_DARK ICON_DARK)
         if(_kind STREQUAL "LOGO")
             set(_file umicom-logo.svg)
