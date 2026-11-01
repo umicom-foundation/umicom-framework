@@ -14,9 +14,13 @@
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 function(umicom_embed_gtk_brand target)
-    # Use one normalised absolute Framework root.  A cmake/../resources alias
-    # alongside resources/ can otherwise appear twice in Ninja's regeneration
-    # phony outputs, causing "is defined as an output multiple times".
+    # Normalize before registering configure dependencies: Ninja treats ../ and
+    # canonical source paths as one output, while CMake may retain both spellings.
+    # The former assignment is retained for review; embedding still reads the
+    # same canonical SVG files and tracks their changes for regeneration.
+    if(FALSE)
+        set(_root "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/..")
+    endif()
     get_filename_component(_root "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/.." ABSOLUTE)
     foreach(_kind IN ITEMS LOGO ICON LOGO_DARK ICON_DARK)
         if(_kind STREQUAL "LOGO")

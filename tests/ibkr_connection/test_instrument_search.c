@@ -54,7 +54,19 @@ int main(int argc,char **argv)
             CHECK(Bond(f,text,!strcmp(argv[1],"malformed"))==0);
             UmiStatus pumped=UmiIbkrConnectionPump(f->c,7U);
             if (!strcmp(argv[1],"malformed")) {
+                /* Freshness is derived by the public copy operation from the
+                 * connection state. Inspect that owned snapshot, not the
+                 * backing cache whose stale field is not updated in place. */
+#if 0
                 CHECK(pumped==UMI_STATUS_PARSE_ERROR && f->c->contractDetails.stale && !f->c->contractDetails.count);
+#endif
+                UmiIbkrContractDetailsSnapshot *observed=calloc(1U,sizeof *observed);
+                CHECK(observed);
+                CHECK(pumped==UMI_STATUS_PARSE_ERROR);
+                CHECK(UmiIbkrContractDetailsCopy(f->c,id,7U,observed)==UMI_STATUS_OK);
+                CHECK(observed->stale && !observed->complete && observed->count==0U);
+                CHECK(f->c->snapshot.state==UMI_IBKR_FAILED);
+                free(observed);
             } else {
                 CHECK(pumped==UMI_STATUS_OK);
                 FEED(f,"52","1",text); CHECK(UmiIbkrConnectionPump(f->c,8U)==UMI_STATUS_OK);

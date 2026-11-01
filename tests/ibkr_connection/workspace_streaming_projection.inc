@@ -80,11 +80,11 @@ static int StreamProjection(const char *test, GtkWidget *root, UmiBrokerWorkspac
     GtkWidget *start = Find(root, "broker-workspace-stream-start"), *stop = Find(root, "broker-workspace-stream-stop");
     GtkWidget *kind = Find(root, "broker-workspace-stream-kind"), *rth = Find(root, "broker-workspace-stream-rth");
     GtkWidget *status = Find(root, "broker-workspace-stream-status"), *notice = Find(root, "broker-workspace-stream-notice");
-    GtkWidget *details = Find(root, "broker-workspace-stream-details");
+    GtkWidget *streamDetailsWidget = Find(root, "broker-workspace-stream-details");
     GtkWidget *contract = Find(root, "broker-workspace-contract"), *exchange = Find(root, "broker-workspace-exchange");
     GtkWidget *visible = Find(root, "broker-workspace-stream-visible"), *offset = Find(root, "broker-workspace-stream-offset");
     GtkWidget *modes = Find(root, "broker-workspace-chart-modes");
-    CHECK(start && stop && details && GTK_IS_STACK(modes));
+    CHECK(start && stop && streamDetailsWidget && GTK_IS_STACK(modes));
     CHECK(gtk_widget_get_sensitive(start) && !gtk_widget_get_sensitive(stop));
     if (!strcmp(test, "stream-retained")) {
         UmiBrokerWorkspaceGtkDestroy(*workspace); *workspace = NULL;
@@ -143,14 +143,14 @@ static int StreamProjection(const char *test, GtkWidget *root, UmiBrokerWorkspac
     CHECK(refreshed == UMI_STATUS_OK);
     if (!strcmp(test, "stream-empty") || !strcmp(test, "stream-stale") || !strcmp(test, "stream-failed") ||
         !strcmp(test, "stream-copy-failure") || !strcmp(test, "stream-capacity")) {
-        CHECK(!Contains(details, "9007199254740993"));
+        CHECK(!Contains(streamDetailsWidget, "9007199254740993"));
         CHECK(streamScenes == 0U); return 0;
     }
-    CHECK(Contains(details, "9007199254740993.123456789"));
-    CHECK(Contains(details, !strcmp(test, "stream-volume-missing") ? "Volume Unavailable" : "Volume 0"));
+    CHECK(Contains(streamDetailsWidget, "9007199254740993.123456789"));
+    CHECK(Contains(streamDetailsWidget, !strcmp(test, "stream-volume-missing") ? "Volume Unavailable" : "Volume 0"));
 #ifdef UMI_IBKR_HAS_HISTORY_MODEL
     CHECK(streamScenes == 1U && streamFirst == 20U && streamCount == 80U);
-    if (!strcmp(test, "stream-render-failure")) CHECK(Contains(details, "Chart unavailable"));
+    if (!strcmp(test, "stream-render-failure")) CHECK(Contains(streamDetailsWidget, "Chart unavailable"));
 #endif
     if (!strcmp(test, "stream-utf8")) CHECK(Contains(status, "TEST\xef\xbf\xbd"));
     if (!strcmp(test, "stream-cache")) {
@@ -185,7 +185,7 @@ static int StreamProjection(const char *test, GtkWidget *root, UmiBrokerWorkspac
     } else if (!strcmp(test, "stream-disconnect") || !strcmp(test, "stream-reconnect")) {
         gtk_window_destroy(inspector);
         CHECK(Contains(status, "STALE") && !gtk_widget_get_sensitive(stop));
-        CHECK(!Contains(details, "9007199254740993"));
+        CHECK(!Contains(streamDetailsWidget, "9007199254740993"));
         if (!strcmp(test, "stream-reconnect")) {
             streamAvailable = FALSE;
             CHECK(UmiBrokerWorkspaceGtkOpenConnection(*workspace) == UMI_STATUS_OK);
@@ -198,7 +198,7 @@ static int StreamProjection(const char *test, GtkWidget *root, UmiBrokerWorkspac
         g_signal_emit_by_name(stop, "clicked");
         CHECK(streamStops == (!strcmp(test, "stream-stop") ? 1U : 0U));
         CHECK(gtk_widget_get_sensitive(stop) == (streamStops == 0U));
-        CHECK(Contains(details, "9007199254740993") == (streamStops == 0U));
+        CHECK(Contains(streamDetailsWidget, "9007199254740993") == (streamStops == 0U));
     }
     CHECK(subscriptions == 0U && cancellations == 0U);
     return 0;

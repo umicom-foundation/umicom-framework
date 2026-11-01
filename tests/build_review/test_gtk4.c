@@ -45,6 +45,14 @@ int main(int argc,char **argv)
     if(strcmp(argv[1],"invalid-record")==0)r->diagnostics.count=SIZE_MAX;
     if(strcmp(argv[1],"empty")!=0)CHECK(umi_build_history_append(history,r)==UMI_STATUS_OK);
     GtkWindow *window=UmiGtk4BuildReviewPresent(NULL,history);CHECK(window!=NULL);g_object_ref(window);
+    /* These windows must consume canonical SVG branding, not retired bitmap
+     * constants. Check the actual adapter's widgets and bounded header sizes. */
+    GtkWidget *logo=Find(GTK_WIDGET(window),"umicom.brand.logo");
+    GtkWidget *icon=Find(GTK_WIDGET(window),"umicom.brand.icon");
+    CHECK(GTK_IS_DRAWING_AREA(logo) && GTK_IS_DRAWING_AREA(icon));
+    CHECK(gtk_drawing_area_get_content_height(GTK_DRAWING_AREA(logo))==38);
+    CHECK(gtk_drawing_area_get_content_height(GTK_DRAWING_AREA(icon))==24);
+    CHECK(!gtk_widget_get_hexpand(logo) && !gtk_widget_get_vexpand(logo));
     GtkWidget *query=Find(GTK_WIDGET(window),"umicom-build-review-filter");
     GtkWidget *report=Find(GTK_WIDGET(window),"umicom-build-review-report");CHECK(query!=NULL && report!=NULL);
     if(strcmp(argv[1],"detached-owner")==0){umi_build_history_destroy(history);history=NULL;gtk_editable_set_text(GTK_EDITABLE(query),"practice");char *text=Text(report);CHECK(strstr(text,"Recorded failure")!=NULL);g_free(text);}

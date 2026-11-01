@@ -23,7 +23,12 @@ typedef struct CalendarUi {
   UmiEventCalendarFilter applied;
   GtkWidget *from, *through, *search, *country, *currency, *kind, *impact;
   GtkWidget *import, *cancel_button, *apply, *previous, *next, *message, *rows, *details;
+#if GTK_CHECK_VERSION(4, 10, 0)
+  GtkFileDialog *chooser;
+  GCancellable *chooserCancel;
+#else
   GtkFileChooserNative *chooser;
+#endif
   GCancellable *cancel;
   size_t offset, total;
   bool detached, loading;
@@ -35,15 +40,32 @@ typedef struct CalendarRead {
 static CalendarUi *State(GtkWidget *root) {
   return root != NULL ? g_object_get_data(G_OBJECT(root), "umicom-event-calendar") : NULL;
 }
+/* Clear the pending identity before cancellation: completion may arrive after
+ * the panel has been retired or a newer chooser has been opened. */
+static void CancelChooser(CalendarUi *s) {
+#if GTK_CHECK_VERSION(4, 10, 0)
+  GCancellable *cancel = s->chooserCancel;
+  s->chooserCancel = NULL;
+  g_clear_object(&s->chooser);
+  if (cancel != NULL) {
+    g_cancellable_cancel(cancel);
+    g_object_unref(cancel);
+  }
+#else
+  if (s->chooser != NULL) {
+    GtkFileChooserNative *chooser = s->chooser;
+    s->chooser = NULL;
+    gtk_native_dialog_destroy(GTK_NATIVE_DIALOG(chooser));
+    g_object_unref(chooser);
+  }
+#endif
+}
 static void Free(gpointer data) {
   CalendarUi *s = data;
   if (s->cancel != NULL)
     g_cancellable_cancel(s->cancel);
   g_clear_object(&s->cancel);
-  if (s->chooser != NULL) {
-    gtk_native_dialog_destroy(GTK_NATIVE_DIALOG(s->chooser));
-    g_object_unref(s->chooser);
-  }
+  CancelChooser(s);
   UmiEventCalendarDestroy(s->calendar);
   g_free(s);
 }
@@ -333,7 +355,16 @@ UmiStatus UmiGtk4EventCalendarReadFile(GtkWidget *panel, GFile *file) {
 }
 void UmiGtk4EventCalendarCancelRead(GtkWidget *panel) {
   CalendarUi *s = State(panel);
-  if (s == NULL || s->detached || !s->loading)
+  if (s == NULL || s->detached)
+    return;
+  if (s->chooser != NULL) {
+    CancelChooser(s);
+    gtk_widget_set_sensitive(s->import, TRUE);
+    gtk_widget_set_sensitive(s->cancel_button, FALSE);
+    Message(s, "Import cancelled. Previous calendar retained.");
+    return;
+  }
+  if (!s->loading)
     return;
   g_cancellable_cancel(s->cancel);
   g_clear_object(&s->cancel);
@@ -350,6 +381,9 @@ static void Cancel(GtkButton *button, gpointer root) {
   (void)button;
   UmiGtk4EventCalendarCancelRead(root);
 }
+/* Retain the pre-4.10 chooser for compatibility review. Modern GTK uses the
+ * cancellable asynchronous implementation below without deprecated calls. */
+#if !GTK_CHECK_VERSION(4, 10, 0)
 static void Chosen(GtkNativeDialog *dialog, int response, gpointer root) {
   CalendarUi *s = State(root);
   if (s == NULL || s->chooser != GTK_FILE_CHOOSER_NATIVE(dialog))
@@ -404,6 +438,75 @@ static void Import(GtkButton *button, gpointer root) {
   g_signal_connect_object(s->chooser, "response", G_CALLBACK(Chosen), G_OBJECT(root), 0);
   gtk_native_dialog_show(GTK_NATIVE_DIALOG(s->chooser));
 }
+#else
+/* GtkFileDialog replaces the deprecated native chooser while retaining local
+ * file policy and the shared asynchronous reader. Weak ownership prevents a
+ * late dialog response from reviving a closed workspace. */
+typedef struct CalendarChoice {
+  GWeakRef root;
+  GCancellable *cancel;
+} CalendarChoice;
+
+static void Chosen(GObject *dialog, GAsyncResult *result, gpointer data) {
+  CalendarChoice *choice = data;
+  GError *error = NULL;
+  GFile *file = gtk_file_dialog_open_finish(GTK_FILE_DIALOG(dialog), result, &error);
+  GtkWidget *root = g_weak_ref_get(&choice->root);
+  CalendarUi *s = State(root);
+  if (s != NULL && !s->detached && s->chooser == GTK_FILE_DIALOG(dialog) &&
+      s->chooserCancel == choice->cancel) {
+    g_clear_object(&s->chooser);
+    g_clear_object(&s->chooserCancel);
+    gtk_widget_set_sensitive(s->import, TRUE);
+    gtk_widget_set_sensitive(s->cancel_button, FALSE);
+    if (!s->detached) {
+      if (file != NULL) {
+        UmiStatus status = UmiGtk4EventCalendarReadFile(root, file);
+        if (status != UMI_STATUS_OK)
+          Message(s, "Choose a local calendar file after the current import completes.");
+      } else if (g_error_matches(error, GTK_DIALOG_ERROR, GTK_DIALOG_ERROR_DISMISSED) ||
+                 g_error_matches(error, GTK_DIALOG_ERROR, GTK_DIALOG_ERROR_CANCELLED) ||
+                 g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
+        Message(s, "Import cancelled. Previous calendar retained.");
+      } else {
+        Message(s, "The file chooser could not open. Previous calendar retained.");
+      }
+    }
+  }
+  g_clear_object(&file);
+  g_clear_error(&error);
+  g_clear_object(&root);
+  g_weak_ref_clear(&choice->root);
+  g_object_unref(choice->cancel);
+  g_free(choice);
+}
+static void Import(GtkButton *button, gpointer root) {
+  (void)button;
+  CalendarUi *s = State(root);
+  if (s == NULL || s->detached || s->loading || s->chooser != NULL)
+    return;
+  GtkRoot *native = gtk_widget_get_root(root);
+  s->chooser = gtk_file_dialog_new();
+  gtk_file_dialog_set_title(s->chooser, "Import economic and earnings calendar");
+  gtk_file_dialog_set_accept_label(s->chooser, "Import");
+  GtkFileFilter *filter = gtk_file_filter_new();
+  gtk_file_filter_set_name(filter, "Calendar CSV (*.csv)");
+  gtk_file_filter_add_pattern(filter, "*.csv");
+  GListStore *filters = g_list_store_new(GTK_TYPE_FILE_FILTER);
+  g_list_store_append(filters, filter);
+  gtk_file_dialog_set_filters(s->chooser, G_LIST_MODEL(filters));
+  g_object_unref(filter);
+  g_object_unref(filters);
+  s->chooserCancel = g_cancellable_new();
+  CalendarChoice *choice = g_new0(CalendarChoice, 1);
+  g_weak_ref_init(&choice->root, G_OBJECT(root));
+  choice->cancel = g_object_ref(s->chooserCancel);
+  gtk_file_dialog_open(s->chooser, GTK_IS_WINDOW(native) ? GTK_WINDOW(native) : NULL,
+                       s->chooserCancel, Chosen, choice);
+  gtk_widget_set_sensitive(s->import, FALSE);
+  gtk_widget_set_sensitive(s->cancel_button, TRUE);
+}
+#endif
 static GtkWidget *Entry(GtkWidget *box, const char *caption, const char *id, int width) {
   GtkWidget *column = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
   gtk_box_append(GTK_BOX(column), Label(caption));
@@ -520,12 +623,7 @@ void UmiGtk4EventCalendarDetach(GtkWidget *panel) {
   s->detached = true;
   if (s->cancel != NULL)
     g_cancellable_cancel(s->cancel);
-  if (s->chooser != NULL) {
-    GtkFileChooserNative *chooser = s->chooser;
-    s->chooser = NULL;
-    gtk_native_dialog_destroy(GTK_NATIVE_DIALOG(chooser));
-    g_object_unref(chooser);
-  }
+  CancelChooser(s);
   gtk_widget_set_sensitive(panel, FALSE);
   Message(s, "Workspace closed. Imported evidence remains visible; calendar actions are disabled.");
 }

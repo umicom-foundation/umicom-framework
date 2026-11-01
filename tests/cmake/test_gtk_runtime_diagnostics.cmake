@@ -56,4 +56,10 @@ if(NOT _count EQUAL 1 OR NOT _normalized MATCHES "Tests remain enabled" OR
    NOT _normalized MATCHES "30727f8a524dbaa69118a60d6bbef4b3447245b1")
     message(FATAL_ERROR "Expected one actionable advisory with upstream identity: ${_error}")
 endif()
+# Keep the warning actionable without converting a known vendor defect into a pass.
+if(NOT _normalized MATCHES "vendor-runtime advisory; configuration can complete" OR
+   NOT _normalized MATCHES "docs/learning/windows-gtk-runtime[.]md" OR
+   NOT EXISTS "${FRAMEWORK_ROOT}/docs/learning/windows-gtk-runtime.md")
+    message(FATAL_ERROR "Expected package guidance without suppressing the runtime advisory")
+endif()
 message(STATUS "GTK advisory catalogue checked; native runtime behavior requires separate qualification")

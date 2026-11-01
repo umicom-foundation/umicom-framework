@@ -6548,6 +6548,9 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomFormRecordImportGtk4.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomFormRecordEditorGtk4.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomStructuredFormWeb.cmake")
 
+# Shared artwork must compose without duplicate Ninja regeneration outputs.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomBrandResourceTests.cmake")
+
 # Configure the real independent modules together: standalone tests cannot
 # expose global executable-name collisions or include-order regressions.
 if(BUILD_TESTING)

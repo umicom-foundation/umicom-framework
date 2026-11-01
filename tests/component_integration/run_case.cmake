@@ -170,7 +170,12 @@ if(_mode STREQUAL "partial" AND NOT _name MATCHES "^framework[.](ibkr_|market_ta
 #[=[
 if(_mode STREQUAL "partial" AND NOT _name MATCHES "^framework[.](ibkr_|market_tape[.]|full_quantity[.]|price_increment[.])")
 ]=]
+# Broker guidance is registered by the same broker-access owner in partial hosts.
+# Preserve the former filter; exact test-name verification remains unchanged.
+#[=[
 if(_mode STREQUAL "partial" AND NOT _name MATCHES "^framework[.](ibkr_|broker_access[.]|broker_profiles[.]|broker_profile_store[.]|market_tape[.]|full_quantity[.]|price_increment[.])")
+]=]
+if(_mode STREQUAL "partial" AND NOT _name MATCHES "^framework[.](ibkr_|broker_access[.]|broker_guidance[.]|broker_profiles[.]|broker_profile_store[.]|market_tape[.]|full_quantity[.]|price_increment[.])")
                     continue()
                 endif()
                 if(_kind STREQUAL "COMMON" OR

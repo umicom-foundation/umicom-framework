@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "../../adapters/gtk4/brand_widget.h"
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #define CHECK(c) do { if (!(c)) { fprintf(stderr, "Check failed at %d: %s\n", __LINE__, #c); return 1; } } while (0)
@@ -43,9 +44,47 @@ static int Decode(gboolean wordmark, gboolean dark, int scale)
     g_object_unref(pixels);
     return 0;
 }
+/* Use known pixel values, including padded RGB rows, to catch channel-order,
+ * alpha and stride mistakes independently of the artwork's visual appearance. */
+static int Surface(void)
+{
+    CHECK(UmiGtkBrandSurface(NULL) == NULL);
+    GdkPixbuf *rgba = gdk_pixbuf_new(GDK_COLORSPACE_RGB, TRUE, 8, 3, 1);
+    CHECK(rgba != NULL);
+    const guchar input[] = {255, 128, 64, 128, 40, 80, 120, 0, 1, 2, 3, 255};
+    memcpy(gdk_pixbuf_get_pixels(rgba), input, sizeof input);
+    cairo_surface_t *surface = UmiGtkBrandSurface(rgba);
+    CHECK(surface != NULL && cairo_surface_status(surface) == CAIRO_STATUS_SUCCESS);
+    g_object_unref(rgba);
+    cairo_surface_flush(surface);
+    uint32_t output[3];
+    memcpy(output, cairo_image_surface_get_data(surface), sizeof output);
+    CHECK(output[0] == UINT32_C(0x80804020));
+    CHECK(output[1] == 0U && output[2] == UINT32_C(0xff010203));
+    cairo_surface_destroy(surface);
+    GdkPixbuf *rgb = gdk_pixbuf_new(GDK_COLORSPACE_RGB, FALSE, 8, 1, 2);
+    CHECK(rgb != NULL);
+    guchar *pixels = gdk_pixbuf_get_pixels(rgb);
+    int stride = gdk_pixbuf_get_rowstride(rgb);
+    CHECK(stride >= 3);
+    memcpy(pixels, input, 3U);
+    memcpy(pixels + stride, input + 8U, 3U);
+    surface = UmiGtkBrandSurface(rgb);
+    CHECK(surface != NULL);
+    g_object_unref(rgb);
+    cairo_surface_flush(surface);
+    const unsigned char *data = cairo_image_surface_get_data(surface);
+    uint32_t first = 0U, second = 0U;
+    memcpy(&first, data, sizeof first);
+    memcpy(&second, data + cairo_image_surface_get_stride(surface), sizeof second);
+    CHECK(first == UINT32_C(0xffff8040) && second == UINT32_C(0xff010203));
+    cairo_surface_destroy(surface);
+    return 0;
+}
 int main(int argc, char **argv)
 {
     if (argc != 2) return 2;
+    if (strcmp(argv[1], "surface") == 0) return Surface();
     if (strcmp(argv[1], "decode") == 0) {
         for (int mark = 0; mark < 2; ++mark)
             for (int dark = 0; dark < 2; ++dark)
@@ -79,6 +118,7 @@ int main(int argc, char **argv)
                 for (int byte = 0; byte < 4; ++byte)
                     CHECK(data[y * stride + x * 4 + byte] == 0U);
         g_clear_object(&view.pixels);
+        if (view.surface != NULL) cairo_surface_destroy(view.surface);
         cairo_destroy(cr);
         cairo_surface_destroy(surface);
         g_object_unref(logo);

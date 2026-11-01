@@ -104,6 +104,9 @@ static void LimitEditor(GtkTextBuffer *buffer,const GtkTextIter *where,
         g_signal_stop_emission_by_name(buffer,"insert-text");
 }
 
+/* Canonical SVG rendering is owned by the shared brand widget. The former
+ * bitmap decoder remains available for implementation review only. */
+#if 0
 static GtkWidget *BrandImage(const unsigned char *data,size_t length,int width,int height)
 {
     GBytes *bytes=g_bytes_new_static(data,length);
@@ -118,6 +121,7 @@ static GtkWidget *BrandImage(const unsigned char *data,size_t length,int width,i
     gtk_widget_set_halign(picture,GTK_ALIGN_START);
     return picture;
 }
+#endif
 
 static size_t StateIndex(const NativeState *state,const char *id)
 {
@@ -238,8 +242,8 @@ UmiStatus UmiDesignerNativeGtkCreate(const UmiDeclDocument *document,GtkWindow *
     gtk_widget_set_margin_start(outer,16); gtk_widget_set_margin_end(outer,16);
     gtk_widget_set_margin_top(outer,16); gtk_widget_set_margin_bottom(outer,16);
     GtkWidget *branding=gtk_box_new(GTK_ORIENTATION_HORIZONTAL,12);
-    gtk_box_append(GTK_BOX(branding),BrandImage(UMICOM_SYSTEM_ICON,sizeof UMICOM_SYSTEM_ICON,32,32));
-    gtk_box_append(GTK_BOX(branding),BrandImage(UMICOM_SYSTEM_LOGO,sizeof UMICOM_SYSTEM_LOGO,180,38));
+    gtk_box_append(GTK_BOX(branding),UmiGtkBrandCreate(FALSE, 32));
+    gtk_box_append(GTK_BOX(branding),UmiGtkBrandCreate(TRUE, 38));
     gtk_box_append(GTK_BOX(outer),branding);
     GtkWidget *body=BuildNode(state,nodes,content,window,&status);
     if(body==NULL) goto failure;

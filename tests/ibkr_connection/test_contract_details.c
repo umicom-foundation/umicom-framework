@@ -172,8 +172,17 @@ static int Run(Fixture *fixture, const char *mode, UmiIbkrContractDetailsSnapsho
     if (strcmp(mode, "bond") == 0)
     {
         FEED(fixture, "18", "36000");
+        /* Bond descriptions now use the bounded decoder. A two-field callback
+         * is malformed, rather than an unsupported but accepted description.
+         * Retain the previous expectation for review of that transition. */
+#if 0
         CHECK(UmiIbkrConnectionPump(fixture->c, 11U) == UMI_STATUS_OK);
         CHECK(UmiIbkrContractDetailsCopy(fixture->c, request, 11U, copy) == UMI_STATUS_OK && copy->failed);
+#endif
+        CHECK(UmiIbkrConnectionPump(fixture->c, 11U) == UMI_STATUS_PARSE_ERROR);
+        CHECK(UmiIbkrContractDetailsCopy(fixture->c, request, 11U, copy) == UMI_STATUS_OK);
+        CHECK(copy->stale && !copy->complete && copy->count == 0U);
+        CHECK(fixture->c->snapshot.state == UMI_IBKR_FAILED);
         return 0;
     }
     CHECK(Detail(fixture, strcmp(mode, "foreign") == 0 ? "39999" : "36000",

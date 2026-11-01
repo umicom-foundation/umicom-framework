@@ -50,6 +50,9 @@ function(umicom_report_gtk_runtime_advisories version target_system)
                 "30727f8a524dbaa69118a60d6bbef4b3447245b1, then rerun native window "
                 "lifetime and TMS independent-host tests. A version-only upgrade "
                 "to 4.24.1 does not establish this fix. Tests remain enabled. "
+                "This is a vendor-runtime advisory; configuration can complete. "
+                "See docs/learning/windows-gtk-runtime.md for package verification "
+                "and focused qualification. "
                 "See https://github.com/GNOME/gtk/commit/30727f8a524dbaa69118a60d6bbef4b3447245b1")
         else()
             message(WARNING

@@ -51,7 +51,7 @@ if(BUILD_TESTING AND TARGET Umicom::ui_gtk4 AND TARGET Umicom::trading_ui AND NO
     target_link_libraries(umicom-event-calendar-file-tests PRIVATE Umicom::ui_gtk4)
     umicom_apply_warnings(umicom-event-calendar-file-tests)
     umicom_apply_sanitizers(umicom-event-calendar-file-tests)
-    foreach(case valid invalid missing limit cancel detached destroyed nonlocal)
+    foreach(case valid invalid missing limit cancel detached destroyed nonlocal chooser-cancel)
         add_test(NAME "framework.event_calendar.file.${case}" COMMAND umicom-event-calendar-file-tests
             "${case}" "${CMAKE_CURRENT_BINARY_DIR}/event-calendar-fixtures")
         set_tests_properties("framework.event_calendar.file.${case}" PROPERTIES

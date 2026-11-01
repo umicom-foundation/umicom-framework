@@ -1,10 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/designer_native/test_gtk.c
+ *
  * PURPOSE:
- *   Real GTK tests. A missing display is NOT RUN (77), never a pass.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Verify real GTK editing, branding and ownership. A missing display is NOT RUN (77), never a pass.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
@@ -14,6 +20,16 @@
 #include <stdlib.h>
 #include <string.h>
 #define CHECK(x) do { if(!(x)) { fprintf(stderr,"line %d: %s\n",__LINE__,#x); return 1; } } while(0)
+static GtkWidget *Find(GtkWidget *root, const char *name)
+{
+    if (strcmp(gtk_widget_get_name(root), name) == 0) return root;
+    for (GtkWidget *child = gtk_widget_get_first_child(root); child != NULL;
+         child = gtk_widget_get_next_sibling(child)) {
+        GtkWidget *found = Find(child, name);
+        if (found != NULL) return found;
+    }
+    return NULL;
+}
 int main(int argc,char **argv)
 {
     if(argc!=2) return 2;
@@ -27,6 +43,13 @@ int main(int argc,char **argv)
         umi_decl_document_destroy(doc); return 0;
     }
     CHECK(UmiDesignerNativeGtkCreate(doc,&window)==UMI_STATUS_OK);
+    /* Exercise branding through the real designer target so missing generated
+     * resources and a return to bitmap-only controls are visible regressions. */
+    GtkWidget *logo = Find(GTK_WIDGET(window), "umicom.brand.logo");
+    GtkWidget *icon = Find(GTK_WIDGET(window), "umicom.brand.icon");
+    CHECK(GTK_IS_DRAWING_AREA(logo) && GTK_IS_DRAWING_AREA(icon));
+    CHECK(gtk_drawing_area_get_content_height(GTK_DRAWING_AREA(logo)) == 38);
+    CHECK(gtk_drawing_area_get_content_height(GTK_DRAWING_AREA(icon)) == 32);
     GtkWidget *editor=UmiDesignerNativeGtkRefControl(window,"notes");
     GtkWidget *button=UmiDesignerNativeGtkRefControl(window,"count");
     GtkWidget *label=UmiDesignerNativeGtkRefControl(window,"result");

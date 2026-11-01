@@ -51,7 +51,7 @@ if(BUILD_TESTING)
     add_executable(umicom-gtk-brand-test "${CMAKE_CURRENT_LIST_DIR}/../tests/desktop_system/test_brand_svg.c")
     target_link_libraries(umicom-gtk-brand-test PRIVATE Umicom::desktop_system_gtk4)
     umicom_embed_gtk_brand(umicom-gtk-brand-test)
-    foreach(case decode native)
+    foreach(case decode surface native)
         add_test(NAME framework.desktop_system.brand.${case} COMMAND umicom-gtk-brand-test ${case})
         set_tests_properties(framework.desktop_system.brand.${case} PROPERTIES
             TIMEOUT 20 SKIP_RETURN_CODE 77 LABELS "framework;gtk4;branding;regression")

@@ -739,7 +739,7 @@ int main(int argc, char **argv)
         GtkWidget *visible = Find(root, "broker-workspace-history-visible");
         GtkWidget *offset = Find(root, "broker-workspace-history-offset");
         GtkWidget *state = Find(root, "broker-workspace-history-status");
-        GtkWidget *details = Find(root, "broker-workspace-history-details");
+        GtkWidget *historyDetailsWidget = Find(root, "broker-workspace-history-details");
         GtkWidget *notice = Find(root, "broker-workspace-history-notice");
         GtkWidget *contract = Find(root, "broker-workspace-contract");
         GtkWidget *exchange = Find(root, "broker-workspace-exchange");
@@ -810,13 +810,13 @@ int main(int argc, char **argv)
                     CHECK(refreshed == UMI_STATUS_OK);
                     CHECK(Contains(state, "12345") && Contains(state, "SYNTHETIC"));
                     if (strcmp(argv[1], "history-empty") == 0)
-                        CHECK(Contains(details, "Completed capture contains no bars"));
+                        CHECK(Contains(historyDetailsWidget, "Completed capture contains no bars"));
                     else if (strcmp(argv[1], "history-timeout") == 0)
-                        CHECK(Contains(state, "Failed") && Contains(details, "complete, current capture"));
+                        CHECK(Contains(state, "Failed") && Contains(historyDetailsWidget, "complete, current capture"));
                     else {
-                        CHECK(Contains(details, "Showing bars 21") && Contains(details, "UTC"));
-                        CHECK(Contains(details, "12.000000001") && Contains(details, "12.100000001"));
-                        CHECK(Contains(details, historyBar.volumeAvailable ? "9007199254740993" : "Volume Unavailable"));
+                        CHECK(Contains(historyDetailsWidget, "Showing bars 21") && Contains(historyDetailsWidget, "UTC"));
+                        CHECK(Contains(historyDetailsWidget, "12.000000001") && Contains(historyDetailsWidget, "12.100000001"));
+                        CHECK(Contains(historyDetailsWidget, historyBar.volumeAvailable ? "9007199254740993" : "Volume Unavailable"));
 #ifdef UMI_IBKR_HAS_HISTORY_MODEL
                         CHECK(historyScenes == 1U && historyFirst == 20U && historyCount == 80U);
                         CHECK(UmiBrokerWorkspaceGtkRefresh(workspace) == UMI_STATUS_OK);
@@ -825,13 +825,13 @@ int main(int argc, char **argv)
                         if (strcmp(argv[1], "history-range") == 0 || strcmp(argv[1], "history-range-clamp") == 0) {
                             gtk_spin_button_set_value(GTK_SPIN_BUTTON(visible), 20.0);
                             gtk_spin_button_set_value(GTK_SPIN_BUTTON(offset), 10.0);
-                            CHECK(Contains(details, "Showing bars 71") && historyReads == 1U);
+                            CHECK(Contains(historyDetailsWidget, "Showing bars 71") && historyReads == 1U);
 #ifdef UMI_IBKR_HAS_HISTORY_MODEL
                             CHECK(historyFirst == 70U && historyCount == 20U);
 #endif
                             if (strcmp(argv[1], "history-range-clamp") == 0) {
                                 gtk_spin_button_set_value(GTK_SPIN_BUTTON(offset), 511.0);
-                                CHECK(Contains(details, "Showing bars 1") && historyReads == 1U);
+                                CHECK(Contains(historyDetailsWidget, "Showing bars 1") && historyReads == 1U);
 #ifdef UMI_IBKR_HAS_HISTORY_MODEL
                                 CHECK(historyFirst == 0U && historyCount == 1U);
 #endif
@@ -839,10 +839,10 @@ int main(int argc, char **argv)
                         } else if (strcmp(argv[1], "history-stale") == 0) {
                             history.stale = true;
                             CHECK(UmiBrokerWorkspaceGtkRefresh(workspace) == UMI_STATUS_OK);
-                            CHECK(Contains(state, "STALE") && !Contains(details, "12.100000001"));
+                            CHECK(Contains(state, "STALE") && !Contains(historyDetailsWidget, "12.100000001"));
                         } else if (strcmp(argv[1], "history-reconnect") == 0) {
                             gtk_window_destroy(inspector);
-                            CHECK(Contains(state, "STALE") && !Contains(details, "12.100000001"));
+                            CHECK(Contains(state, "STALE") && !Contains(historyDetailsWidget, "12.100000001"));
                             historyAvailable = FALSE;
                             CHECK(UmiBrokerWorkspaceGtkOpenConnection(workspace) == UMI_STATUS_OK);
                             CHECK(!Contains(state, "12345") && gtk_widget_get_sensitive(start));
@@ -854,7 +854,7 @@ int main(int argc, char **argv)
                         } else if (strcmp(argv[1], "history-utf8") == 0) CHECK(Contains(state, "Invalid \xef\xbf\xbd"));
                         else if (strcmp(argv[1], "history-render-unavailable") == 0) {
 #ifdef UMI_IBKR_HAS_HISTORY_MODEL
-                            CHECK(Contains(details, "Chart unavailable"));
+                            CHECK(Contains(historyDetailsWidget, "Chart unavailable"));
 #endif
                         } else if (strcmp(argv[1], "history-request") != 0 &&
                             strcmp(argv[1], "history-volume-unavailable") != 0) return 2;

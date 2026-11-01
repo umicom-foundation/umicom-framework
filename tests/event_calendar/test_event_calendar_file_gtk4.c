@@ -73,6 +73,31 @@ int main(int argc, char **argv) {
         } else
             CHECK(g_file_set_contents(filename, input, -1, NULL));
     }
+    if (strcmp(test, "chooser-cancel") == 0) {
+#if GTK_CHECK_VERSION(4, 10, 0)
+        /* Cancel an actual chooser, then begin a new read before its completion
+         * is dispatched. The retired dialog must not change the new import. */
+        GtkWidget *import = Find(panel, "trading.calendar.import");
+        g_signal_emit_by_name(import, "clicked");
+        CHECK(!gtk_widget_get_sensitive(import));
+        CHECK(gtk_widget_get_sensitive(Find(panel, "trading.calendar.cancel")));
+        GFile *pending = g_file_new_for_path(filename);
+        CHECK(UmiGtk4EventCalendarReadFile(panel, pending) == UMI_STATUS_BUSY);
+        g_object_unref(pending);
+        g_signal_emit_by_name(Find(panel, "trading.calendar.cancel"), "clicked");
+        CHECK(gtk_widget_get_sensitive(import));
+        CHECK(!gtk_widget_get_sensitive(Find(panel, "trading.calendar.cancel")));
+        CHECK(Rows(panel) == 2U);
+#else
+        /* The modern async chooser contract does not exist on older GTK. */
+        g_object_unref(panel);
+        CHECK(g_remove(filename) == 0);
+        CHECK(g_rmdir(directory) == 0);
+        g_free(filename);
+        g_free(directory);
+        return 77;
+#endif
+    }
     if (strcmp(test, "nonlocal") == 0) {
         GFile *remote = g_file_new_for_uri("https://invalid.example/calendar.csv");
         CHECK(UmiGtk4EventCalendarReadFile(panel, remote) == UMI_STATUS_PERMISSION_DENIED);
@@ -106,7 +131,7 @@ int main(int argc, char **argv) {
         Finish(&remaining);
         if (panel != NULL) {
             CHECK(!UmiGtk4EventCalendarIsReading(panel));
-            if (strcmp(test, "valid") == 0)
+            if (strcmp(test, "valid") == 0 || strcmp(test, "chooser-cancel") == 0)
                 CHECK(Rows(panel) == 1U);
             else {
                 CHECK(strcmp(test, "invalid") == 0 || strcmp(test, "missing") == 0 ||

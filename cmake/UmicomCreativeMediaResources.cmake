@@ -13,8 +13,12 @@
 # MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
-# Keep every CMAKE_CONFIGURE_DEPENDS path canonical across Media and GTK.
-# Using cmake/../resources alongside resources can duplicate a Ninja output.
+# Normalize the shared source identity before registering resource dependencies.
+# This replaces the unnormalized assignment below, retained for review, so Media
+# and the other GTK consumers share a single Ninja regeneration input per file.
+if(FALSE)
+    set(_umicom_media_root "${CMAKE_CURRENT_LIST_DIR}/..")
+endif()
 get_filename_component(_umicom_media_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
 set(_umicom_media_assets
     "${_umicom_media_root}/resources/brand/umicom-logo-on-dark.svg"

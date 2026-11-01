@@ -140,7 +140,13 @@ int main(int argc, char **argv)
     strcpy(output.exchange, "UNCHANGED");
     before = output;
     UmiStatus status = UmiIbkrPositionReviewQuote(review, 0U, snapshot, &output);
+    /* Quote inspection does not grant order authority. A writable session
+     * retains the same read access as a read-only session. Keep the former
+     * valid-only classification for review of the changed contract. */
+#if 0
     if (!strcmp(name, "valid"))
+#endif
+    if (!strcmp(name, "valid") || !strcmp(name, "writable"))
         CHECK(status == UMI_STATUS_OK && output.contractId == 123U && !strcmp(output.exchange, "SMART"));
     else
     {

@@ -108,6 +108,9 @@ static GtkWidget *Label(const char *text)
     gtk_label_set_wrap(GTK_LABEL(label), TRUE);
     return label;
 }
+/* Canonical SVG rendering is owned by the shared brand widget. The former
+ * bitmap decoder remains available for implementation review only. */
+#if 0
 static GtkWidget *Brand(const unsigned char *data, size_t length, int width, int height)
 {
     GBytes *bytes = g_bytes_new_static(data, length);
@@ -121,6 +124,7 @@ static GtkWidget *Brand(const unsigned char *data, size_t length, int width, int
     gtk_widget_set_halign(picture, GTK_ALIGN_START);
     return picture;
 }
+#endif
 GtkWindow *UmiGtk4BuildReviewPresent(GtkWindow *parent, const UmiBuildHistory *history)
 {
     ReviewWindow *state = g_try_new0(ReviewWindow, 1);
@@ -144,9 +148,9 @@ GtkWindow *UmiGtk4BuildReviewPresent(GtkWindow *parent, const UmiBuildHistory *h
     gtk_widget_set_margin_top(body, 16); gtk_widget_set_margin_bottom(body, 16);
     gtk_widget_set_margin_start(body, 16); gtk_widget_set_margin_end(body, 16);
     gtk_window_set_child(window, body);
-    gtk_box_append(GTK_BOX(body), Brand(UMICOM_SYSTEM_LOGO, sizeof UMICOM_SYSTEM_LOGO, 202, 55));
+    gtk_box_append(GTK_BOX(body), UmiGtkBrandCreate(TRUE, 38));
     row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
-    gtk_box_append(GTK_BOX(row), Brand(UMICOM_SYSTEM_ICON, sizeof UMICOM_SYSTEM_ICON, 24, 24));
+    gtk_box_append(GTK_BOX(row), UmiGtkBrandCreate(FALSE, 24));
     gtk_box_append(GTK_BOX(row), Label("A frozen copy of up to eight retained operations. Close and reopen to see newer results."));
     gtk_box_append(GTK_BOX(body), row);
     operations = gtk_string_list_new(NULL);
