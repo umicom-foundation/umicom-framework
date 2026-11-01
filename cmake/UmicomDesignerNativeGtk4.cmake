@@ -9,6 +9,11 @@ pkg_check_modules(UMICOM_DESIGNER_NATIVE_GTK REQUIRED IMPORTED_TARGET GLOBAL gtk
 get_filename_component(_native_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
 add_library(umicom_designer_native_gtk4 STATIC "${_native_root}/adapters/gtk4/designer_native_gtk4.c")
 add_library(Umicom::designer_native_gtk4 ALIAS umicom_designer_native_gtk4)
+# The native renderer includes the shared, configure-time generated SVG header.
+# Registration also adds its owning generated-directory include path and the
+# canonical artwork dependencies. The previous target lacked this contract.
+include("${_native_root}/cmake/UmicomGtkBrandResources.cmake")
+umicom_embed_gtk_brand(umicom_designer_native_gtk4)
 set_target_properties(umicom_designer_native_gtk4 PROPERTIES EXPORT_NAME designer_native_gtk4
     C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
 target_link_libraries(umicom_designer_native_gtk4 PUBLIC Umicom::designer_native PkgConfig::UMICOM_DESIGNER_NATIVE_GTK)

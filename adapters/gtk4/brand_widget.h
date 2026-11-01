@@ -15,6 +15,7 @@
 #ifndef UMICOM_GTK_BRAND_WIDGET_H
 #define UMICOM_GTK_BRAND_WIDGET_H
 #include <gtk/gtk.h>
+#include <stdint.h>
 #include "umicom_gtk_brand_resources.h"
 
 typedef struct UmiGtkBrandView {
@@ -23,6 +24,7 @@ typedef struct UmiGtkBrandView {
     int scale;
     gboolean dark;
     GdkPixbuf *pixels;
+    cairo_surface_t *surface;
 } UmiGtkBrandView;
 
 static inline GdkPixbuf *UmiGtkBrandDecode(gboolean wordmark, gboolean dark,
@@ -49,10 +51,51 @@ static inline GdkPixbuf *UmiGtkBrandDecode(gboolean wordmark, gboolean dark,
     return pixels;
 }
 
+/* Cairo requires premultiplied ARGB32; GdkPixbuf stores straight RGB(A).
+ * Convert only when the scale or theme changes, not on every draw callback.
+ * The native-endian 0xAARRGGBB value produces Cairo's expected byte order. */
+static inline cairo_surface_t *UmiGtkBrandSurface(GdkPixbuf *pixels)
+{
+    if (pixels == NULL) return NULL;
+    int width = gdk_pixbuf_get_width(pixels);
+    int height = gdk_pixbuf_get_height(pixels);
+    int channels = gdk_pixbuf_get_n_channels(pixels);
+    if (width <= 0 || height <= 0 || (channels != 3 && channels != 4)) return NULL;
+    cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
+    if (cairo_surface_status(surface) != CAIRO_STATUS_SUCCESS) {
+        cairo_surface_destroy(surface);
+        return NULL;
+    }
+    const guchar *source = gdk_pixbuf_read_pixels(pixels);
+    guchar *target = cairo_image_surface_get_data(surface);
+    int sourceStride = gdk_pixbuf_get_rowstride(pixels);
+    int targetStride = cairo_image_surface_get_stride(surface);
+    if (source == NULL || target == NULL) {
+        cairo_surface_destroy(surface);
+        return NULL;
+    }
+    for (int y = 0; y < height; ++y) {
+        const guchar *src = source + (size_t)y * (size_t)sourceStride;
+        uint32_t *dst = (uint32_t *)(void *)(target + (size_t)y * (size_t)targetStride);
+        for (int x = 0; x < width; ++x) {
+            guint a = channels == 4 ? (guint)src[3] : 255U;
+            guint r = ((guint)src[0] * a + 127U) / 255U;
+            guint g = ((guint)src[1] * a + 127U) / 255U;
+            guint b = ((guint)src[2] * a + 127U) / 255U;
+            dst[x] = ((uint32_t)a << 24) | ((uint32_t)r << 16) |
+                     ((uint32_t)g << 8) | (uint32_t)b;
+            src += channels;
+        }
+    }
+    cairo_surface_mark_dirty(surface);
+    return surface;
+}
+
 static inline void UmiGtkBrandRelease(gpointer data)
 {
     UmiGtkBrandView *view = data;
     g_clear_object(&view->pixels);
+    if (view->surface != NULL) cairo_surface_destroy(view->surface);
     g_free(view);
 }
 
@@ -73,12 +116,14 @@ static inline void UmiGtkBrandDraw(GtkDrawingArea *area, cairo_t *cr,
         GError *error = NULL;
         GdkPixbuf *next = UmiGtkBrandDecode(view->wordmark, dark, view->height, scale, &error);
         g_clear_object(&view->pixels);
+        if (view->surface != NULL) cairo_surface_destroy(view->surface);
         view->pixels = next;
+        view->surface = UmiGtkBrandSurface(next);
         view->scale = scale;
         view->dark = dark;
         g_clear_error(&error);
     }
-    if (view->pixels == NULL) return;
+    if (view->pixels == NULL || view->surface == NULL) return;
     /* Logical size stays constant on high-DPI screens. Never stretch a logo
      * across the window or let its physical pixel dimensions enlarge a header. */
     double imageWidth = (double)gdk_pixbuf_get_width(view->pixels) / scale;
@@ -87,7 +132,7 @@ static inline void UmiGtkBrandDraw(GtkDrawingArea *area, cairo_t *cr,
     cairo_save(cr);
     cairo_translate(cr, 0.0, ((double)height - imageHeight * fit) / 2.0);
     cairo_scale(cr, fit / scale, fit / scale);
-    gdk_cairo_set_source_pixbuf(cr, view->pixels, 0.0, 0.0);
+    cairo_set_source_surface(cr, view->surface, 0.0, 0.0);
     cairo_paint(cr);
     cairo_restore(cr);
 }

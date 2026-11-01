@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 #include "media_workspace_style.h"
 #include "umicom_media_workspace_resources.h"
+#include <string.h>
 
 typedef struct MediaStyleOwner {
     GdkDisplay *display;
@@ -71,9 +72,27 @@ static void RefreshBrand(GtkWidget *picture, GParamSpec *property, gpointer unus
         height * scale, TRUE, NULL, &error);
     g_object_unref(input);
     if (pixbuf != NULL) {
-        GdkTexture *texture = gdk_texture_new_for_pixbuf(pixbuf);
+        /* GdkMemoryTexture needs a complete stride * height buffer. Pack
+         * each pixbuf row to avoid reading potentially absent last-row padding.
+         * Its GBytes ownership keeps the new texture independent of pixbuf. */
+        int pixelWidth = gdk_pixbuf_get_width(pixbuf);
+        int pixelHeight = gdk_pixbuf_get_height(pixbuf);
+        int channels = gdk_pixbuf_get_n_channels(pixbuf);
+        gsize stride = (gsize)pixelWidth * (gsize)channels;
+        guchar *packed = g_malloc(stride * (gsize)pixelHeight);
+        const guchar *source = gdk_pixbuf_read_pixels(pixbuf);
+        for (int row = 0; row < pixelHeight; ++row)
+            memcpy(packed + (gsize)row * stride,
+                   source + (gsize)row * (gsize)gdk_pixbuf_get_rowstride(pixbuf),
+                   stride);
+        GBytes *pixelBytes = g_bytes_new_take(packed, stride * (gsize)pixelHeight);
+        GdkMemoryFormat format = gdk_pixbuf_get_has_alpha(pixbuf)
+            ? GDK_MEMORY_R8G8B8A8 : GDK_MEMORY_R8G8B8;
+        GdkTexture *texture = gdk_memory_texture_new(
+            pixelWidth, pixelHeight, format, pixelBytes, stride);
         gtk_picture_set_paintable(GTK_PICTURE(picture), GDK_PAINTABLE(texture));
         g_object_unref(texture);
+        g_bytes_unref(pixelBytes);
         g_object_unref(pixbuf);
     } else {
         gtk_widget_set_tooltip_text(picture, "Umicom SVG artwork could not be decoded.");
