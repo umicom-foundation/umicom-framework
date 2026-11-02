@@ -1436,7 +1436,15 @@ UmiStatus UmiGtk4DeveloperDialogPresent(UmiGtk4DeveloperDialog *dialog)
 {
     if (!DeveloperAlive(dialog)) return UMI_STATUS_INVALID_STATE;
     ++dialog->references;
+    /* Showing a form can synchronously close or replace it through a visibility
+     * observer. Complete that boundary before asking GTK to focus its native
+     * surface; retaining the controller alone does not retain a destroyed surface.
+     * The combined show/focus call is retained below for lifetime review. */
+#if 0
     gtk_window_present(dialog->window);
+#endif
+    gtk_widget_set_visible(GTK_WIDGET(dialog->window), TRUE);
+    if (DeveloperVisible(dialog)) gtk_window_present(dialog->window);
     UmiStatus status = DeveloperVisible(dialog) ? UMI_STATUS_OK : UMI_STATUS_CANCELLED;
     DeveloperRelease(dialog);
     return status;

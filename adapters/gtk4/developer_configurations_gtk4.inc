@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/developer_configurations_gtk4.inc
- * PURPOSE: Let native frontends save and review named configurations without activating them.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Let native frontends save and review named configurations without activating them.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* This fragment shares the Developer dialog controller. Existing child-control
@@ -481,6 +488,9 @@ UmiGtk4BuildSettingsBindConfigurations(UmiGtk4DeveloperDialog *dialog,
                      G_CALLBACK(DeveloperConfigurationSave));
     GtkWidget *section = gtk_expander_new("Saved configurations");
     gtk_expander_set_child(GTK_EXPANDER(section), panel);
+    /* The dedicated settings page should expose its commands immediately.
+     * Keep the expander for compact layouts, with manual collapse still available. */
+    gtk_expander_set_expanded(GTK_EXPANDER(section), TRUE);
     gtk_box_append(GTK_BOX(dialog->body), section);
     g_object_unref(panel);
     dialog->accepting = 0;

@@ -3,7 +3,7 @@
  * File: adapters/gtk4/kanban_window.c
  *
  * PURPOSE:
- *   Serialize board-file work away from GTK and preserve edits on refused storage operations.
+ *   Own native board documents and serialize persistence and window closure.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -30,6 +30,7 @@ typedef struct WindowState {
     UmiKanbanDocument *document;
     bool busy;
     bool closed;
+    bool close_requested; /* Defer window closure until the worker returns ownership. */
 } WindowState;
 typedef struct Job {
     JobKind kind;
@@ -239,8 +240,19 @@ static void Complete(GObject *source, GAsyncResult *result, gpointer data)
         Say(state, "The document opened, but its editor could not be created. Close the board before trying again.");
     if (state->closed) goto retired;
     state->busy = false;
+    /* A titlebar close during file I/O is a pending request, not permission
+     * to free a worker-owned document. Re-enter the normal close policy only
+     * after ownership returns; failed saves still preserve unsaved changes. */
+#if 0
     if (job->close_window && state->document == NULL && job->status == UMI_STATUS_OK)
         gtk_window_destroy(state->window);
+#endif
+    if (job->close_window && state->document == NULL && job->status == UMI_STATUS_OK)
+        gtk_window_destroy(state->window);
+    else if (state->close_requested) {
+        state->close_requested = false;
+        gtk_window_close(state->window);
+    }
     return;
 retired:
     CloseRetiredDocument(state);
@@ -332,10 +344,23 @@ static void Click(GtkButton *button, gpointer data)
     if (state != NULL && gtk_window_get_application(window) != NULL) Start(state, kind, false);
     g_object_unref(window);
 }
+/* Preserve the earlier busy-close refusal for review. The replacement keeps
+ * the user intent until file I/O completes instead of silently losing it. */
+#if 0
 static gboolean CloseRequest(GtkWindow *window, gpointer data)
 {
     (void)window; WindowState *state = data;
     if (state->busy) return TRUE;
+    if (state->document == NULL) return FALSE;
+    Start(state, JOB_CLOSE, true); return TRUE;
+}
+#endif
+static gboolean CloseRequest(GtkWindow *window, gpointer data)
+{
+    (void)window; WindowState *state = data;
+    if (state->closed) return FALSE;
+    if (state->busy) { state->close_requested = true; return TRUE; }
+    state->close_requested = false;
     if (state->document == NULL) return FALSE;
     Start(state, JOB_CLOSE, true); return TRUE;
 }

@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/workspace_library_gtk4.c
- * PURPOSE: Share visible library selection and asynchronous picker ownership.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Share explicit library and recent-location selection with safe asynchronous pickers.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/workspace_library.h"
 #include <string.h>
@@ -19,9 +26,10 @@ struct UmiWorkspaceLibraryGtk {
     char *current;
     char *historyPath, *chooserDraft;
     GtkWidget *recent, *historyMessage;
+    GtkWidget *historyChoice, *historyEntry, *historyChoiceMessage;
     GQueue historyQueue;
     bool historyBusy;
-    bool closed, choosingNew;
+    bool closed, choosingNew, choosingHistory;
 };
 
 static void Tag(GtkWidget *widget, const char *id)
@@ -106,6 +114,10 @@ static void Selected(GObject *source, GAsyncResult *result, gpointer data)
     g_clear_object(&file); g_clear_error(&error); g_object_unref(root);
 }
 #endif
+/* The chooser now targets either the project database or an explicitly chosen
+ * recent-location file. Preserve the database-only route for engineering review;
+ * both routes keep cancellation and newer draft protection. */
+#if 0
 static void Selected(GObject *source, GAsyncResult *result, gpointer data)
 {
     /* The completion owns only the root reference. Destroy marks its context
@@ -151,6 +163,58 @@ static void Browse(GtkButton *button, gpointer data)
         gtk_file_dialog_save(library->chooser, parent, library->cancel, Selected, g_object_ref(library->root));
     } else gtk_file_dialog_open(library->chooser, parent, library->cancel, Selected, g_object_ref(library->root));
 }
+#endif
+static void Selected(GObject *source, GAsyncResult *result, gpointer data)
+{
+    /* The completion owns only the root reference. Destroy marks its context
+     * closed before cancelling, so a late chooser cannot call the application. */
+    GtkWidget *root = data;
+    UmiWorkspaceLibraryGtk *library = g_object_get_data(G_OBJECT(root), "umicom-library-owner");
+    GError *error = NULL;
+    GFile *file = library->choosingNew ? gtk_file_dialog_save_finish(GTK_FILE_DIALOG(source), result, &error) :
+        gtk_file_dialog_open_finish(GTK_FILE_DIALOG(source), result, &error);
+    g_clear_object(&library->chooser); g_clear_object(&library->cancel);
+    /* The user may type while a native dialog is visible. Its late result must
+     * not replace that newer draft or automatically open either location. */
+    GtkWidget *entry = library->choosingHistory ? library->historyEntry : library->path;
+    bool unchanged = !library->closed && g_strcmp0(library->chooserDraft,
+        gtk_editable_get_text(GTK_EDITABLE(entry))) == 0;
+    g_clear_pointer(&library->chooserDraft, g_free);
+    if (unchanged && file != NULL) {
+        char *path = g_file_get_path(file);
+        if (path != NULL && g_utf8_validate(path, -1, NULL))
+            gtk_editable_set_text(GTK_EDITABLE(entry), path);
+        else Message(library, UMI_STATUS_INVALID_ARGUMENT);
+        g_free(path);
+    }
+    if (!library->closed && error != NULL &&
+        !g_error_matches(error, GTK_DIALOG_ERROR, GTK_DIALOG_ERROR_DISMISSED) &&
+        !g_error_matches(error, GTK_DIALOG_ERROR, GTK_DIALOG_ERROR_CANCELLED) &&
+        !g_error_matches(error, G_IO_ERROR, G_IO_ERROR_CANCELLED))
+        gtk_label_set_text(GTK_LABEL(library->message), "The file picker could not open. You can still type an absolute path.");
+    g_clear_object(&file); g_clear_error(&error); g_object_unref(root);
+}
+static void Browse(GtkButton *button, gpointer data)
+{
+    UmiWorkspaceLibraryGtk *library = data;
+    if (library->closed || library->chooser != NULL) return;
+    g_free(library->chooserDraft);
+    library->choosingHistory = g_strcmp0(g_object_get_data(G_OBJECT(button), "umicom-automation-id"),
+        "workspace.library.history.browse") == 0;
+    GtkWidget *entry = library->choosingHistory ? library->historyEntry : library->path;
+    library->chooserDraft = g_strdup(gtk_editable_get_text(GTK_EDITABLE(entry)));
+    library->choosingNew = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(button), "library-create")) != 0;
+    library->chooser = gtk_file_dialog_new(); library->cancel = g_cancellable_new();
+    gtk_file_dialog_set_title(library->chooser, library->choosingHistory ? "Choose where to remember library locations" :
+        (library->choosingNew ? "Choose a new library location" : "Choose an existing library"));
+    gtk_file_dialog_set_modal(library->chooser, TRUE);
+    GtkRoot *root = gtk_widget_get_root(library->root);
+    GtkWindow *parent = GTK_IS_WINDOW(root) ? GTK_WINDOW(root) : NULL;
+    if (library->choosingNew) {
+        gtk_file_dialog_set_initial_name(library->chooser, library->choosingHistory ? "recent-libraries.txt" : "workspace.sqlite3");
+        gtk_file_dialog_save(library->chooser, parent, library->cancel, Selected, g_object_ref(library->root));
+    } else gtk_file_dialog_open(library->chooser, parent, library->cancel, Selected, g_object_ref(library->root));
+}
 static void Button(UmiWorkspaceLibraryGtk *library, GtkWidget *box, const char *label,
     const char *id, bool create, GCallback callback)
 {
@@ -172,6 +236,26 @@ static void Free(gpointer data)
     g_free(library->historyPath); g_free(library->chooserDraft);
     g_ptr_array_unref(library->controls); g_free(library->current); g_free(library);
 }
+
+static void HistoryLocationApply(GtkButton *button, gpointer data)
+{
+    (void)button;
+    UmiWorkspaceLibraryGtk *library = data;
+    if (library->closed) return;
+    if (library->chooser != NULL) {
+        gtk_label_set_text(GTK_LABEL(library->historyChoiceMessage), "Finish choosing the location first.");
+        return;
+    }
+    const char *path = gtk_editable_get_text(GTK_EDITABLE(library->historyEntry));
+    GtkWidget *root = g_object_ref(library->root);
+    UmiStatus status = UmiWorkspaceLibraryGtkEnableHistory(library, path);
+    if (library->closed) { g_object_unref(root); return; }
+    gtk_label_set_text(GTK_LABEL(library->historyChoiceMessage), status == UMI_STATUS_OK ?
+        "Recent library locations use the selected file." :
+        "Choose an absolute filename separate from the project database. Existing work stays unchanged.");
+    g_object_unref(root);
+}
+
 UmiStatus UmiWorkspaceLibraryGtkCreate(UmiWorkspaceLibraryOpen open, void *context, UmiWorkspaceLibraryGtk **outLibrary)
 {
     if (outLibrary == NULL) return UMI_STATUS_INVALID_ARGUMENT;
@@ -200,6 +284,22 @@ UmiStatus UmiWorkspaceLibraryGtkCreate(UmiWorkspaceLibraryOpen open, void *conte
     library->active = Label(library->root, "No library is open."); Tag(library->active, "workspace.library.active");
     gtk_label_set_selectable(GTK_LABEL(library->active), TRUE);
     library->message = Label(library->root, "Selecting a filename does not open or change it."); Tag(library->message, "workspace.library.status");
+    /* Location history is optional user data. A visible opt-in keeps it out of
+     * hidden profile folders and does not prevent opening or creating projects. */
+    GtkWidget *history = gtk_expander_new("Remember library locations (optional)");
+    Tag(history, "workspace.library.history.options");
+    library->historyChoice = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+    gtk_expander_set_child(GTK_EXPANDER(history), library->historyChoice);
+    gtk_box_append(GTK_BOX(library->root), history);
+    Label(library->historyChoice, "Choose your own text file for recent library locations. Leave this off to keep no recent list.");
+    library->historyEntry = gtk_entry_new();
+    Tag(library->historyEntry, "workspace.library.history.path");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(library->historyEntry), "Choose a location for recent-libraries.txt");
+    gtk_box_append(GTK_BOX(library->historyChoice), library->historyEntry);
+    Button(library, library->historyChoice, "Choose recent-list location...", "workspace.library.history.browse", true, G_CALLBACK(Browse));
+    Button(library, library->historyChoice, "Use this recent-list file", "workspace.library.history.enable", false, G_CALLBACK(HistoryLocationApply));
+    library->historyChoiceMessage = Label(library->historyChoice, "No recent-list file is selected.");
+    Tag(library->historyChoiceMessage, "workspace.library.history.choice-status");
     *outLibrary = library; return UMI_STATUS_OK;
 }
 GtkWidget *UmiWorkspaceLibraryGtkWidget(UmiWorkspaceLibraryGtk *library) { return library != NULL ? library->root : NULL; }

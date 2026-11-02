@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/ai_workspace_surface_gtk4.c
- * PURPOSE: Open AI libraries explicitly and replace complete service lifetimes safely.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Open AI libraries explicitly and replace complete service lifetimes safely.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/ai_workspace.h"
@@ -145,6 +152,10 @@ UmiStatus UmiAiWorkspaceGtkSurfaceCreate(GtkWidget *original, const char *applic
     gtk_box_append(GTK_BOX(surface->root), GTK_WIDGET(surface->pages));
     UmiStatus status = UmiWorkspaceLibraryGtkCreate(OpenLibrary, surface, &surface->library);
     if (status != UMI_STATUS_OK) { UmiAiWorkspaceGtkSurfaceDestroy(surface); return status; }
+    /* Recent locations belong in a file selected by the user. Keep the former
+     * profile-directory default for review; the shared library selector now
+     * offers a visible opt-in. An explicit environment setting remains supported. */
+#if 0
     /* Preferences are separate from the user-selected database. Hashing the
      * application identifier keeps arbitrary identifiers out of path segments. */
     char *profileKey = g_compute_checksum_for_string(G_CHECKSUM_SHA256, applicationId, -1);
@@ -152,6 +163,10 @@ UmiStatus UmiAiWorkspaceGtkSurfaceCreate(GtkWidget *original, const char *applic
     char *historyPath = historyOverride != NULL && historyOverride[0] != '\0' ? g_strdup(historyOverride) : g_build_filename(g_get_user_config_dir(), "umicom", "library-history", profileKey, "ai-libraries.txt", NULL);
     (void)UmiWorkspaceLibraryGtkEnableHistory(surface->library, historyPath);
     g_free(historyPath); g_free(profileKey);
+#endif
+    const char *historyOverride = g_getenv("UMICOM_LIBRARY_HISTORY_FILE");
+    if (historyOverride != NULL && historyOverride[0] != '\0')
+        (void)UmiWorkspaceLibraryGtkEnableHistory(surface->library, historyOverride);
     GtkWidget *libraryPage = UmiWorkspaceLibraryGtkWidget(surface->library);
     gtk_stack_add_titled(surface->pages, libraryPage, "library", "Library location");
     /* Keep environment-based workflows available as a visible suggestion.

@@ -205,6 +205,10 @@ UmiStatus UmiCreativeGtkPanelCreate(UmiDataServer * server, const char * profile
     /* Library selection is shared with the AI hosts. Existing databases are
      * offered as visible paths, and are opened only by an explicit user action. */
     if (server == NULL && UmiWorkspaceLibraryGtkCreate(UmiCreativeGtkOpenLibrary, p, &p->library) == UMI_STATUS_OK) {
+        /* Recent locations belong in a file selected by the user. Keep the former
+         * profile-directory default for review; the shared library selector now
+         * offers a visible opt-in. An explicit environment setting remains supported. */
+#if 0
         /* Keep preferences separate for each creative product. Only this
          * small location list uses the configuration directory; project content
          * stays in the database explicitly selected by the user. */
@@ -212,6 +216,10 @@ UmiStatus UmiCreativeGtkPanelCreate(UmiDataServer * server, const char * profile
         char *historyPath = historyOverride != NULL && historyOverride[0] != '\0' ? g_strdup(historyOverride) : g_build_filename(g_get_user_config_dir(), "umicom", "library-history", profile, "creative-libraries.txt", NULL);
         (void)UmiWorkspaceLibraryGtkEnableHistory(p->library, historyPath);
         g_free(historyPath);
+#endif
+        const char *historyOverride = g_getenv("UMICOM_LIBRARY_HISTORY_FILE");
+        if (historyOverride != NULL && historyOverride[0] != '\0')
+            (void)UmiWorkspaceLibraryGtkEnableHistory(p->library, historyOverride);
         GtkWidget *location = gtk_expander_new("Project library location");
         gtk_expander_set_expanded(GTK_EXPANDER(location), TRUE);
         gtk_expander_set_child(GTK_EXPANDER(location), UmiWorkspaceLibraryGtkWidget(p->library));

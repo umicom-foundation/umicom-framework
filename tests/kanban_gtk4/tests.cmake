@@ -26,7 +26,8 @@ umicom_apply_sanitizers(umi-kanban-window-test)
 if(COMMAND umicom_register_validation_target)
     umicom_register_validation_target(umi-kanban-window-test)
 endif()
-foreach(_case IN ITEMS roundtrip dirty-close conflict-copy existing retained completion-reenter)
+foreach(_case IN ITEMS roundtrip dirty-close conflict-copy existing retained completion-reenter
+        close-during-open close-during-save close-after-failed-save)
     set(_test "framework.kanban.window.${_case}")
     file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/kanban-window-${_case}")
     add_test(NAME "${_test}" COMMAND umi-kanban-window-test "${_case}"

@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/workspace_library_history_gtk4.inc
- * PURPOSE: Remember chosen library locations without opening their databases.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Remember chosen library locations without opening their databases.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #define LIBRARY_HISTORY_LIMIT 12U
@@ -191,7 +198,19 @@ UmiStatus UmiWorkspaceLibraryGtkEnableHistory(UmiWorkspaceLibraryGtk *library, c
     if (library == NULL || library->closed || settingsPath == NULL ||
         !g_utf8_validate(settingsPath, -1, NULL) || !g_path_is_absolute(settingsPath)) return UMI_STATUS_INVALID_ARGUMENT;
     if (library->historyPath != NULL) return UMI_STATUS_ALREADY_EXISTS;
+    /* History is metadata, never the project database. Reject an accidental
+     * selection of the current library before scheduling a worker. */
+    char *selected = g_canonicalize_filename(settingsPath, NULL);
+    GFile *historyFile = g_file_new_for_path(selected);
+    GFile *projectFile = library->current != NULL ? g_file_new_for_path(library->current) : NULL;
+    bool sameFile = projectFile != NULL && g_file_equal(historyFile, projectFile);
+    g_clear_object(&historyFile); g_clear_object(&projectFile);
+    if (sameFile) { g_free(selected); return UMI_STATUS_INVALID_ARGUMENT; }
+    /* Previous assignment retained: canonicalisation is now checked first. */
+#if 0
     library->historyPath = g_canonicalize_filename(settingsPath, NULL);
+#endif
+    library->historyPath = selected;
     GtkWidget *box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
     gtk_box_append(GTK_BOX(library->root), box);
     Label(box, "Recent libraries on this computer");
@@ -206,7 +225,11 @@ UmiStatus UmiWorkspaceLibraryGtkEnableHistory(UmiWorkspaceLibraryGtk *library, c
     Label(box, "Only file locations are remembered. This list contains no passwords or API keys.");
     GtkWidget *location = Label(box, library->historyPath); gtk_label_set_selectable(GTK_LABEL(location), TRUE);
     Tag(location, "workspace.library.history.location");
-    return HistoryQueue(library, HISTORY_LOAD, NULL);
+    UmiStatus status = HistoryQueue(library, HISTORY_LOAD, NULL);
+    /* Publish complete history controls before the sensitivity notification.
+     * An observer may retire this selector; no owner access follows it. */
+    if (library->historyChoice != NULL) gtk_widget_set_sensitive(library->historyChoice, FALSE);
+    return status;
 }
 UmiStatus UmiWorkspaceLibraryGtkRememberCurrent(UmiWorkspaceLibraryGtk *library)
 {

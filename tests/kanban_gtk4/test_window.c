@@ -1,9 +1,17 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/kanban_gtk4/test_window.c
- * PURPOSE: Exercise native board persistence, dirty-close refusal and save-copy conflict recovery.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Exercise native board persistence, dirty-close refusal and save-copy conflict recovery.
+ *   Verify a window close requested during file I/O is retained without losing edits.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/kanban_window.h"
@@ -37,6 +45,28 @@ static void Wait(GtkWidget *root)
     }
     REQUIRE(gtk_widget_get_sensitive(controls));
 }
+/* Retained GTK references can outlive native destruction. Test membership in
+ * the actual toplevel model rather than object finalization or visibility. */
+static bool WindowListed(GtkWindow *window)
+{
+    GListModel *windows = gtk_window_get_toplevels();
+    for (guint i = 0U; i < g_list_model_get_n_items(windows); ++i) {
+        GObject *item = g_list_model_get_item(windows, i);
+        bool found = item == G_OBJECT(window); g_object_unref(item);
+        if (found) return true;
+    }
+    return false;
+}
+static void WaitClosed(GtkWindow *window)
+{
+    gint64 deadline = g_get_monotonic_time() + 15 * G_TIME_SPAN_SECOND;
+    while (WindowListed(window) && g_get_monotonic_time() < deadline) {
+        for (unsigned i = 0U; i < 32U && g_main_context_pending(NULL); ++i)
+            (void)g_main_context_iteration(NULL, FALSE);
+        g_usleep(1000U);
+    }
+    REQUIRE(!WindowListed(window));
+}
 typedef struct Reentry { GtkWidget *root; unsigned attempts; } Reentry;
 static void Reenter(GObject *controls, GParamSpec *property, gpointer data)
 {
@@ -66,6 +96,42 @@ int main(int argc, char **argv)
         GtkWidget *button = Find(root, "Create board", false); REQUIRE(button != NULL); g_object_ref(button);
         gtk_window_destroy(window); g_signal_emit_by_name(button, "clicked");
         REQUIRE(!g_file_test(filename, G_FILE_TEST_EXISTS)); g_object_unref(button);
+    } else if (strcmp(argv[1], "close-during-open") == 0 ||
+               strcmp(argv[1], "close-during-save") == 0 ||
+               strcmp(argv[1], "close-after-failed-save") == 0) {
+        gtk_window_present(window);
+        Click(root, "Create board"); Wait(root);
+        bool opening = strcmp(argv[1], "close-during-open") == 0;
+        bool conflict = strcmp(argv[1], "close-after-failed-save") == 0;
+        if (opening) {
+            Click(root, "Close board"); Wait(root);
+            Click(root, "Open board");
+        } else {
+            Set(root, "kanban-title", "Retain edits while closing"); Click(root, "Add card");
+            if (conflict) REQUIRE(g_file_set_contents(filename, "external writer", -1, NULL));
+            Click(root, "Save board");
+        }
+        /* Completion cannot publish until this thread dispatches it, even if
+         * disk I/O finished immediately. Two close attempts must coalesce. */
+        REQUIRE(!gtk_widget_get_sensitive(Find(root, "kanban-document-controls", true)));
+        gtk_window_close(window); gtk_window_close(window);
+        if (conflict) {
+            Wait(root);
+            REQUIRE(WindowListed(window));
+            REQUIRE(Find(root, "kanban-title", true) != NULL);
+            GtkWidget *status = Find(root, "kanban-document-status", true);
+            REQUIRE(strstr(gtk_label_get_text(GTK_LABEL(status)), "unsaved changes") != NULL);
+            char *contents = NULL; REQUIRE(g_file_get_contents(filename, &contents, NULL, NULL));
+            REQUIRE(strcmp(contents, "external writer") == 0); g_free(contents);
+            gtk_check_button_set_active(GTK_CHECK_BUTTON(Find(root, "kanban-document-discard", true)), TRUE);
+            gtk_window_close(window); WaitClosed(window);
+        } else {
+            WaitClosed(window);
+            UmiKanbanDocument *document = NULL;
+            REQUIRE(umi_kanban_document_open(directory, "board.umikb", &document) == UMI_STATUS_OK);
+            REQUIRE(umi_kanban_board_count(umi_kanban_document_board(document)) == (opening ? 0U : 1U));
+            REQUIRE(umi_kanban_document_close(&document, false) == UMI_STATUS_OK);
+        }
     } else {
         Reentry reentry = {root, 0U}; gulong handler = 0U;
         GtkWidget *controls = Find(root, "kanban-document-controls", true);

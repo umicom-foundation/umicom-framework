@@ -36,6 +36,23 @@ they do not automatically open or create a database. No existing database is mov
 <p>Close the applications before copying a database for backup. Copy any SQLite sidecar files with it if they remain.
 Do not replace, rename or edit a database while an application is using it. For a library shared by several applications, explicitly reload after another writer changes its records.</p>
 <h2>Remember and reopen library locations</h2>
+<p>Recent-library history is optional. Without an explicit history-file setting, the selector does not create a recent list. Your project database stays in the location you choose.</p>
+<ol><li>Expand <strong>Remember library locations (optional)</strong>.</li>
+<li>Select <strong>Choose recent-list location...</strong>, then choose a text filename such as <code>C:\UmicomWork\recent-libraries.txt</code>. You can also type an absolute filename. An absolute filename includes the drive or root folder and the complete path.</li>
+<li>Select <strong>Use this recent-list file</strong>. Choose a separate file from your project database. The selector shows the selected history filename and loads any saved locations.</li>
+<li>Open a library, or select <strong>Remember current</strong> if it was already open. The history message reports whether the location was saved.</li>
+<li>To reopen work, choose a recent location and select <strong>Use selected</strong>. Check the filled-in path, then select <strong>Open existing</strong>. Selecting a recent location alone never opens a database.</li>
+<li>Use <strong>Forget selected</strong> or <strong>Clear recent list</strong> to remove location records. These actions do not delete project files or close your current library.</li></ol>
+<p>The history filename is fixed for this selector session. To choose another file, reopen the application. The choice itself is not saved elsewhere: on the next launch, select the same recent-list file again, or explicitly set <code>UMICOM_LIBRARY_HISTORY_FILE</code> before launching. Separate history files keep separate lists; using the same file shares the list.</p>
+<p>The list stores up to twelve recent locations. Paths are plain text and can reveal folder or project names; passwords and API keys are not included. Reading a missing history file creates nothing. Saving history may create its parent folder. This does not create the parent folder of your project database.</p>
+<h3>If recent locations cannot be saved</h3>
+<ol><li>Check the displayed history filename and that its folder is writable.</li>
+<li>For a temporary write failure, select <strong>Remember current</strong> to retry. Your open library remains usable.</li>
+<li>If the file has an invalid format, keep it for inspection. Reopen the application and choose a new recent-list filename. The selector does not repair an unrelated file or use a project database as history.</li></ol>
+<p>Concurrent applications can replace each other's latest history changes. The list is a convenience, not a backup or a database lock. Existing history files are not moved or deleted automatically.</p>
+<!-- Earlier history-location guidance is retained for review. The explicit
+user-selected history workflow above replaces the former implicit location.
+<h2>Remember and reopen library locations</h2>
 <ol><li>After a library opens successfully, its path is added to <strong>Recent libraries on this computer</strong>. The history message reports whether that preference was saved.</li>
 <li>On the next launch, choose a recent path and select <strong>Use selected</strong>. This fills the path field without opening a database.</li>
 <li>Check the path, then select <strong>Open existing</strong>. A remembered path can still be missing, moved or inaccessible.</li>
@@ -43,5 +60,6 @@ Do not replace, rename or edit a database while an application is using it. For 
 <p>The list stores up to twelve recent locations for each application profile. Its full preferences filename is shown below the controls. Only that small metadata file normally lives in your user configuration directory; the project database stays where you chose. Paths are plaintext and may reveal folder or project names. Passwords and API keys are not included.</p>
 <p>For a portable setup, set <code>UMICOM_LIBRARY_HISTORY_FILE</code> to an absolute preferences filename before launching an application. Use separate files for separate profiles unless you want them to share the same list. Reading a missing preferences file creates nothing. A successful open or an explicit history edit may create its preferences folder. It never creates the parent folder of your project database.</p>
 <p>If saving the recent list fails, your open library remains usable. Check the displayed preferences path and its permissions, then select <strong>Remember current</strong> to retry. Damaged preferences are reported and preserved. Close applications using that file, keep a copy for inspection, and choose a new preferences filename to start a fresh list. Concurrent applications can replace each other's latest history changes; this convenience list is not a backup or a database lock.</p>
+-->
 <h2>Keep a report outside the library</h2><p>Creative project summaries and AI draft reviews offer <strong>Save displayed text</strong>. This writes a separate report to a location you choose; it does not copy or change the library database. See <a href="saving-displayed-reports.html">saving displayed reports</a>.</p>
 </html>

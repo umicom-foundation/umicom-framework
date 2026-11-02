@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/workspace_library/test_history_gtk4.c
- * PURPOSE: Verify recent-library persistence, explicit opening and late retirement.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Verify chosen recent-library storage, explicit opening and late retirement.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/workspace_library.h"
 #include "umicom/ui/gtk4/automation.h"
@@ -51,7 +58,29 @@ int main(void)
     CHECK(directory && preferences && settings && first && second);
     CHECK(g_file_set_contents(first, "saved project", -1, NULL));
     CHECK(UmiWorkspaceLibraryGtkCreate(Open, &probe, &library) == UMI_STATUS_OK);
+    /* A fresh selector writes nothing and does not choose a hidden history file.
+     * Exercise the public controls, including rejection of the project database. */
+    CHECK(!UmiWorkspaceLibraryGtkHistoryBusy(library));
+    CHECK(Find(library, "workspace.library.history.list") == NULL);
+    GtkWidget *choice = Find(library, "workspace.library.history.path");
+    GtkWidget *enable = Find(library, "workspace.library.history.enable");
+    CHECK(GTK_IS_ENTRY(choice) && GTK_IS_BUTTON(enable));
+    CHECK(gtk_editable_get_text(GTK_EDITABLE(choice))[0] == '\0');
+    g_signal_emit_by_name(enable, "clicked");
+    CHECK(Find(library, "workspace.library.history.list") == NULL);
+    UmiWorkspaceLibraryGtkSetCurrentPath(library, first);
+    gtk_editable_set_text(GTK_EDITABLE(choice), first);
+    g_signal_emit_by_name(enable, "clicked");
+    CHECK(Find(library, "workspace.library.history.list") == NULL);
+    CHECK(!g_file_test(preferences, G_FILE_TEST_EXISTS));
+    gtk_editable_set_text(GTK_EDITABLE(choice), settings);
+    g_signal_emit_by_name(enable, "clicked");
+    CHECK(Find(library, "workspace.library.history.list") != NULL);
+    CHECK(!gtk_widget_is_sensitive(enable));
+    /* Direct API setup remains below for comparison; later cases still exercise it. */
+#if 0
     CHECK(UmiWorkspaceLibraryGtkEnableHistory(library, settings) == UMI_STATUS_OK);
+#endif
     CHECK(Wait(library) && Count(library) == 0U && probe.calls == 0U);
     CHECK(!g_file_test(preferences, G_FILE_TEST_EXISTS));
     UmiWorkspaceLibraryGtkSetCurrentPath(library, first);
