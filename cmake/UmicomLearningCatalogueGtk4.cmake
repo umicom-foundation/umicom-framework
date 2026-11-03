@@ -24,6 +24,7 @@ get_filename_component(_learning_catalogue_root "${CMAKE_CURRENT_LIST_DIR}/.." A
 add_library(umicom_learning_catalogue_gtk4 STATIC
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_gtk4.c"
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_jobs.c"
+    "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_modules.c"
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_reading.c"
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_find.c"
     "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_body.c"
@@ -526,6 +527,31 @@ if(BUILD_TESTING)
         if(COMMAND umicom_test_impact_owners)
             umicom_test_impact_owners("framework.learning_pack.body_filters.${_case}"
                 TARGETS umicom-learning-body-filters-gtk4-test)
+        endif()
+    endforeach()
+endif()
+
+# Module tests exercise declared file bytes and publication into the catalogue.
+if(BUILD_TESTING)
+    add_executable(umicom-learning-module-gtk4-test "${_learning_catalogue_root}/tests/learning_pack/test_module_gtk4.c")
+    set_target_properties(umicom-learning-module-gtk4-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-learning-module-gtk4-test PRIVATE Umicom::learning_catalogue_gtk4)
+    umicom_apply_warnings(umicom-learning-module-gtk4-test)
+    umicom_apply_sanitizers(umicom-learning-module-gtk4-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-learning-module-gtk4-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-learning-module-gtk4-test FILES "${_learning_catalogue_root}/tests/learning_pack/module_fixture.h")
+    endif()
+    foreach(_case click failed-reopen retire-pending destroy-pending)
+        set(_directory "${CMAKE_CURRENT_BINARY_DIR}/umicom-learning-module-gtk4-test/${_case}")
+        file(MAKE_DIRECTORY "${_directory}")
+        add_test(NAME "framework.learning_pack.module.gtk4.${_case}" COMMAND umicom-learning-module-gtk4-test "${_case}" "${_directory}")
+        set_tests_properties("framework.learning_pack.module.gtk4.${_case}" PROPERTIES TIMEOUT 60 SKIP_RETURN_CODE 77 
+            WORKING_DIRECTORY "${_directory}" LABELS "framework;learning;ownership;regression;gtk4")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.learning_pack.module.gtk4.${_case}" TARGETS umicom-learning-module-gtk4-test)
         endif()
     endforeach()
 endif()

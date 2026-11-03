@@ -1,0 +1,22 @@
+<!doctype html>
+<!--
+Umicom Framework
+File: docs/learning/studio-wiki/first-program.html
+
+PURPOSE:
+Introduce Framework development through explained source workflows.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Your first C program | Umicom Framework</title><style>body{font:1.05rem/1.65 system-ui,sans-serif;max-width:56rem;margin:2rem auto;padding:0 1.25rem;color:#203247;background:#fff}a{color:#006c89}pre{overflow:auto;padding:1rem;background:#eff4f7}code{font-family:monospace}table{border-collapse:collapse;width:100%}td,th{padding:.5rem;border:1px solid #b9c7d1;text-align:left}dt{font-weight:700;margin-top:1rem}dd{margin-left:0}</style></head><body><nav aria-label="Wiki"><a href="index.html">Framework wiki</a> · <a href="source-reference.html">Source map</a> · <a href="glossary.html">Glossary</a></nav><main><h1>Your first C program</h1><p>A source file is a text file containing instructions written in a programming language. C is one such language. A compiler translates those instructions into code that a computer can execute. Reading a source file does not run it.</p><h2>Read the whole example</h2><pre><code>#include &lt;stdio.h&gt;
+
+int main(void)
+{
+    puts("Hello from Bits2Banking.");
+    return 0;
+}</code></pre><p><code>main</code> names the function where this program starts. A function is a named group of instructions. The braces enclose its body. <code>puts</code> displays the quoted text and a new line. <code>return 0</code> finishes and reports success; it does not print zero.</p><p><code>stdio.h</code> describes standard input and output functions to the compiler. The <code>#include</code> line makes those declarations available. The semicolons end the two instructions inside the function.</p><h2>Predict the output</h2><pre>Hello from Bits2Banking.</pre><p>Change only the quoted text to “I am learning C.” What line should appear? The function name and success result remain unchanged. This example is in <code>labs/native/first-c-programs/hello.c</code> in Bits2Banking.</p><h2>Continue in order</h2><p>Complete Learning C through variables, decisions, loops, functions, arrays and pointers before moving into the shared-service examples. Keep each exercise in your own practice folder.</p></main><footer><p>Sammy Hegab · Umicom Foundation · MIT</p></footer></body></html>

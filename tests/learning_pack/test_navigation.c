@@ -42,8 +42,25 @@ static const Case cases[] = {
     {"empty-fragment", "intro", "#", "intro", "", UMI_STATUS_OK, 0},
     {"unknown-current", "missing", "next.html", "", "", UMI_STATUS_NOT_FOUND, 0},
     {"undeclared", "intro", "private.html", "", "", UMI_STATUS_NOT_FOUND, 0},
+    /* Retain the earlier filename-only expectations for review. Course links
+     * now normalize inside the manifest; unknown files and root escapes remain
+     * refused, with the caller's previous selection unchanged. */
+#if 0
     {"parent", "intro", "../intro.html", "", "", UMI_STATUS_INVALID_ARGUMENT, 0},
     {"dot", "intro", "./next.html", "", "", UMI_STATUS_INVALID_ARGUMENT, 0},
+#endif
+    {"parent", "intro", "../intro.html", "", "", UMI_STATUS_NOT_FOUND, 0},
+    {"dot", "intro", "./next.html", "next", "", UMI_STATUS_OK, 0},
+    {"parent-sibling", "diagram", "../next.html", "next", "", UMI_STATUS_OK, 0},
+    {"parent-anchor", "diagram", "../intro.html#start", "intro", "start", UMI_STATUS_OK, 0},
+    {"nested-sibling", "diagram", "../examples/sample.c", "sample", "", UMI_STATUS_OK, 0},
+    {"root-reentry", "sample", "../../chapters/next.html", "next", "", UMI_STATUS_OK, 0},
+    {"root-escape", "intro", "../../chapters/next.html", "", "", UMI_STATUS_INVALID_ARGUMENT, 0},
+    {"double-separator", "intro", "images//diagram.svg", "", "", UMI_STATUS_INVALID_ARGUMENT, 0},
+    {"trailing-separator", "intro", "images/", "", "", UMI_STATUS_INVALID_ARGUMENT, 0},
+    {"normalized-undeclared", "diagram", "../missing.html", "", "", UMI_STATUS_NOT_FOUND, 0},
+    {"normalized-device", "diagram", "../CON", "", "", UMI_STATUS_INVALID_ARGUMENT, 0},
+    {"direct-parent-path", "", "chapters/../chapters/next.html", "", "", UMI_STATUS_INVALID_ARGUMENT, 1},
     {"absolute", "intro", "/chapters/next.html", "", "", UMI_STATUS_INVALID_ARGUMENT, 0},
     {"network", "intro", "//server/next.html", "", "", UMI_STATUS_INVALID_ARGUMENT, 0},
     {"drive", "intro", "C:/next.html", "", "", UMI_STATUS_INVALID_ARGUMENT, 0},

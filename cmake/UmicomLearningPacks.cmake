@@ -25,6 +25,7 @@ target_sources(umicom_developer PRIVATE
     "${_umicom_pack_root}/src/teacher/learning_pack_changes.c"
     "${_umicom_pack_root}/src/teacher/learning_shelf.c"
     "${_umicom_pack_root}/src/teacher/learning_navigation.c"
+    "${_umicom_pack_root}/src/teacher/learning_module.c"
     "${_umicom_pack_root}/src/teacher/learning_reader.c"
     "${_umicom_pack_root}/src/teacher/learning_reader_selection.c"
     "${_umicom_pack_root}/src/teacher/learning_practice.c"
@@ -79,6 +80,8 @@ if(BUILD_TESTING)
     endforeach()
     foreach(_case sibling nested-image nested-example fragment same-document empty-link
             empty-fragment unknown-current undeclared parent dot absolute network drive
+            parent-sibling parent-anchor nested-sibling root-reentry root-escape
+            double-separator trailing-separator normalized-undeclared normalized-device direct-parent-path
             https script encoded query backslash control anchor-space anchor-escape
             two-fragments git-directory device path path-slashes ambiguous ambiguous-path
             long-anchor long-link invalid-arguments)
@@ -317,3 +320,34 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomLearningLibraryChoices.cmake")
 
 # Body search extends metadata browsing with explicit verified-resource snapshots.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomLearningText.cmake")
+
+install(FILES "${_umicom_pack_root}/include/umicom/teacher/learning_module.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/teacher" COMPONENT Framework)
+install(FILES "${_umicom_pack_root}/cmake/UmicomLearningModuleBundle.cmake"
+    "${_umicom_pack_root}/cmake/UmicomStageLearningModule.cmake"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework" COMPONENT Framework)
+
+# Module tests exercise declared file bytes and publication into the catalogue.
+if(BUILD_TESTING)
+    add_executable(umicom-learning-module-test "${_umicom_pack_root}/tests/learning_pack/test_module.c")
+    set_target_properties(umicom-learning-module-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-learning-module-test PRIVATE Umicom::developer)
+    umicom_apply_warnings(umicom-learning-module-test)
+    umicom_apply_sanitizers(umicom-learning-module-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-learning-module-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-learning-module-test FILES "${_umicom_pack_root}/tests/learning_pack/module_fixture.h")
+    endif()
+    foreach(_case root wrong-id wrong-product missing-entry tampered bounded reuse lifetime)
+        set(_directory "${CMAKE_CURRENT_BINARY_DIR}/umicom-learning-module-test/${_case}")
+        file(MAKE_DIRECTORY "${_directory}")
+        add_test(NAME "framework.learning_pack.module.${_case}" COMMAND umicom-learning-module-test "${_case}" "${_directory}")
+        set_tests_properties("framework.learning_pack.module.${_case}" PROPERTIES TIMEOUT 60 
+            WORKING_DIRECTORY "${_directory}" LABELS "framework;learning;ownership;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.learning_pack.module.${_case}" TARGETS umicom-learning-module-test)
+        endif()
+    endforeach()
+endif()

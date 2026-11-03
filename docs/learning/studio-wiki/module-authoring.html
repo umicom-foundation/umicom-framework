@@ -1,0 +1,16 @@
+<!doctype html>
+<!--
+Umicom Framework
+File: docs/learning/studio-wiki/module-authoring.html
+
+PURPOSE:
+Introduce Framework development through explained source workflows.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Create a learning content module | Umicom Framework</title><style>body{font:1.05rem/1.65 system-ui,sans-serif;max-width:56rem;margin:2rem auto;padding:0 1.25rem;color:#203247;background:#fff}a{color:#006c89}pre{overflow:auto;padding:1rem;background:#eff4f7}code{font-family:monospace}table{border-collapse:collapse;width:100%}td,th{padding:.5rem;border:1px solid #b9c7d1;text-align:left}dt{font-weight:700;margin-top:1rem}dd{margin-left:0}</style></head><body><nav aria-label="Wiki"><a href="index.html">Framework wiki</a> · <a href="source-reference.html">Source map</a> · <a href="glossary.html">Glossary</a></nav><main><h1>Create a learning content module</h1><p>A content module is a folder containing <code>learning-pack.json</code> and the files declared by that manifest. A manifest describes what is in a package. It is data, not a program to execute.</p><h2>Prepare the content</h2><ol><li>Choose a stable pack identity and product name.</li><li>Write the introduction and lessons in a clear order.</li><li>Give each resource an identity, title, topic, kind and relative path.</li><li>Calculate its SHA-256 digest after reviewing the final bytes.</li><li>Declare the Framework compatibility range you have reviewed.</li><li>Keep all local reader links within the declared pack.</li></ol><p>The reader compares the actual file bytes with the declared digest. This detects changed content; it does not prove who published it. A trusted installer chooses which pack directories to distribute.</p><h2>Bundle an offered module</h2><p>Framework's <code>UmicomLearningModuleBundle.cmake</code> validates a selected module, stages declared files beside the application and includes them in installation. Studio resolves that location from its executable, not the current project directory. Its optional Bits2Banking source can be selected with <code>UMICOM_STUDIO_BITS2BANKING_MODULE</code>.</p><p>Opening a module is explicit. The UI does not run a post-install script, compiler or example. Missing files and mismatched hashes are reported while retaining the previous reader. A local folder can also be loaded through the catalogue.</p><h2>Maintain several formats</h2><p>Keep Markdown and HTML as reviewed source versions. Preserve unique explanations when comparing them. Regenerate a pack digest only after reviewing its changed HTML. Use a browser for full HTML presentation; the native reader supports a bounded structured reading view.</p><p>To host this wiki on the web, publish these HTML pages together under one directory. No hosting or online marketplace account is created merely by bundling them locally.</p></main><footer><p>Sammy Hegab · Umicom Foundation · MIT</p></footer></body></html>

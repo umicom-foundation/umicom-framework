@@ -52,6 +52,8 @@ typedef struct LearningCatalogue {
     GtkWidget *progress_path, *progress_learner, *progress_checkpoint;
     GtkWidget *progress_evidence, *progress_status;
     GtkWidget *library_path, *library_rows, *library_status;
+    GtkWidget *module_choices;
+    size_t module_count;
     GtkWidget *root, *controls, *path, *query, *results;
     GtkWidget *link, *replacement_status, *replacement_details;
     GtkWidget *heading, *status, *content, *destination, *copy_status;
@@ -69,7 +71,8 @@ typedef enum LearningCatalogueAction {
     LEARNING_CATALOGUE_LIBRARIES_LOAD,
     LEARNING_CATALOGUE_LIBRARIES_SAVE,
     LEARNING_CATALOGUE_LIBRARY_REOPEN,
-    LEARNING_CATALOGUE_TEXT_SEARCH
+    LEARNING_CATALOGUE_TEXT_SEARCH,
+    LEARNING_CATALOGUE_MODULE
 } LearningCatalogueAction;
 typedef struct LearningCatalogueJob {
     GWeakRef root;
@@ -89,6 +92,10 @@ typedef struct LearningCatalogueJob {
     UmiVersion host;
     char directory[UMI_PATH_CAPACITY];
     char link[UMI_TEACHER_PATH_CAPACITY + UMI_LEARNING_FRAGMENT_CAPACITY];
+    /* Copied identities for explicit module admission; no widget is borrowed. */
+    char module_pack[UMI_TEACHER_ID_CAPACITY];
+    char module_product[UMI_TEACHER_ID_CAPACITY];
+    char module_resource[UMI_TEACHER_ID_CAPACITY];
     UmiLearningSearchHit selected;
     UmiLearningShelf *selection_shelf;
     UmiLearningPack *pack;

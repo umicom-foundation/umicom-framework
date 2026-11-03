@@ -1,0 +1,16 @@
+<!doctype html>
+<!--
+Umicom Framework
+File: docs/learning/studio-wiki/extending-studio.html
+
+PURPOSE:
+Introduce Framework development through explained source workflows.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Extend Studio through shared contracts | Umicom Framework</title><style>body{font:1.05rem/1.65 system-ui,sans-serif;max-width:56rem;margin:2rem auto;padding:0 1.25rem;color:#203247;background:#fff}a{color:#006c89}pre{overflow:auto;padding:1rem;background:#eff4f7}code{font-family:monospace}table{border-collapse:collapse;width:100%}td,th{padding:.5rem;border:1px solid #b9c7d1;text-align:left}dt{font-weight:700;margin-top:1rem}dd{margin-left:0}</style></head><body><nav aria-label="Wiki"><a href="index.html">Framework wiki</a> · <a href="source-reference.html">Source map</a> · <a href="glossary.html">Glossary</a></nav><main><h1>Extend Studio through shared contracts</h1><p>Begin with one complete user action: for example, opening a verified learning page. Write down the input, expected output, failure behaviour and lifetime before adding a button.</p><h2>Trace the existing learning action</h2><ol><li>Studio's workbench supplies the action and its parent window.</li><li>Studio declares a content identity and resource to open.</li><li>Framework prepares a candidate shelf and reader away from the GTK owner thread.</li><li>Only a successful, still-owned completion replaces the displayed state.</li><li>A failure leaves the earlier reader intact and reports a status.</li></ol><p>Read <code>applications/studio/src/gui/workbench/runtime/surfaces/learning.inc</code> in Umicom Applications and <code>adapters/gtk4/learning_catalogue_selection.c</code> in Framework. The product supplies policy; the shared catalogue owns loading and presentation lifetime.</p><h2>Develop one extension</h2><ol><li>Define a narrow Framework API and document ownership.</li><li>Add checks for success, invalid input and retained state on failure.</li><li>Connect a Studio action to that API rather than duplicating it.</li><li>Check mouse and keyboard activation, close/reopen and cancellation.</li><li>Document the supported behaviour and any unfinished capability.</li></ol><p>A content module is available for lessons and guides. It is not a general mechanism for loading executable plugins. Language servers, native plugins, permission grants and marketplace updates need their own contracts and implementation.</p></main><footer><p>Sammy Hegab · Umicom Foundation · MIT</p></footer></body></html>

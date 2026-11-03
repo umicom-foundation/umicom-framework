@@ -86,6 +86,24 @@ GtkWindow *UmiLearningCatalogueGtk4PresentShared(GtkWindow *parent, UmiVersion h
  * Native reads can block. There is no promise to interrupt an accepted read. */
 UmiStatus UmiLearningCatalogueGtk4Load(GtkWidget *widget, const char *absolute_root);
 
+/* Register one host-offered content module in this catalogue. All strings are
+ * copied; no files are read until its Open button is clicked. Repeated pack IDs
+ * return ALREADY_EXISTS without changing their route. At most 32 are offered.
+ * Does not promise that a module is installed: missing files are reported when
+ * opening. Registration is a content capability, never an executable plugin. */
+UmiStatus UmiLearningCatalogueGtk4OfferModule(GtkWidget *widget, const char *title,
+    const char *description, const char *absolute_root, const char *pack_id,
+    const char *product, const char *resource_id);
+
+/* Open an explicit content module in one asynchronous operation. Admission,
+ * byte verification and preview preparation precede shelf/reader publication.
+ * Reuse an already loaded matching identity without replacing it. No folder
+ * chooser, network access, implicit settings write or code loading occurs.
+ * Return OK for dispatch; inspect CopyState after busy becomes false for the
+ * completed status. On failure retain the previous shelf, reader and history. */
+UmiStatus UmiLearningCatalogueGtk4OpenModule(GtkWidget *widget, const char *absolute_root,
+    const char *pack_id, const char *product, const char *resource_id);
+
 
 /* A replacement is a reviewable candidate, not an automatic library update.
  * Prepare reads only the chosen manifest on a worker and keeps the current

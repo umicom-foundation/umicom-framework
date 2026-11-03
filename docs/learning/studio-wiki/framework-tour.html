@@ -1,0 +1,18 @@
+<!doctype html>
+<!--
+Umicom Framework
+File: docs/learning/studio-wiki/framework-tour.html
+
+PURPOSE:
+Introduce Framework development through explained source workflows.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>How the Framework fits an application | Umicom Framework</title><style>body{font:1.05rem/1.65 system-ui,sans-serif;max-width:56rem;margin:2rem auto;padding:0 1.25rem;color:#203247;background:#fff}a{color:#006c89}pre{overflow:auto;padding:1rem;background:#eff4f7}code{font-family:monospace}table{border-collapse:collapse;width:100%}td,th{padding:.5rem;border:1px solid #b9c7d1;text-align:left}dt{font-weight:700;margin-top:1rem}dd{margin-left:0}</style></head><body><nav aria-label="Wiki"><a href="index.html">Framework wiki</a> · <a href="source-reference.html">Source map</a> · <a href="glossary.html">Glossary</a></nav><main><h1>How the Framework fits an application</h1><p>Applications often need the same operations. A shared service gives them one implementation to call. A user interface gathers input and presents results; it should not need a second copy of the service's rules.</p><h2>Follow the activity counter</h2><pre>console.c ─┐
+           ├─ BtbActivityAdvance → Framework status
+window.c ──┘</pre><p>The Bits2Banking example in <code>labs/native/framework-activity</code> counts completed exercises. Its header <code>activity.h</code> declares the function. Its implementation <code>activity.c</code> checks the input and computes the next count. Both front ends call it.</p><p>A count from zero to 999 advances by one. At 1000 the service reports capacity exceeded. An invalid input or missing output pointer reports an invalid argument. A failure preserves the output value. These rules are the function's contract: what callers may rely on.</p><h2>What belongs where?</h2><ol><li>Put reusable behaviour in a shared library.</li><li>Declare its public interface in a header.</li><li>Make ownership and failure results explicit.</li><li>Test the rule independently of a window.</li><li>Connect a thin application callback to the service.</li></ol><p>The counter is a teaching consumer of Framework's base component. A mature shared feature belongs in the appropriate Framework module after its contract and dependencies have been reviewed. See <a href="source-reference.html">the source map</a>.</p></main><footer><p>Sammy Hegab · Umicom Foundation · MIT</p></footer></body></html>

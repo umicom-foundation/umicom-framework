@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "learning_catalogue_private.h"
+#include "umicom/teacher/learning_module.h"
 #include "umicom/browser/document_preview.h"
 #include <string.h>
 
@@ -371,6 +372,17 @@ static void CatalogueWorker(GTask *task, gpointer source, gpointer data, GCancel
     job->status = previous == NULL ? UMI_STATUS_OK : UmiLearningReaderClone(previous, &job->reader);
     if (job->status != UMI_STATUS_OK) goto publish;
     switch (job->action) {
+    case LEARNING_CATALOGUE_MODULE: {
+        UmiLearningShelf *candidate = NULL;
+        job->status = UmiLearningModuleOpen(job->selection_shelf, job->directory,
+            job->module_pack, job->module_product, job->module_resource, job->host,
+            UMI_LEARNING_CATALOGUE_BYTES, &candidate, &job->reader);
+        if (job->status == UMI_STATUS_OK) {
+            UmiLearningShelfDestroy(job->selection_shelf);
+            job->selection_shelf = candidate;
+        }
+        break;
+    }
     case LEARNING_CATALOGUE_TEXT_SEARCH:
         /* Routed before the reader-clone boundary above. */
         break;
@@ -708,6 +720,24 @@ static void CatalogueComplete(GObject *source, GAsyncResult *result, gpointer da
             }
             owner->state.busy = 0;
         }
+        g_object_unref(root);
+        CatalogueReadFinished(job);
+        return;
+    }
+
+    /* The content module's candidate shelf and reader are committed only after
+     * preview preparation succeeds. Failed admission leaves the visible session
+     * intact; retiring during model notification prevents later presentation. */
+    if (job->action == LEARNING_CATALOGUE_MODULE && job->status == UMI_STATUS_OK)
+        job->status = LearningCataloguePublishShelf(owner, &job->selection_shelf,
+            gtk_editable_get_text(GTK_EDITABLE(owner->query)));
+    if (job->action == LEARNING_CATALOGUE_MODULE && job->status != UMI_STATUS_OK) {
+        UmiLearningReaderDestroy(job->reader);
+        job->reader = NULL;
+        memset(&job->snapshot, 0, sizeof(job->snapshot));
+    }
+    if (owner->state.retired) {
+        owner->state.busy = 0;
         g_object_unref(root);
         CatalogueReadFinished(job);
         return;

@@ -36,10 +36,12 @@ UmiStatus UmiLearningPackFindPath(const UmiLearningPack *pack, const char *relat
 
 /* Resolve a local href relative to the current resource's containing folder.
  * An empty href or #fragment stays on that resource. Nested forward-slash paths
- * are supported, but '.', '..', absolute paths, backslashes, schemes, query
- * strings and percent escapes are refused. This deliberately small offline
- * profile does not implement general browser URL processing. Use literal
- * filenames; author portable links without percent escapes or parent traversal.
+ * are supported. Historical filename-only policy (retained for review) refused
+ * all dot segments. Course navigation now resolves '.' and '..' inside the
+ * manifest's logical tree; escaping above its root is refused. Absolute paths,
+ * backslashes, schemes, query strings and percent escapes remain refused.
+ * This is a small offline profile, not general browser URL processing. The
+ * resolved filename must be declared; file reads still enforce rooted storage.
  * A fragment is empty or ASCII letters/digits/underscore/hyphen/period/colon.
  * It is a requested anchor, not proof that the document contains that anchor.
  *

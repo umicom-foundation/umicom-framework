@@ -55,6 +55,43 @@ static int NavigationAnchorCharacter(unsigned char ch)
     return (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') ||
         (ch >= '0' && ch <= '9') || ch == '_' || ch == '-' || ch == '.' || ch == ':';
 }
+
+/* Course navigation resolves within the manifest's logical tree, never the
+ * process directory or an OS path. Collapse dot segments before looking up a
+ * declared resource; crossing the pack root remains invalid. Rooted storage
+ * and checksum verification still run when the selected resource is read. */
+static UmiStatus NavigationCoursePath(const char *joined,
+    char normalized[UMI_TEACHER_PATH_CAPACITY])
+{
+    size_t used = 0U, offset = 0U;
+    for (;;) {
+        size_t end = offset;
+        while (joined[end] != '\0' && joined[end] != '/') ++end;
+        size_t count = end - offset;
+        if (count == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+        if (count == 1U && joined[offset] == '.') {
+            /* A current-folder segment changes no resource identity. */
+        } else if (count == 2U && joined[offset] == '.' &&
+                   joined[offset + 1U] == '.') {
+            if (used == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+            while (used > 0U && normalized[used - 1U] != '/') --used;
+            if (used > 0U) --used;
+        } else {
+            size_t separator = used == 0U ? 0U : 1U;
+            if (count >= UMI_TEACHER_PATH_CAPACITY - used - separator)
+                return UMI_STATUS_CAPACITY_EXCEEDED;
+            if (separator != 0U) normalized[used++] = '/';
+            memcpy(normalized + used, joined + offset, count);
+            used += count;
+        }
+        if (joined[end] == '\0') break;
+        offset = end + 1U;
+    }
+    if (used == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    normalized[used] = '\0';
+    return UMI_STATUS_OK;
+}
+
 UmiStatus UmiLearningPackResolveLink(const UmiLearningPack *pack, const char *current,
     const char *href, UmiLearningPackLink *out)
 {
@@ -94,7 +131,16 @@ UmiStatus UmiLearningPackResolveLink(const UmiLearningPack *pack, const char *cu
         if (path_size >= sizeof(relative) - prefix) return UMI_STATUS_CAPACITY_EXCEEDED;
         memcpy(relative + prefix, href, path_size);
         relative[prefix + path_size] = '\0';
+        /* The former strict filename lookup is retained for review. It
+         * refused ordinary course links such as ../index.html. The replacement
+         * resolves a bounded logical path and still requires manifest admission. */
+#if 0
         status = UmiLearningPackFindPath(pack, relative, &candidate.resource);
+#endif
+        char normalized[UMI_TEACHER_PATH_CAPACITY];
+        status = NavigationCoursePath(relative, normalized);
+        if (status == UMI_STATUS_OK)
+            status = UmiLearningPackFindPath(pack, normalized, &candidate.resource);
         if (status != UMI_STATUS_OK) return status;
     }
     /* Commit the complete selection only after path and anchor admission.

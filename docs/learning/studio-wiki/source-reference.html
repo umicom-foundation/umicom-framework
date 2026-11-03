@@ -1,0 +1,16 @@
+<!doctype html>
+<!--
+Umicom Framework
+File: docs/learning/studio-wiki/source-reference.html
+
+PURPOSE:
+Introduce Framework development through explained source workflows.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Find the implementation | Umicom Framework</title><style>body{font:1.05rem/1.65 system-ui,sans-serif;max-width:56rem;margin:2rem auto;padding:0 1.25rem;color:#203247;background:#fff}a{color:#006c89}pre{overflow:auto;padding:1rem;background:#eff4f7}code{font-family:monospace}table{border-collapse:collapse;width:100%}td,th{padding:.5rem;border:1px solid #b9c7d1;text-align:left}dt{font-weight:700;margin-top:1rem}dd{margin-left:0}</style></head><body><nav aria-label="Wiki"><a href="index.html">Framework wiki</a> · <a href="source-reference.html">Source map</a> · <a href="glossary.html">Glossary</a></nav><main><h1>Find the implementation</h1><p>A header states an interface. A source file implements it. A test calls the interface with chosen inputs and checks the result. Start with a small group of related files rather than trying to read the whole repository at once.</p><h2>Learning content in Framework</h2><table><tr><th>Path</th><th>Role</th></tr><tr><td><code>include/umicom/teacher/learning_pack.h</code></td><td>Pack metadata and verified resources</td></tr><tr><td><code>include/umicom/teacher/learning_pack.h</code> — <code>UmiLearningShelf</code> declarations</td><td>Admitted pack collection; shelf interfaces share the pack header</td></tr><tr><td><code>include/umicom/teacher/learning_reader.h</code></td><td>Reader state and navigation history</td></tr><tr><td><code>include/umicom/teacher/learning_module.h</code></td><td>Module location and prepared open operation</td></tr><tr><td><code>src/teacher/learning_module.c</code></td><td>Independent candidate shelf and reader</td></tr><tr><td><code>include/umicom/ui/gtk4/learning_catalogue.h</code></td><td>GTK catalogue interface</td></tr><tr><td><code>adapters/gtk4/learning_catalogue_jobs.c</code></td><td>Worker completion and state publication</td></tr><tr><td><code>tests/learning_pack</code></td><td>Content, ownership and UI regression cases</td></tr></table><h2>Follow one function</h2><p>Find <code>UmiLearningModuleOpen</code> in the public header, then its definition. Notice that failure clears the output handles, while the input shelf remains unchanged. Follow the reader construction call to see where resource bytes are verified. Finally read the module tests and predict the result of a changed lesson file.</p><p>This map covers the examples in this wiki. For another component, find its public header, owning build target, implementation and tests together. Do not assume that a similarly named file in another checkout is the same revision.</p></main><footer><p>Sammy Hegab · Umicom Foundation · MIT</p></footer></body></html>

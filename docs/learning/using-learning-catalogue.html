@@ -118,7 +118,10 @@ same folder can use <code>example.c</code>. A nested lesson can use
 <code>lessons/next.html</code> if that path is declared in the pack. The path is
 relative to the current resource's folder. A resource identifier used by the
 search service is not necessarily its filename.</p>
-<p>This offline link profile refuses parent traversal, absolute paths, web
+<!-- The former offline profile refused every parent segment. Bounded logical
+course navigation now admits parents within the manifest, while retaining the
+root boundary and the declared-resource requirement. -->
+<p>This offline link profile refuses traversal above the pack root, absolute paths, web
 addresses, query strings and percent-encoded paths. It never starts a browser
 or downloads content. A fragment such as <code>#details</code> is retained in
 reading history, but this text preview does not scroll to that anchor or prove
@@ -223,4 +226,4 @@ Follow <a href="record-private-checkpoints.html">the checkpoint walkthrough</a> 
 <p>Adding or replacing a pack makes the previous body results stale against the shelf. Search again before reading those results; the next search rebuilds automatically. A memory snapshot does not detect disk edits by itself. Image files are excluded, HTML scripts and styles are omitted, and source examples are searched without being executed.</p>
 <p>The default snapshot allows 256 documents, 1 MiB per source file, 64 KiB of searchable text per document and 8 MiB overall. The visible controls retain up to 128 matching documents and reports truncation. Back, Forward and Reload retain their resource-navigation behavior; they do not replay a previous search highlight. Selecting Read result again reapplies that verified location. Empty phrases are refused. There is no automatic search on each keystroke, network request, fuzzy ranking or persisted index.</p></section>
 
-</body></html>
+<section><h2>Move between course folders</h2><p>A declared lesson may link to its course overview with <code>../index.html</code> or to another course within the same learning pack. Framework resolves these names in the manifest’s logical tree and refuses links that climb above its root. The destination must be declared and its bytes must pass verification. This does not open arbitrary files or web addresses. Packs authored for the earlier reader can continue using simple sibling links; cross-folder course navigation needs a build containing this support.</p></section></body></html>

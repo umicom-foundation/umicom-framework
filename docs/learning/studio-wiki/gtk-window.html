@@ -1,0 +1,20 @@
+<!doctype html>
+<!--
+Umicom Framework
+File: docs/learning/studio-wiki/gtk-window.html
+
+PURPOSE:
+Introduce Framework development through explained source workflows.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Connect a window to shared behaviour | Umicom Framework</title><style>body{font:1.05rem/1.65 system-ui,sans-serif;max-width:56rem;margin:2rem auto;padding:0 1.25rem;color:#203247;background:#fff}a{color:#006c89}pre{overflow:auto;padding:1rem;background:#eff4f7}code{font-family:monospace}table{border-collapse:collapse;width:100%}td,th{padding:.5rem;border:1px solid #b9c7d1;text-align:left}dt{font-weight:700;margin-top:1rem}dd{margin-left:0}</style></head><body><nav aria-label="Wiki"><a href="index.html">Framework wiki</a> · <a href="source-reference.html">Source map</a> · <a href="glossary.html">Glossary</a></nav><main><h1>Connect a window to shared behaviour</h1><p>GTK4 is a toolkit for graphical applications. A widget is an interface element, such as a label or a button. A container arranges widgets. A signal reports an event, and a callback is the function connected to that event.</p><h2>Read the example window</h2><pre>GtkApplication
+  GtkApplicationWindow
+    GtkBox
+      GtkLabel
+      GtkButton</pre><p>Open <code>labs/native/framework-activity/window.c</code> in Bits2Banking. <code>main</code> creates the application and connects its activation signal. <code>Activate</code> builds the widgets and presents the window. <code>Completed</code> handles a button click, calls <code>BtbActivityAdvance</code>, and updates the label.</p><h2>Understand lifetime</h2><p>Ownership describes who must release a resource. The window owns the counter's state through an attached cleanup function. GTK containers own their child widgets. A borrowed widget pointer lets the callback use a child without taking over its ownership.</p><p>The callback retains the window while updating its label so that a notification cannot destroy its state in the middle of the operation. Such rules matter when applications have several panels that can close independently.</p><h2>Check the interaction</h2><ol><li>Enable the example's <code>BTB_ACTIVITY_GTK4</code> CMake option and build it.</li><li>Start the window and expect a count of zero.</li><li>Click once and expect one; click twice more and expect three.</li><li>Use the keyboard to focus and activate the button.</li><li>Close and reopen the window. The count starts at zero because this example has no persistence.</li></ol><p>Logic tests and these window checks cover different behaviour. Neither replaces the other. Follow the full Bits2Banking GTK4 lesson for setup commands.</p></main><footer><p>Sammy Hegab · Umicom Foundation · MIT</p></footer></body></html>

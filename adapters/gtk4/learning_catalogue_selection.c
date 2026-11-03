@@ -149,3 +149,34 @@ UmiStatus UmiLearningCatalogueGtk4OpenHelp(GtkWidget *widget, const UmiLearningH
     return status == UMI_STATUS_OK ?
         LearningCatalogueOpenSelection(owner, &selected.pack, &selected.resource) : status;
 }
+
+UmiStatus UmiLearningCatalogueGtk4OpenModule(GtkWidget *widget, const char *directory,
+    const char *pack_id, const char *product, const char *resource_id)
+{
+    LearningCatalogue *owner = LearningCatalogueOwner(widget);
+    if (owner == NULL || directory == NULL || pack_id == NULL || product == NULL || resource_id == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (owner->state.retired) return UMI_STATUS_INVALID_STATE;
+    if (owner->state.busy) return UMI_STATUS_BUSY;
+    if (!umi_path_is_absolute(directory) || !g_utf8_validate(directory, -1, NULL) ||
+        pack_id[0] == '\0' || product[0] == '\0' || resource_id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    LearningCatalogueJob *job = g_try_new0(LearningCatalogueJob, 1U);
+    if (job == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    g_weak_ref_init(&job->root, widget);
+    job->action = LEARNING_CATALOGUE_MODULE;
+    job->host = owner->host;
+    UmiStatus status = umi_path_copy(job->directory, sizeof(job->directory), directory);
+    if (strlen(pack_id) >= sizeof(job->module_pack) || strlen(product) >= sizeof(job->module_product) ||
+        strlen(resource_id) >= sizeof(job->module_resource)) status = UMI_STATUS_CAPACITY_EXCEEDED;
+    if (status == UMI_STATUS_OK) {
+        memcpy(job->module_pack, pack_id, strlen(pack_id) + 1U);
+        memcpy(job->module_product, product, strlen(product) + 1U);
+        memcpy(job->module_resource, resource_id, strlen(resource_id) + 1U);
+        status = UmiLearningShelfClone(owner->shelf, &job->selection_shelf);
+    }
+    if (status != UMI_STATUS_OK) { LearningCatalogueJobFree(job); return status; }
+    g_object_ref(widget);
+    status = LearningCatalogueDispatch(owner, job);
+    g_object_unref(widget);
+    return status;
+}
