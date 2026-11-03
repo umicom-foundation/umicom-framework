@@ -71,6 +71,26 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .badge_count = 0U,
         .revision = 1U
     },
+    /* The shared catalogue supplies identity; the host supplies a verified
+     * local learning-pack route when that service is available. */
+    {
+        .structure_size = (uint32_t)sizeof(UmiApplicationShellContribution),
+        .api_version = UMI_APPLICATION_SHELL_API_VERSION,
+        .contribution_id = "umicom.shell.help-menu.user-guide",
+        .title = "Studio User Guide",
+        .description = "Read the local guide to editing, building, debugging and project boards.",
+        .command_id = "help.learning.user-guide",
+        .component_id = "",
+        .group_id = "help",
+        .icon_id = "",
+        .context_key = "",
+        .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
+        .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
+        .order = 120,
+        .flags = UMI_APPLICATION_SHELL_VISIBLE | UMI_APPLICATION_SHELL_ENABLED,
+        .badge_count = 0U,
+        .revision = 1U
+    },
     {
         .structure_size = (uint32_t)sizeof(UmiApplicationShellContribution),
         .api_version = UMI_APPLICATION_SHELL_API_VERSION,

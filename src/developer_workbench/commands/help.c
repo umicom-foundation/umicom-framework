@@ -17,6 +17,15 @@
 #include "umicom/developer_workbench/commands/help.h"
 
 static const UmiDeveloperWorkbenchCommandDefinition COMMANDS[] = {
+    /* Without a provider this remains unavailable, never a successful placeholder. */
+    {
+        "help.learning.user-guide",
+        "Studio User Guide",
+        "Help",
+        "Read the verified local Studio workflow guide.",
+        UMI_DEVELOPER_WORKBENCH_ACTION_EXTERNAL,
+        UMI_DEVELOPER_WORKBENCH_COMMAND_NONE
+    },
     {
         "help.welcome",
         "Welcome",

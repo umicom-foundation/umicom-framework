@@ -33,10 +33,18 @@ int main(void)
     size_t other;
 
     assert(items != NULL);
+    /* The original five-command contract predates the packaged user guide.
+     * Retained so changes to the public Help catalogue remain reviewable. */
+#if 0
     assert(count == 5U);
+#endif
+    assert(count == 6U);
+    int foundGuide = 0;
 
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {
+        if (strcmp(items[index].command_id, "help.learning.user-guide") == 0)
+            foundGuide = 1;
         assert(umi_developer_workbench_command_definition_validate(
             &items[index]) == UMI_STATUS_OK);
 
@@ -47,5 +55,6 @@ int main(void)
         }
     }
 
+    assert(foundGuide);
     return 0;
 }
