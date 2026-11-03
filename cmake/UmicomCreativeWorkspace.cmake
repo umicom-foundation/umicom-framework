@@ -140,7 +140,7 @@ if(BUILD_TESTING)
         if(COMMAND umicom_register_validation_target)
             umicom_register_validation_target(umicom-creative-library-gtk-test)
         endif()
-        foreach(case workflow retained_controls surface_lifetime)
+        foreach(case workflow retained_controls surface_lifetime music-notes music-duplicate music-retired)
             add_test(NAME "framework.creative_workspace.gtk.${case}"
                 COMMAND umicom-creative-workspace-gtk-test "${case}")
             set_tests_properties("framework.creative_workspace.gtk.${case}" PROPERTIES

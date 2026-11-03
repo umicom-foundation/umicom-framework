@@ -59,6 +59,39 @@ static void MediaNavigationChanged(GObject *source, GParamSpec *property, gpoint
     GtkWidget *pages = MediaFind(GTK_WIDGET(root), "creative.surface.pages");
     if (GTK_IS_STACK(pages)) MediaMarkNavigation(GTK_WIDGET(root), GTK_STACK(pages));
 }
+/* The visible command and its menu proxy share availability. Listening to
+ * effective GTK state also covers a disabled editor ancestor during retirement;
+ * object-bound closures disconnect when the proxy is released. The original
+ * command still checks admission at dispatch time and remains the sole editor. */
+static void MediaRouteAvailability(GtkWidget *target, GtkStateFlags previous,
+                                   gpointer proxy)
+{
+    (void)previous;
+    gtk_widget_set_sensitive(GTK_WIDGET(proxy), gtk_widget_is_sensitive(target));
+}
+static void MediaBindRouteAvailability(GtkWidget *widget, GtkStack *pages)
+{
+    const char *route = g_object_get_data(G_OBJECT(widget), "media-route");
+    if (GTK_IS_BUTTON(widget) && route != NULL) {
+        GtkWidget *target = gtk_stack_get_child_by_name(pages, route);
+        if (target == NULL) target = MediaFind(GTK_WIDGET(pages), route);
+        bool valid = target != NULL;
+        if (g_str_has_prefix(route, "video.")) valid = GTK_IS_BUTTON(target);
+        if (valid) {
+            g_signal_connect_object(target, "state-flags-changed",
+                G_CALLBACK(MediaRouteAvailability), widget, 0);
+            MediaRouteAvailability(target, 0, widget);
+        } else {
+            /* Optional SDK pages are not present in every installation. A
+             * missing destination must not be advertised as an active command. */
+            gtk_widget_set_sensitive(widget, FALSE);
+            gtk_widget_set_tooltip_text(widget, "This tool is unavailable in this installation.");
+        }
+    }
+    for (GtkWidget *child = gtk_widget_get_first_child(widget); child != NULL;
+         child = gtk_widget_get_next_sibling(child))
+        MediaBindRouteAvailability(child, pages);
+}
 static void MediaBindNavigation(UmiCreativeGtkSurface *surface)
 {
     g_signal_connect_object(surface->pages, "notify::visible-child",
@@ -67,6 +100,7 @@ static void MediaBindNavigation(UmiCreativeGtkSurface *surface)
     GtkWidget *notebook = page != NULL ? gtk_widget_get_ancestor(page, GTK_TYPE_NOTEBOOK) : NULL;
     if (notebook != NULL) g_signal_connect_object(notebook, "notify::page",
         G_CALLBACK(MediaNavigationChanged), surface->root, 0);
+    MediaBindRouteAvailability(surface->root, surface->pages);
     MediaNavigationChanged(NULL, NULL, surface->root);
 }
 

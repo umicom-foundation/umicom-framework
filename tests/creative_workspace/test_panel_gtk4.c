@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/creative_workspace/test_panel_gtk4.c
- * PURPOSE: Check native edit routing and retained-widget teardown without disk, processes or an application loop.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Check native edit routing and retained-widget teardown with isolated storage.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/creative_workspace.h"
@@ -38,11 +45,56 @@ int main(int argc,char **argv)
         CHECK(gtk_widget_get_parent(original)==NULL);
         CHECK(strcmp(gtk_label_get_text(GTK_LABEL(original)),"Existing product content")==0);
     }else{
-        CHECK(UmiCreativeGtkPanelCreate(server,"media",&panel)==UMI_STATUS_OK);
+        CHECK(UmiCreativeGtkPanelCreate(server,g_str_has_prefix(argv[1],"music-") ? "music" : "media",&panel)==UMI_STATUS_OK);
         root=UmiCreativeGtkPanelWidget(panel);CHECK(umi_data_server_count(server)==0U);
         retained=g_object_ref(Find(root,"creative.project.create"));CHECK(GTK_IS_BUTTON(retained));
         if(strcmp(argv[1],"retained_controls")==0){
             UmiCreativeGtkPanelDestroy(panel);panel=NULL;g_signal_emit_by_name(retained,"clicked");CHECK(umi_data_server_count(server)==0U);
+        }else if(g_str_has_prefix(argv[1],"music-")){
+            /* Inspect a second service handle so assertions observe committed
+             * Framework state, rather than reading labels from the editor. */
+            Click(root,"creative.project.create");
+            CHECK(UmiCreativeWorkspaceOpen(server,"workshop",&inspector)==UMI_STATUS_OK);
+            CHECK(UmiCreativeWorkspaceCopy(inspector,project)==UMI_STATUS_OK);
+            CHECK(project->noteCount==0U);
+            Click(root,"creative.note.add");
+            CHECK(UmiCreativeWorkspaceReload(inspector)==UMI_STATUS_OK);
+            CHECK(UmiCreativeWorkspaceCopy(inspector,project)==UMI_STATUS_OK);
+            CHECK(project->noteCount==1U&&project->notes[0].pitch==69U);
+            uint64_t revision=project->revision;
+            if(strcmp(argv[1],"music-notes")==0){
+                widget=Find(root,"creative.note.pitch");CHECK(GTK_IS_SPIN_BUTTON(widget));
+                gtk_spin_button_set_value(GTK_SPIN_BUTTON(widget),72.0);
+                Click(root,"creative.note.update");
+                CHECK(UmiCreativeWorkspaceReload(inspector)==UMI_STATUS_OK);
+                CHECK(UmiCreativeWorkspaceCopy(inspector,project)==UMI_STATUS_OK);
+                CHECK(project->notes[0].pitch==72U&&project->revision==revision+1U);
+                Click(root,"creative.history.undo");
+                CHECK(UmiCreativeWorkspaceReload(inspector)==UMI_STATUS_OK);
+                CHECK(UmiCreativeWorkspaceCopy(inspector,project)==UMI_STATUS_OK);
+                CHECK(project->notes[0].pitch==69U);
+                Click(root,"creative.history.redo");
+                CHECK(UmiCreativeWorkspaceReload(inspector)==UMI_STATUS_OK);
+                CHECK(UmiCreativeWorkspaceCopy(inspector,project)==UMI_STATUS_OK);
+                CHECK(project->notes[0].pitch==72U);
+                Click(root,"creative.note.remove");
+                CHECK(UmiCreativeWorkspaceReload(inspector)==UMI_STATUS_OK);
+                CHECK(UmiCreativeWorkspaceCopy(inspector,project)==UMI_STATUS_OK);
+                CHECK(project->noteCount==0U);
+            }else if(strcmp(argv[1],"music-duplicate")==0){
+                Click(root,"creative.note.add");
+                CHECK(UmiCreativeWorkspaceReload(inspector)==UMI_STATUS_OK);
+                CHECK(UmiCreativeWorkspaceCopy(inspector,project)==UMI_STATUS_OK);
+                CHECK(project->noteCount==1U&&project->revision==revision);
+            }else if(strcmp(argv[1],"music-retired")==0){
+                GtkWidget *remove=Find(root,"creative.note.remove");CHECK(GTK_IS_BUTTON(remove));
+                g_object_ref(remove);
+                UmiCreativeGtkPanelDestroy(panel);panel=NULL;
+                g_signal_emit_by_name(remove,"clicked");g_object_unref(remove);
+                CHECK(UmiCreativeWorkspaceReload(inspector)==UMI_STATUS_OK);
+                CHECK(UmiCreativeWorkspaceCopy(inspector,project)==UMI_STATUS_OK);
+                CHECK(project->noteCount==1U&&project->revision==revision);
+            }else result=2;
         }else if(strcmp(argv[1],"workflow")==0){
             Click(root,"creative.project.create");Click(root,"creative.project.starter");
             CHECK(UmiCreativeWorkspaceOpen(server,"workshop",&inspector)==UMI_STATUS_OK);

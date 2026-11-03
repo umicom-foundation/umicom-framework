@@ -199,3 +199,23 @@ endif()
 if(BUILD_TESTING)
     include("${CMAKE_CURRENT_LIST_DIR}/../tests/record_chain/bank_operations.cmake")
 endif()
+
+# The native command fixture retains the production widget/service composition;
+# only its database-open and directory-creation boundaries are isolated.
+if(BUILD_TESTING AND TARGET Umicom::bank_operations_gtk4)
+    add_executable(umicom-bank-native-commands-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/bank_operations/test_native_commands.c")
+    target_link_libraries(umicom-bank-native-commands-test PRIVATE
+        Umicom::bank_operations Umicom::ui_gtk4)
+    umicom_bank_review_target(umicom-bank-native-commands-test)
+    foreach(case IN ITEMS review-submit edited-review close-reopen action-catalogue)
+        add_test(NAME framework.bank_operations.native.${case}
+            COMMAND umicom-bank-native-commands-test ${case})
+        set_tests_properties(framework.bank_operations.native.${case} PROPERTIES
+            TIMEOUT 45 SKIP_RETURN_CODE 77 LABELS "framework;bank;bank-operations;gtk4;workflow;regression"
+            ENVIRONMENT "G_DEBUG=fatal-warnings")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-bank-native-commands-test)
+    endif()
+endif()

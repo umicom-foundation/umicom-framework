@@ -95,6 +95,7 @@ static void Geometry(GtkWidget *root)
     CHECK(gtk_widget_get_mapped(Find(root, "video.timeline.clip.0")));
 }
 #include "workspace_customisation.inc"
+#include "workspace_menu_commands.inc"
 
 int main(int argc, char **argv)
 {
@@ -102,7 +103,7 @@ int main(int argc, char **argv)
     const char *mode = argv[1];
     CHECK(strcmp(mode, "geometry") == 0 || strcmp(mode, "selection") == 0 ||
           strcmp(mode, "edits") == 0 || strcmp(mode, "retirement") == 0 ||
-          strcmp(mode, "composition") == 0 || strcmp(mode, "music-composition") == 0 || CustomisationCase(mode));
+          strcmp(mode, "composition") == 0 || strcmp(mode, "music-composition") == 0 || CustomisationCase(mode) || MediaMenuCase(mode));
     (void)g_setenv("GTK_A11Y", "test", TRUE);
     (void)g_setenv("GSETTINGS_BACKEND", "memory", TRUE);
     if (!gtk_init_check()) return 77;
@@ -110,7 +111,7 @@ int main(int argc, char **argv)
     gtk_window_set_default_size(GTK_WINDOW(window), 1280, 800);
     UmiCreativeGtkSurface *surface = NULL;
     GtkWidget *original = NULL, *host, *root;
-    if (strcmp(mode, "composition") == 0 || strcmp(mode, "music-composition") == 0 || SurfaceCase(mode)) {
+    if (strcmp(mode, "composition") == 0 || strcmp(mode, "music-composition") == 0 || SurfaceCase(mode) || MediaMenuCase(mode)) {
         bool music = strcmp(mode, "music-composition") == 0;
         original = gtk_label_new("Original product layout"); g_object_ref_sink(original);
         CHECK(UmiCreativeGtkSurfaceCreate(original, music ? "music" : "media", &surface) == UMI_STATUS_OK);
@@ -180,6 +181,7 @@ int main(int argc, char **argv)
         CHECK(UmiVideoSequenceEqual(&before, UmiVideoSequenceEditorRead(panel->editor)));
     }
     Customisation(mode, window, host, root, panel);
+    MediaMenuCommands(mode, host, root, panel);
     gtk_window_set_child(GTK_WINDOW(window), NULL);
     if (surface != NULL) {
         UmiCreativeGtkSurfaceDestroy(surface);

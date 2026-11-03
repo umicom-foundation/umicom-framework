@@ -89,13 +89,15 @@ if(BUILD_TESTING)
             library-search library-selection library-empty library-reentry timeline-zoom
             layout-resize layout-visibility layout-recall layout-reset layout-retirement
             layout-reentry layout-retire-notify
-            workspace-navigation keyboard-regions keyboard-hidden media-brand media-mode-retention)
+            workspace-navigation keyboard-regions keyboard-hidden media-brand media-mode-retention
+            media-menu-history media-menu-availability media-menu-navigation media-menu-retirement)
         target_link_libraries(umicom-video-workspace-gtk-test PRIVATE Umicom::creative_workspace_gtk4)
         foreach(case geometry selection edits retirement composition music-composition
             library-search library-selection library-empty library-reentry timeline-zoom
             layout-resize layout-visibility layout-recall layout-reset layout-retirement
             layout-reentry layout-retire-notify
-            workspace-navigation keyboard-regions keyboard-hidden media-brand media-mode-retention)
+            workspace-navigation keyboard-regions keyboard-hidden media-brand media-mode-retention
+            media-menu-history media-menu-availability media-menu-navigation media-menu-retirement)
             set_tests_properties(framework.video_sequence.umicom-video-workspace-gtk-test.${case}
                 PROPERTIES ENVIRONMENT "G_DEBUG=fatal-warnings" LABELS "framework;video-sequence;gtk4;workflow;regression")
         endforeach()
