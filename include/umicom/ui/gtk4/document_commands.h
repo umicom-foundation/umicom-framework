@@ -44,6 +44,13 @@ typedef void (*UmiGtk4DocumentEditResultFn)(void *context, UmiStatus status);
 UmiStatus UmiGtk4AdapterBindDocumentEditing(UmiGtk4Adapter *adapter,
     UmiDocumentCoordinator *coordinator, UmiGtk4DocumentEditResultFn completed,
     void *context);
+/** Render the current coordinator-owned source before its host reveals a
+ * hidden editor panel. Does not grab focus or change layout; retains drafts,
+ * selections and undo history. Owner-thread only. OK means native document
+ * widgets were synchronized, not that an editor is visible or focused.
+ * CANCELLED means the binding retired; INVALID_STATE means an observer
+ * selected a different document. Neither case retries or reverses selection. */
+UmiStatus UmiGtk4AdapterRefreshActiveDocument(UmiGtk4Adapter *adapter);
 /** Focus the active coordinator-owned source editor after an explicit New/Open
  * action. Refreshes document widgets only and preserves draft, selection and
  * undo history. The embedding host must reveal its editor panel first; this

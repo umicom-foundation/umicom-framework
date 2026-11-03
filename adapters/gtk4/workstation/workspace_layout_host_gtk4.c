@@ -1296,6 +1296,15 @@ UmiStatus umi_gtk4_workspace_layout_host_focus_window(
             break;
         }
     }
+    /* Selecting an already focused panel is idempotent. Advancing its tab
+     * chain here moves the caret away from an editor whenever a frontend
+     * repeats a panel activation; keyboard traversal belongs to FocusCycle. */
+    GtkRoot *focusRoot = gtk_widget_get_root(frame);
+    GtkWidget *focused = GTK_IS_WINDOW(focusRoot)
+        ? gtk_window_get_focus(GTK_WINDOW(focusRoot)) : NULL;
+    if (focused != NULL && (focused == frame || gtk_widget_is_ancestor(focused, frame)) &&
+        gtk_widget_is_visible(focused) && gtk_widget_is_sensitive(focused))
+        return UMI_STATUS_OK;
     /* Prefer a real editor or control. Read-only panels still expose a focus
      * target so keyboard users can tell which panel was selected. */
     if (!gtk_widget_child_focus(frame, GTK_DIR_TAB_FORWARD)) {

@@ -93,6 +93,16 @@ int main(void)
     gtk_window_set_child(GTK_WINDOW(window), root);
     gtk_window_set_default_size(GTK_WINDOW(window), 1000, 700);
     gtk_window_present(GTK_WINDOW(window)); Settle();
+    CHECK(gtk_widget_grab_focus(fixture.bodies[1]));
+    GtkWidget *editorFocus = gtk_window_get_focus(GTK_WINDOW(window));
+    gtk_editable_select_region(GTK_EDITABLE(fixture.bodies[1]), 2, 7);
+    for (unsigned activation = 0U; activation < 3U; ++activation) {
+        CHECK(umi_gtk4_workspace_layout_host_focus_window(host, "editor") == UMI_STATUS_OK);
+        CHECK(gtk_window_get_focus(GTK_WINDOW(window)) == editorFocus);
+        int start = 0, end = 0;
+        CHECK(gtk_editable_get_selection_bounds(GTK_EDITABLE(fixture.bodies[1]), &start, &end));
+        CHECK(start == 2 && end == 7);
+    }
     CHECK(gtk_widget_grab_focus(fixture.bodies[0]));
     GtkWidget *pane = FirstPane(root);
     CHECK(pane != NULL);

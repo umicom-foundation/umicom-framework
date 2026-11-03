@@ -1491,8 +1491,44 @@ UmiStatus UmiGtk4AdapterFocusActiveDocument(UmiGtk4Adapter *adapter)
 #endif
 
 
+/* Hosts must render the new coordinator selection before revealing a panel.
+ * Revealing an old native page can deliver focus-enter and select that old
+ * document again. Keep document rendering and identity checks in Framework;
+ * the host remains responsible for its layout and the final focus request. */
+static UmiStatus RefreshActiveDocumentIdentity(UmiGtk4Adapter *adapter,
+    UmiDocumentWorkingCopySnapshot *active)
+{
+    if (adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (adapter->shell == NULL || adapter->window == NULL ||
+        adapter->edit_coordinator == NULL || adapter->edit_lifetime == NULL) return UMI_STATUS_UNAVAILABLE;
+    UmiStatus status = umi_document_coordinator_active_snapshot(adapter->edit_coordinator, active);
+    if (status != UMI_STATUS_OK) return status;
+    GObject *lifetime = g_object_ref(adapter->edit_lifetime);
+    status = umi_gtk4_refresh_documents(adapter,
+        umi_ui_application_shell_workbench(adapter->shell));
+    adapter = g_object_get_data(lifetime, "adapter");
+    g_object_unref(lifetime);
+    if (adapter == NULL) return UMI_STATUS_CANCELLED;
+    if (status != UMI_STATUS_OK) return status;
+    UmiDocumentWorkingCopySnapshot current;
+    status = umi_document_coordinator_active_snapshot(adapter->edit_coordinator, &current);
+    if (status != UMI_STATUS_OK) return status;
+    if (current.document_id != active->document_id || strcmp(current.view_id, active->view_id) != 0)
+        return UMI_STATUS_INVALID_STATE;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiGtk4AdapterRefreshActiveDocument(UmiGtk4Adapter *adapter)
+{
+    UmiDocumentWorkingCopySnapshot active;
+    return RefreshActiveDocumentIdentity(adapter, &active);
+}
+
 UmiStatus UmiGtk4AdapterFocusActiveDocument(UmiGtk4Adapter *adapter)
 {
+    /* Shared preparation also supports hidden panels before layout reveal.
+     * Retain the original inline sequence for engineering review. */
+#if 0
     if (adapter == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     if (adapter->shell == NULL || adapter->window == NULL ||
         adapter->edit_coordinator == NULL || adapter->edit_lifetime == NULL) return UMI_STATUS_UNAVAILABLE;
@@ -1516,6 +1552,10 @@ UmiStatus UmiGtk4AdapterFocusActiveDocument(UmiGtk4Adapter *adapter)
     if (status != UMI_STATUS_OK) return status;
     if (current.document_id != active.document_id || strcmp(current.view_id, active.view_id) != 0)
         return UMI_STATUS_INVALID_STATE;
+#endif
+    UmiDocumentWorkingCopySnapshot active;
+    UmiStatus status = RefreshActiveDocumentIdentity(adapter, &active);
+    if (status != UMI_STATUS_OK) return status;
     GtkWidget *notebook = NULL;
     GtkWidget *page = find_document_page(adapter, active.view_id, &notebook);
     GtkWidget *view = page != NULL
