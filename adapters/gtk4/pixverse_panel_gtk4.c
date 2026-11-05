@@ -1,9 +1,17 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/pixverse_panel_gtk4.c
- * PURPOSE: Run reviewed video requests with local keys and explicit progress checks.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Run reviewed video requests with local keys and explicit progress checks,
+ *   and accept bounded creation-brief handoffs.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/media_generation/pixverse_gtk4.h"
@@ -435,5 +443,33 @@ UmiStatus UmiPixVerseGtkCreate(const char *application, const char *profile, Gtk
     g_signal_connect_object(panel->audio, "toggled", G_CALLBACK(Changed), G_OBJECT(panel->root), 0);
     g_signal_connect_object(panel->shots, "toggled", G_CALLBACK(Changed), G_OBJECT(panel->root), 0);
     *out = panel->root;
+    return UMI_STATUS_OK;
+}
+
+/* Handoffs share the original generator owner and invalidation path. They
+ * never click Send, borrow source text, or overwrite an unapproved draft. */
+UmiStatus UmiPixVerseGtkSetPrompt(GtkWidget *root, const char *text, bool replace_existing)
+{
+    if (!GTK_IS_WIDGET(root) || text == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    VideoPanel *panel = Panel(root);
+    if (panel == NULL) return UMI_STATUS_INVALID_STATE;
+    if (panel->busy) return UMI_STATUS_BUSY;
+    size_t length = 0U;
+    while (length < 5001U && text[length] != '\0') ++length;
+    if (length >= 5001U) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (length == 0U || !g_utf8_validate(text, (gssize)length, NULL))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t i = 0U; i < length; ++i) {
+        unsigned char c = (unsigned char)text[i];
+        if (c == 127U || (c < 32U && c != '\t' && c != '\r' && c != '\n'))
+            return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(panel->prompt));
+    if (!replace_existing && gtk_text_buffer_get_char_count(buffer) != 0)
+        return UMI_STATUS_ALREADY_EXISTS;
+    gtk_text_buffer_set_text(buffer, text, (int)length);
+    Invalidate(panel);
+    gtk_editable_set_text(GTK_EDITABLE(panel->password), "");
+    Message(panel, "Creation brief copied. Review this request before generating.");
     return UMI_STATUS_OK;
 }

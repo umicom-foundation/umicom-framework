@@ -110,7 +110,15 @@ static void MediaRoute(GtkButton *button, gpointer data)
     GtkStack *pages = GTK_STACK(data);
     const char *route = g_object_get_data(G_OBJECT(button), "media-route");
     if (route == NULL) return;
+    /* Direct workspace routes now include source preparation. Retain the
+     * original two-page dispatch for review; widget identity is authoritative. */
+#if 0
     if (strcmp(route, "video-editing") == 0 || strcmp(route, "layouts") == 0) {
+        gtk_stack_set_visible_child_name(pages, route);
+        return;
+    }
+#endif
+    if (gtk_stack_get_child_by_name(pages, route) != NULL) {
         gtk_stack_set_visible_child_name(pages, route);
         return;
     }
@@ -190,6 +198,7 @@ static void MediaHeader(UmiCreativeGtkSurface *surface)
     MediaMenuItem(surface->pages, menu, "Project and recipe paths", "media.menu.project", "video.navigation.project");
     MediaMenuItem(surface->pages, menu, "Save new recipe", "media.menu.save", "video.save");
     MediaMenuItem(surface->pages, menu, "Export settings", "media.menu.export", "video.navigation.export");
+    MediaMenuItem(surface->pages, menu, "Create from text", "media.menu.creation", "creation");
     menu = MediaMenu(bar, "Edit");
     MediaMenuItem(surface->pages, menu, "Undo video edit", "media.menu.undo", "video.undo");
     MediaMenuItem(surface->pages, menu, "Redo video edit", "media.menu.redo", "video.redo");
@@ -211,9 +220,16 @@ static void MediaHeader(UmiCreativeGtkSurface *surface)
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll), GTK_POLICY_AUTOMATIC, GTK_POLICY_NEVER);
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), modes);
     gtk_box_append(GTK_BOX(surface->root), scroll);
+    /* The source workflow adds a task without replacing existing editor modes. */
+#if 0
     const char *labels[] = {"Video Edit", "AI Video", "AI Image", "Audio", "Canvas", "Layouts"};
     const char *ids[] = {"video", "ai-video", "ai-image", "audio", "canvas", "layouts"};
     const char *routes[] = {"video-editing", "creative.tools.ai-video", "creative.tools.ai-image",
+                            "creative.tools.audio", "creative.tools.canvas", "layouts"};
+#endif
+    const char *labels[] = {"Video Edit", "Create from text", "AI Video", "AI Image", "Audio", "Canvas", "Layouts"};
+    const char *ids[] = {"video", "create", "ai-video", "ai-image", "audio", "canvas", "layouts"};
+    const char *routes[] = {"video-editing", "creation", "creative.tools.ai-video", "creative.tools.ai-image",
                             "creative.tools.audio", "creative.tools.canvas", "layouts"};
     for (size_t i = 0U; i < G_N_ELEMENTS(labels); ++i) {
         char *id = g_strdup_printf("media.mode.%s", ids[i]);

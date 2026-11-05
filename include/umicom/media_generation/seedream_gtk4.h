@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/media_generation/seedream_gtk4.h
- * PURPOSE: Compose a native reviewed image generation workflow.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Expose reviewed image generation and explicit prompt handoff.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_MEDIA_GENERATION_SEEDREAM_GTK4_H
@@ -20,6 +27,11 @@ extern "C"
  * Generation and PNG export are separate explicit actions. Unsaved results
  * live only for this panel's lifetime; closing cannot cancel remote billing. */
     UmiStatus UmiSeedreamGtkCreate(const char *application, const char *profile, GtkWidget **out);
+    /* Copy an explicit draft into an idle generator. A nonempty existing
+     * draft requires replace_existing=true. Failure preserves all fields;
+     * success revokes review/approval and clears the password. No request is
+     * sent. Call only on the GTK owner thread with this generator's root. */
+    UmiStatus UmiSeedreamGtkSetPrompt(GtkWidget *root, const char *text, bool replace_existing);
 #ifdef __cplusplus
 }
 #endif

@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Create media from a source excerpt</title><style>body{font:17px/1.65 system-ui,sans-serif;max-width:1000px;margin:40px auto;padding:0 24px;color:#193744;background:#f8fbfc}h1,h2{line-height:1.25}h2{margin-top:2em}code{background:#e8f0f4;padding:2px 5px;overflow-wrap:anywhere}blockquote{border-left:4px solid #167f85;margin:20px 0;padding:12px 24px;background:#edf5f6}li{margin:.6em 0}.table{overflow:auto}td,th{border:1px solid #bdd0d8;padding:10px;text-align:left}table{border-collapse:collapse;width:100%}a{color:#075c6e}:focus-visible{outline:3px solid #167f85}footer{margin-top:2em;border-top:1px solid #bdd0d8;padding-top:1em}</style></head><body><main>
+<h1 id="create-media-from-a-source-excerpt">Create media from a source excerpt</h1>
+<p>A <strong>creation brief</strong> describes what you want to make. It combines a short source excerpt, your creative direction and an output choice. For example, a paragraph about a railway journey can become the starting point for a storyboard, an image or a video. A storyboard is a numbered plan of the shots that make up a film.</p>
+<p>Umicom Media prepares the brief on your computer. This step arranges your words; it does not call a model or generate a picture. You can edit the result before passing it to a generation tool or a text model.</p>
+<h2 id="prepare-a-brief">Prepare a brief</h2>
+<ol>
+<li>Open Umicom Media and choose <strong>Create from text</strong> in the top navigation. You can also choose it from <strong>File</strong>. The video editor and its current project remain available under <strong>Video Edit</strong>.</li>
+<li>Drag the divider between the two columns to give the source or the review more room. Each column scrolls independently.</li>
+<li>Enter a <strong>Project title</strong>, such as <code>Coastal journey</code>.</li>
+<li>Choose <strong>Storyboard</strong>, <strong>Image</strong>, <strong>Video</strong> or <strong>Music brief</strong>. Music brief produces a written plan, not an audio file.</li>
+<li>Paste a short passage into <strong>Source excerpt</strong>. You can copy it from a book, document, conversation or your own notes. This page accepts text; it does not open PDF, DOCX or ebook files.</li>
+<li>Enter <strong>Creative direction</strong>. For example: <code>A quiet documentary. Show a small passenger train and natural evening light. Avoid on-screen text.</code> This field is optional.</li>
+<li>Choose <strong>Prepare brief</strong>. The right column shows the instructions, project title, direction and source together. No network request has been made.</li>
+<li>Read and edit the brief. Check names, claims, scene details and the intended output. Treat the result as instructions for another tool, not evidence that media has already been generated.</li>
+</ol>
+<p>Try this source passage:</p>
+<blockquote>A passenger train follows the coast at sunset. It slows beside a small station. A traveller steps onto the platform and looks towards the sea.</blockquote>
+<p>With <strong>Storyboard</strong> selected, the prepared text asks for numbered shots, visual descriptions and narration. It does not invent those shots itself. A text model can develop the plan in the next step.</p>
+<h2 id="use-a-local-or-remote-text-model">Use a local or remote text model</h2>
+<p>A <strong>model</strong> is the program that produces a response. An <strong>endpoint</strong> is the address where a model service accepts requests. Installing model files alone does not start such a service.</p>
+<ol>
+<li>In <strong>Model settings file</strong>, enter an absolute path that you choose, such as <code>C:\umicom\work\media-connections.sqlite3</code>. An absolute path includes the drive or filesystem root. This file stores connection settings, not your source excerpt or chat history. Opening it begins a local settings load; it does not send a request to a provider.</li>
+<li>Choose <strong>Open model connections with this brief</strong>. The connection window displays a copy under <strong>Captured context for one chat</strong>. Later changes in Media do not silently change this copy.</li>
+<li>Select a saved connection. To add one, use <strong>New</strong>, enter its ID, label, endpoint and model identifier, choose its route, enable it, then use <strong>Save draft</strong>. A local service must be running and provide the chat-completions protocol supported by the existing adapter. Use <strong>Local loopback (no credential)</strong> for that route. Remote connections use HTTPS and their configured credential reference.</li>
+<li>Use the connection window&#x27;s chat command. The new chat contains the captured brief as context. Enter a request such as <code>Develop the captured brief into six numbered shots. Include suggested narration for each shot.</code></li>
+<li>Choose <strong>Review request</strong>, inspect the endpoint and complete request, give the displayed approval and choose <strong>Send reviewed request once</strong>. Only this explicit action sends the reviewed text.</li>
+<li>Read the response. Copy the useful text back into the Media brief or save it with the chat&#x27;s export controls. Responses are not inserted into the video timeline automatically.</li>
+</ol>
+<p>An Umicom model can participate through this route when it is served through a compatible endpoint. This page does not load Umicom model weights directly, train a model or fine-tune it. Those are separate model-runtime capabilities. A server responding at an address is not by itself proof that it supports the expected request and response format.</p>
+<h2 id="create-an-image-or-video">Create an image or video</h2>
+<ol>
+<li>Select <strong>Image</strong> or <strong>Video</strong> as the output choice and prepare the brief again. Review the new instructions.</li>
+<li>Choose <strong>Use in AI Image</strong> or <strong>Use in AI Video</strong>. Media copies the brief into its existing image or video generation page and brings that page into view. This does not submit a request.</li>
+<li>If that page already contains a prompt, Media preserves it. Return to <strong>Create from text</strong> and select <strong>Allow replacing the edited brief or generator prompt on the next action</strong> only if you want to replace those words. Choose the handoff again. The permission applies to one action and is then cleared.</li>
+<li>In the generation page, choose the provider settings and review the request using that page&#x27;s controls. Existing approvals are cleared when a new brief arrives. A generation already in progress is not replaced.</li>
+<li>Send only after inspecting the provider request. The image route uses the existing Seedream adapter; the video route uses the existing PixVerse adapter. API availability, provider credentials and provider charges still apply.</li>
+<li>Save a successful image or follow the video receipt/status workflow. Import a completed local asset into the appropriate editing tool when supported. Handoff does not create a persistent generation queue or automatically download and add clips to the timeline.</li>
+</ol>
+<h2 id="plan-music-and-combine-media">Plan music and combine media</h2>
+<p>Choose <strong>Music brief</strong> to ask a text model for mood, instrumentation, tempo suggestions and song structure. A tempo describes the pace of music, commonly measured in beats per minute. The response is a plan: it is not a recording or synthesized performance.</p>
+<p>Use the existing <a href="song-and-music-video-plans.html">song planning guide</a> to work with timed lyrics and shot plans. Use <a href="audio-arrangements.html">audio arrangements</a> to combine supported local audio, and <a href="creative-asset-libraries.html">creative asset libraries</a> to keep source files together. Each editor has its own supported formats and save controls. An exported text brief is not a saved video project, asset library or audio arrangement.</p>
+<h2 id="save-work-and-recover-from-mistakes">Save work and recover from mistakes</h2>
+<ol>
+<li>Use the text export control beneath the model controls. Enter a complete new <code>.txt</code> filename in a folder you can access and choose its save action. The folder must already exist. Existing files are not replaced.</li>
+<li>Check the export message before closing Media. Source fields and the settings-path entry are not automatically saved between launches. The exported brief includes the source and direction as plain text; there is no form-state import in this version.</li>
+<li>If you change a source field, Media keeps the previous brief but blocks handoff until you prepare it again. You can still save the displayed draft.</li>
+<li>If you edited the brief, preparing it again asks for explicit replacement. Save or copy those edits first if you want to keep them.</li>
+<li>If a settings file cannot be opened, check that its path is absolute and writable. A failed load is shown in the connection window. Changing a path does not move an existing settings database.</li>
+<li>If generation is busy, wait for its current result or use that tool&#x27;s existing stop control. A handoff never cancels a provider job for you.</li>
+</ol>
+<p>The title accepts up to 128 UTF-8 bytes, the excerpt 2048 and the direction 512. The editable brief accepts up to 4096 bytes for handoff and export. UTF-8 is a way to store characters as bytes; some characters take more than one byte. Oversized input is refused rather than silently cut short. Use a smaller excerpt and keep the complete original document separately.</p>
+<h2 id="how-framework-and-media-share-the-work">How Framework and Media share the work</h2>
+<p>The application chooses its Media profile. Framework owns the brief, validation, widgets and provider handoff. Another application can reuse the same services without duplicating provider requests.</p>
+<div class="table"><table><thead><tr><th>Source file</th><th>Responsibility</th></tr></thead><tbody>
+<tr><td><code>include/umicom/creative_workspace/media_brief.h</code></td><td>Portable input fields, output choices and ownership contract</td></tr>
+<tr><td><code>src/creative_workspace/media_brief.c</code></td><td>Validate and copy the input into an immutable prepared brief</td></tr>
+<tr><td><code>include/umicom/ui/gtk4/media_brief.h</code></td><td>Native workspace construction and retirement contract</td></tr>
+<tr><td><code>adapters/gtk4/media_brief_gtk4.c</code></td><td>Source editing, review, explicit export and guarded handoff</td></tr>
+<tr><td><code>adapters/gtk4/creative_workspace_surface_gtk4.c</code></td><td>Add the page to Media while retaining existing editors</td></tr>
+<tr><td><code>adapters/gtk4/provider_connections_window_gtk4.c</code></td><td>Open the shared connection chooser with an explicit storage path</td></tr>
+<tr><td><code>tests/creative_workspace/test_media_brief.c</code></td><td>Portable validation and copied-source regression cases</td></tr>
+<tr><td><code>tests/creative_workspace/test_media_brief_gtk4.c</code></td><td>Native preparation, stale-source, prompt replacement and retirement cases</td></tr>
+</tbody></table></div>
+<p><code>UmiMediaBriefCreate</code> copies its input into an owned result. <code>UmiMediaBriefPrompt</code> returns borrowed text that remains valid until <code>UmiMediaBriefDestroy</code>. A host must copy it if it needs the text after destruction. Native hosts call <code>UmiMediaBriefGtkRetire</code> before retiring their generation owners so retained buttons cannot restart work.</p>
+</main><footer><a href="media-creation-briefs.md">Markdown edition</a></footer></body></html>

@@ -1,4 +1,17 @@
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomReleaseQualification.cmake
+#
+# PURPOSE:
+#   Declare implementation owners and independent public-header qualification.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
 # Explicit ownership and consumer-side compilation extend the existing release
 # inventory; header naming alone never grants ownership to a target.
 include_guard(GLOBAL)
@@ -119,6 +132,8 @@ function(umicom_release_contracts_prepare)
     _umicom_release_declare_pair(umicom_creative_workspace include/umicom/creative_workspace/asset_library_archive.h src/creative_workspace/asset_library_archive.c)
     _umicom_release_declare_pair(umicom_creative_workspace_gtk4 include/umicom/ui/gtk4/creative_library.h adapters/gtk4/creative_library_gtk4.c)
     # Creative workflows declare their portable and native implementation owners.
+    _umicom_release_declare_pair(umicom_creative_workspace include/umicom/creative_workspace/media_brief.h src/creative_workspace/media_brief.c)
+    _umicom_release_declare_pair(umicom_creative_workspace_gtk4 include/umicom/ui/gtk4/media_brief.h adapters/gtk4/media_brief_gtk4.c)
     _umicom_release_declare_pair(umicom_application include/umicom/application/launch_receipts.h src/application/launch_receipts.c)
     _umicom_release_declare_pair(umicom_ui_gtk4 include/umicom/ui/gtk4/application_processes.h adapters/gtk4/application_processes_gtk4.c)
     _umicom_release_declare_pair(umicom_pixverse include/umicom/media_generation/pixverse.h src/media_generation/pixverse_plan.c)

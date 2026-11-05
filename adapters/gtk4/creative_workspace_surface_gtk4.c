@@ -16,9 +16,11 @@
 #include "creative_workspace_private.h"
 #include <string.h>
 #include "media_workspace_style.h"
+#include "umicom/ui/gtk4/media_brief.h"
 struct UmiCreativeGtkSurface {
     UmiCreativeGtkPanel *panel;
     GtkWidget *root, *original;
+    GtkWidget *brief; /* Owned by the surface; borrows no model or generator lifetime. */
     GtkStack *pages;
 };
 
@@ -126,7 +128,16 @@ UmiStatus UmiCreativeGtkSurfaceCreate(GtkWidget *original, const char *profile,
     /* Music keeps its audio/design landing view while video editing receives
      * the same full-width workspace instead of enlarging its sidebar. */
     if (music) gtk_stack_set_visible_child_name(surface->pages, "creative-workspace");
-    if (media) MediaBindNavigation(surface);
+    if (media) {
+        /* Source preparation is a full workspace, not a narrow form alongside
+         * the design canvas. Existing editors remain the generation owners. */
+        surface->brief = UmiMediaBriefGtkCreate(
+            MediaFind(GTK_WIDGET(surface->pages), "seedream.panel"),
+            MediaFind(GTK_WIDGET(surface->pages), "pixverse.panel"));
+        if (surface->brief != NULL)
+            gtk_stack_add_titled(surface->pages, surface->brief, "creation", "Create from text");
+        MediaBindNavigation(surface);
+    }
     surface->original = original;
     *out = surface;
     return UMI_STATUS_OK;
@@ -142,6 +153,7 @@ void UmiCreativeGtkSurfaceDestroy(UmiCreativeGtkSurface * surface)
     surface -> original = NULL;
     /* Retained navigation becomes inert before its target owners are retired. */
     gtk_widget_set_sensitive(surface->root, FALSE);
+    UmiMediaBriefGtkRetire(surface->brief);
     UmiCreativeGtkPanelDestroy(surface -> panel);
     g_object_unref(surface -> root);
     g_free(surface);

@@ -202,3 +202,6 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomCaptions.cmake")
 
 # Local video editing and rendering reuse the creative owner and native process channel.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomVideoSequence.cmake")
+
+# Explicit source excerpts compose the existing generators and provider chat.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomMediaBrief.cmake")

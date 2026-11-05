@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/provider_connections/gtk4.h
- * PURPOSE: Expose a shared native editor for non-secret provider settings.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Expose connection settings, explicit storage selection and reviewed context handoff.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROVIDER_CONNECTIONS_GTK4_H
 #define UMICOM_PROVIDER_CONNECTIONS_GTK4_H
@@ -59,6 +66,11 @@ UmiStatus UmiProviderConnectionsGtkSetChatContext(UmiProviderConnectionsGtk *pan
 UmiStatus UmiProviderConnectionsGtkPresentSelection(GtkWindow *parent,
     const char *application_id, const char *profile_id,
     const UmiUiDocumentViewModel *documents, const char *view_id);
+/* Open connection choice using an explicit absolute settings path. Context
+ * is copied and validated before any storage load. No default AppData path,
+ * network call or credential lookup is selected by this entry point. */
+UmiStatus UmiProviderConnectionsGtkPresentAt(GtkWindow *parent,
+    const UmiProviderConnectionsGtkConfig *config, const char *context);
 #ifdef __cplusplus
 }
 #endif
