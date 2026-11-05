@@ -39,12 +39,30 @@ static GtkWidget *Find(GtkWidget *root, const char *name)
     }
     return NULL;
 }
+/* The old blanket entry check predates Gateway path discovery. Preserve it
+ * for review; allow only the named launcher path and GTK drop-down search
+ * internals. Credential fields must still be rejected, including masked paths. */
+#if 0
 static gboolean HasEntry(GtkWidget *root)
 {
     if (GTK_IS_ENTRY(root) || GTK_IS_PASSWORD_ENTRY(root)) return TRUE;
     for (GtkWidget *child = gtk_widget_get_first_child(root); child != NULL;
          child = gtk_widget_get_next_sibling(child))
         if (HasEntry(child)) return TRUE;
+    return FALSE;
+}
+#endif
+static gboolean HasUnexpectedEntry(GtkWidget *root)
+{
+    if (GTK_IS_PASSWORD_ENTRY(root)) return TRUE;
+    if (GTK_IS_ENTRY(root)) {
+        if (!gtk_entry_get_visibility(GTK_ENTRY(root))) return TRUE;
+        if (strcmp(gtk_widget_get_name(root), "ibkr-gateway-custom-path") != 0 &&
+            gtk_widget_get_ancestor(root, GTK_TYPE_DROP_DOWN) == NULL) return TRUE;
+    }
+    for (GtkWidget *child = gtk_widget_get_first_child(root); child != NULL;
+         child = gtk_widget_get_next_sibling(child))
+        if (HasUnexpectedEntry(child)) return TRUE;
     return FALSE;
 }
 static UmiStatus Open(void *data, const UmiBrokerAccessPlan *plan)
@@ -95,7 +113,22 @@ int main(int argc, char **argv)
     GtkWidget *live = Find(root, "broker-welcome-live");
     GtkWidget *profiles = Find(root, "broker-welcome-profiles");
     CHECK(guest && paper && live && profiles);
+    /* Gateway discovery permits a path, never broker credentials. */
+#if 0
     CHECK(probe.calls == 0U && !HasEntry(root));
+#endif
+    CHECK(probe.calls == 0U && !HasUnexpectedEntry(root));
+    GtkWidget *path = Find(root, "ibkr-gateway-custom-path");
+    CHECK(GTK_IS_ENTRY(path) && gtk_entry_get_visibility(GTK_ENTRY(path)));
+    GtkWidget *unexpected = gtk_entry_new();
+    gtk_box_append(GTK_BOX(root), unexpected);
+    CHECK(HasUnexpectedEntry(root));
+    gtk_box_remove(GTK_BOX(root), unexpected);
+    unexpected = gtk_password_entry_new();
+    gtk_box_append(GTK_BOX(root), unexpected);
+    CHECK(HasUnexpectedEntry(root));
+    gtk_box_remove(GTK_BOX(root), unexpected);
+    CHECK(!HasUnexpectedEntry(root));
     g_object_ref(root); g_object_ref(guest);
     if (strcmp(argv[1], "modes") == 0) {
         g_signal_emit_by_name(guest, "clicked");
@@ -233,7 +266,11 @@ int main(int argc, char **argv)
             gtk_stack_set_visible_child_name(GTK_STACK(modes), isLive ? "live" : "paper");
             if (gateway || backCase) gtk_drop_down_set_selected(GTK_DROP_DOWN(program), 1U);
             g_signal_emit_by_name(isLive ? beginLive : beginPaper, "clicked");
+            /* Gateway discovery permits a path, never broker credentials. */
+#if 0
             CHECK(probe.calls == 0U && !HasEntry(root));
+#endif
+            CHECK(probe.calls == 0U && !HasUnexpectedEntry(root));
             CHECK(strcmp(gtk_stack_get_visible_child_name(GTK_STACK(stage)), "authentication") == 0);
             CHECK(strstr(gtk_label_get_text(GTK_LABEL(guide)), isLive ? "Live Trading" : "Paper Trading"));
             CHECK(strstr(gtk_label_get_text(GTK_LABEL(guide)), gateway || backCase ? "IB Gateway" : "TWS"));

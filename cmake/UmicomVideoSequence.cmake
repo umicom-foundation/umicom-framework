@@ -85,14 +85,14 @@ if(BUILD_TESTING)
     endif()
     if(TARGET umicom_creative_workspace_gtk4)
         umicom_video_cases(umicom-video-workspace-gtk-test test_workspace_gtk4.c
-            geometry selection edits retirement composition music-composition
+            geometry selection edits retirement composition music-composition event-deadline
             library-search library-selection library-empty library-reentry timeline-zoom
             layout-resize layout-visibility layout-recall layout-reset layout-retirement
             layout-reentry layout-retire-notify
             workspace-navigation keyboard-regions keyboard-hidden media-brand media-mode-retention
             media-menu-history media-menu-availability media-menu-navigation media-menu-retirement)
         target_link_libraries(umicom-video-workspace-gtk-test PRIVATE Umicom::creative_workspace_gtk4)
-        foreach(case geometry selection edits retirement composition music-composition
+        foreach(case geometry selection edits retirement composition music-composition event-deadline
             library-search library-selection library-empty library-reentry timeline-zoom
             layout-resize layout-visibility layout-recall layout-reset layout-retirement
             layout-reentry layout-retire-notify

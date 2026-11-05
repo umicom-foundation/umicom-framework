@@ -163,6 +163,13 @@ void UmiVideoSequenceGtkRefresh(UmiVideoSequencePanel *panel) {
   LoadSelection(panel);
   if (!panel->closed) RefreshTimeline(panel);
 finished:
+  /* Keep admission closed while sensitivity notifications run. A listener may
+   * retire the panel, so recheck its lifetime before updating the second button.
+   * The Media menu observes these original controls instead of owning history. */
+  if (!panel->closed && panel->undoButton != NULL)
+    gtk_widget_set_sensitive(panel->undoButton, UmiVideoSequenceEditorCanUndo(panel->editor));
+  if (!panel->closed && panel->redoButton != NULL)
+    gtk_widget_set_sensitive(panel->redoButton, UmiVideoSequenceEditorCanRedo(panel->editor));
   panel->refreshing = false;
 }
 
@@ -170,6 +177,9 @@ finished:
  * recipe: Add, Replace or Apply settings publishes one undoable operation. */
 static void Edit(GtkButton *button, gpointer root) {
   UmiVideoSequencePanel *panel = UmiVideoSequenceGtkState(GTK_WIDGET(root));
+  /* Synthetic activation must honour the same disabled command as a
+   * native click, including history limits and a disabled editor ancestor. */
+  if (!gtk_widget_is_sensitive(GTK_WIDGET(button))) return;
   if (panel->closed || panel->busy || panel->refreshing || panel->changing)
     return;
   panel->changing = true;
@@ -285,6 +295,8 @@ static GtkWidget *Button(UmiVideoSequencePanel *panel, GtkWidget *box, const cha
                          const char *id, const char *action, GCallback callback) {
   GtkWidget *button = gtk_button_new_with_label(label);
   Tag(button, id);
+  if (strcmp(action, "undo") == 0) panel->undoButton = button;
+  else if (strcmp(action, "redo") == 0) panel->redoButton = button;
   g_object_set_data_full(G_OBJECT(button), "video-action", g_strdup(action), g_free);
   g_signal_connect_object(button, "clicked", callback, panel->root, 0);
   /* Framework action groups wrap existing command buttons without owning execution.

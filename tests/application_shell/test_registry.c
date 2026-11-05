@@ -64,6 +64,12 @@ int main(void)
     for (size_t i = 0U; i < 4U; ++i) {
         umi_application_shell_contribution_init(&item, ids[i], ids[i],
             UMI_APPLICATION_SHELL_ROLE_MENU_ITEM, UMI_APPLICATION_SHELL_REGION_MENU_BAR);
+        /* Ordering fixtures must obey the same executable-menu contract as
+         * real contributions. An unbound menu item remains an error. */
+        assert(umi_application_shell_registry_upsert(registry, &item)
+            == UMI_STATUS_INVALID_ARGUMENT);
+        assert(umi_application_shell_registry_count(registry) == i);
+        (void)strcpy(item.command_id, ids[i]);
         item.order = orders[i];
         assert(umi_application_shell_registry_upsert(registry, &item) == UMI_STATUS_OK);
     }

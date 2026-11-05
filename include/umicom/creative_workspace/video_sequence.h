@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/creative_workspace/video_sequence.h
- * PURPOSE: Own bounded, non-destructive video edits independently of native controls.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Own bounded, non-destructive video edits independently of native controls.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_CREATIVE_WORKSPACE_VIDEO_SEQUENCE_H
@@ -76,6 +83,10 @@ UmiStatus UmiVideoSequenceEditorApply(UmiVideoSequenceEditor *editor,
 UmiStatus UmiVideoSequenceEditorUndo(UmiVideoSequenceEditor *editor);
 /** @brief Reapply an undone edit, or return NOT_FOUND without changes. */
 UmiStatus UmiVideoSequenceEditorRedo(UmiVideoSequenceEditor *editor);
+/** @brief Report whether a previous edit exists without changing history. NULL returns false. */
+bool UmiVideoSequenceEditorCanUndo(const UmiVideoSequenceEditor *editor);
+/** @brief Report whether an undone edit can be reapplied. NULL returns false. */
+bool UmiVideoSequenceEditorCanRedo(const UmiVideoSequenceEditor *editor);
 /** @brief Release editor storage. NULL is accepted; media files remain untouched. */
 void UmiVideoSequenceEditorDestroy(UmiVideoSequenceEditor *editor);
 /** @brief Export recipe metadata to an owned JSON document asset; out must be NULL.

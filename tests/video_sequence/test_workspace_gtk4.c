@@ -19,6 +19,7 @@
 #include "../build_log/fixture.h"
 #undef CHECK
 #include "fixture.h"
+#include "../support/main_context.h"
 #include "../../adapters/gtk4/video_sequence_private.h"
 #include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/creative_workspace.h"
@@ -37,9 +38,19 @@ static void Settle(void)
 {
     gint64 deadline = g_get_monotonic_time() + 350000;
     do {
+        /* An always-ready source must not trap the fixture inside the drain.
+         * Keep the previous drain for review; the shared slice honours time. */
+#if 0
         while (g_main_context_pending(NULL)) (void)g_main_context_iteration(NULL, FALSE);
+#endif
+        (void)UmiTestDispatchSlice(NULL, deadline, 64U);
         g_usleep(2000U);
     } while (g_get_monotonic_time() < deadline);
+}
+static gboolean KeepReady(gpointer data)
+{
+    ++*(unsigned *)data;
+    return G_SOURCE_CONTINUE;
 }
 static void Add(GtkWidget *root, const char *id, double end)
 {
@@ -103,10 +114,21 @@ int main(int argc, char **argv)
     const char *mode = argv[1];
     CHECK(strcmp(mode, "geometry") == 0 || strcmp(mode, "selection") == 0 ||
           strcmp(mode, "edits") == 0 || strcmp(mode, "retirement") == 0 ||
-          strcmp(mode, "composition") == 0 || strcmp(mode, "music-composition") == 0 || CustomisationCase(mode) || MediaMenuCase(mode));
+          strcmp(mode, "composition") == 0 || strcmp(mode, "music-composition") == 0 || strcmp(mode, "event-deadline") == 0 || CustomisationCase(mode) || MediaMenuCase(mode));
     (void)g_setenv("GTK_A11Y", "test", TRUE);
     (void)g_setenv("GSETTINGS_BACKEND", "memory", TRUE);
     if (!gtk_init_check()) return 77;
+    if (strcmp(mode, "event-deadline") == 0) {
+        unsigned calls = 0U;
+        guint source = g_idle_add_full(G_PRIORITY_HIGH, KeepReady, &calls, NULL);
+        CHECK(source != 0U);
+        gint64 started = g_get_monotonic_time();
+        Settle();
+        gint64 elapsed = g_get_monotonic_time() - started;
+        CHECK(g_source_remove(source));
+        CHECK(calls > 0U && elapsed < 2000000);
+        return 0;
+    }
     GtkWidget *window = gtk_window_new();
     gtk_window_set_default_size(GTK_WINDOW(window), 1280, 800);
     UmiCreativeGtkSurface *surface = NULL;
@@ -129,6 +151,8 @@ int main(int argc, char **argv)
     gtk_window_set_child(GTK_WINDOW(window), host);
     gtk_window_present(GTK_WINDOW(window)); Settle();
     CHECK(gtk_widget_get_mapped(root));
+    CHECK(!gtk_widget_is_sensitive(Find(root, "video.undo")));
+    CHECK(!gtk_widget_is_sensitive(Find(root, "video.redo")));
     Add(root, "first", 5000.0); Add(root, "second", 3000.0); Settle();
     CHECK(UmiVideoSequenceEditorRead(panel->editor)->clip_count == 2U);
     GtkWidget *first = Find(root, "video.timeline.clip.0");

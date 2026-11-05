@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/creative_workspace/video_sequence_history.c
- * PURPOSE: Keep reusable bounded edit history outside application and widget code.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Keep reusable bounded edit history outside application and widget code.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/creative_workspace/video_sequence.h"
@@ -68,5 +75,13 @@ UmiStatus UmiVideoSequenceEditorRedo(UmiVideoSequenceEditor *editor) {
     return UMI_STATUS_NOT_FOUND;
   ++editor->current;
   return UMI_STATUS_OK;
+}
+/* History availability belongs to the editor, so native menus and other
+ * frontends never infer undo/redo from clip count or probe by mutating state. */
+bool UmiVideoSequenceEditorCanUndo(const UmiVideoSequenceEditor *editor) {
+  return editor != NULL && editor->current > 0U;
+}
+bool UmiVideoSequenceEditorCanRedo(const UmiVideoSequenceEditor *editor) {
+  return editor != NULL && editor->current + 1U < editor->count;
 }
 void UmiVideoSequenceEditorDestroy(UmiVideoSequenceEditor *editor) { free(editor); }

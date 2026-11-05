@@ -35,6 +35,19 @@ static void MediaMenuCommands(const char *mode, GtkWidget *host, GtkWidget *root
         Click(host, "media.menu.redo");
         CHECK(UmiVideoSequenceEditorRead(panel->editor)->clip_count == 2U);
         CHECK(!gtk_widget_is_sensitive(redo));
+        /* Exhaust history, then branch from an undone edit. Menu state must
+         * follow the original controls without silently changing the recipe. */
+        Click(host, "media.menu.undo");
+        Click(host, "media.menu.undo");
+        CHECK(!gtk_widget_is_sensitive(undo));
+        CHECK(gtk_widget_is_sensitive(redo));
+        Click(host, "media.menu.undo");
+        CHECK(UmiVideoSequenceEditorRead(panel->editor)->clip_count == 0U);
+        Add(root, "branch", 2000.0);
+        CHECK(gtk_widget_is_sensitive(undo));
+        CHECK(!gtk_widget_is_sensitive(redo));
+        Click(host, "media.menu.redo");
+        CHECK(UmiVideoSequenceEditorRead(panel->editor)->clip_count == 1U);
     } else if (strcmp(mode, "media-menu-availability") == 0) {
         GtkWidget *command = Find(root, "video.undo");
         UmiVideoSequence before = *UmiVideoSequenceEditorRead(panel->editor);

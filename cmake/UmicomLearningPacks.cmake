@@ -329,6 +329,13 @@ install(FILES "${_umicom_pack_root}/cmake/UmicomLearningModuleBundle.cmake"
 
 # Module tests exercise declared file bytes and publication into the catalogue.
 if(BUILD_TESTING)
+    add_test(NAME framework.learning_pack.module.staging
+        COMMAND "${CMAKE_COMMAND}"
+            "-DUMI_STAGE_TEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}/learning-module-staging"
+            "-DUMI_STAGE_SCRIPT=${_umicom_pack_root}/cmake/UmicomStageLearningModule.cmake"
+            -P "${_umicom_pack_root}/tests/learning_pack/check_module_staging.cmake")
+    set_tests_properties(framework.learning_pack.module.staging PROPERTIES
+        TIMEOUT 60 LABELS "framework;learning;staging;regression")
     add_executable(umicom-learning-module-test "${_umicom_pack_root}/tests/learning_pack/test_module.c")
     set_target_properties(umicom-learning-module-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
     target_link_libraries(umicom-learning-module-test PRIVATE Umicom::developer)

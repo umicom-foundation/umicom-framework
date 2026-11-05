@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/video_sequence/test_edits.c
- * PURPOSE: Exercise edit invariants, rollback on failure and bounded undo branches.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Exercise edit invariants, rollback on failure and bounded undo branches.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "fixture.h"
@@ -67,13 +74,17 @@ int main(int argc, char **argv) {
   } else if (strcmp(argv[1], "history") == 0) {
     UmiVideoSequenceEditor *editor = NULL;
     CHECK(UmiVideoSequenceEditorCreate(&sequence, &editor) == UMI_STATUS_OK);
+    CHECK(!UmiVideoSequenceEditorCanUndo(NULL) && !UmiVideoSequenceEditorCanRedo(NULL));
+    CHECK(!UmiVideoSequenceEditorCanUndo(editor) && !UmiVideoSequenceEditorCanRedo(editor));
     for (uint32_t i = 1U; i <= 20U; ++i) {
       sequence.clips[0].begin_ms = 1000U + i;
       CHECK(UmiVideoSequenceEditorApply(editor, &sequence) == UMI_STATUS_OK);
     }
+    CHECK(UmiVideoSequenceEditorCanUndo(editor) && !UmiVideoSequenceEditorCanRedo(editor));
     for (size_t i = 0U; i < UMI_VIDEO_SEQUENCE_HISTORY_LIMIT; ++i)
       CHECK(UmiVideoSequenceEditorUndo(editor) == UMI_STATUS_OK);
     CHECK(UmiVideoSequenceEditorUndo(editor) == UMI_STATUS_NOT_FOUND);
+    CHECK(!UmiVideoSequenceEditorCanUndo(editor) && UmiVideoSequenceEditorCanRedo(editor));
     CHECK(UmiVideoSequenceEditorRead(editor)->clips[0].begin_ms == 1004U);
     CHECK(UmiVideoSequenceEditorRedo(editor) == UMI_STATUS_OK);
     /* A no-op preserves redo; a different edit invalidates it. */
@@ -81,6 +92,11 @@ int main(int argc, char **argv) {
     CHECK(UmiVideoSequenceEditorRedo(editor) == UMI_STATUS_OK);
     CHECK(UmiVideoSequenceEditorApply(editor, &original) == UMI_STATUS_OK);
     CHECK(UmiVideoSequenceEditorRedo(editor) == UMI_STATUS_NOT_FOUND);
+    CHECK(UmiVideoSequenceEditorCanUndo(editor) && !UmiVideoSequenceEditorCanRedo(editor));
+    UmiVideoSequence invalid = original;
+    invalid.width = 1U;
+    CHECK(UmiVideoSequenceEditorApply(editor, &invalid) != UMI_STATUS_OK);
+    CHECK(UmiVideoSequenceEditorCanUndo(editor) && !UmiVideoSequenceEditorCanRedo(editor));
     UmiVideoSequenceEditorDestroy(editor);
   } else
     return 2;
