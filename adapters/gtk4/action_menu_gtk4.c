@@ -41,6 +41,20 @@ static int ActionMenuText(const char *text, size_t limit, int required)
     return bytes <= limit && (!required || bytes != 0U) && g_utf8_validate(text, (gssize)bytes, NULL);
 }
 
+/* Menu captions describe bindings owned by a host key controller. GTK's
+ * accelerator admission deliberately excludes Tab, even with Control; using
+ * that admission for display hid Studio's next/previous document commands.
+ * Permit only the two explicit document-navigation chords in addition to
+ * ordinary accelerators. Bare Tab remains focus traversal, not a menu binding. */
+static gboolean ActionMenuShortcut(guint keyval, GdkModifierType modifiers)
+{
+    if (keyval == 0U) return modifiers == 0;
+    if (keyval == GDK_KEY_Tab || keyval == GDK_KEY_ISO_Left_Tab || keyval == GDK_KEY_KP_Tab)
+        return modifiers == GDK_CONTROL_MASK ||
+            modifiers == (GDK_CONTROL_MASK | GDK_SHIFT_MASK);
+    return gtk_accelerator_valid(keyval, modifiers);
+}
+
 /* Structured command rows retain plain text for search while drawing a native
  * shortcut beside the caption. This adds presentation only: the host still
  * installs the same command callback and owns command admission. */
@@ -49,8 +63,14 @@ UmiStatus UmiGtk4ActionMenuButtonCreate(const char *label, guint keyval,
 {
     if (out_button == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_button = NULL;
+    /* Preserve accelerator-only validation for review. The replacement also
+     * accepts the host's Control-Tab captions without registering accelerators. */
+#if 0
     if (!ActionMenuText(label, 512U, 1) ||
         (keyval == 0U ? modifiers != 0U : !gtk_accelerator_valid(keyval, modifiers)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+#endif
+    if (!ActionMenuText(label, 512U, 1) || !ActionMenuShortcut(keyval, modifiers))
         return UMI_STATUS_INVALID_ARGUMENT;
     GtkWidget *button = gtk_button_new(), *row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 24),
               *caption = gtk_label_new(label);

@@ -69,7 +69,15 @@ int main(int argc, char **argv)
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),GTK_POLICY_NEVER,GTK_POLICY_AUTOMATIC);
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll),group);
     gtk_window_set_child(GTK_WINDOW(window),scroll);
+    /* Keep the native window stable and change the component's allocation.
+     * A default window size is an initial preference, not a portable request
+     * to resize an already mapped window. The earlier fixture is retained. */
+#if 0
     gtk_window_set_default_size(GTK_WINDOW(window),420,700);
+#endif
+    gtk_window_set_default_size(GTK_WINDOW(window),1000,700);
+    gtk_widget_set_halign(scroll,GTK_ALIGN_START);
+    gtk_widget_set_size_request(scroll,420,-1);
     for (size_t i=0U;i<total;++i) {
         buttons[i]=g_object_ref_sink(gtk_button_new_with_label(labels[i%G_N_ELEMENTS(labels)]));
         g_signal_connect(buttons[i],"clicked",G_CALLBACK(Count),&calls);
@@ -92,7 +100,11 @@ int main(int argc, char **argv)
     } else {
         gtk_window_present(GTK_WINDOW(window)); Pump();
         CHECK(gtk_widget_get_mapped(window));
+        /* Test the available action region, independent of window chrome. */
+#if 0
         CHECK(gtk_widget_get_width(window)<800);
+#endif
+        CHECK(gtk_widget_get_width(scroll)<800);
         CHECK(gtk_widget_grab_focus(buttons[3]));
         GtkWidget *focus=gtk_window_get_focus(GTK_WINDOW(window));
         CHECK(focus!=NULL && (focus==buttons[3] || gtk_widget_is_ancestor(focus,buttons[3])));
@@ -113,7 +125,12 @@ int main(int argc, char **argv)
         gtk_window_set_default_size(GTK_WINDOW(window),920,700); Pump();
         CHECK(gtk_widget_get_width(group)>narrowWidth);
 #endif
+        /* The action region owns this resize; menu buttons and focus must
+         * survive a new allocation without recreating the command objects. */
+#if 0
         gtk_window_set_default_size(GTK_WINDOW(window),920,700);
+#endif
+        gtk_widget_set_size_request(scroll,920,-1);
         CHECK(WaitForWidth(window,group,narrowWidth));
         graphene_rect_t widerLast;
         CHECK(gtk_widget_compute_bounds(buttons[total-1U],group,&widerLast));

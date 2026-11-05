@@ -59,3 +59,28 @@
 .umicom-media-workspace paned > separator { background: #334354; min-width: 5px; min-height: 5px; }
 
 .umicom-media-workspace popover > contents { color: #e5edf5; background: #1b252f; }
+
+/* Compact editing chrome is scoped to the shared Media surface. Product
+ * navigation and clip tools keep their accessible names and focus outlines. */
+.umicom-media-workspace .media-editor-toolbar { padding: 3px 6px; }
+.umicom-media-workspace .media-panel-heading {
+  padding: 8px 10px; background: #17212c; border-bottom: 1px solid #334354;
+}
+.umicom-media-workspace .media-modebar { padding: 5px 8px; }
+.umicom-media-workspace .media-mode { padding: 8px 12px; }
+.umicom-media-workspace .media-export {
+  background: #155d86; border-color: #4db9f6; color: #ffffff; font-weight: bold;
+}
+.umicom-media-workspace .media-export:hover { background: #1e719e; }
+.umicom-media-workspace .media-icon-button { padding: 5px; min-width: 24px; min-height: 24px; }
+.umicom-media-workspace .media-transport { padding: 4px; }
+.umicom-media-workspace .media-section { padding: 8px 2px; border-top: 1px solid #334354; }
+.umicom-media-workspace .media-section > title { padding: 4px 0; font-weight: bold; }
+.umicom-media-workspace .media-section-body { padding: 8px 0 0; }
+.umicom-media-workspace .media-timeline-toolbar { padding: 2px 0 6px; }
+.umicom-media-workspace .media-track-heading {
+  padding: 5px 8px; color: #d4e2ef; background: #202f3d;
+}
+.umicom-media-workspace .media-rail { padding: 4px; }
+.umicom-media-workspace .media-rail button { padding: 7px 3px; border-color: transparent; }
+.umicom-media-workspace .media-rail button.suggested-action { border-color: #4db9f6; }

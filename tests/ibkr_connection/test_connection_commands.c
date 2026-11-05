@@ -210,8 +210,20 @@ static int Run(const char *test)
             gtk_drop_down_set_selected(GTK_DROP_DOWN(ui->mode), 1U);
             if (!strcmp(test, "connect-live")) gtk_check_button_set_active(GTK_CHECK_BUTTON(ui->ack), TRUE);
         }
+        /* GtkDropDown automatically retains a valid choice in a nonempty
+         * model. Preserve the ineffective unset probe for review; removing
+         * the choices below exercises a real missing-selection boundary. */
+#if 0
         if (!strcmp(test, "connect-invalid-mode")) gtk_drop_down_set_selected(GTK_DROP_DOWN(ui->mode), GTK_INVALID_LIST_POSITION);
         if (!strcmp(test, "connect-invalid-program")) gtk_drop_down_set_selected(GTK_DROP_DOWN(ui->program), GTK_INVALID_LIST_POSITION);
+#endif
+        if (!strcmp(test, "connect-invalid-mode") || !strcmp(test, "connect-invalid-program")) {
+            GtkDropDown *choice = GTK_DROP_DOWN(!strcmp(test, "connect-invalid-mode") ? ui->mode : ui->program);
+            GtkStringList *empty = gtk_string_list_new(NULL);
+            gtk_drop_down_set_model(choice, G_LIST_MODEL(empty));
+            g_object_unref(empty);
+            CHECK(gtk_drop_down_get_selected(choice) == GTK_INVALID_LIST_POSITION);
+        }
         if (!strcmp(test, "connect-profile-busy")) ui->profileBusy = TRUE;
         if (!strcmp(test, "connect-fill-busy")) ui->fillBusy = TRUE;
         if (!strcmp(test, "connect-quote-busy")) ui->quoteAccessBusy = TRUE;

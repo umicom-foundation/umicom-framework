@@ -29,6 +29,9 @@ typedef struct UmiViewportWidget {
     UmiWorkbenchLayoutDocument *measured;
     UmiWorkbenchViewportPlan plan;
     GtkWidget *leaves[NODES];
+    /* Keep the factory's focus endpoint distinct from its scrolling wrapper.
+     * Weak references do not extend a panel's ownership beyond its host. */
+    GWeakRef focusContents[NODES];
     GtkWidget *decorations[NODES];
     GtkWidget *tabs[NODES][UMI_WORKBENCH_LAYOUT_MAX_CHILDREN];
     bool disposed;
@@ -204,6 +207,7 @@ static void Dispose(GObject *object)
 static void Finalize(GObject *object)
 {
     UmiViewportWidget *view = (UmiViewportWidget *)object;
+    for (size_t i = 0; i < NODES; ++i) g_weak_ref_clear(&view->focusContents[i]);
     free(view->document);
     free(view->measured);
     G_OBJECT_CLASS(umi_viewport_widget_parent_class)->finalize(object);
@@ -286,13 +290,30 @@ static gboolean Key(GtkEventControllerKey *controller, guint key, guint code,
         if (!leaf || gtk_widget_get_parent(leaf) != GTK_WIDGET(view) ||
             !gtk_widget_get_child_visible(leaf) || !gtk_widget_is_sensitive(leaf))
             continue;
+        GtkWidget *content = g_weak_ref_get(&view->focusContents[current]);
+        if (!content) continue;
+        if (!gtk_widget_is_ancestor(content, leaf) ||
+            !gtk_widget_get_visible(content) || !gtk_widget_is_sensitive(content)) {
+            g_object_unref(content);
+            continue;
+        }
         g_object_ref(leaf);
+        /* F6 hands focus to each product panel once. The scroller's fallback
+         * may retry focus or focus its wrapper after a rejecting child. That
+         * retry also runs before we can detect a callback that closes the host.
+         * Keep the old handoff for review; regular Tab navigation is unchanged. */
+#if 0
         gboolean accepted = gtk_widget_child_focus(leaf,
+            reverse ? GTK_DIR_TAB_BACKWARD : GTK_DIR_TAB_FORWARD);
+#endif
+        gboolean accepted = gtk_widget_child_focus(content,
             reverse ? GTK_DIR_TAB_BACKWARD : GTK_DIR_TAB_FORWARD);
         bool valid = !view->disposed && !view->focusInterrupted &&
             gtk_widget_get_root(GTK_WIDGET(view)) == root &&
             view->leaves[current] == leaf &&
-            gtk_widget_get_parent(leaf) == GTK_WIDGET(view);
+            gtk_widget_get_parent(leaf) == GTK_WIDGET(view) &&
+            gtk_widget_is_ancestor(content, leaf);
+        g_object_unref(content);
         g_object_unref(leaf);
         if (!valid) break;
         if (accepted) { handled = TRUE; break; }
@@ -305,6 +326,7 @@ static gboolean Key(GtkEventControllerKey *controller, guint key, guint code,
 
 static void umi_viewport_widget_init(UmiViewportWidget *view)
 {
+    for (size_t i = 0; i < NODES; ++i) g_weak_ref_init(&view->focusContents[i], NULL);
     gtk_widget_set_hexpand(GTK_WIDGET(view), TRUE);
     gtk_widget_set_vexpand(GTK_WIDGET(view), TRUE);
     gtk_widget_set_overflow(GTK_WIDGET(view), GTK_OVERFLOW_HIDDEN);
@@ -466,6 +488,7 @@ UmiStatus UmiWorkbenchViewportWidgetCreate(const UmiWorkbenchLayoutDocument *doc
                 Consume(GTK_WIDGET(view));
                 return UMI_STATUS_INVALID_STATE;
             }
+            g_weak_ref_set(&view->focusContents[i], content);
             GtkWidget *scroll = gtk_scrolled_window_new();
             gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll),
                 GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);

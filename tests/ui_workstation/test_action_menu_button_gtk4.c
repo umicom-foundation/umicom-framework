@@ -22,7 +22,7 @@ static void Clicked(GtkButton *button,gpointer data) { (void)button; ++*(unsigne
 int main(int argc,char **argv)
 {
     if(argc!=2) return 2;
-    const char *mode=argv[1],*cases[]={"ordinary","unicode","shortcut","function-key","no-shortcut","append-search","changed-child","relabel","retained-button","activation","hidden","null-output","invalid-label","label-limit","label-over","invalid-utf8","invalid-shortcut","modifier-without-key"};
+    const char *mode=argv[1],*cases[]={"ordinary","unicode","shortcut","function-key","no-shortcut","append-search","changed-child","relabel","retained-button","activation","hidden","null-output","invalid-label","label-limit","label-over","invalid-utf8","invalid-shortcut","modifier-without-key","control-tab","control-shift-tab","control-keypad-tab","invalid-bare-tab","invalid-shift-tab","invalid-alt-tab"};
     int known=0;
     for(size_t i=0;i<sizeof cases/sizeof cases[0];++i) if(!strcmp(mode,cases[i])) known=1;
     if(!known) return 2;
@@ -48,6 +48,12 @@ int main(int argc,char **argv)
     if(!strcmp(mode,"function-key")) { key=GDK_KEY_F5;modifiers=0; }
     if(!strcmp(mode,"invalid-shortcut")) { key=GDK_KEY_Shift_L;modifiers=0; }
     if(!strcmp(mode,"modifier-without-key")) key=0U;
+    if(!strcmp(mode,"control-tab")) key=GDK_KEY_Tab;
+    if(!strcmp(mode,"control-shift-tab")) { key=GDK_KEY_ISO_Left_Tab; modifiers=GDK_CONTROL_MASK|GDK_SHIFT_MASK; }
+    if(!strcmp(mode,"control-keypad-tab")) key=GDK_KEY_KP_Tab;
+    if(!strcmp(mode,"invalid-bare-tab")) { key=GDK_KEY_Tab; modifiers=0; }
+    if(!strcmp(mode,"invalid-shift-tab")) { key=GDK_KEY_ISO_Left_Tab; modifiers=GDK_SHIFT_MASK; }
+    if(!strcmp(mode,"invalid-alt-tab")) { key=GDK_KEY_Tab; modifiers=GDK_ALT_MASK; }
     UmiStatus status=UmiGtk4ActionMenuButtonCreate(label,key,modifiers,&button);
     if(!strncmp(mode,"invalid-",8U)||!strcmp(mode,"label-over")||!strcmp(mode,"modifier-without-key")) {
         CHECK(status==UMI_STATUS_INVALID_ARGUMENT && button==NULL); goto cleanup;

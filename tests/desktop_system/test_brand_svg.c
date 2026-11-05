@@ -22,6 +22,16 @@ static int Decode(gboolean wordmark, gboolean dark, int scale)
 {
     GError *error = NULL;
     GdkPixbuf *pixels = UmiGtkBrandDecode(wordmark, dark, 36, scale, &error);
+    /* Loader failures are actionable only with their actual error. Keep
+     * decoding strict; a placeholder image must never count as SVG support. */
+    if (error != NULL) {
+        fprintf(stderr, "SVG decode failed: domain=%s code=%d message=%s\n",
+            g_quark_to_string(error->domain), error->code, error->message);
+        const char *cache = g_getenv("GDK_PIXBUF_MODULE_FILE");
+        const char *modules = g_getenv("GDK_PIXBUF_MODULEDIR");
+        fprintf(stderr, "GDK_PIXBUF_MODULE_FILE=%s; GDK_PIXBUF_MODULEDIR=%s\n",
+            cache != NULL ? cache : "(default)", modules != NULL ? modules : "(default)");
+    }
     CHECK(error == NULL && pixels != NULL);
     CHECK(gdk_pixbuf_get_has_alpha(pixels));
     int width = gdk_pixbuf_get_width(pixels), height = gdk_pixbuf_get_height(pixels);
@@ -97,6 +107,7 @@ int main(int argc, char **argv)
         g_clear_error(&error);
     } else if (strcmp(argv[1], "native") == 0) {
         if (!gtk_init_check()) return 77;
+        CHECK(Decode(TRUE, FALSE, 1) == 0);
         GtkWidget *logo = UmiGtkBrandCreate(TRUE, 36);
         g_object_ref_sink(logo);
         CHECK(gtk_drawing_area_get_content_width(GTK_DRAWING_AREA(logo)) == 147);

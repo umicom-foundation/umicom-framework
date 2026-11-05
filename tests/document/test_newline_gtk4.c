@@ -38,6 +38,7 @@ int main(int argc, char **argv) {
       known = 1;
   if (!known)
     return 2;
+  g_test_init(&argc, &argv, NULL);
   if (!gtk_init_check())
     return 77;
   int failed = 0, readonly = !strcmp(name, "readonly");
@@ -77,13 +78,17 @@ int main(int argc, char **argv) {
     modifiers = GDK_META_MASK;
   if (!strcmp(name, "caps-lock"))
     modifiers = GDK_LOCK_MASK;
+  fprintf(stderr, "newline stage: fixture start (%s)\n", name);
   CHECK(NativeEditStart(&f, source, cursor, selection, readonly));
+  fputs("newline stage: fixture ready\n", stderr);
   const int ignored = !strcmp(name, "ctrl") || !strcmp(name, "meta") || !strcmp(name, "retired");
   UmiDocumentId other = 0U;
   if (!strcmp(name, "other-tab")) {
     char view[UMI_UI_ID_CAPACITY];
     UmiDocumentWorkingCopySnapshot active;
+    fputs("newline stage: create second document\n", stderr);
     CHECK(umi_document_coordinator_new(f.documents, "other.c", view, sizeof view) == UMI_STATUS_OK);
+    fputs("newline stage: second document ready\n", stderr);
     CHECK(umi_document_coordinator_active_snapshot(f.documents, &active) == UMI_STATUS_OK);
     other = active.document_id;
   }
@@ -101,7 +106,9 @@ int main(int argc, char **argv) {
     if (readonly)
       CHECK(!UmiGtk4AdapterDocumentCommandEnabled(f.adapter, UMI_DOCUMENT_COMMAND_INSERT_NEWLINE));
     gboolean handled = FALSE;
+    fputs("newline stage: dispatch Enter\n", stderr);
     g_signal_emit_by_name(f.keys, "key-pressed", key, 0U, modifiers, &handled);
+    fputs("newline stage: Enter returned\n", stderr);
     CHECK(handled == !ignored);
   }
   CHECK(f.calls == (ignored ? 0U : 1U));
@@ -126,12 +133,15 @@ int main(int argc, char **argv) {
           active.document_id == other);
   }
   if (changed) {
+    fputs("newline stage: undo and redo\n", stderr);
     CHECK(UmiDocumentCoordinatorUndo(f.documents, f.id) == UMI_STATUS_OK &&
           NativeEditText(&f, source));
     CHECK(UmiDocumentCoordinatorRedo(f.documents, f.id) == UMI_STATUS_OK &&
           NativeEditText(&f, expected));
   }
 cleanup:
+  fputs("newline stage: retire fixture\n", stderr);
   NativeEditStop(&f);
+  fputs("newline stage: retired\n", stderr);
   return failed;
 }

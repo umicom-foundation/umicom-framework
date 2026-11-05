@@ -32,6 +32,9 @@ extern "C"
      * Invalid UTF-8, empty/overlong captions or invalid accelerators clear the
      * output and return INVALID_ARGUMENT. No shortcut handler is registered.
      * Hosts own dispatch and supply the binding their keyboard route uses.
+     * Control-Tab and Control-Shift-Tab (including ISO/keypad Tab keyvals) are
+     * accepted for host-owned document navigation. Bare Tab and Shift-Tab
+     * remain focus traversal and are rejected as command captions.
      * The button can be appended to a normal GTK container or ActionMenu.
      * Do not replace its child before appending it to an ActionMenu. */
     UmiStatus UmiGtk4ActionMenuButtonCreate(const char *label, guint keyval,

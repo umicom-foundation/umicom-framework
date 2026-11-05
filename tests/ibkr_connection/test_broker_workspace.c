@@ -13,11 +13,16 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "umicom/ui/gtk4/automation.h"
 #include "umicom/broker_connectivity/workspace_gtk4.h"
 #include "umicom/broker_connectivity/connection_gtk4.h"
 #include <stdio.h>
 #include <string.h>
 #define CHECK(x) do { if (!(x)) { fprintf(stderr, "%d: %s\n", __LINE__, #x); return 1; } } while (0)
+/* A collapsed expander still owns its controls, although GTK unparents
+ * its content. Retain the physical-only search for review; the shared logical
+ * lookup below inspects those controls without expanding or activating them. */
+#if 0
 static GtkWidget *Find(GtkWidget *root, const char *name)
 {
     if (strcmp(gtk_widget_get_name(root), name) == 0) return root;
@@ -27,6 +32,11 @@ static GtkWidget *Find(GtkWidget *root, const char *name)
         if (found != NULL) return found;
     }
     return NULL;
+}
+#endif
+static GtkWidget *Find(GtkWidget *root, const char *name)
+{
+    return umi_gtk4_automation_find_named_widget(root, name);
 }
 static GtkWindow *Inspector(GtkWindow *parent)
 {

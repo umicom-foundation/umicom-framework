@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "media_workspace_style.h"
+#include "video_sequence_presentation.inc"
 #include "umicom/ui/gtk4/workstation/focus_cycle.h"
 
 /* The editor keeps its existing command IDs and model ownership. The desktop
@@ -39,8 +40,12 @@ GtkWidget *UmiVideoSequenceGtk4Create(void) {
   gtk_box_append(GTK_BOX(panel->form), toolbarRow);
   LayoutMenu(panel, toolbarRow);
   GtkWidget *toolbar = WorkspaceActions(toolbarRow);
+/* History controls move next to the timeline they edit. The previous composition remains for engineering review. */
+#if 0
   Button(panel, toolbar, "Undo", "video.undo", "undo", G_CALLBACK(Edit));
   Button(panel, toolbar, "Redo", "video.redo", "redo", G_CALLBACK(Edit));
+#endif
+  gtk_widget_add_css_class(toolbarRow, "media-editor-toolbar");
   Button(panel, toolbar, "Save new recipe", "video.save", "save", G_CALLBACK(UmiVideoSequenceGtkJob));
   Button(panel, toolbar, "Project", "video.navigation.project", "project", G_CALLBACK(WorkspaceNavigate));
   Button(panel, toolbar, "Export", "video.navigation.export", "export", G_CALLBACK(WorkspaceNavigate));
@@ -71,12 +76,15 @@ GtkWidget *UmiVideoSequenceGtk4Create(void) {
   gtk_paned_set_shrink_start_child(GTK_PANED(horizontal), FALSE);
   gtk_paned_set_shrink_end_child(GTK_PANED(horizontal), FALSE);
   GtkWidget *sources = WorkspacePage(sourceBook, "Media");
+  gtk_widget_add_css_class(sources, "media-library");
   Tag(sources, "video.sources");
   gtk_box_append(GTK_BOX(sources), MediaLibrary(panel));
   panel->selector = gtk_drop_down_new(NULL, NULL);
   Tag(panel->selector, "video.clips");
   gtk_box_append(GTK_BOX(sources), panel->selector);
   g_signal_connect_object(panel->selector, "notify::selected", G_CALLBACK(Select), panel->root, 0);
+/* Import fields can collapse to leave room for the media library. The previous composition remains for engineering review. */
+#if 0
   /* Explicit IDs and ranges remain visible; the library never guesses a file duration. */
   panel->id = gtk_entry_new();
   Tag(panel->id, "video.id");
@@ -92,6 +100,25 @@ GtkWidget *UmiVideoSequenceGtk4Create(void) {
   gtk_box_append(GTK_BOX(sources), panel->path);
   Browse(sources, panel->path, UMI_PATH_PICKER_EXISTING_FILE, "Choose a video clip");
   Button(panel, sources, "Add clip", "video.add", "add", G_CALLBACK(Edit));
+#endif
+  /* Import keeps its original controls and model command in an expandable
+   * section. Source timing remains explicit in the adjacent clip inspector. */
+  GtkWidget *import = PresentationSection(sources, "Import clip", "video.section.import", true);
+  panel->id = gtk_entry_new();
+  Tag(panel->id, "video.id");
+  gtk_entry_set_placeholder_text(GTK_ENTRY(panel->id), "New clip name");
+  gtk_accessible_update_property(GTK_ACCESSIBLE(panel->id), GTK_ACCESSIBLE_PROPERTY_LABEL, "Clip ID", -1);
+  gtk_entry_set_max_length(GTK_ENTRY(panel->id), (int)sizeof(initial.clips[0].id) - 1);
+  gtk_box_append(GTK_BOX(import), panel->id);
+  panel->path = gtk_entry_new();
+  Tag(panel->path, "video.path");
+  gtk_entry_set_placeholder_text(GTK_ENTRY(panel->path), "Local video file");
+  gtk_accessible_update_property(GTK_ACCESSIBLE(panel->path), GTK_ACCESSIBLE_PROPERTY_LABEL, "Local video file", -1);
+  gtk_entry_set_max_length(GTK_ENTRY(panel->path), (int)UMI_PATH_CAPACITY - 1);
+  gtk_box_append(GTK_BOX(import), panel->path);
+  Browse(import, panel->path, UMI_PATH_PICKER_EXISTING_FILE, "Choose a video clip");
+  Button(panel, import, "Add clip", "video.add", "add", G_CALLBACK(Edit));
+  Label(import, "Set the source start and end in Clip range, then add the clip.");
   GtkWidget *project = WorkspacePage(sourceBook, "Project");
   panel->title = Entry(project, "Sequence title", "video.title");
   panel->width = Spin(project, "Output width (even pixels)", "video.width", 16.0, 1920.0);
@@ -122,17 +149,40 @@ GtkWidget *UmiVideoSequenceGtk4Create(void) {
   gtk_widget_set_hexpand(preview, TRUE); gtk_widget_set_vexpand(preview, TRUE);
   gtk_widget_set_size_request(preview, 240, 180);
   gtk_paned_set_start_child(GTK_PANED(right), preview);
+/* A compact player heading keeps the viewing area dominant. The previous composition remains for engineering review. */
+#if 0
   GtkWidget *heading = Label(preview, "Preview");
   gtk_widget_add_css_class(heading, "heading");
+#endif
+  GtkWidget *previewBar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+  gtk_widget_add_css_class(previewBar, "media-panel-heading");
+  gtk_box_append(GTK_BOX(preview), previewBar);
+  GtkWidget *heading = Label(previewBar, "Preview");
+  gtk_widget_add_css_class(heading, "heading");
+  gtk_widget_set_hexpand(heading, TRUE);
+  GtkWidget *silent = Label(previewBar, "Silent preview");
+  gtk_widget_add_css_class(silent, "media-muted");
   panel->video = gtk_video_new();
   Tag(panel->video, "video.player");
   gtk_widget_set_hexpand(panel->video, TRUE); gtk_widget_set_vexpand(panel->video, TRUE);
   gtk_box_append(GTK_BOX(preview), panel->video);
+/* Transport icons keep accessible names and the existing preview callbacks. The previous composition remains for engineering review. */
+#if 0
   GtkWidget *previewHint = Label(preview, "Select a clip, then preview its applied range. Preview is silent.");
   gtk_widget_add_css_class(previewHint, "media-muted");
   GtkWidget *transport = WorkspaceActions(preview);
   Button(panel, transport, "Preview selected clip", "video.preview", "preview", G_CALLBACK(UmiVideoSequenceGtkPreview));
   Button(panel, transport, "Stop preview", "video.stop", "stop", G_CALLBACK(UmiVideoSequenceGtkPreview));
+#endif
+  GtkWidget *transport = WorkspaceActions(preview);
+  gtk_widget_add_css_class(transport, "media-transport");
+  gtk_widget_set_halign(transport, GTK_ALIGN_CENTER);
+  PresentationButton(panel, transport, "Preview selected clip", "media-playback-start-symbolic",
+      "video.preview", "preview", G_CALLBACK(UmiVideoSequenceGtkPreview));
+  PresentationButton(panel, transport, "Stop preview", "media-playback-stop-symbolic",
+      "video.stop", "stop", G_CALLBACK(UmiVideoSequenceGtkPreview));
+  gtk_widget_set_tooltip_text(panel->video,
+      "Select a clip, then preview its applied range. Preview is silent.");
   GtkWidget *inspectorBook = gtk_notebook_new();
   panel->inspectorBook = inspectorBook;
   panel->layoutRegions[1] = inspectorBook;
@@ -144,6 +194,8 @@ GtkWidget *UmiVideoSequenceGtk4Create(void) {
   gtk_paned_set_end_child(GTK_PANED(right), inspectorBook);
   GtkWidget *inspector = WorkspacePage(inspectorBook, "Inspector");
   Tag(inspector, "video.inspector");
+/* Grouped clip tools reduce inspector scrolling without recreating draft fields. The previous composition remains for engineering review. */
+#if 0
   Label(inspector, "Trim the selected source in milliseconds. Apply trim to change the sequence.");
   panel->begin = Spin(inspector, "Source start", "video.begin", 0.0, 600000.0);
   panel->end = Spin(inspector, "Source end (excluded)", "video.end", 1.0, 600000.0);
@@ -155,6 +207,21 @@ GtkWidget *UmiVideoSequenceGtk4Create(void) {
   Button(panel, inspector, "Split clip", "video.split", "split", G_CALLBACK(Edit));
   panel->position = Spin(inspector, "New position (starts at 1)", "video.position", 1.0, 6.0);
   Button(panel, inspector, "Move clip", "video.move", "move", G_CALLBACK(Edit));
+#endif
+  GtkWidget *range = PresentationSection(inspector, "Clip range", "video.section.range", true);
+  Label(range, "Trim the selected source in milliseconds. Apply trim to change the sequence.");
+  panel->begin = Spin(range, "Source start", "video.begin", 0.0, 600000.0);
+  panel->end = Spin(range, "Source end (excluded)", "video.end", 1.0, 600000.0);
+  GtkWidget *edits = WorkspaceActions(range);
+  Button(panel, edits, "Apply trim", "video.replace", "replace", G_CALLBACK(Edit));
+  Button(panel, edits, "Remove clip", "video.remove", "remove", G_CALLBACK(Edit));
+  GtkWidget *cut = PresentationSection(inspector, "Split clip", "video.section.split", false);
+  panel->split = Spin(cut, "Split at source time", "video.split-time", 0.0, 600000.0);
+  panel->rightId = Entry(cut, "New ID for right part", "video.right-id");
+  Button(panel, cut, "Split clip", "video.split", "split", G_CALLBACK(Edit));
+  GtkWidget *order = PresentationSection(inspector, "Clip order", "video.section.order", false);
+  panel->position = Spin(order, "New position (starts at 1)", "video.position", 1.0, 6.0);
+  Button(panel, order, "Move clip", "video.move", "move", G_CALLBACK(Edit));
   GtkWidget *relink = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
   GtkWidget *expander = gtk_expander_new("Relink source media");
   gtk_expander_set_child(GTK_EXPANDER(expander), relink);
@@ -210,6 +277,13 @@ GtkWidget *UmiVideoSequenceGtk4Create(void) {
   gtk_paned_set_end_child(GTK_PANED(vertical), timeline);
   GtkWidget *timelineBar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
   gtk_box_append(GTK_BOX(timeline), timelineBar);
+  gtk_widget_add_css_class(timelineBar, "media-timeline-toolbar");
+  PresentationButton(panel, timelineBar, "Undo video edit", "edit-undo-symbolic",
+      "video.undo", "undo", G_CALLBACK(Edit));
+  PresentationButton(panel, timelineBar, "Redo video edit", "edit-redo-symbolic",
+      "video.redo", "redo", G_CALLBACK(Edit));
+  PresentationButton(panel, timelineBar, "Open split controls", "edit-cut-symbolic",
+      "video.navigation.split", "split-inspector", G_CALLBACK(PresentationSplit));
   panel->durationLabel = Label(timelineBar, "Timeline");
   gtk_widget_set_hexpand(panel->durationLabel, TRUE);
   Label(timelineBar, "Zoom");
@@ -222,7 +296,15 @@ GtkWidget *UmiVideoSequenceGtk4Create(void) {
       GTK_ACCESSIBLE_PROPERTY_LABEL, "Timeline zoom", -1);
   gtk_box_append(GTK_BOX(timelineBar), panel->zoom);
   g_signal_connect_object(panel->zoom, "value-changed", G_CALLBACK(TimelineZoomChanged), panel->root, 0);
+  /* The former unstyled label is retained for review; the named label below
+   * lets the shared stylesheet identify the track without changing its model. */
+#if 0
   Label(timeline, "Video 1  |  Sequential cuts");
+#endif
+  /* The track identifies the current sequential editor; additional tracks must
+   * be backed by a compositing model before the interface advertises them. */
+  GtkWidget *track = Label(timeline, "Video 1  |  Sequential cuts");
+  gtk_widget_add_css_class(track, "media-track-heading");
   Tag(panel->durationLabel, "video.duration");
   panel->emptyTimeline = Label(timeline, "No clips yet. Choose a local file in Clips, set the source range, then choose Add clip.");
   GtkWidget *clips = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 4);
@@ -231,6 +313,7 @@ GtkWidget *UmiVideoSequenceGtk4Create(void) {
   gtk_scrolled_window_set_min_content_height(GTK_SCROLLED_WINDOW(clipScroll), 76);
   gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(clipScroll), clips);
   gtk_box_append(GTK_BOX(timeline), clipScroll);
+  gtk_widget_set_vexpand(clipScroll, TRUE);
   /* Buttons are allocated once. A refresh changes labels and selection but
    * never destroys the focused clip control or dispatches an edit. */
   for (guint i = 0U; i < UMI_VIDEO_SEQUENCE_MAX_CLIPS; ++i) {
@@ -261,5 +344,8 @@ GtkWidget *UmiVideoSequenceGtk4Create(void) {
   /* Layout panes have their own F6 action; join it to the shared regions. */
   UmiGtk4FocusCycleInstall(panel->root);
   UmiVideoSequenceGtkRefresh(panel);
+  /* Allocate the initial layout once, after the host has supplied its size.
+   * Later resizes remain under GtkPaned and the user's control. */
+  gtk_widget_add_tick_callback(panel->root, LayoutInitialAllocation, NULL, NULL);
   return panel->root;
 }

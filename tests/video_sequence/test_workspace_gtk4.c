@@ -20,6 +20,7 @@
 #undef CHECK
 #include "fixture.h"
 #include "../support/main_context.h"
+#include "../support/widget_diagnostics.h"
 #include "../../adapters/gtk4/video_sequence_private.h"
 #include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/creative_workspace.h"
@@ -107,6 +108,7 @@ static void Geometry(GtkWidget *root)
 }
 #include "workspace_customisation.inc"
 #include "workspace_menu_commands.inc"
+#include "workspace_presentation.inc"
 
 int main(int argc, char **argv)
 {
@@ -114,9 +116,14 @@ int main(int argc, char **argv)
     const char *mode = argv[1];
     CHECK(strcmp(mode, "geometry") == 0 || strcmp(mode, "selection") == 0 ||
           strcmp(mode, "edits") == 0 || strcmp(mode, "retirement") == 0 ||
-          strcmp(mode, "composition") == 0 || strcmp(mode, "music-composition") == 0 || strcmp(mode, "event-deadline") == 0 || CustomisationCase(mode) || MediaMenuCase(mode));
+          strcmp(mode, "composition") == 0 || strcmp(mode, "music-composition") == 0 || strcmp(mode, "event-deadline") == 0 || CustomisationCase(mode) || MediaMenuCase(mode) || PresentationCase(mode));
     (void)g_setenv("GTK_A11Y", "test", TRUE);
     (void)g_setenv("GSETTINGS_BACKEND", "memory", TRUE);
+    /* Register as a test before GTK emits diagnostics. On Windows GLib then
+     * reports a fatal warning to the test log without showing a modal error
+     * dialog. Warnings remain fatal; this does not convert a crash to a pass. */
+    g_test_init(&argc, &argv, NULL);
+    UmiTestWidgetDiagnosticsInstall();
     if (!gtk_init_check()) return 77;
     if (strcmp(mode, "event-deadline") == 0) {
         unsigned calls = 0U;
@@ -148,6 +155,7 @@ int main(int argc, char **argv)
         g_object_ref_sink(root); host = root;
     }
     UmiVideoSequencePanel *panel = UmiVideoSequenceGtkState(root);
+    UmiTestWidgetDiagnosticsRoot(window);
     gtk_window_set_child(GTK_WINDOW(window), host);
     gtk_window_present(GTK_WINDOW(window)); Settle();
     CHECK(gtk_widget_get_mapped(root));
@@ -206,6 +214,7 @@ int main(int argc, char **argv)
     }
     Customisation(mode, window, host, root, panel);
     MediaMenuCommands(mode, host, root, panel);
+    Presentation(mode, window, host, root, panel);
     gtk_window_set_child(GTK_WINDOW(window), NULL);
     if (surface != NULL) {
         UmiCreativeGtkSurfaceDestroy(surface);

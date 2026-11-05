@@ -39,6 +39,37 @@ static void LayoutVisibility(GtkCheckButton *check, gpointer root)
   panel->arranging = false;
 }
 
+/* Initial and explicitly reset proportions derive from the editor allocation,
+ * not the screen or working directory. Side panels are bounded so the player
+ * can use wider windows. GtkPaned enforces each child's real minimum size. */
+static void LayoutProportions(UmiVideoSequencePanel *panel)
+{
+  int width = gtk_widget_get_width(panel->layoutPanes[0]);
+  int height = gtk_widget_get_height(panel->layoutPanes[2]);
+  int library = CLAMP(width / 4, 220, 340);
+  int inspector = CLAMP(width / 4, 260, 360);
+  int positions[] = {library, MAX(240, width - library - inspector - 10),
+                     MAX(240, height * 2 / 3)};
+  for (size_t i = 0U; i < 3U && !panel->closed; ++i)
+    gtk_paned_set_position(GTK_PANED(panel->layoutPanes[i]), positions[i]);
+}
+
+static gboolean LayoutInitialAllocation(GtkWidget *root, GdkFrameClock *clock, gpointer data)
+{
+  (void)clock; (void)data;
+  UmiVideoSequencePanel *panel = UmiVideoSequenceGtkState(root);
+  if (panel == NULL || panel->closed) return G_SOURCE_REMOVE;
+  if (!LayoutAvailable(panel) || gtk_widget_get_width(panel->layoutPanes[0]) <= 0 ||
+      gtk_widget_get_height(panel->layoutPanes[2]) <= 0) return G_SOURCE_CONTINUE;
+  bool wasRefreshing = panel->refreshing;
+  panel->arranging = true;
+  panel->refreshing = true;
+  LayoutProportions(panel);
+  panel->refreshing = wasRefreshing;
+  panel->arranging = false;
+  return G_SOURCE_REMOVE;
+}
+
 static void LayoutCommand(GtkButton *button, gpointer root)
 {
   UmiVideoSequencePanel *panel = UmiVideoSequenceGtkState(GTK_WIDGET(root));
@@ -66,11 +97,16 @@ static void LayoutCommand(GtkButton *button, gpointer root)
   } else if (strcmp(action, "focus-preview") == 0) {
     for (size_t i = 0U; i < 3U && !panel->closed; ++i) LayoutSetVisible(panel, i, false);
   } else if (strcmp(action, "reset-layout") == 0) {
+/* Reset uses the current editor size instead of a single monitor assumption. The previous composition remains for engineering review. */
+#if 0
     const int positions[] = {250, 580, 440};
     for (size_t i = 0U; i < 3U && !panel->closed; ++i) {
       LayoutSetVisible(panel, i, true);
       if (!panel->closed) gtk_paned_set_position(GTK_PANED(panel->layoutPanes[i]), positions[i]);
     }
+#endif
+    for (size_t i = 0U; i < 3U && !panel->closed; ++i) LayoutSetVisible(panel, i, true);
+    if (!panel->closed) LayoutProportions(panel);
   } else if (strcmp(action, "recall-layout") == 0) {
     UmiVideoSequenceGtkMessage(panel, "Choose Remember layout first. This window has no remembered layout yet.");
   }

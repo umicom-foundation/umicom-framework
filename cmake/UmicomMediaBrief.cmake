@@ -52,3 +52,7 @@ endif()
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/media-creation-briefs.html"
     "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/media-creation-briefs.md"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/learning" COMPONENT Learning)
+
+# Scene planning shares these source and provider handoffs rather than adding
+# an independent generation owner in the Media application.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomMediaStoryboard.cmake")

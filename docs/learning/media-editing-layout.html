@@ -1,0 +1,63 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Using the Umicom Media editing workspace</title><style>
+body{font:17px/1.65 system-ui,sans-serif;max-width:960px;margin:36px auto;padding:0 24px;color:#203348;background:#fff}
+h1,h2{line-height:1.25}h2{margin-top:2em}a{color:#155d86}.brand{width:180px;max-width:100%;height:auto}
+code{font-size:.9em;background:#edf2f6;padding:2px 4px;overflow-wrap:anywhere}table{border-collapse:collapse;width:100%}
+th,td{border:1px solid #b9c8d3;padding:10px;text-align:left;vertical-align:top}li{margin:.6em 0}
+@media(max-width:650px){table{font-size:.85em}th,td{padding:5px}}
+</style></head><body><main><h1>Using the Umicom Media editing workspace</h1>
+<p><img class="brand" alt="Umicom" src="../../resources/brand/umicom-logo.svg"></p>
+<p>The editing workspace keeps your source files, preview and editing controls visible together. A <strong>clip</strong> is a named part of a video file. A <strong>sequence</strong> places clips in an order. A <strong>recipe</strong> stores that order and the chosen start and end times; it does not contain the video itself.</p>
+<p>This guide describes the sequential video editor. It supports up to six clips and ten minutes of output. Preview is silent. The renderer creates silent H.264 MP4 at 30 frames per second; soundtrack and selectable subtitle exports are separate operations. Multi-track compositing, waveform editing and transitions are not implemented in this editor.</p>
+<h2>1. Find the five working areas</h2>
+<ol>
+<li><strong>Top navigation:</strong> choose Video Edit to edit your sequence. Create from text prepares a written brief. AI Video, AI Image, Audio and Canvas open their respective tools. Moving between these pages keeps the same sequence editor alive.</li>
+<li><strong>Left library:</strong> search and select the clips already in the sequence. Expand Import clip to enter a new clip name and choose a local source file. The cards currently show file icons and names, rather than extracted video thumbnails.</li>
+<li><strong>Centre preview:</strong> select a clip, then use the play button to preview its applied range. The square button stops playback. Hover over either icon to read its name. Preview is not a rendering of the complete sequence.</li>
+<li><strong>Right inspector:</strong> Clip range contains the source start and end. Split clip and Clip order expand to show their controls. The Export tab contains output paths and rendering options.</li>
+<li><strong>Bottom timeline:</strong> select a clip to inspect it. Undo and Redo are beside the timeline. The scissors button opens the split controls; it does not cut immediately. Zoom changes the display width of clips, not their duration.</li>
+</ol>
+<p>The wordmark and icon come from the shared Umicom SVG assets. The interface does not use artwork or logos from example layouts.</p>
+<h2>2. Make room for your work</h2>
+<ol>
+<li>Resize the application window using its outer border. On first display, the editor gives bounded space to the side panels and the remaining width to the preview.</li>
+<li>Drag the divider beside the library, beside the inspector or above the timeline. These are <strong>split panes</strong>: moving a divider changes the space allocated to neighbouring panels.</li>
+<li>Collapse Import clip after adding your sources. Collapse an inspector section when you no longer need its fields. Collapsing keeps the existing field values, including changes you have not applied.</li>
+<li>Open Layout above the editor. Use Show media library, Show inspector and Show timeline to hide or reveal those areas. Focus preview hides all three.</li>
+<li>Choose Remember layout (this window), change the arrangement, then choose Restore remembered layout. This memory lasts only for the current window. It is not stored in the recipe or restored after restarting the application.</li>
+<li>Choose Reset panel layout to show all panels and size them for the current editor area. Reset does not remove clips or clear the editing history.</li>
+</ol>
+<p>The panes have minimum sizes. On a small display, hide a panel or collapse its sections instead of trying to shrink a control below its usable size. Free-floating windows and arbitrary docking are not supported by this editor.</p>
+<h2>3. Add, trim and split a clip</h2>
+<ol>
+<li>In Media, expand Import clip. Enter <code>intro</code> as the clip name and choose a local video file you can read.</li>
+<li>In Inspector, expand Clip range. Enter <code>2000</code> for Source start and <code>6000</code> for Source end. These values are <strong>milliseconds</strong>: 1000 milliseconds is one second. This example selects four seconds of source video, starting two seconds into the file. The end time is excluded.</li>
+<li>Choose Add clip in the left panel. The library and timeline show the new clip. The editor does not inspect the file to fill in its duration automatically.</li>
+<li>Select the clip and press the preview play button. If playback cannot start, check the file path, the chosen range and the available playback backend. An icon or a card in the library is not proof that a codec can decode the video.</li>
+<li>To change its range, edit Source start and Source end, then choose Apply trim. Typing into a field alone does not modify the recipe.</li>
+<li>Choose the scissors button on the timeline. The inspector opens Split clip even if the inspector was hidden. Enter <code>4000</code> for Split at source time and <code>intro-right</code> for the new right-hand clip ID, then choose Split clip. This splits the source range at four seconds into the source file, not four seconds into the timeline.</li>
+<li>Use Undo to reverse the split. Use Redo to apply it again. To rearrange a selected clip, expand Clip order, enter its new position starting at 1, then choose Move clip.</li>
+</ol>
+<p>Use Project to choose a recipe path and Save new recipe to write a new recipe. Use Export to choose an encoder and a new output path. The controls ask for paths you choose; navigating to Project or Export does not itself write a file. See <a href="video-sequences.html">Edit a local video sequence</a> for the complete save, render, soundtrack and subtitle workflow.</p>
+<h2>4. Understand the Framework implementation</h2>
+<p>Umicom Media displays the shared Framework editor. Its layout does not create a second copy of the editing engine.</p>
+<table><thead><tr><th>Source file</th><th>Responsibility</th></tr></thead><tbody>
+<tr><td><code>adapters/gtk4/media_surface.inc</code></td><td>Product navigation and canonical branding</td></tr>
+<tr><td><code>adapters/gtk4/video_sequence_editor.inc</code></td><td>Placement of library, player, inspector and timeline</td></tr>
+<tr><td><code>adapters/gtk4/video_sequence_presentation.inc</code></td><td>Compact buttons and sections around existing commands</td></tr>
+<tr><td><code>adapters/gtk4/video_sequence_layout.inc</code></td><td>Divider positions, visibility and window-local layout recall</td></tr>
+<tr><td><code>adapters/gtk4/video_sequence_gtk4.c</code></td><td>Event callbacks and the owned sequence editor</td></tr>
+<tr><td><code>tests/video_sequence/workspace_presentation.inc</code></td><td>Regression cases for navigation, drafts and editing history</td></tr>
+</tbody></table>
+<p>A <strong>callback</strong> is a function called when an event occurs. For example, the timeline&#x27;s Undo button still uses the existing editing callback. Replacing its visible text with an icon must preserve its callback, command identity and accessible name. An <strong>accessible name</strong> describes a control to assistive technology; it should also make sense without seeing its icon.</p>
+<p>Resizing is a presentation event. It must not add an editing-history entry. GTK can notify other code while a panel is being shown or resized. The layout functions therefore set the editor&#x27;s presentation guard while adjusting widgets and stop if the owner closes the editor. The regression cases deliberately attempt an edit during a notification to check this separation.</p>
+<h2>5. Check a layout change</h2>
+<ol>
+<li>Add two clips and select the second.</li>
+<li>Type a new right-hand clip name in Split clip without applying a split. Collapse and reopen the section. The name should remain.</li>
+<li>Hide the inspector, then use the scissors shortcut. The same fields should reappear with the same values.</li>
+<li>Resize the window and drag all three dividers. The selected clip, source paths and sequence should remain unchanged.</li>
+<li>Use Undo once. It should reverse the last media edit, not a panel resize or section expansion.</li>
+<li>Switch to another mode and back to Video Edit. Check your selected clip and unapplied fields again.</li>
+</ol>
+<p>If a button does nothing, record its name, the visible mode and whether an export operation is in progress. If the logo is absent, record the runtime&#x27;s SVG loader message rather than substituting a different image. Share a screenshot and the relevant application log when reporting the issue; omit credentials and private source content.</p></main></body></html>

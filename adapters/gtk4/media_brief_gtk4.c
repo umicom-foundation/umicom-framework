@@ -232,6 +232,35 @@ static GtkWidget *Button(BriefPanel *p, GtkWidget *box, const char *id, const ch
     gtk_box_append(GTK_BOX(box), button);
     return button;
 }
+UmiStatus UmiMediaBriefGtkSetSource(GtkWidget *root, const UmiMediaBriefDraft *draft,
+                                  bool replace_existing)
+{
+    if (root == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    BriefPanel *p = Panel(root);
+    if (p == NULL || p->closed) return UMI_STATUS_INVALID_STATE;
+    UmiMediaBrief *check = NULL;
+    UmiStatus status = UmiMediaBriefCreate(draft, &check);
+    UmiMediaBriefDestroy(check);
+    if (status != UMI_STATUS_OK) return status;
+    bool occupied = *gtk_editable_get_text(GTK_EDITABLE(p->title)) != 0 || p->edited || p->ready;
+    GtkWidget *views[] = {p->source, p->direction, p->prompt};
+    for (size_t i = 0U; i < G_N_ELEMENTS(views); ++i)
+        occupied = occupied || gtk_text_buffer_get_char_count(gtk_text_view_get_buffer(GTK_TEXT_VIEW(views[i]))) != 0;
+    if (occupied && !replace_existing) return UMI_STATUS_ALREADY_EXISTS;
+    /* Storyboard and future importers share the same source owner. They cannot
+     * overwrite a user's prompt implicitly or bypass explicit preparation. */
+    p->painting = true;
+    gtk_editable_set_text(GTK_EDITABLE(p->title), draft->title);
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(p->kind), (guint)draft->kind);
+    gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(p->source)), draft->source, -1);
+    gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(p->direction)), draft->direction, -1);
+    p->painting = false;
+    p->ready = false;
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(p->replace), FALSE);
+    Message(p, "Source received. Review it and prepare a brief before using a generation tool. The previous prompt is retained.");
+    Sensitivity(p);
+    return UMI_STATUS_OK;
+}
 void UmiMediaBriefGtkRetire(GtkWidget *root)
 {
     if (root == NULL) return;

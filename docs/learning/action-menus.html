@@ -19,5 +19,9 @@ if (status == UMI_STATUS_OK) {
     }
 }</code></pre>
 <ol><li>Pass zero for both key and modifiers when the command has no shortcut. Do not invent a shortcut merely to fill a menu row.</li><li>Keep the button's sensitivity connected to command availability. A displayed shortcut must not bypass workspace trust, document state or pending-operation checks.</li><li>Use the returned button directly in a normal GTK box, or append it to an action menu. Both paths retain its existing activation callback.</li><li>Keep the generated row intact. Search copies its caption during append. To change a group of labels, construct a new group; replacing the child before append is rejected unless it becomes an ordinary labelled GTK button.</li></ol>
-<p>The output is a floating GTK widget. Failed validation clears the output pointer. An empty or invalid UTF-8 caption, a caption over 512 bytes, an invalid accelerator, or modifiers without a key are refused.</p></section>
+<!-- The accelerator-only description is retained for review. Host-owned document-navigation captions now have an explicit Control-Tab exception.
+<p>The output is a floating GTK widget. Failed validation clears the output pointer. An empty or invalid UTF-8 caption, a caption over 512 bytes, an invalid accelerator, or modifiers without a key are refused.</p>
+-->
+<p>The output is a floating GTK widget. Failed validation clears the output pointer. Empty or invalid UTF-8 captions, captions over 512 bytes and modifiers without a key are refused. Ordinary shortcuts must satisfy GTK accelerator validation. Control-Tab and Control-Shift-Tab captions are also accepted for host-owned document navigation; the host still implements their keyboard dispatch. Bare Tab and Shift-Tab remain focus traversal.</p>
+<p>To investigate missing menu commands and native failures, follow <a href="diagnosing-native-test-failures.html">Diagnosing native interface test failures</a>.</p></section>
 </body></html>

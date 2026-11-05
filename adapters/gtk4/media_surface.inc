@@ -199,6 +199,7 @@ static void MediaHeader(UmiCreativeGtkSurface *surface)
     MediaMenuItem(surface->pages, menu, "Save new recipe", "media.menu.save", "video.save");
     MediaMenuItem(surface->pages, menu, "Export settings", "media.menu.export", "video.navigation.export");
     MediaMenuItem(surface->pages, menu, "Create from text", "media.menu.creation", "creation");
+    MediaMenuItem(surface->pages, menu, "Storyboard", "media.menu.storyboard", "storyboard");
     menu = MediaMenu(bar, "Edit");
     MediaMenuItem(surface->pages, menu, "Undo video edit", "media.menu.undo", "video.undo");
     MediaMenuItem(surface->pages, menu, "Redo video edit", "media.menu.redo", "video.redo");
@@ -209,8 +210,15 @@ static void MediaHeader(UmiCreativeGtkSurface *surface)
     GtkWidget *spacer = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
     gtk_widget_set_hexpand(spacer, TRUE);
     gtk_box_append(GTK_BOX(bar), spacer);
+/* The main export command remains routed to the existing inspector. The previous composition remains for engineering review. */
+#if 0
     gtk_box_append(GTK_BOX(bar), MediaRouteButton(surface->pages, "Export",
         "media.export", "video.navigation.export"));
+#endif
+    GtkWidget *export = MediaRouteButton(surface->pages, "Export",
+        "media.export", "video.navigation.export");
+    gtk_widget_add_css_class(export, "media-export");
+    gtk_box_append(GTK_BOX(bar), export);
 
     GtkWidget *modes = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
     gtk_widget_add_css_class(modes, "media-modebar");
@@ -227,13 +235,38 @@ static void MediaHeader(UmiCreativeGtkSurface *surface)
     const char *routes[] = {"video-editing", "creative.tools.ai-video", "creative.tools.ai-image",
                             "creative.tools.audio", "creative.tools.canvas", "layouts"};
 #endif
+    /* Preserve the previous modes for review. Storyboard adds scene planning
+     * without replacing the source-brief or the existing generator routes. */
+#if 0
     const char *labels[] = {"Video Edit", "Create from text", "AI Video", "AI Image", "Audio", "Canvas", "Layouts"};
     const char *ids[] = {"video", "create", "ai-video", "ai-image", "audio", "canvas", "layouts"};
     const char *routes[] = {"video-editing", "creation", "creative.tools.ai-video", "creative.tools.ai-image",
                             "creative.tools.audio", "creative.tools.canvas", "layouts"};
+    const char *icons[] = {"video-x-generic-symbolic", "document-edit-symbolic",
+        "camera-video-symbolic", "image-x-generic-symbolic", "audio-x-generic-symbolic",
+        "applications-graphics-symbolic", "view-grid-symbolic"};
+#endif
+    const char *labels[] = {"Video Edit", "Storyboard", "Create from text", "AI Video", "AI Image", "Audio", "Canvas", "Layouts"};
+    const char *ids[] = {"video", "storyboard", "create", "ai-video", "ai-image", "audio", "canvas", "layouts"};
+    const char *routes[] = {"video-editing", "storyboard", "creation", "creative.tools.ai-video", "creative.tools.ai-image",
+                            "creative.tools.audio", "creative.tools.canvas", "layouts"};
+    const char *icons[] = {"video-x-generic-symbolic", "view-list-symbolic", "document-edit-symbolic",
+        "camera-video-symbolic", "image-x-generic-symbolic", "audio-x-generic-symbolic",
+        "applications-graphics-symbolic", "view-grid-symbolic"};
     for (size_t i = 0U; i < G_N_ELEMENTS(labels); ++i) {
         char *id = g_strdup_printf("media.mode.%s", ids[i]);
+/* Mode icons supplement text without changing the command routing. The previous composition remains for engineering review. */
+#if 0
         gtk_box_append(GTK_BOX(modes), MediaRouteButton(surface->pages, labels[i], id, routes[i]));
+#endif
+        GtkWidget *button = MediaRouteButton(surface->pages, labels[i], id, routes[i]);
+        GtkWidget *body = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+        gtk_box_append(GTK_BOX(body), gtk_image_new_from_icon_name(icons[i]));
+        gtk_box_append(GTK_BOX(body), gtk_label_new(labels[i]));
+        gtk_button_set_child(GTK_BUTTON(button), body);
+        gtk_accessible_update_property(GTK_ACCESSIBLE(button), GTK_ACCESSIBLE_PROPERTY_LABEL, labels[i], -1);
+        gtk_widget_add_css_class(button, "media-mode");
+        gtk_box_append(GTK_BOX(modes), button);
         g_free(id);
     }
 }

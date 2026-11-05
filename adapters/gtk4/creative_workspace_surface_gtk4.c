@@ -17,10 +17,12 @@
 #include <string.h>
 #include "media_workspace_style.h"
 #include "umicom/ui/gtk4/media_brief.h"
+#include "umicom/ui/gtk4/media_storyboard.h"
 struct UmiCreativeGtkSurface {
     UmiCreativeGtkPanel *panel;
     GtkWidget *root, *original;
     GtkWidget *brief; /* Owned by the surface; borrows no model or generator lifetime. */
+    GtkWidget *storyboard; /* Shares the existing library and brief through weak references. */
     GtkStack *pages;
 };
 
@@ -136,6 +138,10 @@ UmiStatus UmiCreativeGtkSurfaceCreate(GtkWidget *original, const char *profile,
             MediaFind(GTK_WIDGET(surface->pages), "pixverse.panel"));
         if (surface->brief != NULL)
             gtk_stack_add_titled(surface->pages, surface->brief, "creation", "Create from text");
+        surface->storyboard = UmiMediaStoryboardGtkCreate(
+            MediaFind(GTK_WIDGET(surface->pages), "creative.library"), surface->brief);
+        if (surface->storyboard != NULL)
+            gtk_stack_add_titled(surface->pages, surface->storyboard, "storyboard", "Storyboard");
         MediaBindNavigation(surface);
     }
     surface->original = original;
@@ -153,6 +159,7 @@ void UmiCreativeGtkSurfaceDestroy(UmiCreativeGtkSurface * surface)
     surface -> original = NULL;
     /* Retained navigation becomes inert before its target owners are retired. */
     gtk_widget_set_sensitive(surface->root, FALSE);
+    UmiMediaStoryboardGtkRetire(surface->storyboard);
     UmiMediaBriefGtkRetire(surface->brief);
     UmiCreativeGtkPanelDestroy(surface -> panel);
     g_object_unref(surface -> root);
