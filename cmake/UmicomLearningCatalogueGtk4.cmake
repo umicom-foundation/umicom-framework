@@ -511,12 +511,13 @@ if(BUILD_TESTING)
     if(COMMAND umicom_target_qualification_inputs)
         umicom_target_qualification_inputs(umicom-learning-body-filters-gtk4-test FILES
             "${_learning_catalogue_root}/tests/learning_pack/text_fixture.h"
-            "${_learning_catalogue_root}/tests/support/gtk4_expanders.h")
+            "${_learning_catalogue_root}/tests/support/gtk4_expanders.h"
+            "${_learning_catalogue_root}/tests/support/main_context.h")
     endif()
     foreach(_case product product-case locale locale-fallback guide example lesson image combined
             limit maximum callback callback-user unterminated invalid-kind zero-limit empty null
             refresh snapshot cached control-product control-locale control-kind control-reset
-            control-notice control-utf8-capacity)
+            control-notice control-utf8-capacity event-deadline)
         set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-body-filters/${_case}")
         file(MAKE_DIRECTORY "${_directory}")
         add_test(NAME "framework.learning_pack.body_filters.${_case}"

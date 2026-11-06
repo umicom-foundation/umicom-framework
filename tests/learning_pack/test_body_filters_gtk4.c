@@ -15,15 +15,32 @@
 #include "text_fixture.h"
 #include "umicom/ui/gtk4/learning_catalogue.h"
 #include "../support/gtk4_expanders.h"
+#include "../support/main_context.h"
 #define CHECK(x) do { if (!(x)) { fprintf(stderr,"%s:%d: %s\n",__FILE__,__LINE__,#x);result=1;goto cleanup; } } while(0)
 static int Finish(void)
 {
     gint64 deadline=g_get_monotonic_time()+15*G_TIME_SPAN_SECOND;
     while(UmiLearningCatalogueGtk4PendingReads()!=0U && g_get_monotonic_time()<deadline) {
+        /* The former drain could never return when a source remained ready.
+         * Keep it for review; the shared bounded dispatcher below returns to
+         * the pending-read and deadline checks after each finite slice. */
+#if 0
         while(g_main_context_iteration(NULL,FALSE)) {}
+#endif
+        (void)UmiTestDispatchSlice(NULL,deadline,64U);
         g_usleep(1000U);
     }
+    if(UmiLearningCatalogueGtk4PendingReads()!=0U)
+        fprintf(stderr,"Learning read completion exceeded 15 seconds; pending=%zu\n",
+            (size_t)UmiLearningCatalogueGtk4PendingReads());
     return UmiLearningCatalogueGtk4PendingReads()==0U;
+}
+/* An idle source that stays ready reproduces the starvation hazard without
+ * network access or an application window. Its lifetime belongs to the test. */
+static gboolean KeepReady(gpointer data)
+{
+    ++*(unsigned *)data;
+    return G_SOURCE_CONTINUE;
 }
 static GtkWidget *Find(GtkWidget *widget,const char *id)
 {
@@ -57,6 +74,8 @@ static int Check(const char *name,const char *directory)
 {
     int result=0,known=1;
     unsigned callbacks=0U;
+    unsigned idle_calls=0U;
+    guint idle_source=0U;
     GtkWidget *panel=NULL;
     UmiLearningShelf *shelf=NULL;
     TextFixture fixture=TextFixtureDefault();
@@ -64,6 +83,14 @@ static int Check(const char *name,const char *directory)
     CHECK(TextFixtureAdopt(shelf,directory,"filter.pack",&fixture)==UMI_STATUS_OK);
     panel=UmiLearningCatalogueGtk4Create((UmiVersion){0U,9U,0U});
     CHECK(panel!=NULL);g_object_ref_sink(panel);UmiTestExpandSections(panel);
+    if(strcmp(name,"event-deadline")==0) {
+        idle_source=g_idle_add_full(G_PRIORITY_LOW,KeepReady,&idle_calls,NULL);
+        CHECK(idle_source!=0U);
+        /* The helper must stop at its iteration budget even while ready work
+         * remains. Finish then uses that same helper for actual reader jobs. */
+        CHECK(UmiTestDispatchSlice(NULL,g_get_monotonic_time()+G_TIME_SPAN_SECOND,64U)<=64U);
+        CHECK(UmiTestDispatchSlice(NULL,g_get_monotonic_time()-1,64U)==0U);
+    }
     CHECK(UmiLearningCatalogueGtk4Load(panel,directory)==UMI_STATUS_OK && Finish());
     CHECK(UmiLearningCatalogueGtk4SearchBodies(panel,"ownership",0,0,0)==UMI_STATUS_OK && Finish());
     UmiLearningCatalogueBodySearchState before,state;
@@ -138,7 +165,7 @@ static int Check(const char *name,const char *directory)
     else if(strcmp(name,"zero-limit")==0) {query.maximum_results=0U;expected=UMI_STATUS_INVALID_ARGUMENT;}
     else if(strcmp(name,"empty")==0) {query.phrase[0]='\0';expected=UMI_STATUS_INVALID_ARGUMENT;}
     else if(strcmp(name,"null")==0 || strcmp(name,"refresh")==0)expected=UMI_STATUS_INVALID_ARGUMENT;
-    else if(strcmp(name,"snapshot")!=0 && strcmp(name,"cached")!=0)known=0;
+    else if(strcmp(name,"snapshot")!=0 && strcmp(name,"cached")!=0 && strcmp(name,"event-deadline")!=0)known=0;
     CHECK(known);
     if(strcmp(name,"cached")==0)CHECK(UmiRootedFileRemove(directory,fixture.paths[1])==UMI_STATUS_OK);
     CHECK(UmiLearningCatalogueGtk4SearchBodiesWithQuery(panel,strcmp(name,"null")==0 ? NULL : &query,
@@ -160,7 +187,9 @@ static int Check(const char *name,const char *directory)
             state.query.maximum_results==before.query.maximum_results && strcmp(state.query.phrase,before.query.phrase)==0);
     }
     CHECK(callbacks==0U);
+    if(strcmp(name,"event-deadline")==0)CHECK(idle_calls>0U);
 cleanup:
+    if(idle_source!=0U)g_source_remove(idle_source);
     if(panel!=NULL)UmiLearningCatalogueGtk4Retire(panel);
     g_clear_object(&panel);
     if(!Finish())result=1;

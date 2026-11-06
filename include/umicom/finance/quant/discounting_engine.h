@@ -26,8 +26,13 @@ extern "C" {
 #endif
 
 /* Discount a single future cashflow. */
+/* Uses the discount-curve validation contract. Non-finite input is invalid;
+ * arithmetic overflow returns CAPACITY_EXCEEDED without modifying output. */
 UmiStatus umi_quant_discounting_engine_cashflow(double amount, double zero_rate, int32_t days, double *out_pv);
 /* Discount a bounded sequence of cashflows and rates. */
+/* A failed member or overflowing partial sum preserves the caller's output.
+ * Cancellation across later cashflows does not rescue an overflowing partial
+ * sum. An empty sequence with non-null arrays produces zero. */
 UmiStatus umi_quant_discounting_engine_portfolio(const double *amounts, const double *zero_rates, const int32_t *days, size_t count, double *out_pv);
 
 #ifdef __cplusplus

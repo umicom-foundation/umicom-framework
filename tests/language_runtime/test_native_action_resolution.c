@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/language_runtime/test_native_action_resolution.c
- * PURPOSE: Check same-session native resolution and complete reviewed workspace proposals.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Check same-session native resolution and complete reviewed workspace proposals.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language_runtime/code_action_query.h"
@@ -51,7 +58,7 @@ static int ProgramMain(int argc, char **argv)
     const char *secondary = strcmp(mode, "unicode") == 0 ? "source second caf\xc3\xa9" : "source second";
     UmiLanguageQuerySource sources[] = {{"file:///workspace/second.c", "c", secondary, strlen(secondary)},
                                         {"file:///workspace/third.c", "c", "source third", 12U}};
-    UmiLanguageCodeActionReport report;
+    UmiLanguageCodeActionReport report = {0};
     UmiLanguageCodeActionCatalogue *catalogue = NULL;
     UmiStatus expected = strcmp(mode, "query-error") == 0 || strcmp(mode, "shutdown-error") == 0
                              ? UMI_STATUS_UNAVAILABLE
@@ -84,8 +91,22 @@ static int ProgramMain(int argc, char **argv)
         request.timeout_ms = 1000U;
         expected = UMI_STATUS_TIMEOUT;
     }
+    /* Retain the earlier boolean assertion for review. The replacement calls
+     * the service once and identifies the failed lifecycle stage without
+     * logging source text, process arguments or credentials. */
+#if 0
     CHECK(UmiLanguageCodeActionQueryNativeWithResolution(&profile, NULL, &request, &options, 32U, NULL,
                                                          &report, &catalogue) == expected);
+#endif
+    UmiStatus actual = UmiLanguageCodeActionQueryNativeWithResolution(
+        &profile, NULL, &request, &options, 32U, NULL, &report, &catalogue);
+    if (actual != expected)
+        fprintf(stderr, "Native action case=%s actual=%d expected=%d started=%d initialized=%d "
+                "document_opened=%d query=%d close=%d shutdown=%d actions=%zu\n",
+                mode, (int)actual, (int)expected, report.started, report.initialized,
+                report.document_opened, (int)report.query_status, (int)report.close_status,
+                (int)report.shutdown_status, report.actions);
+    CHECK(actual == expected);
     CHECK(report.started && report.initialized && report.document_opened &&
           report.close_status == UMI_STATUS_OK);
     if (expected == UMI_STATUS_OK)
