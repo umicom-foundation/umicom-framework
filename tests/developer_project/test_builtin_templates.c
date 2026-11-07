@@ -26,13 +26,24 @@ int main(void)
 {
     UmiDeveloperProjectTemplateRegistry *registry = NULL;
 
+    /* The earlier catalogue count is retained for review. VHDL and Umicom C add
+     * registered entries; the current assertion covers the expanded catalogue. */
+#if 0
     assert(umi_developer_project_builtin_template_count() == 18U);
+#endif
+    assert(umi_developer_project_builtin_template_count() == 20U);
     assert(umi_developer_project_template_registry_create(&registry) ==
            UMI_STATUS_OK);
     assert(umi_developer_project_builtin_templates_register(registry) ==
            UMI_STATUS_OK);
+    /* The earlier catalogue count is retained for review. VHDL and Umicom C add
+     * registered entries; the current assertion covers the expanded catalogue. */
+#if 0
     assert(umi_developer_project_template_registry_count(registry) ==
            18U);
+#endif
+    assert(umi_developer_project_template_registry_count(registry) ==
+           20U);
 
     assert(umi_developer_project_template_registry_find(
         registry, "developer.template.c23-console") != NULL);
@@ -44,6 +55,12 @@ int main(void)
         registry, "developer.template.zig-console") != NULL);
     assert(umi_developer_project_template_registry_find(
         registry, "developer.template.umicom-extension") != NULL);
+
+    assert(umi_developer_project_template_registry_find(
+        registry, "developer.template.vhdl-cpu") != NULL);
+
+    assert(umi_developer_project_template_registry_find(
+        registry, "developer.template.umicom-c-preview") != NULL);
 
     umi_developer_project_template_registry_destroy(registry);
     return 0;

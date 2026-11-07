@@ -37,6 +37,10 @@ typedef struct UmiWatchlist { UmiInstrument instruments[UMI_TRADING_MAX_WATCHLIS
 void umi_watchlist_init(UmiWatchlist *watchlist);
 /**
  * Add watchlist only after its inputs and available capacity have been checked.
+ * Initialise the list before use. A count above the array capacity is invalid;
+ * rejection leaves the list unchanged. A duplicate in a full valid list returns
+ * ALREADY_EXISTS, while a new instrument returns CAPACITY_EXCEEDED.
+ * This structure is caller-owned and requires serial access.
  */
 UmiStatus umi_watchlist_add(UmiWatchlist *watchlist, const UmiInstrument *instrument);
 #ifdef __cplusplus

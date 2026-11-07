@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/local_profile/test_local_profile.c
- * PURPOSE: Regress local profile validation, failure atomicity, verification and credential removal.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Regress local profile validation, failure atomicity, verification and credential removal.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "fixture.h"
@@ -19,6 +26,48 @@ static void Names(void)
     CHECK(UmiLocalProfileName(long_name,output)==UMI_STATUS_INVALID_ARGUMENT);
     long_name[48]='\0'; CHECK(UmiLocalProfileName(long_name,output)==UMI_STATUS_OK);
 }
+/* Explicit-length fields need boundary coverage independent of a terminator.
+ * A separate output snapshot checks the whole destination, not only its prefix. */
+static void NameBytes(void)
+{
+    char output[UMI_LOCAL_PROFILE_NAME_CAPACITY];
+    char before[UMI_LOCAL_PROFILE_NAME_CAPACITY];
+    const char exact[] = {'A', 'b', 'C'};
+    CHECK(UmiLocalProfileNameBytes(exact, sizeof(exact), output) == UMI_STATUS_OK);
+    CHECK(strcmp(output, "abc") == 0);
+    for (size_t i = 3U; i < sizeof(output); ++i) CHECK(output[i] == '\0');
+
+    memset(output, 'Q', sizeof(output));
+    memcpy(before, output, sizeof(before));
+    const char embedded[] = {'A', '\0', 'c'};
+    const char high[] = {'A', (char)0xff, 'c'};
+    const char wrong_first[] = {'1', 'b', 'c'};
+    const char separator[] = {'A', '/', 'c'};
+    const char *invalid[] = {embedded, high, wrong_first, separator};
+    for (size_t i = 0U; i < sizeof(invalid) / sizeof(invalid[0]); ++i) {
+        CHECK(UmiLocalProfileNameBytes(invalid[i], 3U, output) == UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(memcmp(output, before, sizeof(output)) == 0);
+    }
+    CHECK(UmiLocalProfileNameBytes(NULL, 3U, output) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(UmiLocalProfileNameBytes(exact, 0U, output) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(UmiLocalProfileNameBytes(exact, 2U, output) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(UmiLocalProfileNameBytes(exact, SIZE_MAX, output) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(UmiLocalProfileNameBytes(exact, sizeof(exact), NULL) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(memcmp(output, before, sizeof(output)) == 0);
+
+    char maximum[UMI_LOCAL_PROFILE_NAME_CAPACITY];
+    memset(maximum, 'Z', sizeof(maximum));
+    CHECK(UmiLocalProfileNameBytes(maximum, sizeof(maximum), output) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(memcmp(output, before, sizeof(output)) == 0);
+    CHECK(UmiLocalProfileNameBytes(maximum, sizeof(maximum) - 1U, output) == UMI_STATUS_OK);
+    CHECK(strlen(output) == sizeof(maximum) - 1U);
+    for (size_t i = 0U; i < sizeof(maximum) - 1U; ++i) CHECK(output[i] == 'z');
+
+    char overlap[UMI_LOCAL_PROFILE_NAME_CAPACITY + 2U] = "Alice_7";
+    CHECK(UmiLocalProfileNameBytes(overlap, 7U, overlap + 2) == UMI_STATUS_OK);
+    CHECK(strcmp(overlap + 2, "alice_7") == 0);
+}
+
 static void Credentials(void)
 {
     ProfileFixture f={0}; UmiLocalProfileStore *store=FixtureStore(&f);
@@ -61,6 +110,7 @@ int main(int argc,char **argv)
 {
     if(argc!=2) return 2;
     if(strcmp(argv[1],"names")==0) Names();
+    else if(strcmp(argv[1],"name-bytes")==0) NameBytes();
     else if(strcmp(argv[1],"credentials")==0) Credentials();
     else if(strcmp(argv[1],"failures")==0) Failures();
     else return 2;

@@ -63,6 +63,8 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/markdown.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/php.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/rust.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/vhdl.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/umicom_c.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/sql.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/typescript.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/yaml.c"
@@ -95,6 +97,8 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/integration_worker.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/python_tool.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/rust_console.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/vhdl_cpu.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/umicom_c_preview.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/thin_desktop_application.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/umicom_extension.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/web_service_c23.c"
@@ -134,6 +138,22 @@ if(BUILD_TESTING)
         add_test(NAME "${test_name}" COMMAND "${target}")
     endfunction()
 
+    umicom_add_developer_project_test(
+        umicom-developer-project-generated-profiles-test
+        framework.developer_project.generated-profiles
+        tests/developer_project/test_generated_profiles.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-umicom-c-preview-test
+        framework.developer_project.umicom-c-preview
+        tests/developer_project/test_umicom_c_preview.c
+    )
+    # Exercise the same generated project and language contracts consumed by Studio.
+    umicom_add_developer_project_test(
+        umicom-developer-project-vhdl-cpu-test
+        framework.developer_project.vhdl-cpu
+        tests/developer_project/test_vhdl_cpu.c
+    )
     umicom_add_developer_project_test(
         umicom-developer-project-entry-point-test
         framework.developer_project.entry-point
@@ -541,6 +561,25 @@ function(umicom_attach_developer_dialogs_gtk4)
         endforeach()
         if(COMMAND umicom_register_validation_target)
             umicom_register_validation_target(umicom-developer-settings-sections-test)
+        endif()
+        # Exercise template selection and adopted profiles without executing tools.
+        add_executable(umicom-simulation-starters-gtk4-test
+            "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../tests/developer_project/test_simulation_starters_gtk4.c")
+        target_link_libraries(umicom-simulation-starters-gtk4-test PRIVATE Umicom::ui_gtk4)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(umicom-simulation-starters-gtk4-test)
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(umicom-simulation-starters-gtk4-test)
+        endif()
+        foreach(starterCase IN ITEMS vhdl umicom-c cancel)
+            add_test(NAME framework.ide_workflow.starter.gtk4.${starterCase}
+                COMMAND umicom-simulation-starters-gtk4-test ${starterCase})
+            set_tests_properties(framework.ide_workflow.starter.gtk4.${starterCase} PROPERTIES
+                SKIP_RETURN_CODE 77 TIMEOUT 30 LABELS "framework;ide-workflow;gtk4;generation")
+        endforeach()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-simulation-starters-gtk4-test)
         endif()
         set(dialogTestDirectory "${CMAKE_CURRENT_BINARY_DIR}/qualification/developer_dialog")
         file(MAKE_DIRECTORY "${dialogTestDirectory}")

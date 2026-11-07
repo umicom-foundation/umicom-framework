@@ -47,6 +47,13 @@ UmiStatus umi_watchlist_add(UmiWatchlist *watchlist,
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* A caller-owned count must be checked before it controls an array read.
+     * A full, valid list is still searched so duplicate insertion keeps its
+     * existing result; an impossible count is rejected without mutation. */
+    if (watchlist->count > UMI_TRADING_MAX_WATCHLIST) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
     /* Visit each bounded item once so every record receives the same rule. */
     for (size_t index = 0U; index < watchlist->count; ++index) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */

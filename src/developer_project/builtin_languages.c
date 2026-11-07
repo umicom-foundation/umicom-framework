@@ -27,6 +27,8 @@ static const LanguageFactory FACTORIES[] = {
     umi_developer_project_language_bash,
     umi_developer_project_language_zig,
     umi_developer_project_language_rust,
+    umi_developer_project_language_vhdl,
+    umi_developer_project_language_umicom_c,
     umi_developer_project_language_java,
     umi_developer_project_language_php,
     umi_developer_project_language_javascript,

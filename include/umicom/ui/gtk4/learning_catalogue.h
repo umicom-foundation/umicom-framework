@@ -85,6 +85,11 @@ GtkWindow *UmiLearningCatalogueGtk4PresentShared(GtkWindow *parent, UmiVersion h
  * OK means dispatched, not completed; inspect CopyState after busy becomes zero.
  * Native reads can block. There is no promise to interrupt an accepted read. */
 UmiStatus UmiLearningCatalogueGtk4Load(GtkWidget *widget, const char *absolute_root);
+/* Same asynchronous admission and ownership as Load, with a portable relative
+ * manifest route beneath the explicit root. Both strings are copied before
+ * dispatch. Invalid routes do not start a worker or change the catalogue. */
+UmiStatus UmiLearningCatalogueGtk4LoadManifest(GtkWidget *widget,
+    const char *absolute_root, const char *relative_manifest);
 
 /* Register one host-offered content module in this catalogue. All strings are
  * copied; no files are read until its Open button is clicked. Repeated pack IDs
@@ -119,6 +124,10 @@ typedef struct UmiLearningCatalogueReplacement {
 } UmiLearningCatalogueReplacement;
 UmiStatus UmiLearningCatalogueGtk4PrepareReplacement(GtkWidget *widget,
     const char *absolute_root);
+/* Prepare a replacement from an explicit relative manifest using the same
+ * immutable reader and reviewed-generation rules as PrepareReplacement. */
+UmiStatus UmiLearningCatalogueGtk4PrepareReplacementManifest(GtkWidget *widget,
+    const char *absolute_root, const char *relative_manifest);
 /* Copy metadata for the last successful pending preparation. NOT_FOUND means
  * none is pending. Refusal preserves output. Metadata does not authenticate a
  * publisher or verify all resource bytes; each later open still verifies them. */

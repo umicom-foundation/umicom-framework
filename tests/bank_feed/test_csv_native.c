@@ -1,13 +1,21 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/bank_feed/test_csv_native.c
- * PURPOSE: Check explicit CSV dispatch and stale-result retirement through native controls.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Check explicit CSV dispatch, bounded completion and stale-result retirement.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "fixture.h"
 #include "csv_fixture.h"
+#include "../support/main_context.h"
 #include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/bank_feed.h"
 #include <glib/gstdio.h>
@@ -19,10 +27,23 @@ static bool Wait(GtkWindow *window)
 {
     gint64 deadline = g_get_monotonic_time() + 5000000;
     while (UmiBankFeedGtk4Busy(window) && g_get_monotonic_time() < deadline) {
+        /* Retained for review: draining until idle can hide the outer deadline.
+         * Use the shared bounded dispatcher so a continuously ready source
+         * cannot prevent another observation of worker completion. */
+#if 0
         while (g_main_context_iteration(NULL, FALSE)) {}
+#endif
+        (void)UmiTestDispatchSlice(NULL, deadline, 64U);
         g_usleep(1000U);
     }
+    if (UmiBankFeedGtk4Busy(window))
+        fprintf(stderr, "Bank CSV completion exceeded five seconds.\n");
     return !UmiBankFeedGtk4Busy(window);
+}
+static gboolean KeepReady(gpointer data)
+{
+    ++*(unsigned *)data;
+    return G_SOURCE_CONTINUE;
 }
 static char *Text(GtkWidget *view)
 {
@@ -103,7 +124,24 @@ int main(int argc, char **argv)
         if (!strcmp(mode, "prepare-format")) CHECK(!UmiBankFeedGtk4Busy(window));
         if (!strcmp(mode, "loading-change"))
             gtk_drop_down_set_selected(GTK_DROP_DOWN(format), 0U);
-        CHECK(Wait(window));
+        /* Keep unrelated idle work ready throughout a real import. A finite
+         * dispatcher must still return to the bank-feed completion check. */
+        unsigned idle_calls = 0U;
+        guint idle_source = 0U;
+        if (!strcmp(mode, "event-deadline")) {
+            /* Completion is delivered on this context. Require the real
+             * request to be pending before exercising Wait, rather than
+             * accidentally completing it in an earlier dispatch slice. */
+            CHECK(UmiBankFeedGtk4Busy(window));
+            idle_source = g_idle_add_full(G_PRIORITY_DEFAULT, KeepReady, &idle_calls, NULL);
+            CHECK(idle_source != 0U);
+        }
+        bool completed = Wait(window);
+        if (idle_source != 0U) {
+            g_source_remove(idle_source);
+            CHECK(idle_calls != 0U);
+        }
+        CHECK(completed);
         char *text = Text(view);
         if (!strcmp(mode, "invalid")) {
             CHECK(!gtk_widget_get_sensitive(save));
@@ -118,7 +156,7 @@ int main(int argc, char **argv)
                 g_free(text); text = Text(view);
                 CHECK(text[0] == '\0' && !gtk_widget_get_sensitive(save));
             } else if (!strcmp(mode, "reconcile")) CHECK(Reconcile(window) == 0);
-            else CHECK(!strcmp(mode, "import"));
+            else CHECK(!strcmp(mode, "import") || !strcmp(mode, "event-deadline"));
         }
         if (signal != 0U) g_signal_handler_disconnect(note, signal);
         g_free(text);

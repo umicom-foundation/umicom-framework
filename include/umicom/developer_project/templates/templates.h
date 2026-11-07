@@ -27,6 +27,8 @@
 #include "umicom/developer_project/templates/bash_tool.h"
 #include "umicom/developer_project/templates/zig_console.h"
 #include "umicom/developer_project/templates/rust_console.h"
+#include "umicom/developer_project/templates/vhdl_cpu.h"
+#include "umicom/developer_project/templates/umicom_c_preview.h"
 #include "umicom/developer_project/templates/web_service_c23.h"
 #include "umicom/developer_project/templates/thin_desktop_application.h"
 #include "umicom/developer_project/templates/integration_worker.h"

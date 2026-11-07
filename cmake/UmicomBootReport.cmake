@@ -1,8 +1,18 @@
 #-----------------------------------------------------------------------------
-# Umicom Framework | Sammy Hegab, Umicom Foundation | Licence: MIT
-# Normal user-space report interpretation only. No privileged boot source is
-# linked into Framework; that implementation remains in the umicom-os repo.
+# Umicom Framework
+# File: cmake/UmicomBootReport.cmake
+#
+# PURPOSE:
+#   Share user-space report interpretation without linking privileged boot source.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
 #-----------------------------------------------------------------------------
+# Privileged boot implementation remains in the umicom-os repository.
 include_guard(GLOBAL)
 if(NOT TARGET umicom_platform)
     message(FATAL_ERROR "Boot report reader requires the canonical platform target")
@@ -42,5 +52,23 @@ if(BUILD_TESTING)
     foreach(_case IN ITEMS valid matching mismatch large malformed embedded-nul empty missing directory arguments)
         add_test(NAME "framework.os_foundation.boot_report_file.${_case}" COMMAND umicom-boot-report-file-tests "${_case}")
         set_tests_properties("framework.os_foundation.boot_report_file.${_case}" PROPERTIES TIMEOUT 15 LABELS "framework;os-foundation;files")
+    endforeach()
+endif()
+
+if(BUILD_TESTING)
+    add_executable(umicom-boot-report-compare-tests
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/os_foundation/test_boot_report_compare.c")
+    target_link_libraries(umicom-boot-report-compare-tests PRIVATE Umicom::platform)
+    foreach(_helper IN ITEMS umicom_apply_warnings umicom_apply_sanitizers umicom_register_validation_target)
+        if(COMMAND ${_helper})
+            cmake_language(CALL ${_helper} umicom-boot-report-compare-tests)
+        endif()
+    endforeach()
+    foreach(_case IN ITEMS equal semantic state counts recovery source invalid-enums
+            invalid-strings invalid-counts invalid-state arguments)
+        add_test(NAME "framework.os_foundation.boot_report_compare.${_case}"
+            COMMAND umicom-boot-report-compare-tests "${_case}")
+        set_tests_properties("framework.os_foundation.boot_report_compare.${_case}" PROPERTIES
+            TIMEOUT 15 LABELS "framework;os-foundation;regression")
     endforeach()
 endif()

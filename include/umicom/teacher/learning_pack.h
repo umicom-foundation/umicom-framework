@@ -78,6 +78,12 @@ UmiStatus UmiLearningPackCreate(const void *json, size_t length, const char *roo
  * Filesystem calls may block; interactive clients should use a worker. */
 UmiStatus UmiLearningPackLoad(const char *root, const char *manifest_path,
     UmiVersion host_version, UmiLearningPack **out_pack);
+/* Copy the relative manifest route captured by Load, including its terminator.
+ * Metadata-only Create returns NOT_FOUND. Clone, shelf and reader copies keep
+ * the captured route. This is provenance, not proof the current file is unchanged.
+ * Invalid arguments or insufficient capacity leave destination unchanged. */
+UmiStatus UmiLearningPackCopyManifestPath(const UmiLearningPack *pack,
+    char *destination, size_t capacity);
 void UmiLearningPackDestroy(UmiLearningPack *pack);
 
 /* Deep-copy admitted metadata and its root without reading any files. The

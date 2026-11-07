@@ -20,6 +20,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomJsonTree.cmake")
 get_filename_component(_umicom_pack_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
 target_sources(umicom_developer PRIVATE
     "${_umicom_pack_root}/src/teacher/learning_pack.c"
+    "${_umicom_pack_root}/src/teacher/learning_pack_authoring.c"
     "${_umicom_pack_root}/src/teacher/learning_pack_files.c"
     "${_umicom_pack_root}/src/teacher/learning_pack_copy.c"
     "${_umicom_pack_root}/src/teacher/learning_pack_changes.c"
@@ -355,6 +356,73 @@ if(BUILD_TESTING)
             WORKING_DIRECTORY "${_directory}" LABELS "framework;learning;ownership;regression")
         if(COMMAND umicom_test_impact_owners)
             umicom_test_impact_owners("framework.learning_pack.module.${_case}" TARGETS umicom-learning-module-test)
+        endif()
+    endforeach()
+endif()
+
+# Authoring shares admission and rooted storage with Studio's learning reader.
+install(FILES "${_umicom_pack_root}/include/umicom/teacher/learning_pack_authoring.h"
+    DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/teacher" COMPONENT Framework)
+if(BUILD_TESTING)
+    add_executable(umicom-learning-pack-authoring-test
+        "${_umicom_pack_root}/tests/learning_pack/test_authoring.c")
+    add_executable(umicom-learning-pack-authoring-cli-test
+        "${_umicom_pack_root}/tests/learning_pack/test_authoring_cli.c"
+        "${_umicom_pack_root}/tools/umicom/src/command_learning_pack.c")
+    foreach(_target umicom-learning-pack-authoring-test umicom-learning-pack-authoring-cli-test)
+        set_target_properties("${_target}" PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        target_link_libraries("${_target}" PRIVATE Umicom::developer)
+        umicom_apply_warnings("${_target}")
+        umicom_apply_sanitizers("${_target}")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target("${_target}")
+        endif()
+        if(COMMAND umicom_target_qualification_inputs)
+            umicom_target_qualification_inputs("${_target}" FILES
+                "${_umicom_pack_root}/tests/learning_pack/authoring_fixture.h")
+        endif()
+    endforeach()
+    foreach(_kind service cli)
+        if(_kind STREQUAL "service")
+            set(_target umicom-learning-pack-authoring-test)
+            set(_cases arguments missing-late-resource bounded changed binary empty metadata maximum-revision)
+        else()
+            set(_target umicom-learning-pack-authoring-cli-test)
+            set(_cases help arguments incompatible relative-root missing verify existing-output same-output traversal-output revision)
+        endif()
+        foreach(_case IN LISTS _cases)
+            set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-pack-authoring/${_kind}/${_case}")
+            file(MAKE_DIRECTORY "${_directory}")
+            add_test(NAME "framework.learning_pack.authoring.${_kind}.${_case}"
+                COMMAND "${_target}" "${_case}" "${_directory}")
+            set_tests_properties("framework.learning_pack.authoring.${_kind}.${_case}" PROPERTIES
+                WORKING_DIRECTORY "${_directory}" TIMEOUT 30 LABELS "framework;learning;ownership;regression")
+            if(COMMAND umicom_test_impact_owners)
+                umicom_test_impact_owners("framework.learning_pack.authoring.${_kind}.${_case}" TARGETS "${_target}")
+            endif()
+        endforeach()
+    endforeach()
+endif()
+
+# Explicit manifest routes keep several courses in one user-selected library.
+if(BUILD_TESTING)
+    add_executable(umicom-learning-manifest-route-test "${_umicom_pack_root}/tests/learning_pack/test_manifest_route.c")
+    set_target_properties(umicom-learning-manifest-route-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-learning-manifest-route-test PRIVATE Umicom::developer)
+    umicom_apply_warnings(umicom-learning-manifest-route-test)
+    umicom_apply_sanitizers(umicom-learning-manifest-route-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-learning-manifest-route-test)
+    endif()
+    foreach(_case captured copy-lifetimes capacity arguments metadata-only invalid-route two-courses)
+        set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-manifest-core/${_case}")
+        file(MAKE_DIRECTORY "${_directory}")
+        add_test(NAME "framework.learning_pack.manifest_route.core.${_case}"
+            COMMAND umicom-learning-manifest-route-test "${_case}" "${_directory}")
+        set_tests_properties("framework.learning_pack.manifest_route.core.${_case}" PROPERTIES
+            TIMEOUT 30 LABELS "framework;learning;regression;core")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.learning_pack.manifest_route.core.${_case}" TARGETS umicom-learning-manifest-route-test)
         endif()
     endforeach()
 endif()

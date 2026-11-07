@@ -20,6 +20,17 @@
 #include <string.h>
 #include "umicom/platform/threading.h"
 struct UmiCredentialRegistry { UmiCredentialRecord items[UMI_CREDENTIAL_REGISTRY_MAX]; size_t count; UmiMutex *mutex; };
+/* Check each character within its declared capacity before any string comparison.
+ * This keeps malformed caller records out of the shared registry, so all clients
+ * receive complete identifiers and secret references without over-reading fields. */
+static int credential_text_valid(const char *text, size_t capacity)
+{
+    if (text == NULL || capacity == 0U || text[0] == '\0') return 0;
+    for (size_t i = 1U; i < capacity; ++i) {
+        if (text[i] == '\0') return 1;
+    }
+    return 0;
+}
 /* Find credential while leaving the underlying catalogue or model owned by this module. */
 static size_t credential_find(const UmiCredentialRegistry *registry, const char *id)
 { size_t i; /* Visit each bounded item once so every record receives the same rule. */ for (i = 0U; i < registry->count; ++i) /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (strcmp(registry->items[i].credential_id, id) == 0) return i; return SIZE_MAX; }
@@ -58,7 +69,17 @@ UmiStatus umi_credential_registry_register(UmiCredentialRegistry *registry, cons
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
+    /* The former first-character check accepted unterminated fields. Bounded
+     * validation replaces it; retain the previous guard for contract review. */
+#if 0
     if (registry == NULL || record == NULL || record->credential_id[0] == '\0' || record->principal_id[0] == '\0' || record->provider_id[0] == '\0' || record->secret_reference[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+#endif
+    if (registry == NULL || record == NULL ||
+        !credential_text_valid(record->credential_id, sizeof record->credential_id) ||
+        !credential_text_valid(record->principal_id, sizeof record->principal_id) ||
+        !credential_text_valid(record->provider_id, sizeof record->provider_id) ||
+        !credential_text_valid(record->secret_reference, sizeof record->secret_reference))
+        return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_mutex_lock(registry->mutex); /* Preserve the original failure result so the caller can respond to the correct cause. */ if (status != UMI_STATUS_OK) return status;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (credential_find(registry, record->credential_id) != SIZE_MAX) { (void)umi_mutex_unlock(registry->mutex); return UMI_STATUS_ALREADY_EXISTS; }
@@ -78,7 +99,13 @@ UmiStatus umi_credential_registry_get(const UmiCredentialRegistry *registry, con
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
+    /* Bounded lookup replaces the null-only guard; retain its previous form. */
+#if 0
     if (registry == NULL || credential_id == NULL || out_record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+#endif
+    if (registry == NULL || out_record == NULL ||
+        !credential_text_valid(credential_id, UMI_CREDENTIAL_ID_CAPACITY))
+        return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_mutex_lock(registry->mutex); /* Preserve the original failure result so the caller can respond to the correct cause. */ if (status != UMI_STATUS_OK) return status;
     index = credential_find(registry, credential_id); /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (index == SIZE_MAX) { (void)umi_mutex_unlock(registry->mutex); return UMI_STATUS_NOT_FOUND; }
     *out_record = registry->items[index]; (void)umi_mutex_unlock(registry->mutex); return UMI_STATUS_OK;
@@ -94,7 +121,13 @@ UmiStatus umi_credential_registry_revoke(UmiCredentialRegistry *registry, const 
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
+    /* Bounded lookup replaces the null-only guard; retain its previous form. */
+#if 0
     if (registry == NULL || credential_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+#endif
+    if (registry == NULL ||
+        !credential_text_valid(credential_id, UMI_CREDENTIAL_ID_CAPACITY))
+        return UMI_STATUS_INVALID_ARGUMENT;
     status = umi_mutex_lock(registry->mutex); /* Preserve the original failure result so the caller can respond to the correct cause. */ if (status != UMI_STATUS_OK) return status;
     index = credential_find(registry, credential_id); /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (index == SIZE_MAX) { (void)umi_mutex_unlock(registry->mutex); return UMI_STATUS_NOT_FOUND; }
     registry->items[index].active = 0; (void)umi_mutex_unlock(registry->mutex); return UMI_STATUS_OK;

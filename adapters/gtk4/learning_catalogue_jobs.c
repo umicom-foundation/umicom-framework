@@ -398,7 +398,8 @@ static void CatalogueWorker(GTask *task, gpointer source, gpointer data, GCancel
         LearningCatalogueLibraryWorker(job);
         break;
     case LEARNING_CATALOGUE_LOAD:
-        job->status = UmiLearningPackLoad(job->directory, "learning-pack.json", job->host, &job->pack);
+        /* The owner captured both route components before dispatch. */
+        job->status = UmiLearningPackLoad(job->directory, job->manifest, job->host, &job->pack);
         break;
     case LEARNING_CATALOGUE_OPEN:
         if (job->continues_reader)

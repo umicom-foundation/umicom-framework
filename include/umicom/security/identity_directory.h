@@ -33,6 +33,11 @@ typedef struct UmiSecurityIdentityProfile {
  * Represent the security identity directory data shared with callers of this public
  * contract.
  */
+/* Zero-initialise this caller-owned directory. Its functions do not synchronise
+ * concurrent access: the caller must serialize readers and writers. Used rows
+ * require terminated identifiers/names; organisation may be empty. A corrupt
+ * count or row is rejected before lookup, and a failed mutation changes no bytes.
+ * Revision exhaustion returns CAPACITY_EXCEEDED without wrapping. */
 typedef struct UmiSecurityIdentityDirectory { UmiSecurityIdentityProfile items[UMI_SECURITY_GOVERNANCE_MAX_IDENTITIES]; size_t count; uint64_t revision; } UmiSecurityIdentityDirectory;
 /**
  * Add security identity directory only after its inputs and available capacity have been
@@ -43,6 +48,10 @@ UmiStatus umi_security_identity_directory_add(UmiSecurityIdentityDirectory *dire
  * Find security identity directory while leaving the underlying catalogue or model owned
  * by this module.
  */
+/* Returns a borrowed pointer into directory, or NULL for absent/invalid input.
+ * Keep the directory alive while using it and re-read after any mutation. The
+ * lookup identifier must be a readable C string, or a capacity-sized readable
+ * array when testing a missing terminator. Lookup does not grant permission. */
 const UmiSecurityIdentityProfile *umi_security_identity_directory_find(const UmiSecurityIdentityDirectory *directory,const char *identity_id);
 /**
  * Provide the security identity directory set enabled operation used by this module and

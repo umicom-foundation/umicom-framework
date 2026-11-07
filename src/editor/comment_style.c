@@ -17,6 +17,7 @@
 #include <string.h>
 static const UmiEditorLineCommentStyle styles[] = {{"c", "C", "//"},
                                                    {"cpp", "C++", "//"},
+                                                   {"umicom-c", "Umicom C", "//"},
                                                    {"javascript", "JavaScript", "//"},
                                                    {"typescript", "TypeScript", "//"},
                                                    {"java", "Java", "//"},
@@ -41,7 +42,14 @@ static const UmiEditorLineCommentStyle styles[] = {{"c", "C", "//"},
                                                    {"r", "R", "#"},
                                                    {"sql", "SQL", "--"},
                                                    {"lua", "Lua", "--"},
-                                                   {"ini", "INI", ";"}};
+                                                   {"vhdl", "VHDL", "--"},
+                                                   {"ini", "INI", ";"},
+                                                   {"zig", "Zig", "//"},
+                                                   {"d", "D", "//"},
+                                                   {"dart", "Dart", "//"},
+                                                   {"php", "PHP", "//"},
+                                                   {"verilog", "Verilog", "//"},
+                                                   {"systemverilog", "SystemVerilog", "//"}};
 size_t UmiEditorLineCommentStyleCount(void) { return sizeof styles / sizeof styles[0]; }
 const UmiEditorLineCommentStyle *UmiEditorLineCommentStyleAt(size_t index) {
   return index < UmiEditorLineCommentStyleCount() ? &styles[index] : NULL;

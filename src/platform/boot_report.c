@@ -3,13 +3,14 @@
  * File: src/platform/boot_report.c
  *
  * PURPOSE:
- *   Validate the complete boot report before publishing its snapshot.
+ *   Validate boot evidence and compare admitted snapshots without owning boot policy.
  *
  * AUTHOR AND ORGANISATION:
- *   Sammy Hegab
- *   Umicom Foundation
+ * Sammy Hegab
+ * Umicom Foundation
  *
- * LICENCE: MIT
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/platform/boot_report.h"
@@ -42,6 +43,61 @@ static bool Reason(const char *value, size_t length)
         if (Equal(value, length, reasons[i])) return true;
     return false;
 }
+
+/* Parsed files and programmatically constructed reports share one admission
+ * contract. Fixed arrays are measured within their own capacity before any
+ * string comparison, so caller-built reports cannot extend a read past them. */
+UmiStatus UmiBootReportValidate(const UmiBootReport *report)
+{
+    if (!report) return UMI_STATUS_INVALID_ARGUMENT;
+    if (report->mode != UMI_BOOT_REPORT_NORMAL &&
+        report->mode != UMI_BOOT_REPORT_REQUESTED_RECOVERY) return UMI_STATUS_INVALID_ARGUMENT;
+    if (report->state != UMI_BOOT_REPORT_STARTING && report->state != UMI_BOOT_REPORT_READY &&
+        report->state != UMI_BOOT_REPORT_RECOVERY) return UMI_STATUS_INVALID_ARGUMENT;
+    if (report->planned > UMI_BOOT_REPORT_SERVICE_LIMIT ||
+        report->completed > report->planned) return UMI_STATUS_INVALID_ARGUMENT;
+    const char *end = memchr(report->reason, '\0', sizeof report->reason);
+    if (!end || !Reason(report->reason, (size_t)(end - report->reason)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t i = 0; i < 64U; ++i)
+        if (!((report->sourceId[i] >= '0' && report->sourceId[i] <= '9') ||
+            (report->sourceId[i] >= 'a' && report->sourceId[i] <= 'f')))
+            return UMI_STATUS_INVALID_ARGUMENT;
+    if (report->sourceId[64] != '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    if (report->state == UMI_BOOT_REPORT_RECOVERY) {
+        if (strcmp(report->reason, "none") == 0) return UMI_STATUS_INVALID_ARGUMENT;
+        if (report->mode == UMI_BOOT_REPORT_REQUESTED_RECOVERY && report->completed != 0U)
+            return UMI_STATUS_INVALID_ARGUMENT;
+        if (report->mode == UMI_BOOT_REPORT_NORMAL && strcmp(report->reason, "requested") == 0)
+            return UMI_STATUS_INVALID_ARGUMENT;
+    } else {
+        if (report->mode != UMI_BOOT_REPORT_NORMAL || strcmp(report->reason, "none") != 0 ||
+            report->planned == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+        if (report->state == UMI_BOOT_REPORT_READY && report->completed != report->planned)
+            return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    return UMI_STATUS_OK;
+}
+
+/* Compare semantic fields, never padding or bytes after a string terminator.
+ * A source change is explicit; it is not labelled an improvement or regression
+ * because the reports may describe different boot plans. */
+UmiStatus UmiBootReportCompare(const UmiBootReport *before, const UmiBootReport *after,
+    uint32_t *outChanges)
+{
+    if (!outChanges || UmiBootReportValidate(before) != UMI_STATUS_OK ||
+        UmiBootReportValidate(after) != UMI_STATUS_OK) return UMI_STATUS_INVALID_ARGUMENT;
+    uint32_t changes = 0U;
+    if (before->mode != after->mode) changes |= UMI_BOOT_REPORT_CHANGED_MODE;
+    if (before->state != after->state) changes |= UMI_BOOT_REPORT_CHANGED_STATE;
+    if (before->planned != after->planned) changes |= UMI_BOOT_REPORT_CHANGED_PLANNED;
+    if (before->completed != after->completed) changes |= UMI_BOOT_REPORT_CHANGED_COMPLETED;
+    if (strcmp(before->reason, after->reason)) changes |= UMI_BOOT_REPORT_CHANGED_REASON;
+    if (strcmp(before->sourceId, after->sourceId)) changes |= UMI_BOOT_REPORT_CHANGED_SOURCE;
+    *outChanges = changes;
+    return UMI_STATUS_OK;
+}
+
 UmiStatus UmiBootReportParse(const char *text, size_t length, UmiBootReport *outReport)
 {
     const char magic[] = "UMICOM_BOOT_REPORT 1\n";
@@ -98,6 +154,9 @@ UmiStatus UmiBootReportParse(const char *text, size_t length, UmiBootReport *out
         seen |= bit;
         cursor = end + 1;
     }
+    /* The parser-local checks are retained for review. Shared validation now
+     * also protects callers that construct a report directly in memory. */
+#if 0
     if (seen != 63U || result.completed > result.planned) return UMI_STATUS_INVALID_ARGUMENT;
     if (result.state == UMI_BOOT_REPORT_RECOVERY) {
         if (strcmp(result.reason, "none") == 0) return UMI_STATUS_INVALID_ARGUMENT;
@@ -112,6 +171,9 @@ UmiStatus UmiBootReportParse(const char *text, size_t length, UmiBootReport *out
         if (result.state == UMI_BOOT_REPORT_READY && result.completed != result.planned)
             return UMI_STATUS_INVALID_ARGUMENT;
     }
+#endif
+    if (seen != 63U || UmiBootReportValidate(&result) != UMI_STATUS_OK)
+        return UMI_STATUS_INVALID_ARGUMENT;
     *outReport = result;
     return UMI_STATUS_OK;
 }

@@ -288,6 +288,8 @@ static int RunNativeCommand(int argc, char **argv)
     /* Saved test evidence is inspected through Framework without a toolchain or test launch. */
     /* Selection is computed by Framework; this route only displays its evidence. */
     /* Archive inspection is read-only and retains historical provenance. */
+    if (strcmp(command, "learning-pack") == 0)
+        return umi_cli_command_learning_pack(argc - 2, argv + 2);
     if (strcmp(command, "verify") == 0)
         return umi_cli_command_verify(argc - 2, argv + 2);
     /* Check/doctor retain environment inspection. Build-test is the explicit

@@ -431,9 +431,22 @@ static GtkWidget *Find(GtkWidget *root, const char *name)
     return NULL;
 }
 #endif
+/* Report malformed or ambiguous fixture lookup before a type assertion hides
+ * its cause. Ordinary absence is expected while discovering transient panels.
+ * The previous NULL-only wrapper remains available for engineering comparison. */
+#if 0
 static GtkWidget *Find(GtkWidget *root, const char *name)
 {
     return umi_gtk4_automation_find_named_widget(root, name);
+}
+#endif
+static GtkWidget *Find(GtkWidget *root, const char *name)
+{
+    void *found = NULL;
+    UmiStatus status = umi_gtk4_automation_find_named_widget_checked(root, name, &found);
+    if (status != UMI_STATUS_OK && status != UMI_STATUS_NOT_FOUND)
+        fprintf(stderr, "Named widget lookup for %s failed: status %d\n", name, (int)status);
+    return found;
 }
 static gboolean Contains(GtkWidget *root, const char *text)
 {

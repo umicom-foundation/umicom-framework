@@ -117,6 +117,8 @@ void umi_cli_print_help(void)
 
 void umi_cli_print_help(void)
 {
+    (void)puts("Learning resources: umicom learning-pack --help\n"
+        "  Verify local files or prepare a reviewed manifest without replacing the existing one.\n");
     /* Current CLI options are reported separately from the retained earlier
      * usage examples below. Installation never guesses a preset binaryDir. */
     (void)puts("Development commands: use umicom build --help for exact options.\n"

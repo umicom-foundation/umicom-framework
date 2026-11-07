@@ -306,6 +306,23 @@ UmiStatus umi_developer_project_service_generate(
 #endif
     }
 
+    /* Simulation recipes own their preset names. Apply their portable defaults
+     * here so every host receives the same model instead of inventing a native
+     * executable or asking the user to repair a desktop preset after creation.
+     * Existing desktop defaults above remain the fallback for native recipes. */
+    const char *special_preset = NULL;
+    if (strcmp(project_template->template_id, "developer.template.vhdl-cpu") == 0)
+        special_preset = "simulation";
+    else if (strcmp(project_template->template_id, "developer.template.umicom-c-preview") == 0)
+        special_preset = "preview";
+    if (special_preset != NULL) {
+        (void)snprintf(model.preset, sizeof(model.preset), "%s", special_preset);
+        (void)snprintf(model.build_directory, sizeof(model.build_directory),
+            "build/%s", special_preset);
+        model.install_prefix[0] = '\0';
+        model.executable[0] = '\0';
+    }
+
     /* Apply this branch only when its contract condition is satisfied. */
     if (!request->dry_run) {
         status = umi_developer_project_model_registry_upsert(

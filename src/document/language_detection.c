@@ -26,6 +26,9 @@ typedef struct LanguageDefinition {
 } LanguageDefinition;
 
 static const LanguageDefinition DEFINITIONS[] = {
+    {"uc", "umicom-c", "text/x-umicom-c", "text-x-csrc-symbolic"},
+    {"vhd", "vhdl", "text/x-vhdl", "text-x-generic-symbolic"},
+    {"vhdl", "vhdl", "text/x-vhdl", "text-x-generic-symbolic"},
     {"c", "c", "text/x-c", "text-x-csrc-symbolic"},
     {"h", "c", "text/x-chdr", "text-x-chdr-symbolic"},
     {"cc", "cpp", "text/x-c++", "text-x-c++src-symbolic"},
@@ -147,6 +150,22 @@ UmiStatus umi_document_language_detect(const char *path_or_name,UmiDocumentLangu
     {"lua", "lua", "text/plain", "text-x-generic-symbolic"},
     {"toml", "toml", "text/plain", "text-x-generic-symbolic"},
     {"ini", "ini", "text/plain", "text-x-generic-symbolic"},
+    /* Editor identity is shared across Open and explicit language selection.
+     * It does not claim an installed toolchain or a syntax-description package. */
+    {"zig", "zig", "text/plain", "text-x-generic-symbolic"},
+    {"d", "d", "text/plain", "text-x-generic-symbolic"},
+    {"di", "d", "text/plain", "text-x-generic-symbolic"},
+    {"dart", "dart", "text/plain", "text-x-generic-symbolic"},
+    {"pas", "pascal", "text/plain", "text-x-generic-symbolic"},
+    {"pp", "pascal", "text/plain", "text-x-generic-symbolic"},
+    {"lpr", "pascal", "text/plain", "text-x-generic-symbolic"},
+    {"php", "php", "text/plain", "text-x-generic-symbolic"},
+    {"v", "verilog", "text/plain", "text-x-generic-symbolic"},
+    {"vh", "verilog", "text/plain", "text-x-generic-symbolic"},
+    {"sv", "systemverilog", "text/plain", "text-x-generic-symbolic"},
+    {"svh", "systemverilog", "text/plain", "text-x-generic-symbolic"},
+    {"jsx", "javascript", "text/plain", "text-x-generic-symbolic"},
+    {"tsx", "typescript", "text/plain", "text-x-generic-symbolic"},
     };
     const char *extension=strrchr(base,'.');
     if(extension!=NULL&&extension[1]!='\0') {

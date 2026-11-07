@@ -52,6 +52,24 @@ typedef struct UmiDeveloperCommandLine {
  * Read developer command line into validated module state and return a status when input
  * cannot be used.
  */
+/**
+ * Parse exactly text_length readable bytes, excluding any terminator.
+ * Embedded NUL bytes and an empty program are rejected. Empty quoted arguments
+ * are retained. On every failure out_command is unchanged. Input may point
+ * into out_command because publication happens only after successful parsing.
+ * The caller keeps text readable for the call and supplies writable output.
+ *
+ * This is the legacy task grammar, not PowerShell, cmd.exe or POSIX shell:
+ * quotes group bytes; backslash escapes another backslash, either quote or
+ * whitespace. Unquoted shell operators are rejected. Quoted operators remain
+ * literal argument data. No variable, wildcard or command expansion occurs.
+ */
+UmiStatus umi_developer_command_line_parse_n(
+    const char *text,
+    size_t text_length,
+    UmiDeveloperCommandLine *out_command);
+
+/* NUL-terminated compatibility entry point; output is unchanged on failure. */
 UmiStatus umi_developer_command_line_parse(
     const char *text,
     UmiDeveloperCommandLine *out_command);

@@ -41,6 +41,10 @@ static UmiStatus copy_text(char *destination, size_t capacity, const char *sourc
 }
 
 /* Provide the parse arguments operation used by this module and its client applications. */
+/* The former formatted-string helper is retained for review. Exact-span
+ * tokenisation below now preserves empty arguments without scanning past a
+ * restored profile field. */
+#if 0
 static UmiStatus parse_arguments(
     const char *arguments,
     UmiDeveloperCommandLine *out_command)
@@ -70,6 +74,31 @@ static UmiStatus parse_arguments(
     return umi_developer_command_line_parse(combined, out_command);
 }
 
+#endif
+
+/* A launch profile already stores its executable separately. Prefix only a
+ * private parser placeholder and pass the exact byte span; no shell command
+ * is constructed or executed. Capacity follows the public profile field. */
+static UmiStatus parse_arguments(
+    const char *arguments,
+    size_t arguments_length,
+    UmiDeveloperCommandLine *out_command)
+{
+    static const char prefix[] = "__umicom_launch__ ";
+    char combined[sizeof(((UmiProjectLaunchProfileSnapshot *)0)->arguments) +
+                  sizeof(prefix)];
+    const size_t prefix_length = sizeof(prefix) - 1U;
+    if (arguments == NULL || out_command == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (arguments_length > sizeof(combined) - prefix_length)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    memcpy(combined, prefix, prefix_length);
+    if (arguments_length > 0U)
+        memcpy(combined + prefix_length, arguments, arguments_length);
+    return umi_developer_command_line_parse_n(
+        combined, prefix_length + arguments_length, out_command);
+}
+
 /*
  * Provide the developer launch plan submit operation used by this module and its client
  * applications.
@@ -85,6 +114,7 @@ UmiStatus umi_developer_launch_plan_submit(
     UmiProjectLaunchProfileRegistry *registry;
     char generated_id[UMI_DEVELOPER_ID_CAPACITY];
     const char *operation_id;
+    const char *arguments_end;
     UmiDeveloperOperationKind kind;
     size_t index;
     UmiStatus status;
@@ -114,7 +144,16 @@ UmiStatus umi_developer_launch_plan_submit(
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (profile.program[0] == '\0') return UMI_STATUS_INVALID_STATE;
 
+    /* Keep parsing within the fixed profile field before publishing a plan. */
+#if 0
+    /* Retained old call used an unbounded formatted-string conversion. */
     status = parse_arguments(profile.arguments, &command);
+#endif
+    arguments_end = (const char *)memchr(
+        profile.arguments, '\0', sizeof(profile.arguments));
+    if (arguments_end == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = parse_arguments(profile.arguments,
+        (size_t)(arguments_end - profile.arguments), &command);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
 

@@ -53,6 +53,12 @@ int main(int argc, char **argv) {
           !strcmp(style->prefix, "--"));
     CHECK(UmiEditorLineCommentStyleFind("c", &style) == UMI_STATUS_OK &&
           !strcmp(style->prefix, "//"));
+    const char *added[] = {"zig", "d", "dart", "php", "verilog", "systemverilog"};
+    for (size_t i = 0U; i < sizeof added / sizeof added[0]; ++i)
+      CHECK(UmiEditorLineCommentStyleFind(added[i], &style) == UMI_STATUS_OK &&
+            !strcmp(style->prefix, "//"));
+    CHECK(UmiEditorLineCommentStyleFind("vhdl", &style) == UMI_STATUS_OK &&
+          !strcmp(style->prefix, "--"));
   } else if (!strcmp(name, "unknown"))
     CHECK(UmiEditorLineCommentStyleFind("Python", &style) == UMI_STATUS_NOT_FOUND &&
           style == guard);
@@ -72,7 +78,7 @@ int main(int argc, char **argv) {
     CHECK(UmiEditorLineCommentStyleFind("lua", &style) == UMI_STATUS_OK &&
           !strcmp(style->prefix, "--"));
   } else {
-    const char *unknown[] = {"json", "html", "css", "markdown", "asm", "plain"};
+    const char *unknown[] = {"json", "html", "css", "markdown", "asm", "plain", "pascal"};
     for (size_t i = 0U; i < sizeof unknown / sizeof unknown[0]; ++i)
       CHECK(UmiEditorLineCommentStyleFind(unknown[i], &style) == UMI_STATUS_NOT_FOUND);
   }

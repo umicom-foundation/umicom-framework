@@ -39,6 +39,8 @@ typedef struct UmiCliContext {
  */
 void umi_cli_print_help(void);
 int umi_cli_command_verify(int argc, char **argv);
+/* Inspect or author learning metadata through the shared Framework pack service. */
+int umi_cli_command_learning_pack(int argc, char **argv);
 /**
  * Provide the cli print repo help operation used by this module and its client
  * applications.

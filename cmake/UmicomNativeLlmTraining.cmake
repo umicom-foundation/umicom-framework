@@ -270,6 +270,10 @@ if(BUILD_TESTING)
         framework.ai.training.corpus
         test_training_corpus.c)
     _umicom_add_native_ai_training_test(
+        umicom-ai-training-corpus-ranges-test
+        framework.ai.training.corpus_ranges
+        test_training_corpus_ranges.c)
+    _umicom_add_native_ai_training_test(
         umicom-ai-training-corpus-file-test
         framework.ai.training.corpus_file
         test_training_corpus_file.c)

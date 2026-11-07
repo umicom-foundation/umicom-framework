@@ -1,15 +1,22 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/ai/training/corpus.h
- * PURPOSE: Explicitly bounded, read-only corpus import and token-window reads.
  *
- * This laboratory exposes a borrowed immutable byte corpus. It deliberately
+ * PURPOSE:
+ *   Expose explicitly bounded, read-only corpus import and token-window reads.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+/* This laboratory exposes a borrowed immutable byte corpus. It deliberately
  * does not build a vocabulary, train models or replace the existing dataset
  * split and checkpoint components. The caller controls the trust boundary.
- *
- * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation
- * LICENCE: MIT
- *---------------------------------------------------------------------------*/
+ * The corpus object owns its copied bytes; callers borrow its immutable view. */
+
 #ifndef UMICOM_AI_TRAINING_CORPUS_H
 #define UMICOM_AI_TRAINING_CORPUS_H
 #include <stddef.h>
@@ -37,7 +44,11 @@ UmiStatus UmiAiCorpusLength(const UmiAiCorpus *corpus, size_t *outLength);
 /* Returns a next-token training window at byte offset `start`:
  * inputs[i] = corpus[start+i], targets[i] = corpus[start+i+1].
  * Rejects start/count that would cross the end. Writes no partial output.
- * Tokens use the canonical byte-tokenizer mapping. */
+ * Tokens use the canonical byte-tokenizer mapping. Both output ranges must
+ * hold capacity uint32_t elements and remain writable for this call. Their
+ * first count elements must not overlap, including partial overlap. Adjacent
+ * ranges are valid. On supported flat-address hosts, intersecting ranges are
+ * rejected before any write. The caller controls allocation/lifetime validity. */
 UmiStatus UmiAiCorpusWindow(const UmiAiCorpus *corpus,
                             size_t start, size_t count,
                             uint32_t *inputs, uint32_t *targets,

@@ -1,0 +1,4 @@
+UMICOM-AI-DATASET-1
+train training/project.txt
+train training/document.txt
+eval evaluation/workspace.txt

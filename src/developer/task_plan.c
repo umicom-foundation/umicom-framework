@@ -60,6 +60,7 @@ UmiStatus umi_developer_task_plan_submit(
     UmiProjectTaskRegistry *registry;
     char generated_id[UMI_DEVELOPER_ID_CAPACITY];
     const char *operation_id;
+    const char *command_end;
     size_t index;
     UmiStatus status;
 
@@ -91,7 +92,16 @@ UmiStatus umi_developer_task_plan_submit(
         return UMI_STATUS_PERMISSION_DENIED;
     }
 
+    /* A project record supplies fixed storage. Establish its terminator
+     * before passing the exact readable span to the shared parser. */
+#if 0
+    /* Retained prior call relied on an unbounded string scan. */
     status = umi_developer_command_line_parse(task.command, &command);
+#endif
+    command_end = (const char *)memchr(task.command, '\0', sizeof(task.command));
+    if (command_end == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_developer_command_line_parse_n(
+        task.command, (size_t)(command_end - task.command), &command);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         return status;

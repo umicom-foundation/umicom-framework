@@ -23,6 +23,8 @@
 #include "umicom/developer_project/languages/bash.h"
 #include "umicom/developer_project/languages/zig.h"
 #include "umicom/developer_project/languages/rust.h"
+#include "umicom/developer_project/languages/vhdl.h"
+#include "umicom/developer_project/languages/umicom_c.h"
 #include "umicom/developer_project/languages/java.h"
 #include "umicom/developer_project/languages/php.h"
 #include "umicom/developer_project/languages/javascript.h"

@@ -23,8 +23,47 @@
 #include <assert.h>
 #include "test_trading_common.h"
 /* Verify that watchlist identity and price-alert lifecycle remain deterministic. */
+/* Exercise full and damaged list boundaries without relying on a live broker.
+ * Static storage avoids making this fixture's array size part of thread stack
+ * requirements. Failed additions must not alter any bytes, including count. */
+static void check_watchlist_boundaries(void)
+{
+    static UmiWatchlist watchlist;
+    static UmiWatchlist before;
+    UmiInstrument candidate = test_instrument();
+    umi_watchlist_init(&watchlist);
+    for (size_t index = 0U; index < UMI_TRADING_MAX_WATCHLIST; ++index) {
+        int written = snprintf(candidate.instrument_id.value,
+                               sizeof(candidate.instrument_id.value),
+                               "WATCH.%zu", index);
+        assert(written > 0 &&
+               (size_t)written < sizeof(candidate.instrument_id.value));
+        assert(umi_watchlist_add(&watchlist, &candidate) == UMI_STATUS_OK);
+        assert(watchlist.count == index + 1U);
+    }
+    memcpy(&before, &watchlist, sizeof(before));
+    assert(umi_watchlist_add(&watchlist, &candidate) == UMI_STATUS_ALREADY_EXISTS);
+    assert(memcmp(&before, &watchlist, sizeof(before)) == 0);
+    candidate = test_instrument();
+    assert(umi_watchlist_add(&watchlist, &candidate) == UMI_STATUS_CAPACITY_EXCEEDED);
+    assert(memcmp(&before, &watchlist, sizeof(before)) == 0);
+    const size_t damaged_counts[] = {UMI_TRADING_MAX_WATCHLIST + 1U, SIZE_MAX};
+    for (size_t index = 0U; index < sizeof(damaged_counts) / sizeof(damaged_counts[0]); ++index) {
+        watchlist.count = damaged_counts[index];
+        memcpy(&before, &watchlist, sizeof(before));
+        assert(umi_watchlist_add(&watchlist, &candidate) == UMI_STATUS_INVALID_ARGUMENT);
+        assert(memcmp(&before, &watchlist, sizeof(before)) == 0);
+    }
+    umi_watchlist_init(&watchlist);
+    assert(umi_watchlist_add(&watchlist, &candidate) == UMI_STATUS_OK);
+    assert(watchlist.count == 1U);
+    assert(umi_watchlist_add(NULL, &candidate) == UMI_STATUS_INVALID_ARGUMENT);
+    assert(umi_watchlist_add(&watchlist, NULL) == UMI_STATUS_INVALID_ARGUMENT);
+}
+
 int main(void)
 {
+    check_watchlist_boundaries();
     UmiWatchlist watchlist;
     UmiInstrument instrument = test_instrument();
     UmiTradingAlertBook book;

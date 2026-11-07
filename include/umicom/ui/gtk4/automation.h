@@ -101,6 +101,22 @@ void *umi_gtk4_automation_find_named_widget(
     void *native_root, const char *widget_name);
 
 /**
+ * @brief Find a uniquely named control and report incomplete lookup precisely.
+ * @param native_root A live caller-owned GtkWidget on its GTK owning thread.
+ * @param widget_name A nonempty name assigned with gtk_widget_set_name.
+ * @param out_widget Receives a borrowed widget on success, otherwise NULL.
+ * @return OK, NOT_FOUND, ALREADY_EXISTS for ambiguous names, INVALID_ARGUMENT,
+ * or CAPACITY_EXCEEDED for a tree beyond the checked tagged-lookup bounds.
+ *
+ * Uses the same logical tree and status contract as checked tagged lookup.
+ * Default GTK class names are not unique identifiers. This function does not
+ * fall back from names to tags, expand panels, present windows or invoke actions.
+ * Keep the root alive; reacquire the result after notification-capable operations.
+ */
+UmiStatus umi_gtk4_automation_find_named_widget_checked(
+    void *native_root, const char *widget_name, void **out_widget);
+
+/**
  * @brief Expand sections and select pages containing one tagged control.
  * @param native_root A live caller-owned GtkWidget on its GTK owning thread.
  * @param automation_id The nonempty unique identifier to reveal.

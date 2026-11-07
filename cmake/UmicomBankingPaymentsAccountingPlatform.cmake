@@ -805,3 +805,25 @@ if(BUILD_TESTING)
         endif()
     endforeach()
 endif()
+
+# Exercise scoped account projections without starting a GUI.
+if(BUILD_TESTING AND TARGET Umicom::finance)
+    add_executable(umicom-banking-deposit-summary-test
+        "${UMICOM_BANKING_PAYMENTS_ACCOUNTING_ROOT}/tests/finance_banking/test_deposit_summary.c")
+    target_link_libraries(umicom-banking-deposit-summary-test PRIVATE Umicom::finance)
+    set_target_properties(umicom-banking-deposit-summary-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-banking-deposit-summary-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-banking-deposit-summary-test)
+    endif()
+    foreach(scenario IN ITEMS empty arguments scope statuses-and-negative capacity
+            corrupt-count invalid-unselected duplicate overflow underflow reserved-overflow)
+        add_test(NAME framework.banking.deposit.summary.${scenario}
+            COMMAND umicom-banking-deposit-summary-test "${scenario}")
+        set_tests_properties(framework.banking.deposit.summary.${scenario}
+            PROPERTIES TIMEOUT 30 LABELS "framework;banking-core")
+    endforeach()
+endif()

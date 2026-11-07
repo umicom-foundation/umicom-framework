@@ -56,7 +56,16 @@ UmiStatus UmiLearningCatalogueGtk4RememberLibrary(GtkWidget *widget)
     if (status != UMI_STATUS_OK) return status;
     g_object_ref(widget);
     owner->state.busy = 1;
+    /* Earlier versions guessed a fixed manifest name. Keep that expression for
+     * review; a displayed pack now supplies its own captured origin, so a
+     * second course in the same root can be remembered and reopened correctly. */
+#if 0
     status = UmiLearningLibraryChoicesRemember(owner->library_choices, pack, "learning-pack.json");
+#endif
+    char manifest[UMI_TEACHER_PATH_CAPACITY];
+    status = UmiLearningPackCopyManifestPath(pack, manifest, sizeof(manifest));
+    if (status == UMI_STATUS_OK)
+        status = UmiLearningLibraryChoicesRemember(owner->library_choices, pack, manifest);
     UmiLearningPackDestroy(pack);
     if (status == UMI_STATUS_OK) LibraryRows(owner);
     if (!owner->state.retired) LearningCatalogueMessage(owner, status,

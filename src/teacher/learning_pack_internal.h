@@ -18,6 +18,8 @@
 #include "umicom/platform/path.h"
 struct UmiLearningPack {
     char root[UMI_PATH_CAPACITY];
+    /* Empty for metadata-only Create; Load captures the rooted manifest route. */
+    char manifest_path[UMI_TEACHER_PATH_CAPACITY];
     UmiLearningPackInfo info;
     UmiLearningPackResource *resources;
 };

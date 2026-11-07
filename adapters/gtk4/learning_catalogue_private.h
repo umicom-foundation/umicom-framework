@@ -54,7 +54,7 @@ typedef struct LearningCatalogue {
     GtkWidget *library_path, *library_rows, *library_status;
     GtkWidget *module_choices;
     size_t module_count;
-    GtkWidget *root, *controls, *path, *query, *results;
+    GtkWidget *root, *controls, *path, *manifest, *query, *results;
     GtkWidget *link, *replacement_status, *replacement_details;
     GtkWidget *heading, *status, *content, *destination, *copy_status;
 } LearningCatalogue;
@@ -91,6 +91,7 @@ typedef struct LearningCatalogueJob {
     UmiLearningTextProblem text_problem;
     UmiVersion host;
     char directory[UMI_PATH_CAPACITY];
+    char manifest[UMI_TEACHER_PATH_CAPACITY];
     char link[UMI_TEACHER_PATH_CAPACITY + UMI_LEARNING_FRAGMENT_CAPACITY];
     /* Copied identities for explicit module admission; no widget is borrowed. */
     char module_pack[UMI_TEACHER_ID_CAPACITY];

@@ -27,12 +27,22 @@ int main(void)
 {
     UmiDeveloperProjectLanguageRegistry *registry = NULL;
 
+    /* The earlier catalogue count is retained for review. VHDL and Umicom C add
+     * registered entries; the current assertion covers the expanded catalogue. */
+#if 0
     assert(umi_developer_project_builtin_language_count() == 18U);
+#endif
+    assert(umi_developer_project_builtin_language_count() == 20U);
     assert(umi_developer_project_language_registry_create(&registry) ==
            UMI_STATUS_OK);
     assert(umi_developer_project_builtin_languages_register(registry) ==
            UMI_STATUS_OK);
+    /* The earlier catalogue count is retained for review. VHDL and Umicom C add
+     * registered entries; the current assertion covers the expanded catalogue. */
+#if 0
     assert(umi_developer_project_language_registry_count(registry) == 18U);
+#endif
+    assert(umi_developer_project_language_registry_count(registry) == 20U);
 
     assert(umi_developer_project_language_registry_find(
         registry, "developer.language.c23") != NULL);
@@ -44,6 +54,12 @@ int main(void)
         registry, "developer.language.rust") != NULL);
     assert(umi_developer_project_language_registry_find(
         registry, "developer.language.zig") != NULL);
+
+    assert(umi_developer_project_language_registry_find(
+        registry, "developer.language.vhdl") != NULL);
+
+    assert(umi_developer_project_language_registry_find(
+        registry, "developer.language.umicom-c") != NULL);
 
     umi_developer_project_language_registry_destroy(registry);
     return 0;

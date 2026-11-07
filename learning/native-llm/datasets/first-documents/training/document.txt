@@ -1,0 +1,4 @@
+A document has a title and content.
+Opening a document reads saved content into an editable buffer.
+Saving writes the reviewed buffer to a chosen destination.
+A failed save must not be reported as a successful save.

@@ -81,3 +81,36 @@ paths and observable same-handle change checks. It never writes the selected
 file. Parent aliases may be followed, and a writer that hides metadata changes
 is outside this observation contract. The pure parser remains suitable for
 borrowed memory without file access; guest PID1 still has no Framework link.
+
+## Compare captured reports
+
+Use UmiBootReportValidate for a report constructed directly in C. It checks the
+mode, state, service counts, reason and bounded source string. A successful
+validation establishes this format's consistency; it does not authenticate the
+writer or inspect a running machine.
+
+UmiBootReportCompare validates both inputs before writing a uint32_t change mask.
+The mask has independent bits for mode, state, planned count, completed count,
+reason and source identity. Zero means these fields match. The inputs can refer
+to the same report; the output needs separate writable storage. Do not modify
+input reports concurrently. Rejected input leaves the output mask unchanged.
+
+The comparison ignores C structure padding and unused bytes after the reason's
+terminator. Comparing whole structures with memcmp would give misleading
+results when unused bytes differ. Source identities are compared as 64 lowercase
+hexadecimal characters. Different source identities require a review of the
+boot plans before interpreting counts. Matching identities still do not prove
+that the reports came from the same machine or boot attempt.
+
+The OS command is:
+
+~~~powershell
+& .\build\windows-ucrt64-all-debug\bin\umicom-os.exe --compare-boot-reports "C:\umicom\captures\earlier.report" "C:\umicom\captures\later.report"
+~~~
+
+Exit 0 means both selected reports were accepted and compared, including when
+fields differ. Exit 1 means admission, comparison or output failed. Exit 2 means
+the command arguments were not recognised. The command reads existing regular
+files and leaves them unchanged. It does not start a guest, restart services or
+write configuration. Keep the corresponding serial logs and build identities
+alongside each capture when investigating a failure.

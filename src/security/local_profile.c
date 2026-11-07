@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/security/local_profile.c
- * PURPOSE: Keep local profile validation and password handling in the shared security module.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Keep local profile validation and password handling in the shared security module.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/security/local_profile.h"
@@ -20,6 +27,38 @@ static size_t ProfileLength(const char *text, size_t limit)
     while (n < limit && text[n] != '\0') ++n;
     return n;
 }
+/* Form and protocol adapters can carry bounded byte spans. Centralising the
+ * policy here avoids a temporary string copy and keeps every application on the
+ * same naming rules. Read and validate completely before changing caller state. */
+UmiStatus UmiLocalProfileNameBytes(const char *name, size_t length,
+                                 char out[UMI_LOCAL_PROFILE_NAME_CAPACITY])
+{
+    char value[UMI_LOCAL_PROFILE_NAME_CAPACITY] = {0};
+    if (name == NULL || out == NULL || length < 3U || length >= sizeof(value))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t i = 0U; i < length; ++i) {
+        unsigned char c = (unsigned char)name[i];
+        if (c >= 'A' && c <= 'Z') c = (unsigned char)(c + ('a' - 'A'));
+        int letter = c >= 'a' && c <= 'z';
+        if (!letter && (i == 0U || !((c >= '0' && c <= '9') || c == '-' || c == '_')))
+            return UMI_STATUS_INVALID_ARGUMENT;
+        value[i] = (char)c;
+    }
+    memcpy(out, value, sizeof(value));
+    return UMI_STATUS_OK;
+}
+
+/* Keep the public string entry point while sharing its policy with byte spans.
+ * Existing callers still provide a valid C string. Bounded readers use Bytes. */
+UmiStatus UmiLocalProfileName(const char *name, char out[UMI_LOCAL_PROFILE_NAME_CAPACITY])
+{
+    return UmiLocalProfileNameBytes(name,
+        ProfileLength(name, UMI_LOCAL_PROFILE_NAME_CAPACITY), out);
+}
+
+/* The original string-only implementation is retained for engineering review.
+ * The shared byte-span validator above now owns validation and publication. */
+#if 0
 UmiStatus UmiLocalProfileName(const char *name, char out[UMI_LOCAL_PROFILE_NAME_CAPACITY])
 {
     char value[UMI_LOCAL_PROFILE_NAME_CAPACITY] = {0};
@@ -36,6 +75,8 @@ UmiStatus UmiLocalProfileName(const char *name, char out[UMI_LOCAL_PROFILE_NAME_
     memcpy(out, value, sizeof(value));
     return UMI_STATUS_OK;
 }
+#endif
+
 UmiStatus UmiLocalProfileStoreCreate(const UmiLocalProfileBackend *backend, UmiLocalProfileStore **out)
 {
     if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;

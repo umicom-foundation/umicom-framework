@@ -16,6 +16,7 @@
 #include "umicom/ui/gtk4/drop_down.h"
 #include "umicom/base/text.h"
 #include "umicom/platform/output_file.h"
+#include "umicom/platform/rooted_files.h"
 #include "umicom/ui/gtk4/path_picker.h"
 #include <string.h>
 
@@ -172,6 +173,9 @@ static LearningCatalogueJob *NewJob(LearningCatalogue *owner, LearningCatalogueA
     }
     return job;
 }
+/* Preserve the fixed-name loader for review. The explicit manifest entry point
+ * shares its worker/lifetime rules and the original API retains its default. */
+#if 0
 UmiStatus UmiLearningCatalogueGtk4Load(GtkWidget *widget, const char *directory)
 {
     LearningCatalogue *owner = LearningCatalogueOwner(widget);
@@ -188,6 +192,33 @@ UmiStatus UmiLearningCatalogueGtk4Load(GtkWidget *widget, const char *directory)
     status = LearningCatalogueDispatch(owner, job);
     g_object_unref(widget);
     return status;
+}
+#endif
+UmiStatus UmiLearningCatalogueGtk4LoadManifest(GtkWidget *widget, const char *directory,
+    const char *manifest)
+{
+    LearningCatalogue *owner = LearningCatalogueOwner(widget);
+    UmiStatus status = CanStart(owner);
+    if (status != UMI_STATUS_OK) return status;
+    if (directory == NULL || !umi_path_is_absolute(directory)) return UMI_STATUS_INVALID_ARGUMENT;
+    LearningCatalogueJob *job = NewJob(owner, LEARNING_CATALOGUE_LOAD);
+    if (job == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = umi_path_copy(job->directory, sizeof(job->directory), directory);
+    if (status == UMI_STATUS_OK && !g_utf8_validate(job->directory, -1, NULL))
+        status = UMI_STATUS_INVALID_ARGUMENT;
+    if (status == UMI_STATUS_OK) status = manifest == NULL ? UMI_STATUS_INVALID_ARGUMENT :
+        umi_text_copy(job->manifest, sizeof(job->manifest), manifest);
+    if (status == UMI_STATUS_OK)
+        status = UmiRootedFileValidatePath(job->directory, job->manifest);
+    if (status != UMI_STATUS_OK) { LearningCatalogueJobFree(job); return status; }
+    g_object_ref(widget);
+    status = LearningCatalogueDispatch(owner, job);
+    g_object_unref(widget);
+    return status;
+}
+UmiStatus UmiLearningCatalogueGtk4Load(GtkWidget *widget, const char *directory)
+{
+    return UmiLearningCatalogueGtk4LoadManifest(widget, directory, "learning-pack.json");
 }
 UmiStatus UmiLearningCatalogueGtk4Search(GtkWidget *widget, const char *query)
 {
@@ -379,10 +410,13 @@ static void Action(GtkButton *button, gpointer data)
         const char *action = g_object_get_data(G_OBJECT(button), "learning-catalogue-action");
         UmiStatus status = UMI_STATUS_INVALID_ARGUMENT;
         if (strcmp(action, "load") == 0)
-            status = UmiLearningCatalogueGtk4Load(widget, gtk_editable_get_text(GTK_EDITABLE(owner->path)));
+            status = UmiLearningCatalogueGtk4LoadManifest(widget,
+                gtk_editable_get_text(GTK_EDITABLE(owner->path)),
+                gtk_editable_get_text(GTK_EDITABLE(owner->manifest)));
         else if (strcmp(action, "review-replacement") == 0)
-            status = UmiLearningCatalogueGtk4PrepareReplacement(widget,
-                gtk_editable_get_text(GTK_EDITABLE(owner->path)));
+            status = UmiLearningCatalogueGtk4PrepareReplacementManifest(widget,
+                gtk_editable_get_text(GTK_EDITABLE(owner->path)),
+                gtk_editable_get_text(GTK_EDITABLE(owner->manifest)));
         else if (strcmp(action, "accept-replacement") == 0)
             status = UmiLearningCatalogueGtk4AcceptReplacement(widget, owner->replacement.review_serial);
         else if (strcmp(action, "discard-replacement") == 0)
@@ -471,7 +505,7 @@ GtkWidget *UmiLearningCatalogueGtk4Create(UmiVersion host)
     g_object_set_data_full(G_OBJECT(owner->root), UMI_LEARNING_CATALOGUE_DATA, owner, CatalogueFree);
     Tag(owner->root, "learning.catalogue");
     Caption(owner->root, "Offline product guides and source examples");
-    Caption(owner->root, "Choose a folder containing learning-pack.json, then load it. "
+    Caption(owner->root, "Choose a library folder and its relative manifest file, then load it. "
         "Only declared, verified resources are read. No source example is run.");
     owner->controls = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
     /* A long catalogue should not force the reading window taller than the
@@ -497,6 +531,13 @@ GtkWidget *UmiLearningCatalogueGtk4Create(UmiVersion host)
     GtkWidget *browse = UmiPathPickerGtk4Create(GTK_ENTRY(owner->path),
         UMI_PATH_PICKER_DIRECTORY, "Choose a learning pack folder", NULL);
     if (browse != NULL) gtk_box_append(GTK_BOX(owner->controls), browse);
+    Caption(owner->controls, "Manifest file inside the folder");
+    owner->manifest = gtk_entry_new();
+    gtk_entry_set_max_length(GTK_ENTRY(owner->manifest), (int)UMI_TEACHER_PATH_CAPACITY - 1);
+    gtk_editable_set_text(GTK_EDITABLE(owner->manifest), "learning-pack.json");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(owner->manifest), "Example: learning-packs/learning-cmake.json");
+    Tag(owner->manifest, "learning.catalogue.manifest");
+    gtk_box_append(GTK_BOX(owner->controls), owner->manifest);
     Button(owner, owner->controls, "Load learning pack", "load");
     GtkWidget *replacement = gtk_expander_new("Replace a learning pack");
     GtkWidget *replacement_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);

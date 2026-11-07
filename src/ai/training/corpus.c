@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/ai/training/corpus.c
- * PURPOSE: Native read-only training corpus and bounded next-token windows.
- * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Own immutable training bytes and publish bounded, disjoint next-token windows.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/corpus.h"
 #include "umicom/ai/training/byte_tokenizer.h"
@@ -88,6 +95,9 @@ UmiStatus UmiAiCorpusLength(const UmiAiCorpus *corpus, size_t *outLength)
     return UMI_STATUS_OK;
 }
 
+/* The former equal-pointer check is retained for review. The replacement
+ * also rejects partial output overlap before publishing token windows. */
+#if 0
 UmiStatus UmiAiCorpusWindow(const UmiAiCorpus *corpus,
                             size_t start, size_t count,
                             uint32_t *inputs, uint32_t *targets,
@@ -99,6 +109,41 @@ UmiStatus UmiAiCorpusWindow(const UmiAiCorpus *corpus,
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     if (count > capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+    for (size_t i = 0U; i < count; ++i) {
+        inputs[i] = (uint32_t)corpus->bytes[start + i] + UMI_AI_BYTE_OFFSET;
+        targets[i] = (uint32_t)corpus->bytes[start + i + 1U] + UMI_AI_BYTE_OFFSET;
+    }
+    return UMI_STATUS_OK;
+}
+
+#endif
+
+UmiStatus UmiAiCorpusWindow(const UmiAiCorpus *corpus,
+                            size_t start, size_t count,
+                            uint32_t *inputs, uint32_t *targets,
+                            size_t capacity)
+{
+    if (corpus == NULL || inputs == NULL || targets == NULL ||
+        count == 0U || inputs == targets || start >= corpus->length ||
+        count > corpus->length - start - 1U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (count > capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Distinct pointers can still name intersecting storage. Validate the
+     * complete written ranges before either token sequence is published.
+     * Integer address ordering follows the supported flat-address hosts;
+     * callers still own readable/writable allocation and lifetime validity. */
+    if (count > SIZE_MAX / sizeof(*inputs)) return UMI_STATUS_CAPACITY_EXCEEDED;
+    const size_t byte_count = count * sizeof(*inputs);
+#if SIZE_MAX > UINTPTR_MAX
+    if (byte_count > UINTPTR_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+#endif
+    const uintptr_t bytes = (uintptr_t)byte_count;
+    const uintptr_t left = (uintptr_t)(void *)inputs;
+    const uintptr_t right = (uintptr_t)(void *)targets;
+    if (left > UINTPTR_MAX - bytes || right > UINTPTR_MAX - bytes ||
+        (left < right + bytes && right < left + bytes))
+        return UMI_STATUS_INVALID_ARGUMENT;
     for (size_t i = 0U; i < count; ++i) {
         inputs[i] = (uint32_t)corpus->bytes[start + i] + UMI_AI_BYTE_OFFSET;
         targets[i] = (uint32_t)corpus->bytes[start + i + 1U] + UMI_AI_BYTE_OFFSET;

@@ -62,6 +62,11 @@ UmiStatus umi_document_file_filter_add_pattern(
  * Provide the document file filter matches operation used by this module and its client
  * applications.
  */
+/* Matches * and *.*, a suffix such as *.c, or an exact basename such as
+ * CMakeLists.txt, using ASCII case-insensitive comparison. Paths are reduced to
+ * their last slash/backslash component. Empty names, over-capacity names, invalid
+ * counts and unterminated stored patterns return false. This is a selection aid,
+ * not a filesystem access check or a general glob engine. */
 int umi_document_file_filter_matches(const UmiDocumentFileFilter *filter,
                                      const char *file_name);
 

@@ -3,13 +3,14 @@
  * File: include/umicom/platform/boot_report.h
  *
  * PURPOSE:
- *   Read volatile OS boot evidence without owning privileged boot policy.
+ *   Read and compare captured OS boot evidence without owning privileged boot policy.
  *
  * AUTHOR AND ORGANISATION:
- *   Sammy Hegab
- *   Umicom Foundation
+ * Sammy Hegab
+ * Umicom Foundation
  *
- * LICENCE: MIT
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_PLATFORM_BOOT_REPORT_H
@@ -47,6 +48,25 @@ typedef struct UmiBootReport {
  * Unknown versions and fields fail closed. The schema is documented in
  * docs/platform/boot-report.md and emitted independently by minimal OS init. */
 UmiStatus UmiBootReportParse(const char *text, size_t length, UmiBootReport *outReport);
+
+/* Bit masks describe field changes, not severity or boot success. */
+#define UMI_BOOT_REPORT_CHANGED_MODE      (UINT32_C(1) << 0)
+#define UMI_BOOT_REPORT_CHANGED_STATE     (UINT32_C(1) << 1)
+#define UMI_BOOT_REPORT_CHANGED_PLANNED   (UINT32_C(1) << 2)
+#define UMI_BOOT_REPORT_CHANGED_COMPLETED (UINT32_C(1) << 3)
+#define UMI_BOOT_REPORT_CHANGED_REASON    (UINT32_C(1) << 4)
+#define UMI_BOOT_REPORT_CHANGED_SOURCE    (UINT32_C(1) << 5)
+
+/* Validate a complete accessible report, including bounded fixed strings.
+ * No I/O, allocation, ownership transfer or mutation occurs. */
+UmiStatus UmiBootReportValidate(const UmiBootReport *report);
+
+/* Validate both snapshots, then publish a change mask. Failure leaves the
+ * output unchanged. Inputs may be the same object; outChanges must refer to
+ * separate writable storage. Inputs must not be modified during the call.
+ * Same-source reports may still come from different machines or boots. */
+UmiStatus UmiBootReportCompare(const UmiBootReport *before, const UmiBootReport *after,
+    uint32_t *outChanges);
 const char *UmiBootReportStateText(UmiBootReportState state);
 #ifdef __cplusplus
 }

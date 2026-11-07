@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/widget_lookup_gtk4.c
- * PURPOSE: Expose logical widget lookup to full and standalone GTK components.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Expose logical widget lookup to full and standalone GTK components.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/automation.h"
@@ -26,6 +33,10 @@ void *umi_gtk4_automation_find_tagged_widget(void *native_root, const char *auto
 
 /* Compatibility lookup shares the same bounds and logical-child traversal as
  * tagged controls. It cannot broaden the driver to unrelated top-level windows. */
+/* The compatibility entry point keeps its NULL-on-failure contract. Status-aware
+ * callers use the shared checked operation below to distinguish absence from
+ * ambiguous names or incomplete traversal. Retain the previous body for review. */
+#if 0
 void *umi_gtk4_automation_find_named_widget(void *native_root, const char *widget_name)
 {
     if (native_root == NULL || !GTK_IS_WIDGET(native_root) ||
@@ -37,6 +48,13 @@ void *umi_gtk4_automation_find_named_widget(void *native_root, const char *widge
         ? search.found : NULL;
     g_clear_object(&search.found);
     return result;
+}
+#endif
+void *umi_gtk4_automation_find_named_widget(void *native_root, const char *widget_name)
+{
+    void *found = NULL;
+    (void)umi_gtk4_automation_find_named_widget_checked(native_root, widget_name, &found);
+    return found;
 }
 
 
@@ -137,6 +155,9 @@ UmiStatus umi_gtk4_automation_reveal_tagged_widget(void *native_root, const char
 
 /* Checked lookup keeps absence separate from ambiguity or incomplete traversal.
  * The output is borrowed only after the entire bounded tree has been inspected. */
+/* Both selector styles now share status translation and output ownership.
+ * Retain the former tagged-only body so its failure semantics can be reviewed. */
+#if 0
 UmiStatus umi_gtk4_automation_find_tagged_widget_checked(void *native_root,
     const char *automation_id, void **out_widget)
 {
@@ -155,3 +176,36 @@ UmiStatus umi_gtk4_automation_find_tagged_widget_checked(void *native_root,
     g_clear_object(&search.found);
     return status;
 }
+#endif
+static UmiStatus automation_lookup_checked(void *native_root, const char *selector,
+    bool by_widget_name, void **out_widget)
+{
+    if (out_widget == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_widget = NULL;
+    if (native_root == NULL || !GTK_IS_WIDGET(native_root) ||
+        selector == NULL || selector[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    AutomationSearch search = {0};
+    search.by_widget_name = by_widget_name;
+    automation_find_widgets(GTK_WIDGET(native_root), selector, NULL, 0U, &search);
+    UmiStatus status = search.status;
+    if (status == UMI_STATUS_OK) {
+        if (search.matches == 0U) status = UMI_STATUS_NOT_FOUND;
+        else if (search.matches != 1U) status = UMI_STATUS_ALREADY_EXISTS;
+        else *out_widget = search.found;
+    }
+    g_clear_object(&search.found);
+    return status;
+}
+
+UmiStatus umi_gtk4_automation_find_tagged_widget_checked(void *native_root,
+    const char *automation_id, void **out_widget)
+{
+    return automation_lookup_checked(native_root, automation_id, false, out_widget);
+}
+
+UmiStatus umi_gtk4_automation_find_named_widget_checked(void *native_root,
+    const char *widget_name, void **out_widget)
+{
+    return automation_lookup_checked(native_root, widget_name, true, out_widget);
+}
+

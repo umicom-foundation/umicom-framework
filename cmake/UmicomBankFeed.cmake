@@ -1,4 +1,17 @@
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomBankFeed.cmake
+#
+# PURPOSE:
+#   Compose bank-feed libraries, SDK resources and regression qualification.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
 # This module also supports independent composition; own its SDK registration dependency.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
@@ -176,7 +189,15 @@ if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
     if(COMMAND umicom_register_validation_target)
         umicom_register_validation_target(umicom-bank-feed-csv-native-test)
     endif()
-    foreach(case import format-change loading-change retained invalid reconcile prepare-format)
+    # Shared fixture dispatch changes affect this native test's completion
+    # behaviour; retain that ownership in scoped qualification planning.
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-bank-feed-csv-native-test FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/bank_feed/fixture.h"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/bank_feed/csv_fixture.h"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/support/main_context.h")
+    endif()
+    foreach(case import format-change loading-change retained invalid reconcile prepare-format event-deadline)
         add_test(NAME framework.bank_feed.csv.native.${case}
             COMMAND umicom-bank-feed-csv-native-test ${case})
         set_tests_properties(framework.bank_feed.csv.native.${case} PROPERTIES

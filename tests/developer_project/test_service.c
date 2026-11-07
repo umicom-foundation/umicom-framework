@@ -30,7 +30,12 @@ int main(void)
     assert(umi_developer_project_service_create(&service) == UMI_STATUS_OK);
     assert(umi_developer_project_service_snapshot(
         service, &snapshot) == UMI_STATUS_OK);
+    /* The earlier catalogue count is retained for review. VHDL and Umicom C add
+     * registered entries; the current assertion covers the expanded catalogue. */
+#if 0
     assert(snapshot.language_count == 18U);
+#endif
+    assert(snapshot.language_count == 20U);
     assert(snapshot.template_count >= 15U);
     assert(umi_developer_project_provider_registry_count(
         umi_developer_project_service_providers(service)) == 5U);

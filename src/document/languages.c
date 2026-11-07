@@ -17,8 +17,10 @@
 #include <string.h>
 static const UmiDocumentLanguageChoice choices[] = {{"plain", "Plain text", "source.txt"},
                                                     {"c", "C", "source.c"},
+                                                    {"umicom-c", "Umicom C", "source.uc"},
                                                     {"cpp", "C++", "source.cpp"},
                                                     {"asm", "Assembly", "source.s"},
+                                                    {"vhdl", "VHDL", "source.vhd"},
                                                     {"python3", "Python", "source.py"},
                                                     {"javascript", "JavaScript", "source.js"},
                                                     {"typescript", "TypeScript", "source.ts"},
@@ -45,7 +47,14 @@ static const UmiDocumentLanguageChoice choices[] = {{"plain", "Plain text", "sou
                                                     {"ruby", "Ruby", "source.rb"},
                                                     {"perl", "Perl", "source.pl"},
                                                     {"r", "R", "source.r"},
-                                                    {"lua", "Lua", "source.lua"}};
+                                                    {"lua", "Lua", "source.lua"},
+                                                    {"zig", "Zig", "source.zig"},
+                                                    {"d", "D", "source.d"},
+                                                    {"dart", "Dart", "source.dart"},
+                                                    {"pascal", "Pascal", "source.pas"},
+                                                    {"php", "PHP", "source.php"},
+                                                    {"verilog", "Verilog", "source.v"},
+                                                    {"systemverilog", "SystemVerilog", "source.sv"}};
 size_t UmiDocumentLanguageChoiceCount(void) { return sizeof choices / sizeof choices[0]; }
 const UmiDocumentLanguageChoice *UmiDocumentLanguageChoiceAt(size_t index) {
   return index < UmiDocumentLanguageChoiceCount() ? &choices[index] : NULL;

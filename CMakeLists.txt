@@ -3427,6 +3427,7 @@ if(UMICOM_BUILD_NATIVE_TOOL)
     add_executable(umicom
         tools/umicom/src/main.c
         tools/umicom/src/command_sdk.c
+        tools/umicom/src/command_learning_pack.c
         tools/umicom/src/common.c
         tools/umicom/src/command_check.c
         tools/umicom/src/command_build.c
@@ -3886,6 +3887,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-developer-toolchain-binding-tests framework.developer_toolchain_binding tests/test_developer_toolchain_binding.c)
     umicom_add_framework_test(umicom-developer-universal-model-tests framework.developer_universal_model tests/test_developer_universal_model.c)
     umicom_add_framework_test(umicom-developer-command-line-tests framework.developer.command_line tests/test_developer_command_line.c)
+    umicom_add_framework_test(umicom-developer-command-spans-tests framework.developer.command_spans tests/test_developer_command_spans.c)
     umicom_add_framework_test(umicom-developer-task-plan-tests framework.developer.task_plan tests/test_developer_task_plan.c)
     umicom_add_framework_test(umicom-developer-launch-plan-tests framework.developer.launch_plan tests/test_developer_launch_plan.c)
     umicom_add_framework_test(umicom-developer-workflow-tests framework.developer.workflow tests/test_developer_workflow.c)
@@ -4359,6 +4361,12 @@ if(BUILD_TESTING)
         umicom-delivery-lease-tests
         framework.delivery_lease
         tests/test_delivery_lease.c
+    )
+    # Ticket identity prevents a delayed worker from modifying a later acquisition.
+    umicom_add_framework_test(
+        umicom-delivery-lease-ticket-tests
+        framework.delivery_lease.ticket
+        tests/test_delivery_lease_ticket.c
     )
     umicom_add_framework_test(
         umicom-router-filter-transformer-tests

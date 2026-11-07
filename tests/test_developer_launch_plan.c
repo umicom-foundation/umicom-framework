@@ -58,6 +58,40 @@ int main(void)
     assert(operation.argument_count == 2U);
     assert(strcmp(operation.arguments[1], "workspace one") == 0);
 
+    /* Launch profiles preserve empty arguments on both sides of a file path. */
+    strcpy(profile.id, "studio.empty");
+    strcpy(profile.arguments, "\"\" \"source file.c\" ''");
+    assert(umi_project_launch_profile_registry_upsert(
+        umi_project_workspace_launch_profile(umi_developer_runtime_projects(runtime)),
+        &profile) == UMI_STATUS_OK);
+    request.launch_profile_id = "studio.empty";
+    assert(umi_developer_launch_plan_submit(runtime, &request, &plan) == UMI_STATUS_OK);
+    assert(umi_developer_pipeline_find(
+        umi_developer_runtime_pipeline(runtime), plan.operation_id, &operation)
+        == UMI_STATUS_OK);
+    assert(operation.argument_count == 3U);
+    assert(operation.arguments[0][0] == '\0');
+    assert(strcmp(operation.arguments[1], "source file.c") == 0);
+    assert(operation.arguments[2][0] == '\0');
+
+    /* Malformed launch text cannot submit a partial debug operation. */
+    {
+        unsigned char before[sizeof(plan)];
+        memcpy(before, &plan, sizeof(plan));
+        strcpy(profile.id, "studio.malformed");
+        strcpy(profile.arguments, "\"unfinished");
+        assert(umi_project_launch_profile_registry_upsert(
+            umi_project_workspace_launch_profile(umi_developer_runtime_projects(runtime)),
+            &profile) == UMI_STATUS_OK);
+        request.launch_profile_id = "studio.malformed";
+        assert(umi_developer_launch_plan_submit(runtime, &request, &plan)
+            == UMI_STATUS_PARSE_ERROR);
+        assert(memcmp(before, &plan, sizeof(plan)) == 0);
+        assert(umi_developer_pipeline_find(
+            umi_developer_runtime_pipeline(runtime), "debug.studio.malformed", &operation)
+            == UMI_STATUS_NOT_FOUND);
+    }
+
     umi_developer_runtime_destroy(runtime);
     return 0;
 }

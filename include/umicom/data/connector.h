@@ -123,7 +123,8 @@ UmiStatus umi_data_connector_registry_create(
 /* Destroy copied descriptors without touching application-owned drivers. */
 void umi_data_connector_registry_destroy(UmiDataConnectorRegistry *registry);
 
-/* Register one unique copied connector descriptor. */
+/* Register one unique copied connector descriptor. Both fixed-size text fields
+ * must contain a nonempty NUL-terminated string within their declared capacity. */
 UmiStatus umi_data_connector_registry_register(
     UmiDataConnectorRegistry *registry,
     const UmiDataConnectorDescriptor *descriptor);
@@ -134,7 +135,8 @@ UmiStatus umi_data_connector_registry_find(
     const char *connector_id,
     UmiDataConnectorDescriptor *out_descriptor);
 
-/* Open a provider connection using only a local credential reference. */
+/* Open a provider connection using only a local credential reference. Close any
+ * previously open connection before reusing its handle as an output. */
 UmiStatus umi_data_connector_registry_open(
     const UmiDataConnectorRegistry *registry,
     const char *connector_id,
@@ -147,7 +149,10 @@ UmiStatus umi_data_connector_handle_execute(
     const UmiDataConnectorQueryRequest *request,
     UmiDataConnectorQuerySummary *out_summary);
 
-/* Close provider state and clear every callback from the handle. */
+/* Close provider state and clear every callback from the handle. Ownership is
+ * cleared before calling the adapter, so nested and repeated close calls are
+ * harmless. Calls on one handle must be serialized by its owner; this contract
+ * does not make concurrent close and execute safe. */
 void umi_data_connector_handle_close(UmiDataConnectorHandle *handle);
 
 /* Return the number of copied connector descriptors. */

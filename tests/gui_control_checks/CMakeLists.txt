@@ -122,3 +122,20 @@ if(TARGET umicom-gui-control-native-tests)
             TIMEOUT 90 SKIP_RETURN_CODE 77 LABELS "framework;gtk4;regression;logical-navigation")
     endforeach()
 endif()
+
+# Existing named controls can report ambiguity separately from absence without
+# requiring applications to duplicate the Framework logical-tree traversal.
+if(TARGET umicom-gui-control-native-tests)
+    add_executable(umicom-gui-named-lookup-status-tests test_named_lookup_status_gtk4.c)
+    target_link_libraries(umicom-gui-named-lookup-status-tests PRIVATE ${_native_library})
+    set_target_properties(umicom-gui-named-lookup-status-tests PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED ON)
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(umicom-gui-named-lookup-status-tests PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror)
+    endif()
+    foreach(_case unique missing duplicate collapsed expanded isolated invalid depth tag-separation)
+        add_test(NAME framework.gui_control_checks.named_lookup.${_case}
+            COMMAND umicom-gui-named-lookup-status-tests ${_case})
+        set_tests_properties(framework.gui_control_checks.named_lookup.${_case} PROPERTIES
+            TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;gtk4;regression;logical-navigation")
+    endforeach()
+endif()

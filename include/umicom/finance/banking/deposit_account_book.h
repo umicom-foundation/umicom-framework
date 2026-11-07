@@ -38,6 +38,34 @@ UmiStatus umi_banking_deposit_account_book_add(UmiBankingDepositAccountBook *reg
  * by this module.
  */
 const UmiBankingDepositAccount *umi_banking_deposit_account_book_find(const UmiBankingDepositAccountBook *registry,const char *id);
+
+/* A display projection retains customer and currency identity. All statuses are
+ * included; available funds on a blocked or closed account are not permission
+ * to spend. Applications must apply their authorization and payment policy. */
+typedef struct UmiBankingDepositSummary {
+    UmiFinancialId customer_id;
+    UmiCurrency currency;
+    size_t account_count;
+    size_t pending_count;
+    size_t open_count;
+    size_t blocked_count;
+    size_t closed_count;
+    int64_t ledger_minor;
+    int64_t available_minor;
+    int64_t reserved_minor;
+} UmiBankingDepositSummary;
+
+/* Sum accounts for exactly one customer and currency without conversion.
+ * The book must contain valid, uniquely identified accounts, including rows
+ * outside the selected scope. An empty match succeeds with zero totals.
+ * Every intermediate minor-unit sum must fit int64_t; otherwise return
+ * CAPACITY_EXCEEDED. Invalid records or duplicate IDs return INVALID_STATE.
+ * Bad arguments return INVALID_ARGUMENT. Failures preserve out_summary.
+ * Caller serializes book access and supplies a separate output object. */
+UmiStatus UmiBankingDepositAccountBookSummarise(
+    const UmiBankingDepositAccountBook *book, const char *customer_id,
+    const UmiCurrency *currency, UmiBankingDepositSummary *out_summary);
+
 #ifdef __cplusplus
 }
 #endif

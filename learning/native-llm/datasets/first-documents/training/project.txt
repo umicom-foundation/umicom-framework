@@ -1,0 +1,4 @@
+A project contains source files and a build description.
+The build description explains which source files form a program.
+An editor changes source text. A compiler translates source text.
+A test compares an observed result with an expected result.

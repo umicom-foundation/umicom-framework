@@ -41,6 +41,14 @@ typedef struct UmiSimulatedBrokerStorage {
  * Initialise simulated broker from caller-provided values so later operations receive a
  * known state.
  */
+/* Caller-owned storage must outlive the broker table and all callback calls.
+ * Serialize access. No credentials, network, fills or risk approvals are supplied.
+ * Connect accepts SIMULATION or PAPER as local modes only. Retained orders prevent
+ * switching modes until destroy resets the session; same-mode reconnect is allowed.
+ * Submission validates the canonical request and requires the connected mode.
+ * Cancellation requires a connected matching mode and a legal order transition.
+ * An already cancelled order succeeds without incrementing its revision; revision
+ * exhaustion and all rejected callbacks preserve stored orders and connection state. */
 UmiStatus umi_simulated_broker_create(UmiSimulatedBrokerStorage *storage,
                                       UmiBroker *out_broker);
 #ifdef __cplusplus

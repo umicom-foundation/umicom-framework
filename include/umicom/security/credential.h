@@ -55,12 +55,18 @@ void umi_credential_registry_destroy(UmiCredentialRegistry *registry);
 /**
  * Add credential registry only after its inputs and available capacity have been checked.
  */
+/* Every text field must be non-empty and NUL-terminated within its array.
+ * Invalid records, duplicate identifiers and capacity failures leave the
+ * registry unchanged. Only references are stored, never password values. */
 UmiStatus umi_credential_registry_register(UmiCredentialRegistry *registry,
                                            const UmiCredentialRecord *record);
 /**
  * Provide the credential registry get operation used by this module and its client
  * applications.
  */
+/* Lookup identifiers must terminate within UMI_CREDENTIAL_ID_CAPACITY bytes.
+ * The caller supplies a readable C string, or a readable capacity-sized span
+ * when checking malformed input. Failure leaves out_record unchanged. */
 UmiStatus umi_credential_registry_get(const UmiCredentialRegistry *registry,
                                       const char *credential_id,
                                       UmiCredentialRecord *out_record);
@@ -68,6 +74,8 @@ UmiStatus umi_credential_registry_get(const UmiCredentialRegistry *registry,
  * Provide the credential registry revoke operation used by this module and its client
  * applications.
  */
+/* Apply the same identifier boundary as get. Revocation is idempotent for
+ * an existing identifier; a missing or invalid identifier changes no records. */
 UmiStatus umi_credential_registry_revoke(UmiCredentialRegistry *registry,
                                          const char *credential_id);
 /**

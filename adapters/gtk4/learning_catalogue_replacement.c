@@ -14,6 +14,8 @@
  *---------------------------------------------------------------------------*/
 
 #include "learning_catalogue_private.h"
+#include "umicom/base/text.h"
+#include "umicom/platform/rooted_files.h"
 #include <inttypes.h>
 #include <string.h>
 
@@ -24,6 +26,9 @@ static UmiStatus ReplacementReady(LearningCatalogue *owner)
     return owner->state.busy ? UMI_STATUS_BUSY : UMI_STATUS_OK;
 }
 
+/* The default-only preparation is retained for review. Explicit manifests use
+ * the same generation-checked review and never replace an active reader. */
+#if 0
 UmiStatus UmiLearningCatalogueGtk4PrepareReplacement(GtkWidget *widget, const char *directory)
 {
     LearningCatalogue *owner = LearningCatalogueOwner(widget);
@@ -51,11 +56,48 @@ UmiStatus UmiLearningCatalogueGtk4PrepareReplacement(GtkWidget *widget, const ch
     return status;
 }
 
+#endif
+UmiStatus UmiLearningCatalogueGtk4PrepareReplacementManifest(GtkWidget *widget, const char *directory,
+    const char *manifest)
+{
+    LearningCatalogue *owner = LearningCatalogueOwner(widget);
+    UmiStatus status = ReplacementReady(owner);
+    if (status != UMI_STATUS_OK) return status;
+    if (directory == NULL || !umi_path_is_absolute(directory)) return UMI_STATUS_INVALID_ARGUMENT;
+    if (owner->review_serial == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    LearningCatalogueJob *job = g_try_new0(LearningCatalogueJob, 1U);
+    if (job == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    g_weak_ref_init(&job->root, widget);
+    job->host = owner->host;
+    job->action = LEARNING_CATALOGUE_PREPARE_REPLACEMENT;
+    status = umi_path_copy(job->directory, sizeof(job->directory), directory);
+    if (status == UMI_STATUS_OK && !g_utf8_validate(job->directory, -1, NULL))
+        status = UMI_STATUS_INVALID_ARGUMENT;
+    if (status == UMI_STATUS_OK) status = manifest == NULL ? UMI_STATUS_INVALID_ARGUMENT :
+        umi_text_copy(job->manifest, sizeof(job->manifest), manifest);
+    if (status == UMI_STATUS_OK)
+        status = UmiRootedFileValidatePath(job->directory, job->manifest);
+    UmiLearningShelfSnapshot snapshot;
+    if (status == UMI_STATUS_OK) status = UmiLearningShelfCopySnapshot(owner->shelf, &snapshot);
+    if (status == UMI_STATUS_OK) status = UmiLearningShelfClone(owner->shelf, &job->selection_shelf);
+    if (status != UMI_STATUS_OK) { LearningCatalogueJobFree(job); return status; }
+    job->replacement.shelf_generation = snapshot.generation;
+    job->replacement.review_serial = owner->review_serial + 1U;
+    g_object_ref(widget);
+    status = LearningCatalogueDispatch(owner, job);
+    g_object_unref(widget);
+    return status;
+}
+
+UmiStatus UmiLearningCatalogueGtk4PrepareReplacement(GtkWidget *widget, const char *directory)
+{
+    return UmiLearningCatalogueGtk4PrepareReplacementManifest(widget, directory, "learning-pack.json");
+}
 void LearningCataloguePrepareReplacement(LearningCatalogueJob *job)
 {
     /* The worker owns a cloned shelf, so even successful preparation cannot
      * change the current UI, invalidate its results or destroy its reader. */
-    job->status = UmiLearningPackLoad(job->directory, "learning-pack.json", job->host, &job->pack);
+    job->status = UmiLearningPackLoad(job->directory, job->manifest, job->host, &job->pack);
     if (job->status == UMI_STATUS_OK)
         job->status = UmiLearningPackCopyInfo(job->pack, &job->replacement.proposed);
     UmiLearningPack *previous = NULL;

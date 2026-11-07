@@ -19,8 +19,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* Capacity definitions moved to the public contract so callers can size buffers.
+ * The previous local definitions are retained for review. */
+#if 0
 #define UMI_IDEMPOTENCY_KEY_CAPACITY 160U
 #define UMI_IDEMPOTENCY_RESULT_CAPACITY 512U
+#endif
 
 typedef struct UmiIdempotencyEntry {
     char key[UMI_IDEMPOTENCY_KEY_CAPACITY];
@@ -84,6 +88,16 @@ void umi_idempotency_store_destroy(UmiIdempotencyStore *store)
     free(store);
 }
 
+/* Read only the declared text capacity. A missing terminator is rejected rather
+ * than turning a retry identity into a different, truncated identity. Callers
+ * still own the obligation to supply valid readable strings. */
+static size_t bounded_text_length(const char *text, size_t capacity)
+{
+    size_t length = 0U;
+    while (length < capacity && text[length] != '\0') ++length;
+    return length;
+}
+
 /* Provide the find key operation used by this module and its client applications. */
 static size_t find_key(const UmiIdempotencyStore *store, const char *key)
 {
@@ -100,6 +114,8 @@ static size_t find_key(const UmiIdempotencyStore *store, const char *key)
  * Provide the idempotency store record operation used by this module and its client
  * applications.
  */
+/* Truncating retry keys or results could falsely report a complete record. Bounded validation below replaces formatted truncation. Retained for implementation review. */
+#if 0
 UmiStatus umi_idempotency_store_record(UmiIdempotencyStore *store,
                                        const char *key,
                                        UmiStatus outcome,
@@ -126,11 +142,43 @@ UmiStatus umi_idempotency_store_record(UmiIdempotencyStore *store,
                    result_text != NULL ? result_text : "");
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_idempotency_store_record(UmiIdempotencyStore *store,
+                                      const char *key,
+                                      UmiStatus outcome,
+                                      const char *result_text)
+{
+    size_t key_length, result_length;
+    UmiIdempotencyEntry *entry;
+    if (store == NULL || key == NULL || key[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    key_length = bounded_text_length(key, UMI_IDEMPOTENCY_KEY_CAPACITY);
+    if (key_length == UMI_IDEMPOTENCY_KEY_CAPACITY)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (find_key(store, key) != SIZE_MAX) return UMI_STATUS_ALREADY_EXISTS;
+    result_length = result_text != NULL
+        ? bounded_text_length(result_text, UMI_IDEMPOTENCY_RESULT_CAPACITY) : 0U;
+    if (result_length == UMI_IDEMPOTENCY_RESULT_CAPACITY ||
+        store->count == store->capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    /* All checks precede publication. A failed request consumes no entry and
+     * leaves previously recorded results available for a safe retry decision. */
+    entry = &store->entries[store->count];
+    memcpy(entry->key, key, key_length + 1U);
+    entry->outcome = outcome;
+    if (result_text != NULL) memcpy(entry->result, result_text, result_length + 1U);
+    else entry->result[0] = '\0';
+    ++store->count;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Find idempotency store while leaving the underlying catalogue or model owned by this
  * module.
  */
+/* Lookup previously returned success for truncated text. Complete-result validation below preserves both outputs on failure. Retained for implementation review. */
+#if 0
 UmiStatus umi_idempotency_store_lookup(const UmiIdempotencyStore *store,
                                        const char *key,
                                        UmiStatus *out_outcome,
@@ -161,6 +209,32 @@ UmiStatus umi_idempotency_store_lookup(const UmiIdempotencyStore *store,
                        "%s",
                        store->entries[index].result);
     }
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_idempotency_store_lookup(const UmiIdempotencyStore *store,
+                                      const char *key,
+                                      UmiStatus *out_outcome,
+                                      char *out_result,
+                                      size_t result_capacity)
+{
+    size_t index, result_length;
+    if (store == NULL || key == NULL || key[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (bounded_text_length(key, UMI_IDEMPOTENCY_KEY_CAPACITY) ==
+        UMI_IDEMPOTENCY_KEY_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
+    index = find_key(store, key);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    result_length = strlen(store->entries[index].result);
+    if (out_result != NULL && result_capacity <= result_length)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    /* Publish both outputs only after the destination can hold the complete
+     * result including its terminator. NULL output pointers opt out of copying. */
+    if (out_result != NULL)
+        memcpy(out_result, store->entries[index].result, result_length + 1U);
+    if (out_outcome != NULL) *out_outcome = store->entries[index].outcome;
     return UMI_STATUS_OK;
 }
 

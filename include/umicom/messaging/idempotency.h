@@ -19,6 +19,20 @@
 
 #include "umicom/base/status.h"
 
+/* Capacities include the terminating zero byte. */
+#define UMI_IDEMPOTENCY_KEY_CAPACITY 160U
+#define UMI_IDEMPOTENCY_RESULT_CAPACITY 512U
+
+/* This is an in-memory, serial-access registry. It does not atomically commit
+ * external side effects or survive a process restart. Durable applications
+ * must coordinate their effect and retry record in a durable transaction.
+ * Keys contain 1..159 bytes; results contain 0..511 bytes. Text must be valid
+ * readable C strings. Oversized new records return CAPACITY_EXCEEDED without
+ * consuming an entry. NULL result_text records an empty result.
+ * Lookup may omit either output with NULL. A provided result buffer must hold
+ * the whole result and terminator; insufficient space leaves both outputs
+ * unchanged. The registry never returns a successful truncated result. */
+
 #ifdef __cplusplus
 extern "C" {
 #endif

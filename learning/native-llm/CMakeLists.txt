@@ -422,3 +422,66 @@ else()
     target_compile_options(umicom-native-llm-adamw-clipped-experiment PRIVATE
         -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
 endif()
+
+# The dataset inspector exposes existing Framework services without duplicating
+# import or tokenisation rules. Its bounded fixture tests require no network.
+add_executable(umicom-native-llm-dataset inspect_dataset.c)
+target_link_libraries(umicom-native-llm-dataset PRIVATE Umicom::AiTraining)
+target_compile_features(umicom-native-llm-dataset PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-dataset PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-dataset PRIVATE
+        -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME framework.ai.training.dataset_inspector
+        COMMAND "${CMAKE_COMMAND}"
+            "-DINSPECTOR=$<TARGET_FILE:umicom-native-llm-dataset>"
+            "-DMANIFEST=${CMAKE_CURRENT_LIST_DIR}/datasets/first-documents/dataset.txt"
+            -P "${CMAKE_CURRENT_LIST_DIR}/check_dataset_inspector.cmake")
+    set_tests_properties(framework.ai.training.dataset_inspector PROPERTIES
+        TIMEOUT 45 LABELS "framework;ai;native-training;learning")
+endif()
+
+# Expose the existing reducer as a small interactive source-reading laboratory.
+# Training mathematics stays in the canonical decoder service.
+add_executable(umicom-native-llm-accumulation inspect_accumulation.c)
+target_link_libraries(umicom-native-llm-accumulation PRIVATE Umicom::AiTraining)
+target_compile_features(umicom-native-llm-accumulation PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-accumulation PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-accumulation PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    foreach(_micro_sequences IN ITEMS 1 2 5)
+        add_test(NAME framework.ai.training.accumulation_demo.${_micro_sequences}
+            COMMAND umicom-native-llm-accumulation ${_micro_sequences})
+        set_tests_properties(framework.ai.training.accumulation_demo.${_micro_sequences} PROPERTIES
+            TIMEOUT 30 LABELS "framework;ai;native-training;learning"
+            PASS_REGULAR_EXPRESSION "Comparison: within tolerance")
+    endforeach()
+    add_test(NAME framework.ai.training.accumulation_demo.help COMMAND umicom-native-llm-accumulation --help)
+    add_test(NAME framework.ai.training.accumulation_demo.invalid COMMAND umicom-native-llm-accumulation 0)
+    set_tests_properties(framework.ai.training.accumulation_demo.invalid PROPERTIES WILL_FAIL TRUE TIMEOUT 5)
+    set_tests_properties(framework.ai.training.accumulation_demo.help PROPERTIES TIMEOUT 5)
+endif()
+
+# This range laboratory uses the canonical corpus service and never duplicates
+# tokenisation. It makes storage ownership visible in a small console example.
+add_executable(umicom-native-llm-corpus-ranges inspect_corpus_ranges.c)
+target_link_libraries(umicom-native-llm-corpus-ranges PRIVATE Umicom::AiTraining)
+target_compile_features(umicom-native-llm-corpus-ranges PRIVATE c_std_23)
+if(MSVC)
+    target_compile_options(umicom-native-llm-corpus-ranges PRIVATE /W4)
+else()
+    target_compile_options(umicom-native-llm-corpus-ranges PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+endif()
+if(BUILD_TESTING)
+    add_test(NAME framework.ai.training.corpus_ranges_demo
+        COMMAND umicom-native-llm-corpus-ranges)
+    set_tests_properties(framework.ai.training.corpus_ranges_demo PROPERTIES
+        TIMEOUT 10 LABELS "framework;ai;native-training;learning"
+        PASS_REGULAR_EXPRESSION "Adjacent outputs: accepted")
+endif()

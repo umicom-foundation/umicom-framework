@@ -17,6 +17,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "umicom/data/connector.h"
 
@@ -72,6 +73,75 @@ static void fake_close(void *connection, void *driver_context)
     free(connection);
 }
 
+
+/* The callback deliberately re-enters close without using a freed connection.
+ * A second callback invocation fails before free, making the ownership defect
+ * visible without relying on an allocator crash. */
+typedef struct ReentrantCloseFixture {
+    UmiDataConnectorHandle *handle;
+    unsigned calls;
+} ReentrantCloseFixture;
+
+static void reentrant_close(void *connection, void *driver_context)
+{
+    ReentrantCloseFixture *fixture = driver_context;
+    fixture->calls += 1U;
+    assert(fixture->calls == 1U);
+    assert(!fixture->handle->open);
+    assert(fixture->handle->connection == NULL);
+    assert(fixture->handle->execute == NULL);
+    assert(fixture->handle->close == NULL);
+    assert(fixture->handle->driver_context == NULL);
+    umi_data_connector_handle_close(fixture->handle);
+    free(connection);
+}
+
+static void check_descriptor_bounds_and_close(void)
+{
+    UmiDataConnectorRegistry *registry = NULL;
+    UmiDataConnectorDescriptor descriptor = {0};
+    UmiDataConnectorDescriptor invalid;
+    UmiDataConnectorHandle handle = {0};
+    ReentrantCloseFixture fixture = {&handle, 0U};
+    UmiDataConnectorOpenRequest request = {
+        "localhost", "lesson", "secret://lesson/fixture", true};
+    UmiDataConnectorQueryRequest query = {"fixture", true, 2U};
+    UmiDataConnectorQuerySummary summary;
+
+    assert(umi_data_connector_registry_create(2U, &registry) == UMI_STATUS_OK);
+    (void)memset(descriptor.connector_id, 'i', sizeof(descriptor.connector_id) - 1U);
+    (void)memset(descriptor.display_name, 'n', sizeof(descriptor.display_name) - 1U);
+    descriptor.family = UMI_DATA_CONNECTOR_DOCUMENT;
+    descriptor.open = fake_open;
+    descriptor.execute = fake_execute;
+    descriptor.close = reentrant_close;
+    descriptor.driver_context = &fixture;
+    invalid = descriptor;
+    invalid.connector_id[sizeof(invalid.connector_id) - 1U] = 'i';
+    assert(umi_data_connector_registry_register(registry, &invalid) ==
+           UMI_STATUS_INVALID_ARGUMENT);
+    invalid = descriptor;
+    invalid.display_name[sizeof(invalid.display_name) - 1U] = 'n';
+    assert(umi_data_connector_registry_register(registry, &invalid) ==
+           UMI_STATUS_INVALID_ARGUMENT);
+    assert(umi_data_connector_registry_count(registry) == 0U);
+    assert(umi_data_connector_registry_register(registry, &descriptor) == UMI_STATUS_OK);
+    assert(umi_data_connector_registry_open(
+        registry, descriptor.connector_id, &request, &handle) == UMI_STATUS_OK);
+
+    /* Copied callbacks survive registry destruction while the separate driver
+     * context and handle remain alive on this stack. */
+    umi_data_connector_registry_destroy(registry);
+    assert(umi_data_connector_handle_execute(&handle, &query, &summary) == UMI_STATUS_OK);
+    assert(summary.row_count == 2U);
+    umi_data_connector_handle_close(&handle);
+    umi_data_connector_handle_close(&handle);
+    umi_data_connector_handle_close(NULL);
+    assert(fixture.calls == 1U);
+    assert(umi_data_connector_handle_execute(&handle, &query, &summary) ==
+           UMI_STATUS_INVALID_ARGUMENT);
+}
+
 /* Exercise descriptor copying and a complete safe handle lifecycle. */
 int main(void)
 {
@@ -109,5 +179,6 @@ int main(void)
     assert(!handle.open);
 
     umi_data_connector_registry_destroy(registry);
+    check_descriptor_bounds_and_close();
     return 0;
 }

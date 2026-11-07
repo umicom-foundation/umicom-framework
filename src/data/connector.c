@@ -26,10 +26,28 @@ struct UmiDataConnectorRegistry {
 };
 
 /* Validate an adapter before copying its callback boundary into Framework. */
+/* The registry copies fixed-size arrays. Reject unterminated identifiers before
+ * later lookups compare them as C strings. The original predicate is retained
+ * to document the boundary that allowed reads to cross a descriptor field. */
+#if 0
 static bool valid_descriptor(const UmiDataConnectorDescriptor *descriptor)
 {
     return descriptor != NULL && descriptor->connector_id[0] != '\0' &&
         descriptor->display_name[0] != '\0' &&
+        descriptor->family >= UMI_DATA_CONNECTOR_RELATIONAL &&
+        descriptor->family <= UMI_DATA_CONNECTOR_TIME_SERIES &&
+        descriptor->open != NULL && descriptor->execute != NULL &&
+        descriptor->close != NULL;
+}
+#endif
+static bool valid_descriptor(const UmiDataConnectorDescriptor *descriptor)
+{
+    return descriptor != NULL && descriptor->connector_id[0] != '\0' &&
+        memchr(descriptor->connector_id, '\0',
+               sizeof(descriptor->connector_id)) != NULL &&
+        descriptor->display_name[0] != '\0' &&
+        memchr(descriptor->display_name, '\0',
+               sizeof(descriptor->display_name)) != NULL &&
         descriptor->family >= UMI_DATA_CONNECTOR_RELATIONAL &&
         descriptor->family <= UMI_DATA_CONNECTOR_TIME_SERIES &&
         descriptor->open != NULL && descriptor->execute != NULL &&
@@ -219,6 +237,10 @@ UmiStatus umi_data_connector_handle_execute(
 }
 
 /* Close provider state once and erase callbacks to prevent accidental reuse. */
+/* Clear ownership before entering an adapter. A close callback can notify an
+ * application which closes the same handle again; that nested close must see
+ * an empty handle. Keep the former order below for lifetime review. */
+#if 0
 void umi_data_connector_handle_close(UmiDataConnectorHandle *handle)
 {
     /*
@@ -231,6 +253,21 @@ void umi_data_connector_handle_close(UmiDataConnectorHandle *handle)
         handle->close(handle->connection, handle->driver_context);
     }
     (void)memset(handle, 0, sizeof(*handle));
+}
+#endif
+void umi_data_connector_handle_close(UmiDataConnectorHandle *handle)
+{
+    void *connection;
+    void *driver_context;
+    UmiDataConnectorCloseFunction close_function;
+    bool should_close;
+    if (handle == NULL) return;
+    connection = handle->connection;
+    driver_context = handle->driver_context;
+    close_function = handle->close;
+    should_close = handle->open && connection != NULL && close_function != NULL;
+    (void)memset(handle, 0, sizeof(*handle));
+    if (should_close) close_function(connection, driver_context);
 }
 
 /* Return copied descriptor count, treating a NULL registry as empty. */

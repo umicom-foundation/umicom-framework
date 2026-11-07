@@ -25,6 +25,7 @@ UmiStatus UmiLearningPackClone(const UmiLearningPack *source, UmiLearningPack **
     UmiLearningPack *copy = calloc(1U, sizeof(*copy));
     if (copy == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     memcpy(copy->root, source->root, sizeof(copy->root));
+    memcpy(copy->manifest_path, source->manifest_path, sizeof(copy->manifest_path));
     copy->info = source->info;
     if (source->info.resource_count != 0U) {
         copy->resources = calloc(source->info.resource_count, sizeof(*copy->resources));

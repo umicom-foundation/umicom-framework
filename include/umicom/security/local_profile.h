@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/security/local_profile.h
- * PURPOSE: Authenticate local profiles without storing passwords or broker credentials.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Authenticate local profiles without storing passwords or broker credentials.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_SECURITY_LOCAL_PROFILE_H
@@ -50,6 +57,13 @@ void UmiLocalProfileStoreRelease(UmiLocalProfileStore *store);
 /* Names are case-insensitive ASCII: 3..48 letters, digits, '-' or '_', starting
  * with a letter. Output is lower-case and unchanged on validation failure. */
 UmiStatus UmiLocalProfileName(const char *name, char out[UMI_LOCAL_PROFILE_NAME_CAPACITY]);
+/* Validate an exact byte span without searching for a terminator. The caller
+ * supplies length readable bytes; embedded NUL and non-ASCII bytes are invalid.
+ * out must hold NAME_CAPACITY bytes. It may overlap name: validation finishes
+ * before publication. Every output byte remains unchanged on failure. This is
+ * name validation only; it does not authenticate a session or a broker account. */
+UmiStatus UmiLocalProfileNameBytes(const char *name, size_t length,
+                                 char out[UMI_LOCAL_PROFILE_NAME_CAPACITY]);
 /* Passwords are opaque UTF-8 bytes: 12..256 bytes, without normalization.
  * Callers clear their input buffers after use. These synchronous functions
  * belong on a worker thread when used by a graphical application. */

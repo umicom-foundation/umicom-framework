@@ -31,6 +31,8 @@ static const TemplateFactory FACTORIES[] = {
     umi_developer_project_template_bash_tool,
     umi_developer_project_template_zig_console,
     umi_developer_project_template_rust_console,
+    umi_developer_project_template_vhdl_cpu,
+    umi_developer_project_template_umicom_c_preview,
     umi_developer_project_template_web_service_c23,
     umi_developer_project_template_thin_desktop_application,
     umi_developer_project_template_integration_worker,

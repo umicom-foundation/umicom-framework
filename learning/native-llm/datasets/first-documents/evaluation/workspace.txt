@@ -1,0 +1,4 @@
+A workspace groups related projects.
+The user chooses a workspace directory before creating project files.
+A build reports diagnostics that identify the source of a problem.
+A useful lesson explains the command, its result and recovery steps.
