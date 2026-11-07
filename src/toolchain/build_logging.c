@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/toolchain/build_logging.c
- * PURPOSE: Keep complete development output in an explicitly selected private log.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Keep complete development output in an explicitly selected private log.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/toolchain/build_execution.h"
@@ -66,7 +73,13 @@ UmiStatus UmiBuildExecuteLogged(const UmiToolchainProfile *profile,
     umi_build_report_init(report);
     report->last_action = action;
     /* Check requests before creating evidence. Preview uses no storage. */
+    /* Request-only admission allowed malformed options to reserve a log before
+     * execution rejected them. The shared validator now covers both values;
+     * retain the earlier call for comparison with existing client behaviour. */
+#if 0
     UmiStatus status = umi_build_request_validate(action, request, NULL, 0U);
+#endif
+    UmiStatus status = UmiBuildExecutionValidate(action, request, options, NULL, 0U);
     if (!profile) status = UMI_STATUS_INVALID_ARGUMENT;
     if (status != UMI_STATUS_OK) {
         log->execution_status = report->last_status = status;

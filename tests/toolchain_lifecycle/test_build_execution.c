@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/toolchain_lifecycle/test_build_execution.c
- * PURPOSE: Verify literal commands, previews and phase failure boundaries through a fake process transport.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Verify literal commands, previews and phase failure boundaries through a fake process transport.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/toolchain/build_execution.h"
@@ -81,6 +88,26 @@ int main(void)
     options.executor_context = &fixture;
     UmiBuildReport *report = calloc(1U, sizeof *report);
     CHECK(report);
+    /* One Framework validator serves preview, direct execution and logging.
+     * Reject malformed definitions before command observers see partial work. */
+    char message[256];
+    const char *invalid_definitions[] = {NULL, "NO_EQUALS", "=missing-name", "-FLAG=value"};
+    for (size_t i = 0U; i < sizeof invalid_definitions / sizeof invalid_definitions[0]; ++i) {
+        options.configure_definitions = &invalid_definitions[i];
+        CHECK(UmiBuildExecutionValidate(UMI_BUILD_DELIVER, &request, &options, message, sizeof message) == UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(message[0] != '\0');
+        for (int preview = 0; preview <= 1; ++preview) {
+            options.preview = preview;
+            CHECK(UmiBuildExecuteWithOptions(&profile, NULL, UMI_BUILD_DELIVER, &request, &options, report) == UMI_STATUS_INVALID_ARGUMENT);
+            CHECK(fixture.calls == 0U && fixture.commands == 0U);
+            CHECK(report->last_status == UMI_STATUS_INVALID_ARGUMENT);
+        }
+    }
+    options.preview = 0; options.configure_definitions = definitions;
+    CHECK(UmiBuildExecutionValidate(UMI_BUILD_COMPILE, &request, &options, NULL, 0U) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(UmiBuildExecuteWithOptions(&profile, NULL, UMI_BUILD_COMPILE, &request, &options, report) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(fixture.calls == 0U && fixture.commands == 0U);
+    CHECK(UmiBuildExecutionValidate(UMI_BUILD_DELIVER, &request, &options, message, sizeof message) == UMI_STATUS_OK);
     const UmiBuildAction order[] = {UMI_BUILD_CONFIGURE, UMI_BUILD_COMPILE, UMI_BUILD_TEST, UMI_BUILD_INSTALL, UMI_BUILD_PACKAGE};
     CHECK(UmiBuildExecuteWithOptions(&profile, NULL, UMI_BUILD_DELIVER, &request, &options, report) == UMI_STATUS_OK);
     CHECK(fixture.calls == 5U && fixture.commands == 5U && !fixture.bad);

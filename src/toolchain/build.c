@@ -1350,6 +1350,47 @@ UmiStatus umi_build_execute(
     return UMI_STATUS_OK;
 }
 #endif
+/* Validate the complete invocation before either execution or log reservation.
+ * Keeping this boundary in Framework prevents native hosts from having weaker
+ * admission rules than the CLI. No callback or external operation runs here. */
+UmiStatus UmiBuildExecutionValidate(UmiBuildAction action,
+    const UmiBuildRequest *request, const UmiBuildExecutionOptions *options,
+    char *message, size_t message_capacity)
+{
+    UmiStatus status = umi_build_request_validate(action, request, message, message_capacity);
+    if (status != UMI_STATUS_OK) return status;
+    for (size_t i = 0U; i < request->run_argument_count; ++i) {
+        if (request->run_arguments[i] == NULL) {
+            umi_build_message(message, message_capacity, "Launch arguments cannot contain NULL entries.");
+            return UMI_STATUS_INVALID_ARGUMENT;
+        }
+    }
+    if (options == NULL) return UMI_STATUS_OK;
+    if (options->explicit_build_directory && !umi_build_has_text(request->build_directory)) {
+        umi_build_message(message, message_capacity, "An explicit build directory requires a non-empty path.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (options->configure_definition_count > 16U ||
+        (options->configure_definition_count != 0U && options->configure_definitions == NULL)) {
+        umi_build_message(message, message_capacity, "Configure definitions require storage and at most 16 entries.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (options->configure_definition_count != 0U &&
+        action != UMI_BUILD_CONFIGURE && action != UMI_BUILD_MAKE && action != UMI_BUILD_DELIVER) {
+        umi_build_message(message, message_capacity, "Configure definitions require configure, make or deliver.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    for (size_t i = 0U; i < options->configure_definition_count; ++i) {
+        const char *definition = options->configure_definitions[i];
+        const char *equals = definition != NULL ? strchr(definition, '=') : NULL;
+        if (equals == NULL || equals == definition || definition[0] == '-') {
+            umi_build_message(message, message_capacity, "Configure definitions must have the form NAME=VALUE.");
+            return UMI_STATUS_INVALID_ARGUMENT;
+        }
+    }
+    return UMI_STATUS_OK;
+}
+
 UmiStatus UmiBuildExecuteWithOptions(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *environment,
@@ -1373,6 +1414,10 @@ UmiStatus UmiBuildExecuteWithOptions(
         report->last_status = UMI_STATUS_INVALID_ARGUMENT;
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* UmiBuildExecutionValidate now checks the same request/options contract
+     * before execution and log creation. Retain the former execution-only
+     * checks for review; they ran too late to protect the log namespace. */
+#if 0
     /* Native callers receive the same configure-free guarantee as CLI users. */
     if (action == UMI_BUILD_COMPILE_TEST && options && options->configure_definition_count != 0U) {
         report->last_status = UMI_STATUS_INVALID_ARGUMENT;
@@ -1398,6 +1443,8 @@ UmiStatus UmiBuildExecuteWithOptions(
 
     status = umi_build_request_validate(
         action, request, NULL, 0U);
+#endif
+    status = UmiBuildExecutionValidate(action, request, options, NULL, 0U);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         report->last_action = action;

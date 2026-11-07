@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/toolchain_lifecycle/test_build_logging.c
- * PURPOSE: Verify complete raw logs and non-overwrite behavior with a fake child process.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Verify complete raw logs and non-overwrite behavior with a fake child process.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/toolchain/build_execution.h"
@@ -65,6 +72,30 @@ int main(void)
     options.executor = execute; options.executor_context = &fixture;
     options.output = observe; options.observer_context = &fixture;
     UmiBuildExecutionLog log;
+    /* Invalid options must leave the requested filename available for a later
+     * corrected invocation. The transport counter also proves no child starts. */
+    options.explicit_build_directory = 1;
+    CHECK(UmiBuildExecuteLogged(&profile, NULL, UMI_BUILD_RUN, &request, &options, path, &log, report) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(!log.created && !umi_fs_exists(path) && fixture.calls == 0U);
+    CHECK(log.execution_status == UMI_STATUS_INVALID_ARGUMENT && report->last_status == UMI_STATUS_INVALID_ARGUMENT);
+    options.explicit_build_directory = 0;
+    options.configure_definition_count = 17U;
+    CHECK(UmiBuildExecuteLogged(&profile, NULL, UMI_BUILD_RUN, &request, &options, path, &log, report) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(!log.created && !umi_fs_exists(path) && fixture.calls == 0U);
+    options.configure_definition_count = 1U;
+    CHECK(UmiBuildExecuteLogged(&profile, NULL, UMI_BUILD_RUN, &request, &options, path, &log, report) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(!log.created && !umi_fs_exists(path) && fixture.calls == 0U);
+    const char *definition[] = {"BUILD_TESTING=ON"};
+    options.configure_definitions = definition;
+    CHECK(UmiBuildExecuteLogged(&profile, NULL, UMI_BUILD_RUN, &request, &options, path, &log, report) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(!log.created && !umi_fs_exists(path) && fixture.calls == 0U);
+    options.configure_definition_count = 0U; options.configure_definitions = NULL;
+    const char *invalid_args[] = {"two words", NULL};
+    request.run_arguments = invalid_args;
+    CHECK(UmiBuildExecuteLogged(&profile, NULL, UMI_BUILD_RUN, &request, &options, path, &log, report) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(!log.created && !umi_fs_exists(path) && fixture.calls == 0U);
+    request.run_arguments = args;
+    /* The valid retry below must create exactly the previously refused path. */
     CHECK(UmiBuildExecuteLogged(&profile, NULL, UMI_BUILD_RUN, &request, &options, path, &log, report) == UMI_STATUS_OK);
     CHECK(fixture.calls == 1U && fixture.seen == 100000U && log.created && log.capture_complete);
     CHECK(log.file.bytes_written == 100000U && log.log_status == UMI_STATUS_OK);

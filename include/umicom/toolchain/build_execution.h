@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/toolchain/build_execution.h
- * PURPOSE: Stream, preview and record native development commands without changing legacy request layouts.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Stream, preview and record native development commands without changing legacy request layouts.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TOOLCHAIN_BUILD_EXECUTION_H
@@ -46,6 +53,14 @@ typedef struct UmiBuildExecutionLog {
     int capture_complete;
     UmiOutputFileSnapshot file;
 } UmiBuildExecutionLog;
+
+/** Validate request and execution options without creating logs or invoking
+ * observers, tools or filesystem operations. CLI and native clients share this
+ * admission boundary. Configure definitions apply only to configure/make/deliver.
+ * Borrowed argument strings must remain alive until execution returns. */
+UmiStatus UmiBuildExecutionValidate(UmiBuildAction action,
+    const UmiBuildRequest *request, const UmiBuildExecutionOptions *options,
+    char *message, size_t message_capacity);
 
 /** Execute or preview the established action sequence. Stop at the first failed
  * phase; dry-run exit fields stay -1 because no child ran. No Git operation is
