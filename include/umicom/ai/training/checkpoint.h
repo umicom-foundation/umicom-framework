@@ -13,8 +13,11 @@
  *   Do not load untrusted checkpoints or use checksum as authenticity proof.
  *
  * AUTHOR AND ORGANISATION:
- *   Sammy Hegab | Umicom Foundation
- * LICENCE: MIT
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_TRAINING_CHECKPOINT_H
 #define UMICOM_AI_TRAINING_CHECKPOINT_H
@@ -27,6 +30,25 @@ extern "C" {
 
 /* Max bytes includes metadata, per-tensor dimensions and checksum. */
 #define UMI_AI_DECODER_MAX_CHECKPOINT_BYTES 131072U
+
+/* Validated metadata contains values only, never pointers into the input. */
+typedef struct UmiAiTrainingDecoderCheckpointInfo {
+    UmiAiTrainingDecoderConfig config;
+    uint64_t completedSteps;
+    uint32_t formatVersion;
+    uint32_t tensorCount;
+    size_t weightCount;
+    size_t byteCount;
+} UmiAiTrainingDecoderCheckpointInfo;
+
+/* Inspect the complete checkpoint without allocating a decoder or training
+ * tape. Verifies the same bounds, shapes, checksum and finite weights as load.
+ * Input must remain readable and unchanged during the call. On any failure
+ * *outInfo remains unchanged. This is structural validation, not proof of
+ * origin, dataset identity, optimizer state or model quality. */
+UmiStatus UmiAiTrainingDecoderCheckpointInspect(
+    const uint8_t *bytes, size_t byteCount,
+    UmiAiTrainingDecoderCheckpointInfo *outInfo);
 
 /* Compute exact required output size without modifying outSize on error. */
 UmiStatus UmiAiTrainingDecoderCheckpointSize(

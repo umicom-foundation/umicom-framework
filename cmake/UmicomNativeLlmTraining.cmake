@@ -1294,3 +1294,24 @@ if(TARGET umicom_ai_training AND NOT TARGET umicom-native-llm-generation-work)
             LABELS "framework;ai;native-training;learning;generation;performance")
     endif()
 endif()
+
+# Inspect complete checkpoint bytes before allocating a decoder. Each case
+# exercises the same public validator used by model loading.
+if(BUILD_TESTING AND NOT TARGET umicom-ai-checkpoint-inspect-test)
+    add_executable(umicom-ai-checkpoint-inspect-test
+        "${_umicom_ai_training_root}/tests/ai_training/test_training_checkpoint_inspect.c")
+    target_link_libraries(umicom-ai-checkpoint-inspect-test PRIVATE Umicom::AiTraining)
+    target_compile_features(umicom-ai-checkpoint-inspect-test PRIVATE c_std_23)
+    if(MSVC)
+        target_compile_options(umicom-ai-checkpoint-inspect-test PRIVATE /W4)
+    else()
+        target_compile_options(umicom-ai-checkpoint-inspect-test PRIVATE
+            -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    endif()
+    foreach(_case IN ITEMS metadata trained null-input null-output truncated trailing oversized magic version configuration tensor-count shape nan infinity checksum )
+        add_test(NAME framework.ai.training.checkpoint_inspect.${_case}
+            COMMAND umicom-ai-checkpoint-inspect-test "${_case}")
+        set_tests_properties(framework.ai.training.checkpoint_inspect.${_case}
+            PROPERTIES LABELS "framework;ai;native-training" TIMEOUT 60)
+    endforeach()
+endif()

@@ -15,8 +15,11 @@
  *   word-transition format; neither format is silently converted.
  *
  * AUTHOR AND ORGANISATION:
- *   Sammy Hegab | Umicom Foundation
- * LICENCE: MIT
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/checkpoint.h"
 #include "decoder_private.h"
@@ -168,6 +171,97 @@ UmiStatus UmiAiTrainingDecoderCheckpointEncode(
     return UMI_STATUS_OK;
 }
 
+/* Inspection and loading share one bounded validator. UI clients can display
+ * model metadata without constructing a training tape. Input bytes remain
+ * caller-owned and must stay unchanged for the duration of either call. */
+UmiStatus UmiAiTrainingDecoderCheckpointInspect(
+    const uint8_t *bytes, size_t byteCount,
+    UmiAiTrainingDecoderCheckpointInfo *outInfo)
+{
+    UmiAiTrainingDecoderCheckpointInfo info = {0};
+    size_t position = 8U, expected = 0U;
+    if (bytes == NULL || outInfo == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (byteCount < UMICOM_DECODER_CHECKPOINT_HEADER + UMICOM_DECODER_CHECKPOINT_TRAILER ||
+        byteCount > UMI_AI_DECODER_MAX_CHECKPOINT_BYTES)
+        return UMI_STATUS_PARSE_ERROR;
+    if (memcmp(bytes, UMICOM_DECODER_CHECKPOINT_MAGIC, 8U) != 0)
+        return UMI_STATUS_PARSE_ERROR;
+    info.formatVersion = Get32(bytes, &position);
+    if (info.formatVersion != UMICOM_DECODER_CHECKPOINT_FORMAT)
+        return UMI_STATUS_PARSE_ERROR;
+    info.config.vocabularySize = Get32(bytes, &position);
+    info.config.contextLength = Get32(bytes, &position);
+    info.config.channels = Get32(bytes, &position);
+    info.config.hiddenChannels = Get32(bytes, &position);
+    info.config.attentionHeads = Get32(bytes, &position);
+    info.config.initialSeed = Get64(bytes, &position);
+    info.completedSteps = Get64(bytes, &position);
+    info.tensorCount = Get32(bytes, &position);
+    if (info.tensorCount != UMI_DECODER_PARAMETER_COUNT ||
+        SizeFromConfig(&info.config, &expected) != UMI_STATUS_OK || expected != byteCount)
+        return UMI_STATUS_PARSE_ERROR;
+
+    /* Reading the stored checksum advances a cursor. Keep its input length
+     * immutable and sequence the read explicitly: operand evaluation order
+     * must never decide whether the trailer is included in its own checksum. */
+    const size_t payloadSize = byteCount - UMICOM_DECODER_CHECKPOINT_TRAILER;
+    size_t trailerPosition = payloadSize;
+    const uint64_t storedChecksum = Get64(bytes, &trailerPosition);
+    if (Checksum(bytes, payloadSize) != storedChecksum)
+        return UMI_STATUS_PARSE_ERROR;
+    for (size_t p = 0U; p < UMI_DECODER_PARAMETER_COUNT; ++p) {
+        size_t rows, columns;
+        UmiAiDecoderParameterShape(&info.config, p, &rows, &columns);
+        if (Get32(bytes, &position) != rows || Get32(bytes, &position) != columns)
+            return UMI_STATUS_PARSE_ERROR;
+        const size_t count = rows * columns;
+        info.weightCount += count;
+        for (size_t i = 0U; i < count; ++i) {
+            const uint32_t bits = Get32(bytes, &position);
+            float value;
+            memcpy(&value, &bits, sizeof(value));
+            if (!isfinite(value)) return UMI_STATUS_PARSE_ERROR;
+        }
+    }
+    if (position != payloadSize) return UMI_STATUS_PARSE_ERROR;
+    info.byteCount = byteCount;
+    *outInfo = info;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiAiTrainingDecoderCheckpointDecode(
+    const uint8_t *bytes, size_t byteCount,
+    UmiAiTrainingDecoder **outModel)
+{
+    UmiAiTrainingDecoderCheckpointInfo info;
+    float *values[UMI_DECODER_PARAMETER_COUNT] = {0};
+    size_t position = UMICOM_DECODER_CHECKPOINT_HEADER;
+    if (outModel == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = UmiAiTrainingDecoderCheckpointInspect(bytes, byteCount, &info);
+    if (status != UMI_STATUS_OK) return status;
+    for (size_t p = 0U; p < UMI_DECODER_PARAMETER_COUNT; ++p) {
+        size_t rows, columns;
+        UmiAiDecoderParameterShape(&info.config, p, &rows, &columns);
+        const size_t count = rows * columns;
+        position += 8U; /* Dimensions were validated before any allocation. */
+        values[p] = malloc(count * sizeof(*values[p]));
+        if (values[p] == NULL) { status = UMI_STATUS_OUT_OF_MEMORY; goto failure; }
+        for (size_t i = 0U; i < count; ++i) {
+            const uint32_t bits = Get32(bytes, &position);
+            memcpy(&values[p][i], &bits, sizeof(bits));
+        }
+    }
+    status = UmiAiDecoderCreateFromValues(&info.config, (const float *const *)values,
+                                         info.completedSteps, outModel);
+failure:
+    for (size_t p = 0U; p < UMI_DECODER_PARAMETER_COUNT; ++p) free(values[p]);
+    return status;
+}
+
+/* The original decoder remains available for engineering comparison. The
+ * active implementation above validates through the inspection API and
+ * separates checksum length from its advancing read cursor. */
+#if 0
 UmiStatus UmiAiTrainingDecoderCheckpointDecode(
     const uint8_t *bytes, size_t byteCount,
     UmiAiTrainingDecoder **outModel)
@@ -221,6 +315,8 @@ failure:
     for (size_t p = 0U; p < UMI_DECODER_PARAMETER_COUNT; ++p) free(values[p]);
     return status;
 }
+
+#endif
 
 /* Publish only a new file, never replacing an existing model generation.
  * On Linux the hard-link operation is an atomic no-clobber publication;
