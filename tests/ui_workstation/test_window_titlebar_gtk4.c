@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/ui_workstation/test_window_titlebar_gtk4.c
- * PURPOSE: Check topmost canonical identity and native titlebar ownership.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Check topmost canonical identity and native titlebar ownership.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/workstation/shell_header.h"
 #include "umicom/ui/appearance_catalogue.h"
@@ -129,8 +136,11 @@ int main(void)
     managed_close = find_tag(bar, "workstation.application.close");
     if (new_window != NULL) g_object_ref(new_window);
     CHECK(GTK_IS_MENU_BUTTON(catalogue) && GTK_IS_BUTTON(new_window));
+    CHECK(umi_gtk4_ws_window_titlebar_open_applications(NULL) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(umi_gtk4_ws_window_titlebar_open_applications(titlebar) == UMI_STATUS_INVALID_STATE);
     CHECK(gtk_widget_get_visible(catalogue) && gtk_widget_get_visible(new_window));
     CHECK(gtk_menu_button_get_popover(GTK_MENU_BUTTON(catalogue)) != NULL);
+    CHECK(!gtk_widget_get_visible(GTK_WIDGET(gtk_menu_button_get_popover(GTK_MENU_BUTTON(catalogue)))));
     CHECK(is_in_titlebar_end(bar, catalogue) && is_in_titlebar_end(bar, new_window));
     CHECK(!is_in_titlebar_end(bar, label));
     CHECK(GTK_IS_BUTTON(managed_close) && !gtk_widget_get_visible(managed_close));
@@ -194,6 +204,7 @@ int main(void)
     g_object_unref(other_window);
     other_window = NULL;
     CHECK(!umi_gtk4_ws_window_titlebar_snapshot(other).installed);
+    CHECK(umi_gtk4_ws_window_titlebar_open_applications(other) == UMI_STATUS_INVALID_STATE);
 cleanup:
     umi_gtk4_ws_window_titlebar_destroy(other);
     umi_gtk4_ws_window_titlebar_destroy(titlebar);

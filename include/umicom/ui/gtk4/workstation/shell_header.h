@@ -208,6 +208,15 @@ UmiStatus umi_gtk4_ws_window_titlebar_create_from_header(
 void umi_gtk4_ws_window_titlebar_destroy(UmiGtk4WorkstationWindowTitlebar *titlebar);
 /** Borrow the actual GtkHeaderBar installed as the window's titlebar. */
 GtkWidget *umi_gtk4_ws_window_titlebar_widget(UmiGtk4WorkstationWindowTitlebar *titlebar);
+/** Open the existing application catalogue from a desktop or welcome action.
+ * Call on the GTK owning thread after the titlebar is mapped. A hidden,
+ * insensitive, detached or destroyed-window titlebar returns INVALID_STATE.
+ * NULL returns INVALID_ARGUMENT. No application is selected or launched and
+ * no second catalogue is created. OK means the popup was requested, not that
+ * any application is installed or ready. */
+UmiStatus umi_gtk4_ws_window_titlebar_open_applications(
+    UmiGtk4WorkstationWindowTitlebar *titlebar);
+
 /** Follow the existing Framework appearance profile without changing artwork
  * geometry, user fonts, or the document hierarchy. Missing marks stay hidden. */
 UmiStatus umi_gtk4_ws_window_titlebar_apply_appearance(

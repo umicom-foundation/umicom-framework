@@ -101,7 +101,10 @@ if(BUILD_TESTING)
     endforeach()
     add_executable(umicom-broker-workspace-projection-test
         "${CMAKE_CURRENT_LIST_DIR}/../tests/ibkr_connection/test_workspace_projection.c"
-        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/broker_workspace.c")
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/broker_workspace.c"
+        # Use the production logical lookup without adding a real transport
+        # owner to this executable's synthetic observations.
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/widget_lookup_gtk4.c")
     target_link_libraries(umicom-broker-workspace-projection-test PRIVATE
         Umicom::ibkr_connection PkgConfig::IBKR_GTK4)
     # Match the production chart features while keeping all broker observations synthetic.

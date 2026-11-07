@@ -2349,6 +2349,25 @@ GtkWidget *umi_gtk4_ws_window_titlebar_widget(UmiGtk4WorkstationWindowTitlebar *
     return titlebar != NULL ? titlebar->root : NULL;
 }
 
+/* Desktop and welcome actions share this presentation entry point so the
+ * catalogue, selection and launch receipts have one Framework owner. Refuse
+ * pre-map requests: GTK popovers need a live native surface for positioning. */
+UmiStatus umi_gtk4_ws_window_titlebar_open_applications(
+    UmiGtk4WorkstationWindowTitlebar *titlebar)
+{
+    GtkWidget *button;
+    if (titlebar == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (titlebar->window == NULL || titlebar->identity == NULL)
+        return UMI_STATUS_INVALID_STATE;
+    button = titlebar->identity->application_catalogue_button;
+    if (button == NULL || !GTK_IS_MENU_BUTTON(button) ||
+        gtk_widget_get_root(titlebar->root) != GTK_ROOT(titlebar->window) ||
+        !gtk_widget_get_mapped(button) || !gtk_widget_is_sensitive(button))
+        return UMI_STATUS_INVALID_STATE;
+    gtk_menu_button_popup(GTK_MENU_BUTTON(button));
+    return UMI_STATUS_OK;
+}
+
 /* Keep the same vector resolver, logical icon size and appearance validation. */
 UmiStatus umi_gtk4_ws_window_titlebar_apply_appearance(
     UmiGtk4WorkstationWindowTitlebar *titlebar, const UmiUiAppearanceProfile *profile)
