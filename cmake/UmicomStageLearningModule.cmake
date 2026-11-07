@@ -52,6 +52,7 @@ if(_count LESS 1 OR _count GREATER 256)
     message(FATAL_ERROR "A bundled module must declare 1 to 256 resources")
 endif()
 set(UMI_MODULE_FILES "learning-pack.json")
+set(_checksum_mismatches "")
 math(EXPR _last "${_count} - 1")
 foreach(_index RANGE 0 ${_last})
     string(JSON _file GET "${_manifest}" resources ${_index} path)
@@ -59,10 +60,26 @@ foreach(_index RANGE 0 ${_last})
     _umicom_module_path("${_file}")
     file(SHA256 "${UMI_MODULE_SOURCE}/${_file}" _actual)
     if(NOT _actual STREQUAL _expected)
-        message(FATAL_ERROR "Learning resource checksum mismatch: ${_file}; review and regenerate its manifest")
+        # The former first-mismatch error is retained for engineering review.
+        # Collect every changed resource so one content review can repair the
+        # complete module. Staging still begins only after all hashes match.
+        if(FALSE)
+            message(FATAL_ERROR "Learning resource checksum mismatch: ${_file}; review and regenerate its manifest")
+        endif()
+        list(APPEND _checksum_mismatches "${_file}")
     endif()
     list(APPEND UMI_MODULE_FILES "${_file}")
 endforeach()
+list(LENGTH _checksum_mismatches _mismatch_count)
+if(_mismatch_count GREATER 0)
+    list(JOIN _checksum_mismatches "\n  " _mismatch_paths)
+    message(FATAL_ERROR
+        "Learning resource checksum mismatch: ${_mismatch_count} resource(s)\n"
+        "Manifest: ${UMI_MODULE_SOURCE}/learning-pack.json\n"
+        "Changed files:\n  ${_mismatch_paths}\n"
+        "Review these files and prepare a matching manifest before configuring again. "
+        "No learning files were staged by this invocation.")
+endif()
 foreach(_file IN LISTS UMI_MODULE_EXTRA_FILES)
     _umicom_module_path("${_file}")
     list(APPEND UMI_MODULE_FILES "${_file}")
