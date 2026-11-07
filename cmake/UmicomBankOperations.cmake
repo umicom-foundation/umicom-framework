@@ -208,7 +208,7 @@ if(BUILD_TESTING AND TARGET Umicom::bank_operations_gtk4)
     target_link_libraries(umicom-bank-native-commands-test PRIVATE
         Umicom::bank_operations Umicom::ui_gtk4)
     umicom_bank_review_target(umicom-bank-native-commands-test)
-    foreach(case IN ITEMS review-submit edited-review close-reopen action-catalogue)
+    foreach(case IN ITEMS review-submit edited-review close-reopen action-catalogue storage-selection open-retry)
         add_test(NAME framework.bank_operations.native.${case}
             COMMAND umicom-bank-native-commands-test ${case})
         set_tests_properties(framework.bank_operations.native.${case} PROPERTIES

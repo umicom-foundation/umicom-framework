@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 #include "window_removal_private.h"
 #include "umicom/ui/gtk4/bank_operations.h"
+#include "umicom/ui/gtk4/path_picker.h"
 #include "umicom/ui/gtk4/text_export.h"
 #include "umicom/ui/gtk4/payment_quote.h"
 #include "umicom/bank_operations/operations.h"
@@ -87,6 +88,8 @@ typedef struct BankUi {
 
 typedef struct BankLauncher {
     GtkWindow *window; /* Weak; cleared on destroy, disconnected before freeing. */
+    GWeakRef pathEntry;
+    GWeakRef statusLabel;
 } BankLauncher;
 
 static const char *StatusText(UmiStatus status)
@@ -809,7 +812,14 @@ static void LauncherFree(gpointer data)
         g_signal_handlers_disconnect_by_data(launcher->window, launcher);
         gtk_window_destroy(launcher->window);
     }
+    g_weak_ref_clear(&launcher->pathEntry);
+    g_weak_ref_clear(&launcher->statusLabel);
     g_free(launcher);
+}
+static void LauncherMessage(BankLauncher *launcher, const char *message)
+{
+    GtkLabel *label = g_weak_ref_get(&launcher->statusLabel);
+    if (label != NULL) { gtk_label_set_text(label, message); g_object_unref(label); }
 }
 static void OpenWorkspace(GtkButton *button, gpointer data)
 {
@@ -822,11 +832,31 @@ static void OpenWorkspace(GtkButton *button, gpointer data)
     const char *actions[UMI_BANK_ACTION_LAST + 1U];
     BankLauncher *launcher = data; BankUi *ui; GtkRoot *root;
     GtkWidget *box, *formScroll, *form, *toolbar, *buttonWidget, *banner;
-    char *directory; UmiStatus status;
+    /* The selected path is copied before opening; the service owns persistence.
+     * No per-user directory is created as a side effect of the launcher. */
+    char *selectedPath; UmiBankOperations *operations = NULL; UmiStatus status;
     if (launcher->window != NULL) { gtk_window_present(launcher->window); return; }
     root = gtk_widget_get_root(GTK_WIDGET(button));
     if (!GTK_IS_WINDOW(root)) return;
+    GtkEntry *pathEntry = g_weak_ref_get(&launcher->pathEntry);
+    if (pathEntry == NULL) return;
+    selectedPath = g_strdup(gtk_editable_get_text(GTK_EDITABLE(pathEntry)));
+    g_object_unref(pathEntry);
+    if (selectedPath[0] == '\0' || !g_utf8_validate(selectedPath, -1, NULL) ||
+        !g_path_is_absolute(selectedPath)) {
+        g_free(selectedPath);
+        LauncherMessage(launcher, "Choose an absolute local database filename before opening banking operations.");
+        return;
+    }
+    status = UmiBankOperationsOpenSqlite(selectedPath, &operations);
+    if (status != UMI_STATUS_OK) {
+        g_free(selectedPath);
+        LauncherMessage(launcher, "The selected database could not be opened. Check the filename, its parent folder and access permissions; then retry.");
+        return;
+    }
     ui = g_new0(BankUi, 1);
+    ui->path = selectedPath;
+    ui->operations = operations;
     ui->window = GTK_WINDOW(gtk_window_new()); launcher->window = ui->window;
     gtk_window_set_application(ui->window, gtk_window_get_application(GTK_WINDOW(root)));
     gtk_window_set_title(ui->window, "Umicom Bank - Local Banking Operations");
@@ -850,7 +880,7 @@ static void OpenWorkspace(GtkButton *button, gpointer data)
     gtk_label_set_wrap(GTK_LABEL(banner), TRUE); gtk_widget_add_css_class(banner, "heading"); gtk_box_append(GTK_BOX(box), banner);
     { GtkWidget *limitLabel = gtk_label_new("Bounded evaluation profile: 64 records per catalogue and 256 accepted commands. Retain databases as evidence; this is not a production banking deployment.");
       gtk_label_set_wrap(GTK_LABEL(limitLabel), TRUE); gtk_box_append(GTK_BOX(box), limitLabel); }
-    ui->summary = GTK_LABEL(gtk_label_new("Opening the per-user banking database...")); gtk_box_append(GTK_BOX(box), GTK_WIDGET(ui->summary));
+    ui->summary = GTK_LABEL(gtk_label_new("Opening the selected banking database...")); gtk_box_append(GTK_BOX(box), GTK_WIDGET(ui->summary));
     form = gtk_grid_new(); gtk_grid_set_column_spacing(GTK_GRID(form), 12); gtk_grid_set_row_spacing(GTK_GRID(form), 6);
     formScroll = gtk_scrolled_window_new(); gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(formScroll), form);
     gtk_widget_set_size_request(formScroll, -1, 250); gtk_box_append(GTK_BOX(box), formScroll);
@@ -969,11 +999,17 @@ static void OpenWorkspace(GtkButton *button, gpointer data)
     g_signal_connect_object(ui->interestDays, "changed", G_CALLBACK(ReviewEdited), G_OBJECT(ui->window), 0);
     g_signal_connect_object(ui->interestBasis, "changed", G_CALLBACK(ReviewEdited), G_OBJECT(ui->window), 0);
     InvalidateReview(ui);
+    /* Explicit launcher selection replaces automatic AppData creation. Retain
+     * the earlier storage choice for review; existing databases remain in place
+     * and can be selected with Browse existing. */
+#if 0
+    char *directory;
     directory = g_build_filename(g_get_user_data_dir(), "Umicom", "Bank", NULL);
     ui->path = g_build_filename(directory, "bank-operations-simulation.sqlite", NULL);
     status = g_path_is_absolute(ui->path) && g_mkdir_with_parents(directory, 0700) == 0 ?
         UmiBankOperationsOpenSqlite(ui->path, &ui->operations) : UMI_STATUS_IO_ERROR;
     g_free(directory);
+#endif
     { GtkWidget *pathLabel = gtk_label_new(ui->path); gtk_label_set_selectable(GTK_LABEL(pathLabel), TRUE);
       gtk_label_set_ellipsize(GTK_LABEL(pathLabel), PANGO_ELLIPSIZE_MIDDLE); gtk_box_append(GTK_BOX(box), pathLabel); }
     g_signal_connect_object(ui->action, "notify::selected", G_CALLBACK(ActionChanged), G_OBJECT(ui->window), 0);
@@ -983,6 +1019,9 @@ static void OpenWorkspace(GtkButton *button, gpointer data)
     gtk_window_present(ui->window);
 }
 
+/* The launcher now collects an explicit location using the shared picker.
+ * Retain the former launch-only bar for engineering review. */
+#if 0
 GtkWidget *UmiGtk4BankOperationsLauncherCreate(void)
 {
     BankLauncher *launcher = g_new0(BankLauncher, 1);
@@ -996,4 +1035,60 @@ GtkWidget *UmiGtk4BankOperationsLauncherCreate(void)
     g_object_set_data_full(G_OBJECT(button), "umicom-bank-launcher", launcher, LauncherFree);
     g_signal_connect(button, "clicked", G_CALLBACK(OpenWorkspace), launcher);
     return bar;
+}
+#endif
+
+/* The shared picker only edits a filename. Opening remains a separate action,
+ * so cancellation and ordinary navigation cannot create banking data. */
+GtkWidget *UmiGtk4BankOperationsLauncherCreate(void)
+{
+    BankLauncher *launcher = g_new0(BankLauncher, 1);
+    GtkWidget *bar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);
+    GtkWidget *button = gtk_button_new_with_label("Banking operations");
+    GtkWidget *location = gtk_box_new(GTK_ORIENTATION_VERTICAL, 4);
+    GtkWidget *row = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
+    GtkWidget *entry = gtk_entry_new();
+    GtkWidget *status = gtk_label_new("Choose a database for the local banking simulation. Existing files remain where they are.");
+    g_weak_ref_init(&launcher->pathEntry, entry);
+    g_weak_ref_init(&launcher->statusLabel, status);
+    gtk_widget_set_name(entry, "bank.workspace.database-path");
+    gtk_widget_set_name(status, "bank.workspace.storage-status");
+    gtk_entry_set_placeholder_text(GTK_ENTRY(entry), "Absolute local database filename");
+    gtk_widget_set_tooltip_text(entry, "Choose an existing simulation database or a new filename in an existing folder.");
+    gtk_widget_set_hexpand(entry, TRUE);
+    gtk_widget_set_hexpand(location, TRUE);
+    gtk_label_set_xalign(GTK_LABEL(status), 0.0F);
+    gtk_label_set_wrap(GTK_LABEL(status), TRUE);
+    gtk_box_append(GTK_BOX(row), entry);
+    GtkWidget *existing = UmiPathPickerGtk4Create(GTK_ENTRY(entry), UMI_PATH_PICKER_EXISTING_FILE,
+        "Choose banking simulation database", NULL);
+    GtkWidget *proposed = UmiPathPickerGtk4Create(GTK_ENTRY(entry), UMI_PATH_PICKER_NEW_FILE,
+        "Choose new banking database filename", "bank-operations-simulation.sqlite");
+    gtk_box_append(GTK_BOX(row), existing);
+    gtk_box_append(GTK_BOX(row), proposed);
+    gtk_box_append(GTK_BOX(location), row);
+    gtk_box_append(GTK_BOX(location), status);
+    gtk_widget_set_margin_start(bar, 8); gtk_widget_set_margin_end(bar, 8);
+    gtk_widget_set_margin_top(bar, 6); gtk_widget_set_margin_bottom(bar, 6);
+    gtk_box_append(GTK_BOX(bar), button);
+    gtk_box_append(GTK_BOX(bar), location);
+    g_object_set_data_full(G_OBJECT(button), "umicom-bank-launcher", launcher, LauncherFree);
+    g_signal_connect(button, "clicked", G_CALLBACK(OpenWorkspace), launcher);
+    return bar;
+}
+
+UmiStatus UmiGtk4BankOperationsLauncherSetPath(GtkWidget *bar, const char *absolutePath)
+{
+    if (!GTK_IS_BOX(bar) || absolutePath == NULL || !g_utf8_validate(absolutePath, -1, NULL) ||
+        (absolutePath[0] != '\0' && !g_path_is_absolute(absolutePath)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    GtkWidget *button = gtk_widget_get_first_child(bar);
+    BankLauncher *launcher = button == NULL ? NULL :
+        g_object_get_data(G_OBJECT(button), "umicom-bank-launcher");
+    if (launcher == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    GtkEntry *entry = g_weak_ref_get(&launcher->pathEntry);
+    if (entry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    gtk_editable_set_text(GTK_EDITABLE(entry), absolutePath);
+    g_object_unref(entry);
+    return UMI_STATUS_OK;
 }

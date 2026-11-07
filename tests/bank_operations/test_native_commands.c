@@ -22,16 +22,28 @@
  * command parsing, review, submit and query services remain under test. No
  * directory or personal database is created by this fixture. Persistence
  * restart coverage belongs to the separate SQLite service tests. */
+/* Automatic directory creation was removed from the production path. Preserve
+ * the old isolation stub for review; only the database boundary is substituted. */
+#if 0
 static int IsolatedDirectory(const char *directory, int mode)
 {
     (void)directory; (void)mode; return 0;
 }
+#endif
+static unsigned OpenCalls;
+static bool FailOpen;
+static char *OpenedPath;
 static UmiStatus IsolatedOpen(const char *filename, UmiBankOperations **out)
 {
     if (filename == NULL || !g_path_is_absolute(filename)) return UMI_STATUS_INVALID_ARGUMENT;
+    ++OpenCalls;
+    g_free(OpenedPath); OpenedPath = g_strdup(filename);
+    if (FailOpen) { *out = NULL; return UMI_STATUS_IO_ERROR; }
     return UmiBankOperationsOpenMemory(out);
 }
+#if 0 /* Retained automatic-directory boundary; no longer used. */
 #define g_mkdir_with_parents IsolatedDirectory
+#endif
 #define UmiBankOperationsOpenSqlite IsolatedOpen
 #include "../../adapters/gtk4/bank_operations_gtk4.c"
 #undef UmiBankOperationsOpenSqlite
@@ -70,7 +82,27 @@ int main(int argc, char **argv)
     gtk_window_set_child(GTK_WINDOW(parent), bar);
     GtkWidget *button = FindButton(bar, "Banking operations"); CHECK(button != NULL);
     g_object_ref(button);
+    /* Merely creating, parenting or clicking an empty launcher cannot open storage. */
     g_signal_emit_by_name(button, "clicked");
+    CHECK(OpenCalls == 0U);
+    char *chosen = g_build_filename(g_get_tmp_dir(), "bank workspace", "practice-£.sqlite", NULL);
+    CHECK(UmiGtk4BankOperationsLauncherSetPath(bar, chosen) == UMI_STATUS_OK);
+    CHECK(OpenCalls == 0U);
+    CHECK(UmiGtk4BankOperationsLauncherSetPath(bar, "relative.sqlite") == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(UmiGtk4BankOperationsLauncherSetPath(bar, "https://example.invalid/bank") == UMI_STATUS_INVALID_ARGUMENT);
+    const char invalidUtf8[] = {(char)0xff, '\0'};
+    CHECK(UmiGtk4BankOperationsLauncherSetPath(bar, invalidUtf8) == UMI_STATUS_INVALID_ARGUMENT);
+    if (strcmp(argv[1], "open-retry") == 0) {
+        FailOpen = true;
+        g_signal_emit_by_name(button, "clicked");
+        BankLauncher *pending = g_object_get_data(G_OBJECT(button), "umicom-bank-launcher");
+        CHECK(OpenCalls == 1U && pending->window == NULL);
+        FailOpen = false;
+    }
+    unsigned beforeOpen = OpenCalls;
+    g_signal_emit_by_name(button, "clicked");
+    CHECK(OpenCalls == beforeOpen + 1U && strcmp(OpenedPath, chosen) == 0);
+    g_free(chosen);
     BankLauncher *launcher = g_object_get_data(G_OBJECT(button), "umicom-bank-launcher");
     CHECK(launcher != NULL && launcher->window != NULL);
     GtkWindow *child = g_object_ref(launcher->window);
@@ -79,7 +111,19 @@ int main(int argc, char **argv)
     UmiBankCounts counts;
     CHECK(UmiBankOperationsCounts(ui->operations, &counts) == UMI_STATUS_OK);
     CHECK(counts.customers == 0U && counts.revision == 0U && !counts.durable);
-    if (strcmp(argv[1], "close-reopen") == 0) {
+    if (strcmp(argv[1], "storage-selection") == 0 || strcmp(argv[1], "open-retry") == 0) {
+        unsigned previousCalls = OpenCalls;
+        char *original = g_strdup(ui->path);
+        CHECK(UmiGtk4BankOperationsLauncherSetPath(bar, "") == UMI_STATUS_OK);
+        g_signal_emit_by_name(button, "clicked");
+        CHECK(launcher->window == child && OpenCalls == previousCalls);
+        CHECK(strcmp(ui->path, original) == 0);
+        gtk_window_destroy(child);
+        CHECK(launcher->window == NULL && ui->operations == NULL && ui->closed);
+        g_signal_emit_by_name(button, "clicked");
+        CHECK(launcher->window == NULL && OpenCalls == previousCalls);
+        g_free(original);
+    } else if (strcmp(argv[1], "close-reopen") == 0) {
         g_signal_emit_by_name(button, "clicked");
         CHECK(launcher->window == child); /* Re-entry reuses the owned window. */
         GtkButton *retainedSubmit = g_object_ref(ui->submit);
@@ -142,5 +186,6 @@ int main(int argc, char **argv)
     g_signal_emit_by_name(button, "clicked");
     CHECK(launcher->window == NULL);
     g_object_unref(button);
+    g_free(OpenedPath);
     return 0;
 }
