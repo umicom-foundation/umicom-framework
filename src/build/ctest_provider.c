@@ -113,6 +113,33 @@ UmiStatus UmiBuildAutomaticTestDriver(const UmiBuildProfile *profile,
     return UMI_STATUS_OK;
 }
 
+/* Planning belongs to Framework so synchronous CLI and queued IDE clients
+ * cannot disagree when Configure or Build produces a driver mid-request. The
+ * client chooses only whether an ordinary fallback needs an initial Configure. */
+UmiStatus UmiBuildAutomaticPlanPrepare(const UmiBuildProfile *profile,
+    bool configure_first, UmiBuildAutomaticPlan *out_plan)
+{
+    if (profile == NULL || out_plan == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = umi_build_profile_validate(profile, NULL, 0U);
+    if (status != UMI_STATUS_OK) return status;
+    UmiBuildAutomaticPlan plan = {0};
+    char driver[UMI_BUILD_PATH_CAPACITY];
+    UmiStatus discovery = profile->build_testing
+        ? UmiBuildAutomaticTestDriver(profile, driver, sizeof(driver))
+        : UMI_STATUS_NOT_FOUND;
+    if (discovery != UMI_STATUS_OK && discovery != UMI_STATUS_NOT_FOUND) return discovery;
+    if (discovery == UMI_STATUS_OK) {
+        plan.uses_driver = true;
+        plan.phases[plan.phase_count++] = UMI_BUILD_PHASE_TEST;
+    } else {
+        if (configure_first) plan.phases[plan.phase_count++] = UMI_BUILD_PHASE_CONFIGURE;
+        plan.phases[plan.phase_count++] = UMI_BUILD_PHASE_BUILD;
+        if (profile->build_testing) plan.phases[plan.phase_count++] = UMI_BUILD_PHASE_TEST;
+    }
+    *out_plan = plan;
+    return UMI_STATUS_OK;
+}
+
 static UmiStatus AutomaticCommand(const UmiBuildProfile *profile,
     UmiBuildPhase phase, UmiBuildCommand *command)
 {

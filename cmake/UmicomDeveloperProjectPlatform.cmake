@@ -686,3 +686,40 @@ if(BUILD_TESTING)
             LABELS "framework;build;workflow;regression")
     endforeach()
 endif()
+
+# Both the synchronous native command and the queued IDE session consume this
+# read-only plan. Keep real process observations separate from contract checks.
+if(BUILD_TESTING)
+    add_executable(umicom-automatic-plan-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_project/test_automatic_plan.c")
+    target_link_libraries(umicom-automatic-plan-test PRIVATE Umicom::Framework)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-automatic-plan-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-automatic-plan-test)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-automatic-plan-test)
+    endif()
+    set(_admission_directory "${CMAKE_CURRENT_BINARY_DIR}/qualification/automatic-admission")
+    file(MAKE_DIRECTORY "${_admission_directory}")
+    add_test(NAME framework.build.automatic_plan.shared-admission COMMAND umicom-automatic-plan-test)
+    set_tests_properties(framework.build.automatic_plan.shared-admission PROPERTIES
+        WORKING_DIRECTORY "${_admission_directory}" TIMEOUT 30
+        LABELS "framework;build;workflow;regression;filesystem")
+    if(UMICOM_BUILD_NATIVE_TOOL)
+        foreach(_case bootstrap generic existing-driver reject-build reject-test reject-driver invalid-configuration empty-tests)
+            add_test(NAME framework.build.automatic_verify.${_case}
+                COMMAND "${CMAKE_COMMAND}" "-DCLI=$<TARGET_FILE:umicom>"
+                    "-DTEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}/qualification/automatic-verify/${_case}"
+                    "-DCASE=${_case}" "-DGENERATOR=${CMAKE_GENERATOR}"
+                    "-DMAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}"
+                    "-DGENERATOR_PLATFORM=${CMAKE_GENERATOR_PLATFORM}"
+                    "-DGENERATOR_TOOLSET=${CMAKE_GENERATOR_TOOLSET}"
+                    -P "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_project/check_automatic_verify.cmake")
+            set_tests_properties(framework.build.automatic_verify.${_case} PROPERTIES
+                TIMEOUT 270 LABELS "framework;build;workflow;regression;native-cli")
+        endforeach()
+    endif()
+endif()

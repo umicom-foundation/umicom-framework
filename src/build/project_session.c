@@ -1005,6 +1005,10 @@ static UmiStatus ProjectSessionSubmitMode(UmiBuildProjectSession *session,
         /* Test prerequisites are built by the configured generator. Asking for
          * its default project target still compiles only dirty dependencies. */
         if (profile->build_testing) session->profile.build_target[0] = '\0';
+        /* The shared planner now owns the admission decision for both Studio
+         * and the native CLI. Keep this earlier session-only plan for review;
+         * its bootstrap order and default-target policy are preserved below. */
+#if 0
         char driver[UMI_BUILD_PATH_CAPACITY];
         UmiStatus discovery = profile->build_testing
             ? UmiBuildAutomaticTestDriver(&session->profile, driver, sizeof(driver))
@@ -1022,6 +1026,13 @@ static UmiStatus ProjectSessionSubmitMode(UmiBuildProjectSession *session,
             session->phases[session->phase_count++] = UMI_BUILD_PHASE_BUILD;
             if (profile->build_testing) session->phases[session->phase_count++] = UMI_BUILD_PHASE_TEST;
         }
+#endif
+        UmiBuildAutomaticPlan plan;
+        status = UmiBuildAutomaticPlanPrepare(&session->profile, true, &plan);
+        if (status != UMI_STATUS_OK) return status;
+        session->automatic_tests = plan.uses_driver;
+        for (size_t i = 0U; i < plan.phase_count; ++i)
+            session->phases[session->phase_count++] = plan.phases[i];
     } else if (run_current) {
         session->phases[session->phase_count++] = UMI_BUILD_PHASE_RUN;
     } else if (phase == UMI_BUILD_PHASE_REBUILD) {
