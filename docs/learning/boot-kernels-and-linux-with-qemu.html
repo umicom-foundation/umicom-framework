@@ -63,6 +63,69 @@ request which the guest may ignore. <code>quit-qemu</code> and <code>force-stop<
 stop the emulator and are not evidence of clean guest shutdown.</p></li>
 </ol>
 
+<h2>Keep guest output after the console ring buffer fills</h2>
+<p>The interactive <code>console</code> command reads a bounded ring buffer. Add
+<code>--record</code> to <code>plan</code>, <code>review</code> and <code>run</code>
+when you also need a host file containing guest serial output. QEMU writes this
+file independently of how often you request console output. The new directory
+is specific to this run; saved profiles retain their existing settings format.</p>
+<ol>
+<li><p>Create the parent folder once. Choose a child directory that does not
+already exist; do not create that child yourself.</p>
+<pre>New-Item -ItemType Directory -Force "C:\VMs\recordings"</pre></li>
+<li><p>Review the exact inputs and recording destination together:</p>
+<pre>umicom qemu review --target umicom-kernel --qemu "C:\msys64\ucrt64\bin\qemu-system-riscv64.exe" --directory "C:\VMs\Umicom" --firmware "C:\umicom\umicom-kernel\build\riscv64-clang-debug\bin\umicom-system.elf" --record "C:\VMs\recordings\first-console"</pre>
+<p>Review prints the selected destination and a fingerprint. It does not create
+that directory or start QEMU. Changing the destination changes the fingerprint.</p></li>
+<li><p>Replace the placeholder below with the fingerprint from that review.
+Run the identical configuration:</p>
+<pre>umicom qemu run --target umicom-kernel --qemu "C:\msys64\ucrt64\bin\qemu-system-riscv64.exe" --directory "C:\VMs\Umicom" --firmware "C:\umicom\umicom-kernel\build\riscv64-clang-debug\bin\umicom-system.elf" --record "C:\VMs\recordings\first-console" --expect "PASTE_REVIEW_FINGERPRINT_HERE"</pre></li>
+<li><p>Use <code>resume</code>, <code>send help</code> and <code>console</code> at
+the VM prompt, then use the guest's shutdown command. After the session ends,
+inspect <code>C:\VMs\recordings\first-console\serial.log</code> and
+<code>recording.umi</code>. The latter records the review identity and explicitly
+makes no guest-boot qualification claim.</p></li>
+</ol>
+<p>For another run, select another new directory and review again. Existing
+files or directories at the selected destination are refused, even if empty.
+A failed startup can leave its new directory and metadata behind; retain them
+for diagnosis. A missing <code>serial.log</code> can mean QEMU never reached its
+character-device setup. An empty file can mean the guest stayed paused or never
+wrote to the selected serial device. Neither condition is a successful boot.</p>
+<!-- Serial-only guidance is retained as design history; separate host error capture now replaces its limitation.
+<p>The file contains raw guest output and can include control bytes. Inspect it
+with a suitable text or byte viewer. Recording does not capture typed host
+commands, QMP traffic, a PowerShell transcript or the complete QEMU error stream.
+QEMU stderr-file capture remains a separate capability. This command does not
+replace your terminal's own transcript when that wider evidence is required.</p>
+-->
+<p>Each stream has a different job. <code>serial.log</code> contains bytes from
+the guest's selected serial device. <code>qemu-errors.log</code> contains the
+emulator's standard error output, including startup diagnostics. Framework
+creates that error file before launching QEMU, so it can be empty if launch
+never succeeds. Both files can contain control bytes; inspect them with a text
+or byte viewer. A recording does not capture typed host commands, QMP traffic or
+a whole PowerShell transcript.</p>
+<p>Error recording writes directly to the exclusive file instead of a bounded
+pipe. It can continue while the command prompt waits for your next line. There
+is no automatic size limit or rotation: watch free space and stop the session
+before it fills the destination volume. Framework reports a final flush failure
+through observation or force-stop, but it cannot prove that QEMU or the guest
+handled every write failure correctly. Preserve partial evidence and review a
+new directory before retrying.</p>
+<pre>Get-Content -LiteralPath "C:\VMs\recordings\first-console\qemu-errors.log"
+Format-Hex -LiteralPath "C:\VMs\recordings\first-console\serial.log"</pre>
+<p><strong>Practice:</strong> compare an emulator startup error with a guest
+that stays paused. Predict which file receives output in each case. Record the
+actual result, the input identity and the observation you still need. An empty
+error file is not a boot test pass.</p>
+<p>C clients use <code>UmiVmBootPlanCreateRecorded</code>, then the same
+<code>UmiVmBootReview</code> and <code>UmiVmBootStart</code> sequence. Framework
+checks the destination's existing ancestors through the shared setup filesystem
+and exclusively creates its leaf directory at start. Keep the parent and new
+directory under your control while QEMU runs; the review is not a filesystem
+lease. The existing constructor keeps its unrecorded behavior.</p>
+
 <h2>Save several local configurations</h2>
 <p>Profiles live in a local SQLite database through Framework's Data Server.
 They store paths and settings, not running processes or reusable launch approvals.

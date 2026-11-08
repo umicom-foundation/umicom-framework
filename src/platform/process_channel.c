@@ -1,14 +1,18 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/platform/process_channel.c
+ *
  * PURPOSE:
- *   Shared validation and diagnostic-tail ownership for interactive processes.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Share channel validation, diagnostic-tail ownership and recording finalization.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Shared validation and diagnostic-tail ownership for interactive processes. */
 #include "process_channel_internal.h"
 #include <limits.h>
 static int Absolute(const char *s){
@@ -48,4 +52,14 @@ void PcDiagnostic(UmiProcessChannel *c,const char *p,size_t n){
                              * existence visible without allowing a NUL to hide following errors. */
     for(size_t i=0;i<n;++i)c->snapshot.diagnostics[old+i]=p[i]?p[i]:'?';
     c->snapshot.diagnostics[old+n]=0;
+}
+
+/* Close only after the native implementation observed or forced process exit.
+ * Keep the first flush error in the file object so a later Poll cannot silently
+ * turn an incomplete recording into a successful completion. */
+UmiStatus PcFinishDiagnostics(UmiProcessChannel *channel)
+{
+    if (channel->snapshot.running || channel->diagnosticFile == NULL)
+        return UMI_STATUS_OK;
+    return UmiOutputFileClose(channel->diagnosticFile);
 }

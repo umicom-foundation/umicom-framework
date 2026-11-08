@@ -1,4 +1,17 @@
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: tests/setup_centre/CMakeLists.txt
+#
+# PURPOSE:
+#   Register native setup, filesystem and process qualification.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
 add_executable(umicom-setup-centre-test test_setup.c test_install.c test_vm.c)
 target_include_directories(umicom-setup-centre-test PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../../src/setup_centre")
 target_link_libraries(umicom-setup-centre-test PRIVATE Umicom::setup_centre)
@@ -6,6 +19,8 @@ umicom_apply_warnings(umicom-setup-centre-test)
 umicom_apply_sanitizers(umicom-setup-centre-test)
 set(_cases
     paths.valid paths.unsafe paths.unicode paths.absolute paths.capacity numbers.overflow
+    paths.parent-missing-leaf paths.parent-file-leaf paths.parent-directory-leaf
+    paths.parent-missing paths.parent-file paths.parent-root paths.parent-invalid paths.parent-link
     catalogue.roundtrip catalogue.duplicate catalogue.unknown catalogue.missing_entry
     catalogue.reserved catalogue.nonadjacent_parent catalogue.sixty_four_apps
     catalogue.overflow catalogue.case_collision catalogue.parent_collision catalogue.mutations

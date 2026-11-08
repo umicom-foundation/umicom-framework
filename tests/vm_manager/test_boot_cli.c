@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/vm_manager/test_boot_cli.c
- * PURPOSE: Check command parsing without launching a process or reading guest inputs.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Check command parsing without launching a process or reading guest inputs.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/vm_manager/boot.h"
@@ -23,8 +30,24 @@ int main(int argc, char **argv)
     char *options[] = {"plan", "--target", "umicom-kernel", "--qemu", ROOT_PATH "qemu",
         "--directory", ROOT_PATH "runs", "--firmware", ROOT_PATH "system.elf",
         "--memory", "128", "--cpus", "1", NULL, NULL, NULL, NULL};
+    if (strcmp(argv[1], "null-vector") == 0) return UmiVmBootMain(1, NULL) == 2 ? 0 : 1;
+    if (strcmp(argv[1], "negative-count") == 0) return UmiVmBootMain(-1, options) == 2 ? 0 : 1;
+    if (strcmp(argv[1], "null-option") == 0) {
+        options[3] = NULL;
+        return UmiVmBootMain(13, options) == 2 ? 0 : 1;
+    }
     int count = 13, expected = 2;
     if (strcmp(argv[1], "plan") == 0) expected = 0;
+    else if (strncmp(argv[1], "recording-", 10U) == 0) {
+        options[count++] = "--record"; options[count++] = ROOT_PATH "recording";
+        if (strcmp(argv[1], "recording-plan") == 0) expected = 0;
+        else if (strcmp(argv[1], "recording-relative") == 0) options[count - 1] = "relative";
+        else if (strcmp(argv[1], "recording-empty") == 0) options[count - 1] = "";
+        else if (strcmp(argv[1], "recording-missing") == 0) --count;
+        else if (strcmp(argv[1], "recording-duplicate") == 0) {
+            options[count++] = "--record"; options[count++] = ROOT_PATH "second";
+        } else return 2;
+    }
     else if (strcmp(argv[1], "duplicate") == 0) {
         options[count++] = "--memory"; options[count++] = "256";
     } else if (strcmp(argv[1], "unknown") == 0) {

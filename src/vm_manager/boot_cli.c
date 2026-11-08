@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/vm_manager/boot_cli.c
- * PURPOSE: Expose shared boot review and session controls through a small native command.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Expose shared boot review and session controls through a small native command.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "boot_internal.h"
@@ -16,7 +23,17 @@ static void BootHelp(void)
          "       umicom qemu plan|review|run --target NAME --qemu EXE --directory DIR\n"
          "         [--firmware FILE] [--kernel FILE] [--initrd FILE] [--disk RAW]\n"
          "         [--iso FILE] [--append TEXT] [--memory MIB] [--cpus COUNT]\n"
+/* Keep the earlier help line for interface review; the optional recording switch extends the same reviewed workflow. */
+#if 0
          "         [--expect SHA256]\n"
+#endif
+         "         [--expect SHA256] [--record NEW_DIRECTORY]\n"
+/* Retain the serial-only help wording while describing both independently recorded streams. */
+#if 0
+         "--record keeps guest output in a new serial.log directory.\n"
+#endif
+         "--record keeps serial.log and qemu-errors.log in a new directory.\n"
+         "Recording is reviewed, created only by run, and never replaces a directory.\n"
          "All paths must be absolute. plan opens nothing; review reads inputs.\n"
          "run requires the exact review fingerprint and starts PAUSED.\n"
          "Type resume, console, send TEXT, status, pause or powerdown afterward.\n"
@@ -45,6 +62,8 @@ static const BootOption BootOptions[] = {
     {"--append", offsetof(UmiVmBootRequest, commandLine), UMI_VM_BOOT_COMMAND_LINE}
 };
 
+/* Preserve the original request parser. Recorded runs keep their per-run destination separate from persisted boot profiles and still reject arbitrary QEMU options. */
+#if 0
 static int BootParse(int argc, char **argv, UmiVmBootRequest *request, const char **expected)
 {
     const UmiVmBootTargetInfo *target = NULL;
@@ -86,6 +105,56 @@ static int BootParse(int argc, char **argv, UmiVmBootRequest *request, const cha
     }
     return UmiVmBootRequestValidate(request) == UMI_STATUS_OK;
 }
+#endif
+static int BootParse(int argc, char **argv, UmiVmBootRequest *request, const char **expected, char *recordingDirectory)
+{
+    if (argc < 1 || (argc - 1) % 2 != 0 || !argv || !request || !expected) return 0;
+    for (int index = 0; index < argc; ++index) if (!argv[index]) return 0;
+    if (recordingDirectory) recordingDirectory[0] = 0;
+    const UmiVmBootTargetInfo *target = NULL;
+    unsigned seen = 0U;
+    /* Select defaults before copying options, independent of option order. */
+    for (int index = 1; index < argc; index += 2) {
+        if (strcmp(argv[index], "--target") == 0) {
+            if (target) return 0;
+            target = UmiVmBootTargetFind(argv[index + 1]);
+            if (!target) return 0;
+        }
+    }
+    if (!target || UmiVmBootRequestInit(request, target->target) != UMI_STATUS_OK) return 0;
+    *expected = NULL;
+    for (int index = 1; index < argc; index += 2) {
+        const char *key = argv[index], *value = argv[index + 1];
+        size_t option;
+        for (option = 0; option < sizeof BootOptions / sizeof BootOptions[0]; ++option) {
+            if (strcmp(key, BootOptions[option].name) == 0) break;
+        }
+        if (option < sizeof BootOptions / sizeof BootOptions[0]) {
+            unsigned bit = 1U << option;
+            if ((seen & bit) || strlen(value) >= BootOptions[option].capacity) return 0;
+            seen |= bit;
+            strcpy((char *)request + BootOptions[option].offset, value);
+        } else if (strcmp(key, "--target") == 0) {
+            continue;
+        } else if (strcmp(key, "--record") == 0) {
+            if (!recordingDirectory || (seen & 1024U) ||
+                VmBootRecordingValidate(value) != UMI_STATUS_OK) return 0;
+            seen |= 1024U;
+            strcpy(recordingDirectory, value);
+        } else if (strcmp(key, "--expect") == 0) {
+            if (*expected || !VmHash(value)) return 0;
+            *expected = value;
+        } else if (strcmp(key, "--memory") == 0 || strcmp(key, "--cpus") == 0) {
+            unsigned bit = strcmp(key, "--memory") == 0 ? 256U : 512U;
+            uint64_t number;
+            if ((seen & bit) || !VmNumber(value, &number) || number > 32768U) return 0;
+            seen |= bit;
+            if (bit == 256U) request->memoryMiB = (unsigned)number;
+            else request->processors = (unsigned)number;
+        } else return 0;
+    }
+    return UmiVmBootRequestValidate(request) == UMI_STATUS_OK;
+}
 
 /* A numbered vector is a review aid, not a command to paste into a shell.
  * It shows exact argument boundaries even when a filename contains spaces. */
@@ -95,13 +164,26 @@ static void BootPrintPlan(const UmiVmBootPlan *plan)
         UmiVmBootPlanDirectory(plan));
     for (size_t index = 0; index < UmiVmBootPlanArgumentCount(plan); ++index)
         printf("  argv[%zu] = %s\n", index + 1U, UmiVmBootPlanArgument(plan, index));
+    const char *recording = UmiVmBootPlanRecordingDirectory(plan);
+/* Review shows both derived output destinations before any file is created. */
+#if 0
+    if (recording) printf("Guest-output recording: %s/serial.log\n", recording);
+#endif
+    if (recording) {
+        printf("Guest-output recording: %s/serial.log\n", recording);
+        printf("Emulator error recording: %s/qemu-errors.log\n", recording);
+    }
     puts("Paused start; software emulation; serial console; no guest network or host shares.");
 }
 
 /* Profile commands reuse the exact same request grammar and preview. */
 int VmBootParseRequest(int argc, char **argv, UmiVmBootRequest *request, const char **expected)
 {
+/* Stored profiles retain their existing grammar; recording destinations belong to a single reviewed run. */
+#if 0
     return BootParse(argc, argv, request, expected);
+#endif
+    return BootParse(argc, argv, request, expected, NULL);
 }
 
 void VmBootPrintPlan(const UmiVmBootPlan *plan)
@@ -111,6 +193,8 @@ void VmBootPrintPlan(const UmiVmBootPlan *plan)
 
 int UmiVmBootMain(int argc, char **argv)
 {
+    if (argc < 0 || (argc > 0 && !argv)) return 2;
+    for (int index = 0; index < argc; ++index) if (!argv[index]) return 2;
     if (argc > 0 && strcmp(argv[0], "profiles") == 0)
         return VmBootProfilesMain(argc - 1, argv + 1);
     if (argc == 0 || (argc == 1 && (!strcmp(argv[0], "--help") || !strcmp(argv[0], "help")))) {
@@ -132,13 +216,24 @@ int UmiVmBootMain(int argc, char **argv)
     }
     UmiVmBootRequest request;
     const char *expected;
+    char recordingDirectory[UMI_VM_PATH] = {0};
+/* The recording destination is parsed independently and validated before any review or output creation. */
+#if 0
     if (!BootParse(argc, argv, &request, &expected) ||
+        (strcmp(argv[0], "run") == 0 ? expected == NULL : expected != NULL)) {
+#endif
+    if (!BootParse(argc, argv, &request, &expected, recordingDirectory) ||
         (strcmp(argv[0], "run") == 0 ? expected == NULL : expected != NULL)) {
         fputs("Invalid, missing, duplicate or incompatible option. Use qemu --help and qemu targets.\n", stderr);
         return 2;
     }
     UmiVmBootPlan *plan = NULL;
+/* The original unrecorded planner remains public; this adapter selects the shared recorded constructor when requested. */
+#if 0
     UmiStatus status = UmiVmBootPlanCreate(&request, &plan);
+#endif
+    UmiStatus status = UmiVmBootPlanCreateRecorded(&request,
+        recordingDirectory[0] ? recordingDirectory : NULL, &plan);
     if (status != UMI_STATUS_OK) {
         fprintf(stderr, "Boot plan: %s\n", UmiSetupStatusText(status));
         return 1;

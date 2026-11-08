@@ -1,18 +1,20 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/vm_manager/cli.c
+ *
  * PURPOSE:
- *   Human-facing native adapter. Commands delegate to the shared services. The interactive
- *   console accepts only named operations, never raw QMP or a shell.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Delegate native VM commands and report checked process completion honestly.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
-/*-----------------------------------------------------------------------------
- * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Human-facing native adapter. Commands delegate to the shared services. The
- * interactive console accepts only named operations, never raw QMP or a shell.
- *---------------------------------------------------------------------------*/
+/* The human-facing adapter accepts named operations, never raw QMP or a shell.
+ * Reusable process, persistence and recording behavior remains in Framework services. */
 #include "internal.h"
 #include "boot_internal.h"
 #include <errno.h>
@@ -125,12 +127,41 @@ static int Interactive(UmiVmSession*s){
 /* Both packaged images and standalone boots share the same supervised console.
  * Keep Interactive as the original implementation so its commands and comments
  * remain available for review while new entry points reuse its behaviour. */
+/* Console completion must reflect the actual child exit and recording flush; the earlier prompt-only result is retained for review. */
+#if 0
 int VmSessionConsole(UmiVmSession *session)
 {
     return Interactive(session);
 }
+#endif
+int VmSessionConsole(UmiVmSession *session)
+{
+    int result = Interactive(session);
+    UmiVmSnapshot final;
+    UmiStatus status = UmiVmObserve(session, &final);
+    if (status != UMI_STATUS_OK) {
+        fputs("Final process observation or recording flush failed. Retain partial evidence.\n", stderr);
+        return 1;
+    }
+    if (final.processRunning) {
+        /* EOF and lost control already ended the interactive loop. Explicitly
+         * finalize the same owned stop previously left to destruction, so the
+         * caller receives any stop/recording error before reporting its result. */
+        UmiVmReport report;
+        status = UmiVmForceStop(session, &report);
+        puts(report.detail);
+        if (status != UMI_STATUS_OK)
+            fputs("Owned process stop or recording finalization failed.\n", stderr);
+        return 1;
+    }
+    return result != 0 || final.exitCode != 0 ? 1 : 0;
+}
 
 int UmiVmMain(int argc,char**argv){
+    /* Native embedders call this boundary too; inspect no element before the
+     * complete argument vector is known to be present. */
+    if(argc<0||(argc>0&&!argv))return 2;
+    for(int index=0;index<argc;++index)if(!argv[index])return 2;
     /* The standalone command composes the same Framework services as umicom.
      * Existing profile and packaged-runtime commands remain unchanged. */
     if(argc>=2&&!strcmp(argv[1],"qemu"))return UmiVmBootMain(argc-2,argv+2);
@@ -210,7 +241,11 @@ int UmiVmMain(int argc,char**argv){
                         status=UmiVmStart(&profile,OPT("--directory"),OPT("--expect"),&session,&report);
                         if(status==UMI_STATUS_OK){
                             puts(report.detail);
+/* Packaged-image commands use the same checked completion policy as direct boot and profile commands. */
+#if 0
                             int exit=Interactive(session);
+#endif
+                            int exit=VmSessionConsole(session);
                             UmiVmSessionDestroy(session);
                             umi_data_server_destroy(database);
                             return exit;

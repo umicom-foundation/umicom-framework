@@ -1,20 +1,21 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/platform/process_channel_linux.c
+ *
  * PURPOSE:
- *   Linux interactive child transport. A private socketpair supplies stdin so MSG_NOSIGNAL
- *   avoids changing the application's global SIGPIPE policy. stdout and stderr have distinct
- *   pipes. No interpreter is involved.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Own a Linux child group, signal-safe stdin and separate protocol/error destinations.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
-/*-----------------------------------------------------------------------------
- * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Linux interactive child transport. A private socketpair supplies stdin so
- * MSG_NOSIGNAL avoids changing the application's global SIGPIPE policy.
- * stdout and stderr have distinct pipes. No interpreter is involved.
- *---------------------------------------------------------------------------*/
+/* A private socketpair supplies stdin with MSG_NOSIGNAL, so the application
+ * keeps its own SIGPIPE policy. stdout stays separate from stderr in both
+ * recording modes. No interpreter is involved. */
 #define _GNU_SOURCE
 #include "process_channel_internal.h"
 #include <errno.h>
@@ -205,11 +206,19 @@ static int ChannelDescriptorAboveStdio(int *descriptor)
     *descriptor = copy;
     return 1;
 }
+/* The same native launch path now accepts an optional file destination; retain its previous signature for review. */
+#if 0
 static UmiStatus ChannelOpenNative(const UmiProcessChannelRequest *r, char *const *environment, UmiProcessChannel **out){
+#endif
+static UmiStatus ChannelOpenNative(const UmiProcessChannelRequest *r, char *const *environment, const char *diagnosticsPath, UmiProcessChannel **out){
     if(!out)return UMI_STATUS_INVALID_ARGUMENT;
     *out=NULL;
     UmiStatus s=PcValidate(r);
     if(s!=UMI_STATUS_OK)return s;
+    if(diagnosticsPath){
+        s=UmiOutputFileValidatePath(diagnosticsPath);
+        if(s!=UMI_STATUS_OK)return s;
+    }
     struct stat st;
     int executable=open(r->program,O_RDONLY|O_CLOEXEC|O_NOFOLLOW);
     if(executable>=0 && !ChannelDescriptorAboveStdio(&executable)){Close(&executable);return UMI_STATUS_IO_ERROR;}
@@ -254,7 +263,16 @@ static UmiStatus ChannelOpenNative(const UmiProcessChannelRequest *r, char *cons
     }
     c->input=c->output=c->error=-1;
     c->snapshot.exitCode=-1;
+/* Recorded stderr uses a duplicate above the standard descriptors; stdout and launch-error reporting keep their own pipes. */
+#if 0
     if(socketpair(AF_UNIX,SOCK_STREAM|SOCK_CLOEXEC,0,in)||!ChannelDescriptorAboveStdio(&in[0])||!ChannelDescriptorAboveStdio(&in[1])||!UmiPosixPipe(o)||!UmiPosixPipe(e)||!UmiPosixPipe(launch)){
+#endif
+    if(diagnosticsPath){
+        s=UmiOutputFileCreate(diagnosticsPath,&c->diagnosticFile);
+        if(s==UMI_STATUS_OK)s=UmiOutputFileDuplicateForChild(c->diagnosticFile,&e[1]);
+        if(s!=UMI_STATUS_OK)goto failed;
+    }
+    if(socketpair(AF_UNIX,SOCK_STREAM|SOCK_CLOEXEC,0,in)||!ChannelDescriptorAboveStdio(&in[0])||!ChannelDescriptorAboveStdio(&in[1])||!UmiPosixPipe(o)||(!diagnosticsPath&&!UmiPosixPipe(e))||!UmiPosixPipe(launch)){
         s=UMI_STATUS_IO_ERROR;
         goto failed;
     }
@@ -303,7 +321,11 @@ static UmiStatus ChannelOpenNative(const UmiProcessChannelRequest *r, char *cons
     o[0]=-1;
     c->error=e[0];
     e[0]=-1;
+/* Only pipe reads require nonblocking mode; recorded stderr has no parent read descriptor. */
+#if 0
     if(fcntl(c->input,F_SETFL,O_NONBLOCK)<0||fcntl(c->output,F_SETFL,O_NONBLOCK)<0||fcntl(c->error,F_SETFL,O_NONBLOCK)<0){
+#endif
+    if(fcntl(c->input,F_SETFL,O_NONBLOCK)<0||fcntl(c->output,F_SETFL,O_NONBLOCK)<0||(c->error>=0&&fcntl(c->error,F_SETFL,O_NONBLOCK)<0)){
         s=UMI_STATUS_IO_ERROR;
         goto failed;
     }
@@ -324,7 +346,22 @@ static UmiStatus ChannelOpenNative(const UmiProcessChannelRequest *r, char *cons
 UmiStatus UmiProcessChannelOpen(const UmiProcessChannelRequest *request, UmiProcessChannel **out)
 {
     char *environment[] = {"PATH=/usr/bin:/bin", "LANG=C.UTF-8", "LC_ALL=C.UTF-8", NULL};
+/* Existing launch policy selects the original unrecorded mode; retain its former internal call for review. */
+#if 0
     return ChannelOpenNative(request, environment, out);
+#endif
+    return ChannelOpenNative(request, environment, NULL, out);
+}
+UmiStatus UmiProcessChannelOpenRecorded(const UmiProcessChannelRequest *request,
+    const char *diagnosticsPath, UmiProcessChannel **out)
+{
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out = NULL;
+    UmiStatus status = PcValidate(request);
+    if (status == UMI_STATUS_OK) status = UmiOutputFileValidatePath(diagnosticsPath);
+    if (status != UMI_STATUS_OK) return status;
+    char *environment[] = {"PATH=/usr/bin:/bin", "LANG=C.UTF-8", "LC_ALL=C.UTF-8", NULL};
+    return ChannelOpenNative(request, environment, diagnosticsPath, out);
 }
 UmiStatus UmiProcessChannelOpenProgram(const UmiProcessChannelRequest *request,
     const UmiEnvironmentVariable *environment, size_t count, UmiProcessChannel **out)
@@ -340,7 +377,11 @@ UmiStatus UmiProcessChannelOpenProgram(const UmiProcessChannelRequest *request,
     values.environment_count = count;
     UmiPosixLaunch launch;
     status = UmiPosixLaunchPrepare(&values, &launch);
+/* Existing launch policy selects the original unrecorded mode; retain its former internal call for review. */
+#if 0
     if (status == UMI_STATUS_OK) status = ChannelOpenNative(request, launch.environment, out);
+#endif
+    if (status == UMI_STATUS_OK) status = ChannelOpenNative(request, launch.environment, NULL, out);
     UmiPosixLaunchClear(&launch);
     return status;
 }
@@ -441,9 +482,16 @@ UmiStatus UmiProcessChannelPoll(UmiProcessChannel *c,UmiProcessChannelSnapshot *
     if(!c||!out)return UMI_STATUS_INVALID_ARGUMENT;
     Drain(c);
     Reap(c);
+/* Poll exposes exit state and any recording flush failure; repeated polls retain that failure. */
+#if 0
     *out=c->snapshot;
     return UMI_STATUS_OK;
+#endif
+    *out=c->snapshot;
+    return PcFinishDiagnostics(c);
 }
+/* Explicit stop now finalizes owned error recording before reporting success; retained implementation documents the former pipe-only result. */
+#if 0
 UmiStatus UmiProcessChannelTerminate(UmiProcessChannel *c){
     if(!c)return UMI_STATUS_INVALID_ARGUMENT;
     Reap(c);
@@ -460,11 +508,31 @@ UmiStatus UmiProcessChannelTerminate(UmiProcessChannel *c){
     }
     return UMI_STATUS_OK;
 }
+
+#endif
+UmiStatus UmiProcessChannelTerminate(UmiProcessChannel *c){
+    if(!c)return UMI_STATUS_INVALID_ARGUMENT;
+    Reap(c);
+    if(c->snapshot.running){
+        c->snapshot.terminated=1;
+        if(kill(-c->process,SIGKILL)&&errno!=ESRCH)return UMI_STATUS_IO_ERROR;
+        int st;
+        while(waitpid(c->process,&st,0)<0){
+            if(errno==EINTR)continue;
+            break;
+        }
+        c->snapshot.running=0;
+        c->snapshot.exitCode=137;
+    }
+    return PcFinishDiagnostics(c);
+}
+
 void UmiProcessChannelDestroy(UmiProcessChannel *c){
     if(!c)return;
     (void)UmiProcessChannelTerminate(c);
     Close(&c->input);
     Close(&c->output);
     Close(&c->error);
+    UmiOutputFileDestroy(c->diagnosticFile);
     free(c);
 }

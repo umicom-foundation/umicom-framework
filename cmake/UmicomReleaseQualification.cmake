@@ -253,7 +253,9 @@ function(umicom_release_contracts_prepare)
     _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/diagnostic_context.h src/language_runtime/diagnostic_context.c)
     # Live snapshots remain toolkit-independent; the native presenter is optional.
     _umicom_release_declare_pair(umicom_build include/umicom/build/live_output.h src/build/project_session.c)
-    _umicom_release_declare_pair(umicom_platform include/umicom/platform/output_file.h src/platform/output_file.c)
+    # The output writer is now a shared leaf target; retain its former owner for review.
+    #    _umicom_release_declare_pair(umicom_platform include/umicom/platform/output_file.h src/platform/output_file.c)
+    _umicom_release_declare_pair(umicom_output_file include/umicom/platform/output_file.h src/platform/output_file.c)
     _umicom_release_declare_pair(umicom_platform include/umicom/platform/input_file.h src/platform/input_file.c)
     _umicom_release_declare_pair(umicom_qualification_workflow include/umicom/distribution/runtime/qualification_workflow.h src/distribution/runtime/qualification_workflow.c)
     _umicom_release_declare_pair(umicom_distribution include/umicom/distribution/runtime/qualification_view.h src/distribution/runtime/qualification_view.c)

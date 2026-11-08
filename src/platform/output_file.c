@@ -1,15 +1,23 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/platform/output_file.c
- * PURPOSE: Own an exclusive native file handle for incremental raw output capture.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Own an exclusive native file for raw capture and controlled child inheritance.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef _WIN32
 #define _POSIX_C_SOURCE 200809L
 #endif
 #include "umicom/platform/output_file.h"
+#include "output_file_internal.h"
 #include <stdlib.h>
 #include <string.h>
 #ifdef _WIN32
@@ -218,3 +226,47 @@ void UmiOutputFileDestroy(UmiOutputFile *file)
     if (file == NULL) return;
     (void)UmiOutputFileClose(file); free(file);
 }
+
+/* Native channels duplicate this already-reserved object rather than reopen a
+ * pathname, so another writer cannot replace the destination between checks.
+ * The duplicate's offset is shared with the original; only the child writes. */
+#ifdef _WIN32
+UmiStatus UmiOutputFileDuplicateForChild(UmiOutputFile *file, void **outHandle)
+{
+    if (outHandle == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outHandle = NULL;
+    if (file == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (file->snapshot.closed) return UMI_STATUS_INVALID_STATE;
+    if (file->snapshot.status != UMI_STATUS_OK) return file->snapshot.status;
+    HANDLE duplicate = NULL;
+    if (!DuplicateHandle(GetCurrentProcess(), file->handle, GetCurrentProcess(),
+            &duplicate, 0, TRUE, DUPLICATE_SAME_ACCESS)) return UMI_STATUS_IO_ERROR;
+    *outHandle = duplicate;
+    return UMI_STATUS_OK;
+}
+#else
+UmiStatus UmiOutputFileDuplicateForChild(UmiOutputFile *file, int *outDescriptor)
+{
+    if (outDescriptor == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outDescriptor = -1;
+    if (file == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (file->snapshot.closed) return UMI_STATUS_INVALID_STATE;
+    if (file->snapshot.status != UMI_STATUS_OK) return file->snapshot.status;
+    int duplicate;
+    do { duplicate = fcntl(file->descriptor, F_DUPFD_CLOEXEC, STDERR_FILENO + 1); }
+    while (duplicate < 0 && errno == EINTR);
+    if (duplicate < 0) return UMI_STATUS_IO_ERROR;
+    /* A GUI host may have closed stdin/stdout/stderr before opening this file.
+     * Keep the parent's owner above those slots too, so restoring a standard
+     * stream cannot silently close or replace the recording's flush handle. */
+    if (file->descriptor <= STDERR_FILENO) {
+        (void)close(file->descriptor);
+        file->descriptor = duplicate;
+        do { duplicate = fcntl(file->descriptor, F_DUPFD_CLOEXEC, STDERR_FILENO + 1); }
+        while (duplicate < 0 && errno == EINTR);
+        if (duplicate < 0) return UMI_STATUS_IO_ERROR;
+    }
+    *outDescriptor = duplicate;
+    return UMI_STATUS_OK;
+}
+#endif

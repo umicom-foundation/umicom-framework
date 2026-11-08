@@ -1,8 +1,21 @@
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
-# Native interactive child transport. Existing synchronous process APIs remain.
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomProcessChannel.cmake
+#
+# PURPOSE:
+#   Compose native interactive child channels and optional raw stderr capture.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------# Native interactive child transport. Existing synchronous process APIs remain.
 # This module also supports independent composition; own its SDK registration dependency.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomOutputFile.cmake")
 include(GNUInstallDirs)
 find_package(Threads REQUIRED)
 set(_umi_channel_root "${CMAKE_CURRENT_LIST_DIR}/..")
@@ -22,7 +35,7 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 else()
     target_sources(umicom_process_channel PRIVATE "${_umi_channel_root}/src/platform/process_channel_unsupported.c")
 endif()
-target_link_libraries(umicom_process_channel PRIVATE Threads::Threads)
+target_link_libraries(umicom_process_channel PRIVATE Threads::Threads Umicom::output_file)
 if(COMMAND umicom_apply_warnings)
     umicom_apply_warnings(umicom_process_channel)
 endif()

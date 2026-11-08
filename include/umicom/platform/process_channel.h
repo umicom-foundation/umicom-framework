@@ -1,17 +1,21 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/platform/process_channel.h
- * PURPOSE: Own a live child process and its pipes while protocol clients own framing.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Own a live argument-based child channel while protocol clients own framing.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
-/*-----------------------------------------------------------------------------
- * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * A live, argument-based child channel. Framework owns the child and its pipes;
- * protocol clients own framing. The synchronous process runner is unchanged.
+/* Framework owns the live child and its pipes; clients own protocol framing.
  * No shell, socket listener or process-global signal handler is installed.
- *---------------------------------------------------------------------------*/
+ * The synchronous process runner remains an independent interface. */
 #ifndef UMICOM_PLATFORM_PROCESS_CHANNEL_H
 #define UMICOM_PLATFORM_PROCESS_CHANNEL_H
 #include <stddef.h>
@@ -53,6 +57,20 @@ extern "C" {
      * keep that thread alive until the child ends, using a persistent worker
      * rather than a one-shot thread that exits immediately after launch. */
     UmiStatus UmiProcessChannelOpen(const UmiProcessChannelRequest *request,     UmiProcessChannel **outChannel);
+    /** Open with the same restricted environment as Open, redirecting stderr
+     * directly to a new absolute file in an existing trusted parent directory.
+     * No existing file is overwritten. An empty or partial new file is retained
+     * if launch fails. stdout remains a separate protocol pipe; stderr capture
+     * does not depend on polling and has no size limit or automatic rotation.
+     * The snapshot diagnostic tail stays empty in this mode: read the file.
+     * Poll after exit and Terminate flush/close the parent's recording handle
+     * and return any flush failure. Destroy is a best-effort fallback, so check
+     * one of those status-returning operations before reporting completion.
+     * This records bytes the child actually writes, not successful guest boot
+     * or a guarantee that the child handled its own disk/write errors correctly.
+     */
+    UmiStatus UmiProcessChannelOpenRecorded(const UmiProcessChannelRequest *request,
+        const char *diagnosticsPath, UmiProcessChannel **outChannel);
     /** Open an explicitly selected trusted native program with the parent's
      * environment plus optional overrides. No shell or PATH executable search
      * occurs. This differs deliberately from Open's restricted environment.

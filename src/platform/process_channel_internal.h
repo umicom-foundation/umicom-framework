@@ -1,7 +1,22 @@
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/platform/process_channel_internal.h
+ *
+ * PURPOSE:
+ *   Keep native child resources and diagnostic-file ownership private to Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
 #ifndef UMICOM_PROCESS_CHANNEL_INTERNAL_H
 #define UMICOM_PROCESS_CHANNEL_INTERNAL_H
 #include "umicom/platform/process_channel.h"
+#include "output_file_internal.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -12,8 +27,11 @@ struct UmiProcessChannel {
     int input,output,error;
     int process;
 #endif
+    /* Only the child writes; the parent retains the flush/close owner. */
+    UmiOutputFile *diagnosticFile;
     UmiProcessChannelSnapshot snapshot;
 };
+UmiStatus PcFinishDiagnostics(UmiProcessChannel *channel);
 void PcDiagnostic(UmiProcessChannel *channel,const char *data,size_t size);
 UmiStatus PcValidate(const UmiProcessChannelRequest *request);
 uint64_t PcMilliseconds(void);

@@ -1,22 +1,20 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/setup_centre/io.c
+ *
  * PURPOSE:
- *   Bounded regular-file I/O with exclusive creation. Never opens a raw disk, named pipe,
- *   symlink, reparse point or interpreter. Existing directory ancestors are inspected;
- *   Windows handles deny deletion while in use.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Provide bounded regular-file I/O with exclusive creation and checked directory ancestors.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
-
-/*-----------------------------------------------------------------------------
- * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * File: src/setup_centre/io.c
- * Purpose: Bounded regular-file I/O with exclusive creation. Never opens a raw
- * disk, named pipe, symlink, reparse point or interpreter. Existing directory
- * ancestors are inspected; Windows handles deny deletion while in use.
- *---------------------------------------------------------------------------*/
-
+/* Never open a raw disk, named pipe, symlink, reparse point or interpreter.
+ * Existing directory ancestors are inspected; Windows handles deny deletion
+ * while in use. Parent inspection below reuses this same traversal. */
 #if defined(__linux__) && !defined(_GNU_SOURCE)
 #define _GNU_SOURCE
 #endif
@@ -161,6 +159,26 @@ static int Write(ScHandle *h,const void *data,size_t count) {
 
 static int Flush(ScHandle *h) {
     return FlushFileBuffers(h->file)!=0;
+}
+
+/* Reuse the same ancestor handles as exclusive output creation. Release them
+ * before returning: this reports current state, not a reservation for later. */
+UmiStatus ScParentCheck(const char *path,UmiSetupReport *r)
+{
+    ScHandle h = {0};
+    h.file = INVALID_HANDLE_VALUE;
+    wchar_t wide[UMI_SETUP_PATH_CAPACITY+8U];
+    UmiStatus status = Wide(path, wide);
+    if (status == UMI_STATUS_OK && strlen(path) <= 3U) status = UMI_STATUS_INVALID_ARGUMENT;
+    if (status == UMI_STATUS_OK) status = Parents(&h, wide, r);
+    if (status == UMI_STATUS_OK && h.count == 0U) {
+        /* A leaf directly under a drive root has no intermediate components.
+         * Check that root too, so an absent removable drive is not accepted. */
+        char drive[4] = {path[0], ':', '/', 0};
+        status = ScFileRegular(drive, 1, r);
+    }
+    Close(&h);
+    return status;
 }
 
 UmiStatus ScMakeDirectory(const char *path,UmiSetupReport *r)
@@ -316,6 +334,17 @@ static int Write(ScHandle *h,const void *data,size_t count) {
 
 static int Flush(ScHandle *h) {
     return fsync(h->file)==0;
+}
+
+/* Parent opens each ancestor with the canonical no-follow policy. Inspecting
+ * a future output must not create it or weaken the later exclusive open. */
+UmiStatus ScParentCheck(const char *path,UmiSetupReport *r)
+{
+    int parent = -1;
+    char leaf[256];
+    UmiStatus status = Parent(path, &parent, leaf, r);
+    if (parent >= 0) close(parent);
+    return status;
 }
 
 UmiStatus ScMakeDirectory(const char *path,UmiSetupReport *r)

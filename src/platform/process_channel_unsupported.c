@@ -1,13 +1,18 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/platform/process_channel_unsupported.c
+ *
  * PURPOSE:
- *   Report unavailable process-channel operations without substituting a simulated process.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Report unavailable child transport without inventing processes or recording files.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
 #include "process_channel_internal.h"
 uint64_t PcMilliseconds(void){
     return 0;
@@ -57,5 +62,14 @@ UmiStatus UmiProcessChannelOpenProgram(const UmiProcessChannelRequest *request,
 UmiStatus UmiProcessChannelCloseInput(UmiProcessChannel *channel)
 {
     (void)channel;
+    return UMI_STATUS_UNAVAILABLE;
+}
+
+UmiStatus UmiProcessChannelOpenRecorded(const UmiProcessChannelRequest *request,
+    const char *diagnosticsPath, UmiProcessChannel **out)
+{
+    (void)request; (void)diagnosticsPath;
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out = NULL;
     return UMI_STATUS_UNAVAILABLE;
 }

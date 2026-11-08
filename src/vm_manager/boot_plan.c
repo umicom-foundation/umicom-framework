@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/vm_manager/boot_plan.c
- * PURPOSE: Build an owned argument vector without invoking a shell or touching files.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Build an owned argument vector without invoking a shell or touching files.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "boot_internal.h"
@@ -38,6 +45,31 @@ static UmiStatus BootDrive(UmiVmBootPlan *plan, const char *path, int optical)
     return status;
 }
 
+/* QEMU keeps the existing ring buffer for interactive reads and independently
+ * records guest output. Escape commas in the property value, just as for raw
+ * disk filenames, so a directory name cannot add another character device. */
+static UmiStatus BootConsole(UmiVmBootPlan *plan)
+{
+    VmText device;
+    VmTextInit(&device);
+    VmTextPrint(&device, "ringbuf,id=console,size=65536");
+    if (plan->recordingDirectory[0]) {
+        char file[UMI_SETUP_PATH_CAPACITY];
+        UmiStatus status = UmiSetupPathJoin(plan->recordingDirectory, "serial.log", file);
+        if (status != UMI_STATUS_OK) { VmTextFree(&device); return status; }
+        VmTextPrint(&device, ",logappend=off,logfile=");
+        for (size_t index = 0; file[index]; ++index) {
+            if (file[index] == ',') VmTextPrint(&device, ",,");
+            else VmTextPrint(&device, "%c", file[index]);
+        }
+    }
+    UmiStatus status = device.status;
+    if (status == UMI_STATUS_OK) status = BootArgument(plan, "-chardev");
+    if (status == UMI_STATUS_OK) status = BootArgument(plan, device.data);
+    VmTextFree(&device);
+    return status;
+}
+
 static UmiStatus BootArguments(UmiVmBootPlan *plan)
 {
     const UmiVmBootRequest *request = &plan->request;
@@ -68,7 +100,12 @@ static UmiStatus BootArguments(UmiVmBootPlan *plan)
     BOOT_ARG("-monitor"); BOOT_ARG("none");
     BOOT_ARG("-nic"); BOOT_ARG("none");
     BOOT_ARG("-qmp"); BOOT_ARG("stdio");
+/* The original ring-buffer argument is retained; BootConsole adds only an explicitly reviewed recording destination. */
+#if 0
     BOOT_ARG("-chardev"); BOOT_ARG("ringbuf,id=console,size=65536");
+#endif
+    status = BootConsole(plan);
+    if (status != UMI_STATUS_OK) return status;
     BOOT_ARG("-serial"); BOOT_ARG("chardev:console");
     if (request->firmware[0]) {
         BOOT_ARG("-bios"); BOOT_ARG(request->firmware);
@@ -106,6 +143,8 @@ static UmiStatus BootArguments(UmiVmBootPlan *plan)
     return UMI_STATUS_OK;
 }
 
+/* Preserve the original constructor for review. The recorded constructor shares validation and copied arguments; the original public entry remains an unrecorded wrapper. */
+#if 0
 UmiStatus UmiVmBootPlanCreate(const UmiVmBootRequest *request, UmiVmBootPlan **outPlan)
 {
     if (!outPlan) return UMI_STATUS_INVALID_ARGUMENT;
@@ -124,6 +163,39 @@ UmiStatus UmiVmBootPlanCreate(const UmiVmBootRequest *request, UmiVmBootPlan **o
     }
     *outPlan = plan;
     return UMI_STATUS_OK;
+}
+#endif
+UmiStatus UmiVmBootPlanCreateRecorded(const UmiVmBootRequest *request,
+    const char *recordingDirectory, UmiVmBootPlan **outPlan)
+{
+    if (!outPlan) return UMI_STATUS_INVALID_ARGUMENT;
+    *outPlan = NULL;
+    UmiStatus status = UmiVmBootRequestValidate(request);
+    if (status == UMI_STATUS_OK) status = VmBootRecordingValidate(recordingDirectory);
+    if (status != UMI_STATUS_OK) return status;
+    /* Large argv storage lives on the heap, never on a UI or kernel-sized stack.
+     * Copy inputs before returning so editing a dialog cannot change its plan. */
+    UmiVmBootPlan *plan = calloc(1, sizeof *plan);
+    if (!plan) return UMI_STATUS_OUT_OF_MEMORY;
+    plan->request = *request;
+    if (recordingDirectory) strcpy(plan->recordingDirectory, recordingDirectory);
+    status = BootArguments(plan);
+    if (status != UMI_STATUS_OK) {
+        free(plan);
+        return status;
+    }
+    *outPlan = plan;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiVmBootPlanCreate(const UmiVmBootRequest *request, UmiVmBootPlan **outPlan)
+{
+    return UmiVmBootPlanCreateRecorded(request, NULL, outPlan);
+}
+
+const char *UmiVmBootPlanRecordingDirectory(const UmiVmBootPlan *plan)
+{
+    return plan && plan->recordingDirectory[0] ? plan->recordingDirectory : NULL;
 }
 
 void UmiVmBootPlanDestroy(UmiVmBootPlan *plan)

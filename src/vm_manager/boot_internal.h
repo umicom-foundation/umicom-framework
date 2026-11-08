@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/vm_manager/boot_internal.h
- * PURPOSE: Keep owned boot arguments private to the shared VM service.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Keep owned boot arguments private to the shared VM service.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_VM_MANAGER_BOOT_INTERNAL_H
@@ -15,9 +22,14 @@
 #define VM_BOOT_ARGUMENT_BYTES 4096U
 struct UmiVmBootPlan {
     UmiVmBootRequest request;
+    char recordingDirectory[UMI_VM_PATH];
     size_t argumentCount;
     char arguments[UMI_CHANNEL_MAX_ARGUMENTS][VM_BOOT_ARGUMENT_BYTES];
 };
+/* Recording uses the same checked setup filesystem as packaged VM sessions. */
+UmiStatus VmBootRecordingValidate(const char *directory);
+UmiStatus VmBootRecordingReview(const UmiVmBootPlan *plan);
+UmiStatus VmBootRecordingBegin(const UmiVmBootPlan *plan, UmiVmReport *report);
 /* Both CLI entry points use the same session console and ownership policy. */
 int VmSessionConsole(UmiVmSession *session);
 /* CLI composition reuses one request parser and plan renderer. */

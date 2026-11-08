@@ -1,16 +1,19 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/setup_centre/files.c
+ *
  * PURPOSE:
- *   The VM, image and delivery consumers must share the existing bootstrap file rules. These
- *   public entry points deliberately delegate; no new I/O policy.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Delegate shared checked file operations to the canonical bootstrap filesystem.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * The VM, image and delivery consumers must share the existing bootstrap file
- * rules. These public entry points deliberately delegate; no new I/O policy. */
+/* VM, image and delivery consumers share the bootstrap file rules through
+ * this facade. These entry points introduce no separate I/O policy. */
 #include "internal.h"
 #include "umicom/setup_centre/files.h"
 UmiStatus UmiSetupFileRead(const char *p,size_t l,char **b,size_t *n,UmiSetupReport *r){
@@ -24,6 +27,9 @@ UmiStatus UmiSetupFileDigest(const char *p,char h[65],uint64_t *n,UmiSetupReport
 }
 UmiStatus UmiSetupFileCopyChecked(const char *s,const char *d,const char *h,uint64_t n,UmiSetupReport *r){
     return ScCopy(s,d,h,n,NULL,NULL,r);
+}
+UmiStatus UmiSetupFileParentCheck(const char *p,UmiSetupReport *r){
+    return ScParentCheck(p,r);
 }
 UmiStatus UmiSetupDirectoryCreate(const char *p,UmiSetupReport *r){
     return ScMakeDirectory(p,r);

@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/vm_manager/test_boot_plan.c
- * PURPOSE: Exercise boot target contracts and exact argument ownership without filesystem access.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Exercise boot target contracts and exact argument ownership without filesystem access.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/vm_manager/boot.h"
@@ -89,6 +96,43 @@ int main(int argc, char **argv)
         return 0;
     }
     Request(&request, UMI_VM_BOOT_UMICOM_KERNEL);
+    if (strncmp(name, "recording-", 10U) == 0) {
+        char directory[UMI_VM_PATH + 1U] = ROOT_PATH "recordings";
+        const char *selected = directory;
+        UmiStatus expected = UMI_STATUS_OK;
+        if (strcmp(name, "recording-null") == 0) selected = NULL;
+        else if (strcmp(name, "recording-empty") == 0) { directory[0] = 0; expected = UMI_STATUS_INVALID_ARGUMENT; }
+        else if (strcmp(name, "recording-relative") == 0) { strcpy(directory, "recordings"); expected = UMI_STATUS_INVALID_ARGUMENT; }
+        else if (strcmp(name, "recording-control") == 0) { strcpy(directory, ROOT_PATH "bad\nname"); expected = UMI_STATUS_INVALID_ARGUMENT; }
+        else if (strcmp(name, "recording-capacity") == 0) { memset(directory, 'x', UMI_VM_PATH); directory[UMI_VM_PATH] = 0; expected = UMI_STATUS_INVALID_ARGUMENT; }
+        else if (strcmp(name, "recording-escape") == 0) strcpy(directory, ROOT_PATH "notes,logappend=on");
+        else CHECK(strcmp(name, "recording-plan") == 0 || strcmp(name, "recording-ownership") == 0);
+        plan = (UmiVmBootPlan *)(void *)&request;
+        CHECK(UmiVmBootPlanCreateRecorded(&request, selected, &plan) == expected);
+        if (expected != UMI_STATUS_OK) { CHECK(plan == NULL); return 0; }
+        CHECK(plan != NULL);
+        if (!selected) {
+            CHECK(UmiVmBootPlanRecordingDirectory(plan) == NULL);
+            CHECK(strcmp(Value(plan, "-chardev"), "ringbuf,id=console,size=65536") == 0);
+        } else {
+            CHECK(strcmp(UmiVmBootPlanRecordingDirectory(plan), directory) == 0);
+            const char *argument = Value(plan, "-chardev");
+            CHECK(argument != NULL);
+            CHECK(strcmp(argument, strcmp(name, "recording-escape") == 0
+                ? "ringbuf,id=console,size=65536,logappend=off,logfile=" ROOT_PATH "notes,,logappend=on/serial.log"
+                : "ringbuf,id=console,size=65536,logappend=off,logfile=" ROOT_PATH "recordings/serial.log") == 0);
+            if (strcmp(name, "recording-ownership") == 0) {
+                memset(directory, 'x', sizeof directory);
+                memset(&request, 'x', sizeof request);
+                CHECK(strcmp(UmiVmBootPlanRecordingDirectory(plan), ROOT_PATH "recordings") == 0);
+                CHECK(strstr(Value(plan, "-chardev"), ROOT_PATH "recordings/serial.log") != NULL);
+            }
+        }
+        CHECK(Contains(plan, "-S") && strcmp(Value(plan, "-qmp"), "stdio") == 0);
+        CHECK(UmiVmBootPlanRecordingDirectory(NULL) == NULL);
+        UmiVmBootPlanDestroy(plan);
+        return 0;
+    }
     if (strcmp(name, "catalogue") == 0) {
         CHECK(UmiVmBootTargetCount() == 6U);
         CHECK(UmiVmBootTargetFind(NULL) == NULL && UmiVmBootTargetFind("arm") == NULL);

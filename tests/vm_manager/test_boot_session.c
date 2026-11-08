@@ -1,15 +1,24 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/vm_manager/test_boot_session.c
- * PURPOSE: Check file review and owned child cleanup with an inert QMP peer.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Check file review and owned child cleanup with an inert QMP peer.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/vm_manager/boot.h"
 #include "umicom/setup_centre/files.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
+#include <stdlib.h>
 #ifdef _WIN32
 #include <windows.h>
 #define BOOT_PROCESS_ID ((unsigned long)GetCurrentProcessId())
@@ -52,17 +61,59 @@ int main(int argc, char **argv)
     CHECK(UmiSetupFileCopyChecked(argv[2], request.executable, digest, bytes, NULL) == UMI_STATUS_OK);
     CHECK(UmiSetupFileGrantOwnerExecute(request.executable, NULL) == UMI_STATUS_OK);
     const char *firmware = strcmp(test, "running-child") == 0 ? "running.fw" :
+/* Recorded-start failure uses the same inert malformed peer; prior fixture selection is retained. */
+#if 0
         strcmp(test, "bad-handshake") == 0 ? "malformed.fw" : "system.fw";
+#endif
+        (strcmp(test, "bad-handshake") == 0 || strcmp(test, "recording-failed-handshake") == 0)
+        ? "malformed.fw" : "system.fw";
     CHECK(Join(request.firmware, sizeof request.firmware, directory, firmware));
     CHECK(UmiSetupFileWriteNew(request.firmware, "firmware fixture", 16U, NULL) == UMI_STATUS_OK);
     UmiVmBootPlan *plan = NULL;
+    char recording[UMI_VM_PATH];
+    CHECK(Join(recording, sizeof recording, directory, "recording"));
+    bool recorded = strncmp(test, "recording-", 10U) == 0;
+/* Retain the unrecorded fixture setup while exercising the same start path with optional recording. */
+#if 0
     CHECK(UmiVmBootPlanCreate(&request, &plan) == UMI_STATUS_OK);
+#endif
+    CHECK(UmiVmBootPlanCreateRecorded(&request, recorded ? recording : NULL, &plan) == UMI_STATUS_OK);
     UmiVmReport report;
     CHECK(UmiVmBootReview(plan, &report) == UMI_STATUS_OK);
     CHECK(!report.processLaunched && !report.outputCreated && strlen(report.fingerprint) == 64U);
     char expected[65];
     strcpy(expected, report.fingerprint);
+/* The original stable-review branch is retained; recording cases now precede it and share its read-only checks. */
+#if 0
     if (strcmp(test, "stable-review") == 0) {
+#endif
+
+    if (recorded) CHECK(UmiSetupFileCheck(recording, 1, NULL) == UMI_STATUS_NOT_FOUND);
+    if (strcmp(test, "recording-existing") == 0 || strcmp(test, "recording-file-conflict") == 0) {
+        if (strcmp(test, "recording-existing") == 0)
+            CHECK(UmiSetupDirectoryCreate(recording, NULL) == UMI_STATUS_OK);
+        else CHECK(UmiSetupFileWriteNew(recording, "keep", 4U, NULL) == UMI_STATUS_OK);
+        UmiVmSession *session = NULL;
+        CHECK(UmiVmBootStart(plan, expected, &session, &report) != UMI_STATUS_OK);
+        CHECK(session == NULL && !report.processLaunched && !report.outputCreated);
+        if (strcmp(test, "recording-file-conflict") == 0) {
+            char *retained = NULL; size_t length = 0;
+            CHECK(UmiSetupFileRead(recording, 4U, &retained, &length, NULL) == UMI_STATUS_OK);
+            CHECK(length == 4U && memcmp(retained, "keep", 4U) == 0); free(retained);
+        }
+    } else if (strcmp(test, "recording-changed-output") == 0 || strcmp(test, "recording-parent-missing") == 0) {
+        UmiVmBootPlan *changed = NULL;
+        char other[UMI_VM_PATH];
+        CHECK(Join(other, sizeof other, directory, strcmp(test, "recording-parent-missing") == 0
+            ? "missing-parent/recording" : "other-recording"));
+        CHECK(UmiVmBootPlanCreateRecorded(&request, other, &changed) == UMI_STATUS_OK);
+        UmiVmSession *session = NULL;
+        CHECK(UmiVmBootStart(changed, expected, &session, &report) != UMI_STATUS_OK);
+        CHECK(session == NULL && !report.processLaunched && !report.outputCreated);
+        CHECK(UmiSetupFileCheck(recording, 1, NULL) == UMI_STATUS_NOT_FOUND);
+        CHECK(UmiSetupFileCheck(other, 1, NULL) == UMI_STATUS_NOT_FOUND);
+        UmiVmBootPlanDestroy(changed);
+    } else if (strcmp(test, "stable-review") == 0 || strcmp(test, "recording-review") == 0) {
         CHECK(UmiVmBootReview(plan, &report) == UMI_STATUS_OK);
         CHECK(strcmp(expected, report.fingerprint) == 0);
     } else if (strcmp(test, "changed-options") == 0) {
@@ -82,15 +133,29 @@ int main(int argc, char **argv)
         UmiVmSession *session = NULL;
         CHECK(UmiVmBootStart(plan, expected, &session, &report) != UMI_STATUS_OK);
         CHECK(!report.processLaunched && session == NULL);
+/* Recording must not create output for an invalid approval digest. */
+#if 0
     } else if (strcmp(test, "bad-fingerprint") == 0) {
+#endif
+    } else if (strcmp(test, "bad-fingerprint") == 0 || strcmp(test, "recording-bad-fingerprint") == 0) {
         UmiVmSession *session = NULL;
         CHECK(UmiVmBootStart(plan, "not-a-digest", &session, &report) == UMI_STATUS_INVALID_ARGUMENT);
         CHECK(session == NULL && !report.processLaunched);
+/* Keep the existing child failure assertions and include retained recording evidence. */
+#if 0
     } else if (strcmp(test, "running-child") == 0 || strcmp(test, "bad-handshake") == 0) {
+#endif
+    } else if (strcmp(test, "running-child") == 0 || strcmp(test, "bad-handshake") == 0 ||
+               strcmp(test, "recording-failed-handshake") == 0) {
         UmiVmSession *session = NULL;
         CHECK(UmiVmBootStart(plan, expected, &session, &report) != UMI_STATUS_OK);
         CHECK(session == NULL && report.processLaunched);
+/* The recorded lifecycle uses the same real inert process and QMP ownership checks. */
+#if 0
     } else if (strcmp(test, "lifecycle") == 0 || strcmp(test, "report-alias") == 0) {
+#endif
+    } else if (strcmp(test, "lifecycle") == 0 || strcmp(test, "report-alias") == 0 ||
+               strcmp(test, "recording-lifecycle") == 0) {
         UmiVmSession *session = NULL;
         CHECK(UmiVmBootStart(plan, strcmp(test, "report-alias") == 0
             ? report.fingerprint : expected, &session, &report) == UMI_STATUS_OK);
@@ -114,6 +179,24 @@ int main(int argc, char **argv)
     } else {
         UmiVmBootPlanDestroy(plan);
         return 2;
+    }
+    if (recorded) {
+        if (strcmp(test, "recording-lifecycle") == 0 || strcmp(test, "recording-failed-handshake") == 0) {
+            char recordFile[UMI_VM_PATH]; char *text = NULL; size_t length = 0;
+            CHECK(report.outputCreated);
+            CHECK(Join(recordFile, sizeof recordFile, recording, "recording.umi"));
+            CHECK(UmiSetupFileRead(recordFile, 512U, &text, &length, NULL) == UMI_STATUS_OK);
+            CHECK(strstr(text, expected) != NULL && strstr(text, "boot-qualified\tno\n") != NULL);
+            free(text);
+            CHECK(Join(recordFile, sizeof recordFile, recording, "qemu-errors.log"));
+            CHECK(UmiSetupFileRead(recordFile, 64U, &text, &length, NULL) == UMI_STATUS_OK);
+            CHECK(length == 23U && memcmp(text, "inert peer diagnostics\n", 23U) == 0);
+            free(text);
+            /* This inert peer proves reservation and cleanup, not QEMU's actual
+             * chardev writer. The latter needs an owner-run guest exercise. */
+        } else if (strcmp(test, "recording-bad-fingerprint") == 0 || strcmp(test, "recording-review") == 0) {
+            CHECK(UmiSetupFileCheck(recording, 1, NULL) == UMI_STATUS_NOT_FOUND);
+        }
     }
     UmiVmBootPlanDestroy(plan);
     return 0;

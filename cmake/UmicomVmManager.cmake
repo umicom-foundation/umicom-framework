@@ -1,4 +1,17 @@
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomVmManager.cmake
+#
+# PURPOSE:
+#   Compose the shared VM service, native adapters and owner-run qualification.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
 # QMP and profiles have one owner. Presentation remains in a native adapter.
 # This module also supports independent composition; own its SDK registration dependency.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
@@ -29,6 +42,7 @@ add_library(umicom_vm_manager STATIC
     "${_umi_vm_root}/src/vm_manager/boot_targets.c"
     "${_umi_vm_root}/src/vm_manager/boot_plan.c"
     "${_umi_vm_root}/src/vm_manager/boot_session.c"
+    "${_umi_vm_root}/src/vm_manager/boot_recording.c"
     "${_umi_vm_root}/src/vm_manager/boot_profile.c"
     "${_umi_vm_root}/src/vm_manager/boot_profile_cli.c"
     "${_umi_vm_root}/src/vm_manager/boot_cli.c"

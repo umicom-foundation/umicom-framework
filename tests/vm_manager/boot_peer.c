@@ -1,17 +1,35 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/vm_manager/boot_peer.c
- * PURPOSE: Provide an inert portable QMP peer for lifecycle tests; never execute a guest.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Provide inert QMP and stderr fixtures without executing a guest.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#ifdef _WIN32
+#include <fcntl.h>
+#include <io.h>
+#endif
 
 int main(int argc, char **argv)
 {
+    /* Stderr is independent of the QMP protocol and must survive even a failed
+     * handshake. Binary mode makes the asserted bytes identical on both hosts. */
+#ifdef _WIN32
+    (void)_setmode(_fileno(stderr), _O_BINARY);
+#endif
+    if (fwrite("inert peer diagnostics\n", 1U, 23U, stderr) != 23U || fflush(stderr) != 0)
+        return 3;
     /* Firmware basenames select fixture responses. This child is intentionally
      * not QEMU: it tests pipe ownership, protocol handling and shutdown only. */
     int running = 0, malformed = 0;

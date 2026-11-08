@@ -1,21 +1,24 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/setup_centre/test_setup.c
+ *
  * PURPOSE:
- *   Fixture executables, gzip and kernel headers are synthetic data unless a test explicitly
- *   names a real host executable. No test claims a guest boot.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Exercise checked setup paths, catalogue records and synthetic installation fixtures.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework tests | Sammy Hegab, Umicom Foundation | MIT
- * Fixture executables, gzip and kernel headers are synthetic data unless a
+/* Fixture executables, gzip and kernel headers are synthetic data unless a
  * test explicitly names a real host executable. No test claims a guest boot. */
-
 #ifndef _WIN32
 #define _POSIX_C_SOURCE 200809L
 #endif
 #include "test_support.h"
+#include "umicom/setup_centre/files.h"
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -118,9 +121,73 @@ int FixtureCreate(Fixture *f)
 
 }
 
+/* A prospective leaf need not exist. Only its ancestors are inspected; an
+ * existing leaf must remain byte-identical and is checked separately by users
+ * of this API before they attempt exclusive creation. */
+static int TestParentPath(const char *name)
+{
+    if (!strcmp(name, "paths.parent-invalid")) {
+        CHECK(UmiSetupFileParentCheck(NULL, NULL) == UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(UmiSetupFileParentCheck("relative/leaf", NULL) == UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(UmiSetupFileParentCheck("", NULL) == UMI_STATUS_INVALID_ARGUMENT);
+        return 0;
+    }
+    Fixture f;
+    CHECK(!FixtureCreate(&f));
+    char leaf[UMI_SETUP_PATH_CAPACITY];
+    OK(ScJoin(f.root, "prospective", leaf));
+    if (!strcmp(name, "paths.parent-missing-leaf")) {
+        OK(UmiSetupFileParentCheck(leaf, NULL));
+        CHECK(UmiSetupFileCheck(leaf, 0, NULL) == UMI_STATUS_NOT_FOUND);
+    } else if (!strcmp(name, "paths.parent-file-leaf")) {
+        OK(UmiSetupFileWriteNew(leaf, "retain", 6U, NULL));
+        OK(UmiSetupFileParentCheck(leaf, NULL));
+        char *bytes = NULL; size_t length = 0;
+        OK(UmiSetupFileRead(leaf, 6U, &bytes, &length, NULL));
+        CHECK(length == 6U && !memcmp(bytes, "retain", 6U)); free(bytes);
+    } else if (!strcmp(name, "paths.parent-directory-leaf")) {
+        OK(UmiSetupDirectoryCreate(leaf, NULL));
+        OK(UmiSetupFileParentCheck(leaf, NULL));
+        OK(UmiSetupFileCheck(leaf, 1, NULL));
+    } else if (!strcmp(name, "paths.parent-missing")) {
+        OK(ScJoin(f.root, "missing/leaf", leaf));
+        CHECK(UmiSetupFileParentCheck(leaf, NULL) == UMI_STATUS_NOT_FOUND);
+    } else if (!strcmp(name, "paths.parent-file")) {
+        OK(ScJoin(f.bank, "leaf", leaf));
+        CHECK(UmiSetupFileParentCheck(leaf, NULL) != UMI_STATUS_OK);
+    } else if (!strcmp(name, "paths.parent-root")) {
+#ifdef _WIN32
+        char rootLeaf[] = "C:/umicom-prospective-parent-check";
+        rootLeaf[0] = f.root[0];
+        OK(UmiSetupFileParentCheck(rootLeaf, NULL));
+#else
+        OK(UmiSetupFileParentCheck("/umicom-prospective-parent-check", NULL));
+#endif
+    } else if (!strcmp(name, "paths.parent-link")) {
+        char link[UMI_SETUP_PATH_CAPACITY];
+        OK(ScJoin(f.root, "linked-parent", link));
+#ifdef _WIN32
+        wchar_t linkWide[4096], targetWide[4096];
+        CHECK(MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, link, -1, linkWide, 4096) > 0);
+        CHECK(MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, f.root, -1, targetWide, 4096) > 0);
+        if (!CreateSymbolicLinkW(linkWide, targetWide, SYMBOLIC_LINK_FLAG_DIRECTORY | 2U)) {
+            DWORD error = GetLastError();
+            if (error == ERROR_PRIVILEGE_NOT_HELD) return 77;
+            CHECK(0);
+        }
+#else
+        CHECK(symlink(f.root, link) == 0);
+#endif
+        OK(ScJoin(link, "leaf", leaf));
+        CHECK(UmiSetupFileParentCheck(leaf, NULL) != UMI_STATUS_OK);
+    } else return 2;
+    return 0;
+}
+
 int TestPaths(const char *name)
 {
 
+    if (!strncmp(name, "paths.parent-", 13U)) return TestParentPath(name);
     if(!strcmp(name,"paths.valid")) {
         const char *paths[]= {
             "bin/umicom-desk.exe","share/Umicom guide.html","share/caf\xc3\xa9.txt","a/b/c","bin/runtime.dll"

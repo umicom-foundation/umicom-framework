@@ -1,13 +1,18 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/setup_centre/files.h
- * PURPOSE: Expose shared checked file operations to setup and delivery tools.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Expose shared checked file operations to setup and delivery tools.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Public facade for the bootstrap's canonical checked file operations. Shared
+/* Public facade for the bootstrap's canonical checked file operations. Shared
  * tools reuse these rather than copy platform-specific path and hash logic. */
 #ifndef UMICOM_SETUP_CENTRE_FILES_H
 #define UMICOM_SETUP_CENTRE_FILES_H
@@ -20,6 +25,10 @@ extern "C" {
     UmiStatus UmiSetupFileWriteNew(const char *path, const void *data, size_t length,     UmiSetupReport *report);
     UmiStatus UmiSetupFileDigest(const char *path, char outHash[65], uint64_t *outBytes,     UmiSetupReport *report);
     UmiStatus UmiSetupFileCopyChecked(const char *source, const char *destination,     const char *hash, uint64_t bytes, UmiSetupReport *report);
+    /* Inspect existing ancestors of an absolute prospective leaf without
+     * opening or creating that leaf. Reject symlink/reparse ancestors. This
+     * observation is not a lease: creation must repeat the native checks. */
+    UmiStatus UmiSetupFileParentCheck(const char *path, UmiSetupReport *report);
     UmiStatus UmiSetupDirectoryCreate(const char *path, UmiSetupReport *report);
     UmiStatus UmiSetupFileCheck(const char *path, int directory, UmiSetupReport *report);
     UmiStatus UmiSetupFileParents(const char *root, const char *relative, UmiSetupReport *report);

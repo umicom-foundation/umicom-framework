@@ -1,5 +1,17 @@
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Private bootstrap implementation. No GTK, interpreter or shell dependency. */
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/setup_centre/internal.h
+ *
+ * PURPOSE:
+ *   Keep bootstrap implementation private without a GTK, interpreter or shell dependency.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_SETUP_CENTRE_INTERNAL_H
 #define UMICOM_SETUP_CENTRE_INTERNAL_H
@@ -79,6 +91,8 @@ int ScEqualFold(const char *a,const char *b);
 UmiStatus ScRead(const char *path,size_t limit,char **data,size_t *length,UmiSetupReport *report);
 
 UmiStatus ScWriteNew(const char *path,const void *data,size_t length,UmiSetupReport *report);
+
+UmiStatus ScParentCheck(const char *path,UmiSetupReport *report);
 
 UmiStatus ScMakeDirectory(const char *path,UmiSetupReport *report);
 

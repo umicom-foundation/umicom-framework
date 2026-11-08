@@ -372,6 +372,7 @@ umicom_apply_sanitizers(umicom_data)
 # -----------------------------------------------------------------------------
 # Platform services
 # -----------------------------------------------------------------------------
+include(cmake/UmicomOutputFile.cmake)
 add_library(umicom_platform STATIC
     src/platform/config.c
     src/platform/native_arguments.c
@@ -382,7 +383,9 @@ add_library(umicom_platform STATIC
     src/platform/settings.c
     src/platform/filesystem.c
     src/platform/atomic_file.c
-    src/platform/output_file.c
+    # Exclusive capture is now shared through Umicom::output_file below.
+    # Preserve the former source entry for review; compiling it twice would duplicate ownership.
+    # src/platform/output_file.c
     src/platform/input_file.c
     src/platform/file_lease.c
     src/platform/threading.c
@@ -418,6 +421,7 @@ add_library(umicom_platform STATIC
 add_library(Umicom::platform ALIAS umicom_platform)
 set_target_properties(umicom_platform PROPERTIES EXPORT_NAME platform)
 target_link_libraries(umicom_platform PUBLIC
+    Umicom::output_file
     Umicom::base
     Umicom::finance
     Umicom::trading
@@ -6454,6 +6458,9 @@ install(FILES docs/INSTALLED_SDK_QUALIFICATION.html
 
 # Exercise selective installation with real independent native consumers.
 include(cmake/UmicomSdkComponentChecks.cmake)
+
+# Native recording remains independently composable; the full build registers the same cases.
+include(cmake/UmicomProcessChannelRecordingTests.cmake)
 
 # Installed branding calls the Windows deployment helper even when Framework
 # was built without product executables. Export its existing support sources

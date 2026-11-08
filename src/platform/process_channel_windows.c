@@ -1,20 +1,21 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/platform/process_channel_windows.c
+ *
  * PURPOSE:
- *   Windows live child channel. Only three standard handles cross CreateProcess; an owned
- *   kill-on-close job and suspended launch prevent an unowned child. stdin uses overlapped
- *   I/O, so a non-reading child cannot block the GUI forever.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Own a Windows child job, bounded input and separate protocol/error destinations.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
-/*-----------------------------------------------------------------------------
- * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Windows live child channel. Only three standard handles cross CreateProcess;
- * an owned kill-on-close job and suspended launch prevent an unowned child.
- * stdin uses overlapped I/O, so a non-reading child cannot block the GUI forever.
- *---------------------------------------------------------------------------*/
+/* Only three standard handles cross CreateProcess. An owned kill-on-close job
+ * and suspended launch prevent an unowned child; overlapped stdin keeps a
+ * non-reading child from blocking a graphical caller indefinitely. */
 #define WIN32_LEAN_AND_MEAN
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0602
@@ -279,11 +280,19 @@ UmiStatus UmiProcessChannelOpen(const UmiProcessChannelRequest *r,UmiProcessChan
 #include "process_windows_environment.inc"
 /* Both launch policies use the same handle allowlist and job ownership. The
  * environment belongs to the wrapper and is borrowed only by CreateProcessW. */
+/* The same native launch path now accepts an optional file destination; retain its previous signature for review. */
+#if 0
 static UmiStatus ChannelOpenNative(const UmiProcessChannelRequest *r, wchar_t *env, UmiProcessChannel **out){
+#endif
+static UmiStatus ChannelOpenNative(const UmiProcessChannelRequest *r, wchar_t *env, const char *diagnosticsPath, UmiProcessChannel **out){
     if(!out)return UMI_STATUS_INVALID_ARGUMENT;
     *out=NULL;
     UmiStatus s=PcValidate(r);
     if(s!=UMI_STATUS_OK)return s;
+    if(diagnosticsPath){
+        s=UmiOutputFileValidatePath(diagnosticsPath);
+        if(s!=UMI_STATUS_OK)return s;
+    }
     wchar_t *program=NULL,*cwd=NULL;
     s=UmiWindowsUtf16(r->program,&program);
     if(s==UMI_STATUS_OK)s=UmiWindowsUtf16(r->workingDirectory,&cwd);
@@ -367,11 +376,31 @@ static UmiStatus ChannelOpenNative(const UmiProcessChannelRequest *r, wchar_t *e
         CloseHandle(connection.hEvent);
         if(!connected){s=UMI_STATUS_IO_ERROR;goto finish;}
     }
+/* Direct stderr recording avoids pipe backpressure while a protocol client waits for input; the three-handle inheritance allowlist is unchanged. */
+#if 0
     if(!CreatePipe((PHANDLE)&c->output,&childOut,&sa,65536)||!CreatePipe((PHANDLE)&c->error,&childErr,&sa,65536)){
         s=UMI_STATUS_IO_ERROR;
         goto finish;
     }
     if(!SetHandleInformation(c->output,HANDLE_FLAG_INHERIT,0)||!SetHandleInformation(c->error,HANDLE_FLAG_INHERIT,0)){
+        s=UMI_STATUS_IO_ERROR;
+        goto finish;
+    }
+#endif
+    if(!CreatePipe((PHANDLE)&c->output,&childOut,&sa,65536)){
+        s=UMI_STATUS_IO_ERROR;
+        goto finish;
+    }
+    if(diagnosticsPath){
+        s=UmiOutputFileCreate(diagnosticsPath,&c->diagnosticFile);
+        if(s==UMI_STATUS_OK)s=UmiOutputFileDuplicateForChild(c->diagnosticFile,(void **)&childErr);
+        if(s!=UMI_STATUS_OK)goto finish;
+    }else if(!CreatePipe((PHANDLE)&c->error,&childErr,&sa,65536)){
+        s=UMI_STATUS_IO_ERROR;
+        goto finish;
+    }
+    if(!SetHandleInformation(c->output,HANDLE_FLAG_INHERIT,0)||
+       (c->error&&!SetHandleInformation(c->error,HANDLE_FLAG_INHERIT,0))){
         s=UMI_STATUS_IO_ERROR;
         goto finish;
     }
@@ -448,7 +477,25 @@ UmiStatus UmiProcessChannelOpen(const UmiProcessChannelRequest *request, UmiProc
     if (status != UMI_STATUS_OK) return status;
     wchar_t *environment = Environment();
     if (environment == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+/* Existing launch policy selects the original unrecorded mode; retain its former internal call for review. */
+#if 0
     status = ChannelOpenNative(request, environment, out);
+#endif
+    status = ChannelOpenNative(request, environment, NULL, out);
+    free(environment);
+    return status;
+}
+UmiStatus UmiProcessChannelOpenRecorded(const UmiProcessChannelRequest *request,
+    const char *diagnosticsPath, UmiProcessChannel **out)
+{
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out = NULL;
+    UmiStatus status = PcValidate(request);
+    if (status == UMI_STATUS_OK) status = UmiOutputFileValidatePath(diagnosticsPath);
+    if (status != UMI_STATUS_OK) return status;
+    wchar_t *environment = Environment();
+    if (environment == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = ChannelOpenNative(request, environment, diagnosticsPath, out);
     free(environment);
     return status;
 }
@@ -465,7 +512,11 @@ UmiStatus UmiProcessChannelOpenProgram(const UmiProcessChannelRequest *request,
     values.environment_count = count;
     wchar_t *block = NULL;
     status = umi_windows_environment_block(&values, &block);
+/* Existing launch policy selects the original unrecorded mode; retain its former internal call for review. */
+#if 0
     if (status == UMI_STATUS_OK) status = ChannelOpenNative(request, block, out);
+#endif
+    if (status == UMI_STATUS_OK) status = ChannelOpenNative(request, block, NULL, out);
     free(block);
     return status;
 }
@@ -560,9 +611,16 @@ UmiStatus UmiProcessChannelPoll(UmiProcessChannel *c,UmiProcessChannelSnapshot *
     if(!c||!out)return UMI_STATUS_INVALID_ARGUMENT;
     Drain(c);
     Reap(c);
+/* Poll exposes exit state and any recording flush failure; repeated polls retain that failure. */
+#if 0
     *out=c->snapshot;
     return UMI_STATUS_OK;
+#endif
+    *out=c->snapshot;
+    return PcFinishDiagnostics(c);
 }
+/* Explicit stop now finalizes owned error recording before reporting success; retained implementation documents the former pipe-only result. */
+#if 0
 UmiStatus UmiProcessChannelTerminate(UmiProcessChannel *c){
     if(!c)return UMI_STATUS_INVALID_ARGUMENT;
     Reap(c);
@@ -574,6 +632,20 @@ UmiStatus UmiProcessChannelTerminate(UmiProcessChannel *c){
     }
     return UMI_STATUS_OK;
 }
+
+#endif
+UmiStatus UmiProcessChannelTerminate(UmiProcessChannel *c){
+    if(!c)return UMI_STATUS_INVALID_ARGUMENT;
+    Reap(c);
+    if(c->snapshot.running){
+        c->snapshot.terminated=1;
+        if(!TerminateJobObject(c->job,1))return UMI_STATUS_IO_ERROR;
+        if(WaitForSingleObject(c->process,5000)!=WAIT_OBJECT_0)return UMI_STATUS_TIMEOUT;
+        Reap(c);
+    }
+    return PcFinishDiagnostics(c);
+}
+
 void UmiProcessChannelDestroy(UmiProcessChannel *c){
     if(!c)return;
     (void)UmiProcessChannelTerminate(c);
@@ -582,5 +654,6 @@ void UmiProcessChannelDestroy(UmiProcessChannel *c){
     Close(&c->error);
     Close(&c->process);
     Close(&c->job);
+    UmiOutputFileDestroy(c->diagnosticFile);
     free(c);
 }

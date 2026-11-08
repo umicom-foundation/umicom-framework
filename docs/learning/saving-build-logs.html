@@ -51,4 +51,47 @@ invented, and the capture does not imply that the whole requested workflow ran.<
 <code>UmiOutputFileRead</code> and <code>UmiOutputFileClose</code> expose the same file ownership rules. Serialize these
 calls on their owner and destroy the writer only after its final I/O operation. Destruction closes an open handle
 but leaves the file on disk.</p>
+<h2>Keep protocol output separate from errors</h2>
+<p>A build log can merge two text streams, but a protocol client often cannot.
+For example, QEMU sends machine-readable QMP replies on standard output. Inserting
+an error line into that stream would make a valid reply impossible to decode.
+Framework's interactive process channel therefore keeps standard output and
+standard error separate.</p>
+<ol>
+<li>Prepare the existing <code>UmiProcessChannelRequest</code> with an absolute
+trusted executable, literal arguments and an existing working directory. The
+channel starts no shell and performs no executable search.</li>
+<li>Choose a new absolute error-log path in a directory you control. Call
+<code>UmiProcessChannelOpenRecorded</code>. On success, read standard output and
+write standard input through the ordinary channel API. The child writes stderr
+directly to the reserved file, even while your host waits for input.</li>
+<li>Poll until the child exits. Check both the returned <code>UmiStatus</code> and
+<code>snapshot.exitCode</code>. A successful poll means observation and final
+file flush succeeded; it does not turn a failing child exit into success. For
+an explicit forced stop, check <code>UmiProcessChannelTerminate</code> instead.</li>
+<li>Destroy the channel after checking completion. A void destructor is a
+fallback cleanup operation and cannot communicate a recording error. Retain
+partial output after failure, and choose a different filename before retrying.</li>
+</ol>
+<pre><code>#include "umicom/platform/process_channel.h"
+
+/* The caller keeps the returned owner alive, serializes channel operations,
+ * and eventually checks completion before destroying it. */
+UmiStatus OpenProtocolWithErrors(const UmiProcessChannelRequest *request,
+    const char *new_error_path, UmiProcessChannel **out_channel)
+{
+    return UmiProcessChannelOpenRecorded(request, new_error_path, out_channel);
+}</code></pre>
+<p>The recorded channel leaves its in-memory diagnostic tail empty; inspect the
+file instead. Its existing <code>Open</code> mode still supplies a bounded tail.
+The raw file has no rotation or automatic size limit. A final flush cannot prove
+that the child checked its own write errors, nor recover bytes it never emitted.
+The shared <code>Umicom::output_file</code> target owns exclusive creation; the
+channel composes it without importing unrelated application services.</p>
+<p><strong>Exercise:</strong> use a small trusted producer that writes binary
+stderr larger than a pipe's capacity and one short stdout message. Delay channel
+polling, then inspect the file size. Verify that the stdout message contains no
+error bytes. Repeat with an existing filename: launch must be refused and its
+original bytes retained. These are separate observations from a real emulator
+boot or application release test.</p>
 </main></body></html>

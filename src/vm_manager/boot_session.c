@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/vm_manager/boot_session.c
- * PURPOSE: Bind reviewed files to a paused QEMU session using existing process ownership.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Bind reviewed files to a paused QEMU session using existing process ownership.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "boot_internal.h"
@@ -27,6 +34,7 @@ UmiStatus UmiVmBootReview(const UmiVmBootPlan *plan, UmiVmReport *report)
     memset(report, 0, sizeof *report);
     if (!plan) return VmReport(report, UMI_STATUS_INVALID_ARGUMENT, "A boot plan is required.");
     UmiStatus status = UmiSetupFileCheck(plan->request.workingDirectory, 1, NULL);
+    if (status == UMI_STATUS_OK) status = VmBootRecordingReview(plan);
     if (status == UMI_STATUS_OK)
         status = UmiSetupNativeProgramCheck(plan->request.executable, NULL);
     UmiNativeSha256 hash;
@@ -73,6 +81,10 @@ UmiStatus UmiVmBootStart(const UmiVmBootPlan *plan, const char *expectedFingerpr
     if (status == UMI_STATUS_OK && strcmp(expected, report->fingerprint) != 0)
         return VmReport(report, UMI_STATUS_INVALID_STATE, "Boot inputs changed since review. Review the new inputs.");
 
+    /* Reserve evidence only after the repeated review matched. Failure leaves
+     * its directory available for diagnosis and never launches the child. */
+    if (status == UMI_STATUS_OK) status = VmBootRecordingBegin(plan, report);
+
     const char *arguments[UMI_CHANNEL_MAX_ARGUMENTS];
     for (size_t index = 0; index < plan->argumentCount; ++index)
         arguments[index] = plan->arguments[index];
@@ -80,7 +92,16 @@ UmiStatus UmiVmBootStart(const UmiVmBootPlan *plan, const char *expectedFingerpr
     if (status == UMI_STATUS_OK) {
         UmiProcessChannelRequest request = {plan->request.executable, arguments,
             plan->argumentCount, plan->request.workingDirectory};
+/* The shared native channel owns stderr capture while QEMU retains serial.log; neither stream is mixed into QMP. */
+#if 0
         status = UmiProcessChannelOpen(&request, &channel);
+#endif
+        if (plan->recordingDirectory[0]) {
+            char diagnostics[UMI_VM_PATH];
+            status = UmiSetupPathJoin(plan->recordingDirectory, "qemu-errors.log", diagnostics);
+            if (status == UMI_STATUS_OK)
+                status = UmiProcessChannelOpenRecorded(&request, diagnostics, &channel);
+        } else status = UmiProcessChannelOpen(&request, &channel);
         if (status == UMI_STATUS_OK) report->processLaunched = 1;
     }
     if (status == UMI_STATUS_OK) {

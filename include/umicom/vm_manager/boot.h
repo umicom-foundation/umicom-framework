@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/vm_manager/boot.h
- * PURPOSE: Plan and supervise standalone operating-system boots through QEMU.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Plan and supervise standalone operating-system boots through QEMU.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_VM_MANAGER_BOOT_H
@@ -65,6 +72,28 @@ UmiStatus UmiVmBootRequestValidate(const UmiVmBootRequest *request);
  * No writable base image, host device, network, share or monitor is exposed.
  * The plan is not an emulator sandbox or proof that a guest will boot. */
 UmiStatus UmiVmBootPlanCreate(const UmiVmBootRequest *request, UmiVmBootPlan **outPlan);
+/* Recording paths are bound to the review through the serial argument vector.
+ * Use a new absolute directory beneath a trusted existing parent. Planning is
+ * pure, review checks absence, and start creates the directory exclusively.
+ * QEMU writes guest output to serial.log; Framework reserves qemu-errors.log
+ * for child stderr. No QMP commands or terminal input are recorded. Files have
+ * no automatic size limit; keep the directory and available space under owner
+ * control. NULL selects the original unrecorded behavior. Partial files remain
+ * on failure. Check Observe after exit or ForceStop before destroying a session
+ * to receive recording flush errors; raw bytes are not qualified boot evidence.
+ * The earlier serial-only contract is retained below as design history. */
+#if 0
+/* Optional serial recording is part of the reviewed argument vector. The
+ * directory must be absolute, new, and beneath a trusted existing parent.
+ * Planning touches no files; review checks absence; start exclusively creates
+ * the directory before QEMU opens serial.log. Existing directories are refused.
+ * NULL selects the original unrecorded behavior. This records guest output,
+ * not QMP commands, terminal input, stderr, or proof that a guest booted.
+ * Keep the selected directory under owner control for the entire session. */
+#endif
+UmiStatus UmiVmBootPlanCreateRecorded(const UmiVmBootRequest *request,
+    const char *recordingDirectory, UmiVmBootPlan **outPlan);
+const char *UmiVmBootPlanRecordingDirectory(const UmiVmBootPlan *plan);
 void UmiVmBootPlanDestroy(UmiVmBootPlan *plan);
 const char *UmiVmBootPlanProgram(const UmiVmBootPlan *plan);
 const char *UmiVmBootPlanDirectory(const UmiVmBootPlan *plan);
