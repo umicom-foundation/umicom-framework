@@ -188,7 +188,9 @@ static void test_invalid_requests(void)
     UmiDeliveryLeaseTicket invalid = {0U, 1U};
     char owner[UMI_DELIVERY_LEASE_OWNER_CAPACITY + 1U];
     memset(owner, 'a', sizeof(owner));
-    owner[sizeof(owner) - 1U] = ' ';
+    /* A source escape keeps the terminator visible to text-based source audits;
+     * the owner buffer still contains a zero byte at runtime. */
+    owner[sizeof(owner) - 1U] = '\0';
     assert(umi_delivery_lease_acquire_ticket(NULL, 1U, "a", 0U, 1U, &output) ==
            UMI_STATUS_INVALID_ARGUMENT);
     assert(umi_delivery_lease_acquire_ticket(store, 0U, "a", 0U, 1U, &output) ==
