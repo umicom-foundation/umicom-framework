@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/toolchain/build_invocation.c
- * PURPOSE: Resolve one explicit native workflow without shell parsing or guessed installation directories.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Resolve one explicit native workflow without shell parsing or guessed installation directories.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/toolchain/build_invocation.h"
@@ -48,6 +55,7 @@ UmiStatus UmiBuildInvocationParse(UmiBuildAction action, int argc,
     umi_build_request_init(&inv->request);
     const char *source = ".", *binary = NULL, *prefix = NULL, *executable = NULL, *log = NULL;
     const char *alias = NULL;
+    const char *testLog = NULL, *testJunit = NULL;
     uint32_t seen = 0U;
     int configure = action == UMI_BUILD_CONFIGURE || action == UMI_BUILD_MAKE || action == UMI_BUILD_DELIVER;
     /* Preserve the original action classification for comparison. Build-test
@@ -63,7 +71,11 @@ UmiStatus UmiBuildInvocationParse(UmiBuildAction action, int argc,
     int run = action == UMI_BUILD_RUN || action == UMI_BUILD_COMMAND;
     static const char *const keys[] = {"--source", "--build", "--preset", "--target", "--jobs",
         "--executable", "--config", "--prefix", "--tests", "--component", "--package-target",
+/* The original option tail is retained; new CTest artifact keys keep existing indexes. */
+#if 0
         "--timeout-ms", "--log", "--dry-run", "--clean"};
+#endif
+        "--timeout-ms", "--log", "--dry-run", "--clean", "--output-log", "--output-junit"};
     for (int i = 0; i < argc; ++i) {
         const char *key = argv[i];
         if (!key || !*key) return invalid(message, capacity, "Empty option is not supported.");
@@ -74,6 +86,15 @@ UmiStatus UmiBuildInvocationParse(UmiBuildAction action, int argc,
             for (size_t j = 0U; j < inv->request.run_argument_count; ++j)
                 if (!inv->request.run_arguments[j]) return invalid(message, capacity, "Launch argument is NULL.");
             break;
+        }
+        /* The named option keeps launch's -- delimiter unchanged. Each value
+         * is one literal argument, including leading hyphens and spaces. */
+        if (strcmp(key, "--build-argument") == 0) {
+            if ((!compile && !package) || i + 1 >= argc || !argv[i + 1] ||
+                !argv[i + 1][0] || inv->options.build_argument_count == 16U)
+                return invalid(message, capacity, "Build/package accept at most 16 nonempty --build-argument values.");
+            inv->build_arguments[inv->options.build_argument_count++] = argv[++i];
+            continue;
         }
         if (strcmp(key, "--define") == 0) {
             if (!configure || i + 1 >= argc || !argv[i + 1] || inv->options.configure_definition_count == 16U)
@@ -139,6 +160,11 @@ UmiStatus UmiBuildInvocationParse(UmiBuildAction action, int argc,
                 if (!number(value, 86400000U, &parsed)) return invalid(message, capacity, "--timeout-ms must be 1 to 86400000 per phase.");
                 inv->request.timeout_ms = parsed; break;
             case 12: log = value; break;
+            case 15:
+            case 16:
+                if (!test) return invalid(message, capacity, "CTest output paths require a test phase.");
+                if (k == 15U) testLog = value; else testJunit = value;
+                break;
             default: return invalid(message, capacity, "Unsupported option.");
         }
     }
@@ -155,6 +181,8 @@ UmiStatus UmiBuildInvocationParse(UmiBuildAction action, int argc,
     if (status == UMI_STATUS_OK && prefix) status = resolve(prefix, inv->source, inv->prefix);
     if (status == UMI_STATUS_OK && log) status = resolve(log, inv->source, inv->log);
     if (status == UMI_STATUS_OK && executable) status = resolve(executable, inv->source, inv->executable);
+    if (status == UMI_STATUS_OK && testLog) status = resolve(testLog, inv->source, inv->test_log);
+    if (status == UMI_STATUS_OK && testJunit) status = resolve(testJunit, inv->source, inv->test_junit);
     if (status != UMI_STATUS_OK) return invalid(message, capacity, "A selected path is invalid or too long.");
     if (alias) {
         const char *name = alias;
@@ -184,6 +212,13 @@ UmiStatus UmiBuildInvocationParse(UmiBuildAction action, int argc,
     inv->request.window_mode = run ? UMI_PROCESS_WINDOW_INHERIT : UMI_PROCESS_WINDOW_HIDDEN;
     inv->options.explicit_build_directory = binary != NULL;
     inv->options.configure_definitions = inv->definitions;
+    inv->options.build_arguments = inv->build_arguments;
+    inv->options.test_output_log = testLog ? inv->test_log : NULL;
+    inv->options.test_output_junit = testJunit ? inv->test_junit : NULL;
+    /* Independent writers must not share the raw stream log namespace. */
+    if (log && ((testLog && umi_path_equal(inv->log, inv->test_log)) ||
+        (testJunit && umi_path_equal(inv->log, inv->test_junit))))
+        return invalid(message, capacity, "Raw and CTest output files must have distinct paths.");
     if (!binary && !run && !inv->request.preset) {
 #ifdef _WIN32
         inv->request.preset = "windows-ucrt64-headless-debug";
@@ -191,5 +226,10 @@ UmiStatus UmiBuildInvocationParse(UmiBuildAction action, int argc,
         inv->request.preset = "headless-debug";
 #endif
     }
+    /* Keep the earlier request-only admission for review. Shared validation also
+     * checks execution options before a CLI or Studio caller can create logs. */
+    #if 0
     return umi_build_request_validate(action, &inv->request, message, capacity);
+    #endif
+    return UmiBuildExecutionValidate(action, &inv->request, &inv->options, message, capacity);
 }

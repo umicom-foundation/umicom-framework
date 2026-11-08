@@ -761,7 +761,11 @@ static UmiStatus umi_build_compile_internal(
 {
     const UmiToolInfo *cmake =
         umi_toolchain_profile_tool(profile, UMI_TOOL_CMAKE);
+    /* Retain the earlier bound; the shared validator limits appended native arguments. */
+    #if 0
     const char *arguments[16];
+    #endif
+    const char *arguments[UMI_PROCESS_MAX_ARGUMENTS];
     char jobs[32];
     size_t count = 0U;
 
@@ -793,6 +797,13 @@ static UmiStatus umi_build_compile_internal(
     if (umi_build_has_text(request->configuration)) {
         arguments[count++] = "--config";
         arguments[count++] = request->configuration;
+    }
+    /* CMake owns generator selection; Framework forwards reviewed native
+     * arguments only after its delimiter, never through a shell. */
+    if (options && options->build_argument_count != 0U) {
+        arguments[count++] = "--";
+        for (size_t i = 0U; i < options->build_argument_count; ++i)
+            arguments[count++] = options->build_arguments[i];
     }
     return umi_build_run_process(
         cmake,
@@ -905,6 +916,16 @@ static UmiStatus umi_build_test_internal(
         (void)snprintf(jobs, sizeof jobs, "%d", request->jobs);
         arguments[count++] = "--parallel";
         arguments[count++] = jobs;
+    }
+    /* CTest produces its own structured result and transcript independently
+     * of the raw streamed log. Admission requires distinct absolute paths. */
+    if (options && options->test_output_log) {
+        arguments[count++] = "--output-log";
+        arguments[count++] = options->test_output_log;
+    }
+    if (options && options->test_output_junit) {
+        arguments[count++] = "--output-junit";
+        arguments[count++] = options->test_output_junit;
     }
     return umi_build_run_process(
         ctest,
@@ -1076,7 +1097,11 @@ static UmiStatus umi_build_package_internal(
 {
     const UmiToolInfo *cmake =
         umi_toolchain_profile_tool(profile, UMI_TOOL_CMAKE);
+    /* Retain the earlier bound; the shared validator limits appended native arguments. */
+    #if 0
     const char *arguments[16];
+    #endif
+    const char *arguments[UMI_PROCESS_MAX_ARGUMENTS];
     const char *package_target =
         umi_build_has_text(request->package_target)
             ? request->package_target
@@ -1109,6 +1134,13 @@ static UmiStatus umi_build_package_internal(
     if (umi_build_has_text(request->configuration)) {
         arguments[count++] = "--config";
         arguments[count++] = request->configuration;
+    }
+    /* CMake owns generator selection; Framework forwards reviewed native
+     * arguments only after its delimiter, never through a shell. */
+    if (options && options->build_argument_count != 0U) {
+        arguments[count++] = "--";
+        for (size_t i = 0U; i < options->build_argument_count; ++i)
+            arguments[count++] = options->build_arguments[i];
     }
     return umi_build_run_process(
         cmake,
@@ -1366,6 +1398,38 @@ UmiStatus UmiBuildExecutionValidate(UmiBuildAction action,
         }
     }
     if (options == NULL) return UMI_STATUS_OK;
+    /* Execution extensions are admitted here for CLI, Studio and SDK callers.
+     * Validation has no filesystem access, process dispatch or observer calls. */
+    int hasBuild = action == UMI_BUILD_COMPILE || action == UMI_BUILD_PACKAGE ||
+        action == UMI_BUILD_MAKE || action == UMI_BUILD_DELIVER || action == UMI_BUILD_COMPILE_TEST;
+    int hasTest = action == UMI_BUILD_TEST || action == UMI_BUILD_MAKE ||
+        action == UMI_BUILD_DELIVER || action == UMI_BUILD_COMPILE_TEST;
+    if (options->build_argument_count > 16U ||
+        (options->build_argument_count != 0U && (!hasBuild || !options->build_arguments))) {
+        umi_build_message(message, message_capacity, "Native build arguments need a build/package phase and at most 16 values.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    for (size_t i = 0U; i < options->build_argument_count; ++i) {
+        if (!umi_build_has_text(options->build_arguments[i])) {
+            umi_build_message(message, message_capacity, "Native build arguments cannot be NULL or empty.");
+            return UMI_STATUS_INVALID_ARGUMENT;
+        }
+    }
+    const char *artifacts[] = {options->test_output_log, options->test_output_junit};
+    for (size_t i = 0U; i < sizeof artifacts / sizeof artifacts[0]; ++i) {
+        if (!artifacts[i]) continue;
+        char normalized[UMI_PATH_CAPACITY];
+        if (!hasTest || !umi_path_is_absolute(artifacts[i]) ||
+            umi_path_normalise(artifacts[i], normalized, sizeof normalized) != UMI_STATUS_OK) {
+            umi_build_message(message, message_capacity, "CTest artifacts require a test phase and valid absolute paths.");
+            return UMI_STATUS_INVALID_ARGUMENT;
+        }
+    }
+    if (artifacts[0] && artifacts[1] && umi_path_equal(artifacts[0], artifacts[1])) {
+        umi_build_message(message, message_capacity, "CTest log and JUnit paths must be distinct.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
     if (options->explicit_build_directory && !umi_build_has_text(request->build_directory)) {
         umi_build_message(message, message_capacity, "An explicit build directory requires a non-empty path.");
         return UMI_STATUS_INVALID_ARGUMENT;

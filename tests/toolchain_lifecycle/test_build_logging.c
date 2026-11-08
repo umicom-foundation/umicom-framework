@@ -95,6 +95,23 @@ int main(void)
     CHECK(UmiBuildExecuteLogged(&profile, NULL, UMI_BUILD_RUN, &request, &options, path, &log, report) == UMI_STATUS_INVALID_ARGUMENT);
     CHECK(!log.created && !umi_fs_exists(path) && fixture.calls == 0U);
     request.run_arguments = args;
+    /* A CTest artifact cannot be another writer to the raw output stream.
+     * Refuse both collisions before creating the file or starting a child. */
+    UmiBuildRequest artifact_request = request;
+    artifact_request.executable = NULL;
+    artifact_request.run_arguments = NULL;
+    artifact_request.run_argument_count = 0U;
+    artifact_request.build_directory = directory;
+    options.test_output_log = path;
+    CHECK(UmiBuildExecuteLogged(&profile, NULL, UMI_BUILD_TEST, &artifact_request, &options, path, &log, report) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(!log.created && !umi_fs_exists(path) && fixture.calls == 0U);
+    options.test_output_log = NULL; options.test_output_junit = path;
+    CHECK(UmiBuildExecuteLogged(&profile, NULL, UMI_BUILD_TEST, &artifact_request, &options, path, &log, report) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(!log.created && !umi_fs_exists(path) && fixture.calls == 0U);
+    options.test_output_junit = "relative.xml";
+    CHECK(UmiBuildExecuteLogged(&profile, NULL, UMI_BUILD_TEST, &artifact_request, &options, path, &log, report) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(!log.created && !umi_fs_exists(path) && fixture.calls == 0U);
+    options.test_output_junit = NULL;
     /* The valid retry below must create exactly the previously refused path. */
     CHECK(UmiBuildExecuteLogged(&profile, NULL, UMI_BUILD_RUN, &request, &options, path, &log, report) == UMI_STATUS_OK);
     CHECK(fixture.calls == 1U && fixture.seen == 100000U && log.created && log.capture_complete);

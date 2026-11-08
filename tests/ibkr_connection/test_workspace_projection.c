@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/automation.h"
+#include "umicom/ui/gtk4/selection_list.h"
 #include "umicom/broker_connectivity/workspace_gtk4.h"
 #include "umicom/broker_connectivity/access_gtk4.h"
 #include "umicom/broker_connectivity/connection_gtk4.h"
@@ -1104,7 +1105,11 @@ int main(int argc, char **argv)
                 } else {
                     CHECK(refreshed == UMI_STATUS_OK);
                     CHECK(Contains(searchStatus, "Complete"));
+                    /* Retain the raw-index assertion for review; assert the shared no-choice contract. */
+                    #if 0
                     CHECK(gtk_drop_down_get_selected(GTK_DROP_DOWN(results)) == GTK_INVALID_LIST_POSITION);
+                    #endif
+                    CHECK(UmiGtk4SelectionListSelected(GTK_DROP_DOWN(results)) == GTK_INVALID_LIST_POSITION);
                     CHECK(!gtk_widget_get_sensitive(apply));
                     if (strcmp(argv[1], "search-empty") == 0) {
                         CHECK(Contains(searchStatus, "0 candidates"));
@@ -1126,7 +1131,11 @@ int main(int argc, char **argv)
                             g_signal_emit_by_name(apply, "clicked");
                             CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(identity)), "999") == 0);
                             CHECK(Contains(notice, "no longer current"));
+                            /* Retain the raw-index assertion for review; assert the shared no-choice contract. */
+                            #if 0
                             CHECK(gtk_drop_down_get_selected(GTK_DROP_DOWN(results)) == GTK_INVALID_LIST_POSITION);
+                            #endif
+                            CHECK(UmiGtk4SelectionListSelected(GTK_DROP_DOWN(results)) == GTK_INVALID_LIST_POSITION);
                         } else if (strcmp(argv[1], "search-active-quote") == 0) {
                             quoteAvailable = TRUE; quote.subscribed = true; quote.requestId = 36000U;
                             CHECK(UmiBrokerWorkspaceGtkRefresh(workspace) == UMI_STATUS_OK);
@@ -1138,7 +1147,11 @@ int main(int argc, char **argv)
                             CHECK(Contains(searchStatus, "STALE") && !gtk_widget_get_sensitive(apply));
                             searchAvailable = FALSE;
                             CHECK(UmiBrokerWorkspaceGtkOpenConnection(workspace) == UMI_STATUS_OK);
+                            /* Retain the raw-index assertion for review; assert the shared no-choice contract. */
+                            #if 0
                             CHECK(gtk_drop_down_get_selected(GTK_DROP_DOWN(results)) == GTK_INVALID_LIST_POSITION);
+                            #endif
+                            CHECK(UmiGtk4SelectionListSelected(GTK_DROP_DOWN(results)) == GTK_INVALID_LIST_POSITION);
                             CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(GTK_DROP_DOWN(results))) == 0U);
                             CHECK(!gtk_widget_get_sensitive(apply));
                         } else if (strcmp(argv[1], "search-utf8") == 0) {
@@ -1182,7 +1195,11 @@ int main(int argc, char **argv)
             g_signal_emit_by_name(start, "clicked");
             CHECK(subscriptions == 0U && Contains(notice, "positive contract ID"));
         } else if (strcmp(argv[1], "quote-mode-invalid") == 0) {
+            /* Use the shared clear operation so the visible prompt is actually selected. */
+            #if 0
             gtk_drop_down_set_selected(GTK_DROP_DOWN(dataType), GTK_INVALID_LIST_POSITION);
+            #endif
+            CHECK(UmiGtk4SelectionListSelect(GTK_DROP_DOWN(dataType), GTK_INVALID_LIST_POSITION) == UMI_STATUS_OK);
             g_signal_emit_by_name(start, "clicked");
             CHECK(subscriptions == 0U && !quoteAvailable && gtk_widget_get_sensitive(start));
             CHECK(Contains(notice, "data mode"));

@@ -47,7 +47,8 @@ umicom_apply_warnings(umicom_learning_catalogue_gtk4)
 umicom_apply_sanitizers(umicom_learning_catalogue_gtk4)
 if(COMMAND umicom_target_qualification_inputs)
     umicom_target_qualification_inputs(umicom_learning_catalogue_gtk4 FILES
-        "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_private.h")
+        "${_learning_catalogue_root}/adapters/gtk4/learning_catalogue_private.h"
+        "${_learning_catalogue_root}/adapters/gtk4/focus_handoff_private.h")
 endif()
 install(TARGETS umicom_learning_catalogue_gtk4 EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Framework)
@@ -576,6 +577,32 @@ if(BUILD_TESTING)
             TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;learning;regression;gtk4")
         if(COMMAND umicom_test_impact_owners)
             umicom_test_impact_owners("framework.learning_pack.manifest_route.gtk4.${_case}" TARGETS umicom-learning-manifest-route-gtk4-test)
+        endif()
+    endforeach()
+endif()
+
+# Native input focus must finish before asynchronous work disables controls.
+# Keep these cases independent of installed packs and application fixtures.
+if(BUILD_TESTING)
+    add_executable(umicom-learning-catalogue-focus-test
+        "${_learning_catalogue_root}/tests/learning_pack/test_catalogue_focus_gtk4.c")
+    set_target_properties(umicom-learning-catalogue-focus-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom-learning-catalogue-focus-test PRIVATE Umicom::learning_catalogue_gtk4)
+    umicom_apply_warnings(umicom-learning-catalogue-focus-test)
+    umicom_apply_sanitizers(umicom-learning-catalogue-focus-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-learning-catalogue-focus-test)
+    endif()
+    foreach(_case load retire retire-reader unrelated-load unrelated-retire
+            reentrant-load reentrant-retire unrooted)
+        add_test(NAME "framework.learning_pack.focus.${_case}"
+            COMMAND umicom-learning-catalogue-focus-test "${_case}")
+        set_tests_properties("framework.learning_pack.focus.${_case}" PROPERTIES
+            TIMEOUT 60 SKIP_RETURN_CODE 77 LABELS "framework;learning;gtk4;focus;ownership;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.learning_pack.focus.${_case}"
+                TARGETS umicom-learning-catalogue-focus-test)
         endif()
     endforeach()
 endif()

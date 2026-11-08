@@ -127,3 +127,7 @@ foreach(_case IN LISTS _media_cases)
     set_tests_properties(windows_deployment.media.${_case} PROPERTIES TIMEOUT 30
         LABELS "framework;deployment;media;regression")
 endforeach()
+
+# Run the same cache path contracts when qualifying deployment independently.
+include("${UMI_FRAMEWORK}/cmake/UmicomPixbufCacheTests.cmake")
+umicom_register_pixbuf_cache_tests("${UMI_FRAMEWORK}" "windows_deployment")

@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/toolchain_lifecycle/test_build_invocation.c
- * PURPOSE: Reject ambiguous development requests before any process or filesystem mutation.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Reject ambiguous development requests before any process or filesystem mutation.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/toolchain/build_invocation.h"
@@ -86,6 +93,45 @@ int main(void)
     CHECK(inv->request.jobs == 1024);
     const char *empty[] = {NULL};
     CHECK(UmiBuildInvocationParse(UMI_BUILD_COMPILE, 1, empty, WORK, inv, message, sizeof message) != UMI_STATUS_OK);
+    /* Reproduce the owner's CTest artifact paths and Ninja keep-going values
+     * through the public parser. No tool, filesystem or shell is invoked. */
+    const char *artifacts[] = {"--source", "project with spaces", "--build", "output",
+        "--output-log", "logs/test output.log", "--output-junit", "logs/results.xml"};
+    CHECK(UmiBuildInvocationParse(UMI_BUILD_TEST, 8, artifacts, WORK, inv, message, sizeof message) == UMI_STATUS_OK);
+    char expected_artifact[UMI_PATH_CAPACITY];
+    CHECK(umi_path_absolute("logs/test output.log", inv->source, expected_artifact, sizeof expected_artifact) == UMI_STATUS_OK);
+    CHECK(umi_path_equal(inv->options.test_output_log, expected_artifact));
+    CHECK(inv->options.test_output_junit == inv->test_junit);
+    CHECK(UmiBuildInvocationParse(UMI_BUILD_COMPILE, 8, artifacts, WORK, inv, message, sizeof message) == UMI_STATUS_INVALID_ARGUMENT);
+    const char *native[] = {"--build", "output", "--build-argument", "-k", "--build-argument", "0",
+        "--build-argument", "NAME=two words;$(literal)"};
+    CHECK(UmiBuildInvocationParse(UMI_BUILD_COMPILE, 8, native, WORK, inv, message, sizeof message) == UMI_STATUS_OK);
+    CHECK(inv->options.build_argument_count == 3U);
+    CHECK(strcmp(inv->options.build_arguments[0], "-k") == 0);
+    CHECK(strcmp(inv->options.build_arguments[1], "0") == 0);
+    CHECK(strcmp(inv->options.build_arguments[2], "NAME=two words;$(literal)") == 0);
+    CHECK(UmiBuildInvocationParse(UMI_BUILD_TEST, 8, native, WORK, inv, message, sizeof message) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(UmiBuildInvocationParse(UMI_BUILD_CONFIGURE, 8, native, WORK, inv, message, sizeof message) == UMI_STATUS_INVALID_ARGUMENT);
+    const char *artifact_bad[][4] = {
+        {"--output-log", "one.log", "--output-log", "two.log"},
+        {"--output-junit", "", NULL, NULL},
+        {"--output-log", "same.log", "--output-junit", "./same.log"},
+        {"--log", "same.log", "--output-junit", "same.log"},
+        {"--log", "same.log", "--output-log", "same.log"}
+    };
+    for (size_t i = 0U; i < sizeof artifact_bad / sizeof artifact_bad[0]; ++i) {
+        int count = 0; while (count < 4 && artifact_bad[i][count]) ++count;
+        CHECK(UmiBuildInvocationParse(UMI_BUILD_TEST, count, artifact_bad[i], WORK, inv, message, sizeof message) == UMI_STATUS_INVALID_ARGUMENT);
+    }
+    const char *missing_native[] = {"--build-argument"};
+    CHECK(UmiBuildInvocationParse(UMI_BUILD_COMPILE, 1, missing_native, WORK, inv, message, sizeof message) == UMI_STATUS_INVALID_ARGUMENT);
+    const char *empty_native[] = {"--build-argument", ""};
+    CHECK(UmiBuildInvocationParse(UMI_BUILD_COMPILE, 2, empty_native, WORK, inv, message, sizeof message) == UMI_STATUS_INVALID_ARGUMENT);
+    const char *many_native[34];
+    for (size_t i = 0U; i < 17U; ++i) { many_native[i * 2U] = "--build-argument"; many_native[i * 2U + 1U] = "value"; }
+    CHECK(UmiBuildInvocationParse(UMI_BUILD_COMPILE, 32, many_native, WORK, inv, message, sizeof message) == UMI_STATUS_OK);
+    CHECK(inv->options.build_argument_count == 16U);
+    CHECK(UmiBuildInvocationParse(UMI_BUILD_COMPILE, 34, many_native, WORK, inv, message, sizeof message) == UMI_STATUS_INVALID_ARGUMENT);
     free(inv);
     return 0;
 }

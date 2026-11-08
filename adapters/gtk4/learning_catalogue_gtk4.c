@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "learning_catalogue_private.h"
+#include "focus_handoff_private.h"
 #include "umicom/ui/gtk4/drop_down.h"
 #include "umicom/base/text.h"
 #include "umicom/platform/output_file.h"
@@ -397,6 +398,10 @@ void UmiLearningCatalogueGtk4Retire(GtkWidget *widget)
     if (owner == NULL || owner->state.retired) return;
     g_object_ref(widget);
     owner->state.retired = 1;
+    /* Framework ends native text focus while the subtree is still sensitive.
+     * Publish retirement first: focus observers may call back into this panel.
+     * The retained root keeps its controls alive during that notification. */
+    UmiGtk4ReleaseSubtreeFocus(widget);
     gtk_widget_set_sensitive(owner->controls, FALSE);
     g_object_unref(widget);
 }

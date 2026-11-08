@@ -163,6 +163,8 @@ umicom_apply_sanitizers(umicom_base)
 
 # Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
+    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomPixbufCacheTests.cmake")
+    umicom_register_pixbuf_cache_tests("${CMAKE_CURRENT_SOURCE_DIR}" "framework.windows_deployment")
     # Dynamic plugins are not present in an executable import table. Qualify
     # payload selection in the full suite as well as the small deployment project.
     set(_media_payload_cases no-runtime no-plugins plugins ignore-registry missing-scanner directory-scanner file-plugin-root)

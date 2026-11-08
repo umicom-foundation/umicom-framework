@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/gui_control_checks/test_selection_tree_gtk4.c
- * PURPOSE: Check explicit selection and logical access to collapsed GTK panels.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Check explicit selection and logical access to collapsed GTK panels.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/automation.h"
@@ -111,6 +118,16 @@ int main(int argc, char **argv)
         CHECK(UmiGtk4SelectionListSelected(GTK_DROP_DOWN(picker)) == 0U);
         gtk_drop_down_set_selected(GTK_DROP_DOWN(picker), 1U);
         CHECK(UmiGtk4SelectionListSelected(GTK_DROP_DOWN(picker)) == 1U);
+        /* Clearing a previously chosen record must select the native prompt,
+         * not retain that record through GTK's automatic-selection policy. */
+        CHECK(UmiGtk4SelectionListSelect(GTK_DROP_DOWN(picker), GTK_INVALID_LIST_POSITION) == UMI_STATUS_OK);
+        CHECK(gtk_drop_down_get_selected(GTK_DROP_DOWN(picker)) == 2U);
+        CHECK(UmiGtk4SelectionListSelected(GTK_DROP_DOWN(picker)) == GTK_INVALID_LIST_POSITION);
+        CHECK(UmiGtk4SelectionListSelect(GTK_DROP_DOWN(picker), 1U) == UMI_STATUS_OK);
+        CHECK(UmiGtk4SelectionListSelect(GTK_DROP_DOWN(picker), 2U) == UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(UmiGtk4SelectionListSelect(GTK_DROP_DOWN(picker), 50U) == UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(UmiGtk4SelectionListSelected(GTK_DROP_DOWN(picker)) == 1U);
+        CHECK(UmiGtk4SelectionListSelect(NULL, 0U) == UMI_STATUS_INVALID_ARGUMENT);
         CHECK(UmiGtk4SelectionListPublish(GTK_DROP_DOWN(picker), rows, 0U) == UMI_STATUS_INVALID_ARGUMENT);
         CHECK(UmiGtk4SelectionListSelected(GTK_DROP_DOWN(picker)) == 1U);
         g_clear_object(&rows);
@@ -122,9 +139,21 @@ int main(int argc, char **argv)
         CHECK(UmiGtk4SelectionListPublish(GTK_DROP_DOWN(picker), rows, GTK_INVALID_LIST_POSITION) == UMI_STATUS_OK);
         CHECK(gtk_drop_down_get_model(GTK_DROP_DOWN(picker)) == NULL);
         CHECK(UmiGtk4SelectionListSelected(GTK_DROP_DOWN(picker)) == GTK_INVALID_LIST_POSITION);
+        CHECK(UmiGtk4SelectionListSelect(GTK_DROP_DOWN(picker), GTK_INVALID_LIST_POSITION) == UMI_STATUS_OK);
+        CHECK(UmiGtk4SelectionListSelect(GTK_DROP_DOWN(picker), 0U) == UMI_STATUS_INVALID_ARGUMENT);
         /* Empty lists follow the same single-publication ownership rule. */
         CHECK(UmiGtk4SelectionListPublish(GTK_DROP_DOWN(picker), rows,
             GTK_INVALID_LIST_POSITION) == UMI_STATUS_INVALID_ARGUMENT);
+        g_clear_object(&rows);
+        rows = gtk_string_list_new(labels);
+        gtk_drop_down_set_model(GTK_DROP_DOWN(picker), G_LIST_MODEL(rows));
+        CHECK(UmiGtk4SelectionListSelect(GTK_DROP_DOWN(picker), GTK_INVALID_LIST_POSITION) == UMI_STATUS_INVALID_ARGUMENT);
+        g_clear_object(&rows);
+        rows = gtk_string_list_new(labels);
+        CHECK(UmiGtk4SelectionListPublish(GTK_DROP_DOWN(picker), rows, 0U) == UMI_STATUS_OK);
+        gtk_string_list_append(rows, "Unexpected external mutation");
+        CHECK(UmiGtk4SelectionListSelect(GTK_DROP_DOWN(picker), 1U) == UMI_STATUS_INVALID_STATE);
+        CHECK(gtk_drop_down_get_selected(GTK_DROP_DOWN(picker)) == 0U);
     } else failed = 1;
 finish:
     g_clear_object(&rows);

@@ -29,8 +29,16 @@ static void WorkspaceOptionsRender(UmiBrokerWorkspaceGtk *owner)
         !owner->options.failed && !owner->options.abandoned;
     gboolean ready = WorkspaceOptionsReady(owner);
     gboolean choices = ready && WorkspaceOptionsComplete(owner) && owner->optionsItemValid;
+    /* The raw GTK index is retained for review; the shared reader excludes the prompt. */
+    #if 0
     guint expiry = gtk_drop_down_get_selected(GTK_DROP_DOWN(owner->optionsExpiry));
+    #endif
+    guint expiry = UmiGtk4SelectionListSelected(GTK_DROP_DOWN(owner->optionsExpiry));
+    /* The raw GTK index is retained for review; the shared reader excludes the prompt. */
+    #if 0
     guint strike = gtk_drop_down_get_selected(GTK_DROP_DOWN(owner->optionsStrike));
+    #endif
+    guint strike = UmiGtk4SelectionListSelected(GTK_DROP_DOWN(owner->optionsStrike));
     gboolean selected = choices && expiry < owner->optionsItem.expiryCount &&
         strike < owner->optionsItem.strikeCount;
     GtkWidget *controls[] = {owner->optionsRead, owner->optionsAbandon, owner->optionsResolve,
@@ -57,16 +65,25 @@ static void WorkspaceOptionsRender(UmiBrokerWorkspaceGtk *owner)
 }
 static void WorkspaceOptionsSetModel(GtkWidget *widget, GtkStringList *model)
 {
+    /* Retain the old setter for review. The shared service represents no choice
+     * with a visible prompt while keeping provider row indexes unchanged. */
+    #if 0
     gtk_drop_down_set_model(GTK_DROP_DOWN(widget), G_LIST_MODEL(model));
     /* Replacing a model must not silently choose the first financial instrument. */
     gtk_drop_down_set_selected(GTK_DROP_DOWN(widget), GTK_INVALID_LIST_POSITION);
+    #endif
+    (void)UmiGtk4SelectionListPublish(GTK_DROP_DOWN(widget), model, GTK_INVALID_LIST_POSITION);
 }
 static void WorkspaceOptionsChoices(UmiBrokerWorkspaceGtk *owner)
 {
     owner->optionsRendering = TRUE;
     owner->optionsItemValid = FALSE;
     GtkStringList *expiries = gtk_string_list_new(NULL), *strikes = gtk_string_list_new(NULL);
+    /* The raw GTK index is retained for review; the shared reader excludes the prompt. */
+    #if 0
     guint chain = gtk_drop_down_get_selected(GTK_DROP_DOWN(owner->optionsChain));
+    #endif
+    guint chain = UmiGtk4SelectionListSelected(GTK_DROP_DOWN(owner->optionsChain));
     if (owner->connection != NULL && WorkspaceOptionsComplete(owner) &&
         owner->optionsDisplayedRequest == owner->options.requestId && chain < owner->options.count &&
         UmiIbkrGtkCopyOptionChain(owner->connection, owner->options.requestId, chain,
@@ -212,9 +229,21 @@ static void WorkspaceOptionsResolve(GtkButton *button, gpointer data)
     /* Capture intent before a refresh can replace a model or invoke host code. */
     UmiIbkrOptionSelection selection = {0};
     selection.chainRequest = owner->options.requestId;
+    /* The raw GTK index is retained for review; the shared reader excludes the prompt. */
+    #if 0
     selection.chainIndex = gtk_drop_down_get_selected(GTK_DROP_DOWN(owner->optionsChain));
+    #endif
+    selection.chainIndex = UmiGtk4SelectionListSelected(GTK_DROP_DOWN(owner->optionsChain));
+    /* The raw GTK index is retained for review; the shared reader excludes the prompt. */
+    #if 0
     selection.expiryIndex = gtk_drop_down_get_selected(GTK_DROP_DOWN(owner->optionsExpiry));
+    #endif
+    selection.expiryIndex = UmiGtk4SelectionListSelected(GTK_DROP_DOWN(owner->optionsExpiry));
+    /* The raw GTK index is retained for review; the shared reader excludes the prompt. */
+    #if 0
     selection.strikeIndex = gtk_drop_down_get_selected(GTK_DROP_DOWN(owner->optionsStrike));
+    #endif
+    selection.strikeIndex = UmiGtk4SelectionListSelected(GTK_DROP_DOWN(owner->optionsStrike));
     guint right = gtk_drop_down_get_selected(GTK_DROP_DOWN(owner->optionsRight));
     selection.right = right == 0U ? 'C' : right == 1U ? 'P' : '\0';
     const char *currency = gtk_editable_get_text(GTK_EDITABLE(owner->optionsCurrency));

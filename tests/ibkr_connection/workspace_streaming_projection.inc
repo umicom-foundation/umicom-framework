@@ -94,7 +94,11 @@ static int StreamProjection(const char *test, GtkWidget *root, UmiBrokerWorkspac
     }
     gtk_editable_set_text(GTK_EDITABLE(contract), "123"); gtk_editable_set_text(GTK_EDITABLE(exchange), "SMART");
     if (!strcmp(test, "stream-invalid")) gtk_editable_set_text(GTK_EDITABLE(contract), "not-id");
+    /* Use the shared clear operation so the visible prompt is actually selected. */
+    #if 0
     if (!strcmp(test, "stream-kind-invalid")) gtk_drop_down_set_selected(GTK_DROP_DOWN(kind), GTK_INVALID_LIST_POSITION);
+    #endif
+    if (!strcmp(test, "stream-kind-invalid")) CHECK(UmiGtk4SelectionListSelect(GTK_DROP_DOWN(kind), GTK_INVALID_LIST_POSITION) == UMI_STATUS_OK);
     if (!strcmp(test, "stream-midpoint")) gtk_drop_down_set_selected(GTK_DROP_DOWN(kind), 1U);
     if (!strcmp(test, "stream-bid")) gtk_drop_down_set_selected(GTK_DROP_DOWN(kind), 2U);
     if (!strcmp(test, "stream-ask")) gtk_drop_down_set_selected(GTK_DROP_DOWN(kind), 3U);

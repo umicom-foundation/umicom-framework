@@ -273,6 +273,42 @@ if(_pixbuf_modules)
     file(WRITE "${_runtime_root}/share/umicom/runtime/gdk-pixbuf-loaders.cache.in" "${_cache}")
     list(APPEND _records
         "share/umicom/runtime/gdk-pixbuf-loaders.cache.in|${_runtime_root}/share/umicom/runtime/gdk-pixbuf-loaders.cache.in")
+    # Applications keep the constructor-specific template above. Also provide
+    # the standard ABI cache for native tools/tests that load the same staged
+    # GdkPixbuf DLL without that constructor. Module paths remain relocatable;
+    # this does not redirect decoding to a developer's global installation.
+    include("${CMAKE_CURRENT_LIST_DIR}/PixbufCache.cmake")
+    set(_pixbuf_versions "")
+    foreach(_module IN LISTS _pixbuf_modules)
+        get_filename_component(_loader_directory "${_module}" DIRECTORY)
+        get_filename_component(_abi_directory "${_loader_directory}" DIRECTORY)
+        get_filename_component(_abi "${_abi_directory}" NAME)
+        list(APPEND _pixbuf_versions "${_abi}")
+    endforeach()
+    list(REMOVE_DUPLICATES _pixbuf_versions)
+    foreach(_abi IN LISTS _pixbuf_versions)
+        file(GLOB _abi_modules "${UMI_DEPLOY_PREFIX}/lib/gdk-pixbuf-2.0/${_abi}/loaders/*.dll")
+        execute_process(COMMAND "${UMI_DEPLOY_PREFIX}/bin/gdk-pixbuf-query-loaders.exe" ${_abi_modules}
+            RESULT_VARIABLE _abi_result OUTPUT_VARIABLE _abi_cache ERROR_VARIABLE _abi_error
+            ENCODING UTF-8)
+        if(NOT _abi_result STREQUAL "0" OR NOT _abi_cache)
+            message(FATAL_ERROR "Conventional image-loader cache generation failed: ${_abi_error}")
+        endif()
+        umicom_windows_relative_pixbuf_cache("${_abi_cache}" "${UMI_DEPLOY_PREFIX}" "${_abi}" _relative_cache)
+        # query-loaders can omit a module that failed to load. A zero exit code
+        # alone must not turn a missing SVG decoder into a complete runtime.
+        foreach(_module IN LISTS _abi_modules)
+            file(RELATIVE_PATH _expected_module "${UMI_DEPLOY_PREFIX}" "${_module}")
+            string(FIND "${_relative_cache}" "\"${_expected_module}\"" _record_at)
+            if(_record_at LESS 0)
+                message(FATAL_ERROR "Image-loader cache omitted ${_expected_module}: ${_abi_error}")
+            endif()
+        endforeach()
+        set(_relative_cache_path "lib/gdk-pixbuf-2.0/${_abi}/loaders.cache")
+        file(MAKE_DIRECTORY "${_runtime_root}/lib/gdk-pixbuf-2.0/${_abi}")
+        file(WRITE "${_runtime_root}/${_relative_cache_path}" "${_relative_cache}")
+        list(APPEND _records "${_relative_cache_path}|${_runtime_root}/${_relative_cache_path}")
+    endforeach()
 else()
     # This is one known generated file, not a recursive resource-tree deletion.
     file(REMOVE "${_runtime_root}/share/umicom/runtime/gdk-pixbuf-loaders.cache.in")

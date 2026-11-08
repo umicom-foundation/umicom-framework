@@ -20,7 +20,11 @@ static void WorkspaceScannerRender(UmiBrokerWorkspaceGtk *owner)
     gboolean ready = owner->connection != NULL && owner->snapshot.state == UMI_IBKR_READY &&
         !owner->snapshot.stale && !owner->scannerBusy;
     gboolean occupied = owner->hasScanner && owner->scanner.needsCancel;
+    /* The raw GTK index is retained for review; the shared reader excludes the prompt. */
+    #if 0
     guint selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(owner->scannerResults));
+    #endif
+    guint selected = UmiGtk4SelectionListSelected(GTK_DROP_DOWN(owner->scannerResults));
     gboolean usable = ready && owner->hasScanner && !owner->scanner.stale && !owner->scanner.failed &&
         owner->scanner.active && selected < owner->scanner.count && selected < UMI_IBKR_SCANNER_ROW_LIMIT &&
         !owner->quoteBusy && !(owner->hasQuote && owner->quote.subscribed);
@@ -92,10 +96,17 @@ static void WorkspaceScannerRefresh(UmiBrokerWorkspaceGtk *owner)
                 "Complete refresh contains no matching contracts." : "Waiting for a complete scanner refresh.",
                 FALSE), 0, 1, 7, 1);
         owner->scannerRendering = TRUE;
+        /* Retain direct publication for review. Framework publishes a visible prompt
+         * atomically so a refreshed row never becomes an implicit instrument choice. */
+        #if 0
         gtk_drop_down_set_model(GTK_DROP_DOWN(owner->scannerResults), G_LIST_MODEL(items));
         g_object_unref(items);
         if (!owner->closed)
             gtk_drop_down_set_selected(GTK_DROP_DOWN(owner->scannerResults), GTK_INVALID_LIST_POSITION);
+        #endif
+        (void)UmiGtk4SelectionListPublish(GTK_DROP_DOWN(owner->scannerResults),
+            items, GTK_INVALID_LIST_POSITION);
+        g_object_unref(items);
         /* Hold the replacement table even if a notification destroys the owner
          * before the scroll container takes ownership of the new widget. */
         g_object_ref_sink(table);
@@ -181,7 +192,11 @@ static void WorkspaceScannerApply(GtkButton *button, gpointer data)
     UmiBrokerWorkspaceGtk *owner = data;
     if (owner->closed || owner->refreshing || owner->scannerBusy || owner->scannerRendering ||
         owner->quoteBusy || !owner->hasScanner) return;
+    /* The raw GTK index is retained for review; the shared reader excludes the prompt. */
+    #if 0
     guint index = gtk_drop_down_get_selected(GTK_DROP_DOWN(owner->scannerResults));
+    #endif
+    guint index = UmiGtk4SelectionListSelected(GTK_DROP_DOWN(owner->scannerResults));
     if (index >= owner->scanner.count || index >= UMI_IBKR_SCANNER_ROW_LIMIT) return;
     uint32_t request = owner->scanner.requestId, identity = owner->scannerItems[index].contractId;
     uint64_t generation = owner->scanner.generation;

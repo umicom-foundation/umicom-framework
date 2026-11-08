@@ -149,13 +149,25 @@ static int ScannerProjection(const char *test, GtkWidget *root, UmiBrokerWorkspa
         return 0;
     }
     CHECK(refreshed == UMI_STATUS_OK);
+    /* Retain the raw-index assertion for review; assert the shared no-choice contract. */
+    #if 0
     CHECK(gtk_drop_down_get_selected(results) == GTK_INVALID_LIST_POSITION);
+    #endif
+    CHECK(UmiGtk4SelectionListSelected(results) == GTK_INVALID_LIST_POSITION);
     if (strcmp(test, "scanner-empty") == 0) {
         CHECK(Contains(table, "Complete refresh contains no matching contracts"));
         CHECK(!gtk_widget_get_sensitive(apply));
         return 0;
     }
+    /* The two provider rows keep their indexes; Framework appends one prompt. */
+    #if 0
     CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(results)) == 2U);
+    #endif
+    CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(results)) == 3U);
+    CHECK(strcmp(gtk_string_list_get_string(GTK_STRING_LIST(gtk_drop_down_get_model(results)), 2U), "Choose an item") == 0);
+    CHECK(gtk_drop_down_get_selected(results) == 2U);
+    g_signal_emit_by_name(apply, "clicked");
+    CHECK(subscriptions == 0U && !gtk_widget_get_sensitive(apply));
     CHECK(Contains(table, "0.123456789123456789"));
     gtk_drop_down_set_selected(results, 1U);
     CHECK(gtk_widget_get_sensitive(apply));
@@ -165,7 +177,11 @@ static int ScannerProjection(const char *test, GtkWidget *root, UmiBrokerWorkspa
         ++scan.generation; scanRows[1].contractId = 555U;
         g_signal_emit_by_name(apply, "clicked");
         CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(contract)), "999") == 0);
+        /* Retain the raw-index assertion for review; assert the shared no-choice contract. */
+        #if 0
         CHECK(gtk_drop_down_get_selected(results) == GTK_INVALID_LIST_POSITION && Contains(notice, "changed"));
+        #endif
+        CHECK(UmiGtk4SelectionListSelected(results) == GTK_INVALID_LIST_POSITION && Contains(notice, "changed"));
     } else if (strcmp(test, "scanner-row-copy-failed") == 0) {
         ++scan.generation; scanRows[1].contractId = 555U; scanRowStatus = UMI_STATUS_BUSY;
         g_signal_emit_by_name(apply, "clicked");
@@ -191,7 +207,11 @@ static int ScannerProjection(const char *test, GtkWidget *root, UmiBrokerWorkspa
         CHECK(Contains(state, "STALE") && !gtk_widget_get_sensitive(apply));
         scanAvailable = FALSE;
         CHECK(UmiBrokerWorkspaceGtkOpenConnection(*workspace) == UMI_STATUS_OK);
+        /* Empty publication removes the native model; retain the former empty-list check. */
+        #if 0
         CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(results)) == 0U);
+        #endif
+        CHECK(gtk_drop_down_get_model(results) == NULL);
         CHECK(!Contains(table, "EXAMPLE-B"));
     } else if (strcmp(test, "scanner-utf8") == 0) {
         CHECK(Contains(table, "Broken \xef\xbf\xbd") && Contains(state, "Provider \xef\xbf\xbd"));

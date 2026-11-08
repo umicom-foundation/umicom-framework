@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/ui/gtk4/selection_list.h
- * PURPOSE: Publish explicit dropdown choices without silently selecting a business record.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Publish explicit dropdown choices without silently selecting a business record.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_GTK4_SELECTION_LIST_H
@@ -70,5 +77,40 @@ static inline guint UmiGtk4SelectionListSelected(GtkDropDown *picker)
     if (marker != NULL && selected >= GPOINTER_TO_UINT(marker) - 1U)
         return GTK_INVALID_LIST_POSITION;
     return selected;
+}
+
+/**
+ * @brief Select a data row or clear a selection in a published choice list.
+ * @param picker A dropdown whose model was published by this service.
+ * @param selected A data-row index, or GTK_INVALID_LIST_POSITION to clear.
+ * @return OK, INVALID_ARGUMENT for an unknown row or unmanaged model, or
+ * INVALID_STATE if the published list was modified by another owner.
+ *
+ * Clearing selects the visible prompt. GTK's native invalid-index setter can
+ * retain a previous row when automatic selection is enabled. Keeping this
+ * translation in Framework lets UI automation and application clients use the
+ * same no-choice contract. Empty models accept only a clear operation.
+ */
+static inline UmiStatus UmiGtk4SelectionListSelect(GtkDropDown *picker, guint selected)
+{
+    if (!GTK_IS_DROP_DOWN(picker)) return UMI_STATUS_INVALID_ARGUMENT;
+    GListModel *model = gtk_drop_down_get_model(picker);
+    if (model == NULL)
+        return selected == GTK_INVALID_LIST_POSITION ? UMI_STATUS_OK
+            : UMI_STATUS_INVALID_ARGUMENT;
+    gpointer marker = g_object_get_data(G_OBJECT(model), "umicom-selection-list-data-count");
+    if (marker == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    guint count = GPOINTER_TO_UINT(marker) - 1U;
+    if (g_list_model_get_n_items(model) != count + 1U)
+        return UMI_STATUS_INVALID_STATE;
+    if (selected != GTK_INVALID_LIST_POSITION && selected >= count)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* A selected notification may retire its containing window. Retain the
+     * native object through signal delivery without borrowing application state. */
+    g_object_ref(picker);
+    gtk_drop_down_set_selected(picker,
+        selected == GTK_INVALID_LIST_POSITION ? count : selected);
+    g_object_unref(picker);
+    return UMI_STATUS_OK;
 }
 #endif

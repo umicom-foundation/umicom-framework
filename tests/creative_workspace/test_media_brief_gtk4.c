@@ -118,6 +118,11 @@ int main(int argc, char **argv)
         char *path = g_build_filename(directory, "reviewed-brief.txt", NULL);
         GtkWidget *export = Find(root, "text.export");
         CHECK(export != NULL);
+        /* A collapsed expander owns content outside the rendered child tree.
+         * Follow the user action before looking up its entry and Save button. */
+        CHECK(GTK_IS_EXPANDER(export));
+        gtk_expander_set_expanded(GTK_EXPANDER(export), TRUE);
+        CHECK(GTK_IS_EDITABLE(Find(export, "text.export.path")));
         gtk_editable_set_text(GTK_EDITABLE(Find(export, "text.export.path")), path);
         Click(export, "text.export.save");
         gint64 deadline = g_get_monotonic_time() + 5 * G_TIME_SPAN_SECOND;

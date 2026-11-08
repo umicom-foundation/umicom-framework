@@ -213,6 +213,16 @@ static void Finalize(GObject *object)
     G_OBJECT_CLASS(umi_viewport_widget_parent_class)->finalize(object);
 }
 
+/* A strong reference can keep a closed GtkWindow and its child hierarchy alive.
+ * Unmapping ends the in-flight keyboard handoff even if a callback immediately
+ * presents the same window again. A later projection admits a fresh command. */
+static void Unmap(GtkWidget *widget)
+{
+    UmiViewportWidget *view = (UmiViewportWidget *)widget;
+    if (view->focusing) view->focusInterrupted = true;
+    GTK_WIDGET_CLASS(umi_viewport_widget_parent_class)->unmap(widget);
+}
+
 static void umi_viewport_widget_class_init(UmiViewportWidgetClass *klass)
 {
     GtkWidgetClass *widgetClass = GTK_WIDGET_CLASS(klass);
@@ -220,6 +230,7 @@ static void umi_viewport_widget_class_init(UmiViewportWidgetClass *klass)
     widgetClass->measure = Measure;
     widgetClass->size_allocate = Allocate;
     widgetClass->snapshot = Snapshot;
+    widgetClass->unmap = Unmap;
     objectClass->dispose = Dispose;
     objectClass->finalize = Finalize;
     gtk_widget_class_set_css_name(widgetClass, "umicom-workbench-viewport");
@@ -268,9 +279,17 @@ static gboolean Key(GtkEventControllerKey *controller, guint key, guint code,
     (void)code;
     if (key != GDK_KEY_F6) return FALSE;
     UmiViewportWidget *view = data;
+    /* Root identity alone does not establish that a retained window can receive keyboard input. Keep the old guard for review; native navigation now requires a mapped host. */
+    #if 0
     if (view->disposed || view->focusing || view->focusInterrupted) return FALSE;
     GtkRoot *root = gtk_widget_get_root(GTK_WIDGET(view));
     if (!root) return FALSE;
+    #endif
+    if (view->disposed || view->focusing || view->focusInterrupted ||
+        !gtk_widget_get_mapped(GTK_WIDGET(view))) return FALSE;
+    GtkRoot *root = gtk_widget_get_root(GTK_WIDGET(view));
+    if (!root || !gtk_widget_get_mapped(GTK_WIDGET(root)) ||
+        !gtk_widget_get_realized(GTK_WIDGET(root))) return FALSE;
     g_object_ref(view);
     g_object_ref(root);
     view->focusing = true;
@@ -308,8 +327,19 @@ static gboolean Key(GtkEventControllerKey *controller, guint key, guint code,
 #endif
         gboolean accepted = gtk_widget_child_focus(content,
             reverse ? GTK_DIR_TAB_BACKWARD : GTK_DIR_TAB_FORWARD);
+        /* Retain the previous ownership check; host availability and interruption are also required after a callback that can close or hide the window. */
+        #if 0
         bool valid = !view->disposed && !view->focusInterrupted &&
             gtk_widget_get_root(GTK_WIDGET(view)) == root &&
+            view->leaves[current] == leaf &&
+            gtk_widget_get_parent(leaf) == GTK_WIDGET(view) &&
+            gtk_widget_is_ancestor(content, leaf);
+        #endif
+        bool valid = !view->disposed && !view->focusInterrupted &&
+            gtk_widget_get_root(GTK_WIDGET(view)) == root &&
+            gtk_widget_get_mapped(GTK_WIDGET(view)) &&
+            gtk_widget_get_mapped(GTK_WIDGET(root)) &&
+            gtk_widget_get_realized(GTK_WIDGET(root)) &&
             view->leaves[current] == leaf &&
             gtk_widget_get_parent(leaf) == GTK_WIDGET(view) &&
             gtk_widget_is_ancestor(content, leaf);

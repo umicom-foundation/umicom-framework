@@ -77,7 +77,11 @@ static int TapeProjection(const char *test, GtkWidget *root, UmiBrokerWorkspaceG
     }
     gtk_editable_set_text(GTK_EDITABLE(contract), "123"); gtk_editable_set_text(GTK_EDITABLE(exchange), "SMART");
     if (!strcmp(test, "tape-invalid")) gtk_editable_set_text(GTK_EDITABLE(contract), "not-id");
+    /* Use the shared clear operation so the visible prompt is actually selected. */
+    #if 0
     if (!strcmp(test, "tape-kind-invalid")) gtk_drop_down_set_selected(GTK_DROP_DOWN(kind), GTK_INVALID_LIST_POSITION);
+    #endif
+    if (!strcmp(test, "tape-kind-invalid")) CHECK(UmiGtk4SelectionListSelect(GTK_DROP_DOWN(kind), GTK_INVALID_LIST_POSITION) == UMI_STATUS_OK);
     if (!strcmp(test, "tape-ignore-invalid")) gtk_check_button_set_active(GTK_CHECK_BUTTON(ignore), TRUE);
     if (!strcmp(test, "tape-bid-ask")) {
         gtk_drop_down_set_selected(GTK_DROP_DOWN(kind), 2U); gtk_check_button_set_active(GTK_CHECK_BUTTON(ignore), TRUE);

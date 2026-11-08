@@ -56,6 +56,10 @@ static gboolean Focus(GtkWidget *widget, GtkDirectionType direction)
     if (!probe->fired) {
         probe->fired = true;
         if (!strcmp(probe->action, "close")) gtk_window_destroy(probe->window);
+        else if (!strcmp(probe->action, "hide-window") || !strcmp(probe->action, "remap")) {
+            gtk_widget_set_visible(GTK_WIDGET(probe->window), FALSE);
+            if (!strcmp(probe->action, "remap")) gtk_window_present(probe->window);
+        }
         else if (!strcmp(probe->action, "dispose")) {
             gtk_window_set_child(probe->window, NULL);
             g_object_run_dispose(G_OBJECT(probe->view));
@@ -121,13 +125,20 @@ static int Run(const char *name)
     bool reverse = !strcmp(name, "reverse");
     bool hidden = !strcmp(name, "hidden");
     bool detached = !strcmp(name, "detached");
+    bool unmapped = !strcmp(name, "unmapped");
     if (!strcmp(name, "skip")) probe.accept = false;
     else if (!strncmp(name, "close-", 6)) { probe.action = "close"; probe.accept = !strcmp(name, "close-accept"); }
+    else if (!strncmp(name, "hide-window-", 12)) { probe.action = "hide-window"; probe.accept = !strcmp(name, "hide-window-accept"); }
+    else if (!strncmp(name, "remap-", 6)) { probe.action = "remap"; probe.accept = !strcmp(name, "remap-accept"); }
     else if (!strncmp(name, "dispose-", 8)) { probe.action = "dispose"; probe.accept = !strcmp(name, "dispose-accept"); }
     else if (!strcmp(name, "hide-callback")) { probe.action = "hide"; probe.accept = false; }
     else if (!strcmp(name, "tab-callback")) { probe.action = "tab"; probe.accept = false; }
     else if (!strcmp(name, "recursive")) probe.action = "recursive";
+    /* Retain the original mode validation while adding the hidden-host boundary. */
+    #if 0
     else if (strcmp(name, "forward") && !reverse && !hidden && !detached && strcmp(name, "locked")) return 2;
+    #endif
+    else if (strcmp(name, "forward") && !reverse && !hidden && !detached && !unmapped && strcmp(name, "locked")) return 2;
 
     UmiWorkbenchLayoutDocument *document = malloc(sizeof *document);
     CHECK(document);
@@ -156,13 +167,19 @@ static int Run(const char *name)
     }
     probe.keys = Keys(probe.view);
     CHECK(probe.keys);
+    CHECK(gtk_widget_get_mapped(probe.view));
+    if (unmapped) gtk_widget_set_visible(GTK_WIDGET(probe.window), FALSE);
     if (detached) gtk_window_set_child(probe.window, NULL);
     probe.armed = true;
     gboolean handled = SendKey(&probe, reverse);
     probe.armed = false;
     size_t total = 0;
     for (size_t i = 0; i < 4; ++i) total += probe.calls[i];
+    /* An unavailable host must reject synthetic key delivery without entering any panel callback. */
+    #if 0
     if (detached) CHECK(!handled && total == 0);
+    #endif
+    if (detached || unmapped) CHECK(!handled && total == 0);
     else if (!strcmp(probe.action, "normal")) {
         CHECK(handled);
         size_t expected = reverse ? 3U : (hidden || !probe.accept) ? 1U : 0U;
@@ -172,7 +189,30 @@ static int Run(const char *name)
     } else if (!strcmp(probe.action, "recursive")) {
         CHECK(handled && !probe.recursiveHandled && total == 1);
     } else {
+        if (handled || total != 1) fprintf(stderr, "action=%s accepted=%d handled=%d callbacks=%zu mapped=%d realized=%d\n",
+            probe.action, probe.accept, handled, total, gtk_widget_get_mapped(probe.view),
+            gtk_widget_get_realized(GTK_WIDGET(probe.window)));
         CHECK(!handled && total == 1);
+        if (!strcmp(probe.action, "close")) {
+            CHECK(!gtk_widget_get_mapped(GTK_WIDGET(probe.window)));
+            CHECK(!gtk_widget_get_realized(GTK_WIDGET(probe.window)));
+            probe.armed = true;
+            CHECK(!SendKey(&probe, false));
+            probe.armed = false;
+            size_t after = 0;
+            for (size_t i = 0; i < 4; ++i) after += probe.calls[i];
+            CHECK(after == total);
+        }
+        if (!strcmp(probe.action, "hide-window") || !strcmp(probe.action, "remap")) {
+            /* Reopening permits a new command after reprojection, never the
+             * abandoned handoff that ran while the host was being hidden. */
+            gtk_window_present(probe.window);
+            Drain();
+            gtk_widget_allocate(probe.view, 1000, 600, -1, NULL);
+            probe.action = "normal"; probe.accept = true; probe.armed = true;
+            CHECK(SendKey(&probe, false));
+            probe.armed = false;
+        }
         if (!strcmp(probe.action, "hide") || !strcmp(probe.action, "tab")) {
             CHECK(probe.mutation == UMI_STATUS_OK);
             /* A fresh allocation makes the next independent key command valid. */

@@ -51,6 +51,8 @@ static const char *umi_cli_check_option_value(
 }
 
 /* Check that cli check options satisfies its contract before another service relies on it. */
+/* Retain the earlier parser for review. Version-only diagnostics add a deliberate no-compile mode and reject malformed argument vectors before reading them. */
+#if 0
 static int umi_cli_check_options_valid(int argc, char **argv)
 {
     int index;
@@ -58,6 +60,42 @@ static int umi_cli_check_options_valid(int argc, char **argv)
     for (index = 0; index < argc; ++index) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (strcmp(argv[index], "--gtk") == 0 ||
+            strcmp(argv[index], "--github") == 0 ||
+            strcmp(argv[index], "--all") == 0 ||
+            strcmp(argv[index], "--help") == 0 ||
+            strcmp(argv[index], "-h") == 0) {
+            continue;
+        }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(argv[index], "--project") == 0) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+            if (index + 1 >= argc || argv[index + 1][0] == '\0' ||
+                strncmp(argv[index + 1], "--", 2U) == 0) {
+                (void)fprintf(stderr, "--project requires a path.\n");
+                return 0;
+            }
+            ++index;
+            continue;
+        }
+        (void)fprintf(stderr, "Unknown check option: %s\n", argv[index]);
+        return 0;
+    }
+    return 1;
+}
+
+#endif
+static int umi_cli_check_options_valid(int argc, char **argv)
+{
+    int index;
+    if (argc < 0 || (argc != 0 && argv == NULL)) return 0;
+    /* Validate the complete argument vector before option lookups consume it. */
+    for (index = 0; index < argc; ++index)
+        if (argv[index] == NULL || argv[index][0] == '\0') return 0;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0; index < argc; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(argv[index], "--versions-only") == 0 ||
+            strcmp(argv[index], "--gtk") == 0 ||
             strcmp(argv[index], "--github") == 0 ||
             strcmp(argv[index], "--all") == 0 ||
             strcmp(argv[index], "--help") == 0 ||
@@ -146,6 +184,36 @@ static int umi_cli_check_msys_bash(
 #endif
 
 /* Provide the cli command check operation used by this module and its client applications. */
+/* Tool and compiler probes are different operations. This diagnostic uses the
+ * existing Framework discovery request to collect versions without compiling,
+ * linking or running a generated program. Its output is inventory, not proof
+ * that the project's selected compiler or dependencies can build that project. */
+static int umi_cli_check_versions(UmiCliContext *context)
+{
+    if (context == NULL) return 2;
+    memset(context, 0, sizeof(*context));
+    UmiToolchainDiscoveryRequest request;
+    umi_toolchain_discovery_request_init(&request);
+    request.skip_compile_probe = 1;
+    request.diagnostic_sink = umi_cli_diagnostic_sink;
+    UmiStatus status = umi_toolchain_discover(&request, &context->discovery);
+    (void)puts("Umicom tool version inventory\nVersion/target commands ran; no generated program was compiled or launched.");
+    (void)printf("Profile: %s\nRoot: %s\n", context->discovery.profile.profile_id,
+        context->discovery.profile.root[0] != '\0' ? context->discovery.profile.root : "PATH-based discovery");
+    (void)printf("%-20s %-10s %-38s %s\n", "Tool", "Version state", "Version", "Path");
+    for (size_t i = 0U; i < context->discovery.profile.tool_count; ++i) {
+        const UmiToolInfo *tool = &context->discovery.profile.tools[i];
+        if (tool->required || tool->state != UMI_TOOL_MISSING)
+            (void)printf("%-20s %-10s %-38s %s\n", umi_tool_kind_name(tool->kind),
+                umi_tool_state_text(tool->state), tool->version[0] ? tool->version : "-", tool->path);
+    }
+    (void)puts("Compile, link, runtime and C23 probes: NOT RUN.\nProject dependencies and source revisions were not qualified.");
+    if (status != UMI_STATUS_OK)
+        (void)fprintf(stderr, "Tool discovery incomplete: %s\n", umi_status_text(status));
+    if (fflush(stdout) != 0 || ferror(stdout)) return 2;
+    return status == UMI_STATUS_OK ? 0 : 1;
+}
+
 int umi_cli_command_check(UmiCliContext *context, int argc, char **argv)
 {
     static const UmiDependencyRequirement base_requirements[] = {
@@ -187,10 +255,20 @@ int umi_cli_command_check(UmiCliContext *context, int argc, char **argv)
         (void)puts(
             "Usage: umicom check [--all] [--gtk] [--github] "
             "[--project PATH]\n"
+            "       umicom doctor --versions-only\n"
+            "  --versions-only  Capture discovered tool versions without compile/link/run probes.\n"
+            "                   Use alone; invokes tool version/target commands. This is not qualification.\n"
             "  --all      Check desktop libraries and GitHub CLI as well as "
             "the core toolchain.\n"
             "  --project  Also require PATH/CMakePresets.json.");
         return 0;
+    }
+    if (umi_cli_has_option(argc, argv, "--versions-only")) {
+        if (argc != 1) {
+            (void)fputs("--versions-only must be used alone. Use a separate full doctor check for qualification.\n", stderr);
+            return 2;
+        }
+        return umi_cli_check_versions(context);
     }
     check_all = umi_cli_has_option(argc, argv, "--all");
     require_gtk = check_all || umi_cli_has_option(argc, argv, "--gtk");

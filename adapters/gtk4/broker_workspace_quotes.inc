@@ -119,7 +119,11 @@ static void WorkspaceQuoteStart(GtkButton *button, gpointer data)
     UmiStatus status = UmiIbkrQuoteContractParse(
         gtk_editable_get_text(GTK_EDITABLE(owner->quoteContract)),
         gtk_editable_get_text(GTK_EDITABLE(owner->quoteExchange)), &contract);
+    /* The raw GTK index is retained for review; the shared reader excludes the prompt. */
+    #if 0
     guint choice = gtk_drop_down_get_selected(GTK_DROP_DOWN(owner->quoteDataType));
+    #endif
+    guint choice = UmiGtk4SelectionListSelected(GTK_DROP_DOWN(owner->quoteDataType));
     UmiIbkrMarketDataType type = choice < 4U ? (UmiIbkrMarketDataType)(choice + 1U) : UMI_IBKR_DATA_UNKNOWN;
     ++owner->references;
     owner->quoteBusy = TRUE;
@@ -184,7 +188,15 @@ static GtkWidget *WorkspaceQuotePage(UmiBrokerWorkspaceGtk *owner)
     gtk_grid_attach(GTK_GRID(fields), Cell("Exchange", TRUE), 0, 1, 1, 1);
     gtk_grid_attach(GTK_GRID(fields), owner->quoteExchange, 1, 1, 1, 1);
     const char *types[] = {"Real-time", "Frozen", "Delayed", "Delayed frozen", NULL};
+    /* The earlier constructor is retained for review. Keep the existing default
+     * and add Framework's clearable prompt so a missing mode cannot issue traffic. */
+    #if 0
     owner->quoteDataType = gtk_drop_down_new_from_strings(types);
+    #endif
+    owner->quoteDataType = gtk_drop_down_new(NULL, NULL);
+    GtkStringList *choices = gtk_string_list_new(types);
+    (void)UmiGtk4SelectionListPublish(GTK_DROP_DOWN(owner->quoteDataType), choices, 0U);
+    g_object_unref(choices);
     gtk_widget_set_name(owner->quoteDataType, "broker-workspace-data-type");
     gtk_grid_attach(GTK_GRID(fields), Cell("Requested data", TRUE), 0, 2, 1, 1);
     gtk_grid_attach(GTK_GRID(fields), owner->quoteDataType, 1, 2, 1, 1);

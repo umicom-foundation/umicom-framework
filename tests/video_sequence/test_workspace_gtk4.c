@@ -109,14 +109,21 @@ static void Geometry(GtkWidget *root)
 #include "workspace_customisation.inc"
 #include "workspace_menu_commands.inc"
 #include "workspace_presentation.inc"
+#include "workspace_minimum.inc"
 
 int main(int argc, char **argv)
 {
     CHECK(argc == 2);
     const char *mode = argv[1];
+/* Retain the original mode allowlist for review; minimum-size cases exercise native measurement in the same host. */
+#if 0
     CHECK(strcmp(mode, "geometry") == 0 || strcmp(mode, "selection") == 0 ||
           strcmp(mode, "edits") == 0 || strcmp(mode, "retirement") == 0 ||
           strcmp(mode, "composition") == 0 || strcmp(mode, "music-composition") == 0 || strcmp(mode, "event-deadline") == 0 || CustomisationCase(mode) || MediaMenuCase(mode) || PresentationCase(mode));
+#endif
+    CHECK(strcmp(mode, "geometry") == 0 || strcmp(mode, "selection") == 0 ||
+          strcmp(mode, "edits") == 0 || strcmp(mode, "retirement") == 0 ||
+          strcmp(mode, "composition") == 0 || strcmp(mode, "music-composition") == 0 || strcmp(mode, "event-deadline") == 0 || MinimumCase(mode) || CustomisationCase(mode) || MediaMenuCase(mode) || PresentationCase(mode));
     (void)g_setenv("GTK_A11Y", "test", TRUE);
     (void)g_setenv("GSETTINGS_BACKEND", "memory", TRUE);
     /* Register as a test before GTK emits diagnostics. On Windows GLib then
@@ -157,6 +164,7 @@ int main(int argc, char **argv)
     UmiVideoSequencePanel *panel = UmiVideoSequenceGtkState(root);
     UmiTestWidgetDiagnosticsRoot(window);
     gtk_window_set_child(GTK_WINDOW(window), host);
+    if (MinimumCase(mode)) MinimumRequests(root);
     gtk_window_present(GTK_WINDOW(window)); Settle();
     CHECK(gtk_widget_get_mapped(root));
     CHECK(!gtk_widget_is_sensitive(Find(root, "video.undo")));
@@ -212,6 +220,7 @@ int main(int argc, char **argv)
         Click(root, "video.timeline.clip.1"); Click(root, "video.remove");
         CHECK(UmiVideoSequenceEqual(&before, UmiVideoSequenceEditorRead(panel->editor)));
     }
+    MinimumAfterEdits(mode, root, panel);
     Customisation(mode, window, host, root, panel);
     MediaMenuCommands(mode, host, root, panel);
     Presentation(mode, window, host, root, panel);

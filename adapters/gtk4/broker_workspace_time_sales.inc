@@ -121,7 +121,11 @@ static void WorkspaceTapeStart(GtkButton *button, gpointer data)
     UmiStatus status = UmiIbkrQuoteContractParse(
         gtk_editable_get_text(GTK_EDITABLE(owner->quoteContract)),
         gtk_editable_get_text(GTK_EDITABLE(owner->quoteExchange)), &query.contract);
+    /* The raw GTK index is retained for review; the shared reader excludes the prompt. */
+    #if 0
     guint selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(owner->tapeKind));
+    #endif
+    guint selected = UmiGtk4SelectionListSelected(GTK_DROP_DOWN(owner->tapeKind));
     query.kind = selected < 4U ? (UmiIbkrTimeSalesKind)(selected + 1U) : (UmiIbkrTimeSalesKind)0;
     query.ignoreSize = gtk_check_button_get_active(GTK_CHECK_BUTTON(owner->tapeIgnoreSize)) != FALSE;
     if (status == UMI_STATUS_OK) status = UmiIbkrTimeSalesQueryValidate(&query);
@@ -171,7 +175,15 @@ static GtkWidget *WorkspaceTapePage(UmiBrokerWorkspaceGtk *owner)
     gtk_flow_box_set_min_children_per_line(GTK_FLOW_BOX(controls), 1U);
     gtk_flow_box_set_max_children_per_line(GTK_FLOW_BOX(controls), 4U);
     const char *kinds[] = {"Last trades", "All Last trades", "Bid / Ask", "Midpoint", NULL};
+    /* The earlier constructor is retained for review. Keep the existing default
+     * and add Framework's clearable prompt so a missing mode cannot issue traffic. */
+    #if 0
     owner->tapeKind = gtk_drop_down_new_from_strings(kinds);
+    #endif
+    owner->tapeKind = gtk_drop_down_new(NULL, NULL);
+    GtkStringList *choices = gtk_string_list_new(kinds);
+    (void)UmiGtk4SelectionListPublish(GTK_DROP_DOWN(owner->tapeKind), choices, 0U);
+    g_object_unref(choices);
     owner->tapeIgnoreSize = gtk_check_button_new_with_label("Ignore size changes (Bid / Ask only)");
     owner->tapeStart = gtk_button_new_with_label("Start Time & Sales");
     owner->tapeStop = gtk_button_new_with_label("Stop tick stream");

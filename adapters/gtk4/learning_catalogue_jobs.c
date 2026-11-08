@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "learning_catalogue_private.h"
+#include "focus_handoff_private.h"
 #include "umicom/teacher/learning_module.h"
 #include "umicom/browser/document_preview.h"
 #include <string.h>
@@ -822,9 +823,18 @@ static void CatalogueComplete(GObject *source, GAsyncResult *result, gpointer da
                 g_strlcpy(job->notice, "Verified resource opened, but the displayed text changed before its match could be selected.",
                     sizeof(job->notice));
         }
+        /* A missing bundled module completes asynchronously. Retain the generic notice for review; name the failed action and its recovery. */
+        #if 0
         if (!owner->state.retired)
             LearningCatalogueMessage(owner, job->status,
                 job->notice[0] != '\0' ? job->notice : "The previous reading selection was kept.");
+        #endif
+        if (!owner->state.retired)
+            LearningCatalogueMessage(owner, job->status,
+                job->notice[0] != '\0' ? job->notice :
+                job->action == LEARNING_CATALOGUE_MODULE && job->status != UMI_STATUS_OK ?
+                    "The local learning module could not be opened. Check its installed folder or choose a library; the previous reading selection was kept." :
+                    "The previous reading selection was kept.");
     }
     /* Notifications may retire the owner. busy stays true until publication is
      * finished, so callbacks cannot dispatch a second job halfway through it. */
@@ -839,7 +849,15 @@ UmiStatus LearningCatalogueDispatch(LearningCatalogue *owner, LearningCatalogueJ
 {
     owner->state.busy = 1;
     owner->state.last_status = UMI_STATUS_OK;
+    /* Commit busy before ending text focus. A focus callback can retire the
+     * panel; the existing cancellation path then returns transferred ownership
+     * without scheduling a worker. Do not disable an already retired subtree. */
+    UmiGtk4ReleaseSubtreeFocus(owner->controls);
+    /* Retain unconditional disabling for review. A focus callback may already have retired this panel. */
+    #if 0
     gtk_widget_set_sensitive(owner->controls, FALSE);
+    #endif
+    if (!owner->state.retired) gtk_widget_set_sensitive(owner->controls, FALSE);
     if (!owner->state.retired)
         gtk_label_set_text(GTK_LABEL(owner->status), job->action == LEARNING_CATALOGUE_COPY ?
             "Copying the verified example to the chosen new file…" :

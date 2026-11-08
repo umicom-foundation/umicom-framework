@@ -123,7 +123,11 @@ static void WorkspaceStreamStart(GtkButton *button, gpointer data)
     UmiStatus status = UmiIbkrQuoteContractParse(
         gtk_editable_get_text(GTK_EDITABLE(owner->quoteContract)),
         gtk_editable_get_text(GTK_EDITABLE(owner->quoteExchange)), &query.contract);
+    /* The raw GTK index is retained for review; the shared reader excludes the prompt. */
+    #if 0
     guint kind = gtk_drop_down_get_selected(GTK_DROP_DOWN(owner->streamKind));
+    #endif
+    guint kind = UmiGtk4SelectionListSelected(GTK_DROP_DOWN(owner->streamKind));
     query.dataKind = kind < 4U ? (UmiIbkrHistoricalDataKind)(kind + 1U) : (UmiIbkrHistoricalDataKind)0;
     query.regularHours = gtk_check_button_get_active(GTK_CHECK_BUTTON(owner->streamRth)) != FALSE;
     if (status == UMI_STATUS_OK) status = UmiIbkrRealtimeQueryValidate(&query);
@@ -179,7 +183,15 @@ static GtkWidget *WorkspaceStreamPage(UmiBrokerWorkspaceGtk *owner)
     gtk_flow_box_set_min_children_per_line(GTK_FLOW_BOX(query), 1U);
     gtk_flow_box_set_max_children_per_line(GTK_FLOW_BOX(query), 5U);
     gtk_flow_box_set_column_spacing(GTK_FLOW_BOX(query), 8U);
+    /* The earlier constructor is retained for review. Keep the existing default
+     * and add Framework's clearable prompt so a missing mode cannot issue traffic. */
+    #if 0
     owner->streamKind = gtk_drop_down_new_from_strings((const char *[]){"Trades", "Midpoint", "Bid", "Ask", NULL});
+    #endif
+    owner->streamKind = gtk_drop_down_new(NULL, NULL);
+    GtkStringList *choices = gtk_string_list_new((const char *[]){"Trades", "Midpoint", "Bid", "Ask", NULL});
+    (void)UmiGtk4SelectionListPublish(GTK_DROP_DOWN(owner->streamKind), choices, 0U);
+    g_object_unref(choices);
     owner->streamRth = gtk_check_button_new_with_label("Regular hours only");
     gtk_check_button_set_active(GTK_CHECK_BUTTON(owner->streamRth), TRUE);
     owner->streamStart = gtk_button_new_with_label("Start live bars");

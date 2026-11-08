@@ -57,6 +57,13 @@ GtkWidget *UmiVideoSequenceGtk4Create(void) {
   gtk_widget_set_vexpand(vertical, TRUE);
   gtk_box_append(GTK_BOX(panel->form), vertical);
   gtk_paned_set_position(GTK_PANED(vertical), 440);
+  /* Both editing regions contribute their minimum height. Allowing the preview
+   * side to collapse to zero understates the pane request while the timeline
+   * still requires its full height. Cross-axis measurement at that boundary
+   * can then borrow one pixel from the timeline. Keep splitter resizing, but
+   * let GTK reserve the real minimum of each visible child. Explicit layout
+   * visibility controls still hide regions when the user wants more space. */
+  gtk_paned_set_shrink_start_child(GTK_PANED(vertical), FALSE);
   GtkWidget *horizontal = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
   Tag(horizontal, "video.workspace.sources");
   panel->layoutPanes[0] = horizontal;

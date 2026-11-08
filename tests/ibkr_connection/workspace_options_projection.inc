@@ -161,16 +161,32 @@ static int OptionsProjection(const char *test, GtkWidget *root, UmiBrokerWorkspa
         !strcmp(test, "options-stale") || !strcmp(test, "options-failed") || !strcmp(test, "options-copy-failure")) {
         CHECK(!gtk_widget_get_sensitive(resolve)); CHECK(optionResolutions == 0U); return 0;
     }
+    /* Retain the raw-index assertion for review; assert the shared no-choice contract. */
+    #if 0
     CHECK(gtk_drop_down_get_selected(GTK_DROP_DOWN(chain)) == GTK_INVALID_LIST_POSITION);
+    #endif
+    CHECK(UmiGtk4SelectionListSelected(GTK_DROP_DOWN(chain)) == GTK_INVALID_LIST_POSITION);
     GtkStringList *model = GTK_STRING_LIST(gtk_drop_down_get_model(GTK_DROP_DOWN(chain)));
+    /* Two provider chains remain at indexes zero and one, followed by a prompt. */
+    #if 0
     CHECK(g_list_model_get_n_items(G_LIST_MODEL(model)) == 2U);
+    #endif
+    CHECK(g_list_model_get_n_items(G_LIST_MODEL(model)) == 3U);
+    CHECK(strcmp(gtk_string_list_get_string(model, 2U), "Choose an item") == 0);
+    CHECK(gtk_drop_down_get_selected(GTK_DROP_DOWN(chain)) == 2U);
+    g_signal_emit_by_name(resolve, "clicked");
+    CHECK(optionResolutions == 0U);
     CHECK(g_utf8_validate(gtk_string_list_get_string(model, 1U), -1, NULL));
     if (!strcmp(test, "options-item-failure")) {
         CHECK(strstr(gtk_string_list_get_string(model, 0U), "unavailable") != NULL);
         gtk_drop_down_set_selected(GTK_DROP_DOWN(chain), 0U); CHECK(!gtk_widget_get_sensitive(resolve));
     }
     gtk_drop_down_set_selected(GTK_DROP_DOWN(chain), 1U);
+    /* Retain the raw-index assertion for review; assert the shared no-choice contract. */
+    #if 0
     CHECK(gtk_drop_down_get_selected(GTK_DROP_DOWN(expiry)) == GTK_INVALID_LIST_POSITION);
+    #endif
+    CHECK(UmiGtk4SelectionListSelected(GTK_DROP_DOWN(expiry)) == GTK_INVALID_LIST_POSITION);
     gtk_drop_down_set_selected(GTK_DROP_DOWN(expiry), 1U);
     gtk_drop_down_set_selected(GTK_DROP_DOWN(strike), 1U);
     CHECK(gtk_widget_get_sensitive(resolve));
@@ -193,7 +209,11 @@ static int OptionsProjection(const char *test, GtkWidget *root, UmiBrokerWorkspa
             optionsAvailable = FALSE;
             CHECK(UmiBrokerWorkspaceGtkOpenConnection(*workspace) == UMI_STATUS_OK);
             CHECK(!gtk_widget_get_sensitive(resolve) && Contains(status, "No option"));
+            /* Empty publication removes the model; preserve the prior assertion for review. */
+            #if 0
             CHECK(g_list_model_get_n_items(gtk_drop_down_get_model(GTK_DROP_DOWN(chain))) == 0U);
+            #endif
+            CHECK(gtk_drop_down_get_model(GTK_DROP_DOWN(chain)) == NULL);
         }
         return 0;
     }

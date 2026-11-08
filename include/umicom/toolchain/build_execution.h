@@ -44,6 +44,16 @@ typedef struct UmiBuildExecutionOptions {
      * it must stream all output and preserve cancellation and exit evidence. */
     UmiBuildProcessExecutor executor;
     void *executor_context;
+    /* Optional literal native-build arguments follow CMake's -- separator.
+     * The caller chooses arguments appropriate to its configured generator.
+     * These apply to build/package phases only, with at most 16 values. */
+    const char *const *build_arguments;
+    size_t build_argument_count;
+    /* Absolute, distinct CTest-owned output paths. CTest may overwrite them;
+     * use a new qualification directory to retain earlier evidence. These are
+     * separate from the exclusively created raw stream log. */
+    const char *test_output_log;
+    const char *test_output_junit;
 } UmiBuildExecutionOptions;
 
 typedef struct UmiBuildExecutionLog {

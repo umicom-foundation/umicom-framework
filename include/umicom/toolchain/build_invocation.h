@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/toolchain/build_invocation.h
- * PURPOSE: Validate development command options before discovery or mutation.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Validate development command options before discovery or mutation.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TOOLCHAIN_BUILD_INVOCATION_H
@@ -25,6 +32,10 @@ typedef struct UmiBuildInvocation {
     char prefix[UMI_PATH_CAPACITY];
     char log[UMI_PATH_CAPACITY];
     const char *definitions[16];
+    /* Own resolved CTest artifacts; native arguments remain borrowed from argv. */
+    char test_log[UMI_PATH_CAPACITY];
+    char test_junit[UMI_PATH_CAPACITY];
+    const char *build_arguments[16];
 } UmiBuildInvocation;
 
 /** Parse exact options and resolve relative paths against source (source itself

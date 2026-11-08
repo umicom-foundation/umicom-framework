@@ -28,7 +28,11 @@ static void WorkspaceSearchRender(UmiBrokerWorkspaceGtk *owner, gboolean replace
     gboolean usable = ready && owner->hasSearch && owner->search.complete &&
         !owner->search.failed && !owner->search.stale && !owner->quoteBusy &&
         !(owner->hasQuote && owner->quote.subscribed);
+    /* The raw GTK index is retained for review; the shared reader excludes the prompt. */
+    #if 0
     guint selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(owner->searchResults));
+    #endif
+    guint selected = UmiGtk4SelectionListSelected(GTK_DROP_DOWN(owner->searchResults));
     GtkWidget *controls[] = {owner->searchStart, owner->searchAbandon, owner->searchApply, owner->searchPattern};
     gboolean enabled[] = {ready && !pending, ready && pending,
         usable && selected < owner->search.count && selected < UMI_IBKR_SYMBOL_LIMIT,
@@ -81,11 +85,18 @@ static void WorkspaceSearchRefresh(UmiBrokerWorkspaceGtk *owner)
             g_free(display); g_free(raw);
         }
         owner->searchRendering = TRUE;
+        /* Retain direct publication for review. Framework publishes a visible prompt
+         * atomically so a refreshed row never becomes an implicit instrument choice. */
+        #if 0
         gtk_drop_down_set_model(GTK_DROP_DOWN(owner->searchResults), G_LIST_MODEL(items));
         g_object_unref(items);
         /* The user must choose a candidate. Never silently use the first match. */
         if (!owner->closed)
             gtk_drop_down_set_selected(GTK_DROP_DOWN(owner->searchResults), GTK_INVALID_LIST_POSITION);
+        #endif
+        (void)UmiGtk4SelectionListPublish(GTK_DROP_DOWN(owner->searchResults),
+            items, GTK_INVALID_LIST_POSITION);
+        g_object_unref(items);
         owner->searchRendering = FALSE;
     }
     if (!owner->closed) WorkspaceSearchRender(owner, changed);
@@ -147,7 +158,11 @@ static void WorkspaceSearchApply(GtkButton *button, gpointer data)
     UmiBrokerWorkspaceGtk *owner = data;
     if (owner->closed || owner->refreshing || owner->searchRendering || !WorkspaceSearchReady(owner) ||
         owner->quoteBusy || !owner->hasSearch || (owner->hasQuote && owner->quote.subscribed)) return;
+    /* The raw GTK index is retained for review; the shared reader excludes the prompt. */
+    #if 0
     guint index = gtk_drop_down_get_selected(GTK_DROP_DOWN(owner->searchResults));
+    #endif
+    guint index = UmiGtk4SelectionListSelected(GTK_DROP_DOWN(owner->searchResults));
     if (index >= owner->search.count || index >= UMI_IBKR_SYMBOL_LIMIT) return;
     uint32_t request = owner->search.requestId, identity = owner->search.rows[index].contractId;
     ++owner->references;

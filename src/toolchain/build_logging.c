@@ -81,6 +81,12 @@ UmiStatus UmiBuildExecuteLogged(const UmiToolchainProfile *profile,
 #endif
     UmiStatus status = UmiBuildExecutionValidate(action, request, options, NULL, 0U);
     if (!profile) status = UMI_STATUS_INVALID_ARGUMENT;
+    /* CTest and the raw stream sink are independent writers. Refuse collisions
+     * before either creates a file, including through the native SDK entry. */
+    if (status == UMI_STATUS_OK && log_path && options &&
+        ((options->test_output_log && umi_path_equal(log_path, options->test_output_log)) ||
+         (options->test_output_junit && umi_path_equal(log_path, options->test_output_junit))))
+        status = UMI_STATUS_INVALID_ARGUMENT;
     if (status != UMI_STATUS_OK) {
         log->execution_status = report->last_status = status;
         return status;

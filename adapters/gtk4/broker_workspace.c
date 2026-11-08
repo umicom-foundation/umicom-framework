@@ -17,6 +17,8 @@
 #include "umicom/broker_connectivity/access_gtk4.h"
 #include "umicom/broker_connectivity/connection_guidance.h"
 #include "window_removal_private.h"
+/* Broker choices share Framework's explicit no-choice semantics. */
+#include "umicom/ui/gtk4/selection_list.h"
 #include "umicom/broker_connectivity/watchlist.h"
 #include <string.h>
 #include <inttypes.h>

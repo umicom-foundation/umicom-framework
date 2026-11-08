@@ -1,4 +1,17 @@
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomWorkbenchViewportGtk4.cmake
+#
+# PURPOSE:
+#   Register native viewport composition and lifecycle regression coverage.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
 # This module also supports independent composition; own its SDK registration dependency.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
@@ -92,7 +105,8 @@ if(BUILD_TESTING)
         umicom_apply_sanitizers(umicom-workbench-focus-lifetime-test)
     endif()
     foreach(_case IN ITEMS forward reverse skip hidden locked detached close-accept close-reject
-            dispose-accept dispose-reject hide-callback tab-callback recursive)
+            dispose-accept dispose-reject hide-callback tab-callback recursive
+            unmapped hide-window-accept hide-window-reject remap-accept remap-reject)
         add_test(NAME framework.workbench_viewport.focus_lifetime.${_case}
             COMMAND umicom-workbench-focus-lifetime-test ${_case})
         set_tests_properties(framework.workbench_viewport.focus_lifetime.${_case} PROPERTIES

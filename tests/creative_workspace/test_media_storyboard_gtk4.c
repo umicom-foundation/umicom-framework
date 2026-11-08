@@ -95,7 +95,17 @@ int main(int argc, char **argv)
          * the saved content; a user-selected path owns all resulting files. */
         char *directory = g_dir_make_tmp("umicom-storyboard-XXXXXX", NULL); CHECK(directory != NULL);
         char *path = g_build_filename(directory, "instructions.txt", NULL);
+        /* Retain activation of collapsed content for review. Native button activation requires its export section to be expanded and mapped. */
+        #if 0
         GtkWidget *export = Find(root, "text.export"); Entry(export, "text.export.path", path); Click(export, "text.export.save");
+        #endif
+        GtkWidget *export = Find(root, "text.export");
+        CHECK(GTK_IS_EXPANDER(export));
+        gtk_expander_set_expanded(GTK_EXPANDER(export), TRUE);
+        Settle();
+        Entry(export, "text.export.path", path);
+        CHECK(gtk_widget_get_mapped(Find(export, "text.export.save")));
+        Click(export, "text.export.save");
         gint64 end = g_get_monotonic_time() + 5 * G_TIME_SPAN_SECOND;
         while (UmiTextExportGtk4Busy(export) && g_get_monotonic_time() < end) { (void)g_main_context_iteration(NULL, FALSE); g_usleep(1000U); }
         CHECK(!UmiTextExportGtk4Busy(export)); char *saved = NULL, *shown = Read(root, "media.storyboard.instructions");
