@@ -73,6 +73,8 @@ typedef struct UmiBuildTaskGraphSnapshot {
     uint32_t progress_basis_points;
     uint64_t source_revision;
     uint64_t revision;
+    /* Describes the committed graph. A failed rebuild is reported by its return
+     * status and does not replace this snapshot with the rejected candidate. */
     int cyclic;
 } UmiBuildTaskGraphSnapshot;
 
@@ -80,6 +82,11 @@ typedef struct UmiBuildTaskGraph UmiBuildTaskGraph;
 
 UmiStatus umi_build_task_graph_create(UmiBuildTaskGraph **out_graph);
 void umi_build_task_graph_destroy(UmiBuildTaskGraph *graph);
+/* Rebuild publishes only a fully resolved acyclic enabled-task graph. Refusal
+ * preserves the previous graph, including source revision and runtime state.
+ * Missing dependencies return NOT_FOUND; enabled cycles return INVALID_STATE.
+ * Lifecycle mutations likewise publish all runtime changes together or none.
+ * Exhausted graph/node revisions return CAPACITY_EXCEEDED without wrapping. */
 UmiStatus umi_build_task_graph_rebuild(
     UmiBuildTaskGraph *graph,
     const UmiBuildTaskRegistry *registry);

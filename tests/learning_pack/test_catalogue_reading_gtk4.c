@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../support/main_context.h"
 #include "umicom/ui/gtk4/learning_catalogue.h"
 #include "umicom/platform/rooted_files.h"
 #include "../support/gtk4_expanders.h"
@@ -46,12 +47,33 @@ static int Fixture(const char *root)
     return n > 0 && (size_t)n < sizeof(json) &&
         UmiRootedFileWrite(root, "learning-pack.json", json, (size_t)n) == UMI_STATUS_OK;
 }
+/* An always-ready source exercises the wait boundary, not the document parser.
+ * Its explicit lifetime belongs to this fixture, including failure cleanup. */
+static gboolean KeepReady(gpointer data)
+{
+    ++*(unsigned *)data;
+    return G_SOURCE_CONTINUE;
+}
+static void Phase(const char *name)
+{
+    fprintf(stderr, "Native reading phase: %s\n", name);
+    fflush(stderr);
+}
 static int Finish(void)
 {
     gint64 deadline = g_get_monotonic_time() + 15*G_TIME_SPAN_SECOND;
     while (UmiLearningCatalogueGtk4PendingReads() != 0U && g_get_monotonic_time() < deadline) {
+/* An always-ready GLib source can keep the former drain inside one iteration forever. Reuse the shared finite slice so pending-read and deadline checks remain reachable; retain the old loop for review. */
+#if 0
         while (g_main_context_iteration(NULL, FALSE)) {}
+#endif
+        (void)UmiTestDispatchSlice(NULL, deadline, 64U);
         g_usleep(1000U);
+    }
+    if (UmiLearningCatalogueGtk4PendingReads() != 0U) {
+        fprintf(stderr, "Learning fixture wait exceeded 15 seconds; pending=%zu\n",
+            (size_t)UmiLearningCatalogueGtk4PendingReads());
+        fflush(stderr);
     }
     return UmiLearningCatalogueGtk4PendingReads() == 0U;
 }
@@ -91,9 +113,13 @@ static void TagAdded(GtkTextTagTable *table, GtkTextTag *tag, gpointer data)
 int main(int argc, char **argv)
 {
     if (argc != 3) return 2;
+    Phase("GTK initialization");
     if (!gtk_init_check()) return 77;
+    Phase("fixture preparation");
     const char *name = argv[1];
     int failed = 0, matched = 0;
+    guint idle_source = 0U;
+    unsigned idle_calls = 0U;
     GtkWidget *panel = NULL, *other = NULL;
     GtkTextBuffer *buffer = NULL;
     char *text = NULL, *after_text = NULL;
@@ -113,7 +139,13 @@ int main(int argc, char **argv)
         CHECK(UmiLearningCatalogueGtk4OpenReadingLink(panel,0U) == UMI_STATUS_NOT_FOUND);
         goto cleanup;
     }
+    if (strcmp(name, "event-deadline") == 0) {
+        idle_source = g_idle_add_full(G_PRIORITY_LOW, KeepReady, &idle_calls, NULL);
+        CHECK(idle_source != 0U);
+    }
+    Phase("catalogue load");
     CHECK(UmiLearningCatalogueGtk4Load(panel,argv[2]) == UMI_STATUS_OK && Finish());
+    Phase("catalogue ready");
     CHECK(UmiLearningCatalogueGtk4Search(panel,"structured-first") == UMI_STATUS_OK);
     Observer observer = {panel,0U,UMI_STATUS_OK,UMI_STATUS_NOT_FOUND,strcmp(name,"retire-publication")==0};
     if (strcmp(name,"reentrant") == 0 || strcmp(name,"retire-publication") == 0)
@@ -125,6 +157,7 @@ int main(int argc, char **argv)
         signal_owner = G_OBJECT(gtk_text_buffer_get_tag_table(buffer));
         signal = g_signal_connect(signal_owner,"tag-added",G_CALLBACK(TagAdded),panel);
     }
+    Phase("document open");
     CHECK(UmiLearningCatalogueGtk4Open(panel,0U) == UMI_STATUS_OK);
     if (strcmp(name,"busy") == 0) {
         matched = 1;
@@ -136,6 +169,7 @@ int main(int argc, char **argv)
         matched = 1; UmiLearningCatalogueGtk4Retire(panel); g_clear_object(&panel); CHECK(Finish()); goto cleanup;
     }
     CHECK(Finish());
+    Phase("document published");
     CHECK(UmiLearningCatalogueGtk4CopyState(panel,&before) == UMI_STATUS_OK);
     if (strcmp(name,"retire-tag-creation") == 0) {
         matched = 1;
@@ -157,7 +191,11 @@ int main(int argc, char **argv)
     CHECK(UmiLearningCatalogueGtk4CopyReadingSummary(panel,&summary) == UMI_STATUS_OK);
     CHECK(summary.links == 3U && summary.anchors == 2U && summary.image_descriptions == 1U);
     text = Text(buffer); CHECK(text != NULL);
+/* The deadline regression verifies the same formatted document and Unicode anchor while a source stays ready. */
+#if 0
     if (strcmp(name,"formatted") == 0 || strcmp(name,"unicode") == 0) {
+#endif
+    if (strcmp(name,"formatted") == 0 || strcmp(name,"unicode") == 0 || strcmp(name,"event-deadline") == 0) {
         matched = 1;
         CHECK(strstr(text,"{\n    return 42;\n}") != NULL && strstr(text,"[Image: Ownership flow]") != NULL);
         GtkTextIter iter; gtk_text_buffer_get_start_iter(buffer,&iter);
@@ -251,10 +289,13 @@ int main(int argc, char **argv)
     }
     CHECK(matched);
 cleanup:
+    Phase("cleanup");
+    if (idle_source != 0U) g_source_remove(idle_source);
     if (signal != 0U && signal_owner != NULL) g_signal_handler_disconnect(signal_owner,signal);
     if (panel != NULL) UmiLearningCatalogueGtk4Retire(panel);
     if (other != NULL) UmiLearningCatalogueGtk4Retire(other);
     if (!Finish()) failed = 1;
     g_clear_object(&panel); g_clear_object(&other); g_free(text); g_free(after_text);
+    Phase("finished");
     return failed;
 }

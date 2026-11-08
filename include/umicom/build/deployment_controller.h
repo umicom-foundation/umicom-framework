@@ -57,6 +57,12 @@ typedef struct UmiBuildDeploymentControllerSnapshot {
 typedef struct UmiBuildDeploymentController
     UmiBuildDeploymentController;
 
+/** Single-owner state machine; callers serialize access and execute providers
+ * separately. Every mutation reserves all changed revision tokens first.
+ * next_step returns BUSY while a step owns the execution slot. Stop requests
+ * cancel pending forward steps; completion of the running step preserves the
+ * cancelled outcome. Snapshots count all outcomes, while progress uses only
+ * forward steps or the active rollback phase. No filesystem action is implied. */
 UmiStatus umi_build_deployment_controller_create(
     UmiBuildDeploymentController **out_controller);
 void umi_build_deployment_controller_destroy(

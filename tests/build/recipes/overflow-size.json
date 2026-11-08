@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "id": "source-demo",
+  "build": "x86_64-w64-mingw32",
+  "host": "x86_64-w64-mingw32",
+  "target": "riscv64-unknown-elf",
+  "toolchain": {
+    "id": "riscv-gcc",
+    "compiler": "tools/bin/gcc",
+    "manifest": "tools/provenance.json",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "inputs": [
+    {
+      "id": "main",
+      "path": "src/main.c",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "bytes": 9223372036854775808
+    }
+  ],
+  "stages": [
+    {
+      "id": "compile",
+      "label": "Compile source",
+      "phase": "build",
+      "dependencies": [],
+      "inputs": [
+        "main"
+      ],
+      "outputs": [
+        "out/main.o"
+      ]
+    }
+  ]
+}

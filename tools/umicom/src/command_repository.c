@@ -3,8 +3,9 @@
  * File: tools/umicom/src/command_repository.c
  *
  * PURPOSE:
- *   Implement the command repository behavior for
- *   Umicom Framework.
+ *   Implement native repository creation, status and submodule-lock commands.
+ *   Mutating workflow commands delegate to the separate reusable workflow
+ *   service and do not rely on shell scripts.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -17,22 +18,7 @@
 #define _POSIX_C_SOURCE 200809L
 #endif
 
-/*-----------------------------------------------------------------------------
- * Umicom Framework
- * File: tools/umicom/src/command_repository.c
- *
- * PURPOSE:
- *   Implement native repository creation, status and submodule-lock commands.
- *   Mutating workflow commands delegate to the separate reusable workflow
- *   service and do not rely on shell scripts.
- *
- * AUTHOR AND ORGANISATION:
- * Sammy Hegab
- * Umicom Foundation
- *
- * LICENCE:
- * MIT
- *---------------------------------------------------------------------------*/
+
 #include "cli.h"
 #include "umicom/repository/submodule_lock.h"
 #include "umicom/runtime/application_module.h"
@@ -630,6 +616,11 @@ int umi_cli_command_repo(
         (void)fprintf(stderr, "CLI context is required.\n");
         return 2;
     }
+    /* Validate borrowed command storage before dispatch, including help. No
+     * repository service may run for a malformed direct native invocation. */
+    if (argc < 0 || (argc != 0 && argv == NULL)) return 2;
+    for (int index = 0; index < argc; ++index)
+        if (argv[index] == NULL || argv[index][0] == '\0') return 2;
     /* Use the stable identifier comparison to choose the matching record or policy. */
     if (argc == 0 || strcmp(argv[0], "help") == 0 ||
         strcmp(argv[0], "--help") == 0 || strcmp(argv[0], "-h") == 0) {
@@ -649,6 +640,8 @@ int umi_cli_command_repo(
     if (strcmp(argv[0], "inspect-module") == 0)
         return umi_repo_inspect_module(argc - 1, argv + 1);
     /* Read-only review requires only Git, not compiler or SDK discovery. */
+    if (strcmp(argv[0], "submodules") == 0)
+        return umi_cli_command_repository_submodules(argc - 1, argv + 1);
     if (strcmp(argv[0], "review") == 0)
         return umi_cli_command_repository_review(argc - 1, argv + 1);
     if (strcmp(argv[0], "lock") == 0) {

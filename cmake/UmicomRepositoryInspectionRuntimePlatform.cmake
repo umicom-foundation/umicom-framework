@@ -322,3 +322,38 @@ if(BUILD_TESTING)
         umicom_register_validation_target(umicom-repository-inspection-evidence-state-tests)
     endif()
 endif()
+
+# Concrete recursive status contracts replace reliance on a symbol-only smoke
+# result. The existing no-argument test remains and exercises the capture path.
+if(BUILD_TESTING)
+    foreach(case empty markers wide crlf unterminated warning unknown short-hash
+            long-hash nonhex no-path control nul blank oversized-line null capacity failed-capture)
+        add_test(NAME "framework.repository_inspection.submodules.${case}"
+            COMMAND umicom-repository-inspection-submodule-probe-test "${case}")
+        set_tests_properties("framework.repository_inspection.submodules.${case}" PROPERTIES
+            TIMEOUT 15 LABELS "framework;repository;submodules;regression")
+    endforeach()
+    add_executable(umicom-repository-submodule-cli-tests
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/repository_inspection/test_submodule_cli.c")
+    target_link_libraries(umicom-repository-submodule-cli-tests PRIVATE Umicom::repository)
+    umicom_apply_warnings(umicom-repository-submodule-cli-tests)
+    umicom_apply_sanitizers(umicom-repository-submodule-cli-tests)
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-repository-submodule-cli-tests FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../tools/umicom/src/command_repository_submodules.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tools/umicom/src/cli.h")
+        umicom_target_qualification_inputs(umicom-repository-inspection-submodule-probe-test FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../src/repository/inspection/submodule_probe.c")
+    endif()
+    foreach(case default root help short-help empty mismatch failure malformed negative
+            null-vector null-value empty-value extra option help-null)
+        add_test(NAME "framework.repository_inspection.submodule_cli.${case}"
+            COMMAND umicom-repository-submodule-cli-tests "${case}")
+        set_tests_properties("framework.repository_inspection.submodule_cli.${case}" PROPERTIES
+            TIMEOUT 15 LABELS "framework;repository;submodules;cli;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-repository-submodule-cli-tests)
+        umicom_register_validation_target(umicom-repository-inspection-submodule-probe-test)
+    endif()
+endif()

@@ -15,6 +15,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/build/project_session.h"
 #include "umicom/build/run_current.h"
+#include "umicom/build/run_restart.h"
+#include <inttypes.h>
+#include <stdatomic.h>
+#include <stdio.h>
 #include "umicom/build/directory_guard.h"
 #include "umicom/build/ctest_provider.h"
 #include "umicom/build/live_output.h"
@@ -37,6 +41,14 @@ struct UmiBuildProjectSession {
     UmiMutex *mutex;
     UmiCancellationToken *cancellation;
     UmiBuildProfile profile;
+    /* Owner-thread restart intent is separate from worker execution state.
+     * Preserve the admitted settings even when prerequisite phases normalize them. */
+    UmiJobIdentity submitted_identity;
+    UmiBuildRunRestartSnapshot restart;
+    /* General cancellation may arrive from another thread. Only this atomic
+     * signal crosses threads; the owner consumes it into restart state. */
+    atomic_bool restart_stop_requested;
+    bool restart_submitting; /* Owner-thread admission scope; never read by Cancel. */
     bool automatic_tests;
     UmiBuildPhase phases[UMI_BUILD_PROJECT_SESSION_MAX_PHASES];
     size_t phase_count;
@@ -64,6 +76,8 @@ struct UmiBuildProjectSession {
     UmiBuildDirectoryGuardSnapshot directory_guard;
 };
 
+
+static void RestartObserveStop(UmiBuildProjectSession *session);
 
 /* The process worker calls this outside the session mutex. Only copied counts
  * cross to the UI; a long build cannot overflow a counter or infer success from
@@ -589,6 +603,7 @@ UmiStatus umi_build_project_session_create(const UmiBuildProjectSessionConfig *c
     *out_session = NULL;
     session = calloc(1U, sizeof(*session));
     if (session == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    atomic_init(&session->restart_stop_requested, false);
     session->config = *config;
     session->results = calloc(UMI_BUILD_PROJECT_SESSION_MAX_PHASES, sizeof(*session->results));
     status = session->results != NULL ? umi_mutex_create(&session->mutex) : UMI_STATUS_OUT_OF_MEMORY;
@@ -948,6 +963,8 @@ static UmiStatus ProjectSessionSubmitMode(UmiBuildProjectSession *session,
     UmiStatus status;
     if (session == NULL || profile == NULL || phase < UMI_BUILD_PHASE_CONFIGURE ||
         phase > UMI_BUILD_PHASE_DEPLOY) return UMI_STATUS_INVALID_ARGUMENT;
+    RestartObserveStop(session);
+    if (session->restart.pending) return UMI_STATUS_BUSY;
     if (!trusted) return UMI_STATUS_PERMISSION_DENIED;
     if ((phase == UMI_BUILD_PHASE_PACKAGE || phase == UMI_BUILD_PHASE_DEPLOY) &&
         !profile->build_testing) return UMI_STATUS_INVALID_STATE;
@@ -965,6 +982,11 @@ static UmiStatus ProjectSessionSubmitMode(UmiBuildProjectSession *session,
         status = UmiBuildRunCurrentPrepare(profile, launch_profile);
         if (status != UMI_STATUS_OK) { free(launch_profile); return status; }
     }
+    /* Compare reviewed settings across the stop/start gap without retaining
+     * borrowed frontend storage or claiming binary/source identity. */
+    UmiJobIdentity submitted_identity;
+    status = UmiBuildProfileJobIdentity(profile, &submitted_identity);
+    if (status != UMI_STATUS_OK) { free(launch_profile); return status; }
     umi_task_destroy(session->task); session->task = NULL;
     task_config.label = run_current ? "Run current executable" : "Project build workflow";
     task_config.function = execute_session; task_config.user_data = session;
@@ -1094,8 +1116,15 @@ static UmiStatus ProjectSessionSubmitMode(UmiBuildProjectSession *session,
     /* Preserve prior log files; release only the previous closed handle. */
     UmiOutputFileDestroy(session->log_file);
     session->log_file=new_log;
+    if (!session->restart_submitting) atomic_store(&session->restart_stop_requested, false);
     umi_cancellation_token_reset(session->cancellation);
+    /* A concurrent Stop may have preceded the token reset. During restart its
+     * sticky signal survives admission, so the new queued task cannot lose it.
+     * A later Stop reaches the token normally, including after this load. */
+    if (session->restart_submitting && atomic_load(&session->restart_stop_requested))
+        umi_cancellation_token_request(session->cancellation);
     (void)umi_mutex_lock(session->mutex);
+    session->submitted_identity = submitted_identity;
     ++session->snapshot.operation_id;
     bool guard_enabled = session->directory_guard.enabled;
     memset(&session->directory_guard, 0, sizeof(session->directory_guard));
@@ -1191,8 +1220,18 @@ UmiStatus umi_build_project_session_result_at(UmiBuildProjectSession *session,
 /* Cancel the process token without cancelling away queued completion evidence. */
 void umi_build_project_session_cancel(UmiBuildProjectSession *session)
 {
+    /* Stop revokes any deferred launch. RequestRestart uses the token directly
+     * after admission, so this general cancellation API always means stop.
+     * The former token-only implementation remains for review. */
+#if 0
     if (session != NULL && session->cancellation != NULL)
         umi_cancellation_token_request(session->cancellation);
+#endif
+    if (session != NULL) {
+        atomic_store(&session->restart_stop_requested, true);
+        if (session->cancellation != NULL)
+            umi_cancellation_token_request(session->cancellation);
+    }
 }
 
 // MIGRATION REFERENCE — previous implementation excerpts
@@ -1401,3 +1440,6 @@ UmiStatus UmiBuildProjectSessionSubmitAutomatic(UmiBuildProjectSession *session,
     if (phase == UMI_BUILD_PHASE_TEST && !profile->build_testing) return UMI_STATUS_INVALID_STATE;
     return ProjectSessionSubmitMode(session, profile, phase, trusted, log_path, false, true);
 }
+
+/* Restart shares this private session owner; no frontend copies its lifecycle. */
+#include "run_restart.inc"

@@ -249,6 +249,13 @@ static UmiStatus publish_primary(UmiPublicationState *state, size_t index)
     free(capture.bytes);
     if (changed) {
         status = umi_publication_text(state, index, tree, 1U, planned_tree, sizeof(planned_tree));
+        /* A host may review the captured staged tree. Preserve the former direct
+         * commit call; the shared review path rechecks index and HEAD first. */
+#if 0
+        if (status == UMI_STATUS_OK) status = command(state, index, commit, 3U);
+#endif
+        if (status == UMI_STATUS_OK) status = umi_publication_review_staged(state, index, planned_tree);
+        if (status == UMI_STATUS_OK && state->review_staged) status = verify_head(state, index);
         if (status == UMI_STATUS_OK) status = command(state, index, commit, 3U);
         if (status != UMI_STATUS_OK) return status;
         entry->committed = 1;

@@ -120,6 +120,8 @@ static UmiStatus discover_repo(UmiPublicationState *state, const char *path,
     return UMI_STATUS_OK;
 }
 
+/* Explicit top-level scope replaces unconditional discovery; registered child traversal remains unchanged. Retain the original callback for review. */
+#if 0
 static UmiStatus visit_top(const UmiFileInfo *info, void *context)
 {
     UmiPublicationState *state = context;
@@ -135,6 +137,30 @@ static UmiStatus visit_top(const UmiFileInfo *info, void *context)
     return discover_repo(state, info->path, SIZE_MAX, 0, 0U, &index);
 }
 
+#endif
+static UmiStatus visit_top(const UmiFileInfo *info, void *context)
+{
+    UmiPublicationState *state = context;
+    char git_path[UMI_PATH_CAPACITY];
+    size_t index;
+    if (info->kind != UMI_FILE_KIND_DIRECTORY || info->name[0] == '.' ||
+        strcmp(info->name, "_local") == 0 ||
+        strcmp(info->name, "build") == 0 || strcmp(info->name, "installed") == 0)
+        return UMI_STATUS_OK;
+    UmiStatus status = umi_path_join(info->path, ".git", git_path, sizeof(git_path));
+    if (status != UMI_STATUS_OK) return status;
+    if (!umi_fs_exists(git_path)) return UMI_STATUS_OK;
+    for (size_t i = 0U; i < state->excluded_count; ++i) {
+        if (strcmp(info->name, state->excluded_names[i]) == 0) {
+            state->excluded_seen |= UINT32_C(1) << i;
+            return UMI_STATUS_OK;
+        }
+    }
+    return discover_repo(state, info->path, SIZE_MAX, 0, 0U, &index);
+}
+
+/* Explicit exclusions apply only to immediate checkout directories; reject unmatched names and repository-root scope before publication. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_publication_discover(UmiPublicationState *state)
 {
     char git_path[UMI_PATH_CAPACITY];
@@ -153,6 +179,39 @@ UmiStatus umi_publication_discover(UmiPublicationState *state)
     options.follow_symbolic_links = 0;
     status = UmiDirectoryWalkCancellable(state->root, &options, visit_top, state,
         state->request->cancellation);
+    if (status == UMI_STATUS_OK && state->report->count == 0U)
+        return umi_publication_fail(state, SIZE_MAX, UMI_STATUS_NOT_FOUND,
+            "No immediate repositories were found in the selected workspace.");
+    return status;
+}
+#endif
+
+UmiStatus umi_publication_discover(UmiPublicationState *state)
+{
+    char git_path[UMI_PATH_CAPACITY];
+    size_t index;
+    state->excluded_seen = 0U;
+    UmiStatus status = umi_publication_safe_path(state, state->root);
+    UmiDirectoryWalkOptions options = umi_directory_walk_options_default();
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_path_join(state->root, ".git", git_path, sizeof(git_path));
+    if (status != UMI_STATUS_OK) return status;
+    if (umi_fs_exists(git_path)) {
+        if (state->excluded_count != 0U)
+            return umi_publication_fail(state, SIZE_MAX, UMI_STATUS_INVALID_ARGUMENT,
+                "Top-level exclusions require a workspace directory, not a repository root.");
+        return discover_repo(state, state->root, SIZE_MAX, 0, 0U, &index);
+    }
+    options.recursive = 0;
+    options.include_files = 0;
+    options.include_directories = 1;
+    options.include_hidden = 0;
+    options.follow_symbolic_links = 0;
+    status = UmiDirectoryWalkCancellable(state->root, &options, visit_top, state,
+        state->request->cancellation);
+    if (status == UMI_STATUS_OK && state->excluded_seen != ((UINT32_C(1) << state->excluded_count) - 1U))
+        return umi_publication_fail(state, SIZE_MAX, UMI_STATUS_NOT_FOUND,
+            "Every excluded name must match an immediate checkout directory; no publication started.");
     if (status == UMI_STATUS_OK && state->report->count == 0U)
         return umi_publication_fail(state, SIZE_MAX, UMI_STATUS_NOT_FOUND,
             "No immediate repositories were found in the selected workspace.");

@@ -297,6 +297,12 @@ static int RunNativeCommand(int argc, char **argv)
     if (strcmp(command, "build-test") == 0)
         return umi_cli_command_build(&context, UMI_BUILD_COMPILE_TEST, argc - 2, argv + 2);
     /* Capture is explicit; planning only reads evidence and previews work. */
+    if (strcmp(command, "preview") == 0)
+        return umi_cli_command_preview(argc - 2, argv + 2);
+    if (strcmp(command, "recipe") == 0)
+        return umi_cli_command_recipe(argc - 2, argv + 2);
+    if (strcmp(command, "observe-files") == 0)
+        return umi_cli_command_observe_files(argc - 2, argv + 2);
     if (strcmp(command, "source-observation") == 0)
         return umi_cli_command_source_observation(argc - 2, argv + 2);
     if (strcmp(command, "qualification-plan") == 0)

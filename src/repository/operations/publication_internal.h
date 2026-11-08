@@ -69,6 +69,13 @@ typedef struct UmiPublicationState {
     unsigned char attach_ready[UMI_REPOSITORY_PUBLICATION_CAPACITY];
     char previous_main[UMI_REPOSITORY_PUBLICATION_CAPACITY][65];
     char root[UMI_PATH_CAPACITY];
+    /* Normalized owned policy path; empty retains compatibility selection. */
+    char primary_root[UMI_PATH_CAPACITY];
+    const char *const *excluded_names;
+    size_t excluded_count;
+    uint32_t excluded_seen;
+    UmiRepositoryPublicationReviewCallback review_staged;
+    void *review_context;
     char identity[UMI_REPOSITORY_PUBLICATION_CAPACITY][1024];
     UmiPublicationEdge edges[UMI_PUBLICATION_EDGE_CAPACITY];
     size_t edge_count;
@@ -92,6 +99,17 @@ UmiStatus umi_publication_fail(UmiPublicationState *, size_t,
 UmiStatus umi_publication_discover(UmiPublicationState *);
 UmiStatus umi_publication_inspect(UmiPublicationState *, size_t);
 UmiStatus umi_publication_plan(UmiPublicationState *);
+UmiStatus umi_publication_review_staged(UmiPublicationState *, size_t, const char *);
+UmiStatus umi_publication_primary_validate(UmiPublicationState *);
+UmiStatus umi_publication_primary_select(UmiPublicationState *, size_t, size_t *);
+UmiStatus umi_publication_run_options_backend(const UmiToolchainProfile *,
+    UmiEnvironmentPlan *, const UmiRepositoryPublicationRequest *,
+    const UmiRepositoryPublicationOptions *, UmiRepositoryPublicationReport *,
+    const UmiPublicationBackend *);
+UmiStatus umi_publication_run_scoped_backend(const UmiToolchainProfile *,
+    UmiEnvironmentPlan *, const UmiRepositoryPublicationRequest *,
+    const UmiRepositoryPublicationOptions *, const char *const *, size_t,
+    UmiRepositoryPublicationReport *, const UmiPublicationBackend *);
 UmiStatus umi_publication_remember_progress(UmiPublicationState *);
 void umi_publication_restore_progress(UmiPublicationState *);
 UmiStatus umi_publication_execute(UmiPublicationState *);

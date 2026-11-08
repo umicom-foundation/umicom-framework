@@ -38,6 +38,7 @@ if(BUILD_TESTING)
         umicom_target_qualification_inputs(umicom-learning-catalogue-progress-test FILES
             "${_learning_progress_gtk_root}/adapters/gtk4/learning_catalogue_jobs.c"
             "${_learning_progress_gtk_root}/adapters/gtk4/learning_catalogue_private.h"
+            "${_learning_progress_gtk_root}/tests/support/main_context.h"
             "${_learning_progress_gtk_root}/tests/support/gtk4_expanders.h")
     endif()
     foreach(_case arguments wrong-kind retired dispatch-retirement no-automatic-write

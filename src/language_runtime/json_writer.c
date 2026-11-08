@@ -14,6 +14,11 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/language_runtime/json_writer.h"
+/* The original LSP-owned writer is preserved for engineering review. Protocol
+ * now provides the reusable writer with complete-value admission, strict UTF-8
+ * and subtraction-based capacity checks; legacy public symbols remain below. */
+#if 0
+#include "umicom/language_runtime/json_writer.h"
 #include <stdio.h>
 #include <string.h>
 /* Provide the ap operation used by this module and its client applications. */
@@ -48,3 +53,38 @@ UmiStatus umi_language_runtime_json_writer_bool(UmiLanguageRuntimeJsonWriter*w,i
  * client applications.
  */
 UmiStatus umi_language_runtime_json_writer_int64(UmiLanguageRuntimeJsonWriter*w,int64_t v){char b[32];int n=snprintf(b,sizeof(b),"%lld",(long long)v);return n<0||(size_t)n>=sizeof(b)?UMI_STATUS_INTERNAL_ERROR:ap(w,b,(size_t)n);}
+
+#endif
+
+#include "umicom/protocol/json_writer.h"
+/* Keep the established public structure and symbols. Field copies avoid casting
+ * between distinct structure types; protocol owns all escaping and admission. */
+static UmiJsonWriter Shared(const UmiLanguageRuntimeJsonWriter *writer)
+{ return (UmiJsonWriter){writer->buffer, writer->capacity, writer->length, writer->status}; }
+static void Store(UmiLanguageRuntimeJsonWriter *writer, const UmiJsonWriter *shared)
+{
+    writer->buffer = shared->buffer; writer->capacity = shared->capacity;
+    writer->length = shared->length; writer->status = shared->status;
+}
+void umi_language_runtime_json_writer_init(UmiLanguageRuntimeJsonWriter *writer, char *buffer, size_t capacity)
+{
+    if (writer == NULL) return;
+    UmiJsonWriter shared;
+    UmiJsonWriterInit(&shared, buffer, capacity);
+    Store(writer, &shared);
+}
+#define UMI_JSON_COMPATIBILITY(name, shared_name, type) \
+UmiStatus name(UmiLanguageRuntimeJsonWriter *writer, type value) \
+{ \
+    if (writer == NULL) return UMI_STATUS_INVALID_ARGUMENT; \
+    UmiJsonWriter shared = Shared(writer); \
+    UmiStatus status = shared_name(&shared, value); \
+    Store(writer, &shared); \
+    return status; \
+}
+UMI_JSON_COMPATIBILITY(umi_language_runtime_json_writer_raw, UmiJsonWriterRaw, const char *)
+UMI_JSON_COMPATIBILITY(umi_language_runtime_json_writer_string, UmiJsonWriterString, const char *)
+UMI_JSON_COMPATIBILITY(umi_language_runtime_json_writer_uint64, UmiJsonWriterUInt64, uint64_t)
+UMI_JSON_COMPATIBILITY(umi_language_runtime_json_writer_int64, UmiJsonWriterInt64, int64_t)
+UMI_JSON_COMPATIBILITY(umi_language_runtime_json_writer_bool, UmiJsonWriterBool, int)
+#undef UMI_JSON_COMPATIBILITY

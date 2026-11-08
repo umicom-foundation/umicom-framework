@@ -17,9 +17,15 @@
 #define UMICOM_UTF8_TEXT_PRIVATE_H
 #include <stddef.h>
 #include <stdint.h>
+#include "umicom/base/utf8.h"
 
 /* This validates Unicode scalar encoding, not a file format. ASCII controls
  * are valid bytes here; CSV and JSON apply their own rejection/escaping rules. */
+/* The public base service now supplies offsets and single-scalar decoding as
+ * well as span validation. CSV, structured reports and learning text retain
+ * this private entry point so all consumers use one active Unicode policy.
+ * Keep the previous validator for engineering comparison. */
+#if 0
 static inline int UmiUtf8TextValid(const char *text, size_t length)
 {
     if (text == NULL && length != 0U) return 0;
@@ -42,4 +48,10 @@ static inline int UmiUtf8TextValid(const char *text, size_t length)
     }
     return 1;
 }
+#endif
+static inline int UmiUtf8TextValid(const char *text, size_t length)
+{
+    return UmiUtf8Validate((const unsigned char *)text, length, NULL);
+}
+
 #endif

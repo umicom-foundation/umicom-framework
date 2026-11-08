@@ -58,6 +58,8 @@ static size_t source_index(const UmiBuildTaskRegistry *registry,
     return SIZE_MAX;
 }
 
+/* Use bounded explicit traversal frames to preserve dependency-first ordering without recursive task-sized stack allocations. The former implementation is retained for engineering review. */
+#if 0
 static UmiStatus include_task_recursive(
     UmiBuildTaskOrchestrator *orchestrator,
     size_t index,
@@ -87,6 +89,47 @@ static UmiStatus include_task_recursive(
     visiting[index] = 0U;
     included[index] = 1U;
     return umi_build_task_registry_upsert(orchestrator->planned_registry, &task);
+}
+#endif
+
+static UmiStatus include_task_recursive(
+    UmiBuildTaskOrchestrator *orchestrator, size_t index,
+    unsigned char *visiting, unsigned char *included)
+{
+    const size_t count = umi_build_task_registry_count(orchestrator->source_registry);
+    if (index >= count) return UMI_STATUS_NOT_FOUND;
+    if (count > UMI_BUILD_TASK_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (included[index] != 0U) return UMI_STATUS_OK;
+    if (visiting[index] != 0U) return UMI_STATUS_INVALID_STATE;
+    /* Keep the historical internal name, but use explicit small DFS frames.
+     * One task snapshot is reused at every depth instead of accumulating a
+     * large fixed descriptor on the C stack for every dependency. */
+    size_t indices[UMI_BUILD_TASK_CAPACITY];
+    size_t next_dependency[UMI_BUILD_TASK_CAPACITY];
+    size_t depth = 1U;
+    UmiBuildTaskSnapshot task;
+    indices[0] = index; next_dependency[0] = 0U; visiting[index] = 1U;
+    while (depth != 0U) {
+        const size_t frame = depth - 1U;
+        const size_t current = indices[frame];
+        UmiStatus status = umi_build_task_registry_at(orchestrator->source_registry, current, &task);
+        if (status != UMI_STATUS_OK) return status;
+        if (next_dependency[frame] < task.dependency_count) {
+            const size_t dependency = source_index(orchestrator->source_registry,
+                task.dependencies[next_dependency[frame]++]);
+            if (dependency == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+            if (included[dependency] != 0U) continue;
+            if (visiting[dependency] != 0U) return UMI_STATUS_INVALID_STATE;
+            if (depth >= UMI_BUILD_TASK_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
+            indices[depth] = dependency; next_dependency[depth] = 0U;
+            visiting[dependency] = 1U; depth += 1U;
+        } else {
+            status = umi_build_task_registry_upsert(orchestrator->planned_registry, &task);
+            if (status != UMI_STATUS_OK) return status;
+            visiting[current] = 0U; included[current] = 1U; depth -= 1U;
+        }
+    }
+    return UMI_STATUS_OK;
 }
 
 static void update_terminal_state(UmiBuildTaskOrchestrator *orchestrator)
@@ -148,6 +191,8 @@ void umi_build_task_orchestrator_destroy(
     free(orchestrator);
 }
 
+/* Build a dependency-closed candidate registry and reject oversized identities before replacing the previously reviewable plan. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_orchestrator_plan(
     UmiBuildTaskOrchestrator *orchestrator,
     const char *operation_id,
@@ -201,10 +246,84 @@ UmiStatus umi_build_task_orchestrator_plan(
     orchestrator->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_build_task_orchestrator_plan(
+    UmiBuildTaskOrchestrator *orchestrator, const char *operation_id,
+    const char *requested_task_id)
+{
+    if (orchestrator == NULL || operation_id == NULL || operation_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (orchestrator->state == UMI_BUILD_TASK_OPERATION_RUNNING) return UMI_STATUS_BUSY;
+    if (strlen(operation_id) >= sizeof(orchestrator->operation_id) ||
+        (requested_task_id != NULL && strlen(requested_task_id) >= sizeof(orchestrator->requested_task_id)))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (orchestrator->revision == UINT64_MAX || orchestrator->generation == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiBuildTaskOrchestrator candidate = *orchestrator;
+    candidate.planned_registry = NULL;
+    copy_text(candidate.operation_id, sizeof(candidate.operation_id), operation_id);
+    copy_text(candidate.requested_task_id, sizeof(candidate.requested_task_id), requested_task_id);
+    UmiStatus status = umi_build_task_registry_create(&candidate.planned_registry);
+    if (status != UMI_STATUS_OK) return status;
+    unsigned char visiting[UMI_BUILD_TASK_CAPACITY] = {0};
+    unsigned char included[UMI_BUILD_TASK_CAPACITY] = {0};
+    const size_t count = umi_build_task_registry_count(candidate.source_registry);
+    if (count > UMI_BUILD_TASK_CAPACITY) status = UMI_STATUS_CAPACITY_EXCEEDED;
+    else if (candidate.requested_task_id[0] == '\0') {
+        for (size_t i = 0U; i < count; ++i) {
+            UmiBuildTaskSnapshot task;
+            status = umi_build_task_registry_at(candidate.source_registry, i, &task);
+            if (status != UMI_STATUS_OK) break;
+            if ((task.flags & UMI_BUILD_TASK_ENABLED) == 0U) continue;
+            status = include_task_recursive(&candidate, i, visiting, included);
+            if (status != UMI_STATUS_OK) break;
+        }
+    } else {
+        const size_t index = source_index(candidate.source_registry, candidate.requested_task_id);
+        status = index == SIZE_MAX ? UMI_STATUS_NOT_FOUND :
+            include_task_recursive(&candidate, index, visiting, included);
+    }
+    /* The graph service guarantees refusal leaves its existing graph intact.
+     * Keep that graph address stable for compatibility with borrowed observers. */
+    if (status == UMI_STATUS_OK)
+        status = umi_build_task_graph_rebuild(candidate.graph, candidate.planned_registry);
+    if (status != UMI_STATUS_OK) {
+        umi_build_task_registry_destroy(candidate.planned_registry);
+        return status;
+    }
+    UmiBuildTaskRegistry *previous = orchestrator->planned_registry;
+    candidate.state = UMI_BUILD_TASK_OPERATION_PLANNED;
+    candidate.active_count = 0U; candidate.retry_count = 0U; candidate.stop_requested = 0;
+    candidate.generation += 1U; candidate.revision += 1U;
+    *orchestrator = candidate;
+    umi_build_task_registry_destroy(previous);
+    return UMI_STATUS_OK;
+}
+
+/* Reserve orchestrator identity before nested graph mutation so child success cannot leave a wrapped owner observation. The former implementation is retained for engineering review. */
+#if 0
+UmiStatus umi_build_task_orchestrator_begin(
+    UmiBuildTaskOrchestrator *orchestrator)
+{
+    if (orchestrator == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (orchestrator->state != UMI_BUILD_TASK_OPERATION_PLANNED) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    orchestrator->state = UMI_BUILD_TASK_OPERATION_RUNNING;
+    orchestrator->revision += 1U;
+    update_terminal_state(orchestrator);
+    return UMI_STATUS_OK;
+}
+#endif
 
 UmiStatus umi_build_task_orchestrator_begin(
     UmiBuildTaskOrchestrator *orchestrator)
 {
+    /* Reserve the owner identity before a nested graph can change state. */
+    if (orchestrator != NULL && orchestrator->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
     if (orchestrator == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     if (orchestrator->state != UMI_BUILD_TASK_OPERATION_PLANNED) {
         return UMI_STATUS_INVALID_STATE;
@@ -237,6 +356,8 @@ UmiStatus umi_build_task_orchestrator_next_ready(
     return UMI_STATUS_OK;
 }
 
+/* Reserve orchestrator identity before nested graph mutation so child success cannot leave a wrapped owner observation. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_orchestrator_start(
     UmiBuildTaskOrchestrator *orchestrator,
     const char *task_id)
@@ -257,7 +378,35 @@ UmiStatus umi_build_task_orchestrator_start(
     }
     return status;
 }
+#endif
 
+UmiStatus umi_build_task_orchestrator_start(
+    UmiBuildTaskOrchestrator *orchestrator,
+    const char *task_id)
+{
+    /* Reserve the owner identity before a nested graph can change state. */
+    if (orchestrator != NULL && orchestrator->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiStatus status;
+    if (orchestrator == NULL || task_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (orchestrator->state != UMI_BUILD_TASK_OPERATION_RUNNING ||
+        orchestrator->stop_requested ||
+        orchestrator->active_count >= orchestrator->maximum_parallel) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    status = umi_build_task_graph_start(orchestrator->graph, task_id);
+    if (status == UMI_STATUS_OK) {
+        orchestrator->active_count += 1U;
+        orchestrator->revision += 1U;
+    }
+    return status;
+}
+
+/* Reserve orchestrator identity before nested graph mutation so child success cannot leave a wrapped owner observation. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_orchestrator_set_progress(
     UmiBuildTaskOrchestrator *orchestrator,
     const char *task_id,
@@ -270,7 +419,27 @@ UmiStatus umi_build_task_orchestrator_set_progress(
     if (status == UMI_STATUS_OK) orchestrator->revision += 1U;
     return status;
 }
+#endif
 
+UmiStatus umi_build_task_orchestrator_set_progress(
+    UmiBuildTaskOrchestrator *orchestrator,
+    const char *task_id,
+    uint32_t progress_basis_points)
+{
+    /* Reserve the owner identity before a nested graph can change state. */
+    if (orchestrator != NULL && orchestrator->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiStatus status;
+    if (orchestrator == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_build_task_graph_set_progress(
+        orchestrator->graph, task_id, progress_basis_points);
+    if (status == UMI_STATUS_OK) orchestrator->revision += 1U;
+    return status;
+}
+
+/* Reserve orchestrator identity before nested graph mutation so child success cannot leave a wrapped owner observation. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_orchestrator_complete(
     UmiBuildTaskOrchestrator *orchestrator,
     const char *task_id,
@@ -287,7 +456,31 @@ UmiStatus umi_build_task_orchestrator_complete(
     }
     return status;
 }
+#endif
 
+UmiStatus umi_build_task_orchestrator_complete(
+    UmiBuildTaskOrchestrator *orchestrator,
+    const char *task_id,
+    int exit_code)
+{
+    /* Reserve the owner identity before a nested graph can change state. */
+    if (orchestrator != NULL && orchestrator->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiStatus status;
+    if (orchestrator == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_build_task_graph_complete(
+        orchestrator->graph, task_id, exit_code);
+    if (status == UMI_STATUS_OK) {
+        if (orchestrator->active_count > 0U) orchestrator->active_count -= 1U;
+        orchestrator->revision += 1U;
+        update_terminal_state(orchestrator);
+    }
+    return status;
+}
+
+/* Reserve orchestrator identity before nested graph mutation so child success cannot leave a wrapped owner observation. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_orchestrator_fail(
     UmiBuildTaskOrchestrator *orchestrator,
     const char *task_id,
@@ -305,7 +498,32 @@ UmiStatus umi_build_task_orchestrator_fail(
     }
     return graph_status;
 }
+#endif
 
+UmiStatus umi_build_task_orchestrator_fail(
+    UmiBuildTaskOrchestrator *orchestrator,
+    const char *task_id,
+    UmiStatus status,
+    int exit_code)
+{
+    /* Reserve the owner identity before a nested graph can change state. */
+    if (orchestrator != NULL && orchestrator->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiStatus graph_status;
+    if (orchestrator == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    graph_status = umi_build_task_graph_fail(
+        orchestrator->graph, task_id, status, exit_code);
+    if (graph_status == UMI_STATUS_OK) {
+        if (orchestrator->active_count > 0U) orchestrator->active_count -= 1U;
+        orchestrator->revision += 1U;
+        update_terminal_state(orchestrator);
+    }
+    return graph_status;
+}
+
+/* Reserve orchestrator identity before nested graph mutation so child success cannot leave a wrapped owner observation. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_orchestrator_retry(
     UmiBuildTaskOrchestrator *orchestrator,
     const char *task_id)
@@ -321,7 +539,32 @@ UmiStatus umi_build_task_orchestrator_retry(
     }
     return status;
 }
+#endif
 
+UmiStatus umi_build_task_orchestrator_retry(
+    UmiBuildTaskOrchestrator *orchestrator,
+    const char *task_id)
+{
+    /* Reserve the owner identity before a nested graph can change state. */
+    if (orchestrator != NULL && orchestrator->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (orchestrator != NULL && orchestrator->retry_count == SIZE_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiStatus status;
+    if (orchestrator == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_build_task_graph_retry(orchestrator->graph, task_id);
+    if (status == UMI_STATUS_OK) {
+        orchestrator->retry_count += 1U;
+        orchestrator->stop_requested = 0;
+        orchestrator->state = UMI_BUILD_TASK_OPERATION_RUNNING;
+        orchestrator->revision += 1U;
+    }
+    return status;
+}
+
+/* Publish the stop request only after the graph has atomically canceled waiting work, preserving owner state on refusal. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_orchestrator_request_stop(
     UmiBuildTaskOrchestrator *orchestrator)
 {
@@ -339,7 +582,29 @@ UmiStatus umi_build_task_orchestrator_request_stop(
     orchestrator->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
 
+UmiStatus umi_build_task_orchestrator_request_stop(
+    UmiBuildTaskOrchestrator *orchestrator)
+{
+    UmiStatus status;
+    if (orchestrator == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (orchestrator->state != UMI_BUILD_TASK_OPERATION_RUNNING) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    if (orchestrator->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = umi_build_task_graph_cancel_waiting(orchestrator->graph);
+    if (status != UMI_STATUS_OK) return status;
+    orchestrator->stop_requested = 1;
+    if (orchestrator->active_count == 0U) {
+        orchestrator->state = UMI_BUILD_TASK_OPERATION_CANCELLED;
+    }
+    orchestrator->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+/* Require a begun operation and stage terminal-state publication so finishing an idle or merely planned owner cannot manufacture success. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_orchestrator_finish(
     UmiBuildTaskOrchestrator *orchestrator)
 {
@@ -350,6 +615,23 @@ UmiStatus umi_build_task_orchestrator_finish(
         return UMI_STATUS_INVALID_STATE;
     }
     orchestrator->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_build_task_orchestrator_finish(UmiBuildTaskOrchestrator *orchestrator)
+{
+    if (orchestrator == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (orchestrator->active_count != 0U) return UMI_STATUS_BUSY;
+    if (orchestrator->state == UMI_BUILD_TASK_OPERATION_IDLE ||
+        orchestrator->state == UMI_BUILD_TASK_OPERATION_PLANNED)
+        return UMI_STATUS_INVALID_STATE;
+    if (orchestrator->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiBuildTaskOrchestrator candidate = *orchestrator;
+    update_terminal_state(&candidate);
+    if (candidate.state == UMI_BUILD_TASK_OPERATION_RUNNING) return UMI_STATUS_INVALID_STATE;
+    candidate.revision += 1U;
+    *orchestrator = candidate;
     return UMI_STATUS_OK;
 }
 

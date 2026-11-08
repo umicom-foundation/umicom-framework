@@ -39,6 +39,9 @@ typedef struct UmiCliContext {
  */
 void umi_cli_print_help(void);
 int umi_cli_command_verify(int argc, char **argv);
+/* Capture explicitly selected file bytes without loading or executing them. */
+int umi_cli_command_recipe(int argc, char **argv);
+int umi_cli_command_observe_files(int argc, char **argv);
 /* Inspect or author learning metadata through the shared Framework pack service. */
 int umi_cli_command_learning_pack(int argc, char **argv);
 /**
@@ -127,6 +130,8 @@ int umi_cli_command_repository(UmiCliContext *context, int argc, char **argv);
 int umi_cli_command_repo(UmiCliContext *context, int argc, char **argv);
 /** Explain local changes and child repositories without running a mutating Git operation. */
 int umi_cli_command_repository_review(int argc, char **argv);
+/* Observe recursive submodule commits without changing repository state. */
+int umi_cli_command_repository_submodules(int argc, char **argv);
 /** Discover and publish a workspace, or monitor local changes without mutation. */
 int umi_cli_command_repository_publication(UmiCliContext *context, int argc, char **argv);
 /**
@@ -186,5 +191,8 @@ int umi_cli_command_workflow(UmiCliContext *context, int argc, char **argv);
 
 /* Shared QEMU boot workflows; arguments exclude the qemu command name. */
 int umi_cli_command_qemu(int argc, char **argv);
+
+/* Static preview owns its Framework session; arguments exclude the command name. */
+int umi_cli_command_preview(int argc, char **argv);
 
 #endif

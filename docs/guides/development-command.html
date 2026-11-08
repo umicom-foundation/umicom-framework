@@ -21,6 +21,8 @@ umicom pull
 umicom repo lock .</pre>
 <p><code>watch</code> observes local changes without publishing. <code>pull</code> and <code>repo update</code> require a clean checkout on the requested branch and default to leaving nested checkouts untouched. The advanced <code>--with-submodules</code> update option explicitly checks out registered child pins and may detach those children; it is not part of the main-branch development routine. <code>repo lock</code> records checked-out child commits; it does not download newer code. Prefer <code>publish-all</code> when publishing an ecosystem with duplicate copies and parent repositories. Individual commands do not automatically coordinate other checkouts.</p>
 <p>See <a href="repository-publication.html">repository publication</a> for the discovery rules and limits.</p>
+<h2>Compose a single-project lifecycle</h2>
+<p><code>umicom workflow</code> combines verification, configuration, build, test and repository actions through the shared Framework executor. Complete requests are admitted before execution, duplicate options are refused, and failures stop later actions. See <a href="../learning/lifecycle-execution.html">execute a reviewed lifecycle</a> for goal selection, preview, option scope and partial-progress interpretation. Workflow is a bounded single-project composition; use the individual commands below for logs, JUnit, definitions and delivery options, and publish-all for ecosystem publication.</p>
 <h2>Preview before running development tools</h2>
 <p>Use <code>--dry-run</code> on configure, build, test, install, package, make, deliver or launch. It shows the working directory and literal process arguments without discovering tools, launching them or creating a log. Printed arguments are an inspection view, not a shell script. A successful preview is not compiler or test evidence.</p>
 <pre>umicom build --source C:\work\my-project --build build\debug --jobs 2 --dry-run
@@ -81,9 +83,51 @@ umicom qemu --help</pre>
 <p>The original Framework request and report layouts remain available to native callers. The extended execution contract adds optional observers and an injectable process transport; Studio can share the same orchestration without implementing shell commands.</p>
 
 <h2 id="version-inventory">Record tool versions before qualification</h2>
-<p><code>umicom doctor --versions-only</code> uses Framework tool discovery to report executable paths and version results. It runs the discovered tools' version commands and captures the selected compiler target. It does not compile, link or run a generated probe program. Use it alone; options such as <code>--all</code> belong to a separate full doctor check.</p>
+<p><code>umicom doctor --versions-only</code> uses Framework tool discovery to report executable paths and version results. It runs the discovered tools' version commands and captures the selected compiler target. It does not compile, link or run a generated probe program. <!-- The earlier console-only restriction is retained for review. Structured evidence now adds one optional report destination. Use it alone; options such as <code>--all</code> belong to a separate full doctor check. -->
+Use <code>--versions-only</code> with an optional <code>--report</code> destination; options such as <code>--all</code> still belong to a separate full doctor check.</p>
 <pre>umicom doctor --versions-only</pre>
 <p>The report explicitly prints <code>Compile, link, runtime and C23 probes: NOT RUN</code>. A zero exit status means the required discovery checks completed, not that your project can build. A missing required tool produces a nonzero result. Correct the installation or discovery environment and repeat the inventory before requesting a build.</p>
 <ol><li>Record the inventory alongside the source revision, selected preset and complete configure command.</li><li>Check that the reported compiler family and paths match the SDK and build tree you intend to use. The inventory does not inspect a previously configured CMake cache.</li><li>Run configure, build and tests as separate qualification steps. Preserve their results even when inventory succeeded.</li></ol>
 <p>On PowerShell, an outer <code>Start-Transcript</code>/<code>Stop-Transcript</code> session can still capture the commands you typed and their surrounding output. Umicom's <code>--log</code> records a supervised child stream; it does not replace that whole-session record. The shorter inventory command also does not replace a full <code>umicom doctor --all</code> check, which may compile and run probes.</p>
+<h3>Save a tool inventory file</h3>
+<ol><li>Create a private attempt directory before running the command. Use a fresh filename; the writer never replaces an earlier inventory.</li><li>Check <code>umicom doctor --help</code> lists <code>--report</code>. Use a CLI executable outside any build/install tree you are about to replace.</li><li>Run the inventory command below, then inspect its exit status before continuing.</li></ol>
+<pre>umicom doctor --versions-only --report C:\work\evidence\attempt-01\tools.json</pre>
+<p>The JSON file includes the discovered profile, target, selected compiler names, every known tool's state/path/version and the discovery result. Missing tools are explicit. The compile, link, runtime and C23 probe states are <code>not-run</code>, and <code>qualificationPassed</code> is false even when discovery succeeds. A version string describes the tool's reported text; this file does not hash executable bytes or record every dependency.</p>
+<table><thead><tr><th>CLI exit</th><th>Meaning</th><th>Next step</th></tr></thead><tbody>
+<tr><td>0</td><td>Discovery completed and a requested report was saved.</td><td>Compare paths with the intended build cache, then qualify separately.</td></tr>
+<tr><td>1</td><td>Discovery was incomplete. A requested valid report was still saved.</td><td>Inspect missing/failed tools; correct the environment and use a new report path.</td></tr>
+<tr><td>2</td><td>Invalid invocation, evidence write failure or console-output failure.</td><td>Read the diagnostic. Retain a partial file after storage failure; a saved file may already exist if console output failed later.</td></tr>
+</tbody></table>
+<p><strong>Recovery:</strong> an already-existing filename remains unchanged. A relative path is refused before discovery. The parent directory must exist. Windows output paths must be ordinary UTF-8 drive paths; device names, alternate streams and UNC paths are refused. Invalid UTF-8 in a captured field is rejected instead of silently changing evidence. For a write/flush failure, preserve the incomplete file and choose a new name after fixing storage.</p>
+<h3>Use the shared service from C</h3>
+<pre><code>#include "umicom/toolchain/version_inventory.h"
+
+/* Discovery is a separate, explicit operation. Keep its status beside its
+ * report. This helper only validates and writes the already captured data. */
+UmiStatus SaveVersionInventory(const UmiToolchainDiscoveryReport *report,
+    UmiStatus discovery_status, const char *new_absolute_path)
+{
+    return umi_toolchain_version_inventory_save(report, discovery_status,
+        new_absolute_path);
+}</code></pre>
+<p>Callers must capture with <code>skip_compile_probe = 1</code> and serialize access to the report until formatting or saving returns. The service rejects reports whose probe-pass flags are set. Zero flags alone cannot prove that a caller actually skipped probes, so this is an API precondition as well as an input check. CLI and Studio integrations can share this service. The native CLI is wired; a dedicated Studio evidence-export control is not supplied by this guide.</p>
+<h3>Keep three identities separate</h3>
+<ol><li><strong>Tool inventory:</strong> describes discovered paths and version responses. It does not inspect the selected CMake cache or authenticate executable bytes.</li><li><strong>Source observation:</strong> the existing <code>umicom source-observation</code> command hashes files declared in a generated release inventory. It does not discover every unlisted file or create an atomic filesystem snapshot.</li><li><strong>Qualification report:</strong> the existing <code>umicom qualification-report</code> command reads a saved report; reading it does not rerun its tests.</li></ol>
+<p>Follow <a href="scoped-qualification.html">scoped qualification</a> for source-observation, report and retry-plan commands. Keep the outer PowerShell transcript when you need the typed commands and surrounding shell output. A new inventory report complements that record; it does not capture a whole session, Git history, installed dependencies or deployment.</p>
+
+<h2>Record selected file bytes</h2>
+<p>A version string describes what a program reports. A SHA-256 digest identifies the bytes read from a file. Use <code>observe-files</code> to compare a compiler executable, runtime library or explicit source selection between qualification runs. The command reads the paths you list without executing them.</p>
+<ol><li>Install a CLI containing <code>observe-files</code>. Check <code>umicom observe-files --help</code>. Keep the supervising CLI outside any build or installation destination.</li><li>Create a private evidence directory and choose a new report filename.</li><li>Pass absolute paths, quoted when they contain spaces.</li></ol>
+<pre>umicom observe-files --file "C:\tools\bin\gcc.exe" --file "C:\tools\bin\libgtk-4-1.dll" --report "C:\work\evidence\tools-before.json"</pre>
+<p>Replace these example paths with actual files. A successful save prints a confirmation. Omit <code>--report</code> to print JSON. The report lists each path, byte count and lowercase SHA-256 digest. Files are read in selection order; no directory traversal occurs.</p>
+<p>The default limit is 64 MiB per file, at most 64 files and 256 MiB combined. Use <code>--max-bytes 1048576</code> for a one-MiB per-file limit. Empty files are valid. A missing file, directory, final-component link, invalid UTF-8 path, exact duplicate path or oversized file refuses the whole observation.</p>
+<h3>Compare without overstating the result</h3>
+<ol><li>Capture a before report, keep the inputs stable, run separate qualification commands, then capture an after report under a different filename.</li><li>Compare the selection and each digest. Matching values support a claim about the bytes observed at those two reads. An edit followed by a reversal between captures can go undetected.</li><li>Record test results separately. Equal hashes do not mean tests passed. A DLL path does not prove that a particular process loaded it.</li><li>For a vendor repair, compare with trusted source/package records. A digest without a trusted reference cannot establish patch identity.</li></ol>
+<pre>$before = Get-Content -Raw "C:\work\evidence\tools-before.json" | ConvertFrom-Json
+$after = Get-Content -Raw "C:\work\evidence\tools-after.json" | ConvertFrom-Json
+Compare-Object $before.files $after.files -Property path,bytes,sha256</pre>
+<p>No comparison output means those selected properties match. Keep both original reports. Local paths may disclose private directory names.</p>
+<h3>Recover from a refusal</h3>
+<p>Exit code 2 indicates invalid command arguments or selection syntax. Exit code 1 indicates a capture or output failure. Fix the input or storage problem before retrying. Existing destinations remain unchanged: choose a new name. After a write or flush failure, preserve the partial file; it is not deleted automatically. Trusted parent-directory aliases may be followed. This service is not an adversarial filesystem sandbox.</p>
+<p>The C API is <code>UmiFileObservationCapture</code> in <code>umicom/toolchain/file_observation.h</code>. It owns copied paths and digests until <code>UmiFileObservationDestroy</code>. Formatting and saving do not reread source files. GUI clients should capture on a worker because filesystem reads can block.</p>
 </body></html>

@@ -23,6 +23,9 @@ extern "C" {
  * Represent the language runtime json writer data shared with callers of this public
  * contract.
  */
+/* Compatibility structure retained. Operations delegate to protocol JSON emission:
+ * inputs are non-overlapping terminated UTF-8, appends are atomic per value and
+ * errors remain sticky until init. Raw accepts trusted syntax, not arbitrary JSON. */
 typedef struct UmiLanguageRuntimeJsonWriter { char *buffer; size_t capacity,length; UmiStatus status; } UmiLanguageRuntimeJsonWriter;
 /**
  * Initialise language runtime json writer from caller-provided values so later operations

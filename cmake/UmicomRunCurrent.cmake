@@ -44,3 +44,16 @@ umicom_run_current_target(umicom-run-current-review-test test_review.c)
 foreach(case ready empty missing directory working-folder source-folder bare environment arguments buffer)
     umicom_run_current_case(review "${case}" umicom-run-current-review-test)
 endforeach()
+
+# Restart uses the same controlled executor fixtures; no test compiles a project.
+umicom_run_current_target(umicom-run-restart-test test_restart.c)
+foreach(case invalid idle configure build test run-configure run-build untrusted other-project changed-profile
+    success waiting handover duplicate pending-submit destroy stop thread-stop revoked changed-after other-project-after
+    bad-count missing-program log log-collision)
+    umicom_run_current_case(restart "${case}" umicom-run-restart-test)
+endforeach()
+if(COMMAND umicom_target_qualification_inputs)
+    umicom_target_qualification_inputs(umicom-run-restart-test FILES
+        "${CMAKE_CURRENT_LIST_DIR}/../src/build/run_restart.inc"
+        "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/build/run_restart.h")
+endif()

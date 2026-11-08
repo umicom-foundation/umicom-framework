@@ -148,6 +148,8 @@ add_library(umicom_base STATIC
     src/base/result.c
     src/base/memory.c
     src/base/text.c
+    # Unicode validation is shared by document conversion and tool evidence.
+    src/base/utf8.c
 )
 add_library(Umicom::base ALIAS umicom_base)
 set_target_properties(umicom_base PROPERTIES EXPORT_NAME base)
@@ -445,6 +447,15 @@ endif()
 # -----------------------------------------------------------------------------
 # Capability-based security and secrets
 # -----------------------------------------------------------------------------
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomProfileName.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomProfileNameFfi.cmake")
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/docs/learning/portable-profile-name.html"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)
+if(BUILD_TESTING)
+    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomProfileNameTests.cmake")
+    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomProfileNameFfiTests.cmake")
+    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomAndroidProfileNameTests.cmake")
+endif()
 add_library(umicom_security STATIC
     src/security/policy.c
     src/security/secrets.c
@@ -486,6 +497,8 @@ if(WIN32)
     target_link_libraries(umicom_security PRIVATE bcrypt advapi32)
 endif()
 target_link_libraries(umicom_security PUBLIC
+    # Account calls reuse the portable naming implementation.
+    Umicom::profile_name
     Umicom::base
     Umicom::platform
 )
@@ -1389,6 +1402,7 @@ add_library(umicom_protocol STATIC
     src/protocol/types.c
     src/protocol/framing.c
     src/protocol/json.c
+    src/protocol/json_writer.c
     src/protocol/json_rpc.c
     src/protocol/transport.c
     src/protocol/client.c
@@ -1874,6 +1888,7 @@ set(UMICOM_WEB_PLATFORM_SOURCE
     src/web/middleware.c
     src/web/mime.c
     src/web/static_files.c
+    src/web/preview.c
     src/web/json.c
     src/web/rest.c
     src/web/sse.c
@@ -3085,6 +3100,7 @@ add_library(umicom_developer STATIC
     src/developer/executor.c
     src/developer/cmake_plan.c
     src/developer/lifecycle_plan.c
+    src/developer/lifecycle_execution.c
     src/developer/runtime.c
     src/developer/command_line.c
     src/developer/task_plan.c
@@ -3436,6 +3452,9 @@ if(UMICOM_BUILD_NATIVE_TOOL)
         tools/umicom/src/command_learning_pack.c
         tools/umicom/src/common.c
         tools/umicom/src/command_check.c
+        tools/umicom/src/command_observe_files.c
+        tools/umicom/src/command_recipe.c
+        tools/umicom/src/command_preview.c
         tools/umicom/src/command_build.c
         tools/umicom/src/command_verify.c
         tools/umicom/src/command_automation.c
@@ -3468,6 +3487,14 @@ if(UMICOM_BUILD_NATIVE_TOOL)
     umicom_apply_warnings(umicom-developer-reference)
     umicom_apply_sanitizers(umicom-developer-reference)
 endif()
+
+# Preview checks follow the native command definition so entry tests see its real target.
+include(cmake/UmicomWebPreviewChecks.cmake)
+include(cmake/UmicomDeploymentSafetyChecks.cmake)
+include(cmake/UmicomTaskAdmissionChecks.cmake)
+include(cmake/UmicomTaskGraphChecks.cmake)
+include(cmake/UmicomTaskOrchestratorChecks.cmake)
+include(cmake/UmicomBuildRecipes.cmake)
 
 # -----------------------------------------------------------------------------
 # Demonstration and tests
@@ -3887,6 +3914,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-developer-journal-tests framework.developer.journal tests/test_developer_journal.c)
     umicom_add_framework_test(umicom-developer-cmake-plan-tests framework.developer.cmake_plan tests/test_developer_cmake_plan.c)
     umicom_add_framework_test(umicom-developer-lifecycle-plan-tests framework.developer.lifecycle_plan tests/test_developer_lifecycle_plan.c)
+    include(cmake/UmicomDeveloperLifecycleExecution.cmake)
     umicom_add_framework_test(umicom-developer-runtime-tests framework.developer.runtime tests/test_developer_runtime.c)
     umicom_add_framework_test(umicom-language-profile-tests framework.language_profile tests/test_language_profile.c)
     umicom_add_framework_test(umicom-project-language-matrix-tests framework.project_language_matrix tests/test_project_language_matrix.c)
@@ -5499,6 +5527,8 @@ install(TARGETS
     umicom_messaging
     umicom_data
     umicom_platform
+    umicom_profile_name
+    umicom_profile_name_ffi
     umicom_security
     umicom_runtime
     umicom_reflection
@@ -5574,6 +5604,8 @@ umicom_register_sdk_libraries(
     umicom_messaging
     umicom_data
     umicom_platform
+    umicom_profile_name
+    umicom_profile_name_ffi
     umicom_security
     umicom_runtime
     umicom_reflection

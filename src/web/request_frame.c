@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/web/request_frame.c
- * PURPOSE: Validate HTTP framing before a byte stream can reach a reusable service handler.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Validate HTTP framing before a byte stream can reach a reusable service handler.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/web/connection.h"
@@ -53,8 +60,14 @@ static UmiStatus Line(const unsigned char *bytes, size_t length, size_t begin, s
 /* A bounded two-pass parser shares all rules. The first pass admits a whole
  * frame; only then is a temporary request allocated and filled. No partial
  * header set can replace the caller's previous request. */
+/* The header-only admission mode lets the owned stream reuse every field
+ * rule before its body arrives. The former signature is retained for review. */
+#if 0
 static UmiStatus Frame(const unsigned char *bytes, size_t length, size_t maximum, UmiWebRequestFrame *frame,
                        UmiWebRequest *request)
+#endif
+static UmiStatus Frame(const unsigned char *bytes, size_t length, size_t maximum, UmiWebRequestFrame *frame,
+                       UmiWebRequest *request, bool header_only)
 {
     size_t end = 0U;
     UmiStatus status = Line(bytes, length, 0U, &end);
@@ -179,10 +192,20 @@ static UmiStatus Frame(const unsigned char *bytes, size_t length, size_t maximum
     if (body_bytes >= UMI_WEB_BODY_CAPACITY || position > maximum || body_bytes > maximum - position)
         return UMI_STATUS_CAPACITY_EXCEEDED;
     size_t complete = position + body_bytes;
+    /* Header admission reports the expected total without inventing body
+     * bytes. Full framing retains the previous exact-message contract. */
+#if 0
     if (length < complete)
         return UMI_STATUS_BUSY;
     if (length != complete)
         return UMI_STATUS_PARSE_ERROR;
+#endif
+    if (header_only) {
+        if (length != position || request != NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    } else {
+        if (length < complete) return UMI_STATUS_BUSY;
+        if (length != complete) return UMI_STATUS_PARSE_ERROR;
+    }
     if (request != NULL)
     {
         request->header_count = headers;
@@ -204,7 +227,11 @@ UmiStatus UmiWebRequestFrameRead(const void *bytes, size_t length, size_t maximu
         return UMI_STATUS_CAPACITY_EXCEEDED;
     if (length == 0U)
         return UMI_STATUS_BUSY;
+    /* Retain the full-frame call while making its completion mode explicit. */
+#if 0
     UmiStatus status = Frame(bytes, length, maximum, out, NULL);
+#endif
+    UmiStatus status = Frame(bytes, length, maximum, out, NULL, false);
     if (status == UMI_STATUS_BUSY && length == maximum)
         return UMI_STATUS_CAPACITY_EXCEEDED;
     return status;
@@ -220,9 +247,29 @@ UmiStatus UmiWebRequestParseStrict(const void *bytes, size_t length, size_t maxi
     UmiWebRequest *candidate = calloc(1U, sizeof(*candidate));
     if (candidate == NULL)
         return UMI_STATUS_OUT_OF_MEMORY;
+    /* Owned parsing always requires the complete body; the previous call
+     * remains here to document that compatibility boundary. */
+#if 0
     status = Frame(bytes, length, maximum, &frame, candidate);
+#endif
+    status = Frame(bytes, length, maximum, &frame, candidate, false);
     if (status == UMI_STATUS_OK)
         *out = *candidate;
     free(candidate);
     return status;
+}
+
+/* This private entry point accepts exactly the request line and header block.
+ * It shares Frame's Host, method, field and length rules with public parsing.
+ * A caller must not use the expected size as permission to dispatch a handler. */
+UmiStatus UmiWebRequestHeaderFrameRead(const void *bytes, size_t length, size_t maximum,
+                                     UmiWebRequestFrame *out)
+{
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    memset(out, 0, sizeof(*out));
+    if ((bytes == NULL && length != 0U) || maximum == 0U ||
+        maximum > UMI_WEB_CONNECTION_REQUEST_LIMIT) return UMI_STATUS_INVALID_ARGUMENT;
+    if (length > maximum) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (length == 0U) return UMI_STATUS_BUSY;
+    return Frame(bytes, length, maximum, out, NULL, true);
 }

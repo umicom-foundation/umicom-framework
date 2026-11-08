@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/vcs_working_tree/test_review.c
- * PURPOSE: Check child commit explanations, escaped display names and atomic legacy publication.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Verify repository identity display, child explanations and atomic rendering boundaries.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "fixture.h"
@@ -51,6 +58,50 @@ int main(int argc, char **argv)
               UMI_STATUS_OK);
         CHECK(strstr(text, "1 staged") && strstr(text, "1 children with uncommitted") &&
               strstr(text, "does not include those files"));
+    }
+    else if (!strcmp(mode, "identity") || !strcmp(mode, "identity-wide") ||
+        !strcmp(mode, "identity-unborn") || !strcmp(mode, "identity-unknown") ||
+        !strcmp(mode, "identity-detached") || !strcmp(mode, "identity-upstream") ||
+        !strcmp(mode, "identity-maximum"))
+    {
+        UmiVcsWorkingTreeDestroy(tree);
+        static const char wide[] = "# branch.oid " OBJECT_WIDE "\0# branch.head main\0";
+        static const char unborn[] = "# branch.oid (initial)\0# branch.head main\0";
+        static const char detached[] = "# branch.oid " OBJECT_ID "\0# branch.head (detached)\0";
+        static const char upstream[] = HEADERS "# branch.upstream origin/line\nname\0# branch.ab +2 -3\0# stash 4\0";
+        if (!strcmp(mode, "identity-wide")) tree = ParseFixture(wide, sizeof(wide) - 1U);
+        else if (!strcmp(mode, "identity-unborn")) tree = ParseFixture(unborn, sizeof(unborn) - 1U);
+        else if (!strcmp(mode, "identity-unknown")) tree = ParseFixture(NULL, 0U);
+        else if (!strcmp(mode, "identity-detached")) tree = ParseFixture(detached, sizeof(detached) - 1U);
+        else if (!strcmp(mode, "identity-upstream")) tree = ParseFixture(upstream, sizeof(upstream) - 1U);
+        else if (!strcmp(mode, "identity-maximum")) {
+            char bytes[2U * UMI_VCS_NAME_CAPACITY + 128U]; size_t used = 0U;
+            const char *prefixes[] = {"# branch.head ", "# branch.upstream "};
+            for (size_t n = 0U; n < 2U; ++n) {
+                size_t prefix = strlen(prefixes[n]); memcpy(bytes + used, prefixes[n], prefix); used += prefix;
+                memset(bytes + used, n ? 127 : 1, UMI_VCS_NAME_CAPACITY - 1U);
+                used += UMI_VCS_NAME_CAPACITY - 1U; bytes[used++] = '\0';
+            }
+            tree = ParseFixture(bytes, used);
+        } else tree = ParseFixture(input, sizeof(input) - 1U);
+        CHECK(UmiVcsWorkingTreeSummaryText(tree, text, UMI_VCS_WORKING_TREE_SUMMARY_TEXT_CAPACITY) == UMI_STATUS_OK);
+        if (!strcmp(mode, "identity-wide")) CHECK(strstr(text, "Commit (HEAD): " OBJECT_WIDE));
+        else if (!strcmp(mode, "identity-unborn")) CHECK(strstr(text, "Commit (HEAD): (unborn)"));
+        else if (!strcmp(mode, "identity-unknown")) CHECK(strstr(text, "Commit (HEAD): (not reported)"));
+        else if (!strcmp(mode, "identity-maximum")) CHECK(strstr(text, "\\x01\\x01") && strstr(text, "\\x7f\\x7f"));
+        else CHECK(strstr(text, "Commit (HEAD): " OBJECT_ID));
+        if (!strcmp(mode, "identity-upstream")) {
+            CHECK(strstr(text, "Upstream: \"origin/line\\x0aname\""));
+            CHECK(strstr(text, "2 ahead, 3 behind") && strstr(text, "Stashes: 4"));
+        } else CHECK(strstr(text, "Stashes: not reported"));
+        if (!strcmp(mode, "identity-detached")) CHECK(strstr(text, "(detached HEAD)"));
+        size_t required = strlen(text) + 1U;
+        char saved[UMI_VCS_WORKING_TREE_SUMMARY_TEXT_CAPACITY]; memcpy(saved, text, required);
+        memset(text, '~', UMI_VCS_WORKING_TREE_ENTRY_TEXT_CAPACITY);
+        CHECK(UmiVcsWorkingTreeSummaryText(tree, text, required - 1U) == UMI_STATUS_CAPACITY_EXCEEDED);
+        for (size_t i = 0U; i < UMI_VCS_WORKING_TREE_ENTRY_TEXT_CAPACITY; ++i) CHECK(text[i] == '~');
+        CHECK(UmiVcsWorkingTreeSummaryText(tree, text, required) == UMI_STATUS_OK);
+        CHECK(!memcmp(text, saved, required) && text[required] == '~');
     }
     else if (strcmp(mode, "child-only") == 0)
     {

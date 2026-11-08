@@ -1,0 +1,210 @@
+{
+  "schema": 1,
+  "id": "source-demo",
+  "build": "x86_64-w64-mingw32",
+  "host": "x86_64-w64-mingw32",
+  "target": "riscv64-unknown-elf",
+  "toolchain": {
+    "id": "riscv-gcc",
+    "compiler": "tools/bin/gcc",
+    "manifest": "tools/provenance.json",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "inputs": [
+    {
+      "id": "main",
+      "path": "src/main.c",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "bytes": 0
+    }
+  ],
+  "stages": [
+    {
+      "id": "unit-0",
+      "label": "Unit 0",
+      "phase": "build",
+      "dependencies": [],
+      "inputs": [],
+      "outputs": [
+        "out/u0.o"
+      ]
+    },
+    {
+      "id": "unit-1",
+      "label": "Unit 1",
+      "phase": "build",
+      "dependencies": [],
+      "inputs": [],
+      "outputs": [
+        "out/u1.o"
+      ]
+    },
+    {
+      "id": "unit-2",
+      "label": "Unit 2",
+      "phase": "build",
+      "dependencies": [],
+      "inputs": [],
+      "outputs": [
+        "out/u2.o"
+      ]
+    },
+    {
+      "id": "unit-3",
+      "label": "Unit 3",
+      "phase": "build",
+      "dependencies": [],
+      "inputs": [],
+      "outputs": [
+        "out/u3.o"
+      ]
+    },
+    {
+      "id": "unit-4",
+      "label": "Unit 4",
+      "phase": "build",
+      "dependencies": [],
+      "inputs": [],
+      "outputs": [
+        "out/u4.o"
+      ]
+    },
+    {
+      "id": "unit-5",
+      "label": "Unit 5",
+      "phase": "build",
+      "dependencies": [],
+      "inputs": [],
+      "outputs": [
+        "out/u5.o"
+      ]
+    },
+    {
+      "id": "unit-6",
+      "label": "Unit 6",
+      "phase": "build",
+      "dependencies": [],
+      "inputs": [],
+      "outputs": [
+        "out/u6.o"
+      ]
+    },
+    {
+      "id": "unit-7",
+      "label": "Unit 7",
+      "phase": "build",
+      "dependencies": [],
+      "inputs": [],
+      "outputs": [
+        "out/u7.o"
+      ]
+    },
+    {
+      "id": "unit-8",
+      "label": "Unit 8",
+      "phase": "build",
+      "dependencies": [],
+      "inputs": [],
+      "outputs": [
+        "out/u8.o"
+      ]
+    },
+    {
+      "id": "unit-9",
+      "label": "Unit 9",
+      "phase": "build",
+      "dependencies": [],
+      "inputs": [],
+      "outputs": [
+        "out/u9.o"
+      ]
+    },
+    {
+      "id": "unit-10",
+      "label": "Unit 10",
+      "phase": "build",
+      "dependencies": [],
+      "inputs": [],
+      "outputs": [
+        "out/u10.o"
+      ]
+    },
+    {
+      "id": "unit-11",
+      "label": "Unit 11",
+      "phase": "build",
+      "dependencies": [],
+      "inputs": [],
+      "outputs": [
+        "out/u11.o"
+      ]
+    },
+    {
+      "id": "unit-12",
+      "label": "Unit 12",
+      "phase": "build",
+      "dependencies": [],
+      "inputs": [],
+      "outputs": [
+        "out/u12.o"
+      ]
+    },
+    {
+      "id": "unit-13",
+      "label": "Unit 13",
+      "phase": "build",
+      "dependencies": [],
+      "inputs": [],
+      "outputs": [
+        "out/u13.o"
+      ]
+    },
+    {
+      "id": "unit-14",
+      "label": "Unit 14",
+      "phase": "build",
+      "dependencies": [],
+      "inputs": [],
+      "outputs": [
+        "out/u14.o"
+      ]
+    },
+    {
+      "id": "unit-15",
+      "label": "Unit 15",
+      "phase": "build",
+      "dependencies": [],
+      "inputs": [],
+      "outputs": [
+        "out/u15.o"
+      ]
+    },
+    {
+      "id": "link",
+      "label": "Link",
+      "phase": "build",
+      "dependencies": [
+        "unit-0",
+        "unit-1",
+        "unit-2",
+        "unit-3",
+        "unit-4",
+        "unit-5",
+        "unit-6",
+        "unit-7",
+        "unit-8",
+        "unit-9",
+        "unit-10",
+        "unit-11",
+        "unit-12",
+        "unit-13",
+        "unit-14",
+        "unit-15"
+      ],
+      "inputs": [],
+      "outputs": [
+        "out/app.elf"
+      ]
+    }
+  ]
+}

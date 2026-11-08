@@ -47,6 +47,8 @@ UmiStatus umi_publication_plan(UmiPublicationState *state)
     report->repository_count = 0U;
     state->order_count = 0U;
     memset(state->visiting, 0, sizeof(state->visiting));
+    UmiStatus policy_status = umi_publication_primary_validate(state);
+    if (policy_status != UMI_STATUS_OK) return policy_status;
     for (size_t i = 0U; i < report->count; ++i) {
         size_t primary = i;
         if (assigned[i] || report->entries[i].vendor) continue;
@@ -70,6 +72,10 @@ UmiStatus umi_publication_plan(UmiPublicationState *state)
                  candidate->behind < selected->behind))
                 primary = j;
         }
+        /* Explicit ownership refines the existing conflict checks, rather than
+         * replacing them or copying work between checkouts. */
+        policy_status = umi_publication_primary_select(state, i, &primary);
+        if (policy_status != UMI_STATUS_OK) return policy_status;
         ++report->repository_count;
         for (size_t j = i; j < report->count; ++j) {
             if (!report->entries[j].vendor &&

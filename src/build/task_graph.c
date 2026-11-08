@@ -118,6 +118,91 @@ static UmiStatus detect_cycle(UmiBuildTaskGraph *graph)
     return graph->cyclic ? UMI_STATUS_INVALID_STATE : UMI_STATUS_OK;
 }
 
+
+/* Runtime transitions stage only the changing fields, not the large copied
+ * task descriptions. Publication has no remaining failure points once every
+ * dependency and revision has been admitted. Owners serialize graph access. */
+typedef struct TaskGraphRuntime {
+    UmiBuildTaskState state;
+    size_t satisfied;
+    size_t failed;
+    uint32_t progress;
+    uint32_t attempts;
+    UmiStatus status;
+    int exit_code;
+    uint64_t revision;
+} TaskGraphRuntime;
+
+static void runtime_capture(const UmiBuildTaskGraph *graph, TaskGraphRuntime *states)
+{
+    for (size_t i = 0U; i < graph->count; ++i) {
+        const UmiBuildTaskGraphNodeSnapshot *node = &graph->nodes[i];
+        states[i] = (TaskGraphRuntime){node->state, node->satisfied_dependency_count,
+            node->failed_dependency_count, node->progress_basis_points,
+            node->attempt_count, node->last_status, node->last_exit_code, node->revision};
+    }
+}
+
+static UmiStatus runtime_advance(TaskGraphRuntime *state)
+{
+    if (state->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    state->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+static UmiStatus runtime_refresh(const UmiBuildTaskGraph *graph, TaskGraphRuntime *states)
+{
+    if (graph->cyclic) return UMI_STATUS_INVALID_STATE;
+    int changed;
+    do {
+        changed = 0;
+        for (size_t i = 0U; i < graph->count; ++i) {
+            TaskGraphRuntime *node = &states[i];
+            const UmiBuildTaskSnapshot *task = &graph->nodes[i].task;
+            if (node->state == UMI_BUILD_TASK_RUNNING || node->state == UMI_BUILD_TASK_SUCCEEDED ||
+                node->state == UMI_BUILD_TASK_FAILED || node->state == UMI_BUILD_TASK_CANCELLED ||
+                node->state == UMI_BUILD_TASK_SKIPPED) continue;
+            size_t satisfied = 0U, failed = 0U;
+            for (size_t d = 0U; d < task->dependency_count; ++d) {
+                const size_t index = find_index(graph, task->dependencies[d]);
+                if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+                if (is_success_like(states[index].state) ||
+                    (is_failure_like(states[index].state) && dependency_allows_failure(&graph->nodes[index])))
+                    satisfied += 1U;
+                else if (is_failure_like(states[index].state)) failed += 1U;
+            }
+            const UmiBuildTaskState next = failed > 0U ? UMI_BUILD_TASK_BLOCKED :
+                satisfied == task->dependency_count ? UMI_BUILD_TASK_READY : UMI_BUILD_TASK_PENDING;
+            if (next != node->state || satisfied != node->satisfied || failed != node->failed) {
+                UmiStatus status = runtime_advance(node);
+                if (status != UMI_STATUS_OK) return status;
+                changed = next != node->state || changed;
+                node->state = next; node->satisfied = satisfied; node->failed = failed;
+            }
+        }
+    } while (changed);
+    return UMI_STATUS_OK;
+}
+
+static UmiStatus runtime_publish(UmiBuildTaskGraph *graph, const TaskGraphRuntime *states,
+                                uint64_t revision_steps)
+{
+    if (graph->revision > UINT64_MAX - revision_steps) return UMI_STATUS_CAPACITY_EXCEEDED;
+    for (size_t i = 0U; i < graph->count; ++i) {
+        UmiBuildTaskGraphNodeSnapshot *node = &graph->nodes[i];
+        node->state = states[i].state;
+        node->satisfied_dependency_count = states[i].satisfied;
+        node->failed_dependency_count = states[i].failed;
+        node->progress_basis_points = states[i].progress;
+        node->attempt_count = states[i].attempts;
+        node->last_status = states[i].status;
+        node->last_exit_code = states[i].exit_code;
+        node->revision = states[i].revision;
+    }
+    graph->revision += revision_steps;
+    return UMI_STATUS_OK;
+}
+
 UmiStatus umi_build_task_graph_create(UmiBuildTaskGraph **out_graph)
 {
     UmiBuildTaskGraph *graph;
@@ -135,6 +220,8 @@ void umi_build_task_graph_destroy(UmiBuildTaskGraph *graph)
     free(graph);
 }
 
+/* Validate and refresh a complete candidate before replacing an existing graph, so missing dependencies, cycles and allocation failure preserve previous work. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_graph_rebuild(
     UmiBuildTaskGraph *graph,
     const UmiBuildTaskRegistry *registry)
@@ -172,7 +259,43 @@ UmiStatus umi_build_task_graph_rebuild(
     if (status != UMI_STATUS_OK) return status;
     return umi_build_task_graph_refresh(graph);
 }
+#endif
 
+UmiStatus umi_build_task_graph_rebuild(
+    UmiBuildTaskGraph *graph, const UmiBuildTaskRegistry *registry)
+{
+    if (graph == NULL || registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (graph->revision > UINT64_MAX - 2U) return UMI_STATUS_CAPACITY_EXCEEDED;
+    const size_t count = umi_build_task_registry_count(registry);
+    if (count > UMI_BUILD_TASK_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Rebuilding replaces task values as well as runtime state. Allocate the
+     * candidate on the heap rather than placing large task arrays on a stack. */
+    UmiBuildTaskGraph *candidate = calloc(1U, sizeof(*candidate));
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    UmiStatus status = UMI_STATUS_OK;
+    candidate->revision = graph->revision + 1U;
+    candidate->source_revision = umi_build_task_registry_revision(registry);
+    for (size_t i = 0U; i < count; ++i) {
+        UmiBuildTaskGraphNodeSnapshot *node = &candidate->nodes[i];
+        status = umi_build_task_registry_at(registry, i, &node->task);
+        if (status != UMI_STATUS_OK) break;
+        node->structure_size = (uint32_t)sizeof(*node);
+        node->api_version = UMI_BUILD_TASK_GRAPH_API_VERSION;
+        node->state = (node->task.flags & UMI_BUILD_TASK_ENABLED) != 0U ? UMI_BUILD_TASK_PENDING : UMI_BUILD_TASK_SKIPPED;
+        node->last_status = UMI_STATUS_OK;
+        node->revision = 1U;
+        candidate->dependency_count += node->task.dependency_count;
+        candidate->count += 1U;
+    }
+    if (status == UMI_STATUS_OK) status = detect_cycle(candidate);
+    if (status == UMI_STATUS_OK) status = umi_build_task_graph_refresh(candidate);
+    if (status == UMI_STATUS_OK) *graph = *candidate;
+    free(candidate);
+    return status;
+}
+
+/* Stage reset and its readiness refresh together so exhausted downstream identities cannot leave a partially reset graph. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_graph_reset(UmiBuildTaskGraph *graph)
 {
     size_t index;
@@ -193,7 +316,26 @@ UmiStatus umi_build_task_graph_reset(UmiBuildTaskGraph *graph)
     graph->revision += 1U;
     return umi_build_task_graph_refresh(graph);
 }
+#endif
 
+UmiStatus umi_build_task_graph_reset(UmiBuildTaskGraph *graph)
+{
+    if (graph == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    TaskGraphRuntime states[UMI_BUILD_TASK_CAPACITY];
+    runtime_capture(graph, states);
+    for (size_t i = 0U; i < graph->count; ++i) {
+        UmiStatus status = runtime_advance(&states[i]);
+        if (status != UMI_STATUS_OK) return status;
+        states[i].state = (graph->nodes[i].task.flags & UMI_BUILD_TASK_ENABLED) != 0U ? UMI_BUILD_TASK_PENDING : UMI_BUILD_TASK_SKIPPED;
+        states[i].satisfied = 0U; states[i].failed = 0U; states[i].progress = 0U;
+        states[i].attempts = 0U; states[i].status = UMI_STATUS_OK; states[i].exit_code = 0;
+    }
+    UmiStatus status = runtime_refresh(graph, states);
+    return status == UMI_STATUS_OK ? runtime_publish(graph, states, 2U) : status;
+}
+
+/* Plan all readiness and dependency-counter changes before publication and advance identities for changed observable counts as well as states. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_graph_refresh(UmiBuildTaskGraph *graph)
 {
     size_t index;
@@ -248,6 +390,16 @@ UmiStatus umi_build_task_graph_refresh(UmiBuildTaskGraph *graph)
     graph->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_build_task_graph_refresh(UmiBuildTaskGraph *graph)
+{
+    if (graph == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    TaskGraphRuntime states[UMI_BUILD_TASK_CAPACITY];
+    runtime_capture(graph, states);
+    UmiStatus status = runtime_refresh(graph, states);
+    return status == UMI_STATUS_OK ? runtime_publish(graph, states, 1U) : status;
+}
 
 UmiStatus umi_build_task_graph_find(
     const UmiBuildTaskGraph *graph,
@@ -290,6 +442,8 @@ UmiStatus umi_build_task_graph_next_ready(
     return UMI_STATUS_NOT_FOUND;
 }
 
+/* Stage runtime transitions and every affected identity before publishing; preserve existing lifecycle and dependency policy without copying task records per operation. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_graph_start(
     UmiBuildTaskGraph *graph,
     const char *task_id)
@@ -311,7 +465,33 @@ UmiStatus umi_build_task_graph_start(
     graph->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
 
+UmiStatus umi_build_task_graph_start(
+    UmiBuildTaskGraph *graph,
+    const char *task_id)
+{
+    size_t index;
+    TaskGraphRuntime states[UMI_BUILD_TASK_CAPACITY];
+    TaskGraphRuntime *node;
+    if (graph == NULL || task_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    runtime_capture(graph, states);
+    index = find_index(graph, task_id);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    node = &states[index];
+    if (node->state != UMI_BUILD_TASK_READY) return UMI_STATUS_INVALID_STATE;
+    if (node->attempts >= graph->nodes[index].task.maximum_attempts) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    node->state = UMI_BUILD_TASK_RUNNING;
+    node->attempts += 1U;
+    node->progress = 0U;
+    if (runtime_advance(node) != UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;
+    return runtime_publish(graph, states, 1U);
+}
+
+/* Stage runtime transitions and every affected identity before publishing; preserve existing lifecycle and dependency policy without copying task records per operation. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_graph_set_progress(
     UmiBuildTaskGraph *graph,
     const char *task_id,
@@ -331,7 +511,31 @@ UmiStatus umi_build_task_graph_set_progress(
     graph->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
 
+UmiStatus umi_build_task_graph_set_progress(
+    UmiBuildTaskGraph *graph,
+    const char *task_id,
+    uint32_t progress_basis_points)
+{
+    size_t index;
+    TaskGraphRuntime states[UMI_BUILD_TASK_CAPACITY];
+    if (graph == NULL || task_id == NULL || progress_basis_points > 10000U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    runtime_capture(graph, states);
+    index = find_index(graph, task_id);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    if (states[index].state != UMI_BUILD_TASK_RUNNING) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    states[index].progress = progress_basis_points;
+    if (runtime_advance(&states[index]) != UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;
+    return runtime_publish(graph, states, 1U);
+}
+
+/* Stage runtime transitions and every affected identity before publishing; preserve existing lifecycle and dependency policy without copying task records per operation. The former implementation is retained for engineering review. */
+#if 0
 static UmiStatus finish_node(UmiBuildTaskGraph *graph,
                              const char *task_id,
                              UmiBuildTaskState state,
@@ -354,6 +558,32 @@ static UmiStatus finish_node(UmiBuildTaskGraph *graph,
     graph->revision += 1U;
     refresh_status = umi_build_task_graph_refresh(graph);
     return refresh_status;
+}
+#endif
+
+static UmiStatus finish_node(UmiBuildTaskGraph *graph,
+                             const char *task_id,
+                             UmiBuildTaskState state,
+                             UmiStatus status,
+                             int exit_code)
+{
+    size_t index;
+    TaskGraphRuntime states[UMI_BUILD_TASK_CAPACITY];
+    UmiStatus refresh_status;
+    if (graph == NULL || task_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    runtime_capture(graph, states);
+    index = find_index(graph, task_id);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    if (states[index].state != UMI_BUILD_TASK_RUNNING) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    states[index].state = state;
+    states[index].progress = 10000U;
+    states[index].status = status;
+    states[index].exit_code = exit_code;
+    if (runtime_advance(&states[index]) != UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;
+    refresh_status = runtime_refresh(graph, states);
+    return refresh_status == UMI_STATUS_OK ? runtime_publish(graph, states, 2U) : refresh_status;
 }
 
 UmiStatus umi_build_task_graph_complete(UmiBuildTaskGraph *graph,
@@ -378,6 +608,8 @@ UmiStatus umi_build_task_graph_fail(UmiBuildTaskGraph *graph,
                        status, exit_code);
 }
 
+/* Stage runtime transitions and every affected identity before publishing; preserve existing lifecycle and dependency policy without copying task records per operation. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_graph_cancel(UmiBuildTaskGraph *graph,
                                       const char *task_id)
 {
@@ -397,7 +629,32 @@ UmiStatus umi_build_task_graph_cancel(UmiBuildTaskGraph *graph,
     graph->revision += 1U;
     return umi_build_task_graph_refresh(graph);
 }
+#endif
 
+UmiStatus umi_build_task_graph_cancel(UmiBuildTaskGraph *graph,
+                                      const char *task_id)
+{
+    size_t index;
+    TaskGraphRuntime states[UMI_BUILD_TASK_CAPACITY];
+    if (graph == NULL || task_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    runtime_capture(graph, states);
+    index = find_index(graph, task_id);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    if (states[index].state == UMI_BUILD_TASK_SUCCEEDED ||
+        states[index].state == UMI_BUILD_TASK_FAILED ||
+        states[index].state == UMI_BUILD_TASK_SKIPPED) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    states[index].state = UMI_BUILD_TASK_CANCELLED;
+    states[index].progress = 10000U;
+    states[index].status = UMI_STATUS_CANCELLED;
+    if (runtime_advance(&states[index]) != UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiStatus refresh_status = runtime_refresh(graph, states);
+    return refresh_status == UMI_STATUS_OK ? runtime_publish(graph, states, 2U) : refresh_status;
+}
+
+/* Stage runtime transitions and every affected identity before publishing; preserve existing lifecycle and dependency policy without copying task records per operation. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_graph_retry(UmiBuildTaskGraph *graph,
                                      const char *task_id)
 {
@@ -422,7 +679,37 @@ UmiStatus umi_build_task_graph_retry(UmiBuildTaskGraph *graph,
     graph->revision += 1U;
     return umi_build_task_graph_refresh(graph);
 }
+#endif
 
+UmiStatus umi_build_task_graph_retry(UmiBuildTaskGraph *graph,
+                                     const char *task_id)
+{
+    size_t index;
+    TaskGraphRuntime states[UMI_BUILD_TASK_CAPACITY];
+    if (graph == NULL || task_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    runtime_capture(graph, states);
+    index = find_index(graph, task_id);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    if (states[index].state != UMI_BUILD_TASK_FAILED &&
+        states[index].state != UMI_BUILD_TASK_CANCELLED &&
+        states[index].state != UMI_BUILD_TASK_BLOCKED) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    if (states[index].attempts >=
+        graph->nodes[index].task.maximum_attempts) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    states[index].state = UMI_BUILD_TASK_PENDING;
+    states[index].progress = 0U;
+    states[index].status = UMI_STATUS_OK;
+    states[index].exit_code = 0;
+    if (runtime_advance(&states[index]) != UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiStatus refresh_status = runtime_refresh(graph, states);
+    return refresh_status == UMI_STATUS_OK ? runtime_publish(graph, states, 2U) : refresh_status;
+}
+
+/* Stage runtime transitions and every affected identity before publishing; preserve existing lifecycle and dependency policy without copying task records per operation. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_graph_skip(UmiBuildTaskGraph *graph,
                                     const char *task_id)
 {
@@ -440,7 +727,30 @@ UmiStatus umi_build_task_graph_skip(UmiBuildTaskGraph *graph,
     graph->revision += 1U;
     return umi_build_task_graph_refresh(graph);
 }
+#endif
 
+UmiStatus umi_build_task_graph_skip(UmiBuildTaskGraph *graph,
+                                    const char *task_id)
+{
+    size_t index;
+    TaskGraphRuntime states[UMI_BUILD_TASK_CAPACITY];
+    if (graph == NULL || task_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    runtime_capture(graph, states);
+    index = find_index(graph, task_id);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    if (states[index].state == UMI_BUILD_TASK_RUNNING ||
+        states[index].state == UMI_BUILD_TASK_SUCCEEDED) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    states[index].state = UMI_BUILD_TASK_SKIPPED;
+    states[index].progress = 10000U;
+    if (runtime_advance(&states[index]) != UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiStatus refresh_status = runtime_refresh(graph, states);
+    return refresh_status == UMI_STATUS_OK ? runtime_publish(graph, states, 2U) : refresh_status;
+}
+
+/* Stage runtime transitions and every affected identity before publishing; preserve existing lifecycle and dependency policy without copying task records per operation. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_graph_cancel_waiting(UmiBuildTaskGraph *graph)
 {
     size_t index;
@@ -458,6 +768,27 @@ UmiStatus umi_build_task_graph_cancel_waiting(UmiBuildTaskGraph *graph)
     }
     graph->revision += 1U;
     return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_build_task_graph_cancel_waiting(UmiBuildTaskGraph *graph)
+{
+    size_t index;
+    TaskGraphRuntime states[UMI_BUILD_TASK_CAPACITY];
+    if (graph == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    runtime_capture(graph, states);
+    for (index = 0U; index < graph->count; ++index) {
+        TaskGraphRuntime *node = &states[index];
+        if (node->state == UMI_BUILD_TASK_PENDING ||
+            node->state == UMI_BUILD_TASK_READY ||
+            node->state == UMI_BUILD_TASK_BLOCKED) {
+            node->state = UMI_BUILD_TASK_CANCELLED;
+            node->progress = 10000U;
+            node->status = UMI_STATUS_CANCELLED;
+            if (runtime_advance(node) != UMI_STATUS_OK) return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+    }
+    return runtime_publish(graph, states, 1U);
 }
 
 UmiStatus umi_build_task_graph_snapshot(

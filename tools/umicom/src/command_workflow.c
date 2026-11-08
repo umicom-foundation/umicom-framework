@@ -17,6 +17,7 @@
 #include "cli.h"
 
 #include "umicom/developer/lifecycle_plan.h"
+#include "umicom/developer/lifecycle_execution.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -34,6 +35,9 @@ typedef struct UmiCliWorkflowOptions {
     int no_submodules;
 } UmiCliWorkflowOptions;
 
+/* The original multipass parser is retained for review. The single-pass parser
+ * below replaces first-value-wins admission and preserves supported options. */
+#if 0
 /*
  * Provide the workflow option value operation used by this module and its client
  * applications.
@@ -124,6 +128,59 @@ static int workflow_options_parse(
     return 1;
 }
 
+#endif
+
+/* Parse each option once so the admitted request is exactly the one displayed.
+ * Ambiguous duplicates are rejected instead of silently using the first value. */
+static int workflow_options_parse(int argc, char **argv, UmiCliWorkflowOptions *options)
+{
+    static const char *names[] = {"--source", "--preset", "--jobs", "--message",
+        "--remote", "--branch", "--goal", "--strict", "--dry-run", "--no-submodules"};
+    unsigned int seen = 0U;
+    int index;
+    if (options == NULL || argc < 0 || (argc != 0 && argv == NULL)) return 0;
+    (void)memset(options, 0, sizeof(*options));
+    options->source = ".";
+    for (index = 0; index < argc; ++index) {
+        size_t option;
+        const char *value = NULL;
+        if (argv[index] == NULL) return 0;
+        for (option = 0U; option < sizeof(names) / sizeof(names[0]); ++option)
+            if (strcmp(argv[index], names[option]) == 0) break;
+        if (option == sizeof(names) / sizeof(names[0])) {
+            (void)fprintf(stderr, "Unknown workflow option: %s\n", argv[index]);
+            return 0;
+        }
+        if ((seen & (1U << option)) != 0U) {
+            (void)fprintf(stderr, "Duplicate workflow option: %s\n", names[option]);
+            return 0;
+        }
+        seen |= 1U << option;
+        if (option < 7U) {
+            if (index + 1 >= argc || argv[index + 1] == NULL ||
+                argv[index + 1][0] == '\0' || argv[index + 1][0] == '-') {
+                (void)fprintf(stderr, "%s requires a value.\n", names[option]);
+                return 0;
+            }
+            value = argv[++index];
+        }
+        switch (option) {
+            case 0U: options->source = value; break;
+            case 1U: options->preset = value; break;
+            case 2U: options->jobs = value; break;
+            case 3U: options->message = value; break;
+            case 4U: options->remote = value; break;
+            case 5U: options->branch = value; break;
+            case 6U: options->plan_goal = value; break;
+            case 7U: options->strict = 1; break;
+            case 8U: options->dry_run = 1; break;
+            case 9U: options->no_submodules = 1; break;
+            default: return 0;
+        }
+    }
+    return 1;
+}
+
 /* Provide the workflow goal operation used by this module and its client applications. */
 static UmiDeveloperLifecycleGoal workflow_goal(const char *command)
 {
@@ -190,6 +247,9 @@ static int workflow_print_plan(
     return 0;
 }
 
+/* Framework now sequences these three backend actions. Retain the previous
+ * CLI-only verification sequence to make the ownership migration reviewable. */
+#if 0
 /* Provide the workflow verify operation used by this module and its client applications. */
 static int workflow_verify(
     UmiCliContext *context,
@@ -229,6 +289,8 @@ static int workflow_verify(
     return umi_cli_command_dependencies(
         context, dependency_count, dependency_arguments);
 }
+
+#endif
 
 /*
  * Provide the workflow build action operation used by this module and its client
@@ -350,6 +412,61 @@ static int workflow_repository_publish(
     return umi_cli_command_repo(context, count, arguments);
 }
 
+/* The CLI translates typed actions to existing native command services. It does
+ * not decide order, retry failed actions, or turn commands into shell strings. */
+static int workflow_execute_action(void *user_data,
+    const UmiDeveloperLifecycleExecutionRequest *request, UmiDeveloperLifecycleAction action)
+{
+    UmiCliContext *context = user_data;
+    UmiCliWorkflowOptions options = {0};
+    char *arguments[5];
+    int count;
+    options.source = request->source;
+    options.preset = request->preset;
+    options.jobs = request->jobs;
+    options.message = request->message;
+    options.remote = request->remote;
+    options.branch = request->branch;
+    options.strict = request->strict;
+    options.no_submodules = request->no_submodules;
+    switch (action) {
+        case UMI_DEVELOPER_ACTION_ENVIRONMENT:
+            arguments[0] = "--all";
+            arguments[1] = "--project";
+            arguments[2] = (char *)request->source;
+            return umi_cli_command_check(context, 3, arguments);
+        case UMI_DEVELOPER_ACTION_SOURCE_SCAN:
+            arguments[0] = "scan";
+            arguments[1] = (char *)request->source;
+            arguments[2] = "--profile";
+            arguments[3] = "ci";
+            arguments[4] = "--summary";
+            return umi_cli_command_quality(context, 5, arguments);
+        case UMI_DEVELOPER_ACTION_DEPENDENCY_AUDIT:
+            arguments[0] = "audit";
+            arguments[1] = (char *)request->source;
+            arguments[2] = "--strict";
+            count = request->strict ? 3 : 2;
+            return umi_cli_command_dependencies(context, count, arguments);
+        case UMI_DEVELOPER_ACTION_CONFIGURE:
+            return workflow_build_action(context, UMI_BUILD_CONFIGURE, &options);
+        case UMI_DEVELOPER_ACTION_BUILD:
+            return workflow_build_action(context, UMI_BUILD_COMPILE, &options);
+        case UMI_DEVELOPER_ACTION_TEST:
+            return workflow_build_action(context, UMI_BUILD_TEST, &options);
+        case UMI_DEVELOPER_ACTION_REPOSITORY_VERIFY:
+            return workflow_repository_verify(context, &options);
+        case UMI_DEVELOPER_ACTION_REPOSITORY_PUBLISH:
+            return workflow_repository_publish(context, &options);
+        case UMI_DEVELOPER_ACTION_REPOSITORY_UPDATE:
+            return workflow_repository_update(context, &options);
+        default: return 2;
+    }
+}
+
+/* Lifecycle ordering moved to Framework so future Studio clients share the same
+ * admission and failure boundary. Keep the old command body for owner review. */
+#if 0
 /*
  * Provide the cli command workflow operation used by this module and its client
  * applications.
@@ -438,4 +555,73 @@ int umi_cli_command_workflow(UmiCliContext *context, int argc, char **argv)
         return workflow_repository_publish(context, &options);
     }
     return 0;
+}
+
+#endif
+
+int umi_cli_command_workflow(UmiCliContext *context, int argc, char **argv)
+{
+    UmiCliWorkflowOptions options;
+    UmiDeveloperLifecycleGoal goal;
+    UmiDeveloperLifecycleExecutionRequest request;
+    UmiDeveloperLifecycleExecutionHost host = {0};
+    UmiDeveloperLifecycleExecutionReport report;
+    UmiStatus status;
+    size_t index;
+    int plan;
+    if (argc < 0 || (argc != 0 && (argv == NULL || argv[0] == NULL))) return 2;
+    if (argc == 0 || strcmp(argv[0], "help") == 0 ||
+        strcmp(argv[0], "--help") == 0 || strcmp(argv[0], "-h") == 0) {
+        (void)puts("Usage: umicom workflow COMMAND [options]\n"
+            "Commands: plan, verify, build, test, publish, update, complete\n"
+            "Options: --source PATH --preset NAME --jobs N --message TEXT "
+            "--remote NAME --branch NAME --strict --dry-run --no-submodules\n"
+            "Plan accepts --goal verify|build|test|publish|update|complete.\n"
+            "Preset/jobs apply to build, test and complete. Message applies to publish/complete.\n"
+            "Remote/branch apply to publish, update and complete. No-submodules applies to update.\n"
+            "Strict applies to dependency auditing; update does not audit dependencies.\n"
+            "Every option may appear once. Complete requires --message before any action.\n"
+            "Plan/dry-run executes no action; a publication message is optional in preview.");
+        return 0;
+    }
+    goal = workflow_goal(argv[0]);
+    if (goal == 0 || !workflow_options_parse(argc - 1, argv + 1, &options)) return 2;
+    plan = strcmp(argv[0], "plan") == 0;
+    if (options.plan_goal != NULL) {
+        if (!plan) {
+            (void)fputs("--goal is accepted only by workflow plan.\n", stderr);
+            return 2;
+        }
+        goal = workflow_goal(options.plan_goal);
+        if (goal == 0 || strcmp(options.plan_goal, "plan") == 0) return 2;
+    }
+    umi_developer_lifecycle_execution_request_init(&request, goal);
+    request.source = options.source;
+    request.preset = options.preset;
+    request.jobs = options.jobs;
+    request.message = options.message;
+    request.remote = options.remote;
+    request.branch = options.branch;
+    request.strict = options.strict;
+    request.preview = plan || options.dry_run;
+    request.no_submodules = options.no_submodules;
+    if (!request.preview && context == NULL) return 2;
+    host.user_data = context;
+    for (index = 1U; index < UMI_DEVELOPER_ACTION_COUNT; ++index)
+        host.execute[index] = workflow_execute_action;
+    status = umi_developer_lifecycle_execute(&request, &host, &report);
+    if (status != UMI_STATUS_OK && report.attempted_count == 0U) {
+        (void)fputs("Workflow request rejected before execution. Check option scope, "
+            "positive jobs and the required publication message.\n", stderr);
+        return 2;
+    }
+    if (request.preview) return workflow_print_plan(goal, &options);
+    (void)printf("Workflow actions: %zu attempted, %zu completed, %zu planned.\n",
+        report.attempted_count, report.completed_count, report.action_count);
+    if (report.failed_action != UMI_DEVELOPER_ACTION_NONE) {
+        (void)fprintf(stderr, "Stopped at %s (backend result %d). Earlier changes remain.\n",
+            umi_developer_lifecycle_action_text(report.failed_action), report.backend_result);
+        return report.backend_result;
+    }
+    return status == UMI_STATUS_OK ? 0 : 1;
 }

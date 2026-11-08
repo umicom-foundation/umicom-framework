@@ -107,6 +107,10 @@ typedef struct UmiBuildDeploymentPlanSnapshot {
 void umi_build_deployment_plan_init(
     UmiBuildDeploymentPlan *plan,
     const char *deployment_id);
+/** Initialize values before use. Mutations validate bounded metadata and never
+ * wrap revision identities. Rebinding or adding a step revokes approval when
+ * required. Composition publishes one complete replacement or preserves plan;
+ * it advances generation and revision once. These are plans, not provider runs. */
 UmiStatus umi_build_deployment_plan_bind(
     UmiBuildDeploymentPlan *plan,
     const UmiBuildArtifactManifest *artifact,
@@ -123,6 +127,10 @@ UmiStatus umi_build_deployment_plan_compose_default(
  * before this operation changes state or invokes nested work. Initialize the
  * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_build_deployment_plan_approve(UmiBuildDeploymentPlan *plan);
+/** Require terminated fixed fields and ordered, required forward validation,
+ * installation and promotion gates. This checks declared metadata; it does not
+ * verify artifact bytes, authenticate a target, execute commands or grant trust.
+ * Read projections reject malformed storage before writing their outputs. */
 UmiStatus umi_build_deployment_plan_validate(
     const UmiBuildDeploymentPlan *plan,
     char *out_message,

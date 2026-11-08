@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tools/umicom/src/command_repository_review.c
- * PURPOSE: Expose the shared read-only repository review through the native command.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Present shared repository observations after validating the entire command argument vector.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "cli.h"
@@ -46,6 +53,10 @@ int umi_cli_command_repository_review(int argc, char **argv)
     UmiStatus status;
     if (argc < 0 || (argc != 0 && argv == NULL))
         return 2;
+    /* Check every borrowed string before help or value parsing dereferences it.
+     * This adapter is also callable directly by embedded native clients. */
+    for (int index = 0; index < argc; ++index)
+        if (argv[index] == NULL || argv[index][0] == '\0') return 2;
     if (argc == 1 && (strcmp(argv[0], "--help") == 0 || strcmp(argv[0], "-h") == 0))
     {
         puts("Usage: umicom repo review [PATH] [--children] [--timeout-ms MILLISECONDS]\n"
@@ -60,6 +71,10 @@ int umi_cli_command_repository_review(int argc, char **argv)
             children = 1;
         else if (strcmp(argv[index], "--root") == 0 && !root_set && index + 1 < argc)
         {
+            if (argv[index + 1][0] == '-') {
+                fputs("--root requires a path, not another option.\n", stderr);
+                return 2;
+            }
             root = argv[++index];
             root_set = 1;
         }
@@ -109,6 +124,7 @@ int umi_cli_command_repository_review(int argc, char **argv)
     for (size_t index = 0U; status == UMI_STATUS_OK && index < summary.entries; ++index)
     {
         const UmiVcsWorkingTreeEntry *entry = UmiVcsWorkingTreeEntryAt(tree, index);
+        if (entry == NULL) { status = UMI_STATUS_INVALID_STATE; break; }
         if (children && !entry->submodule)
             continue;
         status =

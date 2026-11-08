@@ -85,12 +85,76 @@ void umi_build_deployment_target_init(
     target->revision = 1U;
 }
 
+/* Validate every bounded text member before a registry or deployment planner can copy it. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_deployment_target_validate(
     const UmiBuildDeploymentTargetSnapshot *target,
     char *out_message,
     size_t message_capacity)
 {
     if (target == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (target->target_id[0] == '\0' || target->name[0] == '\0' ||
+        target->destination[0] == '\0') {
+        write_message(out_message, message_capacity,
+                      "Target id, name and destination are required.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (target->kind < UMI_BUILD_DEPLOYMENT_LOCAL_DIRECTORY ||
+        target->kind > UMI_BUILD_DEPLOYMENT_PACKAGE_REPOSITORY ||
+        target->strategy < UMI_BUILD_DEPLOYMENT_COPY ||
+        target->strategy > UMI_BUILD_DEPLOYMENT_IN_PLACE) {
+        write_message(out_message, message_capacity,
+                      "Deployment target kind or strategy is invalid.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if ((target->flags &
+         ~(UmiBuildDeploymentTargetFlags)
+             UMI_BUILD_DEPLOYMENT_TARGET_ALL_FLAGS) != 0U ||
+        target->maximum_parallel == 0U) {
+        write_message(out_message, message_capacity,
+                      "Deployment target flags or parallelism are invalid.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if ((target->flags & UMI_BUILD_DEPLOYMENT_TARGET_HEALTH_CHECK) != 0U &&
+        target->health_uri[0] == '\0') {
+        write_message(out_message, message_capacity,
+                      "Health-enabled targets require a health URI.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if ((target->flags & UMI_BUILD_DEPLOYMENT_TARGET_REMOTE) != 0U &&
+        target->endpoint[0] == '\0') {
+        write_message(out_message, message_capacity,
+                      "Remote targets require an endpoint.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    write_message(out_message, message_capacity,
+                  "Deployment target is valid.");
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_build_deployment_target_validate(
+    const UmiBuildDeploymentTargetSnapshot *target,
+    char *out_message,
+    size_t message_capacity)
+{
+    if (target == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Fixed arrays are untrusted at this public value boundary. A presence
+     * flag or display label cannot establish string termination or ABI identity. */
+    if (target->structure_size != sizeof(*target) ||
+        target->api_version != UMI_BUILD_DEPLOYMENT_TARGET_API_VERSION ||
+        memchr(target->target_id, '\0', sizeof(target->target_id)) == NULL ||
+        memchr(target->name, '\0', sizeof(target->name)) == NULL ||
+        memchr(target->description, '\0', sizeof(target->description)) == NULL ||
+        memchr(target->environment, '\0', sizeof(target->environment)) == NULL ||
+        memchr(target->provider_id, '\0', sizeof(target->provider_id)) == NULL ||
+        memchr(target->endpoint, '\0', sizeof(target->endpoint)) == NULL ||
+        memchr(target->destination, '\0', sizeof(target->destination)) == NULL ||
+        memchr(target->working_directory, '\0', sizeof(target->working_directory)) == NULL ||
+        memchr(target->health_uri, '\0', sizeof(target->health_uri)) == NULL) {
+        write_message(out_message, message_capacity, "Bounded metadata or text is malformed.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
     if (target->target_id[0] == '\0' || target->name[0] == '\0' ||
         target->destination[0] == '\0') {
         write_message(out_message, message_capacity,

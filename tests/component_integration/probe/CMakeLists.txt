@@ -1,8 +1,17 @@
 #-----------------------------------------------------------------------------
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
-# A real native dependency subset, arranged like the complete product:
-# integration is requested in a child before its canonical owners exist.
-# It is NOT the entire Framework or a replacement trading implementation.
+# Umicom Framework
+# File: tests/component_integration/probe/CMakeLists.txt
+#
+# PURPOSE:
+#   Exercise a real native dependency subset with integration requested before
+#   canonical owners exist; this is not a replacement trading implementation.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
 #-----------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.24)
 project(UmicomComponentIntegrationProbe VERSION 1.0.0 LANGUAGES C)
@@ -52,6 +61,9 @@ if(NOT MODE STREQUAL "missing")
     # as real sources, never success-only stubs that could hide a broken SDK.
     target_sources(umicom_base PRIVATE "${FRAMEWORK}/src/base/value_archive.c")
     target_sources(umicom_base PRIVATE "${FRAMEWORK}/src/base/csv_document.c")
+    # The CSV Unicode policy delegates to the same base scalar service as the
+    # complete SDK. Include that real implementation in this small host.
+    target_sources(umicom_base PRIVATE "${FRAMEWORK}/src/base/utf8.c")
     target_sources(umicom_base PRIVATE "${FRAMEWORK}/src/base/sha256.c")
     # The composed broker checks exercise the public order-policy and watch
     # owners too. Link their real implementations in every non-missing host,

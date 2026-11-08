@@ -52,6 +52,39 @@ static void write_message(char *destination, size_t capacity,
     destination[length] = '\0';
 }
 
+/* Public snapshots are borrowed complete objects. Validate bounded storage
+ * before any string operation or count-driven traversal, including builder
+ * calls made before an executable command has been supplied. */
+static UmiStatus task_shape(const UmiBuildTaskSnapshot *task)
+{
+    if (task == NULL || task->structure_size != sizeof(*task) ||
+        task->api_version != UMI_BUILD_TASK_API_VERSION ||
+        task->dependency_count > UMI_BUILD_TASK_DEPENDENCY_CAPACITY ||
+        task->input_count > UMI_BUILD_TASK_INPUT_CAPACITY ||
+        task->output_count > UMI_BUILD_TASK_OUTPUT_CAPACITY ||
+        task->environment_count > UMI_BUILD_TASK_ENVIRONMENT_CAPACITY ||
+        (task->has_build_phase != 0 && task->has_build_phase != 1) ||
+        (task->incremental != 0 && task->incremental != 1))
+        return UMI_STATUS_INVALID_ARGUMENT;
+#define TASK_TEXT(field) do { if (memchr(task->field, '\0', sizeof(task->field)) == NULL) return UMI_STATUS_INVALID_ARGUMENT; } while (0)
+    TASK_TEXT(task_id); TASK_TEXT(label); TASK_TEXT(detail); TASK_TEXT(group);
+    TASK_TEXT(category); TASK_TEXT(command); TASK_TEXT(working_directory); TASK_TEXT(problem_matcher);
+#undef TASK_TEXT
+    for (size_t i = 0U; i < task->dependency_count; ++i)
+        if (memchr(task->dependencies[i], '\0', sizeof(task->dependencies[i])) == NULL)
+            return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t i = 0U; i < task->input_count; ++i)
+        if (memchr(task->inputs[i], '\0', sizeof(task->inputs[i])) == NULL)
+            return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t i = 0U; i < task->output_count; ++i)
+        if (memchr(task->outputs[i], '\0', sizeof(task->outputs[i])) == NULL)
+            return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t i = 0U; i < task->environment_count; ++i)
+        if (memchr(task->environment[i], '\0', sizeof(task->environment[i])) == NULL)
+            return UMI_STATUS_INVALID_ARGUMENT;
+    return UMI_STATUS_OK;
+}
+
 static size_t find_index(const UmiBuildTaskRegistry *registry,
                          const char *task_id)
 {
@@ -162,6 +195,8 @@ UmiStatus umi_build_task_set_command(UmiBuildTaskSnapshot *task,
 }
 #endif
 
+/* Stage command and working directory together so refusal preserves the complete previous value and observation revision. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_set_command(UmiBuildTaskSnapshot *task,
                                      const char *command,
                                      const char *working_directory)
@@ -181,6 +216,31 @@ UmiStatus umi_build_task_set_command(UmiBuildTaskSnapshot *task,
     }
     if (status == UMI_STATUS_OK) task->revision += 1U;
     return status;
+}
+#endif
+
+UmiStatus umi_build_task_set_command(UmiBuildTaskSnapshot *task,
+                                     const char *command,
+                                     const char *working_directory)
+{
+    UmiStatus status = task_shape(task);
+    if (status != UMI_STATUS_OK || command == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (task->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Stage both fields before publication. The inputs may alias existing task
+     * fields; a rejected directory must not silently replace the command. */
+    char next_command[UMI_BUILD_COMMAND_CAPACITY];
+    char next_directory[UMI_BUILD_PATH_CAPACITY];
+    status = copy_text(next_command, sizeof next_command, command);
+    if (status != UMI_STATUS_OK) return status;
+    if (working_directory != NULL) {
+        status = copy_text(next_directory, sizeof next_directory, working_directory);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    (void)copy_text(task->command, sizeof task->command, next_command);
+    if (working_directory != NULL)
+        (void)copy_text(task->working_directory, sizeof task->working_directory, next_directory);
+    task->revision += 1U;
+    return UMI_STATUS_OK;
 }
 
 /* Retained for review: the former mutation could wrap its owner revision.
@@ -215,9 +275,45 @@ UmiStatus umi_build_task_add_dependency(UmiBuildTaskSnapshot *task,
 }
 #endif
 
+/* Bound the complete public task shape before traversing copied metadata; retain existing valid builder behavior and revision refusal. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_add_dependency(UmiBuildTaskSnapshot *task,
                                         const char *dependency_task_id)
 {
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (task != NULL && task->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiStatus status;
+    if (task == NULL || dependency_task_id == NULL ||
+        dependency_task_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (strcmp(task->task_id, dependency_task_id) == 0) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (dependency_exists(task, dependency_task_id)) {
+        return UMI_STATUS_ALREADY_EXISTS;
+    }
+    if (task->dependency_count >= UMI_BUILD_TASK_DEPENDENCY_CAPACITY) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    status = copy_text(task->dependencies[task->dependency_count],
+                       sizeof(task->dependencies[task->dependency_count]),
+                       dependency_task_id);
+    if (status == UMI_STATUS_OK) {
+        task->dependency_count += 1U;
+        task->revision += 1U;
+    }
+    return status;
+}
+#endif
+
+UmiStatus umi_build_task_add_dependency(UmiBuildTaskSnapshot *task,
+                                        const char *dependency_task_id)
+{
+    if (task_shape(task) != UMI_STATUS_OK) return UMI_STATUS_INVALID_ARGUMENT;
     /* A revision is an observation token, not a wrapping counter. Refuse before
      * any nested operation or field write can make the last token ambiguous. */
     if (task != NULL && task->revision == UINT64_MAX)
@@ -280,9 +376,29 @@ UmiStatus umi_build_task_add_input(UmiBuildTaskSnapshot *task,
 }
 #endif
 
+/* Bound the complete public task shape before traversing copied metadata; retain existing valid builder behavior and revision refusal. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_add_input(UmiBuildTaskSnapshot *task,
                                    const char *input_pattern)
 {
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (task != NULL && task->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiStatus status;
+    if (task == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = add_path(task->inputs, &task->input_count,
+                      UMI_BUILD_TASK_INPUT_CAPACITY, input_pattern);
+    if (status == UMI_STATUS_OK) task->revision += 1U;
+    return status;
+}
+#endif
+
+UmiStatus umi_build_task_add_input(UmiBuildTaskSnapshot *task,
+                                   const char *input_pattern)
+{
+    if (task_shape(task) != UMI_STATUS_OK) return UMI_STATUS_INVALID_ARGUMENT;
     /* A revision is an observation token, not a wrapping counter. Refuse before
      * any nested operation or field write can make the last token ambiguous. */
     if (task != NULL && task->revision == UINT64_MAX)
@@ -312,9 +428,29 @@ UmiStatus umi_build_task_add_output(UmiBuildTaskSnapshot *task,
 }
 #endif
 
+/* Bound the complete public task shape before traversing copied metadata; retain existing valid builder behavior and revision refusal. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_add_output(UmiBuildTaskSnapshot *task,
                                     const char *output_pattern)
 {
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (task != NULL && task->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiStatus status;
+    if (task == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = add_path(task->outputs, &task->output_count,
+                      UMI_BUILD_TASK_OUTPUT_CAPACITY, output_pattern);
+    if (status == UMI_STATUS_OK) task->revision += 1U;
+    return status;
+}
+#endif
+
+UmiStatus umi_build_task_add_output(UmiBuildTaskSnapshot *task,
+                                    const char *output_pattern)
+{
+    if (task_shape(task) != UMI_STATUS_OK) return UMI_STATUS_INVALID_ARGUMENT;
     /* A revision is an observation token, not a wrapping counter. Refuse before
      * any nested operation or field write can make the last token ambiguous. */
     if (task != NULL && task->revision == UINT64_MAX)
@@ -360,6 +496,8 @@ UmiStatus umi_build_task_add_environment(UmiBuildTaskSnapshot *task,
 }
 #endif
 
+/* Bound the complete public task shape before traversing copied metadata; retain existing valid builder behavior and revision refusal. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_add_environment(UmiBuildTaskSnapshot *task,
                                          const char *name_value_pair)
 {
@@ -391,7 +529,43 @@ UmiStatus umi_build_task_add_environment(UmiBuildTaskSnapshot *task,
     }
     return status;
 }
+#endif
 
+UmiStatus umi_build_task_add_environment(UmiBuildTaskSnapshot *task,
+                                         const char *name_value_pair)
+{
+    if (task_shape(task) != UMI_STATUS_OK) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A revision is an observation token, not a wrapping counter. Refuse before
+     * any nested operation or field write can make the last token ambiguous. */
+    if (task != NULL && task->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    size_t index;
+    UmiStatus status;
+    if (task == NULL || name_value_pair == NULL ||
+        strchr(name_value_pair, '=') == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    for (index = 0U; index < task->environment_count; ++index) {
+        if (strcmp(task->environment[index], name_value_pair) == 0) {
+            return UMI_STATUS_ALREADY_EXISTS;
+        }
+    }
+    if (task->environment_count >= UMI_BUILD_TASK_ENVIRONMENT_CAPACITY) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    status = copy_text(task->environment[task->environment_count],
+                       sizeof(task->environment[task->environment_count]),
+                       name_value_pair);
+    if (status == UMI_STATUS_OK) {
+        task->environment_count += 1U;
+        task->revision += 1U;
+    }
+    return status;
+}
+
+/* Validate fixed-size public fields and counts before interpreting values, then enforce builder-equivalent distinct entries. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_validate(const UmiBuildTaskSnapshot *task,
                                   char *out_message,
                                   size_t message_capacity)
@@ -448,6 +622,93 @@ UmiStatus umi_build_task_validate(const UmiBuildTaskSnapshot *task,
     write_message(out_message, message_capacity, "Task is valid.");
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_build_task_validate(const UmiBuildTaskSnapshot *task,
+                                  char *out_message,
+                                  size_t message_capacity)
+{
+    size_t index;
+    if (task_shape(task) != UMI_STATUS_OK) {
+        write_message(out_message, message_capacity, "Task metadata, counts or text storage are invalid.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (task->task_id[0] == '\0' || task->label[0] == '\0') {
+        write_message(out_message, message_capacity,
+                      "Task id and label are required.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (task->kind < UMI_BUILD_TASK_COMMAND ||
+        task->kind > UMI_BUILD_TASK_COMPOSITE ||
+        task->run_on < UMI_BUILD_TASK_RUN_MANUALLY ||
+        task->run_on > UMI_BUILD_TASK_RUN_CONTINUOUSLY) {
+        write_message(out_message, message_capacity,
+                      "Task kind or run policy is invalid.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (task->kind == UMI_BUILD_TASK_COMPOSITE &&
+        task->dependency_count == 0U) {
+        write_message(out_message, message_capacity,
+                      "Composite tasks require dependencies.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (task->kind != UMI_BUILD_TASK_COMPOSITE &&
+        task->command[0] == '\0' && !task->has_build_phase) {
+        write_message(out_message, message_capacity,
+                      "Executable tasks require a command or build phase.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (task->has_build_phase &&
+        (task->build_phase < UMI_BUILD_PHASE_CONFIGURE ||
+         task->build_phase > UMI_BUILD_PHASE_DEPLOY)) {
+        write_message(out_message, message_capacity,
+                      "Build phase is invalid.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (task->maximum_attempts == 0U ||
+        (task->flags &
+         ~(UmiBuildTaskFlags)UMI_BUILD_TASK_ALL_FLAGS) != 0U) {
+        write_message(out_message, message_capacity,
+                      "Retry or flag configuration is invalid.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    for (index = 0U; index < task->dependency_count; ++index) {
+        if (task->dependencies[index][0] == '\0' ||
+            strcmp(task->dependencies[index], task->task_id) == 0) {
+            write_message(out_message, message_capacity,
+                          "Dependencies must be non-empty and non-self.");
+            return UMI_STATUS_INVALID_ARGUMENT;
+        }
+    }
+    /* Builders reject duplicates; imported public snapshots must obey the same
+     * rules before being copied into an owned registry or dependency graph. */
+    for (index = 0U; index < task->dependency_count; ++index)
+        for (size_t other = 0U; other < index; ++other)
+            if (strcmp(task->dependencies[index], task->dependencies[other]) == 0) {
+                write_message(out_message, message_capacity, "Task dependencies must be distinct.");
+                return UMI_STATUS_INVALID_ARGUMENT;
+            }
+    write_message(out_message, message_capacity,
+                  "Task inputs, outputs or environment entries are invalid or duplicated.");
+    for (index = 0U; index < task->input_count; ++index) {
+        if (task->inputs[index][0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+        for (size_t other = 0U; other < index; ++other)
+            if (strcmp(task->inputs[index], task->inputs[other]) == 0) return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    for (index = 0U; index < task->output_count; ++index) {
+        if (task->outputs[index][0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+        for (size_t other = 0U; other < index; ++other)
+            if (strcmp(task->outputs[index], task->outputs[other]) == 0) return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    for (index = 0U; index < task->environment_count; ++index) {
+        const char *equals = strchr(task->environment[index], '=');
+        if (equals == NULL || equals == task->environment[index]) return UMI_STATUS_INVALID_ARGUMENT;
+        for (size_t other = 0U; other < index; ++other)
+            if (strcmp(task->environment[index], task->environment[other]) == 0) return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    write_message(out_message, message_capacity, "Task is valid.");
+    return UMI_STATUS_OK;
+}
 
 UmiStatus umi_build_task_registry_create(UmiBuildTaskRegistry **out_registry)
 {
@@ -466,6 +727,8 @@ void umi_build_task_registry_destroy(UmiBuildTaskRegistry *registry)
     free(registry);
 }
 
+/* Reserve both registry and replaced-task identities before publishing a copied task. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_task_registry_upsert(UmiBuildTaskRegistry *registry,
                                          const UmiBuildTaskSnapshot *task)
 {
@@ -493,6 +756,56 @@ UmiStatus umi_build_task_registry_upsert(UmiBuildTaskRegistry *registry,
     registry->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_build_task_registry_upsert(UmiBuildTaskRegistry *registry,
+                                         const UmiBuildTaskSnapshot *task)
+{
+    UmiBuildTaskSnapshot copy;
+    size_t index;
+    char message[256];
+    UmiStatus status;
+    if (registry == NULL || task == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_build_task_validate(task, message, sizeof(message));
+    if (status != UMI_STATUS_OK) return status;
+    if (registry->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    copy = *task;
+    copy.structure_size = (uint32_t)sizeof(copy);
+    copy.api_version = UMI_BUILD_TASK_API_VERSION;
+    if (copy.revision == 0U) copy.revision = 1U;
+    index = find_index(registry, task->task_id);
+    if (index == SIZE_MAX) {
+        if (registry->count >= UMI_BUILD_TASK_CAPACITY) {
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        registry->tasks[registry->count++] = copy;
+    } else {
+        if (registry->tasks[index].revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+        copy.revision = registry->tasks[index].revision + 1U;
+        registry->tasks[index] = copy;
+    }
+    registry->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+/* Refuse exhausted registry identity before moving or removing retained tasks. The former implementation is retained for engineering review. */
+#if 0
+UmiStatus umi_build_task_registry_remove(UmiBuildTaskRegistry *registry,
+                                         const char *task_id)
+{
+    size_t index;
+    if (registry == NULL || task_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    index = find_index(registry, task_id);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    if (index + 1U < registry->count) {
+        (void)memmove(&registry->tasks[index], &registry->tasks[index + 1U],
+                      (registry->count - index - 1U) * sizeof(registry->tasks[0]));
+    }
+    registry->count -= 1U;
+    registry->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
 
 UmiStatus umi_build_task_registry_remove(UmiBuildTaskRegistry *registry,
                                          const char *task_id)
@@ -501,6 +814,7 @@ UmiStatus umi_build_task_registry_remove(UmiBuildTaskRegistry *registry,
     if (registry == NULL || task_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     index = find_index(registry, task_id);
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    if (registry->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     if (index + 1U < registry->count) {
         (void)memmove(&registry->tasks[index], &registry->tasks[index + 1U],
                       (registry->count - index - 1U) * sizeof(registry->tasks[0]));
@@ -571,12 +885,32 @@ uint64_t umi_build_task_registry_revision(const UmiBuildTaskRegistry *registry)
     return registry != NULL ? registry->revision : 0U;
 }
 
+/* Retain the former void clear for review. The checked reset below reserves an
+ * identity before erasing state; the compatibility wrapper preserves state if
+ * it cannot report a newer revision. New callers should inspect reset status. */
+#if 0
 void umi_build_task_registry_clear(UmiBuildTaskRegistry *registry)
 {
     if (registry == NULL) return;
     (void)memset(registry->tasks, 0, sizeof(registry->tasks));
     registry->count = 0U;
     registry->revision += 1U;
+}
+#endif
+
+UmiStatus umi_build_task_registry_reset(UmiBuildTaskRegistry *registry)
+{
+    if (registry == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (registry->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    (void)memset(registry->tasks, 0, sizeof(registry->tasks));
+    registry->count = 0U;
+    registry->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+void umi_build_task_registry_clear(UmiBuildTaskRegistry *registry)
+{
+    (void)umi_build_task_registry_reset(registry);
 }
 
 const char *umi_build_task_kind_text(UmiBuildTaskKind kind)

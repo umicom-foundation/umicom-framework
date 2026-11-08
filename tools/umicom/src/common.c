@@ -59,6 +59,9 @@ void umi_cli_print_help(void)
         "  umicom workflow plan|verify|build|test|publish|update|complete [options]\n"
         "  umicom repo help\n"
         "  umicom source-observation --inventory ABSOLUTE.tsv --output NEW-ABSOLUTE.tsv\n"
+        "  umicom recipe inspect --file ABSOLUTE_JSON_FILE\n"
+        "  umicom observe-files --file ABSOLUTE_PATH [--file PATH ...] [--report NEW_ABSOLUTE_FILE]\n"
+        "  umicom preview --root ABSOLUTE_DIRECTORY --port PORT [--dry-run] (local static files)\n"
         "  umicom qualification-plan --inventory ABSOLUTE.tsv [--help] (preview only)\n"
         "  umicom sdk inspect SDK_PREFIX\n"
         "  umicom repo inspect-module MANIFEST\n"
@@ -67,6 +70,7 @@ void umi_cli_print_help(void)
         "  umicom repo create NAME --module --parent DIR --slug SLUG --id ID [--apply]\n"
         "    Source preview by default; --show PATH displays a generated file.\n"
         "  umicom repo status [PATH]\n"
+        "  umicom repo submodules [PATH]\n"
         "  umicom repo review [PATH] [--children] [--timeout-ms MILLISECONDS]\n"
         "  umicom repo audit [PATH] [quality options]\n"
         "  umicom repo verify [PATH]\n"
@@ -194,6 +198,7 @@ void umi_cli_print_help(void)
         "  umicom repo create NAME --module --parent DIR --slug SLUG --id ID [--apply]\n"
         "    Source preview by default; --show PATH displays a generated file.\n"
         "  umicom repo status [PATH]\n"
+        "  umicom repo submodules [PATH]\n"
         "  umicom repo review [PATH] [--children] [--timeout-ms MILLISECONDS]\n"
         "  umicom repo audit [PATH] [quality options]\n"
         "  umicom repo verify [PATH]\n"
@@ -252,6 +257,8 @@ void umi_cli_print_repo_help(void)
     (void)puts("  umicom pull [PATH] — clean fast-forward, no recursive child checkout\n"
         "  update/pull defaults to --no-submodules; --with-submodules explicitly checks out child pins.\n");
     (void)puts("Workspace publication: umicom repo publish-all WORKSPACE [--apply] [--message TEXT]");
+    (void)puts("Publication ownership: add --primary-directory PATH to select the primary editing subtree");
+    (void)puts("Staged review: add --review-staged to inspect and approve each new commit during apply");
     (void)puts("Publication evidence: add --report ABSOLUTE_PATH for a new private JSON result outside Git repositories");
     (void)puts("Local monitoring:      umicom repo watch WORKSPACE [--interval SECONDS]");
     (void)puts("Publication previews fetch metadata. Watch reads cached refs and never publishes.\n");
@@ -260,6 +267,7 @@ void umi_cli_print_repo_help(void)
         "Usage:\n"
         "  umicom repo help\n"
         "  umicom repo status [PATH]\n"
+        "  umicom repo submodules [PATH]\n"
         "  umicom repo audit [PATH] [--summary]\n"
         "  umicom repo verify [PATH]\n"
         "  umicom repo lock [PATH] [--dry-run]\n"

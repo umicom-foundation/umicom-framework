@@ -1,7 +1,10 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/document/test_document_encoding.c
- * PURPOSE: Verify UTF-8 validation and UTF-8/UTF-16 round trips.
+ *
+ * PURPOSE:
+ *   Verify shared UTF-8 error offsets and UTF-8/UTF-16 document round trips.
+ *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
  * Umicom Foundation
@@ -12,6 +15,7 @@
 /* Required fixture setup and checks also execute in optimized builds. */
 #include "../support/assertions.h"
 #include "umicom/document/document.h"
+#include "umicom/base/utf8.h"
 
 #include <assert.h>
 #include <stdio.h>
@@ -35,6 +39,21 @@ int main(void)
     assert(umi_document_utf8_validate((const unsigned char *)TEXT,
                                       strlen(TEXT), NULL));
     assert(!umi_document_utf8_validate(INVALID, sizeof(INVALID), NULL));
+    /* Document callers keep their existing API while the base service owns
+     * Unicode validation. Exercise offsets after a valid multibyte prefix and
+     * embedded NUL, rather than checking only a failure at the first byte. */
+    static const unsigned char BAD_SUFFIX[] = {0xc3, 0xa9, 0, 0xed, 0xa0, 0x80};
+    size_t document_error = 99U, base_error = 99U;
+    assert(!umi_document_utf8_validate(BAD_SUFFIX, sizeof(BAD_SUFFIX), &document_error));
+    assert(!UmiUtf8Validate(BAD_SUFFIX, sizeof(BAD_SUFFIX), &base_error));
+    assert(document_error == 3U && base_error == document_error);
+    assert(umi_document_utf8_validate(BAD_SUFFIX, 3U, &document_error));
+    assert(document_error == 3U);
+    document_error = 99U;
+    assert(!umi_document_utf8_validate(NULL, 1U, &document_error));
+    assert(document_error == 99U);
+    assert(umi_document_utf8_validate(NULL, 0U, &document_error));
+    assert(document_error == 0U);
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < sizeof(encodings) / sizeof(encodings[0]); ++index) {
         unsigned char *encoded = NULL;

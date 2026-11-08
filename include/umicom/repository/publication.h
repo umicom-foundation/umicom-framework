@@ -124,6 +124,79 @@ UmiStatus umi_repository_publication_run_recovery_sized(
     umi_repository_publication_run_recovery_sized((profile), (environment), (request), \
         (report), sizeof(*(report)), (attach))
 
+/** Immutable staged snapshot offered before creating a new commit. Buffers and
+ * strings are borrowed only during the callback. They can contain source code;
+ * keep them local and render terminal controls as data. The diff compares the
+ * captured HEAD with the captured tree, not a changing worktree or index. */
+typedef struct UmiRepositoryPublicationStagedReview {
+    const char *repository_path;
+    const char *head;
+    const char *tree;
+    const char *summary;
+    size_t summary_size;
+    const char *patch;
+    size_t patch_size;
+} UmiRepositoryPublicationStagedReview;
+
+typedef UmiStatus (*UmiRepositoryPublicationReviewCallback)(
+    const UmiRepositoryPublicationStagedReview *review, void *context);
+
+/** Optional policy for callers that maintain one primary editing directory.
+ * primary_directory is borrowed, may be absolute or relative to workspace_root,
+ * and must contain at least one discovered non-vendor checkout. For each remote
+ * represented there, exactly one checkout may be inside that directory. Other
+ * copies must have no independent work. Repositories not represented there keep
+ * the existing selection policy. NULL preserves the original behavior.
+ *
+ * This chooses a publishing checkout; it does not copy or reconcile source.
+ * attach_published_main has the same explicit recovery contract as above. */
+typedef struct UmiRepositoryPublicationOptions {
+    const char *primary_directory;
+    int attach_published_main;
+    /* Optional synchronous review before each NEW commit. Return OK to proceed;
+     * any other status stops publication while preserving the staged index and
+     * all earlier completed actions. Preview/watch never invoke this callback.
+     * It does not review pre-existing unpublished commits. Keep editors idle;
+     * index and HEAD are rechecked after review, without a filesystem transaction. */
+    UmiRepositoryPublicationReviewCallback review_staged;
+    void *review_context;
+} UmiRepositoryPublicationOptions;
+
+void umi_repository_publication_options_init(UmiRepositoryPublicationOptions *options);
+
+/** Apply optional policy without changing the layout of an existing request.
+ * Exact structure sizes are checked before reading options or writing reports.
+ * Options and all borrowed strings remain valid until the synchronous return. */
+UmiStatus umi_repository_publication_run_options_sized(
+    const UmiToolchainProfile *profile, UmiEnvironmentPlan *environment,
+    const UmiRepositoryPublicationRequest *request,
+    const UmiRepositoryPublicationOptions *options, size_t options_size,
+    UmiRepositoryPublicationReport *report, size_t report_size);
+
+#define umi_repository_publication_run_options(profile, environment, request, options, report) \
+    umi_repository_publication_run_options_sized((profile), (environment), (request), \
+        (options), sizeof(*(options)), (report), sizeof(*(report)))
+
+
+#define UMI_REPOSITORY_PUBLICATION_EXCLUSION_CAPACITY 16U
+/* Exclusions name immediate checkout directories, not paths or remote IDs.
+ * Names use 1..63 ASCII letters/digits/dot/underscore/hyphen, start with an
+ * alphanumeric byte, and total at most 256 bytes including separators.
+ * A scoped workspace must not itself be a Git checkout. Every excluded name
+ * must match an immediate checkout; registered children cannot be excluded.
+ * Existing APIs and structure layouts keep their original discovery scope. */
+UmiStatus umi_repository_publication_exclusions_validate(
+    const char *const *names, size_t count);
+UmiStatus umi_repository_publication_run_scoped_sized(
+    const UmiToolchainProfile *profile, UmiEnvironmentPlan *environment,
+    const UmiRepositoryPublicationRequest *request,
+    const UmiRepositoryPublicationOptions *options, size_t options_size,
+    const char *const *excluded_names, size_t excluded_count,
+    UmiRepositoryPublicationReport *report, size_t report_size);
+#define umi_repository_publication_run_scoped(profile, environment, request, options, names, count, report) \
+    umi_repository_publication_run_scoped_sized((profile), (environment), (request), \
+        (options), sizeof(*(options)), (names), (count), (report), sizeof(*(report)))
+
 /** Classify a repository-relative path before broad staging. Returns nonzero
  * for private working records or generated build outputs requiring review. */
 int umi_repository_publication_private_path(const char *path);

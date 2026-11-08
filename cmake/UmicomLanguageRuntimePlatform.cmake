@@ -21,6 +21,8 @@ endif()
 # Captured-source language replies use the editor's UTF-8/UTF-16 position index.
 # Declare that owner directly so catalogue-only consumers resolve it too.
 target_link_libraries(umicom_developer PRIVATE Umicom::editor)
+# Generic JSON emission belongs to protocol, shared with native evidence tools.
+target_link_libraries(umicom_developer PRIVATE Umicom::protocol)
 
 target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/arguments.c"

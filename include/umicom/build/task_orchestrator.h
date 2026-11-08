@@ -57,12 +57,17 @@ typedef struct UmiBuildTaskOperationSnapshot {
 
 typedef struct UmiBuildTaskOrchestrator UmiBuildTaskOrchestrator;
 
+/* The source registry is borrowed and must outlive the orchestrator. Serialize
+ * registry edits, planning and lifecycle calls through the owning workspace. */
 UmiStatus umi_build_task_orchestrator_create(
     const UmiBuildTaskRegistry *source_registry,
     size_t maximum_parallel,
     UmiBuildTaskOrchestrator **out_orchestrator);
 void umi_build_task_orchestrator_destroy(
     UmiBuildTaskOrchestrator *orchestrator);
+/* Planning owns a dependency-closed copy. Any refusal preserves the old plan
+ * and graph. IDs must fit in full; oversized values are never truncated.
+ * Graph, operation and generation identities are admitted before publication. */
 UmiStatus umi_build_task_orchestrator_plan(
     UmiBuildTaskOrchestrator *orchestrator,
     const char *operation_id,
@@ -93,11 +98,16 @@ UmiStatus umi_build_task_orchestrator_retry(
     const char *task_id);
 UmiStatus umi_build_task_orchestrator_request_stop(
     UmiBuildTaskOrchestrator *orchestrator);
+/* Finish requires an operation that has begun and has no active work. An idle
+ * or merely planned owner cannot become successful by calling finish alone. */
 UmiStatus umi_build_task_orchestrator_finish(
     UmiBuildTaskOrchestrator *orchestrator);
 UmiStatus umi_build_task_orchestrator_snapshot(
     const UmiBuildTaskOrchestrator *orchestrator,
     UmiBuildTaskOperationSnapshot *out_snapshot);
+/* Borrowed compatibility access. Observe through this pointer; route runtime
+ * changes through the orchestrator to keep its counters and state consistent.
+ * The pointer remains stable across successful and rejected replanning. */
 UmiBuildTaskGraph *umi_build_task_orchestrator_graph(
     UmiBuildTaskOrchestrator *orchestrator);
 const char *umi_build_task_operation_state_text(

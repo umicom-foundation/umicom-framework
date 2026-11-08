@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+#include "../support/main_context.h"
 #include "umicom/ui/gtk4/learning_catalogue.h"
 #include "umicom/platform/rooted_files.h"
 #include <stdio.h>
@@ -37,8 +38,17 @@ static int Drain(void)
 {
     gint64 limit = g_get_monotonic_time() + 15 * G_TIME_SPAN_SECOND;
     while (UmiLearningCatalogueGtk4PendingReads() != 0U && g_get_monotonic_time() < limit) {
+/* An always-ready GLib source can keep the former drain inside one iteration forever. Reuse the shared finite slice so pending-read and deadline checks remain reachable; retain the old loop for review. */
+#if 0
         while (g_main_context_iteration(NULL, FALSE)) {}
+#endif
+        (void)UmiTestDispatchSlice(NULL, limit, 64U);
         g_usleep(1000U);
+    }
+    if (UmiLearningCatalogueGtk4PendingReads() != 0U) {
+        fprintf(stderr, "Learning fixture wait exceeded 15 seconds; pending=%zu\n",
+            (size_t)UmiLearningCatalogueGtk4PendingReads());
+        fflush(stderr);
     }
     return UmiLearningCatalogueGtk4PendingReads() == 0U;
 }

@@ -72,3 +72,69 @@ Framework's window input-lifetime helper releases focus before a native surface
 is removed. It protects windows that use it but does not replace GTK's own disposal
 repair. Do not disable input methods as a permanent workaround: users must retain
 their normal text-entry support.
+
+
+## Make a reviewed backport part of the build
+
+A patch file beside a package recipe has no effect by itself. The recipe must
+name the patch as a source, verify its bytes and apply it before compilation.
+This distinction matters when a package build succeeds but still contains the
+original defect.
+
+1. Read the recipe's source and sha256sums arrays together. Every source has a
+   checksum in the same position. A backport can be appended without replacing
+   existing tarball or font-patch identities:
+
+   ~~~sh
+   source+=("002-win32-ime-disposal.patch")
+   sha256sums+=("THE_REVIEWED_PATCH_SHA256")
+   ~~~
+
+   Replace the placeholder with the exact digest obtained from the reviewed
+   patch. Do not use SKIP or regenerate every checksum to silence a mismatch.
+   A hash identifies bytes; the reviewed upstream change establishes what those
+   bytes are intended to fix.
+2. Inspect prepare(). It must apply the patch to the extracted GTK source,
+   before the Meson build starts. Preserve an earlier patch failure instead of
+   allowing a later successful command to hide it. For example:
+
+   ~~~sh
+   patch -Np1 -i ../001-fix-font-rendering.patch
+   local font_patch_status=$?
+   if (( font_patch_status != 0 )); then
+     return "$font_patch_status"
+   fi
+   patch -Np1 -i ../002-win32-ime-disposal.patch
+   ~~~
+
+   These commands belong inside the recipe's function. Do not paste them into
+   an arbitrary source directory. A rejected hunk is a failure to investigate,
+   not a reason to remove the patch or ignore its exit status.
+3. Use a new package-build directory containing the reviewed recipe and its
+   declared local patches. In the MSYS2 UCRT64 environment, the normal builder is
+   shown below. It may request build dependencies; review those prompts.
+
+   ~~~sh
+   MINGW_ARCH=ucrt64 makepkg-mingw -sL
+   ~~~
+
+   Keep the build log and inspect the prepared gtk/gtkimcontextime.c: disposal
+   must call the message-filter removal helper. The matching private structure
+   must contain the display used by that helper.
+4. Keep the built package, its digest and its exact recipe/patch identities
+   together. A local package release distinguishes the rebuilt package from its
+   predecessor, but a release number alone cannot prove the repair. Follow
+   [MSYS2 package creation](https://www.msys2.org/wiki/Creating-Packages/) and
+   [package management](https://www.msys2.org/docs/package-management/) when
+   installing the reviewed artifact. Do not silently substitute an unrelated
+   package or a different architecture.
+5. Refresh the application build's staged runtime, then retain both the package
+   DLL's digest and the executable-directory DLL's digest. Equal disk files
+   still do not prove what a past process loaded. Run the native lifetime and
+   TMS tests against the rebuilt application and capture their runtime output.
+
+For a review exercise, consider three independent mistakes: a patch omitted from
+source, a wrong checksum, and a patch omitted from prepare(). Explain which
+stage should detect each one. The first and third may leave a successful build
+containing old behavior; the checksum mismatch should fail before compilation.
+Keep this exercise separate from a claim that the native defect has been fixed.

@@ -27,6 +27,10 @@ static size_t ProfileLength(const char *text, size_t limit)
     while (n < limit && text[n] != '\0') ++n;
     return n;
 }
+/* Naming now lives in profile_name.c so web and mobile consumers can link
+ * the exact same policy without credential backends. Preserve the previous
+ * placement for review; the public functions and account callers are unchanged. */
+#if 0
 /* Form and protocol adapters can carry bounded byte spans. Centralising the
  * policy here avoids a temporary string copy and keeps every application on the
  * same naming rules. Read and validate completely before changing caller state. */
@@ -55,6 +59,8 @@ UmiStatus UmiLocalProfileName(const char *name, char out[UMI_LOCAL_PROFILE_NAME_
     return UmiLocalProfileNameBytes(name,
         ProfileLength(name, UMI_LOCAL_PROFILE_NAME_CAPACITY), out);
 }
+
+#endif
 
 /* The original string-only implementation is retained for engineering review.
  * The shared byte-span validator above now owns validation and publication. */

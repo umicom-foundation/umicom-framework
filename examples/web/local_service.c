@@ -1,12 +1,21 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: examples/web/local_service.c
- * PURPOSE: Serve a small C-authored website and API through Framework routing on an explicitly chosen loopback port.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Serve a small C-authored website and API through Framework routing on an explicitly chosen loopback port.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/web/server.h"
+#include "umicom/web/preview.h"
+#include "umicom/platform/native_arguments.h"
 #include "umicom/web/static_files.h"
 #include "umicom/web/loopback_access.h"
 #include <signal.h>
@@ -62,6 +71,9 @@ static UmiStatus Echo(const UmiWebRequest *request, UmiWebResponse *response, vo
     response->body_length = request->body_length;
     return umi_web_response_set_header(response, "X-Content-Type-Options", "nosniff");
 }
+/* The shared preview admission now owns decimal port policy. Retain this
+ * former local parser for review; the accepted range remains unchanged. */
+#if 0
 static int ParsePort(const char *text, uint16_t *out)
 {
     if (text == NULL || *text == '\0')
@@ -81,7 +93,20 @@ static int ParsePort(const char *text, uint16_t *out)
     *out = (uint16_t)port;
     return 1;
 }
+#endif
+static int ParsePort(const char *text, uint16_t *out)
+{
+    uint32_t port = 0U;
+    if (out == NULL || UmiWebPreviewPortParse(text, &port) != UMI_STATUS_OK) return 0;
+    *out = (uint16_t)port;
+    return 1;
+}
+/* Capture Windows Unicode arguments before interpreting a selected root.
+ * Keep the previous entry signature for review; its body follows unchanged. */
+#if 0
 int main(int argc, char **argv)
+#endif
+static int LocalServiceMain(int argc, char **argv)
 {
     if (argc == 2 && strcmp(argv[1], "--help") == 0)
     {
@@ -168,4 +193,16 @@ int main(int argc, char **argv)
     umi_web_server_destroy(server);
     umi_web_service_destroy(service);
     return !stop_requested && status != UMI_STATUS_OK ? 1 : 0;
+}
+
+/* The platform owner provides UTF-8 arguments on every supported host. */
+int main(int argc, char **argv)
+{
+    int result = 1;
+    UmiStatus status = UmiNativeArgumentsDispatch(argc, argv, LocalServiceMain, &result);
+    if (status != UMI_STATUS_OK) {
+        fprintf(stderr, "Cannot capture native arguments: %s\n", umi_status_text(status));
+        return 1;
+    }
+    return result;
 }

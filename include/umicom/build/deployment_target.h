@@ -100,6 +100,9 @@ void umi_build_deployment_target_init(
     const char *target_id,
     const char *name,
     UmiBuildDeploymentTargetKind kind);
+/** Require initialized ABI metadata and termination within every fixed text
+ * array. Validation checks declared values; it does not inspect files, contact
+ * endpoints or establish authenticity of the supplied evidence. */
 UmiStatus umi_build_deployment_target_validate(
     const UmiBuildDeploymentTargetSnapshot *target,
     char *out_message,

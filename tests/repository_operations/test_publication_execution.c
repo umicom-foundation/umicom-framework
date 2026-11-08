@@ -40,6 +40,7 @@ typedef struct FakeWorkspace {
     int owns_fixture;
     size_t adds, commits, pushes, fetches, locks, merges;
     size_t advances, attachments;
+    size_t reviews;
     int sequence[32];
     size_t sequence_count;
 } FakeWorkspace;
@@ -234,6 +235,18 @@ static UmiStatus fake_git(void *context, const char *path,
         repo->staged = repo->dirty || (index == 1 && repo->pin[0] == 'c' && repo->head[0] == 'b');
         return answer(out, 0, "");
     }
+    /* Review reads immutable HEAD/tree objects, never mutable --cached output. */
+    if (strcmp(args[0], "diff") == 0 && (count == 8U || count == 9U)) {
+        if (strcmp(args[1], "--no-color") != 0 || strcmp(args[2], "--no-ext-diff") != 0 ||
+            strcmp(args[3], "--no-textconv") != 0 ||
+            strcmp(args[count - 3U], repo->head) != 0 ||
+            strcmp(args[count - 2U], "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee") != 0 ||
+            strcmp(args[count - 1U], "--") != 0) return UMI_STATUS_INVALID_ARGUMENT;
+        return answer(out, 0, count == 8U ? " source.c | 2 +-\n" : "-old\n+new\n");
+    }
+    if (strcmp(args[0], "write-tree") == 0 && workspace->reviews &&
+        strcmp(scenario, "review-index-change") == 0)
+        return answer(out, 0, "ffffffffffffffffffffffffffffffffffffffff\n");
     if (strcmp(args[0], "diff") == 0) {
         if (strcmp(args[count - 1U], "--check") == 0) {
             if (primary && strcmp(scenario, "check-failure") == 0) return answer(out, 2, "");
@@ -345,6 +358,21 @@ static UmiStatus create_fixture(FakeWorkspace *workspace, const char *scenario, 
     return UMI_STATUS_OK;
 }
 
+
+static UmiStatus fake_review(const UmiRepositoryPublicationStagedReview *review, void *context)
+{
+    FakeWorkspace *workspace = context;
+    int index = repository_index(workspace, review->repository_path);
+    ++workspace->reviews;
+    if (index < 0 || !strstr(review->patch, "+new\n")) return UMI_STATUS_INVALID_ARGUMENT;
+    if (strcmp(workspace->scenario, "review-refused") == 0 ||
+        (strcmp(workspace->scenario, "review-parent-refused") == 0 && index == 1))
+        return UMI_STATUS_CANCELLED;
+    if (strcmp(workspace->scenario, "review-head-change") == 0)
+        sha(workspace->repos[index].head, 'f');
+    return UMI_STATUS_OK;
+}
+
 static int run_case(const char *scenario, unsigned number)
 {
     FakeWorkspace *workspace = calloc(1U, sizeof(*workspace));
@@ -355,9 +383,31 @@ static int run_case(const char *scenario, unsigned number)
     if (create_fixture(workspace, scenario, number) != UMI_STATUS_OK) goto finish;
     UmiPublicationBackend backend = {workspace, fake_git, fake_lock};
     umi_repository_publication_request_init(&request, workspace->root);
+    /* The review preview adds a read-only case. Retain the former admission
+     * expression so its original preview/watch coverage remains reviewable. */
+#if 0
     request.apply = strcmp(scenario, "preview") != 0 && strcmp(scenario, "watch") != 0;
+#endif
+    request.apply = strcmp(scenario, "preview") != 0 && strcmp(scenario, "watch") != 0 &&
+        strcmp(scenario, "review-preview") != 0;
     request.refresh = strcmp(scenario, "watch") != 0;
+    /* Options scenarios share the full fake transport; the previous call is
+     * preserved and compatibility cases still reach that same entry point. */
+#if 0
     UmiStatus status = umi_publication_run_backend(NULL, NULL, &request, report, &backend);
+#endif
+    UmiStatus status;
+    if (strncmp(scenario, "review-", 7U) == 0) {
+        UmiRepositoryPublicationOptions options = {0};
+        options.primary_directory = "a";
+        options.review_staged = fake_review;
+        options.review_context = workspace;
+        status = umi_publication_run_options_backend(NULL, NULL, &request,
+            &options, report, &backend);
+    } else {
+        /* Original compatibility scenarios continue to call the original API. */
+        status = umi_publication_run_backend(NULL, NULL, &request, report, &backend);
+    }
     if (strcmp(scenario, "success") == 0 || strcmp(scenario, "behind-copy") == 0) {
         passed = status == UMI_STATUS_OK && report->count == 3U &&
             report->repository_count == 2U && workspace->commits == 2U &&
@@ -384,6 +434,23 @@ static int run_case(const char *scenario, unsigned number)
     } else {
         passed = status != UMI_STATUS_OK && workspace->commits == 0U &&
             workspace->pushes == 0U && workspace->locks == 0U;
+    }
+    if (strncmp(scenario, "review-", 7U) == 0) {
+        if (strcmp(scenario, "review-success") == 0)
+            passed = status == UMI_STATUS_OK && workspace->reviews == 2U &&
+                workspace->commits == 2U && workspace->pushes == 2U;
+        else if (strcmp(scenario, "review-preview") == 0)
+            passed = status == UMI_STATUS_OK && workspace->reviews == 0U &&
+                workspace->adds == 0U && workspace->commits == 0U && workspace->pushes == 0U;
+        else if (strcmp(scenario, "review-parent-refused") == 0)
+            passed = status == UMI_STATUS_CANCELLED && workspace->reviews == 2U &&
+                workspace->commits == 1U && workspace->pushes == 1U &&
+                report->committed_count == 1U && report->pushed_count == 1U &&
+                workspace->repos[1].staged;
+        else
+            passed = status != UMI_STATUS_OK && workspace->reviews == 1U &&
+                workspace->commits == 0U && workspace->pushes == 0U &&
+                workspace->repos[0].staged;
     }
     /* Inspect retained evidence independently of the fake remote's state. */
     if (strcmp(scenario, "clean-behind-only") == 0 ||
@@ -479,6 +546,9 @@ finish:
 
 int main(void)
 {
+    /* Extend rather than replace the original execution matrix. Every earlier
+     * case stays in the active list; the previous declaration is kept below. */
+#if 0
     const char *scenarios[] = {"success", "preview", "watch", "duplicate-dirty",
         "behind-copy", "detached", "diverged", "private", "late-private",
         "history-private", "unpublished", "push-url", "remote-race",
@@ -486,6 +556,16 @@ int main(void)
         "existing-lock", "missing-child", "stage-conflict", "malformed-index",
         "index-change", "dirty-behind", "late-push-url", "hook-history",
         "clean-behind-only", "refresh-failure-after-pull", "pull-destination-race", "pull-head-read-failure"};
+#endif
+    const char *scenarios[] = {"success", "preview", "watch", "duplicate-dirty",
+        "behind-copy", "detached", "diverged", "private", "late-private",
+        "history-private", "unpublished", "push-url", "remote-race",
+        "check-failure", "commit-failure", "push-failure", "hook-tree",
+        "existing-lock", "missing-child", "stage-conflict", "malformed-index",
+        "index-change", "dirty-behind", "late-push-url", "hook-history",
+        "clean-behind-only", "refresh-failure-after-pull", "pull-destination-race", "pull-head-read-failure",
+        "review-success", "review-preview", "review-refused", "review-index-change",
+        "review-head-change", "review-parent-refused"};
     int passed = 1;
     for (unsigned i = 0U; i < sizeof(scenarios) / sizeof(scenarios[0]); ++i)
         passed = run_case(scenarios[i], i) && passed;

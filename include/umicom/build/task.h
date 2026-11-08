@@ -74,6 +74,10 @@ enum {
     UMI_BUILD_TASK_ALL_FLAGS = (1U << 8) - 1U
 };
 
+/* Initialise snapshots with umi_build_task_init. All fixed text fields must be
+ * terminated within their arrays and active entry counts must fit their bounds.
+ * Mutators admit this storage shape even while a command task is being built;
+ * registry publication additionally requires full semantic validation. */
 typedef struct UmiBuildTaskSnapshot {
     uint32_t structure_size;
     uint32_t api_version;
@@ -126,6 +130,9 @@ void umi_build_task_init(UmiBuildTaskSnapshot *task,
 /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
  * before this operation changes state or invokes nested work. Initialize the
  * owner before use and serialize mutations through its owning service. */
+/* Command and optional working-directory replacement is transactional. Inputs
+ * are valid C strings and may alias current task fields; any refusal preserves
+ * the entire task and revision. NULL directory retains its previous value. */
 UmiStatus umi_build_task_set_command(UmiBuildTaskSnapshot *task,
                                      const char *command,
                                      const char *working_directory);
@@ -169,6 +176,10 @@ UmiStatus umi_build_task_registry_snapshot(
     UmiBuildTaskRegistrySnapshot *out_snapshot);
 size_t umi_build_task_registry_count(const UmiBuildTaskRegistry *registry);
 uint64_t umi_build_task_registry_revision(const UmiBuildTaskRegistry *registry);
+/* Checked reset publishes one new identity or leaves the registry unchanged.
+ * The older void clear remains available and silently preserves state if the
+ * identity is exhausted; use reset when the caller needs the refusal status. */
+UmiStatus umi_build_task_registry_reset(UmiBuildTaskRegistry *registry);
 void umi_build_task_registry_clear(UmiBuildTaskRegistry *registry);
 const char *umi_build_task_kind_text(UmiBuildTaskKind kind);
 const char *umi_build_task_run_on_text(UmiBuildTaskRunOn run_on);

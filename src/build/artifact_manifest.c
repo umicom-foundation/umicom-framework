@@ -102,12 +102,78 @@ UmiStatus umi_build_artifact_manifest_import(
     return UMI_STATUS_OK;
 }
 
+/* Validate every bounded text member before a registry or deployment planner can copy it. The former implementation is retained for engineering review. */
+#if 0
 UmiStatus umi_build_artifact_manifest_validate(
     const UmiBuildArtifactManifest *manifest,
     char *out_message,
     size_t message_capacity)
 {
     if (manifest == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (manifest->artifact_id[0] == '\0' || manifest->path[0] == '\0' ||
+        manifest->kind[0] == '\0') {
+        write_message(out_message, message_capacity,
+                      "Artifact id, path and kind are required.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if ((manifest->flags &
+         ~(UmiBuildArtifactManifestFlags)
+             UMI_BUILD_ARTIFACT_MANIFEST_ALL_FLAGS) != 0U) {
+        write_message(out_message, message_capacity,
+                      "Artifact flags are invalid.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if ((manifest->flags & UMI_BUILD_ARTIFACT_VERIFIED) != 0U &&
+        (manifest->checksum_algorithm[0] == '\0' ||
+         manifest->checksum[0] == '\0')) {
+        write_message(out_message, message_capacity,
+                      "Verified artifacts require checksum evidence.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if ((manifest->flags & UMI_BUILD_ARTIFACT_SIGNED) != 0U &&
+        (manifest->flags & UMI_BUILD_ARTIFACT_VERIFIED) == 0U) {
+        write_message(out_message, message_capacity,
+                      "Signed artifacts must also be verified.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if ((manifest->flags & UMI_BUILD_ARTIFACT_DEPLOYABLE) != 0U &&
+        (manifest->flags & UMI_BUILD_ARTIFACT_PRESENT) == 0U) {
+        write_message(out_message, message_capacity,
+                      "Deployable artifacts must be present.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    write_message(out_message, message_capacity, "Artifact manifest is valid.");
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_build_artifact_manifest_validate(
+    const UmiBuildArtifactManifest *manifest,
+    char *out_message,
+    size_t message_capacity)
+{
+    if (manifest == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Fixed arrays are untrusted at this public value boundary. A presence
+     * flag or display label cannot establish string termination or ABI identity. */
+    if (manifest->structure_size != sizeof(*manifest) ||
+        manifest->api_version != UMI_BUILD_ARTIFACT_MANIFEST_API_VERSION ||
+        memchr(manifest->artifact_id, '\0', sizeof(manifest->artifact_id)) == NULL ||
+        memchr(manifest->node_id, '\0', sizeof(manifest->node_id)) == NULL ||
+        memchr(manifest->target_id, '\0', sizeof(manifest->target_id)) == NULL ||
+        memchr(manifest->profile_id, '\0', sizeof(manifest->profile_id)) == NULL ||
+        memchr(manifest->configuration, '\0', sizeof(manifest->configuration)) == NULL ||
+        memchr(manifest->kind, '\0', sizeof(manifest->kind)) == NULL ||
+        memchr(manifest->format, '\0', sizeof(manifest->format)) == NULL ||
+        memchr(manifest->path, '\0', sizeof(manifest->path)) == NULL ||
+        memchr(manifest->content_type, '\0', sizeof(manifest->content_type)) == NULL ||
+        memchr(manifest->platform, '\0', sizeof(manifest->platform)) == NULL ||
+        memchr(manifest->architecture, '\0', sizeof(manifest->architecture)) == NULL ||
+        memchr(manifest->checksum_algorithm, '\0', sizeof(manifest->checksum_algorithm)) == NULL ||
+        memchr(manifest->checksum, '\0', sizeof(manifest->checksum)) == NULL ||
+        memchr(manifest->source_revision, '\0', sizeof(manifest->source_revision)) == NULL) {
+        write_message(out_message, message_capacity, "Bounded metadata or text is malformed.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
     if (manifest->artifact_id[0] == '\0' || manifest->path[0] == '\0' ||
         manifest->kind[0] == '\0') {
         write_message(out_message, message_capacity,

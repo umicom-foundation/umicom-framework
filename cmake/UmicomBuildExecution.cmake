@@ -15,7 +15,12 @@
 include_guard(GLOBAL)
 target_sources(umicom_toolchain PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/toolchain/build_invocation.c"
-    "${CMAKE_CURRENT_LIST_DIR}/../src/toolchain/build_logging.c")
+    "${CMAKE_CURRENT_LIST_DIR}/../src/toolchain/build_logging.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/toolchain/version_inventory.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/toolchain/file_observation.c")
+# Reuse the protocol layer's JSON escaping; it depends only on base/platform.
+# Unicode validation is owned by base, so no document/UI dependency is added.
+target_link_libraries(umicom_toolchain PRIVATE Umicom::protocol)
 
 if(BUILD_TESTING)
     foreach(_case invocation execution logging clean_bounds incremental)
@@ -59,7 +64,8 @@ if(BUILD_TESTING)
             "${CMAKE_CURRENT_LIST_DIR}/../tools/umicom/src/cli.h")
     endif()
     foreach(_case versions missing duplicate mixed null-vector null-value empty-value
-            negative-argc help null-context)
+            negative-argc help null-context report report-incomplete report-failure report-first
+            report-alone report-missing report-relative report-option report-null report-duplicate report-mixed)
         add_test(NAME "framework.toolchain.doctor.${_case}"
             COMMAND umicom-doctor-versions-test "${_case}")
         set_tests_properties("framework.toolchain.doctor.${_case}" PROPERTIES
@@ -72,5 +78,113 @@ if(BUILD_TESTING)
             umicom_test_impact_owners("framework.toolchain.doctor.${_case}"
                 TARGETS umicom-doctor-versions-test)
         endif()
+    endforeach()
+endif()
+
+# Evidence contracts use synthetic discovery records and exclusive temporary
+# files. They never discover tools or run a compiler/version command themselves.
+if(BUILD_TESTING)
+    add_executable(umicom-base-utf8-test "${CMAKE_CURRENT_LIST_DIR}/../tests/base/test_utf8.c")
+    target_link_libraries(umicom-base-utf8-test PRIVATE Umicom::base)
+    umicom_apply_warnings(umicom-base-utf8-test)
+    umicom_apply_sanitizers(umicom-base-utf8-test)
+    add_test(NAME framework.base.utf8.contract COMMAND umicom-base-utf8-test)
+    set_tests_properties(framework.base.utf8.contract PROPERTIES
+        TIMEOUT 30 LABELS "framework;base;unicode;regression")
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-base-utf8-test)
+    endif()
+    if(COMMAND umicom_test_impact_owners)
+        umicom_test_impact_owners(framework.base.utf8.contract TARGETS umicom-base-utf8-test)
+    endif()
+    set(_inventory_cases incomplete complete escaped unicode maximum-text null-report
+        stale-size stale-profile stale-api null-output zero-capacity small-output invalid-status
+        tool-count duplicate-kind invalid-kind invalid-state invalid-family invalid-compiler invalid-cpp
+        unterminated-path unterminated-version unterminated-profile invalid-utf8 found-count
+        required-count missing-count compile-pass link-pass runtime-pass c23-pass c23-capable)
+    set(_inventory_save_cases new unicode-path existing invalid-report relative-path write-failure
+        close-failure create-failure missing-parent)
+    foreach(_suite inventory inventory_save)
+        if(_suite STREQUAL "inventory")
+            set(_source test_version_inventory.c)
+        else()
+            set(_source test_version_inventory_save.c)
+        endif()
+        add_executable("umicom-version-${_suite}-test"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/toolchain_lifecycle/${_source}")
+        target_link_libraries("umicom-version-${_suite}-test" PRIVATE Umicom::toolchain Umicom::protocol)
+        set_target_properties("umicom-version-${_suite}-test" PROPERTIES
+            C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        umicom_apply_warnings("umicom-version-${_suite}-test")
+        umicom_apply_sanitizers("umicom-version-${_suite}-test")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target("umicom-version-${_suite}-test")
+        endif()
+        if(COMMAND umicom_target_qualification_inputs)
+            umicom_target_qualification_inputs("umicom-version-${_suite}-test" FILES
+                "${CMAKE_CURRENT_LIST_DIR}/../src/toolchain/version_inventory.c")
+        endif()
+        foreach(_case IN LISTS _${_suite}_cases)
+            add_test(NAME "framework.toolchain.version_${_suite}.${_case}"
+                COMMAND "umicom-version-${_suite}-test" "${_case}")
+            set_tests_properties("framework.toolchain.version_${_suite}.${_case}" PROPERTIES
+                TIMEOUT 30 LABELS "framework;toolchain;evidence;regression")
+            if(COMMAND umicom_test_impact_owners)
+                umicom_test_impact_owners("framework.toolchain.version_${_suite}.${_case}"
+                    TARGETS "umicom-version-${_suite}-test")
+            endif()
+        endforeach()
+    endforeach()
+endif()
+
+# Native file observations share protocol emission and platform I/O. These tests
+# are source-authored contracts; qualification executes them in the owner's build.
+if(BUILD_TESTING)
+    foreach(_suite json_evidence_writer file_observation file_observation_admission observe_files_cli)
+        add_executable("umicom-${_suite}-test"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/toolchain_lifecycle/test_${_suite}.c")
+        target_link_libraries("umicom-${_suite}-test" PRIVATE Umicom::toolchain Umicom::protocol)
+        set_target_properties("umicom-${_suite}-test" PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        umicom_apply_warnings("umicom-${_suite}-test")
+        umicom_apply_sanitizers("umicom-${_suite}-test")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target("umicom-${_suite}-test")
+        endif()
+    endforeach()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-file_observation_admission-test FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../src/toolchain/file_observation.c")
+        umicom_target_qualification_inputs(umicom-observe_files_cli-test FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../tools/umicom/src/command_observe_files.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tools/umicom/src/cli.h")
+    endif()
+    add_test(NAME framework.protocol.json_evidence_writer COMMAND umicom-json_evidence_writer-test)
+    set_tests_properties(framework.protocol.json_evidence_writer PROPERTIES TIMEOUT 30 LABELS "framework;protocol;evidence")
+    set(_file_observation_cases capture owned format-bounds save save-existing save-input save-invalid
+        missing directory duplicate relative null-path symlink small-limit)
+    set(_file_observation_admission_cases count-zero count-excess null-vector null-output occupied-output
+        limit-zero limit-excess last-relative last-null last-duplicate last-utf8 budget at-budget maximum-files read-error changed-file)
+    set(_observe_files_cli_cases valid default-limit help empty negative null-vector null-value empty-value unknown
+        missing-value no-files relative-report duplicate-report duplicate-limit zero negative-limit plus-limit
+        decimal-limit overflow excess-limit help-mixed count-excess)
+    foreach(_suite file_observation file_observation_admission observe_files_cli)
+        foreach(_case IN LISTS _${_suite}_cases)
+            add_test(NAME "framework.toolchain.${_suite}.${_case}" COMMAND "umicom-${_suite}-test" "${_case}")
+            set_tests_properties("framework.toolchain.${_suite}.${_case}" PROPERTIES TIMEOUT 30
+                SKIP_RETURN_CODE 77 LABELS "framework;toolchain;evidence;regression")
+            if(COMMAND umicom_test_impact_owners)
+                umicom_test_impact_owners("framework.toolchain.${_suite}.${_case}" TARGETS "umicom-${_suite}-test")
+            endif()
+        endforeach()
+    endforeach()
+endif()
+
+if(BUILD_TESTING AND UMICOM_BUILD_NATIVE_TOOL)
+    foreach(_case stdout report existing missing limit source-destination)
+        add_test(NAME "framework.toolchain.observe_files_process.${_case}"
+            COMMAND "${CMAKE_COMMAND}" "-DTOOL=$<TARGET_FILE:umicom>" "-DCASE=${_case}"
+                -P "${CMAKE_CURRENT_LIST_DIR}/../tests/toolchain_lifecycle/check_observe_files_cli.cmake")
+        set_tests_properties("framework.toolchain.observe_files_process.${_case}" PROPERTIES
+            TIMEOUT 30 LABELS "framework;toolchain;evidence;cli")
     endforeach()
 endif()

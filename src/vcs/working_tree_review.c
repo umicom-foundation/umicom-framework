@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/vcs/working_tree_review.c
- * PURPOSE: Render source-control observations without turning path text into commands.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Render observed commit, branch and change identities without turning path text into commands.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/vcs/working_tree_review.h"
@@ -56,6 +63,8 @@ UmiStatus UmiVcsWorkingTreeSummaryText(const UmiVcsWorkingTree *tree, char *outp
     UmiVcsWorkingTreeSummary summary;
     char text[UMI_VCS_WORKING_TREE_SUMMARY_TEXT_CAPACITY];
     char branch[UMI_VCS_NAME_CAPACITY * 4U];
+    char upstream[UMI_VCS_NAME_CAPACITY * 4U];
+    char stashes[96];
     char divergence[192];
     const char *advice;
     UmiStatus status;
@@ -66,6 +75,11 @@ UmiStatus UmiVcsWorkingTreeSummaryText(const UmiVcsWorkingTree *tree, char *outp
     if (status != UMI_STATUS_OK)
         return status;
     DisplayName(summary.branch_known ? summary.branch : "(not reported)", branch);
+    DisplayName(summary.upstream[0] ? summary.upstream : "(not reported)", upstream);
+    if (summary.stash_known)
+        (void)snprintf(stashes, sizeof(stashes), "%zu", summary.stashes);
+    else
+        (void)snprintf(stashes, sizeof(stashes), "not reported");
     if (summary.divergence_known)
         (void)snprintf(divergence, sizeof(divergence),
                        "%zu ahead, %zu behind the locally recorded upstream.", summary.ahead,
@@ -85,6 +99,10 @@ UmiStatus UmiVcsWorkingTreeSummaryText(const UmiVcsWorkingTree *tree, char *outp
                  "A parent commit records child revisions; it does not include those files.";
     else
         advice = "This index has staged changes. Review the staged diff before committing.";
+    /* Expose identities already collected by the immutable status reader.
+     * Preserve the earlier rendering for comparison; no additional Git probe
+     * or assumption about remote publication is introduced. */
+#if 0
     written = snprintf(
         text, sizeof(text),
         "Branch: \"%s\"%s%s\n%zu entries; %zu staged; %zu conflicts; %zu untracked paths.\n"
@@ -94,6 +112,20 @@ UmiStatus UmiVcsWorkingTreeSummaryText(const UmiVcsWorkingTree *tree, char *outp
         "Refresh after changing files, switching branches, staging, or committing.",
         branch, summary.detached ? " (detached HEAD)" : "",
         summary.unborn ? " (no commit yet)" : "", summary.entries, summary.staged,
+        summary.conflicts, summary.untracked, summary.child_commits, summary.dirty_children, advice,
+        divergence);
+#endif
+    written = snprintf(
+        text, sizeof(text),
+        "Branch: \"%s\"%s%s\nCommit (HEAD): %s\nUpstream: \"%s\"\nStashes: %s\n%zu entries; %zu staged; %zu conflicts; %zu untracked paths.\n"
+        "%zu children at a different commit; %zu children with uncommitted contents.\n\n%s\n\n%s\n"
+        "This is a local status observation. It does not fetch, verify publication, or qualify a "
+        "build.\n"
+        "Refresh after changing files, switching branches, staging, or committing.",
+        branch, summary.detached ? " (detached HEAD)" : "",
+        summary.unborn ? " (no commit yet)" : "",
+        summary.commit_known ? summary.commit_id : summary.unborn ? "(unborn)" : "(not reported)",
+        upstream, stashes, summary.entries, summary.staged,
         summary.conflicts, summary.untracked, summary.child_commits, summary.dirty_children, advice,
         divergence);
     return PublishText(text, written, sizeof(text), output, capacity);

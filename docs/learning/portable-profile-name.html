@@ -1,0 +1,38 @@
+<!--
+Umicom Framework
+File: docs/learning/portable-profile-name.html
+
+PURPOSE:
+Teach portable name validation and target-specific linkage.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Portable profile-name validation</title></head><body><main><h1>Portable profile-name validation</h1>
+<p>A name rule and an account store have different dependencies. Umicom::profile_name contains the existing name rule as a small C23 library. Umicom::security links that library for local accounts. A name-only browser or mobile view can compile the same source without credential storage, database or native platform services.</p>
+<h2>Read the contract</h2><ol><li>Include umicom/security/profile_name.h for naming alone. Existing callers may keep local_profile.h.</li><li>Provide an exact readable byte span to UmiLocalProfileNameBytes and a writable output buffer of UMI_LOCAL_PROFILE_NAME_CAPACITY bytes.</li><li>Check the returned UmiStatus before reading the result. Refusal leaves the complete output unchanged.</li><li>On success, the result is lowercase ASCII with a zero-filled tail. Names contain 3 through 48 allowed bytes and start with a letter.</li></ol>
+<pre><code>#include "umicom/security/profile_name.h"
+char canonical[UMI_LOCAL_PROFILE_NAME_CAPACITY];
+const char input[] = {'A', 'l', 'i', 'c', 'e'};
+UmiStatus status = UmiLocalProfileNameBytes(input, sizeof(input), canonical);
+/* Read canonical only when status == UMI_STATUS_OK. */</code></pre>
+<p>An embedded NUL or non-ASCII byte is invalid. The string convenience function UmiLocalProfileName performs a bounded scan. The byte-span API is preferable when an input framework already supplies a length. Overlapping input and output is supported because validation completes into temporary storage before publication. Neither function authenticates an account.</p>
+<h2>Select one build route</h2><p>An installed full SDK exports Umicom::profile_name. A source consumer may instead include cmake/UmicomProfileName.cmake from an explicit Framework checkout and link that target. Do not include both SDK and source definitions in one build. The source target has no additional library dependencies; it requires the standard C string operations and requests position-independent code for consumers such as Android application modules.</p>
+<pre><code>find_package(UmicomFramework CONFIG REQUIRED COMPONENTS profile_name)
+target_link_libraries(my_view PRIVATE Umicom::profile_name)</code></pre>
+<p>For the source route, include the module with an absolute path selected by the parent project, then use the same target name. This module does not configure the Framework root, install an SDK or choose a compiler. The parent must select the appropriate target toolchain before project configuration. A desktop archive is not a browser or mobile archive.</p>
+<h2>Qualify the pure contract</h2><p>From the Framework root, use a C23 compiler environment and run each command separately. Stop on errors. These commands are instructions, not recorded test results.</p>
+<pre><code>cmake -S tests/profile_name -B build/profile-name-contract -G Ninja -DBUILD_TESTING=ON
+cmake --build build/profile-name-contract --parallel 2
+ctest --test-dir build/profile-name-contract --output-on-failure</code></pre>
+<p>The five cases cover every input byte in leading and subsequent positions, length boundaries, unchanged output on refusal, overlap and string compatibility. The existing local-profile suite continues to exercise account callers through Umicom::security. Cross-compiled contract programs are not registered as host tests unless an explicit emulator is supplied. A target compiler accepting the source does not qualify the target user interface.</p>
+<h2>Diagnose a boundary failure</h2><p>A missing component points to an older SDK. An unresolved function points to missing or mismatched link inputs. A successful local name result followed by account failure concerns a different service: inspect its backend and status. Preserve the original error and the source/toolchain identity. Do not fix dependency problems by copying the validator into each application.</p>
+<p>The previous function bodies remain disabled in local_profile.c for review. The active implementation is profile_name.c, shared by both the narrow target and the account service. The public function names and naming behavior are unchanged.</p>
+<section id="android-jni"><h2>Pass Android strings through the shared adapter</h2><p>Include cmake/UmicomAndroidProfileName.cmake from an NDK project and link Umicom::android_profile_name. It compiles this portable policy and adapters/android/profile_name.c for the caller's Android toolchain. This is a source-composition route, not a claim that the whole Framework SDK is available on Android.</p><p>UmiAndroidProfileNameCanonical accepts the current thread's JNIEnv and a borrowed jstring. It reads a bounded UTF-16 region, refuses units outside ASCII, and sends the complete span to UmiLocalProfileNameBytes. Invalid input returns NULL. VM exceptions remain pending; the adapter never clears them. The successful return is a new local Java string. No environment or Java object is retained.</p><p>The application supplies its own JNI-exported method and forwards to this service. The Bits2Banking <a href="https://github.com/umicom-foundation/Bits2Banking/blob/main/labs/mobile/android-framework-profile/README.md">Android profile lab</a> includes the Kotlin declaration, C export and ten instrumented checks. Its existing activity screen is unaffected.</p><h3>Check the host call contract</h3><p>Install a JDK matching the host and make its JAVA_HOME available to CMake. From the Framework root, run these commands separately and stop on errors. A missing JNI header is a setup failure, not a passing test.</p><pre><code>cmake -S tests/android_profile_name -B build/android-jni-contract -G Ninja -DBUILD_TESTING=ON
+cmake --build build/android-jni-contract --parallel 2
+ctest --test-dir build/android-jni-contract --output-on-failure --no-tests=error</code></pre><p>The 19 host cases use the JDK's real JNI declarations with a controlled function table. They check length admission, embedded NUL, non-ASCII units, call order and exception preservation. They do not start a JVM or load an Android library. The separate Android instrumented suite must establish those target behaviors. Neither suite has execution results implied by this guide.</p><p>If JNI cannot be found, inspect JAVA_HOME and the matching JDK installation. If an Android build tries to use host headers or archives, inspect the toolchain and dependency path before copying any binaries. JNI string encodings and lifetime rules are described in the <a href="https://developer.android.com/ndk/guides/jni-tips">Android JNI guide</a>.</p></section>
+</main></body></html>

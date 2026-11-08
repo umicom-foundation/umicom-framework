@@ -1,9 +1,23 @@
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomWebConnection.cmake
+#
+# PURPOSE:
+#   Compose strict request framing, incremental buffering and the existing local HTTP exchange.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 # The byte exchange core uses existing routing; native sockets are a separate adapter.
 target_sources(umicom_web PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/web/loopback_access.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/web/request_frame.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/web/request_stream.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/web/closed_response.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/web/connection.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/web/server_connection_native.c")
@@ -23,3 +37,8 @@ install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/local-web-service.html
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomWebStaticPreviewChecks.cmake")
 
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomWebRequestGateChecks.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomWebRequestStreamChecks.cmake")
+
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/local-static-preview.html"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/doc/umicom/learning COMPONENT Development)

@@ -301,7 +301,7 @@ if(BUILD_TESTING)
         umicom_target_qualification_inputs(umicom-learning-catalogue-reading-gtk4-test FILES
             "${_learning_catalogue_root}/tests/support/gtk4_expanders.h")
     endif()
-    foreach(_case empty formatted unicode controls missing-anchor link-anchor link-source link-control history remote invalid-index fallback changed-resource zoom zoom-controls independent-zoom retired missing-requested-anchor busy destroy-pending reentrant retire-publication retire-tag-creation)
+    foreach(_case empty formatted unicode event-deadline controls missing-anchor link-anchor link-source link-control history remote invalid-index fallback changed-resource zoom zoom-controls independent-zoom retired missing-requested-anchor busy destroy-pending reentrant retire-publication retire-tag-creation)
         set(_directory "${CMAKE_CURRENT_BINARY_DIR}/learning-catalogue-reading/${_case}")
         file(MAKE_DIRECTORY "${_directory}")
         add_test(NAME "framework.learning_pack.native_reading.${_case}"
@@ -604,5 +604,19 @@ if(BUILD_TESTING)
             umicom_test_impact_owners("framework.learning_pack.focus.${_case}"
                 TARGETS umicom-learning-catalogue-focus-test)
         endif()
+    endforeach()
+endif()
+
+# These async fixtures all dispatch through one shared bounded helper. Include
+# its identity in scoped qualification so changing the wait policy invalidates
+# stale fixture evidence, without widening any outer CTest timeout.
+if(BUILD_TESTING AND COMMAND umicom_target_qualification_inputs)
+    foreach(_bounded_target IN ITEMS umicom-learning-catalogue-gtk4-test
+            umicom-learning-catalogue-application-test umicom-learning-catalogue-shared-window-test
+            umicom-learning-catalogue-navigation-test umicom-learning-catalogue-replacement-test
+            umicom-learning-catalogue-libraries-gtk4-test umicom-learning-catalogue-reading-gtk4-test
+            umicom-learning-body-navigation-gtk4-test umicom-learning-module-gtk4-test)
+        umicom_target_qualification_inputs(${_bounded_target} FILES
+            "${_learning_catalogue_root}/tests/support/main_context.h")
     endforeach()
 endif()

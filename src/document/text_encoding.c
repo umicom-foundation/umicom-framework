@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/document/text_encoding.h"
+#include "umicom/base/utf8.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -21,6 +22,10 @@
  * Provide the decode utf8 scalar operation used by this module and its client
  * applications.
  */
+/* The base service now owns scalar decoding for documents and evidence.
+ * Retain this former implementation for review; conversion behavior is kept
+ * through the small compatibility wrapper below. */
+#if 0
 static int decode_utf8_scalar(const unsigned char *bytes,
                               size_t count,
                               size_t *out_used,
@@ -75,6 +80,13 @@ static int decode_utf8_scalar(const unsigned char *bytes,
     return 1;
 }
 
+#endif
+static int decode_utf8_scalar(const unsigned char *bytes, size_t count,
+    size_t *out_used, uint32_t *out_scalar)
+{
+    return UmiUtf8DecodeScalar(bytes, count, out_used, out_scalar);
+}
+
 /*
  * Provide the encode utf8 scalar operation used by this module and its client
  * applications.
@@ -107,6 +119,10 @@ static size_t encode_utf8_scalar(uint32_t scalar, unsigned char out[4])
 }
 
 /* Check that document utf8 satisfies its contract before another service relies on it. */
+/* Share strict UTF-8 validation with non-document Framework consumers. The
+ * public document API and its offset semantics remain unchanged. The previous
+ * loop is retained for comparison with the base implementation. */
+#if 0
 int umi_document_utf8_validate(const unsigned char *bytes,
                                size_t byte_count,
                                size_t *out_error_offset)
@@ -141,6 +157,13 @@ int umi_document_utf8_validate(const unsigned char *bytes,
      */
     if (out_error_offset != NULL) *out_error_offset = byte_count;
     return 1;
+}
+
+#endif
+int umi_document_utf8_validate(const unsigned char *bytes, size_t byte_count,
+    size_t *out_error_offset)
+{
+    return UmiUtf8Validate(bytes, byte_count, out_error_offset);
 }
 
 /*

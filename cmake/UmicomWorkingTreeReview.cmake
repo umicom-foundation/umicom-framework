@@ -1,11 +1,30 @@
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
-# Register focused status readers without requiring the entire application test suite.
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomWorkingTreeReview.cmake
+#
+# PURPOSE:
+#   Register focused status readers and CLI admission without requiring the
+#   entire application test suite.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/repository-working-tree-review.html"
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)
 if(TARGET umicom)
     target_sources(umicom PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../tools/umicom/src/command_repository_review.c")
-    target_link_libraries(umicom PRIVATE Umicom::vcs)
+    target_sources(umicom PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../tools/umicom/src/command_repository_submodules.c")
+    target_link_libraries(umicom PRIVATE Umicom::vcs Umicom::repository)
+    # The earlier link is retained for review. The observer adds the repository
+    # service rather than implementing another Git runner.
+    if(FALSE)
+        target_link_libraries(umicom PRIVATE Umicom::vcs)
+    endif()
 endif()
 if(BUILD_TESTING)
     set(parser_cases empty headers unknown-divergence unborn detached ordinary child child-commit rename copy conflict
@@ -16,14 +35,29 @@ if(BUILD_TESTING)
         empty-output truncated-record overflow stderr-contamination)
     set(review_cases summary child-only escaped-path child-advice small-buffer legacy legacy-overflow)
     # Preserve escaped rename text, immutable observations and atomic capacity refusal.
-    list(APPEND review_cases renamed-path maximum-paths exact-buffer)
+    list(APPEND review_cases renamed-path maximum-paths exact-buffer
+        identity identity-wide identity-unborn identity-unknown identity-detached identity-upstream identity-maximum)
+    set(review_cli_cases default root positional children timeout read-failure help null-vector
+        null-value empty-value negative-count root-missing root-option root-null root-duplicate
+        timeout-missing timeout-null timeout-zero timeout-overflow timeout-negative children-duplicate unknown)
     set(job_cases created cancel-created wrong-owner success late-stop cancel-running read-failure)
-    foreach(kind IN ITEMS parser process review job)
+    # Preserve the earlier suite list for review; the new native adapter cases
+    # join the same registration and warning policy as the existing readers.
+    if(FALSE)
+        foreach(kind IN ITEMS parser process review job)
+        endforeach()
+    endif()
+    foreach(kind IN ITEMS parser process review review_cli job)
         set(target "umicom-vcs-working-tree-${kind}-test")
         add_executable(${target} "${CMAKE_CURRENT_LIST_DIR}/../tests/vcs_working_tree/test_${kind}.c")
         target_link_libraries(${target} PRIVATE Umicom::vcs)
         umicom_apply_warnings(${target})
         umicom_apply_sanitizers(${target})
+        if(kind STREQUAL "review_cli" AND COMMAND umicom_target_qualification_inputs)
+            umicom_target_qualification_inputs(${target} FILES
+                "${CMAKE_CURRENT_LIST_DIR}/../tools/umicom/src/command_repository_review.c"
+                "${CMAKE_CURRENT_LIST_DIR}/../tools/umicom/src/cli.h")
+        endif()
         if(COMMAND umicom_register_validation_target)
             umicom_register_validation_target(${target})
         endif()

@@ -18,10 +18,14 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "umicom/base/status.h"
+#include "umicom/security/profile_name.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
+/* The portable header owns the same constant; retain its previous declaration. */
+#if 0
 #define UMI_LOCAL_PROFILE_NAME_CAPACITY 49U
+#endif
 #define UMI_LOCAL_PROFILE_PASSWORD_CAPACITY 257U
 #define UMI_LOCAL_PROFILE_ITERATIONS 600000U
 
@@ -54,6 +58,9 @@ UmiStatus UmiLocalProfileStoreCreate(const UmiLocalProfileBackend *backend, UmiL
 UmiStatus UmiLocalProfileStorePlatform(const char *application_id, UmiLocalProfileStore **out);
 void UmiLocalProfileStoreRetain(UmiLocalProfileStore *store);
 void UmiLocalProfileStoreRelease(UmiLocalProfileStore *store);
+/* The included portable contract is shared with cross-target consumers.
+ * Keep the previous declarations and their ownership documentation for review. */
+#if 0
 /* Names are case-insensitive ASCII: 3..48 letters, digits, '-' or '_', starting
  * with a letter. Output is lower-case and unchanged on validation failure. */
 UmiStatus UmiLocalProfileName(const char *name, char out[UMI_LOCAL_PROFILE_NAME_CAPACITY]);
@@ -64,6 +71,7 @@ UmiStatus UmiLocalProfileName(const char *name, char out[UMI_LOCAL_PROFILE_NAME_
  * name validation only; it does not authenticate a session or a broker account. */
 UmiStatus UmiLocalProfileNameBytes(const char *name, size_t length,
                                  char out[UMI_LOCAL_PROFILE_NAME_CAPACITY]);
+#endif
 /* Passwords are opaque UTF-8 bytes: 12..256 bytes, without normalization.
  * Callers clear their input buffers after use. These synchronous functions
  * belong on a worker thread when used by a graphical application. */

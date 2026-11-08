@@ -19,6 +19,8 @@
 #include <string.h>
 
 #include "umicom/platform/filesystem.h"
+#include "umicom/platform/output_file.h"
+#include "umicom/toolchain/version_inventory.h"
 
 /* Provide the cli has option operation used by this module and its client applications. */
 static int umi_cli_has_option(int argc, char **argv, const char *option)
@@ -84,6 +86,9 @@ static int umi_cli_check_options_valid(int argc, char **argv)
 }
 
 #endif
+/* The previous version-only parser is retained for review. The active parser
+ * additionally validates the evidence destination before any tool command runs. */
+#if 0
 static int umi_cli_check_options_valid(int argc, char **argv)
 {
     int index;
@@ -103,6 +108,53 @@ static int umi_cli_check_options_valid(int argc, char **argv)
             continue;
         }
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(argv[index], "--project") == 0) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+            if (index + 1 >= argc || argv[index + 1][0] == '\0' ||
+                strncmp(argv[index + 1], "--", 2U) == 0) {
+                (void)fprintf(stderr, "--project requires a path.\n");
+                return 0;
+            }
+            ++index;
+            continue;
+        }
+        (void)fprintf(stderr, "Unknown check option: %s\n", argv[index]);
+        return 0;
+    }
+    return 1;
+}
+
+#endif
+static int umi_cli_check_options_valid(int argc, char **argv)
+{
+    int index;
+    int report_seen = 0;
+    if (argc < 0 || (argc != 0 && argv == NULL)) return 0;
+    /* Validate the complete argument vector before option lookups consume it. */
+    for (index = 0; index < argc; ++index)
+        if (argv[index] == NULL || argv[index][0] == '\0') return 0;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0; index < argc; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(argv[index], "--versions-only") == 0 ||
+            strcmp(argv[index], "--gtk") == 0 ||
+            strcmp(argv[index], "--github") == 0 ||
+            strcmp(argv[index], "--all") == 0 ||
+            strcmp(argv[index], "--help") == 0 ||
+            strcmp(argv[index], "-h") == 0) {
+            continue;
+        }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(argv[index], "--report") == 0) {
+            if (report_seen || index + 1 >= argc || argv[index + 1][0] == '-' ||
+                UmiOutputFileValidatePath(argv[index + 1]) != UMI_STATUS_OK) {
+                (void)fputs("--report requires one absolute new-file path.\n", stderr);
+                return 0;
+            }
+            report_seen = 1;
+            ++index;
+            continue;
+        }
         if (strcmp(argv[index], "--project") == 0) {
             /* Keep the operation inside its valid bounds before reading, writing or adding data. */
             if (index + 1 >= argc || argv[index + 1][0] == '\0' ||
@@ -188,7 +240,12 @@ static int umi_cli_check_msys_bash(
  * existing Framework discovery request to collect versions without compiling,
  * linking or running a generated program. Its output is inventory, not proof
  * that the project's selected compiler or dependencies can build that project. */
+/* Add optional Framework-owned persistence while keeping the earlier console
+ * rendering. The old internal signature is retained for source comparison. */
+#if 0
 static int umi_cli_check_versions(UmiCliContext *context)
+#endif
+static int umi_cli_check_versions(UmiCliContext *context, const char *report_path)
 {
     if (context == NULL) return 2;
     memset(context, 0, sizeof(*context));
@@ -197,6 +254,17 @@ static int umi_cli_check_versions(UmiCliContext *context)
     request.skip_compile_probe = 1;
     request.diagnostic_sink = umi_cli_diagnostic_sink;
     UmiStatus status = umi_toolchain_discover(&request, &context->discovery);
+    /* Save incomplete discovery too. A saved inventory is evidence of what was
+     * observed, never a successful qualification or permission to build. */
+    if (report_path != NULL) {
+        UmiStatus saved = umi_toolchain_version_inventory_save(
+            &context->discovery, status, report_path);
+        if (saved != UMI_STATUS_OK) {
+            (void)fprintf(stderr, "Tool inventory was not saved: %s\n", umi_status_text(saved));
+            return 2;
+        }
+        (void)puts("Tool inventory saved to the requested report file.");
+    }
     (void)puts("Umicom tool version inventory\nVersion/target commands ran; no generated program was compiled or launched.");
     (void)printf("Profile: %s\nRoot: %s\n", context->discovery.profile.profile_id,
         context->discovery.profile.root[0] != '\0' ? context->discovery.profile.root : "PATH-based discovery");
@@ -255,20 +323,37 @@ int umi_cli_command_check(UmiCliContext *context, int argc, char **argv)
         (void)puts(
             "Usage: umicom check [--all] [--gtk] [--github] "
             "[--project PATH]\n"
-            "       umicom doctor --versions-only\n"
+            "       umicom doctor --versions-only [--report ABSOLUTE_NEW_FILE]\n"
             "  --versions-only  Capture discovered tool versions without compile/link/run probes.\n"
-            "                   Use alone; invokes tool version/target commands. This is not qualification.\n"
+            "                   Invokes tool version/target commands. This is not qualification.\n"
+            "  --report   Save version-only JSON evidence; existing files are never replaced.\n"
             "  --all      Check desktop libraries and GitHub CLI as well as "
             "the core toolchain.\n"
             "  --project  Also require PATH/CMakePresets.json.");
         return 0;
     }
+    /* Preserve the original no-report admission for review. Evidence output
+     * is the sole additional option accepted by version-only discovery. */
+#if 0
     if (umi_cli_has_option(argc, argv, "--versions-only")) {
         if (argc != 1) {
             (void)fputs("--versions-only must be used alone. Use a separate full doctor check for qualification.\n", stderr);
             return 2;
         }
         return umi_cli_check_versions(context);
+    }
+#endif
+    const char *report_path = umi_cli_check_option_value(argc, argv, "--report");
+    if (umi_cli_has_option(argc, argv, "--versions-only")) {
+        if (argc != (report_path != NULL ? 3 : 1)) {
+            (void)fputs("--versions-only accepts only an optional --report path.\n", stderr);
+            return 2;
+        }
+        return umi_cli_check_versions(context, report_path);
+    }
+    if (report_path != NULL) {
+        (void)fputs("--report requires --versions-only. Full doctor checks use separate qualification evidence.\n", stderr);
+        return 2;
     }
     check_all = umi_cli_has_option(argc, argv, "--all");
     require_gtk = check_all || umi_cli_has_option(argc, argv, "--gtk");

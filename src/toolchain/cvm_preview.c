@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/cvm_preview.h"
+#include "umicom/toolchain/cvm_trace.h"
 
 static UmiStatus Translate(UmcStatus status)
 {
@@ -32,6 +33,10 @@ static UmiStatus Translate(UmcStatus status)
     default: return UMI_STATUS_INTERNAL_ERROR;
     }
 }
+/* Preserve the earlier adapter for engineering review. The shared request
+ * lifecycle below keeps ordinary and traced previews aligned and reuses the
+ * Umicom C runtime for all execution, including failed attempted steps. */
+#if 0
 UmiStatus umi_cvm_preview(const char *source, size_t length, size_t fuel,
     UmiCvmPreviewWorkspace *workspace, size_t workspace_size,
     UmiCvmPreviewResult *result, size_t result_size)
@@ -57,4 +62,55 @@ UmiStatus umi_cvm_preview(const char *source, size_t length, size_t fuel,
     result->phase = UMI_CVM_COMPLETE;
     result->completed = true;
     return UMI_STATUS_OK;
+}
+#endif
+
+static UmiStatus Preview(const char *source, size_t length, size_t fuel,
+    UmiCvmPreviewWorkspace *workspace, size_t workspace_size,
+    UmiCvmPreviewResult *result, size_t result_size, UmiCvmPreviewTrace *trace)
+{
+    if (workspace == NULL || result == NULL ||
+        workspace_size != sizeof *workspace || result_size != sizeof *result)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* The Framework owns presentation-facing state transitions. Applications
+     * never infer success from an old value when a later preview is rejected. */
+    if (trace != NULL) trace->count = 0U;
+    result->completed = false;
+    result->phase = UMI_CVM_COMPILING;
+    result->instruction_count = 0U;
+    result->execution.value = 0;
+    result->execution.instructions_executed = 0U;
+    UmcStatus status = umc_compile(source, length, workspace->instructions,
+        UMC_PROGRAM_LIMIT, &result->instruction_count, &result->diagnostic);
+    if (status != UMC_OK) return Translate(status);
+    result->phase = UMI_CVM_EXECUTING;
+    if (trace != NULL) {
+        status = umc_execute_trace(workspace->instructions, result->instruction_count,
+            fuel, &result->execution, trace->steps, UMC_PROGRAM_LIMIT, &trace->count,
+            &result->diagnostic);
+    } else {
+        status = umc_execute(workspace->instructions, result->instruction_count,
+            fuel, &result->execution, &result->diagnostic);
+    }
+    umc_locate_diagnostic(source, length, &result->diagnostic);
+    if (status != UMC_OK) return Translate(status);
+    result->phase = UMI_CVM_COMPLETE;
+    result->completed = true;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_cvm_preview(const char *source, size_t length, size_t fuel,
+    UmiCvmPreviewWorkspace *workspace, size_t workspace_size,
+    UmiCvmPreviewResult *result, size_t result_size)
+{
+    return Preview(source, length, fuel, workspace, workspace_size, result, result_size, NULL);
+}
+
+UmiStatus umi_cvm_preview_traced(const char *source, size_t length, size_t fuel,
+    UmiCvmPreviewWorkspace *workspace, size_t workspace_size,
+    UmiCvmPreviewResult *result, size_t result_size,
+    UmiCvmPreviewTrace *trace, size_t trace_size)
+{
+    if (trace == NULL || trace_size != sizeof *trace) return UMI_STATUS_INVALID_ARGUMENT;
+    return Preview(source, length, fuel, workspace, workspace_size, result, result_size, trace);
 }

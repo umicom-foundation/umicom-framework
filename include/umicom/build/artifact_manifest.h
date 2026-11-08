@@ -95,6 +95,9 @@ void umi_build_artifact_manifest_init(
 UmiStatus umi_build_artifact_manifest_import(
     const UmiBuildArtifactSnapshot *artifact,
     UmiBuildArtifactManifest *out_manifest);
+/** Require initialized ABI metadata and termination within every fixed text
+ * array. Validation checks declared values; it does not inspect files, contact
+ * endpoints or establish authenticity of the supplied evidence. */
 UmiStatus umi_build_artifact_manifest_validate(
     const UmiBuildArtifactManifest *manifest,
     char *out_message,
