@@ -157,3 +157,21 @@ umicom suite [MANIFEST]
 The catalogue reports implemented, foundation, and planned Framework
 capabilities.  The suite command validates a suite manifest that composes
 independent applications over one Framework contract set.
+
+## Standalone guide identity
+
+```text
+umicom branding audit --assets BRAND_DIRECTORY --root GUIDES [--root GUIDES ...]
+```
+
+This read-only command delegates to Framework source contracts. It checks the
+controlled standalone HTML format, installed-font declarations and actual decoded
+SVG/ICO bytes against an explicit approved asset directory. It performs no
+configure, compile, browser launch, font installation or source rewrite.
+Exit 0 means the source contract matches, 1 means branding findings, and 2 means
+input, I/O or structure failure. Missing roots and empty selections fail.
+
+Use Framework `resources/brand` as the asset source. This is not a browser layout
+check or a signature check, and it is not intended for generated website templates.
+See [Check a guide’s identity](learning/check-guide-branding.html) for examples
+and recovery steps.

@@ -206,12 +206,24 @@ void umi_build_engine_reset_cancel(UmiBuildEngine *engine)
     }
 }
 
+/* Graph admission owns retry eligibility and attempt limits. Clear cancellation only after it accepts the retry, so an invalid or exhausted request cannot silently revoke an earlier stop request. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_build_engine_retry(UmiBuildEngine *engine,
                                  const char *node_id)
 {
     if (engine == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     umi_build_engine_reset_cancel(engine);
     return umi_build_graph_retry(engine->graph, node_id);
+}
+#endif
+UmiStatus umi_build_engine_retry(UmiBuildEngine *engine,
+                                 const char *node_id)
+{
+    if (engine == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = umi_build_graph_retry(engine->graph, node_id);
+    if (status == UMI_STATUS_OK)
+        umi_build_engine_reset_cancel(engine);
+    return status;
 }
 
 UmiStatus umi_build_engine_invalidate(UmiBuildEngine *engine,

@@ -16,6 +16,11 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_project/templates/thin_desktop_application.h"
 
+/* The earlier recipe bypassed shared native identity and omitted SDK
+ * branding deployment. Keep its complete file texts for review. The active
+ * recipe reuses Framework packaging and window identity without inventing a
+ * product layout or embedding another copy of the approved artwork. */
+#if 0
 static const UmiDeveloperProjectTemplateFile FILES[] = {
     {
         "CMakeLists.txt",
@@ -52,6 +57,40 @@ static const UmiDeveloperProjectTemplateFile FILES[] = {
         "build/\ninstall/\ndist/\n*.o\n*.obj\n*.exe\n*.dll\n*.so\n*.dylib\n",
         0,
         0
+    }
+};
+#endif
+
+static const UmiDeveloperProjectTemplateFile FILES[] = {
+    {
+        "CMakeLists.txt",
+        "#-----------------------------------------------------------------------------\n# {{APPLICATION_NAME}}\n# File: CMakeLists.txt\n#\n# PURPOSE:\n#   Build the generated native application with shared Framework branding.\n#\n# AUTHOR AND ORGANISATION:\n# Sammy Hegab\n# Umicom Foundation\n#\n# LICENCE:\n# MIT\n#-----------------------------------------------------------------------------\ncmake_minimum_required(VERSION 3.25)\nproject({{TARGET_NAME}} VERSION 0.1.0 LANGUAGES C)\nset(CMAKE_C_STANDARD 23)\nset(CMAKE_C_STANDARD_REQUIRED ON)\nset(CMAKE_C_EXTENSIONS OFF)\nset(CMAKE_RUNTIME_OUTPUT_DIRECTORY \"${CMAKE_BINARY_DIR}/bin\")\nset(CMAKE_LIBRARY_OUTPUT_DIRECTORY \"${CMAKE_BINARY_DIR}/lib\")\nset(CMAKE_ARCHIVE_OUTPUT_DIRECTORY \"${CMAKE_BINARY_DIR}/lib\")\n\n# Reuse the installed SDK or an explicitly supplied Framework source checkout.\n# The toolkit adapter and the packaging helper must come from the same source.\nif(EXISTS \"${CMAKE_CURRENT_SOURCE_DIR}/framework/CMakeLists.txt\")\n    add_subdirectory(framework)\n    include(\"${CMAKE_CURRENT_SOURCE_DIR}/framework/cmake/UmicomApplicationBranding.cmake\")\n    set(_application_resources \"${CMAKE_CURRENT_SOURCE_DIR}/framework/resources\")\nelse()\n    find_package(UmicomFramework CONFIG REQUIRED COMPONENTS ui_gtk4)\n    set(_application_resources \"${UMICOM_FRAMEWORK_RESOURCE_ROOT}\")\nendif()\nif(NOT TARGET Umicom::ui_gtk4 OR NOT COMMAND umicom_apply_application_branding)\n    message(FATAL_ERROR \"This starter requires Framework with the GTK4 adapter and application branding helper.\")\nendif()\nfind_package(PkgConfig REQUIRED)\npkg_check_modules(GTK4 REQUIRED IMPORTED_TARGET gtk4>=4.10)\nadd_executable({{TARGET_NAME}} src/main.c)\ntarget_link_libraries({{TARGET_NAME}} PRIVATE\n    Umicom::Framework\n    Umicom::ui_gtk4 PkgConfig::GTK4)\n# Framework stages the approved SVG assets and embeds the Windows ICO identity.\numicom_apply_application_branding(\n    TARGET {{TARGET_NAME}}\n    PRODUCT_NAME \"{{APPLICATION_NAME}}\"\n    INTERNAL_NAME \"{{TARGET_NAME}}\"\n    APPLICATION_ID \"{{APPLICATION_ID}}\"\n    VERSION_MAJOR 0 VERSION_MINOR 1 VERSION_PATCH 0\n    RESOURCE_ROOT \"${_application_resources}\"\n    WINDOWS_GUI DESKTOP_ENTRY)\ninstall(TARGETS {{TARGET_NAME}} RUNTIME DESTINATION bin)\nset(CPACK_GENERATOR \"ZIP\")\ninclude(CPack)\n",
+        0, 0
+    },
+    {
+        "CMakePresets.json",
+        "{\n  \"version\": 6,\n  \"configurePresets\": [\n    {\n      \"name\": \"windows-ucrt64-debug\",\n      \"displayName\": \"Windows MSYS2 UCRT64 Debug\",\n      \"generator\": \"Ninja\",\n      \"binaryDir\": \"${sourceDir}/build/windows-ucrt64-debug\",\n      \"cacheVariables\": {\n        \"CMAKE_BUILD_TYPE\": \"Debug\",\n        \"CMAKE_C_COMPILER\": \"C:/msys64/ucrt64/bin/gcc.exe\",\n        \"CMAKE_MAKE_PROGRAM\": \"C:/msys64/ucrt64/bin/ninja.exe\",\n        \"BUILD_TESTING\": \"ON\"\n      }\n    },\n    {\n      \"name\": \"linux-debug\",\n      \"displayName\": \"Linux Debug\",\n      \"generator\": \"Ninja\",\n      \"binaryDir\": \"${sourceDir}/build/linux-debug\",\n      \"cacheVariables\": {\n        \"CMAKE_BUILD_TYPE\": \"Debug\",\n        \"BUILD_TESTING\": \"ON\"\n      }\n    }\n  ],\n  \"buildPresets\": [\n    {\n      \"name\": \"windows-ucrt64-debug\",\n      \"configurePreset\": \"windows-ucrt64-debug\"\n    },\n    {\n      \"name\": \"linux-debug\",\n      \"configurePreset\": \"linux-debug\"\n    }\n  ],\n  \"testPresets\": [\n    {\n      \"name\": \"windows-ucrt64-debug\",\n      \"configurePreset\": \"windows-ucrt64-debug\",\n      \"output\": {\n        \"outputOnFailure\": true\n      }\n    },\n    {\n      \"name\": \"linux-debug\",\n      \"configurePreset\": \"linux-debug\",\n      \"output\": {\n        \"outputOnFailure\": true\n      }\n    }\n  ]\n}\n",
+        0, 0
+    },
+    {
+        "src/main.c",
+        "/*-----------------------------------------------------------------------------\n * {{APPLICATION_NAME}}\n * File: src/main.c\n *\n * PURPOSE:\n *   Compose the generated application and request Framework-owned native identity.\n *\n * AUTHOR AND ORGANISATION:\n * Sammy Hegab\n * Umicom Foundation\n *\n * LICENCE:\n * MIT\n *---------------------------------------------------------------------------*/\n\n\n\n#include <gtk/gtk.h>\n#include \"umicom/ui/gtk4/workstation/shell_header.h\"\n#include \"umicom/application/application.h\"\n\nstatic void activate(GtkApplication *application, gpointer user_data)\n{\n    GtkWidget *window;\n\n    (void)user_data;\n\n    /*\n     * Reusable shell, layout, command, persistence and integration behaviour\n     * belongs in Umicom Framework. This product keeps only composition here.\n     */\n    window = gtk_application_window_new(application);\n    gtk_window_set_title(GTK_WINDOW(window), \"{{APPLICATION_NAME}}\");\n    gtk_window_set_default_size(GTK_WINDOW(window), 1200, 760);\n    /* The same shared resolver uses staged SVG and the native Windows ICO.\n     * Report unavailable identity; a missing package asset is not a new logo. */\n    UmiStatus identity = umi_gtk4_ws_apply_window_identity(GTK_WINDOW(window));\n    if (identity != UMI_STATUS_OK)\n        g_warning(\"Umicom window identity unavailable (status %d)\", (int)identity);\n    gtk_window_present(GTK_WINDOW(window));\n}\n\nint main(int argc, char **argv)\n{\n    GtkApplication *application;\n    int status;\n\n    application = gtk_application_new(\n        \"{{APPLICATION_ID}}\",\n        G_APPLICATION_DEFAULT_FLAGS);\n    g_signal_connect(application, \"activate\", G_CALLBACK(activate), NULL);\n    status = g_application_run(G_APPLICATION(application), argc, argv);\n    g_object_unref(application);\n    return status;\n}\n",
+        0, 0
+    },
+    {
+        "application.umicom.yaml",
+        "schema: umicom.application/v1\nid: {{APPLICATION_ID}}\nname: {{APPLICATION_NAME}}\nshort_name: {{TARGET_NAME}}\nversion: 0.1.0\nexecutable: {{TARGET_NAME}}\nminimum_framework_version: 0.9.0\nfrontends:\n  - console\n  - gtk4\ncapabilities:\n  - umicom.runtime\n  - umicom.application\n",
+        0, 0
+    },
+    {
+        "README.md",
+        "# {{APPLICATION_NAME}}\n\nThis GTK application is generated by Umicom Framework. Its native identity and\npackaging use the same Framework SDK as the application adapter. The existing\nwindow content is a starting point; application behaviour belongs in shared\nservices and product-specific composition.\n\n## Prerequisites\n\nUse CMake 3.25 or newer, Ninja, the C23 compiler (or the selected C++ compiler)\nand GTK4 development files. Install a Framework SDK that exports Umicom::ui_gtk4,\nor place a deliberately selected Framework checkout in the framework directory.\nA core-only SDK cannot build this graphical starter.\n\n## Build and inspect\n\nFrom this generated project's root, using an example SDK prefix:\n\n~~~powershell\n$env:Path = \"C:/msys64/ucrt64/bin;$env:Path\"\ncmake --preset windows-ucrt64-debug -DCMAKE_PREFIX_PATH=C:/umicom/installed/framework\ncmake --build --preset windows-ucrt64-debug --parallel 2\nGet-ChildItem .\\build\\windows-ucrt64-debug\\bin\\branding\n.\\build\\windows-ucrt64-debug\\bin\\{{TARGET_NAME}}.exe\n~~~\n\nReplace the prefix with the SDK you actually qualified. Stop when a command\nfails. The SDK must match the target platform, architecture and toolchain.\nA generated recipe is not build or runtime evidence.\n\n## Branding and appearance\n\nThe shared CMake helper stages canonical SVG icons and wordmarks next to the\nexecutable. On Windows it embeds the approved ICO and version identity.\nThe application calls the shared native identity resolver before presenting\nthe window. It reports a missing identity as a warning; the operating system\ndecides where window icons appear. The starter does not draw a substitute logo.\n\nKeep the staged branding directory beside the executable when distributing\na build. Runtime dependency deployment is handled by the existing Framework\nhelper; inspect its results on a clean machine. Add a managed Framework\nappearance controller when the product needs theme and font preferences.\nThis minimal window currently uses GTK's inherited fonts; typography and\na branded content header have not been implemented by this recipe.\n\n## Install, package and qualify\n\n~~~powershell\ncmake --install .\\build\\windows-ucrt64-debug --prefix .\\install\ncpack --config .\\build\\windows-ucrt64-debug\\CPackConfig.cmake\n~~~\n\nReview installed files and the archive separately. Check SVG geometry, the\nWindows file/window icon, readable title, DPI behaviour and real font fallback.\nThis starter has no application-specific CTest suite yet. Add meaningful tests\nfor the product before treating a successful build as a qualified application.\n\nThe source/header notices belong to the generated project. Preserve attribution\nand use the actual licence when extending it.\n",
+        0, 0
+    },
+    {
+        ".gitignore",
+        "build/\ninstall/\ndist/\n*.o\n*.obj\n*.exe\n*.dll\n*.so\n*.dylib\n",
+        0, 0
     }
 };
 

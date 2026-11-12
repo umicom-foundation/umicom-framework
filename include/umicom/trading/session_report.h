@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/trading/session_report.h
- * PURPOSE: Capture and reconcile a retained local trading book without changing orders or selection.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Capture and reconcile a retained local trading book without changing orders or selection.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 
@@ -77,8 +84,10 @@ UmiStatus UmiTradingSessionReportCurrencyAt(const UmiTradingSessionReport *repor
     size_t index, UmiTradingSessionCurrency *outCurrency);
 UmiStatus UmiTradingSessionReportIssueAt(const UmiTradingSessionReport *report,
     size_t index, UmiTradingSessionIssue *outIssue);
-/* Current means the original workspace identity and revision/account/environment. It says
- * nothing about external data completeness or broker reconciliation. */
+/* Current means the original workspace identity and revision/account/environment.
+ * At UINT64_MAX this check conservatively returns false: protective controls
+ * can still change while that revision saturates. Reports remain readable.
+ * This says nothing about external data completeness or broker reconciliation. */
 UmiStatus UmiTradingSessionReportIsCurrent(const UmiTradingSessionReport *report,
     const UmiTradingWorkspace *workspace, bool *outCurrent);
 /* Text has a size-query form: output NULL, capacity 0, required non-NULL.

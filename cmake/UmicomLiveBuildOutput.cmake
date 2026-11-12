@@ -3,6 +3,31 @@
 # copies snapshots and does not introduce a toolkit dependency into that core.
 include_guard(GLOBAL)
 if(BUILD_TESTING)
+    # Preparation failures use controlled boundaries and cannot launch a tool.
+    # Existing process-fixture tests remain responsible for native execution.
+    add_executable(umicom-build-preparation-history-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/live_build_output/test_preparation_history.c")
+    target_link_libraries(umicom-build-preparation-history-test PRIVATE Umicom::build)
+    umicom_apply_warnings(umicom-build-preparation-history-test)
+    umicom_apply_sanitizers(umicom-build-preparation-history-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-build-preparation-history-test)
+    endif()
+    foreach(mode legacy observed automatic)
+        foreach(case source build-path install-path run-path launch provider directory
+                environment-create environment-read parser success nonzero spawn-error
+                cancel timeout no-history-success no-history-failure invalid exhausted rolling shared)
+            # Automatic tests always use TEST, so Run launch-plan refusal is
+            # covered by the two interfaces that accept a phase.
+            if(mode STREQUAL "automatic" AND case STREQUAL "launch")
+                continue()
+            endif()
+            add_test(NAME framework.build_preparation_history.${mode}.${case}
+                COMMAND umicom-build-preparation-history-test "${mode}" "${case}")
+            set_tests_properties(framework.build_preparation_history.${mode}.${case}
+                PROPERTIES TIMEOUT 30 LABELS "framework;build;history;regression")
+        endforeach()
+    endforeach()
     foreach(kind session runner)
         add_executable(umicom-live-build-${kind}-test "${CMAKE_CURRENT_LIST_DIR}/../tests/live_build_output/test_${kind}.c")
         target_link_libraries(umicom-live-build-${kind}-test PRIVATE Umicom::build)

@@ -9,6 +9,12 @@
 #define UMICOM_UI_GTK4_WORKSTATION_LIBRARY_EXCHANGE_H
 #include <gtk/gtk.h>
 #include "umicom/ui/workspace_library_exchange.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 G_BEGIN_DECLS
 typedef struct UmiGtk4WorkspaceLibraryExchange UmiGtk4WorkspaceLibraryExchange;
 /* Callbacks run on the GTK owner thread. Export follows the core measure/fill
@@ -47,4 +53,8 @@ GtkWidget *umi_gtk4_ws_library_exchange_widget(UmiGtk4WorkspaceLibraryExchange *
  * asynchronous completions release their own state without calling the owner. */
 void umi_gtk4_ws_library_exchange_destroy(UmiGtk4WorkspaceLibraryExchange *exchange);
 G_END_DECLS
+
+#ifdef __cplusplus
+}
+#endif
 #endif

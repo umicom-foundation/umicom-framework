@@ -22,6 +22,12 @@
 #ifndef UMICOM_UI_COMPONENTS_STATE_H
 #define UMICOM_UI_COMPONENTS_STATE_H
 #include <stdbool.h>
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui component state data shared with callers of this public contract.
  */
@@ -31,4 +37,8 @@ typedef struct UmiUiComponentState { bool visible; bool enabled; bool busy; bool
  * applications.
  */
 UmiUiComponentState umi_ui_component_state_default(void);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

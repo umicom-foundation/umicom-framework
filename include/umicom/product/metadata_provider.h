@@ -245,6 +245,13 @@ UmiStatus umi_product_metadata_provider_registry_archive_restore(UmiProductMetad
 UmiStatus umi_product_metadata_provider_registry_clear_if_current(UmiProductMetadataProviderRegistry *registry,
     uint64_t expected_revision);
 
+/* Compare this record's canonical saved state using caller-owned byte scratch.
+ * See UmiValueArchiveComparison in base/value_archive.h for measurement,
+ * refusal, aliasing and lifetime rules. This call never publishes live state. */
+UmiStatus umi_product_metadata_provider_snapshot_archive_compare_with_workspace(const UmiProductMetadataProviderSnapshot *left,
+    const UmiProductMetadataProviderSnapshot *right, void *workspace, size_t capacity,
+    UmiValueArchiveComparison *out_comparison);
+
 #ifdef __cplusplus
 }
 #endif

@@ -19,6 +19,12 @@
 #include "umicom/ui/layout_persistence.h"
 #include "umicom/ui/workspace_customisation.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Choose whether an imported layout may replace an existing layout with the
  * same stable identifier. Reject is the safest default for general callers. */
 typedef enum UmiUiWorkspaceImportConflictPolicy {
@@ -68,4 +74,8 @@ UmiStatus umi_ui_workspace_customisation_import(
     const UmiUiWorkspaceImportOptions *options,
     UmiUiWorkspaceImportReport *out_report);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

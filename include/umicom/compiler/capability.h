@@ -15,6 +15,12 @@
 #ifndef UMICOM_COMPILER_CAPABILITY_H
 #define UMICOM_COMPILER_CAPABILITY_H
 #include "umicom/compiler/profile.h"
+
+/* Keep the public C symbol names when this header is included directly by a
+ * C++ client. Includes remain outside the linkage block; layouts are unchanged. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the compiler capability snapshot data shared with callers of this public
  * contract.
@@ -44,4 +50,7 @@ UmiStatus umi_compiler_capability_capture(const UmiCompilerProvider *provider,co
  * applications.
  */
 bool umi_compiler_capability_satisfies(const UmiCompilerCapabilitySnapshot *snapshot,UmiCompilerLanguage language,bool require_cross,bool require_c_abi);
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 #endif

@@ -678,3 +678,6 @@ if(BUILD_TESTING)
             TIMEOUT 20 LABELS "framework;broker;status;regression")
     endforeach()
 endif()
+
+# Reuse shared paper, session and audit owners in independent boundary fixtures.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomPaperTransactionChecks.cmake")

@@ -15,6 +15,12 @@
 #ifndef UMICOM_FRONTEND_PREVIEW_SESSION_H
 #define UMICOM_FRONTEND_PREVIEW_SESSION_H
 #include "umicom/frontend/device_registry.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the frontend preview session data shared with callers of this public contract.
  */
@@ -39,4 +45,8 @@ UmiStatus umi_frontend_preview_session_reload(UmiFrontendPreviewSession *session
  * client applications.
  */
 UmiStatus umi_frontend_preview_session_set_device(UmiFrontendPreviewSession *session,const UmiFrontendDevicePreset *device);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

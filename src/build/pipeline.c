@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/build/pipeline.h"
+#include "umicom/base/text.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -88,6 +89,9 @@ static void refresh_deployment_phase(UmiBuildDeliveryPipeline *pipeline)
     }
 }
 
+/* Retained for review: the former constructor truncated pipeline identities. Bound the complete identity before allocation.
+ * The active implementation keeps specialized child owners authoritative. */
+#if 0
 UmiStatus umi_build_delivery_pipeline_create(
     const char *pipeline_id,
     const UmiBuildTaskRegistry *tasks,
@@ -128,6 +132,51 @@ UmiStatus umi_build_delivery_pipeline_create(
     *out_pipeline = pipeline;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_build_delivery_pipeline_create(
+    const char *pipeline_id,
+    const UmiBuildTaskRegistry *tasks,
+    const UmiBuildDeploymentTargetRegistry *targets,
+    size_t maximum_parallel,
+    UmiBuildDeliveryPipeline **out_pipeline)
+{
+    UmiBuildDeliveryPipeline *pipeline;
+    UmiStatus status;
+    if (pipeline_id == NULL || pipeline_id[0] == '\0' || tasks == NULL ||
+        targets == NULL || out_pipeline == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    *out_pipeline = NULL;
+    char identity[UMI_BUILD_ID_CAPACITY];
+    status = umi_text_replace(identity, sizeof identity, pipeline_id);
+    if (status != UMI_STATUS_OK) return status;
+    pipeline = (UmiBuildDeliveryPipeline *)calloc(1U, sizeof(*pipeline));
+    if (pipeline == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    copy_text(pipeline->pipeline_id, sizeof(pipeline->pipeline_id), identity);
+    pipeline->task_registry = tasks;
+    pipeline->target_registry = targets;
+    pipeline->phase = UMI_BUILD_PIPELINE_IDLE;
+    pipeline->revision = 1U;
+    status = umi_build_incremental_planner_create(&pipeline->incremental);
+    if (status == UMI_STATUS_OK) {
+        status = umi_build_task_orchestrator_create(
+            tasks, maximum_parallel, &pipeline->tasks);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_build_artifact_manifest_registry_create(
+            &pipeline->artifacts);
+    }
+    if (status == UMI_STATUS_OK) {
+        status = umi_build_deployment_controller_create(&pipeline->deployment);
+    }
+    if (status != UMI_STATUS_OK) {
+        umi_build_delivery_pipeline_destroy(pipeline);
+        return status;
+    }
+    *out_pipeline = pipeline;
+    return UMI_STATUS_OK;
+}
 
 void umi_build_delivery_pipeline_destroy(UmiBuildDeliveryPipeline *pipeline)
 {
@@ -139,6 +188,9 @@ void umi_build_delivery_pipeline_destroy(UmiBuildDeliveryPipeline *pipeline)
     free(pipeline);
 }
 
+/* Retained for review: admit parent generation and revision before a child can replace its plan.
+ * The active implementation keeps specialized child owners authoritative. */
+#if 0
 UmiStatus umi_build_delivery_pipeline_plan_tasks(
     UmiBuildDeliveryPipeline *pipeline,
     const char *operation_id,
@@ -162,7 +214,37 @@ UmiStatus umi_build_delivery_pipeline_plan_tasks(
     }
     return status;
 }
+#endif
 
+UmiStatus umi_build_delivery_pipeline_plan_tasks(
+    UmiBuildDeliveryPipeline *pipeline,
+    const char *operation_id,
+    const char *task_id)
+{
+    UmiStatus status;
+    if (pipeline == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (pipeline->phase == UMI_BUILD_PIPELINE_TASKS ||
+        pipeline->phase == UMI_BUILD_PIPELINE_DEPLOYMENT) {
+        return UMI_STATUS_BUSY;
+    }
+    if (pipeline->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (pipeline->generation == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = umi_build_task_orchestrator_plan(
+        pipeline->tasks, operation_id, task_id);
+    if (status == UMI_STATUS_OK) {
+        pipeline->task_plan_available = 1;
+        pipeline->deployment_plan_available = 0;
+        pipeline->stop_requested = 0;
+        pipeline->phase = UMI_BUILD_PIPELINE_PLANNED;
+        pipeline->generation += 1U;
+        pipeline->revision += 1U;
+    }
+    return status;
+}
+
+/* Retained for review: a planned deployment must not restart its older task plan; reserve parent identity before begin.
+ * The active implementation keeps specialized child owners authoritative. */
+#if 0
 UmiStatus umi_build_delivery_pipeline_begin_tasks(
     UmiBuildDeliveryPipeline *pipeline)
 {
@@ -172,6 +254,26 @@ UmiStatus umi_build_delivery_pipeline_begin_tasks(
         pipeline->phase != UMI_BUILD_PIPELINE_PLANNED) {
         return UMI_STATUS_INVALID_STATE;
     }
+    status = umi_build_task_orchestrator_begin(pipeline->tasks);
+    if (status == UMI_STATUS_OK) {
+        pipeline->phase = UMI_BUILD_PIPELINE_TASKS;
+        pipeline->revision += 1U;
+        refresh_task_phase(pipeline);
+    }
+    return status;
+}
+#endif
+
+UmiStatus umi_build_delivery_pipeline_begin_tasks(
+    UmiBuildDeliveryPipeline *pipeline)
+{
+    UmiStatus status;
+    if (pipeline == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!pipeline->task_plan_available || pipeline->deployment_plan_available ||
+        pipeline->phase != UMI_BUILD_PIPELINE_PLANNED) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    if (pipeline->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     status = umi_build_task_orchestrator_begin(pipeline->tasks);
     if (status == UMI_STATUS_OK) {
         pipeline->phase = UMI_BUILD_PIPELINE_TASKS;
@@ -192,6 +294,9 @@ UmiStatus umi_build_delivery_pipeline_next_task(
     return umi_build_task_orchestrator_next_ready(pipeline->tasks, out_task);
 }
 
+/* Retained for review: reserve the parent revision before starting a child, and refuse new work after stop.
+ * The active implementation keeps specialized child owners authoritative. */
+#if 0
 UmiStatus umi_build_delivery_pipeline_start_task(
     UmiBuildDeliveryPipeline *pipeline,
     const char *task_id)
@@ -205,7 +310,27 @@ UmiStatus umi_build_delivery_pipeline_start_task(
     if (status == UMI_STATUS_OK) pipeline->revision += 1U;
     return status;
 }
+#endif
 
+UmiStatus umi_build_delivery_pipeline_start_task(
+    UmiBuildDeliveryPipeline *pipeline,
+    const char *task_id)
+{
+    UmiStatus status;
+    if (pipeline == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (pipeline->phase != UMI_BUILD_PIPELINE_TASKS) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    if (pipeline->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (pipeline->stop_requested) return UMI_STATUS_INVALID_STATE;
+    status = umi_build_task_orchestrator_start(pipeline->tasks, task_id);
+    if (status == UMI_STATUS_OK) pipeline->revision += 1U;
+    return status;
+}
+
+/* Retained for review: accept task completion only in the active task phase, including draining work after a stop request.
+ * The active implementation keeps specialized child owners authoritative. */
+#if 0
 UmiStatus umi_build_delivery_pipeline_complete_task(
     UmiBuildDeliveryPipeline *pipeline,
     const char *task_id,
@@ -221,7 +346,29 @@ UmiStatus umi_build_delivery_pipeline_complete_task(
     }
     return status;
 }
+#endif
 
+UmiStatus umi_build_delivery_pipeline_complete_task(
+    UmiBuildDeliveryPipeline *pipeline,
+    const char *task_id,
+    int exit_code)
+{
+    UmiStatus status;
+    if (pipeline == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (pipeline->phase != UMI_BUILD_PIPELINE_TASKS) return UMI_STATUS_INVALID_STATE;
+    if (pipeline->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = umi_build_task_orchestrator_complete(
+        pipeline->tasks, task_id, exit_code);
+    if (status == UMI_STATUS_OK) {
+        refresh_task_phase(pipeline);
+        pipeline->revision += 1U;
+    }
+    return status;
+}
+
+/* Retained for review: accept task completion only in the active task phase, including draining work after a stop request.
+ * The active implementation keeps specialized child owners authoritative. */
+#if 0
 UmiStatus umi_build_delivery_pipeline_fail_task(
     UmiBuildDeliveryPipeline *pipeline,
     const char *task_id,
@@ -238,7 +385,30 @@ UmiStatus umi_build_delivery_pipeline_fail_task(
     }
     return result;
 }
+#endif
 
+UmiStatus umi_build_delivery_pipeline_fail_task(
+    UmiBuildDeliveryPipeline *pipeline,
+    const char *task_id,
+    UmiStatus status,
+    int exit_code)
+{
+    UmiStatus result;
+    if (pipeline == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (pipeline->phase != UMI_BUILD_PIPELINE_TASKS) return UMI_STATUS_INVALID_STATE;
+    if (pipeline->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    result = umi_build_task_orchestrator_fail(
+        pipeline->tasks, task_id, status, exit_code);
+    if (result == UMI_STATUS_OK) {
+        refresh_task_phase(pipeline);
+        pipeline->revision += 1U;
+    }
+    return result;
+}
+
+/* Retained for review: artifact replacement must invalidate an older deployment plan and reserve its parent revision.
+ * The active implementation keeps specialized child owners authoritative. */
+#if 0
 UmiStatus umi_build_delivery_pipeline_register_artifact(
     UmiBuildDeliveryPipeline *pipeline,
     const UmiBuildArtifactManifest *artifact)
@@ -259,7 +429,35 @@ UmiStatus umi_build_delivery_pipeline_register_artifact(
     }
     return status;
 }
+#endif
 
+UmiStatus umi_build_delivery_pipeline_register_artifact(
+    UmiBuildDeliveryPipeline *pipeline,
+    const UmiBuildArtifactManifest *artifact)
+{
+    UmiStatus status;
+    if (pipeline == NULL || artifact == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (pipeline->phase != UMI_BUILD_PIPELINE_ARTIFACTS &&
+        pipeline->phase != UMI_BUILD_PIPELINE_PLANNED) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    if (pipeline->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = umi_build_artifact_manifest_registry_upsert(
+        pipeline->artifacts, artifact);
+    if (status == UMI_STATUS_OK) {
+        /* Replacement evidence invalidates any previously composed deployment. */
+        pipeline->deployment_plan_available = 0;
+        pipeline->phase = UMI_BUILD_PIPELINE_ARTIFACTS;
+        pipeline->revision += 1U;
+    }
+    return status;
+}
+
+/* Retained for review: admit complete deployment identities and parent revision before replacing the child plan.
+ * The active implementation keeps specialized child owners authoritative. */
+#if 0
 UmiStatus umi_build_delivery_pipeline_plan_deployment(
     UmiBuildDeliveryPipeline *pipeline,
     const char *deployment_id,
@@ -297,7 +495,59 @@ UmiStatus umi_build_delivery_pipeline_plan_deployment(
     }
     return status;
 }
+#endif
 
+UmiStatus umi_build_delivery_pipeline_plan_deployment(
+    UmiBuildDeliveryPipeline *pipeline,
+    const char *deployment_id,
+    const char *artifact_id,
+    const char *target_id,
+    int dry_run)
+{
+    UmiBuildArtifactManifest artifact;
+    UmiBuildDeploymentTargetSnapshot target;
+    UmiBuildDeploymentPlan plan;
+    UmiStatus status;
+    if (pipeline == NULL || deployment_id == NULL || artifact_id == NULL ||
+        target_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (pipeline->phase != UMI_BUILD_PIPELINE_ARTIFACTS &&
+        pipeline->phase != UMI_BUILD_PIPELINE_PLANNED) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    if (pipeline->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (dry_run != 0 && dry_run != 1) return UMI_STATUS_INVALID_ARGUMENT;
+    char deployment_key[UMI_BUILD_ID_CAPACITY];
+    char artifact_key[UMI_BUILD_ID_CAPACITY];
+    char target_key[UMI_BUILD_ID_CAPACITY];
+    status = umi_text_replace(deployment_key, sizeof deployment_key, deployment_id);
+    if (status == UMI_STATUS_OK) status = umi_text_replace(artifact_key, sizeof artifact_key, artifact_id);
+    if (status == UMI_STATUS_OK) status = umi_text_replace(target_key, sizeof target_key, target_id);
+    if (status != UMI_STATUS_OK) return status;
+    if (deployment_key[0] == '\0' || artifact_key[0] == '\0' || target_key[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_build_artifact_manifest_registry_find(
+        pipeline->artifacts, artifact_key, &artifact);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_build_deployment_target_registry_find(
+        pipeline->target_registry, target_key, &target);
+    if (status != UMI_STATUS_OK) return status;
+    umi_build_deployment_plan_init(&plan, deployment_key);
+    status = umi_build_deployment_plan_compose_default(
+        &plan, &artifact, &target, dry_run);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_build_deployment_controller_load(pipeline->deployment, &plan);
+    if (status == UMI_STATUS_OK) {
+        pipeline->deployment_plan_available = 1;
+        pipeline->phase = UMI_BUILD_PIPELINE_PLANNED;
+        pipeline->revision += 1U;
+    }
+    return status;
+}
+
+/* Retained for review: approval applies only to the currently planned deployment, with a reserved parent identity.
+ * The active implementation keeps specialized child owners authoritative. */
+#if 0
 UmiStatus umi_build_delivery_pipeline_approve_deployment(
     UmiBuildDeliveryPipeline *pipeline)
 {
@@ -313,6 +563,45 @@ UmiStatus umi_build_delivery_pipeline_approve_deployment(
     if (status == UMI_STATUS_OK) pipeline->revision += 1U;
     return status;
 }
+#endif
+
+UmiStatus umi_build_delivery_pipeline_approve_deployment(
+    UmiBuildDeliveryPipeline *pipeline)
+{
+    UmiBuildDeploymentPlan plan;
+    UmiStatus status;
+    if (pipeline == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!pipeline->deployment_plan_available || pipeline->phase != UMI_BUILD_PIPELINE_PLANNED) return UMI_STATUS_INVALID_STATE;
+    if (pipeline->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = umi_build_deployment_controller_plan(pipeline->deployment, &plan);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_build_deployment_plan_approve(&plan);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_build_deployment_controller_load(pipeline->deployment, &plan);
+    if (status == UMI_STATUS_OK) pipeline->revision += 1U;
+    return status;
+}
+
+/* Retained for review: reserve the parent revision before starting the deployment owner.
+ * The active implementation keeps specialized child owners authoritative. */
+#if 0
+UmiStatus umi_build_delivery_pipeline_begin_deployment(
+    UmiBuildDeliveryPipeline *pipeline)
+{
+    UmiStatus status;
+    if (pipeline == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!pipeline->deployment_plan_available ||
+        pipeline->phase != UMI_BUILD_PIPELINE_PLANNED) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    status = umi_build_deployment_controller_begin(pipeline->deployment);
+    if (status == UMI_STATUS_OK) {
+        pipeline->phase = UMI_BUILD_PIPELINE_DEPLOYMENT;
+        pipeline->revision += 1U;
+    }
+    return status;
+}
+#endif
 
 UmiStatus umi_build_delivery_pipeline_begin_deployment(
     UmiBuildDeliveryPipeline *pipeline)
@@ -323,6 +612,7 @@ UmiStatus umi_build_delivery_pipeline_begin_deployment(
         pipeline->phase != UMI_BUILD_PIPELINE_PLANNED) {
         return UMI_STATUS_INVALID_STATE;
     }
+    if (pipeline->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     status = umi_build_deployment_controller_begin(pipeline->deployment);
     if (status == UMI_STATUS_OK) {
         pipeline->phase = UMI_BUILD_PIPELINE_DEPLOYMENT;
@@ -343,6 +633,9 @@ UmiStatus umi_build_delivery_pipeline_next_deployment_step(
         pipeline->deployment, out_step);
 }
 
+/* Retained for review: keep step callbacks in the active deployment phase and reserve parent identity before child mutation.
+ * The active implementation keeps specialized child owners authoritative. */
+#if 0
 UmiStatus umi_build_delivery_pipeline_start_deployment_step(
     UmiBuildDeliveryPipeline *pipeline,
     const char *step_id)
@@ -354,7 +647,26 @@ UmiStatus umi_build_delivery_pipeline_start_deployment_step(
     if (status == UMI_STATUS_OK) pipeline->revision += 1U;
     return status;
 }
+#endif
 
+UmiStatus umi_build_delivery_pipeline_start_deployment_step(
+    UmiBuildDeliveryPipeline *pipeline,
+    const char *step_id)
+{
+    UmiStatus status;
+    if (pipeline == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (pipeline->phase != UMI_BUILD_PIPELINE_DEPLOYMENT) return UMI_STATUS_INVALID_STATE;
+    if (pipeline->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (pipeline->stop_requested) return UMI_STATUS_INVALID_STATE;
+    status = umi_build_deployment_controller_start_step(
+        pipeline->deployment, step_id);
+    if (status == UMI_STATUS_OK) pipeline->revision += 1U;
+    return status;
+}
+
+/* Retained for review: keep step callbacks in the active deployment phase and reserve parent identity before child mutation.
+ * The active implementation keeps specialized child owners authoritative. */
+#if 0
 UmiStatus umi_build_delivery_pipeline_complete_deployment_step(
     UmiBuildDeliveryPipeline *pipeline,
     const char *step_id,
@@ -370,7 +682,29 @@ UmiStatus umi_build_delivery_pipeline_complete_deployment_step(
     }
     return status;
 }
+#endif
 
+UmiStatus umi_build_delivery_pipeline_complete_deployment_step(
+    UmiBuildDeliveryPipeline *pipeline,
+    const char *step_id,
+    int exit_code)
+{
+    UmiStatus status;
+    if (pipeline == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (pipeline->phase != UMI_BUILD_PIPELINE_DEPLOYMENT) return UMI_STATUS_INVALID_STATE;
+    if (pipeline->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = umi_build_deployment_controller_complete_step(
+        pipeline->deployment, step_id, exit_code);
+    if (status == UMI_STATUS_OK) {
+        refresh_deployment_phase(pipeline);
+        pipeline->revision += 1U;
+    }
+    return status;
+}
+
+/* Retained for review: keep step callbacks in the active deployment phase and reserve parent identity before child mutation.
+ * The active implementation keeps specialized child owners authoritative. */
+#if 0
 UmiStatus umi_build_delivery_pipeline_fail_deployment_step(
     UmiBuildDeliveryPipeline *pipeline,
     const char *step_id,
@@ -388,7 +722,31 @@ UmiStatus umi_build_delivery_pipeline_fail_deployment_step(
     }
     return result;
 }
+#endif
 
+UmiStatus umi_build_delivery_pipeline_fail_deployment_step(
+    UmiBuildDeliveryPipeline *pipeline,
+    const char *step_id,
+    UmiStatus status,
+    int exit_code,
+    const char *message)
+{
+    UmiStatus result;
+    if (pipeline == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (pipeline->phase != UMI_BUILD_PIPELINE_DEPLOYMENT) return UMI_STATUS_INVALID_STATE;
+    if (pipeline->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    result = umi_build_deployment_controller_fail_step(
+        pipeline->deployment, step_id, status, exit_code, message);
+    if (result == UMI_STATUS_OK) {
+        refresh_deployment_phase(pipeline);
+        pipeline->revision += 1U;
+    }
+    return result;
+}
+
+/* Retained for review: the former stop path changed state on refusal and reported cancellation before running children drained.
+ * The active implementation keeps specialized child owners authoritative. */
+#if 0
 UmiStatus umi_build_delivery_pipeline_request_stop(
     UmiBuildDeliveryPipeline *pipeline)
 {
@@ -409,7 +767,38 @@ UmiStatus umi_build_delivery_pipeline_request_stop(
     }
     return status;
 }
+#endif
 
+UmiStatus umi_build_delivery_pipeline_request_stop(
+    UmiBuildDeliveryPipeline *pipeline)
+{
+    UmiStatus status;
+    if (pipeline == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (pipeline->phase != UMI_BUILD_PIPELINE_TASKS &&
+        pipeline->phase != UMI_BUILD_PIPELINE_DEPLOYMENT) return UMI_STATUS_INVALID_STATE;
+    if (pipeline->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (pipeline->phase == UMI_BUILD_PIPELINE_TASKS) {
+        status = umi_build_task_orchestrator_request_stop(pipeline->tasks);
+    } else if (pipeline->phase == UMI_BUILD_PIPELINE_DEPLOYMENT) {
+        status = umi_build_deployment_controller_request_stop(
+            pipeline->deployment);
+    } else {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    if (status == UMI_STATUS_OK) {
+        /* A request stops scheduling. Running children still need completion
+         * callbacks before their owner can report a terminal outcome. */
+        pipeline->stop_requested = 1;
+        if (pipeline->phase == UMI_BUILD_PIPELINE_TASKS) refresh_task_phase(pipeline);
+        else refresh_deployment_phase(pipeline);
+        pipeline->revision += 1U;
+    }
+    return status;
+}
+
+/* Retained for review: a failed nested observation must not overwrite a caller's accepted display with partial data.
+ * The active implementation keeps specialized child owners authoritative. */
+#if 0
 UmiStatus umi_build_delivery_pipeline_snapshot(
     const UmiBuildDeliveryPipeline *pipeline,
     UmiBuildDeliveryPipelineSnapshot *out_snapshot)
@@ -442,6 +831,44 @@ UmiStatus umi_build_delivery_pipeline_snapshot(
     if (status != UMI_STATUS_OK) return status;
     return umi_build_deployment_controller_snapshot(
         pipeline->deployment, &out_snapshot->deployment);
+}
+#endif
+
+UmiStatus umi_build_delivery_pipeline_snapshot(
+    const UmiBuildDeliveryPipeline *pipeline,
+    UmiBuildDeliveryPipelineSnapshot *out_snapshot)
+{
+    UmiStatus status;
+    if (pipeline == NULL || out_snapshot == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    UmiBuildDeliveryPipelineSnapshot candidate;
+    (void)memset(&candidate, 0, sizeof candidate);
+    candidate.structure_size = (uint32_t)sizeof(candidate);
+    candidate.api_version = UMI_BUILD_PIPELINE_API_VERSION;
+    copy_text(candidate.pipeline_id, sizeof(candidate.pipeline_id),
+              pipeline->pipeline_id);
+    candidate.phase = pipeline->phase;
+    candidate.generation = pipeline->generation;
+    candidate.revision = pipeline->revision;
+    candidate.task_plan_available = pipeline->task_plan_available;
+    candidate.deployment_plan_available =
+        pipeline->deployment_plan_available;
+    candidate.stop_requested = pipeline->stop_requested;
+    candidate.available = 1;
+    status = umi_build_incremental_planner_snapshot(
+        pipeline->incremental, &candidate.incremental);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_build_task_orchestrator_snapshot(
+        pipeline->tasks, &candidate.tasks);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_build_artifact_manifest_registry_snapshot(
+        pipeline->artifacts, &candidate.artifacts);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_build_deployment_controller_snapshot(
+        pipeline->deployment, &candidate.deployment);
+    if (status == UMI_STATUS_OK) *out_snapshot = candidate;
+    return status;
 }
 
 UmiBuildIncrementalPlanner *umi_build_delivery_pipeline_incremental(

@@ -1,13 +1,21 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/base/value_archive_internal.h
- * PURPOSE: Share byte-order, bounds and publication rules across typed state codecs.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Share byte-order, bounds and publication rules across typed state codecs.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_VALUE_ARCHIVE_INTERNAL_H
 #define UMICOM_VALUE_ARCHIVE_INTERNAL_H
+#include "storage_internal.h"
 #include "umicom/base/value_archive.h"
 #include <stdbool.h>
 #include <float.h>
@@ -213,12 +221,20 @@ UmiStatus Decode(const void *bytes, size_t byte_count, Record *value) \
  * Keep staging in caller-owned, correctly aligned record storage. Address
  * distances follow the existing Framework overlap convention and avoid forming
  * an end pointer that could overflow before a malformed request is refused. */
+/* The shared storage predicate now owns this unchanged address-distance rule. Keep the archive wrapper and prior implementation for compatibility and engineering review. The previous implementation is retained for review. */
+#if 0
 static inline bool UmiArchiveStorageOverlaps(const void *left, size_t left_size,
     const void *right, size_t right_size)
 {
     if (left_size == 0U || right_size == 0U) return false;
     uintptr_t a = (uintptr_t)left, b = (uintptr_t)right;
     return a <= b ? b - a < left_size : a - b < right_size;
+}
+#endif
+static inline bool UmiArchiveStorageOverlaps(const void *left, size_t left_size,
+    const void *right, size_t right_size)
+{
+    return UmiStorageOverlaps(left, left_size, right, right_size);
 }
 
 /* Workspace is scratch, never a live owner. Validate the complete envelope

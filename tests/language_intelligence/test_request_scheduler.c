@@ -1,7 +1,10 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/language_intelligence/test_request_scheduler.c
- * PURPOSE: Focused regression test for request scheduler.
+ *
+ * PURPOSE:
+ *   Focused regression test for request scheduler.
+ *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
  * Umicom Foundation
@@ -161,6 +164,8 @@ static void ArchiveFillUnusedText(UmiLanguageIntelligenceRequestScheduler *value
 #define ARCHIVE_WORKSPACE_DECODE umi_language_intelligence_request_scheduler_archive_decode_with_workspace
 /* Exercise guarded import through this domain's public snapshot codec. */
 #define ARCHIVE_CONDITIONAL_DECODE umi_language_intelligence_request_scheduler_archive_decode_if_unchanged
+/* Exercise canonical comparison with explicit caller-owned scratch. */
+#define ARCHIVE_COMPARE umi_language_intelligence_request_scheduler_archive_compare_with_workspace
 #define ARCHIVE_EQUAL RecordDefaultsEqual
 #include "../value_archive/record_cases.h"
 

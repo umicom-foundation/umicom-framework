@@ -333,3 +333,10 @@ UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_language_folding_range_snapshot_archive_decod
  * since the caller inspected the collection and allocates no staging copy. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_CLEAR(umi_language_folding_range_registry_clear_if_current,
     UmiLanguageFoldingRangeRegistry, UMI_LANGUAGE_FOLDING_RANGE_CAPACITY)
+
+/* Compare through this owner's validated codec so native review uses the
+ * same fields as persistence. Caller-owned scratch avoids per-call allocation;
+ * an equal observation remains separate from revision-checked publication. */
+#include "../base/value_compare_internal.h"
+UMI_DEFINE_VALUE_COMPARE(umi_language_folding_range_snapshot_archive_compare_with_workspace,
+    UmiLanguageFoldingRangeSnapshot, umi_language_folding_range_snapshot_archive_encode)

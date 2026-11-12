@@ -23,6 +23,12 @@
 #define UMICOM_UI_COMPONENTS_COMMAND_H
 #include "umicom/base/status.h"
 #include "umicom/ui/components/component.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define UMI_UI_COMPONENT_COMMAND_CAPACITY 128U
 /**
  * Represent the ui component command binding data shared with callers of this public
@@ -34,4 +40,8 @@ typedef struct UmiUiComponentCommandBinding { char component_id[UMI_UI_COMPONENT
  * applications.
  */
 UmiStatus umi_ui_component_command_bind(UmiUiComponentCommandBinding *binding,const char *component_id,const char *command_id);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

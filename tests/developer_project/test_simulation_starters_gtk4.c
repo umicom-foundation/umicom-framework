@@ -16,6 +16,7 @@
 #include "umicom/ui/gtk4/developer_dialog.h"
 #include "umicom/ui/gtk4/automation.h"
 #include "umicom/platform/filesystem.h"
+#include "creation_wait.h"
 #include <glib/gstdio.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,6 +52,7 @@ static GtkWindow *Form(GtkWindow *parent)
 int main(int argc, char **argv)
 {
     int result = EXIT_SUCCESS, ownsProject = 0;
+    int creationSettled = 1;
     int vhdl, cancel;
     UmiGtk4DeveloperDialog *dialog = NULL;
     GtkWindow *parent = NULL, *form = NULL;
@@ -98,7 +100,10 @@ int main(int argc, char **argv)
     } else {
         /* This invokes the registered GTK signal, not the generator directly. */
         ownsProject = 1;
+        creationSettled = 0;
         g_signal_emit_by_name(accept, "clicked");
+        creationSettled = UmiTestProjectCreationWait(form);
+        CHECK(creationSettled);
         CHECK(capture.count == 1U);
         CHECK(!gtk_widget_get_visible(GTK_WIDGET(form)));
         CHECK(umi_fs_is_file(source) && !umi_fs_exists(build));
@@ -130,9 +135,17 @@ done:
     if (form != NULL) g_object_unref(form);
     if (parent != NULL) { gtk_window_destroy(parent); g_object_unref(parent); }
     /* Only the unique fixture subtree created above belongs to this test. */
+/* A timed-out writer may still own its fixture. Preserve that directory instead of racing cleanup. The previous implementation is retained for review. */
+#if 0
     if (ownsProject && umi_fs_exists(project) && umi_fs_remove_tree(project) != UMI_STATUS_OK)
         result = EXIT_FAILURE;
     if (temporary != NULL && g_rmdir(temporary) != 0) result = EXIT_FAILURE;
+
+#endif
+    if (creationSettled && ownsProject && umi_fs_exists(project) && umi_fs_remove_tree(project) != UMI_STATUS_OK)
+        result = EXIT_FAILURE;
+    if (creationSettled && temporary != NULL && g_rmdir(temporary) != 0) result = EXIT_FAILURE;
+
     g_free(build); g_free(source); g_free(project); g_free(temporary);
     return result;
 }

@@ -53,7 +53,15 @@ UmiStatus umi_position_apply_fill(UmiPosition *position,
         side == UMI_SIDE_BUY ? quantity : -quantity;
     const double old_quantity = position->quantity;
     const double next_quantity = old_quantity + signed_quantity;
+/* Retain the finite-only admission check for review. The active check also refuses a lost signed quantity increment before either position or P&L publication. The previous implementation is retained for review. */
+#if 0
     if (!isfinite(next_quantity)) return UMI_STATUS_CAPACITY_EXCEEDED;
+#endif
+    /* A nonzero fill must change the represented position. Otherwise a close
+     * could book realised P&L without reducing exposure, or an increase could
+     * acknowledge quantity that is absent from the published position. */
+    if (!isfinite(next_quantity) || next_quantity == old_quantity)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
 
     const int same_direction =
         old_quantity == 0.0 ||

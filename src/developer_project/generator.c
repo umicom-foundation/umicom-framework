@@ -56,6 +56,11 @@ static UmiStatus ensure_parent_directory(
  * Perform developer project generator through the module contract so client applications
  * do not duplicate its policy.
  */
+/* The prior generator is preserved for review. The active implementation
+ * refreshes attempt reports and admits every joined path before effects.
+ * Existing skip/overwrite behavior remains; I/O rollback and concurrent
+ * writer isolation are not provided by this preflight. */
+#if 0
 UmiStatus umi_developer_project_generator_apply(
     const UmiDeveloperProjectGeneratorRequest *request,
     UmiDeveloperProjectGeneratorReport *out_report)
@@ -80,6 +85,95 @@ UmiStatus umi_developer_project_generator_apply(
 
     (void)memset(report, 0, sizeof(*report));
     report->dry_run = request->dry_run != 0;
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (!request->dry_run &&
+        !umi_fs_is_directory(request->plan->project_root)) {
+        status = umi_fs_make_directories(request->plan->project_root);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+        report->directories_created += 1U;
+    }
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < request->plan->file_count; ++index) {
+        const UmiDeveloperProjectGeneratedFile *file =
+            &request->plan->files[index];
+        char destination[UMI_DEVELOPER_PROJECT_PATH_CAPACITY];
+
+        status = umi_fs_join(
+            destination,
+            sizeof(destination),
+            request->plan->project_root,
+            file->relative_path);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (umi_fs_exists(destination) &&
+            !request->overwrite_existing_files) {
+            report->files_skipped += 1U;
+            continue;
+        }
+
+        status = ensure_parent_directory(
+            destination,
+            report,
+            request->dry_run);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (!request->dry_run) {
+            status = umi_fs_write_text(destination, file->content);
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
+            if (status != UMI_STATUS_OK) return status;
+        }
+
+        report->files_created += 1U;
+        report->bytes_written += strlen(file->content);
+    }
+
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_developer_project_generator_apply(
+    const UmiDeveloperProjectGeneratorRequest *request,
+    UmiDeveloperProjectGeneratorReport *out_report)
+{
+    UmiDeveloperProjectGeneratorReport local_report;
+    UmiDeveloperProjectGeneratorReport *report =
+        out_report != NULL ? out_report : &local_report;
+    size_t index;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    /* Each attempt owns a fresh observation, including admission refusal.
+     * As with the plan, the caller must not alias writable report storage with
+     * the request, and must serialize concurrent mutations through this call. */
+    (void)memset(report, 0, sizeof(*report));
+    if (request == NULL || request->plan == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    report->dry_run = request->dry_run != 0;
+
+    status = umi_developer_project_generation_plan_validate(request->plan);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    /* Admit every joined destination before any directory creation. A late
+     * path-capacity failure must not leave earlier generated files behind.
+     * This is a syntax preflight, not a filesystem transaction or reservation. */
+    for (index = 0U; index < request->plan->file_count; ++index) {
+        char destination[UMI_DEVELOPER_PROJECT_PATH_CAPACITY];
+        status = umi_fs_join(destination, sizeof destination,
+            request->plan->project_root, request->plan->files[index].relative_path);
+        if (status != UMI_STATUS_OK) return status;
+    }
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (!request->dry_run &&

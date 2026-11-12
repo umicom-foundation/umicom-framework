@@ -1,15 +1,17 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/setup_centre/cli.c
+ *
  * PURPOSE:
- *   Native CLI over the same reviewed contracts as the graphical setup tool.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Expose reviewed setup contracts and precise media output semantics.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Native CLI over the same reviewed contracts as the graphical setup tool. */
-
 #include "internal.h"
 #include <inttypes.h>
 static void Help(void)
@@ -27,7 +29,9 @@ static void Help(void)
     "  media-stage --kernel ABSOLUTE --initrd ABSOLUTE --output NEW_ABSOLUTE\n"
     "  media-iso --prepared ABSOLUTE --grub ABSOLUTE --output NEW_ABSOLUTE\n"
     "No raw USB writing, optical burning, automatic downloading or scripts.\n"
-    "vm-run/media-iso require the canonical process adapter in this build.");
+    "vm-run/media-iso require the canonical process adapter in this build.\n"
+    "media-stage and media-iso --output name NEW DIRECTORIES.\n"
+    "media-iso creates UmicomOS.iso inside its output directory and requires native Linux GRUB.");
 
 }
 

@@ -890,3 +890,13 @@ if(BUILD_TESTING)
         endif()
     endforeach()
 endif()
+
+# Operational books share bounded admission and publish complete observations.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomTreasuryOperationalChecks.cmake")
+
+install(FILES
+    "${CMAKE_CURRENT_LIST_DIR}/../examples/treasury_observations/main.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../examples/treasury_observations/CMakeLists.txt"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/examples/treasury_observations COMPONENT Learning)
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/treasury-observations.html"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/learning COMPONENT Learning)

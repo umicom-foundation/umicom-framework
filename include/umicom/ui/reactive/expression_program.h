@@ -36,6 +36,10 @@ void umi_ui_reactive_expression_program_init(UmiUiReactiveExpressionProgram *ite
  * Check that ui reactive expression program satisfies its contract before another service
  * relies on it.
  */
+/* Validate storage extent only: count must fit both arrays, and zero is valid.
+ * This does not interpret opcodes, validate stack effects or execute anything.
+ * The record has no public opcode vocabulary; consumers need a separate,
+ * explicitly defined execution contract before treating it as runnable code. */
 int umi_ui_reactive_expression_program_valid(const UmiUiReactiveExpressionProgram *item);
 #ifdef __cplusplus
 }

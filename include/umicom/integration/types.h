@@ -26,6 +26,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define UMI_INTEGRATION_ID_CAPACITY 128U
 #define UMI_INTEGRATION_NAME_CAPACITY 192U
 #define UMI_INTEGRATION_PATH_CAPACITY 512U
@@ -94,4 +100,8 @@ const char *umi_integration_application_state_text(
  */
 const char *umi_integration_message_kind_text(UmiIntegrationMessageKind kind);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -18,6 +18,12 @@ static void Help(void) {
     puts("Umicom native OS image tool\n" "  prepare --os ABS --framework ABS --buildroot ABS --output NEW --arch riscv64|x86_64 --git ABS\n" "  configure --output ABS --make ABS\n" "  build --output ABS --make ABS [--jobs 2]\n" "  legal-info --output ABS --make ABS\n" "  pack --output ABS --bundle NEW\n" "  verify --bundle ABS\n" "  boot --bundle ABS --qemu ABS --mode normal|recovery --result NEW [--timeout 90]\n" "  firmware --file ABS --sha256 SHA256 --bytes NUMBER\n" "  boot accepts --firmware ABS --sha256 SHA256 --bytes NUMBER for RISC-V\n" "  profile --file ABS\n" "  archive --file ABS\n" "  elf --file ABS --arch riscv64|x86_64\n" "  kernel --file ABS --arch riscv64|x86_64\n" "  assess --file ABS --source SHA256 --mode normal|recovery --exit NUMBER\n" "  --self-test\n" "All outputs are new paths. No disk writer, mount, network client or shell feature.\n" "prepare/configure/build run on Linux/WSL. Buildroot itself needs its normal host tools.\n" "archive accepts canonical newc or native stored-gzip; it never extracts.\n" "assess checks supplied text only; it never establishes that QEMU ran.");
 }
 int UmiOsImageMainWithCancellation(int argc,char **argv,const UmiCancellationToken *cancel) {
+    /* Native hosts call this service directly, so executable startup guarantees
+     * do not suffice. Refuse the complete counted vector before help, option
+     * parsing, file inspection or process dispatch. No sentinel is required
+     * beyond argc; callers retain each terminated string for this call. */
+    if (argc < 1 || argv == NULL) return 2;
+    for (int i = 0; i < argc; ++i) if (argv[i] == NULL) return 2;
     if(argc==2&&!strcmp(argv[1],"--help")) {
         Help();
         return 0;

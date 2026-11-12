@@ -15,6 +15,12 @@
 #ifndef UMICOM_SECURITY_PERMISSION_CATALOGUE_H
 #define UMICOM_SECURITY_PERMISSION_CATALOGUE_H
 #include "umicom/security/governance.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the security permission descriptor data shared with callers of this public
  * contract.
@@ -41,4 +47,8 @@ UmiStatus umi_security_permission_catalogue_register(UmiSecurityPermissionCatalo
  * by this module.
  */
 const UmiSecurityPermissionDescriptor *umi_security_permission_catalogue_find(const UmiSecurityPermissionCatalogue *catalogue,const char *name);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

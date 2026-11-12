@@ -67,6 +67,39 @@ endfunction()
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/templates/brand.html.in")
 
+
+include("${CMAKE_CURRENT_SOURCE_DIR}/GuideBranding.cmake")
+function(UmiSiteCopyGuide input destination)
+    get_filename_component(_directory "${destination}" DIRECTORY)
+    file(RELATIVE_PATH _relative "${_directory}" "${UMICOM_SITE_OUTPUT}/assets/brand")
+    file(RELATIVE_PATH _page "${UMICOM_SITE_OUTPUT}" "${destination}")
+    if(_page MATCHES "^[.][.]" OR IS_ABSOLUTE "${_page}")
+        message(FATAL_ERROR "Guide destination is outside the website: ${destination}")
+    endif()
+    file(READ "${input}" _guide)
+    file(SHA256 "${_umicom_brand_root}/umicom.ico" _ico_sha)
+    # Retain the previous dark-only route for review. The selected source
+    # surface now determines the canonical filename and matching digest.
+    if(FALSE)
+    file(SHA256 "${_umicom_brand_root}/umicom-logo-on-dark.svg" _logo_sha)
+    UmiSiteGuideBranding("${_guide}" "${_relative}/" "${_ico_sha}" "${_logo_sha}" _published _status)
+    endif()
+    set(_logo_file "umicom-logo-on-dark.svg")
+    string(FIND "${_guide}" "data-umicom-guide-surface=\"light\"" _light_surface)
+    if(NOT _light_surface LESS 0)
+        set(_logo_file "umicom-logo.svg")
+    endif()
+    file(SHA256 "${_umicom_brand_root}/${_logo_file}" _logo_sha)
+    UmiSiteGuideBranding("${_guide}" "${_relative}/" "${_ico_sha}" "${_logo_sha}" _published _status "${_logo_file}")
+    if(NOT _status STREQUAL "ok")
+        message(FATAL_ERROR "Review standalone guide branding (${_status}): ${input}")
+    endif()
+    set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${input}")
+    file(MAKE_DIRECTORY "${_directory}")
+    file(WRITE "${destination}" "${_published}")
+    set_property(GLOBAL APPEND PROPERTY UMICOM_SITE_COPIED_GUIDES "${_page}")
+endfunction()
+
 # HTML examples use the real source file, not a hand-maintained website copy.
 function(UmiSiteEscape input output)
     string(REPLACE "&" "&amp;" _text "${input}")
@@ -135,24 +168,39 @@ set(_gui_recording_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/gui_recording
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_gui_recording_example}")
 file(READ "${_gui_recording_example}" _example)
 UmiSiteEscape("${_example}" UMICOM_SITE_GUI_RECORDING_EXAMPLE)
-configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/GUI_RECORDING.html"
-    "${UMICOM_SITE_OUTPUT}/GUI_RECORDING.html" COPYONLY)
+# The shared guide path admits identity and records coverage for publication checks.
+# Retain the former raw copy for engineering review.
+if(FALSE)
+    configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/GUI_RECORDING.html"
+        "${UMICOM_SITE_OUTPUT}/GUI_RECORDING.html" COPYONLY)
+endif()
+UmiSiteCopyGuide("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/GUI_RECORDING.html" "${UMICOM_SITE_OUTPUT}/GUI_RECORDING.html")
 
 # Embed the compiled Notes map instead of maintaining another source snippet.
 set(_control_checks_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/gui_recording/control_checks.c")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_control_checks_example}")
 file(READ "${_control_checks_example}" _example)
 UmiSiteEscape("${_example}" UMICOM_SITE_CONTROL_CHECKS_EXAMPLE)
-configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/GUI_CONTROL_CHECKS.html"
-    "${UMICOM_SITE_OUTPUT}/GUI_CONTROL_CHECKS.html" COPYONLY)
+# The shared guide path admits identity and records coverage for publication checks.
+# Retain the former raw copy for engineering review.
+if(FALSE)
+    configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/GUI_CONTROL_CHECKS.html"
+        "${UMICOM_SITE_OUTPUT}/GUI_CONTROL_CHECKS.html" COPYONLY)
+endif()
+UmiSiteCopyGuide("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/GUI_CONTROL_CHECKS.html" "${UMICOM_SITE_OUTPUT}/GUI_CONTROL_CHECKS.html")
 
 # The session walkthrough uses the actual compiled Notes example.
 set(_check_sessions_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/gui_recording/check_sessions.c")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_check_sessions_example}")
 file(READ "${_check_sessions_example}" _example)
 UmiSiteEscape("${_example}" UMICOM_SITE_CHECK_SESSIONS_EXAMPLE)
-configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/GUI_CHECK_SESSIONS.html"
-    "${UMICOM_SITE_OUTPUT}/GUI_CHECK_SESSIONS.html" COPYONLY)
+# The shared guide path admits identity and records coverage for publication checks.
+# Retain the former raw copy for engineering review.
+if(FALSE)
+    configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/GUI_CHECK_SESSIONS.html"
+        "${UMICOM_SITE_OUTPUT}/GUI_CHECK_SESSIONS.html" COPYONLY)
+endif()
+UmiSiteCopyGuide("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/GUI_CHECK_SESSIONS.html" "${UMICOM_SITE_OUTPUT}/GUI_CHECK_SESSIONS.html")
 
 # Read the compiled recovery example rather than maintaining a second API sample.
 set(_action_recovery_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/action_recovery/main.c")
@@ -165,16 +213,26 @@ set(_command_feedback_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/command_fe
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_command_feedback_example}")
 file(READ "${_command_feedback_example}" _example)
 UmiSiteEscape("${_example}" UMICOM_SITE_COMMAND_FEEDBACK_EXAMPLE)
-configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/COMMAND_FEEDBACK.html"
-    "${UMICOM_SITE_OUTPUT}/COMMAND_FEEDBACK.html" COPYONLY)
+# The shared guide path admits identity and records coverage for publication checks.
+# Retain the former raw copy for engineering review.
+if(FALSE)
+    configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/COMMAND_FEEDBACK.html"
+        "${UMICOM_SITE_OUTPUT}/COMMAND_FEEDBACK.html" COPYONLY)
+endif()
+UmiSiteCopyGuide("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/COMMAND_FEEDBACK.html" "${UMICOM_SITE_OUTPUT}/COMMAND_FEEDBACK.html")
 
 # Keep the editing walkthrough tied to the actual compiled example.
 set(_editing_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/editor_workflow/edit_commands.c")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_editing_example}")
 file(READ "${_editing_example}" _example)
 UmiSiteEscape("${_example}" UMICOM_SITE_EDIT_COMMANDS_EXAMPLE)
-configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/EDITING_DOCUMENTS.html"
-    "${UMICOM_SITE_OUTPUT}/EDITING_DOCUMENTS.html" COPYONLY)
+# The shared guide path admits identity and records coverage for publication checks.
+# Retain the former raw copy for engineering review.
+if(FALSE)
+    configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/EDITING_DOCUMENTS.html"
+        "${UMICOM_SITE_OUTPUT}/EDITING_DOCUMENTS.html" COPYONLY)
+endif()
+UmiSiteCopyGuide("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/EDITING_DOCUMENTS.html" "${UMICOM_SITE_OUTPUT}/EDITING_DOCUMENTS.html")
 
 # Read the executable navigation example directly into its Wiki lesson.
 set(_navigation_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/editor_workflow/navigation.c")
@@ -187,16 +245,26 @@ set(_saving_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/editor_workflow/save
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_saving_example}")
 file(READ "${_saving_example}" _example)
 UmiSiteEscape("${_example}" UMICOM_SITE_SAVE_ALL_EXAMPLE)
-configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/SAVING_DOCUMENTS.html"
-    "${UMICOM_SITE_OUTPUT}/SAVING_DOCUMENTS.html" COPYONLY)
+# The shared guide path admits identity and records coverage for publication checks.
+# Retain the former raw copy for engineering review.
+if(FALSE)
+    configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/SAVING_DOCUMENTS.html"
+        "${UMICOM_SITE_OUTPUT}/SAVING_DOCUMENTS.html" COPYONLY)
+endif()
+UmiSiteCopyGuide("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/SAVING_DOCUMENTS.html" "${UMICOM_SITE_OUTPUT}/SAVING_DOCUMENTS.html")
 
 # Keep workflow teaching tied to the actual executable source.
 set(_workflow_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/workflow_tools/main.c")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_workflow_example}")
 file(READ "${_workflow_example}" _example)
 UmiSiteEscape("${_example}" UMICOM_SITE_WORKFLOW_TOOLS_EXAMPLE)
-configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/WORKFLOW_TOOLS.html"
-    "${UMICOM_SITE_OUTPUT}/WORKFLOW_TOOLS.html" COPYONLY)
+# The shared guide path admits identity and records coverage for publication checks.
+# Retain the former raw copy for engineering review.
+if(FALSE)
+    configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/WORKFLOW_TOOLS.html"
+        "${UMICOM_SITE_OUTPUT}/WORKFLOW_TOOLS.html" COPYONLY)
+endif()
+UmiSiteCopyGuide("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/WORKFLOW_TOOLS.html" "${UMICOM_SITE_OUTPUT}/WORKFLOW_TOOLS.html")
 
 # Compile and publish one canonical progress example; the Wiki includes its source.
 set(_save_progress_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/editor_workflow/save_progress.c")
@@ -209,24 +277,39 @@ set(_close_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/editor_workflow/close
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_close_example}")
 file(READ "${_close_example}" _example)
 UmiSiteEscape("${_example}" UMICOM_SITE_CLOSE_EXAMPLE)
-configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/CLOSING_DOCUMENTS.html"
-    "${UMICOM_SITE_OUTPUT}/CLOSING_DOCUMENTS.html" COPYONLY)
+# The shared guide path admits identity and records coverage for publication checks.
+# Retain the former raw copy for engineering review.
+if(FALSE)
+    configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/CLOSING_DOCUMENTS.html"
+        "${UMICOM_SITE_OUTPUT}/CLOSING_DOCUMENTS.html" COPYONLY)
+endif()
+UmiSiteCopyGuide("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/CLOSING_DOCUMENTS.html" "${UMICOM_SITE_OUTPUT}/CLOSING_DOCUMENTS.html")
 
 # Embed the same group-close example that is compiled by tests and SDK users.
 set(_close_sequence_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/editor_workflow/close_documents.c")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_close_sequence_example}")
 file(READ "${_close_sequence_example}" _example)
 UmiSiteEscape("${_example}" UMICOM_SITE_CLOSE_SEQUENCE_EXAMPLE)
-configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/CLOSING_MULTIPLE_DOCUMENTS.html"
-    "${UMICOM_SITE_OUTPUT}/CLOSING_MULTIPLE_DOCUMENTS.html" COPYONLY)
+# The shared guide path admits identity and records coverage for publication checks.
+# Retain the former raw copy for engineering review.
+if(FALSE)
+    configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/CLOSING_MULTIPLE_DOCUMENTS.html"
+        "${UMICOM_SITE_OUTPUT}/CLOSING_MULTIPLE_DOCUMENTS.html" COPYONLY)
+endif()
+UmiSiteCopyGuide("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/CLOSING_MULTIPLE_DOCUMENTS.html" "${UMICOM_SITE_OUTPUT}/CLOSING_MULTIPLE_DOCUMENTS.html")
 
 # Keep the development lesson's example compiled and displayed from one source.
 set(_development_workflow_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/development_workflow/main.c")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_development_workflow_example}")
 file(READ "${_development_workflow_example}" _example)
 UmiSiteEscape("${_example}" UMICOM_SITE_DEVELOPMENT_WORKFLOW_EXAMPLE)
-configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/DEVELOPMENT_WORKFLOW.html"
-    "${UMICOM_SITE_OUTPUT}/DEVELOPMENT_WORKFLOW.html" COPYONLY)
+# The shared guide path admits identity and records coverage for publication checks.
+# Retain the former raw copy for engineering review.
+if(FALSE)
+    configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/DEVELOPMENT_WORKFLOW.html"
+        "${UMICOM_SITE_OUTPUT}/DEVELOPMENT_WORKFLOW.html" COPYONLY)
+endif()
+UmiSiteCopyGuide("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/DEVELOPMENT_WORKFLOW.html" "${UMICOM_SITE_OUTPUT}/DEVELOPMENT_WORKFLOW.html")
 
 # This is a file inventory, not a second C parser or a runtime module registry.
 file(GLOB_RECURSE _headers CONFIGURE_DEPENDS LIST_DIRECTORIES FALSE
@@ -262,8 +345,13 @@ set(_editor_link_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/editor_workflow
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_editor_link_example}")
 file(READ "${_editor_link_example}" _example)
 UmiSiteEscape("${_example}" UMICOM_SITE_EDITOR_LINK_EXAMPLE)
-configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/LIBRARY_LINK_CHECKS.html"
-    "${UMICOM_SITE_OUTPUT}/LIBRARY_LINK_CHECKS.html" COPYONLY)
+# The shared guide path admits identity and records coverage for publication checks.
+# Retain the former raw copy for engineering review.
+if(FALSE)
+    configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/LIBRARY_LINK_CHECKS.html"
+        "${UMICOM_SITE_OUTPUT}/LIBRARY_LINK_CHECKS.html" COPYONLY)
+endif()
+UmiSiteCopyGuide("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/LIBRARY_LINK_CHECKS.html" "${UMICOM_SITE_OUTPUT}/LIBRARY_LINK_CHECKS.html")
 
 # Include the actual SDK caller so the guide cannot silently drift from its source.
 set(_local_document_example "${UMICOM_SITE_FRAMEWORK_ROOT}/examples/document_preview/main.c")
@@ -301,25 +389,70 @@ foreach(_product IN LISTS _product_names)
     UmiSiteConfigurePage("${_page}" "${UMICOM_SITE_OUTPUT}/${_product}/index.html")
 endforeach()
 # Reuse established tutorials and the full build/run/install/Git guide in output.
-configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/COMPARING_SAVED_FILES.html"
-    "${UMICOM_SITE_OUTPUT}/studio/COMPARING_SAVED_FILES.html" COPYONLY)
-configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/RELOADING_FILES.html"
-    "${UMICOM_SITE_OUTPUT}/studio/RELOADING_FILES.html" COPYONLY)
-configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/FIND_IN_FILES.html"
-    "${UMICOM_SITE_OUTPUT}/studio/FIND_IN_FILES.html" COPYONLY)
-configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/PROJECT_FILES.html"
-    "${UMICOM_SITE_OUTPUT}/studio/PROJECT_FILES.html" COPYONLY)
-configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/EDITING_FILES.html"
-    "${UMICOM_SITE_OUTPUT}/studio/EDITING_FILES.html" COPYONLY)
-configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/READING_BUILD_ERRORS.html"
-    "${UMICOM_SITE_OUTPUT}/studio/READING_BUILD_ERRORS.html" COPYONLY)
-configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/docs/getting-started/BUILDING_STUDIO.html"
-    "${UMICOM_SITE_OUTPUT}/build-and-publish.html" COPYONLY)
-configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/EDIT_COMMANDS.html"
-    "${UMICOM_SITE_OUTPUT}/studio/EDIT_COMMANDS.html" COPYONLY)
+# The shared guide path admits identity and records coverage for publication checks.
+# Retain the former raw copy for engineering review.
+if(FALSE)
+    configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/COMPARING_SAVED_FILES.html"
+        "${UMICOM_SITE_OUTPUT}/studio/COMPARING_SAVED_FILES.html" COPYONLY)
+endif()
+UmiSiteCopyGuide("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/COMPARING_SAVED_FILES.html" "${UMICOM_SITE_OUTPUT}/studio/COMPARING_SAVED_FILES.html")
+# The shared guide path admits identity and records coverage for publication checks.
+# Retain the former raw copy for engineering review.
+if(FALSE)
+    configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/RELOADING_FILES.html"
+        "${UMICOM_SITE_OUTPUT}/studio/RELOADING_FILES.html" COPYONLY)
+endif()
+UmiSiteCopyGuide("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/RELOADING_FILES.html" "${UMICOM_SITE_OUTPUT}/studio/RELOADING_FILES.html")
+# The shared guide path admits identity and records coverage for publication checks.
+# Retain the former raw copy for engineering review.
+if(FALSE)
+    configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/FIND_IN_FILES.html"
+        "${UMICOM_SITE_OUTPUT}/studio/FIND_IN_FILES.html" COPYONLY)
+endif()
+UmiSiteCopyGuide("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/FIND_IN_FILES.html" "${UMICOM_SITE_OUTPUT}/studio/FIND_IN_FILES.html")
+# The shared guide path admits identity and records coverage for publication checks.
+# Retain the former raw copy for engineering review.
+if(FALSE)
+    configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/PROJECT_FILES.html"
+        "${UMICOM_SITE_OUTPUT}/studio/PROJECT_FILES.html" COPYONLY)
+endif()
+UmiSiteCopyGuide("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/PROJECT_FILES.html" "${UMICOM_SITE_OUTPUT}/studio/PROJECT_FILES.html")
+# The shared guide path admits identity and records coverage for publication checks.
+# Retain the former raw copy for engineering review.
+if(FALSE)
+    configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/EDITING_FILES.html"
+        "${UMICOM_SITE_OUTPUT}/studio/EDITING_FILES.html" COPYONLY)
+endif()
+UmiSiteCopyGuide("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/EDITING_FILES.html" "${UMICOM_SITE_OUTPUT}/studio/EDITING_FILES.html")
+# The shared guide path admits identity and records coverage for publication checks.
+# Retain the former raw copy for engineering review.
+if(FALSE)
+    configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/READING_BUILD_ERRORS.html"
+        "${UMICOM_SITE_OUTPUT}/studio/READING_BUILD_ERRORS.html" COPYONLY)
+endif()
+UmiSiteCopyGuide("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/READING_BUILD_ERRORS.html" "${UMICOM_SITE_OUTPUT}/studio/READING_BUILD_ERRORS.html")
+# The shared guide path admits identity and records coverage for publication checks.
+# Retain the former raw copy for engineering review.
+if(FALSE)
+    configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/docs/getting-started/BUILDING_STUDIO.html"
+        "${UMICOM_SITE_OUTPUT}/build-and-publish.html" COPYONLY)
+endif()
+UmiSiteCopyGuide("${UMICOM_SITE_APPLICATIONS_ROOT}/docs/getting-started/BUILDING_STUDIO.html" "${UMICOM_SITE_OUTPUT}/build-and-publish.html")
+# The shared guide path admits identity and records coverage for publication checks.
+# Retain the former raw copy for engineering review.
+if(FALSE)
+    configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/EDIT_COMMANDS.html"
+        "${UMICOM_SITE_OUTPUT}/studio/EDIT_COMMANDS.html" COPYONLY)
+endif()
+UmiSiteCopyGuide("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/EDIT_COMMANDS.html" "${UMICOM_SITE_OUTPUT}/studio/EDIT_COMMANDS.html")
 foreach(_workflow_product IN ITEMS studio trader desktop bank tms)
+    # The shared guide path admits identity and records coverage for publication checks.
+# Retain the former raw copy for engineering review.
+if(FALSE)
     configure_file("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/${_workflow_product}/docs/WORKFLOW_TOOLS.html"
-        "${UMICOM_SITE_OUTPUT}/${_workflow_product}/WORKFLOW_TOOLS.html" COPYONLY)
+            "${UMICOM_SITE_OUTPUT}/${_workflow_product}/WORKFLOW_TOOLS.html" COPYONLY)
+endif()
+UmiSiteCopyGuide("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/${_workflow_product}/docs/WORKFLOW_TOOLS.html" "${UMICOM_SITE_OUTPUT}/${_workflow_product}/WORKFLOW_TOOLS.html")
 endforeach()
 file(WRITE "${UMICOM_SITE_OUTPUT}/.nojekyll" "")
 add_custom_target(umicom-website
@@ -372,6 +505,7 @@ add_custom_target(umicom-website-package
     VERBATIM)
 
 if(BUILD_TESTING)
+    get_property(_umicom_copied_guides GLOBAL PROPERTY UMICOM_SITE_COPIED_GUIDES)
     foreach(_case IN ITEMS pages catalogue examples exclusions products branding)
         add_test(NAME "documentation.site.${_case}"
             COMMAND "${CMAKE_COMMAND}"
@@ -381,7 +515,20 @@ if(BUILD_TESTING)
                 "-DSUITE=${UMICOM_SITE_APPLICATIONS_ROOT}"
                 "-DGIT_EXECUTABLE=${GIT_EXECUTABLE}"
                 "-DDOXYFILE=${CMAKE_CURRENT_BINARY_DIR}/Doxyfile"
+                "-DCOPIED_GUIDES=${_umicom_copied_guides}"
                 "-DCASE=${_case}" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_site.cmake")
     endforeach()
 endif()
 message(STATUS "Public source map: ${UMICOM_SITE_HEADER_COUNT} headers in ${UMICOM_SITE_FAMILY_COUNT} source families")
+
+# These checks exercise admission separately from the assembled-site checks.
+# They are registered for the owner to execute; authoring does not qualify output.
+if(BUILD_TESTING)
+    foreach(_case light invalid-variant valid nested missing-logo missing-icon missing-fonts duplicate-logo wrong-identity external-logo invalid-prefix retain-content)
+        add_test(NAME "documentation.site.guide-branding.${_case}"
+            COMMAND "${CMAKE_COMMAND}" "-DFRAMEWORK=${UMICOM_SITE_FRAMEWORK_ROOT}"
+                "-DCASE=${_case}" -P "${CMAKE_CURRENT_SOURCE_DIR}/check_guide_branding.cmake")
+        set_tests_properties("documentation.site.guide-branding.${_case}" PROPERTIES
+            TIMEOUT 30 LABELS "documentation;branding;regression")
+    endforeach()
+endif()

@@ -17,6 +17,12 @@
 #include "umicom/codeguard/evidence.h"
 #include "umicom/codeguard/api_baseline.h"
 #include "umicom/codeguard/duplicate_evidence.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the code guard quality policy data shared with callers of this public
  * contract.
@@ -51,4 +57,8 @@ void umi_codeguard_quality_policy_default(UmiCodeGuardQualityPolicy *policy);
  * applications.
  */
 UmiStatus umi_codeguard_quality_evaluate(const UmiCodeGuardQualityPolicy *policy,const UmiCodeGuardEvidenceStore *evidence,const UmiCodeGuardApiComparison *api,const UmiCodeGuardDuplicateReview *duplicates,UmiCodeGuardQualityEvaluation *out_evaluation);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

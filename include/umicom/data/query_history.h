@@ -15,6 +15,12 @@
 #ifndef UMICOM_DATA_QUERY_HISTORY_H
 #define UMICOM_DATA_QUERY_HISTORY_H
 #include "umicom/data/explorer_types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the database query record data shared with callers of this public contract.
  */
@@ -43,4 +49,8 @@ UmiStatus umi_database_query_history_at(const UmiDatabaseQueryHistory *history,s
  * safely.
  */
 void umi_database_query_history_clear(UmiDatabaseQueryHistory *history);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -15,6 +15,12 @@
 #ifndef UMICOM_INTEGRATION_API_CONTRACT_H
 #define UMICOM_INTEGRATION_API_CONTRACT_H
 #include "umicom/integration/designer_types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the integration api operation data shared with callers of this public
  * contract.
@@ -62,4 +68,8 @@ const UmiIntegrationApiOperation *umi_integration_api_contract_find_operation(co
  * on it.
  */
 UmiStatus umi_integration_api_contract_validate(const UmiIntegrationApiContract *contract,UmiIntegrationDesignerValidation *validation);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -15,6 +15,12 @@
 #ifndef UMICOM_INTEGRATION_SCHEMA_CATALOGUE_H
 #define UMICOM_INTEGRATION_SCHEMA_CATALOGUE_H
 #include "umicom/integration/designer_types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the integration schema descriptor data shared with callers of this public
  * contract.
@@ -50,4 +56,8 @@ const UmiIntegrationSchemaDescriptor *umi_integration_schema_catalogue_find(cons
  * applications.
  */
 bool umi_integration_schema_compatible(const UmiIntegrationSchemaDescriptor *provider,const UmiIntegrationSchemaDescriptor *consumer);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

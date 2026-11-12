@@ -17,6 +17,10 @@
 #include <ctype.h>
 #include <string.h>
 
+/* The earlier decoder accepted incomplete padding and ignored trailing data.
+ * Framework base now validates the complete encoding before writing output.
+ * Retain the original implementation below for review of compatibility. */
+#if 0
 /* Provide the value of operation used by this module and its client applications. */
 static int value_of(unsigned char value)
 {
@@ -93,4 +97,19 @@ UmiStatus umi_debug_runtime_base64_decode(
 
     *out_count = used;
     return UMI_STATUS_OK;
+}
+
+#endif
+
+#include "umicom/base/base64.h"
+
+UmiStatus umi_debug_runtime_base64_decode(const char *text,
+    unsigned char *out_bytes, size_t capacity, size_t *out_count)
+{
+    /* Keep the existing non-NULL output contract and ASCII whitespace support.
+     * Malformed encodings now fail atomically instead of exposing prefix bytes. */
+    if (text == NULL || out_bytes == NULL || out_count == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    return UmiBase64Decode(text, strlen(text),
+        UMI_BASE64_IGNORE_ASCII_WHITESPACE, out_bytes, capacity, out_count);
 }

@@ -55,9 +55,11 @@ typedef struct RootedParent
 #ifdef _WIN32
 #include "rooted_files_win32.inc"
 #include "rooted_create_win32.inc"
+#include "rooted_directory_win32.inc"
 #else
 #include "rooted_files_posix.inc"
 #include "rooted_create_posix.inc"
+#include "rooted_directory_posix.inc"
 #endif
 
 /* Roots are existing absolute directories, including drive/share roots.
@@ -241,4 +243,124 @@ UmiStatus UmiRootedFileCreate(const char *root, const char *relativePath,
     RootedDispose(parent);
     report->status = status;
     return status;
+}
+
+
+/* Project recipes can be reviewed before a root exists. Share the exact name
+ * admission used by native rooted operations without manufacturing a dummy
+ * root or performing I/O. */
+UmiStatus UmiRootedFileValidateRelativePath(const char *relativePath)
+{
+    char normalized[UMI_PATH_CAPACITY];
+    return ValidateRelative(relativePath, normalized);
+}
+
+static unsigned char RootedPortableFold(unsigned char value)
+{
+    return value >= 'A' && value <= 'Z' ? (unsigned char)(value + ('a' - 'A')) : value;
+}
+
+UmiStatus UmiRootedFileCompareRelativePaths(const char *first, const char *second,
+    UmiRootedPathRelation *outRelation)
+{
+    if (outRelation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    char left[UMI_PATH_CAPACITY], right[UMI_PATH_CAPACITY];
+    UmiStatus status = ValidateRelative(first, left);
+    if (status == UMI_STATUS_OK) status = ValidateRelative(second, right);
+    if (status != UMI_STATUS_OK) return status;
+    size_t index = 0U;
+    while (left[index] != '\0' && right[index] != '\0' &&
+        RootedPortableFold((unsigned char)left[index]) ==
+        RootedPortableFold((unsigned char)right[index])) ++index;
+    UmiRootedPathRelation relation = UMI_ROOTED_PATH_DISJOINT;
+    if (left[index] == '\0' && right[index] == '\0')
+        relation = UMI_ROOTED_PATH_EQUAL;
+    else if (left[index] == '\0' && right[index] == '/')
+        relation = UMI_ROOTED_PATH_FIRST_PARENT;
+    else if (right[index] == '\0' && left[index] == '/')
+        relation = UMI_ROOTED_PATH_SECOND_PARENT;
+    *outRelation = relation;
+    return UMI_STATUS_OK;
+}
+
+
+/* Retain the original Ensure wrapper. Both public operations now use one
+ * admission/allocation/report boundary with an explicit final-leaf policy. */
+#if 0
+/* Creation reuses the rooted file name/parent policy. It is a separate effect
+ * from file publication so clients can report partial directory progress and
+ * decide what to do next without hidden cleanup or recursive deletion. */
+UmiStatus UmiRootedDirectoryEnsure(const char *root, const char *relativePath,
+    UmiRootedDirectoryCreation *report)
+{
+    if (report == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *report = (UmiRootedDirectoryCreation){0};
+    report->status = UMI_STATUS_INVALID_ARGUMENT;
+    char normalized[UMI_PATH_CAPACITY], normalRoot[UMI_PATH_CAPACITY];
+    char joined[UMI_PATH_CAPACITY];
+    UmiStatus status = RootedValidateRoot(root);
+    if (status == UMI_STATUS_OK) status = ValidateRelative(relativePath, normalized);
+    if (status == UMI_STATUS_OK) status = umi_path_normalise(root, normalRoot, sizeof normalRoot);
+    if (status == UMI_STATUS_OK) status = umi_path_join(normalRoot, normalized, joined, sizeof joined);
+    RootedParent *parent = NULL;
+    if (status == UMI_STATUS_OK) {
+        parent = calloc(1U, sizeof *parent);
+        if (parent == NULL) status = UMI_STATUS_OUT_OF_MEMORY;
+    }
+    if (parent != NULL) {
+#ifndef _WIN32
+        parent->parent = -1;
+#endif
+        status = RootedEnsureDirectories(normalRoot, normalized, parent, report);
+        status = RootedDirectoryClose(parent, status);
+        free(parent);
+    }
+    report->status = status;
+    report->complete = status == UMI_STATUS_OK;
+    return status;
+}
+#endif
+
+/* Creation reuses the rooted file name/parent policy. It is a separate effect
+ * from file publication so clients can report partial directory progress and
+ * decide what to do next without hidden cleanup or recursive deletion. */
+static UmiStatus RootedDirectoryPrepare(const char *root, const char *relativePath,
+    UmiRootedDirectoryCreation *report, int exclusiveLeaf)
+{
+    if (report == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *report = (UmiRootedDirectoryCreation){0};
+    report->status = UMI_STATUS_INVALID_ARGUMENT;
+    char normalized[UMI_PATH_CAPACITY], normalRoot[UMI_PATH_CAPACITY];
+    char joined[UMI_PATH_CAPACITY];
+    UmiStatus status = RootedValidateRoot(root);
+    if (status == UMI_STATUS_OK) status = ValidateRelative(relativePath, normalized);
+    if (status == UMI_STATUS_OK) status = umi_path_normalise(root, normalRoot, sizeof normalRoot);
+    if (status == UMI_STATUS_OK) status = umi_path_join(normalRoot, normalized, joined, sizeof joined);
+    RootedParent *parent = NULL;
+    if (status == UMI_STATUS_OK) {
+        parent = calloc(1U, sizeof *parent);
+        if (parent == NULL) status = UMI_STATUS_OUT_OF_MEMORY;
+    }
+    if (parent != NULL) {
+#ifndef _WIN32
+        parent->parent = -1;
+#endif
+        status = RootedPrepareDirectories(normalRoot, normalized, parent, report, exclusiveLeaf);
+        status = RootedDirectoryClose(parent, status);
+        free(parent);
+    }
+    report->status = status;
+    report->complete = status == UMI_STATUS_OK;
+    return status;
+}
+
+UmiStatus UmiRootedDirectoryEnsure(const char *root, const char *relativePath,
+    UmiRootedDirectoryCreation *report)
+{
+    return RootedDirectoryPrepare(root, relativePath, report, 0);
+}
+UmiStatus UmiRootedDirectoryCreate(const char *root, const char *relativePath,
+    UmiRootedDirectoryCreation *report)
+{
+    return RootedDirectoryPrepare(root, relativePath, report, 1);
 }

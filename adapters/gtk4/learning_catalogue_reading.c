@@ -15,6 +15,7 @@
 
 #include "learning_catalogue_private.h"
 #include "umicom/ui/gtk4/drop_down.h"
+#include "umicom/ui/gtk4/reading_document.h"
 #include <string.h>
 
 static UmiStatus Ready(LearningCatalogue *owner)
@@ -23,11 +24,15 @@ static UmiStatus Ready(LearningCatalogue *owner)
     if (owner->state.retired) return UMI_STATUS_INVALID_STATE;
     return owner->state.busy ? UMI_STATUS_BUSY : UMI_STATUS_OK;
 }
+/* Preserve borrowed tag creation for comparison. Active fallback styling
+ * owns its tag before table notifications can remove it. */
+#if 0
 static GtkTextTag *TextTag(GtkTextBuffer *buffer, const char *name)
 {
     GtkTextTag *tag = gtk_text_tag_table_lookup(gtk_text_buffer_get_tag_table(buffer), name);
     return tag != NULL ? tag : gtk_text_buffer_create_tag(buffer, name, NULL);
 }
+#endif
 static void Range(GtkTextBuffer *buffer, const char *text, size_t start,
     size_t length, GtkTextIter *first, GtkTextIter *last)
 {
@@ -38,6 +43,10 @@ static void Range(GtkTextBuffer *buffer, const char *text, size_t start,
     gtk_text_buffer_get_iter_at_offset(buffer, first, (gint)begin);
     gtk_text_buffer_get_iter_at_offset(buffer, last, (gint)end);
 }
+/* Preserve the original panel-local projection for engineering review.
+ * The shared GTK reading component now owns Unicode admission, captured
+ * typography and notification-safe range application for all reading hosts. */
+#if 0
 static void ApplyReadingTags(LearningCatalogue *owner)
 {
     if (owner->state.retired) return;
@@ -91,6 +100,63 @@ static void ApplyReadingTags(LearningCatalogue *owner)
         Range(buffer, text, link.byte_start, link.byte_length, &first, &last);
         gtk_text_buffer_apply_tag(buffer, link_tag, &first, &last);
     }
+}
+#endif
+
+/* The root reference held by publication and zoom keeps this state alive;
+ * retirement can still occur during notifications and must stop projection. */
+static int ReadingOwnerContinues(void *context)
+{
+    return !((LearningCatalogue *)context)->state.retired;
+}
+static UmiStatus ApplyReadingTags(LearningCatalogue *owner)
+{
+    if (owner->state.retired) return UMI_STATUS_CANCELLED;
+    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(owner->content));
+    if (owner->reading_document != NULL) {
+        UmiUiAppearanceProfile appearance;
+        UmiStatus status = umi_ui_appearance_profile_init(&appearance, "learning-reader",
+            "Learning reader", UMI_UI_THEME_MODE_SYSTEM, UMI_UI_DENSITY_COMFORTABLE);
+        if (status != UMI_STATUS_OK) return status;
+        /* Preserve the reader's twelve-point starting size while taking font
+         * families from Framework. Zoom remains panel state, not a saved
+         * application preference. Studio supplies its active profile instead. */
+        appearance.interface_font_size = 12.0;
+        appearance.editor_font_size = 12.0;
+        return UmiReadingDocumentGtk4Style(owner->reading_document, buffer,
+            &appearance, owner->reading_zoom_percent, ReadingOwnerContinues, owner);
+    }
+    /* Verified raw-source fallback has no structural model. Preserve its
+     * existing body sizing; it can be larger than a reading projection. */
+    g_object_ref(buffer);
+    GtkTextTagTable *table = gtk_text_buffer_get_tag_table(buffer);
+    GtkTextTag *body = gtk_text_tag_table_lookup(table, "umicom-reading-body");
+    if (body != NULL) g_object_ref(body);
+    else {
+        body = gtk_text_tag_new("umicom-reading-body");
+        if (!gtk_text_tag_table_add(table, body)) {
+            g_object_unref(body); g_object_unref(buffer);
+            return UMI_STATUS_INVALID_STATE;
+        }
+    }
+    if (owner->state.retired ||
+        gtk_text_tag_table_lookup(table, "umicom-reading-body") != body) {
+        UmiStatus result = owner->state.retired ? UMI_STATUS_CANCELLED : UMI_STATUS_INVALID_STATE;
+        g_object_unref(body); g_object_unref(buffer);
+        return result;
+    }
+    g_object_set(body, "size-points", 12.0 * (double)owner->reading_zoom_percent / 100.0, NULL);
+    if (!owner->state.retired &&
+        gtk_text_tag_table_lookup(table, "umicom-reading-body") == body) {
+        GtkTextIter first, last;
+        gtk_text_buffer_get_bounds(buffer, &first, &last);
+        gtk_text_buffer_apply_tag(buffer, body, &first, &last);
+    }
+    UmiStatus status = owner->state.retired ? UMI_STATUS_CANCELLED :
+        gtk_text_tag_table_lookup(table, "umicom-reading-body") != body ?
+            UMI_STATUS_INVALID_STATE : UMI_STATUS_OK;
+    g_object_unref(body); g_object_unref(buffer);
+    return status;
 }
 static UmiStatus PositionAnchor(LearningCatalogue *owner, const char *identifier)
 {
@@ -191,7 +257,15 @@ void LearningCatalogueReadingPublish(LearningCatalogue *owner, LearningCatalogue
     gtk_text_buffer_get_start_iter(buffer, &start);
     gtk_text_buffer_place_cursor(buffer, &start);
     if (owner->state.retired) return;
+    /* Preserve the former ignored styling result. Readable text remains
+     * available on a presentation refusal, with a visible diagnostic. */
+#if 0
     ApplyReadingTags(owner);
+#endif
+    UmiStatus styling_status = ApplyReadingTags(owner);
+    if (styling_status != UMI_STATUS_OK && !owner->state.retired)
+        g_strlcpy(job->notice, "The guide text opened, but native reading styles could not be applied.",
+            sizeof(job->notice));
     if (owner->state.retired) return;
     GtkStringList *rows = gtk_string_list_new(NULL);
     UmiBrowserReadingSummary summary = {0};
@@ -303,6 +377,9 @@ UmiStatus UmiLearningCatalogueGtk4GoToAnchor(GtkWidget *widget, const char *iden
     owner->state.busy = 0; g_object_unref(widget);
     return status;
 }
+/* Retain the previous unconditional success result for review. Zoom now
+ * reports a cancelled or refused shared projection instead of hiding it. */
+#if 0
 UmiStatus UmiLearningCatalogueGtk4SetReadingZoom(GtkWidget *widget, unsigned int percent)
 {
     LearningCatalogue *owner = LearningCatalogueOwner(widget);
@@ -315,6 +392,21 @@ UmiStatus UmiLearningCatalogueGtk4SetReadingZoom(GtkWidget *widget, unsigned int
     if (!owner->state.retired) gtk_spin_button_set_value(GTK_SPIN_BUTTON(owner->reading_zoom), (double)percent);
     owner->state.busy = 0; g_object_unref(widget);
     return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus UmiLearningCatalogueGtk4SetReadingZoom(GtkWidget *widget, unsigned int percent)
+{
+    LearningCatalogue *owner = LearningCatalogueOwner(widget);
+    UmiStatus status = Ready(owner);
+    if (status != UMI_STATUS_OK) return status;
+    if (percent < 50U || percent > 200U) return UMI_STATUS_INVALID_ARGUMENT;
+    g_object_ref(widget); owner->state.busy = 1;
+    owner->reading_zoom_percent = percent; owner->state.reading_zoom_percent = percent;
+    status = ApplyReadingTags(owner);
+    if (!owner->state.retired) gtk_spin_button_set_value(GTK_SPIN_BUTTON(owner->reading_zoom), (double)percent);
+    owner->state.busy = 0; g_object_unref(widget);
+    return status;
 }
 static void ReadingAction(GtkButton *button, gpointer data)
 {

@@ -15,6 +15,12 @@
 #ifndef UMICOM_DATA_CONNECTION_PROFILE_H
 #define UMICOM_DATA_CONNECTION_PROFILE_H
 #include "umicom/data/explorer_types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the database connection profile data shared with callers of this public
  * contract.
@@ -51,4 +57,8 @@ UmiStatus umi_database_connection_registry_activate(UmiDatabaseConnectionRegistr
  * client applications.
  */
 UmiStatus umi_database_connection_registry_active(const UmiDatabaseConnectionRegistry *registry,UmiDatabaseConnectionProfile *out_profile);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

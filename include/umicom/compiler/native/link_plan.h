@@ -56,6 +56,23 @@ UmiStatus umi_nc_link_plan_add_library(UmiNativeLinkPlan *plan,const char *libra
  * applications.
  */
 uint64_t umi_nc_link_plan_fingerprint(const UmiNativeLinkPlan *plan);
+/**
+ * Check a nonempty bounded output, named output kind and all three active
+ * collections. An initialized plan may have no inputs yet. An all-zero record
+ * is not initialized. Validation performs no filesystem or linker operations.
+ * Append refuses malformed existing state with INVALID_STATE and preserves all
+ * bytes on failure. Callers serialize access; values are copied into the plan.
+ */
+bool umi_nc_link_plan_valid(const UmiNativeLinkPlan *plan);
+/** Append an owned library search root in resolution order. */
+UmiStatus umi_nc_link_plan_add_search_path(UmiNativeLinkPlan *plan,const char *path);
+/**
+ * Fingerprints cover output, kind, ordered inputs, libraries and search roots.
+ * Plans without search roots retain their established fingerprint calculation.
+ * Invalid records return zero. The noncryptographic result can collide, including
+ * with zero; use link_plan_valid to distinguish storage admission explicitly.
+ * A fingerprint is not evidence that linking occurred or libraries were found.
+ */
 #ifdef __cplusplus
 }
 #endif

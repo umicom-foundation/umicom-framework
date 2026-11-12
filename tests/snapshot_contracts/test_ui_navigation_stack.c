@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/snapshot_contracts/test_ui_navigation_stack.c
- * PURPOSE: Exercise ui navigation_stack snapshot boundaries and batch rollback.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Exercise ui navigation_stack snapshot boundaries and batch rollback.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/navigation_stack.h"
 #include "umicom/ui/navigation_stack.h"
@@ -100,6 +107,8 @@ static void ArchiveFillUnusedText(UmiUiNavigationEntrySnapshot *value)
 #define ARCHIVE_WORKSPACE_DECODE umi_ui_navigation_stack_snapshot_archive_decode_with_workspace
 /* Exercise guarded import through this domain's public snapshot codec. */
 #define ARCHIVE_CONDITIONAL_DECODE umi_ui_navigation_stack_snapshot_archive_decode_if_unchanged
+/* Exercise canonical comparison with explicit caller-owned scratch. */
+#define ARCHIVE_COMPARE umi_ui_navigation_stack_snapshot_archive_compare_with_workspace
 #define ARCHIVE_EQUAL ContractSnapshotEqual
 #include "../value_archive/record_cases.h"
 

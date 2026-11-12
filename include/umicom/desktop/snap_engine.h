@@ -18,6 +18,12 @@
 
 #include "umicom/desktop/window_manager.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define UMI_DESKTOP_SNAP_GUIDE_LEFT          (1U << 0U)
 #define UMI_DESKTOP_SNAP_GUIDE_RIGHT         (1U << 1U)
 #define UMI_DESKTOP_SNAP_GUIDE_TOP           (1U << 2U)
@@ -69,4 +75,8 @@ UmiStatus umi_desktop_snap_engine_apply(
     UmiDesktopRect candidate,
     UmiDesktopSnapResult *out_result);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

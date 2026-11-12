@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_QUERY_STATE_H
 
 #include "umicom/ui/enterprise/types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent query state data shared with callers of this public contract.
  */
@@ -36,4 +42,8 @@ UmiStatus umi_ui_ent_query_state_set_page(UmiUiEntQueryState *q,size_t page);
  */
 void umi_ui_ent_query_state_set_rules(UmiUiEntQueryState *q,size_t sort_count,size_t filter_count);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

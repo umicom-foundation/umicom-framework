@@ -22,6 +22,12 @@
 #ifndef UMICOM_UI_COMPONENTS_FORM_VALIDATION_H
 #define UMICOM_UI_COMPONENTS_FORM_VALIDATION_H
 #include <stdbool.h>
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define UMI_UI_FORM_MESSAGE_CAPACITY 256U
 /**
  * Represent the ui form validation data shared with callers of this public contract.
@@ -37,4 +43,8 @@ UmiUiFormValidation umi_ui_form_validation_ok(void);
  * applications.
  */
 UmiUiFormValidation umi_ui_form_validation_error(const char *message);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

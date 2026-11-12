@@ -1,7 +1,10 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/desktop/control/layout_compare.c
- * PURPOSE: Implement represent layout comparison fingerprints and change summary state.
+ *
+ * PURPOSE:
+ *   Implement represent layout comparison fingerprints and change summary state.
+ *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
  * Umicom Foundation
@@ -338,3 +341,10 @@ UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_desktop_layout_compare_archive_decode_wit
  * caller. Imported metadata remains evidence; registry publication is separate. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_desktop_layout_compare_archive_decode_if_unchanged, umi_desktop_layout_compare_archive_encode,
     UmiDesktopLayoutCompareSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)
+
+/* Compare through this owner's validated codec so native review uses the
+ * same fields as persistence. Caller-owned scratch avoids per-call allocation;
+ * an equal observation remains separate from revision-checked publication. */
+#include "../../base/value_compare_internal.h"
+UMI_DEFINE_VALUE_COMPARE(umi_desktop_layout_compare_archive_compare_with_workspace,
+    UmiDesktopLayoutCompareSnapshot, umi_desktop_layout_compare_archive_encode)

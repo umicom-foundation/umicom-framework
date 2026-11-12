@@ -21,6 +21,12 @@
 #include "umicom/ui/workstation/waveform_surface.h"
 #include "umicom/ui/workstation/canvas_surface.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Initialise gtk4 ws media viewport from caller-provided values so later operations
  * receive a known state.
@@ -37,4 +43,8 @@ GtkWidget *umi_gtk4_ws_waveform_create(const UmiWsWaveformSurface *waveform);
  */
 GtkWidget *umi_gtk4_ws_canvas_create(const UmiWsCanvasSurface *canvas);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

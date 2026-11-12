@@ -1,21 +1,22 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/setup_centre/media.c
+ *
  * PURPOSE:
- *   Prepare exact boot inputs and invoke an explicit GRUB provider. Do not turn an arbitrary
- *   file copy into a claim of bootable media or write a raw drive.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Prepare exact boot inputs and inspect explicit GRUB output without opening a raw drive.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
-/*-----------------------------------------------------------------------------
- * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * File: src/setup_centre/media.c
- * Prepare exact boot inputs and invoke an explicit GRUB provider. Do not turn
- * an arbitrary file copy into a claim of bootable media or write a raw drive.
- *---------------------------------------------------------------------------*/
-
+/* Preparing or copying files does not make them bootable. The explicit
+ * producer supplies the loader; inspection does not execute it. */
 #include "internal.h"
+#include "umicom/image_inspection/iso.h"
 #include <inttypes.h>
 static const char GRUB_CONFIG[]=
 "set timeout=5\nset default=0\n"
@@ -146,6 +147,10 @@ static UmiStatus VerifyPrepared(const char *root,char kernel[UMI_SETUP_PATH_CAPA
 
 }
 
+/* The former producer-only check did not validate boot load ranges or the
+ * complete bounded descriptor profile. Keep it for comparison; the shared
+ * inspector now gives Setup and Boot Media the same structural rules. */
+#if 0
 static uint32_t Le32(const unsigned char *p) {
     return (uint32_t)p[0]|((uint32_t)p[1]<<8U)|((uint32_t)p[2]<<16U)|((uint32_t)p[3]<<24U);
 }
@@ -187,6 +192,37 @@ static UmiStatus IsoCheck(const char *path,UmiSetupReport *r)
 
     return UMI_STATUS_OK;
 
+}
+#endif
+
+typedef struct IsoSource {
+    const char *path;
+    uint64_t bytes;
+    UmiSetupReport *report;
+} IsoSource;
+
+static UmiStatus IsoRead(void *context,uint64_t offset,void *destination,size_t length)
+{
+    IsoSource *source=context;
+    uint64_t observed=0;
+    UmiStatus status=ScReadAt(source->path,offset,destination,length,&observed,source->report);
+    /* This detects size changes between reopened reads, not arbitrary concurrent
+     * replacement. The producer output must remain private during inspection. */
+    if (status==UMI_STATUS_OK&&observed!=source->bytes)return UMI_STATUS_INVALID_STATE;
+    return status;
+}
+
+static UmiStatus IsoCheck(const char *path,UmiSetupReport *report)
+{
+    unsigned char first=0;
+    IsoSource source={path,0,report};
+    UmiStatus status=ScReadAt(path,0,&first,1,&source.bytes,report);
+    if (status!=UMI_STATUS_OK)return status;
+    UmiIsoImageInfo info={0};
+    status=UmiIsoImageInspect(IsoRead,&source,source.bytes,&info);
+    if (status==UMI_STATUS_OK&&(!info.iso9660||!info.elTorito))
+        status=UMI_STATUS_PARSE_ERROR;
+    return status;
 }
 
 #endif

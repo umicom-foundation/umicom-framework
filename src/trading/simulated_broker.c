@@ -20,6 +20,7 @@
 #include "umicom/trading/simulated_broker.h"
 #include "umicom/trading/order_request.h"
 #include "umicom/trading/order_state.h"
+#include "umicom/trading/time_in_force.h"
 #include "umicom/finance/identifier.h"
 
 /* Validation belongs to the shared adapter: calling through the public broker
@@ -121,6 +122,8 @@ static UmiStatus sim_connect(void *instance, UmiTradingEnvironment environment)
     return UMI_STATUS_OK;
 }
 
+/* The broker retains local requests without immediate matching. Check its time-in-force capability separately from canonical request validity before adding an order. The previous implementation is retained for review. */
+#if 0
 static UmiStatus sim_submit(void *instance, const UmiOrderRequest *request)
 {
     UmiSimulatedBrokerStorage *broker = instance;
@@ -138,6 +141,28 @@ static UmiStatus sim_submit(void *instance, const UmiOrderRequest *request)
     return umi_order_store_add(&broker->orders, &order);
 }
 
+#endif
+static UmiStatus sim_submit(void *instance, const UmiOrderRequest *request)
+{
+    UmiSimulatedBrokerStorage *broker = instance;
+    if (broker == NULL || request == NULL || !broker->connected)
+        return UMI_STATUS_INVALID_STATE;
+    if (broker->environment != UMI_TRADING_SIMULATION &&
+        broker->environment != UMI_TRADING_PAPER) return UMI_STATUS_INVALID_STATE;
+    UmiStatus status = umi_order_request_validate(request);
+    if (status != UMI_STATUS_OK) return status;
+    if (request->environment != broker->environment) return UMI_STATUS_PERMISSION_DENIED;
+    status = UmiTimeInForceCheckLocalRetention(request->tif);
+    if (status != UMI_STATUS_OK) return status;
+    UmiOrder order = {0};
+    order.request = *request;
+    order.status = UMI_ORDER_ACCEPTED;
+    order.version = 1U;
+    return umi_order_store_add(&broker->orders, &order);
+}
+
+/* The prior adapter-local transition is retained for review. Connection/environment authority stays here; canonical order cancellation now owns state, replay and revision rules. The previous implementation is retained for review. */
+#if 0
 static UmiStatus sim_cancel(void *instance, const UmiFinancialId *client_order_id)
 {
     UmiSimulatedBrokerStorage *broker = instance;
@@ -157,6 +182,20 @@ static UmiStatus sim_cancel(void *instance, const UmiFinancialId *client_order_i
     order->status = UMI_ORDER_CANCELLED;
     ++order->version;
     return UMI_STATUS_OK;
+}
+#endif
+static UmiStatus sim_cancel(void *instance, const UmiFinancialId *client_order_id)
+{
+    UmiSimulatedBrokerStorage *broker = instance;
+    if (broker == NULL || client_order_id == NULL ||
+        !umi_financial_id_valid(client_order_id)) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!broker->connected || (broker->environment != UMI_TRADING_SIMULATION &&
+        broker->environment != UMI_TRADING_PAPER)) return UMI_STATUS_INVALID_STATE;
+    UmiOrder *order = NULL;
+    UmiStatus status = umi_order_store_find(&broker->orders, client_order_id->value, &order);
+    if (status != UMI_STATUS_OK) return status;
+    if (order->request.environment != broker->environment) return UMI_STATUS_INVALID_STATE;
+    return UmiOrderCancel(order);
 }
 
 /* Release or reset state held by sim so the same storage can be reused safely. */

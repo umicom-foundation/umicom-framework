@@ -15,6 +15,12 @@
 #ifndef UMICOM_SECURITY_REDACTION_POLICY_H
 #define UMICOM_SECURITY_REDACTION_POLICY_H
 #include "umicom/security/governance.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the security redaction policy data shared with callers of this public
  * contract.
@@ -44,4 +50,8 @@ bool umi_security_redaction_policy_sensitive(const UmiSecurityRedactionPolicy *p
  * input values.
  */
 UmiStatus umi_security_redaction_copy(const UmiSecurityRedactionPolicy *policy,const char *field_name,const char *value,char *out_value,size_t capacity);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

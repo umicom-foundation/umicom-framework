@@ -862,7 +862,8 @@ if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
         umicom_register_validation_target(umicom-gtk4-focus-cycle-test)
     endif()
     foreach(case forward reverse wrap hidden disabled notebook single no-target
-        nested reentry redirect detach retire modifiers controller paned)
+        nested reentry redirect detach retire modifiers controller paned
+        collapsed-section collapsed-reverse expanded-section)
         add_test(NAME framework.ui_workstation.focus_cycle.${case}
             COMMAND umicom-gtk4-focus-cycle-test ${case})
         set_tests_properties(framework.ui_workstation.focus_cycle.${case} PROPERTIES
@@ -905,4 +906,10 @@ if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
         set_tests_properties(framework.ui_workstation.branded_startup.${case} PROPERTIES
             TIMEOUT 20 SKIP_RETURN_CODE 77 LABELS "framework;ui-workstation;gtk4;startup;regression")
     endforeach()
+endif()
+
+# Shared private renderer inputs are part of source identity and impact selection.
+if(TARGET umicom_ui_gtk4)
+    target_sources(umicom_ui_gtk4 PRIVATE
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/appearance_typography_private.h")
 endif()

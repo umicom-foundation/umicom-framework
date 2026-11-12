@@ -18,6 +18,12 @@
 
 #include <gtk/gtk.h>
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Initialise gtk4 ws tool rail from caller-provided values so later operations receive a
  * known state.
@@ -40,4 +46,8 @@ GtkWidget *umi_gtk4_ws_tool_rail_append(GtkWidget *rail, const char *icon_name, 
 GtkWidget *umi_gtk4_ws_tool_rail_append_label(
     GtkWidget *rail, const char *title, gboolean vertical, gboolean active);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

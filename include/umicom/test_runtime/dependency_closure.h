@@ -123,6 +123,13 @@ UmiStatus umi_test_runtime_dependency_closure_archive_decode_if_unchanged(const 
     const UmiTestRuntimeDependencyClosure *expected, UmiTestRuntimeDependencyClosure *value);
 
 
+/* Compare this record's canonical saved state using caller-owned byte scratch.
+ * See UmiValueArchiveComparison in base/value_archive.h for measurement,
+ * refusal, aliasing and lifetime rules. This call never publishes live state. */
+UmiStatus umi_test_runtime_dependency_closure_archive_compare_with_workspace(const UmiTestRuntimeDependencyClosure *left,
+    const UmiTestRuntimeDependencyClosure *right, void *workspace, size_t capacity,
+    UmiValueArchiveComparison *out_comparison);
+
 #ifdef __cplusplus
 }
 #endif

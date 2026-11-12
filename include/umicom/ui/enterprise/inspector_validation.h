@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_INSPECTOR_VALIDATION_H
 
 #include "umicom/ui/enterprise/inspector_property.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent inspector validation data shared with callers of this public
  * contract.
@@ -27,4 +33,8 @@ typedef struct UmiUiEntInspectorValidation { char property_id[UMI_UI_ENT_ID_CAPA
  */
 UmiStatus umi_ui_ent_inspector_validation_run(const UmiUiEntInspectorProperty *property,UmiUiEntInspectorValidation *out_result);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

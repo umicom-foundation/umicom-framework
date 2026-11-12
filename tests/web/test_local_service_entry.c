@@ -82,7 +82,11 @@ static UmiStatus EntryServe(UmiWebServer *server, uint32_t wait, uint32_t exchan
   if (status != UMI_STATUS_OK || response->status != 200 ||
       response->body_length != sizeof(expected) - 1U ||
       memcmp(response->body, expected, sizeof(expected) - 1U) != 0)
+  {
+    fprintf(stderr, "Rooted response mismatch: operation=%s, HTTP=%d, bytes=%zu, expected=%zu\n",
+            umi_status_text(status), response->status, response->body_length, sizeof expected - 1U);
     entry_failed = 1;
+  }
   ++entry_dispatched;
   out->dispatched = 1;
   out->response_complete = !entry_failed;

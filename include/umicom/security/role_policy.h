@@ -15,6 +15,12 @@
 #ifndef UMICOM_SECURITY_ROLE_POLICY_H
 #define UMICOM_SECURITY_ROLE_POLICY_H
 #include "umicom/security/governance.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the security role policy data shared with callers of this public contract.
  */
@@ -49,4 +55,8 @@ const UmiSecurityRolePolicy *umi_security_role_policy_find(const UmiSecurityRole
  * applications.
  */
 bool umi_security_role_policy_allows(const UmiSecurityRolePolicyStore *store,const char *role_id,const char *permission);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

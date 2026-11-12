@@ -15,6 +15,12 @@
 #ifndef UMICOM_UI_LAYOUT_PERSISTENCE_H
 #define UMICOM_UI_LAYOUT_PERSISTENCE_H
 #include "umicom/ui/workspace_layout.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define UMI_UI_LAYOUT_ENCODED_CAPACITY 32768U
 #define UMI_UI_LAYOUT_PERSISTENCE_SCHEMA_VERSION 3U
 /**
@@ -32,4 +38,8 @@ UmiStatus umi_ui_layout_persistence_encode(const UmiUiLayoutPersistenceRecord *r
  * cannot be used.
  */
 UmiStatus umi_ui_layout_persistence_decode(const char *text,UmiUiLayoutPersistenceRecord *out_record);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

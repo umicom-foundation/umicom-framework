@@ -128,6 +128,13 @@ typedef struct UmiDeveloperCMakeDeliveryPlanSnapshot {
  * Provide the developer cmake plan submit operation used by this module and its client
  * applications.
  */
+/* Both submit functions translate all selected operations before publishing a
+ * linear chain through the shared pipeline. On refusal, pipeline operations,
+ * dependencies, identities and the optional output snapshot remain unchanged.
+ * Requests borrow terminated strings and counted arrays for the duration of
+ * the call. A nonempty run-argument vector must have a non-NULL array.
+ * Inputs and outputs must not overlap. The pipeline has one owner; no process
+ * execution, filesystem work or concurrent mutation is part of this operation. */
 UmiStatus umi_developer_cmake_plan_submit(
     UmiDeveloperPipeline *pipeline,
     const UmiDeveloperCMakePlanRequest *request,

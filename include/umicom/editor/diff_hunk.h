@@ -238,6 +238,13 @@ UmiStatus umi_editor_diff_hunk_registry_archive_restore(UmiEditorDiffHunkRegistr
 UmiStatus umi_editor_diff_hunk_registry_clear_if_current(UmiEditorDiffHunkRegistry *registry,
     uint64_t expected_revision);
 
+/* Compare this record's canonical saved state using caller-owned byte scratch.
+ * See UmiValueArchiveComparison in base/value_archive.h for measurement,
+ * refusal, aliasing and lifetime rules. This call never publishes live state. */
+UmiStatus umi_editor_diff_hunk_snapshot_archive_compare_with_workspace(const UmiEditorDiffHunkSnapshot *left,
+    const UmiEditorDiffHunkSnapshot *right, void *workspace, size_t capacity,
+    UmiValueArchiveComparison *out_comparison);
+
 #ifdef __cplusplus
 }
 #endif

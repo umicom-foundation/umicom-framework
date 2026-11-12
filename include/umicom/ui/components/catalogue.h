@@ -23,6 +23,12 @@
 #define UMICOM_UI_COMPONENTS_CATALOGUE_H
 #include <stddef.h>
 #include "umicom/ui/components/component.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Return the number of records represented by ui component catalogue without changing
  * their state.
@@ -38,4 +44,8 @@ UmiUiComponentKind umi_ui_component_catalogue_kind(size_t index);
  * applications.
  */
 int umi_ui_component_catalogue_contains(UmiUiComponentKind kind);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_EDIT_HISTORY_H
 
 #include "umicom/ui/enterprise/edit_commit.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent edit history data shared with callers of this public contract.
  */
@@ -41,4 +47,8 @@ const UmiUiEntEditCommit *umi_ui_ent_edit_history_undo(UmiUiEntEditHistory *h);
  */
 const UmiUiEntEditCommit *umi_ui_ent_edit_history_redo(UmiUiEntEditHistory *h);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

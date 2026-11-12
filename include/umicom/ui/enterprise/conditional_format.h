@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_CONDITIONAL_FORMAT_H
 
 #include "umicom/ui/enterprise/cell_value.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * List the named ui ent compare op values accepted by this public contract.
  */
@@ -31,4 +37,8 @@ typedef struct UmiUiEntConditionalFormat { UmiUiEntCompareOp op; double threshol
  */
 int umi_ui_ent_conditional_format_matches(const UmiUiEntConditionalFormat *rule,const UmiUiEntCellValue *value);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

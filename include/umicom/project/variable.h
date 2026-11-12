@@ -249,6 +249,13 @@ UmiStatus umi_project_variable_registry_archive_restore(UmiProjectVariableRegist
 UmiStatus umi_project_variable_registry_clear_if_current(UmiProjectVariableRegistry *registry,
     uint64_t expected_revision);
 
+/* Compare this record's canonical saved state using caller-owned byte scratch.
+ * See UmiValueArchiveComparison in base/value_archive.h for measurement,
+ * refusal, aliasing and lifetime rules. This call never publishes live state. */
+UmiStatus umi_project_variable_snapshot_archive_compare_with_workspace(const UmiProjectVariableSnapshot *left,
+    const UmiProjectVariableSnapshot *right, void *workspace, size_t capacity,
+    UmiValueArchiveComparison *out_comparison);
+
 #ifdef __cplusplus
 }
 #endif

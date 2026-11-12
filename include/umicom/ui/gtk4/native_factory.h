@@ -20,6 +20,12 @@
 
 #include "umicom/ui/components/component.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Initialise gtk4 native widget from caller-provided values so later operations receive a
  * known state.
@@ -29,4 +35,8 @@ GtkWidget *umi_gtk4_native_widget_create(
     const UmiUiComponentSpec *common_spec,
     GError **error);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

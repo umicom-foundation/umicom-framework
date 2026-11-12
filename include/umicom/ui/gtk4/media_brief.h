@@ -15,6 +15,7 @@
 #ifndef UMICOM_UI_GTK4_MEDIA_BRIEF_H
 #define UMICOM_UI_GTK4_MEDIA_BRIEF_H
 #include <gtk/gtk.h>
+#include <stdbool.h>
 #include "umicom/creative_workspace/media_brief.h"
 #ifdef __cplusplus
 extern "C" {
@@ -26,9 +27,13 @@ extern "C" {
  * until the panel is released. Saving is explicit and uses a chosen path. */
 GtkWidget *UmiMediaBriefGtkCreate(GtkWidget *image_panel, GtkWidget *video_panel);
 void UmiMediaBriefGtkRetire(GtkWidget *root);
+/* Owner-thread observation of a pending creation-document job. Retirement
+ * requests cancellation; an atomic save already publishing may still finish. */
+bool UmiMediaBriefGtkBusy(GtkWidget *root);
 /* Accept a fully validated source draft on the owner thread. Existing source,
  * direction or reviewed prompt is preserved unless replace_existing is true.
- * This invalidates the prior prepared brief; it never starts generation. */
+ * This invalidates the prior prepared brief; it never starts generation.
+ * Returns BUSY while a creation-document save/open owns the panel. */
 UmiStatus UmiMediaBriefGtkSetSource(GtkWidget *root, const UmiMediaBriefDraft *draft,
                                   bool replace_existing);
 #ifdef __cplusplus

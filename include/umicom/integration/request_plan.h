@@ -16,6 +16,12 @@
 #define UMICOM_INTEGRATION_REQUEST_PLAN_H
 #include "umicom/integration/connection_profile.h"
 #include "umicom/integration/api_contract.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the integration request plan data shared with callers of this public contract.
  */
@@ -35,4 +41,8 @@ typedef struct UmiIntegrationRequestPlan {
  * applications.
  */
 UmiStatus umi_integration_request_plan_build(const UmiIntegrationConnectionProfile *profile,const UmiIntegrationApiOperation *operation,const char *payload,const char *correlation_id,UmiIntegrationRequestPlan *out_plan);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -52,10 +52,23 @@ UmiStatus umi_order_apply_execution(UmiOrder *order,
     const double old_filled = order->filled_quantity;
     const double total_filled = old_filled + report->fill_quantity;
 
+/* The earlier fixed-epsilon quantity check is retained for review. The active check uses the actual remaining represented amount and requires observable progress. The previous implementation is retained for review. */
+#if 0
     /* Apply this branch only when its contract condition is satisfied. */
     if (!isfinite(total_filled) || total_filled > order->request.quantity + 1.0e-9) {
         return UMI_STATUS_INVALID_STATE;
     }
+#endif
+    /* Quantity admission uses the represented remaining amount, just as the
+     * workspace does before staging a position. An absolute price-like epsilon
+     * is not a quantity unit: it can exceed an entire small order. Never publish
+     * an overfill, or acknowledge a positive report whose increment is lost. */
+    const double remaining = order->request.quantity - old_filled;
+    if (!isfinite(remaining) || remaining <= 0.0 ||
+        report->fill_quantity > remaining || !isfinite(total_filled) ||
+        total_filled > order->request.quantity)
+        return UMI_STATUS_INVALID_STATE;
+    if (total_filled <= old_filled) return UMI_STATUS_CAPACITY_EXCEEDED;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (total_filled > 0.0) {
@@ -68,7 +81,14 @@ UmiStatus umi_order_apply_execution(UmiOrder *order,
     }
     if (!isfinite(candidate.average_fill_price)) return UMI_STATUS_CAPACITY_EXCEEDED;
     candidate.filled_quantity = total_filled;
+/* Retain tolerance-based completion for comparison. Exact represented completion now keeps a small remaining quantity available for a later fill. The previous implementation is retained for review. */
+#if 0
     candidate.status = total_filled + 1.0e-9 >= order->request.quantity
+        ? UMI_ORDER_FILLED : UMI_ORDER_PARTIALLY_FILLED;
+#endif
+    /* A remaining representable quantity stays open. Price comparison or
+     * display rounding cannot silently complete an order. */
+    candidate.status = total_filled == order->request.quantity
         ? UMI_ORDER_FILLED : UMI_ORDER_PARTIALLY_FILLED;
     candidate.version++;
     *order = candidate;

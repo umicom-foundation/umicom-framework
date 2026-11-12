@@ -15,6 +15,12 @@
 #ifndef UMICOM_UI_THEME_PROFILE_H
 #define UMICOM_UI_THEME_PROFILE_H
 #include "umicom/ui/workspace_layout.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * List the named ui theme mode values accepted by this public contract.
  */
@@ -54,11 +60,26 @@ typedef struct UmiUiThemeProfile {
  * Initialise ui theme profile from caller-provided values so later operations receive a
  * known state.
  */
+/** Initialize a complete canonical theme or leave the destination unchanged.
+ * ID and name may borrow destination fields; each must be readable through its
+ * terminator or field capacity. No text is truncated. Successful initialization
+ * retains the established font scale of 1.0 and revision of one. */
 UmiStatus umi_ui_theme_profile_init(UmiUiThemeProfile *theme, const char *theme_id,
                                     const char *name, UmiUiThemeMode mode, UmiUiDensity density);
 /**
  * Check that ui theme profile satisfies its contract before another service relies on it.
  */
+/* Validate bounded nonempty labels, declared mode/density, finite scale in
+ * [0.75, 2.0] and all seven #RRGGBB fields. RGB letter case is permitted.
+ * Rejection never edits the profile. Diagnostic output must be separate from
+ * the profile; overlapping storage is INVALID_ARGUMENT without a write.
+ * A short separate reason buffer remains terminated but returns
+ * CAPACITY_EXCEEDED, preserving the established explanation-buffer contract.
+ * Validation does not establish font installation, contrast or native rendering. */
 UmiStatus umi_ui_theme_profile_validate(const UmiUiThemeProfile *theme, char *out_reason,
                                         size_t capacity);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

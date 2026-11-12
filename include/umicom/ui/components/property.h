@@ -22,6 +22,12 @@
 #ifndef UMICOM_UI_COMPONENTS_PROPERTY_H
 #define UMICOM_UI_COMPONENTS_PROPERTY_H
 #include "umicom/base/status.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define UMI_UI_COMPONENT_PROPERTY_KEY_CAPACITY 96U
 #define UMI_UI_COMPONENT_PROPERTY_VALUE_CAPACITY 256U
 /**
@@ -33,4 +39,8 @@ typedef struct UmiUiComponentProperty { char key[UMI_UI_COMPONENT_PROPERTY_KEY_C
  * input values.
  */
 UmiStatus umi_ui_component_property_set(UmiUiComponentProperty *property,const char *key,const char *value);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -77,10 +77,32 @@ static void Capture(GtkWidget *window, GtkWidget *root)
     GskRenderer *renderer = gtk_native_get_renderer(GTK_NATIVE(window));
     CHECK(renderer != NULL);
     GdkPaintable *paintable = gtk_widget_paintable_new(root);
+    /* Retain the immediate snapshot for review. A focus or visibility change
+     * can invalidate GTK's cached drawing before its next frame is processed. */
+#if 0
     GtkSnapshot *snapshot = gtk_snapshot_new();
     gdk_paintable_snapshot(paintable, GDK_SNAPSHOT(snapshot),
         gtk_widget_get_width(root), gtk_widget_get_height(root));
     GskRenderNode *node = gtk_snapshot_free_to_node(snapshot);
+#endif
+    CHECK(gtk_widget_get_mapped(root));
+    CHECK(gtk_widget_get_width(root) > 0 && gtk_widget_get_height(root) > 0);
+    GskRenderNode *node = NULL;
+    gint64 deadline = g_get_monotonic_time() + 2 * G_TIME_SPAN_SECOND;
+    gtk_widget_queue_draw(root);
+    do {
+        GtkSnapshot *snapshot = gtk_snapshot_new();
+        gdk_paintable_snapshot(paintable, GDK_SNAPSHOT(snapshot),
+            gtk_widget_get_width(root), gtk_widget_get_height(root));
+        node = gtk_snapshot_free_to_node(snapshot);
+        if (node != NULL || !gtk_widget_get_mapped(root)) break;
+        (void)UmiTestDispatchSlice(NULL, deadline, 64U);
+        g_usleep(1000U);
+    } while (g_get_monotonic_time() < deadline);
+    if (node == NULL)
+        fprintf(stderr, "Media capture has no drawable node after bounded frame wait: mapped=%d size=%dx%d\n",
+            gtk_widget_get_mapped(root), gtk_widget_get_width(root), gtk_widget_get_height(root));
+    CHECK(gtk_widget_get_mapped(root));
     CHECK(node != NULL);
     GdkTexture *texture = gsk_renderer_render_texture(renderer, node, NULL);
     CHECK(texture != NULL);

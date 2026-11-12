@@ -1,7 +1,10 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/desktop/control/layout_lock.c
- * PURPOSE: Implement represent layout lock ownership and mutation policy.
+ *
+ * PURPOSE:
+ *   Implement represent layout lock ownership and mutation policy.
+ *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
  * Umicom Foundation
@@ -345,3 +348,10 @@ UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_desktop_layout_lock_archive_decode_with_w
  * caller. Imported metadata remains evidence; registry publication is separate. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_desktop_layout_lock_archive_decode_if_unchanged, umi_desktop_layout_lock_archive_encode,
     UmiDesktopLayoutLockSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)
+
+/* Compare through this owner's validated codec so native review uses the
+ * same fields as persistence. Caller-owned scratch avoids per-call allocation;
+ * an equal observation remains separate from revision-checked publication. */
+#include "../../base/value_compare_internal.h"
+UMI_DEFINE_VALUE_COMPARE(umi_desktop_layout_lock_archive_compare_with_workspace,
+    UmiDesktopLayoutLockSnapshot, umi_desktop_layout_lock_archive_encode)

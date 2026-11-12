@@ -5,10 +5,15 @@
  * PURPOSE:
  *   Read UTF-8 paths and collect deterministic audit inputs without changing files.
  *
- * Author: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
+
+
 
 #if !defined(_WIN32)
 #define _POSIX_C_SOURCE 200809L
@@ -58,6 +63,10 @@ char *ScJoin(const char *root, const char *path)
     memcpy(joined, root, a); joined[a] = '/'; memcpy(joined + a + 1U, path, b + 1U);
     return joined;
 }
+/* The old text reader is retained for review. The shared byte reader below
+ * keeps its size/IO limits while allowing ICO data; ScRead still refuses NUL
+ * in text, preserving existing source-audit behavior. */
+#if 0
 char *ScRead(const char *path)
 {
     FILE *file;
@@ -94,9 +103,59 @@ char *ScRead(const char *path)
 invalid:
     fclose(file); free(data); return NULL;
 }
+#endif
+
+unsigned char *ScReadBytes(const char *path, size_t *length)
+{
+    if (path == NULL || length == NULL) return NULL;
+    FILE *file;
+#if defined(_WIN32)
+    wchar_t *wide = widePath(path);
+    if (wide == NULL) return NULL;
+    file = _wfopen(wide, L"rb"); free(wide);
+#else
+    file = fopen(path, "rb");
+#endif
+    if (file == NULL) return NULL;
+    size_t capacity = 8192U, used = 0U;
+    char *data = malloc(capacity + 1U);
+    if (data == NULL) { fclose(file); return NULL; }
+    for (;;) {
+        size_t got = fread(data + used, 1U, capacity - used, file); used += got;
+        if (ferror(file)) goto invalid;
+        if (feof(file)) break;
+        if (used == capacity) {
+            if (capacity == SC_MAX_FILE_BYTES) {
+                if (fgetc(file) != EOF || ferror(file)) goto invalid;
+                break;
+            }
+            size_t next = capacity * 2U;
+            if (next > SC_MAX_FILE_BYTES) next = SC_MAX_FILE_BYTES;
+            char *grown = realloc(data, next + 1U);
+            if (grown == NULL) goto invalid;
+            data = grown; capacity = next;
+        }
+    }
+    if (fclose(file) != 0) { free(data); return NULL; }
+    data[used] = '\0'; *length = used; return (unsigned char *)data;
+invalid:
+    fclose(file); free(data); return NULL;
+}
+char *ScRead(const char *path)
+{
+    size_t length = 0U;
+    unsigned char *bytes = ScReadBytes(path, &length);
+    if (bytes != NULL && memchr(bytes, 0, length) != NULL) { free(bytes); return NULL; }
+    return (char *)bytes;
+}
 static bool wanted(const char *name, unsigned kind)
 {
     if (kind == 2U) return strcmp(name, "application.umicom.yaml") == 0;
+    /* Guide discovery reuses the same bounded, non-symlink traversal. */
+    if (kind == 3U) {
+        const char *extension = strrchr(name, '.');
+        return extension != NULL && strcmp(extension, ".html") == 0;
+    }
     const char *dot = strrchr(name, '.');
     return dot != NULL && (kind == 1U ? strcmp(dot, ".h") == 0 : strcmp(dot, ".c") == 0 || strcmp(dot, ".inc") == 0);
 }
@@ -198,3 +257,6 @@ int ScCollect(const char *root, bool headers, ScFiles *files)
 { return collectRoot(root, headers ? 1U : 0U, files); }
 int ScCollectManifests(const char *root, ScFiles *files)
 { return collectRoot(root, 2U, files); }
+
+int ScCollectGuides(const char *root, ScFiles *files)
+{ return collectRoot(root, 3U, files); }

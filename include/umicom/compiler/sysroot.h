@@ -15,6 +15,12 @@
 #ifndef UMICOM_COMPILER_SYSROOT_H
 #define UMICOM_COMPILER_SYSROOT_H
 #include "umicom/compiler/target.h"
+
+/* Keep the public C symbol names when this header is included directly by a
+ * C++ client. Includes remain outside the linkage block; layouts are unchanged. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define UMI_COMPILER_MAX_SYSROOTS 16U
 /**
  * Represent the compiler sysroot data shared with callers of this public contract.
@@ -34,4 +40,18 @@ UmiStatus umi_compiler_sysroot_register(UmiCompilerSysrootCatalogue *catalogue,c
  * applications.
  */
 const UmiCompilerSysroot *umi_compiler_sysroot_resolve(const UmiCompilerSysrootCatalogue *catalogue,const UmiCompilerTarget *target);
+/**
+ * Validate the count and every active record's bounded text. Unused slots and
+ * revision capacity are not validity conditions; saturated owners remain readable.
+ * This does not qualify tool availability, paths, target semantics or ABI support.
+ * Register returns INVALID_STATE for malformed owner storage and
+ * CAPACITY_EXCEEDED for a new insert without slot/revision capacity, leaving the
+ * owner unchanged. Existing identifiers still return ALREADY_EXISTS first.
+ * Lookup returns NULL on malformed storage. Returned records are borrowed;
+ * callers must serialize access and keep the catalogue alive.
+ */
+bool umi_compiler_sysroot_catalogue_valid(const UmiCompilerSysrootCatalogue *catalogue);
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 #endif

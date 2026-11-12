@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/media_generation/seedream_gtk4.h"
+#include "umicom/ui/gtk4/image_brand.h"
 #include "umicom/security/gtk4/profile_keys.h"
 #include "umicom/security/secrets.h"
 #include <string.h>
@@ -193,8 +194,16 @@ static void Worker(GTask *task, gpointer source, gpointer data, GCancellable *un
     (void)source;
     (void)unused;
     ImageJob *job = data;
-    if (job->writing)
+    if (job->writing) {
+        /* The provider watermark is separate from Umicom identity. Retain the
+         * former raw save for review; export now composes canonical SVG through
+         * Framework while the original provider result remains owned unchanged. */
+#if 0
         job->status = UmiMediaPngWriteNew(job->result.image, job->path, job->cancel, &job->written);
+#endif
+        job->status = UmiGtk4ImageWriteBrandedPng(job->result.image, job->path,
+            job->cancel, &job->written);
+    }
     else
     {
         UmiProfileSecrets *secrets = NULL;
@@ -482,6 +491,7 @@ UmiStatus UmiSeedreamGtkCreate(const char *application, const char *profile, Gtk
     panel->path = Entry(panel->form, "Full path for a new PNG file (existing files are never replaced)",
                         "seedream.path");
     panel->save = Button(panel, panel->form, "Save new PNG", "save");
+    Label(panel->form, "PNG export adds the canonical Umicom logo to a separate image. The provider preview stays unchanged. SVG decoding is required; images below 128 × 64 cannot use this export.");
     gtk_widget_set_sensitive(panel->save, FALSE);
     panel->stop = Button(panel, panel->root, "Stop local work", "stop");
     gtk_widget_set_sensitive(panel->stop, FALSE);

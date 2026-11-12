@@ -15,6 +15,12 @@
 #ifndef UMICOM_COMPILER_DIAGNOSTIC_H
 #define UMICOM_COMPILER_DIAGNOSTIC_H
 #include "umicom/compiler/common.h"
+
+/* Keep the public C symbol names when this header is included directly by a
+ * C++ client. Includes remain outside the linkage block; layouts are unchanged. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define UMI_COMPILER_MAX_DIAGNOSTICS 256U
 /**
  * Represent the compiler diagnostic data shared with callers of this public contract.
@@ -46,4 +52,7 @@ UmiStatus umi_compiler_diagnostic_set_add(UmiCompilerDiagnosticSet *set,const Um
  * this module.
  */
 const UmiCompilerDiagnostic *umi_compiler_diagnostic_set_at(const UmiCompilerDiagnosticSet *set,size_t index);
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 #endif

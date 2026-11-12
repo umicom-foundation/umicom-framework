@@ -15,6 +15,12 @@
 #ifndef UMICOM_UI_WINDOW_CATALOGUE_H
 #define UMICOM_UI_WINDOW_CATALOGUE_H
 #include "umicom/ui/workspace_layout.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define UMI_UI_WINDOW_CATALOGUE_MAX 256U
 #define UMI_UI_WINDOW_RECENT_MAX 32U
 /**
@@ -138,4 +144,8 @@ UmiStatus umi_ui_window_catalogue_record_open(
  * applications.
  */
 const char *umi_ui_window_category_text(UmiUiWindowCategory category);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

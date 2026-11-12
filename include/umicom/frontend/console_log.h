@@ -15,6 +15,12 @@
 #ifndef UMICOM_FRONTEND_CONSOLE_LOG_H
 #define UMICOM_FRONTEND_CONSOLE_LOG_H
 #include "umicom/frontend/dev_types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the frontend console entry data shared with callers of this public contract.
  */
@@ -42,4 +48,8 @@ size_t umi_frontend_console_log_count_level(const UmiFrontendConsoleLog *log,Umi
  * safely.
  */
 void umi_frontend_console_log_clear(UmiFrontendConsoleLog *log);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

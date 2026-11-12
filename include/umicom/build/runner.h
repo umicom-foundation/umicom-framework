@@ -42,6 +42,13 @@ UmiStatus umi_build_runner_create(const UmiBuildRunnerConfig *config,
 void umi_build_runner_destroy(UmiBuildRunner *runner);
 UmiStatus umi_build_runner_set_profile(UmiBuildRunner *runner,
                                        const UmiBuildProfile *profile);
+/** Complete one synchronous operation. Once an identity is reserved, preparation
+ * failure is retained in the configured bounded history just like process
+ * completion. Such failure has exit_code -1, zero duration and no child output.
+ * An invalid call or exhausted identity does not append an invented operation.
+ * History append remains best effort; the return value describes execution.
+ * The observed and automatic-test entry points share these semantics. Keep
+ * runner, history, clock, cancellation and output storage alive until return. */
 UmiStatus umi_build_runner_run(UmiBuildRunner *runner,
                                UmiBuildPhase phase,
                                UmiBuildResult *out_result);

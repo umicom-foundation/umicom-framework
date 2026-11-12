@@ -15,6 +15,12 @@
 #ifndef UMICOM_FRONTEND_DEV_SERVER_H
 #define UMICOM_FRONTEND_DEV_SERVER_H
 #include "umicom/frontend/dev_types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the frontend dev server config data shared with callers of this public
  * contract.
@@ -49,4 +55,8 @@ UmiStatus umi_frontend_dev_server_stop(UmiFrontendDevServer *server);
  * client applications.
  */
 UmiStatus umi_frontend_dev_server_record_request(UmiFrontendDevServer *server);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

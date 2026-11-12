@@ -61,3 +61,18 @@ int umi_order_transition_allowed(UmiOrderStatus from, UmiOrderStatus to)
         return 0;
     }
 }
+
+/* Local simulation clients share this transition rather than maintaining
+ * independent status/version rules. Transport cancellation acknowledgements
+ * remain separate: this function makes no external-provider claim. */
+UmiStatus UmiOrderCancel(UmiOrder *order)
+{
+    if (order == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!umi_order_transition_allowed(order->status, UMI_ORDER_CANCELLED))
+        return UMI_STATUS_INVALID_STATE;
+    if (order->status == UMI_ORDER_CANCELLED) return UMI_STATUS_OK;
+    if (order->version == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    order->status = UMI_ORDER_CANCELLED;
+    ++order->version;
+    return UMI_STATUS_OK;
+}

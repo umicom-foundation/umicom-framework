@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/snapshot_contracts/test_ui_tab_model.c
- * PURPOSE: Exercise ui tab_model snapshot boundaries and batch rollback.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Exercise ui tab_model snapshot boundaries and batch rollback.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/tab_model.h"
 #include "umicom/ui/tab_model.h"
@@ -118,6 +125,8 @@ static void ArchiveFillUnusedText(UmiUiTabSnapshot *value)
 #define ARCHIVE_WORKSPACE_DECODE umi_ui_tab_model_snapshot_archive_decode_with_workspace
 /* Exercise guarded import through this domain's public snapshot codec. */
 #define ARCHIVE_CONDITIONAL_DECODE umi_ui_tab_model_snapshot_archive_decode_if_unchanged
+/* Exercise canonical comparison with explicit caller-owned scratch. */
+#define ARCHIVE_COMPARE umi_ui_tab_model_snapshot_archive_compare_with_workspace
 #define ARCHIVE_EQUAL ContractSnapshotEqual
 #include "../value_archive/record_cases.h"
 

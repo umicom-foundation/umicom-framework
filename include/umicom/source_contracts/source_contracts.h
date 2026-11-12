@@ -88,6 +88,38 @@ int UmiSourceContractPresetValue(const char *json, const char *preset,
 int UmiSourceContractAuditPresets(const char *json, const char *path,
     UmiSourceContractReport *report);
 
+
+/** Borrowed canonical assets. The caller owns every byte for the call duration.
+ * Each asset must be nonempty and at most 2 MiB. Supply the approved resources
+ * from one Framework checkout; this check does not establish their provenance. */
+typedef struct UmiSourceBrandAsset {
+    const unsigned char *bytes;
+    size_t length;
+} UmiSourceBrandAsset;
+typedef struct UmiSourceBrandAssets {
+    UmiSourceBrandAsset ico;
+    UmiSourceBrandAsset logo_light;
+    UmiSourceBrandAsset logo_dark;
+    UmiSourceBrandAsset symbol;
+} UmiSourceBrandAssets;
+/** Check the owned standalone-guide markers, font roles and actual decoded
+ * SVG/ICO bytes. Comments, inert templates and raw script/text regions do not
+ * provide visible identity. The input is a bounded HTML span, not a browser
+ * DOM. This checks the controlled guide format; it is not HTML sanitization,
+ * a layout/contrast test, proof of installed fonts, or a signature check.
+ * Return 0: no findings, 1: branding findings, 2: input/structural error.
+ * Nothing is written to the source. Diagnostics omit source/asset bodies. */
+int UmiSourceContractGuideBranding(const char *html, size_t length,
+    const char *path, const UmiSourceBrandAssets *assets,
+    UmiSourceContractReport *report);
+/** Recursively audit lowercase .html files using existing bounded source
+ * collection. Symlinks/reparse entries and build/.git directories are skipped;
+ * missing roots and an empty selection fail. Load umicom.ico, umicom-logo.svg,
+ * umicom-logo-on-dark.svg and umicom-icon.svg from the explicit asset directory.
+ * Results compare local source bytes only, without rendering or modifying files. */
+int UmiSourceContractAuditGuides(const char *const *roots, size_t count,
+    const char *asset_directory, UmiSourceContractReport *report);
+
 #ifdef __cplusplus
 }
 #endif

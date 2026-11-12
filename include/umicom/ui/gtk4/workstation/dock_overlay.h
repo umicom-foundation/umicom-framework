@@ -19,6 +19,12 @@
 #include <gtk/gtk.h>
 #include "umicom/ui/workstation/dock_preview.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Initialise gtk4 ws dock overlay from caller-provided values so later operations receive
  * a known state.
@@ -30,4 +36,8 @@ GtkWidget *umi_gtk4_ws_dock_overlay_create(GtkWidget *content);
  */
 UmiStatus umi_gtk4_ws_dock_overlay_set_preview(GtkWidget *overlay, const UmiWsDockPreview *preview, const char *label);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

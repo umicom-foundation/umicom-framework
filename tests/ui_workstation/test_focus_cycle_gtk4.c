@@ -70,7 +70,8 @@ int main(int argc, char **argv)
 {
     static const char *const cases[] = {"forward", "reverse", "wrap", "hidden",
         "disabled", "notebook", "single", "no-target", "nested", "reentry",
-        "redirect", "detach", "retire", "modifiers", "controller", "paned"};
+        "redirect", "detach", "retire", "modifiers", "controller", "paned",
+        "collapsed-section", "collapsed-reverse", "expanded-section"};
     if (argc != 2) return 2;
     gboolean known = FALSE;
     for (size_t i = 0U; i < G_N_ELEMENTS(cases); ++i)
@@ -170,6 +171,33 @@ int main(int argc, char **argv)
         CHECK(handled && Inside(GTK_WINDOW(window), regions[2]));
         g_signal_emit_by_name(right, "cycle-child-focus", TRUE, &handled);
         CHECK(handled && Inside(GTK_WINDOW(window), regions[1]));
+    } else if (strcmp(mode, "collapsed-section") == 0 ||
+               strcmp(mode, "collapsed-reverse") == 0 ||
+               strcmp(mode, "expanded-section") == 0) {
+        /* Keep a draft owned by a collapsed expander. With its header excluded
+         * from focus, a closed section offers no target; an open one does. */
+        GtkWidget *section = gtk_expander_new("Retained draft");
+        GtkWidget *body = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+        GtkWidget *draft = entries[1];
+        for (GtkWidget *child = gtk_widget_get_first_child(regions[1]); child != NULL;
+             child = gtk_widget_get_next_sibling(child))
+            gtk_widget_set_sensitive(child, FALSE);
+        gtk_box_remove(GTK_BOX(regions[1]), draft);
+        gtk_widget_set_sensitive(draft, TRUE);
+        gtk_box_append(GTK_BOX(body), draft);
+        gtk_expander_set_child(GTK_EXPANDER(section), body);
+        gtk_widget_set_focusable(section, FALSE);
+        gtk_box_append(GTK_BOX(regions[1]), section);
+        gboolean expanded = strcmp(mode, "expanded-section") == 0;
+        gboolean reverse = strcmp(mode, "collapsed-reverse") == 0;
+        gtk_expander_set_expanded(GTK_EXPANDER(section), expanded);
+        Settle();
+        CHECK(gtk_widget_get_mapped(draft) == expanded);
+        CHECK(gtk_widget_grab_focus(entries[reverse ? 2 : 0]));
+        CHECK(UmiGtk4FocusCycleAdvance(workspace, reverse));
+        CHECK(Inside(GTK_WINDOW(window), regions[expanded ? 1 : reverse ? 0 : 2]));
+        CHECK(gtk_expander_get_child(GTK_EXPANDER(section)) == body);
+        CHECK(gtk_expander_get_expanded(GTK_EXPANDER(section)) == expanded);
     } else if (strcmp(mode, "notebook") == 0) {
         /* Only the selected notebook page participates. Marked descendants
          * of a region do not create extra panel stops. */

@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/base/value_archive.h
- * PURPOSE: Describe checked, portable value bytes without granting execution authority.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Describe checked, portable value bytes and caller-owned native comparisons without granting execution authority.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_BASE_VALUE_ARCHIVE_H
@@ -39,6 +46,46 @@ typedef struct UmiValueArchiveInfo {
  */
 UmiStatus umi_value_archive_inspect(const void *bytes, size_t byte_count,
     UmiValueArchiveInfo *out_info);
+
+
+/** A measured request has not compared values. Distinguish that state from an
+ * actual equal result: zero-initialized metadata is never evidence of equality. */
+typedef enum UmiValueArchiveRelation {
+    UMI_VALUE_ARCHIVE_NOT_COMPARED = 0,
+    UMI_VALUE_ARCHIVE_EQUAL = 1,
+    UMI_VALUE_ARCHIVE_DIFFERENT = 2
+} UmiValueArchiveRelation;
+
+typedef struct UmiValueArchiveComparison {
+    size_t left_archive_size;
+    size_t right_archive_size;
+    size_t required_workspace;
+    UmiValueArchiveRelation relation;
+} UmiValueArchiveComparison;
+
+/** Typed archive_compare_with_workspace APIs compare the existing canonical
+ * encoded state of two validated records without allocating or mutating them.
+ *
+ * - Pass NULL/zero workspace to measure both values. Success reports the
+ *   required byte capacity with NOT_COMPARED; this does not establish equality.
+ * - Supply separate writable byte storage of at least required_workspace bytes
+ *   to compare. No special workspace alignment is required. A short workspace
+ *   returns CAPACITY_EXCEEDED with measured metadata and writes no workspace bytes.
+ * - Other refusals preserve out_comparison. Workspace may contain partial
+ *   encoded data after an encoding failure; it is scratch, never a live owner.
+ * - Inputs may share storage with each other. Neither may overlap workspace or
+ *   out_comparison; output metadata and workspace must also be disjoint.
+ *   Inputs stay stable and readable throughout the call. This API provides no lock.
+ * - A successful comparison includes every encoded field, including revisions.
+ *   It ignores struct padding, rebuilt structure-size fields and unused text
+ *   tails exactly as the existing codec does. Floating signed zeros retain the
+ *   codec's bit distinction; this is encoded-state equality, not domain equivalence.
+ * - Workspace holds at most twice UMI_VALUE_ARCHIVE_BYTE_LIMIT bytes. The caller
+ *   owns its lifetime and any clearing needed for sensitive encoded fields.
+ * - Equality is an observation, not a publication or authorization token. Use
+ *   the owner revision/transaction API when applying reviewed live state.
+ *   No I/O, provider call, command execution or allocation occurs.
+ */
 
 /* Typed archive APIs use these common ownership rules:
  * - Encode accepts NULL/zero output to measure. A short output reports the

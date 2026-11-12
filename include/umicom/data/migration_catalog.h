@@ -15,6 +15,12 @@
 #ifndef UMICOM_DATA_MIGRATION_CATALOG_H
 #define UMICOM_DATA_MIGRATION_CATALOG_H
 #include "umicom/data/explorer_types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * List the named database migration state values accepted by this public contract.
  */
@@ -54,4 +60,8 @@ UmiStatus umi_database_migration_catalog_mark_applied(UmiDatabaseMigrationCatalo
  * client applications.
  */
 size_t umi_database_migration_catalog_pending(const UmiDatabaseMigrationCatalog *catalog);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -18,6 +18,12 @@
 #include "umicom/base/status.h"
 #include "umicom/desktop/types.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Represent the desktop layout catalogue data shared with callers of this public contract.
  */
@@ -90,4 +96,8 @@ UmiDesktopLayout *umi_desktop_layout_catalogue_active_mutable(
 const UmiDesktopLayout *umi_desktop_layout_catalogue_active(
     const UmiDesktopLayoutCatalogue *catalogue);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

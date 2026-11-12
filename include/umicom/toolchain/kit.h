@@ -110,12 +110,15 @@ void umi_toolchain_kit_init(UmiToolchainKitSnapshot *kit,
                             const char *kit_id,
                             const char *display_name);
 /**
- * Check that toolchain kit satisfies its contract before another service relies on it.
+ * Check version, required fields and the terminator of every inline string.
+ * This structural admission does not probe tools, authorise execution or
+ * establish that a selected toolchain is installed and usable.
  */
 UmiStatus umi_toolchain_kit_validate(const UmiToolchainKitSnapshot *kit);
 /**
- * Provide the toolchain kit from profile operation used by this module and its client
- * applications.
+ * Construct a complete kit from compatible profile storage and bounded used
+ * fields. Failure preserves the previous kit; allocation failure is reported.
+ * Missing target information returns NOT_FOUND. This does not execute tools.
  */
 UmiStatus umi_toolchain_kit_from_profile(
     UmiToolchainKitSnapshot *kit,
@@ -123,42 +126,45 @@ UmiStatus umi_toolchain_kit_from_profile(
     const UmiSdkSnapshot *sdk,
     const char *host_triple);
 /**
- * Provide the toolchain kit apply cross toolchain operation used by this module and its
- * client applications.
+ * Overlay nonempty cross-tool fields on an initialized kit. Malformed input,
+ * allocation failure or exhausted revision preserves the kit. A valid partial
+ * or unavailable discovery is published, advances the revision and returns
+ * UNAVAILABLE; that result describes readiness rather than rejected storage.
+ * Empty optional tool paths retain the previous selection. No tool is run.
  */
 UmiStatus umi_toolchain_kit_apply_cross_toolchain(
     UmiToolchainKitSnapshot *kit,
     const UmiCrossToolchainSnapshot *cross_toolchain);
 /**
- * Provide the toolchain kit apply python runtime operation used by this module and its
- * client applications.
+ * Copy a discovered runtime executable into initialized kit storage. Missing
+ * runtime returns NOT_FOUND. Rejected input leaves the kit unchanged.
  */
 UmiStatus umi_toolchain_kit_apply_python_runtime(
     UmiToolchainKitSnapshot *kit,
     const UmiPythonRuntimeSnapshot *runtime);
 /**
- * Provide the toolchain kit set sysroot operation used by this module and its client
- * applications.
+ * Replace the sysroot and advance the revision once. Text setters accept empty
+ * text to clear a selection and pointers into the same field. All text storage
+ * must be terminated; a complete ready kit is not required during composition.
+ * Invalid input, oversized text or UINT64_MAX revision leaves the kit unchanged.
  */
 UmiStatus umi_toolchain_kit_set_sysroot(UmiToolchainKitSnapshot *kit,
                                        const char *sysroot);
 /**
- * Provide the toolchain kit set cmake toolchain file operation used by this module and its
- * client applications.
+ * Replace the CMake toolchain file using the same contract as set_sysroot.
  */
 UmiStatus umi_toolchain_kit_set_cmake_toolchain_file(
     UmiToolchainKitSnapshot *kit,
     const char *path);
 /**
- * Provide the toolchain kit set environment profile operation used by this module and its
- * client applications.
+ * Replace the environment profile using the same contract as set_sysroot.
  */
 UmiStatus umi_toolchain_kit_set_environment_profile(
     UmiToolchainKitSnapshot *kit,
     const char *profile_id);
 /**
- * Provide the toolchain kit is cross compile operation used by this module and its client
- * applications.
+ * Compare bounded host and target names. Return false for incompatible storage
+ * or missing names; a false result is not evidence of a usable native compiler.
  */
 int umi_toolchain_kit_is_cross_compile(const UmiToolchainKitSnapshot *kit);
 /**

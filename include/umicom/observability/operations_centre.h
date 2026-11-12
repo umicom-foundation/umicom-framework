@@ -19,6 +19,12 @@
 #include "umicom/observability/crash_registry.h"
 #include "umicom/observability/health_summary.h"
 #include "umicom/observability/resilience_telemetry.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the operations evidence counts data shared with callers of this public
  * contract.
@@ -91,4 +97,8 @@ UmiStatus umi_operations_centre_update_resilience(UmiOperationsCentre *centre,co
  * applications.
  */
 void umi_operations_centre_snapshot(const UmiOperationsCentre *centre,UmiOperationsCentreSnapshot *out_snapshot);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

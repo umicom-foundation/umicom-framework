@@ -16,6 +16,7 @@
  *---------------------------------------------------------------------------*/
 #include "cli.h"
 #include "umicom/platform/native_arguments.h"
+#include "umicom/local_models/manager.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -269,6 +270,9 @@ static int RunNativeCommand(int argc, char **argv)
         return 0;
     }
     command = argv[1];
+    /* Native model commands share Framework policy with the standalone host. */
+    if (strcmp(command, "models") == 0)
+        return UmiModelsCommand(argc - 2, argv + 2);
     /* Use the stable identifier comparison to choose the matching record or policy. */
     if (strcmp(command, "help") == 0 || strcmp(command, "--help") == 0 ||
         strcmp(command, "-h") == 0) {
@@ -288,6 +292,17 @@ static int RunNativeCommand(int argc, char **argv)
     /* Saved test evidence is inspected through Framework without a toolchain or test launch. */
     /* Selection is computed by Framework; this route only displays its evidence. */
     /* Archive inspection is read-only and retains historical provenance. */
+    /* Reuse service CLIs, preserving argv[0] and the existing confirmation contracts. */
+    /* Source branding checks do not prepare a toolchain or launch a process. */
+    /* Compiler metadata reuses Framework planning without toolchain preparation. */
+    if (strcmp(command, "compiler") == 0)
+        return umi_cli_command_compiler(argc - 2, argv + 2);
+    if (strcmp(command, "branding") == 0)
+        return umi_cli_command_branding(argc - 2, argv + 2);
+    if (strcmp(command, "boot-media") == 0)
+        return umi_cli_command_boot_media(argc - 1, argv + 1);
+    if (strcmp(command, "setup") == 0)
+        return umi_cli_command_setup(argc - 1, argv + 1);
     if (strcmp(command, "learning-pack") == 0)
         return umi_cli_command_learning_pack(argc - 2, argv + 2);
     if (strcmp(command, "verify") == 0)
@@ -299,6 +314,9 @@ static int RunNativeCommand(int argc, char **argv)
     /* Capture is explicit; planning only reads evidence and previews work. */
     if (strcmp(command, "preview") == 0)
         return umi_cli_command_preview(argc - 2, argv + 2);
+    /* Project creation uses Framework without preparing a build toolchain. */
+    if (strcmp(command, "project") == 0)
+        return umi_cli_command_project(argc - 2, argv + 2);
     if (strcmp(command, "recipe") == 0)
         return umi_cli_command_recipe(argc - 2, argv + 2);
     if (strcmp(command, "observe-files") == 0)

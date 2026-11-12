@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_COLUMN_ORDER_H
 
 #include "umicom/ui/enterprise/types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent column order data shared with callers of this public contract.
  */
@@ -35,4 +41,8 @@ UmiStatus umi_ui_ent_column_order_append(UmiUiEntColumnOrder *o,const char *id);
  */
 UmiStatus umi_ui_ent_column_order_move(UmiUiEntColumnOrder *o,size_t from,size_t to);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

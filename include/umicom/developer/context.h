@@ -110,6 +110,8 @@ void umi_developer_context_destroy(UmiDeveloperContext *context);
  * Copy developer context into module-owned storage so callers keep ownership of their
  * input values.
  */
+/* Revision exhaustion returns INVALID_STATE without changing context. Patch
+ * uses this same boundary and retains its output on refusal. */
 UmiStatus umi_developer_context_set(
     UmiDeveloperContext *context,
     const UmiDeveloperContextSnapshot *snapshot);

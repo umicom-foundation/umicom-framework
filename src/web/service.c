@@ -19,7 +19,7 @@
 
 #include "umicom/web/service.h"
 #include <stdlib.h>
-struct UmiWebService{UmiWebRouter *router;UmiWebMiddlewareChain *middleware;UmiWebSessionStore *sessions;UmiWebOriginPolicy *origins;UmiWebEndpointRegistry *endpoints;UmiWebMetrics metrics;UmiWebRequestGate gate;void *gate_context;};
+struct UmiWebService{UmiWebRouter *router;UmiWebMiddlewareChain *middleware;UmiWebSessionStore *sessions;UmiWebOriginPolicy *origins;UmiWebEndpointRegistry *endpoints;UmiWebMetrics metrics;UmiWebRequestGate gate;void *gate_context;UmiWebBodyHandler body_fallback;void *body_context;};
 /*
  * Initialise web service from caller-provided values so later operations receive a known
  * state.
@@ -41,6 +41,9 @@ UmiWebRouter *umi_web_service_router(UmiWebService *s){return s!=NULL?s->router:
 #if 0
 UmiStatus umi_web_service_handle(UmiWebService *s,const UmiWebRequest *req,UmiWebResponse *res){UmiStatus st;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s==NULL||req==NULL||res==NULL)return UMI_STATUS_INVALID_ARGUMENT;umi_web_response_init(res);st=umi_web_middleware_chain_run(s->middleware,req,res);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(st==UMI_STATUS_OK)st=umi_web_router_dispatch(s->router,req,res);umi_web_metrics_record(&s->metrics,req->body_length,res->status,res->body_length);return st;}
 #endif
+/* Preserve inline-only dispatch for review. The common owner below adds an
+ * explicitly opted-in body fallback while retaining all admission stages. */
+#if 0
 UmiStatus umi_web_service_handle(UmiWebService *s, const UmiWebRequest *req, UmiWebResponse *res)
 {
     UmiStatus
@@ -67,6 +70,68 @@ UmiStatus umi_web_service_handle(UmiWebService *s, const UmiWebRequest *req, Umi
         st = umi_web_router_dispatch(s->router, req, res);
     umi_web_metrics_record(&s->metrics, req->body_length, res->status, res->body_length);
     return st;
+}
+#endif
+
+static UmiStatus ServiceHandle(UmiWebService *s, const UmiWebRequest *req, UmiWebResponse *res,
+    UmiWebResponseBody **body)
+{
+    UmiStatus
+        st; /* Protect caller-owned memory by checking that required state is available before it is used. */
+    if (s == NULL || req == NULL || res == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    umi_web_response_init(res); /* Admission runs before any middleware or application route. A refusal
+ * response is intentional; a failing gate is still an operational error. */
+    bool accepted = true;
+    if (s->gate != NULL)
+    {
+        accepted = false;
+        st = s->gate(req, res, &accepted, s->gate_context);
+        if (st != UMI_STATUS_OK || !accepted)
+        {
+            umi_web_metrics_record(&s->metrics, req->body_length, res->status, res->body_length);
+            return st;
+        }
+    }
+    st = umi_web_middleware_chain_run(
+        s->middleware, req,
+        res); /* Protect caller-owned memory by checking that required state is available before it is used. */
+    if (st == UMI_STATUS_OK) {
+        if (body != NULL && s->body_fallback != NULL && !UmiWebRouterHasMatch(s->router, req))
+            st = s->body_fallback(req, res, body, s->body_context);
+        else
+            st = umi_web_router_dispatch(s->router, req, res);
+    }
+    if (body != NULL && *body != NULL) {
+        if (st == UMI_STATUS_OK && res->body_length != 0U) st = UMI_STATUS_INVALID_STATE;
+        if (st != UMI_STATUS_OK) {
+            UmiWebResponseBodyDestroy(*body);
+            *body = NULL;
+        }
+    }
+    size_t response_bytes = body != NULL && *body != NULL ?
+        UmiWebResponseBodyLength(*body) : res->body_length;
+    umi_web_metrics_record(&s->metrics, req->body_length, res->status, response_bytes);
+    return st;
+}
+
+UmiStatus umi_web_service_handle(UmiWebService *service, const UmiWebRequest *request, UmiWebResponse *response)
+{
+    return ServiceHandle(service, request, response, NULL);
+}
+UmiStatus UmiWebServiceHandleBody(UmiWebService *service, const UmiWebRequest *request,
+    UmiWebResponse *response, UmiWebResponseBody **out_body)
+{
+    if (out_body == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_body = NULL;
+    return ServiceHandle(service, request, response, out_body);
+}
+UmiStatus UmiWebServiceSetBodyFallback(UmiWebService *service, UmiWebBodyHandler handler, void *context)
+{
+    if (service == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    service->body_fallback = handler;
+    service->body_context = handler != NULL ? context : NULL;
+    return UMI_STATUS_OK;
 }
 
 UmiStatus UmiWebServiceSetRequestGate(UmiWebService *service, UmiWebRequestGate gate, void *context)

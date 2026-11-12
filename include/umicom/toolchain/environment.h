@@ -54,27 +54,30 @@ typedef struct UmiEnvironmentPlan {
  */
 void umi_environment_plan_init(UmiEnvironmentPlan *plan);
 /**
- * Add environment plan only after its inputs and available capacity have been checked.
+ * Add one owned entry to a valid plan. Reject duplicate names, malformed text
+ * and capacity overflow without changing the plan. Names remain case-sensitive.
  */
 UmiStatus umi_environment_plan_add(UmiEnvironmentPlan *plan,
                                    const char *name,
                                    const char *value);
 /**
- * Copy environment plan into module-owned storage so callers keep ownership of their input
- * values.
+ * Set one owned entry after validating the plan and candidate text. A value
+ * borrowed from this same plan is supported; refusal preserves the old state.
  */
 UmiStatus umi_environment_plan_set(UmiEnvironmentPlan *plan,
                                    const char *name,
                                    const char *value);
 /**
- * Find environment plan while leaving the underlying catalogue or model owned by this
- * module.
+ * Borrow a value from a valid plan. NULL means absent or invalid; call the
+ * validator separately when the reason is needed. Mutation can invalidate it.
  */
 const char *umi_environment_plan_find(const UmiEnvironmentPlan *plan,
                                       const char *name);
 /**
- * Provide the environment plan compose operation used by this module and its client
- * applications.
+ * Compose optional base and overlay into an independently staged candidate.
+ * Overlay values replace matching base names. Either input may be out_plan;
+ * failure leaves out_plan unchanged. Heap allocation failure is reported.
+ * Successful process-entry pointers always refer to out_plan storage.
  */
 UmiStatus umi_environment_plan_compose(const UmiEnvironmentPlan *base,
                                        const UmiEnvironmentPlan *overlay,
@@ -108,21 +111,23 @@ UmiStatus umi_environment_plan_set_assignment(
  */
 UmiStatus umi_environment_plan_validate(const UmiEnvironmentPlan *plan);
 /**
- * Provide the environment plan from toolchain operation used by this module and its client
- * applications.
+ * Build an owned plan from a compatible profile. Missing optional tools are
+ * allowed; malformed validated tool paths and preparation errors are reported.
+ * Failure preserves out_plan. An absent inherited PATH adds no empty segment.
  */
 UmiStatus umi_environment_plan_from_toolchain(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *out_plan);
 /**
- * Provide the environment plan variables operation used by this module and its client
- * applications.
+ * Validate and rebind borrowed process entries to this plan. Invalid plans
+ * return NULL without rebinding. Keep the plan alive and stable during use.
  */
 const UmiEnvironmentVariable *umi_environment_plan_variables(
     UmiEnvironmentPlan *plan);
 /**
- * Write environment plan in its stable representation and report capacity or input
- * failures to the caller.
+ * Validate and format the complete plan before opening its text destination.
+ * Admission/formatting refusal performs no write. File-write failures retain
+ * the filesystem service semantics; this is not an atomic filesystem snapshot.
  */
 UmiStatus umi_environment_plan_write(const UmiEnvironmentPlan *plan,
                                      const char *path);

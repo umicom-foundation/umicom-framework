@@ -67,3 +67,64 @@ Follow tests/video_sequence/test_workspace_gtk4.c into tests/support/widget_diag
 
 Practice with a saved test log: identify the test name, first warning, final outcome and missing evidence. Explain which observation would distinguish a test-setup problem from a product defect. Do not change a test’s expected result until you can explain the behaviour it is intended to protect.
 
+
+## Retained controls and keyboard navigation
+
+A widget can still exist without belonging to the visible widget tree. For example,
+GTK keeps an expander's body alive while the section is collapsed, but removes that
+body from its internal box. An ancestor lookup from a field inside the closed body
+can therefore return null. The field has not been deleted and its draft text should
+still be present.
+
+The Media split shortcut keeps a borrowed pointer to the section owner in
+`UmiVideoSequencePanel.splitSection`. The workspace owns that section. The command
+checks that the panel is open, reveals the inspector, expands the same section and
+focuses the existing time field. It does not create a replacement form or submit an
+edit. See `adapters/gtk4/video_sequence_presentation.inc` and
+`tests/video_sequence/workspace_presentation.inc`.
+
+Use this investigation sequence when a shortcut appears to do nothing:
+
+1. Check whether the section is open and whether its body is mapped.
+2. Compare `gtk_expander_get_child()` before and after collapse. It should identify
+   the same retained body when the application deliberately preserves drafts.
+3. Check the field's root and ancestry separately from its object lifetime.
+4. Invoke the real shortcut and verify that the original field becomes mapped,
+   receives focus and retains the draft value. Verify that viewing the section
+   has not added an undo entry.
+5. Repeat after hiding the inspector and after a callback retires the panel.
+
+Framework's workstation focus cycle similarly snapshots only mapped, sensitive,
+focusable targets in a live region. It holds references during callbacks and checks
+root membership again before trying another target. Forward navigation tries the
+first eligible widget; reverse navigation tries the last. It neither opens closed
+sections nor selects hidden notebook pages. A callback that redirects focus or
+retires the workspace must stop that navigation attempt.
+
+The focused regression cases are `framework.ui_workstation.focus_cycle.collapsed-section`,
+`collapsed-reverse` and `expanded-section` under the same prefix. Run the existing
+reentry, detach, retire, notebook and pane cases too: a fix for collapsed sections
+must preserve those lifetime and navigation contracts. These tests require a working
+GTK display; a skipped run does not verify the behavior.
+
+## Capture a rendered frame, not an assumed one
+
+A mapped widget can need another frame after a focus or layout change.
+`GtkWidgetPaintable` may draw nothing when its widget is not ready to draw. A null
+render node at that moment is not sufficient evidence that the screenshot code or
+renderer is permanently broken.
+
+The Media fixture queues a draw and retries its snapshot within a two-second
+deadline, dispatching bounded main-context slices between attempts. It still fails
+if the root is unmapped, has no size, or produces no node by the deadline. GTK
+warnings remain fatal. This avoids treating a fixed sleep as proof that rendering
+finished and avoids accepting an empty image as screenshot evidence.
+
+If the bounded wait expires, keep the mapped state and allocation diagnostic,
+source identity, GTK version and renderer information. Do not turn the assertion
+into a skip or claim success without an actual saved image.
+
+GTK references: [expander implementation](https://gitlab.gnome.org/GNOME/gtk/-/blob/main/gtk/gtkexpander.c)
+and [WidgetPaintable documentation](https://docs.gtk.org/gtk4/class.WidgetPaintable.html).
+The implementation link tracks upstream development; compare the version installed
+in the test environment before attributing a runtime failure to that library.

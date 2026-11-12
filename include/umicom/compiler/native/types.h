@@ -77,6 +77,13 @@ typedef struct UmiNativeSourceSpan { uint32_t file_id; size_t offset; size_t len
 /**
  * Provide the nc copy text operation used by this module and its client applications.
  */
+/**
+ * Copy only if a terminator is found within capacity bytes. Source storage must
+ * be readable until that terminator or the capacity boundary. Refusal leaves the
+ * destination unchanged; successful self and overlapping copies are supported.
+ * The unbounded hash_text convenience function separately requires a terminated
+ * C string. Validate fixed records before passing their fields to it.
+ */
 UmiStatus umi_nc_copy_text(char *destination,size_t capacity,const char *source);
 /**
  * Provide the nc hash bytes operation used by this module and its client applications.

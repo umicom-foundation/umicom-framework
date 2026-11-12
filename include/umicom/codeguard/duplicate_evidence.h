@@ -16,6 +16,12 @@
 #define UMICOM_CODEGUARD_DUPLICATE_EVIDENCE_H
 #include "umicom/codeguard/duplicate.h"
 #include "umicom/codeguard/quality_types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * List the named code guard candidate disposition values accepted by this public contract.
  */
@@ -61,4 +67,8 @@ UmiStatus umi_codeguard_duplicate_review_add(UmiCodeGuardDuplicateReview *review
  * client applications.
  */
 UmiStatus umi_codeguard_duplicate_review_disposition(UmiCodeGuardDuplicateReview *review,size_t index,UmiCodeGuardCandidateDisposition disposition);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

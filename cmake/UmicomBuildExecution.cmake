@@ -14,6 +14,7 @@
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 target_sources(umicom_toolchain PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/toolchain/prepared_shell.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/toolchain/build_invocation.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/toolchain/build_logging.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/toolchain/version_inventory.c"
@@ -188,3 +189,141 @@ if(BUILD_TESTING AND UMICOM_BUILD_NATIVE_TOOL)
             TIMEOUT 30 LABELS "framework;toolchain;evidence;cli")
     endforeach()
 endif()
+
+# Compile the real adapters against synthetic boundaries. These checks never
+# discover a toolchain, repair a cache or launch an interactive process.
+if(BUILD_TESTING)
+    set(_cli_admission_cases
+        build.null-vector build.null-entry build.negative build.null-context
+        build.help build.help-short build.empty build.unknown build.no-options
+        repair.null-vector repair.null-entry repair.negative repair.null-context
+        repair.help repair.help-short repair.empty repair.unknown repair.no-options
+        repair.dry-run repair.duplicate repair.extra
+        shell.null-vector shell.null-entry shell.negative shell.null-context
+        shell.help shell.help-short shell.empty shell.unknown shell.no-options
+        shell.program shell.extra)
+    set(_prepared_shell_cases success default empty-default child-failure
+        not-launched cancelled timeout transport null-environment count name value
+        duplicate later-malformed last-unterminated)
+    foreach(_suite cli_admission prepared_shell)
+        if(_suite STREQUAL "cli_admission")
+            set(_source test_build_cli_admission.c)
+            set(_cases ${_cli_admission_cases})
+        else()
+            set(_source test_prepared_shell.c)
+            set(_cases ${_prepared_shell_cases})
+        endif()
+        add_executable("umicom-build-${_suite}-test"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/toolchain_lifecycle/${_source}")
+        target_link_libraries("umicom-build-${_suite}-test" PRIVATE Umicom::toolchain)
+        set_target_properties("umicom-build-${_suite}-test" PROPERTIES
+            C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        umicom_apply_warnings("umicom-build-${_suite}-test")
+        umicom_apply_sanitizers("umicom-build-${_suite}-test")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target("umicom-build-${_suite}-test")
+        endif()
+        if(COMMAND umicom_target_qualification_inputs)
+            if(_suite STREQUAL "cli_admission")
+                umicom_target_qualification_inputs("umicom-build-${_suite}-test" FILES
+                    "${CMAKE_CURRENT_LIST_DIR}/../tools/umicom/src/command_build.c"
+                    "${CMAKE_CURRENT_LIST_DIR}/../tools/umicom/src/cli.h")
+            else()
+                umicom_target_qualification_inputs("umicom-build-${_suite}-test" FILES
+                    "${CMAKE_CURRENT_LIST_DIR}/../src/toolchain/prepared_shell.c"
+                    "${CMAKE_CURRENT_LIST_DIR}/../src/toolchain/environment.c")
+            endif()
+        endif()
+        foreach(_case IN LISTS _cases)
+            add_test(NAME "framework.toolchain.build.${_suite}.${_case}"
+                COMMAND "umicom-build-${_suite}-test" "${_case}")
+            set_tests_properties("framework.toolchain.build.${_suite}.${_case}" PROPERTIES
+                TIMEOUT 30 LABELS "framework;toolchain;cli;regression;no-process")
+            if(COMMAND umicom_test_impact_owners)
+                umicom_test_impact_owners("framework.toolchain.build.${_suite}.${_case}"
+                    TARGETS "umicom-build-${_suite}-test")
+            endif()
+        endforeach()
+    endforeach()
+endif()
+
+# Shared environment admission is exercised without writing a file. The fixture
+# substitutes only candidate allocation and the final export boundary.
+if(BUILD_TESTING)
+    add_executable(umicom-environment-admission-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/toolchain_lifecycle/test_environment_admission.c")
+    target_link_libraries(umicom-environment-admission-test PRIVATE Umicom::toolchain)
+    set_target_properties(umicom-environment-admission-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-environment-admission-test)
+    umicom_apply_sanitizers(umicom-environment-admission-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-environment-admission-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-environment-admission-test FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../src/toolchain/environment.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/toolchain/environment.h")
+    endif()
+    foreach(_case compose alias-base alias-overlay alias-both empty-compose
+            invalid-base invalid-overlay allocation compose-capacity alias-capacity
+            set-self set-slice add-duplicate invalid-name invalid-value long-value
+            count-read count-mutate unterminated-read export export-failure
+            export-invalid export-capacity)
+        add_test(NAME "framework.toolchain.environment.admission.${_case}"
+            COMMAND umicom-environment-admission-test "${_case}")
+        set_tests_properties("framework.toolchain.environment.admission.${_case}" PROPERTIES
+            TIMEOUT 30 LABELS "framework;toolchain;environment;regression;no-process")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.toolchain.environment.admission.${_case}"
+                TARGETS umicom-environment-admission-test)
+        endif()
+    endforeach()
+endif()
+
+# Toolchain profile conversion must distinguish absent optional tools from bad
+# validated paths, while retaining the last published environment on failure.
+if(BUILD_TESTING)
+    add_executable(umicom-toolchain-environment-admission-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/toolchain_lifecycle/test_toolchain_environment_admission.c")
+    target_link_libraries(umicom-toolchain-environment-admission-test PRIVATE Umicom::toolchain)
+    set_target_properties(umicom-toolchain-environment-admission-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-toolchain-environment-admission-test)
+    umicom_apply_sanitizers(umicom-toolchain-environment-admission-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-toolchain-environment-admission-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-toolchain-environment-admission-test FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../src/toolchain/environment.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../src/toolchain/profile.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/toolchain/environment.h")
+    endif()
+    foreach(_case valid missing-optional missing-c declared-count
+            profile-size profile-version profile-count bin-unterminated prefix-unterminated
+            c-unterminated cpp-unterminated cpp-newline pkg-newline ninja-newline rc-newline
+            prefix-newline java-unterminated java-newline java-parent-first java-parent-second
+            allocation path-long path-unset path-empty)
+        add_test(NAME "framework.toolchain.environment.profile.${_case}"
+            COMMAND umicom-toolchain-environment-admission-test "${_case}")
+        set_tests_properties("framework.toolchain.environment.profile.${_case}" PROPERTIES
+            TIMEOUT 30 LABELS "framework;toolchain;environment;regression;no-process")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.toolchain.environment.profile.${_case}"
+                TARGETS umicom-toolchain-environment-admission-test)
+        endif()
+    endforeach()
+endif()
+
+# Cache interpretation and recovery share the native toolchain service.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomCacheRecoveryChecks.cmake")
+
+# Preset creation reuses Protocol JSON and exclusive Platform output.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomUserPresetChecks.cmake")
+
+# Clean uses shared cache admission and native non-following tree removal.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomTreeRemovalChecks.cmake")
+
+# Pure metadata preflight protects cleanup and log reservation for every host.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomBuildPreflightChecks.cmake")

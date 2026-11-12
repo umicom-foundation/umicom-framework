@@ -16,6 +16,7 @@
 #ifndef UMICOM_DEVELOPER_PROJECT_SERVICE_H
 #define UMICOM_DEVELOPER_PROJECT_SERVICE_H
 
+#include "umicom/build/project_profile.h"
 #include "umicom/developer_project/builtin_languages.h"
 #include "umicom/developer_project/builtin_templates.h"
 #include "umicom/developer_project/builtin_providers.h"
@@ -73,13 +74,33 @@ UmiStatus umi_developer_project_service_plan_generation(
 
 /**
  * Provide the developer project service generate operation used by this module and its
- * client applications.
+ * client applications. Candidate storage is heap-owned. The optional report
+ * is reset for every attempt; a refused attempt leaves out_model unchanged.
+ * A failed file write or later registry update may leave created files for
+ * inspection. This is not a multi-file rollback transaction. The caller owns
+ * serialization of service mutations and the destination filesystem.
  */
 UmiStatus umi_developer_project_service_generate(
     UmiDeveloperProjectService *service,
     const UmiDeveloperProjectGenerationRequest *request,
     UmiDeveloperProjectGeneratorReport *out_report,
     UmiDeveloperProjectModel *out_model);
+
+
+/** Generate a new project through exclusive rooted directory/file creation.
+ * Compose and validate its model and build profile before filesystem effects.
+ * Publish the registry revision and optional model/profile outputs only after
+ * all writes succeed. Reported partial files/directories remain on I/O failure.
+ * The selected absolute parent must already exist. Overwrite mode is refused.
+ * Dry-run output is a prediction with no filesystem access or registry change.
+ * The caller owns service/request/destination serialization; output storage
+ * must not overlap the request, report or another output. Existing project IDs
+ * retain the registry's upsert semantics on successful creation. */
+UmiStatus umi_developer_project_service_generate_new(
+    UmiDeveloperProjectService *service,
+    const UmiDeveloperProjectGenerationRequest *request,
+    UmiDeveloperProjectGeneratorReport *out_report,
+    UmiDeveloperProjectModel *out_model, UmiBuildProfile *out_profile);
 
 /**
  * Provide the developer project service import indexed operation used by this module and

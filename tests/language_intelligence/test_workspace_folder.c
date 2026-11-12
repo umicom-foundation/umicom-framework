@@ -1,7 +1,10 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/language_intelligence/test_workspace_folder.c
- * PURPOSE: Focused regression test for workspace folder.
+ *
+ * PURPOSE:
+ *   Focused regression test for workspace folder.
+ *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
  * Umicom Foundation
@@ -161,6 +164,8 @@ static void ArchiveFillUnusedText(UmiLanguageIntelligenceWorkspaceFolder *value)
 #define ARCHIVE_WORKSPACE_DECODE umi_language_intelligence_workspace_folder_archive_decode_with_workspace
 /* Exercise guarded import through this domain's public snapshot codec. */
 #define ARCHIVE_CONDITIONAL_DECODE umi_language_intelligence_workspace_folder_archive_decode_if_unchanged
+/* Exercise canonical comparison with explicit caller-owned scratch. */
+#define ARCHIVE_COMPARE umi_language_intelligence_workspace_folder_archive_compare_with_workspace
 #define ARCHIVE_EQUAL RecordDefaultsEqual
 #include "../value_archive/record_cases.h"
 

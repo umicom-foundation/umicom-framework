@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_FILTER_PLAN_H
 
 #include "umicom/ui/enterprise/filter_predicate.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent filter plan data shared with callers of this public contract.
  */
@@ -35,4 +41,8 @@ UmiStatus umi_ui_ent_filter_plan_add(UmiUiEntFilterPlan *p,const UmiUiEntFilterP
  */
 int umi_ui_ent_filter_plan_matches_one(const UmiUiEntFilterPlan *p,const char *column_id,const UmiUiEntCellValue *value);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

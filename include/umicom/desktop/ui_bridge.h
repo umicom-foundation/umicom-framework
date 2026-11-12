@@ -20,6 +20,12 @@
 #include "umicom/desktop/monitor_topology.h"
 #include "umicom/ui/workspace_customisation.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Provide the desktop seed workspace customisation operation used by this module and its
  * client applications.
@@ -43,4 +49,8 @@ UmiStatus umi_desktop_seed_workspace_groups(
 UmiStatus umi_desktop_seed_window_catalogue(
     UmiUiWindowCatalogue *catalogue);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -331,3 +331,10 @@ UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_debug_source_snapshot_archive_decode_if_uncha
  * since the caller inspected the collection and allocates no staging copy. */
 UMI_DEFINE_SNAPSHOT_REGISTRY_CLEAR(umi_debug_source_registry_clear_if_current,
     UmiDebugSourceRegistry, UMI_DEBUG_SOURCE_CAPACITY)
+
+/* Compare through this owner's validated codec so native review uses the
+ * same fields as persistence. Caller-owned scratch avoids per-call allocation;
+ * an equal observation remains separate from revision-checked publication. */
+#include "../base/value_compare_internal.h"
+UMI_DEFINE_VALUE_COMPARE(umi_debug_source_snapshot_archive_compare_with_workspace,
+    UmiDebugSourceSnapshot, umi_debug_source_snapshot_archive_encode)

@@ -16,6 +16,8 @@
 #include <string.h>
 
 /* Provide the nc copy text operation used by this module and its client applications. */
+/* Bound the source scan by destination capacity and preserve failed copies; overlap-safe movement replaces unbounded strlen followed by memcpy. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_nc_copy_text(char *destination,size_t capacity,const char *source) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -24,6 +26,18 @@ UmiStatus umi_nc_copy_text(char *destination,size_t capacity,const char *source)
     if (destination==NULL || capacity==0U || source==NULL) return UMI_STATUS_INVALID_ARGUMENT;
     size_t n=strlen(source); /* Keep the operation inside its valid bounds before reading, writing or adding data. */ if (n>=capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
     memcpy(destination,source,n+1U); return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_nc_copy_text(char *destination,size_t capacity,const char *source)
+{
+    if (destination == NULL || capacity == 0U || source == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t length = 0U;
+    while (length < capacity && source[length] != '\0') ++length;
+    if (length == capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Admission completes before any write; memmove supports self, suffix and
+     * shifted overlapping copies used by compiler-owned inline records. */
+    (void)memmove(destination,source,length + 1U);
+    return UMI_STATUS_OK;
 }
 /* Provide the nc hash bytes operation used by this module and its client applications. */
 uint64_t umi_nc_hash_bytes(const void *data,size_t size) {

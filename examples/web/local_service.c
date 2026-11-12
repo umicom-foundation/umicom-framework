@@ -113,7 +113,8 @@ static int LocalServiceMain(int argc, char **argv)
         puts("Umicom local C web service\nUse --port <1024..65535> to start on 127.0.0.1.\nRoutes: /, "
              "/api/health, POST /api/echo. Stop with Ctrl+C.\n"
              "Add --root <absolute-export-directory> to preview files instead of the demo routes.\n"
-             "Static files are read-only and must each be smaller than 16 KiB.");
+             /* The former inline limit is retained for review: "smaller than 16 KiB". */
+             "Static files are read-only and must each fit within 1 MiB.");
         return 0;
     }
     UmiWebServerConfig config = umi_web_server_config_default();
@@ -158,6 +159,8 @@ static int LocalServiceMain(int argc, char **argv)
     }
     if (status == UMI_STATUS_OK && argc == 5)
         status = UmiWebRouterSetFallback(umi_web_service_router(service), UmiWebStaticFilesHandle, &files);
+    if (status == UMI_STATUS_OK && argc == 5)
+        status = UmiWebServiceSetBodyFallback(service, UmiWebStaticFilesHandleBody, &files);
     if (status == UMI_STATUS_OK)
         status = umi_web_server_create(&config, service, &server);
     if (status == UMI_STATUS_OK)

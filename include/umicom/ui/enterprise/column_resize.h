@@ -16,10 +16,20 @@
 #define UMICOM_UI_ENTERPRISE_COLUMN_RESIZE_H
 
 #include "umicom/ui/enterprise/column_descriptor.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Perform ui ent column resize through the module contract so client applications do not
  * duplicate its policy.
  */
 int32_t umi_ui_ent_column_resize_apply(const UmiUiEntColumnDescriptor *column,int32_t current_width,int32_t delta);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

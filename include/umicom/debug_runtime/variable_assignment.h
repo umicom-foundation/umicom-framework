@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/debug_runtime/variable_assignment.h
- * PURPOSE: Assign a captured variable through an explicit, stopped-session operation.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Assign a captured variable through an explicit, stopped-session operation.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DEBUG_RUNTIME_VARIABLE_ASSIGNMENT_H
@@ -35,6 +42,9 @@ UmiStatus UmiDebugRuntimeCheckVariableAssignment(UmiDebugRuntimePlatform *platfo
  * its language meaning and may run target code. An empty value is permitted.
  * Serialize all calls on the platform/workspace owner thread. timeout_ms > 0.
  * out is required and cleared on entry. Preflight failure has attempted=0.
+ * Malformed UTF-8 returns PARSE_ERROR; a value longer than 1023 bytes returns
+ * CAPACITY_EXCEEDED. These refusals retain existing variable captures and send
+ * no adapter request. Owner/session/target admission precedes encoding checks.
  * Immediately before transport submission, discard variable registry captures
  * and advance the platform revision. This invalidates every previous target
  * and child page, even if submission, waiting or decoding fails. Existing owned

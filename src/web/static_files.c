@@ -109,6 +109,9 @@ static UmiStatus StaticRelative(const char *path, char *relative, size_t capacit
 #if 0
 UmiStatus umi_web_static_files_serve(const UmiWebStaticFiles *files,const char *request_path,UmiWebResponse *response){char full[UMI_WEB_PATH_CAPACITY*2U];FILE *f;size_t n;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(files==NULL||request_path==NULL||response==NULL)return UMI_STATUS_INVALID_ARGUMENT;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(strstr(request_path,"..")!=NULL)return umi_web_response_set_text(response,UMI_HTTP_STATUS_FORBIDDEN,"text/plain","Forbidden");/* Protect caller-owned memory by checking that required state is available before it is used. */ if(snprintf(full,sizeof(full),"%s/%s",files->root,request_path[0]=='/'?request_path+1:request_path)<0)return UMI_STATUS_INTERNAL_ERROR;f=fopen(full,"rb");/* Protect caller-owned memory by checking that required state is available before it is used. */ if(f==NULL)return umi_web_response_set_text(response,UMI_HTTP_STATUS_NOT_FOUND,"text/plain","Not Found");n=fread(response->body,1U,sizeof(response->body)-1U,f);(void)fclose(f);response->body[n]='\0';response->body_length=n;response->status=UMI_HTTP_STATUS_OK;response->header_count=0U;return umi_web_response_set_header(response,"Content-Type",umi_web_mime_from_path(full));}
 #endif
+/* Keep the earlier inline loader for review. Both public paths now reuse
+ * one rooted read policy; the opt-in path owns up to one MiB separately. */
+#if 0
 UmiStatus umi_web_static_files_serve(const UmiWebStaticFiles *files, const char *request_path,
                                      UmiWebResponse *response)
 {
@@ -150,6 +153,65 @@ UmiStatus umi_web_static_files_serve(const UmiWebStaticFiles *files, const char 
         status = umi_web_response_set_header(response, "Cache-Control", "no-store");
     return status;
 }
+#endif
+
+static UmiStatus StaticServe(const UmiWebStaticFiles *files, const char *request_path,
+    UmiWebResponse *response, UmiWebResponseBody **body)
+{
+    if (files == NULL || request_path == NULL || response == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(files->root, '\0', sizeof(files->root)) == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    char relative[UMI_WEB_PATH_CAPACITY];
+    UmiStatus status = StaticRelative(request_path, relative, sizeof(relative));
+    if (status == UMI_STATUS_OK)
+        status = UmiRootedFileValidatePath(files->root, relative);
+    if (status != UMI_STATUS_OK)
+        return umi_web_response_set_text(response, 403, "text/plain; charset=utf-8", "Forbidden\n");
+    unsigned char *bytes = NULL;
+    size_t length = 0U;
+    status = UmiRootedFileRead(files->root, relative,
+        body != NULL ? UMI_WEB_RESPONSE_BODY_LIMIT : UMI_WEB_BODY_CAPACITY - 1U, &bytes, &length);
+    if (status != UMI_STATUS_OK)
+    {
+        UmiRootedFileFree(bytes);
+        if (status == UMI_STATUS_NOT_FOUND)
+            return umi_web_response_set_text(response, 404, "text/plain; charset=utf-8", "Not Found\n");
+        if (status == UMI_STATUS_CAPACITY_EXCEEDED)
+            return umi_web_response_set_text(response, 413, "text/plain; charset=utf-8",
+                                             "File exceeds the local preview limit.\n");
+        if (status == UMI_STATUS_PERMISSION_DENIED || status == UMI_STATUS_INVALID_ARGUMENT)
+            return umi_web_response_set_text(response, 403, "text/plain; charset=utf-8", "Forbidden\n");
+        return status;
+    }
+    umi_web_response_init(response);
+    if (body != NULL) {
+        status = UmiWebResponseBodyCreate(bytes, length, body);
+    } else {
+        memcpy(response->body, bytes, length);
+        response->body[length] = '\0';
+        response->body_length = length;
+    }
+    UmiRootedFileFree(bytes);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_web_response_set_header(response, "Content-Type", umi_web_mime_from_path(relative));
+    if (status == UMI_STATUS_OK)
+        status = umi_web_response_set_header(response, "X-Content-Type-Options", "nosniff");
+    /* Development previews should reflect the current file after a reload. */
+    if (status == UMI_STATUS_OK)
+        status = umi_web_response_set_header(response, "Cache-Control", "no-store");
+    if (status != UMI_STATUS_OK && body != NULL) {
+        UmiWebResponseBodyDestroy(*body);
+        *body = NULL;
+    }
+    return status;
+}
+
+UmiStatus umi_web_static_files_serve(const UmiWebStaticFiles *files, const char *request_path,
+    UmiWebResponse *response)
+{
+    return StaticServe(files, request_path, response, NULL);
+}
 
 UmiStatus UmiWebStaticFilesHandle(const UmiWebRequest *request, UmiWebResponse *response, void *context)
 {
@@ -162,4 +224,17 @@ UmiStatus UmiWebStaticFilesHandle(const UmiWebRequest *request, UmiWebResponse *
         return status == UMI_STATUS_OK ? umi_web_response_set_header(response, "Allow", "GET, HEAD") : status;
     }
     return umi_web_static_files_serve(context, request->path, response);
+}
+
+UmiStatus UmiWebStaticFilesHandleBody(const UmiWebRequest *request, UmiWebResponse *response,
+    UmiWebResponseBody **body, void *context)
+{
+    if (body == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *body = NULL;
+    if (request == NULL || response == NULL || context == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (request->method != UMI_HTTP_METHOD_GET && request->method != UMI_HTTP_METHOD_HEAD) {
+        UmiStatus status = umi_web_response_set_text(response, 405, "text/plain; charset=utf-8", "Method Not Allowed\n");
+        return status == UMI_STATUS_OK ? umi_web_response_set_header(response, "Allow", "GET, HEAD") : status;
+    }
+    return StaticServe(context, request->path, response, body);
 }

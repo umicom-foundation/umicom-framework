@@ -32,6 +32,7 @@
 #include <string.h>
 
 #include "umicom/finance/identifier.h"
+#include "umicom/base/text.h"
 #include "umicom/trading/bar.h"
 #include "umicom/trading/depth.h"
 #include "umicom/trading/environment.h"
@@ -107,6 +108,16 @@ static UmiStatus AllocateSessionReportOwner(uint64_t *out)
         if (atomic_compare_exchange_weak_explicit(&next_session_report_owner, &next, next + 1U,
             memory_order_relaxed, memory_order_relaxed)) { *out = (uint64_t)next; return UMI_STATUS_OK; }
     }
+}
+
+/* Protective actions must remain possible when no newer observation number
+ * can be represented. Saturation never invents revision zero. Consumers must
+ * refresh a maximum-revision snapshot; current-report checks are conservative
+ * at that boundary. Existing previews are invalidated by changed controls. */
+static void WorkspacePublishProtectiveChange(UmiTradingWorkspace *workspace)
+{
+    workspace->has_draft_risk = 0;
+    if (workspace->revision != UINT64_MAX) ++workspace->revision;
 }
 
 /* Provide the copy text operation used by this module and its client applications. */
@@ -187,6 +198,8 @@ static int contains_case_insensitive(const char *text, const char *query)
 }
 
 /* Provide the market index operation used by this module and its client applications. */
+/* Use the shared watchlist admission and bounded query service, then check the private parallel market mapping before returning an index. The previous implementation is retained for review. */
+#if 0
 static size_t market_index(const UmiTradingWorkspace *workspace,
                            const char *instrument_id)
 {
@@ -205,8 +218,28 @@ static size_t market_index(const UmiTradingWorkspace *workspace,
     }
     return SIZE_MAX;
 }
+#endif
+static size_t market_index(const UmiTradingWorkspace *workspace,
+                           const char *instrument_id)
+{
+    if (workspace == NULL || workspace->market_count > UMI_TRADING_MAX_WATCHLIST ||
+        workspace->market_count != workspace->watchlist.count) return SIZE_MAX;
+    size_t selected = 0U;
+    if (umi_watchlist_find(&workspace->watchlist, instrument_id, &selected)
+        != UMI_STATUS_OK) return SIZE_MAX;
+    /* Market rows and the watchlist are parallel owners of presentation and
+     * instrument identity. Refuse a drifted mapping before indexing either. */
+    for (size_t index = 0U; index < workspace->market_count; ++index)
+        if (!umi_instrument_valid(&workspace->markets[index].instrument) ||
+            !umi_instrument_same(&workspace->markets[index].instrument,
+                                 &workspace->watchlist.instruments[index]))
+            return SIZE_MAX;
+    return selected;
+}
 
 /* Provide the order index operation used by this module and its client applications. */
+/* Reuse the order store owner for bounded identity lookup. The workspace no longer maintains a second unchecked count/string loop; prior lookup logic remains for review. The previous implementation is retained for review. */
+#if 0
 static size_t order_index(const UmiTradingWorkspace *workspace,
                           const char *client_order_id)
 {
@@ -226,6 +259,17 @@ static size_t order_index(const UmiTradingWorkspace *workspace,
     }
     return SIZE_MAX;
 }
+#endif
+static size_t order_index(const UmiTradingWorkspace *workspace,
+                          const char *client_order_id)
+{
+    if (workspace == NULL) return SIZE_MAX;
+    const UmiOrder *order = NULL;
+    if (umi_order_store_find_const(&workspace->oms.orders, client_order_id, &order)
+        != UMI_STATUS_OK) return SIZE_MAX;
+    return (size_t)(order - workspace->oms.orders.orders);
+}
+
 
 /* Provide the market visible operation used by this module and its client applications. */
 static int market_visible(const UmiTradingWorkspace *workspace,
@@ -512,6 +556,8 @@ void umi_trading_workspace_destroy(UmiTradingWorkspace *workspace)
  * Provide the trading workspace add instrument operation used by this module and its
  * client applications.
  */
+/* The workspace now reserves representable owner observations before its existing mutation. This prevents a refused operation from changing a nested owner first; prior behavior is retained for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_add_instrument(
     UmiTradingWorkspace *workspace,
     const UmiInstrument *instrument)
@@ -550,11 +596,101 @@ UmiStatus umi_trading_workspace_add_instrument(
     workspace->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+/* Initialize chart navigation with each newly registered instrument so a reused array slot cannot inherit another chart view. The previous implementation is retained for review. */
+#if 0
+UmiStatus umi_trading_workspace_add_instrument(
+    UmiTradingWorkspace *workspace,
+    const UmiInstrument *instrument)
+{
+    UmiTradingMarketSnapshot *market;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace == NULL || instrument == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (workspace->market_count >= UMI_TRADING_MAX_WATCHLIST)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = umi_watchlist_add(&workspace->watchlist, instrument);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    market = &workspace->markets[workspace->market_count];
+    memset(market, 0, sizeof(*market));
+    /* A removed market can leave bytes beyond the active count, so reset the
+     * matching history slot before it is assigned to another instrument. */
+    memset(&workspace->bar_histories[workspace->market_count],
+           0,
+           sizeof(workspace->bar_histories[workspace->market_count]));
+    workspace->market_count += 1U;
+    market->structure_size = (uint32_t)sizeof(*market);
+    market->api_version = UMI_TRADING_WORKSPACE_API_VERSION;
+    market->instrument = *instrument;
+    market->market_state = UMI_MARKET_CLOSED;
+    market->revision = 1U;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (workspace->selected_instrument_id[0] == '\0')
+        choose_instrument(workspace, market);
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_trading_workspace_add_instrument(
+    UmiTradingWorkspace *workspace,
+    const UmiInstrument *instrument)
+{
+    UmiTradingMarketSnapshot *market;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace == NULL || instrument == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (workspace->market_count >= UMI_TRADING_MAX_WATCHLIST)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = umi_watchlist_add(&workspace->watchlist, instrument);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    market = &workspace->markets[workspace->market_count];
+    memset(market, 0, sizeof(*market));
+    /* A removed market can leave bytes beyond the active count, so reset the
+     * matching history slot before it is assigned to another instrument. */
+    memset(&workspace->bar_histories[workspace->market_count],
+           0,
+           sizeof(workspace->bar_histories[workspace->market_count]));
+    /* Navigation belongs to the instrument identity, not the reusable slot. */
+    workspace->chart_navigation[workspace->market_count] = (UmiChartNavigation){0};
+    workspace->market_count += 1U;
+    market->structure_size = (uint32_t)sizeof(*market);
+    market->api_version = UMI_TRADING_WORKSPACE_API_VERSION;
+    market->instrument = *instrument;
+    market->market_state = UMI_MARKET_CLOSED;
+    market->revision = 1U;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (workspace->selected_instrument_id[0] == '\0')
+        choose_instrument(workspace, market);
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the trading workspace remove instrument operation used by this module and its
  * client applications.
  */
+/* The workspace now reserves representable owner observations before its existing mutation. This prevents a refused operation from changing a nested owner first; prior behavior is retained for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_remove_instrument(
     UmiTradingWorkspace *workspace,
     const char *instrument_id)
@@ -618,11 +754,204 @@ UmiStatus umi_trading_workspace_remove_instrument(
     reconcile_selections(workspace);
     return UMI_STATUS_OK;
 }
+#endif
+/* Instrument removal now prepares its dependent alert batch before touching the tape, propagates child failure, then publishes only after all fallible child work succeeds. The former ignored-removal loop remains for review. The previous implementation is retained for review. */
+#if 0
+UmiStatus umi_trading_workspace_remove_instrument(
+    UmiTradingWorkspace *workspace,
+    const char *instrument_id)
+{
+    size_t index;
+    size_t alert_index;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace == NULL || instrument_id == NULL || instrument_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    index = market_index(workspace, instrument_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Purge retained public prints before removing the market identity so a
+     * later instrument cannot inherit the removed symbol's Time and Sales. */
+    if (umi_trading_trade_tape_remove_instrument(
+            workspace->trade_tape, instrument_id) != UMI_STATUS_OK) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    /*
+     * Remove dependent alerts first so the workspace cannot retain rules for
+     * an instrument that is no longer available. Reverse iteration remains
+     * correct while each successful removal compacts the alert array.
+     */
+    for (alert_index = workspace->alerts.count;
+         alert_index > 0U;
+         --alert_index) {
+        UmiTradingPriceAlert *alert =
+            &workspace->alerts.alerts[alert_index - 1U];
+
+        if (strcmp(alert->instrument_id, instrument_id) == 0) {
+            (void)umi_trading_alert_book_remove(&workspace->alerts,
+                                                alert->alert_id);
+        }
+    }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index + 1U < workspace->market_count) {
+        memmove(&workspace->markets[index], &workspace->markets[index + 1U],
+                (workspace->market_count - index - 1U) *
+                    sizeof(workspace->markets[0]));
+        memmove(&workspace->bar_histories[index],
+                &workspace->bar_histories[index + 1U],
+                (workspace->market_count - index - 1U) *
+                    sizeof(workspace->bar_histories[0]));
+        memmove(&workspace->watchlist.instruments[index],
+                &workspace->watchlist.instruments[index + 1U],
+                (workspace->watchlist.count - index - 1U) *
+                    sizeof(workspace->watchlist.instruments[0]));
+    }
+    workspace->market_count -= 1U;
+    workspace->watchlist.count -= 1U;
+    /* Clear the inactive tail so removed market data cannot be observed if the
+     * slot is reused by a later instrument. */
+    memset(&workspace->bar_histories[workspace->market_count],
+           0,
+           sizeof(workspace->bar_histories[workspace->market_count]));
+    workspace->revision += 1U;
+    reconcile_selections(workspace);
+    return UMI_STATUS_OK;
+}
+#endif
+/* Compact chart navigation together with market records, candle history and watchlist identities. Reset the retired tail so later additions start with the documented default view. The previous implementation is retained for review. */
+#if 0
+UmiStatus umi_trading_workspace_remove_instrument(
+    UmiTradingWorkspace *workspace,
+    const char *instrument_id)
+{
+    size_t index;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace == NULL || instrument_id == NULL || instrument_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    index = market_index(workspace, instrument_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Prepare dependent alert removal in private storage first. The tape owns
+     * its own failure-atomic removal; publish the prepared book only after it
+     * accepts. No child can then fail after the market arrays are compacted. */
+    UmiTradingAlertBook *next_alerts = malloc(sizeof(*next_alerts));
+    if (next_alerts == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    *next_alerts = workspace->alerts;
+    status = UmiTradingAlertBookRemoveInstrument(next_alerts, instrument_id);
+    if (status != UMI_STATUS_OK) { free(next_alerts); return status; }
+    status = umi_trading_trade_tape_remove_instrument(workspace->trade_tape, instrument_id);
+    if (status != UMI_STATUS_OK) { free(next_alerts); return status; }
+    workspace->alerts = *next_alerts;
+    free(next_alerts);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index + 1U < workspace->market_count) {
+        memmove(&workspace->markets[index], &workspace->markets[index + 1U],
+                (workspace->market_count - index - 1U) *
+                    sizeof(workspace->markets[0]));
+        memmove(&workspace->bar_histories[index],
+                &workspace->bar_histories[index + 1U],
+                (workspace->market_count - index - 1U) *
+                    sizeof(workspace->bar_histories[0]));
+        memmove(&workspace->watchlist.instruments[index],
+                &workspace->watchlist.instruments[index + 1U],
+                (workspace->watchlist.count - index - 1U) *
+                    sizeof(workspace->watchlist.instruments[0]));
+    }
+    workspace->market_count -= 1U;
+    workspace->watchlist.count -= 1U;
+    /* Clear the inactive tail so removed market data cannot be observed if the
+     * slot is reused by a later instrument. */
+    memset(&workspace->bar_histories[workspace->market_count],
+           0,
+           sizeof(workspace->bar_histories[workspace->market_count]));
+    workspace->revision += 1U;
+    reconcile_selections(workspace);
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_trading_workspace_remove_instrument(
+    UmiTradingWorkspace *workspace,
+    const char *instrument_id)
+{
+    size_t index;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace == NULL || instrument_id == NULL || instrument_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    index = market_index(workspace, instrument_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Prepare dependent alert removal in private storage first. The tape owns
+     * its own failure-atomic removal; publish the prepared book only after it
+     * accepts. No child can then fail after the market arrays are compacted. */
+    UmiTradingAlertBook *next_alerts = malloc(sizeof(*next_alerts));
+    if (next_alerts == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    *next_alerts = workspace->alerts;
+    status = UmiTradingAlertBookRemoveInstrument(next_alerts, instrument_id);
+    if (status != UMI_STATUS_OK) { free(next_alerts); return status; }
+    status = umi_trading_trade_tape_remove_instrument(workspace->trade_tape, instrument_id);
+    if (status != UMI_STATUS_OK) { free(next_alerts); return status; }
+    workspace->alerts = *next_alerts;
+    free(next_alerts);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index + 1U < workspace->market_count) {
+        memmove(&workspace->markets[index], &workspace->markets[index + 1U],
+                (workspace->market_count - index - 1U) *
+                    sizeof(workspace->markets[0]));
+        memmove(&workspace->bar_histories[index],
+                &workspace->bar_histories[index + 1U],
+                (workspace->market_count - index - 1U) *
+                    sizeof(workspace->bar_histories[0]));
+        /* Every per-market array moves with the same identity permutation. */
+        memmove(&workspace->chart_navigation[index],
+                &workspace->chart_navigation[index + 1U],
+                (workspace->market_count - index - 1U) *
+                    sizeof(workspace->chart_navigation[0]));
+        memmove(&workspace->watchlist.instruments[index],
+                &workspace->watchlist.instruments[index + 1U],
+                (workspace->watchlist.count - index - 1U) *
+                    sizeof(workspace->watchlist.instruments[0]));
+    }
+    workspace->market_count -= 1U;
+    workspace->watchlist.count -= 1U;
+    workspace->chart_navigation[workspace->market_count] = (UmiChartNavigation){0};
+    /* Clear the inactive tail so removed market data cannot be observed if the
+     * slot is reused by a later instrument. */
+    memset(&workspace->bar_histories[workspace->market_count],
+           0,
+           sizeof(workspace->bar_histories[workspace->market_count]));
+    workspace->revision += 1U;
+    reconcile_selections(workspace);
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the trading workspace update quote operation used by this module and its client
  * applications.
  */
+/* The workspace now reserves representable owner observations before its existing mutation. This prevents a refused operation from changing a nested owner first; prior behavior is retained for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_update_quote(
     UmiTradingWorkspace *workspace,
     const UmiQuote *quote)
@@ -674,11 +1003,69 @@ UmiStatus umi_trading_workspace_update_quote(
     workspace->has_draft_risk = 0;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_trading_workspace_update_quote(
+    UmiTradingWorkspace *workspace,
+    const UmiQuote *quote)
+{
+    size_t index;
+    UmiStatus alert_status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace == NULL || quote == NULL || !umi_quote_valid(quote) ||
+        !umi_instrument_valid(&quote->instrument))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    index = market_index(workspace, quote->instrument.instrument_id.value);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    if (!UmiRiskInstrumentMatches(&workspace->markets[index].instrument, &quote->instrument))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Display-only legacy quotes may omit time. Once timestamped evidence is
+     * present, an older event must not roll it back or fire alerts again. */
+    if (workspace->markets[index].has_quote &&
+        quote->event_time_ms < workspace->markets[index].quote.event_time_ms)
+        return UMI_STATUS_INVALID_STATE;
+
+    /*
+     * Alerts observe the neutral quote midpoint. A legacy provider may omit a
+     * timestamp, so zero is used instead of rejecting otherwise valid prices.
+     */
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX ||
+        workspace->markets[index].revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    alert_status = umi_trading_alert_book_evaluate(
+        &workspace->alerts,
+        quote->instrument.instrument_id.value,
+        umi_quote_mid(quote),
+        quote->event_time_ms >= 0 ? quote->event_time_ms : 0);
+    if (alert_status != UMI_STATUS_OK) {
+        return alert_status;
+    }
+    /* Commit the quote only after every dependent alert accepted the value. */
+    workspace->markets[index].quote = *quote;
+    workspace->markets[index].has_quote = 1;
+    workspace->markets[index].revision += 1U;
+    workspace->market_data_ready = 1;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (strcmp(workspace->selected_instrument_id,
+               quote->instrument.instrument_id.value) == 0 &&
+        workspace->draft_order.limit_price <= 0.0) {
+        workspace->draft_order.limit_price = umi_quote_mid(quote);
+    }
+    workspace->revision += 1U;
+    workspace->has_draft_risk = 0;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the trading workspace update bar operation used by this module and its client
  * applications.
  */
+/* The workspace now reserves representable owner observations before its existing mutation. This prevents a refused operation from changing a nested owner first; prior behavior is retained for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_update_bar(
     UmiTradingWorkspace *workspace,
     const UmiBar *bar,
@@ -727,11 +1114,124 @@ UmiStatus umi_trading_workspace_update_bar(
     workspace->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+/* Market publication now validates the registered contract before changing history or the trade tape. This reuses the canonical matcher shared by quote and depth admission. The previous implementation is retained for review. */
+#if 0
+UmiStatus umi_trading_workspace_update_bar(
+    UmiTradingWorkspace *workspace,
+    const UmiBar *bar,
+    double previous_close)
+{
+    size_t index;
+    UmiTradingBarHistory *history;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace == NULL || bar == NULL || !umi_bar_valid(bar) ||
+        !umi_financial_id_valid(&bar->instrument.instrument_id) ||
+        !isfinite(previous_close) || previous_close < 0.0)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    index = market_index(workspace, bar->instrument.instrument_id.value);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    history = &workspace->bar_histories[index];
+    /* A repeated start time updates the still-forming candle. Older completed
+     * candles are rejected because silently reordering them would make live
+     * studies and visual history disagree. */
+    if (history->count > 0U &&
+        bar->start_time_ms < history->bars[history->count - 1U].start_time_ms) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX ||
+        workspace->markets[index].revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (history->count > 0U &&
+        bar->start_time_ms == history->bars[history->count - 1U].start_time_ms) {
+        history->bars[history->count - 1U] = *bar;
+    } else {
+        /* Once capacity is reached, discard only the oldest candle and keep
+         * the most recent fixed-size window needed by interactive charts. */
+        if (history->count == UMI_TRADING_WORKSPACE_BAR_HISTORY_CAPACITY) {
+            memmove(&history->bars[0],
+                    &history->bars[1],
+                    (history->count - 1U) * sizeof(history->bars[0]));
+            history->count -= 1U;
+        }
+        history->bars[history->count++] = *bar;
+    }
+    workspace->markets[index].bar = *bar;
+    workspace->markets[index].previous_close = previous_close;
+    workspace->markets[index].has_bar = 1;
+    workspace->markets[index].revision += 1U;
+    workspace->market_data_ready = 1;
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_trading_workspace_update_bar(
+    UmiTradingWorkspace *workspace,
+    const UmiBar *bar,
+    double previous_close)
+{
+    size_t index;
+    UmiTradingBarHistory *history;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace == NULL || bar == NULL || !umi_bar_valid(bar) ||
+        !umi_instrument_valid(&bar->instrument) ||
+        !isfinite(previous_close) || previous_close < 0.0)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    index = market_index(workspace, bar->instrument.instrument_id.value);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Contract economics belong to the registered instrument, not just its ID. */
+    if (!UmiRiskInstrumentMatches(&workspace->markets[index].instrument, &bar->instrument))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    history = &workspace->bar_histories[index];
+    /* A repeated start time updates the still-forming candle. Older completed
+     * candles are rejected because silently reordering them would make live
+     * studies and visual history disagree. */
+    if (history->count > 0U &&
+        bar->start_time_ms < history->bars[history->count - 1U].start_time_ms) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX ||
+        workspace->markets[index].revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (history->count > 0U &&
+        bar->start_time_ms == history->bars[history->count - 1U].start_time_ms) {
+        history->bars[history->count - 1U] = *bar;
+    } else {
+        /* Once capacity is reached, discard only the oldest candle and keep
+         * the most recent fixed-size window needed by interactive charts. */
+        if (history->count == UMI_TRADING_WORKSPACE_BAR_HISTORY_CAPACITY) {
+            memmove(&history->bars[0],
+                    &history->bars[1],
+                    (history->count - 1U) * sizeof(history->bars[0]));
+            history->count -= 1U;
+        }
+        history->bars[history->count++] = *bar;
+    }
+    workspace->markets[index].bar = *bar;
+    workspace->markets[index].previous_close = previous_close;
+    workspace->markets[index].has_bar = 1;
+    workspace->markets[index].revision += 1U;
+    workspace->market_data_ready = 1;
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the trading workspace update depth operation used by this module and its client
  * applications.
  */
+/* The workspace now reserves representable owner observations before its existing mutation. This prevents a refused operation from changing a nested owner first; prior behavior is retained for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_update_depth(
     UmiTradingWorkspace *workspace,
     const UmiMarketDepth *depth)
@@ -753,9 +1253,68 @@ UmiStatus umi_trading_workspace_update_depth(
     workspace->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+/* Depth publication now compares the complete validated contract using the same canonical metadata matcher as quotes. The previous ID-only acceptance remains for review. The previous implementation is retained for review. */
+#if 0
+UmiStatus umi_trading_workspace_update_depth(
+    UmiTradingWorkspace *workspace,
+    const UmiMarketDepth *depth)
+{
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace == NULL || depth == NULL || !umi_market_depth_valid(depth))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    index = market_index(workspace, depth->instrument.instrument_id.value);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX ||
+        workspace->markets[index].revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    workspace->markets[index].depth = *depth;
+    workspace->markets[index].has_depth = 1;
+    workspace->markets[index].revision += 1U;
+    workspace->market_data_ready = 1;
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_trading_workspace_update_depth(
+    UmiTradingWorkspace *workspace,
+    const UmiMarketDepth *depth)
+{
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace == NULL || depth == NULL || !umi_market_depth_valid(depth))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    index = market_index(workspace, depth->instrument.instrument_id.value);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* A matching ID alone cannot substitute different contract economics. */
+    if (!UmiRiskInstrumentMatches(&workspace->markets[index].instrument, &depth->instrument))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX ||
+        workspace->markets[index].revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    workspace->markets[index].depth = *depth;
+    workspace->markets[index].has_depth = 1;
+    workspace->markets[index].revision += 1U;
+    workspace->market_data_ready = 1;
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /* Accept one public market trade through the sequence-checked shared tape and
  * mirror only its latest value into the matching lightweight market row. */
+/* The workspace now reserves representable owner observations before its existing mutation. This prevents a refused operation from changing a nested owner first; prior behavior is retained for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_update_trade(
     UmiTradingWorkspace *workspace,
     const UmiTradingTradeTapeRecord *record)
@@ -782,9 +1341,78 @@ UmiStatus umi_trading_workspace_update_trade(
     workspace->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+/* Market publication now validates the registered contract before changing history or the trade tape. This reuses the canonical matcher shared by quote and depth admission. The previous implementation is retained for review. */
+#if 0
+UmiStatus umi_trading_workspace_update_trade(
+    UmiTradingWorkspace *workspace,
+    const UmiTradingTradeTapeRecord *record)
+{
+    size_t index;
+    UmiStatus status;
+
+    if (workspace == NULL || record == NULL ||
+        !umi_trade_tick_valid(&record->trade) ||
+        !umi_instrument_valid(&record->trade.instrument)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    index = market_index(
+        workspace, record->trade.instrument.instrument_id.value);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX ||
+        workspace->markets[index].revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = umi_trading_trade_tape_append(workspace->trade_tape, record);
+    if (status != UMI_STATUS_OK) return status;
+    workspace->markets[index].trade = record->trade;
+    workspace->markets[index].trade_sequence = record->sequence;
+    workspace->markets[index].trade_direction = record->direction;
+    workspace->markets[index].has_trade = 1;
+    workspace->markets[index].revision += 1U;
+    workspace->market_data_ready = 1;
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_trading_workspace_update_trade(
+    UmiTradingWorkspace *workspace,
+    const UmiTradingTradeTapeRecord *record)
+{
+    size_t index;
+    UmiStatus status;
+
+    if (workspace == NULL || record == NULL ||
+        !umi_trade_tick_valid(&record->trade) ||
+        !umi_instrument_valid(&record->trade.instrument)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    index = market_index(
+        workspace, record->trade.instrument.instrument_id.value);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Contract economics belong to the registered instrument, not just its ID. */
+    if (!UmiRiskInstrumentMatches(&workspace->markets[index].instrument, &record->trade.instrument))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX ||
+        workspace->markets[index].revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = umi_trading_trade_tape_append(workspace->trade_tape, record);
+    if (status != UMI_STATUS_OK) return status;
+    workspace->markets[index].trade = record->trade;
+    workspace->markets[index].trade_sequence = record->sequence;
+    workspace->markets[index].trade_direction = record->direction;
+    workspace->markets[index].has_trade = 1;
+    workspace->markets[index].revision += 1U;
+    workspace->market_data_ready = 1;
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /* Keep feed availability separate from general quote health so an application
  * can honestly show a missing trade provider while charts still receive bars. */
+/* Workspace tape controls now reserve the outer revision before child edits; provider availability uses the protective observation path. The previous implementation is retained for review. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_set_trade_tape_provider_ready(
     UmiTradingWorkspace *workspace,
     int ready)
@@ -797,9 +1425,24 @@ UmiStatus umi_trading_workspace_set_trade_tape_provider_ready(
     if (status == UMI_STATUS_OK) workspace->revision += 1U;
     return status;
 }
+#endif
+UmiStatus umi_trading_workspace_set_trade_tape_provider_ready(
+    UmiTradingWorkspace *workspace,
+    int ready)
+{
+    UmiStatus status;
+
+    if (workspace == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_trading_trade_tape_set_provider_ready(
+        workspace->trade_tape, ready);
+    if (status == UMI_STATUS_OK) WorkspacePublishProtectiveChange(workspace);
+    return status;
+}
 
 /* Store Time and Sales filters in Framework state so all open panels and
  * frontend technologies present exactly the same selected rows. */
+/* Workspace tape controls now reserve the outer revision before child edits; provider availability uses the protective observation path. The previous implementation is retained for review. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_set_trade_tape_filter(
     UmiTradingWorkspace *workspace,
     UmiTradingTradeTapeFilter filter,
@@ -813,9 +1456,27 @@ UmiStatus umi_trading_workspace_set_trade_tape_filter(
     if (status == UMI_STATUS_OK) workspace->revision += 1U;
     return status;
 }
+#endif
+UmiStatus umi_trading_workspace_set_trade_tape_filter(
+    UmiTradingWorkspace *workspace,
+    UmiTradingTradeTapeFilter filter,
+    double minimum_size)
+{
+    UmiStatus status;
+
+    if (workspace == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Reserve the outer observation before mutating the child owner. */
+    if (workspace->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = umi_trading_trade_tape_set_filter(
+        workspace->trade_tape, filter, minimum_size);
+    if (status == UMI_STATUS_OK) workspace->revision += 1U;
+    return status;
+}
 
 /* Pause only the visible trade sequence; provider ingestion remains active so
  * a user can inspect a stable row and later resume without a data gap. */
+/* Workspace tape controls now reserve the outer revision before child edits; provider availability uses the protective observation path. The previous implementation is retained for review. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_set_trade_tape_paused(
     UmiTradingWorkspace *workspace,
     int paused)
@@ -828,11 +1489,28 @@ UmiStatus umi_trading_workspace_set_trade_tape_paused(
     if (status == UMI_STATUS_OK) workspace->revision += 1U;
     return status;
 }
+#endif
+UmiStatus umi_trading_workspace_set_trade_tape_paused(
+    UmiTradingWorkspace *workspace,
+    int paused)
+{
+    UmiStatus status;
+
+    if (workspace == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Reserve the outer observation before mutating the child owner. */
+    if (workspace->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = umi_trading_trade_tape_set_paused(
+        workspace->trade_tape, paused);
+    if (status == UMI_STATUS_OK) workspace->revision += 1U;
+    return status;
+}
 
 /*
  * Provide the trading workspace set market state operation used by this module and its
  * client applications.
  */
+/* The workspace now reserves representable owner observations before its existing mutation. This prevents a refused operation from changing a nested owner first; prior behavior is retained for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_set_market_state(
     UmiTradingWorkspace *workspace,
     const char *instrument_id,
@@ -858,11 +1536,43 @@ UmiStatus umi_trading_workspace_set_market_state(
     workspace->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_trading_workspace_set_market_state(
+    UmiTradingWorkspace *workspace,
+    const char *instrument_id,
+    UmiMarketState state)
+{
+    size_t index;
+    UmiTradingMarketSnapshot *market;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace == NULL || instrument_id == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    index = market_index(workspace, instrument_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    market = &workspace->markets[index];
+    /* Apply this operation only while the related capability or state is available. */
+    if (!umi_market_state_transition_allowed(market->market_state, state))
+        return UMI_STATUS_INVALID_STATE;
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX ||
+        workspace->markets[index].revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    market->market_state = state;
+    market->revision += 1U;
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the trading workspace set instrument filter operation used by this module and
  * its client applications.
  */
+/* The workspace now reserves representable owner observations before its existing mutation. This prevents a refused operation from changing a nested owner first; prior behavior is retained for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_set_instrument_filter(
     UmiTradingWorkspace *workspace,
     const char *filter_text)
@@ -872,6 +1582,25 @@ UmiStatus umi_trading_workspace_set_instrument_filter(
      * used.
      */
     if (workspace == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    copy_text(workspace->instrument_filter,
+              sizeof(workspace->instrument_filter), filter_text);
+    workspace->revision += 1U;
+    reconcile_selections(workspace);
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_trading_workspace_set_instrument_filter(
+    UmiTradingWorkspace *workspace,
+    const char *filter_text)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
     copy_text(workspace->instrument_filter,
               sizeof(workspace->instrument_filter), filter_text);
     workspace->revision += 1U;
@@ -909,6 +1638,8 @@ UmiStatus umi_trading_workspace_set_order_filter(
 }
 
 /* Persist a bounded study choice in toolkit-neutral workspace state. */
+/* The workspace now reserves representable owner observations before its existing mutation. This prevents a refused operation from changing a nested owner first; prior behavior is retained for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_set_chart_study(
     UmiTradingWorkspace *workspace,
     UmiTradingChartStudy study,
@@ -945,11 +1676,53 @@ UmiStatus umi_trading_workspace_set_chart_study(
     workspace->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_trading_workspace_set_chart_study(
+    UmiTradingWorkspace *workspace,
+    UmiTradingChartStudy study,
+    size_t period)
+{
+/* The workspace now accepts Framework candle studies alongside the existing averages.
+ * The previous implementation is retained for engineering review. */
+#if 0
+    if (workspace == NULL ||
+        (study != UMI_TRADING_CHART_STUDY_NONE &&
+         study != UMI_TRADING_CHART_STUDY_SIMPLE_AVERAGE &&
+         study != UMI_TRADING_CHART_STUDY_EXPONENTIAL_AVERAGE) ||
+        period < 2U || period > 200U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+#endif
+    if (workspace == NULL ||
+        (study != UMI_TRADING_CHART_STUDY_NONE &&
+         study != UMI_TRADING_CHART_STUDY_SIMPLE_AVERAGE &&
+         study != UMI_TRADING_CHART_STUDY_EXPONENTIAL_AVERAGE &&
+         study != UMI_TRADING_CHART_STUDY_VOLUME_WEIGHTED &&
+         study != UMI_TRADING_CHART_STUDY_BOLLINGER &&
+         study != UMI_TRADING_CHART_STUDY_DONCHIAN &&
+         study != UMI_TRADING_CHART_STUDY_VOLUME_PROFILE) ||
+        period < 2U || period > 200U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (workspace->chart_study == study &&
+        workspace->chart_study_period == period) {
+        return UMI_STATUS_OK;
+    }
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    workspace->chart_study = study;
+    workspace->chart_study_period = period;
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the trading workspace select instrument operation used by this module and its
  * client applications.
  */
+/* The workspace now reserves representable owner observations before its existing mutation. This prevents a refused operation from changing a nested owner first; prior behavior is retained for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_select_instrument(
     UmiTradingWorkspace *workspace,
     const char *instrument_id)
@@ -968,11 +1741,35 @@ UmiStatus umi_trading_workspace_select_instrument(
     workspace->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_trading_workspace_select_instrument(
+    UmiTradingWorkspace *workspace,
+    const char *instrument_id)
+{
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace == NULL || instrument_id == NULL || instrument_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    index = market_index(workspace, instrument_id);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    choose_instrument(workspace, &workspace->markets[index]);
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the trading workspace select order operation used by this module and its client
  * applications.
  */
+/* The workspace now reserves representable owner observations before its existing mutation. This prevents a refused operation from changing a nested owner first; prior behavior is retained for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_select_order(
     UmiTradingWorkspace *workspace,
     const char *client_order_id)
@@ -991,11 +1788,35 @@ UmiStatus umi_trading_workspace_select_order(
     workspace->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_trading_workspace_select_order(
+    UmiTradingWorkspace *workspace,
+    const char *client_order_id)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace == NULL || client_order_id == NULL ||
+        client_order_id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (order_index(workspace, client_order_id) == SIZE_MAX)
+        return UMI_STATUS_NOT_FOUND;
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    copy_text(workspace->selected_order_id,
+              sizeof(workspace->selected_order_id), client_order_id);
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the trading workspace set environment operation used by this module and its
  * client applications.
  */
+/* The workspace now reserves representable owner observations before its existing mutation. This prevents a refused operation from changing a nested owner first; prior behavior is retained for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_set_environment(
     UmiTradingWorkspace *workspace,
     UmiTradingEnvironment environment)
@@ -1014,11 +1835,35 @@ UmiStatus umi_trading_workspace_set_environment(
     workspace->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_trading_workspace_set_environment(
+    UmiTradingWorkspace *workspace,
+    UmiTradingEnvironment environment)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace == NULL || !valid_environment(environment))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    workspace->environment = environment;
+    workspace->draft_order.environment = environment;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (environment != UMI_TRADING_LIVE) workspace->live_armed = 0;
+    workspace->has_draft_risk = 0;
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the trading workspace set health operation used by this module and its client
  * applications.
  */
+/* Protective controls keep their effects at revision capacity. The revised owner policy saturates observations and refuses actions that release protection; the earlier unguarded implementation remains for review. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_set_health(
     UmiTradingWorkspace *workspace,
     int market_data_ready,
@@ -1036,11 +1881,26 @@ UmiStatus umi_trading_workspace_set_health(
     workspace->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_trading_workspace_set_health(UmiTradingWorkspace *workspace,
+    int market_data_ready, int broker_ready, int risk_ready)
+{
+    if (workspace == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Retain the provider's observed health even at capacity. A recovered
+     * health flag does not restore capacity or independently authorize trading. */
+    workspace->market_data_ready = market_data_ready != 0;
+    workspace->broker_ready = broker_ready != 0;
+    workspace->risk_ready = risk_ready != 0;
+    WorkspacePublishProtectiveChange(workspace);
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the trading workspace set live armed operation used by this module and its
  * client applications.
  */
+/* Protective controls keep their effects at revision capacity. The revised owner policy saturates observations and refuses actions that release protection; the earlier unguarded implementation remains for review. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_set_live_armed(
     UmiTradingWorkspace *workspace,
     int armed)
@@ -1058,11 +1918,27 @@ UmiStatus umi_trading_workspace_set_live_armed(
     workspace->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_trading_workspace_set_live_armed(UmiTradingWorkspace *workspace, int armed)
+{
+    if (workspace == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (armed && (workspace->environment != UMI_TRADING_LIVE ||
+                  !workspace->broker_ready || !workspace->risk_ready))
+        return UMI_STATUS_INVALID_STATE;
+    /* Disarming is protective and remains available. Arming releases a gate
+     * and must reserve a representable owner change before taking effect. */
+    if (armed && workspace->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    workspace->live_armed = armed != 0;
+    WorkspacePublishProtectiveChange(workspace);
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the trading workspace set draft side operation used by this module and its
  * client applications.
  */
+/* Draft edits now reserve the owner revision before any state change. Existing validation, preview invalidation and reset behavior are preserved; the unguarded implementation remains for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_set_draft_side(
     UmiTradingWorkspace *workspace,
     UmiSide side)
@@ -1078,11 +1954,32 @@ UmiStatus umi_trading_workspace_set_draft_side(
     workspace->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_trading_workspace_set_draft_side(
+    UmiTradingWorkspace *workspace,
+    UmiSide side)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace == NULL || (side != UMI_SIDE_BUY && side != UMI_SIDE_SELL))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Admission belongs to the workspace owner: a refused edit must retain
+     * both the ticket and its existing preview evidence. */
+    if (workspace->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    workspace->draft_order.side = side;
+    workspace->has_draft_risk = 0;
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the trading workspace set draft type operation used by this module and its
  * client applications.
  */
+/* Draft edits now reserve the owner revision before any state change. Existing validation, preview invalidation and reset behavior are preserved; the unguarded implementation remains for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_set_draft_type(
     UmiTradingWorkspace *workspace,
     UmiOrderType type,
@@ -1105,11 +2002,39 @@ UmiStatus umi_trading_workspace_set_draft_type(
     workspace->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_trading_workspace_set_draft_type(
+    UmiTradingWorkspace *workspace,
+    UmiOrderType type,
+    UmiTimeInForce time_in_force)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace == NULL || type < UMI_ORDER_MARKET ||
+        type > UMI_ORDER_STOP_LIMIT ||
+        !umi_time_in_force_valid(time_in_force))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Admission belongs to the workspace owner: a refused edit must retain
+     * both the ticket and its existing preview evidence. */
+    if (workspace->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    workspace->draft_order.type = type;
+    workspace->draft_order.tif = time_in_force;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (!umi_order_type_requires_stop(type))
+        workspace->draft_order.stop_price = 0.0;
+    workspace->has_draft_risk = 0;
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the trading workspace set draft quantity operation used by this module and its
  * client applications.
  */
+/* Draft edits now reserve the owner revision before any state change. Existing validation, preview invalidation and reset behavior are preserved; the unguarded implementation remains for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_set_draft_quantity(
     UmiTradingWorkspace *workspace,
     double quantity)
@@ -1125,11 +2050,32 @@ UmiStatus umi_trading_workspace_set_draft_quantity(
     workspace->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_trading_workspace_set_draft_quantity(
+    UmiTradingWorkspace *workspace,
+    double quantity)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace == NULL || !isfinite(quantity) || quantity <= 0.0)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Admission belongs to the workspace owner: a refused edit must retain
+     * both the ticket and its existing preview evidence. */
+    if (workspace->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    workspace->draft_order.quantity = quantity;
+    workspace->has_draft_risk = 0;
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the trading workspace set draft prices operation used by this module and its
  * client applications.
  */
+/* Draft edits now reserve the owner revision before any state change. Existing validation, preview invalidation and reset behavior are preserved; the unguarded implementation remains for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_set_draft_prices(
     UmiTradingWorkspace *workspace,
     double limit_price,
@@ -1148,11 +2094,58 @@ UmiStatus umi_trading_workspace_set_draft_prices(
     workspace->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_trading_workspace_set_draft_prices(
+    UmiTradingWorkspace *workspace,
+    double limit_price,
+    double stop_price)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace == NULL || !isfinite(limit_price) || !isfinite(stop_price) ||
+        limit_price < 0.0 || stop_price < 0.0)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Admission belongs to the workspace owner: a refused edit must retain
+     * both the ticket and its existing preview evidence. */
+    if (workspace->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    workspace->draft_order.limit_price = limit_price;
+    workspace->draft_order.stop_price = stop_price;
+    workspace->has_draft_risk = 0;
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the trading workspace preview order operation used by this module and its client
  * applications.
  */
+/* A local capability refusal is retained as preview evidence, not as an
+ * accepted order. Reuse this path for both preview forms and submission so
+ * controls and direct API clients receive the same supported-policy boundary.
+ * Owner capacity is admitted before replacing evidence or publishing a change. */
+static UmiStatus WorkspaceCheckLocalPolicy(UmiTradingWorkspace *workspace,
+    UmiRiskDecision *outDecision)
+{
+    if (workspace->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiStatus status = UmiTimeInForceCheckLocalRetention(workspace->draft_order.tif);
+    if (status == UMI_STATUS_OK) return status;
+    UmiRiskDecision denied = {0};
+    umi_risk_decision_deny(&denied, status == UMI_STATUS_NOT_IMPLEMENTED
+        ? "local order retention does not implement immediate time-in-force execution"
+        : "invalid time-in-force value");
+    memset(&workspace->riskEvidence, 0, sizeof(workspace->riskEvidence));
+    workspace->riskEvidence.decision = denied;
+    workspace->draft_risk = denied;
+    workspace->has_draft_risk = 1;
+    ++workspace->revision;
+    *outDecision = denied;
+    return status;
+}
+
+/* Workspace previews and local submission now share an explicit capability check and admit observation capacity before publishing evidence. Unsupported immediate policies never become retained orders. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_preview_order(
     UmiTradingWorkspace *workspace,
     UmiRiskDecision *out_decision)
@@ -1185,13 +2178,64 @@ UmiStatus umi_trading_workspace_preview_order(
     return status;
 }
 
+#endif
+UmiStatus umi_trading_workspace_preview_order(
+    UmiTradingWorkspace *workspace,
+    UmiRiskDecision *out_decision)
+{
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace == NULL || out_decision == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = WorkspaceCheckLocalPolicy(workspace, out_decision);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_order_request_validate(&workspace->draft_order);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) {
+        memset(&workspace->riskEvidence, 0, sizeof workspace->riskEvidence);
+        umi_risk_decision_deny(&workspace->draft_risk,
+                               "invalid order request");
+        workspace->riskEvidence.decision = workspace->draft_risk;
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
+        workspace->draft_risk = UmiPretradeRiskEvaluateQuoted(
+            &workspace->draft_order, &workspace->oms.risk_limit,
+            current_position_quantity(workspace), realised_pnl(workspace),
+            NULL, 0, &workspace->pricePolicy, &workspace->riskEvidence);
+        status = workspace->draft_risk.allowed
+            ? UMI_STATUS_OK : UMI_STATUS_PERMISSION_DENIED;
+    }
+    workspace->has_draft_risk = 1;
+    workspace->revision += 1U;
+    *out_decision = workspace->draft_risk;
+    return status;
+}
+
 /* Price/time policy is copied into the workspace; it does not grant trust,
  * broker readiness, live arming or any additional permission. */
+/* Draft edits now reserve the owner revision before any state change. Existing validation, preview invalidation and reset behavior are preserved; the unguarded implementation remains for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus UmiTradingWorkspaceSetRiskPricePolicy(UmiTradingWorkspace *workspace,
     const UmiRiskPricePolicy *policy)
 {
     if (workspace == NULL || !UmiRiskPricePolicyValid(policy))
         return UMI_STATUS_INVALID_ARGUMENT;
+    workspace->pricePolicy = *policy;
+    workspace->has_draft_risk = 0;
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus UmiTradingWorkspaceSetRiskPricePolicy(UmiTradingWorkspace *workspace,
+    const UmiRiskPricePolicy *policy)
+{
+    if (workspace == NULL || !UmiRiskPricePolicyValid(policy))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Admission belongs to the workspace owner: a refused edit must retain
+     * both the ticket and its existing preview evidence. */
+    if (workspace->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     workspace->pricePolicy = *policy;
     workspace->has_draft_risk = 0;
     workspace->revision += 1U;
@@ -1210,6 +2254,8 @@ UmiStatus UmiTradingWorkspaceRiskEvidence(const UmiTradingWorkspace *workspace,
 
 /* The same timestamp used by a live provider or replay must be supplied by
  * the caller. A preview is retained evidence, never a cached submit approval. */
+/* Workspace previews and local submission now share an explicit capability check and admit observation capacity before publishing evidence. Unsupported immediate policies never become retained orders. The previous implementation is retained for review. */
+#if 0
 UmiStatus UmiTradingWorkspacePreviewOrderAt(UmiTradingWorkspace *workspace,
     int64_t nowMs, UmiRiskDecision *outDecision)
 {
@@ -1228,10 +2274,33 @@ UmiStatus UmiTradingWorkspacePreviewOrderAt(UmiTradingWorkspace *workspace,
     return outDecision->allowed ? UMI_STATUS_OK : UMI_STATUS_PERMISSION_DENIED;
 }
 
+#endif
+UmiStatus UmiTradingWorkspacePreviewOrderAt(UmiTradingWorkspace *workspace,
+    int64_t nowMs, UmiRiskDecision *outDecision)
+{
+    if (workspace == NULL || outDecision == NULL || nowMs < 0)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus policyStatus = WorkspaceCheckLocalPolicy(workspace, outDecision);
+    if (policyStatus != UMI_STATUS_OK) return policyStatus;
+    const size_t index = market_index(workspace, workspace->selected_instrument_id);
+    const UmiQuote *quote = index != SIZE_MAX && workspace->markets[index].has_quote
+        ? &workspace->markets[index].quote : NULL;
+    workspace->draft_risk = UmiPretradeRiskEvaluateQuoted(&workspace->draft_order,
+        &workspace->oms.risk_limit, current_position_quantity(workspace),
+        realised_pnl(workspace), quote, nowMs, &workspace->pricePolicy,
+        &workspace->riskEvidence);
+    workspace->has_draft_risk = 1;
+    workspace->revision += 1U;
+    *outDecision = workspace->draft_risk;
+    return outDecision->allowed ? UMI_STATUS_OK : UMI_STATUS_PERMISSION_DENIED;
+}
+
 /*
  * Provide the trading workspace submit order operation used by this module and its client
  * applications.
  */
+/* Workspace previews and local submission now share an explicit capability check and admit observation capacity before publishing evidence. Unsupported immediate policies never become retained orders. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_submit_order(
     UmiTradingWorkspace *workspace,
     int64_t now_ms,
@@ -1290,10 +2359,75 @@ UmiStatus umi_trading_workspace_submit_order(
     return status;
 }
 
+#endif
+UmiStatus umi_trading_workspace_submit_order(
+    UmiTradingWorkspace *workspace,
+    int64_t now_ms,
+    UmiRiskDecision *out_decision)
+{
+    UmiStatus status;
+    int ready;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace == NULL || out_decision == NULL || now_ms < 0)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = WorkspaceCheckLocalPolicy(workspace, out_decision);
+    if (status != UMI_STATUS_OK) return status;
+    /* Reserve the next local request identity before changing ticket or OMS. */
+    if (workspace->next_order_sequence == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    memset(&workspace->riskEvidence, 0, sizeof workspace->riskEvidence);
+    ready = umi_trading_health_ready(
+        workspace->market_data_ready, workspace->broker_ready,
+        workspace->risk_ready, workspace->environment);
+    /* Apply this operation only while the related capability or state is available. */
+    if (!ready) {
+        umi_risk_decision_deny(out_decision,
+                               "trading services are not ready");
+        workspace->draft_risk = *out_decision;
+        workspace->has_draft_risk = 1;
+        return UMI_STATUS_UNAVAILABLE;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (!umi_trading_environment_allows_live_execution(
+            workspace->environment, workspace->live_armed)) {
+        umi_risk_decision_deny(out_decision,
+                               "live execution is not explicitly armed");
+        workspace->draft_risk = *out_decision;
+        workspace->has_draft_risk = 1;
+        return UMI_STATUS_PERMISSION_DENIED;
+    }
+    (void)snprintf(workspace->draft_order.client_order_id.value,
+                   sizeof(workspace->draft_order.client_order_id.value),
+                   "umi-order-%llu",
+                   (unsigned long long)workspace->next_order_sequence++);
+    workspace->draft_order.environment = workspace->environment;
+    const size_t marketPosition = market_index(workspace, workspace->selected_instrument_id);
+    const UmiQuote *quote = marketPosition != SIZE_MAX && workspace->markets[marketPosition].has_quote
+        ? &workspace->markets[marketPosition].quote : NULL;
+    status = UmiOmsSubmitQuoted(&workspace->oms, &workspace->draft_order,
+        current_position_quantity(workspace), realised_pnl(workspace), now_ms,
+        quote, &workspace->pricePolicy, out_decision, &workspace->riskEvidence);
+    workspace->draft_risk = *out_decision;
+    workspace->has_draft_risk = 1;
+    workspace->revision += 1U;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        copy_text(workspace->selected_order_id,
+                  sizeof(workspace->selected_order_id),
+                  workspace->draft_order.client_order_id.value);
+    }
+    return status;
+}
+
 /*
  * Provide the trading workspace cancel selected order operation used by this module and
  * its client applications.
  */
+/* The former workspace-local cancellation is retained for review. Canonical cancellation now preserves replay revisions, while workspace admission prevents wraparound before either owner changes. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_cancel_selected_order(
     UmiTradingWorkspace *workspace)
 {
@@ -1317,11 +2451,34 @@ UmiStatus umi_trading_workspace_cancel_selected_order(
     reconcile_selections(workspace);
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_trading_workspace_cancel_selected_order(UmiTradingWorkspace *workspace)
+{
+    if (workspace == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    const size_t index = order_index(workspace, workspace->selected_order_id);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    UmiOrder *order = &workspace->oms.orders.orders[index];
+    /* An acknowledgement of retained cancellation publishes nothing. It must
+     * remain possible when either revision has reached its final value. */
+    if (order->status == UMI_ORDER_CANCELLED) return UmiOrderCancel(order);
+    if (!umi_order_transition_allowed(order->status, UMI_ORDER_CANCELLED))
+        return UMI_STATUS_INVALID_STATE;
+    /* Admit both revision domains before changing either. The canonical owner
+     * checks the order revision; this owner retains the workspace observation. */
+    if (workspace->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    const UmiStatus status = UmiOrderCancel(order);
+    if (status != UMI_STATUS_OK) return status;
+    ++workspace->revision;
+    reconcile_selections(workspace);
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the trading workspace record execution operation used by this module and its
  * client applications.
  */
+/* Execution publication now admits the workspace revision and uses the canonical bounded order lookup before staging a new fill. Exact retained replay continues to publish nothing, including at the final revision. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_record_execution(
     UmiTradingWorkspace *workspace,
     const UmiExecutionReport *report)
@@ -1386,10 +2543,79 @@ UmiStatus umi_trading_workspace_record_execution(
     return UMI_STATUS_OK;
 }
 
+#endif
+UmiStatus umi_trading_workspace_record_execution(
+    UmiTradingWorkspace *workspace,
+    const UmiExecutionReport *report)
+{
+    UmiOrder *order;
+    UmiPosition *position = NULL;
+    const UmiExecutionReport *retained = NULL;
+    UmiOrder candidateOrder;
+    UmiPosition candidatePosition;
+    int createPosition = 0;
+    UmiStatus status;
+
+    /* Validate before comparing IDs or inspecting any mutable order state. */
+    if (workspace == NULL || !umi_execution_report_valid(report))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = UmiExecutionStoreFind(&workspace->executions, &report->execution_id, &retained);
+    if (status == UMI_STATUS_OK) {
+        /* An exact replay remains harmless even after the order is filled or
+         * cancelled. Reuse of an ID for different economics is a conflict. */
+        return UmiExecutionReportEqual(retained, report)
+            ? UMI_STATUS_OK : UMI_STATUS_ALREADY_EXISTS;
+    }
+    if (status != UMI_STATUS_NOT_FOUND) return status;
+    if (workspace->executions.count >= UMI_TRADING_MAX_ORDERS)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Exact retained replay above publishes nothing, even at the final owner
+     * revision. A new event must reserve that revision before any store changes. */
+    if (workspace->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = umi_order_store_find(&workspace->oms.orders,
+        report->client_order_id.value, &order);
+    if (status != UMI_STATUS_OK) return status;
+    if (report->fill_quantity > order->request.quantity - order->filled_quantity)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    candidateOrder = *order;
+    status = umi_order_apply_execution(&candidateOrder, report);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_position_book_get(&workspace->positions,
+        &order->request.instrument, 0, &position);
+    if (status == UMI_STATUS_NOT_FOUND) {
+        if (workspace->positions.count >= UMI_TRADING_MAX_POSITIONS)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        candidatePosition = (UmiPosition){0};
+        candidatePosition.instrument = order->request.instrument;
+        createPosition = 1;
+    } else if (status == UMI_STATUS_OK) {
+        if (!UmiRiskInstrumentMatches(&position->instrument, &order->request.instrument))
+            return UMI_STATUS_INVALID_STATE;
+        candidatePosition = *position;
+    } else {
+        return status;
+    }
+    status = umi_position_apply_fill(&candidatePosition, order->request.side,
+        report->fill_quantity, report->fill_price);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_execution_store_add(&workspace->executions, report);
+    if (status != UMI_STATUS_OK) return status;
+    /* No fallible work remains. One workspace owner commits this in-memory
+     * transaction; cross-process persistence remains a Data Server concern. */
+    if (createPosition) position = &workspace->positions.positions[workspace->positions.count++];
+    *position = candidatePosition;
+    *order = candidateOrder;
+    workspace->has_draft_risk = 0;
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
 /*
  * Provide the trading workspace engage kill switch operation used by this module and its
  * client applications.
  */
+/* Protective controls keep their effects at revision capacity. The revised owner policy saturates observations and refuses actions that release protection; the earlier unguarded implementation remains for review. The previous implementation is retained for review. */
+#if 0
 void umi_trading_workspace_engage_kill_switch(
     UmiTradingWorkspace *workspace,
     const char *reason)
@@ -1404,11 +2630,21 @@ void umi_trading_workspace_engage_kill_switch(
     workspace->live_armed = 0;
     workspace->revision += 1U;
 }
+#endif
+void umi_trading_workspace_engage_kill_switch(UmiTradingWorkspace *workspace, const char *reason)
+{
+    if (workspace == NULL) return;
+    umi_kill_switch_engage(&workspace->oms.kill_switch, reason != NULL ? reason : "operator request");
+    workspace->live_armed = 0;
+    WorkspacePublishProtectiveChange(workspace);
+}
 
 /*
  * Provide the trading workspace reset kill switch operation used by this module and its
  * client applications.
  */
+/* Protective controls keep their effects at revision capacity. The revised owner policy saturates observations and refuses actions that release protection; the earlier unguarded implementation remains for review. The previous implementation is retained for review. */
+#if 0
 void umi_trading_workspace_reset_kill_switch(UmiTradingWorkspace *workspace)
 {
     /*
@@ -1419,11 +2655,29 @@ void umi_trading_workspace_reset_kill_switch(UmiTradingWorkspace *workspace)
     umi_kill_switch_reset(&workspace->oms.kill_switch);
     workspace->revision += 1U;
 }
+#endif
+UmiStatus UmiTradingWorkspaceResetKillSwitch(UmiTradingWorkspace *workspace)
+{
+    if (workspace == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (workspace->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    umi_kill_switch_reset(&workspace->oms.kill_switch);
+    WorkspacePublishProtectiveChange(workspace);
+    return UMI_STATUS_OK;
+}
+
+void umi_trading_workspace_reset_kill_switch(UmiTradingWorkspace *workspace)
+{
+    /* Compatibility callers retain the void entry point. New clients should
+     * inspect the checked result rather than infer success from a callback. */
+    (void)UmiTradingWorkspaceResetKillSwitch(workspace);
+}
 
 /*
  * Provide the trading workspace refresh operation used by this module and its client
  * applications.
  */
+/* The workspace now reserves representable owner observations before its existing mutation. This prevents a refused operation from changing a nested owner first; prior behavior is retained for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_refresh(UmiTradingWorkspace *workspace)
 {
     /*
@@ -1435,8 +2689,25 @@ UmiStatus umi_trading_workspace_refresh(UmiTradingWorkspace *workspace)
     workspace->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_trading_workspace_refresh(UmiTradingWorkspace *workspace)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workspace == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    reconcile_selections(workspace);
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /* Add a price alert for an instrument already known to the workspace. */
+/* The workspace now reserves representable owner observations before its existing mutation. This prevents a refused operation from changing a nested owner first; prior behavior is retained for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_add_price_alert(
     UmiTradingWorkspace *workspace,
     const char *alert_id,
@@ -1484,8 +2755,61 @@ UmiStatus umi_trading_workspace_add_price_alert(
     }
     return status;
 }
+#endif
+UmiStatus umi_trading_workspace_add_price_alert(
+    UmiTradingWorkspace *workspace,
+    const char *alert_id,
+    const char *instrument_id,
+    UmiTradingPriceAlertDirection direction,
+    double threshold,
+    int64_t created_at_ms)
+{
+    UmiTradingPriceAlert alert;
+    size_t market_position;
+    UmiStatus status;
+
+    if (workspace == NULL || instrument_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    market_position = market_index(workspace, instrument_id);
+    if (market_position == SIZE_MAX) {
+        return UMI_STATUS_NOT_FOUND;
+    }
+    status = umi_trading_price_alert_init(&alert,
+                                          alert_id,
+                                          instrument_id,
+                                          direction,
+                                          threshold,
+                                          created_at_ms);
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    /* Seed from known market data so simply creating a rule cannot trigger it. */
+    if (workspace->markets[market_position].has_quote) {
+        status = umi_trading_price_alert_seed(
+            &alert,
+            umi_quote_mid(&workspace->markets[market_position].quote));
+        if (status != UMI_STATUS_OK) {
+            return status;
+        }
+        alert.last_observed_at_ms =
+            workspace->markets[market_position].quote.event_time_ms >= 0
+                ? workspace->markets[market_position].quote.event_time_ms
+                : 0;
+    }
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = umi_trading_alert_book_add(&workspace->alerts, &alert);
+    if (status == UMI_STATUS_OK) {
+        workspace->revision += 1U;
+    }
+    return status;
+}
 
 /* Remove a price alert by stable identifier. */
+/* The workspace now reserves representable owner observations before its existing mutation. This prevents a refused operation from changing a nested owner first; prior behavior is retained for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_remove_price_alert(
     UmiTradingWorkspace *workspace,
     const char *alert_id)
@@ -1501,8 +2825,29 @@ UmiStatus umi_trading_workspace_remove_price_alert(
     }
     return status;
 }
+#endif
+UmiStatus umi_trading_workspace_remove_price_alert(
+    UmiTradingWorkspace *workspace,
+    const char *alert_id)
+{
+    UmiStatus status;
+
+    if (workspace == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = umi_trading_alert_book_remove(&workspace->alerts, alert_id);
+    if (status == UMI_STATUS_OK) {
+        workspace->revision += 1U;
+    }
+    return status;
+}
 
 /* Enable or pause an existing price alert. */
+/* The workspace now reserves representable owner observations before its existing mutation. This prevents a refused operation from changing a nested owner first; prior behavior is retained for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_set_price_alert_enabled(
     UmiTradingWorkspace *workspace,
     const char *alert_id,
@@ -1520,8 +2865,31 @@ UmiStatus umi_trading_workspace_set_price_alert_enabled(
     }
     return status;
 }
+#endif
+UmiStatus umi_trading_workspace_set_price_alert_enabled(
+    UmiTradingWorkspace *workspace,
+    const char *alert_id,
+    int enabled)
+{
+    UmiStatus status;
+
+    if (workspace == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = umi_trading_alert_book_set_enabled(
+        &workspace->alerts, alert_id, enabled);
+    if (status == UMI_STATUS_OK) {
+        workspace->revision += 1U;
+    }
+    return status;
+}
 
 /* Acknowledge an active price alert without deleting its rule. */
+/* The workspace now reserves representable owner observations before its existing mutation. This prevents a refused operation from changing a nested owner first; prior behavior is retained for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_workspace_acknowledge_price_alert(
     UmiTradingWorkspace *workspace,
     const char *alert_id)
@@ -1531,6 +2899,26 @@ UmiStatus umi_trading_workspace_acknowledge_price_alert(
     if (workspace == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    status = umi_trading_alert_book_acknowledge(
+        &workspace->alerts, alert_id);
+    if (status == UMI_STATUS_OK) {
+        workspace->revision += 1U;
+    }
+    return status;
+}
+#endif
+UmiStatus umi_trading_workspace_acknowledge_price_alert(
+    UmiTradingWorkspace *workspace,
+    const char *alert_id)
+{
+    UmiStatus status;
+
+    if (workspace == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Admit observation capacity before changing this owner or a child. */
+    if (workspace->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
     status = umi_trading_alert_book_acknowledge(
         &workspace->alerts, alert_id);
     if (status == UMI_STATUS_OK) {
@@ -1549,7 +2937,6 @@ UmiStatus umi_trading_workspace_snapshot(
 {
     UmiTradingMarketSnapshot market;
     size_t selected_order;
-    size_t index;
 
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -1625,8 +3012,12 @@ UmiStatus umi_trading_workspace_snapshot(
     out_snapshot->live_armed = workspace->live_armed;
     out_snapshot->kill_switch_engaged = workspace->oms.kill_switch.engaged;
     out_snapshot->has_draft_risk = workspace->has_draft_risk;
+/* The owner revision identifies the trading book. Adding unrelated child revisions can collide or wrap; their existing nested snapshot fields remain available independently. The previous implementation is retained for review. */
+#if 0
     out_snapshot->revision = workspace->revision +
         out_snapshot->charts.revision + out_snapshot->trade_tape.revision;
+#endif
+    out_snapshot->revision = workspace->revision;
 
     /* Apply this branch only when its contract condition is satisfied. */
     if (umi_trading_workspace_selected_market(workspace, &market) ==
@@ -1665,18 +3056,42 @@ UmiStatus umi_trading_workspace_snapshot(
         out_snapshot->can_cancel_order =
             umi_order_transition_allowed(order->status, UMI_ORDER_CANCELLED);
     }
+/* Preview capability now reflects the existing owner revision admission rule. The previous implementation is retained for review. */
+#if 0
     out_snapshot->can_preview_order =
         out_snapshot->has_selected_instrument && workspace->risk_ready;
+#endif
+    out_snapshot->can_preview_order =
+        workspace->revision != UINT64_MAX && out_snapshot->has_selected_instrument && workspace->risk_ready;
+/* The submit affordance reflects the same local retention capability and identity capacity as the command. Preview remains available to explain an unsupported policy. The previous implementation is retained for review. */
+#if 0
     out_snapshot->can_submit_order = out_snapshot->can_preview_order &&
         out_snapshot->health_ready && !out_snapshot->kill_switch_engaged &&
         umi_trading_environment_allows_live_execution(
             workspace->environment, workspace->live_armed);
+#endif
+    out_snapshot->can_submit_order = out_snapshot->can_preview_order &&
+        out_snapshot->health_ready && !out_snapshot->kill_switch_engaged &&
+        workspace->revision != UINT64_MAX && workspace->next_order_sequence != UINT64_MAX &&
+        UmiTimeInForceCheckLocalRetention(workspace->draft_order.tif) == UMI_STATUS_OK &&
+        umi_trading_environment_allows_live_execution(
+            workspace->environment, workspace->live_armed);
+/* Reset capability now reflects the same admission rule used by the checked owner command. The previous implementation is retained for review. */
+#if 0
     out_snapshot->can_reset_kill_switch =
         out_snapshot->kill_switch_engaged;
+#endif
+    out_snapshot->can_reset_kill_switch =
+        out_snapshot->kill_switch_engaged && workspace->revision != UINT64_MAX;
+/* Position count is retained as data, not added to revision identity. The former adjustment could hide a closing fill by cancelling its revision increment. The previous implementation is retained for review. */
+#if 0
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < workspace->positions.count; ++index)
         out_snapshot->revision +=
             (uint64_t)(workspace->positions.positions[index].quantity != 0.0);
+#endif
+    /* Position changes already publish a workspace revision. A read must not
+     * synthesize another identity from the number of currently open positions. */
     return UMI_STATUS_OK;
 }
 
@@ -2009,9 +3424,28 @@ const char *umi_trading_workspace_order_filter_text(
 }
 
 /* An explicit reset affects the private ticket, never an order in the OMS. */
+/* Draft edits now reserve the owner revision before any state change. Existing validation, preview invalidation and reset behavior are preserved; the unguarded implementation remains for comparison. The previous implementation is retained for review. */
+#if 0
 UmiStatus UmiTradingWorkspaceResetDraft(UmiTradingWorkspace *workspace)
 {
     if (workspace == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t selected = market_index(workspace, workspace->selected_instrument_id);
+    initialise_draft(workspace);
+    if (selected != SIZE_MAX) choose_instrument(workspace, &workspace->markets[selected]);
+    memset(&workspace->riskEvidence, 0, sizeof workspace->riskEvidence);
+    umi_risk_decision_deny(&workspace->draft_risk,
+        "Ticket reset. Preview risk before submitting.");
+    workspace->has_draft_risk = 0;
+    workspace->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus UmiTradingWorkspaceResetDraft(UmiTradingWorkspace *workspace)
+{
+    if (workspace == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Admission belongs to the workspace owner: a refused edit must retain
+     * both the ticket and its existing preview evidence. */
+    if (workspace->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     size_t selected = market_index(workspace, workspace->selected_instrument_id);
     initialise_draft(workspace);
     if (selected != SIZE_MAX) choose_instrument(workspace, &workspace->markets[selected]);
@@ -2102,6 +3536,8 @@ UmiStatus UmiTradingWorkspaceCancelReviewedOrder(UmiTradingWorkspace *workspace,
 
 /* Chart edits belong to the canonical workspace rather than a transient GTK
  * widget. Capture symbol identity before any gesture crosses a redraw. */
+/* Capture a bounded instrument query before the chart-selection comparison. Valid stale-selection status remains unchanged; unterminated queries are refused without reading beyond the ID limit. The previous implementation is retained for review. */
+#if 0
 static UmiStatus ChartSelectedIndex(const UmiTradingWorkspace *workspace,
     const char *instrument_id, size_t *out_index)
 {
@@ -2110,6 +3546,22 @@ static UmiStatus ChartSelectedIndex(const UmiTradingWorkspace *workspace,
     if (strcmp(workspace->selected_instrument_id, instrument_id) != 0)
         return UMI_STATUS_INVALID_STATE;
     size_t index = market_index(workspace, instrument_id);
+    if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    *out_index = index;
+    return UMI_STATUS_OK;
+}
+#endif
+static UmiStatus ChartSelectedIndex(const UmiTradingWorkspace *workspace,
+    const char *instrument_id, size_t *out_index)
+{
+    if (workspace == NULL || instrument_id == NULL || instrument_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiFinancialId query = {0};
+    UmiStatus status = umi_text_replace(query.value, sizeof(query.value), instrument_id);
+    if (status != UMI_STATUS_OK) return status;
+    if (strcmp(workspace->selected_instrument_id, query.value) != 0)
+        return UMI_STATUS_INVALID_STATE;
+    size_t index = market_index(workspace, query.value);
     if (index == SIZE_MAX) return UMI_STATUS_NOT_FOUND;
     *out_index = index;
     return UMI_STATUS_OK;
@@ -2515,12 +3967,28 @@ UmiStatus UmiTradingCopySessionSource(const UmiTradingWorkspace *workspace,
     memcpy(outSource->positions, workspace->positions.positions, outSource->positionCount * sizeof(UmiPosition));
     return UMI_STATUS_OK;
 }
+/* Report freshness now refuses to certify an exhausted revision, where protective controls may still change. Historical report data stays readable; the previous comparison remains for review. The previous implementation is retained for review. */
+#if 0
 UmiStatus UmiTradingSessionSourceCurrent(const UmiTradingWorkspace *workspace,
     const UmiTradingSessionSource *source, bool *outCurrent)
 {
     if (outCurrent != NULL) *outCurrent = false;
     if (workspace == NULL || source == NULL || outCurrent == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *outCurrent = workspace->session_report_owner_id == source->ownerIdentity &&
+        workspace->revision == source->revision && workspace->environment == source->environment &&
+        strcmp(workspace->account_id.value, source->account.value) == 0;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus UmiTradingSessionSourceCurrent(const UmiTradingWorkspace *workspace,
+    const UmiTradingSessionSource *source, bool *outCurrent)
+{
+    if (outCurrent != NULL) *outCurrent = false;
+    if (workspace == NULL || source == NULL || outCurrent == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Protective actions can still change controls at the final revision.
+     * A report at that value is readable evidence, never asserted current. */
+    *outCurrent = workspace->revision != UINT64_MAX &&
+        workspace->session_report_owner_id == source->ownerIdentity &&
         workspace->revision == source->revision && workspace->environment == source->environment &&
         strcmp(workspace->account_id.value, source->account.value) == 0;
     return UMI_STATUS_OK;

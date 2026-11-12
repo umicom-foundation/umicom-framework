@@ -15,6 +15,12 @@
 #ifndef UMICOM_INTEGRATION_EXECUTION_POLICY_H
 #define UMICOM_INTEGRATION_EXECUTION_POLICY_H
 #include "umicom/integration/designer_types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the integration execution policy data shared with callers of this public
  * contract.
@@ -41,4 +47,8 @@ UmiStatus umi_integration_execution_policy_validate(const UmiIntegrationExecutio
  * client applications.
  */
 unsigned umi_integration_execution_policy_backoff(const UmiIntegrationExecutionPolicy *policy,unsigned attempt);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

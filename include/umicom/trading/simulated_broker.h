@@ -46,6 +46,9 @@ typedef struct UmiSimulatedBrokerStorage {
  * Connect accepts SIMULATION or PAPER as local modes only. Retained orders prevent
  * switching modes until destroy resets the session; same-mode reconnect is allowed.
  * Submission validates the canonical request and requires the connected mode.
+ * IOC/FOK are refused with NOT_IMPLEMENTED before retention. DAY/GTC remain
+ * local resting requests; the caller owns session-end cancellation. This
+ * provider supplies neither immediate matching nor automatic calendar expiry.
  * Cancellation requires a connected matching mode and a legal order transition.
  * An already cancelled order succeeds without incrementing its revision; revision
  * exhaustion and all rejected callbacks preserve stored orders and connection state. */

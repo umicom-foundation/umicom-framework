@@ -23,6 +23,12 @@
 #define UMICOM_UI_COMPONENTS_LAYOUT_H
 #include <stdbool.h>
 #include <stdint.h>
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui component layout data shared with callers of this public contract.
  */
@@ -32,4 +38,8 @@ typedef struct UmiUiComponentLayout { int32_t margin_start,margin_end,margin_top
  * applications.
  */
 UmiUiComponentLayout umi_ui_component_layout_default(void);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

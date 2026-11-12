@@ -34,6 +34,11 @@
 extern "C" {
 #endif
 
+/* Revision properties trading.revision, context.workspace-revision and
+ * research.workspace-revision use UmiUiValueSetUnsigned: INTEGER through
+ * INT64_MAX, otherwise exact decimal STRING. Consumers must accept both kinds.
+ * These identify the trading owner; nested chart/tape observations remain
+ * separate. A view is data and never authorizes an order operation. */
 #define UMI_TRADING_UI_VISIBLE_ROWS 24U
 #define UMI_TRADING_UI_VIEW_DASHBOARD "umicom.trading.workspace.dashboard"
 #define UMI_TRADING_UI_VIEW_WATCHLIST "umicom.trading.workspace.watchlist"

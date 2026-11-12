@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/value_archive/record_cases.h
- * PURPOSE: Check portable bytes and failure preservation through each public record type.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Check portable bytes, native comparison and failure preservation through each public record type.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_TEST_VALUE_ARCHIVE_RECORD_CASES_H
@@ -109,9 +116,20 @@ UMI_TEST_VALUE_WORKSPACE(ArchiveWorkspaceCases, ARCHIVE_TYPE,
     ARCHIVE_ENCODE, ARCHIVE_WORKSPACE_DECODE, ARCHIVE_EQUAL)
 #endif
 
+/* Comparison is an observation only. It shares the record's existing canonical
+ * encoding and preserves the prior archive and restoration checks below. */
+#ifdef ARCHIVE_COMPARE
+#include "comparison_cases.h"
+UMI_TEST_RECORD_COMPARISON(ArchiveComparisonCases, ARCHIVE_TYPE,
+    ARCHIVE_ENCODE, ARCHIVE_COMPARE, ArchiveFillUnusedText)
+#endif
+
 static int ArchiveRecordCases(void)
 {
     ARCHIVE_TYPE value = ArchiveSample(), output = ArchiveSample();
+#ifdef ARCHIVE_COMPARE
+    if (ArchiveComparisonCases(&value) != 0) return 1;
+#endif
 #ifdef ARCHIVE_WORKSPACE_DECODE
     if (ArchiveWorkspaceCases(&value) != 0) return 1;
 #endif

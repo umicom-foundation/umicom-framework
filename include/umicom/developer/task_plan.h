@@ -67,6 +67,18 @@ typedef struct UmiDeveloperTaskPlanSnapshot {
  * Provide the developer task plan submit operation used by this module and its client
  * applications.
  */
+/* Translate one existing project record into an owned operation value without
+ * queueing it, adding journal events or executing a process. out_operation is
+ * required; out_plan is optional. Both outputs remain unchanged on failure.
+ * Inputs and the single-owner runtime must stay stable during this call;
+ * output objects must not overlap. Use submit for one immediate queue entry,
+ * or build several values and publish them through runtime_submit_chain. */
+UmiStatus umi_developer_task_plan_build(
+    UmiDeveloperRuntime *runtime,
+    const UmiDeveloperTaskPlanRequest *request,
+    UmiDeveloperOperationSnapshot *out_operation,
+    UmiDeveloperTaskPlanSnapshot *out_plan);
+
 UmiStatus umi_developer_task_plan_submit(
     UmiDeveloperRuntime *runtime,
     const UmiDeveloperTaskPlanRequest *request,

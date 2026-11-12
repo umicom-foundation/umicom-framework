@@ -21,8 +21,11 @@
 #include "umicom/ui/components/accessibility.h"
 
 #include <string.h>
+#include "umicom/base/text.h"
 
 /* Provide the copy text operation used by this module and its client applications. */
+/* Use Framework bounded replacement for staged metadata and preserve the earlier unbounded helper for review. The previous implementation is retained for review. */
+#if 0
 static UmiStatus copy_text(char *destination, size_t capacity, const char *source)
 {
     /*
@@ -40,11 +43,18 @@ static UmiStatus copy_text(char *destination, size_t capacity, const char *sourc
     (void)memcpy(destination, source, length + 1U);
     return UMI_STATUS_OK;
 }
+#endif
+static UmiStatus copy_text(char *destination, size_t capacity, const char *source)
+{
+    return umi_text_replace(destination, capacity, source);
+}
 
 /*
  * Copy ui component accessibility into module-owned storage so callers keep ownership of
  * their input values.
  */
+/* Publish accessibility name and description together after both fit. The previous sequential mutation is retained to explain the ownership correction. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_ui_component_accessibility_set(UmiUiComponentAccessibility *value,
                                              const char *name,
                                              const char *description)
@@ -66,4 +76,22 @@ UmiStatus umi_ui_component_accessibility_set(UmiUiComponentAccessibility *value,
     return copy_text(value->description,
                      sizeof(value->description),
                      description != NULL ? description : "");
+}
+#endif
+UmiStatus umi_ui_component_accessibility_set(UmiUiComponentAccessibility *value,
+                                             const char *name,
+                                             const char *description)
+{
+    UmiUiComponentAccessibility staged = {0};
+    if (value == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = copy_text(staged.name, sizeof(staged.name),
+                                 name != NULL ? name : "");
+    if (status != UMI_STATUS_OK) return status;
+    status = copy_text(staged.description, sizeof(staged.description),
+                       description != NULL ? description : "");
+    if (status != UMI_STATUS_OK) return status;
+    /* Both inputs can borrow either destination field; commit only after both
+     * have been captured. No failed edit leaves a half-updated accessible label. */
+    *value = staged;
+    return UMI_STATUS_OK;
 }

@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/web/connection.h
- * PURPOSE: Process one bounded HTTP exchange through reusable C routing and an explicit byte transport.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Process one bounded HTTP request and explicitly owned response content through a byte transport.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_WEB_CONNECTION_H
@@ -42,6 +49,13 @@ extern "C"
  * caller output bytes change on failure; out_length is cleared on entry. */
     UmiStatus UmiWebResponseFormatClosed(const UmiWebResponse *response, bool head_request, void *out_bytes,
                                          size_t capacity, size_t *out_length);
+    /* Serialize headers for an external body up to RESPONSE_BODY_LIMIT.
+     * response->body_length must be zero; headers retain the same validation
+     * and authoritative framing as FormatClosed. For HEAD send these headers
+     * only. For 204/304 neither a length nor body is sent. Output is unchanged
+     * on failure. This does not enlarge the legacy response structure. */
+    UmiStatus UmiWebResponseFormatClosedHeaders(const UmiWebResponse *response,
+        size_t body_length, void *out_bytes, size_t capacity, size_t *out_length);
     typedef struct UmiWebConnectionIo
     {
         void *context;
@@ -62,7 +76,9 @@ extern "C"
     } UmiWebExchangeResult;
     /* One owner thread; the service and callback context must outlive return.
  * Read one bounded request, invoke the existing service once, write one
- * complete response. No retry, persistence, file access or implicit endpoint.
+ * complete response. An explicitly registered body fallback may read local
+ * files. The connection owns and destroys that body on success and failure.
+ * No retry, persistence or implicit endpoint.
  * Failures may still send a 400/413/501/500 response; return the original
  * request/handler failure after sending it. A failed send does not imply the
  * handler had no effect. Inspect dispatched and response_complete.

@@ -106,6 +106,12 @@ const char *umi_build_diagnostic_severity_text(
 void umi_build_command_init(UmiBuildCommand *command, const char *program);
 void umi_build_command_rebind(UmiBuildCommand *command);
 
+/* Validate source-owned strings/count, copy the complete record and rebind its
+ * argv cache at destination. Refusal leaves destination unchanged; self-copy
+ * is supported. No source argument pointer is dereferenced or preserved. */
+UmiStatus umi_build_command_copy(UmiBuildCommand *destination,
+                                 const UmiBuildCommand *source);
+
 int umi_build_command_add_argument(UmiBuildCommand *command,
                                    const char *argument);
 int umi_build_command_set_working_directory(UmiBuildCommand *command,
@@ -120,6 +126,9 @@ int umi_build_command_set_working_directory(UmiBuildCommand *command,
  *   - backslash escapes the following character;
  *   - empty quoted arguments are preserved.
  *
+ * Parsing publishes only a complete command. Refusal leaves out_command unchanged.
+ * text may point into out_command; out_message must use separate storage.
+ *
  * There is deliberately no shell expansion, redirection, globbing, variable
  * interpolation, command substitution, pipe handling or statement chaining.
  */
@@ -128,10 +137,19 @@ UmiStatus umi_build_command_parse(const char *text,
                                   char *out_message,
                                   size_t message_capacity);
 
+/* Inspect only bounded owned strings and the argument count. Empty arguments
+ * and an empty working directory are valid; program must be nonempty. The
+ * pointer cache is deliberately ignored: rebind before consuming argv after a
+ * value copy. This byte-oriented check does not resolve programs or validate
+ * UTF-8, permissions, supported tool options or filesystem existence.
+ * A nonempty diagnostic buffer must be writable and separate from the record. */
 UmiStatus umi_build_command_validate(const UmiBuildCommand *command,
                                      char *out_message,
                                      size_t message_capacity);
 
+/* Format bounded owned storage for diagnostics; never execute this display.
+ * Malformed input or insufficient capacity leaves output unchanged. Output must
+ * be separate from command storage; argument pointer cache entries are ignored. */
 int umi_build_command_format(const UmiBuildCommand *command,
                              char *out_text,
                              size_t capacity);

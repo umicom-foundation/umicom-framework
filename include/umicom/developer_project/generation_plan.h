@@ -71,7 +71,10 @@ UmiStatus umi_developer_project_generation_plan_build(
 
 /**
  * Check that developer project generation plan satisfies its contract before another
- * service relies on it.
+ * service relies on it. Rendered paths use portable rooted-file names.
+ * ASCII case/separator aliases and file/parent conflicts return ALREADY_EXISTS.
+ * Existing rooted, colon and double-dot restrictions remain. This is lexical
+ * admission, not filesystem object identity, link containment or a write lock.
  */
 UmiStatus umi_developer_project_generation_plan_validate(
     const UmiDeveloperProjectGenerationPlan *plan);

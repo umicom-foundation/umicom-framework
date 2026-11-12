@@ -22,9 +22,19 @@
 #ifndef UMICOM_UI_COMPONENTS_VALIDATION_H
 #define UMICOM_UI_COMPONENTS_VALIDATION_H
 #include "umicom/ui/components/component.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Provide the ui component validate parent child operation used by this module and its
  * client applications.
  */
 UmiStatus umi_ui_component_validate_parent_child(UmiUiComponentKind parent,UmiUiComponentKind child);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -29,6 +29,8 @@ extern "C" {
  * Represent the developer project build plan data shared with callers of this public
  * contract.
  */
+/* Commands contain self-relative pointer caches. Rebind each active command
+ * after a plain value copy, or use the checked plan copy below. */
 typedef struct UmiDeveloperProjectBuildPlan {
     UmiDeveloperProjectBuildSystem build_system;
     UmiBuildCommand commands[UMI_DEVELOPER_PROJECT_BUILD_PLAN_COMMANDS];
@@ -49,8 +51,19 @@ void umi_developer_project_build_plan_init(
     UmiDeveloperProjectBuildSystem build_system);
 
 /**
- * Provide the developer project build plan cmake operation used by this module and its
- * client applications.
+ * Prepare configure/build, optional test and optional package commands without
+ * invoking tools. A nonempty preset governs all phases; provide matching
+ * configure/build/test preset names in the project. build_directory is metadata
+ * when a preset is selected. Without a preset, the binary directory is required
+ * and configure uses Ninja, with CMAKE_BUILD_TYPE when configuration is supplied.
+ * Build/package use --config and CTest uses -C. Preset single-config generators
+ * must already agree with the requested configuration in their cache settings.
+ * Commands run from source_root; nonpreset configure uses -S . in that directory.
+ *
+ * All factories leave plan unchanged on refusal, including allocation failure.
+ * Input strings may refer into the current plan and must be valid C strings.
+ * Publication owns every command and rebinds its argv cache. No filesystem or
+ * tool discovery occurs, and ordinary nonzero option flags retain their meaning.
  */
 UmiStatus umi_developer_project_build_plan_cmake(
     UmiDeveloperProjectBuildPlan *plan,
@@ -84,8 +97,16 @@ UmiStatus umi_developer_project_build_plan_cargo(
  * Check that developer project build plan satisfies its contract before another service
  * relies on it.
  */
+/* Also validate the four bounded metadata fields; unused command slots and
+ * pointer caches are ignored. An initialized empty plan remains valid. */
 UmiStatus umi_developer_project_build_plan_validate(
     const UmiDeveloperProjectBuildPlan *plan);
+
+/* Validate owned metadata and active commands, copy and rebind argv. Self-copy
+ * is supported; refusal leaves destination unchanged and allocates nothing. */
+UmiStatus umi_developer_project_build_plan_copy(
+    UmiDeveloperProjectBuildPlan *destination,
+    const UmiDeveloperProjectBuildPlan *source);
 
 #ifdef __cplusplus
 }

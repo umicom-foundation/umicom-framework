@@ -22,6 +22,12 @@
 #ifndef UMICOM_UI_COMPONENTS_COLLECTION_H
 #define UMICOM_UI_COMPONENTS_COLLECTION_H
 #include "umicom/ui/components/component.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define UMI_UI_COMPONENT_COLLECTION_CAPACITY 256U
 /**
  * Represent the ui component collection data shared with callers of this public contract.
@@ -37,4 +43,8 @@ void umi_ui_component_collection_init(UmiUiComponentCollection *collection);
  * checked.
  */
 UmiStatus umi_ui_component_collection_add(UmiUiComponentCollection *collection,const char *id);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

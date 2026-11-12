@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/snapshot_contracts/test_language_rename.c
- * PURPOSE: Check language rename input bounds and atomic imports.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Check language rename input bounds and atomic imports.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/language/rename.h"
 #include "umicom/language/rename.h"
@@ -108,6 +115,8 @@ static void ArchiveFillUnusedText(UmiLanguageRenameSnapshot *value)
 #define ARCHIVE_WORKSPACE_DECODE umi_language_rename_snapshot_archive_decode_with_workspace
 /* Exercise guarded import through this domain's public snapshot codec. */
 #define ARCHIVE_CONDITIONAL_DECODE umi_language_rename_snapshot_archive_decode_if_unchanged
+/* Exercise canonical comparison with explicit caller-owned scratch. */
+#define ARCHIVE_COMPARE umi_language_rename_snapshot_archive_compare_with_workspace
 #define ARCHIVE_EQUAL ContractSnapshotEqual
 #include "../value_archive/record_cases.h"
 

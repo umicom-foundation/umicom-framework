@@ -23,10 +23,25 @@
 #include <math.h>
 #include <string.h>
 
+/* A public value can bypass its constructor. Keep extent and finite-component
+ * admission in Framework so every retrieval adapter uses the same rule.
+ * Zero-magnitude vectors remain valid values with a neutral cosine score. */
+bool umi_ai_embedding_valid(const UmiAiEmbedding *embedding)
+{
+    if (embedding == NULL || embedding->dimension == 0U ||
+        embedding->dimension > UMI_AI_EMBEDDING_CAPACITY) return false;
+    for (size_t index = 0U; index < embedding->dimension; ++index)
+        if (!isfinite(embedding->values[index])) return false;
+    return true;
+}
+
+
 /*
  * Copy ai embedding into module-owned storage so callers keep ownership of their input
  * values.
  */
+/* Staging preserves borrowed input and the complete destination on failure; the prior direct reset and copy is The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_ai_embedding_set(UmiAiEmbedding *embedding,
                                const float *values,
                                size_t dimension)
@@ -49,11 +64,30 @@ UmiStatus umi_ai_embedding_set(UmiAiEmbedding *embedding,
     embedding->dimension = dimension;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_ai_embedding_set(UmiAiEmbedding *embedding,
+                               const float *values,
+                               size_t dimension)
+{
+    UmiAiEmbedding candidate = {0};
+    if (embedding == NULL || values == NULL || dimension == 0U ||
+        dimension > UMI_AI_EMBEDDING_CAPACITY) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Capture before publishing: values may borrow all or part of embedding. */
+    for (size_t index = 0U; index < dimension; ++index) {
+        if (!isfinite(values[index])) return UMI_STATUS_INVALID_ARGUMENT;
+        candidate.values[index] = values[index];
+    }
+    candidate.dimension = dimension;
+    (void)memcpy(embedding, &candidate, sizeof(candidate));
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the ai embedding cosine operation used by this module and its client
  * applications.
  */
+/* Shared embedding admission retains the previous numeric policy while avoiding divergent vector checks; the earlier implementation is The previous implementation is retained for review. */
+#if 0
 double umi_ai_embedding_cosine(const UmiAiEmbedding *left,
                                const UmiAiEmbedding *right)
 {
@@ -74,6 +108,26 @@ double umi_ai_embedding_cosine(const UmiAiEmbedding *left,
     if (left->dimension > UMI_AI_EMBEDDING_CAPACITY) return 0.0;
     for (size_t component = 0U; component < left->dimension; ++component)
         if (!isfinite(left->values[component]) || !isfinite(right->values[component])) return 0.0;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < left->dimension; ++index) {
+        double lv = (double)left->values[index];
+        double rv = (double)right->values[index];
+        dot += lv * rv;
+        a += lv * lv;
+        b += rv * rv;
+    }
+    return a > 0.0 && b > 0.0 ? dot / (sqrt(a) * sqrt(b)) : 0.0;
+}
+#endif
+double umi_ai_embedding_cosine(const UmiAiEmbedding *left,
+                               const UmiAiEmbedding *right)
+{
+    size_t index;
+    double dot = 0.0;
+    double a = 0.0;
+    double b = 0.0;
+    if (!umi_ai_embedding_valid(left) || !umi_ai_embedding_valid(right) ||
+        left->dimension != right->dimension) return 0.0;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < left->dimension; ++index) {
         double lv = (double)left->values[index];

@@ -20,6 +20,12 @@
 #include <stdint.h>
 #include "umicom/base/status.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define UMI_INTEGRATION_DESIGNER_ID_CAPACITY 96U
 #define UMI_INTEGRATION_DESIGNER_NAME_CAPACITY 160U
 #define UMI_INTEGRATION_DESIGNER_URI_CAPACITY 384U
@@ -179,4 +185,8 @@ UmiStatus umi_integration_designer_validation_add(
     const char *location,
     const char *message);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

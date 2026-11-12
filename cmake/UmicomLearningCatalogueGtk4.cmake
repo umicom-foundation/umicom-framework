@@ -17,6 +17,8 @@ if(NOT TARGET Umicom::ui_gtk4 OR NOT TARGET Umicom::developer OR NOT TARGET Umic
     return()
 endif()
 include_guard(GLOBAL)
+# Share structured typography with Studio and other native reading hosts.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomReadingDocumentGtk4.cmake")
 include(GNUInstallDirs)
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomPathPicker.cmake")
@@ -43,6 +45,8 @@ set_target_properties(umicom_learning_catalogue_gtk4 PROPERTIES
 target_link_libraries(umicom_learning_catalogue_gtk4
     PUBLIC Umicom::ui_gtk4 Umicom::developer
     PRIVATE Umicom::browser Umicom::platform Umicom::editor)
+# Preserve the original dependencies above; the presenter adds no application logic.
+target_link_libraries(umicom_learning_catalogue_gtk4 PRIVATE Umicom::reading_gtk4)
 umicom_apply_warnings(umicom_learning_catalogue_gtk4)
 umicom_apply_sanitizers(umicom_learning_catalogue_gtk4)
 if(COMMAND umicom_target_qualification_inputs)

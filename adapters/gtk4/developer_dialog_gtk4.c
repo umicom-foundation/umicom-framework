@@ -125,6 +125,8 @@ struct UmiGtk4DeveloperDialog {
     GtkWidget *projectFolderName, *projectChooseParent;
     GCancellable *projectChooserCancel;
     int projectChoosing;
+    /* GTK-thread guard covers admission, the owned writer and result publication. */
+    int projectCreating;
     /* The module form owns reviewed source; ordinary project forms leave it null. */
     DeveloperApplicationForm *application;
     GtkWidget *acceptButton;
@@ -442,6 +444,10 @@ done:
     DeveloperRelease(dialog);
 }
 #endif
+/* Preserve the previous status-only acceptance path. The active callback
+ * keeps its ownership/generation behavior while reporting shared partial-work
+ * semantics instead of describing every collision as an existing root. */
+#if 0
 static void CreateClicked(GtkButton *button, gpointer context)
 {
     UmiGtk4DeveloperDialog *dialog = DeveloperAcquire(context);
@@ -501,6 +507,75 @@ done:
     dialog->accepting = 0;
     DeveloperRelease(dialog);
 }
+
+#endif
+/* Source creation now runs in an owned background task. Preserve this
+ * synchronous route for review; the shared writer and adoption retry remain. */
+#if 0
+static void CreateClicked(GtkButton *button, gpointer context)
+{
+    UmiGtk4DeveloperDialog *dialog = DeveloperAcquire(context);
+    if (dialog == NULL) return;
+    /* An application callback can dispatch another GTK event. Do not accept
+     * the same form recursively while its current result is being adopted. */
+    if (dialog->accepting || dialog->projectChoosing) { DeveloperRelease(dialog); return; }
+    dialog->accepting = 1;
+    UmiDeveloperProjectGenerationRequest request;
+    UmiDeveloperProjectGeneratorReport report = {0};
+    char message[512] = {0};
+    UmiStatus status = UMI_STATUS_OK;
+    (void)button;
+    if (!dialog->generated) {
+        guint selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(dialog->templatePicker));
+        if ((size_t)selected >= dialog->templateCount) goto done;
+        umi_developer_project_generation_request_init(&request);
+        status = umi_text_copy(request.template_id, sizeof(request.template_id),
+            dialog->templates[selected]->template_id);
+#define COPY_INPUT(field, index) \
+        if (status == UMI_STATUS_OK) status = umi_text_copy(request.field, sizeof(request.field), \
+            gtk_editable_get_text(GTK_EDITABLE(dialog->fields[index])))
+        COPY_INPUT(application_name, 0);
+        COPY_INPUT(application_id, 1);
+        COPY_INPUT(repository_name, 2);
+        COPY_INPUT(target_name, 3);
+        COPY_INPUT(project_root, 4);
+#undef COPY_INPUT
+        if (status == UMI_STATUS_OK)
+            status = umi_developer_project_generation_request_validate(&request, message, sizeof(message));
+        if (status == UMI_STATUS_OK) {
+            message[0] = '\0';
+            status = UmiDeveloperProjectCreateNew(dialog->projects, &request,
+                &report, &dialog->model, &dialog->profile);
+        }
+        if (status != UMI_STATUS_OK) {
+            /* Keep field validation detail. Native creation failures use the
+             * same report semantics as the CLI, including partial collisions. */
+            if(message[0]=='\0')
+                (void)UmiDeveloperProjectCreationDescribe(status,&report,message,sizeof message);
+            if(DeveloperVisible(dialog))ShowStatus(dialog,status,message);
+            goto done;
+        }
+        dialog->generated = 1;
+        for (size_t index = 0U; index < 5U && !dialog->closed; ++index)
+            gtk_widget_set_sensitive(dialog->fields[index], FALSE);
+        if (!dialog->closed) gtk_widget_set_sensitive(dialog->templatePicker, FALSE);
+        if (DeveloperVisible(dialog)) {
+            gtk_widget_set_sensitive(dialog->projectFolderName, FALSE);
+            gtk_widget_set_sensitive(dialog->projectChooseParent, FALSE);
+        }
+    }
+    if (!DeveloperVisible(dialog)) goto done;
+    status = dialog->onCreated(&dialog->model, &dialog->profile, dialog->context);
+    if (!DeveloperVisible(dialog)) goto done;
+    if (status == UMI_STATUS_OK) gtk_widget_set_visible(GTK_WIDGET(dialog->window), FALSE);
+    else ShowStatus(dialog, status, "The files were created but Studio could not open the project. Close this form and use Open Folder. No existing project was overwritten.");
+done:
+    dialog->accepting = 0;
+    DeveloperRelease(dialog);
+}
+
+#endif
+#include "developer_project_creation_gtk4.inc"
 
 /* Settings are copied first and only applied after validation and owner acceptance. */
 /* Acceptance now holds owned form state and checks visibility after callbacks; this preserves settings and project generation while preventing use of a retired application context.
@@ -919,6 +994,7 @@ static UmiStatus CreateForm(GtkWindow *parent, const char *title,
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), dialog->body);
     gtk_box_append(GTK_BOX(root), scroll);
     dialog->message = gtk_label_new("");
+    (void)umi_gtk4_automation_tag_widget(dialog->message, "developer.dialog.status");
     gtk_label_set_wrap(GTK_LABEL(dialog->message), TRUE);
     gtk_label_set_xalign(GTK_LABEL(dialog->message), 0.0F);
     gtk_box_append(GTK_BOX(root), dialog->message);
@@ -1517,3 +1593,11 @@ void UmiGtk4DeveloperDialogDestroy(UmiGtk4DeveloperDialog *dialog)
 
 /* Application creation uses the same owner-managed window contract. */
 #include "developer_application_gtk4.inc"
+
+/* Applications consume the shared form's activity instead of duplicating its
+ * worker state. This GTK-thread observation invokes no callbacks. */
+int UmiGtk4DeveloperDialogWritePending(const UmiGtk4DeveloperDialog *dialog)
+{
+    return dialog != NULL && !dialog->closed &&
+        (dialog->projectCreating || (dialog->application != NULL && dialog->application->applying));
+}

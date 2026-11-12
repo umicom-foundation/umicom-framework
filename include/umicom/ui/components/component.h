@@ -106,6 +106,9 @@ UmiUiComponentSpec umi_ui_component_spec_default(UmiUiComponentKind kind);
  * Provide the ui component spec set id operation used by this module and its client
  * applications.
  */
+/** Text setters use bounded replacement, allow overlapping input and leave the
+ * field unchanged on error. Supply readable text through its terminator or the
+ * destination capacity; byte limits include the terminator. */
 UmiStatus umi_ui_component_spec_set_id(UmiUiComponentSpec *spec, const char *id);
 /**
  * Provide the ui component spec set text operation used by this module and its client

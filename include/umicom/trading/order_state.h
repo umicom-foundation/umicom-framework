@@ -33,6 +33,14 @@ extern "C" {
 /* Only declared states are valid, including for an unchanged state. */
 int UmiOrderStatusValid(UmiOrderStatus state);
 int umi_order_transition_allowed(UmiOrderStatus from, UmiOrderStatus to);
+/* Complete a local cancellation from ACCEPTED or PARTIALLY_FILLED. A retained
+ * CANCELLED state is an idempotent success, including at maximum revision.
+ * Other states and exhausted new transitions preserve the complete order.
+ * Accepted cancellation changes only status and version; partial fills remain.
+ * Serialize access and admit the surrounding owner's revision/transaction first.
+ * This value operation does not validate a request, send a broker command,
+ * retain audit evidence, or establish an external cancellation acknowledgement. */
+UmiStatus UmiOrderCancel(UmiOrder *order);
 #ifdef __cplusplus
 }
 #endif

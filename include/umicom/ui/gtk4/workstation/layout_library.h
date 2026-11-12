@@ -22,6 +22,12 @@
 #include "umicom/ui/workspace_library_checkpoint.h"
 
 #include "umicom/ui/gtk4/workstation/library_exchange.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 G_BEGIN_DECLS
 
 /** Managed GTK projection; the caller retains its authoritative workspace. */
@@ -176,4 +182,8 @@ UmiStatus umi_gtk4_ws_layout_library_set_saved_review_handler(
     UmiGtk4WorkspaceLibrarySavedReviewHandler handler, void *context);
 
 G_END_DECLS
+
+#ifdef __cplusplus
+}
+#endif
 #endif

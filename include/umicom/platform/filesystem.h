@@ -75,6 +75,13 @@ UmiStatus umi_fs_make_directories(const char *path);
  * bounds directory recursion to 128 levels. Removal may be partial on failure.
  * Callers must own the tree and prevent concurrent parent/link replacement;
  * this path-based operation is not an adversarial filesystem sandbox. */
+/* POSIX now removes links as leaves, including dangling links, and enumerates
+ * through pinned directory descriptors. It refuses /, final . or .., nested
+ * directories on another device and recursion at 128 directory levels. Initial
+ * path bytes must fit UMI_PATH_CAPACITY. Missing entries succeed; enumeration,
+ * close and removal errors are failures, possibly after earlier removals.
+ * Parent aliases remain allowed. Keep parents, entries and mounts stable;
+ * neither adapter is an adversarial filesystem isolation mechanism. */
 UmiStatus umi_fs_remove_tree(const char *path);
 /**
  * Provide the fs rename operation used by this module and its client applications.

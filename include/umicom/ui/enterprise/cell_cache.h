@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_CELL_CACHE_H
 
 #include "umicom/ui/enterprise/cell_value.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent cell cache entry data shared with callers of this public contract.
  */
@@ -40,4 +46,8 @@ UmiStatus umi_ui_ent_cell_cache_put(UmiUiEntCellCache *c,uint64_t key,size_t col
  */
 int umi_ui_ent_cell_cache_get(const UmiUiEntCellCache *c,uint64_t key,size_t column,UmiUiEntCellValue *out_value);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -1,20 +1,21 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/boot_media/device_linux.c
+ *
  * PURPOSE:
- *   Linux removable-USB adapter. Kernel sysfs is the inventory authority. Whole disks only;
- *   mounted partitions, swap, holders and unknown observations block acquisition. There is
- *   no umount, sudo, shell, device-node creation or retry.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Observe Linux removable USB whole disks through sysfs and refuse mounted, swapped, held or unknown devices.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
-/*-----------------------------------------------------------------------------
- * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Linux removable-USB adapter. Kernel sysfs is the inventory authority. Whole
- * disks only; mounted partitions, swap, holders and unknown observations block
- * acquisition. There is no umount, sudo, shell, device-node creation or retry.
- *---------------------------------------------------------------------------*/
+/* Kernel sysfs is the inventory authority. Whole disks only; mounted partitions,
+ * swap, holders and unknown observations block acquisition. There is no umount,
+ * sudo, shell, device-node creation or retry. */
 
 #define _GNU_SOURCE
 #define _FILE_OFFSET_BITS 64
@@ -233,7 +234,14 @@ UmiStatus BmDeviceCheck(const char *path,UmiBootMediaDevice *out)
     return UMI_STATUS_OK;
 }
 
+/* The former public adapter entry remains below for source review. Shared
+ * discovery.c now resets and publishes diagnostics consistently on every host;
+ * this private entry retains the same native observation and refusal logic. */
+#if 0
 UmiStatus UmiBootMediaDiscover(UmiBootMediaInventory *out,UmiBootMediaReport *r)
+#else
+UmiStatus BmDiscover(UmiBootMediaInventory *out,UmiBootMediaReport *r)
+#endif
 {
     if (!out)return UMI_STATUS_INVALID_ARGUMENT;
     memset(out,0,sizeof *out);

@@ -26,6 +26,11 @@ extern "C" {
 
 
 #define UMI_UI_BINDING_MAX 256U
+/* On OK, assign a complete valid target through a value setter or copy.
+ * target starts as deterministic invalid scratch, not as a source copy.
+ * Errors preserve the target view. Do not retain either temporary pointer.
+ * Callbacks run inside registry propagation: do not reenter or mutate that
+ * registry, destroy its views, or wait for work that needs the same registry. */
 typedef UmiStatus (*UmiUiBindingTransform)(const UmiUiValue *source, UmiUiValue *target, void *user_data);
 /**
  * Represent the ui binding descriptor data shared with callers of this public contract.
@@ -48,6 +53,9 @@ void umi_ui_binding_registry_destroy(UmiUiBindingRegistry *registry);
 /**
  * Add ui binding only after its inputs and available capacity have been checked.
  */
+/* The registry copies bounded descriptor text, but borrows both views and
+ * user_data. They must outlive registration and any in-progress propagation.
+ * Invalid descriptors leave the registry unchanged. */
 UmiStatus umi_ui_binding_register(UmiUiBindingRegistry *registry, const UmiUiBindingDescriptor *descriptor);
 /**
  * Remove ui binding while keeping the remaining records in a valid and discoverable state.
@@ -62,6 +70,9 @@ UmiStatus umi_ui_binding_propagate(UmiUiBindingRegistry *registry, const char *b
  * Provide the ui binding propagate all operation used by this module and its client
  * applications.
  */
+/* Propagates in registration order and continues after a failure. Return the
+ * first failure and count OK results, including disabled no-ops. This is not
+ * an atomic transaction across views; earlier accepted updates remain visible. */
 UmiStatus umi_ui_binding_propagate_all(UmiUiBindingRegistry *registry, size_t *out_propagated);
 /**
  * Return the number of records represented by ui binding without changing their state.

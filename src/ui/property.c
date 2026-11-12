@@ -36,8 +36,44 @@ void umi_ui_property_bag_destroy(UmiUiPropertyBag *bag){/* Protect caller-owned 
  * Copy ui property bag into module-owned storage so callers keep ownership of their input
  * values.
  */
+/* Use the shared UI value admission contract before publishing property data; preserve the previous implementation for review. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_ui_property_bag_set(UmiUiPropertyBag *bag,const char *key,const UmiUiValue *value)
 { size_t i; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(bag==NULL||key==NULL||value==NULL||key[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT; /* Protect caller-owned memory by checking that required state is available before it is used. */ if(strlen(key)>=UMI_UI_PROPERTY_KEY_CAPACITY)return UMI_STATUS_CAPACITY_EXCEEDED; (void)umi_mutex_lock(bag->mutex); i=property_find(bag,key); /* Protect caller-owned memory by checking that required state is available before it is used. */ if(i==SIZE_MAX){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(bag->count>=UMI_UI_PROPERTY_MAX){(void)umi_mutex_unlock(bag->mutex);return UMI_STATUS_CAPACITY_EXCEEDED;}i=bag->count++;(void)umi_ui_copy_text(bag->entries[i].key,sizeof(bag->entries[i].key),key);}bag->entries[i].value=*value;bag->revision=umi_ui_next_revision(bag->revision);(void)umi_mutex_unlock(bag->mutex);return UMI_STATUS_OK; }
+#endif
+UmiStatus umi_ui_property_bag_set(UmiUiPropertyBag *bag, const char *key, const UmiUiValue *value)
+{
+    UmiUiValue candidate;
+    size_t length = 0U;
+    size_t index;
+    UmiStatus status;
+    if (bag == NULL || key == NULL || value == NULL || key[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    while (length < UMI_UI_PROPERTY_KEY_CAPACITY && key[length] != '\0')
+        ++length;
+    if (length == UMI_UI_PROPERTY_KEY_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    /* Framework validates and owns the complete value before touching the
+     * property catalogue. A malformed plug-in result must not add a key,
+     * replace an existing value or advance the observable bag revision. */
+    status = umi_ui_value_copy(&candidate, value);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_mutex_lock(bag->mutex);
+    if (status != UMI_STATUS_OK) return status;
+    index = property_find(bag, key);
+    if (index == SIZE_MAX) {
+        if (bag->count >= UMI_UI_PROPERTY_MAX) {
+            (void)umi_mutex_unlock(bag->mutex);
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        }
+        index = bag->count++;
+        memcpy(bag->entries[index].key, key, length + 1U);
+    }
+    bag->entries[index].value = candidate;
+    bag->revision = umi_ui_next_revision(bag->revision);
+    (void)umi_mutex_unlock(bag->mutex);
+    return UMI_STATUS_OK;
+}
 /*
  * Provide the ui property bag get operation used by this module and its client
  * applications.

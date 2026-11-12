@@ -80,3 +80,6 @@ if(BUILD_TESTING)
         endif()
     endforeach()
 endif()
+
+# Alternate source formats reuse this owner and its semantic-range contracts.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomMarkdownReading.cmake")

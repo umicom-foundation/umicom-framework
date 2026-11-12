@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_CELL_VALIDATION_H
 
 #include "umicom/ui/enterprise/cell_value.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent cell validation rule data shared with callers of this public
  * contract.
@@ -27,4 +33,8 @@ typedef struct UmiUiEntCellValidationRule { int required; size_t max_length; int
  */
 UmiStatus umi_ui_ent_cell_validation_validate(const UmiUiEntCellValidationRule *rule,const UmiUiEntCellValue *value,char *message,size_t message_capacity);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

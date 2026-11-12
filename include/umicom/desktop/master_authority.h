@@ -27,6 +27,12 @@
 #include "umicom/desktop/shell_model.h"
 #include "umicom/runtime/master_controller.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define UMI_DESKTOP_MASTER_AUTHORITY_ID "org.umicom.framework.desktop"
 
 /**
@@ -90,4 +96,8 @@ UmiDesktopSessionRecovery *umi_master_controller_desktop_session_recovery(
 UmiDesktopMonitorInteraction *umi_master_controller_desktop_monitor_interaction(
     UmiMasterController *controller);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

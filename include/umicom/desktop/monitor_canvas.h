@@ -19,6 +19,12 @@
 
 #include "umicom/desktop/window_manager.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Represent the desktop canvas rect data shared with callers of this public contract.
  */
@@ -116,4 +122,8 @@ bool umi_desktop_canvas_rect_contains(
     double x,
     double y);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

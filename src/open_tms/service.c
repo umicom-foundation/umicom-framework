@@ -227,6 +227,9 @@ UmiStatus umi_open_tms_service_evaluate(
     return UMI_STATUS_NOT_FOUND;
 }
 
+/* Retained for review: the former enclosing capture published counts before
+ * child admission. The replacement validates and publishes a complete value. */
+#if 0
 UmiStatus umi_open_tms_service_snapshot(
     const UmiOpenTmsService *service,
     uint64_t nowMilliseconds,
@@ -262,5 +265,38 @@ UmiStatus umi_open_tms_service_snapshot(
     outSnapshot->revision = outSnapshot->dashboard.revision > service->revision
         ? outSnapshot->dashboard.revision
         : service->revision;
+    return UMI_STATUS_OK;
+}
+
+#endif
+
+/* The enclosing service preserves the dashboard's all-or-nothing boundary.
+ * Validate forward storage too before publishing its count. */
+UmiStatus umi_open_tms_service_snapshot(const UmiOpenTmsService *service,
+    uint64_t nowMilliseconds, UmiOpenTmsServiceSnapshot *outSnapshot)
+{
+    if (service == NULL || outSnapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (service->revision == 0U) return UMI_STATUS_INVALID_STATE;
+    UmiStatus status = umi_open_tms_fx_forward_book_validate(&service->forwards);
+    if (status != UMI_STATUS_OK) return status;
+    UmiOpenTmsServiceSnapshot value = {0};
+    status = umi_open_tms_dashboard_snapshot(&service->cash, &service->liquidity,
+        &service->positions, &service->risk, &service->settlements, &service->accounting,
+        &service->reconciliation, nowMilliseconds, &value.dashboard);
+    if (status != UMI_STATUS_OK) return status;
+    value.policyCount = umi_open_tms_service_count();
+    value.forwardCount = service->forwards.count;
+    value.cashCount = service->cash.count;
+    value.liquidityBucketCount = service->liquidity.count;
+    value.positionCount = service->positions.count;
+    value.riskLimitCount = service->risk.count;
+    value.settlementCount = service->settlements.count;
+    value.reconciliationCount = service->reconciliation.count;
+    value.revision = value.dashboard.revision > service->revision
+        ? value.dashboard.revision : service->revision;
+    /* Include forwards in the compatible maximum-child observation. This still
+     * is not a globally unique change token across independently edited books. */
+    if (service->forwards.revision > value.revision) value.revision = service->forwards.revision;
+    *outSnapshot = value;
     return UMI_STATUS_OK;
 }

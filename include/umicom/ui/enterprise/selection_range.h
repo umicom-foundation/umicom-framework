@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_SELECTION_RANGE_H
 
 #include "umicom/ui/enterprise/types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent selection range data shared with callers of this public contract.
  */
@@ -31,4 +37,8 @@ UmiUiEntSelectionRange umi_ui_ent_selection_range_normalize(UmiUiEntSelectionRan
  */
 int umi_ui_ent_selection_range_contains(UmiUiEntSelectionRange value,size_t row,size_t column);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

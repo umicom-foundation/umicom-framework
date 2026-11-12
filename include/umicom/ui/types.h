@@ -107,6 +107,9 @@ typedef struct UmiUiRect {
 /**
  * Check that ui id satisfies its contract before another service relies on it.
  */
+/* Read at most UMI_UI_ID_CAPACITY bytes, stopping at NUL. The caller supplies
+ * readable storage through the terminator or that bound. Empty, overlong and
+ * unterminated identifiers are invalid; the accepted character set is unchanged. */
 int umi_ui_id_is_valid(const char *identifier);
 /**
  * Provide the ui orientation text operation used by this module and its client

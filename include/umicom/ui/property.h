@@ -54,6 +54,9 @@ void umi_ui_property_bag_destroy(UmiUiPropertyBag *bag);
  * Copy ui property bag into module-owned storage so callers keep ownership of their input
  * values.
  */
+/* Invalid active value kinds or unterminated STRING payloads are rejected
+ * before changing a key, value, count or revision. The bag owns a copy;
+ * callers retain and may later change their source record independently. */
 UmiStatus umi_ui_property_bag_set(UmiUiPropertyBag *bag, const char *key,
                                   const UmiUiValue *value);
 /**

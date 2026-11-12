@@ -24,6 +24,12 @@
 #include "umicom/security/approval.h"
 #include "umicom/security/package_trust.h"
 #include "umicom/security/security_audit.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the security access request data shared with callers of this public contract.
  */
@@ -85,4 +91,8 @@ UmiStatus umi_security_governance_authorise(UmiSecurityGovernanceCentre *centre,
  * applications.
  */
 void umi_security_governance_snapshot(const UmiSecurityGovernanceCentre *centre,UmiSecurityGovernanceSnapshot *out_snapshot);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

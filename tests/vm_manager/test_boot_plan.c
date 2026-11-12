@@ -96,6 +96,32 @@ int main(int argc, char **argv)
         return 0;
     }
     Request(&request, UMI_VM_BOOT_UMICOM_KERNEL);
+    /* Exercise the public planner at the largest admitted directory size.
+     * The derived filenames exceed the directory field but remain within the
+     * shared path output contract. No directories or processes are created. */
+    if (strcmp(name, "recording-boundary") == 0 ||
+        strcmp(name, "recording-boundary-unicode") == 0) {
+        char directory[UMI_VM_PATH];
+        const size_t prefix = strlen(ROOT_PATH);
+        memcpy(directory, ROOT_PATH, prefix);
+        memset(directory + prefix, 'x', sizeof directory - prefix - 1U);
+        for (size_t index = prefix + 63U; index + 1U < sizeof directory; index += 64U)
+            directory[index] = '/';
+        if (strcmp(name, "recording-boundary-unicode") == 0) {
+            directory[sizeof directory - 3U] = (char)0xc3;
+            directory[sizeof directory - 2U] = (char)0xa9;
+        }
+        directory[sizeof directory - 1U] = '\0';
+        CHECK(UmiVmBootPlanCreateRecorded(&request, directory, &plan) == UMI_STATUS_OK);
+        CHECK(plan != NULL);
+        CHECK(strcmp(UmiVmBootPlanRecordingDirectory(plan), directory) == 0);
+        const char *argument = Value(plan, "-chardev");
+        CHECK(argument != NULL && strstr(argument, directory) != NULL);
+        CHECK(strlen(argument) > UMI_VM_PATH);
+        CHECK(strcmp(argument + strlen(argument) - strlen("/serial.log"), "/serial.log") == 0);
+        UmiVmBootPlanDestroy(plan);
+        return 0;
+    }
     if (strncmp(name, "recording-", 10U) == 0) {
         char directory[UMI_VM_PATH + 1U] = ROOT_PATH "recordings";
         const char *selected = directory;

@@ -253,6 +253,13 @@ UmiStatus umi_test_platform_run_session_registry_archive_restore(UmiTestPlatform
 UmiStatus umi_test_platform_run_session_registry_clear_if_current(UmiTestPlatformRunSessionRegistry *registry,
     uint64_t expected_revision);
 
+/* Compare this record's canonical saved state using caller-owned byte scratch.
+ * See UmiValueArchiveComparison in base/value_archive.h for measurement,
+ * refusal, aliasing and lifetime rules. This call never publishes live state. */
+UmiStatus umi_test_platform_run_session_snapshot_archive_compare_with_workspace(const UmiTestPlatformRunSessionSnapshot *left,
+    const UmiTestPlatformRunSessionSnapshot *right, void *workspace, size_t capacity,
+    UmiValueArchiveComparison *out_comparison);
+
 #ifdef __cplusplus
 }
 #endif

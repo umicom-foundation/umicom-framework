@@ -17,12 +17,15 @@
 #include "../base/value_construction_internal.h"
 
 #include <ctype.h>
+#include <math.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #include "umicom/platform/threading.h"
 #include "ui_internal.h"
+#include "theme_validation_internal.h"
 
 struct UmiUiAppearanceModel {
     UmiUiAppearanceProfile items[UMI_UI_APPEARANCE_MAX_PROFILES];
@@ -183,6 +186,10 @@ UMI_DEFINE_STAGED_VALUE_INIT(umi_ui_appearance_profile_init, UmiUiAppearanceProf
     umi_ui_appearance_profile_init_build_value(candidate, profile_id, label, mode, density))
 
 
+/* Retain the former unbounded validation for review. The active validator
+ * first admits complete public fields and finite typography, so all native
+ * renderers and persisted profiles share the same input contract. */
+#if 0
 /* Provide the valid colour operation used by this module and its client applications. */
 static int valid_colour(const char *colour)
 {
@@ -260,6 +267,214 @@ UmiStatus umi_ui_appearance_profile_validate(
         reason = "Font families contain unsupported characters";
         result = UMI_STATUS_INVALID_STATE;
     } else /* Apply this branch only when its contract condition is satisfied. */ if (profile->interface_font_size < 8.0 ||
+               profile->interface_font_size > 32.0 ||
+               profile->editor_font_size < 8.0 ||
+               profile->editor_font_size > 40.0 ||
+               profile->font_scale < 0.75 || profile->font_scale > 2.0) {
+        reason = "Font sizes or scale are outside supported limits";
+        result = UMI_STATUS_INVALID_STATE;
+    } else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (!UMI_COLOUR_OK(background) || !UMI_COLOUR_OK(surface) ||
+               !UMI_COLOUR_OK(raised_surface) ||
+               !UMI_COLOUR_OK(hover_surface) ||
+               !UMI_COLOUR_OK(editor_background) ||
+               !UMI_COLOUR_OK(foreground) ||
+               !UMI_COLOUR_OK(muted_foreground) || !UMI_COLOUR_OK(border) ||
+               !UMI_COLOUR_OK(strong_border) || !UMI_COLOUR_OK(accent) ||
+               !UMI_COLOUR_OK(accent_surface) || !UMI_COLOUR_OK(success) ||
+               !UMI_COLOUR_OK(warning) || !UMI_COLOUR_OK(danger)) {
+        reason = "Every semantic colour must use #RRGGBB notation";
+        result = UMI_STATUS_INVALID_STATE;
+    }
+
+    written = snprintf(out_reason, capacity, "%s", reason);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (written < 0 || (size_t)written >= capacity) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    return result;
+#undef UMI_COLOUR_OK
+}
+
+#endif
+
+/* Provide the valid colour operation used by this module and its client applications. */
+/* Share the bounded six-digit colour grammar with theme and editor validation; preserve the previous admitted-profile helper for comparison. The previous implementation is retained for review. */
+#if 0
+static int valid_colour(const char *colour)
+{
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (colour == NULL || colour[0] != '#' || strlen(colour) != 7U) return 0;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 1U; index < 7U; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (!isxdigit((unsigned char)colour[index])) return 0;
+    }
+    return 1;
+}
+#endif
+static int valid_colour(const char *colour)
+{
+    return UmiUiThemeHexColourIsValid(colour, UMI_UI_APPEARANCE_COLOUR_CAPACITY);
+}
+
+/* Provide the valid font operation used by this module and its client applications. */
+/* Move the existing repaired font-list grammar into the shared bounded helper so editor snapshots follow the same rule. The previous implementation is retained for review. */
+#if 0
+static int valid_font(const char *font)
+{
+    /* Profile admission establishes the terminator before this bounded field
+     * is parsed. Require one actual name per comma-separated fallback; an
+     * empty family otherwise produces invalid renderer CSS. */
+    bool named = false;
+    for (const unsigned char *p = (const unsigned char *)font; ; ++p) {
+        unsigned char c = *p;
+        if (c == ',' || c == '\0') {
+            if (!named) return 0;
+            if (c == '\0') return 1;
+            named = false;
+        } else if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
+                   (c >= '0' && c <= '9')) {
+            named = true;
+        } else if (c != ' ' && c != '-' && c != '_' && c != '.') {
+            return 0;
+        }
+    }
+}
+#endif
+static int valid_font(const char *font)
+{
+    return UmiUiThemeFontListIsValid(font, UMI_UI_APPEARANCE_FONT_CAPACITY);
+}
+
+/* Every public inline string must end inside its own field before a legacy
+ * string API can inspect it. Metadata is included because persistence and
+ * product identity consumers also read these accepted profile values. */
+static bool ProfileTextIsBounded(const UmiUiAppearanceProfile *profile)
+{
+#define BOUNDED(field) (memchr(profile->field, '\0', sizeof(profile->field)) != NULL)
+    return BOUNDED(profile_id) && BOUNDED(label) && BOUNDED(description) &&
+        BOUNDED(brand_name) && BOUNDED(logo_resource) && BOUNDED(icon_resource) &&
+        BOUNDED(interface_font) && BOUNDED(editor_font) && BOUNDED(background) &&
+        BOUNDED(surface) && BOUNDED(raised_surface) && BOUNDED(hover_surface) &&
+        BOUNDED(editor_background) && BOUNDED(foreground) && BOUNDED(muted_foreground) &&
+        BOUNDED(border) && BOUNDED(strong_border) && BOUNDED(accent) &&
+        BOUNDED(accent_surface) && BOUNDED(success) && BOUNDED(warning) && BOUNDED(danger);
+#undef BOUNDED
+}
+
+/*
+ * Check that ui appearance profile satisfies its contract before another service relies on
+ * it.
+ */
+/* Reject diagnostic output that overlaps the const profile before any explanation is written. Existing bounded text and finite-number admission remain in force. The previous implementation is retained for review. */
+#if 0
+UmiStatus umi_ui_appearance_profile_validate(
+    const UmiUiAppearanceProfile *profile,
+    char *out_reason,
+    size_t capacity)
+{
+#define UMI_COLOUR_OK(field) valid_colour(profile->field)
+    const char *reason = "Appearance profile is valid";
+    UmiStatus result = UMI_STATUS_OK;
+    int written;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (profile == NULL || out_reason == NULL || capacity == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (!ProfileTextIsBounded(profile)) {
+        reason = "Appearance text must end within each field";
+        result = UMI_STATUS_INVALID_STATE;
+    } else if (!umi_ui_id_is_valid(profile->profile_id) || profile->label[0] == '\0') {
+        reason = "Appearance profile identity is invalid";
+        result = UMI_STATUS_INVALID_STATE;
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (profile->mode < UMI_UI_THEME_MODE_SYSTEM ||
+               profile->mode > UMI_UI_THEME_MODE_HIGH_CONTRAST ||
+               profile->density < UMI_UI_DENSITY_COMPACT ||
+               profile->density > UMI_UI_DENSITY_SPACIOUS) {
+        reason = "Appearance mode or density is invalid";
+        result = UMI_STATUS_INVALID_STATE;
+    } else /* Apply this operation only while the related capability or state is available. */ if (!valid_font(profile->interface_font) ||
+               !valid_font(profile->editor_font)) {
+        reason = "Font families contain unsupported characters";
+        result = UMI_STATUS_INVALID_STATE;
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (!isfinite(profile->interface_font_size) ||
+               !isfinite(profile->editor_font_size) || !isfinite(profile->font_scale) ||
+               profile->interface_font_size < 8.0 ||
+               profile->interface_font_size > 32.0 ||
+               profile->editor_font_size < 8.0 ||
+               profile->editor_font_size > 40.0 ||
+               profile->font_scale < 0.75 || profile->font_scale > 2.0) {
+        reason = "Font sizes or scale are outside supported limits";
+        result = UMI_STATUS_INVALID_STATE;
+    } else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (!UMI_COLOUR_OK(background) || !UMI_COLOUR_OK(surface) ||
+               !UMI_COLOUR_OK(raised_surface) ||
+               !UMI_COLOUR_OK(hover_surface) ||
+               !UMI_COLOUR_OK(editor_background) ||
+               !UMI_COLOUR_OK(foreground) ||
+               !UMI_COLOUR_OK(muted_foreground) || !UMI_COLOUR_OK(border) ||
+               !UMI_COLOUR_OK(strong_border) || !UMI_COLOUR_OK(accent) ||
+               !UMI_COLOUR_OK(accent_surface) || !UMI_COLOUR_OK(success) ||
+               !UMI_COLOUR_OK(warning) || !UMI_COLOUR_OK(danger)) {
+        reason = "Every semantic colour must use #RRGGBB notation";
+        result = UMI_STATUS_INVALID_STATE;
+    }
+
+    written = snprintf(out_reason, capacity, "%s", reason);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (written < 0 || (size_t)written >= capacity) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    return result;
+#undef UMI_COLOUR_OK
+}
+#endif
+UmiStatus umi_ui_appearance_profile_validate(
+    const UmiUiAppearanceProfile *profile,
+    char *out_reason,
+    size_t capacity)
+{
+#define UMI_COLOUR_OK(field) valid_colour(profile->field)
+    const char *reason = "Appearance profile is valid";
+    UmiStatus result = UMI_STATUS_OK;
+    int written;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (profile == NULL || out_reason == NULL || capacity == 0U ||
+        UmiStorageOverlaps(profile, sizeof(*profile), out_reason, capacity)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (!ProfileTextIsBounded(profile)) {
+        reason = "Appearance text must end within each field";
+        result = UMI_STATUS_INVALID_STATE;
+    } else if (!umi_ui_id_is_valid(profile->profile_id) || profile->label[0] == '\0') {
+        reason = "Appearance profile identity is invalid";
+        result = UMI_STATUS_INVALID_STATE;
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (profile->mode < UMI_UI_THEME_MODE_SYSTEM ||
+               profile->mode > UMI_UI_THEME_MODE_HIGH_CONTRAST ||
+               profile->density < UMI_UI_DENSITY_COMPACT ||
+               profile->density > UMI_UI_DENSITY_SPACIOUS) {
+        reason = "Appearance mode or density is invalid";
+        result = UMI_STATUS_INVALID_STATE;
+    } else /* Apply this operation only while the related capability or state is available. */ if (!valid_font(profile->interface_font) ||
+               !valid_font(profile->editor_font)) {
+        reason = "Font families contain unsupported characters";
+        result = UMI_STATUS_INVALID_STATE;
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (!isfinite(profile->interface_font_size) ||
+               !isfinite(profile->editor_font_size) || !isfinite(profile->font_scale) ||
+               profile->interface_font_size < 8.0 ||
                profile->interface_font_size > 32.0 ||
                profile->editor_font_size < 8.0 ||
                profile->editor_font_size > 40.0 ||

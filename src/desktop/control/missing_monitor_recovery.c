@@ -1,7 +1,10 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/desktop/control/missing_monitor_recovery.c
- * PURPOSE: Implement describe fallback behaviour when a saved monitor is no longer present.
+ *
+ * PURPOSE:
+ *   Implement describe fallback behaviour when a saved monitor is no longer present.
+ *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
  * Umicom Foundation
@@ -343,3 +346,10 @@ UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_desktop_missing_monitor_recovery_archive_
  * caller. Imported metadata remains evidence; registry publication is separate. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_desktop_missing_monitor_recovery_archive_decode_if_unchanged, umi_desktop_missing_monitor_recovery_archive_encode,
     UmiDesktopMissingMonitorRecoverySnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)
+
+/* Compare through this owner's validated codec so native review uses the
+ * same fields as persistence. Caller-owned scratch avoids per-call allocation;
+ * an equal observation remains separate from revision-checked publication. */
+#include "../../base/value_compare_internal.h"
+UMI_DEFINE_VALUE_COMPARE(umi_desktop_missing_monitor_recovery_archive_compare_with_workspace,
+    UmiDesktopMissingMonitorRecoverySnapshot, umi_desktop_missing_monitor_recovery_archive_encode)

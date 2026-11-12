@@ -13,7 +13,6 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* Umicom Framework Batch 58 test | Sammy Hegab | Umicom Foundation | MIT */
 /* Required fixture setup and checks also execute in optimized builds. */
 #include "support/assertions.h"
 #include "umicom/compiler/compiler.h"
@@ -22,4 +21,8 @@
  * Start this command or application, report setup failures, and return a process exit code
  * to the operating system.
  */
+/* Declare compile metadata and exercise explicit refusal of unsupported reproducible intent before selecting the supported release options. Preserve all other original checks and the earlier fixture for review. The previous implementation is retained for review. */
+#if 0
 int main(void) { UmiCompilerRegistry registry; UmiCompilerProvider provider; UmiCompilerProfile profile; UmiCompilerTarget target; UmiCompilerPlan plan; char reason[256]; umi_compiler_registry_init(&registry); provider = umi_compiler_clang_provider("clang","x86_64-unknown-linux-gnu"); assert(umi_compiler_registry_register(&registry,&provider) == UMI_STATUS_OK); assert(umi_compiler_target_host(&target) == UMI_STATUS_OK); assert(umi_compiler_profile_init(&profile,"release","Release","clang",UMI_COMPILER_LANGUAGE_C,&target) == UMI_STATUS_OK); profile.policy = umi_compiler_policy_release(); assert(umi_compiler_profile_validate(&profile,&registry,reason,sizeof(reason)) == UMI_STATUS_OK); umi_compiler_plan_init(&plan); assert(umi_compiler_policy_append_arguments(&profile.policy,UMI_COMPILER_FAMILY_CLANG,&plan) == UMI_STATUS_OK); assert(plan.argument_count >= 4U); return 0; }
+#endif
+int main(void) { UmiCompilerRegistry registry; UmiCompilerProvider provider; static UmiCompilerProfile profile; UmiCompilerTarget target; static UmiCompilerPlan plan; char reason[256]; umi_compiler_registry_init(&registry); provider = umi_compiler_clang_provider("clang","x86_64-unknown-linux-gnu"); assert(umi_compiler_registry_register(&registry,&provider) == UMI_STATUS_OK); assert(umi_compiler_target_host(&target) == UMI_STATUS_OK); assert(umi_compiler_profile_init(&profile,"release","Release","clang",UMI_COMPILER_LANGUAGE_C,&target) == UMI_STATUS_OK); profile.policy = umi_compiler_policy_release(); assert(umi_compiler_profile_validate(&profile,&registry,reason,sizeof(reason)) == UMI_STATUS_OK); umi_compiler_plan_init(&plan); plan.language = UMI_COMPILER_LANGUAGE_C; plan.action = UMI_COMPILER_ACTION_COMPILE; assert(umi_compiler_policy_append_arguments(&profile.policy,UMI_COMPILER_FAMILY_CLANG,&plan) == UMI_STATUS_NOT_IMPLEMENTED); assert(plan.argument_count == 0U); profile.policy.reproducible = false; assert(umi_compiler_policy_append_arguments(&profile.policy,UMI_COMPILER_FAMILY_CLANG,&plan) == UMI_STATUS_OK); assert(plan.argument_count >= 4U); return 0; }

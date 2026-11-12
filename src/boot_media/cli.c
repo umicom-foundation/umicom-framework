@@ -1,15 +1,17 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/boot_media/cli.c
+ *
  * PURPOSE:
- *   Native CLI adapter; no shell commands or automatic privileged relaunch.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Expose reviewed media operations with validated native argument ownership.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Native CLI adapter; no shell commands or automatic privileged relaunch. */
-
 #include "internal.h"
 #include <inttypes.h>
 static void Help(void)
@@ -34,14 +36,35 @@ static void Image(const UmiBootMediaImage *i)
         i->bytes,i->sha256,i->mbrLayout?"yes":"no",i->gptLayout?"yes":"no",i->iso9660?"yes":"no",i->elTorito?"yes":"no");
 }
 
+/* Retain the earlier detail-only output. The shared bounded report now exposes creation and write effects even when the operation failed. The previous implementation is retained for review. */
+#if 0
 static int Result(UmiStatus s,const UmiBootMediaReport *r)
 {
     if (r&&r->detail[0])fprintf(s==UMI_STATUS_OK?stdout:stderr,"%s\n",r->detail);
     return s==UMI_STATUS_OK?0:s==UMI_STATUS_UNAVAILABLE?77:1;
 }
 
+
+#endif
+static int Result(UmiStatus s,const UmiBootMediaReport *r)
+{
+    char text[UMI_BOOT_MEDIA_REPORT_TEXT];
+    UmiStatus described=UmiBootMediaReportDescribe(s,r,text,sizeof text);
+    if(described==UMI_STATUS_OK)fprintf(s==UMI_STATUS_OK?stdout:stderr,"%s\n",text);
+    else {
+        fprintf(stderr,"Media operation status: %d; report unavailable (%d). No verified success can be shown.\n",
+            (int)s,(int)described);
+        if(s==UMI_STATUS_OK)return 1;
+    }
+    return s==UMI_STATUS_OK?0:s==UMI_STATUS_UNAVAILABLE?77:1;
+}
+
 int UmiBootMediaMain(int argc,char **argv)
 {
+    /* This service is callable by native hosts as well as an executable.
+     * Validate the counted vector before help, policy or filesystem work. */
+    if (argc < 1 || argv == NULL) return 2;
+    for (int i = 0; i < argc; ++i) if (argv[i] == NULL) return 2;
     if (argc==2&&(!strcmp(argv[1],"--help")||!strcmp(argv[1],"help"))) {
         Help();
         return 0;
@@ -56,7 +79,12 @@ int UmiBootMediaMain(int argc,char **argv)
     };
     if (argc==2&&!strcmp(argv[1],"list")) {
         UmiBootMediaInventory *items=calloc(1,sizeof *items);
+/* Publish allocation refusal through the same diagnostic contract without starting discovery. The previous implementation is retained for review. */
+#if 0
         if (!items)return 1;
+#endif
+        if (!items)return Result(BmMessage(&report,UMI_STATUS_OUT_OF_MEMORY,
+            "Device inventory could not be allocated. No discovery was started."),&report);
         UmiStatus s=UmiBootMediaDiscover(items,&report);
         for (size_t i=0;i<items->count;++i) {
             const UmiBootMediaDevice*d=&items->devices[i];
@@ -104,6 +132,8 @@ int UmiBootMediaMain(int argc,char **argv)
     if (device) {
         UmiBootMediaDevice observed;
         s=BmDeviceCheck(device,&observed);
+        if (s!=UMI_STATUS_OK)BmMessage(&report,s,
+            "Device observation failed before media review. No destination was acquired.");
         if (s==UMI_STATUS_OK)s=UmiBootMediaReviewDevice(image,&observed,&plan,NULL,NULL,&report);
     }
     else s=UmiBootMediaReviewFile(image,output,&plan,NULL,NULL,&report);

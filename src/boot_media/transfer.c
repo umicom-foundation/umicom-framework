@@ -1,24 +1,24 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/boot_media/transfer.c
+ *
  * PURPOSE:
- *   Review -> recheck -> acquire -> write -> flush -> read back. The plan is single-use, and
- *   verified is set only at the final boundary. Physical writes have no rollback;
- *   cancellation after the first write is explicitly partial.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Review, recheck, acquire, write, flush and read back single-use media plans.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
-/*-----------------------------------------------------------------------------
- * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * File: src/boot_media/transfer.c
- * Review -> recheck -> acquire -> write -> flush -> read back. The plan is
- * single-use, and verified is set only at the final boundary. Physical writes
- * have no rollback; cancellation after the first write is explicitly partial.
- *---------------------------------------------------------------------------*/
+/* Verified is set only at the final boundary. Physical writes have no rollback;
+ * cancellation after the first write is explicitly partial. */
 
 #include "internal.h"
 #include "umicom/setup_centre/files.h"
+#include "umicom/base/utf8.h"
 #include <inttypes.h>
 UmiStatus BmMessage(UmiBootMediaReport *r,UmiStatus s,const char *fmt,...)
 {
@@ -72,6 +72,11 @@ int BmSameDevice(const UmiBootMediaDevice *a,const UmiBootMediaDevice *b)
         !strcmp(a->model,b->model)&&a->bytes==b->bytes&&a->sectorBytes==b->sectorBytes&&a->usb==b->usb&&a->removable==b->removable;
 }
 
+/* Preserve the previous direct policy entry point for review. Its existing
+ * geometry and device restrictions are retained in DevicePolicyFacts below;
+ * the public boundary now validates observation fields and publishes a fresh
+ * report instead of retaining unrelated transfer flags or stale status. */
+#if 0
 UmiStatus UmiBootMediaCheckDevicePolicy(const UmiBootMediaImage *im,const UmiBootMediaDevice *d,UmiBootMediaReport *r)
 {
     if (!im||!d)return UMI_STATUS_INVALID_ARGUMENT;
@@ -90,6 +95,64 @@ UmiStatus UmiBootMediaCheckDevicePolicy(const UmiBootMediaImage *im,const UmiBoo
     return UMI_STATUS_OK;
 }
 
+#endif
+
+static UmiStatus DevicePolicyFacts(const UmiBootMediaImage *im,const UmiBootMediaDevice *d,UmiBootMediaReport *r)
+{
+    if (!im||!d)return UMI_STATUS_INVALID_ARGUMENT;
+    if (!DeviceStringsValid(d))return UMI_STATUS_INVALID_ARGUMENT;
+    if (!d->identity[0]||!d->serial[0]||!d->path[0]||!d->model[0])return BmMessage(r,UMI_STATUS_PERMISSION_DENIED,
+        "A whole-device identity, model and serial are required.");
+    if (!d->usb||!d->removable||d->protectedDevice||d->inUse||d->readOnly)return BmMessage(r,UMI_STATUS_PERMISSION_DENIED,
+        "Device is not an unused, writable, identified removable USB disk: %s",d->reason);
+    if (d->sectorBytes<512U||d->sectorBytes>4096U||(d->sectorBytes&(d->sectorBytes-1U))||!d->bytes||d->bytes%d->sectorBytes||d->bytes>UMI_BOOT_MEDIA_MAX_DEVICE)return BmMessage(r,
+        UMI_STATUS_INVALID_ARGUMENT,"Unsupported sector geometry or device size.");
+    if (im->bytes<512U||im->bytes>UMI_BOOT_MEDIA_MAX_IMAGE||im->bytes%512U||im->bytes>d->bytes)return BmMessage(r,
+        UMI_STATUS_CAPACITY_EXCEEDED,"The complete image must fit the selected disk.");
+    if (!im->mbrLayout&&!im->gptLayout)return BmMessage(r,UMI_STATUS_UNAVAILABLE,"An optical-only ISO is not accepted as a USB disk image.");
+    if (d->sectorBytes!=512U)return BmMessage(r,UMI_STATUS_UNAVAILABLE,"This disk-image profile uses 512-byte logical sectors; 4Kn media is not qualified.");
+    if (im->gptLayout&&im->bytes!=d->bytes)return BmMessage(r,UMI_STATUS_UNAVAILABLE,"GPT images require an exactly sized target; automatic GPT relocation is not implemented.");
+    return UMI_STATUS_OK;
+}
+
+/* All inputs remain observations, not authority to acquire a device. Binary
+ * flags distinguish a measured yes/no from invalid or sentinel values. Text
+ * admission keeps a malformed native label out of public diagnostics. */
+static int DevicePolicyObservationValid(const UmiBootMediaImage *image,
+    const UmiBootMediaDevice *device)
+{
+    if (image == NULL || !DeviceStringsValid(device)) return 0;
+    const int flags[] = {image->mbrLayout,image->gptLayout,image->iso9660,
+        image->elTorito,image->biosEntry,image->efiEntry,device->usb,device->removable,
+        device->protectedDevice,device->inUse,device->readOnly};
+    for (size_t i=0U;i<sizeof(flags)/sizeof(flags[0]);++i)
+        if (flags[i]!=0 && flags[i]!=1) return 0;
+    const char *const text[] = {device->path,device->identity,device->model,device->serial,device->reason};
+    for (size_t i=0U;i<sizeof(text)/sizeof(text[0]);++i)
+        if (!UmiUtf8Validate((const unsigned char *)text[i],strlen(text[i]),NULL)) return 0;
+    return 1;
+}
+UmiStatus UmiBootMediaCheckDevicePolicy(const UmiBootMediaImage *image,
+    const UmiBootMediaDevice *device,UmiBootMediaReport *report)
+{
+    /* Publish one fresh observation after all borrowed inputs have been read.
+     * A prior transfer's verified/writeStarted flags cannot describe this
+     * read-only decision. The public report and image ABI remain unchanged. */
+    UmiBootMediaReport candidate={0};
+    UmiStatus status;
+    if (!DevicePolicyObservationValid(image,device))
+        status=BmMessage(&candidate,UMI_STATUS_INVALID_ARGUMENT,
+            "A complete observation with binary flags and bounded UTF-8 labels is required.");
+    else {
+        status=DevicePolicyFacts(image,device,&candidate);
+        if (status==UMI_STATUS_OK)
+            BmMessage(&candidate,status,
+                "Device observation meets removable USB policy. Native acquisition must recheck it.");
+    }
+    if (report!=NULL) *report=candidate;
+    return status;
+}
+
 UmiStatus UmiBootMediaInspect(const char *path,UmiBootMediaImage *out,UmiBootMediaProgress cb,void *ctx,
     UmiBootMediaReport *r)
 {
@@ -98,7 +161,13 @@ UmiStatus UmiBootMediaInspect(const char *path,UmiBootMediaImage *out,UmiBootMed
     };
     if (!r)r=&local;
     memset(r,0,sizeof *r);
+    /* Retain the bare-status path for review. A fresh report must describe the
+     * same refusal returned to the caller, even before opening a source. */
+#if 0
     if (!out)return UMI_STATUS_INVALID_ARGUMENT;
+#endif
+    if (!out)return BmMessage(r,UMI_STATUS_INVALID_ARGUMENT,
+        "An output image observation is required. No source was opened.");
     memset(out,0,sizeof *out);
     BmFile *f=NULL;
     uint64_t bytes=0;
@@ -114,7 +183,15 @@ UmiStatus UmiBootMediaInspect(const char *path,UmiBootMediaImage *out,UmiBootMed
     };
     if (s==UMI_STATUS_OK)s=BmInspect(f,bytes,&checked);
     if (s==UMI_STATUS_OK&&!SameImageStructure(out,&checked))s=UMI_STATUS_INVALID_STATE;
+    /* Recheck the pinned extent after reading both metadata and payload. */
+    if (s==UMI_STATUS_OK)s=BmCheckRegularSize(f,bytes);
+    /* Keep the first operational failure, but do not publish success if
+     * releasing the pinned source or verification handle reports an error. */
+#if 0
     BmClose(f);
+#endif
+    UmiStatus closeStatus=BmCloseResult(f);
+    if (s==UMI_STATUS_OK) s=closeStatus;
     if (s!=UMI_STATUS_OK)memset(out,0,sizeof *out);
     return BmMessage(r,s,s==UMI_STATUS_OK?"Image structure and SHA-256 recorded. No boot code was executed.":"Image inspection failed or was cancelled. No destination was opened.");
 }
@@ -142,9 +219,21 @@ static UmiStatus Review(const char *source,const char *dest,const UmiBootMediaDe
     if (r)memset(r,0,sizeof *r);
     if (!out)return BmMessage(r,UMI_STATUS_INVALID_ARGUMENT,"An output-plan pointer is required.");
     *out=NULL;
+    /* The earlier bare return left report.status as OK. Keep the path policy;
+     * publish its refusal through the shared diagnostic boundary. */
+#if 0
     if (BmPath(source)!=UMI_STATUS_OK||(!device&&BmPath(dest)!=UMI_STATUS_OK)||!dest||strlen(dest)>=UMI_BOOT_MEDIA_PATH)return UMI_STATUS_INVALID_ARGUMENT;
+#endif
+    if (BmPath(source)!=UMI_STATUS_OK||(!device&&BmPath(dest)!=UMI_STATUS_OK)||!dest||strlen(dest)>=UMI_BOOT_MEDIA_PATH)
+        return BmMessage(r,UMI_STATUS_INVALID_ARGUMENT,
+            "A valid absolute source and destination are required. No destination was opened.");
     UmiBootMediaPlan *p=calloc(1,sizeof *p);
+    /* Retain the original allocation refusal, now with matching report status. */
+#if 0
     if (!p)return UMI_STATUS_OUT_OF_MEMORY;
+#endif
+    if (!p)return BmMessage(r,UMI_STATUS_OUT_OF_MEMORY,
+        "The review plan could not be allocated. No destination was opened.");
     strcpy(p->source,source);
     strcpy(p->destination,dest);
     p->physical=device!=NULL;
@@ -174,9 +263,19 @@ UmiStatus UmiBootMediaReviewFile(const char *s,const char *d,UmiBootMediaPlan **
 
 UmiStatus UmiBootMediaReviewDevice(const char *s,const UmiBootMediaDevice *d,UmiBootMediaPlan **p,UmiBootMediaProgress cb,
     void *c,UmiBootMediaReport *r) {
+    /* A malformed observation never reaches native discovery. Preserve the
+     * original branch, and replace any stale transfer evidence on refusal. */
+#if 0
     if (!DeviceStringsValid(d)) {
         if (p)*p=NULL;
         return UMI_STATUS_INVALID_ARGUMENT;
+    }
+#endif
+    if (!DeviceStringsValid(d)) {
+        if (p)*p=NULL;
+        if (r)memset(r,0,sizeof *r);
+        return BmMessage(r,UMI_STATUS_INVALID_ARGUMENT,
+            "A device observation with bounded labels is required. No device query was started.");
     }
     return Review(s,d->path,d,p,cb,c,r);
 }
@@ -238,9 +337,16 @@ UmiStatus UmiBootMediaApply(UmiBootMediaPlan *p,const char *expected,const char 
     if (s==UMI_STATUS_OK)s=BmInspect(source,bytes,&checked);
     if (s==UMI_STATUS_OK&&!SameImageStructure(&p->image,&checked))s=UMI_STATUS_INVALID_STATE;
     if (s==UMI_STATUS_OK)s=BmTick(r,UMI_BOOT_MEDIA_RECHECK,bytes,bytes,cb,ctx);
+    /* Refuse a changed source before acquiring any destination. */
+    if (s==UMI_STATUS_OK)s=BmCheckRegularSize(source,bytes);
     if (s==UMI_STATUS_OK) {
+/* Successful native creation may be followed by failed handle admission. Carry the creation effect directly instead of deriving it from final status. The previous implementation is retained for review. */
+#if 0
         s=p->physical?BmDeviceOpen(&p->device,1,&target):BmCreate(p->destination,&target);
         if (s==UMI_STATUS_OK&&!p->physical)r->outputCreated=1;
+#endif
+        if (p->physical) s=BmDeviceOpen(&p->device,1,&target);
+        else s=BmCreateObserved(p->destination,&target,&r->outputCreated);
     }
     unsigned char *buffer=NULL;
     if (s==UMI_STATUS_OK) {
@@ -267,6 +373,9 @@ UmiStatus UmiBootMediaApply(UmiBootMediaPlan *p,const char *expected,const char 
         if (strcmp(hash,p->image.sha256))s=UMI_STATUS_INVALID_STATE;
     }
 
+    /* A matching prefix digest must not hide appended source bytes. */
+    if (s==UMI_STATUS_OK)s=BmCheckRegularSize(source,bytes);
+
     /* Retire stale trailing partition signatures on a larger MBR target. The
      * untouched middle is NOT erased securely. The plan/guide state this rule. */
     uint64_t tail=0,tailAt=bytes;
@@ -289,9 +398,22 @@ UmiStatus UmiBootMediaApply(UmiBootMediaPlan *p,const char *expected,const char 
             break;
         }
     }
+    /* Device capacity can exceed the image; exact whole-file extent applies
+     * only to regular-file practice output. Source extent remains exact. */
+    if (s==UMI_STATUS_OK&&!p->physical)s=BmCheckRegularSize(target,bytes);
+    if (s==UMI_STATUS_OK)s=BmCheckRegularSize(source,bytes);
     free(buffer);
+    /* Both owners must be released even if the first release fails. The first
+     * transfer error has priority; otherwise destination release precedes source
+     * release. No close attempt is retried and no partial file is removed. */
+#if 0
     BmClose(target);
     BmClose(source);
+#endif
+    UmiStatus targetClose=BmCloseResult(target);
+    UmiStatus sourceClose=BmCloseResult(source);
+    if (s==UMI_STATUS_OK) s=targetClose;
+    if (s==UMI_STATUS_OK) s=sourceClose;
     if (s==UMI_STATUS_OK)s=BmTick(r,UMI_BOOT_MEDIA_FINISHED,bytes+tail,bytes+tail,cb,ctx);
     r->verified=s==UMI_STATUS_OK;
     return BmMessage(r,s,s==UMI_STATUS_OK?"Transfer flushed and read back. Image bytes agree; booting has not been tested.":r->writeStarted?"Transfer incomplete. Written media may be unbootable. No rollback or automatic retry was attempted.":"Stopped before any payload write. A newly created practice file may remain.");
@@ -314,7 +436,14 @@ UmiStatus UmiBootMediaVerifyFile(const char *a,const char *b,UmiBootMediaProgres
     if (s==UMI_STATUS_OK&&bytes!=image.bytes)s=UMI_STATUS_INVALID_STATE;
     if (s==UMI_STATUS_OK)s=BmHash(f,bytes,hash,cb,ctx,r);
     if (s==UMI_STATUS_OK&&strcmp(hash,image.sha256))s=UMI_STATUS_INVALID_STATE;
+    if (s==UMI_STATUS_OK)s=BmCheckRegularSize(f,bytes);
+    /* Keep the first operational failure, but do not publish success if
+     * releasing the pinned source or verification handle reports an error. */
+#if 0
     BmClose(f);
+#endif
+    UmiStatus closeStatus=BmCloseResult(f);
+    if (s==UMI_STATUS_OK) s=closeStatus;
     r->verified=s==UMI_STATUS_OK;
     return BmMessage(r,s,s==UMI_STATUS_OK?"Whole-file bytes agree. No boot code was executed.":"The new-file copy does not verify or the check was cancelled.");
 }

@@ -72,6 +72,10 @@ UmiStatus umi_build_history_append(UmiBuildHistory *history,
     if (history == NULL || result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Admit caller-owned records before advancing ring or operation identity.
+     * Invalid imported evidence must not evict a previous valid observation. */
+    UmiStatus validation=UmiBuildResultValidateStorage(result);
+    if (validation!=UMI_STATUS_OK)return validation;
     (void)umi_mutex_lock(history->mutex);
     index = (history->head + history->count) % history->capacity;
     if (history->count == history->capacity) {

@@ -43,6 +43,10 @@ void umi_oms_init(UmiOms *oms, UmiRiskLimit risk_limit);
 /**
  * Provide the oms submit operation used by this module and its client applications.
  */
+/** The reference OMS rate-limits submission attempts after the kill-switch
+ * check, including requests later refused by validation, risk or storage.
+ * This is an attempt quota, not a count of stored or executed orders.
+ * Supply a nonnegative timestamp from the same clock domain for every call. */
 UmiStatus umi_oms_submit(UmiOms *oms, const UmiOrderRequest *request, double current_position, double daily_pnl, int64_t now_ms, UmiRiskDecision *decision);
 
 /** Submit with explicit price evidence; kill switch and throttle still apply.

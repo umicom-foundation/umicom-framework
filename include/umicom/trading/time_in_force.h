@@ -30,6 +30,13 @@ extern "C" {
  * Check that time in force satisfies its contract before another service relies on it.
  */
 int umi_time_in_force_valid(UmiTimeInForce tif);
+/* Capability of the local retained-order model, separate from enum validity.
+ * DAY/GTC may be retained; the caller still owns session-end cancellation.
+ * No automatic calendar expiry or venue matching is supplied. IOC/FOK return
+ * NOT_IMPLEMENTED because their immediate execution guarantees are absent.
+ * Unknown values return INVALID_ARGUMENT. This function has no side effects
+ * and makes no claim about an external broker's supported policies. */
+UmiStatus UmiTimeInForceCheckLocalRetention(UmiTimeInForce tif);
 #ifdef __cplusplus
 }
 #endif

@@ -1,7 +1,10 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/desktop/control/layout_rename.c
- * PURPOSE: Implement represent rename intent without mutating layout content directly.
+ *
+ * PURPOSE:
+ *   Implement represent rename intent without mutating layout content directly.
+ *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
  * Umicom Foundation
@@ -329,3 +332,10 @@ UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_desktop_layout_rename_archive_decode_with
  * caller. Imported metadata remains evidence; registry publication is separate. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_desktop_layout_rename_archive_decode_if_unchanged, umi_desktop_layout_rename_archive_encode,
     UmiDesktopLayoutRenameSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)
+
+/* Compare through this owner's validated codec so native review uses the
+ * same fields as persistence. Caller-owned scratch avoids per-call allocation;
+ * an equal observation remains separate from revision-checked publication. */
+#include "../../base/value_compare_internal.h"
+UMI_DEFINE_VALUE_COMPARE(umi_desktop_layout_rename_archive_compare_with_workspace,
+    UmiDesktopLayoutRenameSnapshot, umi_desktop_layout_rename_archive_encode)

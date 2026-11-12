@@ -18,12 +18,17 @@
 #include "umicom/ui/gtk4/text_export.h"
 #include "umicom/creative_workspace/media_storyboard.h"
 #include "umicom/security/secrets.h"
+#include "umicom/platform/output_file.h"
 #include "umicom/ui/gtk4/interaction_recording.h"
 #include <string.h>
 
 typedef struct StoryPanel {
     GtkWidget *root, *selection, *title, *duration, *story, *assets, *output, *message;
     GtkWidget *replace, *handoff, *export, *asset_choice;
+    GtkWidget *workspace, *file_form, *file_path, *open_approval, *save_approval;
+    GtkWidget *file_stop, *file_status;
+    UmiCancellationToken *pending; /* Borrowed from the one active file job. */
+    bool busy, changed_during_io, document_dirty, has_document;
     char asset_ids[UMI_CREATIVE_LIBRARY_MAX_ASSETS][UMI_CREATIVE_ID_CAPACITY];
     size_t asset_count;
     GWeakRef library, brief;
@@ -32,6 +37,17 @@ typedef struct StoryPanel {
     size_t selected;
     bool closed, painting, dirty, ready;
 } StoryPanel;
+
+/* The worker owns every value it touches. The native panel is only weakly
+ * observed on completion, and cancellation ownership stays with the job. */
+typedef struct StoryFileJob {
+    GWeakRef root;
+    char *path;
+    UmiMediaStoryboardDraft draft;
+    UmiCancellationToken *cancel;
+    UmiStatus status;
+    bool opening;
+} StoryFileJob;
 #define STORY_KEY "umicom-media-storyboard"
 static StoryPanel *State(GtkWidget *root) { return g_object_get_data(G_OBJECT(root), STORY_KEY); }
 static void Tag(GtkWidget *widget, const char *id)
@@ -43,6 +59,32 @@ static GtkWidget *Label(GtkWidget *box, const char *text)
     gtk_box_append(GTK_BOX(box), label); return label;
 }
 static void Message(StoryPanel *p, const char *text) { gtk_label_set_text(GTK_LABEL(p->message), text); }
+
+static void FileApprovalsClear(StoryPanel *p)
+{
+    if (p->open_approval != NULL)
+        gtk_check_button_set_active(GTK_CHECK_BUTTON(p->open_approval), FALSE);
+    if (p->save_approval != NULL)
+        gtk_check_button_set_active(GTK_CHECK_BUTTON(p->save_approval), FALSE);
+}
+static void FileStatus(StoryPanel *p)
+{
+    if (p->file_status == NULL) return;
+    const char *text = p->dirty ? "Pending scene edits: apply, add or discard before saving or opening."
+        : p->document_dirty ? "Applied scene changes have not been saved."
+        : p->has_document ? "Applied scenes match the last completed save or open."
+        : "No scene document has been saved or opened.";
+    gtk_label_set_text(GTK_LABEL(p->file_status), text);
+}
+static void FilePathChanged(GObject *object, gpointer root)
+{
+    (void)object;
+    StoryPanel *p = State(root);
+    if (p == NULL || p->closed) return;
+    FileApprovalsClear(p);
+    if (p->busy) p->changed_during_io = true;
+}
+
 static void Invalidate(StoryPanel *p)
 { p->ready = false; gtk_widget_set_sensitive(p->handoff, FALSE); }
 static void Reveal(GtkWidget *target)
@@ -61,6 +103,8 @@ static void Changed(GObject *object, gpointer root)
     (void)object; StoryPanel *p = State(root);
     if (p == NULL || p->closed || p->painting) return;
     p->dirty = true; Invalidate(p);
+    FileApprovalsClear(p); FileStatus(p);
+    if (p->busy) p->changed_during_io = true;
     Message(p, "Scene edits are pending. Apply changes or add as a new scene; discard reloads the selected scene.");
 }
 static void DurationChanged(GtkSpinButton *spin, gpointer root) { Changed(G_OBJECT(spin), root); }
@@ -90,6 +134,7 @@ static void Load(StoryPanel *p)
     gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(p->story)), scene != NULL ? scene->story : "", -1);
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(p->duration), scene != NULL ? (double)scene->duration_seconds : 10.0);
     p->painting = false; p->dirty = false;
+    FileStatus(p);
 }
 static void RefreshScenes(StoryPanel *p)
 {
@@ -108,6 +153,13 @@ static void Selected(GObject *object, GParamSpec *property, gpointer root)
 {
     (void)object; (void)property; StoryPanel *p = State(root);
     if (p == NULL || p->closed || p->painting) return;
+    if (p->busy) {
+        p->painting = true;
+        gtk_drop_down_set_selected(GTK_DROP_DOWN(p->selection),
+            p->selected < p->draft.count ? (guint)p->selected : GTK_INVALID_LIST_POSITION);
+        p->painting = false;
+        return;
+    }
     if (p->dirty) {
         p->painting = true;
         gtk_drop_down_set_selected(GTK_DROP_DOWN(p->selection), p->selected < p->draft.count ? (guint)p->selected : GTK_INVALID_LIST_POSITION);
@@ -118,8 +170,9 @@ static void Selected(GObject *object, GParamSpec *property, gpointer root)
 static void Edit(GtkButton *button, gpointer root)
 {
     StoryPanel *p = State(root); if (p == NULL || p->closed) return;
+    if (p->busy) return;
     const char *id = g_object_get_data(G_OBJECT(button), "umicom-automation-id");
-    if (strcmp(id, "media.storyboard.discard") == 0) { Load(p); Message(p, "Selected scene reloaded; applied scenes are unchanged."); return; }
+    if (strcmp(id, "media.storyboard.discard") == 0) { Load(p); FileApprovalsClear(p); Message(p, "Selected scene reloaded; applied scenes are unchanged."); return; }
     if (strcmp(id, "media.storyboard.add") == 0 || strcmp(id, "media.storyboard.apply") == 0) {
         UmiMediaStoryboardScene scene = {0}; UmiStatus status = Capture(p, &scene);
         bool add = strcmp(id, "media.storyboard.add") == 0;
@@ -143,8 +196,15 @@ static void Edit(GtkButton *button, gpointer root)
             (void)UmiMediaStoryboardMove(&p->draft, p->selected, next); p->selected = next;
         }
     }
+    p->document_dirty = true;
+    FileApprovalsClear(p);
     Invalidate(p); RefreshScenes(p);
+    /* The former message is retained for review. Scene documents now preserve
+     * applied edits independently of preparing instructions for generation. */
+#if 0
     Message(p, "Storyboard draft updated. Prepare instructions to check the scene tags against the asset library.");
+#endif
+    Message(p, "Storyboard draft updated and not yet saved. Save its scene document, or prepare instructions to check asset tags.");
 }
 static UmiStatus Inventory(StoryPanel *p, UmiCreativeAssetLibraryEntry *entries, size_t *count)
 {
@@ -171,6 +231,7 @@ static UmiStatus Plan(StoryPanel *p, UmiMediaStoryboard **plan)
 static void Assets(GtkButton *button, gpointer root)
 {
     StoryPanel *p = State(root); if (p == NULL || p->closed) return;
+    if (p->busy) return;
     const char *id = g_object_get_data(G_OBJECT(button), "umicom-automation-id");
     if (strcmp(id, "media.storyboard.library") == 0) {
         GtkWidget *library = g_weak_ref_get(&p->library);
@@ -202,6 +263,7 @@ static void Assets(GtkButton *button, gpointer root)
 static void InsertTag(GtkButton *button, gpointer root)
 {
     (void)button; StoryPanel *p = State(root); if (p == NULL || p->closed) return;
+    if (p->busy) return;
     guint selected = gtk_drop_down_get_selected(GTK_DROP_DOWN(p->asset_choice));
     if ((size_t)selected >= p->asset_count) { Message(p, "Refresh assets, then select the asset to reference."); return; }
     GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(p->story));
@@ -231,6 +293,7 @@ static void InsertTag(GtkButton *button, gpointer root)
 static void Prepare(GtkButton *button, gpointer root)
 {
     (void)button; StoryPanel *p = State(root); if (p == NULL || p->closed) return;
+    if (p->busy) return;
     if (p->dirty) { Message(p, "Apply pending scene edits before preparing instructions."); return; }
     UmiMediaStoryboard *plan = NULL; UmiCreativeExport output = {0};
     UmiStatus status = Plan(p, &plan);
@@ -255,6 +318,7 @@ static void Handoff(GtkButton *button, gpointer root)
 {
     (void)button; StoryPanel *p = State(root);
     if (p == NULL || p->closed || !p->ready || p->dirty || p->selected >= p->draft.count) return;
+    if (p->busy) return;
     UmiMediaStoryboard *plan = NULL; UmiCreativeExport current = {0}, scene = {0};
     UmiStatus status = Plan(p, &plan);
     if (status == UMI_STATUS_OK) status = UmiMediaStoryboardInstructions(plan, &current);
@@ -280,6 +344,125 @@ static void Handoff(GtkButton *button, gpointer root)
     g_clear_object(&brief); UmiCreativeExportFree(&current); UmiCreativeExportFree(&scene);
     UmiMediaStoryboardDestroy(plan); umi_secret_clear(&draft, sizeof(draft));
 }
+
+static void FileJobFree(gpointer data)
+{
+    StoryFileJob *job = data;
+    g_weak_ref_clear(&job->root);
+    if (job->path != NULL) { umi_secret_clear(job->path, strlen(job->path)); g_free(job->path); }
+    umi_secret_clear(&job->draft, sizeof(job->draft));
+    umi_cancellation_token_destroy(job->cancel);
+    g_free(job);
+}
+static void FileWorker(GTask *task, gpointer source, gpointer data, GCancellable *unused)
+{
+    (void)source; (void)unused;
+    StoryFileJob *job = data;
+    job->status = job->opening ?
+        UmiMediaStoryboardDraftLoad(job->path, job->cancel, &job->draft) :
+        UmiMediaStoryboardDraftSave(&job->draft, job->path, job->cancel);
+    g_task_return_boolean(task, TRUE);
+}
+static void FileFinished(GObject *source, GAsyncResult *result, gpointer unused)
+{
+    (void)source; (void)unused;
+    StoryFileJob *job = g_task_get_task_data(G_TASK(result));
+    (void)g_task_propagate_boolean(G_TASK(result), NULL);
+    GObject *root = g_weak_ref_get(&job->root);
+    if (root == NULL) return;
+    StoryPanel *p = State(GTK_WIDGET(root));
+    if (p != NULL && p->pending == job->cancel) {
+        /* Clear the borrowed token even for a retired but retained panel; the
+         * task owns it and will destroy it after this completion returns. */
+        p->pending = NULL;
+        p->busy = false;
+        if (!p->closed) {
+            gtk_widget_set_sensitive(p->workspace, TRUE);
+            gtk_widget_set_sensitive(p->file_form, TRUE);
+            gtk_widget_set_sensitive(p->file_stop, FALSE);
+            if (job->status == UMI_STATUS_OK && job->opening && !p->changed_during_io) {
+                p->draft = job->draft;
+                p->selected = p->draft.count > 0U ? 0U : SIZE_MAX;
+                p->document_dirty = false; p->has_document = true;
+                Invalidate(p); RefreshScenes(p);
+                Message(p, "Scene document opened. Previous instructions remain available as stale text; prepare again before handoff.");
+            } else if (job->status == UMI_STATUS_OK && job->opening) {
+                Message(p, "The document was read, but the panel changed while opening. Current edits were kept; review and open again.");
+            } else if (job->status == UMI_STATUS_OK) {
+                if (!p->changed_during_io && !p->dirty) {
+                    p->document_dirty = false; p->has_document = true;
+                }
+                char *message = g_strdup_printf("Captured scenes saved to %s.%s", job->path,
+                    p->changed_during_io || p->dirty ? " Later edits or path changes remain for review." : "");
+                Message(p, message); g_free(message);
+            } else {
+                char *message = g_strdup_printf("%s failed: %s. Current scene edits were kept.",
+                    job->opening ? "Open" : "Save", umi_status_text(job->status));
+                Message(p, message); g_free(message);
+            }
+            FileStatus(p);
+        }
+    }
+    g_object_unref(root);
+}
+static void FileAction(GtkButton *button, gpointer root)
+{
+    StoryPanel *p = State(root);
+    if (p == NULL || p->closed) return;
+    /* Disabled native controls cannot start I/O through a semantic signal. */
+    if (!gtk_widget_is_sensitive(GTK_WIDGET(button))) return;
+    const char *id = g_object_get_data(G_OBJECT(button), "umicom-automation-id");
+    if (strcmp(id, "media.storyboard.file.stop") == 0) {
+        if (p->pending != NULL) {
+            umi_cancellation_token_request(p->pending);
+            Message(p, "Cancellation requested. A save already publishing may still complete; its actual result will be reported.");
+        }
+        return;
+    }
+    if (p->busy) return;
+    if (p->dirty) {
+        Message(p, "Apply, add or discard the pending scene edits before saving or opening. No file operation started.");
+        return;
+    }
+    if (p->export != NULL && UmiTextExportGtk4Busy(p->export)) {
+        Message(p, "Wait for the instructions export to finish before opening or saving scenes.");
+        return;
+    }
+    bool opening = strcmp(id, "media.storyboard.file.open") == 0;
+    if (!opening && strcmp(id, "media.storyboard.file.save") != 0) return;
+    GtkWidget *approval = opening ? p->open_approval : p->save_approval;
+    if (!gtk_check_button_get_active(GTK_CHECK_BUTTON(approval))) {
+        Message(p, opening ? "Approve replacing the current scenes from the selected file before opening."
+            : "Approve saving to the selected path, including replacement of an existing file.");
+        return;
+    }
+    const char *path = gtk_editable_get_text(GTK_EDITABLE(p->file_path));
+    UmiStatus status = UmiOutputFileValidatePath(path);
+    if (status == UMI_STATUS_OK && !opening) status = UmiMediaStoryboardDraftValidate(&p->draft);
+    if (status != UMI_STATUS_OK) { Message(p, umi_status_text(status)); return; }
+    StoryFileJob *job = g_try_new0(StoryFileJob, 1);
+    if (job == NULL) { Message(p, "Not enough memory to capture the scene document."); return; }
+    g_weak_ref_init(&job->root, G_OBJECT(p->root));
+    size_t path_length = strlen(path);
+    job->path = g_try_malloc(path_length + 1U);
+    if (job->path == NULL) { FileJobFree(job); Message(p, "Not enough memory for the selected path."); return; }
+    memcpy(job->path, path, path_length + 1U);
+    job->opening = opening;
+    if (!opening) job->draft = p->draft;
+    status = umi_cancellation_token_create(&job->cancel);
+    if (status != UMI_STATUS_OK) { FileJobFree(job); Message(p, umi_status_text(status)); return; }
+    p->pending = job->cancel; p->busy = true; p->changed_during_io = false;
+    FileApprovalsClear(p);
+    gtk_widget_set_sensitive(p->workspace, FALSE);
+    gtk_widget_set_sensitive(p->file_form, FALSE);
+    gtk_widget_set_sensitive(p->file_stop, TRUE);
+    Message(p, opening ? "Opening the selected scene document..." : "Saving the captured scenes...");
+    GTask *task = g_task_new(NULL, NULL, FileFinished, NULL);
+    g_task_set_task_data(task, job, FileJobFree);
+    g_task_run_in_thread(task, FileWorker);
+    g_object_unref(task);
+}
+
 static GtkWidget *Button(StoryPanel *p, GtkWidget *box, const char *id, const char *text, GCallback callback)
 {
     GtkWidget *button = gtk_button_new_with_label(text); Tag(button, id);
@@ -313,11 +496,20 @@ void UmiMediaStoryboardGtkRetire(GtkWidget *root)
 {
     if (root == NULL) return;
     StoryPanel *p = State(root); if (p == NULL || p->closed) return;
+    if (p->pending != NULL) umi_cancellation_token_request(p->pending);
     p->closed = true; Invalidate(p); UmiTextExportGtk4Retire(p->export); gtk_widget_set_sensitive(root, FALSE);
+}
+bool UmiMediaStoryboardGtkBusy(GtkWidget *root)
+{
+    if (root == NULL) return false;
+    StoryPanel *p = State(root);
+    return p != NULL && p->busy;
 }
 static void Release(gpointer data)
 {
-    StoryPanel *p = data; UmiTextExportGtk4Retire(p->export); g_clear_object(&p->export);
+    StoryPanel *p = data;
+    if (p->pending != NULL) umi_cancellation_token_request(p->pending);
+    UmiTextExportGtk4Retire(p->export); g_clear_object(&p->export);
     g_weak_ref_clear(&p->library); g_weak_ref_clear(&p->brief); UmiCreativeExportFree(&p->reviewed);
     umi_secret_clear(&p->draft, sizeof(p->draft));
     umi_secret_clear(p->asset_ids, sizeof(p->asset_ids)); g_free(p);
@@ -331,8 +523,38 @@ GtkWidget *UmiMediaStoryboardGtkCreate(GtkWidget *asset_library, GtkWidget *crea
     g_object_set_data_full(G_OBJECT(p->root), STORY_KEY, p, Release);
     g_weak_ref_init(&p->library, asset_library); g_weak_ref_init(&p->brief, creation_brief);
     Label(p->root, "Storyboard");
+    /* The session-only description is retained as design history. Editable
+     * scene documents now use the shared service; instruction export remains. */
+#if 0
     Label(p->root, "Plan scenes with images, avatars, audio and text references. Write @{asset-id} to tag an imported asset. Scenes remain in this session; export instructions before closing.");
+#endif
+    Label(p->root, "Plan scenes with images, avatars, audio and text references. Write @{asset-id} to tag an imported asset. Save applied scenes as a document; instructions and assets remain separate.");
+    GtkWidget *files = gtk_expander_new("Scene document");
+    Tag(files, "media.storyboard.file");
+    GtkWidget *file_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+    p->file_form = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+    gtk_expander_set_child(GTK_EXPANDER(files), file_box);
+    gtk_box_append(GTK_BOX(file_box), p->file_form);
+    gtk_box_append(GTK_BOX(p->root), files);
+    Label(p->file_form, "Absolute path to a storyboard JSON document");
+    p->file_path = gtk_entry_new(); Tag(p->file_path, "media.storyboard.file.path");
+    UmiGtk4RecordingSetPrivate(p->file_path, true);
+    gtk_box_append(GTK_BOX(p->file_form), p->file_path);
+    p->save_approval = gtk_check_button_new_with_label("Allow replacing the selected file on the next save");
+    Tag(p->save_approval, "media.storyboard.file.allow-save");
+    gtk_box_append(GTK_BOX(p->file_form), p->save_approval);
+    Button(p, p->file_form, "media.storyboard.file.save", "Save applied scenes", G_CALLBACK(FileAction));
+    p->open_approval = gtk_check_button_new_with_label("Allow replacing current scenes on the next open");
+    Tag(p->open_approval, "media.storyboard.file.allow-open");
+    gtk_box_append(GTK_BOX(p->file_form), p->open_approval);
+    Button(p, p->file_form, "media.storyboard.file.open", "Open scene document", G_CALLBACK(FileAction));
+    p->file_stop = Button(p, file_box, "media.storyboard.file.stop", "Request cancellation", G_CALLBACK(FileAction));
+    gtk_widget_set_sensitive(p->file_stop, FALSE);
+    p->file_status = Label(file_box, "No scene document has been saved or opened.");
+    Tag(p->file_status, "media.storyboard.file.status");
+
     GtkWidget *split = Split("media.storyboard.split", 280); gtk_box_append(GTK_BOX(p->root), split);
+    p->workspace = split;
     GtkWidget *left = Pane(split, true), *editor_split = Split("media.storyboard.editor-split", 430);
     gtk_paned_set_end_child(GTK_PANED(split), editor_split);
     GtkWidget *editor = Pane(editor_split, true), *right = Pane(editor_split, false);
@@ -369,5 +591,6 @@ GtkWidget *UmiMediaStoryboardGtkCreate(GtkWidget *asset_library, GtkWidget *crea
     g_signal_connect_object(p->duration, "value-changed", G_CALLBACK(DurationChanged), p->root, 0);
     g_signal_connect_object(gtk_text_view_get_buffer(GTK_TEXT_VIEW(p->story)), "changed", G_CALLBACK(Changed), p->root, 0);
     g_signal_connect_object(p->selection, "notify::selected", G_CALLBACK(Selected), p->root, 0);
+    g_signal_connect_object(p->file_path, "changed", G_CALLBACK(FilePathChanged), p->root, 0);
     Load(p); Invalidate(p); return p->root;
 }

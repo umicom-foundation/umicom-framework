@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/snapshot_contracts/test_ui_welcome_view.c
- * PURPOSE: Exercise ui welcome_view snapshot boundaries and batch rollback.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Exercise ui welcome_view snapshot boundaries and batch rollback.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/welcome_view.h"
 #include "umicom/ui/welcome_view.h"
@@ -115,6 +122,8 @@ static void ArchiveFillUnusedText(UmiUiWelcomeItemSnapshot *value)
 #define ARCHIVE_WORKSPACE_DECODE umi_ui_welcome_view_snapshot_archive_decode_with_workspace
 /* Exercise guarded import through this domain's public snapshot codec. */
 #define ARCHIVE_CONDITIONAL_DECODE umi_ui_welcome_view_snapshot_archive_decode_if_unchanged
+/* Exercise canonical comparison with explicit caller-owned scratch. */
+#define ARCHIVE_COMPARE umi_ui_welcome_view_snapshot_archive_compare_with_workspace
 #define ARCHIVE_EQUAL ContractSnapshotEqual
 #include "../value_archive/record_cases.h"
 

@@ -15,6 +15,12 @@
 #ifndef UMICOM_COMPILER_PROVIDER_H
 #define UMICOM_COMPILER_PROVIDER_H
 #include "umicom/compiler/plan.h"
+
+/* Keep the public C symbol names when this header is included directly by a
+ * C++ client. Includes remain outside the linkage block; layouts are unchanged. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the compiler provider descriptor data shared with callers of this public
  * contract.
@@ -49,6 +55,13 @@ UmiStatus umi_compiler_provider_init(UmiCompilerProvider *provider,const UmiComp
  * applications.
  */
 bool umi_compiler_provider_supports(const UmiCompilerProvider *provider,UmiCompilerLanguage language);
+/** Query whether this planner maps an action for the declared family/language.
+ * This is independent of available, executable existence or toolchain qualification.
+ * Compile and assembly retain their existing mappings. C/C++ checks are mapped
+ * for GCC, Clang and MSVC. Link/archive and other checks are currently unmapped. */
+bool umi_compiler_provider_can_plan_action(const UmiCompilerProvider *provider,
+                                          UmiCompilerLanguage language,
+                                          UmiCompilerAction action);
 /**
  * Provide the compiler provider plan operation used by this module and its client
  * applications.
@@ -59,4 +72,23 @@ UmiStatus umi_compiler_provider_plan(const UmiCompilerProvider *provider,const U
  * applications.
  */
 const char *umi_compiler_family_name(UmiCompilerFamily family);
+/**
+ * Initialization preserves the destination on refusal and accepts a descriptor
+ * borrowed from that provider. All descriptor text must terminate inside its arrays.
+ * Planning rejects malformed descriptor storage before writing the plan. Request
+ * validity and plan construction have their own contracts; no compiler is launched.
+ */
+/**
+ * Build a complete plan in temporary heap storage. Every failure leaves out_plan
+ * unchanged; successful publication rebases argument_view into out_plan.
+ * No compiler process is started. Callers serialize inputs and output throughout.
+ * Unmapped actions return NOT_IMPLEMENTED without replacing the old plan. A CHECK
+ * plan omits generated object-output and debug-artifact switches; request validation
+ * still requires the existing output_path field even though CHECK does not use it.
+ * Explicit raw options are retained and can alter driver behavior. Inspect them
+ * through the application policy before execution; this planner is not a sandbox.
+ */
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 #endif

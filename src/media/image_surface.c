@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/media/image_surface.h"
 #include "umicom/media/image_edit.h"
+#include "umicom/media/image_composite.h"
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -109,6 +110,9 @@ UmiStatus umi_media_image_surface_clear(
      * used.
      */
     if (surface == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Match the decoder row boundary: exhausted revisions refuse the entire
+     * mutation before any pixel changes, rather than wrapping observation identity. */
+    if (surface->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < surface->pixel_count; ++index) {
         surface->pixels[index] = pixel;
@@ -128,6 +132,8 @@ UmiStatus umi_media_image_surface_set_pixel(
     UmiStatus status = pixel_index(surface, x, y, &index);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
+    /* Keep revision identity monotonic just as complete row writes do. */
+    if (surface->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     surface->pixels[index] = pixel;
     surface->revision += 1U;
     return UMI_STATUS_OK;
@@ -292,5 +298,65 @@ UmiStatus UmiMediaImageSurfaceApplyEdit(const UmiMediaImageSurface *source, cons
         return UMI_STATUS_CANCELLED;
     }
     *out_surface = result;
+    return UMI_STATUS_OK;
+}
+
+/* Work in exact straight-alpha sample values. The unrounded alpha denominator
+ * avoids a second rounding error in RGB. Every product is bounded by 255^3,
+ * safely below UINT32_MAX; transparent coverage preserves hidden source bytes. */
+static UmiMediaRgbaPixel CompositePixel(UmiMediaRgbaPixel base, UmiMediaRgbaPixel over)
+{
+    if (over.alpha == 0U) return base;
+    if (over.alpha == 255U) return over;
+    uint32_t foreground = (uint32_t)over.alpha * 255U;
+    uint32_t background = (uint32_t)base.alpha * (255U - (uint32_t)over.alpha);
+    uint32_t alpha = foreground + background;
+    UmiMediaRgbaPixel result;
+    result.red = (uint8_t)(((uint32_t)over.red * foreground +
+        (uint32_t)base.red * background + alpha / 2U) / alpha);
+    result.green = (uint8_t)(((uint32_t)over.green * foreground +
+        (uint32_t)base.green * background + alpha / 2U) / alpha);
+    result.blue = (uint8_t)(((uint32_t)over.blue * foreground +
+        (uint32_t)base.blue * background + alpha / 2U) / alpha);
+    result.alpha = (uint8_t)((alpha + 127U) / 255U);
+    return result;
+}
+
+UmiStatus UmiMediaImageSurfaceComposite(const UmiMediaImageSurface *source,
+    const UmiMediaImageSurface *overlay, size_t x, size_t y,
+    const UmiCancellationToken *cancel, UmiMediaImageSurface **out_surface)
+{
+    if (source == NULL || overlay == NULL || out_surface == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (*out_surface != NULL) return UMI_STATUS_INVALID_STATE;
+    /* Subtract after admitting the position; x+width must never overflow.
+     * Opaque surfaces already own positive, multiplication-checked dimensions. */
+    if (x >= source->width || y >= source->height ||
+        overlay->width > source->width - x || overlay->height > source->height - y)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (source->pixel_count > UMI_MEDIA_IMAGE_EDIT_MAX_PIXELS)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiMediaImageEdit copy = {0U, 0U, source->width, source->height, UMI_MEDIA_IMAGE_ORIGINAL};
+    UmiMediaImageSurface *candidate = NULL;
+    /* Reuse the existing bounded, cancellable copy owner. Native and headless
+     * clients share this publication rule rather than editing borrowed pixels. */
+    UmiStatus status = UmiMediaImageSurfaceApplyEdit(source, &copy, cancel, &candidate);
+    if (status != UMI_STATUS_OK) return status;
+    for (size_t row = 0U; row < overlay->height; ++row) {
+        if (umi_cancellation_token_is_requested(cancel)) {
+            umi_media_image_surface_destroy(candidate);
+            return UMI_STATUS_CANCELLED;
+        }
+        for (size_t column = 0U; column < overlay->width; ++column) {
+            size_t destination = (y + row) * candidate->width + x + column;
+            candidate->pixels[destination] = CompositePixel(candidate->pixels[destination],
+                overlay->pixels[row * overlay->width + column]);
+        }
+    }
+    if (umi_cancellation_token_is_requested(cancel)) {
+        umi_media_image_surface_destroy(candidate);
+        return UMI_STATUS_CANCELLED;
+    }
+    *out_surface = candidate;
     return UMI_STATUS_OK;
 }

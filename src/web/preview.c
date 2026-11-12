@@ -63,6 +63,9 @@ UmiStatus UmiWebPreviewCreate(const char *absolute_root, uint32_t port,
     if (status == UMI_STATUS_OK)
         status = UmiWebRouterSetFallback(umi_web_service_router(preview->service),
             UmiWebStaticFilesHandle, &preview->files);
+    if (status == UMI_STATUS_OK)
+        status = UmiWebServiceSetBodyFallback(preview->service,
+            UmiWebStaticFilesHandleBody, &preview->files);
     UmiWebServerConfig config = umi_web_server_config_default();
     /* Keep transport binding independent of browser header admission. */
     memcpy(config.bind_address, "127.0.0.1", sizeof("127.0.0.1"));
@@ -104,4 +107,13 @@ UmiStatus UmiWebPreviewServeNext(UmiWebPreview *preview, uint32_t wait_ms,
     memset(out, 0, sizeof(*out));
     if (preview == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     return UmiWebServerServeNext(preview->server, wait_ms, exchange_ms, cancel, out);
+}
+
+UmiStatus UmiWebPreviewHandleBody(UmiWebPreview *preview, const UmiWebRequest *request,
+    UmiWebResponse *response, UmiWebResponseBody **out_body)
+{
+    if (out_body == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_body = NULL;
+    if (preview == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return UmiWebServiceHandleBody(preview->service, request, response, out_body);
 }

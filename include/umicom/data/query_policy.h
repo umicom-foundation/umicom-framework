@@ -15,6 +15,12 @@
 #ifndef UMICOM_DATA_QUERY_POLICY_H
 #define UMICOM_DATA_QUERY_POLICY_H
 #include "umicom/data/explorer_types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the database query policy data shared with callers of this public contract.
  */
@@ -38,4 +44,8 @@ UmiDatabaseQueryKind umi_database_query_classify(const char *statement);
  * applications.
  */
 UmiStatus umi_database_query_policy_evaluate(const UmiDatabaseQueryPolicy *policy,const char *statement,int transaction_active,UmiDatabaseQueryDecision *out_decision);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

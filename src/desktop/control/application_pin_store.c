@@ -1,7 +1,10 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/desktop/control/application_pin_store.c
- * PURPOSE: Implement persist pin/unpin intent for applications without moving taskbar ownership into an application.
+ *
+ * PURPOSE:
+ *   Implement persist pin/unpin intent for applications without moving taskbar ownership into an application.
+ *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
  * Umicom Foundation
@@ -329,3 +332,10 @@ UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_desktop_application_pin_store_archive_dec
  * caller. Imported metadata remains evidence; registry publication is separate. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_desktop_application_pin_store_archive_decode_if_unchanged, umi_desktop_application_pin_store_archive_encode,
     UmiDesktopApplicationPinStoreSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)
+
+/* Compare through this owner's validated codec so native review uses the
+ * same fields as persistence. Caller-owned scratch avoids per-call allocation;
+ * an equal observation remains separate from revision-checked publication. */
+#include "../../base/value_compare_internal.h"
+UMI_DEFINE_VALUE_COMPARE(umi_desktop_application_pin_store_archive_compare_with_workspace,
+    UmiDesktopApplicationPinStoreSnapshot, umi_desktop_application_pin_store_archive_encode)

@@ -29,6 +29,12 @@ extern "C" {
 /**
  * Check that market depth satisfies its contract before another service relies on it.
  */
+/* Requires a canonical instrument, bounded counts, finite active prices and
+ * finite nonnegative active sizes. Finite negative prices and zero sizes are
+ * supported. Inactive array tails are ignored. This does not check ordering,
+ * crossed-book state or event-time freshness. Best bid/ask read the first
+ * active level; the caller owns ordering. Their zero fallback is ambiguous
+ * with a valid zero price, so inspect validity/count separately when needed. */
 int umi_market_depth_valid(const UmiMarketDepth *depth);
 /**
  * Provide the market depth best bid operation used by this module and its client

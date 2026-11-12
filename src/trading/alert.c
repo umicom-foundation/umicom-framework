@@ -38,10 +38,24 @@ static size_t bounded_text_length(const char *text, size_t capacity)
     return length;
 }
 
+static int valid_alert(const UmiTradingPriceAlert *alert);
+
 /* Check collection metadata before using its count as an array boundary. */
+/* Alert ownership now validates retained evidence and reserves revision capacity before mutation. Existing rule behavior is preserved; the earlier implementation remains for review. The previous implementation is retained for review. */
+#if 0
 static int valid_book(const UmiTradingAlertBook *book)
 {
     return book != NULL && book->count <= UMI_TRADING_MAX_ALERTS;
+}
+#endif
+static int valid_book(const UmiTradingAlertBook *book)
+{
+    if (book == NULL || book->count > UMI_TRADING_MAX_ALERTS) return 0;
+    /* The book is caller-owned public storage. Validate all retained rules
+     * before any command can mutate an earlier valid row and fail later. */
+    for (size_t i = 0U; i < book->count; ++i)
+        if (!valid_alert(&book->alerts[i])) return 0;
+    return 1;
 }
 
 /* Return the position of an alert, or the current count when it is absent. */
@@ -197,6 +211,8 @@ void umi_trading_alert_book_init(UmiTradingAlertBook *book)
 }
 
 /* Add a defensive copy of a unique, validated alert rule. */
+/* Alert ownership now validates retained evidence and reserves revision capacity before mutation. Existing rule behavior is preserved; the earlier implementation remains for review. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_alert_book_add(UmiTradingAlertBook *book,
                                      const UmiTradingPriceAlert *alert)
 {
@@ -213,8 +229,28 @@ UmiStatus umi_trading_alert_book_add(UmiTradingAlertBook *book,
     book->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_trading_alert_book_add(UmiTradingAlertBook *book,
+                                     const UmiTradingPriceAlert *alert)
+{
+    if (!valid_book(book) || !valid_alert(alert)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (find_alert(book, alert->alert_id) < book->count) {
+        return UMI_STATUS_ALREADY_EXISTS;
+    }
+    if (book->count >= UMI_TRADING_MAX_ALERTS) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    if (book->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    book->alerts[book->count++] = *alert;
+    book->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /* Remove one rule by stable alert identifier. */
+/* Alert ownership now validates retained evidence and reserves revision capacity before mutation. Existing rule behavior is preserved; the earlier implementation remains for review. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_alert_book_remove(UmiTradingAlertBook *book,
                                         const char *alert_id)
 {
@@ -240,8 +276,37 @@ UmiStatus umi_trading_alert_book_remove(UmiTradingAlertBook *book,
     book->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_trading_alert_book_remove(UmiTradingAlertBook *book,
+                                        const char *alert_id)
+{
+    size_t position;
+
+    if (!valid_book(book) || alert_id == NULL || alert_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    position = find_alert(book, alert_id);
+    if (position >= book->count) {
+        return UMI_STATUS_NOT_FOUND;
+    }
+    if (book->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Move later records left so iteration remains compact and deterministic. */
+    if (position + 1U < book->count) {
+        (void)memmove(&book->alerts[position],
+                      &book->alerts[position + 1U],
+                      (book->count - position - 1U) * sizeof(book->alerts[0]));
+    }
+    book->count -= 1U;
+    (void)memset(&book->alerts[book->count],
+                 0,
+                 sizeof(book->alerts[book->count]));
+    book->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /* Enable or pause a rule without discarding its occurrence history. */
+/* Alert ownership now validates retained evidence and reserves revision capacity before mutation. Existing rule behavior is preserved; the earlier implementation remains for review. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_alert_book_set_enabled(UmiTradingAlertBook *book,
                                              const char *alert_id,
                                              int enabled)
@@ -267,8 +332,37 @@ UmiStatus umi_trading_alert_book_set_enabled(UmiTradingAlertBook *book,
     book->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_trading_alert_book_set_enabled(UmiTradingAlertBook *book,
+                                             const char *alert_id,
+                                             int enabled)
+{
+    size_t position;
+    const int normalised_enabled = enabled != 0;
+
+    if (!valid_book(book) || alert_id == NULL || alert_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    position = find_alert(book, alert_id);
+    if (position >= book->count) {
+        return UMI_STATUS_NOT_FOUND;
+    }
+    /* Repeating the same request leaves the revision and observers unchanged. */
+    if (book->alerts[position].enabled == normalised_enabled) {
+        return UMI_STATUS_OK;
+    }
+    if (book->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    book->alerts[position].enabled = normalised_enabled;
+    if (!normalised_enabled) {
+        book->alerts[position].active = 0;
+    }
+    book->revision += 1U;
+    return UMI_STATUS_OK;
+}
 
 /* Acknowledge one active alert while retaining the rule for later crossings. */
+/* Alert ownership now validates retained evidence and reserves revision capacity before mutation. Existing rule behavior is preserved; the earlier implementation remains for review. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_alert_book_acknowledge(UmiTradingAlertBook *book,
                                              const char *alert_id)
 {
@@ -289,8 +383,41 @@ UmiStatus umi_trading_alert_book_acknowledge(UmiTradingAlertBook *book,
     book->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_trading_alert_book_acknowledge(UmiTradingAlertBook *book,
+                                             const char *alert_id)
+{
+    size_t position;
+
+    if (!valid_book(book) || alert_id == NULL || alert_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    position = find_alert(book, alert_id);
+    if (position >= book->count) {
+        return UMI_STATUS_NOT_FOUND;
+    }
+    if (!book->alerts[position].active) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    if (book->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    book->alerts[position].active = 0;
+    book->alerts[position].acknowledged = 1;
+    book->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+/* One predicate is shared by admission and application so skipped/stale rows
+ * cannot accidentally consume capacity or drift between the two passes. */
+static int AlertAcceptsObservation(const UmiTradingPriceAlert *alert,
+    const char *instrument_id, int64_t event_time_ms)
+{
+    return strncmp(alert->instrument_id, instrument_id, UMI_FINANCE_ID_CAPACITY) == 0 &&
+        (!alert->has_last_value || event_time_ms >= alert->last_observed_at_ms);
+}
 
 /* Evaluate all rules for an instrument against one ordered market value. */
+/* Alert ownership now validates retained evidence and reserves revision capacity before mutation. Existing rule behavior is preserved; the earlier implementation remains for review. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_alert_book_evaluate(UmiTradingAlertBook *book,
                                           const char *instrument_id,
                                           double current_value,
@@ -323,6 +450,58 @@ UmiStatus umi_trading_alert_book_evaluate(UmiTradingAlertBook *book,
             continue;
         }
         observed = 1;
+        if (alert->enabled && alert->has_last_value &&
+            directional_crossed(alert->direction,
+                                alert->last_value,
+                                current_value,
+                                alert->threshold)) {
+            alert->active = 1;
+            alert->acknowledged = 0;
+            alert->triggered_at_ms = event_time_ms;
+            /* Saturation preserves truthful history instead of wrapping to zero. */
+            if (alert->occurrences < UINT64_MAX) {
+                alert->occurrences += 1U;
+            }
+        }
+        /* Disabled rules still follow price, preventing stale crossings on resume. */
+        alert->last_value = current_value;
+        alert->last_observed_at_ms = event_time_ms;
+        alert->has_last_value = 1;
+    }
+    if (observed) {
+        book->revision += 1U;
+    }
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_trading_alert_book_evaluate(UmiTradingAlertBook *book,
+                                          const char *instrument_id,
+                                          double current_value,
+                                          int64_t event_time_ms)
+{
+    size_t index;
+    size_t instrument_id_length;
+    int observed = 0;
+
+    instrument_id_length = bounded_text_length(
+        instrument_id, UMI_FINANCE_ID_CAPACITY);
+    if (!valid_book(book) || instrument_id_length == 0U ||
+        instrument_id_length >= UMI_FINANCE_ID_CAPACITY ||
+        !isfinite(current_value) || current_value <= 0.0 ||
+        event_time_ms < 0) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    for (index = 0U; index < book->count; ++index)
+        if (AlertAcceptsObservation(&book->alerts[index], instrument_id, event_time_ms)) {
+            observed = 1;
+            break;
+        }
+    if (!observed) return UMI_STATUS_OK;
+    if (book->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    for (index = 0U; index < book->count; ++index) {
+        UmiTradingPriceAlert *alert = &book->alerts[index];
+
+        if (!AlertAcceptsObservation(alert, instrument_id, event_time_ms)) continue;
         if (alert->enabled && alert->has_last_value &&
             directional_crossed(alert->direction,
                                 alert->last_value,
@@ -409,4 +588,29 @@ const char *umi_trading_price_alert_direction_text(
         case UMI_TRADING_PRICE_ALERT_CROSSES_BELOW: return "crosses below";
         default: return "unknown direction";
     }
+}
+
+/* Remove every rule for one instrument as a single observable edit. Stage
+ * admission before compaction; an absent instrument is an idempotent no-op. */
+UmiStatus UmiTradingAlertBookRemoveInstrument(UmiTradingAlertBook *book,
+    const char *instrument_id)
+{
+    size_t length = bounded_text_length(instrument_id, UMI_FINANCE_ID_CAPACITY);
+    if (!valid_book(book) || length == 0U || length >= UMI_FINANCE_ID_CAPACITY)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    size_t matches = 0U;
+    for (size_t i = 0U; i < book->count; ++i)
+        if (!strcmp(book->alerts[i].instrument_id, instrument_id)) ++matches;
+    if (matches == 0U) return UMI_STATUS_OK;
+    if (book->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    size_t write = 0U;
+    for (size_t read = 0U; read < book->count; ++read)
+        if (strcmp(book->alerts[read].instrument_id, instrument_id)) {
+            if (write != read) book->alerts[write] = book->alerts[read];
+            ++write;
+        }
+    memset(&book->alerts[write], 0, (book->count - write) * sizeof(book->alerts[0]));
+    book->count = write;
+    ++book->revision;
+    return UMI_STATUS_OK;
 }

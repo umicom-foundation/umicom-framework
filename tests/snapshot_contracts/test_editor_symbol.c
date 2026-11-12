@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/snapshot_contracts/test_editor_symbol.c
- * PURPOSE: Check editor symbol input bounds and atomic imports.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Check editor symbol input bounds and atomic imports.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/editor/symbol.h"
 #include "umicom/editor/symbol.h"
@@ -120,6 +127,8 @@ static void ArchiveFillUnusedText(UmiEditorSymbolSnapshot *value)
 #define ARCHIVE_WORKSPACE_DECODE umi_editor_symbol_snapshot_archive_decode_with_workspace
 /* Exercise guarded import through this domain's public snapshot codec. */
 #define ARCHIVE_CONDITIONAL_DECODE umi_editor_symbol_snapshot_archive_decode_if_unchanged
+/* Exercise canonical comparison with explicit caller-owned scratch. */
+#define ARCHIVE_COMPARE umi_editor_symbol_snapshot_archive_compare_with_workspace
 #define ARCHIVE_EQUAL ContractSnapshotEqual
 #include "../value_archive/record_cases.h"
 

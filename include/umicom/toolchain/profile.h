@@ -100,17 +100,21 @@ UmiStatus umi_toolchain_profile_initialize(
  */
 bool umi_toolchain_profile_storage_compatible(
     const UmiToolchainProfile *profile);
+/** Check compatible storage plus all fixed profile strings and declared known
+ * tool slots. Empty fields and failed/missing tools remain valid metadata.
+ * This does not establish usable paths, supported targets or a complete kit. */
+bool umi_toolchain_profile_storage_valid(const UmiToolchainProfile *profile);
 /**
- * Provide the toolchain profile tool operation used by this module and its client
- * applications.
+ * Borrow a tool only when the profile is compatible and kind lies within
+ * both the known tool identities and the profile's declared tool_count.
  */
 const UmiToolInfo *umi_toolchain_profile_tool(
     const UmiToolchainProfile *profile,
     UmiToolKind kind
 );
 /**
- * Provide the toolchain profile tool mutable operation used by this module and its client
- * applications.
+ * Borrow mutable storage under the same declared-count admission as the
+ * const accessor. NULL does not authorize extending the profile implicitly.
  */
 UmiToolInfo *umi_toolchain_profile_tool_mutable(
     UmiToolchainProfile *profile,

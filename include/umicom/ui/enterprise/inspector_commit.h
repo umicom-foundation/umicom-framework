@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_INSPECTOR_COMMIT_H
 
 #include "umicom/ui/enterprise/inspector_property.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent inspector commit data shared with callers of this public contract.
  */
@@ -26,4 +32,8 @@ typedef struct UmiUiEntInspectorCommit { char property_id[UMI_UI_ENT_ID_CAPACITY
  */
 UmiStatus umi_ui_ent_inspector_commit_create(UmiUiEntInspectorCommit *c,const char *property_id,const char *before_value,const char *after_value,uint64_t base_revision,uint64_t commit_revision);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

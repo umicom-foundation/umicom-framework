@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/creative_workspace/media_brief.h"
+#include "umicom/creative_workspace/media_brief_document.h"
 #include "umicom/ai/mcp/json.h"
 #include "umicom/language_runtime/json_tree.h"
 #include "umicom/security/secrets.h"
@@ -50,15 +51,42 @@ static UmiStatus Validate(const char *text, size_t capacity, bool required)
     return status;
 }
 
+/* Preparation and recovery share bounded Unicode admission. Recovery preserves
+ * unfinished input, while preparation additionally requires visible content.
+ * This keeps UI and installed clients on one text policy. */
+static UmiStatus ValidateDraft(const UmiMediaBriefDraft *draft, bool required)
+{
+    if (draft == NULL || draft->kind < UMI_MEDIA_BRIEF_STORYBOARD ||
+        draft->kind > UMI_MEDIA_BRIEF_MUSIC) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = Validate(draft->title, sizeof(draft->title), required);
+    if (status == UMI_STATUS_OK) status = Validate(draft->source, sizeof(draft->source), required);
+    if (status == UMI_STATUS_OK) status = Validate(draft->direction, sizeof(draft->direction), false);
+    return status;
+}
+UmiStatus UmiMediaBriefDocumentValidate(const UmiMediaBriefDocument *document)
+{
+    if (document == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = ValidateDraft(&document->draft, false);
+    if (status == UMI_STATUS_OK)
+        status = Validate(document->prompt, sizeof(document->prompt), false);
+    return status;
+}
+
 UmiStatus UmiMediaBriefCreate(const UmiMediaBriefDraft *draft, UmiMediaBrief **out)
 {
     if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out = NULL;
+    /* The original preparation-only validation remains for engineering review.
+     * ValidateDraft now owns the same policy for preparation and recovery. */
+#if 0
     if (draft == NULL || draft->kind < UMI_MEDIA_BRIEF_STORYBOARD ||
         draft->kind > UMI_MEDIA_BRIEF_MUSIC) return UMI_STATUS_INVALID_ARGUMENT;
     UmiStatus status = Validate(draft->title, sizeof(draft->title), true);
     if (status == UMI_STATUS_OK) status = Validate(draft->source, sizeof(draft->source), true);
     if (status == UMI_STATUS_OK) status = Validate(draft->direction, sizeof(draft->direction), false);
+    if (status != UMI_STATUS_OK) return status;
+#endif
+    UmiStatus status = ValidateDraft(draft, true);
     if (status != UMI_STATUS_OK) return status;
     const char *tasks[] = {
         "Create a storyboard with numbered shots, visual descriptions and narration. Separate source facts from creative suggestions.",

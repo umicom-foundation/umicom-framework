@@ -23,6 +23,9 @@
 extern "C" {
 #endif
 
+/* Return one finite score. Query, chunk and user data are borrowed for the call.
+ * Do not retain the chunk pointer, cast away const, mutate the result owner or
+ * reenter a mutation of that owner. External callback side effects cannot roll back. */
 typedef double (*UmiAiRerankScoreFn)(
     const char *query,
     const UmiAiChunk *chunk,
@@ -37,7 +40,13 @@ typedef struct UmiAiReranker {
     void *user_data;
 } UmiAiReranker;
 
-/* Apply an optional reranker and sort results in descending score order. */
+/* Apply an optional reranker and sort results in descending score order.
+ * Invalid input records return INVALID_ARGUMENT before any callback or mutation.
+ * A non-finite callback score returns INVALID_STATE; allocation failure returns
+ * OUT_OF_MEMORY. These refusals preserve all result bytes, provided the callback obeys
+ * its ownership contract. Null callback performs a stable sort without allocation.
+ * Count zero accepts null results. Query must be a terminated C string; callers
+ * provide the complete advertised array extent and exclude concurrent mutation. */
 UmiStatus umi_ai_reranker_apply(
     const UmiAiReranker *reranker,
     const char *query,

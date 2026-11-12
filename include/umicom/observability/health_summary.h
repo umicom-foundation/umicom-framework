@@ -17,6 +17,12 @@
 #include "umicom/observability/operations_contract.h"
 #include "umicom/runtime/health.h"
 #include "umicom/diagnostics/readiness.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the operations health summary data shared with callers of this public
  * contract.
@@ -27,4 +33,8 @@ typedef struct UmiOperationsHealthSummary { size_t components; size_t ready_comp
  * applications.
  */
 UmiStatus umi_operations_health_summarise(const UmiHealthRegistry *health,const UmiReadinessRegistry *readiness,UmiOperationsHealthSummary *out_summary);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

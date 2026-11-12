@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/variable_assignment/test_platform.c
- * PURPOSE: Exercise real framed assignment, capability refusal and one-attempt capture invalidation.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Exercise real framed assignment, capability refusal and one-attempt capture invalidation.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "../variable_inspection/fixture.h"
@@ -84,6 +91,20 @@ int main(int argc, char **argv)
                 strcmp(name, "duplicate") == 0 ? UMI_STATUS_ALREADY_EXISTS : strcmp(name, "long-input") == 0 ? UMI_STATUS_CAPACITY_EXCEEDED :
                 strcmp(name, "invalid-utf8") == 0 ? UMI_STATUS_PARSE_ERROR : UMI_STATUS_INVALID_ARGUMENT;
             CHECK(status == expected);
+            if (strcmp(name, "invalid-utf8") == 0) {
+                /* All malformed scalar classes share the same public refusal. */
+                const char *invalid_values[] = {"\xed\xa0\x80", "\xe2\x82", "\xf4\x90\x80\x80", "\x80"};
+                for (size_t i = 0U; i < sizeof invalid_values / sizeof invalid_values[0]; ++i) {
+                    UmiDebugVariableAssignment refused;
+                    CHECK(UmiDebugRuntimeAssignVariable(platform, workspace, target,
+                        invalid_values[i], 2000U, &refused) == UMI_STATUS_PARSE_ERROR);
+                    CHECK(!refused.attempted && !refused.confirmed);
+                    OK(umi_debug_runtime_platform_snapshot(platform, &after));
+                    CHECK(after.adapter.messages_sent == before.adapter.messages_sent);
+                    CHECK(umi_debug_variable_registry_count(umi_debug_service_variable(f.service)) == 1U);
+                    OK(UmiDebugVariableTargetValidate(f.workspace, target));
+                }
+            }
             if (strcmp(name, "prequeued") == 0) CHECK(after.adapter.queued_events == 1U);
         } else {
             CHECK(result.attempted && after.adapter.messages_sent == before.adapter.messages_sent + 1U);

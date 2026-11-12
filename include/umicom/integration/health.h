@@ -25,6 +25,12 @@
 #include "umicom/integration/launch_plan.h"
 #include "umicom/integration/suite_runtime.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Represent the integration health summary data shared with callers of this public
  * contract.
@@ -57,4 +63,8 @@ void umi_integration_health_from_runtime(
     const UmiIntegrationSuiteRuntime *runtime,
     UmiIntegrationHealthSummary *out_summary);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

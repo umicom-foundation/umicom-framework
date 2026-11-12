@@ -29,6 +29,9 @@ extern "C" {
 /**
  * Check that trade tick satisfies its contract before another service relies on it.
  */
+/* Numeric/time validation only: finite positive price, finite nonnegative size,
+ * and nonnegative event time. Zero size remains accepted. Retaining owners must
+ * separately validate instrument metadata and their sequence policy. */
 int umi_trade_tick_valid(const UmiTradeTick *tick);
 #ifdef __cplusplus
 }

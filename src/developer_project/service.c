@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_project/service.h"
+#include "umicom/platform/rooted_files.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -168,6 +169,11 @@ UmiStatus umi_developer_project_service_plan_generation(
  * Provide the developer project service generate operation used by this module and its
  * client applications.
  */
+/* Preserve the former stack-owned operation for review. The active service
+ * uses a heap workspace and retains the same model defaults, registry update
+ * and generator behaviour. Filesystem creation is still not a rollback
+ * transaction; partial files remain available for diagnosis after a failure. */
+#if 0
 UmiStatus umi_developer_project_service_generate(
     UmiDeveloperProjectService *service,
     const UmiDeveloperProjectGenerationRequest *request,
@@ -338,6 +344,475 @@ UmiStatus umi_developer_project_service_generate(
      */
     if (out_model != NULL) *out_model = model;
     return UMI_STATUS_OK;
+}
+#endif
+
+/* Preserve the former write-before-model composition for review. The active
+ * path admits model/profile state before effects and chooses the shared writer
+ * policy explicitly, preserving additive generation as a compatibility API. */
+#if 0
+static UmiStatus generate_owned(
+    UmiDeveloperProjectService *service,
+    const UmiDeveloperProjectGenerationRequest *request,
+    UmiDeveloperProjectGeneratorReport *out_report,
+    UmiDeveloperProjectModel *out_model,
+    UmiDeveloperProjectGenerationPlan *plan,
+    UmiDeveloperProjectModel *model)
+{
+    const UmiDeveloperProjectTemplate *project_template;
+    UmiDeveloperProjectGeneratorRequest generator_request;
+    size_t index;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (service == NULL || request == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    status = umi_developer_project_service_plan_generation(
+        service, request, plan);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    project_template = umi_developer_project_template_registry_find(
+        service->templates, request->template_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (project_template == NULL) return UMI_STATUS_NOT_FOUND;
+
+    (void)memset(&generator_request, 0, sizeof(generator_request));
+    generator_request.plan = plan;
+    generator_request.dry_run = request->dry_run;
+    generator_request.overwrite_existing_files =
+        request->overwrite_existing_files;
+
+    status = umi_developer_project_generator_apply(
+        &generator_request, out_report);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    umi_developer_project_model_init(
+        model,
+        request->application_id,
+        request->application_name);
+    (void)snprintf(model->root, sizeof(model->root), "%s", request->project_root);
+    (void)snprintf(
+        model->template_id,
+        sizeof(model->template_id),
+        "%s",
+        project_template->template_id);
+    (void)snprintf(
+        model->primary_language_id,
+        sizeof(model->primary_language_id),
+        "%s",
+        project_template->primary_language_id);
+    model->kind = project_template->kind;
+    model->build_system = project_template->build_system;
+    model->generated = 1;
+
+    /*
+     * Populate immediately useful launch/staging defaults for generated
+     * starters. They remain editable project-model state, not hard-coded Studio
+     * assumptions.
+     */
+    if (project_template->build_system ==
+            UMI_DEVELOPER_PROJECT_BUILD_SCRIPT &&
+        strcmp(project_template->primary_language_id,
+               "developer.language.bash") == 0) {
+        (void)snprintf(
+            model->entry_point,
+            sizeof(model->entry_point),
+            "bin/%s.sh",
+            request->target_name);
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (project_template->build_system ==
+                   UMI_DEVELOPER_PROJECT_BUILD_SCRIPT &&
+               strcmp(project_template->primary_language_id,
+                      "developer.language.cpython") == 0) {
+        (void)snprintf(
+            model->entry_point,
+            sizeof(model->entry_point),
+            "src/%s.py",
+            request->target_name);
+    }
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U;
+         index < project_template->secondary_language_count;
+         ++index) {
+        status = umi_developer_project_model_add_language(
+            model,
+            project_template->secondary_language_ids[index]);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+    }
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (project_template->build_system ==
+        UMI_DEVELOPER_PROJECT_BUILD_CMAKE) {
+#ifdef _WIN32
+        (void)snprintf(
+            model->preset,
+            sizeof(model->preset),
+            "%s",
+            "windows-ucrt64-debug");
+        (void)snprintf(
+            model->build_directory,
+            sizeof(model->build_directory),
+            "%s",
+            "build/windows-ucrt64-debug");
+        (void)snprintf(
+            model->install_prefix,
+            sizeof(model->install_prefix),
+            "%s",
+            "install/windows-ucrt64-debug");
+
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (project_template->kind == UMI_DEVELOPER_PROJECT_EXECUTABLE) {
+            (void)snprintf(
+                model->executable,
+                sizeof(model->executable),
+                "build/windows-ucrt64-debug/bin/%s.exe",
+                request->target_name);
+        }
+#else
+        (void)snprintf(model->preset, sizeof(model->preset), "%s", "linux-debug");
+        (void)snprintf(model->build_directory, sizeof(model->build_directory), "%s", "build/linux-debug");
+        (void)snprintf(model->install_prefix, sizeof(model->install_prefix), "%s", "install/linux-debug");
+        if (project_template->kind == UMI_DEVELOPER_PROJECT_EXECUTABLE)
+            (void)snprintf(model->executable, sizeof(model->executable),
+                "build/linux-debug/bin/%s", request->target_name);
+#endif
+    }
+
+    /* Simulation recipes own their preset names. Apply their portable defaults
+     * here so every host receives the same model instead of inventing a native
+     * executable or asking the user to repair a desktop preset after creation.
+     * Existing desktop defaults above remain the fallback for native recipes. */
+    const char *special_preset = NULL;
+    if (strcmp(project_template->template_id, "developer.template.vhdl-cpu") == 0)
+        special_preset = "simulation";
+    else if (strcmp(project_template->template_id, "developer.template.umicom-c-preview") == 0)
+        special_preset = "preview";
+    if (special_preset != NULL) {
+        (void)snprintf(model->preset, sizeof(model->preset), "%s", special_preset);
+        (void)snprintf(model->build_directory, sizeof(model->build_directory),
+            "build/%s", special_preset);
+        model->install_prefix[0] = '\0';
+        model->executable[0] = '\0';
+    }
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (!request->dry_run) {
+        status = umi_developer_project_model_registry_upsert(
+            service->models, model);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+        service->revision += 1U;
+    }
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (out_model != NULL) *out_model = *model;
+    return UMI_STATUS_OK;
+}
+
+#endif
+
+static UmiStatus generate_owned(
+    UmiDeveloperProjectService *service,
+    const UmiDeveloperProjectGenerationRequest *request,
+    UmiDeveloperProjectGeneratorReport *out_report,
+    UmiDeveloperProjectModel *out_model,
+    UmiDeveloperProjectGenerationPlan *plan,
+    UmiDeveloperProjectModel *model,
+    int exclusive, UmiBuildProfile *profile)
+{
+    const UmiDeveloperProjectTemplate *project_template;
+    UmiDeveloperProjectGeneratorRequest generator_request;
+    size_t index;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (service == NULL || request == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    status = umi_developer_project_service_plan_generation(
+        service, request, plan);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+
+    project_template = umi_developer_project_template_registry_find(
+        service->templates, request->template_id);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (project_template == NULL) return UMI_STATUS_NOT_FOUND;
+
+    (void)memset(&generator_request, 0, sizeof(generator_request));
+    generator_request.plan = plan;
+    generator_request.dry_run = request->dry_run;
+    generator_request.overwrite_existing_files =
+        request->overwrite_existing_files;
+
+    umi_developer_project_model_init(
+        model,
+        request->application_id,
+        request->application_name);
+    (void)snprintf(model->root, sizeof(model->root), "%s", request->project_root);
+    (void)snprintf(
+        model->template_id,
+        sizeof(model->template_id),
+        "%s",
+        project_template->template_id);
+    (void)snprintf(
+        model->primary_language_id,
+        sizeof(model->primary_language_id),
+        "%s",
+        project_template->primary_language_id);
+    model->kind = project_template->kind;
+    model->build_system = project_template->build_system;
+    model->generated = 1;
+
+    /*
+     * Populate immediately useful launch/staging defaults for generated
+     * starters. They remain editable project-model state, not hard-coded Studio
+     * assumptions.
+     */
+    if (project_template->build_system ==
+            UMI_DEVELOPER_PROJECT_BUILD_SCRIPT &&
+        strcmp(project_template->primary_language_id,
+               "developer.language.bash") == 0) {
+        (void)snprintf(
+            model->entry_point,
+            sizeof(model->entry_point),
+            "bin/%s.sh",
+            request->target_name);
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (project_template->build_system ==
+                   UMI_DEVELOPER_PROJECT_BUILD_SCRIPT &&
+               strcmp(project_template->primary_language_id,
+                      "developer.language.cpython") == 0) {
+        (void)snprintf(
+            model->entry_point,
+            sizeof(model->entry_point),
+            "src/%s.py",
+            request->target_name);
+    }
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U;
+         index < project_template->secondary_language_count;
+         ++index) {
+        status = umi_developer_project_model_add_language(
+            model,
+            project_template->secondary_language_ids[index]);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+    }
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (project_template->build_system ==
+        UMI_DEVELOPER_PROJECT_BUILD_CMAKE) {
+#ifdef _WIN32
+        (void)snprintf(
+            model->preset,
+            sizeof(model->preset),
+            "%s",
+            "windows-ucrt64-debug");
+        (void)snprintf(
+            model->build_directory,
+            sizeof(model->build_directory),
+            "%s",
+            "build/windows-ucrt64-debug");
+        (void)snprintf(
+            model->install_prefix,
+            sizeof(model->install_prefix),
+            "%s",
+            "install/windows-ucrt64-debug");
+
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (project_template->kind == UMI_DEVELOPER_PROJECT_EXECUTABLE) {
+            (void)snprintf(
+                model->executable,
+                sizeof(model->executable),
+                "build/windows-ucrt64-debug/bin/%s.exe",
+                request->target_name);
+        }
+#else
+        (void)snprintf(model->preset, sizeof(model->preset), "%s", "linux-debug");
+        (void)snprintf(model->build_directory, sizeof(model->build_directory), "%s", "build/linux-debug");
+        (void)snprintf(model->install_prefix, sizeof(model->install_prefix), "%s", "install/linux-debug");
+        if (project_template->kind == UMI_DEVELOPER_PROJECT_EXECUTABLE)
+            (void)snprintf(model->executable, sizeof(model->executable),
+                "build/linux-debug/bin/%s", request->target_name);
+#endif
+    }
+
+    /* Simulation recipes own their preset names. Apply their portable defaults
+     * here so every host receives the same model instead of inventing a native
+     * executable or asking the user to repair a desktop preset after creation.
+     * Existing desktop defaults above remain the fallback for native recipes. */
+    const char *special_preset = NULL;
+    if (strcmp(project_template->template_id, "developer.template.vhdl-cpu") == 0)
+        special_preset = "simulation";
+    else if (strcmp(project_template->template_id, "developer.template.umicom-c-preview") == 0)
+        special_preset = "preview";
+    if (special_preset != NULL) {
+        (void)snprintf(model->preset, sizeof(model->preset), "%s", special_preset);
+        (void)snprintf(model->build_directory, sizeof(model->build_directory),
+            "build/%s", special_preset);
+        model->install_prefix[0] = '\0';
+        model->executable[0] = '\0';
+    }
+
+
+    /* Compose and admit the complete model before creating project files.
+     * New-project clients also require a usable build profile before effects.
+     * Both modes retain the same language, preset and launch defaults above. */
+    status = umi_developer_project_model_validate(model, NULL, 0U);
+    if (status == UMI_STATUS_OK && exclusive)
+        status = UmiBuildProfileFromProject(model, profile);
+    if (status != UMI_STATUS_OK) return status;
+    if (exclusive && !request->dry_run &&
+        umi_developer_project_model_registry_count(service->models) >=
+            UMI_DEVELOPER_PROJECT_MODEL_CAPACITY) {
+        UmiDeveloperProjectModel existing;
+        status = umi_developer_project_model_registry_find(
+            service->models, model->project_id, &existing);
+        if (status == UMI_STATUS_NOT_FOUND) return UMI_STATUS_CAPACITY_EXCEEDED;
+        if (status != UMI_STATUS_OK) return status;
+    }
+    status = exclusive ? umi_developer_project_generator_create(&generator_request, out_report) :
+        umi_developer_project_generator_apply(&generator_request, out_report);
+    if (status != UMI_STATUS_OK) return status;
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (!request->dry_run) {
+        status = umi_developer_project_model_registry_upsert(
+            service->models, model);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status != UMI_STATUS_OK) return status;
+        service->revision += 1U;
+    }
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (out_model != NULL) *out_model = *model;
+    return UMI_STATUS_OK;
+}
+
+/* Preserve the original allocation wrapper. One mode dispatcher now owns
+ * candidate allocation, report freshness and success-only output publication. */
+#if 0
+UmiStatus umi_developer_project_service_generate(
+    UmiDeveloperProjectService *service,
+    const UmiDeveloperProjectGenerationRequest *request,
+    UmiDeveloperProjectGeneratorReport *out_report,
+    UmiDeveloperProjectModel *out_model)
+{
+    /* The report describes this attempt even when admission or allocation
+     * fails. A previous model remains untouched until generation succeeds. */
+    if (out_report != NULL) memset(out_report, 0, sizeof *out_report);
+    if (service == NULL || request == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!request->dry_run && service->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    typedef struct GenerationStorage {
+        UmiDeveloperProjectGenerationPlan plan;
+        UmiDeveloperProjectModel model;
+    } GenerationStorage;
+    /* Plans contain up to 32 owned text buffers. Keeping them on a worker
+     * stack made UI and CLI callers depend on an unrelated thread-stack limit.
+     * This owner survives the entire fallible operation and is released once. */
+    GenerationStorage *storage = calloc(1U, sizeof *storage);
+    /* Framework declares OUT_OF_MEMORY. Preserve the earlier spelling below
+     * for integration review; the active path keeps the same failure behavior. */
+#if 0
+    if (storage == NULL) return UMI_STATUS_NO_MEMORY;
+#else
+    if (storage == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+#endif
+    UmiStatus status = generate_owned(service, request, out_report, out_model,
+        &storage->plan, &storage->model);
+    free(storage);
+    return status;
+}
+
+#endif
+
+static UmiStatus generate_mode(
+    UmiDeveloperProjectService *service,
+    const UmiDeveloperProjectGenerationRequest *request,
+    UmiDeveloperProjectGeneratorReport *out_report,
+    UmiDeveloperProjectModel *out_model, UmiBuildProfile *out_profile, int exclusive)
+{
+    /* The report describes this attempt even when admission or allocation
+     * fails. A previous model remains untouched until generation succeeds. */
+    if (out_report != NULL) memset(out_report, 0, sizeof *out_report);
+    if (service == NULL || request == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (exclusive) {
+        /* Admit bounded absolute identity before build-profile conversion:
+         * relative profile conversion may consult the process directory. */
+        UmiStatus admission = umi_developer_project_generation_request_validate(request, NULL, 0U);
+        if (admission != UMI_STATUS_OK) return admission;
+        if (request->overwrite_existing_files) return UMI_STATUS_INVALID_ARGUMENT;
+        admission = UmiRootedFileValidatePath(request->project_root, "project");
+        if (admission != UMI_STATUS_OK) return admission;
+    }
+    if (!request->dry_run && service->revision == UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    typedef struct GenerationStorage {
+        UmiDeveloperProjectGenerationPlan plan;
+        UmiDeveloperProjectModel model;
+        UmiBuildProfile profile;
+    } GenerationStorage;
+    /* Plans contain up to 32 owned text buffers. Keeping them on a worker
+     * stack made UI and CLI callers depend on an unrelated thread-stack limit.
+     * This owner survives the entire fallible operation and is released once. */
+    GenerationStorage *storage = calloc(1U, sizeof *storage);
+    /* Framework declares OUT_OF_MEMORY. Preserve the earlier spelling below
+     * for integration review; the active path keeps the same failure behavior. */
+#if 0
+    if (storage == NULL) return UMI_STATUS_NO_MEMORY;
+#else
+    if (storage == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+#endif
+    UmiStatus status = generate_owned(service, request, out_report, out_model,
+        &storage->plan, &storage->model, exclusive, &storage->profile);
+    if (status == UMI_STATUS_OK && out_profile != NULL) *out_profile = storage->profile;
+    free(storage);
+    return status;
+}
+
+
+UmiStatus umi_developer_project_service_generate(
+    UmiDeveloperProjectService *service,
+    const UmiDeveloperProjectGenerationRequest *request,
+    UmiDeveloperProjectGeneratorReport *out_report,
+    UmiDeveloperProjectModel *out_model)
+{
+    return generate_mode(service,request,out_report,out_model,NULL,0);
+}
+
+UmiStatus umi_developer_project_service_generate_new(
+    UmiDeveloperProjectService *service,
+    const UmiDeveloperProjectGenerationRequest *request,
+    UmiDeveloperProjectGeneratorReport *out_report,
+    UmiDeveloperProjectModel *out_model, UmiBuildProfile *out_profile)
+{
+    return generate_mode(service,request,out_report,out_model,out_profile,1);
 }
 
 /*

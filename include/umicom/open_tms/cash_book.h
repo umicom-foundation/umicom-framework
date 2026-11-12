@@ -42,6 +42,23 @@ typedef struct UmiOpenTmsCashBook {
     uint64_t revision;
 } UmiOpenTmsCashBook;
 
+/* These public preview values are caller-owned. Validate before using restored
+ * storage; counts are checked before traversal and unused rows are ignored.
+ * Required inline text must be terminated and nonempty; currency remains an
+ * opaque bounded label, not validated ISO membership. All amounts are finite.
+ * Keep inputs stable on one owner thread. Output objects must not overlap inputs. */
+UmiStatus umi_open_tms_cash_record_validate(const UmiOpenTmsCashRecord *record);
+UmiStatus umi_open_tms_cash_book_validate(const UmiOpenTmsCashBook *book);
+typedef struct UmiOpenTmsCashMeasures { double netForecast; double headroom; } UmiOpenTmsCashMeasures;
+/* Complete finite result or unchanged output. Signed preview values are allowed.
+ * This is double arithmetic, not an exact-money posting or an FX conversion. */
+UmiStatus umi_open_tms_cash_record_measure(const UmiOpenTmsCashRecord *record, UmiOpenTmsCashMeasures *out);
+/* A total requires one currency label across the book; mixed labels refuse.
+ * An initialized empty book yields zero. Overflow preserves the output. */
+UmiStatus umi_open_tms_cash_book_headroom_checked(const UmiOpenTmsCashBook *book, double *out);
+/* Scalar compatibility functions return zero on any refusal. Use checked
+ * results when zero must be distinguished from unavailable evidence. */
+
 void umi_open_tms_cash_book_init(UmiOpenTmsCashBook *book);
 /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
  * before this operation changes state or invokes nested work. Initialize the

@@ -20,6 +20,12 @@
 #include <gtk/gtk.h>
 #include "umicom/ui/workstation/command_bar.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 G_BEGIN_DECLS
 
 /**
@@ -127,4 +133,8 @@ UmiStatus umi_gtk4_ws_command_bar_query(
 
 G_END_DECLS
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

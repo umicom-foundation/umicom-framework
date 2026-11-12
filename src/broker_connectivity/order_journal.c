@@ -119,6 +119,13 @@ static int JournalValid(const UmiBrokerOrderJournal *journal)
     }
     return 1;
 }
+/* Expose the existing owner admission for composed operations; keep one
+ * definition of record identity and timestamp validity. */
+UmiStatus UmiBrokerOrderJournalValidate(const UmiBrokerOrderJournal *journal)
+{
+    if (journal == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return JournalValid(journal) ? UMI_STATUS_OK : UMI_STATUS_INVALID_STATE;
+}
 const UmiBrokerOrderRecord *umi_broker_order_journal_find(
     const UmiBrokerOrderJournal *journal,const char *clientOrderId)
 {

@@ -30,6 +30,9 @@ extern "C" {
 /**
  * Represent the ui theme snapshot data shared with callers of this public contract.
  */
+/* All inline fields must terminate within their declared arrays. token_id uses
+ * the shared UI identifier grammar. Empty values and descriptions are allowed;
+ * storage admission does not validate colour, font, CSS, asset paths or UTF-8. */
 typedef struct UmiUiThemeSnapshot {
     char token_id[UMI_UI_ID_CAPACITY];
     char value[UMI_UI_VALUE_STRING_CAPACITY];
@@ -54,23 +57,36 @@ void umi_ui_theme_model_destroy(UmiUiThemeModel *model);
  * Provide the ui theme model upsert operation used by this module and its client
  * applications.
  */
+/* Capture and validate a complete caller-owned snapshot before mutation.
+ * Malformed fields return INVALID_ARGUMENT without changing items or revision.
+ * Replacing an existing token remains permitted when the catalogue is full.
+ * item must not overlap the opaque model allocation. */
 UmiStatus umi_ui_theme_model_upsert(UmiUiThemeModel *model,
                                      const UmiUiThemeSnapshot *item);
 /**
  * Remove ui theme model while keeping the remaining records in a valid and discoverable
  * state.
  */
+/* Queries share umi_ui_id_is_valid: readable through NUL or
+ * UMI_UI_ID_CAPACITY bytes. Invalid/unterminated queries return INVALID_ARGUMENT;
+ * a valid absent ID returns NOT_FOUND. Refusal leaves the model unchanged. */
 UmiStatus umi_ui_theme_model_remove(UmiUiThemeModel *model, const char *item_id);
 /**
  * Find ui theme model while leaving the underlying catalogue or model owned by this
  * module.
  */
+/* The same query rules apply here. Output is a caller-owned value copy and is
+ * unchanged on any refusal; it must not overlap the opaque model allocation.
+ * A query inside a separate output snapshot is allowed. Callers synchronize
+ * their own input/output storage and destruction; the mutex protects model state. */
 UmiStatus umi_ui_theme_model_find(const UmiUiThemeModel *model, const char *item_id,
                                    UmiUiThemeSnapshot *out_item);
 /**
  * Find ui theme model while leaving the underlying catalogue or model owned by this
  * module.
  */
+/* Output ownership and refusal preservation are the same as find(). Indices
+ * describe the current ordered catalogue and can change after removal. */
 UmiStatus umi_ui_theme_model_at(const UmiUiThemeModel *model, size_t index,
                                  UmiUiThemeSnapshot *out_item);
 /**

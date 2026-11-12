@@ -222,7 +222,13 @@ GtkWidget *UmiVideoSequenceGtk4Create(void) {
   GtkWidget *edits = WorkspaceActions(range);
   Button(panel, edits, "Apply trim", "video.replace", "replace", G_CALLBACK(Edit));
   Button(panel, edits, "Remove clip", "video.remove", "remove", G_CALLBACK(Edit));
+  /* Keep the original factory call for review; the extended factory also
+   * returns the owner needed by the timeline shortcut while the body is closed. */
+#if 0
   GtkWidget *cut = PresentationSection(inspector, "Split clip", "video.section.split", false);
+#endif
+  GtkWidget *cut = PresentationSectionWithOwner(inspector, "Split clip",
+      "video.section.split", false, &panel->splitSection);
   panel->split = Spin(cut, "Split at source time", "video.split-time", 0.0, 600000.0);
   panel->rightId = Entry(cut, "New ID for right part", "video.right-id");
   Button(panel, cut, "Split clip", "video.split", "split", G_CALLBACK(Edit));
@@ -339,6 +345,7 @@ GtkWidget *UmiVideoSequenceGtk4Create(void) {
   gtk_text_view_set_editable(GTK_TEXT_VIEW(panel->summary), FALSE);
   gtk_text_view_set_wrap_mode(GTK_TEXT_VIEW(panel->summary), GTK_WRAP_WORD_CHAR);
   expander = gtk_expander_new("Sequence details");
+  Tag(expander, "video.section.summary");
   gtk_expander_set_child(GTK_EXPANDER(expander), WorkspaceScroll(panel->summary));
   gtk_box_append(GTK_BOX(timeline), expander);
   GtkWidget *statusBar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 8);

@@ -17,6 +17,12 @@
 #include "umicom/data/data_server.h"
 #include "umicom/data/query_history.h"
 #include "umicom/data/query_policy.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the database query result data shared with callers of this public contract.
  */
@@ -35,4 +41,8 @@ UmiStatus umi_database_query_session_init(UmiDatabaseQuerySession *session,UmiDa
  * duplicate its policy.
  */
 UmiStatus umi_database_query_session_execute(UmiDatabaseQuerySession *session,const char *statement,UmiDatabaseQueryResult *out_result);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

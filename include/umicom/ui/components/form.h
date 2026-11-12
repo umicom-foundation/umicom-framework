@@ -23,6 +23,12 @@
 #define UMICOM_UI_COMPONENTS_FORM_H
 #include <stdbool.h>
 #include "umicom/ui/components/component.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui form field data shared with callers of this public contract.
  */
@@ -32,4 +38,8 @@ typedef struct UmiUiFormField { char id[UMI_UI_COMPONENT_ID_CAPACITY]; char labe
  * state.
  */
 UmiStatus umi_ui_form_field_init(UmiUiFormField *field,const char *id,const char *label);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -247,6 +247,13 @@ UmiStatus umi_ui_property_inspector_registry_archive_restore(UmiUiInspectorPrope
 UmiStatus umi_ui_property_inspector_registry_clear_if_current(UmiUiInspectorPropertyRegistry *registry,
     uint64_t expected_revision);
 
+/* Compare this record's canonical saved state using caller-owned byte scratch.
+ * See UmiValueArchiveComparison in base/value_archive.h for measurement,
+ * refusal, aliasing and lifetime rules. This call never publishes live state. */
+UmiStatus umi_ui_property_inspector_snapshot_archive_compare_with_workspace(const UmiUiInspectorPropertySnapshot *left,
+    const UmiUiInspectorPropertySnapshot *right, void *workspace, size_t capacity,
+    UmiValueArchiveComparison *out_comparison);
+
 #ifdef __cplusplus
 }
 #endif

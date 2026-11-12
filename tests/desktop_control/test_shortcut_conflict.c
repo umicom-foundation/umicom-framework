@@ -1,7 +1,10 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/desktop_control/test_shortcut_conflict.c
- * PURPOSE: Validate the Framework-owned shortcut conflict contract.
+ *
+ * PURPOSE:
+ *   Validate the Framework-owned shortcut conflict contract.
+ *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
  * Umicom Foundation
@@ -168,6 +171,8 @@ static void ArchiveFillUnusedText(UmiDesktopShortcutConflictSnapshot *value)
 #define ARCHIVE_WORKSPACE_DECODE umi_desktop_shortcut_conflict_archive_decode_with_workspace
 /* Exercise guarded import through this domain's public snapshot codec. */
 #define ARCHIVE_CONDITIONAL_DECODE umi_desktop_shortcut_conflict_archive_decode_if_unchanged
+/* Exercise canonical comparison with explicit caller-owned scratch. */
+#define ARCHIVE_COMPARE umi_desktop_shortcut_conflict_archive_compare_with_workspace
 #define ARCHIVE_EQUAL RecordDefaultsEqual
 #include "../value_archive/record_cases.h"
 

@@ -19,6 +19,12 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "umicom/base/status.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define UMI_DATABASE_ID_CAPACITY 128U
 #define UMI_DATABASE_NAME_CAPACITY 256U
 #define UMI_DATABASE_PATH_CAPACITY 1024U
@@ -67,4 +73,8 @@ const char *umi_database_provider_text(UmiDatabaseProvider provider);
  * applications.
  */
 const char *umi_database_query_kind_text(UmiDatabaseQueryKind kind);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

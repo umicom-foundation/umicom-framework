@@ -46,6 +46,13 @@ typedef struct UmiBrokerAuditJournal {
     uint64_t revision;
 } UmiBrokerAuditJournal;
 
+/* Validate bounded fields, positive ordered sequences, exact retained gap count,
+ * nonnegative timestamps and known status/persistence values. No mutation, I/O
+ * or cryptographic verification occurs. Invalid count returns zero from the
+ * compatibility persisted-count API; call Validate to distinguish that case. */
+UmiStatus UmiBrokerAuditRecordValidate(const UmiBrokerAuditRecord *record);
+UmiStatus UmiBrokerAuditJournalValidate(const UmiBrokerAuditJournal *journal);
+
 void umi_broker_audit_journal_init(UmiBrokerAuditJournal *journal);
 /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
  * before this operation changes state or invokes nested work. Initialize the

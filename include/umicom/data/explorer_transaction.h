@@ -16,6 +16,12 @@
 #define UMICOM_DATA_EXPLORER_TRANSACTION_H
 #include <stdint.h>
 #include "umicom/data/data_server.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the database explorer transaction data shared with callers of this public
  * contract.
@@ -47,4 +53,8 @@ UmiStatus umi_database_explorer_transaction_commit(UmiDatabaseExplorerTransactio
  * before this operation changes state or invokes nested work. Initialize the
  * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_database_explorer_transaction_rollback(UmiDatabaseExplorerTransaction *transaction);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

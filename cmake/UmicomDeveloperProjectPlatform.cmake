@@ -40,6 +40,8 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/generation_plan.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/generation_request.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/generator.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/generator_create.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/generator_message.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/new_project.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/application_scaffold.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/destination.c"
@@ -474,6 +476,32 @@ function(umicom_attach_developer_dialogs_gtk4)
     target_link_libraries(umicom_ui_gtk4 PUBLIC Umicom::developer Umicom::scaffold)
     set_property(TARGET umicom_ui_gtk4 PROPERTY UMICOM_DEVELOPER_DIALOGS_ATTACHED TRUE)
     if(BUILD_TESTING)
+        # The held dispatcher still releases onto a real GTask worker. Only the
+        # native filesystem writer is injected; GTK and completion remain real.
+        add_executable(umicom-project-creation-worker-gtk4-test
+            "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../tests/developer_project/test_project_creation_worker_gtk4.c")
+        target_link_libraries(umicom-project-creation-worker-gtk4-test PRIVATE Umicom::ui_gtk4)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(umicom-project-creation-worker-gtk4-test)
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(umicom-project-creation-worker-gtk4-test)
+        endif()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-project-creation-worker-gtk4-test)
+        endif()
+        if(COMMAND umicom_target_qualification_inputs)
+            umicom_target_qualification_inputs(umicom-project-creation-worker-gtk4-test FILES
+                "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../adapters/gtk4/developer_dialog_gtk4.c"
+                "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../adapters/gtk4/developer_project_creation_gtk4.inc"
+                "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../adapters/gtk4/developer_application_gtk4.inc")
+        endif()
+        foreach(case IN ITEMS complete owned-request busy-submit busy-cancel busy-close hidden-completion owner-retired parent-retired form-retired adoption-retry adoption-destroy adoption-reentrant refused partial notify-before-start hide-before-start notify-on-result invalid-input application-admission-close application-admission-hide)
+            add_test(NAME framework.ide_workflow.project_creation.gtk4.${case}
+                COMMAND umicom-project-creation-worker-gtk4-test ${case})
+            set_tests_properties(framework.ide_workflow.project_creation.gtk4.${case} PROPERTIES
+                SKIP_RETURN_CODE 77 TIMEOUT 45 LABELS "framework;ide-workflow;gtk4;ownership;no-filesystem")
+        endforeach()
         add_executable(umicom-developer-dialog-gtk4-test
             "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/../tests/developer_project/test_developer_dialog_gtk4.c")
         target_link_libraries(umicom-developer-dialog-gtk4-test PRIVATE Umicom::ui_gtk4)
@@ -722,4 +750,276 @@ if(BUILD_TESTING)
                 TIMEOUT 270 LABELS "framework;build;workflow;regression;native-cli")
         endforeach()
     endif()
+endif()
+
+# Recipe admission and candidate publication use no filesystem or GUI actions.
+# Keep the real source allocation seam visible to source-identity qualification.
+if(BUILD_TESTING)
+    add_executable(umicom-project-template-admission-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_project/test_template_admission.c")
+    target_link_libraries(umicom-project-template-admission-test PRIVATE Umicom::Framework)
+    set_target_properties(umicom-project-template-admission-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-project-template-admission-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-project-template-admission-test)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-project-template-admission-test)
+    endif()
+    foreach(_case IN ITEMS valid later-null-path later-empty-path later-null-content late-invalid-before-duplicate duplicate absolute backslash drive traversal null-language-array null-later-language empty-later-language language-count empty-primary file-count null-files api kind build-system empty-content)
+        add_test(NAME framework.developer_project.template-admission.${_case}
+            COMMAND umicom-project-template-admission-test ${_case})
+        set_tests_properties(framework.developer_project.template-admission.${_case} PROPERTIES
+            TIMEOUT 20 LABELS "framework;project;regression;no-filesystem")
+    endforeach()
+    add_executable(umicom-project-variable-admission-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_project/test_variable_admission.c")
+    target_link_libraries(umicom-project-variable-admission-test PRIVATE Umicom::Framework)
+    set_target_properties(umicom-project-variable-admission-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-project-variable-admission-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-project-variable-admission-test)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-project-variable-admission-test)
+    endif()
+    foreach(_case IN ITEMS empty set replace empty-value alias-name alias-value long-name long-value long-new-value count unterminated-name unterminated-value late-invalid duplicate empty-name full-append full-replace revision lookup-missing render-invalid)
+        add_test(NAME framework.developer_project.variable-admission.${_case}
+            COMMAND umicom-project-variable-admission-test ${_case})
+        set_tests_properties(framework.developer_project.variable-admission.${_case} PROPERTIES
+            TIMEOUT 20 LABELS "framework;project;regression;no-filesystem")
+    endforeach()
+    add_executable(umicom-project-generation-transaction-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_project/test_generation_transaction.c")
+    target_link_libraries(umicom-project-generation-transaction-test PRIVATE Umicom::Framework)
+    set_target_properties(umicom-project-generation-transaction-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-project-generation-transaction-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-project-generation-transaction-test)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-project-generation-transaction-test)
+    endif()
+    foreach(_case IN ITEMS replace late-syntax late-missing late-content-capacity late-path-capacity root-capacity id-capacity rendered-duplicate rendered-traversal rendered-drive invalid-variable-count invalid-variable-value later-null-path empty-root null-output aliased-root aliased-content empty-content maximum-files template-refusal)
+        add_test(NAME framework.developer_project.generation-transaction.${_case}
+            COMMAND umicom-project-generation-transaction-test ${_case})
+        set_tests_properties(framework.developer_project.generation-transaction.${_case} PROPERTIES
+            TIMEOUT 20 LABELS "framework;project;regression;no-filesystem")
+    endforeach()
+    add_executable(umicom-project-generation-allocation-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_project/test_generation_allocation.c")
+    target_link_libraries(umicom-project-generation-allocation-test PRIVATE Umicom::Framework)
+    set_target_properties(umicom-project-generation-allocation-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-project-generation-allocation-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-project-generation-allocation-test)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-project-generation-allocation-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-project-generation-allocation-test FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/generation_plan.c")
+    endif()
+    add_test(NAME framework.developer_project.generation-allocation COMMAND umicom-project-generation-allocation-test)
+    set_tests_properties(framework.developer_project.generation-allocation PROPERTIES
+        TIMEOUT 20 LABELS "framework;project;regression;allocation;no-filesystem")
+endif()
+
+# Rendering contracts run without GTK initialization or project-file writes.
+if(BUILD_TESTING)
+    add_executable(umicom-gtk-starter-branding-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_project/test_gtk_starter_branding.c")
+    target_link_libraries(umicom-gtk-starter-branding-test PRIVATE Umicom::Framework)
+    if(COMMAND umicom_apply_warnings)
+        umicom_apply_warnings(umicom-gtk-starter-branding-test)
+    endif()
+    if(COMMAND umicom_apply_sanitizers)
+        umicom_apply_sanitizers(umicom-gtk-starter-branding-test)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-gtk-starter-branding-test)
+    endif()
+    foreach(_starter IN ITEMS c23 cpp thin)
+        add_test(NAME framework.developer_project.gtk-branding.${_starter}
+            COMMAND umicom-gtk-starter-branding-test ${_starter})
+        set_tests_properties(framework.developer_project.gtk-branding.${_starter} PROPERTIES
+            TIMEOUT 20 LABELS "framework;project;branding;regression;no-filesystem")
+    endforeach()
+endif()
+
+# The command adapter reuses the real Framework service. Fixtures preserve
+# previous run directories and never configure/build/launch generated products.
+if(BUILD_TESTING)
+    add_executable(umicom-project-cli-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_project/test_project_cli.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../tools/umicom/src/command_project.c")
+    target_link_libraries(umicom-project-cli-test PRIVATE Umicom::Framework)
+    add_executable(umicom-project-service-allocation-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_project/test_service_allocation.c")
+    target_link_libraries(umicom-project-service-allocation-test PRIVATE Umicom::Framework)
+    foreach(_target IN ITEMS umicom-project-cli-test umicom-project-service-allocation-test)
+        set_target_properties(${_target} PROPERTIES
+            C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        if(COMMAND umicom_apply_warnings)
+            umicom_apply_warnings(${_target})
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers(${_target})
+        endif()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(${_target})
+        endif()
+    endforeach()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-project-service-allocation-test FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/service.c")
+    endif()
+    foreach(_case IN ITEMS help templates templates-extra plan plan-files plan-c23 plan-cpp plan-thin unknown-option duplicate-option missing-value missing-option missing-apply plan-apply relative-parent escape-folder reserved-folder unknown-template oversized-name create existing-directory existing-file null-vector empty-argument unknown-command)
+        add_test(NAME framework.developer_project.cli.${_case}
+            COMMAND umicom-project-cli-test ${_case}
+                "${CMAKE_CURRENT_BINARY_DIR}/qualification/project-command/${_case}")
+        set_tests_properties(framework.developer_project.cli.${_case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;project;native-cli;filesystem;regression")
+    endforeach()
+    add_test(NAME framework.developer_project.service-allocation
+        COMMAND umicom-project-service-allocation-test
+            "${CMAKE_CURRENT_BINARY_DIR}/qualification/project-service-allocation/preview")
+    set_tests_properties(framework.developer_project.service-allocation PROPERTIES
+        TIMEOUT 30 LABELS "framework;project;allocation;regression")
+    if(UMICOM_BUILD_NATIVE_TOOL)
+        add_test(NAME framework.developer_project.native-route-help COMMAND "$<TARGET_FILE:umicom>" project --help)
+        add_test(NAME framework.developer_project.native-route-templates COMMAND "$<TARGET_FILE:umicom>" project templates)
+        set_tests_properties(framework.developer_project.native-route-help
+            framework.developer_project.native-route-templates PROPERTIES
+            TIMEOUT 30 LABELS "framework;project;native-cli;regression")
+    endif()
+endif()
+
+# Generation admission must finish before any filesystem effect or probe.
+if(BUILD_TESTING)
+    add_executable(umicom-project-path-conflicts-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_project/test_path_conflicts.c")
+    target_link_libraries(umicom-project-path-conflicts-test PRIVATE Umicom::developer)
+    umicom_apply_warnings(umicom-project-path-conflicts-test)
+    umicom_apply_sanitizers(umicom-project-path-conflicts-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-project-path-conflicts-test)
+    endif()
+    foreach(case valid ascii-case separators first-parent second-parent siblings later-traversal git reserved duplicate-before-invalid trailing-dot trailing-space empty-component late-join-capacity null-request missing-plan unterminated)
+        add_test(NAME framework.developer_project.path-conflicts.${case}
+            COMMAND umicom-project-path-conflicts-test ${case})
+        set_tests_properties(framework.developer_project.path-conflicts.${case}
+            PROPERTIES TIMEOUT 10 LABELS "framework;developer_project;paths;regression")
+    endforeach()
+endif()
+
+# Fresh-project effects and state publication have separate native and injected-boundary cases.
+if(BUILD_TESTING)
+    add_executable(umicom-project-generator-create-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_project/test_generator_create.c")
+    target_link_libraries(umicom-project-generator-create-test PRIVATE Umicom::developer)
+    set_target_properties(umicom-project-generator-create-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-project-generator-create-test)
+    umicom_apply_sanitizers(umicom-project-generator-create-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-project-generator-create-test)
+    endif()
+    foreach(case complete repeat empty-content separators unicode existing-directory existing-file missing-parent parent-link root-link dry-existing dry-missing-parent invalid-late overwrite null-request)
+        file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/generator-create/${case}")
+        add_test(NAME framework.developer_project.generator-create.${case}
+            COMMAND umicom-project-generator-create-test ${case})
+        set_tests_properties(framework.developer_project.generator-create.${case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;developer_project;regression;filesystem"
+            SKIP_RETURN_CODE 77 WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/generator-create/${case}"
+        )
+    endforeach()
+    add_executable(umicom-project-generator-create-effects-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_project/test_generator_create_effects.c")
+    target_link_libraries(umicom-project-generator-create-effects-test PRIVATE Umicom::developer)
+    set_target_properties(umicom-project-generator-create-effects-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-project-generator-create-effects-test)
+    umicom_apply_sanitizers(umicom-project-generator-create-effects-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-project-generator-create-effects-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-project-generator-create-effects-test FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/generator_create.c")
+    endif()
+    foreach(case complete root-refused root-partial ensure-refused ensure-partial first-file-refused first-file-partial second-file-refused second-file-partial late-admission dry-no-effects null-reset overwrite-no-effects)
+        add_test(NAME framework.developer_project.generator-create-effects.${case}
+            COMMAND umicom-project-generator-create-effects-test ${case})
+        set_tests_properties(framework.developer_project.generator-create-effects.${case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;developer_project;regression;no-filesystem"
+        )
+    endforeach()
+    add_executable(umicom-new-project-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_project/test_new_project.c")
+    target_link_libraries(umicom-new-project-test PRIVATE Umicom::developer)
+    set_target_properties(umicom-new-project-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-new-project-test)
+    umicom_apply_sanitizers(umicom-new-project-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-new-project-test)
+    endif()
+    foreach(case complete repeat dry-run dry-existing existing-directory existing-file missing-parent parent-link invalid-request unknown-template overwrite null-output null-service)
+        file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/new-project/${case}")
+        add_test(NAME framework.developer_project.new-project.${case}
+            COMMAND umicom-new-project-test ${case})
+        set_tests_properties(framework.developer_project.new-project.${case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;developer_project;regression;filesystem"
+            SKIP_RETURN_CODE 77 WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/qualification/new-project/${case}"
+        )
+    endforeach()
+    add_executable(umicom-new-project-preflight-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_project/test_new_project_preflight.c")
+    target_link_libraries(umicom-new-project-preflight-test PRIVATE Umicom::developer)
+    set_target_properties(umicom-new-project-preflight-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-new-project-preflight-test)
+    umicom_apply_sanitizers(umicom-new-project-preflight-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-new-project-preflight-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-new-project-preflight-test FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/service.c")
+    endif()
+    foreach(case profile-refusal writer-refusal complete dry-run full-registry full-registry-upsert revision-exhausted relative-root overwrite invalid-root)
+        add_test(NAME framework.developer_project.new-project-preflight.${case}
+            COMMAND umicom-new-project-preflight-test ${case})
+        set_tests_properties(framework.developer_project.new-project-preflight.${case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;developer_project;regression;no-filesystem"
+        )
+    endforeach()
+endif()
+
+# Pure creation-result text is shared by the CLI and native project form.
+if(BUILD_TESTING)
+    add_executable(umicom-project-creation-message-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_project/test_creation_message.c")
+    target_link_libraries(umicom-project-creation-message-test PRIVATE Umicom::developer)
+    umicom_apply_warnings(umicom-project-creation-message-test)
+    umicom_apply_sanitizers(umicom-project-creation-message-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-project-creation-message-test)
+    endif()
+    foreach(case success preview preview-refusal existing partial-directory partial-file partial-collision refused unknown-progress capacity exact-capacity null-output zero-capacity report-preserved large-counts skipped-report invalid-preview invalid-flag bytes-without-file)
+        add_test(NAME framework.developer_project.creation-message.${case}
+            COMMAND umicom-project-creation-message-test ${case})
+        set_tests_properties(framework.developer_project.creation-message.${case} PROPERTIES
+            TIMEOUT 10 LABELS "framework;developer_project;diagnostics;regression;no-filesystem")
+    endforeach()
 endif()

@@ -15,6 +15,12 @@
 #ifndef UMICOM_COMPILER_INTEROP_GRAPH_H
 #define UMICOM_COMPILER_INTEROP_GRAPH_H
 #include "umicom/compiler/abi.h"
+
+/* Keep the public C symbol names when this header is included directly by a
+ * C++ client. Includes remain outside the linkage block; layouts are unchanged. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define UMI_INTEROP_MAX_NODES 64U
 #define UMI_INTEROP_MAX_EDGES 128U
 /**
@@ -48,4 +54,7 @@ UmiStatus umi_interop_graph_validate(const UmiInteropGraph *graph,char *out_reas
  * applications.
  */
 UmiStatus umi_interop_graph_order(const UmiInteropGraph *graph,size_t *out_indices,size_t capacity,size_t *out_count);
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 #endif

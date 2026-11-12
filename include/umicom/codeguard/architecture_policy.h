@@ -15,6 +15,12 @@
 #ifndef UMICOM_CODEGUARD_ARCHITECTURE_POLICY_H
 #define UMICOM_CODEGUARD_ARCHITECTURE_POLICY_H
 #include "umicom/codeguard/evidence.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * List the named code guard architecture layer values accepted by this public contract.
  */
@@ -64,4 +70,8 @@ bool umi_codeguard_architecture_is_private_header(const char *path);
  * its client applications.
  */
 UmiStatus umi_codeguard_architecture_check_dependency(const UmiCodeGuardArchitecturePolicy *policy,const char *source_path,const char *target_path,UmiCodeGuardEvidenceStore *evidence);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

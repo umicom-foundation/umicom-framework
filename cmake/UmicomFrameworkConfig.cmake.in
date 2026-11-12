@@ -29,6 +29,7 @@ find_dependency(Threads)
 # is composed. Resolve them before importing static-library link interfaces;
 # a core-only Framework installation has no such fragment and remains unchanged.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiWorkspaceDependencies.cmake" OPTIONAL)
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomLocalModelsDependencies.cmake" OPTIONAL)
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomConnectionCheckDependencies.cmake" OPTIONAL)
 # Market-tape presentation has an optional, separately installed GTK dependency.
 # A core-only installation does not acquire a GUI requirement.

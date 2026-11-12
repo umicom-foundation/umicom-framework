@@ -256,6 +256,9 @@ UmiStatus umi_financial_platform_service_evaluate(
     return UMI_STATUS_NOT_FOUND;
 }
 
+/* Retained for review: the former enclosing snapshot cleared output before
+ * checked child capture. Compose locally so refusal preserves prior evidence. */
+#if 0
 UmiStatus umi_financial_platform_service_snapshot(
     const UmiFinancialControlService *service,
     UmiFinancialPlatformServiceSnapshot *outSnapshot)
@@ -292,5 +295,47 @@ UmiStatus umi_financial_platform_service_snapshot(
         control.paymentCount > 0U ||
         control.settlementCount > 0U;
     outSnapshot->auditReady = control.auditReady;
+    return UMI_STATUS_OK;
+}
+
+#endif
+
+UmiStatus umi_financial_platform_service_snapshot(
+    const UmiFinancialControlService *service,
+    UmiFinancialPlatformServiceSnapshot *outSnapshot)
+{
+    UmiFinancialControlSnapshot control;
+    UmiStatus status;
+
+    if (service == NULL || outSnapshot == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    UmiFinancialPlatformServiceSnapshot value = {0};
+    status = umi_financial_control_service_snapshot(service, &control);
+    if (status != UMI_STATUS_OK) return status;
+
+    value.revision = control.revision;
+    value.policyCount = umi_financial_platform_service_count();
+    value.rateCount = control.rateCount;
+    value.relationshipCount = control.relationshipCount;
+    value.instrumentCount = control.instrumentCount;
+    value.tradeCount = control.tradeCount;
+    value.positionCount = control.positionCount;
+    value.paymentCount = control.paymentCount;
+    value.settlementCount = control.settlementCount;
+    value.auditCount = control.auditCount;
+    value.auditGapCount = control.auditGapCount;
+    value.persistedAuditCount = control.persistedAuditCount;
+    value.referenceDataReady =
+        control.rateCount > 0U &&
+        control.relationshipCount > 0U &&
+        control.instrumentCount > 0U;
+    value.lifecycleReady =
+        control.tradeCount > 0U ||
+        control.paymentCount > 0U ||
+        control.settlementCount > 0U;
+    value.auditReady = control.auditReady;
+    *outSnapshot = value;
     return UMI_STATUS_OK;
 }

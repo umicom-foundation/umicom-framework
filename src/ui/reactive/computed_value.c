@@ -27,6 +27,8 @@ void umi_ui_reactive_computed_value_init(UmiUiReactiveComputedValue *item) {
 }
 
 /* Validate that the contract pointer is available to a binding/state pipeline. */
+/* Reject unsupported embedded UI value kinds through Framework admission while retaining archive text checks. The previous implementation is retained for review. */
+#if 0
 int umi_ui_reactive_computed_value_valid(const UmiUiReactiveComputedValue *item) {
     /* Fixed-size fields may come from a plug-in or restored state. Check
      * every terminator before the domain rules use these strings. Add each
@@ -36,6 +38,19 @@ int umi_ui_reactive_computed_value_valid(const UmiUiReactiveComputedValue *item)
     if (memchr(item->value.string_value, '\0', sizeof(item->value.string_value)) == NULL) return 0;
 
     return item != NULL;
+}
+#endif
+int umi_ui_reactive_computed_value_valid(const UmiUiReactiveComputedValue *item) {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (item == NULL) return 0;
+    if (memchr(item->computed_id, '\0', sizeof(item->computed_id)) == NULL) return 0;
+    if (memchr(item->value.string_value, '\0', sizeof(item->value.string_value)) == NULL) return 0;
+
+    /* Archive text fields still require their own terminators above, even
+     * when inactive. Active value admission is shared with property owners. */
+    return umi_ui_value_valid(&item->value);
 }
 
 /* State transfer belongs to this Framework value owner. Explicit fields keep

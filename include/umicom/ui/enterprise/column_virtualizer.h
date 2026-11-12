@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_COLUMN_VIRTUALIZER_H
 
 #include "umicom/ui/enterprise/viewport.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent column virtualizer data shared with callers of this public
  * contract.
@@ -27,4 +33,8 @@ typedef struct UmiUiEntColumnVirtualizer { size_t total; UmiUiEntSpan materialis
  */
 UmiStatus umi_ui_ent_column_virtualizer_update(UmiUiEntColumnVirtualizer *value,const UmiUiEntViewport *viewport,size_t total);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

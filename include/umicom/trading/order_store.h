@@ -36,6 +36,26 @@ typedef struct UmiOrderStore { UmiOrder orders[UMI_TRADING_MAX_ORDERS]; size_t c
  * state.
  */
 void umi_order_store_init(UmiOrderStore *store);
+
+/** Admit count, terminated nonempty active IDs and uniqueness. Inactive rows are
+ * ignored. This validates storage identity, not economic or lifecycle policy.
+ * NULL returns INVALID_ARGUMENT; malformed active storage is INVALID_STATE. */
+UmiStatus umi_order_store_validate(const UmiOrderStore *store);
+
+/** Store calls require complete aligned records and serialized owner access.
+ * Add leaves the store unchanged on refusal, including borrowed input.
+ * A valid full store reports an existing ID before capacity exhaustion.
+ * Find scans no more than sizeof(UmiFinancialId.value) query bytes; the caller
+ * supplies readable storage through a terminator or that full capacity.
+ * Empty queries are INVALID_ARGUMENT; missing termination is CAPACITY_EXCEEDED.
+ * For non-NULL arguments and separate output storage, lookup failure clears
+ * the output pointer. Missing arguments or output overlapping the store are
+ * INVALID_ARGUMENT and leave output untouched. Queries may borrow separate
+ * output storage because query capture precedes pointer publication.
+ * Returned pointers borrow the store lifetime. Do not change IDs through the
+ * mutable pointer; subsequent calls reject duplicate or malformed identities. */
+UmiStatus umi_order_store_find_const(const UmiOrderStore *store,
+    const char *client_order_id, const UmiOrder **out_order);
 /**
  * Add order store only after its inputs and available capacity have been checked.
  */

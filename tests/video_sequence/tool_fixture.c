@@ -1,12 +1,20 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/video_sequence/tool_fixture.c
- * PURPOSE: Emulate encoder pipe outcomes without pretending to encode playable video.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Emulate encoder pipe outcomes and verify captured SVG lifetime without claiming playable video.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/platform/clock.h"
+#include "umicom/platform/input_file.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -22,6 +30,27 @@ int main(int argc, char **argv) {
   for (int i = 1; i + 1 < argc; ++i)
     if (strcmp(argv[i], "-i") == 0)
       input = argv[i + 1];
+  /* Native export dispatch must keep its private SVG alive until the child
+   * has consumed it. Byte-for-byte canonical identity has separate resource
+   * coverage; this fixture checks lifetime and decoder selection only. */
+  bool branded = false, svgDecoder = false;
+  for (int i = 1; i + 1 < argc; ++i) {
+    if (strcmp(argv[i], "-filter_complex") == 0 && strstr(argv[i + 1], "[umi_branded]"))
+      branded = true;
+    if (strcmp(argv[i], "-c:v") == 0 && strcmp(argv[i + 1], "librsvg") == 0)
+      svgDecoder = true;
+  }
+  if (branded) {
+    unsigned char *bytes = NULL;
+    size_t size = 0U;
+    if (!svgDecoder || UmiInputFileRead(input, 131072U, &bytes, &size) != UMI_STATUS_OK)
+      return 41;
+    bool svg = false;
+    for (size_t i = 0U; i + 4U <= size; ++i)
+      if (memcmp(bytes + i, "<svg", 4U) == 0) { svg = true; break; }
+    UmiInputFileFree(bytes);
+    if (!svg) return 42;
+  }
   if (strstr(input, "timeout") != NULL) {
     UmiClock clock = umi_clock_system();
     (void)clock.sleep_milliseconds(&clock, 10000U);

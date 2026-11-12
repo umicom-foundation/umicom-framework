@@ -21,6 +21,7 @@
 #include <stdint.h>
 
 #include "umicom/base/status.h"
+#include "umicom/browser/reading_document.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,6 +45,12 @@ typedef enum UmiBrowserSourcePreviewKind {
 /**
  * Describe one immutable source revision. Source memory is borrowed only for
  * the duration of the render call, so providers must not retain its address.
+ * source_length is an exact UTF-8 byte span, shorter than CONTENT_CAPACITY,
+ * without embedded NUL; it need not have a trailing terminator. The service
+ * supplies providers a terminated snapshot. Optional path/language strings
+ * must terminate within PATH_CAPACITY / ID_CAPACITY and contain valid UTF-8.
+ * Permission fields accept zero or one. Empty source is allowed with a nonnull
+ * address; revision zero and a zero output budget are not valid requests.
  */
 typedef struct UmiBrowserSourcePreviewRequest {
     uint32_t structure_size;
@@ -134,15 +141,43 @@ UmiStatus umi_browser_source_preview_service_unregister(
     UmiBrowserSourcePreviewService *service,
     const char *provider_id);
 
-/** Install safe built-ins for readable HTML and ordinary text documents. */
+/** Install safe built-ins for readable HTML, the bounded Markdown profile and ordinary text documents.
+ * On any refusal the complete prior catalogue remains unchanged. */
 UmiStatus umi_browser_source_preview_service_install_builtins(
     UmiBrowserSourcePreviewService *service);
 
-/** Resolve and invoke the highest-priority provider allowed by the request. */
+/** Resolve and invoke the highest-priority provider allowed by the request.
+ * Every non-OK return leaves out_result byte-for-byte unchanged. On success,
+ * output strings contain valid UTF-8 and built-in limits preserve scalars.
+ * Executable providers require both workspace trust and explicit consent,
+ * independently of their optional requires_trusted_workspace declaration.
+ * Callers serialize catalogue access and keep provider contexts alive through
+ * callbacks. A callback may unregister a provider, but must not destroy this
+ * service. Capturing a descriptor preserves the in-flight provider identity.
+ * A failure-atomic result does not roll back a custom provider's side effects.
+ */
 UmiStatus umi_browser_source_preview_service_render(
     const UmiBrowserSourcePreviewService *service,
     const UmiBrowserSourcePreviewRequest *request,
     UmiBrowserSourcePreviewResult *out_result);
+
+/** Render text and optionally transfer a complete immutable reading model.
+ * The ordinary provider selection, trust and failure contracts also apply.
+ * Both outputs stay unchanged on failure. On success out_document is NULL for
+ * providers without structured output or when the projected text was shortened.
+ * The current structured providers are the built-in Markdown profile.
+ * A nonnull document owns the same complete text as out_result.content; its
+ * summary source_bytes counts the original source. Destroy it with
+ * UmiBrowserReadingDocumentDestroy after all readers have finished.
+ * Use a separate candidate pointer when replacing an existing owned model;
+ * this service never releases a caller's previous document. Output objects
+ * must be distinct and writable. No public result/provider layout is changed.
+ */
+UmiStatus umi_browser_source_preview_service_render_reading(
+    const UmiBrowserSourcePreviewService *service,
+    const UmiBrowserSourcePreviewRequest *request,
+    UmiBrowserSourcePreviewResult *out_result,
+    UmiBrowserReadingDocument **out_document);
 
 /** Return the number of providers currently available to callers. */
 size_t umi_browser_source_preview_service_count(

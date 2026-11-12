@@ -217,6 +217,8 @@ UmiStatus umi_trading_ui_controller_engage_kill_switch(
  * Provide the trading ui controller reset kill switch operation used by this module and
  * its client applications.
  */
+/* Returns the canonical checked reset status and retains protection on refusal.
+ * Presentation callbacks must inspect last_status; notification is not success. */
 UmiStatus umi_trading_ui_controller_reset_kill_switch(
     UmiTradingUiController *controller);
 

@@ -12,6 +12,8 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+#include "appearance_typography_private.h"
+
 #include "theme_settings_gtk4.h"
 #include "gtk4_internal.h"
 
@@ -550,6 +552,9 @@ static const char *palette_for_workbench(UmiUiWorkbench *workbench)
 }
 
 /* Provide the appearance css operation used by this module and its client applications. */
+/* Retain the former renderer-specific font formatting for review. Shared
+ * projection now applies the same roles and decimal syntax in both shells. */
+#if 0
 static char *appearance_css(UmiUiWorkbench *workbench,
                             int *out_prefer_dark)
 {
@@ -617,6 +622,75 @@ static char *appearance_css(UmiUiWorkbench *workbench,
         profile.warning, profile.danger, profile.interface_font,
         interface_size, profile.editor_font, editor_size, toolbar_padding,
         control_height);
+}
+
+#endif
+
+static char *appearance_css(UmiUiWorkbench *workbench,
+                            int *out_prefer_dark)
+{
+    UmiUiAppearanceProfile profile;
+    int control_height;
+    int toolbar_padding;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (out_prefer_dark != NULL) *out_prefer_dark = 1;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (workbench == NULL ||
+        umi_ui_appearance_model_active(
+            umi_ui_workbench_appearance(workbench), &profile) !=
+            UMI_STATUS_OK) {
+        return NULL;
+    }
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (out_prefer_dark != NULL) {
+        *out_prefer_dark = profile.mode == UMI_UI_THEME_MODE_DARK ||
+                           profile.mode == UMI_UI_THEME_MODE_HIGH_CONTRAST;
+    }
+    control_height = profile.density == UMI_UI_DENSITY_COMPACT ? 25 :
+        (profile.density == UMI_UI_DENSITY_SPACIOUS ? 34 : 29);
+    toolbar_padding = profile.density == UMI_UI_DENSITY_COMPACT ? 3 :
+        (profile.density == UMI_UI_DENSITY_SPACIOUS ? 7 : 5);
+
+    char *typography = UmiGtk4AppearanceTypographyCss(&profile, TRUE);
+    if (typography == NULL) return NULL;
+    char *chrome = g_strdup_printf(
+        "@define-color umi_background %s;"
+        "@define-color umi_surface %s;"
+        "@define-color umi_surface_raised %s;"
+        "@define-color umi_surface_hover %s;"
+        "@define-color umi_editor %s;"
+        "@define-color umi_border %s;"
+        "@define-color umi_border_strong %s;"
+        "@define-color umi_foreground %s;"
+        "@define-color umi_muted %s;"
+        "@define-color umi_accent %s;"
+        "@define-color umi_accent_surface %s;"
+        "@define-color umi_success %s;"
+        "@define-color umi_warning %s;"
+        "@define-color umi_danger %s;"
+        ".umicom-main-toolbar { padding: %dpx 8px; }"
+        ".umicom-toolbar-button, .umicom-workspace-profile-button > button,"
+        ".umicom-appearance-button > button { min-height: %dpx; }",
+        profile.background, profile.surface, profile.raised_surface,
+        profile.hover_surface, profile.editor_background, profile.border,
+        profile.strong_border, profile.foreground, profile.muted_foreground,
+        profile.accent, profile.accent_surface, profile.success,
+        profile.warning, profile.danger, toolbar_padding,
+        control_height);
+    char *css = g_strconcat(chrome, typography, NULL);
+    g_free(chrome);
+    g_free(typography);
+    return css;
 }
 
 /* Provide the gtk4 apply theme operation used by this module and its client applications. */

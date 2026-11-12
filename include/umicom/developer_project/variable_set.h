@@ -39,6 +39,12 @@ typedef struct UmiDeveloperProjectVariableSet {
 void umi_developer_project_variable_set_init(
     UmiDeveloperProjectVariableSet *variables);
 
+/** Validate count, terminated occupied strings, nonempty names and unique names.
+ * Strings returned by get remain borrowed until the next mutation. Set refuses
+ * without changing any owner bytes, including on capacity exhaustion. */
+UmiStatus umi_developer_project_variable_set_validate(
+    const UmiDeveloperProjectVariableSet *variables);
+
 /**
  * Copy developer project variable into module-owned storage so callers keep ownership of
  * their input values.

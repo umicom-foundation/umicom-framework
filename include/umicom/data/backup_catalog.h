@@ -15,6 +15,12 @@
 #ifndef UMICOM_DATA_BACKUP_CATALOG_H
 #define UMICOM_DATA_BACKUP_CATALOG_H
 #include "umicom/data/explorer_types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the database backup record data shared with callers of this public contract.
  */
@@ -41,4 +47,8 @@ UmiStatus umi_database_backup_catalog_add(UmiDatabaseBackupCatalog *catalog,cons
  * client applications.
  */
 UmiStatus umi_database_backup_catalog_mark_verified(UmiDatabaseBackupCatalog *catalog,const char *id);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -15,6 +15,12 @@
 #ifndef UMICOM_SECURITY_ROLE_ASSIGNMENT_H
 #define UMICOM_SECURITY_ROLE_ASSIGNMENT_H
 #include "umicom/security/governance.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the security role assignment data shared with callers of this public contract.
  */
@@ -46,4 +52,8 @@ const UmiSecurityRoleAssignment *umi_security_role_assignment_find(const UmiSecu
  * applications.
  */
 UmiStatus umi_security_role_assignment_revoke(UmiSecurityRoleAssignmentStore *store,const char *assignment_id);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

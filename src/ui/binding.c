@@ -32,16 +32,78 @@ UmiStatus umi_ui_binding_registry_create(UmiUiBindingRegistry **out){UmiUiBindin
  */
 void umi_ui_binding_registry_destroy(UmiUiBindingRegistry *r){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL)return;umi_mutex_destroy(r->mutex);free(r);}
 /* Add ui binding only after its inputs and available capacity have been checked. */
+/* Validate bounded descriptors and complete values before binding publication. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_ui_binding_register(UmiUiBindingRegistry *r,const UmiUiBindingDescriptor *d){/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||d==NULL||!umi_ui_id_is_valid(d->binding_id)||d->source_view==NULL||d->target_view==NULL||d->source_property[0]=='\0'||d->target_property[0]=='\0')return UMI_STATUS_INVALID_ARGUMENT;(void)umi_mutex_lock(r->mutex);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(find_binding(r,d->binding_id)!=SIZE_MAX){(void)umi_mutex_unlock(r->mutex);return UMI_STATUS_ALREADY_EXISTS;}/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r->count>=UMI_UI_BINDING_MAX){(void)umi_mutex_unlock(r->mutex);return UMI_STATUS_CAPACITY_EXCEEDED;}r->items[r->count++]=*d;(void)umi_mutex_unlock(r->mutex);return UMI_STATUS_OK;}
+#endif
+UmiStatus umi_ui_binding_register(UmiUiBindingRegistry *registry, const UmiUiBindingDescriptor *descriptor)
+{
+    UmiStatus status;
+    if (registry == NULL || descriptor == NULL ||
+        !umi_ui_id_is_valid(descriptor->binding_id) ||
+        descriptor->source_view == NULL || descriptor->target_view == NULL ||
+        descriptor->source_property[0] == '\0' || descriptor->target_property[0] == '\0' ||
+        memchr(descriptor->source_property, '\0', sizeof(descriptor->source_property)) == NULL ||
+        memchr(descriptor->target_property, '\0', sizeof(descriptor->target_property)) == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Descriptor strings are borrowed only for this call. Establish all
+     * fixed bounds before copying them into a long-lived binding owner. */
+    status = umi_mutex_lock(registry->mutex);
+    if (status != UMI_STATUS_OK) return status;
+    if (find_binding(registry, descriptor->binding_id) != SIZE_MAX) {
+        (void)umi_mutex_unlock(registry->mutex); return UMI_STATUS_ALREADY_EXISTS;
+    }
+    if (registry->count >= UMI_UI_BINDING_MAX) {
+        (void)umi_mutex_unlock(registry->mutex); return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    registry->items[registry->count++] = *descriptor;
+    (void)umi_mutex_unlock(registry->mutex);
+    return UMI_STATUS_OK;
+}
 /* Remove ui binding while keeping the remaining records in a valid and discoverable state. */
+/* Use the shared bounded identifier validator before registry lookup. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_ui_binding_unregister(UmiUiBindingRegistry *r,const char *id){size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||id==NULL)return UMI_STATUS_INVALID_ARGUMENT;(void)umi_mutex_lock(r->mutex);i=find_binding(r,id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i==SIZE_MAX){(void)umi_mutex_unlock(r->mutex);return UMI_STATUS_NOT_FOUND;}/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i+1U<r->count)(void)memmove(&r->items[i],&r->items[i+1U],(r->count-i-1U)*sizeof(r->items[0]));r->count--; (void)umi_mutex_unlock(r->mutex);return UMI_STATUS_OK;}
+#endif
+UmiStatus umi_ui_binding_unregister(UmiUiBindingRegistry *r,const char *id){size_t i;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||!umi_ui_id_is_valid(id))return UMI_STATUS_INVALID_ARGUMENT;(void)umi_mutex_lock(r->mutex);i=find_binding(r,id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i==SIZE_MAX){(void)umi_mutex_unlock(r->mutex);return UMI_STATUS_NOT_FOUND;}/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i+1U<r->count)(void)memmove(&r->items[i],&r->items[i+1U],(r->count-i-1U)*sizeof(r->items[0]));r->count--; (void)umi_mutex_unlock(r->mutex);return UMI_STATUS_OK;}
 /* Provide the propagate operation used by this module and its client applications. */
+/* Validate bounded descriptors and complete values before binding publication. The previous implementation is retained for review. */
+#if 0
 static UmiStatus propagate(UmiUiBindingDescriptor *d){UmiUiValue source_value,target_value;UmiStatus s;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(!d->enabled)return UMI_STATUS_OK;s=umi_ui_view_model_get_property(d->source_view,d->source_property,&source_value);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK)return s;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(d->transform!=NULL)s=d->transform(&source_value,&target_value,d->user_data);/* Use this fallback path when the earlier condition does not apply. */ else target_value=source_value;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(s!=UMI_STATUS_OK)return s;return umi_ui_view_model_set_property(d->target_view,d->target_property,&target_value);}
+#endif
+static UmiStatus propagate(UmiUiBindingDescriptor *descriptor)
+{
+    UmiUiValue source_value;
+    UmiUiValue target_value = {0};
+    UmiStatus status;
+    if (!descriptor->enabled) return UMI_STATUS_OK;
+    status = umi_ui_view_model_get_property(descriptor->source_view,
+        descriptor->source_property, &source_value);
+    if (status != UMI_STATUS_OK) return status;
+    if (descriptor->transform != NULL) {
+        /* Deterministic invalid scratch detects a callback that returns OK
+         * without assigning a complete result. The callback owns preparation;
+         * only a valid accepted payload can reach the target view owner. */
+        target_value.kind = (UmiUiValueKind)-1;
+        status = descriptor->transform(&source_value, &target_value, descriptor->user_data);
+        if (status != UMI_STATUS_OK) return status;
+        if (!umi_ui_value_valid(&target_value)) return UMI_STATUS_INVALID_ARGUMENT;
+    } else {
+        status = umi_ui_value_copy(&target_value, &source_value);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    return umi_ui_view_model_set_property(descriptor->target_view,
+        descriptor->target_property, &target_value);
+}
 /*
  * Provide the ui binding propagate operation used by this module and its client
  * applications.
  */
+/* Use the shared bounded identifier validator before registry lookup. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_ui_binding_propagate(UmiUiBindingRegistry *r,const char *id){size_t i;UmiStatus s;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||id==NULL)return UMI_STATUS_INVALID_ARGUMENT;(void)umi_mutex_lock(r->mutex);i=find_binding(r,id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i==SIZE_MAX){(void)umi_mutex_unlock(r->mutex);return UMI_STATUS_NOT_FOUND;}s=propagate(&r->items[i]);(void)umi_mutex_unlock(r->mutex);return s;}
+#endif
+UmiStatus umi_ui_binding_propagate(UmiUiBindingRegistry *r,const char *id){size_t i;UmiStatus s;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||!umi_ui_id_is_valid(id))return UMI_STATUS_INVALID_ARGUMENT;(void)umi_mutex_lock(r->mutex);i=find_binding(r,id);/* Protect caller-owned memory by checking that required state is available before it is used. */ if(i==SIZE_MAX){(void)umi_mutex_unlock(r->mutex);return UMI_STATUS_NOT_FOUND;}s=propagate(&r->items[i]);(void)umi_mutex_unlock(r->mutex);return s;}
 /*
  * Provide the ui binding propagate all operation used by this module and its client
  * applications.

@@ -89,6 +89,11 @@ UmiStatus umi_trading_price_alert_seed(
     UmiTradingPriceAlert *alert,
     double current_value);
 
+/* Book commands validate retained rules before changing public caller-owned
+ * storage. Mutations reserve one revision; exhausted capacity leaves the book
+ * unchanged. Valid enable no-ops and stale/nonmatching evaluation remain OK.
+ * An accepted evaluation updates all eligible rules in one revision. */
+
 /** Initialise an empty book whose records live inside caller-owned storage. */
 void umi_trading_alert_book_init(UmiTradingAlertBook *book);
 
@@ -101,6 +106,11 @@ UmiStatus umi_trading_alert_book_add(
 UmiStatus umi_trading_alert_book_remove(
     UmiTradingAlertBook *book,
     const char *alert_id);
+
+/* Remove all matching rules in stable order with one revision. No match is OK
+ * without mutation; validation/capacity failure leaves the complete book intact. */
+UmiStatus UmiTradingAlertBookRemoveInstrument(UmiTradingAlertBook *book,
+    const char *instrument_id);
 
 /** Enable or pause a rule without discarding its occurrence history. */
 UmiStatus umi_trading_alert_book_set_enabled(

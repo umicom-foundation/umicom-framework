@@ -15,6 +15,12 @@
 #ifndef UMICOM_COMPILER_POLICY_H
 #define UMICOM_COMPILER_POLICY_H
 #include "umicom/compiler/plan.h"
+
+/* Keep the public C symbol names when this header is included directly by a
+ * C++ client. Includes remain outside the linkage block; layouts are unchanged. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * List the named compiler optimisation values accepted by this public contract.
  */
@@ -45,4 +51,29 @@ UmiStatus umi_compiler_policy_validate(const UmiCompilerPolicy *policy,char *out
  * client applications.
  */
 UmiStatus umi_compiler_policy_append_arguments(const UmiCompilerPolicy *policy,UmiCompilerFamily family,UmiCompilerPlan *plan);
+
+/** Append preserves the complete plan on any refusal, including a late argument
+ * capacity/revision failure or allocation failure. On success cached argument
+ * pointers are rebased into the destination. Callers serialize access.
+ *
+ * Validation admits named optimisation levels and sanitizer bits; it is not a
+ * compiler capability probe. Optional diagnostic storage must not overlap inputs. */
+/** Validate the mapping before publication. Supports C/C++ COMPILE plans with
+ * GCC, Clang or MSVC dialects. Other actions, languages and families return
+ * NOT_IMPLEMENTED without modifying inputs. GCC memory sanitizer and MSVC
+ * non-address sanitizers are refused; address/thread/memory are mutually exclusive.
+ *
+ * Reproducible intent currently returns NOT_IMPLEMENTED: the previous identity
+ * path map and /Brepro approximation did not establish a reproducibility contract.
+ * The release factory retains that intent, so clients must explicitly choose a
+ * policy whose supported behavior matches their qualification.
+ *
+ * Accepted mappings still need target, compiler-version, linker and runtime
+ * qualification. GCC/Clang control-flow protection is target dependent; MSVC CFG
+ * also requires linker support. This service performs no driver probing. */
+UmiStatus umi_compiler_policy_validate_for_plan(const UmiCompilerPolicy *policy,UmiCompilerFamily family,
+    const UmiCompilerPlan *plan,char *out_reason,size_t capacity);
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 #endif

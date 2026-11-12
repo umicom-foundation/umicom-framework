@@ -18,6 +18,12 @@
 #include "umicom/desktop/shell_model.h"
 #include "umicom/ui/view_model.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Initialise desktop overview view from caller-provided values so later operations receive
  * a known state.
@@ -43,4 +49,8 @@ UmiStatus umi_desktop_monitor_manager_view_create(
     UmiDesktopShellModel *model,
     UmiUiViewModel **out_view);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

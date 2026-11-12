@@ -46,8 +46,15 @@ elseif(CASE STREQUAL "source-destination")
 else()
     message(FATAL_ERROR "Unknown fixture case")
 endif()
+# Native commands emit UTF-8 regardless of the Windows console code page.
+# Retain the implicit-decoding invocation for review; explicitly decode the
+# child output so this fixture measures path preservation, not CMake policy.
+if(FALSE)
 execute_process(COMMAND "${TOOL}" observe-files ${_arguments}
     WORKING_DIRECTORY "${_root}" RESULT_VARIABLE _status OUTPUT_VARIABLE _stdout ERROR_VARIABLE _stderr TIMEOUT 15)
+endif()
+execute_process(COMMAND "${TOOL}" observe-files ${_arguments}
+    WORKING_DIRECTORY "${_root}" RESULT_VARIABLE _status OUTPUT_VARIABLE _stdout ERROR_VARIABLE _stderr ENCODING UTF-8 TIMEOUT 15)
 if(NOT "${_status}" STREQUAL "${_expected}")
     message(FATAL_ERROR "Unexpected exit ${_status}, expected ${_expected}: ${_stderr}")
 endif()

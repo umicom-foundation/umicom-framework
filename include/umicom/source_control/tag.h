@@ -249,6 +249,13 @@ UmiStatus umi_source_control_tag_registry_archive_restore(UmiSourceControlTagReg
 UmiStatus umi_source_control_tag_registry_clear_if_current(UmiSourceControlTagRegistry *registry,
     uint64_t expected_revision);
 
+/* Compare this record's canonical saved state using caller-owned byte scratch.
+ * See UmiValueArchiveComparison in base/value_archive.h for measurement,
+ * refusal, aliasing and lifetime rules. This call never publishes live state. */
+UmiStatus umi_source_control_tag_snapshot_archive_compare_with_workspace(const UmiSourceControlTagSnapshot *left,
+    const UmiSourceControlTagSnapshot *right, void *workspace, size_t capacity,
+    UmiValueArchiveComparison *out_comparison);
+
 #ifdef __cplusplus
 }
 #endif

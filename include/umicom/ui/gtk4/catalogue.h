@@ -22,9 +22,19 @@
 #ifndef UMICOM_UI_GTK4_CATALOGUE_H
 #define UMICOM_UI_GTK4_CATALOGUE_H
 #include "umicom/ui/components/component.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Provide the gtk4 component is supported operation used by this module and its client
  * applications.
  */
 int umi_gtk4_component_is_supported(UmiUiComponentKind kind);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

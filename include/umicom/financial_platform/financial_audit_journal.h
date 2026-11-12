@@ -47,6 +47,24 @@ typedef struct UmiFinancialAuditJournal {
     uint64_t revision;
 } UmiFinancialAuditJournal;
 
+/* These are local, caller-owned observations, not tamper-evident or durable
+ * records. Inline strings must terminate; causation may be empty. Sequence is
+ * nonzero, status is a named Framework status, persisted is 0 or 1. Signed event
+ * timestamps remain supported. The caller serializes access and owns storage. */
+UmiStatus umi_financial_audit_record_validate(const UmiFinancialAuditRecord *record);
+/* Count is checked before traversal. Sequences strictly increase; the first
+ * row establishes the observed interval, so earlier missing numbers are not
+ * counted. Repeated event IDs are allowed; sequence identifies each row.
+ * gapCount must exactly match missing sequences within that interval.
+ * Unused rows and bytes after string terminators are ignored. */
+UmiStatus umi_financial_audit_journal_validate(const UmiFinancialAuditJournal *journal);
+/* Complete count or unchanged output, disjoint from journal storage. The legacy
+ * scalar count returns zero on refusal; use status to distinguish unavailable.
+ * Marking persisted changes a local flag only. It does not write or verify a
+ * file, database, signature or remote receipt. A final UINT64_MAX sequence can
+ * be marked but no later row can be appended; exhaustion refuses atomically. */
+UmiStatus umi_financial_audit_journal_persisted_count_checked(
+    const UmiFinancialAuditJournal *journal, size_t *outCount);
 void umi_financial_audit_journal_init(UmiFinancialAuditJournal *journal);
 /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
  * before this operation changes state or invokes nested work. Initialize the

@@ -18,6 +18,12 @@
 #include "umicom/application/context_hub.h"
 #include "umicom/ui/window_group.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Represent the desktop context links data shared with callers of this public contract.
  */
@@ -91,4 +97,8 @@ UmiStatus umi_desktop_context_links_publish(
     const char *subject_id,
     const char *correlation_id);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

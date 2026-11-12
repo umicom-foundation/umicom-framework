@@ -18,6 +18,12 @@
 #include "umicom/resilience/circuit_breaker.h"
 #include "umicom/resilience/rate_limiter.h"
 #include "umicom/resilience/supervisor.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the operations resilience telemetry data shared with callers of this public
  * contract.
@@ -28,4 +34,8 @@ typedef struct UmiOperationsResilienceTelemetry { size_t supervised_components; 
  * applications.
  */
 UmiStatus umi_operations_resilience_capture(UmiResilienceSupervisor *supervisor,UmiCircuitBreaker *circuit,UmiRateLimiter *limiter,UmiOperationsResilienceTelemetry *out_telemetry);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_STREAMING_WINDOW_H
 
 #include "umicom/ui/enterprise/types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent streaming window data shared with callers of this public contract.
  */
@@ -31,4 +37,8 @@ UmiStatus umi_ui_ent_streaming_window_init(UmiUiEntStreamingWindow *w,size_t cap
  */
 UmiStatus umi_ui_ent_streaming_window_accept(UmiUiEntStreamingWindow *w,uint64_t sequence,size_t first_row,size_t row_count);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

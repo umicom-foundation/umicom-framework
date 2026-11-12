@@ -24,6 +24,12 @@
 #include "umicom/ui/components/component.h"
 #include "umicom/ui/components/state.h"
 #include "umicom/ui/components/style.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui component model data shared with callers of this public contract.
  */
@@ -33,4 +39,8 @@ typedef struct UmiUiComponentModel { UmiUiComponentSpec spec; UmiUiComponentStat
  * applications.
  */
 UmiUiComponentModel umi_ui_component_model_default(UmiUiComponentKind kind);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

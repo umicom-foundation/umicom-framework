@@ -21,6 +21,7 @@
 #define INCLUDE_UMICOM_AI_CHUNK_H
 
 #include <stddef.h>
+#include <stdbool.h>
 #include "umicom/ai/types.h"
 #include "umicom/base/status.h"
 
@@ -40,8 +41,16 @@ typedef struct UmiAiChunk {
     char text[UMI_AI_TEXT_CAPACITY];
 } UmiAiChunk;
 
+/** Check termination of all three inline strings. Empty fields are permitted;
+ * this storage check does not certify identity, provenance or offset semantics. */
+bool umi_ai_chunk_storage_valid(const UmiAiChunk *chunk);
+
 /**
  * Copy ai chunk into module-owned storage so callers keep ownership of their input values.
+ * Text and document ID may borrow from chunk. All refusal paths preserve chunk.
+ * Inputs must terminate within their respective field capacities, or be readable
+ * for that capacity. Generated ID overflow returns CAPACITY_EXCEEDED; source-offset
+ * addition overflow returns INVALID_ARGUMENT. Offsets count bytes, not characters.
  */
 UmiStatus umi_ai_chunk_set(UmiAiChunk *chunk,
                            const char *document_id,

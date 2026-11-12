@@ -1,11 +1,19 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/creative_workspace/export_writer.c
- * PURPOSE: Centralise bounded output ownership, integer formatting and XML escaping.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Centralise bounded output ownership, integer formatting and XML/JSON escaping.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "internal.h"
+#include "umicom/ai/mcp/json.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,6 +56,18 @@ void UmiCreativeWriterNumber(UmiCreativeWriter * w, uint64_t value)
     char text[32];
     (void)snprintf(text, sizeof(text), "%" PRIu64, value);
     UmiCreativeWriterText(w, text);
+}
+
+/* Reuse the established JSON encoder rather than teaching each document format
+ * a second quoting grammar. The writer owns one extra terminator byte; size
+ * counts payload bytes only. A quoting failure stays sticky until Finish. */
+void UmiCreativeWriterJson(UmiCreativeWriter *writer, const char *text)
+{
+    if (writer->status != UMI_STATUS_OK) return;
+    writer->status = umi_ai_mcp_json_escape_string(text,
+        (char *)writer->bytes + writer->size, writer->capacity - writer->size + 1U);
+    if (writer->status == UMI_STATUS_OK)
+        writer->size += strlen((const char *)writer->bytes + writer->size);
 }
 
 void UmiCreativeWriterXml(UmiCreativeWriter * w, const char * text)

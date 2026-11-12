@@ -64,6 +64,11 @@ UmiStatus umi_build_engine_execute_all(UmiBuildEngine *engine,
                                        size_t *out_executed_count);
 void umi_build_engine_request_cancel(UmiBuildEngine *engine);
 void umi_build_engine_reset_cancel(UmiBuildEngine *engine);
+/** Ask the graph to retry one failed, cancelled or timed-out node within its
+ * existing attempt budget. Only accepted retry clears the cancellation token.
+ * Refusal preserves cancellation and the engine revision; it does not start a
+ * process, consume an attempt or discard retained build history. Serialize
+ * lifecycle mutations through the owning client; this is not a scheduler lock. */
 UmiStatus umi_build_engine_retry(UmiBuildEngine *engine,
                                  const char *node_id);
 UmiStatus umi_build_engine_invalidate(UmiBuildEngine *engine,

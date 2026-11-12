@@ -15,6 +15,12 @@
 #ifndef UMICOM_FRONTEND_BUILD_PROFILE_H
 #define UMICOM_FRONTEND_BUILD_PROFILE_H
 #include "umicom/frontend/dev_types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the frontend build profile data shared with callers of this public contract.
  */
@@ -43,4 +49,8 @@ UmiStatus umi_frontend_build_profiles_activate(UmiFrontendBuildProfiles *profile
  * applications.
  */
 UmiStatus umi_frontend_build_profiles_active(const UmiFrontendBuildProfiles *profiles,UmiFrontendBuildProfile *out_profile);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

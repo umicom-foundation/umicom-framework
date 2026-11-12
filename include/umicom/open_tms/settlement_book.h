@@ -51,6 +51,20 @@ typedef struct UmiOpenTmsSettlementBook {
     uint64_t revision;
 } UmiOpenTmsSettlementBook;
 
+/* Validate counts, nonzero revision, unique IDs, bounded strings, finite signed
+ * amounts and known states before traversal. accountId may be empty as before;
+ * every inline text field must be terminated. Currency is an opaque label.
+ * Existing transitions between known states remain permitted, with strictly
+ * increasing versions and terminal SETTLED. No payment is sent by this model. */
+UmiStatus umi_open_tms_settlement_record_validate(const UmiOpenTmsSettlementRecord *record);
+UmiStatus umi_open_tms_settlement_book_validate(const UmiOpenTmsSettlementBook *book);
+typedef struct UmiOpenTmsSettlementMeasures { size_t failedCount; size_t overdueCount; } UmiOpenTmsSettlementMeasures;
+/* Due zero is unknown, equality with now is not overdue, SETTLED is excluded.
+ * Complete output or no change. Keep inputs stable and output disjoint. Legacy
+ * counts return zero on refusal; use this status to distinguish unavailable. */
+UmiStatus umi_open_tms_settlement_book_measure(const UmiOpenTmsSettlementBook *book,
+    uint64_t nowMilliseconds, UmiOpenTmsSettlementMeasures *out);
+
 void umi_open_tms_settlement_book_init(UmiOpenTmsSettlementBook *book);
 /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
  * before this operation changes state or invokes nested work. Initialize the

@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/cash_plan_gtk4.c
- * PURPOSE: Render shared cash assumptions with reversible edits and explicit file review.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Render shared cash assumptions with reversible edits, enabled launchers and explicit file review.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "cash_plan_private.h"
@@ -530,9 +537,15 @@ static void Open(GtkButton *button, gpointer unused)
     (void)unused;
     /* A retained launcher from a closed product window must not open an
      * orphan workspace. Resolve its live parent for this click only. */
+    /* Include inherited sensitivity and native removal in the shared check.
+     * The earlier root-type-only guard remains below for engineering review. */
+#if 0
     GtkRoot *parent = gtk_widget_get_root(GTK_WIDGET(button));
     if (!GTK_IS_WINDOW(parent))
         return;
+#endif
+    GtkWindow *parent = UmiGtk4EnabledLauncherWindow(GTK_WIDGET(button));
+    if (parent == NULL) return;
     GtkWidget *content = NULL;
     if (UmiGtk4CashPlanCreate(&content) != UMI_STATUS_OK)
         return;

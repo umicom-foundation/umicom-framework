@@ -59,6 +59,9 @@ size_t umi_open_tms_service_count(void);
 UmiStatus umi_open_tms_service_id_at(size_t index,const char **outId);
 UmiStatus umi_open_tms_service_evaluate(
     const char *id,const UmiOpenTmsInput *input,UmiOpenTmsSnapshot *outSnapshot);
+/* Capture validated child counts and a complete dashboard, or leave output
+ * unchanged. Caller serializes all owners and supplies disjoint output storage.
+ * Revision is a maximum-child observation, not a globally unique change token. */
 UmiStatus umi_open_tms_service_snapshot(
     const UmiOpenTmsService *service,uint64_t nowMilliseconds,
     UmiOpenTmsServiceSnapshot *outSnapshot);

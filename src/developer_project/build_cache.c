@@ -1,12 +1,20 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/developer_project/build_cache.c
- * PURPOSE: Read selected build-cache values and expose project identity mismatches for review.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Read selected build-cache values and expose project identity mismatches for review.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/developer_project/build_cache.h"
+#include "umicom/toolchain/cmake_cache.h"
 #include "umicom/document/text_encoding.h"
 #include "umicom/platform/input_file.h"
 #include "umicom/platform/output_file.h"
@@ -15,6 +23,10 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+/* Cache spelling and byte admission now belong to the shared toolchain
+ * parser. Retain the original implementation for review; the active wrapper
+ * preserves this API's required identity fields and atomic output contract. */
+#if 0
 typedef struct CacheField
 {
     const char *name;
@@ -166,6 +178,51 @@ UmiStatus UmiProjectBuildCacheParse(const void *bytes, size_t size, const char *
     if (status == UMI_STATUS_OK)
         *out = *cache;
     free(cache);
+    return status;
+}
+#endif
+static UmiStatus CacheDirectory(const char *path, char *out)
+{
+    if (path == NULL || !umi_path_is_absolute(path)) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = umi_path_normalise(path, out, UMI_BUILD_PATH_CAPACITY);
+    return status == UMI_STATUS_OK ? UmiOutputFileValidatePath(out) : status;
+}
+UmiStatus UmiProjectBuildCacheParse(const void *bytes, size_t size, const char *sourceDirectory,
+                                    const char *buildDirectory, UmiProjectBuildCache *out)
+{
+    if (bytes == NULL || out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (size > UMI_PROJECT_BUILD_CACHE_BYTE_LIMIT) return UMI_STATUS_CAPACITY_EXCEEDED;
+    char source[UMI_BUILD_PATH_CAPACITY], build[UMI_BUILD_PATH_CAPACITY];
+    UmiStatus status = CacheDirectory(sourceDirectory, source);
+    if (status == UMI_STATUS_OK) status = CacheDirectory(buildDirectory, build);
+    if (status != UMI_STATUS_OK) return status;
+    UmiCMakeCache *metadata = calloc(1U, sizeof *metadata);
+    UmiProjectBuildCache *candidate = calloc(1U, sizeof *candidate);
+    if (metadata == NULL || candidate == NULL) {
+        free(metadata); free(candidate); return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    status = UmiCMakeCacheParse(bytes, size, metadata);
+    unsigned required = UMI_CMAKE_CACHE_SOURCE | UMI_CMAKE_CACHE_BUILD | UMI_CMAKE_CACHE_GENERATOR;
+    if (status == UMI_STATUS_OK && ((metadata->present & required) != required ||
+        !metadata->source_directory[0] || !metadata->build_directory[0] || !metadata->generator[0]))
+        status = UMI_STATUS_PARSE_ERROR;
+    if (status == UMI_STATUS_OK) {
+        memcpy(candidate->source_directory, metadata->source_directory, sizeof candidate->source_directory);
+        memcpy(candidate->build_directory, metadata->build_directory, sizeof candidate->build_directory);
+        memcpy(candidate->generator, metadata->generator, sizeof candidate->generator);
+        memcpy(candidate->compiler, metadata->compiler, sizeof candidate->compiler);
+        memcpy(candidate->configuration, metadata->configuration, sizeof candidate->configuration);
+        memcpy(candidate->configurations, metadata->configurations, sizeof candidate->configurations);
+        memcpy(candidate->install_directory, metadata->install_directory, sizeof candidate->install_directory);
+        memcpy(candidate->toolchain_file, metadata->toolchain_file, sizeof candidate->toolchain_file);
+        char recorded[UMI_BUILD_PATH_CAPACITY];
+        status = CacheDirectory(candidate->source_directory, recorded);
+        if (status == UMI_STATUS_OK) candidate->source_matches = umi_path_equal(source, recorded);
+        if (status == UMI_STATUS_OK) status = CacheDirectory(candidate->build_directory, recorded);
+        if (status == UMI_STATUS_OK) candidate->build_matches = umi_path_equal(build, recorded);
+    }
+    if (status == UMI_STATUS_OK) *out = *candidate;
+    free(metadata); free(candidate);
     return status;
 }
 UmiStatus UmiProjectBuildCacheRead(const char *sourceDirectory, const char *buildDirectory,

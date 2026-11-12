@@ -148,6 +148,11 @@ typedef struct UmiTradingWorkspaceSnapshot {
     double selected_change_percent;
     double selected_depth_imbalance;
     double selected_top_liquidity;
+    /* Exact trading owner revision, matching local session-report capture.
+     * Chart and trade-tape observations retain their own nested revisions.
+     * Readers tracking those domains compare the fields separately; do not sum
+     * revisions or use a position count as an observation identity. This value
+     * is meaningful within the lifetime of this workspace, not across owners. */
     uint64_t revision;
     int market_data_ready;
     int broker_ready;
@@ -220,6 +225,10 @@ UmiStatus UmiTradingWorkspaceCancelReviewedOrder(UmiTradingWorkspace *workspace,
  * shared chart registry. Both survive native panel replacement during this
  * workspace session. Callers must pass the instrument shown in their chart;
  * stale views cannot alter the newly selected market or its ticket. */
+/* Chart identity queries are bounded by UMI_FINANCE_ID_CAPACITY. An
+ * unterminated query returns CAPACITY_EXCEEDED with output/owner unchanged.
+ * An ordinary query for a different selected instrument remains INVALID_STATE.
+ * Market selection/removal retain their established no-match status mapping. */
 UmiStatus UmiTradingWorkspaceGetChartNavigation(const UmiTradingWorkspace *workspace,
     const char *instrument_id, UmiChartNavigation *out_navigation);
 UmiStatus UmiTradingWorkspaceSetChartNavigation(UmiTradingWorkspace *workspace,
@@ -267,6 +276,12 @@ void umi_trading_workspace_destroy(UmiTradingWorkspace *workspace);
  * Provide the trading workspace add instrument operation used by this module and its
  * client applications.
  */
+/* Instrument/data, browsing, environment, refresh and alert edits reserve a
+ * workspace revision before mutation. Data/state updates also reserve the
+ * selected market-row revision. Exhaustion returns CAPACITY_EXCEEDED without
+ * changing either owner. Existing argument and lookup checks still apply.
+ * Health/disarm/kill/provider availability have separate protective semantics.
+ * Child services retain their own independent capacity contracts. */
 UmiStatus umi_trading_workspace_add_instrument(
     UmiTradingWorkspace *workspace,
     const UmiInstrument *instrument);
@@ -274,6 +289,11 @@ UmiStatus umi_trading_workspace_add_instrument(
  * Provide the trading workspace remove instrument operation used by this module and its
  * client applications.
  */
+/* Removal compacts market records, retained candles, watchlist identities and
+ * chart navigation together. A later instrument starts with zero navigation
+ * (newest candles, fitted view, provider interval). It does not inherit the
+ * removed slot's zoom, pin or timeframe. Existing chart drawing/document
+ * retention is governed by its separate owner; this is not a purge API. */
 UmiStatus umi_trading_workspace_remove_instrument(
     UmiTradingWorkspace *workspace,
     const char *instrument_id);
@@ -288,6 +308,9 @@ UmiStatus umi_trading_workspace_update_quote(
  * Provide the trading workspace update bar operation used by this module and its client
  * applications.
  */
+/* Bars and public trades must carry the complete registered instrument contract.
+ * Mismatched metadata is refused before history, tape, revisions or readiness
+ * change. A bar with valid numeric ranges is not by itself a registered contract. */
 UmiStatus umi_trading_workspace_update_bar(
     UmiTradingWorkspace *workspace,
     const UmiBar *bar,
@@ -296,14 +319,21 @@ UmiStatus umi_trading_workspace_update_bar(
  * Provide the trading workspace update depth operation used by this module and its client
  * applications.
  */
+/* Validates the canonical instrument and active levels before identity lookup;
+ * the matching market must also have the same contract metadata. Rejected
+ * depth leaves the owner unchanged. No feed ordering/freshness is implied. */
 UmiStatus umi_trading_workspace_update_depth(
     UmiTradingWorkspace *workspace,
     const UmiMarketDepth *depth);
 /** Accept one sequence-checked public market trade from a provider or replay. */
+/* Finite positive price, finite nonnegative size and matching instrument
+ * metadata are required before the shared tape can accept a public print. */
 UmiStatus umi_trading_workspace_update_trade(
     UmiTradingWorkspace *workspace,
     const UmiTradingTradeTapeRecord *record);
 /** Report whether a public market trade provider is currently connected. */
+/* Provider availability stays observable at maximum owner revision. Tape
+ * filter/pause commands instead reserve outer capacity before child mutation. */
 UmiStatus umi_trading_workspace_set_trade_tape_provider_ready(
     UmiTradingWorkspace *workspace,
     int ready);
@@ -391,6 +421,14 @@ UmiStatus umi_trading_workspace_set_live_armed(
  * Provide the trading workspace set draft side operation used by this module and its
  * client applications.
  */
+/**
+ * Draft side/type/quantity/prices setters, ResetDraft and SetRiskPricePolicy
+ * validate arguments before admitting a workspace revision. At UINT64_MAX
+ * they return CAPACITY_EXCEEDED without changing ticket or preview evidence.
+ * An accepted edit retains its existing semantics: even a repeated value
+ * invalidates the preview and consumes one revision. ResetDraft likewise
+ * requires a new revision. This contract does not cover emergency controls.
+ */
 UmiStatus umi_trading_workspace_set_draft_side(
     UmiTradingWorkspace *workspace,
     UmiSide side);
@@ -428,6 +466,13 @@ UmiStatus umi_trading_workspace_preview_order(
  * Provide the trading workspace submit order operation used by this module and its client
  * applications.
  */
+/* The retained local workspace does not implement IOC/FOK matching guarantees.
+ * Those values return NOT_IMPLEMENTED and retain a denied preview without
+ * allocating an order ID, consuming OMS throttle or storing an order. Both
+ * preview entry points report the same denial. DAY/GTC remain retained requests;
+ * callers own session-end cancellation, with no automatic calendar expiry.
+ * New preview/submit observations require an available workspace revision;
+ * submission additionally requires an available local order sequence. */
 UmiStatus umi_trading_workspace_submit_order(
     UmiTradingWorkspace *workspace,
     int64_t now_ms,
@@ -436,12 +481,23 @@ UmiStatus umi_trading_workspace_submit_order(
  * Provide the trading workspace cancel selected order operation used by this module and
  * its client applications.
  */
+/* Local workspace cancellation uses the shared order-state owner. A selected
+ * retained CANCELLED order succeeds without publishing a new order/workspace
+ * revision. A new cancellation requires space in both revision counters.
+ * Existing partial fills and positions remain; this is not a broker transport
+ * acknowledgement. An active order filter can retire the selection after the
+ * first cancellation, in which case a later selected-order command is NOT_FOUND. */
 UmiStatus umi_trading_workspace_cancel_selected_order(
     UmiTradingWorkspace *workspace);
 /**
  * Provide the trading workspace record execution operation used by this module and its
  * client applications.
  */
+/* Retain a new execution together with its order and position changes. Exact
+ * retained replay succeeds without changing revisions; conflicting reuse of
+ * an execution identity returns ALREADY_EXISTS. New events require available
+ * workspace and order revisions, bounded stores and representable economics.
+ * Refusal preserves the owner. Access must be serialized by its caller. */
 UmiStatus umi_trading_workspace_record_execution(
     UmiTradingWorkspace *workspace,
     const UmiExecutionReport *report);
@@ -457,6 +513,13 @@ void umi_trading_workspace_engage_kill_switch(
  * Provide the trading workspace reset kill switch operation used by this module and its
  * client applications.
  */
+/* Checked reset refuses CAPACITY_EXCEEDED without releasing the switch.
+ * The legacy void form delegates and leaves protection engaged on refusal.
+ * Health observations, disarming and engagement still take effect at the final
+ * revision, invalidate previews and saturate the counter. At UINT64_MAX a
+ * snapshot must be refreshed; revision equality alone cannot establish current
+ * control state. Session-report current checks conservatively return false. */
+UmiStatus UmiTradingWorkspaceResetKillSwitch(UmiTradingWorkspace *workspace);
 void umi_trading_workspace_reset_kill_switch(UmiTradingWorkspace *workspace);
 /**
  * Provide the trading workspace refresh operation used by this module and its client

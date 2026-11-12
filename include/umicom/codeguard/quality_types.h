@@ -18,6 +18,12 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "umicom/base/status.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define UMI_CODEGUARD_QUALITY_ID_CAPACITY 96U
 #define UMI_CODEGUARD_QUALITY_PATH_CAPACITY 512U
 #define UMI_CODEGUARD_QUALITY_TEXT_CAPACITY 384U
@@ -77,4 +83,8 @@ const char *umi_codeguard_evidence_kind_text(UmiCodeGuardEvidenceKind kind);
  * applications.
  */
 const char *umi_codeguard_quality_decision_text(UmiCodeGuardQualityDecision decision);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -23,9 +23,19 @@
 #define UMICOM_UI_GTK4_FEEDBACK_H
 #include <gtk/gtk.h>
 #include "umicom/ui/components/component.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Provide the gtk4 status message new operation used by this module and its client
  * applications.
  */
 GtkWidget *umi_gtk4_status_message_new(const UmiUiComponentSpec *spec);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

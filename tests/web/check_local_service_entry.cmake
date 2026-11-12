@@ -33,7 +33,17 @@ endif()
 file(MAKE_DIRECTORY "${WORK}/unrelated")
 if(expected EQUAL 0)
     file(MAKE_DIRECTORY "${root}")
+    # Static serving must preserve bytes. Keep the former host-native newline
+    # writer for review; the fixture now declares and checks its LF contract.
+    if(FALSE)
     file(WRITE "${root}/message.txt" "Unicode root reached.\n")
+    endif()
+    file(CONFIGURE OUTPUT "${root}/message.txt" CONTENT "Unicode root reached.\n"
+        @ONLY NEWLINE_STYLE LF)
+    file(READ "${root}/message.txt" fixture_hex HEX)
+    if(NOT fixture_hex STREQUAL "556e69636f646520726f6f7420726561636865642e0a")
+        message(FATAL_ERROR "The native-entry fixture bytes do not match the LF contract: ${fixture_hex}")
+    endif()
 endif()
 execute_process(COMMAND "${TOOL}" --port "${port}" --root "${root}"
     WORKING_DIRECTORY "${WORK}/unrelated" RESULT_VARIABLE result

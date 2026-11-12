@@ -19,10 +19,20 @@
 #include <gtk/gtk.h>
 #include "umicom/ui/workstation/status_strip.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Initialise gtk4 ws status strip from caller-provided values so later operations receive
  * a known state.
  */
 GtkWidget *umi_gtk4_ws_status_strip_create(const UmiWsStatusStrip *strip);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

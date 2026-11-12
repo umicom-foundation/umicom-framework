@@ -483,6 +483,8 @@ UmiStatus umi_trading_ui_controller_engage_kill_switch(
  * Provide the trading ui controller reset kill switch operation used by this module and
  * its client applications.
  */
+/* The shared controller now reports the checked reset result instead of announcing success after a void call. The compatibility implementation remains for review. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_ui_controller_reset_kill_switch(
     UmiTradingUiController *controller)
 {
@@ -495,6 +497,23 @@ UmiStatus umi_trading_ui_controller_reset_kill_switch(
     umi_trading_workspace_reset_kill_switch(controller->workspace);
     return finish_action(controller, UMI_STATUS_OK, NULL,
         "Trading kill switch reset through the canonical workspace.", 1);
+}
+#endif
+UmiStatus umi_trading_ui_controller_reset_kill_switch(
+    UmiTradingUiController *controller)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (controller == NULL || controller->workspace == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = UmiTradingWorkspaceResetKillSwitch(controller->workspace);
+    return finish_action(controller, status, NULL,
+        status == UMI_STATUS_OK
+            ? "Trading kill switch reset through the canonical workspace."
+            : "Trading kill switch remains engaged; reset was refused.",
+        status == UMI_STATUS_OK);
 }
 
 /* Create a price alert for the currently selected instrument. */

@@ -16,6 +16,12 @@
 #define UMICOM_COMPILER_LOCKFILE_H
 #include "umicom/compiler/manifest.h"
 #include "umicom/compiler/profile.h"
+
+/* Keep the public C symbol names when this header is included directly by a
+ * C++ client. Includes remain outside the linkage block; layouts are unchanged. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the compiler lockfile data shared with callers of this public contract.
  */
@@ -40,4 +46,7 @@ UmiStatus umi_compiler_lockfile_encode(const UmiCompilerLockfile *lockfile,char 
  * be used.
  */
 UmiStatus umi_compiler_lockfile_decode(const char *text,UmiCompilerLockfile *out_lockfile);
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 #endif

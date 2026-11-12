@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/window_removal_private.h
- * PURPOSE: Observe native window removal while callers retain windows or controls.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Observe native window removal and admit enabled launchers while callers retain windows or controls.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_GTK4_WINDOW_REMOVAL_PRIVATE_H
@@ -50,6 +57,22 @@ static gboolean UmiGtk4WindowRegistered(GtkWindow *window)
     }
     return FALSE;
 }
+/* Signal handlers may be invoked programmatically even when normal pointer
+ * interaction is disabled. Share one admission rule across finance surfaces:
+ * inherit the ancestor's sensitivity and require a still-registered native
+ * host. This is a borrowed GTK-thread snapshot, not a lifetime lock; callers
+ * still own their normal window-removal and callback-retirement contracts.
+ * Visibility is deliberately separate: unpresented hosts remain supported. */
+static inline GtkWindow *UmiGtk4EnabledLauncherWindow(GtkWidget *launcher)
+{
+    if (!GTK_IS_WIDGET(launcher) || !gtk_widget_is_sensitive(launcher))
+        return NULL;
+    GtkRoot *root = gtk_widget_get_root(launcher);
+    if (!GTK_IS_WINDOW(root) || !UmiGtk4WindowRegistered(GTK_WINDOW(root)))
+        return NULL;
+    return GTK_WINDOW(root);
+}
+
 static void UmiGtk4RemovalChanged(GListModel *model, guint position,
     guint removed, guint added, gpointer data)
 {

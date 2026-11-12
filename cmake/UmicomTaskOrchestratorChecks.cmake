@@ -40,3 +40,6 @@ if(BUILD_TESTING)
         endforeach()
     endforeach()
 endif()
+
+# The composing pipeline must preserve the same child lifecycle boundaries.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDeliveryPipelineChecks.cmake")

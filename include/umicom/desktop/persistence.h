@@ -17,6 +17,12 @@
 
 #include "umicom/desktop/runtime.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define UMI_DESKTOP_PERSISTENCE_TEXT_CAPACITY 131072U
 
 /**
@@ -43,4 +49,8 @@ UmiStatus umi_desktop_persistence_decode_transactional(
     UmiDesktopRuntime *runtime,
     const char *text);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

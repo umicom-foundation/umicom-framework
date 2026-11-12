@@ -17,9 +17,19 @@
 #include "umicom/security/governance.h"
 #include "umicom/security/workspace_trust.h"
 #include "umicom/security/permission_catalogue.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Provide the security workspace policy evaluate operation used by this module and its
  * client applications.
  */
 UmiStatus umi_security_workspace_policy_evaluate(UmiWorkspaceTrustLevel trust,const UmiSecurityPermissionDescriptor *permission,UmiSecurityGovernanceDecision *out_decision);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

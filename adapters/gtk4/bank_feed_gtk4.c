@@ -692,9 +692,15 @@ GtkWindow *UmiBankFeedGtk4Create(GtkWindow *parent) {
 }
 static void FeedOpen(GtkButton *button, gpointer unused) {
   (void)unused;
+  /* Reuse shared inherited-state admission; retained controls must respect
+   * a disabled host. The former root-only check remains for review. */
+#if 0
   GtkRoot *root = gtk_widget_get_root(GTK_WIDGET(button));
   if (!GTK_IS_WINDOW(root) || !UmiGtk4WindowRegistered(GTK_WINDOW(root)))
     return;
+#endif
+  GtkWindow *root = UmiGtk4EnabledLauncherWindow(GTK_WIDGET(button));
+  if (root == NULL) return;
   GtkWindow *window = UmiBankFeedGtk4Create(GTK_WINDOW(root));
   if (window != NULL)
     gtk_window_present(window);

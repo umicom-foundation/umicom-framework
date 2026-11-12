@@ -67,6 +67,9 @@ bool umi_toolchain_profile_storage_compatible(
  * Provide the toolchain profile tool operation used by this module and its client
  * applications.
  */
+/* Only expose initialized slots within the profile's declared tool count.
+ * The previous enum-only boundary is retained for engineering review. */
+#if 0
 const UmiToolInfo *umi_toolchain_profile_tool(
     const UmiToolchainProfile *profile,
     UmiToolKind kind)
@@ -76,17 +79,40 @@ const UmiToolInfo *umi_toolchain_profile_tool(
         ? &profile->tools[(size_t)kind]
         : NULL;
 }
+#endif
+const UmiToolInfo *umi_toolchain_profile_tool(
+    const UmiToolchainProfile *profile,
+    UmiToolKind kind)
+{
+    return umi_toolchain_profile_storage_compatible(profile) &&
+               kind >= 0 && kind < UMI_TOOL_COUNT && (size_t)kind < profile->tool_count
+        ? &profile->tools[(size_t)kind]
+        : NULL;
+}
 
 /*
  * Provide the toolchain profile tool mutable operation used by this module and its client
  * applications.
  */
+/* Only expose initialized slots within the profile's declared tool count.
+ * The previous enum-only boundary is retained for engineering review. */
+#if 0
 UmiToolInfo *umi_toolchain_profile_tool_mutable(
     UmiToolchainProfile *profile,
     UmiToolKind kind)
 {
     return umi_toolchain_profile_storage_compatible(profile) &&
                kind >= 0 && kind < UMI_TOOL_COUNT
+        ? &profile->tools[(size_t)kind]
+        : NULL;
+}
+#endif
+UmiToolInfo *umi_toolchain_profile_tool_mutable(
+    UmiToolchainProfile *profile,
+    UmiToolKind kind)
+{
+    return umi_toolchain_profile_storage_compatible(profile) &&
+               kind >= 0 && kind < UMI_TOOL_COUNT && (size_t)kind < profile->tool_count
         ? &profile->tools[(size_t)kind]
         : NULL;
 }
@@ -133,4 +159,27 @@ const UmiToolInfo *umi_toolchain_profile_cpp_compiler(
                profile->selected_cpp_compiler < UMI_TOOL_COUNT
         ? umi_toolchain_profile_tool(profile, profile->selected_cpp_compiler)
         : NULL;
+}
+
+
+bool umi_toolchain_profile_storage_valid(const UmiToolchainProfile *profile)
+{
+    if (!umi_toolchain_profile_storage_compatible(profile) ||
+        !memchr(profile->profile_id,'\0',sizeof(profile->profile_id)) ||
+        !memchr(profile->display_name,'\0',sizeof(profile->display_name)) ||
+        !memchr(profile->root,'\0',sizeof(profile->root)) ||
+        !memchr(profile->bin_directory,'\0',sizeof(profile->bin_directory)) ||
+        !memchr(profile->prefix_directory,'\0',sizeof(profile->prefix_directory)) ||
+        !memchr(profile->generator,'\0',sizeof(profile->generator)) ||
+        !memchr(profile->target_triple,'\0',sizeof(profile->target_triple))) return false;
+    /* Reserved slots keep the public ABI independent of the current tool enum.
+     * Inspect only declared known slots; consumers still admit the selected kind. */
+    for (size_t index = 0U; index < profile->tool_count && index < (size_t)UMI_TOOL_COUNT; ++index) {
+        const UmiToolInfo *tool = &profile->tools[index];
+        if (tool->kind != (UmiToolKind)index ||
+            tool->state < UMI_TOOL_MISSING || tool->state > UMI_TOOL_FAILED ||
+            !memchr(tool->path,'\0',sizeof(tool->path)) ||
+            !memchr(tool->version,'\0',sizeof(tool->version))) return false;
+    }
+    return true;
 }

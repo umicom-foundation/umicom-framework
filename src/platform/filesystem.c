@@ -3,8 +3,9 @@
  * File: src/platform/filesystem.c
  *
  * PURPOSE:
- *   Implement the filesystem behavior for
- *   Umicom Framework.
+ *   Implement the portable filesystem and path operations required by the
+ *   Framework runtime, native Umicom command, repository scaffolding, build
+ *   orchestration, and application products.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -17,22 +18,6 @@
 #define _POSIX_C_SOURCE 200809L
 #endif
 
-/*-----------------------------------------------------------------------------
- * Umicom Framework
- * File: src/platform/filesystem.c
- *
- * PURPOSE:
- *   Implement the portable filesystem and path operations required by the
- *   Framework runtime, native Umicom command, repository scaffolding, build
- *   orchestration, and application products.
- *
- * AUTHOR AND ORGANISATION:
- * Sammy Hegab
- * Umicom Foundation
- *
- * LICENCE:
- * MIT
- *---------------------------------------------------------------------------*/
 #include "umicom/platform/filesystem.h"
 
 #include <dirent.h>
@@ -602,6 +587,10 @@ UmiStatus umi_fs_copy_file(const char *source, const char *destination)
     return fclose(output) == 0 ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
 }
 
+/* The earlier POSIX path walk followed directory links and discarded enumeration
+ * errors. Preserve it for review; descriptor-relative removal below keeps leaf
+ * links separate and reports partial failures through the existing status API. */
+#if 0
 UmiStatus umi_fs_remove_tree(const char *path)
 {
 #ifdef _WIN32
@@ -681,6 +670,20 @@ UmiStatus umi_fs_remove_tree(const char *path)
 #else
     return rmdir(path) == 0 ? UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
 #endif
+#endif
+}
+#endif
+
+#ifndef _WIN32
+#include "filesystem_remove_posix.inc"
+#endif
+UmiStatus umi_fs_remove_tree(const char *path)
+{
+#ifdef _WIN32
+    if (path == NULL || path[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_windows_remove_tree(path);
+#else
+    return umi_posix_remove_tree(path);
 #endif
 }
 

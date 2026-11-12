@@ -1,14 +1,22 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/developer_project/test_settings_lifetime_gtk4.c
- * PURPOSE: Exercise settings acceptance, stage selection and GTK callback ownership.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Exercise settings acceptance, asynchronous project adoption and GTK callback ownership.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/developer_dialog.h"
 #include "umicom/platform/filesystem.h"
+#include "creation_wait.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -129,6 +137,7 @@ int main(int argc, char **argv)
     GtkWidget *chooseParent = NULL;
     char *projectRoot = NULL, *scratch = NULL;
     int failed = 0;
+    int creationSettled = 1;
     CHECK(argc == 2);
     probe.mode = argv[1];
     Phase("before-gtk-init");
@@ -257,7 +266,12 @@ int main(int argc, char **argv)
     {
         if (strcmp(probe.mode, "notify-close") == 0)
             g_signal_connect(form, "notify::visible", G_CALLBACK(VisibilityChanged), &probe);
+        if (project) creationSettled = 0;
         g_signal_emit_by_name(probe.accept, "clicked");
+        if (project) {
+            creationSettled = UmiTestProjectCreationWait(form);
+            CHECK(creationSettled);
+        }
         CHECK(probe.calls == 1U);
         if (strcmp(probe.mode, "retry") == 0)
         {
@@ -300,7 +314,12 @@ cleanup:
         gtk_window_destroy(parent);
         g_object_unref(parent);
     }
+/* Keep a timed-out creation fixture because its worker may still be writing. The previous implementation is retained for review. */
+#if 0
     if (scratch != NULL && umi_fs_remove_tree(scratch) != UMI_STATUS_OK)
+        failed = 1;
+#endif
+    if (creationSettled && scratch != NULL && umi_fs_remove_tree(scratch) != UMI_STATUS_OK)
         failed = 1;
     g_free(projectRoot);
     g_free(scratch);

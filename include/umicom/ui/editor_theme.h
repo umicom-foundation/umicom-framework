@@ -62,12 +62,21 @@ typedef struct UmiUiEditorThemeSnapshot {
  * Provide the ui editor theme resolve operation used by this module and its client
  * applications.
  */
+/* Stage the complete derived value and publish only after editor validation.
+ * Every refusal leaves the destination unchanged. Input may borrow overlapping
+ * destination storage when both complete object spans are readable/writable
+ * as required; no input is read after publication. Callers serialize access. */
 UmiStatus umi_ui_editor_theme_resolve(
     const UmiUiAppearanceProfile *appearance,
     UmiUiEditorThemeSnapshot *out_theme);
 /**
  * Check that ui editor theme satisfies its contract before another service relies on it.
  */
+/* Admit fixed-field RGB tokens, the same bounded ASCII font-list grammar as
+ * appearance profiles, finite font size and every active scheme identifier.
+ * Colour comparisons ignore hexadecimal letter case. Diagnostic output must
+ * not overlap the snapshot; short separate buffers retain existing truncation
+ * behavior. Structural validity is not native rendering or font availability. */
 UmiStatus umi_ui_editor_theme_validate(
     const UmiUiEditorThemeSnapshot *theme,
     char *out_reason,
@@ -76,6 +85,10 @@ UmiStatus umi_ui_editor_theme_validate(
  * Provide the ui editor theme preferred scheme operation used by this module and its
  * client applications.
  */
+/* Validate the complete snapshot before borrowing a scheme name. Separate
+ * output storage is set to NULL on lookup refusal. NULL arguments or output
+ * overlapping the snapshot return INVALID_ARGUMENT without a write. A returned
+ * pointer expires when the snapshot is changed or its storage is released. */
 UmiStatus umi_ui_editor_theme_preferred_scheme(
     const UmiUiEditorThemeSnapshot *theme,
     size_t index,

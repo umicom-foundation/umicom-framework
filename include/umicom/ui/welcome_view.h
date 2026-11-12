@@ -243,6 +243,13 @@ UmiStatus umi_ui_welcome_view_registry_archive_restore(UmiUiWelcomeItemRegistry 
 UmiStatus umi_ui_welcome_view_registry_clear_if_current(UmiUiWelcomeItemRegistry *registry,
     uint64_t expected_revision);
 
+/* Compare this record's canonical saved state using caller-owned byte scratch.
+ * See UmiValueArchiveComparison in base/value_archive.h for measurement,
+ * refusal, aliasing and lifetime rules. This call never publishes live state. */
+UmiStatus umi_ui_welcome_view_snapshot_archive_compare_with_workspace(const UmiUiWelcomeItemSnapshot *left,
+    const UmiUiWelcomeItemSnapshot *right, void *workspace, size_t capacity,
+    UmiValueArchiveComparison *out_comparison);
+
 #ifdef __cplusplus
 }
 #endif

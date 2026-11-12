@@ -15,6 +15,12 @@
 #ifndef UMICOM_FINANCE_TREASURY_LIQUIDITY_PROFILE_H
 #define UMICOM_FINANCE_TREASURY_LIQUIDITY_PROFILE_H
 #include "umicom/finance/treasury/liquidity_bucket.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the treasury liquidity profile data shared with callers of this public
  * contract.
@@ -35,4 +41,8 @@ UmiStatus umi_treasury_liquidity_profile_add(UmiTreasuryLiquidityProfile *profil
  * module and its client applications.
  */
 int64_t umi_treasury_liquidity_profile_cumulative_gap_minor(const UmiTreasuryLiquidityProfile *profile);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

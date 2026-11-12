@@ -23,6 +23,7 @@
 #include "umicom/base/status.h"
 #include "umicom/toolchain/capability.h"
 #include "umicom/toolchain/discovery.h"
+#include "umicom/toolchain/environment.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -152,6 +153,14 @@ size_t umi_toolchain_catalogue_profile_count(
 UmiStatus umi_toolchain_catalogue_select_profile(
     UmiToolchainCatalogue *catalogue,
     const char *profile_id);
+/** Prepare a complete child environment before changing the explicit selection.
+ * Failure preserves catalogue selection and both output owners. Outputs must be
+ * separate from each other and catalogue storage; identifiers may borrow output
+ * text. Process-entry pointers are rebound into the receiving environment.
+ * Callers serialize catalogue access across this operation. Environment preparation
+ * may read inherited PATH, but does not launch tools or alter the parent process. */
+UmiStatus umi_toolchain_catalogue_select_with_environment(UmiToolchainCatalogue *catalogue,
+    const char *profile_id,UmiToolchainProfile *out_profile,UmiEnvironmentPlan *out_environment);
 /**
  * Provide the toolchain catalogue resolve selected profile operation used by this module
  * and its client applications.

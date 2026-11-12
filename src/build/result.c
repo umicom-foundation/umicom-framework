@@ -19,6 +19,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* This is storage admission, not a claim that a build ran or succeeded.
+ * Keep phase/state/status interpretation with the producer's existing contract. */
+UmiStatus UmiBuildResultValidateStorage(const UmiBuildResult *result)
+{
+    if (result==NULL||memchr(result->profile_id,0,sizeof result->profile_id)==NULL||
+        memchr(result->command,0,sizeof result->command)==NULL||
+        memchr(result->output,0,sizeof result->output)==NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    return UmiBuildDiagnosticListValidate(&result->diagnostics);
+}
+
 UmiStatus umi_build_result_create(UmiBuildResult **out_result)
 {
     UmiBuildResult *result;
@@ -118,6 +129,9 @@ UmiStatus umi_build_result_summary(const UmiBuildResult *result,
     if (result == NULL || out_text == NULL || capacity == 0U) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Reject malformed evidence before touching the caller's summary buffer. */
+    UmiStatus validation=UmiBuildResultValidateStorage(result);
+    if (validation!=UMI_STATUS_OK)return validation;
     written = snprintf(
         out_text,
         capacity,

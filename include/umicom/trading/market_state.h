@@ -30,6 +30,8 @@ extern "C" {
  * Provide the market state transition allowed operation used by this module and its client
  * applications.
  */
+/* Both values must be declared states, even when equal. Repeated declared
+ * states are accepted; the existing closed/preopen/open/halted edges apply. */
 int umi_market_state_transition_allowed(UmiMarketState from, UmiMarketState to);
 #ifdef __cplusplus
 }

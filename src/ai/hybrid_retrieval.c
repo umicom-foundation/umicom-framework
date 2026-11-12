@@ -16,6 +16,7 @@
 #include "umicom/ai/hybrid_retrieval.h"
 
 #include <string.h>
+#include <math.h>
 
 /* Provide the find result operation used by this module and its client applications. */
 static size_t find_result(
@@ -88,6 +89,8 @@ umi_ai_hybrid_retrieval_settings_default(void)
  * Provide the ai hybrid retrieval rank operation used by this module and its client
  * applications.
  */
+/* Whole-source and finite-weight admission reject invalid blends before callbacks; the shared reranker now refuses overflowing merged scores and stages callback publication. The previous composition is The previous implementation is retained for review. */
+#if 0
 size_t umi_ai_hybrid_retrieval_rank(
     const char *query,
     const UmiAiChunk *chunks,
@@ -128,6 +131,152 @@ size_t umi_ai_hybrid_retrieval_rank(
     effective = settings != NULL
         ? *settings
         : umi_ai_hybrid_retrieval_settings_default();
+
+    limit = effective.candidate_limit;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (limit == 0U ||
+        limit > UMI_AI_MAX_RETRIEVAL_RESULTS) {
+        limit = UMI_AI_MAX_RETRIEVAL_RESULTS;
+    }
+
+    lexical_count = umi_ai_retrieval_rank(
+        query,
+        chunks,
+        chunk_count,
+        lexical,
+        limit);
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < lexical_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (lexical[index].score > lexical_maximum) {
+            lexical_maximum = lexical[index].score;
+        }
+    }
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < lexical_count; ++index) {
+        double normalized = lexical_maximum > 0.0
+            ? lexical[index].score / lexical_maximum
+            : 0.0;
+
+        insert_or_add(
+            candidates,
+            &candidate_count,
+            UMI_AI_HYBRID_MAX_CANDIDATES,
+            &lexical[index].chunk,
+            normalized * effective.lexical_weight);
+    }
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (vector_store != NULL &&
+        query_embedding != NULL) {
+        vector_count = umi_ai_vector_store_search(
+            vector_store,
+            query_embedding,
+            vector_indices,
+            vector_scores,
+            limit);
+
+        /* Visit each bounded item once so every record receives the same rule. */
+        for (index = 0U; index < vector_count; ++index) {
+            size_t vector_index = vector_indices[index];
+            double normalized;
+
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+            if (vector_index >= vector_store->count) {
+                continue;
+            }
+
+            /*
+             * Cosine similarity can be negative. Negative similarity does not
+             * strengthen a hybrid candidate, so clamp it to the neutral floor.
+             */
+            normalized = vector_scores[index] > 0.0
+                ? vector_scores[index]
+                : 0.0;
+
+            insert_or_add(
+                candidates,
+                &candidate_count,
+                UMI_AI_HYBRID_MAX_CANDIDATES,
+                &vector_store->entries[vector_index].chunk,
+                normalized * effective.vector_weight);
+        }
+    }
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (umi_ai_reranker_apply(
+            reranker,
+            query,
+            candidates,
+            candidate_count) != UMI_STATUS_OK) {
+        return 0U;
+    }
+
+    output_count = candidate_count < capacity
+        ? candidate_count
+        : capacity;
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < output_count; ++index) {
+        results[index] = candidates[index];
+    }
+
+    return output_count;
+}
+#endif
+size_t umi_ai_hybrid_retrieval_rank(
+    const char *query,
+    const UmiAiChunk *chunks,
+    size_t chunk_count,
+    const UmiAiVectorStore *vector_store,
+    const UmiAiEmbedding *query_embedding,
+    const UmiAiHybridRetrievalSettings *settings,
+    const UmiAiReranker *reranker,
+    UmiAiRetrievalResult *results,
+    size_t capacity)
+{
+    UmiAiHybridRetrievalSettings effective;
+    UmiAiRetrievalResult
+        lexical[UMI_AI_MAX_RETRIEVAL_RESULTS];
+    UmiAiRetrievalResult
+        candidates[UMI_AI_HYBRID_MAX_CANDIDATES];
+    size_t vector_indices[UMI_AI_MAX_RETRIEVAL_RESULTS];
+    double vector_scores[UMI_AI_MAX_RETRIEVAL_RESULTS];
+    size_t lexical_count;
+    size_t vector_count = 0U;
+    size_t candidate_count = 0U;
+    size_t index;
+    size_t limit;
+    size_t output_count;
+    double lexical_maximum = 0.0;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (query == NULL ||
+        chunks == NULL ||
+        results == NULL ||
+        capacity == 0U) {
+        return 0U;
+    }
+
+    effective = settings != NULL
+        ? *settings
+        : umi_ai_hybrid_retrieval_settings_default();
+
+    /* Reject malformed sources instead of silently publishing a partial blend.
+     * Either absent vector argument retains the existing lexical-only fallback. */
+    if (!isfinite(effective.lexical_weight) || !isfinite(effective.vector_weight) ||
+        !umi_ai_retrieval_chunks_valid(chunks, chunk_count)) return 0U;
+    if (vector_store != NULL && query_embedding != NULL &&
+        (!umi_ai_vector_store_valid(vector_store) ||
+         !umi_ai_embedding_valid(query_embedding))) return 0U;
 
     limit = effective.candidate_limit;
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */

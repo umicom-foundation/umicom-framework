@@ -102,7 +102,13 @@ int main(void)
     assert(service != NULL);
     assert(umi_browser_source_preview_service_install_builtins(service) ==
            UMI_STATUS_OK);
+    /* The original HTML/text catalogue count is retained for review.
+     * Three shared Markdown selectors now extend that catalogue. */
+#if 0
     assert(umi_browser_source_preview_service_count(service) == 3U);
+#else
+    assert(umi_browser_source_preview_service_count(service) == 6U);
+#endif
 
     /* HTML is converted to readable content and hidden executable text is removed. */
     request = request_for("lesson.html", "html", HTML, 7U);

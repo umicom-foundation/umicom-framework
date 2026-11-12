@@ -53,6 +53,18 @@ typedef struct UmiFinancialTradeControlBook {
     uint64_t revision;
 } UmiFinancialTradeControlBook;
 
+/* Validate complete caller-owned storage before traversal: bounded terminated
+ * text, required identities, finite numeric observations, known states/boolean
+ * flags and unique keys. Count must fit the array and revision must be nonzero.
+ * These references do not replace canonical domain engines or authenticate
+ * permissions. Keep inputs stable on one owner thread and outputs disjoint.
+ * Borrowed find results last until the next mutation; queries inspect at most
+ * 64 readable bytes and must terminate. Unused rows/text tails are ignored. */
+UmiStatus umi_financial_trade_control_validate(const UmiFinancialTradeControl *row);
+UmiStatus umi_financial_trade_control_book_validate(const UmiFinancialTradeControlBook *owner);
+/* Imported observations may use any known state. Transition retains the
+ * existing known-state edges, terminal rules and strictly increasing versions.
+ * Updating these local values does not perform a financial transaction. */
 void umi_financial_trade_control_book_init(UmiFinancialTradeControlBook *book);
 /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
  * before this operation changes state or invokes nested work. Initialize the

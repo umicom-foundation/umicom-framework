@@ -35,6 +35,18 @@ option(UMICOM_ENABLE_SANITIZERS
 option(UMICOM_BUILD_NATIVE_TOOL
        "Build the native umicom environment, build and repository command"
        ON)
+option(UMICOM_BUILD_CPP_COMPILER_CONSUMER_TESTS
+       "Qualify C compiler SDK linkage from an explicitly enabled C++ compiler"
+       OFF)
+option(UMICOM_BUILD_CPP_UI_CONSUMER_TESTS
+       "Qualify the C UI SDK from an explicitly enabled C++ compiler"
+       OFF)
+option(UMICOM_BUILD_CPP_SERVICE_CONSUMER_TESTS
+       "Qualify direct C++ consumers of selected shared C service components"
+       OFF)
+set(UMICOM_CPP_SERVICE_COMPONENTS
+    "codeguard;data;desktop;developer;finance;frontend;integration;observability;security"
+    CACHE STRING "Exported service components selected for C++ qualification")
 option(UMICOM_BUILD_GTK4_ADAPTER
        "Build the optional Framework GTK4 reference UI adapter"
        OFF)
@@ -143,6 +155,8 @@ add_library(umicom_base STATIC
     src/base/status.c
     src/base/arguments.c
     src/base/sha256.c
+    # Canonical decoding is shared by debugger memory and document asset admission.
+    src/base/base64.c
     src/base/csv_document.c
     src/base/snapshot_validation.c
     src/base/result.c
@@ -389,6 +403,8 @@ add_library(umicom_platform STATIC
     # Preserve the former source entry for review; compiling it twice would duplicate ownership.
     # src/platform/output_file.c
     src/platform/input_file.c
+    # Large model files share bounded native reads without changing the buffer API.
+    src/platform/input_stream.c
     src/platform/file_lease.c
     src/platform/threading.c
     src/platform/task.c
@@ -1153,6 +1169,8 @@ target_include_directories(umicom_compiler
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/src/compiler
 )
+# Compiler JSON presentation reuses the Protocol writer; do not duplicate escaping.
+target_link_libraries(umicom_compiler PRIVATE Umicom::protocol)
 umicom_apply_warnings(umicom_compiler)
 umicom_apply_sanitizers(umicom_compiler)
 
@@ -1887,6 +1905,7 @@ set(UMICOM_WEB_PLATFORM_SOURCE
     src/web/router.c
     src/web/middleware.c
     src/web/mime.c
+    src/web/response_body.c
     src/web/static_files.c
     src/web/preview.c
     src/web/json.c
@@ -3449,14 +3468,17 @@ if(UMICOM_BUILD_NATIVE_TOOL)
     add_executable(umicom
         tools/umicom/src/main.c
         tools/umicom/src/command_sdk.c
+        tools/umicom/src/command_compiler.c
         tools/umicom/src/command_learning_pack.c
         tools/umicom/src/common.c
         tools/umicom/src/command_check.c
         tools/umicom/src/command_observe_files.c
         tools/umicom/src/command_recipe.c
+        tools/umicom/src/command_project.c
         tools/umicom/src/command_preview.c
         tools/umicom/src/command_build.c
         tools/umicom/src/command_verify.c
+        tools/umicom/src/command_branding.c
         tools/umicom/src/command_automation.c
         tools/umicom/src/command_repository.c
         tools/umicom/src/command_application_module.c
@@ -3475,7 +3497,10 @@ if(UMICOM_BUILD_NATIVE_TOOL)
         UMICOM_APPLICATION_MODULE_TEMPLATE_ROOT="${CMAKE_CURRENT_SOURCE_DIR}/templates/application_module"
         UMICOM_APPLICATION_MODULE_TEMPLATE_INSTALL_DIR="${CMAKE_INSTALL_DATADIR}/umicom/templates/application_module"
     )
-    target_link_libraries(umicom PRIVATE Umicom::Framework)
+    # The same read-only source service backs both native audit commands.
+    include(cmake/UmicomSourceContracts.cmake)
+    umicom_enable_source_contracts()
+    target_link_libraries(umicom PRIVATE Umicom::Framework Umicom::source_contracts)
     umicom_apply_warnings(umicom)
     umicom_apply_sanitizers(umicom)
 
@@ -3486,6 +3511,17 @@ if(UMICOM_BUILD_NATIVE_TOOL)
     target_link_libraries(umicom-developer-reference PRIVATE Umicom::Framework)
     umicom_apply_warnings(umicom-developer-reference)
     umicom_apply_sanitizers(umicom-developer-reference)
+    # Native tools use the same identity service without adding GTK deployment.
+    include(cmake/UmicomApplicationBranding.cmake)
+    if(WIN32)
+        enable_language(RC)
+    endif()
+    foreach(_native_tool IN ITEMS umicom umicom-developer-reference)
+        umicom_apply_application_branding(TARGET "${_native_tool}"
+            PRODUCT_NAME "Umicom Framework" INTERNAL_NAME "${_native_tool}"
+            RESOURCE_ROOT "${CMAKE_CURRENT_SOURCE_DIR}/resources"
+            NO_RUNTIME_DEPLOYMENT)
+    endforeach()
 endif()
 
 # Preview checks follow the native command definition so entry tests see its real target.
@@ -3717,6 +3753,43 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-compiler-response-database-test framework.compiler.response_database tests/test_compiler_response_database.c)
     umicom_add_framework_test(umicom-compiler-policy-profile-test framework.compiler.policy_profile tests/test_compiler_policy_profile.c)
     umicom_add_framework_test(umicom-compiler-sysroot-runtime-test framework.compiler.sysroot_runtime tests/test_compiler_sysroot_runtime.c)
+    # Exercise shared catalogue admission without launching a compiler or probing an SDK.
+    umicom_add_framework_test(umicom-compiler-catalogue-admission-test framework.compiler.catalogue_admission tests/test_compiler_catalogue_admission.c)
+    umicom_add_framework_test(umicom-compiler-record-admission-test framework.compiler.record_admission tests/test_compiler_record_admission.c)
+    umicom_add_framework_test(umicom-compiler-request-plan-admission-test framework.compiler.request_plan_admission tests/test_compiler_request_plan_admission.c)
+    umicom_add_framework_test(umicom-compiler-action-planning-test framework.compiler.action_planning tests/test_compiler_action_planning.c)
+    umicom_add_framework_test(umicom-compiler-position-independent-test framework.compiler.position_independent tests/test_compiler_position_independent.c)
+    umicom_add_framework_test(umicom-compiler-profile-publication-test framework.compiler.profile_publication tests/test_compiler_profile_publication.c)
+    umicom_add_framework_test(umicom-compiler-toolchain-admission-test framework.compiler.toolchain_admission tests/test_compiler_toolchain_admission.c)
+    umicom_add_framework_test(umicom-compiler-toolchain-sync-test framework.compiler.toolchain_sync tests/test_compiler_toolchain_sync.c)
+    umicom_add_framework_test(umicom-toolchain-selection-publication-test framework.toolchain.selection_publication tests/test_toolchain_selection_publication.c)
+    umicom_add_framework_test(umicom-toolchain-profile-storage-test framework.toolchain.profile_storage tests/test_toolchain_profile_storage.c)
+    umicom_add_framework_test(umicom-compiler-factory-admission-test framework.compiler.factory_admission tests/test_compiler_factory_admission.c)
+    umicom_add_framework_test(umicom-compiler-plan-json-test framework.compiler.plan_json tests/test_compiler_plan_json.c)
+    umicom_add_framework_test(umicom-compiler-manifest-admission-test framework.compiler.manifest_admission tests/test_compiler_manifest_admission.c)
+    umicom_add_framework_test(umicom-compiler-manifest-languages-test framework.compiler.manifest_languages tests/test_compiler_manifest_languages.c)
+    umicom_add_framework_test(umicom-compiler-snapshot-format-test framework.compiler.snapshot_format tests/test_compiler_snapshot_format.c)
+
+    # C++ is an optional consumer-language check; the implementation remains C23.
+    if(UMICOM_BUILD_CPP_COMPILER_CONSUMER_TESTS)
+        enable_language(CXX)
+        include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomCompilerCppConsumer.cmake")
+        umicom_add_compiler_cpp_checks(umicom-compiler-cpp
+            "${CMAKE_CURRENT_SOURCE_DIR}/include" Umicom::compiler)
+    endif()
+
+    umicom_add_framework_test(umicom-compiler-profile-admission-test framework.compiler.profile_admission tests/test_compiler_profile_admission.c)
+    umicom_add_framework_test(umicom-compiler-database-admission-test framework.compiler.database_admission tests/test_compiler_database_admission.c)
+    umicom_add_framework_test(umicom-compiler-artifact-admission-test framework.compiler.artifact_admission tests/test_compiler_artifact_admission.c)
+    umicom_add_framework_test(umicom-compiler-cache-admission-test framework.compiler.cache_admission tests/test_compiler_cache_admission.c)
+    umicom_add_framework_test(umicom-compiler-request-identity-test framework.compiler.request_identity tests/test_compiler_request_identity.c)
+    umicom_add_framework_test(umicom-compiler-policy-publication-test framework.compiler.policy_publication tests/test_compiler_policy_publication.c)
+    umicom_add_framework_test(umicom-compiler-centre-admission-test framework.compiler.centre_admission tests/test_compiler_centre_admission.c)
+    umicom_add_framework_test(umicom-compiler-centre-publication-test framework.compiler.centre_publication tests/test_compiler_centre_publication.c)
+    umicom_add_framework_test(umicom-compiler-database-upsert-test framework.compiler.database_upsert tests/test_compiler_database_upsert.c)
+    umicom_add_framework_test(umicom-compiler-policy-dialects-test framework.compiler.policy_dialects tests/test_compiler_policy_dialects.c)
+    umicom_add_framework_test(umicom-compiler-linker-profile-admission-test framework.compiler.linker_profile_admission tests/test_compiler_linker_profile_admission.c)
+    umicom_add_framework_test(umicom-compiler-native-link-admission-test framework.compiler.native_link_admission tests/test_compiler_native_link_admission.c)
 
     # Batch 57: observability, resilience evidence and professional workspaces.
     umicom_add_framework_test(umicom-operations-histories-test framework.operations_histories tests/test_operations_histories.c)
@@ -3772,6 +3845,7 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-ui-workspace-profile-persistence-tests framework.ui.workspace_profile_persistence tests/test_ui_workspace_profile_persistence.c)
     umicom_add_framework_test(umicom-ui-workspace-profile-designer-tests framework.ui.workspace_profile_designer tests/test_ui_workspace_profile_designer.c)
     umicom_add_framework_test(umicom-ui-appearance-tests framework.ui.appearance tests/test_ui_appearance.c)
+    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomAppearanceTypographyChecks.cmake")
     umicom_add_framework_test(umicom-ui-automation-tests framework.ui.automation tests/test_ui_automation.c)
     add_subdirectory(tests/gui_recording)
     add_subdirectory(tests/gui_control_checks)
@@ -3913,6 +3987,94 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-developer-pipeline-tests framework.developer.pipeline tests/test_developer_pipeline.c)
     umicom_add_framework_test(umicom-developer-journal-tests framework.developer.journal tests/test_developer_journal.c)
     umicom_add_framework_test(umicom-developer-cmake-plan-tests framework.developer.cmake_plan tests/test_developer_cmake_plan.c)
+
+    # Plan translation and queue publication share the real Framework services.
+    add_executable(umicom-developer-cmake-transaction-tests tests/test_developer_cmake_transaction.c)
+    target_link_libraries(umicom-developer-cmake-transaction-tests PRIVATE Umicom::developer)
+    set_target_properties(umicom-developer-cmake-transaction-tests PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-developer-cmake-transaction-tests)
+    umicom_apply_sanitizers(umicom-developer-cmake-transaction-tests)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-developer-cmake-transaction-tests)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-developer-cmake-transaction-tests FILES
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/developer/cmake_plan.c")
+    endif()
+    foreach(_case IN ITEMS dev-flags-1 dev-flags-2 dev-flags-3 dev-flags-4 dev-flags-5 dev-flags-6 dev-flags-7 dev-flags-8 dev-flags-9 dev-flags-10 dev-flags-11 dev-flags-12 dev-flags-13 dev-flags-14 dev-flags-15 delivery-flags-0 delivery-flags-1 delivery-flags-2 delivery-flags-3 delivery-flags-4 delivery-flags-5 delivery-flags-6 delivery-flags-7 dev-run-array dev-run-null dev-run-long dev-run-program-long dev-empty dev-capacity dev-dependencies dev-collision dev-retry delivery-filter-long delivery-prefix-long delivery-generator-long delivery-invalid-flags delivery-version delivery-struct delivery-capacity delivery-dependencies delivery-collision delivery-retry runtime-success runtime-refusal allocation-dev allocation-delivery)
+        add_test(NAME framework.developer.cmake_transaction.${_case}
+            COMMAND umicom-developer-cmake-transaction-tests ${_case})
+        set_tests_properties(framework.developer.cmake_transaction.${_case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;developer;cmake;transaction;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.developer.cmake_transaction.${_case}
+                TARGETS umicom-developer-cmake-transaction-tests)
+        endif()
+    endforeach()
+    add_executable(umicom-developer-publication-budget-tests tests/developer_lifecycle/test_runtime_publication_budget.c)
+    target_link_libraries(umicom-developer-publication-budget-tests PRIVATE Umicom::developer)
+    set_target_properties(umicom-developer-publication-budget-tests PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-developer-publication-budget-tests)
+    umicom_apply_sanitizers(umicom-developer-publication-budget-tests)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-developer-publication-budget-tests)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-developer-publication-budget-tests FILES
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/developer/runtime.c")
+    endif()
+    foreach(_case IN ITEMS chain-runtime chain-sequence chain-journal-revision chain-dropped chain-boundary cmake-runtime cmake-sequence cmake-journal-revision cmake-dropped cmake-boundary single-runtime single-sequence single-journal-revision single-dropped single-boundary)
+        add_test(NAME framework.developer.publication_budget.${_case}
+            COMMAND umicom-developer-publication-budget-tests ${_case})
+        set_tests_properties(framework.developer.publication_budget.${_case} PROPERTIES
+            TIMEOUT 20 LABELS "framework;developer;identity;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.developer.publication_budget.${_case}
+                TARGETS umicom-developer-publication-budget-tests)
+        endif()
+    endforeach()
+
+    # Exercise every journalled mutation using the real runtime implementation.
+    # The one-event case proves synchronous execution reserves its terminal event.
+    add_executable(umicom-developer-transition-budget-tests tests/developer_lifecycle/test_runtime_transition_budget.c)
+    target_link_libraries(umicom-developer-transition-budget-tests PRIVATE Umicom::developer)
+    set_target_properties(umicom-developer-transition-budget-tests PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-developer-transition-budget-tests)
+    umicom_apply_sanitizers(umicom-developer-transition-budget-tests)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-developer-transition-budget-tests)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-developer-transition-budget-tests FILES
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/developer/runtime.c")
+    endif()
+    foreach(_transition IN ITEMS context dependency start progress complete fail cancel retry execute)
+        set(_transition_budgets runtime sequence journal dropped boundary)
+        if(_transition STREQUAL "execute")
+            list(APPEND _transition_budgets one-event)
+        endif()
+        foreach(_budget IN LISTS _transition_budgets)
+            add_test(NAME framework.developer.transition_budget.${_transition}.${_budget}
+                COMMAND umicom-developer-transition-budget-tests ${_transition} ${_budget})
+            set_tests_properties(framework.developer.transition_budget.${_transition}.${_budget}
+                PROPERTIES TIMEOUT 20 LABELS "framework;developer;identity;regression")
+            if(COMMAND umicom_test_impact_owners)
+                umicom_test_impact_owners(framework.developer.transition_budget.${_transition}.${_budget}
+                    TARGETS umicom-developer-transition-budget-tests)
+            endif()
+        endforeach()
+    endforeach()
+
+    umicom_add_framework_test(umicom-developer-model-identity-tests framework.developer.model_identity tests/developer_lifecycle/test_model_identity_budget.c)
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-developer-model-identity-tests FILES
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/developer/context.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/developer/journal.c")
+    endif()
+
     umicom_add_framework_test(umicom-developer-lifecycle-plan-tests framework.developer.lifecycle_plan tests/test_developer_lifecycle_plan.c)
     include(cmake/UmicomDeveloperLifecycleExecution.cmake)
     umicom_add_framework_test(umicom-developer-runtime-tests framework.developer.runtime tests/test_developer_runtime.c)
@@ -3925,6 +4087,52 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-developer-task-plan-tests framework.developer.task_plan tests/test_developer_task_plan.c)
     umicom_add_framework_test(umicom-developer-launch-plan-tests framework.developer.launch_plan tests/test_developer_launch_plan.c)
     umicom_add_framework_test(umicom-developer-workflow-tests framework.developer.workflow tests/test_developer_workflow.c)
+    add_executable(umicom-developer-chain-admission-tests tests/developer_lifecycle/test_chain_admission_failures.c)
+    target_link_libraries(umicom-developer-chain-admission-tests PRIVATE Umicom::developer)
+    set_target_properties(umicom-developer-chain-admission-tests PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-developer-chain-admission-tests)
+    umicom_apply_sanitizers(umicom-developer-chain-admission-tests)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-developer-chain-admission-tests)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-developer-chain-admission-tests FILES
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/developer/pipeline.c")
+    endif()
+    foreach(_case allocation-owner allocation-operations allocation-dependencies pipeline-revision sequence operation-revision)
+        add_test(NAME framework.developer.chain_admission.${_case}
+            COMMAND umicom-developer-chain-admission-tests ${_case})
+        set_tests_properties(framework.developer.chain_admission.${_case} PROPERTIES
+            TIMEOUT 20 LABELS "framework;developer;workflow;transaction;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.developer.chain_admission.${_case}
+                TARGETS umicom-developer-chain-admission-tests)
+        endif()
+    endforeach()
+
+    # Whole-workflow admission uses synthetic tasks and model completions only.
+    # Each refused request must retain existing operations, events and revisions.
+    add_executable(umicom-developer-workflow-transaction-tests tests/test_developer_workflow_transaction.c)
+    target_link_libraries(umicom-developer-workflow-transaction-tests PRIVATE Umicom::developer)
+    set_target_properties(umicom-developer-workflow-transaction-tests PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-developer-workflow-transaction-tests)
+    umicom_apply_sanitizers(umicom-developer-workflow-transaction-tests)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-developer-workflow-transaction-tests)
+    endif()
+    foreach(_case success tasks-only launch-only maximum repeat-task missing-task disabled-task malformed-task null-task empty-task missing-launch malformed-launch late-collision operation-capacity dependency-capacity empty-workflow debug-range null-task-array task-count chain-copies chain-duplicate chain-existing chain-id chain-title chain-program chain-summary chain-argument chain-argument-count chain-struct-size chain-version chain-kind chain-zero chain-count chain-null-array chain-null-runtime task-plan task-missing launch-plan launch-missing repair-after-refusal late-id-limit single-id single-program single-argument single-kind single-legacy)
+        add_test(NAME framework.developer.workflow_transaction.${_case}
+            COMMAND umicom-developer-workflow-transaction-tests ${_case})
+        set_tests_properties(framework.developer.workflow_transaction.${_case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;developer;workflow;transaction;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.developer.workflow_transaction.${_case}
+                TARGETS umicom-developer-workflow-transaction-tests)
+        endif()
+    endforeach()
+
     umicom_add_framework_test(umicom-developer-batch-execution-tests framework.developer.batch_execution tests/test_developer_batch_execution.c)
     umicom_add_framework_test(umicom-developer-workspace-state-tests framework.developer.workspace_state tests/test_developer_workspace_state.c)
 
@@ -4488,6 +4696,105 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-database-explorer-tests framework.database_explorer tests/test_database_explorer.c)
 
     umicom_add_framework_test(umicom-ui-value-property-tests framework.ui_value_property tests/test_ui_value_property.c)
+
+    # Exercise the shared value owner without launching a native window.
+    add_executable(umicom-ui-value-publication-test tests/ui/test_value_publication.c)
+    target_link_libraries(umicom-ui-value-publication-test PRIVATE Umicom::ui)
+    umicom_apply_warnings(umicom-ui-value-publication-test)
+    umicom_apply_sanitizers(umicom-ui-value-publication-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-ui-value-publication-test)
+    endif()
+    function(umicom_add_ui_value_publication_case name)
+        add_test(NAME framework.ui.value_publication.${name}
+            COMMAND umicom-ui-value-publication-test ${ARGN})
+        set_tests_properties(framework.ui.value_publication.${name} PROPERTIES
+            TIMEOUT 30 LABELS "framework;ui;ownership;regression")
+    endfunction()
+    foreach(mode valid copy equal)
+        foreach(record none boolean integer real nan infinity text empty last unterminated unknown negative-kind inactive-text negative-boolean)
+            umicom_add_ui_value_publication_case("${mode}.${record}" "${mode}" "${record}")
+        endforeach()
+    endforeach()
+    foreach(case empty replace limit overflow unterminated null-text null-destination self suffix last-byte self-unterminated)
+        umicom_add_ui_value_publication_case("string.${case}" string "${case}")
+    endforeach()
+    foreach(case nulls self-copy invalid-self-copy different-text different-kind different-integer different-boolean different-real)
+        umicom_add_ui_value_publication_case("special.${case}" special "${case}")
+    endforeach()
+    foreach(destination existing new)
+        foreach(record unterminated unknown negative-kind)
+            umicom_add_ui_value_publication_case("bag.${destination}.${record}" bag "${destination}" "${record}")
+        endforeach()
+    endforeach()
+    foreach(record text inactive-text)
+        umicom_add_ui_value_publication_case("bag.copy.${record}" bag new "${record}")
+    endforeach()
+    foreach(owner observable computed)
+        foreach(record text unknown inactive-text)
+            umicom_add_ui_value_publication_case("reactive.${owner}.${record}" reactive "${owner}" "${record}")
+        endforeach()
+    endforeach()
+
+
+    # Public reactive records share the same value admission as property owners.
+    add_executable(umicom-ui-reactive-value-admission-test tests/ui_reactive/test_value_admission.c)
+    target_link_libraries(umicom-ui-reactive-value-admission-test PRIVATE Umicom::ui)
+    umicom_apply_warnings(umicom-ui-reactive-value-admission-test)
+    umicom_apply_sanitizers(umicom-ui-reactive-value-admission-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-ui-reactive-value-admission-test)
+    endif()
+    function(umicom_add_reactive_value_admission_case group case)
+        add_test(NAME framework.ui_reactive.value_admission.${group}.${case}
+            COMMAND umicom-ui-reactive-value-admission-test "${group}" "${case}")
+        set_tests_properties(framework.ui_reactive.value_admission.${group}.${case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;ui;reactive;ownership;regression")
+    endfunction()
+    foreach(case existing new null-store null-key empty-key long-key limit-key null-value unknown-value unterminated-value count stored-key stored-empty-key stored-kind stored-text revision revision-new last-revision borrowed full-new full-existing)
+        umicom_add_reactive_value_admission_case(put "${case}")
+    endforeach()
+    foreach(case existing new null-store null-key empty-key long-key limit-key null-output count stored-key stored-empty-key stored-kind stored-text revision)
+        umicom_add_reactive_value_admission_case(get "${case}")
+    endforeach()
+    foreach(owner change-before change-after parameter operand evaluator converter-source converter-target validator)
+        foreach(kind none boolean integer real string unknown negative)
+            umicom_add_reactive_value_admission_case("${owner}" "${kind}")
+        endforeach()
+    endforeach()
+
+
+    # Qualify component-boundary refusal without creating native windows.
+    add_executable(umicom-ui-binding-admission-test tests/ui/test_binding_admission.c)
+    target_link_libraries(umicom-ui-binding-admission-test PRIVATE Umicom::ui)
+    umicom_apply_warnings(umicom-ui-binding-admission-test)
+    umicom_apply_sanitizers(umicom-ui-binding-admission-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-ui-binding-admission-test)
+    endif()
+    function(umicom_add_ui_binding_admission_case name)
+        add_test(NAME framework.ui.binding_admission.${name}
+            COMMAND umicom-ui-binding-admission-test ${ARGN})
+        set_tests_properties(framework.ui.binding_admission.${name} PROPERTIES
+            TIMEOUT 30 LABELS "framework;ui;binding;ownership;regression")
+    endfunction()
+    foreach(case valid limit over unterminated null empty space colon)
+        umicom_add_ui_binding_admission_case("identifier.${case}" identifier "${case}")
+    endforeach()
+    foreach(case valid id source-key target-key empty-source empty-target source-view target-view null-descriptor null-registry limit duplicate full)
+        umicom_add_ui_binding_admission_case("register.${case}" register "${case}")
+    endforeach()
+    foreach(case valid none identity disabled missing error error-after-write no-write kind unterminated)
+        umicom_add_ui_binding_admission_case("single.${case}" single "${case}")
+    endforeach()
+    foreach(case valid none identity disabled missing error error-after-write no-write kind unterminated)
+        umicom_add_ui_binding_admission_case("all.${case}" all "${case}")
+    endforeach()
+    foreach(case unregister propagate)
+        umicom_add_ui_binding_admission_case("lookup.${case}" lookup "${case}")
+    endforeach()
+    umicom_add_ui_binding_admission_case(mixed mixed)
+
     umicom_add_framework_test(umicom-ui-view-model-tests framework.ui_view_model tests/test_ui_view_model.c)
     umicom_add_framework_test(umicom-ui-action-menu-tests framework.ui_action_menu tests/test_ui_action_menu.c)
     umicom_add_framework_test(umicom-ui-toolbar-status-tests framework.ui_toolbar_status tests/test_ui_toolbar_status.c)
@@ -4535,6 +4842,26 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-build-plan-tests framework.build_plan tests/test_build_plan.c)
     umicom_add_framework_test(umicom-build-provider-command-tests framework.build_provider_commands tests/test_build_provider_commands.c)
     umicom_add_framework_test(umicom-build-engine-tests framework.build_engine tests/test_build_engine.c)
+    # Retry admission must not revoke cancellation on a rejected graph mutation.
+    add_executable(umicom-build-retry-cancellation-test tests/build/test_retry_cancellation.c)
+    target_link_libraries(umicom-build-retry-cancellation-test PRIVATE Umicom::build)
+    umicom_apply_warnings(umicom-build-retry-cancellation-test)
+    umicom_apply_sanitizers(umicom-build-retry-cancellation-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-build-retry-cancellation-test)
+    endif()
+    foreach(owner owned borrowed)
+        foreach(cancellation requested clear)
+            foreach(case null-engine null-node missing ready waiting blocked running
+                    succeeded attempts failed cancelled timed-out repeat)
+                add_test(NAME framework.build_retry_cancellation.${owner}.${cancellation}.${case}
+                    COMMAND umicom-build-retry-cancellation-test "${owner}" "${cancellation}" "${case}")
+                set_tests_properties(framework.build_retry_cancellation.${owner}.${cancellation}.${case}
+                    PROPERTIES TIMEOUT 30 LABELS "framework;build;cancellation;regression")
+            endforeach()
+        endforeach()
+    endforeach()
+
     umicom_add_framework_test(umicom-build-artifact-tests framework.build_artifact tests/test_build_artifact.c)
     umicom_add_framework_test(umicom-build-workspace-tests framework.build_workspace tests/test_build_workspace.c)
     umicom_add_framework_test(umicom-build-ui-views-tests framework.build_ui_views tests/test_build_ui_views.c)
@@ -4763,6 +5090,9 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-ai-prompt-context-tests framework.ai_prompt_context tests/test_ai_prompt_context.c)
     umicom_add_framework_test(umicom-ai-retrieval-tests framework.ai_retrieval tests/test_ai_retrieval.c)
     umicom_add_framework_test(umicom-ai-embedding-tests framework.ai_embedding tests/test_ai_embedding.c)
+    # Exercise the shared record/store boundary through its real public operations.
+    umicom_add_framework_test(umicom-ai-vector-admission-test framework.ai.vector_admission tests/test_ai_vector_admission.c)
+    umicom_add_framework_test(umicom-ai-retrieval-publication-test framework.ai.retrieval_publication tests/test_ai_retrieval_publication.c)
     umicom_add_framework_test(umicom-ai-tools-policy-tests framework.ai_tools_policy tests/test_ai_tools_policy.c)
     umicom_add_framework_test(umicom-ai-provider-tests framework.ai_provider tests/test_ai_provider.c)
     umicom_add_framework_test(umicom-ai-model-ensemble-tests framework.ai_model_ensemble tests/test_ai_model_ensemble.c)
@@ -6352,6 +6682,8 @@ include(cmake/UmicomWorkspaceValueArchives.cmake)
 include(cmake/UmicomSnippetUpdates.cmake)
 # Native QEMU commands consume the canonical VM planner and process owner.
 include(cmake/UmicomQemuCommand.cmake)
+# Distribution commands reuse the native media and setup owners.
+include(cmake/UmicomMediaCommands.cmake)
 # Read-only Git observations and source-control review acceptance cases.
 include(cmake/UmicomNativeArguments.cmake)
 include(cmake/UmicomLocalProfileDatabase.cmake)
@@ -6664,3 +6996,104 @@ endif()
 
 # Shared history mutations carry their persistence and qualification contract.
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/UmicomRecentItemsRemoval.cmake")
+
+
+# Imported diagnostic storage is admitted before queries or history retention.
+if(BUILD_TESTING)
+    add_executable(umicom-build-storage-test tests/test_build_storage_admission.c)
+    target_link_libraries(umicom-build-storage-test PRIVATE Umicom::build)
+    set_target_properties(umicom-build-storage-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-build-storage-test)
+    umicom_apply_sanitizers(umicom-build-storage-test)
+    foreach(_storage_case IN ITEMS
+        valid.empty
+        valid.inactive
+        valid.locations
+        null.arguments
+        record.file
+        record.code
+        record.message
+        record.severity-high
+        record.severity-negative
+        count.over
+        count.maximum
+        index.boundary
+        index.last-invalid
+        full.dropped
+        full.saturated
+        append.alias
+        severity.thresholds
+        severity.invalid-high
+        severity.invalid-negative
+        result.profile
+        result.command
+        result.output
+        result.diagnostics
+        result.inactive
+        result.unknown-phase
+        summary.valid
+        summary.invalid
+        summary.capacity
+        history.profile
+        history.command
+        history.output
+        history.diagnostics
+        history.live-message
+        history.full-refusal
+        history.identity-refusal)
+        add_test(NAME framework.build.storage.${_storage_case}
+            COMMAND umicom-build-storage-test "${_storage_case}")
+        set_tests_properties(framework.build.storage.${_storage_case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;build;diagnostics;memory-only")
+    endforeach()
+endif()
+
+# Shared byte admission has no debugger or GUI dependency.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomBase64Checks.cmake")
+
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomGuideBrandingChecks.cmake")
+
+# Shared preview contracts are qualified independently of a native editor window.
+include("${CMAKE_CURRENT_LIST_DIR}/cmake/UmicomSourcePreviewChecks.cmake")
+
+# Native reading is reusable even when the optional learning catalogue is absent.
+include("${CMAKE_CURRENT_LIST_DIR}/cmake/UmicomReadingDocumentGtk4.cmake")
+
+# Retained finance controls share host admission across native products.
+include("${CMAKE_CURRENT_LIST_DIR}/cmake/UmicomLauncherAdmissionChecks.cmake")
+
+# Owned command admission is shared by planners, providers and diagnostic views.
+include(cmake/UmicomBuildCommandChecks.cmake)
+
+# Publish complete provider plans and qualify their literal phase selections.
+include(cmake/UmicomProjectPlanChecks.cmake)
+
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomCompilerPlanChecks.cmake")
+
+
+# UI adapters and enterprise extensions are all registered before their consumers.
+# CXX remains optional and is used only by these SDK compatibility checks.
+if(BUILD_TESTING AND UMICOM_BUILD_CPP_UI_CONSUMER_TESTS)
+    enable_language(CXX)
+    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomUiCppConsumer.cmake")
+    umicom_add_ui_cpp_checks(umicom-ui-cpp "${CMAKE_CURRENT_SOURCE_DIR}/include"
+        "${UMICOM_BUILD_GTK4_ADAPTER}")
+endif()
+
+# Compound UI edits share memory-only ownership regression coverage.
+include(cmake/UmicomUiStatePublicationChecks.cmake)
+
+
+# Register after every selected library has received its extension sources.
+if(BUILD_TESTING AND UMICOM_BUILD_CPP_SERVICE_CONSUMER_TESTS)
+    enable_language(CXX)
+    include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomServiceCppConsumer.cmake")
+    umicom_add_service_cpp_checks(umicom-service-cpp "${CMAKE_CURRENT_SOURCE_DIR}/include"
+        ${UMICOM_CPP_SERVICE_COMPONENTS})
+endif()
+
+# Order storage and attempt quotas share deterministic boundary checks.
+include(cmake/UmicomOrderAdmissionChecks.cmake)
+
+# Model lifetime and transport policy belong to Framework, shared by native clients.
+include("${CMAKE_CURRENT_LIST_DIR}/cmake/UmicomLocalModels.cmake")

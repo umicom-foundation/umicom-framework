@@ -1,20 +1,21 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/boot_media/device_windows.c
+ *
  * PURPOSE:
- *   Native Windows removable-USB observation and gated acquisition. System-volume extents
- *   are excluded; every target volume must be single-disk and lockable. Failed
- *   identity/extent/lock checks occur before the first disk write.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Observe Windows removable USB disks and acquire only identified, lockable non-system volumes.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
-/*-----------------------------------------------------------------------------
- * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Native Windows removable-USB observation and gated acquisition. System-volume
- * extents are excluded; every target volume must be single-disk and lockable.
- * Failed identity/extent/lock checks occur before the first disk write.
- *---------------------------------------------------------------------------*/
+/* System-volume extents are excluded; every target volume must be single-disk
+ * and lockable. Failed identity/extent/lock checks occur before the first disk
+ * write. The adapter does not elevate or retry acquisition. */
 
 #include "internal.h"
 #include <winioctl.h>
@@ -273,7 +274,14 @@ UmiStatus BmDeviceCheck(const char *path,UmiBootMediaDevice *out)
     return UMI_STATUS_OK;
 }
 
+/* The former public adapter entry remains below for source review. Shared
+ * discovery.c now resets and publishes diagnostics consistently on every host;
+ * this private entry retains the same native observation and refusal logic. */
+#if 0
 UmiStatus UmiBootMediaDiscover(UmiBootMediaInventory *out,UmiBootMediaReport *r)
+#else
+UmiStatus BmDiscover(UmiBootMediaInventory *out,UmiBootMediaReport *r)
+#endif
 {
     if (!out)return UMI_STATUS_INVALID_ARGUMENT;
     memset(out,0,sizeof *out);

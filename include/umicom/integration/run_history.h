@@ -15,6 +15,12 @@
 #ifndef UMICOM_INTEGRATION_RUN_HISTORY_H
 #define UMICOM_INTEGRATION_RUN_HISTORY_H
 #include "umicom/integration/simulator.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the integration run record data shared with callers of this public contract.
  */
@@ -59,4 +65,8 @@ const UmiIntegrationRunRecord *umi_integration_run_history_find(const UmiIntegra
  * applications.
  */
 void umi_integration_run_history_metrics(const UmiIntegrationRunHistory *history,UmiIntegrationRunMetrics *out_metrics);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

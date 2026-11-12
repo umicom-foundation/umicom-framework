@@ -64,6 +64,12 @@ typedef struct UmiDeveloperWorkflowSnapshot {
  * Provide the developer workflow submit operation used by this module and its client
  * applications.
  */
+/* Translate every task and optional launch profile before publishing a complete
+ * dependency chain. Any failure preserves the queue, journal, runtime revision
+ * and optional output snapshot. Previously queued/running work is retained.
+ * Requests borrow terminated strings and task-ID storage for the call; one
+ * owner serializes access to the runtime and its project registries. Successful
+ * submission queues work and publishes observations; it never executes it. */
 UmiStatus umi_developer_workflow_submit(
     UmiDeveloperRuntime *runtime,
     const UmiDeveloperWorkflowRequest *request,

@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_CHANGE_BATCH_H
 
 #include "umicom/ui/enterprise/data_delta.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent change batch data shared with callers of this public contract.
  */
@@ -30,4 +36,8 @@ void umi_ui_ent_change_batch_init(UmiUiEntChangeBatch *b);
  */
 UmiStatus umi_ui_ent_change_batch_add(UmiUiEntChangeBatch *b,const UmiUiEntDataDelta *delta);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

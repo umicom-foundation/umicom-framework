@@ -21,6 +21,11 @@
 
 
 /* Provide the plan build operation used by this module and its client applications. */
+/* Retained for review: forcing Debug could contradict a selected preset.
+ * The model has no separate configuration selection, so presets keep their
+ * own configuration; the established no-preset Ninja default remains Debug.
+ * Model admission also bounds its strings before the pure planner reads them. */
+#if 0
 static UmiStatus plan_build(
     const UmiDeveloperProjectModel *model,
     int include_test,
@@ -33,6 +38,25 @@ static UmiStatus plan_build(
         model->build_directory,
         model->preset,
         "Debug",
+        include_test,
+        include_package);
+}
+#endif
+
+static UmiStatus plan_build(
+    const UmiDeveloperProjectModel *model,
+    int include_test,
+    int include_package,
+    UmiDeveloperProjectBuildPlan *out_plan)
+{
+    UmiStatus status = umi_developer_project_model_validate(model, NULL, 0U);
+    if (status != UMI_STATUS_OK) return status;
+    return umi_developer_project_build_plan_cmake(
+        out_plan,
+        model->root,
+        model->build_directory,
+        model->preset,
+        model->preset[0] != '\0' ? NULL : "Debug",
         include_test,
         include_package);
 }

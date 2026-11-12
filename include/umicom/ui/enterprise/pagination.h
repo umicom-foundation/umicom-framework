@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_PAGINATION_H
 
 #include "umicom/ui/enterprise/types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent pagination data shared with callers of this public contract.
  */
@@ -31,4 +37,8 @@ size_t umi_ui_ent_pagination_page_count(const UmiUiEntPagination *p);
  */
 UmiUiEntSpan umi_ui_ent_pagination_span(const UmiUiEntPagination *p);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

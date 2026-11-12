@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_DATA_PROVIDER_H
 
 #include "umicom/ui/enterprise/cell_value.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 typedef size_t (*UmiUiEntRowCountFn)(void *context);
 typedef UmiStatus (*UmiUiEntCellFn)(void *context,size_t row,size_t column,UmiUiEntCellValue *out_value);
 /**
@@ -33,4 +39,8 @@ int umi_ui_ent_data_provider_validate(const UmiUiEntDataProvider *provider);
  */
 UmiStatus umi_ui_ent_data_provider_cell(const UmiUiEntDataProvider *provider,size_t row,size_t column,UmiUiEntCellValue *out_value);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

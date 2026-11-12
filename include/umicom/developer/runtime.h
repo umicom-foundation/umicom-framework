@@ -127,9 +127,26 @@ UmiStatus umi_developer_runtime_set_context(
  * Provide the developer runtime submit operation operation used by this module and its
  * client applications.
  */
+/* All lifecycle mutations reserve journal/runtime event identities before
+ * changing the model. An exhausted event budget returns INVALID_STATE without
+ * changing that model. Synchronous execute_next admits both start and terminal
+ * events before calling the executor. Serialize runtime access; executor and
+ * notification callbacks must not re-enter or mutate the runtime. Admission
+ * protects counter capacity, not external process side effects or durability. */
 UmiStatus umi_developer_runtime_submit_operation(
     UmiDeveloperRuntime *runtime,
     const UmiDeveloperOperationSnapshot *operation);
+
+/* Submit one complete dependency chain through the shared pipeline transaction.
+ * All admission failures leave queue, journal and runtime revision unchanged.
+ * Success records submitted/dependency events in the original interleaved order;
+ * workbench notifications use the existing best-effort projection. No process is
+ * started. Inputs remain readable/stable and the runtime stays single-owner
+ * throughout the call. See pipeline_submit_chain for operation storage rules. */
+UmiStatus umi_developer_runtime_submit_chain(
+    UmiDeveloperRuntime *runtime,
+    const UmiDeveloperOperationSnapshot *operations,
+    size_t count);
 
 /**
  * Provide the developer runtime add dependency operation used by this module and its

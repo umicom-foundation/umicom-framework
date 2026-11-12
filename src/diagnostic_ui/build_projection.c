@@ -101,6 +101,9 @@ UmiStatus umi_diagnostic_build_result_ingest(UmiDiagnosticPipeline *pipeline,
      * used.
      */
     if (pipeline == NULL || result == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Retain the earlier local check for review. Build producers, history and
+     * Problems now share storage admission before any previous finding changes. */
+#if 0
     if (result->diagnostics.count > UMI_BUILD_MAX_DIAGNOSTICS ||
         memchr(result->output, '\0', sizeof result->output) == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
@@ -112,6 +115,9 @@ UmiStatus umi_diagnostic_build_result_ingest(UmiDiagnosticPipeline *pipeline,
             item->severity < UMI_BUILD_DIAGNOSTIC_NOTE || item->severity > UMI_BUILD_DIAGNOSTIC_FATAL)
             return UMI_STATUS_INVALID_ARGUMENT;
     }
+#endif
+    status=UmiBuildResultValidateStorage(result);
+    if (status!=UMI_STATUS_OK)return status;
     source = source != NULL && source[0] != '\0' ? source : "build";
     /* Replace active compiler findings from the same build producer only when
      * a new compile result arrives. Other tools' findings remain independent. */

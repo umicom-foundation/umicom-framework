@@ -79,8 +79,13 @@ UmiStatus UmiBuildExecuteLogged(const UmiToolchainProfile *profile,
 #if 0
     UmiStatus status = umi_build_request_validate(action, request, NULL, 0U);
 #endif
+    /* Preserve request/options-only admission. Complete metadata preflight
+     * below prevents a refused environment or later tool from consuming a log. */
+#if 0
     UmiStatus status = UmiBuildExecutionValidate(action, request, options, NULL, 0U);
     if (!profile) status = UMI_STATUS_INVALID_ARGUMENT;
+#endif
+    UmiStatus status = UmiBuildExecutionPreflight(profile, environment, action, request, options, NULL, 0U);
     /* CTest and the raw stream sink are independent writers. Refuse collisions
      * before either creates a file, including through the native SDK entry. */
     if (status == UMI_STATUS_OK && log_path && options &&

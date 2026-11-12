@@ -15,6 +15,12 @@
 #ifndef UMICOM_COMPILER_MANIFEST_H
 #define UMICOM_COMPILER_MANIFEST_H
 #include "umicom/compiler/request.h"
+
+/* Keep the public C symbol names when this header is included directly by a
+ * C++ client. Includes remain outside the linkage block; layouts are unchanged. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the compiler unit manifest data shared with callers of this public contract.
  */
@@ -43,4 +49,24 @@ const UmiCompilerUnitManifest *umi_compiler_manifest_find_unit(const UmiCompiler
  * Check that compiler manifest satisfies its contract before another service relies on it.
  */
 UmiStatus umi_compiler_manifest_validate(const UmiCompilerProjectManifest *manifest,char *out_reason,size_t capacity);
+/** Check complete required unit text, optional provider/ABI text and a known language. */
+bool umi_compiler_unit_manifest_valid(const UmiCompilerUnitManifest *unit);
+/** Bound scalar strings, unit count and all active unit rows. Empty scalar fields
+ * and zero units permit draft composition; manifest_validate checks required
+ * project/target metadata and the established entry-point rule separately.
+ * Constructor failures preserve all destination bytes, including borrowed inputs.
+ * Insert failures preserve all bytes. Duplicates precede slot/revision exhaustion.
+ * Lookup returns a borrowed pointer only after full admission; callers serialize
+ * access and keep the manifest alive. Inactive slots and target/provider existence
+ * are not qualified. Diagnostic output must not overlap the manifest. */
+bool umi_compiler_manifest_storage_valid(const UmiCompilerProjectManifest *manifest);
+/** Derive the distinct known-language mask only after complete manifest storage
+ * admission. Draft manifests with zero units return zero. Failure preserves the
+ * output; it must be separate from manifest storage. This reads metadata only,
+ * supplies no synchronization and does not qualify compiler or ABI support. */
+UmiStatus umi_compiler_manifest_languages(const UmiCompilerProjectManifest *manifest,
+    uint32_t *out_mask);
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 #endif

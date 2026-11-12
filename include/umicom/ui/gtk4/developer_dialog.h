@@ -27,6 +27,13 @@ typedef UmiStatus (*UmiGtk4BuildSettingsApplied)(const UmiBuildProfile *profile,
     int trusted, void *context);
 /** No code is executed when opening either form. Call on the GTK thread.
  * The owner must destroy this handle before releasing the callback context. */
+/** Choosing Create copies the draft and schedules source generation off the GTK
+ * thread. Completion adopts into a live visible host only. A hidden owned form
+ * retains the result and offers Open Project when presented again. Failed
+ * adoption can be retried without writing again. Normal Close/Cancel waits for
+ * a started write; Destroy retires callback authority without undoing files.
+ * Keep the creating GTK main context running until background completions drain.
+ * Generated source still requires the owner's separate build qualification. */
 UmiStatus UmiGtk4NewProjectDialogCreate(GtkWindow *parent,
     UmiGtk4ProjectCreated onCreated, void *context, UmiGtk4DeveloperDialog **outDialog);
 /**
@@ -90,6 +97,15 @@ UmiStatus UmiGtk4BuildSettingsCurrentSection(const UmiGtk4DeveloperDialog *dialo
  * function retains internal lifetime and returns CANCELLED if the form closes.
  * Callers must reacquire their own owner before accessing it after this call. */
 UmiStatus UmiGtk4DeveloperDialogPresent(UmiGtk4DeveloperDialog *dialog);
+/** Observe source-write activity without running callbacks or changing state.
+ * Call on the GTK thread with an owned, not-yet-destroyed handle (NULL is idle).
+ * True covers write admission, background work and completion publication for
+ * ordinary projects and application modules. Read-only preview work is excluded.
+ * Hidden forms can remain busy. Hosts should postpone normal close or form
+ * replacement while true, then let their event loop deliver completion.
+ * This snapshot does not reserve the form or promise rollback after Destroy. */
+int UmiGtk4DeveloperDialogWritePending(const UmiGtk4DeveloperDialog *dialog);
+
 /** Accept/Cancel hides the form. The owner retains it until Destroy. */
 /** Destroy may be called from an acceptance callback on the GTK thread. Clear
  * the owner's stored handle at that point; the callback's borrowed result stays

@@ -22,6 +22,12 @@
 #include "umicom/ui/window_group.h"
 #include "umicom/ui/layout_library.h"
 #include "umicom/ui/theme_profile.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define UMI_UI_CUSTOM_WORKSPACE_MAX_LAYOUTS 16U
 /* Bound one coordinated layout edit so callers cannot submit an unbounded
  * list of panel changes to a synchronous transaction. */
@@ -282,4 +288,8 @@ UmiStatus umi_ui_workspace_customisation_place_canvas_window(
     double width,
     double height);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -1,7 +1,10 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/toolchain/kit_environment.h
- * PURPOSE: Build a deterministic child environment from a selected developer kit.
+ *
+ * PURPOSE:
+ *   Build a deterministic child environment from a selected developer kit.
+ *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
  * Umicom Foundation
@@ -20,8 +23,10 @@ extern "C" {
 #endif
 
 /**
- * Provide the toolchain kit environment plan operation used by this module and its client
- * applications.
+ * Validate a complete kit and stage its non-empty overrides on an optional
+ * profile environment. Failure leaves out_plan unchanged. On success all
+ * process entries borrow out_plan storage; keep it alive during consumption.
+ * Construction can report heap allocation failure.
  */
 UmiStatus umi_toolchain_kit_environment_plan(
     const UmiToolchainKitSnapshot *kit,

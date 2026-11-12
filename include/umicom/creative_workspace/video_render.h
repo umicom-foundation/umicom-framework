@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/creative_workspace/video_render.h
- * PURPOSE: Render explicitly selected local video recipes through an owned native tool.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Render explicitly selected local video recipes through an owned native tool.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_CREATIVE_WORKSPACE_VIDEO_RENDER_H
@@ -29,6 +36,18 @@ typedef struct UmiVideoRenderReport {
  * cannot render. The caller selects a trusted tool; this is not a sandbox. */
 UmiStatus UmiVideoRenderPrepare(const UmiVideoSequence *sequence, const char *ffmpeg,
                                 const char *workingDirectory, UmiVideoRenderPlan **out);
+/** @brief Add one trusted SVG logo to a prepared plan before dispatch.
+ * Captures an absolute local path, not file contents. No I/O or process starts.
+ * The owner must keep that file stable until Execute returns. Failure retains
+ * the plan; repeated application returns ALREADY_EXISTS without stacking logos.
+ * The logo fits within one fifth of video width/height with two-percent margins.
+ * Video is re-encoded with libx264; selected audio and caption mappings remain.
+ * Requires FFmpeg image2pipe/librsvg, reference-aware scale and overlay support.
+ * Missing support fails the render; there is no unbranded fallback. This API
+ * does not authenticate artwork: native Media supplies its embedded canonical SVG.
+ * Serialize plan mutation with execution. Existing prepare APIs remain unbranded
+ * until this function succeeds, for compatibility with general SDK consumers. */
+UmiStatus UmiVideoRenderApplyWatermark(UmiVideoRenderPlan *plan, const char *svgPath);
 /** @brief Render on the calling worker with a bounded deadline and cancellation.
  * Sequence plans use the first video stream, 30 fps, letterboxing and libx264.
  * Soundtrack plans copy the selected video and replace its audio with AAC.

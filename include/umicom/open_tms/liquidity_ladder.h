@@ -39,6 +39,19 @@ typedef struct UmiOpenTmsLiquidityLadder {
     uint64_t revision;
 } UmiOpenTmsLiquidityLadder;
 
+/* Public storage is validated before traversal. Inline IDs must be nonempty
+ * and terminated, all numeric observations finite, bucket times increasing and
+ * revision nonzero. Repeated descriptive IDs are allowed; times define order.
+ * This currency-free preview requires the caller to supply consistent units. */
+UmiStatus umi_open_tms_liquidity_bucket_validate(const UmiOpenTmsLiquidityBucket *bucket);
+UmiStatus umi_open_tms_liquidity_ladder_validate(const UmiOpenTmsLiquidityLadder *ladder);
+typedef struct UmiOpenTmsLiquidityMeasures { double gap; double worstGap; } UmiOpenTmsLiquidityMeasures;
+/* Worst gap includes the initial zero and every cumulative bucket. A complete
+ * finite result is published once; refusal leaves out unchanged. Keep inputs
+ * stable, with output disjoint from the ladder. Scalar wrappers return zero on
+ * refusal, which is not evidence of sufficient funding. */
+UmiStatus umi_open_tms_liquidity_ladder_measure(const UmiOpenTmsLiquidityLadder *ladder, UmiOpenTmsLiquidityMeasures *out);
+
 void umi_open_tms_liquidity_ladder_init(UmiOpenTmsLiquidityLadder *ladder);
 /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
  * before this operation changes state or invokes nested work. Initialize the

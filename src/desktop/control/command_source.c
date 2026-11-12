@@ -1,7 +1,10 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/desktop/control/command_source.c
- * PURPOSE: Implement describe a Framework-owned global command provider.
+ *
+ * PURPOSE:
+ *   Implement describe a Framework-owned global command provider.
+ *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
  * Umicom Foundation
@@ -329,3 +332,10 @@ UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_desktop_command_source_archive_decode_wit
  * caller. Imported metadata remains evidence; registry publication is separate. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_desktop_command_source_archive_decode_if_unchanged, umi_desktop_command_source_archive_encode,
     UmiDesktopCommandSourceSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)
+
+/* Compare through this owner's validated codec so native review uses the
+ * same fields as persistence. Caller-owned scratch avoids per-call allocation;
+ * an equal observation remains separate from revision-checked publication. */
+#include "../../base/value_compare_internal.h"
+UMI_DEFINE_VALUE_COMPARE(umi_desktop_command_source_archive_compare_with_workspace,
+    UmiDesktopCommandSourceSnapshot, umi_desktop_command_source_archive_encode)

@@ -22,7 +22,7 @@ and build `umicom-website-api` to add the function/type/source browser. Build
 
 - Framework owns reusable teaching topics, templates and the shared presentation.
 - Product introductions live in `applications/<product>/docs/site/index.html`.
-- Existing application guides are copied into the output, not duplicated in source.
+- Existing application guides remain in their product repository. The website rebases their owned brand attributes to shared assets and preserves lesson content.
 - Example blocks are read from their existing C files at configure time.
 - The public header inventory is generated into the build tree.
 - Download pages link to real repository release listings; no guessed asset exists.
@@ -75,3 +75,53 @@ wordmark markup and adjusts only that relative resource URL and the display
 attributes. It does not regenerate paths, lettering or colours. The Home link
 remains the single keyboard-focus target. Both the full wordmark and its symbol
 are retained unchanged in the generated asset directory.
+
+## Keep standalone guides branded
+
+A guide may be opened directly from its repository or from the generated website.
+Use the current SVG wordmark and ICO from Framework resources in the source page.
+Inline data URLs make that source page independent of a neighbouring asset folder.
+The interface uses Segoe UI Variable Text or Segoe UI; code uses Cascadia Code or
+Consolas. These are installed-font preferences with generic fallbacks, not bundled
+font licences or a guarantee that a particular typeface exists on the machine.
+
+1. Reuse the structure of an existing maintained standalone guide. Keep its
+   lessons, navigation, accessible image label and responsive layout.
+2. Copy the current canonical artwork bytes into the inline SVG and ICO data URLs.
+   Record their SHA-256 identities in the active image's data-umicom-guide-logo
+   attribute and the favicon's data-umicom-guide-ico attribute. The font override
+   has id umicom-guide-fonts; the page marker is umicom-guide-branding. Retained
+   older markup belongs in an inert template, with a reason for its replacement.
+3. Register publication with UmiSiteCopyGuide rather than a raw COPYONLY operation.
+   The helper checks those markers and identities, rebases the active brand routes
+   to site/assets/brand, and adds the destination to the branding-check inventory.
+   It does not rewrite teaching examples or publish the page to a remote host.
+4. Configure and build the documentation using the commands above, then run CTest.
+   Missing markers, duplicate active identities or changed artwork identities
+   require source review. Do not disable the check to accept an unbranded guide.
+5. Open both the standalone source and generated page. Check logo contrast, tab
+   icon, narrow-window layout, code font fallback, keyboard navigation and print
+   output. A source or text check cannot establish these browser behaviours.
+
+The standalone admission tests cover refused inputs and unchanged caller output.
+The assembled branding check covers every registered copied guide independently
+from the main site header, and checks shared asset copies against Framework.
+An attribute digest identifies the expected master; it is not a signature or a
+claim that an arbitrary data URL was independently authenticated. Review inline
+bytes against the master when updating source guides.
+
+### Verify decoded standalone assets before publication
+
+The native `umicom branding audit --assets resources/brand --root docs/learning`
+command compares the actual decoded SVG/ICO bytes with the approved local files.
+Run it from the Framework source root with a current native command. The
+`umicom-source-contracts guides` command offers the same service. These are
+read-only source checks; they do not render the page or publish it.
+
+The CMake publication helper continues to check markers and route declared asset
+identities. It does not decode image payloads. Use the native check for byte
+identity and the existing site checks for generated asset routes. A light-surface
+wordmark records `data-umicom-guide-surface="light"`; `UmiSiteCopyGuide` preserves
+that choice when rebasing its route. The six-argument `UmiSiteGuideBranding` helper
+retains its dark-surface default; its optional seventh argument accepts only the
+two canonical wordmark filenames. Neither route is a browser qualification.

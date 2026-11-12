@@ -13,10 +13,10 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/* Umicom Framework | Compiler targets | Sammy Hegab | Umicom Foundation | MIT */
 #include "umicom/compiler/target.h"
 #include <stdio.h>
 #include <string.h>
+#include "catalogue_validation.h"
 /* Provide the classify operation used by this module and its client applications. */
 static void classify(UmiCompilerTarget *target)
 {
@@ -36,6 +36,8 @@ static void classify(UmiCompilerTarget *target)
  * Read compiler target into validated module state and return a status when input cannot
  * be used.
  */
+/* Shared bounded record admission and staged publication protect direct compiler clients and borrowed initialization inputs; existing classification and compatibility policy remain. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_compiler_target_parse(const char *triple,UmiCompilerTarget *out_target)
 {
     int matched;
@@ -52,6 +54,23 @@ UmiStatus umi_compiler_target_parse(const char *triple,UmiCompilerTarget *out_ta
     /* Use the stable identifier comparison to choose the matching record or policy. */
     if (matched == 3) (void)snprintf(out_target->environment,sizeof(out_target->environment),"unknown");
     classify(out_target);
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_compiler_target_parse(const char *triple,UmiCompilerTarget *out_target)
+{
+    if (out_target == NULL || !UmiCompilerCatalogueText(triple,UMI_COMPILER_NAME_CAPACITY,true))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* This small inline record can be built on the stack. Inputs may refer to
+     * the old destination because publication waits until parsing completes. */
+    UmiCompilerTarget candidate = {0};
+    (void)snprintf(candidate.triple,sizeof(candidate.triple),"%s",triple);
+    const int matched = sscanf(triple,"%63[^-]-%63[^-]-%63[^-]-%63s",
+        candidate.architecture,candidate.vendor,candidate.operating_system,candidate.environment);
+    if (matched < 3) return UMI_STATUS_PARSE_ERROR;
+    if (matched == 3) (void)snprintf(candidate.environment,sizeof(candidate.environment),"unknown");
+    classify(&candidate);
+    *out_target = candidate;
     return UMI_STATUS_OK;
 }
 /*
@@ -80,7 +99,17 @@ UmiStatus umi_compiler_target_host(UmiCompilerTarget *out_target)
  * Provide the compiler target compatible operation used by this module and its client
  * applications.
  */
+/* Shared bounded record admission and staged publication protect direct compiler clients and borrowed initialization inputs; existing classification and compatibility policy remain. The previous implementation is retained for review. */
+#if 0
 bool umi_compiler_target_compatible(const UmiCompilerTarget *left,const UmiCompilerTarget *right) { return left != NULL && right != NULL && strcmp(left->architecture,right->architecture) == 0 && strcmp(left->operating_system,right->operating_system) == 0 && left->object_format == right->object_format && left->pointer_width == right->pointer_width; }
+#endif
+bool umi_compiler_target_compatible(const UmiCompilerTarget *left,const UmiCompilerTarget *right)
+{
+    return UmiCompilerCatalogueTarget(left) && UmiCompilerCatalogueTarget(right) &&
+        strcmp(left->architecture,right->architecture) == 0 &&
+        strcmp(left->operating_system,right->operating_system) == 0 &&
+        left->object_format == right->object_format && left->pointer_width == right->pointer_width;
+}
 /*
  * Provide the compiler object format name operation used by this module and its client
  * applications.

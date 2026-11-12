@@ -144,3 +144,7 @@ if(BUILD_TESTING AND TARGET umicom-video-gtk-test)
             PROPERTIES ENVIRONMENT "G_DEBUG=fatal-warnings")
     endforeach()
 endif()
+
+# Shared plan decoration is installed independently of native Media; its resource
+# owner is attached only when the GTK client is present.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomVideoWatermarkChecks.cmake")

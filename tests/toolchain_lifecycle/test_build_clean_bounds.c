@@ -1,10 +1,18 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/toolchain_lifecycle/test_build_clean_bounds.c
- * PURPOSE: Check source protection and CMake cache ownership for explicitly requested cleanup.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Check source protection and exact cache identities for requested cleanup.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
+
 
 #include "umicom/toolchain/build_execution.h"
 #include "umicom/platform/filesystem.h"
@@ -16,7 +24,11 @@ int main(void)
 {
     int passed = 0, owns = 0;
     char temp[UMI_PATH_CAPACITY], project[UMI_PATH_CAPACITY] = {0}, binary[UMI_PATH_CAPACITY], cache[UMI_PATH_CAPACITY];
+    /* Two complete identities replace the source-only fixture below. */
+#if 0
     char contents[UMI_PATH_CAPACITY + 64U], leaf[128];
+#endif
+    char contents[2U * UMI_PATH_CAPACITY + 128U], leaf[128];
     UmiBuildReport *report = calloc(1U, sizeof *report);
     CHECK(report);
     UmiClock clock = umi_clock_system();
@@ -40,7 +52,14 @@ int main(void)
     CHECK(umi_fs_is_directory(binary));
     CHECK(umi_fs_write_text(cache, "CMAKE_HOME_DIRECTORY:INTERNAL=unrelated\n") == UMI_STATUS_OK);
     CHECK(umi_build_execute(&profile, NULL, UMI_BUILD_CLEAN, &request, report) != UMI_STATUS_OK);
+    /* Preserve the source-only cache fixture for review. A real cache also
+     * identifies its binary directory; both are required by clean admission. */
+#if 0
     (void)snprintf(contents, sizeof contents, "CMAKE_HOME_DIRECTORY:INTERNAL=%s\n", project);
+#endif
+    int written = snprintf(contents, sizeof contents,
+        "CMAKE_HOME_DIRECTORY:INTERNAL=%s\nCMAKE_CACHEFILE_DIR:INTERNAL=%s\n", project, binary);
+    CHECK(written > 0 && (size_t)written < sizeof contents);
     CHECK(umi_fs_write_text(cache, contents) == UMI_STATUS_OK);
     UmiBuildExecutionOptions options = {0}; options.preview = 1;
     CHECK(UmiBuildExecuteWithOptions(&profile, NULL, UMI_BUILD_CLEAN, &request, &options, report) == UMI_STATUS_OK);

@@ -20,6 +20,10 @@
  * Check that developer project template satisfies its contract before another service
  * relies on it.
  */
+/* The former single-pass validator compared later records before their
+ * pointers had been admitted. Preserve it for review; the replacement admits
+ * every record before comparison so malformed plug-in recipes fail normally. */
+#if 0
 UmiStatus umi_developer_project_template_validate(
     const UmiDeveloperProjectTemplate *project_template)
 {
@@ -92,5 +96,54 @@ UmiStatus umi_developer_project_template_validate(
         }
     }
 
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_developer_project_template_validate(
+    const UmiDeveloperProjectTemplate *project_template)
+{
+    if (project_template == NULL ||
+        project_template->structure_size != sizeof(*project_template) ||
+        project_template->api_version != UMI_DEVELOPER_PROJECT_API_VERSION ||
+        project_template->template_id == NULL || project_template->template_id[0] == '\0' ||
+        project_template->title == NULL || project_template->title[0] == '\0' ||
+        project_template->description == NULL ||
+        project_template->kind < UMI_DEVELOPER_PROJECT_EXECUTABLE ||
+        project_template->kind > UMI_DEVELOPER_PROJECT_META ||
+        project_template->build_system < UMI_DEVELOPER_PROJECT_BUILD_NONE ||
+        project_template->build_system > UMI_DEVELOPER_PROJECT_BUILD_CUSTOM ||
+        project_template->primary_language_id == NULL ||
+        project_template->primary_language_id[0] == '\0' ||
+        project_template->secondary_language_count > UMI_DEVELOPER_PROJECT_LANGUAGE_CAPACITY ||
+        (project_template->secondary_language_count != 0U &&
+         project_template->secondary_language_ids == NULL) ||
+        project_template->files == NULL || project_template->file_count == 0U ||
+        project_template->file_count > UMI_DEVELOPER_PROJECT_TEMPLATE_FILE_CAPACITY)
+        return UMI_STATUS_INVALID_ARGUMENT;
+
+    /* Borrowed strings remain caller-owned and must be readable C strings.
+     * Admit the entire array before any pairwise lookup can read a later slot. */
+    for (size_t i = 0U; i < project_template->secondary_language_count; ++i)
+        if (project_template->secondary_language_ids[i] == NULL ||
+            project_template->secondary_language_ids[i][0] == '\0')
+            return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t i = 0U; i < project_template->file_count; ++i) {
+        const UmiDeveloperProjectTemplateFile *file = &project_template->files[i];
+        if (file->relative_path == NULL || file->relative_path[0] == '\0' ||
+            file->content_template == NULL ||
+            file->relative_path[0] == '/' || file->relative_path[0] == '\\')
+            return UMI_STATUS_INVALID_ARGUMENT;
+        /* The rendered plan already refuses drive/stream syntax. Apply that
+         * same lexical policy before generation allocates or renders a file. */
+        if (strstr(file->relative_path, "..") != NULL ||
+            strchr(file->relative_path, ':') != NULL)
+            return UMI_STATUS_PERMISSION_DENIED;
+    }
+    for (size_t i = 0U; i < project_template->file_count; ++i)
+        for (size_t j = i + 1U; j < project_template->file_count; ++j)
+            if (strcmp(project_template->files[i].relative_path,
+                       project_template->files[j].relative_path) == 0)
+                return UMI_STATUS_ALREADY_EXISTS;
     return UMI_STATUS_OK;
 }

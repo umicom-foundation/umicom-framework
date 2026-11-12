@@ -117,3 +117,10 @@ GtkWidget *UmiMediaWorkspaceBrand(bool wordmark)
     RefreshBrand(picture, NULL, NULL);
     return picture;
 }
+
+/* Static resource bytes are immutable and safe to borrow from a render worker.
+ * The same canonical artwork supplies the native header and exported video. */
+GBytes *UmiMediaWorkspaceLogoBytes(void)
+{
+    return g_bytes_new_static(MediaLogoSvg, sizeof MediaLogoSvg);
+}

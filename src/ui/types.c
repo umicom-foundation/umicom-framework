@@ -19,6 +19,8 @@
 
 
 /* Check that ui id satisfies its contract before another service relies on it. */
+/* Bound identifier admission before scanning externally supplied fixed fields. The previous implementation is retained for review. */
+#if 0
 int umi_ui_id_is_valid(const char *identifier)
 {
     size_t index;
@@ -41,6 +43,20 @@ int umi_ui_id_is_valid(const char *identifier)
         }
     }
     return 1;
+}
+#endif
+int umi_ui_id_is_valid(const char *identifier)
+{
+    if (identifier == NULL || identifier[0] == '\0') return 0;
+    /* Inspect no more than the declared identifier field. A fixed descriptor
+     * must not require an unbounded strlen before it can be rejected. */
+    for (size_t index = 0U; index < UMI_UI_ID_CAPACITY; ++index) {
+        unsigned char character = (unsigned char)identifier[index];
+        if (character == 0U) return 1;
+        if (!(isalnum(character) || character == '.' || character == '-' ||
+              character == '_' || character == '/')) return 0;
+    }
+    return 0;
 }
 
 /*

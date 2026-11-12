@@ -1,12 +1,20 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/developer_project/test_developer_dialog_gtk4.c
- * PURPOSE: Exercise the real project and settings forms without running generated code.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Exercise real project/settings forms and shared creation diagnostics without running generated code.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/developer_dialog.h"
 #include "umicom/platform/filesystem.h"
+#include "creation_wait.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -68,6 +76,7 @@ int main(void)
     Probe probe = {0};
     char cwd[UMI_PATH_CAPACITY], root[UMI_PATH_CAPACITY], file[UMI_PATH_CAPACITY];
     int failed = 0, generated = 0;
+    int creationSettled = 1;
     if (!gtk_init_check()) return 77;
     CHECK(umi_fs_current_directory(cwd, sizeof(cwd)) == UMI_STATUS_OK);
     CHECK(umi_fs_join(root, sizeof(root), cwd, "Umicom Notes Form") == UMI_STATUS_OK);
@@ -93,7 +102,28 @@ int main(void)
     g_signal_emit_by_name(accept, "clicked");
     CHECK(probe.created == 0U && !umi_fs_exists(root));
     gtk_editable_set_text(GTK_EDITABLE(target), "umicom_notes");
+    /* Existing-root refusal uses the shared result formatter and keeps the
+     * form editable. No adoption or new destination is published on refusal. */
+    gtk_editable_set_text(GTK_EDITABLE(folder), cwd);
+    creationSettled = 0;
     g_signal_emit_by_name(accept, "clicked");
+    creationSettled = UmiTestProjectCreationWait(form);
+    CHECK(creationSettled);
+    CHECK(probe.created == 0U && gtk_widget_get_visible(GTK_WIDGET(form)));
+    CHECK(!umi_fs_exists(root));
+    GtkWidget *creationStatus = Find(GTK_WIDGET(form), "developer.dialog.status");
+    CHECK(GTK_IS_LABEL(creationStatus));
+    UmiDeveloperProjectGeneratorReport noEffects = {0};
+    char expectedStatus[512];
+    CHECK(UmiDeveloperProjectCreationDescribe(UMI_STATUS_ALREADY_EXISTS,
+        &noEffects, expectedStatus, sizeof expectedStatus) == UMI_STATUS_OK);
+    CHECK(strcmp(gtk_label_get_text(GTK_LABEL(creationStatus)), expectedStatus) == 0);
+    CHECK(gtk_widget_get_sensitive(folder) && gtk_widget_get_sensitive(target));
+    gtk_editable_set_text(GTK_EDITABLE(folder), root);
+    creationSettled = 0;
+    g_signal_emit_by_name(accept, "clicked");
+    creationSettled = UmiTestProjectCreationWait(form);
+    CHECK(creationSettled);
     generated = probe.created == 1U;
     CHECK(generated && !gtk_widget_get_visible(GTK_WIDGET(form)));
     CHECK(umi_fs_join(file, sizeof(file), root, "src/main.c") == UMI_STATUS_OK && umi_fs_is_file(file));
@@ -141,6 +171,10 @@ cleanup:
     if (form != NULL) g_object_unref(form);
     UmiGtk4DeveloperDialogDestroy(dialog);
     if (parent != NULL) { gtk_window_destroy(parent); g_object_unref(parent); }
+/* Retain a timed-out writer fixture; cleanup must not race native creation. The previous implementation is retained for review. */
+#if 0
     if (generated && umi_fs_remove_tree(root) != UMI_STATUS_OK) failed = 1;
+#endif
+    if (creationSettled && generated && umi_fs_remove_tree(root) != UMI_STATUS_OK) failed = 1;
     return failed ? EXIT_FAILURE : EXIT_SUCCESS;
 }

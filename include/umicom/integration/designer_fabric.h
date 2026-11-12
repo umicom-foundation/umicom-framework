@@ -20,6 +20,12 @@
 #include "umicom/integration/field_mapping.h"
 #include "umicom/integration/workflow.h"
 #include "umicom/integration/run_history.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the integration designer fabric data shared with callers of this public
  * contract.
@@ -84,4 +90,8 @@ UmiStatus umi_integration_designer_fabric_record_run(UmiIntegrationDesignerFabri
  * client applications.
  */
 void umi_integration_designer_fabric_snapshot(const UmiIntegrationDesignerFabric *fabric,UmiIntegrationDesignerSnapshot *out_snapshot);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

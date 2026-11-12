@@ -249,6 +249,13 @@ UmiStatus umi_ui_command_history_registry_archive_restore(UmiUiCommandHistoryReg
 UmiStatus umi_ui_command_history_registry_clear_if_current(UmiUiCommandHistoryRegistry *registry,
     uint64_t expected_revision);
 
+/* Compare this record's canonical saved state using caller-owned byte scratch.
+ * See UmiValueArchiveComparison in base/value_archive.h for measurement,
+ * refusal, aliasing and lifetime rules. This call never publishes live state. */
+UmiStatus umi_ui_command_history_snapshot_archive_compare_with_workspace(const UmiUiCommandHistorySnapshot *left,
+    const UmiUiCommandHistorySnapshot *right, void *workspace, size_t capacity,
+    UmiValueArchiveComparison *out_comparison);
+
 #ifdef __cplusplus
 }
 #endif

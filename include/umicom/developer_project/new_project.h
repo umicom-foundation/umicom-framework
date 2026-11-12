@@ -33,6 +33,11 @@ UmiStatus UmiDeveloperProjectChooseDestination(const char *parent,
  * absolute, new path. Existing destinations are rejected, never overwritten.
  * No compiler, Git command, or network request is run. On an I/O failure new
  * partial files may remain for inspection; existing user files are not removed.
+ * Model/profile admission precedes effects and outputs remain unchanged on
+ * failure. The optional attempt report is always reset; partial native effects
+ * remain reported. Live creation requires an existing absolute parent and uses
+ * exclusive root/file creation. The legacy dry-run wrapper still rejects an
+ * existing destination; use the service preview for syntax-only inspection.
  * The caller must not concurrently modify the selected destination. */
 UmiStatus UmiDeveloperProjectCreateNew(UmiDeveloperProjectService *service,
     const UmiDeveloperProjectGenerationRequest *request,

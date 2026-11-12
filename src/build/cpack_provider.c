@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/build/cpack_provider.c
- * PURPOSE: Build an owned argv for CPack without executing a command shell.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Build an owned argv for CPack without executing a command shell.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/build/tool_location.h"
 #include "umicom/build/cpack_provider.h"
@@ -38,10 +45,16 @@ static UmiStatus CreatePackageCommand(const UmiBuildProfile *profile,
             return UMI_STATUS_CAPACITY_EXCEEDED;
     if (!umi_build_command_set_working_directory(&command, profile->source_directory))
         return UMI_STATUS_CAPACITY_EXCEEDED;
+/* Retained for engineering review: the checked Framework copy centralizes validation and final-address rebinding instead of repeating it in each provider.
+ * The replacement below preserves the established owned-record and token grammar contracts. */
+#if 0
     /* argv entries point inside their owning record: rebind after the copy. */
     *outCommand = command;
     umi_build_command_rebind(outCommand);
     return UMI_STATUS_OK;
+#endif
+
+    return umi_build_command_copy(outCommand, &command);
 }
 
 UmiBuildProvider UmiBuildCPackProvider(void)

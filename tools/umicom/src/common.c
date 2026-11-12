@@ -121,6 +121,15 @@ void umi_cli_print_help(void)
 
 void umi_cli_print_help(void)
 {
+    (void)puts("Local text models: umicom models --help (review, download, serve and chat).\n");
+    (void)puts("Compiler plan preview: umicom compiler plan --help\n"
+        "  Shared argument planning as JSON; no compiler discovery or execution.\n");
+    (void)puts("Project recipes: umicom project templates|plan|create (project --help for options)\n"
+        "  plan renders memory only; create requires --apply and a new destination.\n");
+    (void)puts("Distribution media: umicom boot-media --help | umicom setup --help\n"
+        "  boot-media inspects, reviews and verifies images; copying requires reviewed tokens.\n"
+        "  setup media-stage/media-iso reuse native setup and its checked process adapter.\n"
+        "  Physical writing remains build-gated; optical burning and eject are unavailable.\n");
     (void)puts("Learning resources: umicom learning-pack --help\n"
         "  Verify local files or prepare a reviewed manifest without replacing the existing one.\n");
     /* Current CLI options are reported separately from the retained earlier
@@ -187,6 +196,7 @@ void umi_cli_print_help(void)
         "  umicom repo help\n"
         , stdout);
     (void)puts(
+        "  umicom branding audit --assets BRAND_DIRECTORY --root GUIDES (source bytes only)\n"
         "  umicom test-report CTEST_JUNIT_FILE [--all] (saved results only)\n"
         "  umicom impact --inventory ABSOLUTE.tsv --working-tree (preview only)\n"
         "  umicom qualification-report ABSOLUTE.tsv [--expect-report SHA256] [--all] (saved evidence)\n"

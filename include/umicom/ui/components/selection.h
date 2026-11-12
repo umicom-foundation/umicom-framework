@@ -23,6 +23,12 @@
 #define UMICOM_UI_COMPONENTS_SELECTION_H
 #include <stddef.h>
 #include <stdbool.h>
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui component selection data shared with callers of this public contract.
  */
@@ -32,4 +38,8 @@ typedef struct UmiUiComponentSelection { size_t index; bool has_selection; } Umi
  * applications.
  */
 UmiUiComponentSelection umi_ui_component_selection_none(void);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

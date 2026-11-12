@@ -18,6 +18,12 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "umicom/base/status.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define UMI_UI_WORKSPACE_LAYOUT_ID_CAPACITY 128U
 #define UMI_UI_WORKSPACE_LAYOUT_NAME_CAPACITY 192U
 #define UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS 64U
@@ -209,4 +215,8 @@ UmiStatus umi_ui_workspace_layout_validate(const UmiUiWorkspaceLayout *layout,ch
  * applications.
  */
 UmiStatus umi_ui_workspace_layout_clone(const UmiUiWorkspaceLayout *source,const char *layout_id,const char *name,UmiUiWorkspaceLayout *out_layout);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

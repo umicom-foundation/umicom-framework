@@ -263,6 +263,13 @@ UmiStatus umi_chart_drawing_registry_archive_restore(UmiChartDrawingRegistry *re
 UmiStatus umi_chart_drawing_registry_clear_if_current(UmiChartDrawingRegistry *registry,
     uint64_t expected_revision);
 
+/* Compare this record's canonical saved state using caller-owned byte scratch.
+ * See UmiValueArchiveComparison in base/value_archive.h for measurement,
+ * refusal, aliasing and lifetime rules. This call never publishes live state. */
+UmiStatus umi_chart_drawing_snapshot_archive_compare_with_workspace(const UmiChartDrawingSnapshot *left,
+    const UmiChartDrawingSnapshot *right, void *workspace, size_t capacity,
+    UmiValueArchiveComparison *out_comparison);
+
 #ifdef __cplusplus
 }
 #endif

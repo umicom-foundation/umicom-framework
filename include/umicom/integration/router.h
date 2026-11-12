@@ -25,6 +25,12 @@
 #include "umicom/base/status.h"
 #include "umicom/integration/route.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Represent the integration router data shared with callers of this public contract.
  */
@@ -55,4 +61,8 @@ const UmiIntegrationRoute *umi_integration_router_resolve(
     const char *topic,
     UmiIntegrationMessageKind kind);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

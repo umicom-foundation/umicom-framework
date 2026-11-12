@@ -1,7 +1,10 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/toolchain/kit/kit_environment.c
- * PURPOSE: Implement deterministic child-process environment construction.
+ *
+ * PURPOSE:
+ *   Implement deterministic child-process environment construction.
+ *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
  * Umicom Foundation
@@ -10,6 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/kit_environment.h"
+
+#include <stdlib.h>
 
 /* Provide the set if present operation used by this module and its client applications. */
 static UmiStatus set_if_present(UmiEnvironmentPlan *plan,
@@ -25,6 +30,9 @@ static UmiStatus set_if_present(UmiEnvironmentPlan *plan,
  * Provide the toolchain kit environment plan operation used by this module and its client
  * applications.
  */
+/* Admit the kit and stage all overrides before publishing the environment.
+ * Retain incremental construction below for engineering review. */
+#if 0
 UmiStatus umi_toolchain_kit_environment_plan(
     const UmiToolchainKitSnapshot *kit,
     const UmiToolchainProfile *profile,
@@ -73,4 +81,45 @@ UmiStatus umi_toolchain_kit_environment_plan(
     SET("UMICOM_JAVAC", kit->javac);
 #undef SET
     return umi_environment_plan_validate(out_plan);
+}
+#endif
+UmiStatus umi_toolchain_kit_environment_plan(
+    const UmiToolchainKitSnapshot *kit, const UmiToolchainProfile *profile,
+    UmiEnvironmentPlan *out_plan)
+{
+    if (!out_plan) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = umi_toolchain_kit_validate(kit);
+    if (status != UMI_STATUS_OK) return status;
+    /* A selected kit adds several values to the profile. Keep this composition
+     * private until every override fits, so the last usable plan survives. */
+    UmiEnvironmentPlan *candidate = calloc(1U, sizeof *candidate);
+    if (!candidate) return UMI_STATUS_OUT_OF_MEMORY;
+    if (profile) status = umi_environment_plan_from_toolchain(profile, candidate);
+    const struct { const char *name; const char *value; } overrides[] = {
+        {"UMICOM_TOOLCHAIN_KIT", kit->id},
+        {"UMICOM_TOOLCHAIN_PROFILE", kit->profile_id},
+        {"UMICOM_SDK", kit->sdk_id},
+        {"UMICOM_HOST_TRIPLE", kit->host_triple},
+        {"UMICOM_TARGET_TRIPLE", kit->target_triple},
+        {"UMICOM_SYSROOT", kit->sysroot},
+        {"UMICOM_ENVIRONMENT_PROFILE", kit->environment_profile},
+        {"UMICOM_CMAKE_TOOLCHAIN_FILE", kit->cmake_toolchain_file},
+        {"CC", kit->c_compiler}, {"CXX", kit->cpp_compiler},
+        {"AS", kit->assembler}, {"LD", kit->linker},
+        {"CMAKE_GENERATOR", kit->cmake_generator},
+        {"CMAKE_MAKE_PROGRAM", kit->ninja}, {"UMICOM_DEBUGGER", kit->debugger},
+        {"UMICOM_GIT", kit->git}, {"UMICOM_PYTHON", kit->python},
+        {"UMICOM_JAVA", kit->java}, {"UMICOM_JAVAC", kit->javac}
+    };
+    for (size_t i = 0; i < sizeof overrides / sizeof overrides[0] && status == UMI_STATUS_OK; ++i)
+        status = set_if_present(candidate, overrides[i].name, overrides[i].value);
+    if (status == UMI_STATUS_OK) status = umi_environment_plan_validate(candidate);
+    if (status == UMI_STATUS_OK) {
+        *out_plan = *candidate;
+        /* The validated copy owns text at a new address; use Framework's
+         * projection service to rebind its borrowed process entries. */
+        (void)umi_environment_plan_variables(out_plan);
+    }
+    free(candidate);
+    return status;
 }

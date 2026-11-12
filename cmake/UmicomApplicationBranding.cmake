@@ -23,7 +23,7 @@ function(umicom_apply_application_branding)
     # Installation folders are resolved only when a real project invokes the
     # helper, after CMake knows the target platform and architecture.
     include(GNUInstallDirs)
-    set(options WINDOWS_GUI DESKTOP_ENTRY RASTER_FALLBACKS)
+    set(options WINDOWS_GUI DESKTOP_ENTRY RASTER_FALLBACKS NO_RUNTIME_DEPLOYMENT)
     set(one_value_args
         TARGET
         PRODUCT_NAME
@@ -261,7 +261,10 @@ function(umicom_apply_application_branding)
 
     # Framework owns deployment as well as branding. This is deliberately
     # additive: existing icons, install rules and product behaviour stay intact.
-    if(WIN32)
+    # A native Win32 or console tool can own its runtime separately while still
+    # receiving the exact same SVG/ICO and version resources. The default path
+    # below remains unchanged for existing GTK application consumers.
+    if(WIN32 AND NOT UMICOM_BRAND_NO_RUNTIME_DEPLOYMENT)
         include("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/UmicomWindowsDeployment.cmake")
         set(_umicom_deployment_gui_option "")
         if(UMICOM_BRAND_WINDOWS_GUI)

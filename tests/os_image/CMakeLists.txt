@@ -1,4 +1,17 @@
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: tests/os_image/CMakeLists.txt
+#
+# PURPOSE:
+#   Qualify image buffers, native command admission and explicitly inert process fixtures.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
 # These cases distinguish buffer checks, real process transport and explicitly
 # inert pipeline fixtures. None of the fixture cases claim an operating-system boot.
 add_executable(umicom-os-image-buffer-tests test_buffers.c)
@@ -38,7 +51,8 @@ add_test(NAME framework.os_image.archive_lesson COMMAND umicom-os-image-archive-
 add_executable(umicom-os-firmware-cli-tests test_firmware_cli.c)
 target_link_libraries(umicom-os-firmware-cli-tests PRIVATE Umicom::os_image)
 set_target_properties(umicom-os-firmware-cli-tests PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
-foreach(_case IN ITEMS partial zero overflow uppercase duplicate null-pin report-status)
+foreach(_case IN ITEMS partial zero overflow uppercase duplicate null-pin report-status
+    argument-negative argument-zero argument-null-vector argument-null-program argument-null-command argument-null-option argument-null-value argument-counted-tail argument-no-sentinel argument-missing-command)
     add_test(NAME "framework.os_image.firmware_cli.${_case}" COMMAND umicom-os-firmware-cli-tests "${_case}")
     set_tests_properties("framework.os_image.firmware_cli.${_case}" PROPERTIES TIMEOUT 15 LABELS "os_image;buffer;firmware")
 endforeach()

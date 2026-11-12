@@ -15,6 +15,12 @@
 #ifndef UMICOM_DATA_SCHEMA_CATALOG_H
 #define UMICOM_DATA_SCHEMA_CATALOG_H
 #include "umicom/data/explorer_types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the database column info data shared with callers of this public contract.
  */
@@ -47,4 +53,8 @@ UmiStatus umi_database_schema_catalog_find(const UmiDatabaseSchemaCatalog *catal
  * applications.
  */
 UmiStatus umi_database_table_add_column(UmiDatabaseTableInfo *table,const UmiDatabaseColumnInfo *column);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

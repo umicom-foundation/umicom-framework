@@ -20,6 +20,12 @@
 #include "umicom/codeguard/quality_evaluation.h"
 #include "umicom/codeguard/remediation_plan.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* A quality session keeps related evidence together for one workspace. Every
  * member owns its data; no source-file or UI pointer is retained. */
 typedef struct UmiCodeGuardQualitySession {
@@ -60,4 +66,8 @@ UmiStatus umi_codeguard_quality_session_record_documentation(
  * owner before use and serialize mutations through its owning service. */
 UmiStatus umi_codeguard_quality_session_evaluate(UmiCodeGuardQualitySession *session);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

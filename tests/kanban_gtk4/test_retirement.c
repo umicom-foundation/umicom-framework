@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/kanban_gtk4/test_retirement.c
- * PURPOSE: Verify forced native removal releases leases without resurrecting board controls.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Verify forced native removal releases leases without resurrecting board controls.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 
@@ -13,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "../support/widget_diagnostics.h"
 #define REQUIRE(c) do { if (!(c)) { fprintf(stderr, "%d: %s\n", __LINE__, #c); exit(1); } } while (0)
 static GtkWidget *find(GtkWidget *root, const char *text)
 {
@@ -39,6 +47,8 @@ static void wait_idle(GtkWindow *window)
     while (UmiKanbanGtk4WindowBusy(window) && g_get_monotonic_time() < deadline) {
         (void)g_main_context_iteration(NULL, FALSE); g_usleep(1000U);
     }
+    fprintf(stderr, "Kanban retirement wait: busy=%d\n", UmiKanbanGtk4WindowBusy(window));
+    fflush(stderr);
     REQUIRE(!UmiKanbanGtk4WindowBusy(window));
 }
 typedef struct Removal {
@@ -64,13 +74,24 @@ static void status_changed(GObject *object, GParamSpec *property, gpointer data)
 int main(int argc, char **argv)
 {
     REQUIRE(argc == 3);
+    /* Report fatal runtime warnings as test failures, never modal Windows
+     * dialogs. The DBus warning policy remains unchanged for diagnosis. */
+    g_test_init(&argc, &argv, NULL);
+    UmiTestWidgetDiagnosticsInstall();
+    fprintf(stderr, "Kanban retirement stage: GTK initialization (%s)\n", argv[1]);
+    fflush(stderr);
     if (!gtk_init_check()) return 77;
+    fputs("Kanban retirement stage: registering application\n", stderr);
+    fflush(stderr);
     char *directory = g_build_filename(argv[2], "retirement-XXXXXX", NULL);
     REQUIRE(g_mkdtemp(directory));
     GtkApplication *app = gtk_application_new("org.umicom.KanbanRemovalTest", G_APPLICATION_NON_UNIQUE);
     REQUIRE(g_application_register(G_APPLICATION(app), NULL, NULL));
     GtkWindow *window = UmiKanbanGtk4CreateWindow(app); REQUIRE(window); g_object_ref(window);
     GtkWidget *root = GTK_WIDGET(window);
+    UmiTestWidgetDiagnosticsRoot(root);
+    fputs("Kanban retirement stage: native window created\n", stderr);
+    fflush(stderr);
     set(root, "kanban-document-directory", directory);
     set(root, "kanban-document-filename", "board.umikb");
     GtkWidget *controls = g_object_ref(find(root, "kanban-document-controls"));
@@ -89,6 +110,8 @@ int main(int argc, char **argv)
     gulong observing = 0U;
     if (before || completion)
         observing = g_signal_connect(controls, "notify::sensitive", G_CALLBACK(remove_window), &removal);
+    fputs("Kanban retirement stage: submitting board creation\n", stderr);
+    fflush(stderr);
     click(root, "Create board");
     if (during) { removal.fired = true; gtk_window_destroy(window); }
     wait_idle(window);

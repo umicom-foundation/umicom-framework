@@ -18,6 +18,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+static UmiStatus operation_storage(const UmiDeveloperOperationSnapshot *operation, int require_metadata);
+
 typedef struct UmiDeveloperDependency {
     size_t operation_index;
     size_t depends_on_index;
@@ -334,6 +336,11 @@ void umi_developer_pipeline_destroy(UmiDeveloperPipeline *pipeline)
  * Provide the developer pipeline submit operation used by this module and its client
  * applications.
  */
+/* The previous single-operation path searched an unadmitted ID and then
+ * silently terminated copied fields. Retain it for review. Shared fixed-storage
+ * admission now runs before lookup, preserving valid legacy metadata defaults
+ * while refusing unreadable IDs and truncated command values. */
+#if 0
 UmiStatus umi_developer_pipeline_submit(
     UmiDeveloperPipeline *pipeline,
     const UmiDeveloperOperationSnapshot *operation)
@@ -347,6 +354,53 @@ UmiStatus umi_developer_pipeline_submit(
     if (pipeline == NULL || operation == NULL || operation->id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (pipeline->operation_count >= UMI_DEVELOPER_PIPELINE_OPERATION_CAPACITY) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (find_index(pipeline, operation->id, NULL)) {
+        return UMI_STATUS_ALREADY_EXISTS;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (operation->argument_count > UMI_DEVELOPER_MAX_ARGUMENTS) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    copy = *operation;
+    terminate_operation(&copy);
+    copy.state = UMI_DEVELOPER_OPERATION_QUEUED;
+    copy.attempt_count = 0U;
+    copy.exit_code = 0;
+    copy.has_exit_code = 0;
+    copy.progress_basis_points = 0U;
+    copy.sequence = pipeline->next_sequence++;
+    copy.revision = 1U;
+
+    pipeline->operations[pipeline->operation_count++] = copy;
+    pipeline->revision += 1U;
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_developer_pipeline_submit(
+    UmiDeveloperPipeline *pipeline,
+    const UmiDeveloperOperationSnapshot *operation)
+{
+    UmiDeveloperOperationSnapshot copy;
+    UmiStatus validation;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (pipeline == NULL || operation == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    validation = operation_storage(operation, 0);
+    if (validation != UMI_STATUS_OK) return validation;
+    if (pipeline->next_sequence == UINT64_MAX || pipeline->revision == UINT64_MAX)
+        return UMI_STATUS_INVALID_STATE;
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (pipeline->operation_count >= UMI_DEVELOPER_PIPELINE_OPERATION_CAPACITY) {
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -430,6 +484,85 @@ UmiStatus umi_developer_pipeline_add_dependency(
     pipeline->dependency_count += 1U;
     pipeline->revision += 1U;
     return umi_developer_pipeline_refresh(pipeline);
+}
+
+
+/* A chain is admitted as one candidate so a late duplicate or capacity refusal
+ * cannot leave earlier operations runnable. Reuse the normal submit/dependency
+ * rules on owned temporary storage; keep the public pipeline object address
+ * stable for runtime and UI observers when the candidate is published. */
+static UmiStatus operation_storage(const UmiDeveloperOperationSnapshot *operation, int require_metadata)
+{
+    if ((require_metadata && (operation->struct_size != sizeof(*operation) ||
+        operation->api_version != UMI_DEVELOPER_OPERATION_API_VERSION)) ||
+        operation->kind < UMI_DEVELOPER_OPERATION_CUSTOM ||
+        operation->kind > UMI_DEVELOPER_OPERATION_AI)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (operation->argument_count > UMI_DEVELOPER_MAX_ARGUMENTS)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+#define CHAIN_TERMINATED(field) \
+    (memchr(operation->field, 0, sizeof(operation->field)) != NULL)
+    if (!CHAIN_TERMINATED(id) || !CHAIN_TERMINATED(title) ||
+        !CHAIN_TERMINATED(project_id) || !CHAIN_TERMINATED(configuration_id) ||
+        !CHAIN_TERMINATED(target_id) || !CHAIN_TERMINATED(program) ||
+        !CHAIN_TERMINATED(working_directory) || !CHAIN_TERMINATED(summary))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+#undef CHAIN_TERMINATED
+    if (operation->id[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t i = 0U; i < operation->argument_count; ++i)
+        if (memchr(operation->arguments[i], 0, sizeof(operation->arguments[i])) == NULL)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+    return UMI_STATUS_OK;
+}
+UmiStatus umi_developer_pipeline_submit_chain(
+    UmiDeveloperPipeline *pipeline,
+    const UmiDeveloperOperationSnapshot *operations,
+    size_t count)
+{
+    if (pipeline == NULL || operations == NULL || count == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (count > UMI_DEVELOPER_PIPELINE_OPERATION_CAPACITY ||
+        pipeline->operation_count > UMI_DEVELOPER_PIPELINE_OPERATION_CAPACITY ||
+        pipeline->dependency_count > UMI_DEVELOPER_PIPELINE_DEPENDENCY_CAPACITY ||
+        count > UMI_DEVELOPER_PIPELINE_OPERATION_CAPACITY - pipeline->operation_count ||
+        count - 1U > UMI_DEVELOPER_PIPELINE_DEPENDENCY_CAPACITY - pipeline->dependency_count)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Reserve a conservative revision budget for submit, edge insertion and
+     * refresh. Refusal preserves identities instead of allowing wraparound. */
+    if ((uint64_t)count > UINT64_MAX - pipeline->next_sequence ||
+        (uint64_t)(count * 3U) > UINT64_MAX - pipeline->revision)
+        return UMI_STATUS_INVALID_STATE;
+    for (size_t i = 0U; i < pipeline->operation_count; ++i)
+        if ((uint64_t)count > UINT64_MAX - pipeline->operations[i].revision)
+            return UMI_STATUS_INVALID_STATE;
+    for (size_t i = 0U; i < count; ++i) {
+        UmiStatus status = operation_storage(&operations[i], 1);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    UmiDeveloperPipeline *candidate = NULL;
+    UmiStatus status = umi_developer_pipeline_create(&candidate);
+    if (status != UMI_STATUS_OK) return status;
+    memcpy(candidate->operations, pipeline->operations,
+           pipeline->operation_count * sizeof(*pipeline->operations));
+    memcpy(candidate->dependencies, pipeline->dependencies,
+           pipeline->dependency_count * sizeof(*pipeline->dependencies));
+    candidate->operation_count = pipeline->operation_count;
+    candidate->dependency_count = pipeline->dependency_count;
+    candidate->next_sequence = pipeline->next_sequence;
+    candidate->revision = pipeline->revision;
+    for (size_t i = 0U; i < count && status == UMI_STATUS_OK; ++i) {
+        status = umi_developer_pipeline_submit(candidate, &operations[i]);
+        if (status == UMI_STATUS_OK && i != 0U)
+            status = umi_developer_pipeline_add_dependency(
+                candidate, operations[i].id, operations[i - 1U].id);
+    }
+    if (status == UMI_STATUS_OK) {
+        UmiDeveloperPipeline previous = *pipeline;
+        *pipeline = *candidate;
+        *candidate = previous;
+    }
+    umi_developer_pipeline_destroy(candidate);
+    return status;
 }
 
 /*

@@ -24,6 +24,12 @@
 #include <gtk/gtk.h>
 #include "umicom/base/status.h"
 #include "umicom/ui/components/component.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Initialise gtk4 component from caller-provided values so later operations receive a
  * known state.
@@ -34,4 +40,8 @@ GtkWidget *umi_gtk4_component_create(const UmiUiComponentSpec *spec);
  * applications.
  */
 UmiStatus umi_gtk4_component_apply_common(GtkWidget *widget,const UmiUiComponentSpec *spec);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -25,6 +25,12 @@
 #include "umicom/base/status.h"
 #include "umicom/integration/launch_plan.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * List the named integration suite state values accepted by this public contract.
  */
@@ -141,4 +147,8 @@ UmiStatus umi_integration_suite_runtime_reconcile(
     const UmiIntegrationRegistry *registry);
 
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

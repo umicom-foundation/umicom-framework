@@ -18,6 +18,12 @@
 #include "umicom/finance/treasury/risk_limit_book.h"
 #include "umicom/finance/treasury/margin_call_book.h"
 #include "umicom/finance/treasury/settlement_queue.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the treasury treasury service data shared with callers of this public
  * contract.
@@ -43,4 +49,8 @@ void umi_treasury_treasury_service_set_blockers(UmiTreasuryTreasuryService *serv
  * applications.
  */
 bool umi_treasury_treasury_service_ready(const UmiTreasuryTreasuryService *service);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

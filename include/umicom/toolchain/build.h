@@ -145,8 +145,22 @@ UmiStatus umi_build_execute(const UmiToolchainProfile *profile,
                             const UmiBuildRequest *request,
                             UmiBuildReport *out_report);
 /**
- * Provide the build repair cache operation used by this module and its client
- * applications.
+ * Inspect an absolute non-root build directory. A missing cache or an exact
+ * selected-compiler match succeeds with an empty recovery output. A malformed
+ * cache, unavailable compiler, invalid path or insufficient output fails before
+ * moving anything. The selected compiler must be validated with an absolute
+ * path. Cache reads are bounded regular-file reads; no CMake script executes.
+ *
+ * A stale cache proposes a same-parent .recovery-<clock-value> name. dry_run
+ * must be 0 or 1; preview creates no files. Apply uses the platform no-replace
+ * rename (Windows/Linux; other platforms may return NOT_IMPLEMENTED).
+ * Existing recovery destinations are never replaced, including a racing one.
+ * The output pair is optional (NULL,0); otherwise provide nonzero writable
+ * capacity. It is cleared on entry and never truncated. A nonempty output on
+ * apply failure means the rename completed but a later handle close failed.
+ * Inspect that path; do not repeat the move blindly. Inputs/output must be
+ * disjoint and stable. Own the source and its parents, exclude open files and
+ * serialize external changes; this is not a filesystem isolation boundary.
  */
 UmiStatus umi_build_repair_cache(const UmiToolchainProfile *profile,
                                  const char *build_directory,
@@ -154,14 +168,20 @@ UmiStatus umi_build_repair_cache(const UmiToolchainProfile *profile,
                                  size_t capacity,
                                  int dry_run);
 /**
- * Provide the build write user presets operation used by this module and its client
- * applications.
+ * Compatibility writer with the established replace-file policy. Profile
+ * fields are bounded and escaped through shared preset formatting. This entry
+ * can overwrite an existing destination and leave partial output on failure.
+ * New integrations should use UmiBuildUserPresetsCreate from user_presets.h
+ * when existing user files must remain unchanged. No merge is performed.
  */
 UmiStatus umi_build_write_user_presets(const UmiToolchainProfile *profile,
                                        const char *project_root,
                                        const char *path);
 /**
- * Provide the build open shell operation used by this module and its client applications.
+ * Open one explicitly requested shell with the validated child environment.
+ * A successful process transport is followed by cancellation, timeout and exit
+ * checks: a nonzero child exit returns UMI_STATUS_INTERNAL_ERROR. The existing
+ * default shell and visible interactive-window behaviour are retained.
  */
 UmiStatus umi_build_open_shell(const UmiToolchainProfile *profile,
                                UmiEnvironmentPlan *environment,

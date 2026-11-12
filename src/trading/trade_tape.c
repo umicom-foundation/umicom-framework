@@ -39,9 +39,16 @@ struct UmiTradingTradeTape {
 
 /* Advance observable state without allowing an unsigned wrap to look like an
  * unchanged zero revision to caches and user interfaces. */
+/* Tape changes now reserve a representable observation before mutating retained data. Provider availability remains observable at capacity; the previous implementation is retained for review. The previous implementation is retained for review. */
+#if 0
 static uint64_t next_revision(uint64_t revision)
 {
     return revision == UINT64_MAX ? 1U : revision + 1U;
+}
+#endif
+static uint64_t next_revision(uint64_t revision)
+{
+    return revision == UINT64_MAX ? UINT64_MAX : revision + 1U;
 }
 
 /* Accept only declared direction values so corrupted provider data cannot be
@@ -208,6 +215,8 @@ UmiStatus umi_trading_trade_tape_set_provider_ready(
 
 /* Retain accepted trades in ascending provider sequence. Full tapes discard
  * only their oldest row, preserving a deterministic most-recent window. */
+/* Tape changes now reserve a representable observation before mutating retained data. Provider availability remains observable at capacity; the previous implementation is retained for review. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_trade_tape_append(
     UmiTradingTradeTape *tape,
     const UmiTradingTradeTapeRecord *record)
@@ -236,9 +245,41 @@ UmiStatus umi_trading_trade_tape_append(
     tape->revision = next_revision(tape->revision);
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_trading_trade_tape_append(
+    UmiTradingTradeTape *tape,
+    const UmiTradingTradeTapeRecord *record)
+{
+    if (tape == NULL || !record_valid(record)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (tape->last_sequence > 0U && record->sequence <= tape->last_sequence) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+    if (tape->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (tape->last_sequence > 0U &&
+        record->sequence > tape->last_sequence + 1U) {
+        add_saturated(&tape->missing_sequence_count,
+                      record->sequence - tape->last_sequence - 1U);
+    }
+    if (tape->count == UMI_TRADING_TRADE_TAPE_CAPACITY) {
+        (void)memmove(&tape->records[0],
+                      &tape->records[1],
+                      (tape->count - 1U) * sizeof(tape->records[0]));
+        tape->count -= 1U;
+        add_saturated(&tape->dropped_trade_count, 1U);
+    }
+    tape->records[tape->count++] = *record;
+    tape->last_sequence = record->sequence;
+    tape->provider_ready = 1;
+    tape->revision = next_revision(tape->revision);
+    return UMI_STATUS_OK;
+}
 
 /* Filters affect presentation only. A later filter change can therefore show
  * retained rows immediately without asking the provider to resend them. */
+/* Tape changes now reserve a representable observation before mutating retained data. Provider availability remains observable at capacity; the previous implementation is retained for review. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_trade_tape_set_filter(
     UmiTradingTradeTape *tape,
     UmiTradingTradeTapeFilter filter,
@@ -256,9 +297,30 @@ UmiStatus umi_trading_trade_tape_set_filter(
     }
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_trading_trade_tape_set_filter(
+    UmiTradingTradeTape *tape,
+    UmiTradingTradeTapeFilter filter,
+    double minimum_size)
+{
+    if (tape == NULL || !filter_valid(filter) ||
+        !isfinite(minimum_size) || minimum_size < 0.0 ||
+        minimum_size > DBL_MAX) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (tape->filter != filter || tape->minimum_size != minimum_size) {
+        if (tape->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+        tape->filter = filter;
+        tape->minimum_size = minimum_size;
+        tape->revision = next_revision(tape->revision);
+    }
+    return UMI_STATUS_OK;
+}
 
 /* Pausing records the latest accepted sequence. New data may continue to be
  * retained, but queries stay frozen until the user resumes the tape. */
+/* Tape changes now reserve a representable observation before mutating retained data. Provider availability remains observable at capacity; the previous implementation is retained for review. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_trade_tape_set_paused(
     UmiTradingTradeTape *tape,
     int paused)
@@ -273,9 +335,27 @@ UmiStatus umi_trading_trade_tape_set_paused(
     tape->revision = next_revision(tape->revision);
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_trading_trade_tape_set_paused(
+    UmiTradingTradeTape *tape,
+    int paused)
+{
+    int normalized;
+
+    if (tape == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    normalized = paused != 0;
+    if (tape->paused == normalized) return UMI_STATUS_OK;
+    if (tape->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    tape->paused = normalized;
+    tape->paused_at_sequence = normalized ? tape->last_sequence : 0U;
+    tape->revision = next_revision(tape->revision);
+    return UMI_STATUS_OK;
+}
 
 /* Compact retained values in place and clear the inactive tail so removed
  * instrument data cannot reappear if storage is inspected or later reused. */
+/* Tape changes now reserve a representable observation before mutating retained data. Provider availability remains observable at capacity; the previous implementation is retained for review. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_trading_trade_tape_remove_instrument(
     UmiTradingTradeTape *tape,
     const char *instrument_id)
@@ -286,6 +366,43 @@ UmiStatus umi_trading_trade_tape_remove_instrument(
     if (tape == NULL || instrument_id == NULL || instrument_id[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    for (read_index = 0U; read_index < tape->count; ++read_index) {
+        if (strcmp(tape->records[read_index].trade.instrument.instrument_id.value,
+                   instrument_id) != 0) {
+            if (write_index != read_index) {
+                tape->records[write_index] = tape->records[read_index];
+            }
+            write_index += 1U;
+        }
+    }
+    if (write_index != tape->count) {
+        (void)memset(&tape->records[write_index],
+                     0,
+                     (tape->count - write_index) * sizeof(tape->records[0]));
+        tape->count = write_index;
+        tape->revision = next_revision(tape->revision);
+    }
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_trading_trade_tape_remove_instrument(
+    UmiTradingTradeTape *tape,
+    const char *instrument_id)
+{
+    size_t read_index;
+    size_t write_index = 0U;
+
+    if (tape == NULL || instrument_id == NULL || instrument_id[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Determine whether removal changes anything before compacting in place.
+     * An absent instrument remains an idempotent no-op, including at capacity. */
+    size_t matches = 0U;
+    for (read_index = 0U; read_index < tape->count; ++read_index)
+        if (strcmp(tape->records[read_index].trade.instrument.instrument_id.value, instrument_id) == 0)
+            ++matches;
+    if (matches == 0U) return UMI_STATUS_OK;
+    if (tape->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     for (read_index = 0U; read_index < tape->count; ++read_index) {
         if (strcmp(tape->records[read_index].trade.instrument.instrument_id.value,
                    instrument_id) != 0) {

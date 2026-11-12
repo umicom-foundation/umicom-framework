@@ -36,11 +36,20 @@ void umi_ui_reactive_observable_store_init(UmiUiReactiveObservableStore *item);
  * Provide the ui reactive observable store put operation used by this module and its
  * client applications.
  */
+/* Caller-serialized operation. Nonempty keys must terminate within PATH_CAPACITY.
+ * Malformed input is INVALID_ARGUMENT; corrupt active rows/count are INVALID_STATE.
+ * Full insertion or exhausted revision returns CAPACITY_EXCEEDED. Every refusal
+ * preserves the store. Existing rows remain replaceable at full row capacity.
+ * Source values may borrow a complete row; the operation stages their payload.
+ * Successful updates advance both store and changed-row revisions exactly once. */
 UmiStatus umi_ui_reactive_observable_store_put(UmiUiReactiveObservableStore *item,const char *key,const UmiUiValue *value);
 /**
  * Provide the ui reactive observable store get operation used by this module and its
  * client applications.
  */
+/* Copy an accepted value to caller storage distinct from the store. Refusal
+ * leaves output unchanged. Reads remain available at UINT64_MAX revision.
+ * Callers serialize reads with writes; this public value object has no lock. */
 UmiStatus umi_ui_reactive_observable_store_get(const UmiUiReactiveObservableStore *item,const char *key,UmiUiValue *out_value);
 #ifdef __cplusplus
 }

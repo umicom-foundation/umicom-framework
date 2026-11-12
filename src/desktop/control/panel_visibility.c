@@ -1,7 +1,10 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/desktop/control/panel_visibility.c
- * PURPOSE: Implement represent panel visibility intent separate from widget lifetime.
+ *
+ * PURPOSE:
+ *   Implement represent panel visibility intent separate from widget lifetime.
+ *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
  * Umicom Foundation
@@ -338,3 +341,10 @@ UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_desktop_panel_visibility_archive_decode_w
  * caller. Imported metadata remains evidence; registry publication is separate. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_desktop_panel_visibility_archive_decode_if_unchanged, umi_desktop_panel_visibility_archive_encode,
     UmiDesktopPanelVisibilitySnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)
+
+/* Compare through this owner's validated codec so native review uses the
+ * same fields as persistence. Caller-owned scratch avoids per-call allocation;
+ * an equal observation remains separate from revision-checked publication. */
+#include "../../base/value_compare_internal.h"
+UMI_DEFINE_VALUE_COMPARE(umi_desktop_panel_visibility_archive_compare_with_workspace,
+    UmiDesktopPanelVisibilitySnapshot, umi_desktop_panel_visibility_archive_encode)

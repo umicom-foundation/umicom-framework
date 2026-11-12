@@ -14,14 +14,12 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Exercise real native controls and SQLite history. Missing display coverage
- * is explicitly skipped; persistence failures never become successful skips. */
 #include "../application_experience/structured_form_fixture.h"
 #undef CHECK
 #include "umicom/data/structured_form_record.h"
 #include "umicom/ui/gtk4/form_record_editor.h"
 #include <glib/gstdio.h>
+#include "../support/widget_diagnostics.h"
 #define CHECK(x)                                                                                   \
   do {                                                                                             \
     if (!(x)) {                                                                                    \
@@ -61,14 +59,25 @@ static bool fill(GtkWidget *root, const char *mass) {
          text(root, "parcel.observed.value", "2026-10-24T12:00:00+01:00") &&
          known(root, "parcel.observed.state");
 }
-static bool idle(GtkWidget *root) {
+/* A timeout without a stage cannot distinguish GTK startup, a worker or
+ * completion callbacks. Keep bounded waits and report their call-site lines;
+ * this instrumentation is not evidence that a storage failure is repaired. */
+static bool idle_at(GtkWidget *root, unsigned line) {
+  fprintf(stderr, "Form editor wait begin: line=%u busy=%d\n", line,
+          UmiFormRecordEditorGtk4Busy(root));
+  fflush(stderr);
   gint64 end = g_get_monotonic_time() + 15 * G_USEC_PER_SEC;
   while (UmiFormRecordEditorGtk4Busy(root) && g_get_monotonic_time() < end) {
     (void)g_main_context_iteration(NULL, FALSE);
     g_usleep(1000);
   }
-  return !UmiFormRecordEditorGtk4Busy(root);
+  bool ready = !UmiFormRecordEditorGtk4Busy(root);
+  fprintf(stderr, "Form editor wait end: line=%u idle=%d last-status=%d\n",
+          line, ready, (int)UmiFormRecordEditorGtk4LastStatus(root));
+  fflush(stderr);
+  return ready;
 }
+#define idle(root) idle_at((root), __LINE__)
 typedef struct Observer {
   GtkWidget *root;
   const char *prefix;
@@ -179,10 +188,18 @@ int main(int argc, char **argv) {
       selected = true;
   if (!selected)
     return 2;
+  /* GLib test mode reports fatal diagnostics without Windows error dialogs.
+   * Do not relax G_DEBUG or redirect warnings away from the qualification log. */
+  g_test_init(&argc, &argv, NULL);
+  UmiTestWidgetDiagnosticsInstall();
+  fprintf(stderr, "Form editor stage: GTK initialization (%s)\n", argv[1]);
+  fflush(stderr);
   if (!gtk_init_check()) {
     fprintf(stderr, "GTK display unavailable; native coverage skipped.\n");
     return 77;
   }
+  fputs("Form editor stage: GTK initialized; constructing fixture\n", stderr);
+  fflush(stderr);
   int result = 0;
   const char *name = argv[1];
   FormFixture *fixture = form_fixture_new();
@@ -209,6 +226,9 @@ int main(int argc, char **argv) {
   }
   OK(UmiFormRecordEditorGtk4New(&options, &root));
   g_object_ref_sink(root);
+  UmiTestWidgetDiagnosticsRoot(root);
+  fputs("Form editor stage: native editor created\n", stderr);
+  fflush(stderr);
   CHECK(UmiFormRecordEditorGtk4CanClose(root));
   if (strcmp(name, "relative-path") == 0) {
     CHECK(UmiFormRecordEditorGtk4Connect(root, "relative.sqlite3") == UMI_STATUS_INVALID_ARGUMENT);
@@ -862,7 +882,8 @@ int main(int argc, char **argv) {
     CHECK(state->record.expected_revision == 1 && state->form.answers[0].value.decimal_value == 2);
   }
 cleanup:
-  if (root != NULL) {
+  fputs("Form editor stage: cleanup\n", stderr);
+  fflush(stderr);  if (root != NULL) {
     if (!idle(root))
       result = 1;
   }

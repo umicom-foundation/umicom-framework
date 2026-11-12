@@ -15,6 +15,12 @@
 #ifndef UMICOM_UI_LAYOUT_LIBRARY_H
 #define UMICOM_UI_LAYOUT_LIBRARY_H
 #include "umicom/ui/workspace_layout.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define UMI_UI_LAYOUT_LIBRARY_MAX 32U
 /**
  * Represent the ui layout library item data shared with callers of this public contract.
@@ -48,4 +54,8 @@ const UmiUiLayoutLibraryItem *umi_ui_layout_library_find(const UmiUiLayoutLibrar
  * applications.
  */
 UmiStatus umi_ui_layout_library_instantiate(const UmiUiLayoutLibrary *library,const char *preset_id,const char *layout_id,const char *name,UmiUiWorkspaceLayout *out_layout);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

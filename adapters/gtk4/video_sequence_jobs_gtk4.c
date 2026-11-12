@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/video_sequence_jobs_gtk4.c
- * PURPOSE: Capture media jobs before dispatch and publish results only to a live editor.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Capture media jobs before dispatch and publish results only to a live editor.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/creative_workspace/video_captions.h"
@@ -11,6 +18,7 @@
 #include "umicom/platform/input_file.h"
 #include "video_sequence_private.h"
 #include <string.h>
+#include "media_watermark_gtk4.h"
 typedef enum JobKind {
   OPEN_RECIPE,
   SAVE_RECIPE,
@@ -31,6 +39,7 @@ typedef struct VideoJob {
   UmiCancellationToken *cancel;
   char *path;
   UmiStatus status;
+  UmiStatus watermark_cleanup;
   UmiVideoRenderReport rendered;
   UmiCreativeAssetWriteResult saved;
 } VideoJob;
@@ -49,9 +58,24 @@ static void Work(GTask *task, gpointer source, gpointer taskData, GCancellable *
   UmiCreativeAsset *asset = NULL;
   if (umi_cancellation_token_is_requested(job->cancel))
     job->status = UMI_STATUS_CANCELLED;
-  else if (RenderJob(job->kind))
+  else if (RenderJob(job->kind)) {
+    /* Retain the former direct render for review. Every Media-produced video
+     * now acquires the embedded SVG and decorates the shared plan before output
+     * creation; lack of branding support cannot silently produce another file. */
+#if 0
     job->status = UmiVideoRenderExecute(job->render, job->path, UMI_VIDEO_RENDER_MAX_TIMEOUT_MS,
                                         job->cancel, &job->rendered);
+#endif
+    UmiMediaWatermarkFile *watermark = NULL;
+    job->status = UmiMediaWatermarkFileCreate(&watermark);
+    if (job->status == UMI_STATUS_OK)
+      job->status = UmiVideoRenderApplyWatermark(job->render,
+          UmiMediaWatermarkFilePath(watermark));
+    if (job->status == UMI_STATUS_OK)
+      job->status = UmiVideoRenderExecute(job->render, job->path, UMI_VIDEO_RENDER_MAX_TIMEOUT_MS,
+          job->cancel, &job->rendered);
+    job->watermark_cleanup = UmiMediaWatermarkFileDestroy(watermark);
+  }
   else if (job->kind == SAVE_RECIPE) {
     job->status = UmiVideoSequenceExport(&job->sequence, job->cancel, &asset);
     if (job->status == UMI_STATUS_OK)
@@ -117,6 +141,9 @@ static void Complete(GObject *source, GAsyncResult *result, gpointer data) {
                             : job->kind == ATTACH_SOUNDTRACK ? "Attach soundtrack"
                                                              : "Render silent video";
     bool created = RenderJob(job->kind) ? job->rendered.output_created : job->saved.created;
+    /* The former completion text is retained for review. The active message
+     * now distinguishes requested branding from independently inspected pixels. */
+#if 0
     char *message =
         g_strdup_printf("%s: %s.\n%s\n%s%s", operation, umi_status_text(job->status), job->path,
                         job->status != UMI_STATUS_OK && created
@@ -125,6 +152,27 @@ static void Complete(GObject *source, GAsyncResult *result, gpointer data) {
                         RenderJob(job->kind) && job->status == UMI_STATUS_OK
                             ? "Render finished. Open the MP4 in a player to verify its content."
                             : "");
+#endif
+    char *message =
+        g_strdup_printf("%s: %s.\n%s\n%s%s", operation, umi_status_text(job->status), job->path,
+                        job->status != UMI_STATUS_OK && created
+                            ? "A new partial file remains. Choose another output path.\n"
+                            : "",
+                        RenderJob(job->kind) && job->status == UMI_STATUS_OK
+                            ? "Render finished with the Umicom SVG watermark requested. Verify the logo and content in a player."
+                            : "");
+    if (RenderJob(job->kind) && job->status != UMI_STATUS_OK) {
+      char *withRequirements = g_strconcat(message,
+          "\nVideo branding requires FFmpeg librsvg, reference-aware scale, overlay and libx264.", NULL);
+      g_free(message);
+      message = withRequirements;
+    }
+    if (job->watermark_cleanup != UMI_STATUS_OK) {
+      char *withCleanup = g_strconcat(message,
+          "\nThe private watermark file could not be removed from the temporary directory.", NULL);
+      g_free(message);
+      message = withCleanup;
+    }
     UmiVideoSequenceGtkMessage(panel, message);
     g_free(message);
     if (!panel->closed && RenderJob(job->kind) && job->rendered.process.diagnostics[0] != '\0') {

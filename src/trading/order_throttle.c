@@ -45,6 +45,8 @@ void umi_order_throttle_init(UmiOrderThrottle *throttle,
  * Provide the order throttle accept operation used by this module and its client
  * applications.
  */
+/* Use the accepted count to distinguish an unused time window, admit time arithmetic and publish only accepted attempts. This replaces the zero-timestamp sentinel and retains its implementation for review. The previous implementation is retained for review. */
+#if 0
 int umi_order_throttle_accept(UmiOrderThrottle *throttle, int64_t now_ms)
 {
     /*
@@ -72,3 +74,25 @@ int umi_order_throttle_accept(UmiOrderThrottle *throttle, int64_t now_ms)
     throttle->count++;
     return 1;
 }
+#endif
+int umi_order_throttle_accept(UmiOrderThrottle *throttle, int64_t now_ms)
+{
+    if (throttle == NULL || throttle->max_count == 0U ||
+        throttle->window_ms <= 0 || throttle->window_start_ms < 0 ||
+        now_ms < 0 || throttle->count > throttle->max_count)
+        return 0;
+    if (throttle->count != 0U && now_ms < throttle->window_start_ms)
+        return 0;
+    UmiOrderThrottle next = *throttle;
+    /* Count zero identifies an unused throttle; timestamp zero is valid.
+     * With nonnegative ordered operands, subtraction cannot overflow int64_t. */
+    if (next.count == 0U || now_ms - next.window_start_ms >= next.window_ms) {
+        next.window_start_ms = now_ms;
+        next.count = 0U;
+    }
+    if (next.count >= next.max_count) return 0;
+    next.count += 1U;
+    *throttle = next;
+    return 1;
+}
+

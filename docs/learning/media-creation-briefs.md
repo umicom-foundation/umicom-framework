@@ -52,13 +52,35 @@ Use the existing [song planning guide](song-and-music-video-plans.html) to work 
 ## Save work and recover from mistakes
 
 1. Use the text export control beneath the model controls. Enter a complete new `.txt` filename in a folder you can access and choose its save action. The folder must already exist. Existing files are not replaced.
-2. Check the export message before closing Media. Source fields and the settings-path entry are not automatically saved between launches. The exported brief includes the source and direction as plain text; there is no form-state import in this version.
+<!-- Earlier text-only recovery limitation retained for review: 2. Check the export message before closing Media. Source fields and the settings-path entry are not automatically saved between launches. The exported brief includes the source and direction as plain text; there is no form-state import in this version. -->
+2. Check the export message before closing Media. Plain-text export remains separate from the Creation document controls described below. Those controls save and reopen source fields and the edited prompt explicitly; the model settings-path entry is not included, and there is no automatic recovery.
 3. If you change a source field, Media keeps the previous brief but blocks handoff until you prepare it again. You can still save the displayed draft.
 4. If you edited the brief, preparing it again asks for explicit replacement. Save or copy those edits first if you want to keep them.
 5. If a settings file cannot be opened, check that its path is absolute and writable. A failed load is shown in the connection window. Changing a path does not move an existing settings database.
 6. If generation is busy, wait for its current result or use that tool's existing stop control. A handoff never cancels a provider job for you.
 
 The title accepts up to 128 UTF-8 bytes, the excerpt 2048 and the direction 512. The editable brief accepts up to 4096 bytes for handoff and export. UTF-8 is a way to store characters as bytes; some characters take more than one byte. Oversized input is refused rather than silently cut short. Use a smaller excerpt and keep the complete original document separately.
+
+
+## Save and reopen a creation document
+
+1. Expand Creation document in Create from text. Enter an ordinary absolute JSON path in a trusted folder; Save may create missing parent folders.
+2. To save the current title, output choice, source, direction and edited prompt, select Allow replacing the selected file on the next save, then choose Save creation text. Incomplete fields and a prompt retained from older source edits can be saved.
+3. To open, select Allow replacing current source and prompt on the next open, then choose Open creation document. This explicitly replaces the current form text; save any work you want to keep first.
+4. Wait for the result. The editing area and file form are disabled during the job. Request cancellation is cooperative: a save already publishing may still finish, and the result reports that outcome.
+5. Review the persistent file-status label. Editing the path, kind, source fields or prompt clears file approvals. Each approval is consumed by the next accepted operation.
+6. After opening, the prompt remains an edited draft and model handoffs stay disabled. Preparing a replacement for nonempty restored text requires the existing replacement checkbox. Save the restored wording before replacing it if you want to compare both versions.
+7. If a file is damaged, unsupported or too large, current text is kept. If a direct edit or path change occurs while an Open worker runs, its completion does not overwrite that newer panel state.
+
+Creation documents use the shared Framework service, which captures owned text and an owned path before a worker starts. The worker never reads native widget buffers. An incoming storyboard source is refused with a busy result while document I/O owns the creation panel.
+
+Closing or retiring the panel requests cancellation and prevents further actions. A late completion cannot update a retired panel. An atomic save already publishing is not undone by closing the window.
+
+The document does not save model settings paths, model choices, credentials, provider permissions, receipts, generated assets, video/audio projects or undo history. There is no automatic save, restart recovery or close-time unsaved-change prompt.
+
+The native controls and 24 recovery scenarios are authored but unexecuted. Qualify actual file replacement, native display behavior, installed libraries and closure during I/O separately from portable document parsing.
+
+See [Editable creation drafts](editable-creation-drafts.html) for the versioned schema, ownership rules and installed C example.
 
 ## How Framework and Media share the work
 

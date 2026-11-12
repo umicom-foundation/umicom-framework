@@ -414,6 +414,9 @@ static UmiStatus record_operation_event(
  * Provide the developer runtime set context operation used by this module and its client
  * applications.
  */
+/* Shared event admission is defined beside chain publication below. */
+static UmiStatus admit_runtime_events(UmiDeveloperRuntime *runtime, uint64_t events);
+
 UmiStatus umi_developer_runtime_set_context(
     UmiDeveloperRuntime *runtime,
     const UmiDeveloperContextSnapshot *context)
@@ -428,6 +431,10 @@ UmiStatus umi_developer_runtime_set_context(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Admit event publication before changing the underlying lifecycle value.
+     * Exhausted journal/runtime identities must leave the prior state intact. */
+    status = admit_runtime_events(runtime, 1U);
+    if (status != UMI_STATUS_OK) return status;
     status = umi_developer_context_set(runtime->context, context);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
@@ -465,6 +472,10 @@ UmiStatus umi_developer_runtime_submit_operation(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Reserve the journal/runtime identities before publishing a single
+     * operation too. A refused event must never leave executable queue work. */
+    status = admit_runtime_events(runtime, 1U);
+    if (status != UMI_STATUS_OK) return status;
     status = umi_developer_pipeline_submit(runtime->pipeline, operation);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
@@ -473,6 +484,101 @@ UmiStatus umi_developer_runtime_submit_operation(
 
     return record_operation_event(
         runtime, operation->id, UMI_DEVELOPER_EVENT_SUBMITTED, "Operation queued.");
+}
+
+
+/* Queue publication precedes journal/workbench projection, but only after all
+ * fallible queue admission has succeeded. The journal has fixed ring storage:
+ * these admitted events cannot allocate or fail, and identity headroom is
+ * checked before changing either model. Workbench projections retain the
+ * existing best-effort notification policy of individual submissions. */
+/* The earlier chain-specific headroom calculation is retained for review.
+ * admit_runtime_events now supplies the same admission to both workflow
+ * chains and CMake plans, keeping event identity ownership in Framework. */
+#if 0
+UmiStatus umi_developer_runtime_submit_chain(
+    UmiDeveloperRuntime *runtime,
+    const UmiDeveloperOperationSnapshot *operations,
+    size_t count)
+{
+    if (runtime == NULL || operations == NULL || count == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (count > UMI_DEVELOPER_PIPELINE_OPERATION_CAPACITY)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (runtime->pipeline == NULL || runtime->journal == NULL)
+        return UMI_STATUS_INVALID_STATE;
+    UmiDeveloperJournalSnapshot journal;
+    UmiStatus status = umi_developer_journal_snapshot(runtime->journal, &journal);
+    if (status != UMI_STATUS_OK) return status;
+    uint64_t events = (uint64_t)count * 2U - 1U;
+    uint64_t displaced = journal.entry_count + events > UMI_DEVELOPER_JOURNAL_CAPACITY
+        ? journal.entry_count + events - UMI_DEVELOPER_JOURNAL_CAPACITY : 0U;
+    if (events > UINT64_MAX - runtime->revision ||
+        events > UINT64_MAX - journal.next_sequence ||
+        events > UINT64_MAX - journal.revision ||
+        displaced > UINT64_MAX - journal.dropped_count)
+        return UMI_STATUS_INVALID_STATE;
+    status = umi_developer_pipeline_submit_chain(runtime->pipeline, operations, count);
+    if (status != UMI_STATUS_OK) return status;
+    for (size_t i = 0U; i < count; ++i) {
+        /* Every ID now exists and the non-allocating journal has been admitted.
+         * No callbacks may mutate this single-owner runtime during submission. */
+        (void)record_operation_event(runtime, operations[i].id,
+            UMI_DEVELOPER_EVENT_SUBMITTED, "Operation queued.");
+        if (i != 0U)
+            (void)record_operation_event(runtime, operations[i].id,
+                UMI_DEVELOPER_EVENT_DEPENDENCY_ADDED, "Operation dependency added.");
+    }
+    return UMI_STATUS_OK;
+}
+#endif
+
+/* Queue publication must have enough event identities before it commits.
+ * The journal is a fixed ring and does not allocate during event publication.
+ * Workbench projections retain their existing best-effort policy. */
+static UmiStatus admit_runtime_events(UmiDeveloperRuntime *runtime, uint64_t events)
+{
+    if (runtime == NULL || events == 0U ||
+        events > (uint64_t)UMI_DEVELOPER_PIPELINE_OPERATION_CAPACITY * 2U - 1U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (runtime->pipeline == NULL || runtime->journal == NULL)
+        return UMI_STATUS_INVALID_STATE;
+    UmiDeveloperJournalSnapshot journal;
+    UmiStatus status = umi_developer_journal_snapshot(runtime->journal, &journal);
+    if (status != UMI_STATUS_OK) return status;
+    uint64_t displaced = journal.entry_count + events > UMI_DEVELOPER_JOURNAL_CAPACITY
+        ? journal.entry_count + events - UMI_DEVELOPER_JOURNAL_CAPACITY : 0U;
+    if (events > UINT64_MAX - runtime->revision ||
+        events > UINT64_MAX - journal.next_sequence ||
+        events > UINT64_MAX - journal.revision ||
+        displaced > UINT64_MAX - journal.dropped_count)
+        return UMI_STATUS_INVALID_STATE;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_developer_runtime_submit_chain(
+    UmiDeveloperRuntime *runtime,
+    const UmiDeveloperOperationSnapshot *operations,
+    size_t count)
+{
+    if (runtime == NULL || operations == NULL || count == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (count > UMI_DEVELOPER_PIPELINE_OPERATION_CAPACITY)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiStatus status = admit_runtime_events(runtime, (uint64_t)count * 2U - 1U);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_developer_pipeline_submit_chain(runtime->pipeline, operations, count);
+    if (status != UMI_STATUS_OK) return status;
+    for (size_t i = 0U; i < count; ++i) {
+        /* Every ID now exists and the non-allocating journal has been admitted.
+         * No callbacks may mutate this single-owner runtime during submission. */
+        (void)record_operation_event(runtime, operations[i].id,
+            UMI_DEVELOPER_EVENT_SUBMITTED, "Operation queued.");
+        if (i != 0U)
+            (void)record_operation_event(runtime, operations[i].id,
+                UMI_DEVELOPER_EVENT_DEPENDENCY_ADDED, "Operation dependency added.");
+    }
+    return UMI_STATUS_OK;
 }
 
 /*
@@ -494,6 +600,10 @@ UmiStatus umi_developer_runtime_add_dependency(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Admit event publication before changing the underlying lifecycle value.
+     * Exhausted journal/runtime identities must leave the prior state intact. */
+    status = admit_runtime_events(runtime, 1U);
+    if (status != UMI_STATUS_OK) return status;
     status = umi_developer_pipeline_add_dependency(
         runtime->pipeline, operation_id, depends_on_operation_id);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -512,6 +622,10 @@ UmiStatus umi_developer_runtime_add_dependency(
  * Provide the developer runtime submit cmake plan operation used by this module and its
  * client applications.
  */
+/* Retain the prior CMake publication body. The replacement adds the shared
+ * event headroom check before pipeline mutation while preserving event order,
+ * text and output publication semantics. */
+#if 0
 UmiStatus umi_developer_runtime_submit_cmake_plan(
     UmiDeveloperRuntime *runtime,
     const UmiDeveloperCMakePlanRequest *request,
@@ -530,6 +644,70 @@ UmiStatus umi_developer_runtime_submit_cmake_plan(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    status = umi_developer_cmake_plan_submit(runtime->pipeline, request, &plan);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+
+    operation_ids[0] = plan.configure_operation_id;
+    operation_ids[1] = plan.build_operation_id;
+    operation_ids[2] = plan.test_operation_id;
+    operation_ids[3] = plan.run_operation_id;
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < 4U; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (operation_ids[index][0] != '\0') {
+            status = record_operation_event(
+                runtime,
+                operation_ids[index],
+                UMI_DEVELOPER_EVENT_SUBMITTED,
+                "Operation queued by CMake plan.");
+            /* Preserve the original failure result so the caller can respond to the correct cause. */
+            if (status != UMI_STATUS_OK) {
+                return status;
+            }
+        }
+    }
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (out_plan != NULL) {
+        *out_plan = plan;
+    }
+    return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_developer_runtime_submit_cmake_plan(
+    UmiDeveloperRuntime *runtime,
+    const UmiDeveloperCMakePlanRequest *request,
+    UmiDeveloperCMakePlanSnapshot *out_plan)
+{
+    UmiDeveloperCMakePlanSnapshot plan;
+    const char *operation_ids[4];
+    size_t index;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (runtime == NULL || request == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    /* Preserve the existing one-submitted-event-per-stage journal contract.
+     * Reserve its identities before the complete CMake chain is admitted. */
+    uint64_t events = (request->include_configure != 0 ? 1U : 0U) +
+        (request->include_build != 0 ? 1U : 0U) +
+        (request->include_tests != 0 ? 1U : 0U) +
+        (request->include_run != 0 ? 1U : 0U);
+    status = admit_runtime_events(runtime, events);
+    if (status != UMI_STATUS_OK) return status;
     status = umi_developer_cmake_plan_submit(runtime->pipeline, request, &plan);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
@@ -585,6 +763,10 @@ UmiStatus umi_developer_runtime_start_operation(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Admit event publication before changing the underlying lifecycle value.
+     * Exhausted journal/runtime identities must leave the prior state intact. */
+    status = admit_runtime_events(runtime, 1U);
+    if (status != UMI_STATUS_OK) return status;
     status = umi_developer_pipeline_start(runtime->pipeline, operation_id);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
@@ -656,6 +838,10 @@ UmiStatus umi_developer_runtime_set_progress(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Admit event publication before changing the underlying lifecycle value.
+     * Exhausted journal/runtime identities must leave the prior state intact. */
+    status = admit_runtime_events(runtime, 1U);
+    if (status != UMI_STATUS_OK) return status;
     status = umi_developer_pipeline_set_progress(
         runtime->pipeline, operation_id, progress_basis_points, summary);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -686,6 +872,10 @@ UmiStatus umi_developer_runtime_complete_operation(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Admit event publication before changing the underlying lifecycle value.
+     * Exhausted journal/runtime identities must leave the prior state intact. */
+    status = admit_runtime_events(runtime, 1U);
+    if (status != UMI_STATUS_OK) return status;
     status = umi_developer_pipeline_complete(
         runtime->pipeline, operation_id, exit_code, summary);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -716,6 +906,10 @@ UmiStatus umi_developer_runtime_fail_operation(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Admit event publication before changing the underlying lifecycle value.
+     * Exhausted journal/runtime identities must leave the prior state intact. */
+    status = admit_runtime_events(runtime, 1U);
+    if (status != UMI_STATUS_OK) return status;
     status = umi_developer_pipeline_fail(
         runtime->pipeline, operation_id, exit_code, summary);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -745,6 +939,10 @@ UmiStatus umi_developer_runtime_cancel_operation(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Admit event publication before changing the underlying lifecycle value.
+     * Exhausted journal/runtime identities must leave the prior state intact. */
+    status = admit_runtime_events(runtime, 1U);
+    if (status != UMI_STATUS_OK) return status;
     status = umi_developer_pipeline_cancel(runtime->pipeline, operation_id, summary);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
@@ -772,6 +970,10 @@ UmiStatus umi_developer_runtime_retry_operation(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Admit event publication before changing the underlying lifecycle value.
+     * Exhausted journal/runtime identities must leave the prior state intact. */
+    status = admit_runtime_events(runtime, 1U);
+    if (status != UMI_STATUS_OK) return status;
     status = umi_developer_pipeline_retry(runtime->pipeline, operation_id);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
@@ -805,6 +1007,11 @@ UmiStatus umi_developer_runtime_execute_next(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Synchronous execution needs both started and terminal event identities
+     * before the external callback may run. The owner and executor must not
+     * re-enter or otherwise mutate this runtime during execution. */
+    status = admit_runtime_events(runtime, 2U);
+    if (status != UMI_STATUS_OK) return status;
     status = umi_developer_runtime_start_next(runtime, &operation);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {

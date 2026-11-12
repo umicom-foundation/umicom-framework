@@ -53,6 +53,17 @@ static UmiStatus set_integer(UmiUiViewModel *view, const char *key,
         ? umi_ui_view_model_set_property(view, key, &value) : status;
 }
 
+/* Full-width identities use the shared exact value conversion. Existing
+ * integer properties keep their kind while representable; larger revisions
+ * become decimal strings understood by the generic native property renderer. */
+static UmiStatus set_unsigned(UmiUiViewModel *view, const char *key, uint64_t number)
+{
+    UmiUiValue value;
+    UmiStatus status = UmiUiValueSetUnsigned(&value, number);
+    return status == UMI_STATUS_OK
+        ? umi_ui_view_model_set_property(view, key, &value) : status;
+}
+
 /* Provide the set number operation used by this module and its client applications. */
 static UmiStatus set_number(UmiUiViewModel *view, const char *key,
                             double number)
@@ -129,8 +140,13 @@ static UmiStatus create_view(const char *view_id, const char *view_kind,
 static UmiStatus set_workspace_properties(
     UmiUiViewModel *view, const UmiTradingWorkspaceSnapshot *snapshot)
 {
+/* The shared unsigned UI value preserves the full observation identity without an out-of-range signed cast. The previous implementation is retained for review. */
+#if 0
     UmiStatus status = set_integer(
         view, "trading.revision", (int64_t)snapshot->revision);
+#endif
+    UmiStatus status = set_unsigned(
+        view, "trading.revision", snapshot->revision);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
         status = set_string(view, "trading.account-id",
@@ -1090,9 +1106,14 @@ UmiStatus umi_trading_ui_context_inspector_view_create(
         status = set_boolean(*out_view, "context.has-order",
                              snapshot.has_selected_order);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
+/* The shared unsigned UI value preserves the full observation identity without an out-of-range signed cast. The previous implementation is retained for review. */
+#if 0
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "context.workspace-revision",
                              (int64_t)snapshot.revision);
+#endif
+    if (status == UMI_STATUS_OK)
+        status = set_unsigned(*out_view, "context.workspace-revision", snapshot.revision);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.trading.refresh", "Refresh Context",
@@ -1207,9 +1228,14 @@ UmiStatus umi_trading_ui_research_output_view_create(
         status = set_integer(*out_view, "research.position-count",
                              (int64_t)snapshot.position_count);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
+/* The shared unsigned UI value preserves the full observation identity without an out-of-range signed cast. The previous implementation is retained for review. */
+#if 0
     if (status == UMI_STATUS_OK)
         status = set_integer(*out_view, "research.workspace-revision",
                              (int64_t)snapshot.revision);
+#endif
+    if (status == UMI_STATUS_OK)
+        status = set_unsigned(*out_view, "research.workspace-revision", snapshot.revision);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) status = set_action(
         *out_view, 0U, "studio.action.trading.refresh", "Refresh Output",

@@ -52,6 +52,20 @@ typedef struct UmiFinancialPaymentControlBook {
     uint64_t revision;
 } UmiFinancialPaymentControlBook;
 
+/* Validate complete caller-owned storage before traversal: bounded terminated
+ * text, required identities, finite numeric observations, known states/boolean
+ * flags and unique keys. Count must fit the array and revision must be nonzero.
+ * These references do not replace canonical domain engines or authenticate
+ * permissions. Keep inputs stable on one owner thread and outputs disjoint.
+ * Borrowed find results last until the next mutation; queries inspect at most
+ * 64 readable bytes and must terminate. Unused rows/text tails are ignored. */
+UmiStatus umi_financial_payment_control_validate(const UmiFinancialPaymentControl *row);
+UmiStatus umi_financial_payment_control_book_validate(const UmiFinancialPaymentControlBook *owner);
+/* Imported observations may use any known state. Transition retains the
+ * existing known-state edges, terminal rules and strictly increasing versions.
+ * Updating these local values does not perform a financial transaction. */
+/* SENT/SETTLED transitions still require the local approved flag. That flag
+ * is caller-supplied evidence, not an authenticated payment authorization. */
 void umi_financial_payment_control_book_init(UmiFinancialPaymentControlBook *book);
 /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
  * before this operation changes state or invokes nested work. Initialize the

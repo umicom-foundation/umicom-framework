@@ -16,6 +16,12 @@
 #ifndef UMICOM_BROKER_GATEWAY_GTK4_H
 #define UMICOM_BROKER_GATEWAY_GTK4_H
 #include <gtk/gtk.h>
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 typedef struct UmiIbkrGatewayGtk UmiIbkrGatewayGtk;
 /* Main-thread API. The owner retains this panel until Destroy; its Widget is
  * borrowed. Detection runs in a worker and never opens a socket or a process.
@@ -26,4 +32,8 @@ GtkWidget *UmiIbkrGatewayGtkWidget(UmiIbkrGatewayGtk *owner);
 /* Retire before destroying the containing window. Pending work is cancelled;
  * an already explicitly launched broker process remains the user's process. */
 void UmiIbkrGatewayGtkDestroy(UmiIbkrGatewayGtk *owner);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

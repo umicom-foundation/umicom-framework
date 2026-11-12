@@ -250,6 +250,13 @@ UmiStatus umi_ui_navigation_stack_registry_archive_restore(UmiUiNavigationEntryR
 UmiStatus umi_ui_navigation_stack_registry_clear_if_current(UmiUiNavigationEntryRegistry *registry,
     uint64_t expected_revision);
 
+/* Compare this record's canonical saved state using caller-owned byte scratch.
+ * See UmiValueArchiveComparison in base/value_archive.h for measurement,
+ * refusal, aliasing and lifetime rules. This call never publishes live state. */
+UmiStatus umi_ui_navigation_stack_snapshot_archive_compare_with_workspace(const UmiUiNavigationEntrySnapshot *left,
+    const UmiUiNavigationEntrySnapshot *right, void *workspace, size_t capacity,
+    UmiValueArchiveComparison *out_comparison);
+
 #ifdef __cplusplus
 }
 #endif

@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_TREE_LAZY_LOADER_H
 
 #include "umicom/ui/enterprise/types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * List the named ui ent load state values accepted by this public contract.
  */
@@ -35,4 +41,8 @@ UmiStatus umi_ui_ent_tree_lazy_loader_request(UmiUiEntTreeLazyLoader *l,const ch
  */
 UmiStatus umi_ui_ent_tree_lazy_loader_complete(UmiUiEntTreeLazyLoader *l,uint64_t sequence,int success);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

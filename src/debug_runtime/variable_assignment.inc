@@ -1,12 +1,20 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/debug_runtime/variable_assignment.inc
- * PURPOSE: Keep runtime assignments bound to current evidence and invalidate uncertain captures.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Keep runtime assignments bound to current evidence and invalidate uncertain captures.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/debug_runtime/variable_assignment.h"
+#include "umicom/base/utf8.h"
 #include "umicom/language_runtime/json_document.h"
 #include "variable_inspection_private.h"
 
@@ -48,6 +56,12 @@ UmiStatus UmiDebugRuntimeAssignVariable(UmiDebugRuntimePlatform *platform,
     if (length == 1024U) return UMI_STATUS_CAPACITY_EXCEEDED;
     UmiStatus status = UmiDebugRuntimeCheckVariableAssignment(platform, workspace, target);
     if (status != UMI_STATUS_OK) return status;
+    /* The shared JSON writer rejects malformed Unicode as INVALID_ARGUMENT.
+     * Assignment has historically reported PARSE_ERROR for that input. Keep
+     * the public boundary stable by validating through the shared UTF-8 owner
+     * before writing JSON, without weakening writer admission for other users. */
+    if (!UmiUtf8Validate((const unsigned char *)value, length, NULL))
+        return UMI_STATUS_PARSE_ERROR;
     /* Prepare and validate the complete escaped request before invalidating any
      * displayed evidence. This also rejects malformed UTF-8 in caller input. */
     char arguments[8192]; UmiLanguageRuntimeJsonWriter writer;

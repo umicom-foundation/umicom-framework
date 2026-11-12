@@ -54,6 +54,9 @@ UmiStatus umi_financial_platform_service_evaluate(
     const UmiFinancialPlatformInput *input,
     UmiFinancialPlatformSnapshot *outSnapshot);
 
+/* Complete coverage observation or unchanged output. Inherit the control
+ * snapshot's bounded-count and local-evidence limits; readiness flags do not
+ * authorize transactions. Serialize owners and supply disjoint output. */
 UmiStatus umi_financial_platform_service_snapshot(
     const UmiFinancialControlService *service,
     UmiFinancialPlatformServiceSnapshot *outSnapshot);

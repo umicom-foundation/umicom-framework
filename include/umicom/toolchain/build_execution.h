@@ -72,6 +72,20 @@ UmiStatus UmiBuildExecutionValidate(UmiBuildAction action,
     const UmiBuildRequest *request, const UmiBuildExecutionOptions *options,
     char *message, size_t message_capacity);
 
+/** Validate the complete action sequence before side effects. Reuses request/
+ * option admission, checks profile compatibility, child-window mode, the full
+ * optional environment and every CMake/CTest slot the sequence will consume.
+ * Execution requires nonempty validated tool paths; preview permits missing
+ * tools with descriptive default names but refuses malformed supplied fields.
+ * No allocation, filesystem access, observer, tool probe or process runs here.
+ * Relative program names retain their existing PATH-resolution semantics.
+ * Metadata admission is not executable discovery or a successful build. Inputs
+ * must remain stable through the subsequent call, including observer callbacks. */
+UmiStatus UmiBuildExecutionPreflight(const UmiToolchainProfile *profile,
+    const UmiEnvironmentPlan *environment, UmiBuildAction action,
+    const UmiBuildRequest *request, const UmiBuildExecutionOptions *options,
+    char *message, size_t message_capacity);
+
 /** Execute or preview the established action sequence. Stop at the first failed
  * phase; dry-run exit fields stay -1 because no child ran. No Git operation is
  * implied. Existing umi_build_execute callers keep their source and ABI layout. */

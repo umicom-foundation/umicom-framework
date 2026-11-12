@@ -30,6 +30,10 @@ static int Terminated(const char *text, size_t capacity)
 {
     return memchr(text, 0, capacity) != NULL;
 }
+/* Lower-level producers now share storage admission before retention. Keep
+ * this former complete validator for review; the replacement still enforces
+ * the review's stronger enum, message and source-location requirements. */
+#if 0
 static int ValidResult(const UmiBuildResult *result)
 {
     if (result->phase < UMI_BUILD_PHASE_CONFIGURE || result->phase > UMI_BUILD_PHASE_DEPLOY ||
@@ -45,6 +49,19 @@ static int ValidResult(const UmiBuildResult *result)
             !Terminated(d->file, sizeof d->file) || !Terminated(d->code, sizeof d->code) ||
             !Terminated(d->message, sizeof d->message) || d->message[0] == '\0' ||
             (d->line == 0U && d->column != 0U)) return 0;
+    }
+    return 1;
+}
+#endif
+static int ValidResult(const UmiBuildResult *result)
+{
+    if (UmiBuildResultValidateStorage(result)!=UMI_STATUS_OK||
+        result->phase<UMI_BUILD_PHASE_CONFIGURE||result->phase>UMI_BUILD_PHASE_DEPLOY||
+        result->state<UMI_BUILD_STATE_CREATED||result->state>UMI_BUILD_STATE_TIMED_OUT||
+        result->status<UMI_STATUS_OK||result->status>UMI_STATUS_BUSY)return 0;
+    for (size_t index=0;index<result->diagnostics.count;++index) {
+        const UmiBuildDiagnostic *diagnostic=&result->diagnostics.items[index];
+        if (diagnostic->message[0]=='\0'||(diagnostic->line==0U&&diagnostic->column!=0U))return 0;
     }
     return 1;
 }

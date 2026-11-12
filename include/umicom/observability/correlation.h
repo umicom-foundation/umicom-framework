@@ -18,6 +18,12 @@
 #include "umicom/diagnostics/trace.h"
 #include "umicom/diagnostics/audit.h"
 #include "umicom/diagnostics/event_log.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the operations correlation summary data shared with callers of this public
  * contract.
@@ -28,4 +34,8 @@ typedef struct UmiOperationsCorrelationSummary { uint64_t correlation_id; size_t
  * applications.
  */
 UmiStatus umi_operations_correlate(uint64_t correlation_id,const UmiTraceStore *traces,const UmiAuditLog *audit,const UmiOperationalEventLog *events,UmiOperationsCorrelationSummary *out_summary);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

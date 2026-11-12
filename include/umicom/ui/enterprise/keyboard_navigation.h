@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_KEYBOARD_NAVIGATION_H
 
 #include "umicom/ui/enterprise/types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * List the named ui ent navigation action values accepted by this public contract.
  */
@@ -31,4 +37,8 @@ typedef struct UmiUiEntNavigationPosition { size_t row,column; } UmiUiEntNavigat
  */
 UmiUiEntNavigationPosition umi_ui_ent_keyboard_navigation_apply(UmiUiEntNavigationPosition p,UmiUiEntNavigationAction a,size_t rows,size_t columns,size_t page_rows);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

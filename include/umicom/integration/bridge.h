@@ -25,6 +25,12 @@
 #include "umicom/base/status.h"
 #include "umicom/integration/envelope.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef UmiStatus (*UmiIntegrationLaunchFn)(
     const char *application_id,
     void *user_data);
@@ -51,4 +57,8 @@ typedef struct UmiIntegrationBridge {
  */
 bool umi_integration_bridge_valid(const UmiIntegrationBridge *bridge);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

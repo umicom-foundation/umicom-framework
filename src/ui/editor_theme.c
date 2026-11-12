@@ -16,6 +16,8 @@
 #include "umicom/ui/editor_theme.h"
 
 #include <ctype.h>
+#include <math.h>
+#include "theme_validation_internal.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -31,6 +33,8 @@ static void copy_text(char *destination, size_t capacity, const char *source)
 }
 
 /* Provide the valid colour operation used by this module and its client applications. */
+/* Use the shared bounded RGB grammar before comparing editor colours; retain the former unbounded scan for review. The previous implementation is retained for review. */
+#if 0
 static int valid_colour(const char *colour)
 {
     size_t index;
@@ -45,6 +49,11 @@ static int valid_colour(const char *colour)
         if (!isxdigit((unsigned char)colour[index])) return 0;
     }
     return 1;
+}
+#endif
+static int valid_colour(const char *colour)
+{
+    return UmiUiThemeHexColourIsValid(colour, UMI_UI_APPEARANCE_COLOUR_CAPACITY);
 }
 
 /* Provide the add scheme operation used by this module and its client applications. */
@@ -62,6 +71,8 @@ static void add_scheme(UmiUiEditorThemeSnapshot *theme, const char *scheme_id)
  * Provide the ui editor theme resolve operation used by this module and its client
  * applications.
  */
+/* Build and validate a complete editor snapshot locally before replacing the destination. Invalid derived styling preserves the previous output and borrowed input fields remain available during construction. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_ui_editor_theme_resolve(
     const UmiUiAppearanceProfile *appearance,
     UmiUiEditorThemeSnapshot *out_theme)
@@ -120,8 +131,71 @@ UmiStatus umi_ui_editor_theme_resolve(
     }
     return umi_ui_editor_theme_validate(out_theme, reason, sizeof(reason));
 }
+#endif
+UmiStatus umi_ui_editor_theme_resolve(
+    const UmiUiAppearanceProfile *appearance,
+    UmiUiEditorThemeSnapshot *out_theme)
+{
+    char reason[192U];
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (appearance == NULL || out_theme == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Apply this operation only while the related capability or state is available. */
+    if (umi_ui_appearance_profile_validate(appearance, reason,
+                                           sizeof(reason)) != UMI_STATUS_OK) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    UmiUiEditorThemeSnapshot staged = {0};
+    staged.struct_size = (uint32_t)sizeof(*out_theme);
+    staged.api_version = UMI_UI_EDITOR_THEME_API_VERSION;
+    staged.mode = appearance->mode;
+    copy_text(staged.background, sizeof(staged.background),
+              appearance->editor_background);
+    copy_text(staged.foreground, sizeof(staged.foreground),
+              appearance->foreground);
+    copy_text(staged.current_line, sizeof(staged.current_line),
+              appearance->mode == UMI_UI_THEME_MODE_HIGH_CONTRAST
+                  ? appearance->accent_surface
+                  : appearance->hover_surface);
+    copy_text(staged.selection, sizeof(staged.selection),
+              appearance->accent_surface);
+    copy_text(staged.gutter, sizeof(staged.gutter),
+              appearance->surface);
+    copy_text(staged.gutter_foreground,
+              sizeof(staged.gutter_foreground),
+              appearance->muted_foreground);
+    copy_text(staged.caret, sizeof(staged.caret), appearance->accent);
+    copy_text(staged.right_margin, sizeof(staged.right_margin),
+              appearance->border);
+    copy_text(staged.font_family, sizeof(staged.font_family),
+              appearance->editor_font);
+    staged.font_size = appearance->editor_font_size *
+                           appearance->font_scale;
+    staged.highlight_current_line = 1;
+
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (appearance->mode == UMI_UI_THEME_MODE_DARK ||
+        appearance->mode == UMI_UI_THEME_MODE_HIGH_CONTRAST) {
+        add_scheme(&staged, "Adwaita-dark");
+        add_scheme(&staged, "oblivion");
+        add_scheme(&staged, "cobalt");
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
+        add_scheme(&staged, "Adwaita");
+        add_scheme(&staged, "classic");
+        add_scheme(&staged, "tango");
+    }
+    UmiStatus status = umi_ui_editor_theme_validate(&staged, reason, sizeof(reason));
+    if (status == UMI_STATUS_OK) *out_theme = staged;
+    return status;
+}
 
 /* Check that ui editor theme satisfies its contract before another service relies on it. */
+/* Admit bounded fonts/scheme names and finite size before native editor use. Compare RGB colours by value rather than letter case and refuse diagnostics inside the snapshot. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_ui_editor_theme_validate(
     const UmiUiEditorThemeSnapshot *theme,
     char *out_reason,
@@ -192,11 +266,87 @@ UmiStatus umi_ui_editor_theme_validate(
     }
     return status;
 }
+#endif
+UmiStatus umi_ui_editor_theme_validate(
+    const UmiUiEditorThemeSnapshot *theme,
+    char *out_reason,
+    size_t capacity)
+{
+    const char *reason = "Editor theme is valid";
+    UmiStatus status = UMI_STATUS_OK;
+    size_t index;
+    int written;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (theme == NULL || out_reason == NULL || capacity == 0U ||
+        UmiStorageOverlaps(theme, sizeof(*theme), out_reason, capacity)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (theme->struct_size != sizeof(*theme) ||
+        theme->api_version != UMI_UI_EDITOR_THEME_API_VERSION) {
+        reason = "Editor theme structure or API version is invalid";
+        status = UMI_STATUS_INVALID_STATE;
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (theme->mode < UMI_UI_THEME_MODE_SYSTEM ||
+               theme->mode > UMI_UI_THEME_MODE_HIGH_CONTRAST) {
+        reason = "Editor theme mode is invalid";
+        status = UMI_STATUS_INVALID_STATE;
+    } else /* Apply this operation only while the related capability or state is available. */ if (!valid_colour(theme->background) ||
+               !valid_colour(theme->foreground) ||
+               !valid_colour(theme->current_line) ||
+               !valid_colour(theme->selection) ||
+               !valid_colour(theme->gutter) ||
+               !valid_colour(theme->gutter_foreground) ||
+               !valid_colour(theme->caret) ||
+               !valid_colour(theme->right_margin)) {
+        reason = "Every editor colour must use #RRGGBB notation";
+        status = UMI_STATUS_INVALID_STATE;
+    } else /* Use the stable identifier comparison to choose the matching record or policy. */ if (UmiUiThemeHexColoursEqual(theme->background, theme->current_line)) {
+        reason = "Current-line colour must remain distinguishable";
+        status = UMI_STATUS_INVALID_STATE;
+    } else /* Apply this branch only when its contract condition is satisfied. */ if ((theme->mode == UMI_UI_THEME_MODE_DARK ||
+                theme->mode == UMI_UI_THEME_MODE_HIGH_CONTRAST) &&
+               UmiUiThemeHexColoursEqual(theme->current_line, "#FFFFFF")) {
+        reason = "A dark editor cannot use an opaque white current line";
+        status = UMI_STATUS_INVALID_STATE;
+    } else /* Apply this branch only when its contract condition is satisfied. */ if (!UmiUiThemeFontListIsValid(theme->font_family, sizeof(theme->font_family)) ||
+               !isfinite(theme->font_size) || theme->font_size < 6.0 ||
+               theme->font_size > 96.0 ||
+               (theme->highlight_current_line != 0 &&
+                theme->highlight_current_line != 1) ||
+               theme->preferred_scheme_count == 0U ||
+               theme->preferred_scheme_count >
+                   UMI_UI_EDITOR_THEME_SCHEME_CAPACITY) {
+        reason = "Editor typography, highlight or scheme list is invalid";
+        status = UMI_STATUS_INVALID_STATE;
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
+        /* Visit each bounded item once so every record receives the same rule. */
+        for (index = 0U; index < theme->preferred_scheme_count; ++index) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+            if (!UmiUiThemeTextIsBounded(theme->preferred_scheme_ids[index],
+                    sizeof(theme->preferred_scheme_ids[index]), true)) {
+                reason = "Preferred editor scheme identifiers must be bounded and nonempty";
+                status = UMI_STATUS_INVALID_STATE;
+                break;
+            }
+        }
+    }
+    written = snprintf(out_reason, capacity, "%s", reason);
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (written < 0 || (size_t)written >= capacity) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    return status;
+}
 
 /*
  * Provide the ui editor theme preferred scheme operation used by this module and its
  * client applications.
  */
+/* Validate the complete editor snapshot before borrowing a scheme name so an oversized retained count cannot authorize an out-of-bounds index. Protect owner storage from output pointer aliasing. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_ui_editor_theme_preferred_scheme(
     const UmiUiEditorThemeSnapshot *theme,
     size_t index,
@@ -211,6 +361,25 @@ UmiStatus umi_ui_editor_theme_preferred_scheme(
     }
     *out_scheme_id = NULL;
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (index >= theme->preferred_scheme_count) return UMI_STATUS_NOT_FOUND;
+    *out_scheme_id = theme->preferred_scheme_ids[index];
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_ui_editor_theme_preferred_scheme(
+    const UmiUiEditorThemeSnapshot *theme,
+    size_t index,
+    const char **out_scheme_id)
+{
+    if (theme == NULL || out_scheme_id == NULL ||
+        UmiStorageOverlaps(theme, sizeof(*theme), out_scheme_id, sizeof(*out_scheme_id)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    char reason[192U];
+    const UmiStatus status = umi_ui_editor_theme_validate(theme, reason, sizeof(reason));
+    /* Preserve NULL-on-lookup-failure for separate output storage. Validation
+     * bounds the retained count and every active name before array indexing. */
+    *out_scheme_id = NULL;
+    if (status != UMI_STATUS_OK) return status;
     if (index >= theme->preferred_scheme_count) return UMI_STATUS_NOT_FOUND;
     *out_scheme_id = theme->preferred_scheme_ids[index];
     return UMI_STATUS_OK;

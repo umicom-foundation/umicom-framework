@@ -160,7 +160,20 @@ static int History(const char *name)
         CHECK(UmiBuildReviewCount(review)==2U);CHECK(UmiBuildReviewSummarise(review,0U,NULL,&summary)==UMI_STATUS_OK && summary.operationId==7U);CHECK(UmiBuildReviewSummarise(review,1U,NULL,&summary)==UMI_STATUS_OK && summary.operationId==8U);
         if(strcmp(name,"detached")==0){char *text=NULL;size_t size=0U;CHECK(UmiBuildReviewRender(review,0U,NULL,&text,&size)==UMI_STATUS_OK);CHECK(strstr(text,"Operation: 7")!=NULL && size==strlen(text));UmiBuildReviewTextFree(text);}
 
-    }else if(strcmp(name,"invalid_record")==0){r->diagnostics.count=SIZE_MAX;CHECK(umi_build_history_append(history,r)==UMI_STATUS_OK);CHECK(UmiBuildReviewCapture(history,1U,&review)==UMI_STATUS_INVALID_STATE && review==NULL);}
+    }
+    /* Malformed storage is refused before retention. Preserve the former
+     * fixture and exercise review-only semantic rejection with an unknown phase. */
+#if 0
+else if(strcmp(name,"invalid_record")==0){r->diagnostics.count=SIZE_MAX;CHECK(umi_build_history_append(history,r)==UMI_STATUS_OK);CHECK(UmiBuildReviewCapture(history,1U,&review)==UMI_STATUS_INVALID_STATE && review==NULL);}
+#endif
+    else if(strcmp(name,"invalid_record")==0){
+        r->diagnostics.count=SIZE_MAX;
+        CHECK(umi_build_history_append(history,r)==UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(umi_build_history_count(history)==0U);
+        r->diagnostics.count=0U;r->phase=(UmiBuildPhase)99;
+        CHECK(umi_build_history_append(history,r)==UMI_STATUS_OK);
+        CHECK(UmiBuildReviewCapture(history,1U,&review)==UMI_STATUS_INVALID_STATE && review==NULL);
+    }
     else if(strcmp(name,"concurrent")==0){
         Producer p={.history=history,.done=0,.status=0};UmiThread *thread=NULL;int exitCode=1;
         CHECK(umi_thread_start(Produce,&p,&thread)==UMI_STATUS_OK);

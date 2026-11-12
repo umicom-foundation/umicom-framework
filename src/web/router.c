@@ -67,3 +67,13 @@ UmiStatus UmiWebRouterSetFallback(UmiWebRouter *router, UmiWebHandler handler, v
     router->fallback_context = handler != NULL ? context : NULL;
     return UMI_STATUS_OK;
 }
+
+/* Fallback selection must use the router's own matcher. A matched endpoint's
+ * intentional 404 or error never authorizes a second static-file operation. */
+int UmiWebRouterHasMatch(const UmiWebRouter *router, const UmiWebRequest *request)
+{
+    if (router == NULL || request == NULL) return 0;
+    for (size_t i = 0U; i < router->count; ++i)
+        if (umi_web_route_matches(&router->routes[i], request)) return 1;
+    return 0;
+}

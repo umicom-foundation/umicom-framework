@@ -23,6 +23,12 @@
 #define UMICOM_UI_GTK4_NAVIGATION_H
 #include <gtk/gtk.h>
 #include "umicom/ui/components/component.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Provide the gtk4 tab host new operation used by this module and its client applications.
  */
@@ -36,4 +42,8 @@ GtkWidget *umi_gtk4_stack_new(const UmiUiComponentSpec *spec);
  * applications.
  */
 GtkWidget *umi_gtk4_stack_switcher_new(const UmiUiComponentSpec *spec);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -17,6 +17,12 @@
 
 #include <stdint.h>
 #include "umicom/ui/enterprise/types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent hit data shared with callers of this public contract.
  */
@@ -27,4 +33,8 @@ typedef struct UmiUiEntHit { size_t row,column; int valid; } UmiUiEntHit;
  */
 UmiUiEntHit umi_ui_ent_hit_test_uniform(int32_t x,int32_t y,int32_t row_height,int32_t column_width,size_t row_offset,size_t column_offset,size_t rows,size_t columns);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

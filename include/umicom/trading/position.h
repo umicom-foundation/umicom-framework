@@ -30,6 +30,11 @@ extern "C" {
  * Provide the position apply fill operation used by this module and its client
  * applications.
  */
+/* A nonzero fill must produce a finite, different represented quantity.
+ * CAPACITY_EXCEEDED reports a lost increment as well as arithmetic overflow;
+ * every refusal preserves quantity, average and realised P&L together.
+ * This double-valued simulation policy does not establish exact lot/tick
+ * accounting or permission to execute an external transaction. */
 UmiStatus umi_position_apply_fill(UmiPosition *position, UmiSide side, double quantity, double price);
 #ifdef __cplusplus
 }

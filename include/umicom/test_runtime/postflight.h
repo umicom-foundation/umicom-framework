@@ -112,6 +112,13 @@ UmiStatus umi_test_runtime_postflight_archive_decode_if_unchanged(const void *by
     const UmiTestRuntimePostflight *expected, UmiTestRuntimePostflight *value);
 
 
+/* Compare this record's canonical saved state using caller-owned byte scratch.
+ * See UmiValueArchiveComparison in base/value_archive.h for measurement,
+ * refusal, aliasing and lifetime rules. This call never publishes live state. */
+UmiStatus umi_test_runtime_postflight_archive_compare_with_workspace(const UmiTestRuntimePostflight *left,
+    const UmiTestRuntimePostflight *right, void *workspace, size_t capacity,
+    UmiValueArchiveComparison *out_comparison);
+
 #ifdef __cplusplus
 }
 #endif

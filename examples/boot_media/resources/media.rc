@@ -1,6 +1,22 @@
-// Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
-// Reuse the canonical setup bitmap/icon; only this executable manifest differs.
-#include <windows.h>
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/boot_media/resources/media.rc
+ *
+ * PURPOSE:
+ *   Retain the native media manifest and compatibility bitmap beside shared brand resources.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/#include <windows.h>
+/* The shared application-branding helper now embeds resource 101 from the
+ * canonical ICO. Retain the previous setup-copy binding for engineering review;
+ * emitting it as well would create two resources with the same identity. */
+#if 0
 101 ICON "umicom.ico"
+#endif
 102 BITMAP "umicom-logo.bmp"
 1 RT_MANIFEST "media.manifest"

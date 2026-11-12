@@ -40,6 +40,18 @@ typedef struct UmiOpenTmsRiskBook {
     uint64_t revision;
 } UmiOpenTmsRiskBook;
 
+/* Validate complete bounded owner storage and unique IDs before lookup. Text
+ * is nonempty and terminated. Limits are finite and positive; utilisation is
+ * finite and may be signed; hardLimit is 0 or 1. Revision zero is uninitialized. */
+UmiStatus umi_open_tms_risk_limit_validate(const UmiOpenTmsRiskLimit *limit);
+UmiStatus umi_open_tms_risk_book_validate(const UmiOpenTmsRiskBook *book);
+/* Checked observations preserve output on refusal. Keep inputs stable and
+ * outputs disjoint. A breach means utilisation strictly exceeds the limit.
+ * These local flags do not enforce a trade authorization policy. Scalar/count
+ * compatibility functions return zero on refusal; do not interpret it as safe. */
+UmiStatus umi_open_tms_risk_limit_utilisation_checked(const UmiOpenTmsRiskLimit *limit, double *out);
+UmiStatus umi_open_tms_risk_book_breach_count_checked(const UmiOpenTmsRiskBook *book, size_t *out);
+
 void umi_open_tms_risk_book_init(UmiOpenTmsRiskBook *book);
 /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
  * before this operation changes state or invokes nested work. Initialize the

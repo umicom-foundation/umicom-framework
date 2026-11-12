@@ -49,6 +49,9 @@ UmiStatus umi_web_router_dispatch(UmiWebRouter *router,const UmiWebRequest *requ
  * Return the number of records represented by web router without changing their state.
  */
 size_t umi_web_router_count(const UmiWebRouter *router);
+/* Inspect the same exact-route rules without calling a handler or fallback.
+ * Owner-thread use only; NULL arguments return false. */
+int UmiWebRouterHasMatch(const UmiWebRouter *router, const UmiWebRequest *request);
 /* Set one borrowed fallback callback/context. It runs only when no exact route
  * matched, never after a matched handler returns 404 or fails. NULL clears it.
  * Configure on the router owner thread, outside dispatch; context must remain

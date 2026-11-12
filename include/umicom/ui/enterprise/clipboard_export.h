@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_CLIPBOARD_EXPORT_H
 
 #include "umicom/ui/enterprise/types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent clipboard export data shared with callers of this public contract.
  */
@@ -31,4 +37,8 @@ UmiStatus umi_ui_ent_clipboard_export_init(UmiUiEntClipboardExport *e,char *buff
  */
 UmiStatus umi_ui_ent_clipboard_export_append(UmiUiEntClipboardExport *e,const char *text,int end_of_row);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

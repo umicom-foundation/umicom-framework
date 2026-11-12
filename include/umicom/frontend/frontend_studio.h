@@ -23,6 +23,12 @@
 #include "umicom/frontend/network_log.h"
 #include "umicom/frontend/preview_session.h"
 #include "umicom/frontend/quality_audit.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the frontend studio data shared with callers of this public contract.
  */
@@ -51,4 +57,8 @@ UmiStatus umi_frontend_studio_open_document(UmiFrontendStudio *studio,const UmiF
  * applications.
  */
 UmiStatus umi_frontend_studio_publish_changes(UmiFrontendStudio *studio,uint64_t *out_generation);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

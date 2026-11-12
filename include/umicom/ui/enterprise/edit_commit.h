@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_EDIT_COMMIT_H
 
 #include "umicom/ui/enterprise/cell_value.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent edit commit data shared with callers of this public contract.
  */
@@ -26,4 +32,8 @@ typedef struct UmiUiEntEditCommit { uint64_t row_key; char column_id[UMI_UI_ENT_
  */
 UmiStatus umi_ui_ent_edit_commit_create(UmiUiEntEditCommit *c,uint64_t row_key,const char *column_id,const UmiUiEntCellValue *before,const UmiUiEntCellValue *after,uint64_t base_revision,uint64_t commit_revision);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -1,36 +1,40 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/boot_media/image.c
+ *
  * PURPOSE:
- *   Checked structural observations of raw disk and ISO images. A valid table is not proof
- *   that its boot loader executes or that its publisher is trusted.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
- *---------------------------------------------------------------------------*/
-
-/*-----------------------------------------------------------------------------
- * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * File: src/boot_media/image.c
- * Checked structural observations of raw disk and ISO images. A valid table is
- * not proof that its boot loader executes or that its publisher is trusted.
+ *   Check raw disk and ISO structures; table validity does not establish bootability or trust.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "internal.h"
+#include "umicom/image_inspection/iso.h"
+#include "umicom/image_inspection/gpt.h"
+/* Optical decoding moved into the shared ISO inspector. This former helper
+ * is retained with the historical parser instead of emitting an unused function. */
+#if 0
 static uint16_t Le16(const unsigned char *p) {
     return (uint16_t)((unsigned)p[0]|((unsigned)p[1]<<8U));
 }
+#endif
 
 static uint32_t Le32(const unsigned char *p) {
     return (uint32_t)p[0]|((uint32_t)p[1]<<8U)|((uint32_t)p[2]<<16U)|((uint32_t)p[3]<<24U);
 }
 
-static uint32_t Be32(const unsigned char *p) {
-    return (uint32_t)p[3]|((uint32_t)p[2]<<8U)|((uint32_t)p[1]<<16U)|((uint32_t)p[0]<<24U);
-}
-
+/* The shared GPT inspector now decodes 64-bit fields. Retain this former
+ * media-local decoder with its preserved parser without an unused function. */
+#if 0
 static uint64_t Le64(const unsigned char *p) {
     return (uint64_t)Le32(p)|((uint64_t)Le32(p+4)<<32U);
 }
+#endif
 
 static int Zero(const unsigned char *p,size_t n) {
     for (size_t i=0;i<n;++i)if (p[i])return 0;
@@ -46,6 +50,13 @@ uint32_t BmCrc32(const void *data,size_t n)
         for (unsigned j=0;j<8U;++j)c=(c>>1U)^(UINT32_C(0xedb88320)&(0U-(c&1U)));
     }
     return ~c;
+}
+
+/* ISO parsing now belongs to the independent image-inspection service.
+ * Retain the previous parser for review; MBR and GPT inspection remain here. */
+#if 0
+static uint32_t Be32(const unsigned char *p) {
+    return (uint32_t)p[3]|((uint32_t)p[2]<<8U)|((uint32_t)p[1]<<16U)|((uint32_t)p[0]<<24U);
 }
 
 static UmiStatus BootEntry(const unsigned char *p,unsigned platform,uint64_t bytes,UmiBootMediaImage *out)
@@ -124,6 +135,30 @@ static UmiStatus Iso(BmFile *f,uint64_t bytes,UmiBootMediaImage *out)
     return UMI_STATUS_OK;
 }
 
+#endif
+
+static UmiStatus IsoRead(void *context,uint64_t offset,void *destination,size_t length)
+{
+    return BmRead(context,offset,destination,length);
+}
+
+static UmiStatus Iso(BmFile *file,uint64_t bytes,UmiBootMediaImage *out)
+{
+    UmiIsoImageInfo info={0};
+    UmiStatus status=UmiIsoImageInspect(IsoRead,file,bytes,&info);
+    if (status==UMI_STATUS_OK) {
+        out->iso9660=info.iso9660;
+        out->elTorito=info.elTorito;
+        out->biosEntry=info.biosEntry;
+        out->efiEntry=info.efiEntry;
+    }
+    return status;
+}
+
+/* Partition-table policy now belongs to the shared, read-only GPT inspector.
+ * Preserve the former parser for review; the adapter below retains the media
+ * requirement for a nonempty table while adding format reservation checks. */
+#if 0
 static UmiStatus GptHeader(BmFile *f,uint64_t lba,uint64_t sectors,unsigned char header[512])
 {
     if (lba>=sectors)return UMI_STATUS_PARSE_ERROR;
@@ -190,6 +225,21 @@ static UmiStatus Gpt(BmFile *f,uint64_t bytes,UmiBootMediaImage *out)
     if (s==UMI_STATUS_OK)out->gptLayout=1;
     return s;
 }
+#endif
+
+static UmiStatus Gpt(BmFile *file, uint64_t bytes, UmiBootMediaImage *out)
+{
+    UmiGptImageInfo info = {0};
+    UmiStatus status = UmiGptImageInspect(IsoRead, file, bytes, 512U, &info);
+    /* Empty tables are valid structural observations, but the media workflow
+     * still requires an actual partition before offering a disk-image copy. */
+    if (status == UMI_STATUS_OK && info.partitions == 0U) status = UMI_STATUS_PARSE_ERROR;
+    if (status == UMI_STATUS_OK) {
+        out->partitions = info.partitions;
+        out->gptLayout = 1;
+    }
+    return status;
+}
 
 UmiStatus BmInspect(BmFile *f,uint64_t bytes,UmiBootMediaImage *out)
 {
@@ -219,7 +269,16 @@ UmiStatus BmInspect(BmFile *f,uint64_t bytes,UmiBootMediaImage *out)
             }
             if (!length||(uint64_t)start+length>bytes/512U)return UMI_STATUS_PARSE_ERROR;
             if (p[4]==0xeeU) {
+                /* The protective range represents the complete admitted disk
+                 * after LBA zero. The 64 GiB image bound keeps this length
+                 * representable in the MBR's 32-bit field. A short cover must
+                 * not become acceptable merely because both GPT copies agree.
+                 * Retain the previous start-only admission for review. */
+#if 0
                 if (start!=1U||protective)return UMI_STATUS_PARSE_ERROR;
+#endif
+                if (start!=1U||protective||(uint64_t)length!=bytes/512U-1U)
+                    return UMI_STATUS_PARSE_ERROR;
                 protective=1;
             }
             else {

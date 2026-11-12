@@ -15,6 +15,12 @@
 #ifndef UMICOM_COMPILER_LINKER_PROFILE_H
 #define UMICOM_COMPILER_LINKER_PROFILE_H
 #include "umicom/compiler/target.h"
+
+/* Keep the public C symbol names when this header is included directly by a
+ * C++ client. Includes remain outside the linkage block; layouts are unchanged. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define UMI_LINKER_MAX_PATHS 24U
 #define UMI_LINKER_MAX_LIBRARIES 48U
 /**
@@ -52,4 +58,17 @@ UmiStatus umi_linker_profile_add_library(UmiLinkerProfile *profile,const char *l
  * Check that linker profile satisfies its contract before another service relies on it.
  */
 UmiStatus umi_linker_profile_validate(const UmiLinkerProfile *profile,char *out_reason,size_t capacity);
+/**
+ * Validate scalar/target text, both counts and active entries. Empty scalar
+ * fields are allowed for draft storage; profile_validate checks completeness.
+ * Initialization uses temporary heap storage and supports inputs borrowed from
+ * the previous profile. Any initialization or append refusal preserves the
+ * complete destination, including unused slots. Exhausted revisions refuse an
+ * append without wrapping; an otherwise valid profile remains readable.
+ * Diagnostic buffers must be separate from the profile. Callers serialize access.
+ */
+bool umi_linker_profile_storage_valid(const UmiLinkerProfile *profile);
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 #endif

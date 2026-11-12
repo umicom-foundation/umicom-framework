@@ -58,13 +58,25 @@ static void MinimumAfterEdits(const char *mode, GtkWidget *root, UmiVideoSequenc
     bool dirty = panel->dirty;
     MinimumRequests(root);
     if (strcmp(mode, "minimum-expanded") == 0) {
+        /* A collapsed body is retained by its expander but is not parented.
+         * Locate the named owner rather than requiring a hidden child ancestry.
+         * Preserve the earlier assumption so the regression remains reviewable. */
+#if 0
         GtkWidget *expander = gtk_widget_get_ancestor(panel->summary, GTK_TYPE_EXPANDER);
+#endif
+        GtkWidget *expander = Find(root, "video.section.summary");
         CHECK(expander != NULL);
+        CHECK(!gtk_expander_get_expanded(GTK_EXPANDER(expander)));
+        GtkWidget *body = gtk_expander_get_child(GTK_EXPANDER(expander));
+        CHECK(body != NULL);
+        CHECK(gtk_widget_is_ancestor(panel->summary, body));
         gtk_expander_set_expanded(GTK_EXPANDER(expander), TRUE);
         MinimumRequests(root); Settle();
         CHECK(gtk_widget_get_mapped(panel->summary));
         gtk_expander_set_expanded(GTK_EXPANDER(expander), FALSE);
         MinimumRequests(root);
+        CHECK(gtk_expander_get_child(GTK_EXPANDER(expander)) == body);
+        CHECK(!gtk_widget_get_mapped(panel->summary));
     } else if (strcmp(mode, "minimum-visibility") == 0) {
         GtkWidget *pane = Find(root, "video.workspace.vertical");
         GtkWidget *start = gtk_paned_get_start_child(GTK_PANED(pane));

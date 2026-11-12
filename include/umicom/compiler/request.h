@@ -15,6 +15,12 @@
 #ifndef UMICOM_COMPILER_REQUEST_H
 #define UMICOM_COMPILER_REQUEST_H
 #include "umicom/compiler/target.h"
+
+/* Keep the public C symbol names when this header is included directly by a
+ * C++ client. Includes remain outside the linkage block; layouts are unchanged. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the compiler request data shared with callers of this public contract.
  */
@@ -35,6 +41,9 @@ typedef struct UmiCompilerRequest {
     size_t definition_count;
     size_t option_count;
     bool debug_information;
+    /* GCC/Clang C/C++ COMPILE maps true to -fPIC. Other current mappings refuse
+     * true with NOT_IMPLEMENTED. False leaves driver defaults unchanged; it is
+     * not an explicit -fno-PIC request. Target support is not probed. */
     bool position_independent;
     bool warnings_as_errors;
 } UmiCompilerRequest;
@@ -66,4 +75,15 @@ UmiStatus umi_compiler_request_add_option(UmiCompilerRequest *request,const char
  * Check that compiler request satisfies its contract before another service relies on it.
  */
 UmiStatus umi_compiler_request_validate(const UmiCompilerRequest *request,char *out_reason,size_t capacity);
+/**
+ * Check bounded scalar text, target text, counts and active option strings.
+ * Empty scalar fields are permitted for draft composition. This does not qualify
+ * toolchain semantics. Incremental additions refuse malformed existing storage
+ * with INVALID_STATE and leave the complete request unchanged on every refusal.
+ * Diagnostics passed to request_validate must not overlap the request.
+ */
+bool umi_compiler_request_storage_valid(const UmiCompilerRequest *request);
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 #endif

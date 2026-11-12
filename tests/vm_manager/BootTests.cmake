@@ -27,7 +27,7 @@ foreach(target IN ITEMS umicom-vm-boot-plan-test umicom-vm-boot-cli-test)
 endforeach()
 foreach(case IN ITEMS umicom-kernel linux-x86_64 linux-riscv64 linux-aarch64 pc-iso pc-disk
     recording-plan recording-ownership recording-escape recording-null recording-empty
-    recording-relative recording-control recording-capacity
+    recording-relative recording-control recording-capacity recording-boundary recording-boundary-unicode
     catalogue ownership drive-escaping linux-assets null missing-firmware relative-path
     unterminated-path control-path invalid-utf8 kernel-smp memory kernel-memory extra-initrd
     unknown-target arm-firmware linux-missing-kernel command-control command-unterminated disk-iso-conflict)

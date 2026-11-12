@@ -60,6 +60,23 @@ typedef struct UmiFinancialControlSnapshot {
 } UmiFinancialControlSnapshot;
 
 void umi_financial_control_service_init(UmiFinancialControlService *service);
+/* Retained for review: coverage previously admitted only rate and audit rows.
+ * The current contract below extends admission to all composed owners. */
+#if 0
+/* All child counts must fit their arrays and revisions must be initialized.
+ * Rate and audit rows receive complete validation; the other reported counts
+ * describe bounded coverage only, not the validity of their domain records.
+ * Audit readiness is based on caller-supplied local persistence flags, not
+ * independently verified durability. Failure preserves the output. Serialize
+ * the complete service and use output disjoint from it. The maximum revision
+ * is an observation, not a unique token across independently edited owners. */
+#endif
+/* All eight child owners receive complete structural/row admission before a
+ * count or readiness observation is published. This does not verify canonical
+ * account/instrument references or authorize transactions. Audit readiness uses
+ * caller-supplied local persistence flags, not independently verified durability.
+ * Failure preserves output. Serialize the complete service and use disjoint
+ * output. Maximum child revision is not a unique cross-owner change token. */
 UmiStatus umi_financial_control_service_snapshot(
     const UmiFinancialControlService *service,
     UmiFinancialControlSnapshot *outSnapshot);

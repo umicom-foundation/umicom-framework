@@ -15,6 +15,12 @@
 #ifndef UMICOM_COMPILER_RESPONSE_FILE_H
 #define UMICOM_COMPILER_RESPONSE_FILE_H
 #include "umicom/compiler/plan.h"
+
+/* Keep the public C symbol names when this header is included directly by a
+ * C++ client. Includes remain outside the linkage block; layouts are unchanged. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Write compiler response file in its stable representation and report capacity or input
  * failures to the caller.
@@ -25,4 +31,7 @@ UmiStatus umi_compiler_response_file_encode(const UmiCompilerPlan *plan,char *ou
  * applications.
  */
 UmiStatus umi_compiler_response_file_argument(const char *path,char *out_argument,size_t capacity);
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 #endif

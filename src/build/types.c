@@ -174,6 +174,9 @@ int umi_build_command_set_working_directory(UmiBuildCommand *command,
                      directory);
 }
 
+/* Retained for engineering review: the former validator admitted unterminated program and working-directory fields.
+ * The replacement below preserves the established owned-record and token grammar contracts. */
+#if 0
 UmiStatus umi_build_command_validate(const UmiBuildCommand *command,
                                      char *out_message,
                                      size_t message_capacity)
@@ -213,6 +216,68 @@ UmiStatus umi_build_command_validate(const UmiBuildCommand *command,
     write_message(out_message, message_capacity, "Command is valid.");
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_build_command_validate(const UmiBuildCommand *command,
+                                     char *out_message,
+                                     size_t message_capacity)
+{
+    size_t index;
+
+    if (command == NULL) {
+        write_message(out_message, message_capacity, "Command is required.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (memchr(command->program, '\0', sizeof command->program) == NULL ||
+        command->program[0] == '\0') {
+        write_message(out_message,
+                      message_capacity,
+                      "Command program must be nonempty and terminated.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (memchr(command->working_directory, '\0', sizeof command->working_directory) == NULL) {
+        write_message(out_message, message_capacity, "Command working directory is not terminated.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    if (command->argument_count > UMI_BUILD_MAX_ARGUMENTS) {
+        write_message(out_message,
+                      message_capacity,
+                      "Command argument count exceeds the Framework limit.");
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    for (index = 0U; index < command->argument_count; ++index) {
+        if (memchr(command->argument_storage[index],
+                   '\0',
+                   sizeof(command->argument_storage[index])) == NULL) {
+            write_message(out_message,
+                          message_capacity,
+                          "Command argument is not terminated.");
+            return UMI_STATUS_INVALID_ARGUMENT;
+        }
+    }
+
+    write_message(out_message, message_capacity, "Command is valid.");
+    return UMI_STATUS_OK;
+}
+
+/* The record's pointer cache is reconstructed at its final address. Checking
+ * only owned storage makes copying useful even after an ordinary value copy;
+ * no potentially stale external argument pointer is read. */
+UmiStatus umi_build_command_copy(UmiBuildCommand *destination,
+                                 const UmiBuildCommand *source)
+{
+    if (destination == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = umi_build_command_validate(source, NULL, 0U);
+    if (status != UMI_STATUS_OK) return status;
+    (void)memmove(destination, source, sizeof *destination);
+    umi_build_command_rebind(destination);
+    return UMI_STATUS_OK;
+}
+
 
 static UmiStatus parse_token(const char **cursor,
                              char *out_token,
@@ -302,6 +367,9 @@ static UmiStatus parse_token(const char **cursor,
     return UMI_STATUS_OK;
 }
 
+/* Retained for engineering review: the former parser wrote partial output before detecting invalid syntax or capacity.
+ * The replacement below preserves the established owned-record and token grammar contracts. */
+#if 0
 UmiStatus umi_build_command_parse(const char *text,
                                   UmiBuildCommand *out_command,
                                   char *out_message,
@@ -391,6 +459,117 @@ UmiStatus umi_build_command_parse(const char *text,
 
     return status;
 }
+#endif
+
+static UmiStatus parse_command_candidate(const char *text,
+                                  UmiBuildCommand *out_command,
+                                  char *out_message,
+                                  size_t message_capacity)
+{
+    const char *cursor;
+    size_t token_index = 0U;
+    UmiStatus status;
+
+    if (text == NULL || out_command == NULL) {
+        write_message(out_message,
+                      message_capacity,
+                      "Command text and output command are required.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    umi_build_command_init(out_command, NULL);
+    cursor = text;
+
+    while (*cursor != '\0') {
+        char token[UMI_BUILD_PATH_CAPACITY];
+        int started = 0;
+
+        while (isspace((unsigned char)*cursor)) {
+            ++cursor;
+        }
+
+        if (*cursor == '\0') {
+            break;
+        }
+
+        status = parse_token(&cursor,
+                             token,
+                             sizeof(token),
+                             &started,
+                             out_message,
+                             message_capacity);
+        if (status != UMI_STATUS_OK) {
+            return status;
+        }
+
+        if (!started) {
+            break;
+        }
+
+        if (token_index == 0U) {
+            if (token[0] == '\0') {
+                write_message(out_message,
+                              message_capacity,
+                              "Command program cannot be empty.");
+                return UMI_STATUS_PARSE_ERROR;
+            }
+
+            if (!copy_text(out_command->program,
+                           sizeof(out_command->program),
+                           token)) {
+                return UMI_STATUS_CAPACITY_EXCEEDED;
+            }
+        } else {
+            if (strlen(token) >= UMI_BUILD_ARGUMENT_CAPACITY) {
+                return UMI_STATUS_CAPACITY_EXCEEDED;
+            }
+
+            if (!umi_build_command_add_argument(out_command, token)) {
+                return UMI_STATUS_CAPACITY_EXCEEDED;
+            }
+        }
+
+        ++token_index;
+    }
+
+    if (token_index == 0U) {
+        write_message(out_message,
+                      message_capacity,
+                      "Command text is empty.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    status = umi_build_command_validate(out_command,
+                                        out_message,
+                                        message_capacity);
+    if (status == UMI_STATUS_OK) {
+        write_message(out_message,
+                      message_capacity,
+                      "Command parsed without shell expansion.");
+    }
+
+    return status;
+}
+
+/* Prepare an independent record before replacing the caller's current command.
+ * This also permits text to point into that current record: publication occurs
+ * only after all input has been consumed. The diagnostic buffer must be separate. */
+UmiStatus umi_build_command_parse(const char *text,
+                                  UmiBuildCommand *out_command,
+                                  char *out_message,
+                                  size_t message_capacity)
+{
+    if (text == NULL || out_command == NULL) {
+        write_message(out_message, message_capacity,
+            "Command text and output command are required.");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    UmiBuildCommand candidate;
+    UmiStatus status = parse_command_candidate(text, &candidate, out_message, message_capacity);
+    if (status != UMI_STATUS_OK) return status;
+    return umi_build_command_copy(out_command, &candidate);
+}
+
 
 static int needs_display_quotes(const char *text)
 {
@@ -455,6 +634,9 @@ static int append_display_token(char *out_text,
     return 1;
 }
 
+/* Retained for engineering review: the former formatter traversed counts and strings without full admission and left partial text on refusal.
+ * The replacement below preserves the established owned-record and token grammar contracts. */
+#if 0
 int umi_build_command_format(const UmiBuildCommand *command,
                              char *out_text,
                              size_t capacity)
@@ -486,5 +668,40 @@ int umi_build_command_format(const UmiBuildCommand *command,
         }
     }
 
+    return 1;
+}
+#endif
+
+
+/* The admitted record bounds the total display size to fewer than twice its
+ * owned string bytes plus delimiters. Size first so capacity refusal preserves
+ * the previous display. This diagnostic syntax is never an executable shell. */
+static size_t display_token_size(const char *text)
+{
+    size_t length = needs_display_quotes(text) ? 2U : 0U;
+    for (const char *cursor = text; *cursor != '\0'; ++cursor) {
+        length += (*cursor == '"' || *cursor == '\\') ? 2U : 1U;
+    }
+    return length;
+}
+int umi_build_command_format(const UmiBuildCommand *command,
+                             char *out_text,
+                             size_t capacity)
+{
+    if (out_text == NULL || capacity == 0U ||
+        umi_build_command_validate(command, NULL, 0U) != UMI_STATUS_OK)
+        return 0;
+    size_t required = display_token_size(command->program);
+    for (size_t index = 0U; index < command->argument_count; ++index)
+        required += 1U + display_token_size(command->argument_storage[index]);
+    if (required >= capacity) return 0;
+    size_t used = 0U;
+    out_text[0] = '\0';
+    if (!append_display_token(out_text, capacity, &used, command->program)) return 0;
+    for (size_t index = 0U; index < command->argument_count; ++index) {
+        if (!append_character(out_text, capacity, &used, ' ') ||
+            !append_display_token(out_text, capacity, &used, command->argument_storage[index]))
+            return 0;
+    }
     return 1;
 }

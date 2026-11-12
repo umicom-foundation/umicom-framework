@@ -111,6 +111,13 @@ UmiStatus umi_desktop_theme_selection_archive_decode_if_unchanged(const void *by
     const UmiDesktopThemeSelectionSnapshot *expected, UmiDesktopThemeSelectionSnapshot *value);
 
 
+/* Compare this record's canonical saved state using caller-owned byte scratch.
+ * See UmiValueArchiveComparison in base/value_archive.h for measurement,
+ * refusal, aliasing and lifetime rules. This call never publishes live state. */
+UmiStatus umi_desktop_theme_selection_archive_compare_with_workspace(const UmiDesktopThemeSelectionSnapshot *left,
+    const UmiDesktopThemeSelectionSnapshot *right, void *workspace, size_t capacity,
+    UmiValueArchiveComparison *out_comparison);
+
 #ifdef __cplusplus
 }
 #endif

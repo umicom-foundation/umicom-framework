@@ -37,6 +37,11 @@ typedef struct UmiBrokerSessionSupervisor {
     uint64_t revision;
 } UmiBrokerSessionSupervisor;
 
+/* Use one nondecreasing clock for this owner. Revision and reconnect counters
+ * refuse exhaustion before mutation. Repeated timeout on an already degraded
+ * session returns TIMEOUT without changing its revision. Serialize access. */
+UmiStatus UmiBrokerSessionSupervisorValidate(const UmiBrokerSessionSupervisor *supervisor);
+
 void umi_broker_session_supervisor_init(UmiBrokerSessionSupervisor *supervisor);
 UmiStatus umi_broker_session_supervisor_connected(
     UmiBrokerSessionSupervisor *supervisor,

@@ -71,7 +71,14 @@ int main(int argc, char **argv)
         }
     } else if (!strcmp(mode, "negative-backend")) {
         probe.fail = UMI_DEVELOPER_ACTION_BUILD; probe.result = -3; expected = UMI_STATUS_IO_ERROR;
+    /* Numbered callback cases must not consume the separate missing-message
+     * admission case. Keep the former prefix-only dispatch for review. */
+#if 0
     } else if (!strncmp(mode, "missing-", 8U)) {
+#else
+    } else if (!strncmp(mode, "missing-", 8U) &&
+               mode[8] >= '1' && mode[8] <= '9' && mode[9] == '\0') {
+#endif
         int index = atoi(mode + 8); assert(index >= 1 && index <= 9);
         host.execute[index] = NULL; expected = UMI_STATUS_UNAVAILABLE;
         if (index == 9) { request.goal = UMI_DEVELOPER_LIFECYCLE_UPDATE; request.message = NULL; }

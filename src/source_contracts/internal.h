@@ -50,6 +50,9 @@ size_t ScCount(const ScText *source, const char *pattern);
 char *ScCompactRange(const ScText *source, size_t first, size_t last);
 size_t ScLine(const ScText *source, size_t token);
 char *ScRead(const char *path);
+/* Binary reads retain an extra sentinel byte; length describes original data. */
+unsigned char *ScReadBytes(const char *path, size_t *length);
+int ScCollectGuides(const char *root, ScFiles *files);
 char *ScJoin(const char *root, const char *path);
 int ScCollect(const char *root, bool headers, ScFiles *files);
 int ScCollectManifests(const char *root, ScFiles *files);

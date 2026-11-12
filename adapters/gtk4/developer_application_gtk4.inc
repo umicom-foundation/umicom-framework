@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/developer_application_gtk4.inc
- * PURPOSE: Review and create native application source with owned background work.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Review and create native application source with owned background work.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 
@@ -37,6 +44,8 @@ static void DeveloperApplicationDispose(DeveloperApplicationForm *form)
     free(form);
 }
 
+/* Both source-creation forms keep normal Close/Cancel pending until a started write reports its result. Destroy still retires the host without promising rollback. The previous implementation is retained for review. */
+#if 0
 static int DeveloperApplicationMayClose(UmiGtk4DeveloperDialog *dialog)
 {
     if (dialog->application == NULL || !dialog->application->applying) return 1;
@@ -45,8 +54,20 @@ static int DeveloperApplicationMayClose(UmiGtk4DeveloperDialog *dialog)
     return 0;
 }
 
+#endif
+static int DeveloperApplicationMayClose(UmiGtk4DeveloperDialog *dialog)
+{
+    if (!dialog->projectCreating &&
+        (dialog->application == NULL || !dialog->application->applying)) return 1;
+    ShowStatus(dialog, UMI_STATUS_BUSY,
+        "Source creation is finishing. Wait for its result before closing. Files already written are retained.");
+    return 0;
+}
+
 /* Sensitivity helps the user follow the workflow; every callback independently
  * checks the same state because retained widgets can still emit their signals. */
+/* Control notifications may retire the native owner. Recheck its authority before each following update. The previous implementation is retained for review. */
+#if 0
 static void DeveloperApplicationControls(UmiGtk4DeveloperDialog *dialog)
 {
     DeveloperApplicationForm *form = dialog->application;
@@ -57,6 +78,20 @@ static void DeveloperApplicationControls(UmiGtk4DeveloperDialog *dialog)
     gtk_widget_set_sensitive(form->choose, editable && !form->busy && !dialog->projectChoosing);
     gtk_widget_set_sensitive(form->preview, editable && !form->busy && !dialog->projectChoosing && !form->revisionExhausted);
     gtk_widget_set_sensitive(dialog->acceptButton, !form->busy && !dialog->projectChoosing &&
+        (dialog->generated || (form->plan != NULL && !form->invalidated && !form->revisionExhausted)));
+}
+
+#endif
+static void DeveloperApplicationControls(UmiGtk4DeveloperDialog *dialog)
+{
+    DeveloperApplicationForm *form = dialog->application;
+    int editable = !form->applying && !dialog->generated;
+    for (size_t i = 0U; i < 5U && DeveloperAlive(dialog); ++i)
+        gtk_widget_set_sensitive(dialog->fields[i], editable);
+    if (DeveloperAlive(dialog)) gtk_widget_set_sensitive(form->gtk, editable);
+    if (DeveloperAlive(dialog)) gtk_widget_set_sensitive(form->choose, editable && !form->busy && !dialog->projectChoosing);
+    if (DeveloperAlive(dialog)) gtk_widget_set_sensitive(form->preview, editable && !form->busy && !dialog->projectChoosing && !form->revisionExhausted);
+    if (DeveloperAlive(dialog)) gtk_widget_set_sensitive(dialog->acceptButton, !form->busy && !dialog->projectChoosing &&
         (dialog->generated || (form->plan != NULL && !form->invalidated && !form->revisionExhausted)));
 }
 
@@ -298,6 +333,8 @@ static void DeveloperApplicationCompleted(GObject *source, GAsyncResult *result,
 
 /* Transfer the acquired dialog reference to the completion. No cancellation is
  * advertised for writes: stopping halfway cannot restore their previous state. */
+/* Create the task after admission-sensitive notifications so every constructed task can receive a completion result. The previous implementation is retained for review. */
+#if 0
 static void DeveloperApplicationStart(UmiGtk4DeveloperDialog *dialog, DeveloperApplicationJob *job)
 {
     DeveloperApplicationForm *form = dialog->application;
@@ -317,6 +354,31 @@ static void DeveloperApplicationStart(UmiGtk4DeveloperDialog *dialog, DeveloperA
         DeveloperRelease(dialog);
         return;
     }
+    g_task_run_in_thread(task, DeveloperApplicationWorker);
+    g_object_unref(task);
+}
+
+#endif
+static void DeveloperApplicationStart(UmiGtk4DeveloperDialog *dialog, DeveloperApplicationJob *job)
+{
+    DeveloperApplicationForm *form = dialog->application;
+    form->busy = 1;
+    form->applying = job->apply;
+    DeveloperApplicationControls(dialog);
+    if (DeveloperVisible(dialog)) ShowStatus(dialog, UMI_STATUS_OK, job->apply
+        ? "Creating reviewed source. No compiler, Git command or application will run."
+        : "Reading templates and preparing a source preview...");
+    /* Widget notifications may retire the host before the job starts. Retire
+     * the unstarted task too; after the worker starts, writes finish normally. */
+    if (!DeveloperVisible(dialog) || (!job->apply && form->invalidated)) {
+        form->busy = 0; form->applying = 0;
+        DeveloperApplicationJobFree(job);
+        if (DeveloperAlive(dialog)) DeveloperApplicationControls(dialog);
+        DeveloperRelease(dialog);
+        return;
+    }
+    GTask *task = g_task_new(NULL, NULL, DeveloperApplicationCompleted, dialog);
+    g_task_set_task_data(task, job, DeveloperApplicationJobFree);
     g_task_run_in_thread(task, DeveloperApplicationWorker);
     g_object_unref(task);
 }

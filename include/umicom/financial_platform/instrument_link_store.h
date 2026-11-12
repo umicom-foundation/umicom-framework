@@ -41,6 +41,16 @@ typedef struct UmiFinancialInstrumentLinkStore {
     uint64_t revision;
 } UmiFinancialInstrumentLinkStore;
 
+/* Validate complete caller-owned storage before traversal: bounded terminated
+ * text, required identities, finite numeric observations, known states/boolean
+ * flags and unique keys. Count must fit the array and revision must be nonzero.
+ * These references do not replace canonical domain engines or authenticate
+ * permissions. Keep inputs stable on one owner thread and outputs disjoint.
+ * Borrowed find results last until the next mutation; queries inspect at most
+ * 64 readable bytes and must terminate. Unused rows/text tails are ignored. */
+UmiStatus umi_financial_instrument_link_validate(const UmiFinancialInstrumentLink *row);
+UmiStatus umi_financial_instrument_link_store_validate(const UmiFinancialInstrumentLinkStore *owner);
+/* settlementConvention remains optional. Equal versions may replace a row. */
 void umi_financial_instrument_link_store_init(UmiFinancialInstrumentLinkStore *store);
 /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
  * before this operation changes state or invokes nested work. Initialize the

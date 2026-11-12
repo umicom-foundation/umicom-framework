@@ -1,16 +1,28 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/boot_media/device_unsupported.c
+ *
  * PURPOSE:
  *   Report unavailable native device operations on unsupported host platforms.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT */
-
 #include "internal.h"
-UmiStatus UmiBootMediaDiscover(UmiBootMediaInventory *out,UmiBootMediaReport *r) {
+/* The former public adapter entry remains below for source review. Shared
+ * discovery.c now resets and publishes diagnostics consistently on every host;
+ * this private entry retains the same native observation and refusal logic. */
+#if 0
+UmiStatus UmiBootMediaDiscover(UmiBootMediaInventory *out,UmiBootMediaReport *r)
+#else
+UmiStatus BmDiscover(UmiBootMediaInventory *out,UmiBootMediaReport *r)
+#endif
+{
     if (out)memset(out,0,sizeof *out);
     return BmMessage(r,UMI_STATUS_UNAVAILABLE,"No native removable-device adapter for this host.");
 }

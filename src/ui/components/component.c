@@ -23,8 +23,11 @@
 #include "../../base/value_archive_internal.h"
 
 #include <string.h>
+#include "umicom/base/text.h"
 
 /* Provide the copy text operation used by this module and its client applications. */
+/* The shared bounded replacement contract supports borrowed text and unchanged-on-refusal edits. Retain the earlier unbounded copy for review. The previous implementation is retained for review. */
+#if 0
 static UmiStatus copy_text(char *destination, size_t capacity, const char *source)
 {
     /*
@@ -41,6 +44,11 @@ static UmiStatus copy_text(char *destination, size_t capacity, const char *sourc
     }
     (void)memcpy(destination, source, length + 1U);
     return UMI_STATUS_OK;
+}
+#endif
+static UmiStatus copy_text(char *destination, size_t capacity, const char *source)
+{
+    return umi_text_replace(destination, capacity, source);
 }
 
 /*

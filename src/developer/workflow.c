@@ -18,6 +18,7 @@
 #include "umicom/developer/project_bootstrap.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* Provide the copy text operation used by this module and its client applications. */
@@ -56,6 +57,11 @@ static UmiStatus make_operation_id(
  * Provide the developer workflow submit operation used by this module and its client
  * applications.
  */
+/* The earlier loop submitted each task before validating later tasks and the
+ * launch profile, leaving partial runnable work on refusal. Retain it for review.
+ * The replacement uses shared pure planners and one atomic runtime chain, keeping
+ * the original task order, operation IDs, dependency semantics and public API. */
+#if 0
 UmiStatus umi_developer_workflow_submit(
     UmiDeveloperRuntime *runtime,
     const UmiDeveloperWorkflowRequest *request,
@@ -175,6 +181,86 @@ UmiStatus umi_developer_workflow_submit(
      */
     if (out_workflow != NULL) *out_workflow = workflow;
     return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_developer_workflow_submit(
+    UmiDeveloperRuntime *runtime,
+    const UmiDeveloperWorkflowRequest *request,
+    UmiDeveloperWorkflowSnapshot *out_workflow)
+{
+    if (runtime == NULL || request == NULL || request->workflow_id == NULL ||
+        request->workflow_id[0] == '\0' ||
+        request->task_count > UMI_DEVELOPER_WORKFLOW_MAX_TASKS ||
+        (request->task_count != 0U && request->task_ids == NULL) ||
+        request->debug_mode < -1 || request->debug_mode > 1)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    int launch = request->launch_profile_id != NULL && request->launch_profile_id[0] != '\0';
+    size_t count = request->task_count + (launch ? 1U : 0U);
+    if (count == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiDeveloperWorkflowSnapshot workflow = {0};
+    workflow.struct_size = (uint32_t)sizeof(workflow);
+    workflow.api_version = UMI_DEVELOPER_WORKFLOW_API_VERSION;
+    UmiStatus status = copy_text(workflow.workflow_id, sizeof(workflow.workflow_id),
+                                 request->workflow_id);
+    if (status != UMI_STATUS_OK) return status;
+    /* The bounded batch can contain seventeen sizeable operation values. Keep
+     * them on the heap rather than nesting a large array on a native UI stack. */
+    UmiDeveloperOperationSnapshot *operations = calloc(count, sizeof(*operations));
+    if (operations == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    char operation_id[UMI_DEVELOPER_ID_CAPACITY];
+    for (size_t i = 0U; i < request->task_count && status == UMI_STATUS_OK; ++i) {
+        if (request->task_ids[i] == NULL || request->task_ids[i][0] == '\0') {
+            status = UMI_STATUS_INVALID_ARGUMENT;
+            break;
+        }
+        status = make_operation_id(request->workflow_id, "task", i,
+                                   operation_id, sizeof(operation_id));
+        if (status != UMI_STATUS_OK) break;
+        UmiDeveloperTaskPlanRequest task = {0};
+        task.struct_size = (uint32_t)sizeof(task);
+        task.api_version = UMI_DEVELOPER_TASK_PLAN_API_VERSION;
+        task.task_id = request->task_ids[i];
+        task.operation_id = operation_id;
+        task.configuration_id = request->configuration_id;
+        task.target_id = request->target_id;
+        task.timeout_ms = request->timeout_ms;
+        task.max_attempts = request->max_attempts;
+        status = umi_developer_task_plan_build(runtime, &task, &operations[i], NULL);
+        if (status == UMI_STATUS_OK)
+            status = copy_text(workflow.operation_ids[i], sizeof(workflow.operation_ids[i]),
+                               operations[i].id);
+    }
+    if (status == UMI_STATUS_OK && launch) {
+        size_t i = request->task_count;
+        status = make_operation_id(request->workflow_id, "launch", 0U,
+                                   operation_id, sizeof(operation_id));
+        if (status == UMI_STATUS_OK) {
+            UmiDeveloperLaunchPlanRequest target = {0};
+            target.struct_size = (uint32_t)sizeof(target);
+            target.api_version = UMI_DEVELOPER_LAUNCH_PLAN_API_VERSION;
+            target.launch_profile_id = request->launch_profile_id;
+            target.operation_id = operation_id;
+            target.configuration_id = request->configuration_id;
+            target.target_id = request->target_id;
+            target.timeout_ms = request->timeout_ms;
+            target.max_attempts = request->max_attempts;
+            target.debug_mode = request->debug_mode;
+            status = umi_developer_launch_plan_build(runtime, &target, &operations[i], NULL);
+            if (status == UMI_STATUS_OK)
+                status = copy_text(workflow.operation_ids[i], sizeof(workflow.operation_ids[i]),
+                                   operations[i].id);
+        }
+    }
+    if (status == UMI_STATUS_OK)
+        status = umi_developer_runtime_submit_chain(runtime, operations, count);
+    if (status == UMI_STATUS_OK) {
+        workflow.operation_count = count;
+        workflow.dependency_count = count - 1U;
+        if (out_workflow != NULL) *out_workflow = workflow;
+    }
+    free(operations);
+    return status;
 }
 
 /* ------------------------------------------------------------------------- */

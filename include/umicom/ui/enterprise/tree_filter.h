@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_TREE_FILTER_H
 
 #include "umicom/ui/enterprise/tree_node.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent tree filter data shared with callers of this public contract.
  */
@@ -31,4 +37,8 @@ UmiStatus umi_ui_ent_tree_filter_set(UmiUiEntTreeFilter *f,const char *query,int
  */
 int umi_ui_ent_tree_filter_matches(const UmiUiEntTreeFilter *f,const UmiUiEntTreeNode *node);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

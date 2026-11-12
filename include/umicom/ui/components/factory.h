@@ -22,6 +22,12 @@
 #ifndef UMICOM_UI_COMPONENTS_FACTORY_H
 #define UMICOM_UI_COMPONENTS_FACTORY_H
 #include "umicom/ui/components/component.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui component factory data shared with callers of this public contract.
  */
@@ -31,4 +37,8 @@ typedef struct UmiUiComponentFactory { uint32_t structure_size; void *context; U
  * it.
  */
 int umi_ui_component_factory_is_valid(const UmiUiComponentFactory *factory);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

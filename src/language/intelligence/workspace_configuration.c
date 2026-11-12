@@ -265,3 +265,10 @@ UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_language_intelligence_workspace_configura
  * caller. Imported metadata remains evidence; registry publication is separate. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_language_intelligence_workspace_configuration_archive_decode_if_unchanged, umi_language_intelligence_workspace_configuration_archive_encode,
     UmiLanguageIntelligenceWorkspaceConfiguration, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)
+
+/* Compare through this owner's validated codec so native review uses the
+ * same fields as persistence. Caller-owned scratch avoids per-call allocation;
+ * an equal observation remains separate from revision-checked publication. */
+#include "../../base/value_compare_internal.h"
+UMI_DEFINE_VALUE_COMPARE(umi_language_intelligence_workspace_configuration_archive_compare_with_workspace,
+    UmiLanguageIntelligenceWorkspaceConfiguration, umi_language_intelligence_workspace_configuration_archive_encode)

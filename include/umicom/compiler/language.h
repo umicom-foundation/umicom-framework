@@ -15,6 +15,12 @@
 #ifndef UMICOM_COMPILER_LANGUAGE_H
 #define UMICOM_COMPILER_LANGUAGE_H
 #include "umicom/compiler/common.h"
+
+/* Keep the public C symbol names when this header is included directly by a
+ * C++ client. Includes remain outside the linkage block; layouts are unchanged. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Provide the compiler language name operation used by this module and its client
  * applications.
@@ -40,4 +46,7 @@ UmiCompilerLanguage umi_compiler_language_from_extension(const char *path);
  * applications.
  */
 bool umi_compiler_language_uses_c_abi(UmiCompilerLanguage language);
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 #endif

@@ -21,6 +21,12 @@
 #include "umicom/data/query_session.h"
 #include "umicom/data/schema_catalog.h"
 #include "umicom/data/transfer_plan.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the database explorer data shared with callers of this public contract.
  */
@@ -45,4 +51,8 @@ UmiStatus umi_database_explorer_snapshot(const UmiDatabaseExplorer *explorer,Umi
  * applications.
  */
 UmiStatus umi_database_explorer_add_transfer(UmiDatabaseExplorer *explorer,const UmiDatabaseTransferPlan *plan);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

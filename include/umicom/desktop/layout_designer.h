@@ -20,6 +20,12 @@
 #include "umicom/desktop/runtime.h"
 #include "umicom/desktop/snap_engine.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define UMI_DESKTOP_DESIGNER_HISTORY_DEPTH 16U
 
 /**
@@ -160,4 +166,8 @@ UmiStatus umi_desktop_layout_designer_snapshot(
     const UmiDesktopLayoutDesigner *designer,
     UmiDesktopLayoutDesignerSnapshot *out_snapshot);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -50,6 +50,8 @@ typedef struct UmiBrokerOrderJournal {
  * state needs explicit reconciliation rather than reopening through update.
  * Failed mutation leaves the journal unchanged; find returns NULL for invalid
  * storage. Returned records are borrowed until the next owner mutation. */
+/* Validate the complete retained owner without modifying it. */
+UmiStatus UmiBrokerOrderJournalValidate(const UmiBrokerOrderJournal *journal);
 void umi_broker_order_journal_init(UmiBrokerOrderJournal *journal);
 UmiStatus umi_broker_order_journal_add(
     UmiBrokerOrderJournal *journal,

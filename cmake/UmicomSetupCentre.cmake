@@ -1,8 +1,20 @@
 #-----------------------------------------------------------------------------
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# Umicom Framework
+# File: cmake/UmicomSetupCentre.cmake
+#
+# PURPOSE:
+#   Compose native setup services and their shared command-line execution owner.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
+
 # C23-only installer core; native Windows GUI avoids requiring GTK to install GTK.
 # Existing runtime staging and the NSIS installer are retained unchanged.
-#-----------------------------------------------------------------------------
 # This module also supports independent composition; own its SDK registration dependency.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
@@ -11,6 +23,7 @@ set(_umi_setup_root "${CMAKE_CURRENT_LIST_DIR}/..")
 if(NOT TARGET Umicom::native_launcher)
     include("${CMAKE_CURRENT_LIST_DIR}/UmicomNativeLauncher.cmake")
 endif()
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomIsoImage.cmake")
 add_library(umicom_setup_centre STATIC
     "${_umi_setup_root}/src/setup_centre/text.c"
     "${_umi_setup_root}/src/setup_centre/catalogue.c"
@@ -27,7 +40,7 @@ set_target_properties(umicom_setup_centre PROPERTIES EXPORT_NAME setup_centre
 target_include_directories(umicom_setup_centre PUBLIC
     $<BUILD_INTERFACE:${_umi_setup_root}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-target_link_libraries(umicom_setup_centre PUBLIC Umicom::native_launcher)
+target_link_libraries(umicom_setup_centre PUBLIC Umicom::native_launcher Umicom::iso_image)
 if(WIN32)
     target_link_libraries(umicom_setup_centre PRIVATE ole32 shell32 uuid)
 endif()
@@ -38,7 +51,9 @@ if(COMMAND umicom_apply_sanitizers)
     umicom_apply_sanitizers(umicom_setup_centre)
 endif()
 if(TARGET Umicom::platform)
-    add_library(umicom_setup_process STATIC "${_umi_setup_root}/src/setup_centre/process_adapter.c")
+    add_library(umicom_setup_process STATIC
+        "${_umi_setup_root}/src/setup_centre/process_adapter.c"
+        "${_umi_setup_root}/src/setup_centre/native_cli.c")
     add_library(Umicom::setup_process ALIAS umicom_setup_process)
     set_target_properties(umicom_setup_process PROPERTIES EXPORT_NAME setup_process
         C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
@@ -93,6 +108,21 @@ if(WIN32 AND TARGET Umicom::setup_process)
         umicom_apply_sanitizers(umicom-setup-centre)
     endif()
     install(TARGETS umicom-setup-centre RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Framework)
+endif()
+# The native installer and console share canonical identity without making
+# the installer depend on GTK deployment. The GUI retains its manifest and
+# bitmap compatibility header; Framework owns icon and version resources.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationBranding.cmake")
+if(WIN32)
+    enable_language(RC)
+endif()
+umicom_apply_application_branding(TARGET umicom-setup
+    PRODUCT_NAME "Umicom Setup" INTERNAL_NAME umicom-setup
+    RESOURCE_ROOT "${_umi_setup_root}/resources" NO_RUNTIME_DEPLOYMENT)
+if(TARGET umicom-setup-centre)
+    umicom_apply_application_branding(TARGET umicom-setup-centre
+        PRODUCT_NAME "Umicom Setup Centre" INTERNAL_NAME umicom-setup-centre
+        RESOURCE_ROOT "${_umi_setup_root}/resources" WINDOWS_GUI NO_RUNTIME_DEPLOYMENT)
 endif()
 install(TARGETS umicom_setup_centre EXPORT UmicomFrameworkTargets
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)

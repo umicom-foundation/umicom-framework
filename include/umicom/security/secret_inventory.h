@@ -15,6 +15,12 @@
 #ifndef UMICOM_SECURITY_SECRET_INVENTORY_H
 #define UMICOM_SECURITY_SECRET_INVENTORY_H
 #include "umicom/security/governance.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the security secret reference data shared with callers of this public
  * contract.
@@ -58,4 +64,8 @@ const UmiSecuritySecretMetadata *umi_security_secret_inventory_find(const UmiSec
  * applications.
  */
 bool umi_security_secret_rotation_due(const UmiSecuritySecretMetadata *metadata,uint64_t now_ns);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -39,6 +39,20 @@ typedef struct UmiFinancialRateBook {
     uint64_t revision;
 } UmiFinancialRateBook;
 
+/* Public storage is caller-owned. Validate count before traversal, nonzero
+ * revision, every bounded nonempty label, finite positive rate and unique pair.
+ * Labels remain case-sensitive opaque strings, not verified ISO currency codes.
+ * Equal timestamps may replace an observation; older timestamps refuse.
+ * Serialize use; unused rows and bytes after string terminators are ignored. */
+UmiStatus umi_financial_rate_record_validate(const UmiFinancialRateRecord *record);
+UmiStatus umi_financial_rate_book_validate(const UmiFinancialRateBook *book);
+/* Queries inspect at most eight bytes per label. Supply terminated readable
+ * text or an eight-byte readable array. All outputs must be disjoint from input
+ * storage and remain unchanged on refusal. Conversion is a double-valued preview:
+ * no rounding, freshness policy, inverse lookup, triangulation or posting occurs.
+ * Same-label conversion preserves a finite amount after validating the owner.
+ * A non-finite product or nonzero amount underflowing to zero refuses with
+ * CAPACITY_EXCEEDED; finite subnormal values remain supported. */
 void umi_financial_rate_book_init(UmiFinancialRateBook *book);
 /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
  * before this operation changes state or invokes nested work. Initialize the

@@ -15,6 +15,12 @@
 #ifndef UMICOM_OBSERVABILITY_OPERATIONS_CATALOGUE_H
 #define UMICOM_OBSERVABILITY_OPERATIONS_CATALOGUE_H
 #include "umicom/observability/operations_centre.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * List the named operations view kind values accepted by this public contract.
  */
@@ -39,4 +45,8 @@ const UmiOperationsViewDescriptor *umi_operations_catalogue_at(size_t index);
  * module.
  */
 const UmiOperationsViewDescriptor *umi_operations_catalogue_find(const char *id);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

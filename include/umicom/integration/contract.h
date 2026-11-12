@@ -24,6 +24,12 @@
 
 #include "umicom/integration/types.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Represent the integration contract data shared with callers of this public contract.
  */
@@ -41,4 +47,8 @@ bool umi_integration_contract_compatible(
     const UmiIntegrationContract *provider,
     const UmiIntegrationContract *consumer);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -52,6 +52,23 @@ typedef struct UmiFinancialSettlementBook {
     uint64_t revision;
 } UmiFinancialSettlementBook;
 
+/* Validate complete caller-owned storage before traversal: bounded terminated
+ * text, required identities, finite numeric observations, known states/boolean
+ * flags and unique keys. Count must fit the array and revision must be nonzero.
+ * These references do not replace canonical domain engines or authenticate
+ * permissions. Keep inputs stable on one owner thread and outputs disjoint.
+ * Borrowed find results last until the next mutation; queries inspect at most
+ * 64 readable bytes and must terminate. Unused rows/text tails are ignored. */
+UmiStatus umi_financial_settlement_control_validate(const UmiFinancialSettlementControl *row);
+UmiStatus umi_financial_settlement_book_validate(const UmiFinancialSettlementBook *owner);
+/* Imported observations may use any known state. Transition retains the
+ * existing known-state edges, terminal rules and strictly increasing versions.
+ * Updating these local values does not perform a financial transaction. */
+/* A nonzero due time strictly before now is overdue unless state is SETTLED.
+ * Publish one complete count or preserve output on refusal. The scalar query
+ * returns zero on refusal; use this status to distinguish unavailable evidence. */
+UmiStatus umi_financial_settlement_book_overdue_count_checked(
+    const UmiFinancialSettlementBook *book, uint64_t nowMilliseconds, size_t *outCount);
 void umi_financial_settlement_book_init(UmiFinancialSettlementBook *book);
 /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
  * before this operation changes state or invokes nested work. Initialize the

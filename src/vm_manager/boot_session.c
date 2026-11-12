@@ -97,7 +97,14 @@ UmiStatus UmiVmBootStart(const UmiVmBootPlan *plan, const char *expectedFingerpr
         status = UmiProcessChannelOpen(&request, &channel);
 #endif
         if (plan->recordingDirectory[0]) {
+            /* The joined filename extends the admitted directory. The shared
+             * path service requires its full output capacity, independently of
+             * the smaller VM directory field. Retain the undersized storage
+             * declaration for review of the original contract mismatch. */
+#if 0
             char diagnostics[UMI_VM_PATH];
+#endif
+            char diagnostics[UMI_SETUP_PATH_CAPACITY];
             status = UmiSetupPathJoin(plan->recordingDirectory, "qemu-errors.log", diagnostics);
             if (status == UMI_STATUS_OK)
                 status = UmiProcessChannelOpenRecorded(&request, diagnostics, &channel);

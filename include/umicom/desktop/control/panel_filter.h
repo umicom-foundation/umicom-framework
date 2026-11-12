@@ -114,6 +114,13 @@ UmiStatus umi_desktop_panel_filter_archive_decode_if_unchanged(const void *bytes
     const UmiDesktopPanelFilterSnapshot *expected, UmiDesktopPanelFilterSnapshot *value);
 
 
+/* Compare this record's canonical saved state using caller-owned byte scratch.
+ * See UmiValueArchiveComparison in base/value_archive.h for measurement,
+ * refusal, aliasing and lifetime rules. This call never publishes live state. */
+UmiStatus umi_desktop_panel_filter_archive_compare_with_workspace(const UmiDesktopPanelFilterSnapshot *left,
+    const UmiDesktopPanelFilterSnapshot *right, void *workspace, size_t capacity,
+    UmiValueArchiveComparison *out_comparison);
+
 #ifdef __cplusplus
 }
 #endif

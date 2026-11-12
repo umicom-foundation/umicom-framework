@@ -21,6 +21,12 @@
 #include "umicom/desktop/monitor_topology.h"
 #include "umicom/desktop/window_manager.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Represent the desktop runtime data shared with callers of this public contract.
  */
@@ -197,4 +203,8 @@ UmiDesktopWindowManager *umi_desktop_runtime_windows(
 UmiDesktopContextLinks *umi_desktop_runtime_context_links(
     UmiDesktopRuntime *runtime);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -67,7 +67,33 @@ The handoff rechecks referenced IDs, labels and types against the library. If th
 3. Use the export save action and check its result. An existing file is not overwritten; use a new name for the next revision.
 4. Save the asset library separately. The exported instructions are text, not a video or a complete project archive.
 
+<!-- The earlier session-only instructions are preserved for source review; the scene-document workflow below now replaces that limitation.
 Scenes currently stay in memory for the current session. There is no automatic storyboard recovery or structured scene import. Export before closing Media. You can use the exported text as a reference when recreating scene fields; reopening the text does not automatically reconstruct the scene list. If you edit scenes after preparing, the export still contains the previous displayed instructions until preparation succeeds again.
+-->
+
+Use Scene document to save and reopen applied scene fields. Instructions export remains a separate text workflow: it does not reconstruct the scene list. If you edit scenes after preparing or open another scene document, the export still contains the previous displayed instructions until preparation succeeds again. There is no automatic save, session recovery or close-time unsaved-change prompt; save the intended scene document before closing Media.
+## Save and reopen editable scenes
+
+1. Apply or add pending scene edits, or use Discard pending edits. Save and Open refuse to proceed while the current form has unapplied changes.
+2. Expand Scene document and enter the complete absolute path of a JSON file in a trusted folder. Review the path carefully; Save may create missing parent folders.
+3. To save, select Allow replacing the selected file on the next save, then choose Save applied scenes. This can replace an existing file at that path.
+4. To open, select Allow replacing current scenes on the next open, then choose Open scene document. A malformed or unsupported document preserves the current scenes.
+5. Wait for the result. The form is disabled while the job runs. Request cancellation asks it to stop cooperatively; a save already publishing can still finish.
+6. Review the persistent file-status label and result message. If another source edit or path change occurs during Open, the completion keeps the current panel instead of applying the loaded draft.
+7. Save the asset library separately. After reopening, refresh assets and prepare instructions again before using a scene in Create from text.
+
+Each approval applies to the next accepted operation. Editing the path or scene input clears approvals. A save captures the applied scene values and an owned path before starting a worker; it does not read GTK widgets from that worker.
+
+An empty scene list can be saved and reopened. Unresolved or incomplete asset tags remain editable text. Open does not upload assets, restore a prepared handoff or authorize a provider request.
+
+The scene document stores order, title, story and requested duration only. It does not contain asset bytes, creation briefs, model selections, generation receipts, undo history or unapplied widget text. Keep those workflows separate when collecting a project.
+
+Closing or retiring the panel requests cancellation. A retained control cannot start a new file operation after retirement, and a late completion does not change the retired UI. Retirement cannot undo an atomic save that has already started.
+
+The native controls and regression scenarios are authored. File replacement, display layout, installed-runtime behavior and closing while I/O is active require execution in the qualification environment.
+
+See [Editable storyboard documents](editable-storyboard-documents.html) for the C API, installed-client example and exact file contract.
+
 
 ## Limits and troubleshooting
 

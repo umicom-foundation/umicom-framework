@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_RECYCLER_POOL_H
 
 #include "umicom/ui/enterprise/types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent recycler pool data shared with callers of this public contract.
  */
@@ -36,4 +42,8 @@ UmiStatus umi_ui_ent_recycler_pool_acquire(UmiUiEntRecyclerPool *pool,size_t *ou
  */
 UmiStatus umi_ui_ent_recycler_pool_release(UmiUiEntRecyclerPool *pool);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

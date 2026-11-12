@@ -113,6 +113,13 @@ UmiStatus umi_test_runtime_filesystem_requirement_archive_decode_if_unchanged(co
     const UmiTestRuntimeFilesystemRequirement *expected, UmiTestRuntimeFilesystemRequirement *value);
 
 
+/* Compare this record's canonical saved state using caller-owned byte scratch.
+ * See UmiValueArchiveComparison in base/value_archive.h for measurement,
+ * refusal, aliasing and lifetime rules. This call never publishes live state. */
+UmiStatus umi_test_runtime_filesystem_requirement_archive_compare_with_workspace(const UmiTestRuntimeFilesystemRequirement *left,
+    const UmiTestRuntimeFilesystemRequirement *right, void *workspace, size_t capacity,
+    UmiValueArchiveComparison *out_comparison);
+
 #ifdef __cplusplus
 }
 #endif

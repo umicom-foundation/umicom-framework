@@ -27,6 +27,19 @@ typedef struct UmiOpenTmsReconciliationItem {
 typedef struct UmiOpenTmsReconciliationBook {
  UmiOpenTmsReconciliationItem items[UMI_OPEN_TMS_RECONCILIATION_CAPACITY];size_t count;size_t matchedCount;size_t breakCount;uint64_t revision;
 } UmiOpenTmsReconciliationBook;
+/* Validate bounded strings, finite observations, nonnegative tolerance and
+ * boolean flags. Book admission additionally requires unique IDs, derived
+ * matched flags and counters consistent with every active item. matchedCount
+ * counts matches; breakCount counts unmatched AND unresolved items. */
+UmiStatus umi_open_tms_reconciliation_item_validate(const UmiOpenTmsReconciliationItem *item);
+UmiStatus umi_open_tms_reconciliation_book_validate(const UmiOpenTmsReconciliationBook *book);
+/* Add recomputes matched, preserves a valid resolved flag and refuses duplicate
+ * IDs. Resolve changes only local review state, never an external transaction.
+ * Checked coverage leaves output unchanged on refusal. Empty valid books give
+ * zero; legacy coverage also gives zero on refusal. Keep inputs stable and
+ * output disjoint. This double-valued tolerance model is not exact accounting. */
+UmiStatus umi_open_tms_reconciliation_book_coverage_checked(const UmiOpenTmsReconciliationBook *book, double *out);
+
 void umi_open_tms_reconciliation_book_init(UmiOpenTmsReconciliationBook *book);
 /** An exhausted owner revision returns UMI_STATUS_CAPACITY_EXCEEDED
  * before this operation changes state or invokes nested work. Initialize the

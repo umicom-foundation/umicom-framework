@@ -15,6 +15,12 @@
 #ifndef UMICOM_INTEGRATION_WORKFLOW_H
 #define UMICOM_INTEGRATION_WORKFLOW_H
 #include "umicom/integration/designer_types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the integration workflow node data shared with callers of this public
  * contract.
@@ -71,4 +77,8 @@ const UmiIntegrationWorkflowNode *umi_integration_workflow_find_node(const UmiIn
  * it.
  */
 UmiStatus umi_integration_workflow_validate(const UmiIntegrationWorkflow *workflow,UmiIntegrationDesignerValidation *validation);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_FILTER_PREDICATE_H
 
 #include "umicom/ui/enterprise/cell_value.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * List the named ui ent filter operator values accepted by this public contract.
  */
@@ -35,4 +41,8 @@ int umi_ui_ent_filter_predicate_validate(const UmiUiEntFilterPredicate *p);
  */
 int umi_ui_ent_filter_predicate_matches(const UmiUiEntFilterPredicate *p,const UmiUiEntCellValue *value);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

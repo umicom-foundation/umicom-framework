@@ -15,6 +15,12 @@
 #ifndef UMICOM_FRONTEND_HOT_RELOAD_H
 #define UMICOM_FRONTEND_HOT_RELOAD_H
 #include "umicom/frontend/dev_types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the frontend changed file data shared with callers of this public contract.
  */
@@ -38,4 +44,8 @@ UmiStatus umi_frontend_hot_reload_queue(UmiFrontendHotReload *reload,const char 
  * applications.
  */
 UmiStatus umi_frontend_hot_reload_complete(UmiFrontendHotReload *reload,uint64_t *out_generation);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

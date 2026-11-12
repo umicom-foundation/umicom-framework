@@ -1,17 +1,19 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/boot_media/media.h
- * PURPOSE: Review media transfers and keep device writes separate from file-based practice.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Review media transfers and keep device writes separate from file-based practice.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
-
-/*-----------------------------------------------------------------------------
- * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * File: include/umicom/boot_media/media.h
- * Reviewed media transfer. Inspection never executes boot code. Device writes
- * are irreversible and separate from the default, new-file practice workflow.
- *---------------------------------------------------------------------------*/
+/* Inspection never executes boot code. Device writes are irreversible and
+ * separate from the default, new-file practice workflow. */
 #ifndef UMICOM_BOOT_MEDIA_MEDIA_H
 #define UMICOM_BOOT_MEDIA_MEDIA_H
 #include <stddef.h>
@@ -29,6 +31,18 @@ typedef enum UmiBootMediaPhase {
     UMI_BOOT_MEDIA_INSPECT, UMI_BOOT_MEDIA_RECHECK, UMI_BOOT_MEDIA_WRITE,
     UMI_BOOT_MEDIA_FLUSH, UMI_BOOT_MEDIA_VERIFY, UMI_BOOT_MEDIA_FINISHED
 } UmiBootMediaPhase;
+/** Each public operation replaces a supplied report. status agrees with the
+ * return value, including invalid arguments and allocation refusal. Discovery,
+ * review and inspection never retain a previous transfer's write/verified flags.
+ * A verified copy is byte agreement, not a successful firmware or system boot.
+ * outputCreated records exclusive practice-file creation independently of the
+ * final status. Validation, locking or allocation may fail after creating an
+ * empty file; it is retained even when no payload write started. Device writes
+ * do not set this regular-file creation flag.
+ * Successful inspection and verification include checked release of owned
+ * native handles. A release error cannot set verified; a preceding operation
+ * failure remains primary. Release is attempted once and is never a rollback.
+ * Reports and output objects must not overlap borrowed inputs or each other. */
 typedef struct UmiBootMediaReport {
     UmiStatus status;
     UmiBootMediaPhase phase;
@@ -36,6 +50,15 @@ typedef struct UmiBootMediaReport {
     int outputCreated, writeStarted, verified;
     char detail[384];
 } UmiBootMediaReport;
+#define UMI_BOOT_MEDIA_REPORT_TEXT 1024U
+/** Describe a final observation without I/O. result must match report->status;
+ * flags are binary, phase is known, done <= total and detail is bounded UTF-8.
+ * Failed operations cannot claim verified. Output remains unchanged on refusal
+ * or insufficient capacity. Output storage must not overlap the report.
+ * The returned status describes formatting, not the media operation. */
+UmiStatus UmiBootMediaReportDescribe(UmiStatus result,const UmiBootMediaReport *report,
+    char *output,size_t capacity);
+
 /** Return nonzero to cancel. Called synchronously on the invoking thread; do
  * not mutate/free the plan, handles or transfer inputs inside this callback. */
 typedef int (*UmiBootMediaProgress)(const UmiBootMediaReport *, void *);
@@ -63,6 +86,9 @@ typedef struct UmiBootMediaPlan UmiBootMediaPlan;
 /** A complete sector-addressable image, not a ZIP, gzip, kernel or directory.
  * Paths are UTF-8, host-absolute (drive-qualified on Windows, no UNC). Caller
  * inputs must be private against concurrent mutation; Linux locks cooperate.
+ * Open regular-file lengths are rechecked after inspection and transfer; a
+ * changed extent is refused rather than accepting a matching prefix digest.
+ * These checks are observations, not a snapshot against concurrent writers.
  * Flags describe structural observations, never actual bootability or trust. */
 UmiStatus UmiBootMediaInspect(const char *imagePath,UmiBootMediaImage *out,
     UmiBootMediaProgress progress,void *context,UmiBootMediaReport *report);
@@ -89,15 +115,25 @@ void UmiBootMediaPlanDestroy(UmiBootMediaPlan *plan);
 UmiStatus UmiBootMediaApply(UmiBootMediaPlan *plan,const char *fingerprint,
     const char *confirmation,UmiBootMediaProgress progress,void *context,UmiBootMediaReport *report);
 /** Compare an entire regular-file copy with the inspected source image.
- * Both files must have equal lengths. Only regular-file handles are accepted;
+ * Both files must have equal lengths, including a post-hash check on the open
+ * copy handle. Only regular-file handles are accepted;
  * this is not a physical-device verifier. Agreement does not prove bootability. */
 UmiStatus UmiBootMediaVerifyFile(const char *imagePath,const char *copyPath,
     UmiBootMediaProgress progress,void *context,UmiBootMediaReport *report);
 /** Pure policy check; does not establish that a caller-supplied observation is
  * true. The native device adapter re-observes everything before opening writes. */
+/* All image/device flags must be 0 or 1. Device label fields must terminate
+ * within their arrays and contain valid UTF-8. Empty required identity fields
+ * are permission refusals; malformed fields are invalid arguments. A report,
+ * when supplied, is replaced on every return with this decision only: status
+ * agrees with the return value and no write/verification claim survives.
+ * Geometry and layout flags alone do not validate source bytes or a digest. */
 UmiStatus UmiBootMediaCheckDevicePolicy(const UmiBootMediaImage *image,
     const UmiBootMediaDevice *device,UmiBootMediaReport *report);
 int UmiBootMediaDeviceWritesEnabled(void);
+/** Borrow a counted UTF-8 argument vector, including the program at index zero.
+ * A nonpositive count, NULL vector or NULL counted entry returns usage code 2
+ * before any media operation. Referenced strings must remain valid for the call. */
 int UmiBootMediaMain(int argc,char **argv);
 #ifdef __cplusplus
 }

@@ -30,9 +30,17 @@ elseif(NOT CASE STREQUAL "unicode")
     message(FATAL_ERROR "Unknown preview case")
 endif()
 # Dry-run intentionally does not create/read the selected site or open a socket.
+# Native commands emit UTF-8 regardless of the Windows console code page.
+# Retain the implicit-decoding invocation for review; explicitly decode the
+# child output so this fixture measures path preservation, not CMake policy.
+if(FALSE)
 execute_process(COMMAND "${TOOL}" preview --root "${root}" --port "${port}" --dry-run
     WORKING_DIRECTORY "${WORK}" RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error
     TIMEOUT 10)
+endif()
+execute_process(COMMAND "${TOOL}" preview --root "${root}" --port "${port}" --dry-run
+    WORKING_DIRECTORY "${WORK}" RESULT_VARIABLE result OUTPUT_VARIABLE output ERROR_VARIABLE error
+    ENCODING UTF-8 TIMEOUT 10)
 if(NOT "${result}" STREQUAL "${expected}")
     message(FATAL_ERROR "Expected exit ${expected}, got ${result}: ${output} ${error}")
 endif()

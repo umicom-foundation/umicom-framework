@@ -42,7 +42,12 @@ int main(int argc,char **argv)
     r->state=UMI_BUILD_STATE_FAILED;r->phase=UMI_BUILD_PHASE_BUILD;r->status=UMI_STATUS_IO_ERROR;r->exit_code=1;r->operation_id=11U;
     strcpy(r->output,"notes.c:1:1: error: practice fault\n");
     CHECK(umi_build_parse_output(r->output,&r->diagnostics)==UMI_STATUS_OK);
+    /* History now refuses malformed storage. Keep that former fixture for
+     * review and exercise the presenter's stronger phase admission instead. */
+#if 0
     if(strcmp(argv[1],"invalid-record")==0)r->diagnostics.count=SIZE_MAX;
+#endif
+    if(strcmp(argv[1],"invalid-record")==0)r->phase=(UmiBuildPhase)99;
     if(strcmp(argv[1],"empty")!=0)CHECK(umi_build_history_append(history,r)==UMI_STATUS_OK);
     GtkWindow *window=UmiGtk4BuildReviewPresent(NULL,history);CHECK(window!=NULL);g_object_ref(window);
     /* These windows must consume canonical SVG branding, not retired bitmap

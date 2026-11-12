@@ -1,15 +1,17 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: examples/setup_centre/main.c
+ *
  * PURPOSE:
- *   A thin executable entry point; all behaviour belongs to shared services.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Provide a thin executable entry point over shared native setup services.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * A thin executable entry point; all behaviour belongs to shared services. */
-
 #include "umicom/setup_centre/setup.h"
 #ifdef UMICOM_SETUP_HAS_PROCESS
 #include "umicom/setup_centre/execution.h"
@@ -21,6 +23,10 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif
+/* The native execution context now belongs to setup_process so every CLI
+ * host uses the same timeout and output ownership. Preserve the former
+ * executable-owned implementation for review; the fallback is unchanged. */
+#if 0
 static int Run(int argc,char **argv)
 {
 
@@ -46,6 +52,16 @@ static int Run(int argc,char **argv)
 #else
     return UmiSetupMain(argc,argv);
 
+#endif
+}
+
+#endif
+static int Run(int argc, char **argv)
+{
+#ifdef UMICOM_SETUP_HAS_PROCESS
+    return UmiSetupNativeMain(argc, argv);
+#else
+    return UmiSetupMain(argc, argv);
 #endif
 }
 

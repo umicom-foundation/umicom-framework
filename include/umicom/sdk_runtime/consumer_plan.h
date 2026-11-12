@@ -133,6 +133,13 @@ UmiStatus umi_sdk_runtime_consumer_plan_archive_decode_if_unchanged(const void *
     const UmiSdkRuntimeConsumerPlan *expected, UmiSdkRuntimeConsumerPlan *value);
 
 
+/* Compare this record's canonical saved state using caller-owned byte scratch.
+ * See UmiValueArchiveComparison in base/value_archive.h for measurement,
+ * refusal, aliasing and lifetime rules. This call never publishes live state. */
+UmiStatus umi_sdk_runtime_consumer_plan_archive_compare_with_workspace(const UmiSdkRuntimeConsumerPlan *left,
+    const UmiSdkRuntimeConsumerPlan *right, void *workspace, size_t capacity,
+    UmiValueArchiveComparison *out_comparison);
+
 #ifdef __cplusplus
 }
 #endif

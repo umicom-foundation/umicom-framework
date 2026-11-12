@@ -19,6 +19,12 @@
 #include <gtk/gtk.h>
 #include "umicom/ui/workstation/panel_chrome.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Initialise gtk4 ws panel frame from caller-provided values so later operations receive a
  * known state.
@@ -49,4 +55,8 @@ void umi_gtk4_ws_panel_frame_set_context_colour(
  * does not destroy widgets or change product data. NULL is harmless. */
 void umi_gtk4_ws_panel_frame_invalidate_actions(GtkWidget *root);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

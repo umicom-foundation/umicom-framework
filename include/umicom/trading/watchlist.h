@@ -43,6 +43,19 @@ void umi_watchlist_init(UmiWatchlist *watchlist);
  * This structure is caller-owned and requires serial access.
  */
 UmiStatus umi_watchlist_add(UmiWatchlist *watchlist, const UmiInstrument *instrument);
+/* Inspect all active records and unique identities. Invalid count/NULL owner
+ * returns INVALID_ARGUMENT; malformed active records or repeated identities
+ * return INVALID_STATE. Inactive bytes do not participate. Insertion performs
+ * this check before duplicate/capacity decisions and preserves bytes on refusal. */
+UmiStatus umi_watchlist_validate(const UmiWatchlist *watchlist);
+/* Copy a stable index on success only; every refusal preserves out_index.
+ * Query storage must be readable through its terminator or ID capacity. An
+ * unterminated query returns CAPACITY_EXCEEDED; empty/NULL is INVALID_ARGUMENT.
+ * Output storage must be writable, aligned and separate from the owner.
+ * Query/output may share separate storage: query capture precedes publication.
+ * The index expires on catalogue edits. Callers serialize access. */
+UmiStatus umi_watchlist_find(const UmiWatchlist *watchlist,
+                            const char *instrument_id, size_t *out_index);
 #ifdef __cplusplus
 }
 #endif

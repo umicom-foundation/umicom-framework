@@ -15,6 +15,12 @@
 #ifndef UMICOM_COMPILER_BUILD_GRAPH_H
 #define UMICOM_COMPILER_BUILD_GRAPH_H
 #include "umicom/compiler/plan.h"
+
+/* Keep the public C symbol names when this header is included directly by a
+ * C++ client. Includes remain outside the linkage block; layouts are unchanged. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define UMI_COMPILER_MAX_BUILD_STEPS 192U
 #define UMI_COMPILER_MAX_STEP_DEPENDENCIES 16U
 /**
@@ -48,4 +54,7 @@ const UmiCompilerBuildStep *umi_compiler_build_graph_find(const UmiCompilerBuild
  * applications.
  */
 UmiStatus umi_compiler_build_graph_order(const UmiCompilerBuildGraph *graph,size_t *out_indices,size_t capacity,size_t *out_count);
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 #endif

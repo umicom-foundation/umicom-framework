@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_MEASUREMENT_CACHE_H
 
 #include "umicom/ui/enterprise/types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent measurement data shared with callers of this public contract.
  */
@@ -40,4 +46,8 @@ UmiStatus umi_ui_ent_measurement_cache_set(UmiUiEntMeasurementCache *c,const cha
  */
 int umi_ui_ent_measurement_cache_get(const UmiUiEntMeasurementCache *c,const char *id,int32_t *out_pixels);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

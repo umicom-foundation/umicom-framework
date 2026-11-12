@@ -38,12 +38,21 @@ typedef struct UmiCliContext {
  * Provide the cli print help operation used by this module and its client applications.
  */
 void umi_cli_print_help(void);
+/* Unlike developer handlers, these shared CLIs include their command name in argv[0]. */
+int umi_cli_command_boot_media(int argc, char **argv);
+int umi_cli_command_setup(int argc, char **argv);
 int umi_cli_command_verify(int argc, char **argv);
 /* Capture explicitly selected file bytes without loading or executing them. */
 int umi_cli_command_recipe(int argc, char **argv);
+/* Shared project recipes; creation is explicit and never overwrites a destination. */
+int umi_cli_command_project(int argc, char **argv);
 int umi_cli_command_observe_files(int argc, char **argv);
 /* Inspect or author learning metadata through the shared Framework pack service. */
 int umi_cli_command_learning_pack(int argc, char **argv);
+/* Read-only controlled guide identity; delegates to Framework source contracts. */
+int umi_cli_command_branding(int argc, char **argv);
+/* Read-only compiler metadata; argv[0] is plan/help, without the compiler prefix. */
+int umi_cli_command_compiler(int argc, char **argv);
 /**
  * Provide the cli print repo help operation used by this module and its client
  * applications.

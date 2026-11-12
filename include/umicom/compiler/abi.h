@@ -15,6 +15,12 @@
 #ifndef UMICOM_COMPILER_ABI_H
 #define UMICOM_COMPILER_ABI_H
 #include "umicom/compiler/target.h"
+
+/* Keep the public C symbol names when this header is included directly by a
+ * C++ client. Includes remain outside the linkage block; layouts are unchanged. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * List the named compiler abi kind values accepted by this public contract.
  */
@@ -37,4 +43,13 @@ bool umi_compiler_abi_compatible(const UmiCompilerAbiProfile *producer,const Umi
  * Provide the compiler abi name operation used by this module and its client applications.
  */
 const char *umi_compiler_abi_name(UmiCompilerAbiKind kind);
+/**
+ * Initialization preserves the destination on refusal and accepts its own identifier
+ * and target as inputs. An overlong identifier returns CAPACITY_EXCEEDED.
+ * Compatibility rejects unterminated ABI/target text, then retains its existing
+ * target, pointer-width and kind comparison. Storage admission does not certify an ABI.
+ */
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 #endif

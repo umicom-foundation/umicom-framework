@@ -30,6 +30,9 @@ typedef struct UmiBuildHistory UmiBuildHistory;
 UmiStatus umi_build_history_create(size_t capacity,
                                    UmiBuildHistory **out_history);
 void umi_build_history_destroy(UmiBuildHistory *history);
+/** Copy a storage-valid record. Refused evidence does not evict records or
+ * advance the next operation identity; no producer pointer is retained. The
+ * caller keeps result storage unchanged until this synchronous call returns. */
 UmiStatus umi_build_history_append(UmiBuildHistory *history,
                                    const UmiBuildResult *result);
 size_t umi_build_history_count(const UmiBuildHistory *history);

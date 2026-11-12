@@ -22,12 +22,23 @@ add_library(umicom_source_contracts STATIC
     "${_umicom_contract_root}/src/source_contracts/files.c"
     "${_umicom_contract_root}/src/source_contracts/audit.c"
     "${_umicom_contract_root}/src/source_contracts/identity.c"
+    "${_umicom_contract_root}/src/source_contracts/guide_branding.c"
+    "${_umicom_contract_root}/src/source_contracts/guide_files.c"
     "${_umicom_contract_root}/src/source_contracts/presets.c"
     "${_umicom_contract_root}/src/source_contracts/workbench.c"
     "${_umicom_contract_root}/src/source_contracts/portfolio.c"
     # Compile the existing dependency-free Framework reader in this small tool
     # closure; do not introduce or copy another JSON implementation.
     "${_umicom_contract_root}/src/language_runtime/json.c")
+# Reuse Framework base in the composition. The small standalone tool compiles
+# the same source files when no base target exists; it does not fork the codec.
+if(TARGET Umicom::base)
+    target_link_libraries(umicom_source_contracts PUBLIC Umicom::base)
+else()
+    target_sources(umicom_source_contracts PRIVATE
+        "${_umicom_contract_root}/src/base/base64.c"
+        "${_umicom_contract_root}/src/base/sha256.c")
+endif()
 add_library(Umicom::source_contracts ALIAS umicom_source_contracts)
 set_target_properties(umicom_source_contracts PROPERTIES
     C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
@@ -147,4 +158,60 @@ if(BUILD_TESTING)
         endif()
     endforeach()
     unset(_literal_case)
+endif()
+
+# Native guide checks inspect source bytes without running a renderer or app.
+if(BUILD_TESTING)
+    add_executable(umicom-source-guide-test
+        "${_umicom_contract_root}/tests/source_contracts/test_guide_branding.c")
+    add_executable(umicom-source-guide-files-test
+        "${_umicom_contract_root}/tests/source_contracts/test_guide_files.c")
+    foreach(_target IN ITEMS umicom-source-guide-test umicom-source-guide-files-test)
+        target_link_libraries("${_target}" PRIVATE Umicom::source_contracts)
+        target_include_directories("${_target}" PRIVATE "${_umicom_contract_root}/src/source_contracts")
+        set_target_properties("${_target}" PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        if(MSVC)
+            target_compile_options("${_target}" PRIVATE /W4)
+        else()
+            target_compile_options("${_target}" PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+        endif()
+        if(COMMAND umicom_apply_sanitizers)
+            umicom_apply_sanitizers("${_target}")
+        endif()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target("${_target}")
+        endif()
+        if(COMMAND umicom_target_qualification_inputs)
+            umicom_target_qualification_inputs("${_target}" FILES
+                "${_umicom_contract_root}/tests/source_contracts/guide_branding_fixture.h")
+        endif()
+    endforeach()
+    foreach(_case IN ITEMS dark light symbol comment template nested-template script textarea quoted-delimiter single-quotes uppercase missing-meta wrong-meta duplicate-meta missing-logo wrong-hash wrong-bytes short-asset long-asset external-asset raster-asset missing-alt unowned-image missing-icon wrong-icon-type icon-bytes missing-fonts font-comment font-role unknown-surface only-comment only-template unclosed-template unmatched-template unclosed-comment unclosed-style duplicate-attribute unclosed-quote empty-asset oversized-asset null-inputs embedded-nul)
+        add_test(NAME "framework.source_contracts.guide.${_case}" COMMAND umicom-source-guide-test "${_case}")
+        set_tests_properties("framework.source_contracts.guide.${_case}" PROPERTIES
+            TIMEOUT 10 LABELS "framework;source-contracts;branding;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.source_contracts.guide.${_case}" TARGETS umicom-source-guide-test)
+        endif()
+    endforeach()
+    foreach(_case IN ITEMS valid duplicates empty missing-root missing-asset empty-asset binary-html altered-asset unrelated-file nested read-bytes ignored-directory)
+        file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/guide-fixtures/${_case}")
+        add_test(NAME "framework.source_contracts.guide_files.${_case}"
+            COMMAND umicom-source-guide-files-test "${_case}" "${CMAKE_CURRENT_BINARY_DIR}/guide-fixtures/${_case}")
+        set_tests_properties("framework.source_contracts.guide_files.${_case}" PROPERTIES
+            TIMEOUT 10 LABELS "framework;source-contracts;branding;filesystem;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.source_contracts.guide_files.${_case}" TARGETS umicom-source-guide-files-test)
+        endif()
+    endforeach()
+    # Audit the maintained source tree as well as controlled failure fixtures.
+    add_test(NAME framework.source_contracts.learning_branding
+        COMMAND umicom-source-contracts guides --assets "${_umicom_contract_root}/resources/brand"
+            --root "${_umicom_contract_root}/docs/learning")
+    set_tests_properties(framework.source_contracts.learning_branding PROPERTIES
+        TIMEOUT 60 LABELS "framework;source-contracts;branding;learning")
+    # Source trees are mutable observations, not closed executable-only inputs.
+    if(COMMAND umicom_test_impact_owners)
+        umicom_test_impact_owners(framework.source_contracts.learning_branding TARGETS umicom-source-contracts ALWAYS)
+    endif()
 endif()

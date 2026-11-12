@@ -1,4 +1,17 @@
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomSeedream.cmake
+#
+# PURPOSE:
+#   Compose shared provider image requests and native hosts with explicit canonical export branding.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
 # Shared image generation owns provider requests; native products compose its UI.
 # This module also supports independent composition; own its SDK registration dependency.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
@@ -65,3 +78,6 @@ if(BUILD_TESTING)
 endif()
 install(FILES "${_umicom_seedream_root}/docs/learning/seedream-image-requests.html"
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)
+
+# PNG identity is a Framework adapter service; provider products remain clients.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomImageBrandChecks.cmake")

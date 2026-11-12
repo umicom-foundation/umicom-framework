@@ -15,6 +15,12 @@
 #ifndef UMICOM_CODEGUARD_REMEDIATION_PLAN_H
 #define UMICOM_CODEGUARD_REMEDIATION_PLAN_H
 #include "umicom/codeguard/evidence.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the code guard remediation action data shared with callers of this public
  * contract.
@@ -44,4 +50,8 @@ UmiStatus umi_codeguard_remediation_plan_build(const UmiCodeGuardEvidenceStore *
  * this module.
  */
 const UmiCodeGuardRemediationAction *umi_codeguard_remediation_plan_at(const UmiCodeGuardRemediationPlan *plan,size_t index);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

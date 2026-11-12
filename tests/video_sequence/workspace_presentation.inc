@@ -42,6 +42,7 @@ static void Presentation(const char *mode, GtkWidget *window, GtkWidget *host,
     bool dirty = panel->dirty;
     GtkExpander *split = GTK_EXPANDER(Find(root, "video.section.split"));
     CHECK(!gtk_expander_get_expanded(split));
+    CHECK(panel->splitSection == GTK_WIDGET(split));
     if (strcmp(mode, "presentation-sections") == 0) {
         gtk_editable_set_text(GTK_EDITABLE(panel->rightId), "draft-right");
         gtk_spin_button_set_value(GTK_SPIN_BUTTON(panel->split), 1250.0);
@@ -66,6 +67,20 @@ static void Presentation(const char *mode, GtkWidget *window, GtkWidget *host,
         CHECK(gtk_expander_get_expanded(split));
         CHECK(gtk_widget_get_mapped(panel->split));
         CHECK(FocusInRegion(window, GTK_WIDGET(split)));
+        CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(panel->rightId)), "draft-right") == 0);
+        /* Repeated navigation must reuse the retained form, including a draft
+         * entered before collapse; no replacement controls or undo entries. */
+        GtkWidget *body = gtk_expander_get_child(split);
+        GtkWidget *field = panel->split;
+        gtk_spin_button_set_value(GTK_SPIN_BUTTON(field), 1250.0);
+        gtk_expander_set_expanded(split, FALSE);
+        Settle();
+        CHECK(!gtk_widget_get_mapped(field));
+        ActivatePresentation(root, "video.navigation.split");
+        CHECK(gtk_expander_get_expanded(split));
+        CHECK(gtk_expander_get_child(split) == body && panel->split == field);
+        CHECK(gtk_widget_get_mapped(field) && FocusInRegion(window, GTK_WIDGET(split)));
+        CHECK(gtk_spin_button_get_value(GTK_SPIN_BUTTON(field)) == 1250.0);
         CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(panel->rightId)), "draft-right") == 0);
     } else if (strcmp(mode, "presentation-split-edit") == 0) {
         ActivatePresentation(root, "video.navigation.split");

@@ -20,6 +20,7 @@
 #ifndef UMICOM_WEB_SERVICE_H
 #define UMICOM_WEB_SERVICE_H
 #include <stdbool.h>
+#include "umicom/web/response_body.h"
 #include "umicom/web/endpoint.h"
 #include "umicom/web/metrics.h"
 #include "umicom/web/middleware.h"
@@ -82,6 +83,23 @@ UmiWebMetrics *umi_web_service_metrics(UmiWebService *service);
  * its policy.
  */
 UmiStatus umi_web_service_handle(UmiWebService *service,const UmiWebRequest *request,UmiWebResponse *response);
+/* Optional fallback for body-aware callers only. Exact registered routes have
+ * priority; this callback replaces the legacy fallback only when no route
+ * matches. Configure outside dispatch on the service owner thread. Context is
+ * borrowed. NULL clears this optional callback without changing the old one.
+ * On success transfer one BodyCreate result (or NULL for the inline body) to
+ * the caller. Never fill both bodies. A failed callback's body is destroyed
+ * by the service. Gate and middleware still run before this callback. */
+typedef UmiStatus (*UmiWebBodyHandler)(const UmiWebRequest *request,
+    UmiWebResponse *response, UmiWebResponseBody **body, void *context);
+UmiStatus UmiWebServiceSetBodyFallback(UmiWebService *service,
+    UmiWebBodyHandler handler, void *context);
+/* Clear out_body on entry. Success transfers ownership to the caller, which
+ * must destroy it on every path after use. Metadata remains in response; an
+ * external body has response->body_length == 0. The legacy handle API keeps
+ * its original inline-only behavior and never invokes the body fallback. */
+UmiStatus UmiWebServiceHandleBody(UmiWebService *service, const UmiWebRequest *request,
+    UmiWebResponse *response, UmiWebResponseBody **out_body);
 #ifdef __cplusplus
 }
 #endif

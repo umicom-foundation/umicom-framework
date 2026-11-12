@@ -22,6 +22,12 @@
 #ifndef UMICOM_UI_COMPONENTS_TREE_H
 #define UMICOM_UI_COMPONENTS_TREE_H
 #include "umicom/ui/components/component.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define UMI_UI_COMPONENT_TREE_CAPACITY 512U
 /**
  * Represent the ui component node data shared with callers of this public contract.
@@ -45,4 +51,8 @@ UmiStatus umi_ui_component_tree_add(UmiUiComponentTree *tree,const UmiUiComponen
  * their state.
  */
 size_t umi_ui_component_tree_child_count(const UmiUiComponentTree *tree,size_t parent_index);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

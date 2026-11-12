@@ -21,6 +21,7 @@
 #define UMICOM_WEB_STATIC_FILES_H
 #include "umicom/web/response.h"
 #include "umicom/web/request.h"
+#include "umicom/web/response_body.h"
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -53,6 +54,13 @@ UmiStatus umi_web_static_files_serve(const UmiWebStaticFiles *files,const char *
  * connection serializer suppresses a HEAD body. API routes retain priority. */
 UmiStatus UmiWebStaticFilesHandle(const UmiWebRequest *request,UmiWebResponse *response,void *context);
 
+/* Body-aware fallback for UmiWebServiceSetBodyFallback. Reuses the same path,
+ * rooted-handle and method checks. Complete content is copied into an owned
+ * body up to RESPONSE_BODY_LIMIT, including binary NUL bytes. Error responses
+ * use the inline body and return a NULL external body. HEAD is read and
+ * checked identically; the connection omits its bytes on the wire. */
+UmiStatus UmiWebStaticFilesHandleBody(const UmiWebRequest *request,
+    UmiWebResponse *response, UmiWebResponseBody **body, void *context);
 #ifdef __cplusplus
 }
 #endif

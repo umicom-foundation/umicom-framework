@@ -237,6 +237,8 @@ static void ArchiveFillUnusedText(UmiSdkRuntimeRuntimePolicy *value)
 #define ARCHIVE_WORKSPACE_DECODE umi_sdk_runtime_runtime_policy_archive_decode_with_workspace
 /* Exercise guarded import through this domain's public snapshot codec. */
 #define ARCHIVE_CONDITIONAL_DECODE umi_sdk_runtime_runtime_policy_archive_decode_if_unchanged
+/* Exercise canonical comparison with explicit caller-owned scratch. */
+#define ARCHIVE_COMPARE umi_sdk_runtime_runtime_policy_archive_compare_with_workspace
 #define ARCHIVE_EQUAL RecordDefaultsEqual
 #include "../value_archive/record_cases.h"
 

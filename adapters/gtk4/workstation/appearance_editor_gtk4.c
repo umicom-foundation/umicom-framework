@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "../theme_settings_gtk4.h"
+#include "../appearance_typography_private.h"
 #include "umicom/ui/gtk4/workstation/appearance_editor.h"
 
 #include <stdint.h>
@@ -131,6 +132,9 @@ static char *profile_colour(UmiUiAppearanceProfile *profile, UmiGtk4AppearanceCo
 
 /* Create scoped CSS from a validated profile so one application process can
  * restyle its complete workbench without changing business widgets. */
+/* Retain the interface-only projection for review. Both saved font roles now
+ * reach the renderer through the shared typography fragment below. */
+#if 0
 static char *profile_css(const UmiUiAppearanceProfile *profile) {
   double interface_size;
   int control_height;
@@ -223,6 +227,106 @@ static char *profile_css(const UmiUiAppearanceProfile *profile) {
       profile->raised_surface, profile->border, profile->raised_surface, profile->border,
       profile->foreground, profile->editor_background, profile->muted_foreground,
       profile->border, profile->danger);
+}
+
+#endif
+
+static char *profile_css(const UmiUiAppearanceProfile *profile) {
+  int control_height;
+  int spacing;
+
+  /*
+   * Protect caller-owned memory by checking that required state is available before it is
+   * used.
+   */
+  if (profile == NULL)
+    return NULL;
+  control_height = profile->density == UMI_UI_DENSITY_COMPACT
+                       ? 25
+                       : (profile->density == UMI_UI_DENSITY_SPACIOUS ? 34 : 29);
+  spacing = profile->density == UMI_UI_DENSITY_COMPACT
+                ? 3
+                : (profile->density == UMI_UI_DENSITY_SPACIOUS ? 8 : 5);
+
+  char *typography = UmiGtk4AppearanceTypographyCss(profile, FALSE);
+  if (typography == NULL) return NULL;
+  char *chrome = g_strdup_printf(
+      ".umicom-appearance-scope { background: %s; color: %s; "
+      "}"
+      ".umicom-appearance-scope .umicom-suite-layout-header {"
+      " min-height: %dpx; padding: %dpx 7px; background: %s;"
+      " border-bottom: 1px solid %s; }"
+      ".umicom-appearance-scope .umicom-workstation-identity {"
+      " min-height: 24px; padding: 1px 7px 1px 4px; color: %s;"
+      " border: 1px solid alpha(black,0.20); border-radius: 3px;"
+      " background: alpha(black,0.08);"
+      " box-shadow: inset 0 1px alpha(white,0.05),"
+      " inset 0 -1px alpha(black,0.24); }"
+      ".umicom-appearance-scope .umicom-workstation-identity-title {"
+      " color: %s; font-weight: 700; text-shadow: 0 1px alpha(black,0.42); }"
+      ".umicom-appearance-scope .umicom-workstation-identity-icon {"
+      " margin-right: 2px; opacity: 0.94; }"
+      ".umicom-appearance-scope .umicom-mode-badge {"
+      " color: %s; background: %s; border-radius: 3px; padding: 1px 5px; }"
+      /* Compact product identity is part of the toolbar, not a second card.
+       * Keep the configured font size: only decoration and spacing change. */
+      ".umicom-appearance-scope .umicom-workstation-header.compact {"
+      " padding: 0; margin: 0; }"
+      ".umicom-appearance-scope .umicom-workstation-header.compact"
+      " .umicom-workstation-identity {"
+      " min-height: 0; padding: 0 3px; margin: 0; border: 0;"
+      " border-radius: 0; background: transparent; box-shadow: none; }"
+      ".umicom-appearance-scope .umicom-workstation-header.compact"
+      " .umicom-workstation-identity-title { font-weight: 600; text-shadow: none; }"
+      ".umicom-appearance-scope .umicom-workstation-header.compact"
+      " .umicom-mode-badge { min-height: 0; min-width: 0;"
+      " padding: 1px 4px; margin: 0; box-shadow: none; }"
+      /* These are minimum sizes, not fixed heights. Large user fonts can still
+       * grow controls, while platform default padding no longer inflates them. */
+      ".umicom-appearance-scope .umicom-workstation-header.compact > button,"
+      ".umicom-appearance-scope .umicom-workstation-header.compact > menubutton > button {"
+      " min-height: 20px; min-width: 20px; padding: 2px 4px; margin: 0;"
+      " border-radius: 3px; box-shadow: none; }"
+      ".umicom-appearance-scope .umicom-workstation-panel,"
+      ".umicom-appearance-scope .umicom-tool-window-flyout {"
+      " background: %s; color: %s; border-color: %s; }"
+      ".umicom-appearance-scope .umicom-panel-header {"
+      " background: %s; color: %s; border-color: %s; }"
+      ".umicom-appearance-scope button,"
+      ".umicom-appearance-scope entry,"
+      ".umicom-appearance-scope dropdown > button {"
+      " min-height: %dpx; color: %s; background: %s;"
+      " border: 1px solid %s; border-radius: 3px; }"
+      ".umicom-appearance-scope button:hover { background: %s; }"
+      ".umicom-appearance-scope button:checked,"
+      ".umicom-appearance-scope button.suggested-action {"
+      " background: %s; color: %s; border-color: %s; }"
+      ".umicom-appearance-scope popover contents {"
+      " color: %s; background: %s; border: 1px solid %s; }"
+      ".umicom-appearance-scope notebook > header {"
+      " background: %s; border-color: %s; }"
+      ".umicom-appearance-scope notebook > stack,"
+      ".umicom-appearance-scope textview,"
+      ".umicom-appearance-scope textview text,"
+      ".umicom-appearance-scope .view {"
+      " color: %s; background: %s; }"
+      ".umicom-appearance-scope .dim-label { color: %s; }"
+      ".umicom-appearance-scope separator { background: %s; }"
+      ".umicom-appearance-scope .error { color: %s; }",
+      profile->background, profile->foreground,
+      control_height, spacing, profile->raised_surface, profile->border,
+      profile->foreground, profile->foreground, profile->muted_foreground,
+      profile->accent_surface, profile->surface, profile->foreground, profile->border,
+      profile->raised_surface, profile->foreground, profile->strong_border, control_height,
+      profile->foreground, profile->raised_surface, profile->border, profile->hover_surface,
+      profile->accent_surface, profile->foreground, profile->accent, profile->foreground,
+      profile->raised_surface, profile->border, profile->raised_surface, profile->border,
+      profile->foreground, profile->editor_background, profile->muted_foreground,
+      profile->border, profile->danger);
+  char *css = g_strconcat(chrome, typography, NULL);
+  g_free(chrome);
+  g_free(typography);
+  return css;
 }
 
 /* Apply the active model profile and update the toolkit's dark preference. */
@@ -905,7 +1009,17 @@ UmiStatus umi_gtk4_appearance_editor_apply_custom(UmiGtk4AppearanceEditor *edito
    * Protect caller-owned memory by checking that required state is available before it is
    * used.
    */
+  /* Validate inline fields before comparing a caller-supplied identity. The
+   * earlier order is retained for review; malformed arrays must not be read
+   * as unbounded strings or enter the model. */
+#if 0
   if (editor == NULL || profile == NULL || strcmp(profile->profile_id, "umicom-custom") != 0) {
+    return UMI_STATUS_INVALID_ARGUMENT;
+  }
+#endif
+  char reason[192];
+  if (editor == NULL || umi_ui_appearance_profile_validate(profile, reason, sizeof(reason)) != UMI_STATUS_OK ||
+      strcmp(profile->profile_id, "umicom-custom") != 0) {
     return UMI_STATUS_INVALID_ARGUMENT;
   }
   candidate = *profile;

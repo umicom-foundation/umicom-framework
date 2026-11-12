@@ -17,6 +17,12 @@
 
 #include "umicom/desktop/layout_designer.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define UMI_DESKTOP_ACTION_NEW_LAYOUT      "umicom.desktop.layout.new"
 #define UMI_DESKTOP_ACTION_SAVE_LAYOUT     "umicom.desktop.layout.save"
 #define UMI_DESKTOP_ACTION_CANCEL_LAYOUT   "umicom.desktop.layout.cancel"
@@ -56,4 +62,8 @@ UmiStatus umi_desktop_shell_action_at(
     size_t index,
     UmiDesktopShellAction *out_action);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

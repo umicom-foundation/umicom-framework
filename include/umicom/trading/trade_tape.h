@@ -76,7 +76,12 @@ typedef struct UmiTradingTradeTapeSnapshot {
     int paused;
 } UmiTradingTradeTapeSnapshot;
 
-/** Opaque bounded tape owned by a trading workspace or another client. */
+/** Opaque bounded tape owned by a trading workspace or another client.
+ * Changes to retained data, filters and pause state require revision capacity.
+ * At UINT64_MAX they return CAPACITY_EXCEEDED without changing the owner.
+ * Valid filter/pause no-ops and removal of an absent instrument remain OK.
+ * Provider readiness may still change while the revision saturates; refresh
+ * readiness fields rather than caching solely by a maximum revision value. */
 typedef struct UmiTradingTradeTape UmiTradingTradeTape;
 
 /** Build a validated record from one normalised public market trade. */

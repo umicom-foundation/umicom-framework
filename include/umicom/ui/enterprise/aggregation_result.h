@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_AGGREGATION_RESULT_H
 
 #include "umicom/ui/enterprise/types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent aggregation result data shared with callers of this public
  * contract.
@@ -37,4 +43,8 @@ UmiStatus umi_ui_ent_aggregation_result_add(UmiUiEntAggregationResult *r,double 
  */
 double umi_ui_ent_aggregation_result_value(const UmiUiEntAggregationResult *r);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

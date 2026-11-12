@@ -1,18 +1,21 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/boot_media/io.c
+ *
  * PURPOSE:
- *   Seekable, pinned native handles. No shell, interpreter or device inference. POSIX parent
- *   walks reject links; Windows also rejects reparse components, but callers must keep
- *   parent directories private against concurrent rename.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Pin native handles and recheck regular-file extents during media transfer.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Seekable, pinned native handles. No shell, interpreter or device inference.
- * POSIX parent walks reject links; Windows also rejects reparse components,
- * but callers must keep parent directories private against concurrent rename. */
+/* POSIX parent walks reject links; Windows also rejects reparse components.
+ * Callers must keep parent directories private against concurrent rename.
+ * No shell, interpreter or device inference participates in these operations. */
 
 #ifndef _WIN32
 #define _POSIX_C_SOURCE 200809L
@@ -51,6 +54,8 @@ static UmiStatus Error(void)
     return UMI_STATUS_IO_ERROR;
 }
 
+/* Record native leaf creation separately from successful handle admission so later validation or allocation failures retain their filesystem effects. The previous implementation is retained for review. */
+#if 0
 static UmiStatus MediaOpenRegularFile(const char *path,int create,BmFile **out,uint64_t *size)
 {
     *out=NULL;
@@ -90,6 +95,49 @@ static UmiStatus MediaOpenRegularFile(const char *path,int create,BmFile **out,u
     if (size)*size=f->bytes;
     return UMI_STATUS_OK;
 }
+#endif
+static UmiStatus MediaOpenRegularFile(const char *path,int create,BmFile **out,uint64_t *size,int *created)
+{
+    *out=NULL;
+    if (created) *created=0;
+    if (BmPath(path)!=UMI_STATUS_OK)return UMI_STATUS_INVALID_ARGUMENT;
+    wchar_t wide[UMI_BOOT_MEDIA_PATH];
+    if (!MultiByteToWideChar(CP_UTF8,MB_ERR_INVALID_CHARS,path,-1,wide,UMI_BOOT_MEDIA_PATH))return UMI_STATUS_INVALID_ARGUMENT;
+
+    /* Check every existing parent with the canonical bootstrap path rules. */
+    char parent[UMI_BOOT_MEDIA_PATH];
+    strcpy(parent,path);
+    char *a=strrchr(parent,'/'),*b=strrchr(parent,'\\');
+    if (b&&(!a||b>a))a=b;
+    if (!a)return UMI_STATUS_INVALID_ARGUMENT;
+    if (a==parent+2&&parent[1]==':')a[1]=0;
+    else *a=0;
+    UmiStatus s=UmiSetupFileCheck(parent,1,NULL);
+    if (s!=UMI_STATUS_OK)return s;
+    HANDLE h=CreateFileW(wide,create?(GENERIC_READ|GENERIC_WRITE):GENERIC_READ,
+        create?0U:FILE_SHARE_READ,NULL,create?CREATE_NEW:OPEN_EXISTING,FILE_FLAG_OPEN_REPARSE_POINT,NULL);
+    if (h==INVALID_HANDLE_VALUE)return Error();
+    /* CREATE_NEW has already published a leaf, even if later checks refuse it. */
+    if (create&&created) *created=1;
+    BY_HANDLE_FILE_INFORMATION info;
+    LARGE_INTEGER n;
+    if (GetFileType(h)!=FILE_TYPE_DISK||!GetFileInformationByHandle(h,&info)||!GetFileSizeEx(h,&n)||n.QuadPart<0||
+        (info.dwFileAttributes&(FILE_ATTRIBUTE_REPARSE_POINT|FILE_ATTRIBUTE_DIRECTORY))||info.nNumberOfLinks!=1U) {
+        CloseHandle(h);
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    BmFile *f=calloc(1,sizeof *f);
+    if (!f) {
+        CloseHandle(h);
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    f->handle=h;
+    f->bytes=(uint64_t)n.QuadPart;
+    f->writable=create;
+    *out=f;
+    if (size)*size=f->bytes;
+    return UMI_STATUS_OK;
+}
 
 #else
 static UmiStatus Error(void)
@@ -100,6 +148,8 @@ static UmiStatus Error(void)
     return UMI_STATUS_IO_ERROR;
 }
 
+/* Record exclusive leaf creation before validation, locking or allocation. The caller must retain this effect even when no usable handle is returned. The previous implementation is retained for review. */
+#if 0
 static UmiStatus MediaOpenRegularFile(const char *path,int create,BmFile **out,uint64_t *size)
 {
     *out=NULL;
@@ -141,16 +191,81 @@ static UmiStatus MediaOpenRegularFile(const char *path,int create,BmFile **out,u
     if (size)*size=f->bytes;
     return UMI_STATUS_OK;
 }
+#endif
+static UmiStatus MediaOpenRegularFile(const char *path,int create,BmFile **out,uint64_t *size,int *created)
+{
+    *out=NULL;
+    if (created) *created=0;
+    if (BmPath(path)!=UMI_STATUS_OK||path[0]!='/')return UMI_STATUS_INVALID_ARGUMENT;
+    char copy[UMI_BOOT_MEDIA_PATH];
+    strcpy(copy,path+1);
+    int dir=open("/",O_RDONLY|O_DIRECTORY|O_CLOEXEC);
+    if (dir<0)return Error();
+    char *part=copy,*slash;
+    while ((slash=strchr(part,'/'))!=NULL) {
+        *slash=0;
+        int next=openat(dir,part,O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC);
+        close(dir);
+        if (next<0)return Error();
+        dir=next;
+        part=slash+1;
+    }
+    int fd=openat(dir,part,(create?(O_RDWR|O_CREAT|O_EXCL):O_RDONLY)|O_CLOEXEC|O_NOFOLLOW|O_NONBLOCK,0600);
+    close(dir);
+    if (fd<0)return Error();
+    /* O_CREAT|O_EXCL has already published a leaf before validation or locking. */
+    if (create&&created) *created=1;
+    struct stat st;
+    if (fstat(fd,&st)||!S_ISREG(st.st_mode)||st.st_nlink!=1||st.st_size<0) {
+        close(fd);
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (flock(fd,(create?LOCK_EX:LOCK_SH)|LOCK_NB)) {
+        close(fd);
+        return Error();
+    }
+    BmFile *f=calloc(1,sizeof *f);
+    if (!f) {
+        close(fd);
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    f->fd=fd;
+    f->bytes=(uint64_t)st.st_size;
+    f->writable=create;
+    *out=f;
+    if (size)*size=f->bytes;
+    return UMI_STATUS_OK;
+}
 
 #endif
 UmiStatus BmSourceOpen(const char *path,BmFile **out,uint64_t *size) {
     if (!out||!size)return UMI_STATUS_INVALID_ARGUMENT;
+/* Read-only source admission has no creation observation. The previous implementation is retained for review. */
+#if 0
     return MediaOpenRegularFile(path,0,out,size);
+#endif
+    return MediaOpenRegularFile(path,0,out,size,NULL);
 }
 
+/* Keep the legacy internal convenience entry point while transfers use an explicit creation-effect output. The previous implementation is retained for review. */
+#if 0
 UmiStatus BmCreate(const char *path,BmFile **out) {
     if (!out)return UMI_STATUS_INVALID_ARGUMENT;
     return MediaOpenRegularFile(path,1,out,NULL);
+}
+#endif
+/* A failed admission can still create an empty practice file. Keep the native
+ * effect distinct from status; no caller should infer rollback from failure. */
+UmiStatus BmCreateObserved(const char *path,BmFile **out,int *created)
+{
+    if (created) *created=0;
+    if (!out)return UMI_STATUS_INVALID_ARGUMENT;
+    *out=NULL;
+    return MediaOpenRegularFile(path,1,out,NULL,created);
+}
+UmiStatus BmCreate(const char *path,BmFile **out)
+{
+    return BmCreateObserved(path,out,NULL);
 }
 
 UmiStatus BmRead(BmFile *f,uint64_t at,void *data,size_t n)
@@ -225,6 +340,8 @@ UmiStatus BmFlush(BmFile *f)
 #endif
 }
 
+/* The original release discarded native errors. Keep it for review while checked completion uses BmCloseResult; the legacy void wrapper remains available. The previous implementation is retained for review. */
+#if 0
 void BmClose(BmFile *f)
 {
     if (!f)return;
@@ -238,6 +355,61 @@ void BmClose(BmFile *f)
 
 #endif
     free(f);
+}
+
+
+#endif
+/* Release is part of completion, even after explicit flush and readback. Each
+ * owned native handle gets one close attempt; later handles are still released
+ * after an earlier error. Linux may reuse a descriptor after a failed close, so
+ * retrying it could close another thread's unrelated file. The wrapper is
+ * consumed on every result, including failure, and NULL is harmless. */
+UmiStatus BmCloseResult(BmFile *f)
+{
+    if (!f) return UMI_STATUS_OK;
+    UmiStatus status=UMI_STATUS_OK;
+#ifdef _WIN32
+    for (size_t i=0;i<f->volumeCount;++i) {
+        if (!CloseHandle(f->volumes[i])&&status==UMI_STATUS_OK) status=Error();
+    }
+    if (!CloseHandle(f->handle)&&status==UMI_STATUS_OK) status=Error();
+#else
+    if (close(f->fd)!=0) status=Error();
+#endif
+    free(f);
+    return status;
+}
+
+/* Error-cleanup clients may keep the historical void interface. Completion
+ * paths use BmCloseResult and combine it with the first operation failure. */
+void BmClose(BmFile *f)
+{
+    (void)BmCloseResult(f);
+}
+
+/* Hashing a remembered prefix does not establish whole-file identity. Query
+ * the already opened handle at verification boundaries without reopening a
+ * path or silently adopting a changed length. This detects extent/link changes;
+ * it is not a snapshot against a writer that ignores cooperative locking. */
+UmiStatus BmCheckRegularSize(BmFile *f,uint64_t expected)
+{
+    if (!f||expected>INT64_MAX)return UMI_STATUS_INVALID_ARGUMENT;
+#ifdef _WIN32
+    BY_HANDLE_FILE_INFORMATION info;
+    LARGE_INTEGER length;
+    if (GetFileType(f->handle)!=FILE_TYPE_DISK)return UMI_STATUS_INVALID_STATE;
+    if (!GetFileInformationByHandle(f->handle,&info)||!GetFileSizeEx(f->handle,&length))return Error();
+    if (length.QuadPart<0||info.nNumberOfLinks!=1U||
+        (info.dwFileAttributes&(FILE_ATTRIBUTE_REPARSE_POINT|FILE_ATTRIBUTE_DIRECTORY)))
+        return UMI_STATUS_INVALID_STATE;
+    uint64_t observed=(uint64_t)length.QuadPart;
+#else
+    struct stat info;
+    if (fstat(f->fd,&info))return Error();
+    if (!S_ISREG(info.st_mode)||info.st_nlink!=1||info.st_size<0)return UMI_STATUS_INVALID_STATE;
+    uint64_t observed=(uint64_t)info.st_size;
+#endif
+    return observed==expected&&f->bytes==expected?UMI_STATUS_OK:UMI_STATUS_INVALID_STATE;
 }
 
 UmiStatus BmHash(BmFile *f,uint64_t bytes,char hex[65],UmiBootMediaProgress cb,void *ctx,UmiBootMediaReport *r)

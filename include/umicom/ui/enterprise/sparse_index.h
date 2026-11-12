@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_SPARSE_INDEX_H
 
 #include "umicom/ui/enterprise/types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent sparse index entry data shared with callers of this public
  * contract.
@@ -41,4 +47,8 @@ UmiStatus umi_ui_ent_sparse_index_put(UmiUiEntSparseIndex *index,uint64_t key,si
  */
 int umi_ui_ent_sparse_index_find(const UmiUiEntSparseIndex *index,uint64_t key,size_t *out_logical_index);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

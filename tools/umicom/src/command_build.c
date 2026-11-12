@@ -15,6 +15,7 @@
  *---------------------------------------------------------------------------*/
 #include "cli.h"
 #include "umicom/toolchain/build_invocation.h"
+#include "umicom/toolchain/user_presets.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,6 +39,16 @@ static const char *umi_cli_option_value(int argc,
 }
 
 #endif
+
+/* Entry admission also protects direct in-process callers. Help handling must
+ * not dereference argv before its counted entries have been checked. */
+static int build_arguments_valid(int argc, char **argv)
+{
+    if (argc < 0 || (argc != 0 && argv == NULL)) return 0;
+    for (int index = 0; index < argc; ++index)
+        if (argv[index] == NULL) return 0;
+    return 1;
+}
 
 /* Provide the cli has flag operation used by this module and its client applications. */
 static int umi_cli_has_flag(int argc, char **argv, const char *option)
@@ -298,6 +309,7 @@ static void build_command(UmiBuildAction action, const UmiProcessRequest *comman
 
 int umi_cli_command_build(UmiCliContext *context, UmiBuildAction action, int argc, char **argv)
 {
+    if (!build_arguments_valid(argc, argv)) return 2;
     if (argc == 1 && (strcmp(argv[0], "--help") == 0 || strcmp(argv[0], "help") == 0)) {
         (void)puts("Incremental: umicom build-test --build PATH --target NAME --tests REGEX [options]\n"
             "Build-test compiles, then tests; it does not request configure, clean or install.\n"
@@ -380,6 +392,15 @@ int umi_cli_command_build(UmiCliContext *context, UmiBuildAction action, int arg
  */
 int umi_cli_command_repair(UmiCliContext *context, int argc, char **argv)
 {
+    if (!build_arguments_valid(argc, argv)) return 2;
+    if (argc == 1 && (!strcmp(argv[0], "--help") || !strcmp(argv[0], "help"))) {
+        (void)puts("Usage: umicom repair [--dry-run]");
+        return 0;
+    }
+    /* An ignored option could otherwise enter cache/preset preparation.
+     * Admit the entire repair request before any discovery or mutation. */
+    if (!context || argc > 1 || (argc == 1 && strcmp(argv[0], "--dry-run")))
+        return 2;
     char preset_path[UMI_PATH_CAPACITY];
     char build_directory[UMI_PATH_CAPACITY];
     char recovery_path[UMI_PATH_CAPACITY];
@@ -390,6 +411,9 @@ int umi_cli_command_repair(UmiCliContext *context, int argc, char **argv)
     if (umi_cli_context_prepare(context, NULL, 0, 0) != UMI_STATUS_OK) {
         return 1;
     }
+    /* Validate both destinations before repair can move the build directory.
+     * Retain the previous unchecked joins for review of this boundary. */
+#if 0
     (void)umi_fs_join(preset_path,
                       sizeof(preset_path),
                       context->project_root,
@@ -398,11 +422,31 @@ int umi_cli_command_repair(UmiCliContext *context, int argc, char **argv)
                       sizeof(build_directory),
                       context->project_root,
                       "build/umicom-auto-debug");
+#endif
+    status = umi_fs_join(preset_path, sizeof preset_path, context->project_root, "CMakeUserPresets.json");
+    if (status == UMI_STATUS_OK)
+        status = umi_fs_join(build_directory, sizeof build_directory, context->project_root, "build/umicom-auto-debug");
+    if (status != UMI_STATUS_OK) {
+        (void)fprintf(stderr, "Repair path preparation failed: %s\n", umi_status_text(status));
+        return 1;
+    }
+    recovery_path[0] = '\0';
+    /* Review all preset bytes and the new-file destination before moving a
+     * cache. Apply later uses exclusive creation to handle a racing writer. */
+    status = UmiBuildUserPresetsCreate(&context->discovery.profile, context->project_root, preset_path, 1);
+    if (status != UMI_STATUS_OK) {
+        (void)fprintf(stderr, "User preset preparation failed: %s\n", umi_status_text(status));
+        return 1;
+    }
     status = umi_build_repair_cache(&context->discovery.profile,
                                     build_directory,
                                     recovery_path,
                                     sizeof(recovery_path),
                                     dry_run);
+    /* A rename can complete before a handle-close error. Show the recovery
+     * evidence before returning the failure so the owner can inspect it.
+     * Preserve the former success-only reporting order for review. */
+#if 0
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         (void)fprintf(stderr,
@@ -414,11 +458,23 @@ int umi_cli_command_repair(UmiCliContext *context, int argc, char **argv)
     if (recovery_path[0] != '\0') {
         (void)printf("Stale cache recovery path: %s\n", recovery_path);
     }
+#endif
+    if (recovery_path[0] != '\0')
+        (void)printf("%s cache recovery path: %s\n", dry_run ? "Proposed" : "Recorded", recovery_path);
+    if (status != UMI_STATUS_OK) {
+        (void)fprintf(stderr, "Cache repair failed: %s\n", umi_status_text(status));
+        return 1;
+    }
     /* Apply this branch only when its contract condition is satisfied. */
     if (!dry_run) {
+        /* The previous replacement call is retained for review. Repair must
+         * preserve existing user customizations, including a racing file. */
+#if 0
         status = umi_build_write_user_presets(&context->discovery.profile,
                                               context->project_root,
                                               preset_path);
+#endif
+        status = UmiBuildUserPresetsCreate(&context->discovery.profile, context->project_root, preset_path, 0);
         /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) {
             (void)fprintf(stderr,
@@ -436,6 +492,15 @@ int umi_cli_command_repair(UmiCliContext *context, int argc, char **argv)
 /* Provide the cli command shell operation used by this module and its client applications. */
 int umi_cli_command_shell(UmiCliContext *context, int argc, char **argv)
 {
+    if (!build_arguments_valid(argc, argv)) return 2;
+    if (argc == 1 && (!strcmp(argv[0], "--help") || !strcmp(argv[0], "help"))) {
+        (void)puts("Usage: umicom shell [PROGRAM]");
+        return 0;
+    }
+    /* A program is one literal argument. Extra tokens are not shell commands
+     * and must not disappear before the prepared process is launched. */
+    if (!context || argc > 1 || (argc == 1 && (!argv[0][0] || argv[0][0] == '-')))
+        return 2;
     const char *shell = argc > 0 ? argv[0] : NULL;
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (umi_cli_context_prepare(context, NULL, 0, 0) != UMI_STATUS_OK) {

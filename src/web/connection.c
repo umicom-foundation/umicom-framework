@@ -161,6 +161,10 @@ finished:
 }
 #endif
 
+/* Retain the inline-only exchange for review. The active exchange preserves
+ * request parsing and admission while owning an optional separate body until
+ * all writes finish or fail. Request limits and legacy response ABI stay fixed. */
+#if 0
 UmiStatus UmiWebConnectionProcess(UmiWebService *service, const UmiWebConnectionIo *transport, size_t maximum,
                                   const UmiCancellationToken *cancel, UmiWebExchangeResult *out)
 {
@@ -273,6 +277,141 @@ UmiStatus UmiWebConnectionProcess(UmiWebService *service, const UmiWebConnection
 finished:
     if (!out->dispatched && out->request_status == UMI_STATUS_OK && status != UMI_STATUS_OK)
         out->request_status = status;
+    UmiWebRequestStreamDestroy(stream);
+    free(output);
+    free(request);
+    free(response);
+    return status;
+}
+#endif
+
+UmiStatus UmiWebConnectionProcess(UmiWebService *service, const UmiWebConnectionIo *transport, size_t maximum,
+                                  const UmiCancellationToken *cancel, UmiWebExchangeResult *out)
+{
+    if (out == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    memset(out, 0, sizeof(*out));
+    if (service == NULL || transport == NULL || transport->read == NULL || transport->write == NULL ||
+        maximum == 0U || maximum > UMI_WEB_CONNECTION_REQUEST_LIMIT)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (umi_cancellation_token_is_requested(cancel))
+    {
+        out->request_status = UMI_STATUS_CANCELLED;
+        return UMI_STATUS_CANCELLED;
+    }
+    UmiWebConnectionIo io = *transport;
+    UmiWebRequestStream *stream = NULL;
+    unsigned char *output = malloc(UMI_WEB_CONNECTION_RESPONSE_LIMIT);
+    UmiWebRequest *request = calloc(1U, sizeof(*request));
+    UmiWebResponse *response = calloc(1U, sizeof(*response));
+    UmiWebResponseBody *body = NULL;
+    UmiStatus status = UmiWebRequestStreamCreate(maximum, &stream), operation = UMI_STATUS_OK;
+    size_t received = 0U, wire_bytes = 0U;
+    if (status != UMI_STATUS_OK)
+        goto finished;
+    if (output == NULL || request == NULL || response == NULL)
+    {
+        status = UMI_STATUS_OUT_OF_MEMORY;
+        goto finished;
+    }
+    for (;;)
+    {
+        if (umi_cancellation_token_is_requested(cancel))
+        {
+            status = UMI_STATUS_CANCELLED;
+            break;
+        }
+        size_t count = 0U, capacity = 0U;
+        void *input = NULL;
+        status = UmiWebRequestStreamWritable(stream, &input, &capacity);
+        if (status != UMI_STATUS_OK)
+            break;
+        status = io.read(io.context, input, capacity, &count);
+        if (count > capacity)
+        {
+            status = UMI_STATUS_INVALID_STATE;
+            break;
+        }
+        received += count;
+        out->bytes_received = received;
+        if (status != UMI_STATUS_OK)
+            break;
+        if (count == 0U)
+        {
+            status = UMI_STATUS_UNAVAILABLE;
+            break;
+        }
+        status = UmiWebRequestStreamCommit(stream, count);
+        if (status != UMI_STATUS_BUSY)
+            break;
+    }
+    if (status == UMI_STATUS_OK)
+        status = UmiWebRequestStreamParse(stream, request);
+    if (status == UMI_STATUS_OK && umi_cancellation_token_is_requested(cancel))
+        status = UMI_STATUS_CANCELLED;
+    out->request_status = status;
+    operation = status;
+    if (status == UMI_STATUS_OK)
+    {
+        out->dispatched = true;
+        status = UmiWebServiceHandleBody(service, request, response, &body);
+        out->dispatch_status = status;
+        operation = status;
+        if (status != UMI_STATUS_OK)
+            status = umi_web_response_set_text(response, 500, "text/plain; charset=utf-8",
+                                               "The request handler failed.\n");
+    }
+    else if (status == UMI_STATUS_PARSE_ERROR || status == UMI_STATUS_CAPACITY_EXCEEDED ||
+             status == UMI_STATUS_NOT_IMPLEMENTED)
+    {
+        int code = status == UMI_STATUS_CAPACITY_EXCEEDED ? 413
+                   : status == UMI_STATUS_NOT_IMPLEMENTED ? 501
+                                                          : 400;
+        status = umi_web_response_set_text(response, code, "text/plain; charset=utf-8",
+                                           "This request cannot be processed.\n");
+    }
+    else
+        goto finished;
+    if (status != UMI_STATUS_OK)
+        goto finished;
+    status = body != NULL ?
+        UmiWebResponseFormatClosedHeaders(response, UmiWebResponseBodyLength(body), output,
+            UMI_WEB_CONNECTION_RESPONSE_LIMIT, &wire_bytes) :
+        UmiWebResponseFormatClosed(response, request->method == UMI_HTTP_METHOD_HEAD, output,
+            UMI_WEB_CONNECTION_RESPONSE_LIMIT, &wire_bytes);
+    if (status != UMI_STATUS_OK)
+    {
+        UmiWebResponseBodyDestroy(body);
+        body = NULL;
+        /* A malformed handler response cannot inject wire headers. Send a
+         * known replacement, preserving the failure for the caller. */
+        operation = status;
+        out->dispatch_status = status;
+        status = umi_web_response_set_text(response, 500, "text/plain; charset=utf-8",
+                                           "The response could not be encoded.\n");
+        if (status == UMI_STATUS_OK)
+            status = UmiWebResponseFormatClosed(response, request->method == UMI_HTTP_METHOD_HEAD, output,
+                                                UMI_WEB_CONNECTION_RESPONSE_LIMIT, &wire_bytes);
+    }
+    if (status == UMI_STATUS_OK)
+    {
+        out->response_status = response->status;
+        status = WriteResponse(&io, output, wire_bytes, cancel, out);
+        if (status == UMI_STATUS_OK && body != NULL &&
+            request->method != UMI_HTTP_METHOD_HEAD && response->status != 204 && response->status != 304) {
+            /* Header delivery is not complete response delivery. Keep the body
+             * alive across partial writes and cancellation, then destroy it at
+             * the one cleanup point. Bytes already sent remain observable. */
+            out->response_complete = false;
+            status = WriteResponse(&io, UmiWebResponseBodyBytes(body),
+                UmiWebResponseBodyLength(body), cancel, out);
+        }
+        if (status == UMI_STATUS_OK) status = operation;
+    }
+finished:
+    if (!out->dispatched && out->request_status == UMI_STATUS_OK && status != UMI_STATUS_OK)
+        out->request_status = status;
+    UmiWebResponseBodyDestroy(body);
     UmiWebRequestStreamDestroy(stream);
     free(output);
     free(request);

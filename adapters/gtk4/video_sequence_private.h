@@ -23,6 +23,8 @@ typedef struct UmiVideoSequencePanel {
   UmiVideoSequence saved; /* Last successfully saved/opened recipe, or initial empty state. */
   GtkWidget *root, *form, *status, *summary, *selector, *title, *width, *height;
   GtkWidget *id, *path, *begin, *end, *split, *rightId, *position;
+  /* Borrowed from the root: GTK retains collapsed bodies outside its widget tree. */
+  GtkWidget *splitSection;
   GtkWidget *undoButton, *redoButton; /* Borrowed children; editor owns history. */
   GtkWidget *projectPath, *approval, *program, *output, *cancelButton, *video;
   GtkWidget *soundtrackVideo, *soundtrackAudio, *soundtrackOutput;

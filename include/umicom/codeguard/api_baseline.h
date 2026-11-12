@@ -16,6 +16,12 @@
 #define UMICOM_CODEGUARD_API_BASELINE_H
 #include "umicom/codeguard/quality_types.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* A symbol record stores a stable name and a caller-calculated signature hash.
  * Deprecation permits a planned warning period before reviewed removal. */
 typedef struct UmiCodeGuardApiSymbol {
@@ -80,4 +86,8 @@ UmiStatus umi_codeguard_api_baseline_compare(
 
 /* Return true when any recorded change requires an ABI/API compatibility plan. */
 bool umi_codeguard_api_comparison_breaking(const UmiCodeGuardApiComparison *comparison);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -104,6 +104,10 @@ UmiStatus umi_developer_context_set(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Keep monotonic identity meaningful for direct callers and patch users.
+     * Never wrap an exhausted owner revision into an apparently fresh value. */
+    if (context->state.revision == UINT64_MAX) return UMI_STATUS_INVALID_STATE;
+
     next_revision = context->state.revision + 1U;
     context->state = *snapshot;
     normalise(&context->state);

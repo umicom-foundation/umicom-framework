@@ -61,6 +61,9 @@ typedef struct UmiBuildDeliveryPipelineSnapshot {
 
 typedef struct UmiBuildDeliveryPipeline UmiBuildDeliveryPipeline;
 
+/* Task and target registries are borrowed and must outlive this owner.
+ * Serialize pipeline calls and child observation on the workspace owner thread.
+ * Identities must fit in full; construction never truncates a different ID. */
 UmiStatus umi_build_delivery_pipeline_create(
     const char *pipeline_id,
     const UmiBuildTaskRegistry *tasks,
@@ -68,6 +71,11 @@ UmiStatus umi_build_delivery_pipeline_create(
     size_t maximum_parallel,
     UmiBuildDeliveryPipeline **out_pipeline);
 void umi_build_delivery_pipeline_destroy(UmiBuildDeliveryPipeline *pipeline);
+/* Mutations reserve the parent revision (and planning generation) before
+ * changing a child. Refusal preserves the accepted parent and child state.
+ * Planning a deployment selects the deployment branch of PLANNED; begin_tasks
+ * cannot restart its older task plan. Replacing an artifact invalidates a
+ * previously composed deployment plan, which must be reviewed again. */
 UmiStatus umi_build_delivery_pipeline_plan_tasks(
     UmiBuildDeliveryPipeline *pipeline,
     const char *operation_id,
@@ -118,11 +126,22 @@ UmiStatus umi_build_delivery_pipeline_fail_deployment_step(
     UmiStatus status,
     int exit_code,
     const char *message);
+/* Stop requests prevent new scheduling; they do not kill an OS process.
+ * While a child task or deployment step is active the phase remains TASKS or
+ * DEPLOYMENT and stop_requested is true. Supply its actual completion/failure
+ * callback before the child can publish its terminal outcome. A refused stop
+ * changes neither owner. Do not destroy this owner while callbacks are pending. */
 UmiStatus umi_build_delivery_pipeline_request_stop(
     UmiBuildDeliveryPipeline *pipeline);
+/* Publish a complete composed observation or leave output unchanged. Output
+ * storage must be separate from the owner and all its borrowed children. */
 UmiStatus umi_build_delivery_pipeline_snapshot(
     const UmiBuildDeliveryPipeline *pipeline,
     UmiBuildDeliveryPipelineSnapshot *out_snapshot);
+/* Borrowed compatibility accessors. Observe these children; route lifecycle
+ * changes through the pipeline so parent phases and revisions stay consistent.
+ * Metadata and successful model transitions are not evidence that commands,
+ * artifact checksums, installation or external deployment have executed. */
 UmiBuildIncrementalPlanner *umi_build_delivery_pipeline_incremental(
     UmiBuildDeliveryPipeline *pipeline);
 UmiBuildTaskOrchestrator *umi_build_delivery_pipeline_tasks(

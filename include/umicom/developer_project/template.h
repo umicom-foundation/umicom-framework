@@ -60,7 +60,10 @@ typedef struct UmiDeveloperProjectTemplate {
 
 /**
  * Check that developer project template satisfies its contract before another service
- * relies on it.
+ * relies on it. All pointer fields borrow readable, terminated strings for
+ * the duration of the call. Every file and language pointer is admitted before
+ * duplicate-file comparisons. Paths retain the lexical relative-path policy;
+ * this validator does not resolve filesystem aliases or symbolic links.
  */
 UmiStatus umi_developer_project_template_validate(
     const UmiDeveloperProjectTemplate *project_template);

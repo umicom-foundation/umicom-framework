@@ -67,6 +67,13 @@ UmiStatus umi_developer_project_render_text(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* A caller can supply the public value struct directly. Admit its bounds
+     * before lookup or strlen reads any occupied value. Rendering may still
+     * produce a partial string on syntax/capacity failure; plan publication
+     * provides the atomic boundary for project creation. */
+    UmiStatus admission = umi_developer_project_variable_set_validate(variables);
+    if (admission != UMI_STATUS_OK) return admission;
+
     out_text[0] = '\0';
     cursor = template_text;
 

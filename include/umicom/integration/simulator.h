@@ -16,6 +16,12 @@
 #define UMICOM_INTEGRATION_SIMULATOR_H
 #include "umicom/integration/workflow.h"
 #include "umicom/integration/execution_policy.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the integration trace entry data shared with callers of this public contract.
  */
@@ -42,4 +48,8 @@ typedef struct UmiIntegrationSimulation {
  * applications.
  */
 UmiStatus umi_integration_simulate(const UmiIntegrationWorkflow *workflow,const UmiIntegrationExecutionPolicy *policy,const char *run_id,UmiIntegrationSimulation *out_simulation);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -27,6 +27,8 @@ void umi_ui_reactive_validator_init(UmiUiReactiveValidator *item) {
 }
 
 /* Validate that the contract pointer is available to a binding/state pipeline. */
+/* Apply shared value admission before a reactive record can be accepted or archived. The previous implementation is retained for review. */
+#if 0
 int umi_ui_reactive_validator_valid(const UmiUiReactiveValidator *item) {
     /* Fixed-size fields may come from a plug-in or restored state. Check
      * every terminator before the domain rules use these strings. Add each
@@ -35,6 +37,18 @@ int umi_ui_reactive_validator_valid(const UmiUiReactiveValidator *item) {
     if (memchr(item->validator_id, '\0', sizeof(item->validator_id)) == NULL) return 0;
 
     return item != NULL;
+}
+#endif
+int umi_ui_reactive_validator_valid(const UmiUiReactiveValidator *item) {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (item == NULL) return 0;
+    if (memchr(item->validator_id, '\0', sizeof(item->validator_id)) == NULL) return 0;
+
+    /* Reuse the same kind contract as UI properties. Archive terminator
+     * checks above still cover every encoded fixed text field. */
+    return umi_ui_value_kind_valid(item->value_kind);
 }
 
 /* State transfer belongs to this Framework value owner. Explicit fields keep

@@ -14,6 +14,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/media_brief.h"
 #include "umicom/creative_workspace/media_brief.h"
+#include "umicom/creative_workspace/media_brief_document.h"
+#include "umicom/platform/output_file.h"
 #include "umicom/media_generation/pixverse_gtk4.h"
 #include "umicom/media_generation/seedream_gtk4.h"
 #include "umicom/provider_connections/gtk4.h"
@@ -25,9 +27,23 @@
 typedef struct BriefPanel {
     GtkWidget *root, *title, *source, *direction, *kind, *prompt, *message;
     GtkWidget *replace, *image, *video, *models, *database, *export;
+    GtkWidget *workspace, *file_form, *file_path, *save_approval, *open_approval;
+    GtkWidget *file_stop, *file_status;
+    UmiCancellationToken *pending; /* Borrowed from the active file job. */
+    bool busy, changed_during_io, document_dirty, has_document;
     GWeakRef image_panel, video_panel;
     bool ready, closed, painting, edited;
 } BriefPanel;
+/* Blocking storage owns a captured document/path and a cancellation token.
+ * The completion weakly observes the UI; no worker borrows GTK text buffers. */
+typedef struct BriefFileJob {
+    GWeakRef root;
+    char *path;
+    UmiMediaBriefDocument document;
+    UmiCancellationToken *cancel;
+    UmiStatus status;
+    bool opening;
+} BriefFileJob;
 #define BRIEF_KEY "umicom-media-brief"
 
 static BriefPanel *Panel(gpointer root)
@@ -36,6 +52,34 @@ static void Tag(GtkWidget *widget, const char *id)
 { g_object_set_data_full(G_OBJECT(widget), "umicom-automation-id", g_strdup(id), g_free); }
 static void Message(BriefPanel *p, const char *message)
 { gtk_label_set_text(GTK_LABEL(p->message), message); }
+static void FileApprovalsClear(BriefPanel *p)
+{
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(p->save_approval), FALSE);
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(p->open_approval), FALSE);
+}
+static void FileStatus(BriefPanel *p)
+{
+    if (p->file_status == NULL) return;
+    gtk_label_set_text(GTK_LABEL(p->file_status), p->document_dirty
+        ? "Creation text has changes not yet saved."
+        : p->has_document ? "Creation text matches the last completed save or open."
+        : "No creation document has been saved or opened.");
+}
+static void FileEdited(BriefPanel *p)
+{
+    p->document_dirty = true;
+    if (p->busy) p->changed_during_io = true;
+    FileApprovalsClear(p);
+    FileStatus(p);
+}
+static void FilePathChanged(GObject *object, gpointer root)
+{
+    (void)object;
+    BriefPanel *p = Panel(root);
+    if (p == NULL || p->closed) return;
+    FileApprovalsClear(p);
+    if (p->busy) p->changed_during_io = true;
+}
 static GtkWidget *Label(GtkWidget *box, const char *text)
 {
     GtkWidget *label = gtk_label_new(text);
@@ -88,13 +132,34 @@ static UmiStatus Capture(GtkWidget *view, char *out, size_t capacity)
     g_free(text);
     return status;
 }
+static UmiStatus CaptureDocument(BriefPanel *p, UmiMediaBriefDocument *document)
+{
+    document->draft.kind = (UmiMediaBriefKind)gtk_drop_down_get_selected(GTK_DROP_DOWN(p->kind));
+    UmiStatus status = Copy(gtk_editable_get_text(GTK_EDITABLE(p->title)),
+        document->draft.title, sizeof(document->draft.title));
+    if (status == UMI_STATUS_OK) status = Capture(p->source,
+        document->draft.source, sizeof(document->draft.source));
+    if (status == UMI_STATUS_OK) status = Capture(p->direction,
+        document->draft.direction, sizeof(document->draft.direction));
+    if (status == UMI_STATUS_OK) status = Capture(p->prompt,
+        document->prompt, sizeof(document->prompt));
+    if (status == UMI_STATUS_OK) status = UmiMediaBriefDocumentValidate(document);
+    return status;
+}
 static void Sensitivity(BriefPanel *p)
 {
     guint kind = gtk_drop_down_get_selected(GTK_DROP_DOWN(p->kind));
     GObject *image = g_weak_ref_get(&p->image_panel), *video = g_weak_ref_get(&p->video_panel);
+    /* File jobs now own the editing panel temporarily. Retain the previous
+     * handoff conditions for review; the active conditions also require idle I/O. */
+#if 0
     gtk_widget_set_sensitive(p->image, p->ready && !p->closed && image != NULL && kind == UMI_MEDIA_BRIEF_IMAGE);
     gtk_widget_set_sensitive(p->video, p->ready && !p->closed && video != NULL && kind == UMI_MEDIA_BRIEF_VIDEO);
     gtk_widget_set_sensitive(p->models, p->ready && !p->closed);
+#endif
+    gtk_widget_set_sensitive(p->image, p->ready && !p->closed && !p->busy && image != NULL && kind == UMI_MEDIA_BRIEF_IMAGE);
+    gtk_widget_set_sensitive(p->video, p->ready && !p->closed && !p->busy && video != NULL && kind == UMI_MEDIA_BRIEF_VIDEO);
+    gtk_widget_set_sensitive(p->models, p->ready && !p->closed && !p->busy);
     g_clear_object(&image);
     g_clear_object(&video);
 }
@@ -104,6 +169,7 @@ static void SourceChanged(GObject *unused, gpointer root)
     BriefPanel *p = Panel(root);
     if (p == NULL || p->closed || p->painting) return;
     p->ready = false;
+    FileEdited(p);
     /* Preserve the reviewed draft for comparison, but prevent a stale send. */
     Message(p, "Source or direction changed. You can save the previous brief; prepare it again before sending it to another tool.");
     Sensitivity(p);
@@ -116,6 +182,7 @@ static void PromptChanged(GtkTextBuffer *buffer, gpointer root)
     BriefPanel *p = Panel(root);
     if (p == NULL || p->closed || p->painting) return;
     p->edited = true;
+    FileEdited(p);
     gtk_check_button_set_active(GTK_CHECK_BUTTON(p->replace), FALSE);
 }
 static void Prepare(GtkButton *button, gpointer root)
@@ -123,6 +190,7 @@ static void Prepare(GtkButton *button, gpointer root)
     (void)button;
     BriefPanel *p = Panel(root);
     if (p == NULL || p->closed) return;
+    if (p->busy || !gtk_widget_is_sensitive(GTK_WIDGET(button))) return;
     if (p->edited && !gtk_check_button_get_active(GTK_CHECK_BUTTON(p->replace))) {
         Message(p, "Your brief has edits. Save them or allow replacement before preparing another brief.");
         return;
@@ -141,6 +209,7 @@ static void Prepare(GtkButton *button, gpointer root)
         p->painting = false;
         p->ready = true;
         p->edited = false;
+        FileEdited(p);
         gtk_check_button_set_active(GTK_CHECK_BUTTON(p->replace), FALSE);
         Message(p, "Brief prepared locally. Edit it, then choose a model or a generation tool.");
     } else {
@@ -155,6 +224,7 @@ static void Prepare(GtkButton *button, gpointer root)
 static UmiStatus CurrentPrompt(BriefPanel *p, char *text, size_t capacity, bool require_current_source)
 {
     if (p == NULL || p->closed || (require_current_source && !p->ready)) return UMI_STATUS_INVALID_STATE;
+    if (p->busy) return UMI_STATUS_BUSY;
     UmiStatus status = Capture(p->prompt, text, capacity);
     if (status != UMI_STATUS_OK) return status;
     bool visible = false;
@@ -199,6 +269,7 @@ static void Handoff(GtkButton *button, gpointer root)
 {
     BriefPanel *p = Panel(root);
     if (p == NULL || p->closed || !gtk_widget_is_sensitive(GTK_WIDGET(button))) return;
+    if (p->busy) return;
     char text[UMI_MEDIA_BRIEF_PROMPT_CAPACITY] = {0};
     UmiStatus status = CurrentPrompt(p, text, sizeof(text), true);
     if (status == UMI_STATUS_OK && GTK_WIDGET(button) == p->models) {
@@ -224,6 +295,138 @@ static void Handoff(GtkButton *button, gpointer root)
     else if (status == UMI_STATUS_CAPACITY_EXCEEDED) Message(p, "The edited brief exceeds 4096 UTF-8 bytes. Shorten it before continuing.");
     else Message(p, "Unable to continue. Check the brief and the absolute path for model settings; no generation was started.");
 }
+static void FileJobFree(gpointer data)
+{
+    BriefFileJob *job = data;
+    g_weak_ref_clear(&job->root);
+    if (job->path != NULL) { umi_secret_clear(job->path, strlen(job->path)); g_free(job->path); }
+    umi_secret_clear(&job->document, sizeof(job->document));
+    umi_cancellation_token_destroy(job->cancel);
+    g_free(job);
+}
+static void FileWorker(GTask *task, gpointer source, gpointer data, GCancellable *unused)
+{
+    (void)source; (void)unused;
+    BriefFileJob *job = data;
+    job->status = job->opening
+        ? UmiMediaBriefDocumentLoad(job->path, job->cancel, &job->document)
+        : UmiMediaBriefDocumentSave(&job->document, job->path, job->cancel);
+    g_task_return_boolean(task, TRUE);
+}
+static void InstallDocument(BriefPanel *p, const UmiMediaBriefDocument *document)
+{
+    p->painting = true;
+    gtk_editable_set_text(GTK_EDITABLE(p->title), document->draft.title);
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(p->kind), (guint)document->draft.kind);
+    gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(p->source)), document->draft.source, -1);
+    gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(p->direction)), document->draft.direction, -1);
+    gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(p->prompt)), document->prompt, -1);
+    p->painting = false;
+    /* Restored text is useful without restoring a send decision. Treat a
+     * nonempty prompt as edited, so preparation must not overwrite it silently. */
+    p->ready = false;
+    p->edited = document->prompt[0] != '\0';
+    p->document_dirty = false;
+    p->has_document = true;
+    gtk_check_button_set_active(GTK_CHECK_BUTTON(p->replace), FALSE);
+}
+static void FileFinished(GObject *source, GAsyncResult *result, gpointer unused)
+{
+    (void)source; (void)unused;
+    BriefFileJob *job = g_task_get_task_data(G_TASK(result));
+    (void)g_task_propagate_boolean(G_TASK(result), NULL);
+    GObject *root = g_weak_ref_get(&job->root);
+    if (root == NULL) return;
+    BriefPanel *p = Panel(root);
+    if (p != NULL && p->pending == job->cancel) {
+        /* The task destroys its token after this callback; even a retained
+         * retired panel must stop borrowing that token before destruction. */
+        p->pending = NULL;
+        p->busy = false;
+        if (!p->closed) {
+            gtk_widget_set_sensitive(p->workspace, TRUE);
+            gtk_widget_set_sensitive(p->file_form, TRUE);
+            gtk_widget_set_sensitive(p->file_stop, FALSE);
+            if (job->status == UMI_STATUS_OK && job->opening && !p->changed_during_io) {
+                InstallDocument(p, &job->document);
+                Message(p, "Creation document opened. Restored prompts remain edited drafts; review before preparing a replacement or using another tool.");
+            } else if (job->status == UMI_STATUS_OK && job->opening) {
+                Message(p, "The file was read, but the panel changed while opening. Current text was kept; review and open again.");
+            } else if (job->status == UMI_STATUS_OK) {
+                if (!p->changed_during_io) { p->document_dirty = false; p->has_document = true; }
+                char *message = g_strdup_printf("Captured creation text saved to %s.%s", job->path,
+                    p->changed_during_io ? " Later text or path changes remain for review." : "");
+                Message(p, message); g_free(message);
+            } else {
+                char *message = g_strdup_printf("%s failed: %s. Current creation text was kept.",
+                    job->opening ? "Open" : "Save", umi_status_text(job->status));
+                Message(p, message); g_free(message);
+            }
+            FileStatus(p);
+            Sensitivity(p);
+        }
+    }
+    g_object_unref(root);
+}
+static void FileAction(GtkButton *button, gpointer root)
+{
+    BriefPanel *p = Panel(root);
+    if (p == NULL || p->closed || !gtk_widget_is_sensitive(GTK_WIDGET(button))) return;
+    const char *id = g_object_get_data(G_OBJECT(button), "umicom-automation-id");
+    if (strcmp(id, "media.brief.file.stop") == 0) {
+        if (p->pending != NULL) {
+            umi_cancellation_token_request(p->pending);
+            Message(p, "Cancellation requested. A save already publishing may complete; its actual result will be reported.");
+        }
+        return;
+    }
+    if (p->busy) return;
+    if (p->export != NULL && UmiTextExportGtk4Busy(p->export)) {
+        Message(p, "Wait for the prompt text export to finish before opening or saving a creation document.");
+        return;
+    }
+    bool opening = strcmp(id, "media.brief.file.open") == 0;
+    if (!opening && strcmp(id, "media.brief.file.save") != 0) return;
+    GtkWidget *approval = opening ? p->open_approval : p->save_approval;
+    if (!gtk_check_button_get_active(GTK_CHECK_BUTTON(approval))) {
+        Message(p, opening ? "Approve replacing the source and edited prompt from the selected file before opening."
+            : "Approve saving to the selected path, including replacement of an existing file.");
+        return;
+    }
+    const char *path = gtk_editable_get_text(GTK_EDITABLE(p->file_path));
+    UmiStatus status = UmiOutputFileValidatePath(path);
+    if (status != UMI_STATUS_OK) { Message(p, umi_status_text(status)); return; }
+    BriefFileJob *job = g_try_new0(BriefFileJob, 1);
+    if (job == NULL) { Message(p, "Not enough memory to capture the creation document."); return; }
+    g_weak_ref_init(&job->root, G_OBJECT(p->root));
+    job->opening = opening;
+    if (!opening) status = CaptureDocument(p, &job->document);
+    if (status != UMI_STATUS_OK) {
+        FileJobFree(job);
+        Message(p, "Creation text is invalid or exceeds a field limit. Nothing was truncated or saved.");
+        return;
+    }
+    size_t length = strlen(path);
+    job->path = g_try_malloc(length + 1U);
+    if (job->path == NULL) { FileJobFree(job); Message(p, "Not enough memory for the selected path."); return; }
+    memcpy(job->path, path, length + 1U);
+    status = umi_cancellation_token_create(&job->cancel);
+    if (status != UMI_STATUS_OK) { FileJobFree(job); Message(p, umi_status_text(status)); return; }
+    p->pending = job->cancel;
+    p->busy = true;
+    p->changed_during_io = false;
+    FileApprovalsClear(p);
+    gtk_widget_set_sensitive(p->workspace, FALSE);
+    gtk_widget_set_sensitive(p->file_form, FALSE);
+    gtk_widget_set_sensitive(p->file_stop, TRUE);
+    Sensitivity(p);
+    Message(p, opening ? "Opening the selected creation document..." : "Saving the captured creation text...");
+    GTask *task = g_task_new(NULL, NULL, FileFinished, NULL);
+    g_task_set_task_data(task, job, FileJobFree);
+    g_task_run_in_thread(task, FileWorker);
+    g_object_unref(task);
+}
+
 static GtkWidget *Button(BriefPanel *p, GtkWidget *box, const char *id, const char *label, GCallback callback)
 {
     GtkWidget *button = gtk_button_new_with_label(label);
@@ -238,6 +441,7 @@ UmiStatus UmiMediaBriefGtkSetSource(GtkWidget *root, const UmiMediaBriefDraft *d
     if (root == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     BriefPanel *p = Panel(root);
     if (p == NULL || p->closed) return UMI_STATUS_INVALID_STATE;
+    if (p->busy) return UMI_STATUS_BUSY;
     UmiMediaBrief *check = NULL;
     UmiStatus status = UmiMediaBriefCreate(draft, &check);
     UmiMediaBriefDestroy(check);
@@ -256,6 +460,7 @@ UmiStatus UmiMediaBriefGtkSetSource(GtkWidget *root, const UmiMediaBriefDraft *d
     gtk_text_buffer_set_text(gtk_text_view_get_buffer(GTK_TEXT_VIEW(p->direction)), draft->direction, -1);
     p->painting = false;
     p->ready = false;
+    FileEdited(p);
     gtk_check_button_set_active(GTK_CHECK_BUTTON(p->replace), FALSE);
     Message(p, "Source received. Review it and prepare a brief before using a generation tool. The previous prompt is retained.");
     Sensitivity(p);
@@ -266,15 +471,23 @@ void UmiMediaBriefGtkRetire(GtkWidget *root)
     if (root == NULL) return;
     BriefPanel *p = Panel(root);
     if (p == NULL || p->closed) return;
+    if (p->pending != NULL) umi_cancellation_token_request(p->pending);
     p->closed = true;
     p->ready = false;
     UmiTextExportGtk4Retire(p->export);
     gtk_widget_set_sensitive(root, FALSE);
     Sensitivity(p);
 }
+bool UmiMediaBriefGtkBusy(GtkWidget *root)
+{
+    if (root == NULL) return false;
+    BriefPanel *p = Panel(root);
+    return p != NULL && p->busy;
+}
 static void Release(gpointer data)
 {
     BriefPanel *p = data;
+    if (p->pending != NULL) umi_cancellation_token_request(p->pending);
     UmiTextExportGtk4Retire(p->export);
     g_clear_object(&p->export);
     g_weak_ref_clear(&p->image_panel);
@@ -293,7 +506,28 @@ GtkWidget *UmiMediaBriefGtkCreate(GtkWidget *image_panel, GtkWidget *video_panel
     g_weak_ref_init(&p->video_panel, video_panel);
     Label(p->root, "Create from text");
     Label(p->root, "Turn a book excerpt, chat or document into a creation brief. Preparing a brief is local; generation happens only after review in a connected tool.");
+    GtkWidget *files = gtk_expander_new("Creation document");
+    Tag(files, "media.brief.file");
+    GtkWidget *file_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+    p->file_form = gtk_box_new(GTK_ORIENTATION_VERTICAL, 6);
+    gtk_expander_set_child(GTK_EXPANDER(files), file_box);
+    gtk_box_append(GTK_BOX(file_box), p->file_form);
+    gtk_box_append(GTK_BOX(p->root), files);
+    p->file_path = Entry(p->file_form, "media.brief.file.path", "Absolute path to a creation JSON document");
+    p->save_approval = gtk_check_button_new_with_label("Allow replacing the selected file on the next save");
+    Tag(p->save_approval, "media.brief.file.allow-save");
+    gtk_box_append(GTK_BOX(p->file_form), p->save_approval);
+    Button(p, p->file_form, "media.brief.file.save", "Save creation text", G_CALLBACK(FileAction));
+    p->open_approval = gtk_check_button_new_with_label("Allow replacing current source and prompt on the next open");
+    Tag(p->open_approval, "media.brief.file.allow-open");
+    gtk_box_append(GTK_BOX(p->file_form), p->open_approval);
+    Button(p, p->file_form, "media.brief.file.open", "Open creation document", G_CALLBACK(FileAction));
+    p->file_stop = Button(p, file_box, "media.brief.file.stop", "Request cancellation", G_CALLBACK(FileAction));
+    gtk_widget_set_sensitive(p->file_stop, FALSE);
+    p->file_status = Label(file_box, "No creation document has been saved or opened.");
+    Tag(p->file_status, "media.brief.file.status");
     GtkWidget *split = gtk_paned_new(GTK_ORIENTATION_HORIZONTAL);
+    p->workspace = split;
     Tag(split, "media.brief.split");
     gtk_widget_set_vexpand(split, TRUE);
     gtk_paned_set_resize_start_child(GTK_PANED(split), TRUE);
@@ -340,6 +574,7 @@ GtkWidget *UmiMediaBriefGtkCreate(GtkWidget *image_panel, GtkWidget *video_panel
     g_signal_connect_object(gtk_text_view_get_buffer(GTK_TEXT_VIEW(p->source)), "changed", G_CALLBACK(SourceChanged), p->root, 0);
     g_signal_connect_object(gtk_text_view_get_buffer(GTK_TEXT_VIEW(p->direction)), "changed", G_CALLBACK(SourceChanged), p->root, 0);
     g_signal_connect_object(gtk_text_view_get_buffer(GTK_TEXT_VIEW(p->prompt)), "changed", G_CALLBACK(PromptChanged), p->root, 0);
+    g_signal_connect_object(p->file_path, "changed", G_CALLBACK(FilePathChanged), p->root, 0);
     Sensitivity(p);
     return p->root;
 }

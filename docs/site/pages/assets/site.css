@@ -3,3 +3,8 @@
 
 /* Shared teaching diagrams use normal document order and remain useful in print. */
 .architecture{margin:30px 0;padding:24px;border:1px solid var(--line);background:white;border-radius:12px}.architecture figcaption{font-size:15px;color:var(--muted);margin-top:18px}.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px;padding:0;list-style-position:inside}.flow li{background:var(--soft);padding:20px;border-top:3px solid var(--accent)}.flow strong,.flow span{display:block}.flow span{font-size:15px;margin-top:10px}.learning-route{padding-left:2rem}.learning-route li{background:white;padding:12px 22px 18px;margin:18px 0;border:1px solid var(--line);border-radius:8px}.learning-route h3{margin-top:6px}.sdk-banner{display:flex;flex-wrap:wrap;align-items:center;gap:16px;padding:22px 0;border-bottom:1px solid var(--line)}.sdk-banner p{flex:1 1 320px;margin:0}dt{margin-top:22px}dd{margin:8px 0 0 20px;max-width:920px}@media(max-width:820px){.flow{grid-template-columns:1fr 1fr}}@media(max-width:500px){.flow{grid-template-columns:1fr}.architecture{padding:14px}.learning-route{padding-left:1.4rem}}@media print{.flow{display:block}.flow li{margin:12px 0}.sdk-banner{display:block}#learning-search,#learning-count,#learning-help{display:none}}
+
+/* Keep the established layout and scale while sharing the product font roles.
+ * These are installed-font fallbacks; no proprietary font files are bundled. */
+body{font-family:"Segoe UI Variable Text","Segoe UI",sans-serif}
+pre,code,kbd,samp{font-family:"Cascadia Code",Consolas,monospace}

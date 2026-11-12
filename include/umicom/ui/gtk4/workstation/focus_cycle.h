@@ -36,6 +36,9 @@ void UmiGtk4FocusCycleInstall(GtkWidget *workspace);
  * widget-tree order, wrap once, and stay inside the workspace's native root.
  * Returns TRUE only when focus ends in another eligible region. A single
  * already-focused region is left alone. Reentrant requests return FALSE.
+ * Forward navigation tries the first mapped focusable widget in tree order;
+ * reverse navigation tries the last. Retained collapsed bodies are excluded.
+ * This does not open a section or select a hidden notebook page.
  * Focus callbacks may redirect focus or retire the workspace; navigation
  * then stops without restoring stale focus or activating any command. */
 gboolean UmiGtk4FocusCycleAdvance(GtkWidget *workspace, gboolean reverse);

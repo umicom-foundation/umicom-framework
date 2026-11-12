@@ -53,6 +53,8 @@ typedef struct UmiUiEntSpan { size_t first; size_t count; } UmiUiEntSpan;
 /**
  * Provide the ui ent copy text operation used by this module and its client applications.
  */
+/** Copy complete text with the shared bounded replacement contract. At most cap
+ * source bytes are inspected; overlap is supported and failure preserves dst. */
 UmiStatus umi_ui_ent_copy_text(char *dst, size_t cap, const char *src);
 /**
  * Check that ui ent id satisfies its contract before another service relies on it.

@@ -54,6 +54,49 @@ static GPtrArray *Regions(GtkWidget *workspace)
     return regions;
 }
 
+/* A region may retain controls outside its widget tree (collapsed expanders)
+ * or on unmapped notebook pages. Snapshot only live focusable descendants;
+ * a generic container focus action can recurse into those retained controls.
+ * References protect candidates if a focus observer removes their parents. */
+static GPtrArray *FocusTargets(GtkWidget *region)
+{
+    GPtrArray *targets = g_ptr_array_new_with_free_func(g_object_unref);
+    GtkWidget *widget = region;
+    while (widget != NULL) {
+        gboolean eligible = Available(widget);
+        if (eligible && gtk_widget_get_focusable(widget))
+            g_ptr_array_add(targets, g_object_ref(widget));
+        if (eligible && gtk_widget_get_first_child(widget) != NULL) {
+            widget = gtk_widget_get_first_child(widget);
+            continue;
+        }
+        while (widget != region && gtk_widget_get_next_sibling(widget) == NULL)
+            widget = gtk_widget_get_parent(widget);
+        widget = widget == region ? NULL : gtk_widget_get_next_sibling(widget);
+    }
+    return targets;
+}
+
+static void FocusRegion(GtkWidget *workspace, GtkWidget *region, GtkRoot *native,
+                        GtkWidget *original, gboolean reverse)
+{
+    GPtrArray *targets = FocusTargets(region);
+    for (guint visited = 0U; visited < targets->len; ++visited) {
+        if (!Available(workspace) || gtk_widget_get_root(workspace) != native ||
+            !Within(region, workspace) || !Available(region) ||
+            gtk_widget_get_root(region) != native ||
+            g_object_get_data(G_OBJECT(region), RegionKey) == NULL) break;
+        guint index = reverse ? targets->len - 1U - visited : visited;
+        GtkWidget *target = g_ptr_array_index(targets, index);
+        if (!Within(target, region) || !Available(target) ||
+            !gtk_widget_get_focusable(target) || gtk_widget_get_root(target) != native) continue;
+        (void)gtk_widget_grab_focus(target);
+        /* Never overwrite an observer's redirection or retry a retired tree. */
+        if (gtk_root_get_focus(native) != original) break;
+    }
+    g_ptr_array_unref(targets);
+}
+
 void UmiGtk4FocusCycleMarkRegion(GtkWidget *region, gboolean enabled)
 {
     if (region == NULL) return;
@@ -89,8 +132,13 @@ gboolean UmiGtk4FocusCycleAdvance(GtkWidget *workspace, gboolean reverse)
         if (!Within(region, workspace) || !Available(region) ||
             gtk_widget_get_root(region) != native ||
             g_object_get_data(G_OBJECT(region), RegionKey) == NULL) continue;
+        /* Retain the earlier recursive delegation for review. Explicit mapped
+         * targets below keep collapsed or detached controls out of navigation. */
+#if 0
         (void)gtk_widget_child_focus(region,
             reverse ? GTK_DIR_TAB_BACKWARD : GTK_DIR_TAB_FORWARD);
+#endif
+        FocusRegion(workspace, region, native, original, reverse);
         /* A GTK return is not enough: a focus observer may have hidden,
          * detached or destroyed the target, or selected a different panel. */
         GtkWidget *focus = gtk_root_get_focus(native);

@@ -1,5 +1,21 @@
-// Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
-#include <windows.h>
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/setup_centre/resources/setup.rc
+ *
+ * PURPOSE:
+ *   Retain installer manifest and compatibility bitmap beside shared canonical identity.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/#include <windows.h>
+// Framework application branding now supplies canonical icon 101 and version
+// metadata. Keep the former local resource for comparison, without duplicate IDs.
+#if 0
 101 ICON "umicom.ico"
+#endif
 102 BITMAP "umicom-logo.bmp"
 1 RT_MANIFEST "setup.manifest"

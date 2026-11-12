@@ -17,6 +17,12 @@
 #include "umicom/compiler/linker_profile.h"
 #include "umicom/compiler/policy.h"
 #include "umicom/compiler/registry.h"
+
+/* Keep the public C symbol names when this header is included directly by a
+ * C++ client. Includes remain outside the linkage block; layouts are unchanged. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the compiler profile data shared with callers of this public contract.
  */
@@ -41,4 +47,16 @@ UmiStatus umi_compiler_profile_init(UmiCompilerProfile *profile,const char *prof
  * Check that compiler profile satisfies its contract before another service relies on it.
  */
 UmiStatus umi_compiler_profile_validate(const UmiCompilerProfile *profile,const UmiCompilerRegistry *registry,char *out_reason,size_t capacity);
+/** Validate bounded scalar and target text plus the complete nested linker
+ * storage. This permits a zero-initialized draft and does not qualify policy,
+ * provider availability or target compatibility. Initialization stages the whole
+ * value on the heap, preserving all destination bytes and borrowed inputs on
+ * every refusal. Validation admits profile and registry before lookup and
+ * reports policy failures accurately. Optional diagnostics must not overlap
+ * either input; a short diagnostic buffer retains the semantic return status.
+ * Callers serialize access; no compiler or filesystem action is performed. */
+bool umi_compiler_profile_storage_valid(const UmiCompilerProfile *profile);
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 #endif

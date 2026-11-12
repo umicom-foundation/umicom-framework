@@ -15,6 +15,12 @@
 #ifndef UMICOM_UI_WINDOW_GROUP_H
 #define UMICOM_UI_WINDOW_GROUP_H
 #include "umicom/ui/workspace_layout.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 #define UMI_UI_WINDOW_GROUP_MAX 16U
 #define UMI_UI_WINDOW_GROUP_MAX_MEMBERS 32U
 /**
@@ -115,4 +121,8 @@ const UmiUiWindowGroup *umi_ui_window_group_for_window(
  * applications.
  */
 size_t umi_ui_window_group_route(const UmiUiWindowGroupStore *store,const char *group_id,const char *source_window_id,const char **out_window_ids,size_t capacity);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

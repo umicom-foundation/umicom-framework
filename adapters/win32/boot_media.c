@@ -1,18 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/win32/boot_media.c
+ *
  * PURPOSE:
- *   A native presentation adapter. All validation, plan identity and byte transfer live in
- *   the shared media service. Closing waits for owned work to stop.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
- *---------------------------------------------------------------------------*/
-
-/*-----------------------------------------------------------------------------
- * Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * File: adapters/win32/boot_media.c
- * A native presentation adapter. All validation, plan identity and byte transfer
- * live in the shared media service. Closing waits for owned work to stop.
+ *   Present native media controls while the shared service owns validation, plan identity and transfer. Closing waits for owned work to stop.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef _WIN32_WINNT
@@ -47,6 +45,7 @@ typedef struct MediaJob {
     UmiBootMediaReport report;
     UmiStatus status;
     volatile LONG cancel;
+    volatile LONG progress;
     HANDLE thread;
 }
 
@@ -64,6 +63,7 @@ struct MediaUi {
     HBITMAP logo;
     unsigned dpi;
     int closing,scrollX,scrollY;
+    int lifecycleFailed;
     MediaControl controls[48];
     size_t controlCount;
     MediaJob *job;
@@ -162,6 +162,8 @@ static int Read(MediaUi*u,int id,char*text,size_t cap)
     return WideCharToMultiByte(CP_UTF8,WC_ERR_INVALID_CHARS,wide,-1,text,(int)cap,NULL,NULL)>0;
 }
 
+static const UmiBootMediaDevice *SelectedDevice(MediaUi *u);
+
 static void Buttons(MediaUi*u)
 {
     const int inputs[]= {
@@ -169,7 +171,12 @@ static void Buttons(MediaUi*u)
         ID_VERIFY
     };
     for (size_t i=0;i<sizeof inputs/sizeof inputs[0];++i)EnableWindow(Control(u,inputs[i]),!u->job);
+    /* Inventory presence alone cannot identify a displayed selection. Keep
+     * the former enablement rule for review; bound item data is required now. */
+#if 0
     EnableWindow(Control(u,ID_REVIEW_USB),!u->job&&u->inventory&&u->inventory->count>0);
+#endif
+    EnableWindow(Control(u,ID_REVIEW_USB),!u->job&&SelectedDevice(u)!=NULL);
     int physical=u->plan&&UmiBootMediaPlanConfirmation(u->plan)[0]=='E';
     EnableWindow(Control(u,ID_COPY),!u->job&&u->plan&&!physical);
     EnableWindow(Control(u,ID_WRITE_USB),!u->job&&physical&&UmiBootMediaDeviceWritesEnabled());
@@ -184,12 +191,28 @@ static void Invalidate(MediaUi*u)
     Buttons(u);
 }
 
+/* Retain the former value-bearing notifications. Atomic owned progress avoids stale queued values and reduces duplicate notifications; delivery is not completion authority. The previous implementation is retained for review. */
+#if 0
 static int Progress(const UmiBootMediaReport*r,void*context)
 {
     MediaJob*j=context;
     unsigned percent=r->bytesTotal?(unsigned)((long double)r->bytesDone*100.0L/(long double)r->bytesTotal):0U;
     if (percent>100U)percent=100U;
     PostMessageW(j->owner->window,WM_MEDIA_PROGRESS,(WPARAM)percent,0);
+    return InterlockedCompareExchange(&j->cancel,0,0)!=0;
+}
+
+
+#endif
+/* The owned job is the progress authority. Posted messages contain no borrowed
+ * pointer and are advisory; a stale message only refreshes the current job. */
+static int Progress(const UmiBootMediaReport*r,void*context)
+{
+    MediaJob*j=context;
+    unsigned percent=r->bytesTotal?(unsigned)((long double)r->bytesDone*100.0L/(long double)r->bytesTotal):0U;
+    if(percent>100U)percent=100U;
+    LONG prior=InterlockedExchange(&j->progress,(LONG)percent);
+    if(prior!=(LONG)percent)(void)PostMessageW(j->owner->window,WM_MEDIA_PROGRESS,0,0);
     return InterlockedCompareExchange(&j->cancel,0,0)!=0;
 }
 
@@ -203,13 +226,76 @@ static DWORD WINAPI Run(LPVOID context)
     else if (j->kind==5)j->status=UmiBootMediaReviewDevice(j->image,&j->device,&j->plan,Progress,j,&j->report);
     else if (j->kind==6)j->status=UmiBootMediaVerifyFile(j->image,j->destination,Progress,j,&j->report);
     else j->status=UMI_STATUS_INVALID_ARGUMENT;
-    PostMessageW(j->owner->window,WM_MEDIA_DONE,0,0);
+    /* The message is a wake hint. The UI also waits on this native thread, so
+     * failed posting cannot strand completion or justify freeing live state. */
+    (void)PostMessageW(j->owner->window,WM_MEDIA_DONE,0,0);
     return 0;
+}
+
+
+/* A displayed row is not an inventory index: conversion or control allocation
+ * can omit entries. Store a one-based inventory key on every admitted row.
+ * Zero means unbound, so an accidentally added row cannot select device zero. */
+static const UmiBootMediaDevice *SelectedDevice(MediaUi *u)
+{
+    if(!u->inventory||u->inventory->count>UMI_BOOT_MEDIA_DEVICES)return NULL;
+    HWND list=Control(u,ID_DEVICES);
+    LRESULT row=SendMessageW(list,CB_GETCURSEL,0,0);
+    if(row<0)return NULL;
+    LRESULT key=SendMessageW(list,CB_GETITEMDATA,(WPARAM)row,0);
+    if(key<=0||(size_t)key>u->inventory->count)return NULL;
+    return &u->inventory->devices[(size_t)key-1U];
+}
+
+#define MEDIA_LABEL_CAPACITY (UMI_BOOT_MEDIA_PATH+128U+128U+192U+96U)
+static int MediaDeviceLabel(const UmiBootMediaDevice *device,
+    wchar_t *wide,int capacity)
+{
+    if(!device||!wide||capacity<=0||
+        !memchr(device->path,0,sizeof device->path)||
+        !memchr(device->model,0,sizeof device->model)||
+        !memchr(device->serial,0,sizeof device->serial)||
+        !memchr(device->reason,0,sizeof device->reason))return 0;
+    /* Preserve complete UTF-8 fields before conversion. A byte precision such
+     * as %.127s can cut a valid multibyte character and hide the entire row. */
+    char label[MEDIA_LABEL_CAPACITY];
+    int length=snprintf(label,sizeof label,"%s | %s | %s | %llu bytes | %s",
+        device->path,device->model,device->serial,
+        (unsigned long long)device->bytes,device->reason);
+    if(length<0||(size_t)length>=sizeof label)return 0;
+    return MultiByteToWideChar(CP_UTF8,MB_ERR_INVALID_CHARS,label,-1,wide,capacity)>0;
+}
+
+static size_t PopulateDevices(MediaUi *u)
+{
+    HWND list=Control(u,ID_DEVICES);
+    SendMessageW(list,CB_RESETCONTENT,0,0);
+    if(!u->inventory||u->inventory->count>UMI_BOOT_MEDIA_DEVICES)return 0;
+    size_t listed=0;
+    for(size_t i=0;i<u->inventory->count;++i) {
+        wchar_t wide[MEDIA_LABEL_CAPACITY];
+        if(!MediaDeviceLabel(&u->inventory->devices[i],wide,(int)MEDIA_LABEL_CAPACITY))
+            continue;
+        LRESULT row=SendMessageW(list,CB_ADDSTRING,0,(LPARAM)wide);
+        if(row<0)continue;
+        if(SendMessageW(list,CB_SETITEMDATA,(WPARAM)row,(LPARAM)(i+1U))==CB_ERR) {
+            /* Never leave an unbound row available for review. */
+            SendMessageW(list,CB_DELETESTRING,(WPARAM)row,0);
+            continue;
+        }
+        ++listed;
+    }
+    SendMessageW(list,CB_SETCURSEL,(WPARAM)-1,0);
+    return listed;
 }
 
 static void Start(MediaUi*u,int kind)
 {
+    /* Closing admission cannot start another worker. Retain the old guard. */
+#if 0
     if (u->job)return;
+#endif
+    if (u->job||u->closing)return;
     MediaJob*j=calloc(1,sizeof *j);
     if (!j) {
         Output(u,"Not enough memory.");
@@ -224,9 +310,16 @@ static void Start(MediaUi*u,int kind)
         valid=j->inventory!=NULL;
     }
     if (kind==5) {
+        /* Preserve the former row-index assumption for review. Explicit item
+         * data now keeps skipped labels from shifting the selected device. */
+#if 0
         LRESULT selected=SendMessageW(Control(u,ID_DEVICES),CB_GETCURSEL,0,0);
         valid=valid&&u->inventory&&selected>=0&&(size_t)selected<u->inventory->count;
         if (valid)j->device=u->inventory->devices[(size_t)selected];
+#endif
+        const UmiBootMediaDevice *selected=SelectedDevice(u);
+        valid=valid&&selected!=NULL;
+        if(valid)j->device=*selected;
     }
     if (kind==3) {
         valid=valid&&u->plan&&Read(u,ID_CONFIRM,j->confirmation,sizeof j->confirmation);
@@ -252,8 +345,19 @@ static void Start(MediaUi*u,int kind)
     }
     if (kind!=3)Invalidate(u);
     u->job=j;
+    SendMessageW(Control(u,ID_PROGRESS),PBM_SETPOS,0,0);
     Buttons(u);
     Output(u,"Working. No physical write happens without an enabled writer and an explicit reviewed confirmation.");
+    /* Native control notifications can re-enter close handling before launch.
+     * Discard only a never-started job; no worker may outlive this ownership. */
+    if(u->closing||!IsWindow(u->window)){
+        u->job=NULL;
+        UmiBootMediaPlanDestroy(j->plan);
+        free(j->inventory);
+        free(j);
+        if(IsWindow(u->window))DestroyWindow(u->window);
+        return;
+    }
     j->thread=CreateThread(NULL,0,Run,j,0,NULL);
     if (!j->thread) {
         u->job=NULL;
@@ -265,27 +369,73 @@ static void Start(MediaUi*u,int kind)
     }
 }
 
+/* Native clients share field meanings and bounds with the CLI. A mismatched or
+ * malformed observation must not expose an old success message or adopt a plan. */
+static int MediaCompletionReport(MediaJob *job,char *text,size_t capacity)
+{
+    UmiStatus described=UmiBootMediaReportDescribe(job->status,&job->report,text,capacity);
+    if(described==UMI_STATUS_OK)return 1;
+    (void)snprintf(text,capacity,
+        "Media operation status: %d; report unavailable (%d).\r\nNo verified success can be shown.",
+        (int)job->status,(int)described);
+    job->status=UMI_STATUS_INVALID_STATE;
+    return 0;
+}
+
 static void Finish(MediaUi*u)
 {
     MediaJob*j=u->job;
+    /* An old notification may re-enter admission before CreateThread returns. */
+#if 0
     if (!j)return;
+#endif
+    if (!j||!j->thread)return;
+/* Retain the blocking notification-driven join. Completion now reads only stopped workers and does not block the event thread on an early notification. The previous implementation is retained for review. */
+#if 0
     WaitForSingleObject(j->thread,INFINITE);
     CloseHandle(j->thread);
+#endif
+    /* A posted message can arrive before the worker's final return, or belong
+     * to an older job. Only a signalled thread permits reading final fields. */
+    DWORD completed=WaitForSingleObject(j->thread,0);
+    if(completed!=WAIT_OBJECT_0){
+        if(completed==WAIT_FAILED)u->lifecycleFailed=1;
+        return;
+    }
+    int releaseFailed=!CloseHandle(j->thread);
+    j->thread=NULL;
+    if(releaseFailed)u->lifecycleFailed=1;
     char text[8192];
+/* The earlier summary omitted exclusive creation. Preserve it while the shared report service supplies all effect fields and refuses malformed observations. The previous implementation is retained for review. */
+#if 0
     (void)snprintf(text,sizeof text,"%s\r\nStatus: %d; payload write started: %s; read-back verified: %s",
         j->report.detail,(int)j->status,j->report.writeStarted?"yes":"no",j->report.verified?"yes":"no");
+#endif
+    (void)MediaCompletionReport(j,text,sizeof text);
     if (j->status==UMI_STATUS_OK&&(j->kind==2||j->kind==5)) {
         u->plan=j->plan;
         j->plan=NULL;
+/* Append review identity after the shared observation instead of replacing its status and effect fields. The previous implementation is retained for review. */
+#if 0
         (void)snprintf(text,sizeof text,"%.383s\r\nDestination: %.4095s\r\nImage SHA-256: %.64s\r\nPlan fingerprint: %.64s\r\nType confirmation: %.95s\r\nReview does not write. Structural checks do not prove bootability.",
             j->report.detail,UmiBootMediaPlanDestination(u->plan),UmiBootMediaPlanImage(u->plan)->sha256,UmiBootMediaPlanFingerprint(u->plan),
             UmiBootMediaPlanConfirmation(u->plan));
+
+#endif
+        size_t used=strlen(text);
+        (void)snprintf(text+used,sizeof text-used,
+            "\r\nDestination: %.4095s\r\nImage SHA-256: %.64s\r\nPlan fingerprint: %.64s\r\nType confirmation: %.95s\r\nReview does not write.",
+            UmiBootMediaPlanDestination(u->plan),UmiBootMediaPlanImage(u->plan)->sha256,
+            UmiBootMediaPlanFingerprint(u->plan),UmiBootMediaPlanConfirmation(u->plan));
         SetWindowTextW(Control(u,ID_CONFIRM),L"");
     }
     if (j->kind==4&&j->status==UMI_STATUS_OK) {
         free(u->inventory);
         u->inventory=j->inventory;
         j->inventory=NULL;
+        /* Keep the earlier presentation loop for review. PopulateDevices
+         * binds every visible row and avoids splitting UTF-8 fields. */
+#if 0
         SendMessageW(Control(u,ID_DEVICES),CB_RESETCONTENT,0,0);
         for (size_t i=0;i<u->inventory->count;++i) {
             UmiBootMediaDevice*d=&u->inventory->devices[i];
@@ -297,10 +447,31 @@ static void Finish(MediaUi*u)
                 CB_ADDSTRING,0,(LPARAM)wide);
         }
         SendMessageW(Control(u,ID_DEVICES),CB_SETCURSEL,(WPARAM)-1,0);
+#endif
+        (void)PopulateDevices(u);
     }
+/* Keep structural image observations alongside the shared completion report; retain the former replacement formatter for review. The previous implementation is retained for review. */
+#if 0
     if (j->kind==1&&j->status==UMI_STATUS_OK)(void)snprintf(text,sizeof text,"%s\r\nBytes: %llu\r\nSHA-256: %s\r\nMBR: %d; GPT: %d; ISO9660: %d; El Torito: %d\r\nBIOS catalogue entry: %d; EFI catalogue entry: %d\r\nThese are file observations, not firmware or guest-boot test results.",
         j->report.detail,(unsigned long long)j->observation.bytes,j->observation.sha256,j->observation.mbrLayout,
         j->observation.gptLayout,j->observation.iso9660,j->observation.elTorito,j->observation.biosEntry,j->observation.efiEntry);
+
+#endif
+    if (j->kind==1&&j->status==UMI_STATUS_OK) {
+        size_t used=strlen(text);
+        (void)snprintf(text+used,sizeof text-used,
+            "\r\nBytes: %llu\r\nSHA-256: %s\r\nMBR: %d; GPT: %d; ISO9660: %d; El Torito: %d\r\nBIOS catalogue entry: %d; EFI catalogue entry: %d\r\nThese are file observations, not firmware or guest-boot test results.",
+            (unsigned long long)j->observation.bytes,j->observation.sha256,j->observation.mbrLayout,
+            j->observation.gptLayout,j->observation.iso9660,j->observation.elTorito,
+            j->observation.biosEntry,j->observation.efiEntry);
+    }
+    if(releaseFailed){
+        size_t used=strlen(text);
+        (void)snprintf(text+used,sizeof text-used,
+            "\r\nWorker handle release failed; native cleanup requires review.");
+    }
+    SendMessageW(Control(u,ID_PROGRESS),PBM_SETPOS,
+        (WPARAM)InterlockedCompareExchange(&j->progress,0,0),0);
     Output(u,text);
     UmiBootMediaPlanDestroy(j->plan);
     free(j->inventory);
@@ -363,6 +534,132 @@ static void Build(MediaUi*u)
     Buttons(u);
 }
 
+
+/* These hidden-control checks use synthetic observations only. They never call
+ * discovery, create a plan or open a source, destination or physical device. */
+static void SelectionFixture(UmiBootMediaDevice *device,const char *model)
+{
+    memset(device,0,sizeof *device);
+    strcpy(device->path,"C:/synthetic-device");
+    strcpy(device->identity,"synthetic-identity");
+    strcpy(device->serial,"synthetic-serial");
+    strcpy(device->model,model);
+    strcpy(device->reason,"fixture only");
+    device->bytes=4096;
+}
+
+static int CheckDeviceSelection(MediaUi *u)
+{
+    u->inventory=calloc(1,sizeof *u->inventory);
+    if(!u->inventory)return 1;
+    u->inventory->count=3;
+    SelectionFixture(&u->inventory->devices[0],"invalid");
+    u->inventory->devices[0].model[0]=(char)0xff;
+    SelectionFixture(&u->inventory->devices[1],"second device");
+    SelectionFixture(&u->inventory->devices[2],"third device");
+    HWND list=Control(u,ID_DEVICES);
+    if(PopulateDevices(u)!=2||SelectedDevice(u)!=NULL)return 1;
+    Buttons(u);
+    if(IsWindowEnabled(Control(u,ID_REVIEW_USB)))return 1;
+    SendMessageW(list,CB_SETCURSEL,0,0);
+    if(SelectedDevice(u)!=&u->inventory->devices[1])return 1;
+    Buttons(u);
+    if(!IsWindowEnabled(Control(u,ID_REVIEW_USB)))return 1;
+    SendMessageW(list,CB_SETCURSEL,1,0);
+    if(SelectedDevice(u)!=&u->inventory->devices[2])return 1;
+    /* Removing an earlier row must not change the identity bound to the next. */
+    SendMessageW(list,CB_DELETESTRING,0,0);
+    SendMessageW(list,CB_SETCURSEL,0,0);
+    if(SelectedDevice(u)!=&u->inventory->devices[2])return 1;
+    SendMessageW(list,CB_SETITEMDATA,0,0);
+    if(SelectedDevice(u)!=NULL)return 1;
+    Buttons(u);
+    if(IsWindowEnabled(Control(u,ID_REVIEW_USB)))return 1;
+    SendMessageW(list,CB_SETITEMDATA,0,(LPARAM)4);
+    if(SelectedDevice(u)!=NULL)return 1;
+    SendMessageW(list,CB_SETITEMDATA,0,(LPARAM)-1);
+    if(SelectedDevice(u)!=NULL)return 1;
+    SendMessageW(list,CB_SETCURSEL,(WPARAM)-1,0);
+    if(SelectedDevice(u)!=NULL)return 1;
+    u->inventory->count=UMI_BOOT_MEDIA_DEVICES+1U;
+    if(PopulateDevices(u)!=0||SendMessageW(list,CB_GETCOUNT,0,0)!=0)return 1;
+    u->inventory->count=1;
+    SelectionFixture(&u->inventory->devices[0],"replacement inventory");
+    if(PopulateDevices(u)!=1||SelectedDevice(u)!=NULL)return 1;
+    SendMessageW(list,CB_SETCURSEL,0,0);
+    if(SelectedDevice(u)!=&u->inventory->devices[0])return 1;
+    return 0;
+}
+
+static int CheckDeviceLabels(void)
+{
+    UmiBootMediaDevice device;
+    SelectionFixture(&device,"model");
+    /* The old %.127s path projection split this three-byte euro sign. */
+    memset(device.path,'a',126);
+    device.path[0]='C';device.path[1]=':';device.path[2]='/';
+    memcpy(device.path+126,"\xe2\x82\xac.img",8);
+    wchar_t label[MEDIA_LABEL_CAPACITY];
+    if(!MediaDeviceLabel(&device,label,(int)MEDIA_LABEL_CAPACITY)||
+        !wcsstr(label,L"\x20ac.img"))return 1;
+    if(MediaDeviceLabel(&device,label,1))return 1;
+    device.model[0]=(char)0xff;
+    if(MediaDeviceLabel(&device,label,(int)MEDIA_LABEL_CAPACITY))return 1;
+    SelectionFixture(&device,"model");
+    memset(device.path,'x',sizeof device.path);
+    if(MediaDeviceLabel(&device,label,(int)MEDIA_LABEL_CAPACITY))return 1;
+    SelectionFixture(&device,"model");
+    memset(device.model,'x',sizeof device.model);
+    if(MediaDeviceLabel(&device,label,(int)MEDIA_LABEL_CAPACITY))return 1;
+    SelectionFixture(&device,"model");
+    memset(device.serial,'x',sizeof device.serial);
+    if(MediaDeviceLabel(&device,label,(int)MEDIA_LABEL_CAPACITY))return 1;
+    SelectionFixture(&device,"model");
+    memset(device.reason,'x',sizeof device.reason);
+    if(MediaDeviceLabel(&device,label,(int)MEDIA_LABEL_CAPACITY))return 1;
+    SelectionFixture(&device,"model");
+    memset(device.path,'p',sizeof device.path-1U);device.path[sizeof device.path-1U]=0;
+    memset(device.model,'m',sizeof device.model-1U);device.model[sizeof device.model-1U]=0;
+    memset(device.serial,'s',sizeof device.serial-1U);device.serial[sizeof device.serial-1U]=0;
+    memset(device.reason,'r',sizeof device.reason-1U);device.reason[sizeof device.reason-1U]=0;
+    device.bytes=UINT64_MAX;
+    if(!MediaDeviceLabel(&device,label,(int)MEDIA_LABEL_CAPACITY))return 1;
+    return 0;
+}
+
+/* Exercise the actual output control with synthetic reports only. This check
+ * starts no worker and acquires no image, output file or physical device. */
+static int CheckCompletionReports(MediaUi *ui)
+{
+    MediaJob job={0};
+    char text[UMI_BOOT_MEDIA_REPORT_TEXT];
+    wchar_t shown[UMI_BOOT_MEDIA_REPORT_TEXT];
+    job.status=job.report.status=UMI_STATUS_OUT_OF_MEMORY;
+    job.report.outputCreated=1;
+    strcpy(job.report.detail,"Created practice \xCE\xA9; allocation refused.");
+    if(!MediaCompletionReport(&job,text,sizeof text))return 1;
+    Output(ui,text);
+    if(!GetWindowTextW(Control(ui,ID_OUTPUT),shown,(int)(sizeof shown/sizeof shown[0]))||
+        !wcsstr(shown,L"Practice file created: yes")||
+        !wcsstr(shown,L"Payload write attempted: no")||
+        !wcsstr(shown,L"Byte agreement verified: no")||!wcsstr(shown,L"\x03a9"))return 1;
+    memset(&job,0,sizeof job);
+    job.report.phase=UMI_BOOT_MEDIA_VERIFY;
+    job.report.verified=1;
+    strcpy(job.report.detail,"Independent file comparison.");
+    if(!MediaCompletionReport(&job,text,sizeof text))return 1;
+    Output(ui,text);
+    if(!GetWindowTextW(Control(ui,ID_OUTPUT),shown,(int)(sizeof shown/sizeof shown[0]))||
+        !wcsstr(shown,L"Practice file created: no")||
+        !wcsstr(shown,L"Byte agreement verified: yes"))return 1;
+    job.status=UMI_STATUS_IO_ERROR; /* Deliberately inconsistent report. */
+    if(MediaCompletionReport(&job,text,sizeof text))return 1;
+    Output(ui,text);
+    if(!GetWindowTextW(Control(ui,ID_OUTPUT),shown,(int)(sizeof shown/sizeof shown[0]))||
+        !wcsstr(shown,L"report unavailable")||wcsstr(shown,L"Byte agreement verified: yes"))return 1;
+    return 0;
+}
+
 static LRESULT CALLBACK Window(HWND h,UINT message,WPARAM w,LPARAM l)
 {
     MediaUi*u=(MediaUi*)GetWindowLongPtrW(h,GWLP_USERDATA);
@@ -407,7 +704,12 @@ static LRESULT CALLBACK Window(HWND h,UINT message,WPARAM w,LPARAM l)
         return 0;
     }
     if (message==WM_MEDIA_PROGRESS) {
+/* Ignore the queued value from an older job; the current owner supplies its atomic observation. The previous implementation is retained for review. */
+#if 0
         SendMessageW(Control(u,ID_PROGRESS),PBM_SETPOS,w,0);
+#endif
+        if(u->job)SendMessageW(Control(u,ID_PROGRESS),PBM_SETPOS,
+            (WPARAM)InterlockedCompareExchange(&u->job->progress,0,0),0);
         return 0;
     }
     if (message==WM_MEDIA_DONE) {
@@ -452,6 +754,54 @@ static LRESULT CALLBACK Window(HWND h,UINT message,WPARAM w,LPARAM l)
     return DefWindowProcW(h,message,w,l);
 }
 
+/* This adapter already owns a waitable native thread. Integrate that handle
+ * with the Windows message queue rather than making notification delivery a
+ * prerequisite for joining. The handle is closed only by this UI thread after
+ * the wait has returned; no concurrent owner can invalidate the wait array. */
+static int MediaMessageLoop(MediaUi *ui,HWND window)
+{
+    for(;;){
+        MSG message;
+        if(ui->job&&ui->job->thread){
+            HANDLE worker=ui->job->thread;
+            DWORD ready=MsgWaitForMultipleObjectsEx(1,&worker,INFINITE,QS_ALLINPUT,MWMO_INPUTAVAILABLE);
+            if(ready==WAIT_OBJECT_0){Finish(ui);continue;}
+            if(ready!=WAIT_OBJECT_0+1U)return 1;
+            if(!PeekMessageW(&message,NULL,0,0,PM_REMOVE))continue;
+            if(message.message==WM_QUIT)return 0;
+        }else{
+            BOOL next=GetMessageW(&message,NULL,0,0);
+            if(next<=0)return next==0?0:1;
+        }
+        if(!IsDialogMessageW(window,&message)){
+            TranslateMessage(&message);
+            DispatchMessageW(&message);
+        }
+    }
+}
+
+/* After quit or an abnormal wait result, keep the owner and captured inputs
+ * alive until cooperative work returns. Do not present a result into a retired
+ * window. Native I/O can delay cancellation; this is not forced termination.
+ * An uncertain join preserves the complete owner instead of freeing live data. */
+static int MediaDrainWorker(MediaUi *ui)
+{
+    MediaJob *job=ui->job;
+    if(!job)return 1;
+    InterlockedExchange(&job->cancel,1);
+    if(!job->thread||WaitForSingleObject(job->thread,INFINITE)!=WAIT_OBJECT_0){
+        ui->lifecycleFailed=1;
+        return 0;
+    }
+    if(!CloseHandle(job->thread))ui->lifecycleFailed=1;
+    job->thread=NULL;
+    UmiBootMediaPlanDestroy(job->plan);
+    free(job->inventory);
+    free(job);
+    ui->job=NULL;
+    return 1;
+}
+
 int UmiBootMediaWindowsMain(void*instance,int show,int checkOnly)
 {
 
@@ -490,10 +840,15 @@ int UmiBootMediaWindowsMain(void*instance,int show,int checkOnly)
             SetWindowPos(h,NULL,0,0,520,420,SWP_NOMOVE|SWP_NOZORDER|SWP_NOACTIVATE);
             MediaScroll(u,SB_VERT,SB_BOTTOM);
             if (u->scrollY<=0)result=1;
+            if(checkOnly==UMI_BOOT_MEDIA_WINDOWS_CHECK_SELECTION&&CheckDeviceSelection(u))result=1;
+            if(checkOnly==UMI_BOOT_MEDIA_WINDOWS_CHECK_LABELS&&CheckDeviceLabels())result=1;
+            if(checkOnly==UMI_BOOT_MEDIA_WINDOWS_CHECK_REPORTS&&CheckCompletionReports(u))result=1;
             DestroyWindow(h);
         }
         else {
             ShowWindow(h,show);
+/* Preserve the former message-only loop. The native worker handle now wakes completion even if posting fails. The previous implementation is retained for review. */
+#if 0
             MSG m;
             BOOL next;
             while ((next=GetMessageW(&m,NULL,0,0))>0) {
@@ -503,8 +858,16 @@ int UmiBootMediaWindowsMain(void*instance,int show,int checkOnly)
                 }
             }
             result=next==0?0:1;
+#endif
+            result=MediaMessageLoop(u,h);
         }
     }
+    if(!MediaDrainWorker(u)){
+        OutputDebugStringW(L"Umicom Boot Media: worker completion is uncertain; owner state retained.\n");
+        return 1;
+    }
+    if(IsWindow(h))DestroyWindow(h);
+    if(u->lifecycleFailed)result=1;
     UmiBootMediaPlanDestroy(u->plan);
     free(u->inventory);
     if (u->font)DeleteObject(u->font);

@@ -25,6 +25,12 @@
 #include "umicom/base/status.h"
 #include "umicom/integration/dependency.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Represent the integration topology edge data shared with callers of this public
  * contract.
@@ -61,4 +67,8 @@ UmiStatus umi_integration_topology_add(
 size_t umi_integration_topology_required_edges(
     const UmiIntegrationTopology *topology);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -39,6 +39,13 @@ void umi_order_throttle_init(UmiOrderThrottle *throttle, uint32_t max_count, int
  * Provide the order throttle accept operation used by this module and its client
  * applications.
  */
+/** Consume one attempt in a fixed window. Zero is a valid timestamp; use one
+ * nonnegative monotonic clock domain. A time before the active window start,
+ * invalid configuration/state or exhausted quota returns zero without mutation.
+ * Count zero starts a window at the supplied time. At elapsed window_ms a new
+ * window starts with this accepted attempt. The record does not remember every
+ * call's timestamp, so it cannot detect backwards movement within one window.
+ * Caller owns serialization. Admission grants no order-execution authority. */
 int umi_order_throttle_accept(UmiOrderThrottle *throttle, int64_t now_ms);
 #ifdef __cplusplus
 }

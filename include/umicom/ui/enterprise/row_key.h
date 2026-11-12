@@ -17,6 +17,12 @@
 
 #include <stdint.h>
 #include "umicom/ui/enterprise/types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Provide the ui ent row key from text operation used by this module and its client
  * applications.
@@ -28,4 +34,8 @@ uint64_t umi_ui_ent_row_key_from_text(const char *text);
  */
 uint64_t umi_ui_ent_row_key_combine(uint64_t parent,uint64_t child);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

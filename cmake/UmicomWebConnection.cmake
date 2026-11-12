@@ -42,3 +42,5 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomWebRequestStreamChecks.cmake")
 
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/local-static-preview.html"
     DESTINATION ${CMAKE_INSTALL_DATADIR}/doc/umicom/learning COMPONENT Development)
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomWebResponseBodyChecks.cmake")

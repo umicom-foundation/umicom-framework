@@ -15,6 +15,10 @@
 #include "umicom/open_tms/dashboard_service.h"
 #include <string.h>
 
+/* Retained for review: direct output accumulation could expose partial or
+ * invalid evidence. The replacement below reuses each Framework owner's
+ * checked boundary and publishes one complete snapshot after success. */
+#if 0
 UmiStatus umi_open_tms_dashboard_snapshot(
     const UmiOpenTmsCashBook *cash,
     const UmiOpenTmsLiquidityLadder *liquidity,
@@ -83,5 +87,56 @@ UmiStatus umi_open_tms_dashboard_snapshot(
         revision = reconciliation->revision;
     }
     outSnapshot->revision = revision;
+    return UMI_STATUS_OK;
+}
+
+#endif
+
+/* Compose validated observations locally. A late failure must not erase the
+ * caller's previous display, and an invalid book must not appear as a zero. */
+UmiStatus umi_open_tms_dashboard_snapshot(
+    const UmiOpenTmsCashBook *cash, const UmiOpenTmsLiquidityLadder *liquidity,
+    const UmiOpenTmsPositionBook *positions, const UmiOpenTmsRiskBook *risk,
+    const UmiOpenTmsSettlementBook *settlements, const UmiOpenTmsAccountingBook *accounting,
+    const UmiOpenTmsReconciliationBook *reconciliation, uint64_t nowMilliseconds,
+    UmiOpenTmsDashboardSnapshot *outSnapshot)
+{
+    if (outSnapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiOpenTmsDashboardSnapshot value = {0};
+    UmiOpenTmsLiquidityMeasures liquidityValue;
+    UmiOpenTmsPositionMeasures positionValue;
+    UmiOpenTmsSettlementMeasures settlementValue;
+    UmiStatus status = umi_open_tms_cash_book_headroom_checked(cash, &value.cashHeadroom);
+    if (status == UMI_STATUS_OK) status = umi_open_tms_liquidity_ladder_measure(liquidity, &liquidityValue);
+    if (status == UMI_STATUS_OK) status = umi_open_tms_position_book_measure(positions, &positionValue);
+    if (status == UMI_STATUS_OK) status = umi_open_tms_risk_book_breach_count_checked(risk, &value.riskBreaches);
+    if (status == UMI_STATUS_OK) status = umi_open_tms_settlement_book_measure(settlements, nowMilliseconds, &settlementValue);
+    if (status == UMI_STATUS_OK) status = umi_open_tms_accounting_book_validate(accounting);
+    if (status == UMI_STATUS_OK && accounting->approved)
+        status = umi_open_tms_accounting_book_check_balance(accounting);
+    if (status == UMI_STATUS_OK) status = umi_open_tms_reconciliation_book_validate(reconciliation);
+    if (status != UMI_STATUS_OK) return status;
+
+    value.liquidityGap = liquidityValue.gap;
+    value.grossExposure = positionValue.grossExposure;
+    value.netExposure = positionValue.netExposure;
+    value.unrealisedPnl = positionValue.unrealisedPnl;
+    value.settlementFailures = settlementValue.failedCount;
+    value.overdueSettlements = settlementValue.overdueCount;
+    value.reconciliationBreaks = reconciliation->breakCount;
+    value.cashReady = cash->count > 0U;
+    value.liquidityReady = liquidity->count > 0U;
+    value.positionReady = positions->count > 0U;
+    value.riskReady = risk->count > 0U && value.riskBreaches == 0U;
+    value.settlementReady = settlements->count > 0U && value.settlementFailures == 0U && value.overdueSettlements == 0U;
+    value.accountingReady = accounting->approved && accounting->posted;
+    value.reconciliationReady = reconciliation->count > 0U && reconciliation->breakCount == 0U;
+    value.operationsReady = value.cashReady && value.liquidityReady && value.positionReady &&
+        value.riskReady && value.settlementReady && value.accountingReady && value.reconciliationReady;
+    uint64_t revisions[] = {cash->revision, liquidity->revision, positions->revision,
+        risk->revision, settlements->revision, accounting->revision, reconciliation->revision};
+    for (size_t i = 0U; i < sizeof revisions / sizeof revisions[0]; ++i)
+        if (revisions[i] > value.revision) value.revision = revisions[i];
+    *outSnapshot = value;
     return UMI_STATUS_OK;
 }

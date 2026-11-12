@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_EDIT_SESSION_H
 
 #include "umicom/ui/enterprise/cell_value.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent edit session data shared with callers of this public contract.
  */
@@ -36,4 +42,8 @@ UmiStatus umi_ui_ent_edit_session_update(UmiUiEntEditSession *s,const UmiUiEntCe
  */
 void umi_ui_ent_edit_session_cancel(UmiUiEntEditSession *s);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

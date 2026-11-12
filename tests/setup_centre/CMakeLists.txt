@@ -33,7 +33,9 @@ set(_cases
     vm.limits vm.bad_kernel vm.no_script vm.comma vm.plan vm.riscv vm.interactive
     vm.stale vm.wrong_review vm.failed_exit vm.cancelled vm.execute_contract
     media.prepare media.exists media.bad_arch media.no_script media.tampered media.iso_structure
-    media.producer_failure media.missing_iso)
+    media.producer_failure media.missing_iso
+    media.iso_zero_load media.iso_endian media.iso_terminator media.iso_load_range
+    media.iso_efi_zero media.iso_efi_one media.iso_no_boot media.iso_emulation media.iso_hybrid)
 foreach(_case IN LISTS _cases)
     add_test(NAME framework.setup_centre.${_case} COMMAND umicom-setup-centre-test "${_case}")
     set_tests_properties(framework.setup_centre.${_case} PROPERTIES TIMEOUT 90 SKIP_RETURN_CODE 77
@@ -68,4 +70,20 @@ if(TARGET umicom-setup-centre)
     add_test(NAME framework.setup_centre.windows_ui COMMAND umicom-setup-centre --check-ui)
     set_tests_properties(framework.setup_centre.windows_ui PROPERTIES
         TIMEOUT 30 LABELS "framework;setup;windows;gui")
+endif()
+
+# Compile the real shared entry against recording ports; this does not qualify
+# a process, ISO producer or installed consumer.
+if(TARGET Umicom::setup_process)
+    add_executable(umicom-setup-native-entry-test
+        test_native_cli.c "${CMAKE_CURRENT_LIST_DIR}/../../src/setup_centre/native_cli.c")
+    target_include_directories(umicom-setup-native-entry-test PRIVATE
+        "${CMAKE_CURRENT_LIST_DIR}/../../include")
+    set_target_properties(umicom-setup-native-entry-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-setup-native-entry-test)
+    umicom_apply_sanitizers(umicom-setup-native-entry-test)
+    add_test(NAME framework.setup_centre.native_entry COMMAND umicom-setup-native-entry-test)
+    set_tests_properties(framework.setup_centre.native_entry PROPERTIES
+        TIMEOUT 10 LABELS "framework;setup;command;ownership;no-devices")
 endif()

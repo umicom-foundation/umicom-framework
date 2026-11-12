@@ -20,6 +20,8 @@
 #include <string.h>
 #include "umicom/trading/order_store.h"
 #include "umicom/finance/identifier.h"
+#include "umicom/base/text.h"
+#include "../base/storage_internal.h"
 
 /*
  * Initialise order store from caller-provided values so later operations receive a known
@@ -37,6 +39,8 @@ void umi_order_store_init(UmiOrderStore *store)
 }
 
 /* Add order store only after its inputs and available capacity have been checked. */
+/* Validate the complete active identifier set before duplicate lookup or append. The shared admission contract replaces early-match acceptance and retains the previous implementation for review. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_order_store_add(UmiOrderStore *store, const UmiOrder *order)
 {
     /*
@@ -66,8 +70,67 @@ UmiStatus umi_order_store_add(UmiOrderStore *store, const UmiOrder *order)
     store->count++;
     return UMI_STATUS_OK;
 }
+#endif
+/* Storage admission is deliberately narrower than order submission: identifiers
+ * and uniqueness make lookup safe, while request/risk/lifecycle policy remains
+ * in its existing owners. Inspect every active row before returning a match. */
+UmiStatus umi_order_store_validate(const UmiOrderStore *store)
+{
+    if (store == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (store->count > UMI_TRADING_MAX_ORDERS) return UMI_STATUS_INVALID_STATE;
+    for (size_t index = 0U; index < store->count; ++index) {
+        const UmiFinancialId *id = &store->orders[index].request.client_order_id;
+        if (!umi_financial_id_valid(id)) return UMI_STATUS_INVALID_STATE;
+        for (size_t prior = 0U; prior < index; ++prior)
+            if (umi_financial_id_equal(id, &store->orders[prior].request.client_order_id))
+                return UMI_STATUS_INVALID_STATE;
+    }
+    return UMI_STATUS_OK;
+}
+
+/* Copy query bytes before writing a caller's output. This also permits a
+ * query borrowed from that separate output allocation. The shared text helper
+ * bounds the scan to the declared identifier capacity. */
+static UmiStatus OrderStoreIndex(const UmiOrderStore *store, const char *text,
+                                size_t *out_index)
+{
+    UmiFinancialId query = {0};
+    UmiStatus status = umi_text_replace(query.value, sizeof(query.value), text);
+    if (status != UMI_STATUS_OK) return status;
+    if (!umi_financial_id_valid(&query)) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_order_store_validate(store);
+    if (status != UMI_STATUS_OK) return status;
+    for (size_t index = 0U; index < store->count; ++index) {
+        if (umi_financial_id_equal(&query, &store->orders[index].request.client_order_id)) {
+            *out_index = index;
+            return UMI_STATUS_OK;
+        }
+    }
+    return UMI_STATUS_NOT_FOUND;
+}
+
+UmiStatus umi_order_store_add(UmiOrderStore *store, const UmiOrder *order)
+{
+    if (store == NULL || order == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = umi_order_store_validate(store);
+    if (status != UMI_STATUS_OK) return status;
+    if (!umi_financial_id_valid(&order->request.client_order_id))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t index = 0U; index < store->count; ++index)
+        if (umi_financial_id_equal(&store->orders[index].request.client_order_id,
+                                   &order->request.client_order_id))
+            return UMI_STATUS_ALREADY_EXISTS;
+    if (store->count == UMI_TRADING_MAX_ORDERS) return UMI_STATUS_CAPACITY_EXCEEDED;
+    const UmiOrder staged = *order;
+    store->orders[store->count] = staged;
+    store->count += 1U;
+    return UMI_STATUS_OK;
+}
+
 
 /* Find order store while leaving the underlying catalogue or model owned by this module. */
+/* Use bounded shared query admission and protect the owner from overlapping output storage. Mutable and const callers share one search; the old direct strcmp loop is retained for review. The previous implementation is retained for review. */
+#if 0
 UmiStatus umi_order_store_find(UmiOrderStore *store,
                                const char *client_order_id,
                                UmiOrder **out_order)
@@ -96,3 +159,33 @@ UmiStatus umi_order_store_find(UmiOrderStore *store,
 
     return UMI_STATUS_NOT_FOUND;
 }
+#endif
+UmiStatus umi_order_store_find(UmiOrderStore *store, const char *client_order_id,
+                               UmiOrder **out_order)
+{
+    if (store == NULL || client_order_id == NULL || out_order == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (UmiStorageOverlaps(store, sizeof(*store), out_order, sizeof(*out_order)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index = 0U;
+    const UmiStatus status = OrderStoreIndex(store, client_order_id, &index);
+    /* Preserve the established NULL-on-lookup-failure contract, without ever
+     * clearing pointer bytes inside the store itself. */
+    *out_order = status == UMI_STATUS_OK ? &store->orders[index] : NULL;
+    return status;
+}
+
+UmiStatus umi_order_store_find_const(const UmiOrderStore *store,
+                                     const char *client_order_id,
+                                     const UmiOrder **out_order)
+{
+    if (store == NULL || client_order_id == NULL || out_order == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (UmiStorageOverlaps(store, sizeof(*store), out_order, sizeof(*out_order)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index = 0U;
+    const UmiStatus status = OrderStoreIndex(store, client_order_id, &index);
+    *out_order = status == UMI_STATUS_OK ? &store->orders[index] : NULL;
+    return status;
+}
+

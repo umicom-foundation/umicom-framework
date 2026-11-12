@@ -16,6 +16,12 @@
 #define UMICOM_SECURITY_IDENTITY_DIRECTORY_H
 #include "umicom/security/governance.h"
 #include "umicom/security/identity.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the security identity profile data shared with callers of this public
  * contract.
@@ -58,4 +64,8 @@ const UmiSecurityIdentityProfile *umi_security_identity_directory_find(const Umi
  * its client applications.
  */
 UmiStatus umi_security_identity_directory_set_enabled(UmiSecurityIdentityDirectory *directory,const char *identity_id,bool enabled);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

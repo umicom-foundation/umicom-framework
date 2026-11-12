@@ -79,9 +79,28 @@ void umi_developer_pipeline_destroy(UmiDeveloperPipeline *pipeline);
  * Provide the developer pipeline submit operation used by this module and its client
  * applications.
  */
+/* Admit terminated active fixed fields before searching the ID. Invalid storage,
+ * kinds, exhausted sequence/revision identity and duplicate IDs leave the pipeline
+ * unchanged. Legacy structure metadata remains normalized for this original API;
+ * the newer chain API requires explicit current structure metadata. */
 UmiStatus umi_developer_pipeline_submit(
     UmiDeveloperPipeline *pipeline,
     const UmiDeveloperOperationSnapshot *operation);
+
+/* Append count operations as a dependency chain: each new operation after the
+ * first depends on its predecessor. Existing work is preserved, including
+ * running operations and their results. The whole call either publishes or
+ * leaves all pipeline values/revisions unchanged. Duplicate IDs, exhausted
+ * capacity/identities and invalid fixed storage are refused.
+ * Operations must use the current struct_size/api_version, a supported kind
+ * and terminated active text fields. State/attempt/result fields are normalized
+ * by the existing submit policy. The caller owns stable input during the call.
+ * This is a single-owner in-memory transaction, not process execution or thread
+ * synchronization. The pipeline object address remains stable. */
+UmiStatus umi_developer_pipeline_submit_chain(
+    UmiDeveloperPipeline *pipeline,
+    const UmiDeveloperOperationSnapshot *operations,
+    size_t count);
 
 /**
  * Provide the developer pipeline add dependency operation used by this module and its

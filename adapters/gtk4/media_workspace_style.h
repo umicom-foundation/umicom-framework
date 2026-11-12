@@ -18,4 +18,6 @@
 #include <stdbool.h>
 void UmiMediaWorkspaceStyle(GtkWidget *root);
 GtkWidget *UmiMediaWorkspaceBrand(bool wordmark);
+/* Caller owns the returned immutable byte reference; no display is accessed. */
+GBytes *UmiMediaWorkspaceLogoBytes(void);
 #endif

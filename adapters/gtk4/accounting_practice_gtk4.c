@@ -370,8 +370,14 @@ UmiStatus UmiGtk4AccountingPracticeRead(GtkWindow *window, UmiOpenTmsAccountingB
 }
 static void Open(GtkButton *button, gpointer unused) {
     (void)unused;
+    /* Effective sensitivity includes a retired product wrapper. Preserve the
+     * root-only admission below; the shared helper now checks both conditions. */
+#if 0
     GtkRoot *root = gtk_widget_get_root(GTK_WIDGET(button));
     if (!GTK_IS_WINDOW(root) || !UmiGtk4WindowRegistered(GTK_WINDOW(root))) return;
+#endif
+    GtkWindow *root = UmiGtk4EnabledLauncherWindow(GTK_WIDGET(button));
+    if (root == NULL) return;
     GtkWindow *window = UmiGtk4AccountingPracticeCreate(GTK_WINDOW(root));
     if (window != NULL) gtk_window_present(window);
 }

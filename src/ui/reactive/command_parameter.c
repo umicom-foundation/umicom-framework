@@ -27,6 +27,8 @@ void umi_ui_reactive_command_parameter_init(UmiUiReactiveCommandParameter *item)
 }
 
 /* Validate that the contract pointer is available to a binding/state pipeline. */
+/* Apply shared value admission before a reactive record can be accepted or archived. The previous implementation is retained for review. */
+#if 0
 int umi_ui_reactive_command_parameter_valid(const UmiUiReactiveCommandParameter *item) {
     /* Fixed-size fields may come from a plug-in or restored state. Check
      * every terminator before the domain rules use these strings. Add each
@@ -36,6 +38,19 @@ int umi_ui_reactive_command_parameter_valid(const UmiUiReactiveCommandParameter 
     if (memchr(item->value.string_value, '\0', sizeof(item->value.string_value)) == NULL) return 0;
 
     return item != NULL;
+}
+#endif
+int umi_ui_reactive_command_parameter_valid(const UmiUiReactiveCommandParameter *item) {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (item == NULL) return 0;
+    if (memchr(item->name, '\0', sizeof(item->name)) == NULL) return 0;
+    if (memchr(item->value.string_value, '\0', sizeof(item->value.string_value)) == NULL) return 0;
+
+    /* Reuse the same kind contract as UI properties. Archive terminator
+     * checks above still cover every encoded fixed text field. */
+    return umi_ui_value_valid(&item->value);
 }
 
 /* State transfer belongs to this Framework value owner. Explicit fields keep

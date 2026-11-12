@@ -41,6 +41,59 @@ extern "C"
  * by the later operation. No output path or authority is manufactured. */
     UmiStatus UmiRootedFileValidatePath(const char *root, const char *relativePath);
 
+
+    /** Apply the same portable relative-name syntax without requiring a root.
+     * No file is opened. The caller supplies readable terminated input. */
+    UmiStatus UmiRootedFileValidateRelativePath(const char *relativePath);
+
+    typedef enum UmiRootedPathRelation {
+        UMI_ROOTED_PATH_DISJOINT = 0,
+        UMI_ROOTED_PATH_EQUAL = 1,
+        UMI_ROOTED_PATH_FIRST_PARENT = 2,
+        UMI_ROOTED_PATH_SECOND_PARENT = 3
+    } UmiRootedPathRelation;
+
+    /** Compare two admitted portable names after separator normalization and
+     * ASCII-only case folding. Parent relations require a component boundary.
+     * The result is unchanged on refusal. This conservative portability policy
+     * does not resolve filesystem objects, Unicode case folding, links, 8.3
+     * names or mounts. Serialize access to input storage for the whole call. */
+    UmiStatus UmiRootedFileCompareRelativePaths(const char *first, const char *second,
+        UmiRootedPathRelation *outRelation);
+
+
+    typedef struct UmiRootedDirectoryCreation {
+        size_t directories_created;
+        int complete;
+        UmiStatus status;
+    } UmiRootedDirectoryCreation;
+
+    /** Ensure a portable relative directory chain beneath an existing absolute
+     * root. Existing ordinary directories are accepted; links/reparse points
+     * and nondirectory components are refused. Missing descendants are created
+     * one component at a time under checked parents. The root is never created.
+     * POSIX uses descriptor-relative operations; Windows holds checked parents
+     * without delete sharing. Ancestors above the root remain trusted.
+     *
+     * report is required and reset on every attempt. directories_created counts
+     * successful native creates, including partial progress on later failure.
+     * No directory is removed or rolled back. New POSIX directories request
+     * mode 0700 subject to umask/default ACLs; Windows inherits parent policy.
+     * No durability, workspace trust, concurrent-content lock or subsequent-call
+     * reservation is granted. Serialize the caller's edits. Report storage must
+     * not overlap input strings, which remain readable for the call. */
+    UmiStatus UmiRootedDirectoryEnsure(const char *root, const char *relativePath,
+        UmiRootedDirectoryCreation *report);
+
+
+    /** Create a new final directory with an exclusive native operation.
+     * Missing intermediate descendants are prepared like Ensure. An existing
+     * final name returns ALREADY_EXISTS even when it is an ordinary directory.
+     * Partial parent creation is reported and retained. No reservation survives
+     * this call; callers must still prevent external destination mutation. */
+    UmiStatus UmiRootedDirectoryCreate(const char *root, const char *relativePath,
+        UmiRootedDirectoryCreation *report);
+
     /* Read a regular file into owned size+1 storage under maximumBytes. Binary
  * bytes are retained and a trailing NUL is added. Free with UmiRootedFileFree.
  * Failure clears both outputs and never publishes a partial read. */

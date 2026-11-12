@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_COLUMN_CATALOGUE_H
 
 #include "umicom/ui/enterprise/column_descriptor.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent column catalogue data shared with callers of this public contract.
  */
@@ -41,4 +47,8 @@ const UmiUiEntColumnDescriptor *umi_ui_ent_column_catalogue_find(const UmiUiEntC
  */
 UmiStatus umi_ui_ent_column_catalogue_move(UmiUiEntColumnCatalogue *c,size_t from,size_t to);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

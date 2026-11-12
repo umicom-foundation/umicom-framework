@@ -139,6 +139,12 @@ UmiStatus umi_developer_journal_append(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* The journal is also public without a runtime wrapper. Reserve every
+     * increment before touching the ring or a caller-owned output entry. */
+    if (journal->next_sequence == UINT64_MAX || journal->revision == UINT64_MAX ||
+        (journal->count == UMI_DEVELOPER_JOURNAL_CAPACITY && journal->dropped_count == UINT64_MAX))
+        return UMI_STATUS_INVALID_STATE;
+
     memset(&entry, 0, sizeof(entry));
     entry.struct_size = (uint32_t)sizeof(entry);
     entry.api_version = UMI_DEVELOPER_JOURNAL_API_VERSION;
@@ -240,6 +246,10 @@ UmiStatus umi_developer_journal_snapshot(
  * Release or reset state held by developer journal so the same storage can be reused
  * safely.
  */
+/* Retain the former unchecked clear for review. The status-bearing operation
+ * below preserves ring contents when revision identity is exhausted; the
+ * original void interface remains a compatibility wrapper. */
+#if 0
 void umi_developer_journal_clear(UmiDeveloperJournal *journal)
 {
     /*
@@ -254,4 +264,21 @@ void umi_developer_journal_clear(UmiDeveloperJournal *journal)
     journal->count = 0U;
     journal->dropped_count = 0U;
     journal->revision += 1U;
+}
+
+#endif
+UmiStatus umi_developer_journal_clear_checked(UmiDeveloperJournal *journal)
+{
+    if (journal == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (journal->revision == UINT64_MAX) return UMI_STATUS_INVALID_STATE;
+    journal->start = 0U;
+    journal->count = 0U;
+    journal->dropped_count = 0U;
+    journal->revision += 1U;
+    return UMI_STATUS_OK;
+}
+
+void umi_developer_journal_clear(UmiDeveloperJournal *journal)
+{
+    (void)umi_developer_journal_clear_checked(journal);
 }

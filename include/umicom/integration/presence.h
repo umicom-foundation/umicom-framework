@@ -25,6 +25,12 @@
 #include "umicom/base/status.h"
 #include "umicom/integration/types.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Represent the integration presence record data shared with callers of this public
  * contract.
@@ -66,4 +72,8 @@ bool umi_integration_presence_is_active(
     const char *application_id,
     uint64_t now_ms);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

@@ -120,6 +120,9 @@ UmiStatus umi_developer_project_variable_set(
 }
 #endif
 
+/* Preserve the revision-aware mutation for review. The replacement stages
+ * both fields and validates occupied storage before indexing it. */
+#if 0
 UmiStatus umi_developer_project_variable_set(
     UmiDeveloperProjectVariableSet *variables,
     const char *name,
@@ -179,11 +182,64 @@ UmiStatus umi_developer_project_variable_set(
     variables->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+/* Owned slots expose their capacities, so validate every string before lookup.
+ * This does not inspect unoccupied slots or require a nonzero revision; a
+ * zero-initialized empty set remains compatible with existing callers. */
+UmiStatus umi_developer_project_variable_set_validate(
+    const UmiDeveloperProjectVariableSet *variables)
+{
+    if (variables == NULL || variables->count > UMI_DEVELOPER_PROJECT_VARIABLE_CAPACITY)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t i = 0U; i < variables->count; ++i)
+        if (memchr(variables->variables[i].name, '\0',
+                   sizeof variables->variables[i].name) == NULL ||
+            variables->variables[i].name[0] == '\0' ||
+            memchr(variables->variables[i].value, '\0',
+                   sizeof variables->variables[i].value) == NULL)
+            return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t i = 0U; i < variables->count; ++i)
+        for (size_t j = i + 1U; j < variables->count; ++j)
+            if (strcmp(variables->variables[i].name, variables->variables[j].name) == 0)
+                return UMI_STATUS_ALREADY_EXISTS;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_developer_project_variable_set(
+    UmiDeveloperProjectVariableSet *variables, const char *name, const char *value)
+{
+    UmiStatus status = umi_developer_project_variable_set_validate(variables);
+    if (status != UMI_STATUS_OK) return status;
+    if (variables->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (name == NULL || name[0] == '\0' || value == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+
+    /* Copy both strings before changing the owner. Inputs may borrow another
+     * occupied slot, and a long value must not leave an unpublished name. */
+    UmiDeveloperProjectVariable candidate = {0};
+    status = copy_text(candidate.name, sizeof candidate.name, name);
+    if (status != UMI_STATUS_OK) return status;
+    status = copy_text(candidate.value, sizeof candidate.value, value);
+    if (status != UMI_STATUS_OK) return status;
+    size_t index = 0U;
+    for (; index < variables->count; ++index)
+        if (strcmp(variables->variables[index].name, candidate.name) == 0) break;
+    if (index == UMI_DEVELOPER_PROJECT_VARIABLE_CAPACITY)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    memcpy(&variables->variables[index], &candidate, sizeof candidate);
+    if (index == variables->count) ++variables->count;
+    ++variables->revision;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the developer project variable get operation used by this module and its client
  * applications.
  */
+/* Keep the former unchecked lookup for comparison. The active lookup only
+ * returns a borrowed value after all occupied storage has been admitted. */
+#if 0
 const char *umi_developer_project_variable_get(
     const UmiDeveloperProjectVariableSet *variables,
     const char *name)
@@ -195,6 +251,32 @@ const char *umi_developer_project_variable_get(
      * used.
      */
     if (variables == NULL || name == NULL) return NULL;
+
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < variables->count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(variables->variables[index].name, name) == 0) {
+            return variables->variables[index].value;
+        }
+    }
+
+    return NULL;
+}
+#endif
+
+const char *umi_developer_project_variable_get(
+    const UmiDeveloperProjectVariableSet *variables,
+    const char *name)
+{
+    size_t index;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (name == NULL ||
+        umi_developer_project_variable_set_validate(variables) != UMI_STATUS_OK)
+        return NULL;
 
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < variables->count; ++index) {

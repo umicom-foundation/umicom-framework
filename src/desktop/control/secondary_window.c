@@ -1,7 +1,10 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/desktop/control/secondary_window.c
- * PURPOSE: Implement describe secondary-window lifecycle and owner identity.
+ *
+ * PURPOSE:
+ *   Implement describe secondary-window lifecycle and owner identity.
+ *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
  * Umicom Foundation
@@ -329,3 +332,10 @@ UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_desktop_secondary_window_archive_decode_w
  * caller. Imported metadata remains evidence; registry publication is separate. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_desktop_secondary_window_archive_decode_if_unchanged, umi_desktop_secondary_window_archive_encode,
     UmiDesktopSecondaryWindowSnapshot, ArchiveSchema, ArchiveBound, ArchiveReadFields, ArchiveValidate)
+
+/* Compare through this owner's validated codec so native review uses the
+ * same fields as persistence. Caller-owned scratch avoids per-call allocation;
+ * an equal observation remains separate from revision-checked publication. */
+#include "../../base/value_compare_internal.h"
+UMI_DEFINE_VALUE_COMPARE(umi_desktop_secondary_window_archive_compare_with_workspace,
+    UmiDesktopSecondaryWindowSnapshot, umi_desktop_secondary_window_archive_encode)

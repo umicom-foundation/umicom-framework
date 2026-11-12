@@ -41,6 +41,10 @@ typedef struct UmiBuildResult {
     UmiBuildDiagnosticList diagnostics;
 } UmiBuildResult;
 
+/** Check inline text and live diagnostic storage without changing the record.
+ * This does not certify phase/state consistency, execution or source identity. */
+UmiStatus UmiBuildResultValidateStorage(const UmiBuildResult *result);
+
 UmiStatus umi_build_result_create(UmiBuildResult **out_result);
 void umi_build_result_destroy(UmiBuildResult *result);
 void umi_build_result_init(UmiBuildResult *result,
@@ -51,6 +55,7 @@ void umi_build_result_finish(UmiBuildResult *result,
                              UmiStatus status,
                              int exit_code,
                              uint64_t duration_ms);
+/** Malformed result storage is refused without modifying out_text. */
 UmiStatus umi_build_result_summary(const UmiBuildResult *result,
                                    char *out_text,
                                    size_t capacity);

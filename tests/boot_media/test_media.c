@@ -1,20 +1,19 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/boot_media/test_media.c
+ *
  * PURPOSE:
- *   Synthetic boot structures are data, NOT bootable guests. All write tests use fresh
- *   regular files. No physical drive, mounted filesystem or optical device is opened by
- *   these tests. This test executable never enables device writes.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
- *---------------------------------------------------------------------------*/
-
-/*-----------------------------------------------------------------------------
- * Umicom Framework tests | Sammy Hegab, Umicom Foundation | MIT
- * Synthetic boot structures are data, NOT bootable guests. All write tests use
+ *   Verify media contracts with synthetic structures and new regular-file destinations.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*//* Synthetic boot structures are data, NOT bootable guests. All write tests use
  * fresh regular files. No physical drive, mounted filesystem or optical device
- * is opened by these tests. This test executable never enables device writes.
- *---------------------------------------------------------------------------*/
+ * is opened by these tests. This test executable never enables device writes. */
 
 #ifndef _WIN32
 #define _POSIX_C_SOURCE 200809L
@@ -63,6 +62,10 @@ static void Mbr(unsigned char*p) {
     Put32(p+458,SIZE/512U-1U);
 }
 
+/* The original four-slot fixture occupied only one reserved sector on each
+ * side. Preserve it for review; use a complete 16 KiB reservation in the
+ * successful fixture so positive evidence describes supported GPT geometry. */
+#if 0
 static void Gpt(unsigned char*p)
 {
     Mbr(p);
@@ -87,6 +90,37 @@ static void Gpt(unsigned char*p)
         h[56]=1;
         Put64(h+72,i?SIZE/512U-2U:2U);
         Put32(h+80,4);
+        Put32(h+84,128);
+        Put32(h+88,crc);
+        Put32(h+16,BmCrc32(h,92));
+    }
+}
+#endif
+
+static void Gpt(unsigned char*p)
+{
+    Mbr(p);
+    p[446]=0;
+    p[450]=0xee;
+    unsigned char*entries=p+1024U;
+    entries[0]=1;
+    entries[16]=2;
+    Put64(entries+32,34);
+    Put64(entries+40,100);
+    uint32_t crc=BmCrc32(entries,16384U);
+    memcpy(p+SIZE-33U*512U,entries,16384U);
+    for (unsigned i=0;i<2U;++i) {
+        unsigned char*h=i?p+SIZE-512U:p+512U;
+        memcpy(h,"EFI PART",8);
+        Put32(h+8,0x10000U);
+        Put32(h+12,92);
+        Put64(h+24,i?SIZE/512U-1U:1U);
+        Put64(h+32,i?1U:SIZE/512U-1U);
+        Put64(h+40,34U);
+        Put64(h+48,SIZE/512U-34U);
+        h[56]=1;
+        Put64(h+72,i?SIZE/512U-33U:2U);
+        Put32(h+80,128U);
         Put32(h+84,128);
         Put32(h+88,crc);
         Put32(h+16,BmCrc32(h,92));
@@ -172,7 +206,38 @@ static int InspectCase(const char *name,const char *file,unsigned char *data)
         if (!strcmp(name,"gpt.header_crc"))data[512+16]^=1;
         if (!strcmp(name,"gpt.table_crc"))data[1024]^=1;
         if (!strcmp(name,"gpt.backup"))data[SIZE-512+24]^=1;
+        /* The backup array now begins before its full 16 KiB reservation. */
+#if 0
         if (!strcmp(name,"gpt.backup_table"))data[SIZE-1024+10]^=1;
+#endif
+        if (!strcmp(name,"gpt.backup_table"))data[SIZE-33U*512U+10U]^=1;
+        /* These mutations keep both CRCs and header copies consistent. They
+         * isolate format policy from an incidental checksum or backup failure. */
+        if (!strcmp(name,"gpt.stride") || !strcmp(name,"gpt.primary_reservation") ||
+            !strcmp(name,"gpt.backup_reservation") || !strcmp(name,"gpt.reserved_attributes")) {
+            unsigned char *entries=data+1024U;
+            uint32_t width=!strcmp(name,"gpt.stride")?384U:128U;
+            size_t length=4U*width;
+            uint64_t other=!strcmp(name,"gpt.backup_reservation")?SIZE/512U-2U:SIZE/512U-33U;
+            if (!strcmp(name,"gpt.reserved_attributes"))Put64(entries+48U,8U);
+            memcpy(data+other*512U,entries,length);
+            uint32_t crc=BmCrc32(entries,length);
+            for(unsigned i=0U;i<2U;++i) {
+                unsigned char *h=i?data+SIZE-512U:data+512U;
+                Put32(h+80U,4U);Put32(h+84U,width);Put32(h+88U,crc);
+                if (!strcmp(name,"gpt.primary_reservation"))Put64(h+40U,3U);
+                if(i)Put64(h+72U,other);
+                Put32(h+16U,0U);Put32(h+16U,BmCrc32(h,92U));
+            }
+        }
+        if (!strcmp(name,"gpt.protective_short"))Put32(data+458U,1U);
+        if (!strcmp(name,"gpt.protective_zero_start"))Put32(data+454U,0U);
+        if (!strcmp(name,"gpt.protective_past_end"))Put32(data+458U,SIZE/512U);
+        if (!strcmp(name,"gpt.protective_shifted")) {
+            Put32(data+454U,2U);Put32(data+458U,SIZE/512U-2U);
+        }
+        if (!strcmp(name,"gpt.protective_duplicate"))memcpy(data+462U,data+446U,16U);
+        if (!strcmp(name,"gpt.protective_missing"))memset(data+446U,0,16U);
         if (!strcmp(name,"gpt.large_count")) {
             Put32(data+512+80,UINT32_MAX);
             memset(data+512+16,0,4);
@@ -181,7 +246,18 @@ static int InspectCase(const char *name,const char *file,unsigned char *data)
     }
     else if (!strncmp(name,"iso.",4)) {
         Iso(data,1);
+        /* Preserve the earlier acceptance set; the shared parser also accepts
+         * UEFI zero/one counts in a catalogue section. */
+#if 0
         valid=!strcmp(name,"iso.valid")||!strcmp(name,"iso.bios");
+#endif
+        valid=!strcmp(name,"iso.valid")||!strcmp(name,"iso.bios")||
+            !strcmp(name,"iso.efi_zero")||!strcmp(name,"iso.efi_one");
+        if (!strcmp(name,"iso.efi_zero"))Put16(data+20*2048+102,0);
+        if (!strcmp(name,"iso.efi_one"))Put16(data+20*2048+102,1);
+        if (!strcmp(name,"iso.hidden_trailer")) {
+            memset(data+20*2048+64,0,32);
+        }
         if (!strcmp(name,"iso.bios"))Iso(data,0);
         if (!strcmp(name,"iso.endian"))data[16*2048+84]^=1;
         if (!strcmp(name,"iso.terminator"))data[18*2048]=1;
@@ -209,10 +285,14 @@ static int InspectCase(const char *name,const char *file,unsigned char *data)
     CHECK(Save(file,data,SIZE));
     UmiStatus s=UmiBootMediaInspect(file,&info,NULL,NULL,&r);
     CHECK(valid?s==UMI_STATUS_OK:s!=UMI_STATUS_OK);
+    /* These complete regular-file fixtures isolate malformed protective metadata. */
+    if (!strncmp(name,"gpt.protective_",15U))CHECK(s==UMI_STATUS_PARSE_ERROR);
     if (valid) {
         CHECK(strlen(info.sha256)==64U&&info.bytes==SIZE);
         if (!strncmp(name,"gpt.",4))CHECK(info.gptLayout&&info.partitions==1U);
         if (!strcmp(name,"iso.valid"))CHECK(info.elTorito&&info.biosEntry&&info.efiEntry);
+        if (!strcmp(name,"iso.efi_zero")||!strcmp(name,"iso.efi_one"))
+            CHECK(info.iso9660&&info.elTorito&&info.biosEntry&&info.efiEntry);
     }
     else CHECK(!info.bytes&&!info.sha256[0]);
     return 0;
@@ -311,6 +391,112 @@ static int CopyCase(const char *name,const char *source,const char *target,unsig
     return 0;
 }
 
+/* Test-only interference emulates a writer that ignores Linux advisory locks.
+ * Production callbacks must not mutate inputs; these fixtures prove rejection
+ * of a changed extent rather than relying on cooperative clients alone. */
+static int ExtentProgress(const UmiBootMediaReport *r,void *context)
+{
+    Change *change=context;
+    if (change->done)return 0;
+    int act=(change->action==100&&r->phase==UMI_BOOT_MEDIA_INSPECT)||
+        (change->action==101&&r->phase==UMI_BOOT_MEDIA_RECHECK&&!r->bytesDone)||
+        (change->action==102&&r->phase==UMI_BOOT_MEDIA_RECHECK&&r->bytesDone==r->bytesTotal)||
+        (change->action==103&&r->phase==UMI_BOOT_MEDIA_WRITE)||
+        ((change->action==104||change->action==105||change->action==106)&&r->phase==UMI_BOOT_MEDIA_VERIFY);
+    if (act) {
+        const char *destination=(change->action==104||change->action==106)?change->target:change->source;
+        unsigned char trailer[512]={0};
+        FILE *file=fopen(destination,"ab");
+        change->done=-1;
+        if (file) {
+            size_t count=fwrite(trailer,1,sizeof trailer,file);
+            int closed=fclose(file);
+            if (count==sizeof trailer&&closed==0)change->done=1;
+        }
+    }
+    return 0;
+}
+
+static int ExtentTransferCase(const char *name,const char *source,const char *target,unsigned char *data)
+{
+    Mbr(data);
+    CHECK(Save(source,data,SIZE));
+    Change change={source,target,100,0};
+    UmiBootMediaReport report={0};
+    UmiStatus status;
+    if (!strcmp(name,"image.extent_grown_inspection")) {
+        UmiBootMediaImage image;
+        memset(&image,0x5a,sizeof image);
+        status=UmiBootMediaInspect(source,&image,ExtentProgress,&change,&report);
+        for (size_t index=0;index<sizeof image;++index)
+            CHECK(((const unsigned char *)&image)[index]==0);
+    } else if (!strncmp(name,"verify.",7)) {
+        CHECK(Save(target,data,SIZE));
+        change.action=!strcmp(name,"verify.extent_source_grown")?100:106;
+        status=UmiBootMediaVerifyFile(source,target,ExtentProgress,&change,&report);
+    } else {
+        UmiBootMediaPlan *plan=NULL;
+        OK(UmiBootMediaReviewFile(source,target,&plan,NULL,NULL,&report));
+        if (!strcmp(name,"copy.extent_grown_recheck"))change.action=101;
+        else if (!strcmp(name,"copy.extent_grown_before_acquire"))change.action=102;
+        else if (!strcmp(name,"copy.extent_grown_write"))change.action=103;
+        else if (!strcmp(name,"copy.extent_grown_verify"))change.action=104;
+        else if (!strcmp(name,"copy.extent_source_after_flush"))change.action=105;
+        else {UmiBootMediaPlanDestroy(plan);CHECK(0);}
+        status=UmiBootMediaApply(plan,UmiBootMediaPlanFingerprint(plan),
+            UmiBootMediaPlanConfirmation(plan),ExtentProgress,&change,&report);
+        if (change.action<=102) {
+            CHECK(!report.outputCreated&&!report.writeStarted);
+            CHECK(UmiSetupFileCheck(target,0,NULL)==UMI_STATUS_NOT_FOUND);
+        } else CHECK(report.outputCreated&&report.writeStarted);
+        UmiBootMediaPlanDestroy(plan);
+    }
+    CHECK(change.done==1&&status==UMI_STATUS_INVALID_STATE);
+    CHECK(report.status==status&&!report.verified);
+    return 0;
+}
+
+static int ExtentCase(const char *name,const char *target)
+{
+    if (!strcmp(name,"extent.null")) {
+        CHECK(BmCheckRegularSize(NULL,0)==UMI_STATUS_INVALID_ARGUMENT);
+        return 0;
+    }
+    BmFile *file=NULL;
+    OK(BmCreate(target,&file));
+    OK(BmCheckRegularSize(file,0));
+    if (!strcmp(name,"extent.zero")) {BmClose(file);return 0;}
+    unsigned char bytes[512]={0};
+    OK(BmWrite(file,0,bytes,sizeof bytes));
+    OK(BmFlush(file));
+    uint64_t remembered=file->bytes;
+    UmiStatus expected=UMI_STATUS_OK;
+    uint64_t query=sizeof bytes;
+    if (!strcmp(name,"extent.wrong_expected")) {query=0;expected=UMI_STATUS_INVALID_STATE;}
+    else if (!strcmp(name,"extent.large_expected")) {query=UINT64_MAX;expected=UMI_STATUS_INVALID_ARGUMENT;}
+    else if (!strcmp(name,"extent.grown")||!strcmp(name,"extent.shrunk")) {
+        uint64_t length=!strcmp(name,"extent.grown")?1024U:128U;
+#ifdef _WIN32
+        LARGE_INTEGER position;
+        position.QuadPart=(LONGLONG)length;
+        CHECK(SetFilePointerEx(file->handle,position,NULL,FILE_BEGIN));
+        CHECK(SetEndOfFile(file->handle));
+#else
+        CHECK(ftruncate(file->fd,(off_t)length)==0);
+#endif
+        expected=UMI_STATUS_INVALID_STATE;
+    } else if (!strcmp(name,"extent.readonly")) {
+        BmClose(file);file=NULL;
+        uint64_t size=0;
+        OK(BmSourceOpen(target,&file,&size));
+        CHECK(size==sizeof bytes);
+    } else CHECK(!strcmp(name,"extent.valid"));
+    CHECK(BmCheckRegularSize(file,query)==expected);
+    CHECK(file->bytes==remembered);
+    BmClose(file);
+    return 0;
+}
+
 static int Policy(const char *name)
 {
     UmiBootMediaImage im= {
@@ -365,6 +551,22 @@ int main(int argc,char **argv)
 {
     CHECK(argc==2||(argc==3&&!strcmp(argv[1],"example.file_workflow")));
     const char*name=argv[1];
+    if (!strcmp(name,"cli.arguments")) {
+        char *help[] = {"media", "--help", NULL};
+        char *missingCommand[] = {"media", NULL};
+        char *missingOption[] = {"media", "inspect", NULL, "unused"};
+        char *missingValue[] = {"media", "inspect", "--image", NULL};
+        char *missingProgram[] = {NULL, "--help"};
+        CHECK(UmiBootMediaMain(-1,help)==2);
+        CHECK(UmiBootMediaMain(0,help)==2);
+        CHECK(UmiBootMediaMain(2,NULL)==2);
+        CHECK(UmiBootMediaMain(2,missingCommand)==2);
+        CHECK(UmiBootMediaMain(4,missingOption)==2);
+        CHECK(UmiBootMediaMain(4,missingValue)==2);
+        CHECK(UmiBootMediaMain(2,missingProgram)==2);
+        CHECK(UmiBootMediaMain(2,help)==0);
+        return 0;
+    }
     if(!strcmp(name,"path.drive_root")){
         char out[4096];OK(UmiSetupPathJoin("C:\\","umicom-setup-1",out));
         CHECK(!strcmp(out,"C:\\umicom-setup-1"));return 0;
@@ -400,7 +602,9 @@ int main(int argc,char **argv)
     unsigned char *data=malloc(SIZE);
     CHECK(data);
     int result=1;
-    if (!strncmp(name,"mbr.",4)||!strncmp(name,"gpt.",4)||!strncmp(name,"iso.",4))result=InspectCase(name,source,
+    if (!strncmp(name,"extent.",7))result=ExtentCase(name,target);
+    else if (strstr(name,".extent_"))result=ExtentTransferCase(name,source,target,data);
+    else if (!strncmp(name,"mbr.",4)||!strncmp(name,"gpt.",4)||!strncmp(name,"iso.",4))result=InspectCase(name,source,
         data);
     else if (!strncmp(name,"copy.",5))result=CopyCase(name,source,target,data);
     else if(!strcmp(name,"example.file_workflow")){

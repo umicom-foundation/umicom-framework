@@ -35,10 +35,22 @@ typedef struct UmiPaperBrokerRuntime {
     int initialised;
 } UmiPaperBrokerRuntime;
 
+/* Keep this owner at a stable address after init; its broker points into its
+ * own storage. Do not replace the canonical callback table or copy the owner.
+ * Operations stage local state on the heap and publish it with an audit row.
+ * Audit admission failure leaves all state unchanged. Admitted operation failures
+ * retain only their audit reason. This is in-memory paper trading, not a durable
+ * transaction or external-provider rollback. Serialize access, use a nondecreasing
+ * millisecond clock representable by int64_t, and retain evidence before capacity
+ * is exhausted. Repeated cancel preserves order revisions and adds an audit row. */
 UmiStatus umi_paper_broker_runtime_init(UmiPaperBrokerRuntime *runtime);
 UmiStatus umi_paper_broker_runtime_connect(
     UmiPaperBrokerRuntime *runtime,
     uint64_t nowMilliseconds);
+/* Validate the canonical request before submitting it. Malformed requests and
+ * live-trading requests do not change either order journal or the audit sequence.
+ * An admitted adapter attempt is audited even when the adapter refuses it.
+ * The caller owns request storage and serializes access to this runtime. */
 UmiStatus umi_paper_broker_runtime_submit(
     UmiPaperBrokerRuntime *runtime,
     const UmiOrderRequest *request,

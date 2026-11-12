@@ -108,6 +108,13 @@ UmiStatus umi_ui_appearance_profile_init(
  * Check that ui appearance profile satisfies its contract before another service relies on
  * it.
  */
+/* Every inline text field must contain a terminator. Font lists use nonempty
+ * comma-separated ASCII names (letters/digits, spaces, hyphen, underscore and
+ * period). Sizes and scale must be finite and within their supported ranges.
+ * Rejection does not mutate the profile or a catalogue containing it.
+ * Diagnostic output must not overlap profile storage; that overlap returns
+ * INVALID_ARGUMENT without writing a reason. A separate short reason buffer
+ * retains the existing terminated-truncation/CAPACITY_EXCEEDED behavior. */
 UmiStatus umi_ui_appearance_profile_validate(
     const UmiUiAppearanceProfile *profile,
     char *out_reason,

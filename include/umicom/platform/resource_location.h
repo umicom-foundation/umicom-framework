@@ -320,6 +320,13 @@ UmiStatus umi_platform_resource_location_registry_archive_restore(UmiResourceLoc
 UmiStatus umi_platform_resource_location_registry_clear_if_current(UmiResourceLocationRegistry *registry,
     uint64_t expected_revision);
 
+/* Compare this record's canonical saved state using caller-owned byte scratch.
+ * See UmiValueArchiveComparison in base/value_archive.h for measurement,
+ * refusal, aliasing and lifetime rules. This call never publishes live state. */
+UmiStatus umi_platform_resource_location_snapshot_archive_compare_with_workspace(const UmiResourceLocationSnapshot *left,
+    const UmiResourceLocationSnapshot *right, void *workspace, size_t capacity,
+    UmiValueArchiveComparison *out_comparison);
+
 #ifdef __cplusplus
 }
 #endif

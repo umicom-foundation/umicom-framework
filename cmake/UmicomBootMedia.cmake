@@ -1,8 +1,24 @@
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomBootMedia.cmake
+#
+# PURPOSE:
+#   Compose the native media service, branded tools and owner-run qualification.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
 # One shared native media workflow; application adapters contain presentation.
 # This module also supports independent composition; own its SDK registration dependency.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
+# Share structural disk inspection across callers; this adds no write capability.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomGptImage.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationBranding.cmake")
 include(GNUInstallDirs)
 if(NOT TARGET Umicom::setup_centre)
     include("${CMAKE_CURRENT_LIST_DIR}/UmicomSetupCentre.cmake")
@@ -14,6 +30,8 @@ add_library(umicom_boot_media STATIC
     "${_umi_boot_media_root}/src/boot_media/image.c"
     "${_umi_boot_media_root}/src/boot_media/io.c"
     "${_umi_boot_media_root}/src/boot_media/transfer.c"
+    "${_umi_boot_media_root}/src/boot_media/report.c"
+    "${_umi_boot_media_root}/src/boot_media/discovery.c"
     "${_umi_boot_media_root}/src/boot_media/cli.c")
 if(WIN32)
     target_sources(umicom_boot_media PRIVATE "${_umi_boot_media_root}/src/boot_media/device_windows.c")
@@ -25,7 +43,8 @@ endif()
 add_library(Umicom::boot_media ALIAS umicom_boot_media)
 set_target_properties(umicom_boot_media PROPERTIES EXPORT_NAME boot_media C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
 target_include_directories(umicom_boot_media PUBLIC $<BUILD_INTERFACE:${_umi_boot_media_root}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-target_link_libraries(umicom_boot_media PUBLIC Umicom::setup_centre Umicom::native_launcher)
+target_link_libraries(umicom_boot_media PUBLIC Umicom::setup_centre Umicom::native_launcher Umicom::iso_image)
+target_link_libraries(umicom_boot_media PUBLIC Umicom::gpt_image)
 if(UMICOM_BOOT_MEDIA_ENABLE_DEVICE_WRITES)
     target_compile_definitions(umicom_boot_media PRIVATE UMICOM_BOOT_MEDIA_ENABLE_DEVICE_WRITES=1)
 endif()
@@ -74,6 +93,26 @@ if(WIN32)
     endif()
     install(TARGETS umicom-media-centre RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Framework)
 endif()
+# Reuse the application identity service without pulling GTK deployment into
+# the standalone native media SDK. The GUI retains its existing manifest and
+# bitmap fallback; the shared helper owns its canonical icon and SVG resources.
+if(WIN32)
+    enable_language(RC)
+endif()
+foreach(_media_tool IN ITEMS umicom-media umicom-media-review-example umicom-media-image-example)
+    umicom_apply_application_branding(
+        TARGET "${_media_tool}" PRODUCT_NAME "Umicom Boot Media"
+        INTERNAL_NAME "${_media_tool}" RESOURCE_ROOT "${_umi_boot_media_root}/resources"
+        NO_RUNTIME_DEPLOYMENT)
+endforeach()
+if(TARGET umicom-media-centre)
+    umicom_apply_application_branding(
+        TARGET umicom-media-centre PRODUCT_NAME "Umicom Boot Media Centre"
+        INTERNAL_NAME umicom-media-centre APPLICATION_ID org.umicom.BootMedia
+        RESOURCE_ROOT "${_umi_boot_media_root}/resources"
+        WINDOWS_GUI NO_RUNTIME_DEPLOYMENT)
+endif()
+
 install(TARGETS umicom_boot_media EXPORT UmicomFrameworkTargets ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Framework)
 # Include this exported library surface in the opt-in SDK without changing full installs.
 umicom_register_sdk_libraries(
@@ -82,6 +121,8 @@ umicom_register_sdk_libraries(
 install(TARGETS umicom-media RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Framework)
 install(DIRECTORY "${_umi_boot_media_root}/include/umicom/boot_media" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom COMPONENT Framework)
 install(FILES "${_umi_boot_media_root}/docs/learning/prepare-and-check-boot-media.html" DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)
+install(FILES "${_umi_boot_media_root}/docs/learning/boot-media-diagnostics.html"
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)
 if(BUILD_TESTING)
     add_subdirectory("${_umi_boot_media_root}/tests/boot_media" "${CMAKE_CURRENT_BINARY_DIR}/boot-media-tests")
 endif()

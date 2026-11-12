@@ -109,6 +109,12 @@ UmiStatus UmiOsImageBoot(const char *bundle, const char *qemuProgram,
 /** CLI adapter with an optional caller-owned cancellation token. The token
  * must remain alive until return; no process-global signal handler is installed
  * by the library. The standalone Linux host handles SIGINT/SIGTERM separately. */
+/* Native callable CLI boundary. argc includes the program at index zero.
+ * Borrow a vector of argc non-NULL, NUL-terminated strings, stable until return.
+ * A sentinel after the counted entries is unnecessary. Nonpositive counts,
+ * a NULL vector or any NULL counted entry return usage code 2 before help,
+ * filesystem access, image work or child-process dispatch. The caller owns the
+ * optional cancellation token throughout the synchronous invocation. */
 int UmiOsImageMainWithCancellation(int argc, char **argv, const UmiCancellationToken *cancel);
 int UmiOsImageMain(int argc, char **argv);
 #ifdef __cplusplus

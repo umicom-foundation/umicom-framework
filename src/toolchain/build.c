@@ -16,6 +16,8 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/build.h"
 #include "umicom/toolchain/build_execution.h"
+#include "umicom/toolchain/cmake_cache.h"
+#include "umicom/platform/output_file.h"
 
 #include <limits.h>
 #include <stdio.h>
@@ -562,6 +564,10 @@ static UmiStatus umi_build_clean_internal(const UmiBuildRequest *request,
     return status;
 }
 #endif
+/* The former unbounded, source-only cache scan remains for review. Shared
+ * metadata admission below rejects duplicate identities and copied caches
+ * before the same public clean operation can remove a build tree. */
+#if 0
 static UmiStatus umi_build_clean_internal(const UmiBuildRequest *request,
     UmiBuildReport *report)
 {
@@ -603,6 +609,51 @@ static UmiStatus umi_build_clean_internal(const UmiBuildRequest *request,
         (void)snprintf(report->last_output, sizeof report->last_output, "%s",
             status == UMI_STATUS_OK ? "Build directory cleaned." :
             "Clean refused or failed; select this project's separate CMake binary directory.");
+    }
+    return status;
+}
+#endif
+
+static UmiStatus umi_build_clean_internal(const UmiBuildRequest *request,
+    UmiBuildReport *report)
+{
+    if (!request || !request->source_root || !request->build_directory) return UMI_STATUS_INVALID_ARGUMENT;
+    char cwd[UMI_PATH_CAPACITY], source[UMI_PATH_CAPACITY], binary[UMI_PATH_CAPACITY];
+    char cache_path[UMI_PATH_CAPACITY];
+    UmiStatus status = umi_fs_current_directory(cwd, sizeof cwd);
+    if (status == UMI_STATUS_OK) status = umi_path_absolute(request->source_root, cwd, source, sizeof source);
+    if (status == UMI_STATUS_OK) status = umi_path_absolute(request->build_directory, source, binary, sizeof binary);
+    /* Source and its ancestors are never cleanup targets. Validate an ordinary
+     * native path before reading metadata or entering recursive removal. */
+    if (status == UMI_STATUS_OK) status = UmiOutputFileValidatePath(binary);
+    if (status == UMI_STATUS_OK && umi_path_is_within(binary, source)) status = UMI_STATUS_INVALID_ARGUMENT;
+    if (status == UMI_STATUS_OK && umi_fs_exists(binary)) {
+        status = umi_path_join(binary, "CMakeCache.txt", cache_path, sizeof cache_path);
+        UmiCMakeCache *cache = NULL;
+        if (status == UMI_STATUS_OK) {
+            cache = calloc(1U, sizeof *cache);
+            if (cache == NULL) status = UMI_STATUS_OUT_OF_MEMORY;
+        }
+        if (status == UMI_STATUS_OK) status = UmiCMakeCacheRead(cache_path, cache);
+        /* Both complete identities must agree. Copying another binary tree's
+         * cache, a duplicate selected entry or an oversized/nonregular file
+         * cannot grant permission to remove this directory. Cache contents are
+         * ownership metadata, not proof of filesystem isolation or a build. */
+        const unsigned required = UMI_CMAKE_CACHE_SOURCE | UMI_CMAKE_CACHE_BUILD;
+        if (status == UMI_STATUS_OK && ((cache->present & required) != required ||
+            !cache->source_directory[0] || !cache->build_directory[0] ||
+            !umi_path_equal(source, cache->source_directory) ||
+            !umi_path_equal(binary, cache->build_directory)))
+            status = UMI_STATUS_INVALID_STATE;
+        free(cache);
+        if (status == UMI_STATUS_OK) status = umi_fs_remove_tree(binary);
+    }
+    if (report) {
+        report->last_action = UMI_BUILD_CLEAN;
+        report->last_status = status;
+        (void)snprintf(report->last_output, sizeof report->last_output, "%s",
+            status == UMI_STATUS_OK ? "Build directory cleaned." :
+            "Clean refused or failed; select this project's separate CMake binary directory. A removal error may leave a partial tree.");
     }
     return status;
 }
@@ -1508,7 +1559,12 @@ UmiStatus UmiBuildExecuteWithOptions(
     status = umi_build_request_validate(
         action, request, NULL, 0U);
 #endif
+    /* Keep request-only admission for review. Required later-phase tools and
+     * environment metadata must also be admitted before clean or observers. */
+#if 0
     status = UmiBuildExecutionValidate(action, request, options, NULL, 0U);
+#endif
+    status = UmiBuildExecutionPreflight(profile, environment, action, request, options, NULL, 0U);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) {
         report->last_action = action;
@@ -1626,6 +1682,10 @@ UmiStatus umi_build_execute(const UmiToolchainProfile *profile,
  * Provide the build repair cache operation used by this module and its client
  * applications.
  */
+/* Recovery now uses the shared exact-entry parser, bounded input and native
+ * no-replacement rename in cache_repair.c. Preserve the former substring and
+ * ordinary rename implementation for comparison without executing it. */
+#if 0
 UmiStatus umi_build_repair_cache(
     const UmiToolchainProfile *profile,
     const char *build_directory,
@@ -1737,10 +1797,16 @@ UmiStatus umi_build_repair_cache(
         : umi_fs_rename(build_directory, recovery);
 }
 
+#endif
+
 /*
  * Provide the build write user presets operation used by this module and its client
  * applications.
  */
+/* Preset text now uses Protocol JSON escaping and bounded profile admission
+ * in user_presets.c. Retain the former interpolation for engineering review.
+ * The established replacement API remains; CLI uses explicit create-only I/O. */
+#if 0
 UmiStatus umi_build_write_user_presets(
     const UmiToolchainProfile *profile,
     const char *project_root,
@@ -1829,6 +1895,12 @@ UmiStatus umi_build_write_user_presets(
     return umi_fs_write_text(path, text);
 }
 
+#endif
+
+/* The prepared-shell service now validates its environment and reports child
+ * failure as well as transport failure. Retain the earlier implementation for
+ * review; src/toolchain/prepared_shell.c owns the unchanged public entry. */
+#if 0
 /* Provide the build open shell operation used by this module and its client applications. */
 UmiStatus umi_build_open_shell(
     const UmiToolchainProfile *profile,
@@ -1887,3 +1959,5 @@ UmiStatus umi_build_open_shell(
 
     return umi_process_execute(&request, &result);
 }
+
+#endif

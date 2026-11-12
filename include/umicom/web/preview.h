@@ -34,9 +34,15 @@ UmiStatus UmiWebPreviewStart(UmiWebPreview *preview);
 UmiStatus UmiWebPreviewStop(UmiWebPreview *preview);
 /* Headless request dispatch uses the same Host/Origin gate and static fallback.
  * The caller supplies a parsed request. File I/O can block; do not call on a
- * GUI event thread. UMI_STATUS_OK may represent a deliberate HTTP refusal. */
+ * GUI event thread. UMI_STATUS_OK may represent a deliberate HTTP refusal.
+ * This legacy entry remains limited to the inline response capacity. */
 UmiStatus UmiWebPreviewHandle(UmiWebPreview *preview,
     const UmiWebRequest *request, UmiWebResponse *response);
+/* Body-aware headless entry uses the same admission and one-MiB static limit
+ * as the native connection. Destroy a successful out_body after consuming it;
+ * metadata and HTTP error bodies follow UmiWebServiceHandleBody's contract. */
+UmiStatus UmiWebPreviewHandleBody(UmiWebPreview *preview, const UmiWebRequest *request,
+    UmiWebResponse *response, UmiWebResponseBody **out_body);
 /* A started session serves one bounded exchange; see ServerServeNext for
  * deadlines, cooperative cancellation and socket ownership. Errors never
  * retry a request. The caller decides whether to keep serving after an error.

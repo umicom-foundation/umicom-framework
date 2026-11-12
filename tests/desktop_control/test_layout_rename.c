@@ -1,7 +1,10 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/desktop_control/test_layout_rename.c
- * PURPOSE: Validate the Framework-owned layout rename contract.
+ *
+ * PURPOSE:
+ *   Validate the Framework-owned layout rename contract.
+ *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
  * Umicom Foundation
@@ -168,6 +171,8 @@ static void ArchiveFillUnusedText(UmiDesktopLayoutRenameSnapshot *value)
 #define ARCHIVE_WORKSPACE_DECODE umi_desktop_layout_rename_archive_decode_with_workspace
 /* Exercise guarded import through this domain's public snapshot codec. */
 #define ARCHIVE_CONDITIONAL_DECODE umi_desktop_layout_rename_archive_decode_if_unchanged
+/* Exercise canonical comparison with explicit caller-owned scratch. */
+#define ARCHIVE_COMPARE umi_desktop_layout_rename_archive_compare_with_workspace
 #define ARCHIVE_EQUAL RecordDefaultsEqual
 #include "../value_archive/record_cases.h"
 

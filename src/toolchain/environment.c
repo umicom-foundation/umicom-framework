@@ -23,6 +23,36 @@
 
 #include "umicom/platform/filesystem.h"
 
+/* Mutation candidates own their text before any destination changes. This also
+ * supports values borrowed from the plan being updated without overlapping
+ * snprintf buffers. Validation policy is shared by input and stored records. */
+static void umi_environment_plan_rebind(UmiEnvironmentPlan *plan);
+static UmiStatus environment_entry_validate(const UmiEnvironmentPlanEntry *entry)
+{
+    if (!memchr(entry->name, '\0', sizeof entry->name) ||
+        !memchr(entry->value, '\0', sizeof entry->value) ||
+        !entry->name[0] || strchr(entry->name, '=') ||
+        strchr(entry->name, '\n') || strchr(entry->name, '\r') ||
+        strchr(entry->value, '\n') || strchr(entry->value, '\r'))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    return UMI_STATUS_OK;
+}
+static UmiStatus environment_entry_prepare(const char *name, const char *value,
+    UmiEnvironmentPlanEntry *entry)
+{
+    if (!name || !value) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t name_length = 0, value_length = 0;
+    while (name_length < sizeof entry->name && name[name_length]) ++name_length;
+    while (value_length < sizeof entry->value && value[value_length]) ++value_length;
+    if (name_length == sizeof entry->name || value_length == sizeof entry->value)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    memset(entry, 0, sizeof *entry);
+    memcpy(entry->name, name, name_length + 1U);
+    memcpy(entry->value, value, value_length + 1U);
+    return environment_entry_validate(entry);
+}
+
+
 /*
  * Initialise environment plan from caller-provided values so later operations receive a
  * known state.
@@ -39,6 +69,9 @@ void umi_environment_plan_init(UmiEnvironmentPlan *plan)
 }
 
 /* Add environment plan only after its inputs and available capacity have been checked. */
+/* Validate existing storage and publish one owned entry only after admission.
+ * Retain the superseded implementation below for engineering review. */
+#if 0
 UmiStatus umi_environment_plan_add(UmiEnvironmentPlan *plan,
                                    const char *name,
                                    const char *value)
@@ -65,6 +98,22 @@ UmiStatus umi_environment_plan_add(UmiEnvironmentPlan *plan,
     plan->count += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_environment_plan_add(UmiEnvironmentPlan *plan,
+    const char *name, const char *value)
+{
+    UmiStatus status = umi_environment_plan_validate(plan);
+    if (status != UMI_STATUS_OK) return status;
+    UmiEnvironmentPlanEntry entry;
+    status = environment_entry_prepare(name, value, &entry);
+    if (status != UMI_STATUS_OK) return status;
+    for (size_t i = 0; i < plan->count; ++i)
+        if (!strcmp(plan->entries[i].name, entry.name)) return UMI_STATUS_ALREADY_EXISTS;
+    if (plan->count == UMI_ENVIRONMENT_PLAN_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    plan->entries[plan->count++] = entry;
+    umi_environment_plan_rebind(plan);
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the environment plan rebind operation used by this module and its client
@@ -89,6 +138,9 @@ static void umi_environment_plan_rebind(UmiEnvironmentPlan *plan)
  * Find environment plan while leaving the underlying catalogue or model owned by this
  * module.
  */
+/* Refuse malformed plans before traversing names or returning borrowed values.
+ * Retain the superseded implementation below for engineering review. */
+#if 0
 const char *umi_environment_plan_find(const UmiEnvironmentPlan *plan,
                                       const char *name)
 {
@@ -110,11 +162,23 @@ const char *umi_environment_plan_find(const UmiEnvironmentPlan *plan,
 
     return NULL;
 }
+#endif
+const char *umi_environment_plan_find(const UmiEnvironmentPlan *plan,
+    const char *name)
+{
+    if (!name || umi_environment_plan_validate(plan) != UMI_STATUS_OK) return NULL;
+    for (size_t i = 0; i < plan->count; ++i)
+        if (!strcmp(plan->entries[i].name, name)) return plan->entries[i].value;
+    return NULL;
+}
 
 /*
  * Copy environment plan into module-owned storage so callers keep ownership of their input
  * values.
  */
+/* Own replacement text before modifying a possibly aliased value.
+ * Retain the superseded implementation below for engineering review. */
+#if 0
 UmiStatus umi_environment_plan_set(UmiEnvironmentPlan *plan,
                                    const char *name,
                                    const char *value)
@@ -149,8 +213,31 @@ UmiStatus umi_environment_plan_set(UmiEnvironmentPlan *plan,
 
     return umi_environment_plan_add(plan, name, value);
 }
+#endif
+UmiStatus umi_environment_plan_set(UmiEnvironmentPlan *plan,
+    const char *name, const char *value)
+{
+    UmiStatus status = umi_environment_plan_validate(plan);
+    if (status != UMI_STATUS_OK) return status;
+    UmiEnvironmentPlanEntry entry;
+    status = environment_entry_prepare(name, value, &entry);
+    if (status != UMI_STATUS_OK) return status;
+    for (size_t i = 0; i < plan->count; ++i) {
+        if (strcmp(plan->entries[i].name, entry.name)) continue;
+        plan->entries[i] = entry;
+        umi_environment_plan_rebind(plan);
+        return UMI_STATUS_OK;
+    }
+    if (plan->count == UMI_ENVIRONMENT_PLAN_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    plan->entries[plan->count++] = entry;
+    umi_environment_plan_rebind(plan);
+    return UMI_STATUS_OK;
+}
 
 /* Check that environment plan satisfies its contract before another service relies on it. */
+/* Use one field policy and compare duplicates only after all stored text is admitted.
+ * Retain the superseded implementation below for engineering review. */
+#if 0
 UmiStatus umi_environment_plan_validate(const UmiEnvironmentPlan *plan)
 {
     size_t index;
@@ -183,6 +270,9 @@ UmiStatus umi_environment_plan_validate(const UmiEnvironmentPlan *plan)
             return UMI_STATUS_INVALID_ARGUMENT;
         }
 
+        /* Retain the former eager comparison for review. Later names have not
+         * yet passed their bounded termination checks at this point. */
+#if 0
         /* Visit each bounded item once so every record receives the same rule. */
         for (other = index + 1U; other < plan->count; ++other) {
             /* Use the stable identifier comparison to choose the matching record or policy. */
@@ -190,8 +280,33 @@ UmiStatus umi_environment_plan_validate(const UmiEnvironmentPlan *plan)
                 return UMI_STATUS_ALREADY_EXISTS;
             }
         }
+#endif
     }
 
+    /* Compare only after every field is admitted. This keeps strcmp inside
+     * validated strings and gives malformed storage priority over duplicates. */
+    for (index = 0U; index < plan->count; ++index) {
+        for (other = index + 1U; other < plan->count; ++other) {
+            if (strcmp(plan->entries[index].name, plan->entries[other].name) == 0)
+                return UMI_STATUS_ALREADY_EXISTS;
+        }
+    }
+
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_environment_plan_validate(const UmiEnvironmentPlan *plan)
+{
+    if (!plan) return UMI_STATUS_INVALID_ARGUMENT;
+    if (plan->count > UMI_ENVIRONMENT_PLAN_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+    for (size_t i = 0; i < plan->count; ++i) {
+        UmiStatus status = environment_entry_validate(&plan->entries[i]);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    for (size_t i = 0; i < plan->count; ++i)
+        for (size_t j = i + 1U; j < plan->count; ++j)
+            if (!strcmp(plan->entries[i].name, plan->entries[j].name))
+                return UMI_STATUS_ALREADY_EXISTS;
     return UMI_STATUS_OK;
 }
 
@@ -199,6 +314,9 @@ UmiStatus umi_environment_plan_validate(const UmiEnvironmentPlan *plan)
  * Provide the environment plan compose operation used by this module and its client
  * applications.
  */
+/* Build an independent candidate so failed or in-place composition preserves its inputs.
+ * Retain the superseded implementation below for engineering review. */
+#if 0
 UmiStatus umi_environment_plan_compose(const UmiEnvironmentPlan *base,
                                        const UmiEnvironmentPlan *overlay,
                                        UmiEnvironmentPlan *out_plan)
@@ -254,6 +372,35 @@ UmiStatus umi_environment_plan_compose(const UmiEnvironmentPlan *base,
     }
 
     return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_environment_plan_compose(const UmiEnvironmentPlan *base,
+    const UmiEnvironmentPlan *overlay, UmiEnvironmentPlan *out_plan)
+{
+    if (!out_plan) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = base ? umi_environment_plan_validate(base) : UMI_STATUS_OK;
+    if (status == UMI_STATUS_OK && overlay) status = umi_environment_plan_validate(overlay);
+    if (status != UMI_STATUS_OK) return status;
+    /* A plan can hold about 200 KiB of text. Heap staging avoids adding that
+     * much temporary stack use to an already nested compiler/GUI workflow. */
+    UmiEnvironmentPlan *candidate = calloc(1U, sizeof *candidate);
+    if (!candidate) return UMI_STATUS_OUT_OF_MEMORY;
+    if (base) {
+        for (size_t i = 0; i < base->count && status == UMI_STATUS_OK; ++i)
+            status = umi_environment_plan_add(candidate, base->entries[i].name, base->entries[i].value);
+    }
+    if (overlay) {
+        for (size_t i = 0; i < overlay->count && status == UMI_STATUS_OK; ++i)
+            status = umi_environment_plan_set(candidate, overlay->entries[i].name, overlay->entries[i].value);
+    }
+    if (status == UMI_STATUS_OK) {
+        *out_plan = *candidate;
+        /* Rebind after publication: borrowed pointers must refer to the
+         * destination's storage, never to the temporary candidate. */
+        umi_environment_plan_rebind(out_plan);
+    }
+    free(candidate);
+    return status;
 }
 
 /*
@@ -420,6 +567,9 @@ UmiStatus umi_environment_plan_set_assignment(
  * Provide the environment add tool operation used by this module and its client
  * applications.
  */
+/* Admit bounded validated tool paths before copying them into environment storage.
+ * Retain the earlier unchecked helper for engineering review. */
+#if 0
 static UmiStatus umi_environment_add_tool(UmiEnvironmentPlan *plan,
                                           const char *name,
                                           const UmiToolchainProfile *profile,
@@ -435,11 +585,26 @@ static UmiStatus umi_environment_add_tool(UmiEnvironmentPlan *plan,
     }
     return umi_environment_plan_add(plan, name, tool->path);
 }
+#endif
+static UmiStatus umi_environment_add_tool(UmiEnvironmentPlan *plan,
+    const char *name, const UmiToolchainProfile *profile, UmiToolKind kind)
+{
+    if (kind < 0 || kind >= UMI_TOOL_COUNT || (size_t)kind >= profile->tool_count)
+        return UMI_STATUS_NOT_FOUND;
+    const UmiToolInfo *tool = umi_toolchain_profile_tool(profile, kind);
+    if (!tool || tool->state != UMI_TOOL_VALIDATED) return UMI_STATUS_NOT_FOUND;
+    if (!memchr(tool->path, '\0', sizeof tool->path) || !tool->path[0])
+        return UMI_STATUS_INVALID_ARGUMENT;
+    return umi_environment_plan_add(plan, name, tool->path);
+}
 
 /*
  * Provide the environment plan from toolchain operation used by this module and its client
  * applications.
  */
+/* Publish a complete toolchain environment and propagate malformed optional values.
+ * The earlier incremental construction is retained for engineering review. */
+#if 0
 UmiStatus umi_environment_plan_from_toolchain(
     const UmiToolchainProfile *profile,
     UmiEnvironmentPlan *out_plan)
@@ -524,11 +689,79 @@ UmiStatus umi_environment_plan_from_toolchain(
 
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_environment_plan_from_toolchain(
+    const UmiToolchainProfile *profile, UmiEnvironmentPlan *out_plan)
+{
+    if (!out_plan || !umi_toolchain_profile_storage_compatible(profile))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (!memchr(profile->bin_directory, '\0', sizeof profile->bin_directory) ||
+        !memchr(profile->prefix_directory, '\0', sizeof profile->prefix_directory))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* A failed optional value is different from an absent optional tool.
+     * Stage the whole plan and publish only after all present values fit. */
+    UmiEnvironmentPlan *candidate = calloc(1U, sizeof *candidate);
+    if (!candidate) return UMI_STATUS_OUT_OF_MEMORY;
+    UmiStatus status = UMI_STATUS_OK;
+#ifdef _WIN32
+    const char separator = ';';
+#else
+    const char separator = ':';
+#endif
+    if (profile->bin_directory[0]) {
+        const char *current_path = getenv("PATH");
+        char path_value[UMI_ENVIRONMENT_VALUE_CAPACITY];
+        /* Do not add an empty search component when the inherited PATH is
+         * absent. Existing inherited components retain their original order. */
+        int written = current_path && current_path[0]
+            ? snprintf(path_value, sizeof path_value, "%s%c%s",
+                profile->bin_directory, separator, current_path)
+            : snprintf(path_value, sizeof path_value, "%s", profile->bin_directory);
+        if (written < 0 || (size_t)written >= sizeof path_value)
+            status = UMI_STATUS_CAPACITY_EXCEEDED;
+        else status = umi_environment_plan_add(candidate, "PATH", path_value);
+    }
+    if (status == UMI_STATUS_OK)
+        status = umi_environment_add_tool(candidate, "CC", profile, profile->selected_c_compiler);
+    const UmiToolKind kinds[] = {profile->selected_cpp_compiler, UMI_TOOL_PKG_CONFIG,
+        UMI_TOOL_NINJA, UMI_TOOL_WINDRES};
+    const char *const names[] = {"CXX", "PKG_CONFIG", "CMAKE_MAKE_PROGRAM", "RC"};
+    for (size_t i = 0; i < sizeof kinds / sizeof kinds[0] && status == UMI_STATUS_OK; ++i) {
+        UmiStatus optional = umi_environment_add_tool(candidate, names[i], profile, kinds[i]);
+        if (optional != UMI_STATUS_NOT_FOUND) status = optional;
+    }
+    if (status == UMI_STATUS_OK && profile->prefix_directory[0])
+        status = umi_environment_plan_add(candidate, "CMAKE_PREFIX_PATH", profile->prefix_directory);
+    const UmiToolInfo *java = (size_t)UMI_TOOL_JAVA < profile->tool_count
+        ? umi_toolchain_profile_tool(profile, UMI_TOOL_JAVA) : NULL;
+    if (status == UMI_STATUS_OK && java && java->state == UMI_TOOL_VALIDATED) {
+        char java_bin[UMI_PATH_CAPACITY], java_home[UMI_PATH_CAPACITY];
+        if (!memchr(java->path, '\0', sizeof java->path) || !java->path[0] ||
+            strchr(java->path, '\n') || strchr(java->path, '\r'))
+            status = UMI_STATUS_INVALID_ARGUMENT;
+        else {
+            status = umi_fs_parent(java_bin, sizeof java_bin, java->path);
+            if (status == UMI_STATUS_OK)
+                status = umi_fs_parent(java_home, sizeof java_home, java_bin);
+            if (status == UMI_STATUS_OK)
+                status = umi_environment_plan_add(candidate, "JAVA_HOME", java_home);
+        }
+    }
+    if (status == UMI_STATUS_OK) {
+        *out_plan = *candidate;
+        umi_environment_plan_rebind(out_plan);
+    }
+    free(candidate);
+    return status;
+}
 
 /*
  * Provide the environment plan variables operation used by this module and its client
  * applications.
  */
+/* Expose process entries only after validating the complete stored plan.
+ * Retain the superseded implementation below for engineering review. */
+#if 0
 const UmiEnvironmentVariable *umi_environment_plan_variables(
     UmiEnvironmentPlan *plan)
 {
@@ -540,11 +773,21 @@ const UmiEnvironmentVariable *umi_environment_plan_variables(
     umi_environment_plan_rebind(plan);
     return plan->process_entries;
 }
+#endif
+const UmiEnvironmentVariable *umi_environment_plan_variables(UmiEnvironmentPlan *plan)
+{
+    if (umi_environment_plan_validate(plan) != UMI_STATUS_OK) return NULL;
+    umi_environment_plan_rebind(plan);
+    return plan->process_entries;
+}
 
 /*
  * Write environment plan in its stable representation and report capacity or input
  * failures to the caller.
  */
+/* Validate count and text before formatting or opening an environment export.
+ * Retain the superseded implementation below for engineering review. */
+#if 0
 UmiStatus umi_environment_plan_write(const UmiEnvironmentPlan *plan,
                                      const char *path)
 {
@@ -576,6 +819,24 @@ UmiStatus umi_environment_plan_write(const UmiEnvironmentPlan *plan,
             (size_t)written >= sizeof(text) - used) {
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
+        used += (size_t)written;
+    }
+    return umi_fs_write_text(path, text);
+}
+#endif
+UmiStatus umi_environment_plan_write(const UmiEnvironmentPlan *plan, const char *path)
+{
+    if (!path) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = umi_environment_plan_validate(plan);
+    if (status != UMI_STATUS_OK) return status;
+    char text[32768];
+    size_t used = 0;
+    text[0] = '\0';
+    for (size_t i = 0; i < plan->count; ++i) {
+        int written = snprintf(text + used, sizeof text - used, "%s=%s\n",
+            plan->entries[i].name, plan->entries[i].value);
+        if (written < 0 || (size_t)written >= sizeof text - used)
+            return UMI_STATUS_CAPACITY_EXCEEDED;
         used += (size_t)written;
     }
     return umi_fs_write_text(path, text);

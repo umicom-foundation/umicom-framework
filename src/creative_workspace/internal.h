@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/creative_workspace/internal.h
- * PURPOSE: Keep editing, wire encoding and transaction ownership private to Framework.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Keep editing, wire encoding and transaction ownership private to Framework.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_CREATIVE_INTERNAL_H
 #define UMICOM_CREATIVE_INTERNAL_H
@@ -43,6 +50,10 @@ void UmiCreativeWriterInit(UmiCreativeWriter * writer, size_t capacity);
 void UmiCreativeWriterAppend(UmiCreativeWriter * writer, const void * bytes, size_t size);
 void UmiCreativeWriterText(UmiCreativeWriter * writer, const char * text);
 void UmiCreativeWriterNumber(UmiCreativeWriter * writer, uint64_t value);
+/* JSON text uses the shared encoder and the same sticky failure/size owner.
+ * Callers first admit text under their format rules; this helper does not add
+ * a second Unicode/control policy to the existing encoder. */
+void UmiCreativeWriterJson(UmiCreativeWriter *writer, const char *text);
 void UmiCreativeWriterXml(UmiCreativeWriter * writer, const char * text);
 UmiStatus UmiCreativeWriterFinish(UmiCreativeWriter * writer, UmiCreativeExport * out);
 UmiStatus UmiCreativeExportSvg(const UmiCreativeProject * project, uint32_t timeMs, UmiCreativeExport * out);

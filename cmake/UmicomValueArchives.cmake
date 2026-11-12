@@ -98,3 +98,41 @@ if(BUILD_TESTING)
         framework.value_archive.workspace.installed_source PROPERTIES
         TIMEOUT 60 LABELS "framework;value-archive;workspace;regression")
 endif()
+
+# Compare through native codecs; the executable is also an installed-SDK lesson.
+if(BUILD_TESTING)
+    add_executable(umicom-archive-comparison-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/value_archive/test_comparison.c")
+    target_link_libraries(umicom-archive-comparison-test PRIVATE Umicom::base)
+    add_executable(umicom-archive-comparison-example
+        "${CMAKE_CURRENT_LIST_DIR}/../examples/value_archive/compare.c")
+    target_link_libraries(umicom-archive-comparison-example PRIVATE Umicom::project)
+    foreach(_target umicom-archive-comparison-test umicom-archive-comparison-example)
+        set_target_properties("${_target}" PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        umicom_apply_warnings("${_target}")
+        umicom_apply_sanitizers("${_target}")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target("${_target}")
+        endif()
+    endforeach()
+    if(WIN32)
+        enable_language(RC)
+    endif()
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationBranding.cmake")
+    umicom_apply_application_branding(TARGET umicom-archive-comparison-example
+        PRODUCT_NAME "Umicom Native State Comparison"
+        INTERNAL_NAME umicom-archive-comparison-example
+        RESOURCE_ROOT "${CMAKE_CURRENT_LIST_DIR}/../resources"
+        NO_RUNTIME_DEPLOYMENT)
+    add_test(NAME framework.value_archive.comparison.failures COMMAND umicom-archive-comparison-test)
+    add_test(NAME framework.value_archive.comparison.example COMMAND umicom-archive-comparison-example)
+    set_tests_properties(framework.value_archive.comparison.failures
+        framework.value_archive.comparison.example PROPERTIES
+        TIMEOUT 60 LABELS "framework;value-archive;native-comparison;regression")
+endif()
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/compare-native-state.html"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/learning"
+    COMPONENT Framework)
+install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/compare-native-state.html"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/learning"
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)

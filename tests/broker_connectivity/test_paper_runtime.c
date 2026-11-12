@@ -59,6 +59,15 @@ int main(void)
     invalid.instrument = (UmiInstrument){0};
     assert(umi_paper_broker_runtime_submit(&runtime, &invalid, 1050U) ==
            UMI_STATUS_INVALID_ARGUMENT);
+    /* An unterminated fixed field must be refused before audit uses it as text. */
+    invalid = request;
+    memset(invalid.client_order_id.value, 'x', sizeof invalid.client_order_id.value);
+    assert(umi_paper_broker_runtime_submit(&runtime, &invalid, 1050U) ==
+           UMI_STATUS_INVALID_ARGUMENT);
+    invalid = request;
+    invalid.side = (UmiSide)0;
+    assert(umi_paper_broker_runtime_submit(&runtime, &invalid, 1050U) ==
+           UMI_STATUS_INVALID_ARGUMENT);
     assert(runtime.orders.count == 0U && runtime.storage.orders.count == 0U);
     assert(runtime.audit.count == auditCount);
     assert(runtime.nextAuditSequence == auditSequence);

@@ -16,6 +16,12 @@
 #define UMICOM_UI_ENTERPRISE_FOCUS_MODEL_H
 
 #include "umicom/ui/enterprise/types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent focus model data shared with callers of this public contract.
  */
@@ -31,4 +37,8 @@ void umi_ui_ent_focus_model_clear(UmiUiEntFocusModel *m);
  */
 UmiStatus umi_ui_ent_focus_model_set(UmiUiEntFocusModel *m,size_t row,size_t column,size_t row_count,size_t column_count);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

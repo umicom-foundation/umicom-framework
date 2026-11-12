@@ -15,6 +15,12 @@
 #ifndef UMICOM_SECURITY_APPROVAL_H
 #define UMICOM_SECURITY_APPROVAL_H
 #include "umicom/security/governance.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the security approval data shared with callers of this public contract.
  */
@@ -58,4 +64,8 @@ UmiStatus umi_security_approval_decide(UmiSecurityApprovalStore *store,const cha
  * Check that security approval satisfies its contract before another service relies on it.
  */
 bool umi_security_approval_valid(const UmiSecurityApproval *approval,uint64_t now_ns);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

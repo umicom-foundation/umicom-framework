@@ -15,6 +15,12 @@
 #ifndef UMICOM_CODEGUARD_EVIDENCE_H
 #define UMICOM_CODEGUARD_EVIDENCE_H
 #include "umicom/codeguard/quality_types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the code guard evidence data shared with callers of this public contract.
  */
@@ -60,4 +66,8 @@ size_t umi_codeguard_evidence_count_state(const UmiCodeGuardEvidenceStore *store
  * applications.
  */
 size_t umi_codeguard_evidence_count_kind(const UmiCodeGuardEvidenceStore *store,UmiCodeGuardEvidenceKind kind);
+
+#ifdef __cplusplus
+}
+#endif
 #endif

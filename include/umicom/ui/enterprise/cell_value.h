@@ -17,6 +17,12 @@
 
 #include <stdint.h>
 #include "umicom/ui/enterprise/types.h"
+
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
 /**
  * Represent the ui ent cell value data shared with callers of this public contract.
  */
@@ -25,6 +31,15 @@ typedef struct UmiUiEntCellValue { UmiUiEntValueKind kind; char text[UMI_UI_ENT_
  * Release or reset state held by ui ent cell value so the same storage can be reused
  * safely.
  */
+/** Validate only the active value: terminated text, a known kind and a 0/1
+ * boolean. Other fields are ignored. REAL retains ordinary C floating-point
+ * equality semantics, including NaN comparing unequal. No state is changed. */
+UmiStatus umi_ui_ent_cell_value_validate(const UmiUiEntCellValue *value);
+
+/** Text replacement captures borrowed input before changing the cell. On any
+ * error the complete cell is unchanged. Text must be readable through its
+ * terminator or UMI_UI_ENT_VALUE_CAPACITY; no input is truncated. Equality
+ * returns zero for malformed values. Serialize mutation through one owner. */
 void umi_ui_ent_cell_value_clear(UmiUiEntCellValue *value);
 /**
  * Provide the ui ent cell value set text operation used by this module and its client
@@ -52,4 +67,8 @@ void umi_ui_ent_cell_value_set_boolean(UmiUiEntCellValue *value,int enabled);
  */
 int umi_ui_ent_cell_value_equal(const UmiUiEntCellValue *left,const UmiUiEntCellValue *right);
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

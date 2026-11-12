@@ -26,7 +26,14 @@ UmiStatus VmBootRecordingValidate(const char *directory)
     }
     /* Validate the derived filename during pure planning, before a start can
      * reserve its directory. Reuse the raw writer's native path contract. */
+    /* A valid directory can already fill the VM path field. Appending the
+     * diagnostic filename therefore needs the setup service's output capacity.
+     * Keep the former declaration for review; planning must never write beyond
+     * its local storage while validating a derived filename. */
+#if 0
     char diagnostics[UMI_VM_PATH];
+#endif
+    char diagnostics[UMI_SETUP_PATH_CAPACITY];
     UmiStatus status = UmiSetupPathJoin(directory, "qemu-errors.log", diagnostics);
     return status == UMI_STATUS_OK ? UmiOutputFileValidatePath(diagnostics) : status;
 }

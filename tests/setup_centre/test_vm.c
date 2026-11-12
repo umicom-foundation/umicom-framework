@@ -1,14 +1,17 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/setup_centre/test_vm.c
+ *
  * PURPOSE:
- *   Synthetic image-header fixtures. Callback tests are not QEMU/GRUB execution.
- * ORGANISATION: Umicom Foundation
- * LICENCE: MIT
+ *   Exercise synthetic VM and ISO structure contracts; callbacks do not execute QEMU or GRUB.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework tests | Sammy Hegab, Umicom Foundation | MIT
- * Synthetic image-header fixtures. Callback tests are not QEMU/GRUB execution. */
 
 /* Skipped coverage must explain its unmet fixture or configuration prerequisite. */
 #include <stdio.h>
@@ -69,6 +72,10 @@ static UmiStatus Execute(const char *program,const char *const *args,size_t coun
         if(!strcmp(args[i],"-serial"))e->sawSerial=1;
     }
 
+    /* The previous fixture omitted big-endian size fields and boot-image
+     * extent. Retain it for review; use complete structural records now that
+     * producer output and Boot Media share the same inspector. */
+#if 0
     if(e->makeIso&&count==3U) {
         unsigned char image[20U*2048U]= {
             0
@@ -104,6 +111,45 @@ static UmiStatus Execute(const char *program,const char *const *args,size_t coun
         UmiSetupReport r= {
             0
         };
+        return ScWriteNew(args[1],image,sizeof image,&r);
+    }
+
+#endif
+    if(e->makeIso&&count==3U) {
+        unsigned char image[24U*2048U]={0};
+        unsigned char *p=image+16U*2048U;
+        p[0]=1; memcpy(p+1,"CD001",5); p[6]=1;
+        p[80]=24; p[87]=24;
+        p[129]=8; p[130]=8;
+        p=image+17U*2048U;
+        memcpy(p+1,"CD001",5); p[6]=1;
+        memcpy(p+7,"EL TORITO SPECIFICATION",23); p[71]=19;
+        p=image+18U*2048U;
+        p[0]=255; memcpy(p+1,"CD001",5); p[6]=1;
+        unsigned char *catalogue=image+19U*2048U;
+        catalogue[0]=1; catalogue[30]=0x55; catalogue[31]=0xaa;
+        catalogue[32]=0x88; catalogue[38]=4; catalogue[40]=20;
+        if(e->makeIso==2)catalogue[38]=0;
+        if(e->makeIso==3)image[16U*2048U+87]=23;
+        if(e->makeIso==4)image[18U*2048U]=2;
+        if(e->makeIso==5)catalogue[40]=24;
+        if(e->makeIso==6||e->makeIso==7) {
+            catalogue[1]=0xef;
+            catalogue[38]=(unsigned char)(e->makeIso==6?0:1);
+        }
+        if(e->makeIso==8)catalogue[32]=0;
+        if(e->makeIso==9)catalogue[33]=2;
+        if(e->makeIso==10) {
+            catalogue[64]=0x91; catalogue[65]=0xef; catalogue[66]=1;
+            catalogue[96]=0x88; catalogue[102]=0; catalogue[104]=21;
+        }
+        unsigned sum=0;
+        for(unsigned i=0;i<32U;i+=2U)
+            sum+=(unsigned)catalogue[i]|((unsigned)catalogue[i+1U]<<8U);
+        unsigned checksum=(0U-sum)&65535U;
+        catalogue[28]=(unsigned char)checksum;
+        catalogue[29]=(unsigned char)(checksum>>8U);
+        UmiSetupReport r={0};
         return ScWriteNew(args[1],image,sizeof image,&r);
     }
 
@@ -277,11 +323,25 @@ int TestMedia(const char *name)
 
         else {
             if(!strcmp(name,"media.iso_structure"))e.makeIso=1;
+            else if(!strcmp(name,"media.iso_zero_load"))e.makeIso=2;
+            else if(!strcmp(name,"media.iso_endian"))e.makeIso=3;
+            else if(!strcmp(name,"media.iso_terminator"))e.makeIso=4;
+            else if(!strcmp(name,"media.iso_load_range"))e.makeIso=5;
+            else if(!strcmp(name,"media.iso_efi_zero"))e.makeIso=6;
+            else if(!strcmp(name,"media.iso_efi_one"))e.makeIso=7;
+            else if(!strcmp(name,"media.iso_no_boot"))e.makeIso=8;
+            else if(!strcmp(name,"media.iso_emulation"))e.makeIso=9;
+            else if(!strcmp(name,"media.iso_hybrid"))e.makeIso=10;
             else if(!strcmp(name,"media.producer_failure"))e.code=1;
 
             UmiStatus s=UmiSetupMediaBuildIso(f.destination,TestProgram,output,Execute,&e,&r);
             CHECK(e.calls==1);
+            /* Only supported complete records qualify as inspected producer
+             * output. Failure retains the newly created output for diagnosis. */
+#if 0
             if(e.makeIso) {
+#endif
+            if(e.makeIso==1||e.makeIso==6||e.makeIso==7||e.makeIso==10) {
                 CHECK(s==UMI_STATUS_OK&&r.completed);
                 char sourceReceipt[4096],copiedReceipt[4096],sourceHash[65],copiedHash[65];
                 uint64_t sourceBytes=0,copiedBytes=0;
@@ -291,7 +351,16 @@ int TestMedia(const char *name)
                 OK(ScDigest(copiedReceipt,copiedHash,&copiedBytes,NULL,NULL,&r));
                 CHECK(sourceBytes==copiedBytes&&!strcmp(sourceHash,copiedHash));
             }
-            else CHECK(s!=UMI_STATUS_OK&&!r.completed);
+            else {
+                CHECK(s!=UMI_STATUS_OK&&!r.completed);
+                if(e.makeIso) {
+                    CHECK(s==(e.makeIso==9?UMI_STATUS_UNAVAILABLE:UMI_STATUS_PARSE_ERROR));
+                    CHECK(r.outputCreated);
+                    char retained[4096];
+                    OK(ScJoin(output,"UmicomOS.iso",retained));
+                    OK(ScFileRegular(retained,0,&r));
+                }
+            }
         }
 
 #endif

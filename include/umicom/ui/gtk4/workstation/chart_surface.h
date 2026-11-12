@@ -20,6 +20,12 @@
 #include "umicom/chart/render_scene.h"
 #include "umicom/ui/workstation/chart_surface.h"
 
+/* This API is implemented by the C23 Framework. Keep its external symbols
+ * in the C ABI when a C++ application includes this header directly. */
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Initialise gtk4 ws chart surface from caller-provided values so later operations receive
  * a known state.
@@ -44,4 +50,8 @@ UmiStatus umi_gtk4_ws_chart_surface_set_scene(
     const UmiChartRenderScene *scene
 );
 
+
+#ifdef __cplusplus
+}
+#endif
 #endif

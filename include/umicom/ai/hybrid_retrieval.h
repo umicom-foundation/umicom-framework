@@ -46,6 +46,13 @@ umi_ai_hybrid_retrieval_settings_default(void);
  * Combine lexical scores over chunks with vector scores from the existing
  * vector store. query_embedding may be NULL to fall back to lexical-only
  * operation. No new index or source store is created.
+ * Weights must be finite; signed weights and the existing candidate-limit clamp
+ * are retained. Overflowing merged scores, malformed active sources or invalid
+ * callback scores return zero without publishing output. When both vector inputs
+ * are present, invalid vector data is an error rather than lexical-only fallback.
+ * Query must be a terminated C string. Callers provide valid array extents,
+ * nonoverlapping output/source storage and external mutation synchronization.
+ * This API returns a count, so zero does not distinguish refusal from no matches.
  */
 size_t umi_ai_hybrid_retrieval_rank(
     const char *query,

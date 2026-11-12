@@ -80,6 +80,8 @@ void umi_developer_journal_destroy(UmiDeveloperJournal *journal);
 /**
  * Add developer journal only after its inputs and available capacity have been checked.
  */
+/* Reserve sequence, revision and any displaced-entry count before publication.
+ * Exhaustion returns INVALID_STATE without changing the ring or out_entry. */
 UmiStatus umi_developer_journal_append(
     UmiDeveloperJournal *journal,
     UmiDeveloperEventKind kind,
@@ -115,6 +117,13 @@ UmiStatus umi_developer_journal_snapshot(
  * safely.
  */
 void umi_developer_journal_clear(UmiDeveloperJournal *journal);
+
+/** Clear stored entries and displacement count while retaining next_sequence.
+ * INVALID_STATE means revision exhaustion and preserves all existing data.
+ * The legacy void clear delegates here and leaves the journal unchanged on
+ * refusal; use this status-bearing API when the host needs to report failure.
+ * Serialize owner access. Clearing is not a durable erase of private data. */
+UmiStatus umi_developer_journal_clear_checked(UmiDeveloperJournal *journal);
 
 #ifdef __cplusplus
 }

@@ -1,14 +1,17 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/setup_centre/execution.h
- * PURPOSE: Bind setup operations to the canonical argument-based process runner.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Bind setup operations to the canonical argument-based process runner.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
-
-/* Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
- * Bind the setup provider port to the existing canonical process runner. */
-
 #ifndef UMICOM_SETUP_CENTRE_EXECUTION_H
 #define UMICOM_SETUP_CENTRE_EXECUTION_H
 #include "umicom/setup_centre/virtual_machine.h"
@@ -33,6 +36,12 @@ extern "C" {
 
     UmiStatus UmiSetupExecuteProcess(const char *program,const char *const *arguments,
     size_t count,const char *directory,void *context,int *exitCode);
+
+    /** Native UTF-8 argv includes the program name at index zero. Arguments are
+     * borrowed for this call. Uses the existing five-minute process limit,
+     * except explicitly interactive VM runs, and returns the shared CLI code.
+     * Requires the setup_process component. No automatic elevation occurs. */
+    int UmiSetupNativeMain(int argc, char **argv);
 
     int UmiSetupMainWithExecutor(int argc,char **argv,UmiSetupExecute execute,void *context);
 

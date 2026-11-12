@@ -48,6 +48,18 @@ static UmiStatus ValidateScene(const UmiMediaStoryboardScene *scene)
 }
 static bool DraftValid(const UmiMediaStoryboardDraft *draft)
 { return draft != NULL && draft->count <= UMI_MEDIA_STORYBOARD_MAX_SCENES; }
+/* Persistence must admit every active scene without demanding that referenced
+ * assets are currently present. Reuse the editor's validation, while leaving
+ * tag resolution and generation readiness with the existing Create boundary. */
+UmiStatus UmiMediaStoryboardDraftValidate(const UmiMediaStoryboardDraft *draft)
+{
+    if (!DraftValid(draft)) return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t i = 0U; i < draft->count; ++i) {
+        UmiStatus status = ValidateScene(&draft->scenes[i]);
+        if (status != UMI_STATUS_OK) return status;
+    }
+    return UMI_STATUS_OK;
+}
 UmiStatus UmiMediaStoryboardAppend(UmiMediaStoryboardDraft *draft, const UmiMediaStoryboardScene *scene)
 {
     if (!DraftValid(draft)) return UMI_STATUS_INVALID_ARGUMENT;

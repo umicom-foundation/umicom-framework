@@ -728,3 +728,6 @@ endif()
 
 message(STATUS
     "Umicom shared financial platform core completion enabled")
+
+# Shared observations refuse malformed owners before exposing evidence.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomFinancialObservationChecks.cmake")
