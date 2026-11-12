@@ -87,6 +87,7 @@ int main(int argc, char **argv)
         "missing-cmake", "missing-ctest", "cmake-found", "ctest-failed", "empty-cmake",
         "empty-ctest", "kind-cmake", "kind-ctest", "state-cmake", "state-ctest",
         "unterminated-cmake", "unterminated-ctest", "utf8-cmake", "utf8-ctest",
+        "unicode-cmake", "unicode-ctest",
         "profile-size", "profile-version", "profile-count", "null-profile", "window-mode",
         "environment-count", "environment-name", "environment-value", "environment-duplicate",
         "late-malformed", "clean-bad-environment", "run-no-tools", "command-no-tools",
@@ -134,6 +135,10 @@ int main(int argc, char **argv)
         memset(ctest->path, 'x', sizeof ctest->path); expected = UMI_STATUS_CAPACITY_EXCEEDED;
     } else if (!strcmp(mode, "utf8-cmake")) { strcpy(cmake->path, "\xff"); expected = UMI_STATUS_INVALID_ARGUMENT; }
     else if (!strcmp(mode, "utf8-ctest")) { strcpy(ctest->path, "\xff"); options.preview = 1; expected = UMI_STATUS_INVALID_ARGUMENT; }
+    /* Positive multibyte cases complement malformed-octet refusal. The fake
+     * executor observes admission only; this does not claim the path exists. */
+    else if (!strcmp(mode, "unicode-cmake")) strcpy(cmake->path, "caf\xc3\xa9/cmake");
+    else if (!strcmp(mode, "unicode-ctest")) strcpy(ctest->path, "caf\xc3\xa9/ctest");
     else if (!strcmp(mode, "profile-size")) { --profile.structure_size; expected = UMI_STATUS_INVALID_ARGUMENT; }
     else if (!strcmp(mode, "profile-version")) { ++profile.api_version; expected = UMI_STATUS_INVALID_ARGUMENT; }
     else if (!strcmp(mode, "profile-count")) { profile.tool_count = UMI_TOOLCHAIN_PROFILE_TOOL_CAPACITY + 1U; expected = UMI_STATUS_INVALID_ARGUMENT; }

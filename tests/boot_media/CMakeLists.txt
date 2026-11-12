@@ -306,6 +306,10 @@ target_link_libraries(umicom-media-read-close-test PRIVATE Umicom::boot_media Um
 set_target_properties(umicom-media-read-close-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
 umicom_apply_warnings(umicom-media-read-close-test)
 umicom_apply_sanitizers(umicom-media-read-close-test)
+# Inclusion fixtures must not introduce names that shadow the production unit.
+if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(umicom-media-read-close-test PRIVATE -Werror=shadow)
+endif()
 if(COMMAND umicom_target_qualification_inputs)
     umicom_target_qualification_inputs(umicom-media-read-close-test FILES "${CMAKE_CURRENT_LIST_DIR}/../../src/boot_media/transfer.c")
 endif()
@@ -378,6 +382,10 @@ if(WIN32)
         C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
     umicom_apply_warnings(umicom-media-worker-windows-test)
     umicom_apply_sanitizers(umicom-media-worker-windows-test)
+    # Keep native worker admission control flow unambiguous under strict builds.
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(umicom-media-worker-windows-test PRIVATE -Werror=misleading-indentation)
+    endif()
     if(COMMAND umicom_target_qualification_inputs)
         umicom_target_qualification_inputs(umicom-media-worker-windows-test FILES
             "${CMAKE_CURRENT_LIST_DIR}/../../adapters/win32/boot_media.c")

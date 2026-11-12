@@ -133,7 +133,16 @@ static void ObserveFree(void *pointer)
 
 int main(int argc,char **argv)
 {
+    /* Argument admission must complete before reading argv[1]. Keep the
+     * compressed former spelling for review; explicit control flow also lets
+     * strict compilers diagnose future misleading fixture indentation. */
+#if 0
     if(argc!=2)return 2;mode=argv[1];
+#endif
+    if(argc!=2) {
+        return 2;
+    }
+    mode=argv[1];
     const char *cases[]={"completion", "lost-notification", "premature-notification", "stale-progress", "close-running", "quit-running", "window-destroyed", "wait-failure", "idle-loop-error", "drain-failure", "start-failure", "admission-close", "release-failure"};
     int known=0;
     for(size_t i=0;i<sizeof cases/sizeof cases[0];++i)if(!strcmp(mode,cases[i]))known=1;

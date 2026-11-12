@@ -34,7 +34,7 @@ if(BUILD_TESTING)
     endif()
     foreach(_case valid preview preview-missing preview-undeclared missing-cmake missing-ctest
             cmake-found ctest-failed empty-cmake empty-ctest kind-cmake kind-ctest
-            state-cmake state-ctest unterminated-cmake unterminated-ctest utf8-cmake utf8-ctest
+            state-cmake state-ctest unterminated-cmake unterminated-ctest utf8-cmake utf8-ctest unicode-cmake unicode-ctest
             profile-size profile-version profile-count null-profile window-mode environment-count
             environment-name environment-value environment-duplicate late-malformed clean-bad-environment
             run-no-tools command-no-tools test-only configure-only compile-only install-only package-only

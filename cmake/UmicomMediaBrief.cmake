@@ -77,6 +77,10 @@ if(BUILD_TESTING)
             umicom_register_validation_target("${_target}")
         endif()
     endforeach()
+    # Including production wrappers must not introduce fixture-local shadowing.
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(umicom-creation-file-contract-test PRIVATE -Werror=shadow)
+    endif()
     foreach(_case IN ITEMS
         roundtrip
         kinds

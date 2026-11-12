@@ -38,7 +38,17 @@ int main(int argc, char **argv)
         REQUIRE(umi_financial_rate_book_convert(&book, "GBP", "USD", -100, &amount) == UMI_STATUS_OK && amount == -125);
         REQUIRE(umi_financial_rate_book_find(&book, "GBP", "USD", &found) == UMI_STATUS_OK && found.rate == 1.25);
     } else if (strcmp(test, "identity") == 0) {
+        /* Some Windows signbit macros expose a float conversion in an
+         * unselected branch under strict warnings. Use the double copysign
+         * function and an explicit zero check to preserve the exact assertion.
+         * Keep the previous expression for review and cover both zero signs. */
+#if 0
         REQUIRE(umi_financial_rate_book_convert(&book, "EUR", "EUR", -0.0, &amount) == UMI_STATUS_OK && signbit(amount));
+#endif
+        REQUIRE(umi_financial_rate_book_convert(&book, "EUR", "EUR", -0.0, &amount) == UMI_STATUS_OK);
+        REQUIRE(amount == 0.0 && copysign(1.0, amount) == -1.0);
+        REQUIRE(umi_financial_rate_book_convert(&book, "EUR", "EUR", +0.0, &amount) == UMI_STATUS_OK);
+        REQUIRE(amount == 0.0 && copysign(1.0, amount) == 1.0);
         book.count = SIZE_MAX; amount = 77;
         REQUIRE(umi_financial_rate_book_convert(&book, "EUR", "EUR", 5, &amount) == UMI_STATUS_CAPACITY_EXCEEDED && amount == 77);
     } else if (strcmp(test, "text") == 0) {

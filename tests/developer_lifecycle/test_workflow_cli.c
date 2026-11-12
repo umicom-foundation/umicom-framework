@@ -19,14 +19,20 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+/* Inclusion tests share a translation unit with the production parser.
+ * Give captured backend calls a fixture-specific name so production-local
+ * option tracking remains independent. Keep the former declaration for review. */
+#if 0
 static UmiDeveloperLifecycleAction seen[10];
+#endif
+static UmiDeveloperLifecycleAction captured_workflow_actions[10];
 static size_t calls;
 static UmiDeveloperLifecycleAction fail_action;
 static int strict_audit, full_options, update_options;
 static const char *source = "selected project";
 static int Record(UmiDeveloperLifecycleAction action)
 {
-    assert(calls < 10U); seen[calls++] = action;
+    assert(calls < 10U); captured_workflow_actions[calls++] = action;
     return action == fail_action ? 47 : 0;
 }
 static void Equal(const char *actual, const char *expected)
@@ -137,13 +143,13 @@ int main(int argc, char **argv)
     assert(calls == expected_calls);
     if (calls != 0U) {
         if (!strcmp(args[0], "update")) {
-            assert(seen[0] == UMI_DEVELOPER_ACTION_REPOSITORY_VERIFY);
-            if (calls > 1U) assert(seen[1] == UMI_DEVELOPER_ACTION_REPOSITORY_UPDATE);
+            assert(captured_workflow_actions[0] == UMI_DEVELOPER_ACTION_REPOSITORY_VERIFY);
+            if (calls > 1U) assert(captured_workflow_actions[1] == UMI_DEVELOPER_ACTION_REPOSITORY_UPDATE);
         } else {
-            assert(seen[0] == UMI_DEVELOPER_ACTION_ENVIRONMENT);
-            if (calls >= 3U) assert(seen[2] == UMI_DEVELOPER_ACTION_DEPENDENCY_AUDIT);
-            if (!strcmp(args[0], "complete")) for (size_t i = 0U; i < calls; ++i) assert(seen[i] == (UmiDeveloperLifecycleAction)(i + 1U));
-            if (!strcmp(args[0], "publish") && calls == 5U) assert(seen[3] == UMI_DEVELOPER_ACTION_REPOSITORY_VERIFY && seen[4] == UMI_DEVELOPER_ACTION_REPOSITORY_PUBLISH);
+            assert(captured_workflow_actions[0] == UMI_DEVELOPER_ACTION_ENVIRONMENT);
+            if (calls >= 3U) assert(captured_workflow_actions[2] == UMI_DEVELOPER_ACTION_DEPENDENCY_AUDIT);
+            if (!strcmp(args[0], "complete")) for (size_t i = 0U; i < calls; ++i) assert(captured_workflow_actions[i] == (UmiDeveloperLifecycleAction)(i + 1U));
+            if (!strcmp(args[0], "publish") && calls == 5U) assert(captured_workflow_actions[3] == UMI_DEVELOPER_ACTION_REPOSITORY_VERIFY && captured_workflow_actions[4] == UMI_DEVELOPER_ACTION_REPOSITORY_PUBLISH);
         }
     }
     return 0;

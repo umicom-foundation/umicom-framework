@@ -26,6 +26,11 @@ if(BUILD_TESTING)
             umicom_register_validation_target(umicom-lifecycle-${_suite}-test)
         endif()
     endforeach()
+    # The CLI inclusion fixture shares identifiers with production source.
+    # Treat a future collision as a failed regression build, not a quiet warning.
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(umicom-lifecycle-workflow_cli-test PRIVATE -Werror=shadow)
+    endif()
     if(COMMAND umicom_target_qualification_inputs)
         umicom_target_qualification_inputs(umicom-lifecycle-workflow_cli-test FILES
             "${CMAKE_CURRENT_LIST_DIR}/../tools/umicom/src/command_workflow.c"

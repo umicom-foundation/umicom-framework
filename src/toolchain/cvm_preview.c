@@ -28,6 +28,11 @@ static UmiStatus Translate(UmcStatus status)
     case UMC_DEPTH_LIMIT:
     case UMC_STACK_OVERFLOW:
     case UMC_FUEL_EXHAUSTED:
+    /* Optional SDK extension: keep older supported headers compilable while
+     * translating the new compiler bound through the shared status contract. */
+#ifdef UMC_LOCAL_INTEGER_PROFILE
+    case UMC_LOCAL_CAPACITY:
+#endif
     case UMC_BUFFER_TOO_SMALL: return UMI_STATUS_CAPACITY_EXCEEDED;
     case UMC_ARITHMETIC_ERROR: return UMI_STATUS_INVALID_STATE;
     default: return UMI_STATUS_INTERNAL_ERROR;

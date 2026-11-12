@@ -50,7 +50,13 @@ static const Case cases[] = {
     {"code-entity", "\x60&amp;\x60", "&amp;\n", 1U, UMI_BROWSER_READING_CODE},
     {"code-island", "*a \x60*\x60 b*", "a * b\n", 2U, UMI_BROWSER_READING_CODE},
     {"multi-code-literal", "\x60\x60x\x60\x60", "\x60\x60x\x60\x60\n", 0U, 0},
+    /* A hexadecimal escape consumes all following hex digits, including the
+     * language label c. Adjacent literals end the escape before that label;
+     * retain the old fixture for review without changing the parser contract. */
+#if 0
     {"fence", "\x60\x60\x60c\n  int x;\n\x60\x60\x60", "  int x;\n", 1U, UMI_BROWSER_READING_CODE},
+#endif
+    {"fence", "\x60\x60\x60" "c\n  int x;\n\x60\x60\x60", "  int x;\n", 1U, UMI_BROWSER_READING_CODE},
     {"fence-unclosed", "~~~\n  x", "  x\n", 1U, UMI_BROWSER_READING_CODE},
     {"fence-crlf", "~~~\r\n\tx\r\n~~~", "\tx\n", 1U, UMI_BROWSER_READING_CODE},
     {"fence-marker", "~~~~\nx\n~~~\ny\n~~~~", "x\n~~~\ny\n", 1U, UMI_BROWSER_READING_CODE},

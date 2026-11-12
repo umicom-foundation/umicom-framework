@@ -36,7 +36,15 @@ static UmiStatus PreflightTool(const UmiToolchainProfile *profile,
         return UMI_STATUS_INVALID_ARGUMENT;
     const char *end = memchr(tool->path, '\0', sizeof tool->path);
     if (end == NULL) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* UTF-8 admission reads octets after the bounded terminator check. Keep
+     * the old signed-character call for review; the byte view changes neither
+     * storage ownership nor the exact extent passed to the shared validator. */
+#if 0
     if (!UmiUtf8Validate(tool->path, (size_t)(end - tool->path), NULL))
+        return UMI_STATUS_INVALID_ARGUMENT;
+#endif
+    if (!UmiUtf8Validate((const unsigned char *)tool->path,
+            (size_t)(end - tool->path), NULL))
         return UMI_STATUS_INVALID_ARGUMENT;
     if (!preview && (tool->state != UMI_TOOL_VALIDATED || end == tool->path))
         return UMI_STATUS_NOT_FOUND;

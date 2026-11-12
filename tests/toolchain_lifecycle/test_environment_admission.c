@@ -23,7 +23,13 @@
 static unsigned allocations, writes;
 static int refuse_allocation;
 static UmiStatus write_status = UMI_STATUS_OK;
+/* This fixture includes the production translation unit below. Give captured
+ * output a fixture-specific name so production-local formatting counters do
+ * not shadow test state. The old declaration is retained for review. */
+#if 0
 static char written[32768];
+#endif
+static char captured_environment_text[32768];
 static void *StageAllocate(size_t count, size_t size)
 {
     ++allocations;
@@ -33,8 +39,8 @@ static UmiStatus ObserveExport(const char *destination, const char *text)
 {
     if (!destination || strcmp(destination, "synthetic export")) return UMI_STATUS_INVALID_ARGUMENT;
     ++writes;
-    if (strlen(text) >= sizeof written) return UMI_STATUS_CAPACITY_EXCEEDED;
-    strcpy(written, text);
+    if (strlen(text) >= sizeof captured_environment_text) return UMI_STATUS_CAPACITY_EXCEEDED;
+    strcpy(captured_environment_text, text);
     return write_status;
 }
 /* Only allocation and final file export are substituted. No child process or
@@ -145,7 +151,7 @@ int main(int argc, char **argv)
     } else if (!strcmp(mode, "export") || !strcmp(mode, "export-failure")) {
         if (!strcmp(mode, "export-failure")) write_status = UMI_STATUS_IO_ERROR;
         CHECK(umi_environment_plan_write(base, "synthetic export") == write_status);
-        CHECK(writes == 1U && !strcmp(written, "MODE=base\nKEEP=yes\n"));
+        CHECK(writes == 1U && !strcmp(captured_environment_text, "MODE=base\nKEEP=yes\n"));
     } else if (!strcmp(mode, "export-invalid") || !strcmp(mode, "export-capacity")) {
         UmiStatus expected = UMI_STATUS_INVALID_ARGUMENT;
         if (!strcmp(mode, "export-invalid")) memset(base->entries[0].value, 'x', sizeof base->entries[0].value);

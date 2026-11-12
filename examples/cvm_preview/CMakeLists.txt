@@ -65,3 +65,31 @@ if(BUILD_TESTING)
         set_tests_properties("framework.toolchain.cvm_comparison.${case}" PROPERTIES TIMEOUT 15 LABELS "toolchain;cvm;comparison;sdk")
     endforeach()
 endif()
+
+# Local preview uses the same Framework adapter; no parser or VM is copied here.
+if(BUILD_TESTING)
+    add_executable(umicom-cvm-local-tests ../../tests/toolchain/test_cvm_locals.c)
+    target_link_libraries(umicom-cvm-local-tests PRIVATE umicom_cvm_preview)
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(umicom-cvm-local-tests PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    endif()
+    foreach(case IN ITEMS success ordinary-parity syntax-reset fuel-reset capacity-reset)
+        add_test(NAME "framework.toolchain.cvm_local.${case}" COMMAND umicom-cvm-local-tests "${case}")
+        set_tests_properties("framework.toolchain.cvm_local.${case}" PROPERTIES TIMEOUT 15 LABELS "toolchain;cvm;locals;sdk")
+    endforeach()
+endif()
+
+# Logical execution remains in Umicom C; Framework owns fresh preview state.
+if(BUILD_TESTING)
+    add_executable(umicom-cvm-logical-tests ../../tests/toolchain/test_cvm_logical.c)
+    target_link_libraries(umicom-cvm-logical-tests PRIVATE umicom_cvm_preview)
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(umicom-cvm-logical-tests PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
+    endif()
+    # The prior four logical cases remain; conditional source uses the same adapter.
+    foreach(case IN ITEMS success ordinary-parity fuel-reset syntax-reset
+        conditional-fallback conditional-true conditional-fault)
+        add_test(NAME "framework.toolchain.cvm_logical.${case}" COMMAND umicom-cvm-logical-tests "${case}")
+        set_tests_properties("framework.toolchain.cvm_logical.${case}" PROPERTIES TIMEOUT 15 LABELS "toolchain;cvm;logical;sdk")
+    endforeach()
+endif()

@@ -6684,6 +6684,8 @@ include(cmake/UmicomSnippetUpdates.cmake)
 include(cmake/UmicomQemuCommand.cmake)
 # Distribution commands reuse the native media and setup owners.
 include(cmake/UmicomMediaCommands.cmake)
+# Native CLI composition must keep independently owned helper symbols distinct.
+include(cmake/UmicomSourceCompositionChecks.cmake)
 # Read-only Git observations and source-control review acceptance cases.
 include(cmake/UmicomNativeArguments.cmake)
 include(cmake/UmicomLocalProfileDatabase.cmake)
@@ -6901,6 +6903,8 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomSqliteHealth.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomSqliteBackups.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomFormText.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomStructuredForms.cmake")
+# A weight observation reuses the shared form/date and record contracts.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomWeightLog.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomStructuredFormMerge.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomHealthcareForms.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomStructuredFormRecords.cmake")

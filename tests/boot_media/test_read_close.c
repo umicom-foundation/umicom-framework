@@ -19,44 +19,50 @@
 #include "umicom/setup_centre/files.h"
 #include <assert.h>
 static const char *mode;
+/* Production transfer functions are included below. Keep synthetic file
+ * objects distinct from their local source/target pointers; retain the former
+ * declaration for review without changing release ordering or error outcomes. */
+#if 0
 static BmFile source,target;
+#endif
+static BmFile captured_source_file,captured_target_file;
 static UmiBootMediaImage fixture;
 static unsigned sourceClosed,targetClosed,targetOpened;
 static UmiStatus ReadOpen(const char *path,BmFile **out,uint64_t *bytes)
 {
-    if(!strcmp(path,"source"))*out=&source;
-    else if(!strcmp(path,"target")){*out=&target;++targetOpened;}
+    if(!strcmp(path,"source"))*out=&captured_source_file;
+    else if(!strcmp(path,"target")){*out=&captured_target_file;++targetOpened;}
     else return UMI_STATUS_INVALID_ARGUMENT;
     *bytes=fixture.bytes;return UMI_STATUS_OK;
 }
 static UmiStatus ReadInspect(BmFile *file,uint64_t bytes,UmiBootMediaImage *out)
 {
-    assert(file==&source&&bytes==fixture.bytes);*out=fixture;return UMI_STATUS_OK;
+    assert(file==&captured_source_file&&bytes==fixture.bytes);*out=fixture;return UMI_STATUS_OK;
 }
 static UmiStatus ReadHash(BmFile *file,uint64_t bytes,char hex[65],
     UmiBootMediaProgress callback,void *context,UmiBootMediaReport *report)
 {
     (void)callback;(void)context;(void)report;
     assert(bytes==fixture.bytes);
-    if((file==&source&&!strcmp(mode,"inspect-read-and-close-error"))||
-        (file==&target&&!strcmp(mode,"verify-read-and-close-error")))
+    if((file==&captured_source_file&&!strcmp(mode,"inspect-read-and-close-error"))||
+        (file==&captured_target_file&&!strcmp(mode,"verify-read-and-close-error")))
         return UMI_STATUS_INVALID_STATE;
     strcpy(hex,fixture.sha256);return UMI_STATUS_OK;
 }
 static UmiStatus ReadSize(BmFile *file,uint64_t bytes)
 {
-    assert(file==&source||file==&target);
+    assert(file==&captured_source_file||file==&captured_target_file);
     return bytes==fixture.bytes?UMI_STATUS_OK:UMI_STATUS_INVALID_STATE;
 }
 static UmiStatus ReadClose(BmFile *file)
 {
     if(file==NULL)return UMI_STATUS_OK;
-    if(file==&source){
+    if(file==&captured_source_file){
         assert(++sourceClosed==1U);
         if(!strcmp(mode,"inspect-close-error")||!strcmp(mode,"inspect-read-and-close-error")||
             !strcmp(mode,"verify-source-close-error"))return UMI_STATUS_IO_ERROR;
     }else{
-        assert(file==&target&&++targetClosed==1U);
+        assert(file==&captured_target_file&&++targetClosed==1U);
         if(!strcmp(mode,"verify-target-close-error")||!strcmp(mode,"verify-read-and-close-error"))
             return UMI_STATUS_PERMISSION_DENIED;
     }

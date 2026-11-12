@@ -21,10 +21,20 @@
 #include <stdlib.h>
 #include <string.h>
 #define CHECK(x) do { if (!(x)) { fprintf(stderr, "line %d: %s\n", __LINE__, #x); exit(1); } } while (0)
+/* The included production wrapper has an absolute_path parameter. Keep the
+ * fixture identity distinct without changing any path, I/O result or counter.
+ * Retain the previous declaration for engineering review. */
+#if 0
 #ifdef _WIN32
 static const char absolute_path[] = "C:/umicom-creation-draft-contract/document.json";
 #else
 static const char absolute_path[] = "/umicom-creation-draft-contract/document.json";
+#endif
+#endif
+#ifdef _WIN32
+static const char fixture_document_path[] = "C:/umicom-creation-draft-contract/document.json";
+#else
+static const char fixture_document_path[] = "/umicom-creation-draft-contract/document.json";
 #endif
 static const char good_json[] =
     "{\"format\":\"umicom-media-creation-draft\",\"version\":1,"
@@ -37,7 +47,7 @@ static int cancel_during_write, cancel_after_read;
 static UmiStatus FakeAtomicWrite(const char *path, const void *bytes, size_t size)
 {
     ++writes;
-    CHECK(strcmp(path, absolute_path) == 0);
+    CHECK(strcmp(path, fixture_document_path) == 0);
     UmiMediaBriefDocument restored = {0};
     CHECK(UmiMediaBriefDocumentImport(bytes, size, NULL, &restored) == UMI_STATUS_OK);
     CHECK(strcmp(restored.draft.title, "Opening") == 0);
@@ -49,7 +59,7 @@ static UmiStatus FakeInputRead(const char *path, size_t maximum_bytes,
     unsigned char **out_bytes, size_t *out_size)
 {
     ++reads;
-    CHECK(strcmp(path, absolute_path) == 0);
+    CHECK(strcmp(path, fixture_document_path) == 0);
     CHECK(maximum_bytes == UMI_MEDIA_BRIEF_DOCUMENT_BYTES);
     *out_bytes = NULL;
     *out_size = 0U;
@@ -87,7 +97,7 @@ int main(int argc, char **argv)
     CHECK(argc == 2);
     CHECK(umi_cancellation_token_create(&token) == UMI_STATUS_OK);
     const char *name = argv[1];
-    const char *path = absolute_path;
+    const char *path = fixture_document_path;
     UmiStatus expected = UMI_STATUS_OK;
     UmiMediaBriefDocument draft = {0}, before;
     unsigned expected_calls = 1U;

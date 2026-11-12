@@ -18,6 +18,39 @@
 #include "umicom/source_contracts/source_contracts.h"
 #include <stdio.h>
 
+/* These helpers remain private to Source Contracts, but their definitions
+ * have external linkage across its translation units. Setup Centre uses some
+ * of the same short names with different contracts. Preserve the established
+ * implementation spellings through local aliases while emitting component-
+ * qualified linker symbols. New cross-file helpers must join this namespace;
+ * public UmiSourceContract APIs and independently owned Setup Centre helpers
+ * are unchanged. Never expose this private header as an SDK contract. */
+#define ScCopy UmiSourceContractInternalCopy
+#define ScFinding UmiSourceContractInternalFinding
+#define ScLex UmiSourceContractInternalLex
+#define ScLiterals UmiSourceContractInternalLiterals
+#define ScTextFree UmiSourceContractInternalTextFree
+#define ScTokenEquals UmiSourceContractInternalTokenEquals
+#define ScIdentifier UmiSourceContractInternalIdentifier
+#define ScMatching UmiSourceContractInternalMatching
+#define ScBody UmiSourceContractInternalBody
+#define ScContains UmiSourceContractInternalContains
+#define ScIndex UmiSourceContractInternalIndex
+#define ScCount UmiSourceContractInternalCount
+#define ScCompactRange UmiSourceContractInternalCompactRange
+#define ScLine UmiSourceContractInternalLine
+#define ScRead UmiSourceContractInternalRead
+#define ScReadBytes UmiSourceContractInternalReadBytes
+#define ScCollectGuides UmiSourceContractInternalCollectGuides
+#define ScJoin UmiSourceContractInternalJoin
+#define ScCollect UmiSourceContractInternalCollect
+#define ScCollectManifests UmiSourceContractInternalCollectManifests
+#define ScFilesFree UmiSourceContractInternalFilesFree
+#define ScMetadata UmiSourceContractInternalMetadata
+#define ScGuard UmiSourceContractInternalGuard
+#define ScPortfolio UmiSourceContractInternalPortfolio
+#define ScWorkbenchRules UmiSourceContractInternalWorkbenchRules
+
 #define SC_MAX_FILE_BYTES (16U * 1024U * 1024U)
 #define SC_MAX_FILES 100000U
 #define SC_MAX_DEPTH 128U
