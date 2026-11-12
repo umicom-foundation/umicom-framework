@@ -456,10 +456,12 @@ UmiStatus umi_toolchain_catalogue_bind_project(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
+    /* Keep the terminator as a textual C escape: an embedded zero byte makes
+     * the source unreadable to bounded text tools even inside a character literal. */
     if (catalogue == NULL || binding == NULL ||
         !ToolchainCatalogueIdentity(binding->project_id,sizeof(binding->project_id)) ||
         !ToolchainCatalogueIdentity(binding->profile_id,sizeof(binding->profile_id)) ||
-        !memchr(binding->compilation_database,' ',sizeof(binding->compilation_database)))
+        !memchr(binding->compilation_database,'\0',sizeof(binding->compilation_database)))
         return UMI_STATUS_INVALID_ARGUMENT;
     /* Use the stable identifier comparison to choose the matching record or policy. */
     if (find_profile_index(catalogue, binding->profile_id) == SIZE_MAX)
