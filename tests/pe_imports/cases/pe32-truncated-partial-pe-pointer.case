@@ -1,0 +1,13 @@
+# -----------------------------------------------------------------------------
+# Umicom Framework
+# File: tests/pe_imports/cases/pe32-truncated-partial-pe-pointer.case
+# PURPOSE: Reject truncation before a declared structure is fully stored.
+# EDUCATIONAL OVERVIEW: Synthetic bytes test a declared parsing invariant; no code is executed.
+# AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+# LICENCE: MIT
+# -----------------------------------------------------------------------------
+expect=error
+machine=014c
+imports=
+data:
+4d5a00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000

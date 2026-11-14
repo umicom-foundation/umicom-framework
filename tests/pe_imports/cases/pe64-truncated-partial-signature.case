@@ -1,0 +1,15 @@
+# -----------------------------------------------------------------------------
+# Umicom Framework
+# File: tests/pe_imports/cases/pe64-truncated-partial-signature.case
+# PURPOSE: Reject truncation before a declared structure is fully stored.
+# EDUCATIONAL OVERVIEW: Synthetic bytes test a declared parsing invariant; no code is executed.
+# AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
+# LICENCE: MIT
+# -----------------------------------------------------------------------------
+expect=error
+machine=8664
+imports=
+data:
+4d5a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000080000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+504500
