@@ -1,8 +1,12 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Check a Framework SDK with an independent application</title>
-<style>body{max-width:58rem;margin:2rem auto;padding:0 1rem;font:1rem/1.65 system-ui;color:#162130}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#eef2f6;padding:1rem}code{overflow-wrap:anywhere}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:.6rem;text-align:left}a{color:#075a82}</style></head>
-<body><nav><a href="inspecting-an-installed-sdk.html">Choose an installed SDK</a></nav>
+<style>body{max-width:58rem;margin:2rem auto;padding:0 1rem;font:1rem/1.65 system-ui;color:#162130}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#eef2f6;padding:1rem}code{overflow-wrap:anywhere}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:.6rem;text-align:left}a{color:#075a82}</style><!-- Use the approved shared artwork and typography without distributing fonts. -->
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{font-family:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}code,pre{font-family:"Cascadia Code",Consolas,monospace}header img{width:212px;height:auto}</style>
+</head>
+<body><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header><nav><a href="inspecting-an-installed-sdk.html">Choose an installed SDK</a></nav>
 <h1>Check a Framework SDK with an independent application</h1>
 <p>A header tells a compiler how to call a library. The library contains the compiled implementation.
 An SDK packages these files together. Finding both files is necessary, but it does not establish
@@ -96,4 +100,119 @@ not a computed proof that every exported function remains compatible.</p>
 without compiling libraries. Keep those results separate from this real installed consumer
 and from the product's complete runtime qualification.</p>
 <p>Continue with <a href="check-sdk-shutdown.html">background-task ownership and shutdown through the installed SDK</a> to exercise lifecycle contracts beyond the base-library call.</p>
+
+<section id="conformance-evidence"><h2>Record checks without manufacturing a passing result</h2>
+<p><code>UmiSdkConformance</code> stores three caller-reported counts: checks run, passed and failed. Start with a zero-initialized value. Empty evidence is valid data, but it is not a passing result. Every completed check must contribute to exactly one outcome, so <code>checks_run == checks_passed + checks_failed</code>.</p>
+<p>Use the checked recording function when writing a consumer. It validates that invariant and refuses an exhausted counter before modifying the summary. Always inspect the returned status before using the summary's verdict:</p>
+<pre><code>#include "umicom/sdk/conformance.h"
+
+static UmiStatus record_consumer_result(UmiSdkConformance *checks,
+                                        UmiStatus observed_status,
+                                        int *out_all_passed)
+{
+    if (out_all_passed == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus recorded = umi_sdk_conformance_record_checked(
+        checks, observed_status == UMI_STATUS_OK);
+    if (recorded != UMI_STATUS_OK) {
+        /* The previous summary is not evidence for this refused observation. */
+        return recorded;
+    }
+    *out_all_passed = umi_sdk_conformance_passed(checks);
+    return UMI_STATUS_OK;
+}
+</code></pre>
+<p>The caller initializes <code>UmiSdkConformance checks = {0};</code> once for a collection and passes its address. The output verdict is written only when recording succeeds. <code>observed_status</code> above is the actual result produced by your check. The recorder does not run a compiler, inspect a library or determine whether that check was sufficient. Keep skipped and unexecuted work separate; do not turn either into a passed observation. A complete release needs the identified checks required by its qualification plan.</p>
+<p>Validation uses subtraction after checking the passed count against the total. Adding two untrusted <code>size_t</code> counts could overflow and make inconsistent data appear valid. Checked recording returns <code>INVALID_STATE</code> for inconsistent summaries and <code>CAPACITY_EXCEEDED</code> when no further total can be represented. Every refusal preserves the checked API's input bytes.</p>
+<p>The older <code>umi_sdk_conformance_record</code> function remains available. Because it cannot return an error, a refused recording sets its failed count to <code>SIZE_MAX</code>. This latch prevents a dropped observation from leaving a passing verdict and retains the other counts for diagnosis. Reinitialize the entire structure to start a new collection; do not edit only the failure field to hide an error.</p>
+<p><code>umi_sdk_conformance_passed</code> now requires a consistent, nonempty summary with no failures. <code>umi_sdk_report_format</code> refuses inconsistent evidence and stages complete text before writing the caller's buffer. If the output buffer is too small, its previous contents remain unchanged; check the status before displaying them. These operations require serialized ownership and supply no thread lock.</p>
+<h3>Try the boundary exercises</h3>
+<pre><code>Set-Location "C:\umicom\Umicom-Applications\framework"
+cmake --build build/windows-ucrt64-debug --target umicom-sdk-conformance-evidence-test umicom-sdk-conformance-test
+ctest --test-dir build/windows-ucrt64-debug -C Debug --output-on-failure -R "^framework[.]sdk([.]conformance_evidence[.]|_conformance$)"
+</code></pre>
+<p>Run each command separately and stop on failure. The 24 new cases cover empty evidence, true/false observations, inconsistent totals, final representable counts, checked refusal, legacy refusal/recovery and report capacity. The original public conformance test remains registered. Passing these boundary tests does not prove that a particular SDK compiled, linked or ran an independent application.</p>
+</section>
+
+
+<section id="toolchain-declarations"><h2>Compare toolchain declarations in native C</h2>
+<p><code>UmiSdkToolchainEvidence</code> is a record supplied by its caller. Its compiler name, version and architecture must now be nonempty C strings, and its pointer size must be nonzero. Validation does not discover a compiler, parse a version range or inspect machine code. An unrecognized nonempty architecture remains an explicit declaration, not a verified capability.</p>
+<p><code>umi_sdk_toolchain_compare</code> compares two valid records and returns flags for each differing field. A successful return means comparison completed, even when fields differ. The result contains values only and retains no input pointers; keep the input strings readable and unchanged until the synchronous call returns. Invalid input leaves the result bytes unchanged.</p>
+<p>This complete metadata-only example deliberately supplies different version strings. It performs no compiler discovery or SDK file access:</p>
+<pre><code>#include "umicom/sdk/toolchain.h"
+#include &lt;stdio.h&gt;
+
+int main(void)
+{
+    UmiSdkToolchainEvidence producer = {"GNU", "14.1", "x86_64", 8};
+    UmiSdkToolchainEvidence consumer = {"GNU", "14.2", "x86_64", 8};
+    UmiSdkToolchainComparison compared;
+    UmiStatus status = umi_sdk_toolchain_compare(&amp;producer, &amp;consumer, &amp;compared);
+    if (status != UMI_STATUS_OK) return 2;
+    int written = printf("Declared fields differing: %u\n",
+                         (unsigned)compared.differing_fields);
+    if (written &lt; 0 || fflush(stdout) != 0 || ferror(stdout)) return 2;
+    return compared.declarations_match ? 0 : 1;
+}
+</code></pre>
+<p>Link this program with <code>Umicom::sdk</code>. For these explicit inputs the version-difference flag is set and the program returns 1. The expected result describes the example; compile, link and run it against your selected SDK before recording actual qualification evidence.</p>
+<table><thead><tr><th>Flag</th><th>Declaration compared</th></tr></thead><tbody>
+<tr><td><code>UMI_SDK_TOOLCHAIN_DIFFERENT_COMPILER</code></td><td>Compiler identifier</td></tr>
+<tr><td><code>UMI_SDK_TOOLCHAIN_DIFFERENT_VERSION</code></td><td>Complete version string</td></tr>
+<tr><td><code>UMI_SDK_TOOLCHAIN_DIFFERENT_ARCHITECTURE</code></td><td>Architecture identifier</td></tr>
+<tr><td><code>UMI_SDK_TOOLCHAIN_DIFFERENT_POINTER_SIZE</code></td><td>Declared pointer bytes</td></tr>
+</tbody></table>
+<p>Strings compare exactly and case matters. <code>amd64</code> and <code>x86_64</code> therefore differ, as do <code>14.1</code> and <code>14.1.0</code>. Normalize records through an explicitly chosen discovery policy if that is your application's requirement. The comparison itself does not silently substitute aliases, infer instruction sets or approve a compiler-version change. Equal declarations still need the independent consumer, runtime and lifecycle checks described above.</p>
+<pre><code>Set-Location "C:\umicom\Umicom-Applications\framework"
+cmake --build build/windows-ucrt64-debug --target umicom-sdk-toolchain-declarations-test
+ctest --test-dir build/windows-ucrt64-debug -C Debug --output-on-failure -R "^framework[.]sdk[.]toolchain_declarations[.]"
+</code></pre>
+<p>Stop on failure. These 23 cases cover malformed records, individual and combined differences, exact aliases and version spellings, borrowed input lifetime and output preservation. They qualify the declared-data comparison, not a target architecture or compiler.</p>
+</section>
+
+
+<section id="consumer-requirements"><h2>Check what an application requires from a declared SDK</h2>
+<p>A consumer is an application using the SDK. Its requirement record names a minimum Framework version, a nonzero ABI number and the targets it expects. An ABI describes the binary calling contract. A manifest supplies a declared version, ABI and component inventory. These records are ordinary data: constructing one does not inspect an installation or load a library.</p>
+<ol>
+<li><strong>Keep arrays and counts together.</strong> A nonzero target count requires a readable target-pointer array, and a nonzero component count requires readable component records. Validators now reject null arrays and counts whose byte extent cannot be represented before indexing. C pointers do not encode allocation length, so callers must still supply the full declared storage and NUL-terminated strings.</li>
+<li><strong>Validate the complete inputs.</strong> <code>umi_sdk_requirement_validate</code> rejects a zero ABI requirement, matching the existing consumer contract. An empty target or component inventory is valid. The same-major minimum-version and minimum-ABI-number comparison policy is retained; neither rule replaces binary qualification.</li>
+<li><strong>Separate comparison completion from satisfaction.</strong> <code>umi_sdk_consumer_check</code> returns <code>UMI_STATUS_OK</code> after comparing valid declarations. Read <code>declarations_satisfied</code> for the policy result and the missing-target fields for diagnosis. Invalid declarations leave every output byte unchanged, so do not display an old result after a failed call.</li>
+</ol>
+<p>This complete C example uses deliberately illustrative version and ABI values. Its supplied manifest lacks the media target; it does not describe your installed SDK:</p>
+<pre><code>#include "umicom/sdk/consumer.h"
+#include &lt;stdio.h&gt;
+
+int main(void)
+{
+    const char *required[] = {"Umicom::base", "Umicom::media"};
+    const UmiSdkComponent components[] = {{"base", "Umicom::base", 1}};
+    UmiSdkConsumer consumer = {
+        "example.application", {{3, 4, 5}, 7}, required, 2
+    };
+    UmiSdkManifest manifest = {{3, 4, 5}, 7, components, 1};
+    UmiSdkConsumerCheck result;
+    if (umi_sdk_consumer_check(&amp;consumer, &amp;manifest, &amp;result) != UMI_STATUS_OK)
+        return 2;
+    int written = printf("Missing target entries: %zu\n", result.targets_missing);
+    if (written &lt; 0 || fflush(stdout) != 0 || ferror(stdout)) return 2;
+    return result.declarations_satisfied ? 0 : 1;
+}
+</code></pre>
+<p>Link with <code>Umicom::sdk</code>. For these declarations, the expected missing count is 1, the first missing index is 1 and the program returns 1. The output status is an expected example result, not execution evidence. Change the declared inventory to include the second target and compare again; then separately configure and link a real consumer against an explicitly selected SDK.</p>
+<table><thead><tr><th>Result field</th><th>Meaning</th></tr></thead><tbody>
+<tr><td><code>targets_checked</code></td><td>Number of required entries examined, including duplicates.</td></tr>
+<tr><td><code>targets_missing</code></td><td>Required entries with no exact target-name match in the supplied inventory.</td></tr>
+<tr><td><code>first_missing_index</code></td><td>First absent required entry, or <code>SIZE_MAX</code> when none are absent.</td></tr>
+<tr><td><code>version_abi_compatible</code></td><td>Declared version and ABI satisfy the existing metadata policy.</td></tr>
+<tr><td><code>declarations_satisfied</code></td><td>Version/ABI policy matches and no required entry is missing.</td></tr>
+</tbody></table>
+<p>Names compare exactly and case matters. An optional component still belongs to the supplied inventory. Extra targets are allowed, and duplicated required entries are counted separately rather than silently deduplicated. The result contains no borrowed pointers and remains readable after inputs are released. During the call, keep inputs stable and use separate output storage. There is no internal lock. Work can grow with the product of the two inventory counts; bound untrusted lists before submitting them.</p>
+<p><code>umi_sdk_manifest_current</code> describes the linked Framework, not an arbitrary SDK on disk. Use the installed-SDK inspection workflow when you need evidence about a selected prefix, then perform independent compile, link and runtime checks. A matching declared target name is not proof that its library exists or exports the required functions.</p>
+<h3>Exercise invalid declarations and missing targets</h3>
+<pre><code>Set-Location "C:\umicom\Umicom-Applications\framework"
+cmake --build build/windows-ucrt64-debug --target umicom-sdk-consumer-requirements-test
+ctest --test-dir build/windows-ucrt64-debug -C Debug --output-on-failure -R "^framework[.]sdk[.]consumer_requirements[.]"
+</code></pre>
+<p>Run commands separately and stop on failure. The 43 authored cases cover null and invalid arrays, terminal entries, representable counts, empty inventories, duplicate targets, exact names, version/ABI differences, output preservation and result lifetime. Configuration registers these cases; it does not execute them. If validation rejects an input, correct the pointer/count pair or incomplete declaration instead of weakening the guard. If a comparison completes with missing targets, confirm the declared inventory and then select or build the required SDK components.</p>
+</section>
+
 </body></html>

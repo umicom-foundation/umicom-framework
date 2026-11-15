@@ -69,8 +69,24 @@ set(UMICOM_FRAMEWORK_RESOURCE_ROOT
     "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_DATADIR@/umicom/framework/resources")
 # Give documentation-aware applications one portable installed location for
 # the offline learning library and future generated reference pages.
+# Source-compatible guides, lessons and brand paths share the canonical root.
+# Retain the old location explicitly for clients with stored legacy links.
+#[[
 set(UMICOM_FRAMEWORK_DOCUMENTATION_ROOT
     "${PACKAGE_PREFIX_DIR}/@CMAKE_INSTALL_DATADIR@/umicom/docs")
+]]
+# Honor an absolute GNUInstallDirs data path as well as the relocatable
+# relative default. Archive policy may separately require relative directories.
+set(_umicom_documentation_data_root "@CMAKE_INSTALL_DATADIR@")
+if(NOT IS_ABSOLUTE "${_umicom_documentation_data_root}")
+    set(_umicom_documentation_data_root
+        "${PACKAGE_PREFIX_DIR}/${_umicom_documentation_data_root}")
+endif()
+set(UMICOM_FRAMEWORK_LEGACY_DOCUMENTATION_ROOT
+    "${_umicom_documentation_data_root}/umicom/docs")
+set(UMICOM_FRAMEWORK_DOCUMENTATION_ROOT
+    "${_umicom_documentation_data_root}/umicom/framework/docs")
+unset(_umicom_documentation_data_root)
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationBranding.cmake")
 
 # Components map directly to exported Umicom::<component> targets. This keeps

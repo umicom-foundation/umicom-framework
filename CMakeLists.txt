@@ -5290,6 +5290,142 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-sdk-package-test framework.sdk_package tests/test_sdk_package.c)
     umicom_add_framework_test(umicom-sdk-compatibility-test framework.sdk_compatibility tests/test_sdk_compatibility.c)
     umicom_add_framework_test(umicom-sdk-conformance-test framework.sdk_conformance tests/test_sdk_conformance.c)
+
+    # Evidence counters must not manufacture a passing SDK verdict after an
+    # invalid summary or an unrecorded check. Keep this public-contract fixture.
+    add_executable(umicom-sdk-conformance-evidence-test
+        tests/sdk_installation/test_conformance_evidence.c)
+    target_link_libraries(umicom-sdk-conformance-evidence-test PRIVATE Umicom::sdk)
+    set_target_properties(umicom-sdk-conformance-evidence-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES)
+    umicom_apply_warnings(umicom-sdk-conformance-evidence-test)
+    umicom_apply_sanitizers(umicom-sdk-conformance-evidence-test)
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-sdk-conformance-evidence-test FILES
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/sdk/conformance.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/sdk/report.c")
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-sdk-conformance-evidence-test)
+    endif()
+    foreach(_case IN ITEMS null empty pass fail truthy mixed last-pass last-fail
+            exhausted-pass exhausted-failed exhausted-mixed missing-results excess-passed
+            excess-failed sum-overflow legacy-refusal legacy-recovery report-complete
+            report-empty report-failed report-capacity report-inconsistent report-max report-null)
+        add_test(NAME framework.sdk.conformance_evidence.${_case}
+            COMMAND umicom-sdk-conformance-evidence-test ${_case})
+        set_tests_properties(framework.sdk.conformance_evidence.${_case} PROPERTIES
+            TIMEOUT 15 LABELS "framework;sdk;evidence;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.sdk.conformance_evidence.${_case}
+                TARGETS umicom-sdk-conformance-evidence-test)
+        endif()
+    endforeach()
+
+
+    # Compare explicit toolchain records without promoting metadata agreement
+    # to a binary compatibility claim.
+    add_executable(umicom-sdk-toolchain-declarations-test
+        tests/sdk_installation/test_toolchain_declarations.c)
+    target_link_libraries(umicom-sdk-toolchain-declarations-test PRIVATE Umicom::sdk)
+    set_target_properties(umicom-sdk-toolchain-declarations-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES)
+    umicom_apply_warnings(umicom-sdk-toolchain-declarations-test)
+    umicom_apply_sanitizers(umicom-sdk-toolchain-declarations-test)
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-sdk-toolchain-declarations-test FILES
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/sdk/toolchain.c")
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-sdk-toolchain-declarations-test)
+    endif()
+    foreach(_case IN ITEMS validate-null null-compiler null-version null-architecture
+            zero-pointer empty-compiler empty-version empty-architecture compare-null-output
+            compare-null-producer compare-null-consumer match different-compiler different-version
+            different-architecture different-pointer all-different architecture-alias
+            compiler-case version-spelling same-object owned-result opaque)
+        add_test(NAME framework.sdk.toolchain_declarations.${_case}
+            COMMAND umicom-sdk-toolchain-declarations-test ${_case})
+        set_tests_properties(framework.sdk.toolchain_declarations.${_case} PROPERTIES
+            TIMEOUT 15 LABELS "framework;sdk;metadata;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.sdk.toolchain_declarations.${_case}
+                TARGETS umicom-sdk-toolchain-declarations-test)
+        endif()
+    endforeach()
+
+
+    # Exercise consumer declarations without interpreting metadata as an actual
+    # installed binary compatibility or target-discovery result.
+    add_executable(umicom-sdk-consumer-requirements-test
+        tests/sdk_installation/test_consumer_requirements.c)
+    target_link_libraries(umicom-sdk-consumer-requirements-test PRIVATE Umicom::sdk)
+    set_target_properties(umicom-sdk-consumer-requirements-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES)
+    umicom_apply_warnings(umicom-sdk-consumer-requirements-test)
+    umicom_apply_sanitizers(umicom-sdk-consumer-requirements-test)
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-sdk-consumer-requirements-test FILES
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/sdk/consumer.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/sdk/manifest.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/sdk/compatibility.c")
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-sdk-consumer-requirements-test)
+    endif()
+    foreach(_case IN ITEMS consumer-null
+            consumer-null-id
+            consumer-empty-id
+            consumer-zero-abi
+            consumer-null-array
+            consumer-extent
+            consumer-null-entry
+            consumer-empty-entry
+            consumer-last-invalid
+            manifest-null
+            manifest-zero-abi
+            manifest-null-array
+            manifest-extent
+            manifest-null-id
+            manifest-empty-id
+            manifest-null-target
+            manifest-empty-target
+            manifest-last-invalid
+            null-output
+            requirement-null
+            requirement-zero
+            owned-result
+            match
+            missing-one
+            missing-all
+            empty-required
+            empty-available
+            both-empty
+            duplicate-required
+            duplicate-present
+            duplicate-available
+            case-sensitive
+            optional-component
+            extra-targets
+            older-version
+            older-patch
+            different-major
+            low-abi
+            higher-abi
+            newer-minor
+            newer-patch
+            combined-mismatch
+            zero-minimum-version)
+        add_test(NAME framework.sdk.consumer_requirements.${_case}
+            COMMAND umicom-sdk-consumer-requirements-test ${_case})
+        set_tests_properties(framework.sdk.consumer_requirements.${_case} PROPERTIES
+            TIMEOUT 15 LABELS "framework;sdk;metadata;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.sdk.consumer_requirements.${_case}
+                TARGETS umicom-sdk-consumer-requirements-test)
+        endif()
+    endforeach()
+
     umicom_add_framework_test(umicom-sdk-export-catalogue-test framework.sdk_export_catalogue tests/test_sdk_export_catalogue.c)
     umicom_add_framework_test(umicom-sdk-consumer-package-test framework.sdk_consumer_package tests/test_sdk_consumer_package.c)
     umicom_add_framework_test(umicom-delivery-package-manifest-test framework.delivery_package_manifest tests/test_delivery_package_manifest.c)
@@ -7004,12 +7140,36 @@ install(DIRECTORY docs/learning/
 # Preserve earlier learning destinations for compatibility while offering a
 # source-compatible location beside the canonical resources and SDK examples.
 # Relative SVG/ICO, lesson and example links then retain their source meaning.
+# The complete canonical documentation helper now owns these destinations and
+# adds their linked guides and approved brand files. Retain the earlier learning-
+# only rules for review; legacy destination rules above continue to execute.
+if(FALSE)
 install(DIRECTORY docs/learning/
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/learning"
     COMPONENT Framework)
 install(DIRECTORY docs/learning/
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/learning"
     COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
+endif()
+include(cmake/UmicomSdkDocumentation.cmake)
+umicom_install_sdk_documentation("${CMAKE_CURRENT_SOURCE_DIR}")
+
+if(BUILD_TESTING)
+    foreach(_case IN ITEMS framework sdk docs default custom-datadir relocated missing-guide missing-brand)
+        add_test(NAME framework.sdk.documentation_layout.${_case}
+            COMMAND "${CMAKE_COMMAND}"
+                "-DFRAMEWORK=${CMAKE_CURRENT_SOURCE_DIR}"
+                "-DTEST_BINARY=${CMAKE_CURRENT_BINARY_DIR}/sdk-documentation"
+                "-DTEST_GENERATOR=${CMAKE_GENERATOR}" "-DCASE=${_case}"
+                -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/sdk_documentation/check_layout.cmake")
+        set_tests_properties(framework.sdk.documentation_layout.${_case} PROPERTIES
+            TIMEOUT 100 LABELS "framework;sdk;documentation;install-fixture;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.sdk.documentation_layout.${_case} ALWAYS)
+        endif()
+    endforeach()
+endif()
+
 
 install(FILES docs/SELECTIVE_SDK_INSTALLATION.html
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs" COMPONENT Framework)

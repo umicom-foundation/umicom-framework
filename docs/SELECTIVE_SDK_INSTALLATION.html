@@ -91,5 +91,21 @@ This path selects a package explicitly; it does not clone, download or build Fra
 <p>The archive fixtures cover static and shared libraries, Release, spaces in the producer path, checksum equality, extraction into a different prefix, exclusion of an unrelated product executable, and refusal of absolute installation directories. Their consumer stages compile, link and run a small application. Authored fixtures require execution before making a compatibility claim.</p>
 <p>If CPack reports a missing artifact, rebuild the package target in the matching configuration; do not edit exports to hide missing libraries. If a dependency cannot be found on the receiving machine, install that dependency or produce a separately configured SDK. If extraction or linkage fails, preserve the ZIP, checksum and logs rather than overlaying another SDK into the same folder.</p>
 <p>Packaging uses the documented <a href="https://cmake.org/cmake/help/latest/module/CPack.html">CPack install-project selection</a> and <a href="https://cmake.org/cmake/help/latest/cpack_gen/archive.html">archive generator</a>. It does not bundle the source repository or change application language syntax.</p></section>
+
+<section id="offline-documentation"><h2>Install the offline documentation collection</h2>
+<p>The canonical documentation tree is <code>share/umicom/framework/docs</code> under the installation prefix. Guides, lessons and their selected root reference pages share this layout. Approved SVG logos, SVG icons and the ICO sit beside them at <code>share/umicom/framework/resources/brand</code>, so the same relative links work in the source tree and this installed tree.</p>
+<p>Both <code>Framework</code> and <code>FrameworkSDK</code> include the canonical collection. To install the collection by itself from a configured Framework build, select <code>FrameworkDocumentation</code>:</p>
+<pre><code>Set-Location "C:\umicom\Umicom-Applications\framework"
+cmake --install ".\build\windows-ucrt64-debug" --component FrameworkDocumentation --prefix "C:\SDK-Docs\Umicom"
+</code></pre>
+<p>Stop if the command fails and check <code>$LASTEXITCODE</code>. Then open <code>C:\SDK-Docs\Umicom\share\umicom\framework\docs\guides\check-sdk-environment.html</code> in a browser and follow its lesson links. This component installs documentation and approved artwork; an independent application still needs SDK headers, libraries, package files and its external dependencies. It does not install or redistribute fonts.</p>
+<p>The configured package now exposes the canonical directory through <code>UMICOM_FRAMEWORK_DOCUMENTATION_ROOT</code>. Its previous <code>share/umicom/docs</code> location remains available as <code>UMICOM_FRAMEWORK_LEGACY_DOCUMENTATION_ROOT</code>. Existing older learning and guide installation rules are retained for compatibility. New links should start from the canonical root; not every historical page uses the same legacy layout.</p>
+<h3>Check component selection and relocation</h3>
+<pre><code>ctest --test-dir ".\build\windows-ucrt64-debug" -C Debug --output-on-failure --no-tests=error -R "^framework[.]sdk[.]documentation_layout[.]"
+</code></pre>
+<p>The eight isolated cases configure a project with no compiler or product targets and exercise the real documentation install helper. They cover the three named components, the default selection, a custom data directory, a relocated prefix, and missing guide or brand inputs. Installed fixture links must resolve, and the approved artwork must retain its source hashes.</p>
+<p>These fixtures are authored checks, not evidence that your SDK installation has passed. Qualify the actual packaged directory separately: open its guides, follow the links you distribute, inspect the logo/icon appearance and record the SDK revision and installation prefix. A successful documentation install does not establish that a native application can compile, link or launch.</p>
+</section>
+
 <footer><p>Sammy Hegab · Umicom Foundation · MIT</p></footer>
 </body></html>

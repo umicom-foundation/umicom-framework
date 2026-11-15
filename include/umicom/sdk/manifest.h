@@ -37,6 +37,12 @@ UmiSdkManifest umi_sdk_manifest_current(const UmiSdkComponent *components,size_t
 /**
  * Check that sdk manifest satisfies its contract before another service relies on it.
  */
+/** A nonzero component_count requires that many readable component records.
+ * Reject null storage and unrepresentable array byte extents before indexing.
+ * Empty inventories are valid. Strings and arrays are borrowed and must remain
+ * stable for the call; the validator cannot infer actual allocation lengths.
+ * A current manifest describes the linked Framework, not another installation.
+ */
 UmiStatus umi_sdk_manifest_validate(const UmiSdkManifest *manifest);
 #ifdef __cplusplus
 }

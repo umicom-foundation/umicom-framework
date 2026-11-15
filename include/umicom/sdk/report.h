@@ -28,6 +28,9 @@ extern "C" {
 /**
  * Provide the sdk report format operation used by this module and its client applications.
  */
+/* Refuse inconsistent conformance with INVALID_STATE. Every failure preserves
+ * buffer bytes, including insufficient capacity and formatting errors. A
+ * complete report still describes caller-supplied observations, not SDK trust. */
 UmiStatus umi_sdk_report_format(const UmiSdkProbeResult *probe,const UmiSdkConformance *conformance,char *buffer,size_t capacity);
 #ifdef __cplusplus
 }
