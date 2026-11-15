@@ -23,6 +23,7 @@
 #define UMICOM_AI_CODING_CONTEXT_H
 
 #include "umicom/ai/coding_types.h"
+#include "umicom/base/snapshot_validation.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -62,6 +63,23 @@ typedef struct UmiAiCodingContextPlan {
  * Represent the ai coding context index data shared with callers of this public contract.
  */
 typedef struct UmiAiCodingContextIndex UmiAiCodingContextIndex;
+
+/* Bound all inline fields before path parsing. Path is required and lexically
+ * relative; language and summary may be empty. Incoming revision is historical;
+ * upsert assigns stored identity. active/enabled use nonzero-is-true semantics. */
+UmiStatus UmiAiCodingContextFileValidate(const UmiAiCodingContextFile *file);
+/* Live serialized owners only; validation cannot repair dangling pointers or
+ * data races. Invalid count helpers return zero; Validate/Capture distinguish
+ * invalid state from empty. Capture preserves output on every refusal. */
+UmiStatus UmiAiCodingContextIndexValidate(const UmiAiCodingContextIndex *index);
+UmiStatus UmiAiCodingContextCapture(const UmiAiCodingContextIndex *index,
+    UmiSnapshotCapture *out_capture);
+/* Refuse exhausted revision before mutation. Even an empty successful clear
+ * advances the revision. The void compatibility clear delegates here and
+ * preserves state on refusal; use this checked form when status matters. */
+UmiStatus UmiAiCodingContextClearChecked(UmiAiCodingContextIndex *index);
+
+
 
 /**
  * Initialise ai coding context index from caller-provided values so later operations
@@ -108,6 +126,11 @@ UmiStatus umi_ai_coding_context_at(const UmiAiCodingContextIndex *index,
  * Provide the ai coding context plan operation used by this module and its client
  * applications.
  */
+/* Preserve output on refusal, including invalid policy/provider on an empty
+ * owner. Zero token budget is valid: enabled files are reported as drops.
+ * Active files rank first but remain optional; privacy/budget exclusions do
+ * not fail an otherwise valid plan. Copies contain provenance and estimates,
+ * not file contents, filesystem containment proof or permission to execute. */
 UmiStatus umi_ai_coding_context_plan(
     const UmiAiCodingContextIndex *index,
     uint32_t token_budget,

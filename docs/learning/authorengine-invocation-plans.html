@@ -1,0 +1,73 @@
+<!-- Umicom Framework
+File: docs/learning/authorengine-invocation-plans.html
+
+PURPOSE:
+Teach exact argv ownership, bounded configuration and transactional native process planning.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Prepare complete native tool plans | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Prepare complete native tool plans</h1>
+<p>A desktop application often needs an external tool to build a document, inspect a provider or generate a result. The application should first describe the intended operation as data that can be reviewed. Framework's AuthorEngine integration creates a native invocation containing an executable, separate arguments and a working directory. Preparing this value does not run the tool.</p>
+<p>Prerequisites: C structures, arrays, pointers and status returns. Follow the declarations in <a href="../../include/umicom/ai/authorengine.h">authorengine.h</a> and the implementation in <a href="../../src/ai/authorengine.c">authorengine.c</a>. AuthorEngine itself is an independently installed program; a plan is not evidence that the program is installed or that its version supports every operation.</p>
+<h2>1. Keep arguments separate</h2>
+<p>A shell command string mixes program structure with input text. A native argument vector keeps each value separate, so a path containing spaces remains one argument. Framework does not quote or concatenate the values into a shell command. The process adapter must retain this distinction when launching and must select the plan's working directory explicitly.</p>
+<pre><code class="language-c">#include &lt;string.h&gt;
+#include "umicom/ai/authorengine.h"
+
+UmiStatus prepare_book_build(UmiAiAuthorEngineInvocation *plan)
+{
+    UmiAiAuthorEngineConfig config = {0};
+    strcpy(config.executable, "uaengine");
+    strcpy(config.workspace, "C:/Projects/My Book");
+    /* Publication commands do not require an AI provider. */
+    return umi_ai_authorengine_plan_publication_invocation(
+        &amp;config, UMI_AI_AUTHOR_ENGINE_BUILD, NULL, plan);
+}</code></pre>
+<p>A successful value contains the command argument <code>build</code> and the configured working directory. It does not check whether the directory exists, resolve a trusted executable, create output folders or publish content. Those decisions belong to the later approved execution boundary. A relative executable name still needs deliberate resolution by the launcher.</p>
+<h2>2. Validate fixed configuration fields before reading strings</h2>
+<p>A field such as <code>char workspace[UMI_AI_TEXT_CAPACITY]</code> may contain no terminating zero byte. Checking only its first byte does not make <code>snprintf(..., "%s", workspace)</code> safe. Publication planning now uses Framework's bounded text-field validator before copying executable and workspace.</p>
+<p>AI planning already validates all three configuration fields and requires a provider. Publication planning uses only executable and workspace; provider metadata is unused and remains optional. Neither validator checks path existence, credentials, encoding validity or executable trust. A field that is correctly terminated can still be unsuitable for execution.</p>
+<h2>3. Publish only a complete plan</h2>
+<p>Consider a preview plan that accepts a site folder, or an AI generation plan whose final output-path argument is too long. A direct writer could clear the old plan, copy the executable and several arguments, then return an error. The caller would receive a failed status alongside a partially changed value.</p>
+<p>The public planners now use the shared value-construction helper:</p>
+<ol><li>Allocate a temporary candidate for the inline invocation fields.</li><li>Build and validate every argument in that candidate.</li><li>Copy the complete candidate into the destination only after success.</li><li>Free the candidate on every return path.</li></ol>
+<p>A failed request, including allocation failure, leaves the previous destination unchanged. This is useful for an editable launch form: the last complete value stays available while the draft is corrected. The caller must still stop execution after a failed planning call. Keeping an older valid plan does not mean the user approved executing that older plan.</p>
+<h2>4. Understand the two command families</h2>
+<table><thead><tr><th>Planner</th><th>Command family</th><th>Input requirements</th></tr></thead><tbody>
+<tr><td><code>umi_ai_authorengine_plan_invocation</code></td><td>Health, provider catalogue and generation</td><td>Executable, workspace and provider; generation also requires session, model, input and output values.</td></tr>
+<tr><td><code>umi_ai_authorengine_plan_publication_invocation</code></td><td>Project initialization, ingestion, build, export, preview serving/opening, rendering, doctor and publication</td><td>Executable and workspace; a nonempty site override is accepted only for preview serving.</td></tr>
+</tbody></table>
+<p>The external command spellings and argument order are preserved. A site override on a build or export request returns <code>UMI_STATUS_INVALID_ARGUMENT</code>. An argument at or above its destination capacity returns <code>UMI_STATUS_CAPACITY_EXCEEDED</code>; truncation would change the selected path and is refused. The configuration workspace field is larger than one argument slot, so an AI plan can refuse a workspace that a publication working-directory field can hold.</p>
+<h2>5. Borrow text from a previous plan carefully</h2>
+<p>An editor may pass a path already stored in the destination plan back into the planner. Staging keeps that old storage readable until every input has been consumed. The resulting invocation owns copies of its text, so it does not retain caller pointers after success.</p>
+<pre><code class="language-c">/* draft_site points into the previous plan. Both objects remain alive
+ * and access is serialized until the planner returns. */
+const char *draft_site = plan.arguments[4];
+UmiStatus status = umi_ai_authorengine_plan_publication_invocation(
+    &amp;config, UMI_AI_AUTHOR_ENGINE_SERVE_PREVIEW, draft_site, &amp;plan);
+if (status != UMI_STATUS_OK) {
+    /* Show the failure and keep editing. Do not launch the retained plan. */
+}</code></pre>
+<p>Borrowing does not make dangling pointers valid. Non-configuration string inputs must still be readable, zero-terminated strings. Keep all inputs stable for the call. The helper adds no lock and no ownership of threads, processes or provider handles.</p>
+<h2>6. Run the boundary exercises</h2>
+<p>From the Framework repository with its configured toolchain, stop after any failed command:</p>
+<pre><code class="language-powershell">cmake --preset windows-ucrt64-debug
+cmake --build --preset windows-ucrt64-debug --target umicom-ai-authorengine-planning-test umicom-ai-authorengine-boundary-tests
+ctest --test-dir build/windows-ucrt64-debug -R '^framework[.]ai[.]authorengine[.]planning[.]|^framework[.]ai_authorengine_boundary$' --output-on-failure --no-tests=error</code></pre>
+<p>The <a href="../../tests/test_ai_authorengine_planning.c">planning scenarios</a> check the publication command mappings, required fields, unterminated arrays, exact argument limits, late refusal, borrowed input and literal punctuation. They create plans only. A semicolon or a dollar sign in these fixtures is data, never a shell instruction. The <a href="../../examples/local_models/sdk_consumer/main.c">installed consumer</a> checks the same exported boundary without invoking AuthorEngine.</p>
+<ol><li>Build one valid plan and copy its complete bytes.</li><li>Request a site override for a non-preview command. Expect an invalid-argument result and unchanged destination bytes.</li><li>Supply an overlong final output argument. Expect a capacity error with the original plan intact.</li><li>Pass a site pointer borrowed from the old plan into preview planning. Confirm the exact new argument survives.</li><li>Keep process execution as a separate exercise with reviewed tool identity, working directory, authorization and actual exit/log evidence.</li></ol>
+<p>Configuration or test registration does not establish that these executables ran. No real AuthorEngine process, installed SDK execution, filesystem side effect or GUI workflow is qualified by a source review of the planner.</p>
+<p><a href="conversation-file-loading.html">Recover saved conversations</a> · <a href="index.html">Learning index</a></p>
+</main></body></html>

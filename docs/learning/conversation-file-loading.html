@@ -1,0 +1,112 @@
+<!-- Umicom Framework
+File: docs/learning/conversation-file-loading.html
+
+PURPOSE:
+Teach transactional conversation parsing, complete format validation and bounded native file loading.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Load conversations without losing state | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Load conversations without losing state</h1>
+<p>A conversation file is external input even when it lives on the same computer. It can be incomplete, edited by another program or copied from an older workspace. A failed load should report the problem while preserving the record already displayed in the application. This lesson follows the native Framework parser and its two file-reading interfaces.</p>
+<p>Prerequisites: C pointers, return values and <a href="runtime-catalogue-revisions.html">conversation records and revisions</a>. The public contracts are in <a href="../../include/umicom/ai/conversation_archive.h">conversation_archive.h</a>. Parsing and reading do not run a model or grant permission to persist or transmit a conversation.</p>
+<h2>1. Prepare a candidate before replacing the current value</h2>
+<p>An unsafe loader clears the caller's record and writes fields into it as lines arrive. A malformed line near the end then returns an error after destroying the previous valid record. Transactional parsing means building a separate candidate and publishing it only after every required check succeeds.</p>
+<ol><li>Check the input pointer, exact byte length and format-size limit.</li><li>Copy input into temporary storage and allocate a separate record candidate.</li><li>Parse and validate the complete candidate.</li><li>Replace the caller's record only after success; free temporary storage on every path.</li></ol>
+<p><code>UmiAiConversationRecordParse</code> follows these steps. Its input is an explicit byte span, so a zero byte hidden in the middle cannot silently truncate the file. The input may even borrow bytes from the previous output record: the copy is complete before publication. A failure, including allocation failure, preserves the previous record.</p>
+<pre><code class="language-c">#include "umicom/ai/conversation_archive.h"
+
+UmiStatus read_selected_conversation(
+    const char *absolute_path, UmiAiConversationRecord *current)
+{
+    /* The application has already obtained the user's selected path.
+     * On any error, current keeps its previous complete value. */
+    return UmiAiConversationArchiveLoadBounded(
+        absolute_path, UMI_AI_CONVERSATION_FILE_MAX_BYTES, current);
+}</code></pre>
+<p>The maximum accepted format size is 1 MiB. It exceeds the worst-case escaped representation of this fixed-capacity record. Applications can choose a smaller file budget. This is a format/resource boundary, not a claim that all files below the limit are valid.</p>
+<h2>2. Require one complete meaning for each field</h2>
+<p>The v1 writer emits thirteen metadata fields and three fields for each declared message. Each appears exactly once. Their order is free; empty lines, CRLF line endings and a missing final newline are accepted. An optional message name or text may be empty, but its field still has to appear. Use the Framework writer to produce files instead of hand-building an incomplete header.</p>
+<pre><code>format=umicom-ai-session-v1
+session.id=session.example
+session.provider=provider.local
+session.model=model.chat
+session.created=1
+record.workspace=workspace.example
+record.title=Example
+record.classification=2
+record.remote-approved=0
+record.persistence-approved=0
+record.updated=1
+record.revision=1
+message.count=0</code></pre>
+<p>A second classification field could override an earlier privacy choice. A second message field could replace text the first reader displayed. The parser rejects both. It also rejects message fields beyond the declared count, missing fields, unknown keys and unknown format versions. A duplicate index spelled as <code>00</code> still refers to index zero and cannot bypass duplicate detection.</p>
+<p>The writer escapes special bytes with percent notation: a newline becomes <code>%0A</code>, percent becomes <code>%25</code>, and an equals sign becomes <code>%3D</code>. Valid escapes are decoded. An escaped zero byte, <code>%00</code>, is refused because it would hide subsequent bytes from C string consumers. This format does not add signatures, encryption, provider identity or proof that generated text is trustworthy.</p>
+<h2>3. Check numbers before narrowing them</h2>
+<p>Standard unsigned conversion functions can accept a leading sign or whitespace. Those spellings are unnecessary for this file format. Framework's shared <code>umi_ascii_uint64_parse</code> accepts unsigned decimal digits and checks overflow before arithmetic. The conversation parser translates invalid numeric fields into a parse error.</p>
+<p>Classification is checked while still represented as a 64-bit value, before conversion to its enum. Otherwise a large value could narrow into a valid-looking classification. Message indices are checked before indexing storage. Timestamps and serialized revisions may use the complete unsigned 64-bit range; an archive assigns its own new stored revision when a loaded record is inserted.</p>
+<table><thead><tr><th>Input</th><th>Outcome</th></tr></thead><tbody>
+<tr><td>Ordinary unsigned digits within the field's domain</td><td>Admitted</td></tr>
+<tr><td><code>-1</code>, <code>+1</code>, leading whitespace or trailing text</td><td>Parse error</td></tr>
+<tr><td>A value larger than the unsigned 64-bit maximum</td><td>Parse error</td></tr>
+<tr><td>Classification outside the declared enum range</td><td>Parse error before narrowing</td></tr>
+<tr><td>Message count or index outside fixed storage</td><td>Parse error before access</td></tr>
+</tbody></table>
+<h2>4. Choose the file reader deliberately</h2>
+<table><thead><tr><th>API</th><th>Input and resource behavior</th></tr></thead><tbody>
+<tr><td><code>UmiAiConversationRecordParse</code></td><td>Parses existing bytes; no filesystem access; enforces the format-size bound.</td></tr>
+<tr><td><code>UmiAiConversationArchiveLoadBounded</code></td><td>Requires an ordinary absolute regular-file path and a byte budget. Rejects an oversized file before allocation using the shared input-file service.</td></tr>
+<tr><td><code>umi_ai_conversation_archive_load_record</code></td><td>Retains compatibility with the existing relative-path/link behavior. Allocates the whole file before the parser applies its size bound.</td></tr>
+</tbody></table>
+<p>The bounded reader rejects a final symbolic link, reparse point or device. Parent aliases can still be followed, so choose a trusted directory; this is not a directory sandbox. It checks the same open handle for observable changes, but that is not a guarantee against every concurrent writer. File I/O can block: an interactive application should call from an owned worker and publish the result only to the request that selected it.</p>
+<p>Both file interfaces now share staged parsing. Complete files emitted by the existing writer remain supported. Incomplete or ambiguous files that earlier code happened to accept are refused. Keep the original file for investigation; do not quietly fill in missing privacy metadata or drop duplicate messages.</p>
+<h2>5. Run the exercises and inspect actual results</h2>
+<p>On Windows, start in the Framework repository with its configured UCRT64 toolchain available. Use the existing Debug preset, then build the focused targets and run the selection below. Stop after a failed command.</p>
+<pre><code class="language-powershell">cmake --preset windows-ucrt64-debug
+cmake --build --preset windows-ucrt64-debug --target umicom-ai-conversation-parsing-test umicom-ai-conversation-archive-tests
+ctest --test-dir build/windows-ucrt64-debug -R '^framework[.]ai[.]conversation[.]parsing[.]|^framework[.]ai_conversation_archive$' --output-on-failure --no-tests=error</code></pre>
+<p>The <a href="../../tests/test_ai_conversation_archive_parsing.c">forty parsing scenarios</a> cover valid complete files, line endings, field order, maximum message counts, exact integer limits, aliased input and malformed values. The <a href="../../tests/test_ai_conversation_archive.c">file round trip</a> checks both readers, an exact byte budget, an insufficient budget and unchanged output after a late parse failure. Registration alone does not prove these tests passed.</p>
+<ol><li>Load a valid record and keep a copy of its title and messages.</li><li>Remove one required field from a test file. Expect a parse error and the original record still present.</li><li>Add a second message text field or an out-of-count message. Confirm refusal instead of silent replacement or omission.</li><li>Set a byte budget smaller than the valid file. Expect CAPACITY_EXCEEDED before the bounded reader allocates the file buffer.</li><li>Restore the valid file and reload it. Successful recovery should not require resetting unrelated application state.</li></ol>
+<p>If a test is absent, reconfigure from the updated source. For a parse error, inspect a copy of the file and its exact fields; avoid placing sensitive conversations in public logs. For a capacity error, compare the real file size with the chosen budget and field capacities. Missing exported symbols in an installed application require rebuilding and reinstalling a matching SDK, then running its <a href="../../examples/local_models/sdk_consumer/main.c">consumer example</a>. That example exercises parsing offline; its invalid-path check only resolves bounded-load admission and does not qualify real file I/O.</p>
+<h2>6. Import the parsed record into a live service</h2>
+<p>Parsing answers whether a file represents a complete conversation. Importing asks a separate question: may this candidate replace the record currently owned by the service? Another user action may have edited that record while a worker was reading the file. Keep those two decisions separate.</p>
+<p><code>UmiAiAuthorEngineImportSession</code> takes an already parsed record and an expected stored revision. Zero means insert only when the session identifier is absent. A nonzero value means replace only the matching existing record at that revision. A conflict returns <code>UMI_STATUS_BUSY</code> and preserves the archive, active session, service revision and output report. Do not resolve a conflict by automatically retrying with a newly read revision: show the current record and let the user choose.</p>
+<pre><code class="language-c">#include "umicom/ai/authorengine_service.h"
+
+/* Run on the serialized service owner after the application confirms that
+ * this completion still belongs to the request that selected the file. */
+UmiStatus adopt_loaded_session(
+    UmiAiAuthorEngineService *service,
+    const UmiAiConversationRecord *candidate,
+    uint64_t selected_stored_revision,
+    UmiAiConversationImportReport *report)
+{
+    return UmiAiAuthorEngineImportSession(
+        service, candidate, selected_stored_revision, report);
+}</code></pre>
+<ol><li>When replacing an existing session, read its stored record and retain that revision. For an explicitly new session, use zero.</li><li>Read and parse the selected file into worker-owned storage. Keep the service itself on its serialized owner.</li><li>On completion, check the application's initiating request and workspace identity before touching the service. Conditional record admission alone does not detect that the user switched to another workspace.</li><li>Call the import function with the captured stored revision. On success, use the report to identify the newly active session. On failure, retain the current display and report the cause.</li><li>Release the candidate after the call; the archive owns its own copy.</li></ol>
+<table><thead><tr><th>Report field</th><th>Meaning</th></tr></thead><tbody>
+<tr><td><code>source_record_revision</code></td><td>The historical value from the candidate or saved file. It may be zero or the unsigned maximum.</td></tr>
+<tr><td><code>stored_record_revision</code></td><td>The new revision assigned by the destination archive. Use this identity for a later conditional edit.</td></tr>
+<tr><td><code>service_revision</code></td><td>The service revision after successful import and active-session selection.</td></tr>
+<tr><td><code>replaced</code></td><td>Whether this operation replaced the explicitly selected existing record.</td></tr>
+</tbody></table>
+<p>Do not compare revisions across independent archives or use a file's historical number as a destination revision. Counters describe their own owner. At counter exhaustion the operation refuses before publishing state; it does not wrap to an old identity.</p>
+<p>For a synchronous command, <code>UmiAiAuthorEngineLoadSessionBounded</code> combines the bounded reader with conditional import. It can block for file I/O and requires exclusive serialized ownership throughout. The separate parse/import workflow is more suitable for an interactive application. These APIs add no worker thread or GUI file chooser.</p>
+<p>Import does not register a provider, load a model, contact an endpoint or modify the service's provider/privacy policy. Saved classifications and approval flags remain record metadata; importing them is not proof of fresh user consent or of the file's authenticity. Review the current policy and consent at any later execution or persistence boundary. The legacy <code>umi_ai_authorengine_service_load_session</code> still exposes its compatibility reader and unconditional replacement behavior; its output contains the historical parsed record rather than this new import report.</p>
+<pre><code class="language-powershell">cmake --build --preset windows-ucrt64-debug --target umicom-ai-conversation-import-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework[.]ai[.]conversation[.]import[.]' --output-on-failure --no-tests=error</code></pre>
+<p>The <a href="../../tests/test_ai_conversation_import.c">import regression scenarios</a> exercise insertion, replacement, stale identity, archive capacity, counter exhaustion, policy preservation and actual build-local file reads. The installed SDK consumer also exercises in-memory import without model or network activity. Configuration and registration do not establish that either executable passed.</p>
+<p><a href="runtime-catalogue-revisions.html">Conversation revisions</a> · <a href="bounded-input-cleanup.html">Bounded native file cleanup</a> · <a href="index.html">Learning index</a></p>
+</main></body></html>

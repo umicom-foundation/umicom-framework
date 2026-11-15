@@ -21,6 +21,8 @@
 
 #include "umicom/codeguard/rule_registry.h"
 #include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
 #include "umicom/codeguard/rules/memory.h"
 #include "umicom/codeguard/rules/buffer.h"
 #include "umicom/codeguard/rules/string.h"
@@ -68,7 +70,51 @@ void umi_codeguard_rule_registry_destroy(UmiCodeGuardRuleRegistry *r){/* Protect
  * Add codeguard rule registry only after its inputs and available capacity have been
  * checked.
  */
+/* Check arithmetic before allocation and retain old descriptor storage until every incoming entry has been copied. This preserves self-appends and leaves failed batches unchanged; the prior realloc implementation remains for review. The previous implementation remains for review. */
+#if 0
 UmiStatus umi_codeguard_rule_registry_add(UmiCodeGuardRuleRegistry *r,const UmiCodeGuardRule *rules,size_t count){UmiCodeGuardRule *p;size_t cap;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r==NULL||(rules==NULL&&count>0U))return UMI_STATUS_INVALID_ARGUMENT;/* Protect caller-owned memory by checking that required state is available before it is used. */ if(r->count+count>r->capacity){cap=r->capacity==0U?128U:r->capacity;/* Continue only while work remains available; the loop body advances the state on each pass. */ while(cap<r->count+count)cap*=2U;p=(UmiCodeGuardRule*)realloc(r->items,cap*sizeof(*p));/* Protect caller-owned memory by checking that required state is available before it is used. */ if(p==NULL)return UMI_STATUS_OUT_OF_MEMORY;r->items=p;r->capacity=cap;}/* Visit each bounded item once so every record receives the same rule. */ for(size_t i=0U;i<count;++i)r->items[r->count++]=rules[i];return UMI_STATUS_OK;}
+#endif
+UmiStatus umi_codeguard_rule_registry_add(UmiCodeGuardRuleRegistry *registry,
+    const UmiCodeGuardRule *rules, size_t count)
+{
+    if (registry == NULL || (rules == NULL && count != 0U))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    const size_t maximum = SIZE_MAX / sizeof(UmiCodeGuardRule);
+    if (registry->count > registry->capacity || registry->capacity > maximum ||
+        (registry->capacity != 0U && registry->items == NULL))
+        return UMI_STATUS_INVALID_STATE;
+    if (count > maximum - registry->count) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (count == 0U) return UMI_STATUS_OK;
+
+    /* Validate the complete batch before mutating storage. Optional diagnostic
+     * text may remain NULL; an empty but valid needle keeps its historical
+     * whole-line match behavior. Pattern text must be a readable string. */
+    for (size_t i = 0U; i < count; ++i)
+        if (rules[i].needle == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    const size_t required = registry->count + count;
+    if (required <= registry->capacity) {
+        memmove(registry->items + registry->count, rules, count * sizeof *rules);
+        registry->count = required;
+        return UMI_STATUS_OK;
+    }
+    size_t capacity = registry->capacity == 0U
+        ? (maximum < 128U ? maximum : 128U) : registry->capacity;
+    while (capacity < required)
+        capacity = capacity > maximum / 2U ? maximum : capacity * 2U;
+    UmiCodeGuardRule *candidate = malloc(capacity * sizeof *candidate);
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    if (registry->count != 0U)
+        memcpy(candidate, registry->items, registry->count * sizeof *candidate);
+    /* A caller may append entries borrowed from this registry. Copy before
+     * releasing the old array so growth cannot invalidate the input. Strings
+     * remain borrowed; only descriptor storage belongs to the registry. */
+    memcpy(candidate + registry->count, rules, count * sizeof *candidate);
+    free(registry->items);
+    registry->items = candidate;
+    registry->capacity = capacity;
+    registry->count = required;
+    return UMI_STATUS_OK;
+}
 /*
  * Return the number of records represented by codeguard rule registry without changing
  * their state.

@@ -16,6 +16,7 @@
 
 #include "umicom/ai_workspace/providers.h"
 #include "workspace_internal.h"
+#include "execution_internal.h"
 #include "local_chat_internal.h"
 #include <float.h>
 #include <math.h>
@@ -64,6 +65,13 @@ static UmiStatus Generate(void *context, const UmiAiRequest *request, UmiAiRespo
     if (f->mode == 14) {
         for (size_t i = 0U; i < 4092U; i += 3U) memcpy(response->text + i, "\xE2\x82\xAC", 3U);
         response->text[4092] = '\0';
+    }
+    if (f->mode == 15) {
+        UmiAiWorkspace *alias = f->workspace;
+        f->reentrant = UmiAiWorkspaceRelease(&alias);
+        if (alias != f->workspace) return UMI_STATUS_INTERNAL_ERROR;
+        /* The legacy entry point must refuse the same active storage. */
+        UmiAiWorkspaceDestroy(f->workspace);
     }
     if (umi_data_server_in_transaction(f->data)) return UMI_STATUS_INVALID_STATE;
     return UMI_STATUS_OK;
@@ -385,7 +393,37 @@ static int Case_remote_policy_is_not_bypassed(void)
     OK(Prepare(false)); CHECK(Run() == UMI_STATUS_INVALID_STATE); OK(Approve());
     /* Provider-kind changed after review must be rejected, not relabelled. */
     fixture.runtime.providers.providers[0].kind = UMI_AI_PROVIDER_LOCAL;
+    /* Binding changes still require review even when the replacement is denied. */
+    fixture.runtime.policy.allow_local = 0;
     CHECK(Run() == UMI_STATUS_BUSY && fixture.calls == 0U); return 0;
+}
+/* Structural admission must finish before the durable RUNNING record or any
+ * external provider call. Restore each deliberate fault before observing state. */
+static int Case_registry_corruption_blocks_run(void)
+{
+    OK(Prepare(false)); OK(Approve());
+    UmiAiProviderRegistry valid;
+    memcpy(&valid, &fixture.runtime.providers, sizeof(valid));
+    for (unsigned fault = 0U; fault < 5U; ++fault) {
+        switch (fault) {
+            case 0U: fixture.runtime.providers.count = SIZE_MAX; break;
+            case 1U: fixture.runtime.providers.providers[0].generate = NULL; break;
+            case 2U: fixture.runtime.providers.providers[0].kind = (UmiAiProviderKind)99; break;
+            case 3U: fixture.runtime.providers.providers[0].provider_id = NULL; break;
+            case 4U:
+                fixture.runtime.providers.providers[1] = fixture.runtime.providers.providers[0];
+                fixture.runtime.providers.count = 2U;
+                break;
+            default: return 1;
+        }
+        UmiStatus status = Run();
+        memcpy(&fixture.runtime.providers, &valid, sizeof(valid));
+        CHECK(status == UMI_STATUS_INVALID_STATE && fixture.calls == 0U);
+        CHECK(Job() != NULL && Job()->state == UMI_AI_WORKSPACE_APPROVED);
+    }
+    OK(Run());
+    CHECK(fixture.calls == 1U && Job()->state == UMI_AI_WORKSPACE_SUCCEEDED);
+    return 0;
 }
 static int Case_tools_require_allowlist_and_review(void)
 {
@@ -565,8 +603,130 @@ static int Case_sqlite_separate_connection_stale_writer(void)
     UmiAiWorkspaceDestroy(other); umi_data_server_destroy(data); CHECK(status == UMI_STATUS_BUSY); return 0;
 }
 
+static int Case_busy_release_preserves_workspace(void)
+{
+    OK(Prepare(false)); OK(Approve()); fixture.mode = 15; OK(Run());
+    CHECK(fixture.reentrant == UMI_STATUS_BUSY && fixture.calls == 1U);
+    CHECK(Job() != NULL && Job()->state == UMI_AI_WORKSPACE_SUCCEEDED);
+    return 0;
+}
+static int Case_prepared_execution_abandon(void)
+{
+    OK(Prepare(false)); OK(Approve());
+    uint64_t revision = fixture.workspace->state->revision;
+    AwExecution *execution = NULL, *other = NULL;
+    OK(AwExecutionPrepare(fixture.workspace, "job.one", NULL, &execution));
+    CHECK(AwExecutionGetPhase(execution) == AW_EXECUTION_PREPARED);
+    CHECK(fixture.workspace->state->revision == revision && fixture.calls == 0U);
+    CHECK(UmiAiWorkspacePutCollection(fixture.workspace, "blocked", "Blocked") == UMI_STATUS_BUSY);
+    CHECK(AwExecutionPrepare(fixture.workspace, "job.one", NULL, &other) == UMI_STATUS_BUSY && other == NULL);
+    UmiAiWorkspace *alias = fixture.workspace;
+    CHECK(UmiAiWorkspaceRelease(&alias) == UMI_STATUS_BUSY && alias == fixture.workspace);
+    OK(AwExecutionRelease(&execution)); CHECK(execution == NULL);
+    OK(AwExecutionRelease(&execution));
+    CHECK(fixture.workspace->state->revision == revision && Job()->state == UMI_AI_WORKSPACE_APPROVED);
+    CHECK(fixture.workspace->execution_owners == 0U);
+    return 0;
+}
+static int Case_execution_retained_completed_storage(void)
+{
+    OK(Prepare(false)); OK(Approve());
+    AwExecution *execution = NULL;
+    OK(AwExecutionPrepare(fixture.workspace, "job.one", NULL, &execution));
+    OK(AwExecutionStart(execution));
+    CHECK(AwExecutionStart(execution) == UMI_STATUS_INVALID_STATE);
+    CHECK(AwExecutionRelease(&execution) == UMI_STATUS_BUSY && execution != NULL);
+    OK(umi_ai_runtime_generate(&fixture.runtime, "test.provider", 1,
+        AwExecutionRequest(execution), AwExecutionResponse(execution)));
+    OK(AwExecutionComplete(execution, UMI_STATUS_OK, false));
+    CHECK(AwExecutionOperationStatus(execution) == UMI_STATUS_OK);
+    CHECK(AwExecutionPublicationStatus(execution) == UMI_STATUS_OK);
+    CHECK(AwExecutionComplete(execution, UMI_STATUS_OK, false) == UMI_STATUS_INVALID_STATE);
+    CHECK(AwExecutionGetPhase(execution) == AW_EXECUTION_SETTLED);
+    UmiAiWorkspace *alias = fixture.workspace;
+    CHECK(UmiAiWorkspaceRelease(&alias) == UMI_STATUS_BUSY && alias == fixture.workspace);
+    /* Completed ownership does not block a new workspace operation, but it
+     * still prevents destruction of the storage retained by this controller. */
+    OK(UmiAiWorkspacePutCollection(fixture.workspace, "later", "Later"));
+    CHECK(strcmp(AwExecutionJob(execution)->id, "job.one") == 0);
+    OK(AwExecutionRelease(&execution));
+    OK(UmiAiWorkspaceRelease(&fixture.workspace)); CHECK(fixture.workspace == NULL);
+    return 0;
+}
+static int Case_execution_rechecks_policy_before_start(void)
+{
+    OK(Prepare(false)); OK(Approve());
+    uint64_t revision = fixture.workspace->state->revision;
+    AwExecution *execution = NULL;
+    OK(AwExecutionPrepare(fixture.workspace, "job.one", NULL, &execution));
+    fixture.runtime.policy.allow_local = 0;
+    CHECK(AwExecutionStart(execution) == UMI_STATUS_PERMISSION_DENIED);
+    CHECK(fixture.workspace->state->revision == revision && fixture.calls == 0U);
+    OK(AwExecutionRelease(&execution));
+    fixture.runtime.policy.allow_local = 1;
+    CHECK(Job()->state == UMI_AI_WORKSPACE_APPROVED);
+    OK(Run()); CHECK(fixture.calls == 1U);
+    return 0;
+}
+static int Case_execution_invalid_reply_is_settled(void)
+{
+    OK(Prepare(false)); OK(Approve());
+    AwExecution *execution = NULL;
+    OK(AwExecutionPrepare(fixture.workspace, "job.one", NULL, &execution));
+    OK(AwExecutionStart(execution));
+    CHECK(AwExecutionComplete(execution, UMI_STATUS_OK, false) == UMI_STATUS_PARSE_ERROR);
+    CHECK(AwExecutionOperationStatus(execution) == UMI_STATUS_PARSE_ERROR);
+    CHECK(AwExecutionPublicationStatus(execution) == UMI_STATUS_OK);
+    CHECK(Job()->state == UMI_AI_WORKSPACE_FAILED && Job()->response.text[0] == '\0');
+    OK(AwExecutionRelease(&execution));
+    return 0;
+}
+static int Case_execution_owner_count_guard(void)
+{
+    OK(Prepare(false)); OK(Approve());
+    AwExecution *execution = NULL;
+    fixture.workspace->execution_owners = SIZE_MAX;
+    UmiStatus status = AwExecutionPrepare(fixture.workspace, "job.one", NULL, &execution);
+    fixture.workspace->execution_owners = 0U;
+    CHECK(status == UMI_STATUS_CAPACITY_EXCEEDED && execution == NULL && fixture.calls == 0U);
+    CHECK(Job()->state == UMI_AI_WORKSPACE_APPROVED);
+    CHECK(UmiAiWorkspaceRelease(NULL) == UMI_STATUS_INVALID_ARGUMENT);
+    UmiAiWorkspace *empty = NULL;
+    OK(UmiAiWorkspaceRelease(&empty));
+    return 0;
+}
+static int Case_sqlite_execution_publication_failure(void)
+{
+    OK(Prepare(false)); OK(Approve()); fixture.mode = 8;
+    AwExecution *execution = NULL;
+    OK(AwExecutionPrepare(fixture.workspace, "job.one", NULL, &execution));
+    OK(AwExecutionStart(execution));
+    OK(umi_ai_runtime_generate(&fixture.runtime, "test.provider", 1,
+        AwExecutionRequest(execution), AwExecutionResponse(execution)));
+    CHECK(AwExecutionComplete(execution, UMI_STATUS_OK, false) == UMI_STATUS_IO_ERROR);
+    CHECK(AwExecutionOperationStatus(execution) == UMI_STATUS_OK);
+    CHECK(AwExecutionPublicationStatus(execution) == UMI_STATUS_IO_ERROR);
+    CHECK(AwExecutionGetPhase(execution) == AW_EXECUTION_SETTLED);
+    CHECK(fixture.workspace->recoveryRequired && fixture.calls == 1U);
+    UmiAiWorkspace *alias = fixture.workspace;
+    CHECK(UmiAiWorkspaceRelease(&alias) == UMI_STATUS_BUSY && alias == fixture.workspace);
+    OK(AwExecutionRelease(&execution));
+    CHECK(Run() == UMI_STATUS_INVALID_STATE);
+    OK(umi_data_server_execute(fixture.data, "DROP TRIGGER fail_result;"));
+    OK(UmiAiWorkspaceReload(fixture.workspace));
+    CHECK(Job()->state == UMI_AI_WORKSPACE_INTERRUPTED && fixture.calls == 1U);
+    return 0;
+}
+
 typedef struct TestCase { const char *name; int (*run)(void); } TestCase;
 static const TestCase CASES[] = {
+    {"busy_release_preserves_workspace", Case_busy_release_preserves_workspace},
+    {"prepared_execution_abandon", Case_prepared_execution_abandon},
+    {"execution_retained_completed_storage", Case_execution_retained_completed_storage},
+    {"execution_rechecks_policy_before_start", Case_execution_rechecks_policy_before_start},
+    {"execution_invalid_reply_is_settled", Case_execution_invalid_reply_is_settled},
+    {"execution_owner_count_guard", Case_execution_owner_count_guard},
+    {"sqlite_execution_publication_failure", Case_sqlite_execution_publication_failure},
     {"empty_open_is_read_only", Case_empty_open_is_read_only},
     {"invalid_inputs_do_not_write", Case_invalid_inputs_do_not_write},
     {"source_provenance_round_trip", Case_source_provenance_round_trip},
@@ -616,6 +776,7 @@ static const TestCase CASES[] = {
     {"source_instructions_remain_data", Case_source_instructions_remain_data},
     {"policy_revocation_blocks_run", Case_policy_revocation_blocks_run},
     {"remote_policy_is_not_bypassed", Case_remote_policy_is_not_bypassed},
+    {"registry_corruption_blocks_run", Case_registry_corruption_blocks_run},
     {"tools_require_allowlist_and_review", Case_tools_require_allowlist_and_review},
     {"tool_permission_change_blocks_run", Case_tool_permission_change_blocks_run},
     {"maximum_response_round_trip", Case_maximum_response_round_trip},

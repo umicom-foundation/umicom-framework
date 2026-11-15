@@ -1,0 +1,60 @@
+<!-- Umicom Framework
+File: docs/learning/codeguard-workspace-paths.html
+
+PURPOSE:
+Teach workspace-relative source selection, lexical path coordinates and regression fixtures.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Select source relative to its workspace</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Select source relative to its workspace</h1>
+<h2>1. Separate a file address from a policy path</h2>
+<p>A file address tells the filesystem what to open. A policy path tells an analyser where that file belongs inside the workspace the caller selected. Using the full address for exclusion rules lets unrelated ancestor directory names change the result. For example, selecting C:\build\projects\demo must not silently exclude demo\src\main.c because build appears outside demo.</p>
+<table><thead><tr><th>Selected workspace</th><th>Visited file</th><th>Policy path</th><th>Recursive selection</th></tr></thead><tbody>
+<tr><td>/build/projects/demo</td><td>/build/projects/demo/src/main.c</td><td>src/main.c</td><td>Scan</td></tr>
+<tr><td>/projects/demo</td><td>/projects/demo/build/generated.c</td><td>build/generated.c</td><td>Exclude</td></tr>
+<tr><td>/projects/demo/build</td><td>/projects/demo/build/generated.c</td><td>generated.c</td><td>Scan the explicitly selected root</td></tr>
+<tr><td>/projects/demo</td><td>/projects/demo/build-tools/tool.c</td><td>build-tools/tool.c</td><td>Scan</td></tr></tbody></table>
+<h2>2. Reuse the Framework path service</h2>
+<pre><code class="language-c">char relative[UMI_PATH_CAPACITY];
+UmiStatus status = umi_path_relative(
+    workspace_root, visited_path, relative, sizeof relative);
+if (status != UMI_STATUS_OK)
+    return status;
+/* Apply workspace selection to relative, while opening visited_path. */</code></pre>
+<p>Include umicom/platform/path.h and link Umicom::platform. Both inputs must be expressed in a compatible coordinate system. Directory traversal supplies paths derived from its selected root. This calculation is lexical: it processes path text without accessing storage, discovering the working directory or resolving symbolic links.</p>
+<p>Normalization represents an empty relative location as a dot. A dot has zero named components. From "." to "src/main.c", the correct relative result is "src/main.c". From "src" to ".", it is "..". Counting the dot as a directory would introduce an unnecessary ascent. Framework handles this boundary centrally so CodeGuard does not invent another path parser.</p>
+<h2>3. Match directory components, not substrings</h2>
+<p><!-- Previous unconditional generated-directory description retained for review: CodeGuard excludes .git, build, _CPack_Packages, node_modules and third_party directories below the selected root, plus adjacent codeguard/rules directory components. -->CodeGuard excludes .git, node_modules, third_party and adjacent codeguard/rules directories below the selected root. By default it also excludes build and _CPack_Packages; scan_generated opts into those two directory categories. Language flags still decide which source files are admitted. The names build-tools and rules-extra do not match. A file named build.c does not match a build directory. Component comparison uses Framework's existing platform case behavior: ASCII case-insensitive on Windows and case-sensitive on POSIX. Unicode bytes are preserved; this does not imply Unicode case folding.</p>
+<p>Workspace-relative templates/workspace payloads are still scanned, but they are omitted from duplicate comparisons against the live workspace. A templates/workspace ancestor outside the selected root does not suppress duplicate comparisons inside the selected project. Direct-file scanning remains an explicit request and bypasses recursive workspace exclusions.</p>
+<h2>4. Keep the boundary honest</h2>
+<p>A relative result beginning with a parent ascent means the visitor supplied a path outside the expected lexical root. The scanner rejects that inconsistent state instead of applying inside-workspace policy to it. Prefixes must end at a component boundary: project and project-other are different roots.</p>
+<p>This is selection policy, not a security sandbox. Traversal retains its existing no-follow-symbolic-links setting, but lexical checks do not prevent filesystem races, aliases or hard links. Excluded directories are still traversed by the current walker before their files are filtered; this change does not add pruning or improve traversal cost. Keep the process working directory stable while using relative scan roots. Prefer an absolute root for a long-lived service.</p>
+<p>Path tests exercise Unicode spelling without opening files. Native file reading has separate platform and encoding requirements; passing a lexical Unicode case does not qualify every Unicode filesystem workflow. Profile-driven reads now use the shared native UTF-8 reader; separate actual-file regressions cover a UTF-8 leaf name. Those authored cases still require execution on supported hosts. See <a href="codeguard-bounded-input.html">bounded source input</a>. Architecture rules retain their separate path classification, and file contents may change between analysis passes.</p>
+<h2>5. Build a fixture that can expose the bug</h2>
+<ol><li>Create a disposable workspace below an ancestor named build.</li>
+<li>Place eligible files under src and build-tools. Place generated files inside the workspace's own build directory.</li>
+<li>Scan the workspace by absolute path, relative path and dot from inside it. Compare selected source, not just exit status.</li>
+<li>Select the inner build directory explicitly and verify its source is considered relative to that new root.</li>
+<li>Call the direct-file API on one generated file and verify that the explicit request still scans it.</li></ol>
+<p>The configured fixture contains eight eligible source files and seven excluded source files. A deliberately small line-length threshold produces one predictable finding for each selected file. These findings make a wrongly empty scan observable. Other analyses are disabled for this fixture; their own tests remain necessary.</p>
+<pre><code class="language-powershell">cmake --build build --target umicom-path-relative-current-tests umicom-codeguard-path-policy-tests umicom-codeguard-workspace-exclusions-tests
+ctest --test-dir build -R "^framework[.](path_relative_current|codeguard_path_policy|codeguard_workspace_exclusions)[.]" --output-on-failure --no-tests=error</code></pre>
+<p>Use your configured directory in place of build. The suite registers twenty shared path cases, twenty-nine policy cases and six real-scanner selection cases. Run the existing path, scanner and cancellation checks too. Successful configuration only creates build rules and fixture input; it is not execution evidence.</p>
+<p>Read <a href="codeguard-scan-profiles.html">scan profiles</a> for language selection and generated-source options. The eight-file fixture above uses the default generated-source policy.</p>
+<h2>Exercises</h2>
+<ol><li>Explain why selecting a directory named build differs from selecting its parent.</li>
+<li>Add a nonadjacent codeguard/other/rules path and verify it remains eligible.</li>
+<li>Compare an ASCII case variant on Windows and POSIX, then explain why that test says nothing about Unicode case folding.</li>
+<li>Describe the additional filesystem controls needed for a security boundary. Keep those controls separate from ordinary source-selection policy.</li></ol>
+<p><a href="codeguard-analysis-failures.html">Propagate analysis failures</a> · <a href="codeguard-cancellation.html">Cancel a scan</a> · <a href="index.html">Learning index</a></p>
+</main></body></html>

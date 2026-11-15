@@ -54,6 +54,7 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/ai_coding_runtime/context_summary.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/ai_coding_runtime/event_queue.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/ai_coding_runtime/history.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/ai_coding_runtime/observation.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/ai_coding_runtime/ignore.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/ai_coding_runtime/language.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/ai_coding_runtime/local_workspace.c"

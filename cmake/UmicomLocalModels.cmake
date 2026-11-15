@@ -45,13 +45,15 @@ add_library(umicom_local_models STATIC
     "${_umi_models_root}/src/local_models/inspect.c"
     "${_umi_models_root}/src/local_models/download.c"
     "${_umi_models_root}/src/local_models/plan.c"
+    "${_umi_models_root}/src/local_models/runtime.c"
     "${_umi_models_root}/src/local_models/session.c"
+    "${_umi_models_root}/src/local_models/readiness.c"
     "${_umi_models_root}/src/local_models/cli.c")
 add_library(Umicom::local_models ALIAS umicom_local_models)
 set_target_properties(umicom_local_models PROPERTIES EXPORT_NAME local_models)
 target_include_directories(umicom_local_models PUBLIC
     $<BUILD_INTERFACE:${_umi_models_root}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
-target_link_libraries(umicom_local_models PUBLIC Umicom::platform Umicom::ai_workspace)
+target_link_libraries(umicom_local_models PUBLIC Umicom::platform Umicom::ai_workspace Umicom::ai)
 if(UMICOM_MODEL_DOWNLOAD_BUILT)
     target_compile_definitions(umicom_local_models PRIVATE UMICOM_MODELS_HAS_CURL=1)
     target_link_libraries(umicom_local_models PRIVATE PkgConfig::UMICOM_MODELS_CURL)
@@ -90,6 +92,15 @@ install(FILES "${_umi_models_root}/docs/local-model-manager.md" "${_umi_models_r
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs" COMPONENT Learning)
 install(FILES "${_umi_models_root}/docs/learning/local-model-lifecycle.html" "${_umi_models_root}/docs/learning/local-model-lifecycle.md"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/learning" COMPONENT Learning)
+# Ship the independent consumer with both ordinary and selective SDK installs.
+# This example links installed exports; it never adds the Framework source tree.
+install(DIRECTORY "${_umi_models_root}/examples/local_models/sdk_consumer/"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/examples/local_models/sdk_consumer"
+    COMPONENT Framework)
+install(DIRECTORY "${_umi_models_root}/examples/local_models/sdk_consumer/"
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/examples/local_models/sdk_consumer"
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
+
 if(BUILD_TESTING)
     add_subdirectory("${_umi_models_root}/tests/local_models" "${CMAKE_CURRENT_BINARY_DIR}/local-model-tests")
 endif()

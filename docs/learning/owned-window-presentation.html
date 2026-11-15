@@ -1,0 +1,181 @@
+<!-- Umicom Framework
+File: docs/learning/owned-window-presentation.html
+
+PURPOSE:
+Explain native owned-window presentation and layout browser callback lifetime.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Present owned tool windows safely</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Present owned tool windows safely</h1>
+<p>Opening a tool window seems simple until a notification closes the application during the call. This lesson follows the Studio Layout Manager into a shared Framework service. It uses the existing browser design and layout model. The aim is to report what actually remains open, preserve documents and prevent an old button from reaching a retired application.</p>
+<h2>1. Open the browser without changing the workspace</h2>
+<ol><li>Open a practice source document, make an unsaved edit and select a few characters.</li>
+<li>Choose Window → Layout Manager. The existing Studio Layout Browser should appear as a modal child of the Studio window.</li>
+<li>Close the browser and open it again. It should be the same owned browser; opening it should not select, save or restore a layout.</li>
+<li>Choose a named layout. Check that its panels are shown while your document text, dirty state and selection remain intact.</li>
+<li>Begin editing a layout, then attempt a browser selection. Apply or cancel the edit first; a retained row must not bypass that admission rule.</li></ol>
+<p>The Window menu uses layout.manager. The existing keyboard route uses studio.layout.manager. Both now call the same native presenter. Keeping a compatibility spelling does not require a second layout model or a second window. Layout persistence remains explicit and separate from showing this browser.</p>
+<h2>2. Distinguish memory lifetime from native lifetime</h2>
+<p>A GObject reference keeps memory alive. It does not prove that a GtkWindow is still registered as an open native window. A test or another component can retain the object after gtk_window_destroy removes it. Framework already observes native removal through UmiGtk4WindowIsOpen and UmiGtk4WatchWindowClosed; the presentation service reuses that boundary.</p>
+<pre><code class="language-c">#include &quot;umicom/ui/gtk4/window_lifecycle.h&quot;
+
+/* owner and browser are existing live GtkWindows on the GTK main thread. */
+UmiStatus status = UmiGtk4PresentOwnedWindow(owner, browser);
+if (status != UMI_STATUS_OK) {
+    /* Handle refusal or cancellation; do not report that the browser opened. */
+}</code></pre>
+<p>The browser must already have owner as its exact transient parent. The service does not silently reparent it, create another window or choose modal policy. Invalid objects, self-ownership and an initially mismatched parent are refused. A removed owner or child produces cancellation. These checks keep an accidentally retained window from being treated as a usable tool.</p>
+<h2>3. Check again after presentation</h2>
+<p>Presenting a window can emit synchronous GTK notifications. An observer can hide the child, close either window, change its transient parent or request another presentation. The service retains both objects for the duration, prevents a nested presentation of the same child, then rechecks registration, relation and visibility before returning.</p>
+<p>OK means the child is still registered and visible when the call returns. It does not prove that the operating system granted keyboard focus, that the window is unobscured or that it will remain open after a later event. A nested attempt returns BUSY; a changed or removed presentation returns CANCELLED. The guard is released on either outcome so a later valid attempt can proceed.</p>
+<h2>4. Keep application identity separate</h2>
+<p>The shared service cannot know whether Studio replaced its runtime while retaining the same native window. Studio therefore keeps its established weak owner token around the call and resolves it afterward. This detects both a closed native owner and an old generation of application state. Other applications should use their own existing lifetime token alongside the shared window service.</p>
+<p>A layout-choice callback needs the same discipline. Its signal binding contains a weak reference to the browser and a weak Studio owner request. Before hiding the browser, it copies the command and creates an independent request. After the visibility notification, it resolves the owner again. A row retained after teardown consequently has no active runtime to mutate.</p>
+<p>Copying the command before hiding also matters: destruction can release the button and its associated string. The callback keeps no borrowed command string across that notification. A selection guard rejects a reentrant open or another selection while the original callback is deciding which layout to apply. It does not alter the general layout-edit or document-save rules.</p>
+<h2>5. Qualify outcomes independently</h2>
+<p>In a configured Framework checkout, build the native fixture and run its focused checks. Stop on build errors. A missing graphical session returns a skip; it is not evidence that the presentation worked.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-owned-window-present-gtk4-test
+ctest --test-dir build/windows-ucrt64-debug -R &quot;^framework[.]gtk4[.]owned_window_present[.]&quot; --output-on-failure --no-tests=error</code></pre>
+<p>The shared fixture covers admission, retained destroyed windows, repeated presentation and observers that close, hide, reparent or reenter. It checks returned statuses separately from native registration and visibility.</p>
+<p>In a configured Applications checkout, qualify the real menu and browser callbacks:</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-all-debug --target umicom-studio-layout-manager-menu-test
+ctest --test-dir build/windows-ucrt64-all-debug -R &quot;^studio[.]layout_manager[.]menu[.]gtk4[.]&quot; --output-on-failure --no-tests=error</code></pre>
+<p>These tests exercise both command identities, unexpected arguments, reopening, deliberately chosen layouts, an active edit, retained buttons and owner-destroying observers. They also compare unsaved document bytes and selection. Configuration merely registers this coverage; compilation, native execution and physical keyboard/mouse checks remain separate steps.</p>
+<h2>6. Diagnose a failed exercise</h2>
+<ol><li>If the menu is unavailable, inspect whether its owner and browser remain registered and whether another selection is active. Do not fix this by creating an unrelated window.</li>
+<li>If presentation returns cancellation, check the synchronous observer that changed the window or application token. Retrying cannot make a retired owner valid.</li>
+<li>If a chosen layout does not apply, retain the returned operation diagnostics and inspect the active layout edit. Do not silently discard an edit.</li>
+<li>If a draft changes, compare document identity, text and selection independently of panel geometry. A layout browser must not save or replace source documents.</li></ol>
+<h2>7. Dismiss a command window before dispatch</h2>
+<p>Closing a tool window and hiding it are different operations. Closing ends its native lifetime; hiding keeps the same window available for reuse. A command palette normally hides after a choice so the selected command can work in the editor. Hiding can still emit synchronous notifications. One of those observers may close the application, show the palette again or change its transient owner before the hide call returns.</p>
+<p>Use UmiGtk4HideOwnedWindow when a command requires a completed dismissal. The helper checks the live owner and transient relation, holds native object references during the transition, and verifies that the child remains hidden afterwards. It shares the presentation guard with UmiGtk4PresentOwnedWindow, so a competing hide or present request for the same child returns BUSY. An already-hidden child is accepted if its owner and relation are valid. The helper does not execute an application command.</p>
+<pre><code class="language-c">UmiStatus status = UmiGtk4HideOwnedWindow(owner, palette);
+/* Resolve the application runtime token again here. */
+if (status == UMI_STATUS_OK &amp;&amp; runtime_is_current) {
+    /* Dispatch the copied command through the existing command service. */
+}</code></pre>
+<p>The token check in this sketch is application-specific: native windows can stay alive in memory after an application has detached its runtime. Copy the command identifier before hiding. Keep the dispatch request independently owned while observers run, then release it after dispatch. A strong window reference protects memory; it does not grant permission to use a retired application session.</p>
+<h2>8. Publish complete search results</h2>
+<p>Replacing a live result list one row at a time exposes partial state to observers. Instead, collect command metadata from the existing registry and build a detached candidate list. Bind each row to a weak application token. Publish the candidate through the existing scroll host only after preparation succeeds. GTK can insert a viewport around a list, so verify ancestry instead of assuming the list is the scroll host’s direct child.</p>
+<p>A result generation identifies the currently published query. A retained row from an earlier query must remain inert, even if its widget still exists. Check that the row belongs to the current list, check its effective sensitivity, and reevaluate command admission before hiding the palette. A query that fails keeps the previous content available for diagnosis but disables it until a complete refresh succeeds. Do not enable a native command merely because a generic alias once reported it enabled.</p>
+<ol><li>Open Command Palette from View and search for Zen. Select the current result and confirm the existing layout command runs while dirty source text and selection remain intact.</li>
+<li>Search again, then replace the query with one that has no matches. An older retained result must not execute under the new query.</li>
+<li>Close the palette and reopen it. Confirm the same native window is reused and the query resets.</li>
+<li>Exercise observers that close the owner during presentation, search replacement and dismissal. Confirm cancellation, preserved documents and no late command execution.</li></ol>
+<p>The native regression suites include these lifetime cases and direct compatibility command entry points. Registering their test names during configuration does not execute them. Run the suites from the matching configured repository and inspect skipped cases separately from passes.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-owned-window-hide-gtk4-test
+ctest --test-dir build/windows-ucrt64-debug -R &quot;^framework[.]gtk4[.]owned_window_hide[.]&quot; --output-on-failure --no-tests=error</code></pre>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-all-debug --target umicom-studio-command-palette-test
+ctest --test-dir build/windows-ucrt64-all-debug -R &quot;^studio[.]command_palette[.]gtk4[.]&quot; --output-on-failure --no-tests=error</code></pre>
+<p>Use Framework’s commands in the Framework repository and Studio’s commands in the Applications repository. Physical keyboard interaction, focus granted by the desktop window manager and the installed GTK package remain additional qualification tasks.</p>
+<h2>9. Select a notebook page by identity</h2>
+<p>A notebook holds several pages and shows one at a time. Its page number is a position, not a stable identity: moving a page changes the number while leaving the widget itself intact. A command such as “show breakpoints” usually names content inside a page rather than a permanent numeric index. Framework can resolve the page containing that content and check whether the same page remains selected.</p>
+<pre><code class="language-c">#include &quot;umicom/ui/gtk4/window_lifecycle.h&quot;
+
+/* All three objects already exist on the GTK main thread.
+ * branch_list belongs to one page of source_notebook. */
+UmiStatus status = UmiGtk4NotebookSelectOwnedTarget(
+    owner, source_notebook, branch_list);
+/* Resolve the application runtime/session token again here.
+ * Only report completion if status is OK and that token is current. */</code></pre>
+<p>This API creates no widgets and changes no hierarchy. The notebook and target must initially belong to the supplied live owner. The target may be the page itself or a descendant such as a list nested in a scroll container. A target elsewhere in the window is refused. A hidden page returns UNAVAILABLE; the function does not override application visibility policy to force the page open.</p>
+<p>The helper retains the owner, notebook, target and resolved page across the GTK call. It guards that notebook against a nested selection request, which returns BUSY. After synchronous observers finish, it checks native window registration, widget ancestry, page visibility and selected identity. A retained object can still have been removed from the live hierarchy, so references and ancestry checks answer different questions.</p>
+<p>Reordering the intended page is accepted if it remains selected and contains the target. Removing the page, moving the notebook to another owner, moving the target to a different page, hiding the page or redirecting selection returns CANCELLED. The current index is checked before reading a page: GTK uses a negative index to mean the last page, which must not accidentally validate the absence of a selection.</p>
+<h2>10. Separate native ownership from project identity</h2>
+<p>Studio uses the shared helper for Branches and the existing Breakpoints menu. The application still owns its project and runtime. Branch navigation captures the current project root and revision before revealing the pane, then checks them after native callbacks. A still-live window may host a different project, so validating only the GTK root would be insufficient.</p>
+<p>A native selection also grants no authority to run a provider operation. Revealing Branches does not check out a branch, stage files or push commits. Opening Breakpoints does not start a debugger. Keep those operations on their existing service boundaries. A short presentation helper should not become an alternate path around workspace admission or process ownership.</p>
+<h2>11. Exercise observer changes deliberately</h2>
+<p>The native fixture uses two pages and an editable field. Its observers make controlled changes during selection so the result can be compared with the intended contract. The field retains its unsaved text. No external process or repository is used. In a configured Framework checkout, compile the fixture and execute its sixteen scenarios:</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-owned-notebook-gtk4-test
+ctest --test-dir build/windows-ucrt64-debug -R &quot;^framework[.]gtk4[.]owned_notebook[.]&quot; --output-on-failure --no-tests=error</code></pre>
+<ol><li>Predict the return status for a callback that moves the selected page from position one to position zero. The same page identity can remain valid, so the expected status is OK.</li>
+<li>Predict the result when the callback selects the first page instead. The requested destination has been abandoned; expect CANCELLED.</li>
+<li>Remove the intended page while retaining a separate reference to its target. Confirm that live memory does not make the removed page a successful selection.</li>
+<li>Request another selection from the observer. Expect BUSY for the nested request while the outer selection can complete normally.</li>
+<li>Close the owner and then call through a retained window reference. Expect cancellation rather than treating delayed finalisation as a live window.</li></ol>
+<p>A missing graphical session returns the fixture’s skip code. Record that as missing coverage. Configuration only declares the cases; compilation and native execution must be recorded separately. Then run the Studio branch-menu fixture and breakpoint observer cases, followed by actual keyboard and mouse acceptance in the application. A signal-emission test does not establish a physical input path or focus granted by the desktop.</p>
+<p>If an expected selection fails, first inspect whether the target belongs to the intended page and window. Next check page visibility and any synchronous observers. Do not repair the test by forcing a new parent or ignoring cancellation; that changes the ownership contract. Keep the original observer and capture the source revision and returned status so the failure remains reproducible.</p>
+<p>GTK reference: <a href="https://docs.gtk.org/gtk4/method.Notebook.set_current_page.html">page selection and visibility</a>, <a href="https://docs.gtk.org/gtk4/method.Widget.is_ancestor.html">widget ancestry</a>, <a href="https://docs.gtk.org/gtk4/method.Notebook.get_nth_page.html">page lookup</a>.</p>
+
+<h2>12. Selecting a workspace panel is a transaction</h2>
+<p>A workbench panel is more than its label. It has a saved model record, a current frame, a provider body and an optional native window. A menu can ask Framework to focus an editor, but GTK may notify application code while it changes the selected notebook page. That code can close the workbench, hide the frame or select a different page before the original call returns. Successful entry into a function therefore does not prove successful selection.</p>
+<p>The shared <code>umi_gtk4_workspace_layout_host_focus_window</code> operation now retains the target widgets and keeps its host allocation alive across this synchronous work. A destruction request retires the host immediately for the caller; final release waits until the focus call stops using it. The caller must discard its host pointer when it requests destruction. Deferred release is an internal lifetime rule, not permission to use a retired object.</p>
+<p>Framework checks the host revision, the actual frame, the native root and the selected notebook page after notifying operations. A page can move to another index and still be the correct target. A different frame with the same label is not the same target. Removal, hiding, reparenting, owner closure or a competing selection causes cancellation. Rebuilding, maximising or restoring the workspace from inside the focus callback returns <code>UMI_STATUS_BUSY</code>; schedule that operation after the current callback instead of replacing its wrappers in the middle of selection.</p>
+<pre><code>UmiStatus status = umi_gtk4_workspace_layout_host_focus_window(host, "editor");
+if (status == UMI_STATUS_CANCELLED) {
+    /* Reacquire application ownership before using any saved host or UI pointer. */
+    return;
+}
+if (status == UMI_STATUS_BUSY) {
+    /* Wait for the current UI callback to finish before making another request. */
+    return;
+}</code></pre>
+<p>This example illustrates result handling; the application must supply its existing live host and use its own lifetime mechanism. Framework owns panel rendering, while the application owns the surrounding session. A Framework return value cannot revive an application object that an observer destroyed. Keep that distinction when adapting Studio, Media or another product.</p>
+<h2>13. Preserve editing focus and recognise redirection</h2>
+<p>Selecting a panel repeatedly should preserve the current editor and its selected text. The operation checks whether focus already belongs to that panel before traversing its children. Keyboard navigation between panels remains a separate action. This avoids moving a text caret merely because a status update repeats an activation request.</p>
+<p>Checking only the final focus pointer is insufficient. An observer can briefly receive focus in the target and then send it back to the original outside entry. The final pointer equals the starting pointer, but a real transition happened. The implementation observes focus notifications during the request and treats this redirection as cancellation. It does not retry by forcing focus over the observer's decision.</p>
+<p>An unmounted workspace retains its earlier ability to select a notebook page before being attached to a window. This is useful during composition and does not establish desktop keyboard focus. Similarly, presenting an existing floating window requests visibility; the operating system still controls desktop activation. Keep native input and window-manager checks separate from model and widget assertions.</p>
+<h2>14. Exercise the real host through callbacks</h2>
+<ol><li>Configure the Framework with GTK4 and testing enabled using your normal build preset.</li>
+<li>Build the dedicated focus target and the existing idempotence target.</li>
+<li>Run the focused tests in a desktop session and preserve their actual results, including any skip caused by unavailable GTK initialisation.</li>
+<li>Exercise the same panel selection through the application's menu and keyboard. Confirm that drafts survive, repeated activation preserves the selected text, and closed windows do not receive later actions.</li></ol>
+<pre><code>cmake --build build/windows-ucrt64-debug --target umicom-gtk4-workspace-focus-ownership-test umicom-gtk4-workspace-focus-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]ui_workstation[.]workspace[.]focus" --output-on-failure</code></pre>
+<p>The ownership target contains 28 scenarios for ordinary and unmounted selection, repeated focus, invalid or unavailable targets, page removal and reparenting, closure, hiding, redirection, reordering, reentry, rebuild and maximise admission, metadata changes, focus observers and floating-window presentation. The tests call the production host and alter real GTK widgets. Their presence is not evidence that they have passed on a particular machine.</p>
+<p>If a callback scenario fails, keep the observer in place and inspect the returned status, owner lifetime and actual selected frame. Do not remove the callback to make the test pass. A result of <code>BUSY</code> means the attempted nested mutation was refused; it does not mean a new layout was applied. A cancelled operation may have begun a visible transition before an observer changed the state, so callers should read the current model rather than assume an automatic rollback.</p>
+<p>GTK reference: the <a href="https://docs.gtk.org/gtk4/property.Window.focus-widget.html">window focus-widget property</a> exposes the current logical focus, and <a href="https://docs.gtk.org/gtk4/method.Notebook.reorder_child.html">notebook page reordering</a> changes a page's position while retaining the child object.</p>
+
+<h2>15. Give About the correct GTK4 contract</h2>
+<p>An About window presents product identity, version and licence information. It should not start a build, read a project or contact a service. GTK4's <a href="https://docs.gtk.org/gtk4/class.AboutDialog.html">GtkAboutDialog</a> derives from GtkWindow. It does not provide GtkDialog's response signal. Connecting that old signal can produce a warning while leaving the expected close callback unused. Native Close and Escape belong to the window lifecycle.</p>
+<p>The Framework service <code>UmiGtk4AboutDialogPresent</code> supplies the existing GTK layout. Studio supplies its product strings and public version macro. Keeping these responsibilities separate lets another application use the same closure and branding rules without copying Studio's widget code.</p>
+<pre><code>#include "umicom/ui/gtk4/workstation/about_dialog.h"
+
+static UmiStatus PresentProductInformation(GtkWindow *owner)
+{
+    const UmiGtk4AboutDialogConfig config = {
+        {"Umicom Example", "Umicom Foundation", "umicom-example"},
+        "1.0.0",
+        "A native Framework learning application.",
+        GTK_LICENSE_MIT_X11
+    };
+    return UmiGtk4AboutDialogPresent(owner, &amp;config);
+}</code></pre>
+<p>The example's version is explicit teaching data. A real application should obtain its version from its established public version contract, as Studio does with <code>UMICOM_STUDIO_VERSION_STRING</code>. Do not display a release string merely because a mockup uses it. Choose the licence matching your actual application; using Framework does not assign a licence to unrelated code.</p>
+<h2>16. Follow the lifetime and metadata rules</h2>
+<ol><li>Call the service on the GTK owning thread with a live parent window. The parent may be NULL for a legacy independent window, but such calls do not share a cached window.</li>
+<li>Supply valid UTF-8. Name, vendor, executable identity and version must be nonempty and at most 255 bytes each. Comments may be empty and at most 4095 bytes. Invalid metadata returns INVALID_ARGUMENT before creating a window.</li>
+<li>Check the returned status. OK means the About window remains visible when the call returns. It does not prove that the desktop granted focus. BUSY refuses synchronous reentry for the same parent; CANCELLED reports closure, hiding or ownership changes observed during presentation.</li>
+<li>Repeat the command to reuse the same live About window. The cache holds a weak reference, which does not prolong the window's life. After native closure, a later command creates a new window even if a test or another observer still retains the old GObject.</li>
+<li>Close a live About window before supplying different metadata. The service returns INVALID_STATE for an identity change while that parent's cached window remains open. This prevents an unrelated caller from silently changing an existing product window.</li></ol>
+<p>Metadata is copied before native construction because GTK's toplevel model can notify observers synchronously. Strong references keep objects allocated during callbacks. Separate checks against the live toplevel model establish whether they remain usable. These are different guarantees: a retained pointer to a destroyed window is not permission to reopen it.</p>
+<p>Use <code>UmiGtk4AboutDialogCreate</code> when a host needs an unpresented window for composition or testing. Initialise the output pointer to NULL. On success, the caller owns a reference: destroy the window when finished and then release that reference. Closing the native window does not release the caller's reference automatically.</p>
+<h2>17. Keep artwork independent of the working directory</h2>
+<p>The About service reuses Framework's embedded canonical SVG decoder. It chooses the icon variant from the initial native foreground colour and decodes a 96-pixel image. If SVG decoding fails, creation returns IO_ERROR instead of substituting another logo. Close and reopen after changing the theme. The existing window-identity service also requests packaged SVG/native ICO integration; support and visible taskbar appearance depend on the platform and installed resources.</p>
+<p>The dialog inherits the host's GTK styling. This code does not download or distribute fonts. Verify the approved interface font, light and dark contrast, icon transparency and multiple display scales in a desktop session. The embedded artwork removes a runtime repository-path requirement; it does not establish that an installed platform icon, font fallback or high-DPI rendering has been qualified.</p>
+<h2>18. Verify About without disturbing a draft</h2>
+<ol><li>Open Studio, create a draft, change its text and select a range.</li>
+<li>Choose Help → About Umicom. Expect Umicom Studio IDE, the public Studio version, the Umicom icon and the application licence.</li>
+<li>Close About and repeat the command. The editor text, selection and dirty state should remain unchanged. The current workbench does not require an open project to show this metadata.</li>
+<li>Run the focused native tests in a desktop session. A missing display produces skip code 77; preserve that as skipped coverage.</li>
+<li>Inspect callback tests that close the owner, close or hide the child, change its transient parent, mutate metadata during creation, or reenter presentation. Do not remove the observer to make a failing test pass.</li></ol>
+<pre><code>cmake --build build/windows-ucrt64-debug --target umicom-gtk4-about-dialog-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]ui_workstation[.]about[.]" --output-on-failure
+
+# From an Applications build that enables Studio:
+cmake --build build/windows-ucrt64-all-debug --target umicom-studio-about-test
+ctest --test-dir build/windows-ucrt64-all-debug -R "^studio[.]about[.]gtk4[.]" --output-on-failure</code></pre>
+<p>The Framework target contains 29 cases; the Studio target contains 11 cases covering native dispatch, legacy wrappers, actual version identity, repeated presentation and draft preservation. These are executable checks, not a claim of a passed build or GUI run. The old Studio response implementation remains disabled for engineering review; its public wrappers now call the shared service.</p>
+
+<p>For a complete independent application, use the <a href="../../examples/sdk_about/README.md">installed-SDK About example</a>. It consumes exported targets and package-owned branding without cloning Framework into the application.</p>
+</main></body></html>

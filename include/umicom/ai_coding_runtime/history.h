@@ -39,6 +39,24 @@ void umi_ai_coding_history_destroy(UmiAiCodingHistory *history);
 UmiStatus umi_ai_coding_history_record(
     UmiAiCodingHistory *history,
     const UmiAiCodingAgentSnapshot *snapshot);
+/** Retain a complete group atomically, evicting only the oldest existing records
+ * when necessary. snapshot_count may not exceed UMI_AI_CODING_RUNTIME_HISTORY_CAPACITY; a zero count
+ * accepts NULL snapshots and changes nothing. Text must be terminated; empty
+ * labels and scalar values remain valid evidence. Refusal preserves history.
+ * Inputs must be stable and separate from owner storage. Serialize all access. */
+UmiStatus UmiAiCodingHistoryRecordBatch(UmiAiCodingHistory *history,
+    const UmiAiCodingAgentSnapshot *snapshots, size_t snapshot_count);
+
+/** Copy up to capacity records from an oldest-first offset without consuming
+ * history. offset equal to count returns OK with zero copied; a larger offset
+ * returns NOT_FOUND. NULL snapshots is allowed only for zero capacity. Every
+ * failure preserves outputs. out_count is required, separate writable storage;
+ * outputs must not overlap history storage. Serialize this read with mutations:
+ * offsets may shift after retention evicts older records. */
+UmiStatus UmiAiCodingHistoryCopyRange(const UmiAiCodingHistory *history,
+    size_t offset, UmiAiCodingAgentSnapshot *snapshots, size_t capacity,
+    size_t *out_count);
+
 /**
  * Find ai coding history while leaving the underlying catalogue or model owned by this
  * module.
@@ -52,6 +70,12 @@ UmiStatus umi_ai_coding_history_at(
  * state.
  */
 size_t umi_ai_coding_history_count(const UmiAiCodingHistory *history);
+/* Predict the matching batch mutation without changing this owner.
+ * A successful check is valid only while the owner and inputs remain unchanged
+ * on the serialized owner thread. It reserves no capacity and acquires no lock. */
+UmiStatus UmiAiCodingHistoryCheckRecordBatch(const UmiAiCodingHistory *history,
+    const UmiAiCodingAgentSnapshot *snapshots, size_t snapshot_count);
+
 #ifdef __cplusplus
 }
 #endif

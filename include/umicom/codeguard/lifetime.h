@@ -47,6 +47,15 @@ void umi_codeguard_lifetime_init(UmiCodeGuardLifetimeTracker *tracker);
 void umi_codeguard_lifetime_scan(UmiCodeGuardLifetimeTracker *tracker,
                                  const char *path, size_t line_number,
                                  const char *code_line, UmiCodeGuardResult *result);
+/* Checked analysis preserves tracker state on failure and reports finding
+ * insertion errors or exhaustion of 64 simultaneously tracked names.
+ * Cleared slots can be reused. Result insertion is append-only and may be
+ * partial on failure: discard the failed scan candidate rather than treating
+ * it as complete. This remains a textual heuristic, not control-flow proof.
+ * The historical void function remains available and discards this status. */
+UmiStatus umi_codeguard_lifetime_scan_checked(UmiCodeGuardLifetimeTracker *tracker,
+    const char *path, size_t line_number, const char *code_line,
+    UmiCodeGuardResult *result);
 #ifdef __cplusplus
 }
 #endif

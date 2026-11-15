@@ -1,0 +1,55 @@
+<!-- Umicom Framework
+File: docs/learning/codeguard-native-output.html
+
+PURPOSE:
+Teach current-context quality presentation through shared native output controls.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Present CodeGuard findings in a native output view</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Present CodeGuard findings in a native output view</h1>
+<h2>1. Let the service own the scan</h2>
+<p>A report widget should not start workers or retain an application service. Framework's review controller owns scan publication, while its native output adapter copies the evidence needed for display. Studio or another host polls its own controller and passes a snapshot with the result borrowed for the current context.</p>
+<p>Read <a href="codeguard-current-request.html">current-request ownership</a>, <a href="codeguard-reports.html">checked report serialization</a> and <a href="output-callback-lifetimes.html">output callback lifetimes</a> first. The presenter depends on those boundaries rather than providing a second scanner or a second implementation of Follow, Refresh and Copy.</p>
+<h2>2. Publish one coherent display input</h2>
+<pre><code class="language-c">GtkWidget *panel = UmiCodeGuardOutputGtk4Create();
+/* Attach the floating panel through the host's established GTK composition. */
+UmiCodeGuardReviewSnapshot snapshot;
+UmiStatus status = UmiCodeGuardReviewPoll(review, current_context, &amp;snapshot);
+if (status == UMI_STATUS_OK) {
+    const UmiCodeGuardResult *result = snapshot.has_report ?
+        UmiCodeGuardReviewResult(review, current_context) : NULL;
+    status = UmiCodeGuardOutputGtk4Update(panel, current_context, &amp;snapshot, result);
+}</code></pre>
+<p>Use the GTK owner thread. A zero current context means the workspace is closed. Only provide a result when has_report is true, and require its report context to match the current workspace. Keep the snapshot and result stable for the duration of the call. A successful update describes presentation, not a successful scan or a passed quality gate.</p>
+<p>The adapter finishes all reads of borrowed findings before calling GTK. It then owns plain values and report bytes. A text-change notification may therefore close the application service without leaving a report pointer inside the widget. Nested publication returns BUSY; retry from a later owner-loop turn.</p>
+<h2>3. Preserve selection until the evidence changes</h2>
+<p>Polling often returns the same snapshot several times. Replacing text on every timer tick would erase the user's selection. The adapter compares named snapshot fields and summary values, avoiding structure-padding comparisons. Unchanged evidence leaves the display alone. New findings must arrive through a new review request; changing result storage behind an unchanged snapshot violates the presentation contract.</p>
+<p>The shared controls still distinguish accepted evidence from displayed text. With Follow paused, a newer report is available but does not automatically replace the user's selection. The status says that retained findings are available; it does not claim that a paused display already shows them.</p>
+<h2>4. Clear a retired workspace even while paused</h2>
+<p>Pause is a reading preference, not permission to retain the previous workspace as the current report. When the host context changes or its report disappears, the adapter calls the shared reset operation before publishing the new state. Reset clears both accepted and displayed text while preserving the Follow setting. Refresh cannot revive the discarded workspace copy.</p>
+<pre><code class="language-c">UmiStatus status = UmiOutputViewGtk4Reset(output_panel);
+/* The owner must also stop old producers from submitting stale evidence. */</code></pre>
+<p>Reset restarts the presenter's identity admission. It does not cancel workers, change services or clear text previously copied to a clipboard. The host still owns context validation. If a new workspace already has a valid report while Follow is paused, its display stays empty until Refresh or Follow shows that new copy.</p>
+<h2>5. Report preview limits without hiding scan state</h2>
+<p>The adapter uses the shared output view's bounded capacity. It requests a complete plain-text report within that budget. A report that is too large, malformed or unavailable is represented by an explicit unavailable-preview status and empty text. The service retains its complete result for another export path. Partial JSON is never presented as a valid export.</p>
+<p>A failed or cancelled scan may leave an older report for the same workspace. The view displays execution status and publication status separately and describes retained findings as available. A context change clears them. These distinctions prevent a previous successful result from becoming a success claim for the latest attempt.</p>
+<h2>6. Qualify the native transitions</h2>
+<pre><code class="language-powershell">cmake --build build --target umicom-output-view-reset-tests umicom-codeguard-output-gtk4-tests
+ctest --test-dir build -R "^framework\.(output_view_reset|codeguard_output)\." --output-on-failure</code></pre>
+<p>Use a configured Framework or Applications build with GTK enabled. Reset cases cover paused text, accepted newer text, restarted identities, recursive calls and owner retirement. Quality-view cases cover success, pending and failed attempts, cancellation, stale contexts, closing a workspace, report loss, oversized or malformed records, unchanged selection, invalid input and callbacks that release the result owner.</p>
+<p>A missing desktop display returns 77 and is a skip. Expected qualification is zero failed registered cases with skipped coverage reported separately. Configuration and authored tests do not demonstrate that these native cases ran.</p>
+<h2>7. Connect the host deliberately</h2>
+<p>The presenter itself registers no application command and creates no timer. A host must bind its existing scan/cancel commands, poll on its established event loop and put the presenter into the approved Output surface. Keep compiler and test output in their existing controls. On close or workspace change, invalidate the scan context and publish the matching view state. This lesson covers the shared presenter; an application's menu binding and full workflow require separate implementation and qualification.</p>
+<p><a href="index.html">Framework learning index</a></p>
+</main></body></html>

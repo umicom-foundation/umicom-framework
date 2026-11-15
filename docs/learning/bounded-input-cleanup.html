@@ -1,0 +1,80 @@
+<!-- Umicom Framework
+File: docs/learning/bounded-input-cleanup.html
+
+PURPOSE:
+Teach bounded native input, cleanup ownership and preservation of the first failure.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Close input handles without losing the original failure</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Close input handles without losing the original failure</h1>
+<h2>1. Two operations can fail in one request</h2>
+<p>A file operation includes opening a handle, checking metadata, reading bytes, processing them and closing the handle. If processing reports cancellation and closing also fails, there are two failures. Replacing the cancellation status with a generic close error hides the reason work stopped.</p>
+<p>Framework's bounded input services always attempt to close their owned native handle. They retain an earlier failure status. If everything succeeded until close, a close failure changes the final result to UMI_STATUS_IO_ERROR.</p>
+<table><thead><tr><th>Earlier result</th><th>Close result</th><th>Returned status</th></tr></thead><tbody>
+<tr><td>OK</td><td>Success</td><td>OK</td></tr>
+<tr><td>OK</td><td>Failure</td><td>IO_ERROR</td></tr>
+<tr><td>CAPACITY_EXCEEDED</td><td>Failure</td><td>CAPACITY_EXCEEDED</td></tr>
+<tr><td>OUT_OF_MEMORY</td><td>Failure</td><td>OUT_OF_MEMORY</td></tr>
+<tr><td>CANCELLED from a visitor</td><td>Failure</td><td>CANCELLED</td></tr>
+<tr><td>BUSY from changed metadata</td><td>Failure</td><td>BUSY</td></tr></tbody></table>
+<p>The single status value reports the first failure; it is not a complete list of every cleanup diagnostic. This policy does not turn failed cleanup into success.</p>
+<h2>2. Keep cleanup outside the success condition</h2>
+<pre><code class="language-c">/* Windows */
+if (!CloseHandle(file) &amp;&amp; status == UMI_STATUS_OK)
+    status = UMI_STATUS_IO_ERROR;
+
+/* POSIX */
+if (close(file) != 0 &amp;&amp; status == UMI_STATUS_OK)
+    status = UMI_STATUS_IO_ERROR;</code></pre>
+<p>The close operation is the left operand, so it always runs when control reaches cleanup. Reversing the operands would short-circuit the expression when status already holds a failure and could skip closing the handle. The ordering protects both resource ownership and error attribution.</p>
+<h2>3. Choose the right bounded input contract</h2>
+<p>UmiInputFileRead allocates a complete owned buffer under the caller's byte limit. The buffer includes one trailing NUL byte, but embedded NUL bytes remain valid binary data. Failure clears the output pointer and size. Release a successful buffer with UmiInputFileFree.</p>
+<p>UmiInputFileVisit reads through a 64 KiB stack buffer and calls a synchronous visitor for each borrowed chunk. This suits large model files, hashing and other incremental consumers. The visitor must not close the reader's handle or retain a chunk pointer after returning. Its failure status stops further reading.</p>
+<pre><code class="language-c">static UmiStatus Consume(const unsigned char *bytes, size_t count, void *context)
+{
+    Candidate *candidate = context;
+    return ProcessCandidateBytes(candidate, bytes, count);
+}
+/* Candidate and ProcessCandidateBytes are application-specific here. */
+uint64_t observed = 0U;
+UmiStatus status = UmiInputFileVisit(path, byte_limit, Consume,
+    &amp;candidate, &amp;observed);
+if (status == UMI_STATUS_OK) {
+    PublishCandidate(&amp;candidate);
+} else {
+    DiscardCandidate(&amp;candidate);
+}</code></pre>
+<p>The example shows ownership flow rather than a complete program: Candidate and the three processing functions belong to the consuming service. A visitor may receive bytes before a later I/O or metadata-change failure. Publish the candidate only after the entire visit returns OK. A failed visit clears outSize; it cannot undo effects a callback already made elsewhere.</p>
+<h2>4. Understand what the native reader checks</h2>
+<p>Both services require an ordinary absolute path and a regular final file, refusing final links or reparse points. Parent aliases may still be followed. Windows paths are converted from UTF-8 for native file access. Keep parents trusted; these functions do not provide a filesystem sandbox.</p>
+<p>The reader checks size before consuming the observed file and compares metadata through the same handle afterward. A changed size or timestamp can reject the observation as BUSY. That is useful evidence, not a guarantee against every concurrent writer or an immutable snapshot.</p>
+<p>Reading is synchronous and can block. Use an application's existing worker service when integrating it into an interactive product. A streaming callback may return CANCELLED, but it cannot interrupt an operating-system read already in progress.</p>
+<h2>5. Exercise paired failures deliberately</h2>
+<ol><li>Read a small known file successfully and verify its exact bytes.</li>
+<li>Report a close failure after successful reading. Expect IO_ERROR and no successful output publication.</li>
+<li>Set the limit below the file size and also report a close failure. Expect CAPACITY_EXCEEDED.</li>
+<li>Refuse allocation in the whole-file reader, then fail close. Expect OUT_OF_MEMORY with a NULL output buffer and zero size.</li>
+<li>Return CANCELLED or another failure from the streaming visitor, then fail close. Expect the original visitor status and no further callbacks.</li>
+<li>Simulate changed final metadata and a close failure. Expect BUSY.</li>
+<li>Check that the real native handle was closed exactly once in every case.</li></ol>
+<p>The regression fixture closes the actual handle before simulating a close error. Its metadata hook changes only the returned observation, leaving the fixture bytes untouched. These controlled failures make otherwise rare paths repeatable without leaving handles open or corrupting files.</p>
+<pre><code class="language-powershell">cmake --build build --target umicom-input-cleanup-status-tests
+ctest --test-dir build -R "^framework[.]input_cleanup_status[.]" --output-on-failure --no-tests=error</code></pre>
+<p>Replace build with your configured directory. The suite registers twenty-seven cases for whole-file and streaming reads. The Windows and POSIX implementations need qualification on their respective hosts. Successful configuration and authored tests alone are not compiler or runtime evidence.</p>
+<h2>Exercises</h2>
+<ol><li>Explain why checking status before calling close can leak a handle.</li>
+<li>Design a candidate object for streaming model validation that has no externally visible effects before publication.</li>
+<li>Explain why a byte limit and a metadata comparison do not create a filesystem sandbox.</li>
+<li>Separate three questions when diagnosing a failed read: what stopped the work, whether cleanup ran, and whether any partial result was published.</li></ol>
+<p><a href="codeguard-scan-profiles.html">Scan profile contracts</a> · <a href="codeguard-analysis-failures.html">Analysis failure propagation</a> · <a href="index.html">Learning index</a></p>
+</main></body></html>

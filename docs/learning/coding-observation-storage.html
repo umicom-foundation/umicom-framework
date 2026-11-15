@@ -1,0 +1,80 @@
+<!-- Umicom Framework
+File: docs/learning/coding-observation-storage.html
+
+PURPOSE:
+Teach bounded event delivery, snapshot retention and failure-preserving observation reads.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Store coding events and history | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Store coding events and history safely</h1>
+<p>A coding runtime exposes two different kinds of observations. An event queue holds notifications until a consumer removes them. A history store retains snapshots so a user can inspect previous states without consuming them. Framework keeps these policies separate while sharing bounded text validation.</p>
+<h2>1. Choose the retention policy</h2>
+<table><thead><tr><th>Service</th><th>Ordering</th><th>When full</th><th>Reading</th></tr></thead><tbody>
+<tr><td>Event queue</td><td>First in, first out</td><td>Refuse a group that does not fit; existing events remain</td><td>Pop removes only the copied records</td></tr>
+<tr><td>Snapshot history</td><td>Oldest retained record first</td><td>Evict the oldest records after the entire new group is admitted</td><td>Copy leaves history intact</td></tr>
+</tbody></table>
+<p>Neither service is a durable audit log. Their contents live in memory and disappear when the owner is destroyed. Both require serialized access; they do not create a worker thread or provide a mutex.</p>
+<h2>2. Admit text without rewriting evidence</h2>
+<p><code>UmiAiCodingEventValidateText</code> checks the event task label and message. <code>UmiAiCodingAgentSnapshotValidateText</code> checks the task, request, provider, model and patch labels. Every array must contain a zero terminator within its own capacity. Empty labels remain valid.</p>
+<p>These operations deliberately preserve scalar evidence such as status codes, state values, counts, flags, sequence values and revisions. They do not certify that a transition was valid or that a recorded operation succeeded. Unknown state values may be displayed as unknown; never use a stored snapshot as permission to execute a task.</p>
+<p>Text termination is also separate from UTF-8 decoding and presentation escaping. A web viewer must escape HTML, and a terminal viewer should apply its control-character policy before displaying untrusted messages.</p>
+<h2>3. Deliver event groups without partial insertion</h2>
+<pre><code class="language-c">#include "umicom/ai_coding_runtime/event_queue.h"
+#include &lt;string.h&gt;
+
+int main(void)
+{
+    UmiAiCodingEventQueue *queue = NULL;
+    UmiAiCodingEvent events[2] = {0}, output[2];
+    size_t copied = 0U;
+    int exit_status = 1;
+    events[0].kind = UMI_AI_CODING_EVENT_STATE;
+    events[0].state = UMI_AI_CODING_RUNTIME_PREPARING;
+    events[0].sequence = 10U;
+    strcpy(events[0].message, "Preparing the request");
+    events[1].kind = UMI_AI_CODING_EVENT_MESSAGE;
+    events[1].sequence = 11U;
+    strcpy(events[1].message, "Waiting for review");
+    if (umi_ai_coding_event_queue_create(&amp;queue) != UMI_STATUS_OK) return 1;
+    if (UmiAiCodingEventQueuePushBatch(queue, events, 2U) != UMI_STATUS_OK) goto done;
+    if (UmiAiCodingEventQueuePopBatch(queue, output, 1U, &amp;copied) != UMI_STATUS_OK) goto done;
+    if (copied != 1U || output[0].sequence != 10U) goto done;
+    if (umi_ai_coding_event_queue_count(queue) != 1U) goto done;
+    exit_status = 0;
+done:
+    umi_ai_coding_event_queue_destroy(queue);
+    return exit_status;
+}</code></pre>
+<p>Build this C23 program against the installed SDK's <code>Umicom::developer</code> target. Expected exit status is zero. The producer supplies sequence values, and the event queue preserves them. Unlike the coding task queue, it does not assign new identities.</p>
+<p>A batch pop copies at most the supplied output capacity. Empty queues return OK with zero copied. A zero-capacity call may use a null output pointer and removes nothing. The existing single-event pop retains its NOT_FOUND result for an empty queue.</p>
+<h2>4. Retain the newest snapshots</h2>
+<p><code>UmiAiCodingHistoryRecordBatch</code> accepts up to <code>UMI_AI_CODING_RUNTIME_HISTORY_CAPACITY</code> snapshots in one group. It checks every incoming text field before evicting any older record. A malformed final snapshot therefore cannot erase valid history.</p>
+<p>For a capacity of 64, a history containing 61 records has room for three. Adding seven snapshots drops four old records, retains 57 old records and appends all seven new ones. If a complete group of 64 is accepted, it replaces the retained window.</p>
+<pre><code class="language-c">UmiAiCodingAgentSnapshot page[8];
+size_t copied = 0U;
+UmiStatus status = UmiAiCodingHistoryCopyRange(
+    history, 0U, page, 8U, &amp;copied);
+/* On OK, page[0..copied) contains the oldest retained observations. */</code></pre>
+<p>The offset is an index in the current retained window. An offset equal to its count returns OK with zero copied; a larger offset returns NOT_FOUND. Retention can shift offsets when older records are evicted, so serialize a read with mutations and do not treat an offset as a permanent snapshot identity.</p>
+<h2>5. Keep prior state when a call is refused</h2>
+<ul><li>Malformed incoming text returns INVALID_ARGUMENT before a batch changes storage.</li><li>Event batches that exceed remaining space and history groups larger than the entire retention capacity return CAPACITY_EXCEEDED before traversing their records.</li><li>Invalid private owner bounds return INVALID_STATE before indexing storage. This indicates an ownership or memory-integrity problem, not a reason to increase a capacity argument.</li><li>Failed batch reads preserve the output records and the caller's prior copied-count value.</li><li>Input and output records must be separate from owner storage. The copied-count result must also be separate from record arrays.</li></ul>
+<p>Provide real readable input extents and writable output allocations. A numeric count cannot make an invalid pointer safe. Keep all records stable for the duration of the call.</p>
+<h2>6. Qualify admission, eviction and draining</h2>
+<pre><code class="language-powershell"># From the Framework source root after configuring with testing enabled:
+cmake --build build/windows-ucrt64-debug --target umicom-ai-coding-event-storage-test umicom-ai-coding-history-storage-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework\.ai\.coding-(event|history)-storage\.' --output-on-failure</code></pre>
+<p>The 49 cases exercise both event fields, all five snapshot labels, final-byte terminators, partial reads, wraparound, atomic refusal, newest-record retention, copied inputs, empty ranges and untouched outputs. Public cases call the linked SDK; separate private fixtures inject impossible ring bounds and corrupted stored text.</p>
+<p>Expected result: all selected cases pass. Execute and inspect native qualification before claiming that result. This storage contract does not establish producer sequence continuity, valid state transitions, successful provider calls or durable audit persistence.</p>
+<p>Continue with <a href="coding-task-queues.html">coding task queues</a> to compare producer-owned event identities with queue-assigned task identities.</p>
+</main></body></html>

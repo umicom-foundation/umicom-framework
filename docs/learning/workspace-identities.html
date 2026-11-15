@@ -1,0 +1,54 @@
+<!-- Umicom Framework
+File: docs/learning/workspace-identities.html
+
+PURPOSE:
+Teach monotonic workspace identities, exhaustion and atomic project discovery.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Keep workspace identities unique</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Keep workspace identities unique</h1>
+<h2>1. Recognise a result from an older workspace</h2>
+<p>A background source scan can finish after a developer changes projects. Comparing folder names alone is insufficient: closing and reopening the same folder creates a different session. A workspace revision is a number identifying a published state. Capture it when work starts and compare it before publishing the result. This extends the <a href="codeguard-current-request.html">current-request review lesson</a>.</p>
+<p>The shared <a href="../../include/umicom/platform/workspace_graph.h">workspace graph contract</a> owns the root, trust value and project list. Studio should read this identity instead of inventing a separate path hash. A graph starts at revision 1 and advances on open, close, trust changes and successful project mutations. Keep the graph alive while jobs use its identity; revisions from two separately created graphs are not globally unique.</p>
+<h2>2. Understand unsigned wraparound</h2>
+<p>A 64-bit unsigned integer can represent zero through UINT64_MAX. Incrementing the maximum produces zero. This is defined integer arithmetic in C, but it breaks an identity contract: an old value can eventually appear again. The large range makes the boundary rare; it does not make reuse correct.</p>
+<pre><code class="language-c">/* Hold the graph mutex before reading or changing the counter. */
+if (graph-&gt;revision == UINT64_MAX) {
+    (void)umi_mutex_unlock(graph-&gt;mutex);
+    return UMI_STATUS_CAPACITY_EXCEEDED;
+}
+/* Only now publish the new root, trust value or project rows. */
+graph-&gt;revision += 1U;</code></pre>
+<p>Checking after changing the project list is too late. A refused operation must leave the root, trust, rows and counter unchanged. Failure also preserves a caller's output project ID. The check and mutation happen while holding the same mutex, so another graph operation cannot consume the reserved value between them.</p>
+<h2>3. Keep project IDs distinct from revisions</h2>
+<p>A revision describes the whole graph. A project ID identifies one admitted project row. Project IDs continue across open and close operations; they do not restart at 1 each time. The allocator reserves zero and refuses a next-ID value of UINT64_MAX rather than wrapping. UINT64_MAX - 1 is therefore the last allocatable project ID under this contract.</p>
+<p>Existing duplicate-add behaviour is useful at exhaustion: it returns ALREADY_EXISTS and the existing project's ID without changing the graph. Removing an unknown ID still returns NOT_FOUND. Open, close and setting trust retain their established revision-advancing behaviour even when called repeatedly with the same values, so those calls require a spare revision. Destruction needs no revision and remains possible after exhaustion.</p>
+<h2>4. Publish discovery once</h2>
+<p>Discovery examines immediate subdirectories for project markers. It copies the current graph into a private candidate, adds discovered rows there, then compares the live revision again before publication. An I/O failure discards the candidate. A newer live change returns INVALID_STATE and preserves that newer state.</p>
+<p>The candidate's editing counter is private. Copying a nearly exhausted live revision into it would incorrectly require one live revision for every discovered row. The implementation starts the candidate counter at 1, stages the bounded list, and consumes exactly one live revision when publishing all additions. Project IDs still come from the live allocator's captured next ID, because published rows must retain unique IDs.</p>
+<p>For example, a live revision of UINT64_MAX - 1 can admit two discovered projects together and publish revision UINT64_MAX. A later no-change discovery succeeds without incrementing it. A discovery that needs to add another project returns CAPACITY_EXCEEDED. If a candidate admits one row but then runs out of project IDs, none of its new rows are published.</p>
+<h2>5. Inspect and run the regression checks</h2>
+<p>The <a href="../../tests/test_workspace_identity.c">native regression fixture</a> includes the real graph implementation so it can set private counters near their limits. Production code exposes no counter-reset API. The fixture uses real mutexes and directory traversal; a narrow traversal hook adds a failure or a newer trust change just before publication. It copies graph bytes before refused operations and checks that the entire retained state survives.</p>
+<ol><li>Configure the Framework in a disposable build directory:</li></ol>
+<pre><code>cmake -S . -B build/workspace-review -DBUILD_TESTING=ON
+cmake --build build/workspace-review --target umicom-workspace-identity-tests
+ctest --test-dir build/workspace-review -R "^framework\.workspace_identity\." --output-on-failure</code></pre>
+<p>The suite registers 26 scenarios. A qualified run should report all 26 passed, with no failures or skips. Configuration only registers them; it does not execute them. The checks cover each mutating boundary, last-value admission, duplicate and missing rows, discovery rollback, stale publication and IDs across workspace sessions.</p>
+<h2>6. Recover without weakening identity</h2>
+<p>Treat CAPACITY_EXCEEDED as a refused operation. Keep the previous snapshot visible and stop scheduling changes against that exhausted owner. To start a new owner, first cancel and retire all dependent jobs, discard their borrowed results, then destroy the old graph. A new graph starts a new lifetime; do not compare its revisions with outstanding work from the previous graph. Never reset a live counter to make an operation succeed.</p>
+<p>If a discovery test fails, first distinguish counter exhaustion, filesystem failure and a deliberately changed revision. Retrying may be appropriate after an I/O problem or a current-state refresh, but it cannot restore an exhausted lifetime. A revision also does not freeze file contents or prove that a compiled artifact came from those files.</p>
+<aside>This implementation and its tests require compiler and runtime qualification. The lesson describes the source contract; it does not certify a Studio interface, installed SDK or complete application workflow.</aside>
+<p><a href="index.html">Framework learning index</a> · <a href="codeguard-background-jobs.html">Background job ownership</a> · <a href="codeguard-job-adoption.html">Retained result adoption</a></p>
+</main></body></html>

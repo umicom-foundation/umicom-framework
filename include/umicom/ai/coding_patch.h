@@ -73,6 +73,13 @@ typedef struct UmiAiCodingPatch {
     uint64_t revision;
 } UmiAiCodingPatch;
 
+/* All calls require serialized ownership of the live patch and adapter.
+ * Callbacks must not mutate/reenter that patch or invalidate the adapter.
+ * A successful read initializes exactly out_length bytes, with out_length
+ * strictly below capacity. Hashing consumes those bytes without requiring a
+ * terminator. The host enforces workspace containment and stable file access.
+ * Failure compensation is attempted, but callback errors do not certify that
+ * restoration succeeded; inspect the affected files before retrying. */
 typedef UmiStatus (*UmiAiCodingFileRead)(
     void *user_data,
     const char *relative_path,
@@ -100,11 +107,23 @@ typedef struct UmiAiCodingFileAdapter {
     void *user_data;
 } UmiAiCodingFileAdapter;
 
+/** Check ABI size/version and required callback slots without invoking them.
+ * Host storage and user_data lifetime remain the caller responsibility. */
+UmiStatus UmiAiCodingFileAdapterValidate(const UmiAiCodingFileAdapter *adapter);
+
 /**
  * Provide the ai coding patch policy default operation used by this module and its client
  * applications.
  */
 UmiAiCodingPatchPolicy umi_ai_coding_patch_policy_default(void);
+/** Policy file limits must be 1..UMI_AI_CODING_PATCH_FILE_MAX and the line
+ * budget must be positive. Boolean fields retain nonzero-is-true semantics. */
+UmiStatus UmiAiCodingPatchPolicyValidate(const UmiAiCodingPatchPolicy *policy);
+/** Admit fixed text, physical counts, known domains, stored lengths, hashes,
+ * line counts and a nonzero revision. An initialized empty patch is valid here;
+ * policy validation/application still requires at least one file. This is
+ * metadata integrity, not proof of approval authenticity or filesystem safety. */
+UmiStatus UmiAiCodingPatchCheckIntegrity(const UmiAiCodingPatch *patch);
 /**
  * Initialise ai coding patch from caller-provided values so later operations receive a
  * known state.
@@ -122,6 +141,10 @@ UmiStatus umi_ai_coding_patch_init(UmiAiCodingPatch *patch,
  * Provide the ai coding patch add file operation used by this module and its client
  * applications.
  */
+/** Addition and approval preserve every patch byte on refusal. Text inputs
+ * may borrow existing fields. Addition allocates a temporary complete value;
+ * duplicate paths are refused before publication. Mutation at UINT64_MAX is
+ * refused; reading and validating that final revision remain possible. */
 UmiStatus umi_ai_coding_patch_add_file(UmiAiCodingPatch *patch,
                                        const char *path,
                                        UmiAiCodingPatchOperation operation,
@@ -157,6 +180,53 @@ UmiStatus umi_ai_coding_patch_apply(UmiAiCodingPatch *patch,
  */
 UmiStatus umi_ai_coding_patch_revert(UmiAiCodingPatch *patch,
                                      const UmiAiCodingFileAdapter *adapter);
+
+/* Read-only synchronous reentry preflight. BUSY means an outer file callback
+ * still borrows this patch. NULL is INVALID_ARGUMENT. No lock is acquired. */
+UmiStatus UmiAiCodingPatchCheckIdle(const UmiAiCodingPatch *patch);
+
+typedef struct UmiAiCodingPatchTransactionReport {
+    int admitted;
+    UmiStatus primary_status;
+    UmiStatus compensation_status;
+    size_t failed_file_index;
+    size_t verified_files;
+    size_t mutation_attempts;
+    size_t mutations_completed;
+    size_t compensation_attempts;
+    size_t compensation_failures;
+    size_t restoration_checks;
+    size_t restoration_failures;
+    uint64_t revision_before;
+    uint64_t revision_after;
+} UmiAiCodingPatchTransactionReport;
+
+/* Admission failure leaves outReport and the patch unchanged. After admission,
+ * every return publishes a complete report with admitted=1, including verification
+ * failure. Initialize a fresh report to zero before each attempt to distinguish
+ * admission refusal from a completed report; do not reuse a previous admitted flag.
+ * failed_file_index is SIZE_MAX if no file failed. The return value remains the
+ * primary status; compensation_status is the first failed compensation callback
+ * or subsequent restoration check. Counts describe attempted and completed work.
+ * A zero compensation_status alone does not imply compensation was needed.
+ *
+ * Restoration checks read through the host adapter after all compensation
+ * callbacks. They do not prove durability or prevent later external changes.
+ * A failing operation retains the last committed patch state; that state does
+ * not claim that the workspace was restored. Revision advances once whenever
+ * mutation callbacks were attempted, even when the operation failed.
+ *
+ * All mutation APIs refuse reentry on this patch from its synchronous callbacks.
+ * Read-only validation remains available. This is not cross-thread locking.
+ * Callbacks must return normally and must not directly mutate/free the patch,
+ * output report or borrowed user data. The report must not overlap any of them.
+ * Captured callback slots remain fixed; user_data lifetime belongs to the host.
+ * Legacy apply/revert delegate here and return the same primary status. */
+UmiStatus UmiAiCodingPatchApplyWithReport(UmiAiCodingPatch *patch,
+    const UmiAiCodingPatchPolicy *policy, const UmiAiCodingFileAdapter *adapter,
+    UmiAiCodingPatchTransactionReport *outReport);
+UmiStatus UmiAiCodingPatchRevertWithReport(UmiAiCodingPatch *patch,
+    const UmiAiCodingFileAdapter *adapter, UmiAiCodingPatchTransactionReport *outReport);
 
 #ifdef __cplusplus
 }

@@ -151,8 +151,13 @@ serial or reuse one from another window.</p>
 or rich document rendering in this workflow.</li>
 <li>Loaded packs and pending reviews are in-memory window state. Closing discards
 them. Accepted filesystem reads finish privately and require orderly callback cleanup.</li>
+<!-- Retain the malformed earlier paragraph for review. A stray tag opener interrupted controlled HTML parsing; the active paragraph below preserves its complete teaching text.
 <li>Discarding a review does not undo an already accepted replacement. Reopening a
 catalogue and explicitly loading a chosen older pack is a separate user decision;</nthe replacement operation itself refuses downgrades.</li>
+-->
+<li>Discarding a review does not undo an already accepted replacement. Reopening a
+catalogue and explicitly loading a chosen older pack is a separate user decision;
+the replacement operation itself refuses downgrades.</li>
 <li>A text-preview allocation failure keeps the earlier verified reader. It does
 not prove that the resource is unsafe or that more memory is always the right fix.</li>
 <li>Record the operation, exact status and tested source revision when reporting a

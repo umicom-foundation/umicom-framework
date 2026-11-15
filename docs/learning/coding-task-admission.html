@@ -1,0 +1,72 @@
+<!-- Umicom Framework
+File: docs/learning/coding-task-admission.html
+
+PURPOSE:
+Teach canonical provider identity, request classification and complete task publication through the native coding assistant.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan coding tasks with one provider identity | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Use one provider identity when planning coding tasks</h1>
+<p>A coding task combines a request, general workspace context and repository context. Each may have a privacy classification. If the general planner treats a runtime as remote while the repository planner treats it as local, the resulting plan can violate the intended sharing limit. Framework therefore obtains the provider kind from the selected runtime catalogue entry and uses that identity throughout preparation.</p>
+<h2>1. Treat the caller's provider kind as an assertion</h2>
+<p><code>umi_ai_coding_assistant_prepare</code> retains its existing provider-kind argument. An unknown value returns <code>UMI_STATUS_INVALID_ARGUMENT</code>. A known value that disagrees with the selected runtime returns <code>UMI_STATUS_PERMISSION_DENIED</code>. The argument cannot override or relabel the runtime.</p>
+<p>Register a descriptor that accurately represents the actual integration. Catalogue admission checks its metadata, not the truth of a claimed endpoint, provider or network location. The host still owns configuration trust, connection policy and execution consent.</p>
+<h2>2. Classify the instruction as well as retrieved context</h2>
+<p><code>umi_ai_coding_request_validate</code> accepts only public, internal, confidential or restricted classification values. Planning checks the request classification against the selected provider's sharing ceiling and sensitive-approval rules. It then asks AuthorEngine to plan general context and uses the same provider identity for repository context.</p>
+<table><thead><tr><th>Input</th><th>Example outcome</th></tr></thead><tbody>
+<tr><td>Public request; remote ceiling public; remote access permitted</td><td>The request may be planned. Internal repository files remain omitted.</td></tr>
+<tr><td>Internal request; remote ceiling public</td><td>The whole request is refused, even when there are no repository files.</td></tr>
+<tr><td>Restricted request allowed locally; sensitive approval missing</td><td>Preparation is refused while the approval rule applies.</td></tr>
+<tr><td>Remote runtime labelled local by caller</td><td>Provider mismatch is refused before context selection.</td></tr>
+</tbody></table>
+<p>Classifications are supplied by the host. These checks do not inspect instruction content to discover secrets or establish that a classification is correct. Review the selected material and classify it conservatively.</p>
+<h2>3. Prepare through the native service</h2>
+<p>The following function assumes the host has already created an assistant, registered <code>runtime.local</code> accurately as a local provider and obtained any required consent. Literal strings below fit the fixed fields. Real input needs bounded copying with an explicit overflow response.</p>
+<pre><code class="language-c">#include "umicom/ai/coding_assistant.h"
+#include &lt;string.h&gt;
+
+UmiStatus explain_source(UmiAiCodingAssistantService *assistant,
+                         UmiAiCodingTaskPlan *plan)
+{
+    UmiAiCodingRequest request;
+    umi_ai_coding_request_init(&amp;request, UMI_AI_CODING_TASK_EXPLAIN);
+    strcpy(request.request_id, "explain.1");
+    strcpy(request.session_id, "editing.1");
+    strcpy(request.runtime_id, "runtime.local");
+    strcpy(request.workspace_root, ".");
+    strcpy(request.active_path, "src/calculate.c");
+    strcpy(request.language_id, "c23");
+    strcpy(request.instruction, "Explain this calculation.");
+    request.classification = UMI_AI_DATA_INTERNAL;
+    return umi_ai_coding_assistant_prepare(
+        assistant, &amp;request, UMI_AI_PROVIDER_LOCAL, plan);
+}</code></pre>
+<p>Allocate the large plan outside a small thread stack when appropriate. A successful plan contains copied request metadata, selected repository entries and token estimates. It does not read those files or invoke a provider.</p>
+<h2>4. Publish a complete plan or preserve the previous one</h2>
+<p>The shared value-construction helper builds a temporary candidate on the heap. Every refusal, including allocation failure, leaves the caller's previous output, task history and service revision unchanged. The request may borrow fields from the previous output because publication happens after all input reads.</p>
+<p>Only a successful plan advances the service revision and enters history. At the fixed history capacity, the oldest accepted task is replaced. An exhausted revision or an invalid owner count is refused before publication. This prepare boundary does not establish the behavior of unrelated service mutations; those contracts need their own qualification.</p>
+<h2>5. Interpret readiness and budgets accurately</h2>
+<p><code>ready</code> means that metadata planning was accepted. It does not prove that a model is healthy, a session exists, a complete serialized prompt fits, or execution is authorized. Context token values are estimates supplied by the host. The instruction and final prompt formatting still need token accounting at invocation time.</p>
+<p>The repository budget is the smaller of the request's context budget and the space remaining after general context. A zero remaining repository budget is valid: optional repository entries are omitted and marked as dropped. Required general context that cannot be shared or fitted still refuses the plan.</p>
+<p>Planning and eventual execution are separate operations. Policies, context and runtime configuration can change between them. Keep serialized owner access, review the accepted material and revalidate relevant identities and consent before invocation. A saved plan hash is a deterministic metadata indicator, not cryptographic authentication or a durable execution permit.</p>
+<h2>6. Exercise the refusal and history paths</h2>
+<ol><li>Configure and build Framework with tests enabled using the documented platform preset.</li>
+<li>Run <code>ctest --test-dir &lt;framework-build&gt; -R "^framework[.]ai[.]coding-task[.]" --output-on-failure</code>.</li>
+<li>Check invalid classifications and provider kinds, both directions of provider mismatch, request privacy refusal, remote-provider consent and mandatory general-context refusal.</li>
+<li>Check unchanged output and history after failure, borrowed output fields, exhausted revisions, rolling history and a zero repository budget.</li>
+<li>Run the installed local-model SDK consumer. Its task example plans offline metadata; it does not contact a provider.</li></ol>
+<p>Expected results are explicit refusals without publication for inadmissible requests, and one history entry and revision advance for accepted plans. Preserve the source identity and output for failed cases. Registered tests, written examples and successful configuration are not evidence that native tests or product workflows passed.</p>
+<p>Continue with <a href="repository-context-admission.html">repository context admission</a>, <a href="coding-patch-admission.html">reviewed patches</a> and the <a href="index.html">learning catalogue</a>.</p>
+
+</main></body></html>

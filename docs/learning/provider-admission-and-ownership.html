@@ -1,0 +1,136 @@
+<!-- Umicom Framework
+File: docs/learning/provider-admission-and-ownership.html
+
+PURPOSE:
+Teach provider classification, current policy admission and checked registry ownership in C.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admit providers and retain ownership</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Admit providers and retain ownership</h1>
+<p>A provider is a small C function table that connects an application to an inference implementation. A registry keeps those tables together. Before calling a function pointer, Framework must check that the registry is coherent and the current policy permits that provider. This lesson follows the actual shared AI runtime, including how it behaves when a descriptor is invalid.</p>
+<h2>1. Separate identity, classification and permission</h2>
+<p>The provider identifier answers “which adapter?”. Its kind classifies it as local, remote, AuthorEngine or test. Policy answers whether that class may run, and whether a remote call needs approval. An unknown enum value is invalid; it must not inherit local permission just because it is not equal to the remote value.</p>
+<pre><code class="language-c">UmiAiProvider provider = {0};
+provider.structure_size = (uint32_t)sizeof(provider);
+provider.abi_version = 1;
+provider.provider_id = "example.local";
+provider.kind = UMI_AI_PROVIDER_LOCAL;
+provider.instance = adapter;
+provider.generate = Generate;
+provider.destroy = Destroy;</code></pre>
+<p><code>Generate</code>, <code>Destroy</code> and <code>adapter</code> are integration points implemented by your adapter. The registry does not authenticate an endpoint or prove that a provider labelled local stays on the machine. Configure the adapter and transport separately.</p>
+<h2>2. Transfer ownership only after successful registration</h2>
+<ol><li>Initialize fresh registry or runtime storage.</li><li>Construct a valid provider table and keep its identifier alive.</li><li>Call <code>umi_ai_provider_registry_add</code>.</li><li>On success, the registry owns the registered instance cleanup obligation. On failure, the caller still owns it.</li><li>Keep the borrowed identifier readable and unchanged until release.</li></ol>
+<p>Registration copies the function table, not the string or private instance. Duplicate identifiers return ALREADY_EXISTS, including when the table is full. A distinct entry beyond capacity returns CAPACITY_EXCEEDED. Invalid existing storage returns INVALID_STATE without inserting a new owner.</p>
+<p>Do not initialize an already populated registry to clear an error. Initialization would discard the only references to its owners. Use checked release for valid storage and diagnose invalid storage before deciding how to recover it.</p>
+<h2>3. Validate storage before traversing it</h2>
+<p><code>UmiAiProviderRegistryValidate</code> first checks the entry count against the fixed array capacity. It then checks each descriptor and rejects duplicate identifiers. The order matters: a loop must not read entries using an untrusted count before checking its bound.</p>
+<p>Legacy <code>umi_ai_provider_registry_find</code> still returns a borrowed pointer or NULL. For a precise structural result, call Validate. No C function can establish that an arbitrary non-null pointer is still alive. Callers remain responsible for readable, terminated identifiers, valid function pointers and serialized access.</p>
+<h2>4. Admit immediately before external work</h2>
+<pre><code class="language-c">UmiAiProvider *selected = NULL;
+UmiStatus status = UmiAiRuntimeAdmitProvider(
+    &amp;runtime, "example.local", approved, &amp;selected);
+if (status == UMI_STATUS_OK) {
+    /* Inspect the borrowed table while retaining serialized runtime ownership. */
+}</code></pre>
+<p>Admission validates the current registry, resolves the identifier and evaluates the current policy. It does not invoke generation. The output pointer stays unchanged on failure. An earlier successful admission is not a permission token: changing policy or replacing a provider requires another admission before dispatch.</p>
+<!-- The earlier recommendation is retained for review. The checked generation service below adds response publication guarantees without removing the legacy API.
+<p>Ordinary callers should continue using <code>umi_ai_runtime_generate</code>, which now delegates to the same admission service and then invokes the provider. A denied or malformed provider never reaches that callback. Successful dispatch returns the provider's actual status; it does not turn a transport failure into a successful answer.</p>
+-->
+<p>Generation uses the same admission service immediately before invoking a provider. Use <code>UmiAiRuntimeGenerateChecked</code> when the previous response must survive a failed attempt. Section 9 explains its value-validation and publication contract; the legacy entry point remains available for callers that require provider-written failure output.</p>
+<h2>5. Preserve reviewed workspace behavior</h2>
+<p>The AI workspace has additional responsibilities: freeze the requested provider and model, collect review, retain evidence identity, and publish RUNNING before an external call. Shared admission does not replace those steps. A changed provider kind still returns BUSY so the caller can obtain a new review, even if the new kind is currently denied by policy.</p>
+<p>The workspace now reuses runtime admission while retaining that review boundary. A malformed registry is refused before publishing RUNNING or calling the provider. The lower-level local streaming job remains a separate transport owner; it does not independently implement workspace review or durable job state.</p>
+<h2>6. Release once, or retain evidence</h2>
+<pre><code class="language-c">UmiStatus status = UmiAiRuntimeRelease(&amp;runtime);
+if (status != UMI_STATUS_OK) {
+    /* Retain the runtime for diagnosis. Do not clear it or claim cleanup passed. */
+}</code></pre>
+<p>Checked registry release validates all entries before invoking any destructor. It releases instances in reverse registration order, then clears the registry. During teardown it marks the registry unavailable, so a destructor cannot recursively release or add providers through the registry API. The implementation snapshots the small tables before callbacks; no allocation is required.</p>
+<p>Callbacks must return normally and must not directly mutate or reinitialize the registry. These functions do not add cross-thread synchronization. The legacy void destroy wrappers remain available; they leave invalid storage intact but cannot report the error. Use the checked Release functions where cleanup evidence matters.</p>
+<h2>7. Qualify refusal as well as success</h2>
+<p>The provider tests cover malformed counts and descriptors, duplicate identity, capacity, borrowed identifiers, reverse cleanup, callback reentry, current policy and dispatch result propagation. The kind-policy test exercises all four supported kinds against local/remote permission, approval requirements and zero/nonzero approval values. The workspace case checks that refusal leaves the approved job unchanged.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-ai-provider-registry-lifetime-tests umicom-ai-provider-admission-tests umicom-ai-provider-kind-policy-tests umicom-ai-workspace-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.(ai\.provider_(registry_lifetime|admission|kind_policy)|ai_workspace\.(registry_corruption_blocks_run|remote_policy_is_not_bypassed|policy_revocation_blocks_run))$" --output-on-failure</code></pre>
+<p>Run these commands from the configured Framework checkout. Six selected test cases are expected when their targets are available; this is an expectation, not a recorded pass. The fixtures use the real runtime and registry, with controlled provider callbacks. They do not contact a model.</p>
+<h2>8. Diagnose a failure without erasing ownership</h2>
+<table><tr><th>Result</th><th>Next investigation</th></tr>
+<tr><td>INVALID_ARGUMENT</td><td>Check pointers, provider ABI, required callbacks and supported kind.</td></tr>
+<tr><td>INVALID_STATE</td><td>Inspect registry bounds and stored descriptors before attempting cleanup.</td></tr>
+<tr><td>NOT_FOUND</td><td>Check the requested stable identifier against registered providers.</td></tr>
+<tr><td>PERMISSION_DENIED</td><td>Inspect current policy and the actual user approval decision.</td></tr>
+<tr><td>BUSY from reviewed binding</td><td>Review the changed provider binding rather than reusing old approval.</td></tr></table>
+<p>Do not infer memory safety, successful inference or a working GUI from configuration alone. Runtime and application qualification must identify the source and environment actually executed.</p>
+<p>Continue with <a href="background-local-model-streams.html">background request ownership</a> and <a href="complete-local-model-streams.html">honest stream completion</a>.</p>
+
+<h2>9. Validate values before publishing an answer</h2>
+<p>A provider table can be valid while the request supplied to it is malformed. A fixed array holds a bounded number of bytes, but it is only a C string when a zero byte appears within that array. Likewise, check <code>message_count</code> before using it to index the message array.</p>
+<p><code>UmiAiRequestValidate</code> checks both identifiers, the active messages' names, text and roles, and a finite temperature. A count larger than <code>UMI_AI_MAX_MESSAGES</code> returns CAPACITY_EXCEEDED before traversal. Malformed text, roles or temperature return INVALID_ARGUMENT. Empty drafts and unused message slots are allowed. Model availability, provider-specific temperature ranges and token limits still need separate checks.</p>
+<p><code>UmiAiResponseValidate</code> checks all four fixed text fields and the finish-reason domain. Empty text and FINISH_NONE are valid. A provider's model alias, reported token counts and identity strings remain evidence to interpret; structural validation does not authenticate them or invent a missing token total.</p>
+<pre><code class="language-c">#include "umicom/ai/runtime.h"
+
+UmiStatus GenerateReviewedReply(UmiAiRuntime *runtime, int approved,
+    const UmiAiRequest *request, UmiAiResponse *last_reply)
+{
+    UmiAiGenerationReport report;
+    UmiStatus status = UmiAiRuntimeGenerateChecked(
+        runtime, "example.local", approved, request, last_reply, &amp;report);
+    if (status != UMI_STATUS_OK) {
+        /* last_reply still holds its previous value.
+         * report.dispatched distinguishes refusal from an attempted callback.
+         * Check response_checked before reading response_status. */
+        return status;
+    }
+    /* response_published is now true; the reply is structurally valid.
+     * Apply the application's identity, content and presentation rules next. */
+    return UMI_STATUS_OK;
+}</code></pre>
+<ol>
+<li>Initialize and populate the request, then keep its complete storage unchanged for the call. Use heap or owner-managed storage for this large record if the calling thread has a small stack.</li>
+<li>Keep the provider identifier readable and terminated. Supply separate response and optional report storage; neither output may overlap the request or runtime.</li>
+<li>Call the checked operation. It validates the request, rechecks registry and policy, then invokes the provider into private response storage.</li>
+<li>Read the returned status first. A provider error is retained even if its unfinished output is malformed. Such output is not published.</li>
+<li>If a provider returns OK but its response is malformed, the operation returns INTERNAL_ERROR. The report records the successful callback status and the failed response check separately.</li>
+<li>Only a structurally valid successful response replaces the caller's previous response. Display failures as failures; do not present the retained old response as a new answer.</li>
+</ol>
+<p>The coding provider executor uses this checked path. Invalid configuration or request values preserve both outputs. Once input is admitted, execution metadata records the attempt. Finish reason and usage are populated only when a response was published, so a failed attempt cannot inherit the previous answer's usage. Provider selection is captured before invoking external code.</p>
+<!-- The earlier lifetime limitation is retained for review; the shared invocation guard below now covers supported same-thread runtime and registry APIs.
+<p>The legacy <code>umi_ai_runtime_generate</code> entry point now checks request bounds, but continues to expose provider-written error output for compatibility. It does not promise unchanged response storage on failure or validated response publication. Use the checked operation when those guarantees are needed. Both calls require serialized ownership. Native callbacks remain trusted code; these checks do not prevent a callback from directly corrupting memory or releasing its active provider through unsupported lifetime behavior.</p>
+-->
+<p>The legacy <code>umi_ai_runtime_generate</code> entry point now checks request bounds, but continues to expose provider-written error output for compatibility. It does not promise unchanged response storage on failure or validated response publication. Use the checked operation when those guarantees are needed. Both calls require serialized ownership. Native callbacks remain trusted code; direct memory mutation remains unsupported. Section 11 explains the shared guard against supported API teardown and recursive generation during the callback.</p>
+<h2>10. Exercise generation boundaries</h2>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-ai-checked-generation-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]ai[.]checked-generation[.]" --output-on-failure</code></pre>
+<p>Run these commands in a configured Framework checkout. The suite registers 69 cases: malformed and maximum-length text, count overflow, active versus unused message slots, enum and floating-point values, policy refusal, corrupt registry counts, provider errors, invalid successful responses, configuration changes during callbacks and optional reports. Controlled callbacks perform no model or network operation.</p>
+<p>Expected refusals must leave the documented outputs unchanged. If a case fails, retain its name and source revision, inspect which stage ran, and correct the boundary before retrying with a real model. Configuration and test registration are not evidence that these native cases passed.</p>
+
+
+<h2>11. Keep the provider alive until its callback returns</h2>
+<p>Generation now records the active registry in a thread-local stack frame. A frame is a small record on the current call stack, linked to any outer invocation. Public registry and runtime layouts stay unchanged. Framework uses the frame only to detect synchronous reentry; it is not a mutex and does not make concurrent calls safe.</p>
+<p>During generation, checked release, provider insertion and recursive generation on the same registry return BUSY. The legacy void initialize and destroy functions preserve the active owner. Read-only registry validation and lookup remain available. A nested call using a different registry is allowed, and its callback still cannot release an outer active registry.</p>
+<pre><code class="language-c">UmiStatus status = UmiAiRuntimeCheckIdle(&amp;runtime);
+if (status != UMI_STATUS_OK) {
+    /* Retain this runtime and all dependent owners. */
+    return status;
+}
+/* Keep external lifecycle serialization until release completes. */
+return UmiAiRuntimeRelease(&amp;runtime);</code></pre>
+<p><code>UmiAiRuntimeCheckIdle</code> checks invocation activity and provider registry structure. Use it before releasing siblings in a composition owner. <code>UmiAiProviderRegistryCheckIdle</code> only observes activity and does not validate table contents. Neither grants a lease for later execution. Callback code must return normally without freeing, copying or directly rewriting its owner. Calls through raw provider function pointers, arbitrary tool callbacks, nonlocal jumps and other threads are outside this guard.</p>
+<p>After a callback returns, its frame is removed even if the provider reports an error or the checked response later fails validation. Shutdown can then be retried under the host's lifecycle rules. The response report marks refused recursive calls as not dispatched. It does not claim that a failed attempt generated a reply.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-ai-provider-invocation-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]ai[.]provider-invocation[.]" --output-on-failure</code></pre>
+<p>The 73 registered cases cover checked and legacy dispatch, release and initialization attempts, insertion, nested invocation, cross-registry nesting, normal/error/invalid-response returns and NULL idle checks. These are deterministic native callback fixtures. Run them with the source revision recorded; registration does not establish a pass.</p>
+
+<h2>12. Share callback ownership with health refresh</h2>
+<p>AuthorEngine health refresh now uses the same registry ownership scope, retaining the runtime through both provider health callbacks and descriptor-aware probes. Generation, registry mutation and teardown on that runtime return BUSY until refresh returns. Read <a href="runtime-catalogue-revisions.html">runtime catalogue observations</a> for service cleanup, revision publication and the distinct legacy/probe error contracts. This adds ownership protection, not permission to access an endpoint.</p>
+</main></body></html>

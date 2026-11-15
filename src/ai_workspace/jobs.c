@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "workspace_internal.h"
+#include "execution_internal.h"
 #include "evidence_internal.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -37,6 +38,8 @@ UmiStatus UmiAiWorkspaceAllowTool(UmiAiWorkspace *workspace, const char *toolId)
     (void)AwTextCopy(workspace->allowedTools[workspace->allowedToolCount++], UMI_AI_ID_CAPACITY, toolId, false);
     return UMI_STATUS_OK;
 }
+/* Expose the frozen-binding check only to private Framework execution composition. Keep the former file-local implementation for review; public APIs and binding rules are unchanged. The former implementation is retained for owner review. */
+#if 0
 static UmiStatus AwJobBinding(UmiAiWorkspace *workspace, const UmiAiWorkspaceJob *job, bool preparing)
 {
     if (workspace->runtime->providers.count > UMI_AI_MAX_PROVIDERS || workspace->runtime->tools.count > UMI_AI_MAX_TOOLS)
@@ -49,12 +52,55 @@ static UmiStatus AwJobBinding(UmiAiWorkspace *workspace, const UmiAiWorkspaceJob
         if (!preparing && strcmp(job->permission, tool->permission) != 0) return UMI_STATUS_BUSY;
         return umi_ai_policy_check_tool(&workspace->runtime->policy, 1);
     }
+/* Workspace binding keeps its durable approval and frozen-kind checks while sharing provider validation and policy admission with the runtime. The previous inline checks are retained below for review. The former implementation is retained for owner review. */
+#if 0
     UmiAiProvider *provider = umi_ai_provider_registry_find(&workspace->runtime->providers, job->providerId);
     if (provider == NULL) return UMI_STATUS_NOT_FOUND;
     if (umi_ai_provider_validate(provider) != UMI_STATUS_OK ||
         provider->kind < UMI_AI_PROVIDER_LOCAL || provider->kind > UMI_AI_PROVIDER_TEST) return UMI_STATUS_INVALID_STATE;
     if (!preparing && job->providerKind != provider->kind) return UMI_STATUS_BUSY;
     return umi_ai_policy_check_provider(&workspace->runtime->policy, provider->kind, 1);
+#endif
+    UmiStatus status = UmiAiProviderRegistryValidate(&workspace->runtime->providers);
+    if (status != UMI_STATUS_OK) return status;
+    UmiAiProvider *provider = umi_ai_provider_registry_find(&workspace->runtime->providers, job->providerId);
+    if (provider == NULL) return UMI_STATUS_NOT_FOUND;
+    /* Preserve the reviewed-kind mismatch result before admission: a changed
+     * provider binding requires a new review even if its current policy allows it. */
+    if (!preparing && job->providerKind != provider->kind) return UMI_STATUS_BUSY;
+    return UmiAiRuntimeAdmitProvider(workspace->runtime, job->providerId, 1, &provider);
+}
+
+#endif
+UmiStatus AwJobBinding(UmiAiWorkspace *workspace, const UmiAiWorkspaceJob *job, bool preparing)
+{
+    if (workspace->runtime->providers.count > UMI_AI_MAX_PROVIDERS || workspace->runtime->tools.count > UMI_AI_MAX_TOOLS)
+        return UMI_STATUS_INVALID_STATE;
+    if (job->kind == UMI_AI_WORKSPACE_TOOL) {
+        UmiAiTool *tool = umi_ai_tool_registry_find(&workspace->runtime->tools, job->providerId);
+        if (tool == NULL) return UMI_STATUS_NOT_FOUND;
+        if (!AwToolAllowed(workspace, job->providerId)) return UMI_STATUS_PERMISSION_DENIED;
+        if (!AwTextValid(tool->permission, sizeof(tool->permission), false) || tool->invoke == NULL) return UMI_STATUS_INVALID_STATE;
+        if (!preparing && strcmp(job->permission, tool->permission) != 0) return UMI_STATUS_BUSY;
+        return umi_ai_policy_check_tool(&workspace->runtime->policy, 1);
+    }
+/* Workspace binding keeps its durable approval and frozen-kind checks while sharing provider validation and policy admission with the runtime. The previous inline checks are retained below for review. The former implementation is retained for owner review. */
+#if 0
+    UmiAiProvider *provider = umi_ai_provider_registry_find(&workspace->runtime->providers, job->providerId);
+    if (provider == NULL) return UMI_STATUS_NOT_FOUND;
+    if (umi_ai_provider_validate(provider) != UMI_STATUS_OK ||
+        provider->kind < UMI_AI_PROVIDER_LOCAL || provider->kind > UMI_AI_PROVIDER_TEST) return UMI_STATUS_INVALID_STATE;
+    if (!preparing && job->providerKind != provider->kind) return UMI_STATUS_BUSY;
+    return umi_ai_policy_check_provider(&workspace->runtime->policy, provider->kind, 1);
+#endif
+    UmiStatus status = UmiAiProviderRegistryValidate(&workspace->runtime->providers);
+    if (status != UMI_STATUS_OK) return status;
+    UmiAiProvider *provider = umi_ai_provider_registry_find(&workspace->runtime->providers, job->providerId);
+    if (provider == NULL) return UMI_STATUS_NOT_FOUND;
+    /* Preserve the reviewed-kind mismatch result before admission: a changed
+     * provider binding requires a new review even if its current policy allows it. */
+    if (!preparing && job->providerKind != provider->kind) return UMI_STATUS_BUSY;
+    return UmiAiRuntimeAdmitProvider(workspace->runtime, job->providerId, 1, &provider);
 }
 /* The lexical-only entry point is preserved below for engineering review.
  * AwPrepareSelected now owns both preparation routes so inspected hybrid or
@@ -242,6 +288,8 @@ UmiStatus UmiAiWorkspaceCancel(UmiAiWorkspace *workspace, const char *jobId)
     next->jobs[index].status = UMI_STATUS_CANCELLED;
     return AwPublish(workspace, next, false);
 }
+/* Shared execution ownership replaces inline allocation and persistence so synchronous and upcoming background paths obey the same review, RUNNING, validation and recovery rules. Preserve the complete earlier implementation for comparison. The former implementation is retained for owner review. */
+#if 0
 UmiStatus UmiAiWorkspaceRun(UmiAiWorkspace *workspace, const char *jobId, const UmiAiWorkspaceCancellation *cancellation)
 {
     UmiStatus status = AwReady(workspace), commitStatus; AwState *next; size_t index;
@@ -297,4 +345,35 @@ UmiStatus UmiAiWorkspaceRun(UmiAiWorkspace *workspace, const char *jobId, const 
     if (commitStatus != UMI_STATUS_OK) workspace->recoveryRequired = true;
     workspace->busy = false; free(request); free(response);
     return commitStatus != UMI_STATUS_OK ? commitStatus : status;
+}
+
+#endif
+UmiStatus UmiAiWorkspaceRun(UmiAiWorkspace *workspace, const char *jobId,
+    const UmiAiWorkspaceCancellation *cancellation)
+{
+    AwExecution *execution = NULL;
+    UmiStatus status = AwExecutionPrepare(workspace, jobId, cancellation, &execution);
+    if (status == UMI_STATUS_ALREADY_EXISTS) return UMI_STATUS_OK;
+    if (status != UMI_STATUS_OK) return status;
+    status = AwExecutionStart(execution);
+    if (status == UMI_STATUS_OK) {
+        const UmiAiWorkspaceJob *job = AwExecutionJob(execution);
+        UmiAiResponse *response = AwExecutionResponse(execution);
+        /* The shared execution owner has already committed RUNNING. Dispatch
+         * still passes through current Runtime policy before external work. */
+        if (job->kind == UMI_AI_WORKSPACE_TOOL) {
+            (void)AwTextCopy(response->request_id, sizeof(response->request_id), job->id, false);
+            (void)AwTextCopy(response->provider_id, sizeof(response->provider_id), job->providerId, false);
+            response->finish_reason = UMI_AI_FINISH_STOP;
+            status = umi_ai_runtime_invoke_tool(workspace->runtime, job->providerId, 1, job->prompt,
+                response->text, sizeof(response->text));
+        } else {
+            status = umi_ai_runtime_generate(workspace->runtime, job->providerId, 1,
+                AwExecutionRequest(execution), response);
+        }
+        status = AwExecutionComplete(execution, status,
+            UmiAiWorkspaceCancellationIsRequested(cancellation));
+    }
+    UmiStatus release_status = AwExecutionRelease(&execution);
+    return status != UMI_STATUS_OK ? status : release_status;
 }

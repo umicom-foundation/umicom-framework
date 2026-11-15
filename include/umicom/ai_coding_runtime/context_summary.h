@@ -24,6 +24,12 @@ extern "C" {
  * Provide the ai coding context summary operation used by this module and its client
  * applications.
  */
+/* Format metadata without reading source text or certifying its displayed
+ * hash, length or token estimates. Count and label bounds are checked before
+ * traversal. Paths are relative; labels are UTF-8 without ASCII control bytes.
+ * Preserve out_text on every failure, including insufficient capacity. The
+ * destination may overlap input metadata when its actual writable capacity
+ * is sufficient; publication follows all input reads. Serialize access. */
 UmiStatus umi_ai_coding_context_summary(
     const UmiAiCodingMaterializedContext *context,
     char *out_text,

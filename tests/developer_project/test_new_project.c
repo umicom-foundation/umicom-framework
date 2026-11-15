@@ -20,6 +20,7 @@
 #include "../build_log/fixture.h"
 #include "umicom/developer_project/new_project.h"
 #include "umicom/platform/rooted_files.h"
+#include "umicom/platform/path.h"
 #include "umicom/platform/filesystem.h"
 
 int main(int argc,char **argv)
@@ -90,7 +91,13 @@ int main(int argc,char **argv)
     if(expected==UMI_STATUS_OK){
         CHECK(!strcmp(model->project_id,"org.umicom.ledger")&&!strcmp(model->root,destination));
         CHECK(umi_build_profile_validate(profile,NULL,0U)==UMI_STATUS_OK);
+        /* Build profiles use their own normalized path spelling. Creation
+         * still has to target the exact destination and report real files. */
+#if 0
         CHECK(!strcmp(profile->source_directory,destination)&&report.files_created>0U&&report.files_skipped==0U);
+#endif
+        CHECK(umi_path_equal(profile->source_directory,destination));
+        CHECK(report.files_created>0U&&report.files_skipped==0U);
         if(applied){FixturePath(full,destination,"src/main.c");CHECK(umi_fs_exists(full));}
         else CHECK(!umi_fs_exists(destination)&&report.directories_created==0U);
     }else{

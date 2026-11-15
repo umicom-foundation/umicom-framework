@@ -50,6 +50,10 @@ void umi_ai_coding_runtime_config_init(UmiAiCodingRuntimeConfig *config);
  * Check that ai coding runtime config satisfies its contract before another service relies
  * on it.
  */
+/** Accept only known provider kinds and finite temperature in [0,2].
+ * Other established limits still apply. Flags retain nonzero-is-true
+ * compatibility. This validates configuration data, not provider availability,
+ * consent, model capability or permission to execute. */
 UmiStatus umi_ai_coding_runtime_config_validate(
     const UmiAiCodingRuntimeConfig *config);
 

@@ -1,0 +1,54 @@
+<!-- Umicom Framework
+File: docs/learning/output-callback-lifetimes.html
+
+PURPOSE:
+Teach synchronous GUI reentrancy, scoped owner references and publication admission.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Keep output views alive during callbacks</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Keep output views alive during callbacks</h1>
+<h2>1. A setter can call application code before returning</h2>
+<p>A GUI event loop usually runs on one thread, but that does not make every function call indivisible. Updating a text buffer emits signals synchronously. A connected handler can close the window, release its last panel reference or ask the presenter to display newer output. Execution then returns to the original setter and continues its remaining statements.</p>
+<p>This is reentrancy: control enters related code again before the earlier operation finishes. It differs from simultaneous work on two threads, but it can still invalidate ownership and ordering assumptions. Review every statement after a signal-emitting call, not only the callback itself.</p>
+<h2>2. Separate widget ownership from service ownership</h2>
+<p>The shared output panel owns its copied snapshot and child widgets. Build and test services remain outside the presenter. The presenter must not retain a service pointer merely to keep a display alive. Conversely, a callback holding one child widget does not establish that the panel's private state remains alive.</p>
+<p>The output presenter now takes a temporary strong reference to the panel while updating or handling a control. A host may release its own reference during a notification. The temporary reference keeps the panel and its state alive until the current operation finishes. The final release must be the last use of that state.</p>
+<pre><code class="language-c">g_object_ref(panel);
+/* Publish copied evidence and handle synchronous GTK notifications. */
+/* Finish all accesses to panel-owned state. */
+g_object_unref(panel);
+/* Do not dereference the old state here. */</code></pre>
+<p>A strong reference is a lifetime mechanism, not permission to keep using a retired application. Studio still rechecks its weak host binding after calls that may close the workbench. The shared presenter owns display bytes only.</p>
+<p>The existing controls already use <a href="https://docs.gtk.org/gobject/func.signal_connect_object.html">g_signal_connect_object</a>, whose closure temporarily retains the panel during its handler and disconnects when that panel is destroyed. That protection does not cover a direct call to the public Update function. The shared scope closes that direct-call gap and gives controls the same publication-admission rule.</p>
+<h2>3. Refuse nested publication before changing evidence</h2>
+<p>Keeping an object alive does not prevent a recursive update from changing its latest snapshot halfway through an outer update. An admission flag therefore marks the presenter as updating. A nested <code>UmiOutputViewGtk4Update</code> returns <code>UMI_STATUS_BUSY</code> before accepting the new evidence. The caller can retry after the outer call returns.</p>
+<pre><code class="language-c">UmiStatus status = UmiOutputViewGtk4Update(panel, &amp;copied_snapshot);
+if (status == UMI_STATUS_BUSY) {
+    /* Keep your owned snapshot and retry from a later owner-loop turn.
+       Do not spin recursively inside the current notification. */
+}</code></pre>
+<p>The flag belongs to the GTK owner thread. It is not a mutex and does not permit worker threads to call GTK. Refresh, Follow and Copy ignore recursive activation during publication. Their ordinary behavior remains unchanged: pausing retains displayed text, refresh shows the latest accepted copy, and copy uses the text actually displayed.</p>
+<h2>4. Test retirement at the exact boundary</h2>
+<p>A test that closes a window only after Update returns misses this defect. Connect a text-buffer changed handler that drops the panel's last external reference while Update is still running. Also cover status-label notification, explicit Refresh and resuming Follow. A weak pointer should clear when the operation releases its temporary owner; retained child controls must no longer reach that retired panel.</p>
+<p>For ordering, make the callback submit revision 3 while revision 2 is being published. Expect BUSY, verify that revision 2 remains current, then retry revision 3 after the outer call returns. This tests observable behavior rather than inspecting a private admission field.</p>
+<h2>5. Run the native regressions</h2>
+<pre><code class="language-powershell">cmake --build build --target umicom-output-view-lifetime-tests umicom-live-build-gtk4-test
+ctest --test-dir build -R "^framework\.output_view_lifetime\." --output-on-failure
+ctest --test-dir build -R "^framework\.live_build_output\.gtk4\." --output-on-failure</code></pre>
+<p>Use a configured Framework or Applications build with the GTK adapter enabled. The new cases cover owner release, window close, nested updates and recursive controls. Existing build-output cases cover pause, refresh, resume, copying, text repair, stale evidence and retained children. Run in a desktop session; return code 77 records an unavailable display as a skip, never a pass.</p>
+<p>These commands describe qualification to execute. Source review and successful CMake generation do not establish that compilation or a GUI test passed. Where supported, repeat with memory diagnostics to catch accesses after object destruction.</p>
+<h2>6. Extend through the shared presenter</h2>
+<p>New output consumers should prepare owned plain-text snapshots, then adapt their domain state to the shared presenter. Keep job success separate from transport and presentation status. Do not duplicate callback ownership or add a second rendering implementation to each application. Read <a href="live-build-output.html">live build output</a> and <a href="codeguard-reports.html">checked CodeGuard reports</a> for the producer side of this boundary.</p>
+<p><a href="index.html">Framework learning index</a></p>
+</main></body></html>

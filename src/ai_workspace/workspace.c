@@ -159,12 +159,31 @@ UmiStatus UmiAiWorkspaceCreate(UmiDataServer *data, UmiAiRuntime *runtime,
     if (status != UMI_STATUS_OK) { UmiAiWorkspaceDestroy(workspace); return status; }
     *outWorkspace = workspace; return UMI_STATUS_OK;
 }
+/* Checked release retains storage during callbacks and while completed controllers still reference it. The original destructor is preserved for ownership review; borrowed runtime and Data Server ownership remains unchanged. The former implementation is retained for owner review. */
+#if 0
 void UmiAiWorkspaceDestroy(UmiAiWorkspace *workspace)
 {
     if (workspace == NULL) return;
     /* The owner must join pending work first. Borrowed registries and storage
      * are deliberately not destroyed here. */
     free(workspace->state); free(workspace);
+}
+
+#endif
+UmiStatus UmiAiWorkspaceRelease(UmiAiWorkspace **in_out_workspace)
+{
+    if (in_out_workspace == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiAiWorkspace *workspace = *in_out_workspace;
+    if (workspace == NULL) return UMI_STATUS_OK;
+    if (workspace->busy || workspace->execution_owners != 0U) return UMI_STATUS_BUSY;
+    free(workspace->state);
+    free(workspace);
+    *in_out_workspace = NULL;
+    return UMI_STATUS_OK;
+}
+void UmiAiWorkspaceDestroy(UmiAiWorkspace *workspace)
+{
+    if (workspace != NULL) (void)UmiAiWorkspaceRelease(&workspace);
 }
 UmiStatus UmiAiWorkspaceReload(UmiAiWorkspace *workspace)
 {

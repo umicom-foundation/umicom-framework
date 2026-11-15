@@ -128,3 +128,27 @@ GTK references: [expander implementation](https://gitlab.gnome.org/GNOME/gtk/-/b
 and [WidgetPaintable documentation](https://docs.gtk.org/gtk4/class.WidgetPaintable.html).
 The implementation link tracks upstream development; compare the version installed
 in the test environment before attributing a runtime failure to that library.
+
+
+## When a previously working CLI path disappears
+
+A standalone Framework build and an Applications build have separate binary directories. Rebuilding one does not recreate the other's executable. A linker failure can leave the requested program absent even when thousands of other targets built successfully.
+
+1. Check the exact path with PowerShell's Test-Path command.
+2. Read that build tree's log for the failed executable target and the first linker diagnostic. A duplicate-symbol error can arise when two static libraries export the same private helper name. Give cross-file private helpers a component-specific linker prefix; keep public API names unchanged.
+3. Rebuild the affected target after integrating its source repair. Do not interpret a file's presence as proof that it is current or qualified.
+4. Run the explicit executable path with --help. For repo lock ., the dot selects the current repository directory, independently of the executable's directory. Locking records checked-out dependency revisions; it does not fetch, build or publish them.
+
+## Native path spelling and dependency traversal
+
+Path text and path identity are different. On Windows, normalization may turn src/main.c into src\main.c. Parent checks must recognise the component separator, while src and src2 remain different names. Read src/platform/rooted_files.c and tests/platform/test_relative_path_relation.c. The regression checks both operand orders: reversing a parent relationship must reverse its direction. Invalid input must leave the caller's output unchanged.
+
+A dependency graph is a set of operations connected to prerequisites. An acyclic graph has no path back to its starting operation. Dense graphs can contain many paths to the same prerequisite. If a traversal marks a node only when removing it from its stack, pending duplicates can fill a bounded stack and falsely suggest a cycle. Mark a node when adding it to the stack instead, so each operation occupies at most one pending slot.
+
+Read src/developer/pipeline.c and DenseDependencies in tests/test_developer_pipeline.c. The exercise admits 1024 edges, rejects real reverse cycles, checks that refusal preserves the dependency count and revision, and checks the capacity boundary separately. These assertions need compiler and runtime qualification; reading them is not a passing result.
+
+## Reach the assertion you intend to test
+
+A logging fixture that tests two writers targeting one file must first supply valid CTest metadata. Otherwise metadata validation correctly returns before the collision check. Keep a separate missing-metadata assertion, then supply a synthetic tool record and retain the no-process/no-file assertions. The injected executor must continue to prevent an actual tool launch.
+
+A Windows worker test that creates production common controls also needs the production activation manifest. Merely linking comctl32 does not select version 6 of that runtime. Compare tests/boot_media/CMakeLists.txt with examples/boot_media/resources/media.manifest. Do not remove InitCommonControlsEx assertions or mark them skipped to hide an initialization failure. Microsoft describes the activation requirement in its [common-controls deployment guide](https://learn.microsoft.com/en-us/windows/win32/controls/cookbook-overview).

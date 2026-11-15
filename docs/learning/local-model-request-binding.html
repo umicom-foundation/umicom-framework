@@ -1,0 +1,65 @@
+<!-- Umicom Framework
+File: docs/learning/local-model-request-binding.html
+
+PURPOSE:
+Teach session ownership and host-side correlation of asynchronous local model responses.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Keep local model replies with their requests | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Keep local model replies with their requests</h1>
+<p>A chat request may finish after its tab, selected model or pending question changes. The old response can still be valid text, but it no longer belongs in the current conversation. A port such as 18080 and an alias such as <code>local-chat</code> cannot distinguish two successive server sessions that reuse those values.</p>
+<p>This lesson uses Framework's native model session and request binding contracts. It adds host-side correlation: the application keeps a small value with each pending request and checks it before displaying that request's result. The check performs no network request and does not prove which server answered.</p>
+<h2>1. Understand the three identities</h2>
+<table><tr><th>Value</th><th>Meaning</th></tr><tr><td>Session identity</td><td>A nonzero value reserved for one owner by the currently loaded Framework instance. It is never reused by that instance, including after a failed start.</td></tr><tr><td>Request ID</td><td>An application-chosen name, unique within this session, for one pending question. Use 1–127 ASCII letters, digits, dots, hyphens or underscores. The names . and .. are refused.</td></tr><tr><td>Model settings</td><td>The admitted model digest, alias, port, context limit and CPU thread count captured by the owner. These are local configuration records, not measurements from an endpoint.</td></tr></table>
+<p>Do not save a session identity for use after restarting the application. Separate loaded Framework instances have separate counters. The value is not a credential, cryptographic nonce or globally unique identifier.</p>
+<h2>2. Capture before dispatch</h2>
+<p>After explicitly starting an owned session, keep the binding next to the application's pending work. Starting a session reports process submission, not model readiness. The application must complete its separate approved readiness and endpoint checks before sending a prompt.</p>
+<pre><code>#include &lt;umicom/local_models/request_binding.h&gt;
+
+UmiModelRequestBinding pending;
+UmiStatus status = UmiModelSessionBindRequest(
+    current_session, "chat.turn.17", &amp;pending);
+if (status != UMI_STATUS_OK) {
+    /* Keep the previous view and report why admission was refused. */
+    return status;
+}
+/* Copy pending into the application's worker-owned job record.
+ * Dispatch through the existing approved provider transport. */</code></pre>
+<p><code>pending</code> owns its text arrays. Later edits to an application's model-selection form cannot change the captured values. A failed capture leaves the output untouched. A cleanup owner retained after failed process submission is refused.</p>
+<h2>3. Check before publishing a completed reply</h2>
+<p>Bring completion back to the thread that owns the current session. Retrieve the binding from the host's pending job record, not from JSON returned by the model. Compare it with both the current live owner and the expected request ID.</p>
+<pre><code>UmiStatus status = UmiModelSessionCheckBinding(
+    current_session, &amp;completed_job.binding, "chat.turn.17");
+if (status != UMI_STATUS_OK) {
+    /* Discard or archive the stale result; do not replace current chat text. */
+    return status;
+}
+/* Also check application cancellation and conversation revision here.
+ * Only then publish completed_job's response through the existing UI. */</code></pre>
+<p>The snippets illustrate integration points: <code>current_session</code>, <code>completed_job</code> and UI publication belong to the application. The binding service does not dispatch requests, manage tabs or implement those UI operations.</p>
+<h2>4. Keep ownership separate from correlation</h2>
+<ol><li>Serialize all operations on a session owner. The identity allocator is atomic, but that does not make concurrent Start, Stop or metadata access safe.</li><li>Cancel and join application requests before stopping their server. A binding value does not keep a session alive.</li><li>After Stop consumes an owner, never pass the old pointer to any function. Compare an older saved binding only against the current live owner.</li><li>Choose a new request ID for every new request in a session. Reusing an ID can make two questions indistinguishable to this contract.</li><li>Check the conversation revision and cancellation separately. An unchanged session is compatible with several different tabs and requests.</li></ol>
+<p>A submitted process may exit while its owner is still retained. A matching binding therefore does not imply liveness, successful inference, endpoint authentication or model quality. Those are separate observations.</p>
+<h2>5. Diagnose refusals</h2>
+<table><tr><th>Result</th><th>Action</th></tr><tr><td>INVALID_ARGUMENT</td><td>Check null inputs, request syntax, terminated fields and the bounded numeric settings in a caller-edited binding. Keep the previous output.</td></tr><tr><td>INVALID_STATE</td><td>The current owner is incomplete, or the binding describes another session, request or setting. Do not relabel an old response as current.</td></tr><tr><td>CAPACITY_EXCEEDED during Start</td><td>The instance's identity counter is exhausted. No new lease or process is acquired for that attempt. Do not reset or recycle identities in a running process.</td></tr></table>
+<h2>6. Build and execute the regression coverage</h2>
+<p>From the Framework repository in PowerShell, run each command separately and stop if it fails. Choose your installed UCRT64 toolchain and use a separate build directory.</p>
+<pre><code>$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake -S . -B build/request-binding -G Ninja -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe -DBUILD_TESTING=ON
+cmake --build build/request-binding --target umicom-model-request-binding-test umicom-model-session-test
+ctest --test-dir build/request-binding -R '^framework.local_models.(request_binding.|session.lifetime$)' --output-on-failure</code></pre>
+<p>The source registers 40 pure correlation cases, including concurrent identity allocation and refusal at the maximum identity. The existing session lifetime case also checks replacement using a finite native child fixture. It does not download weights or run inference. These cases are authored regression coverage; configuration alone is not evidence that they compile or pass.</p>
+<h2>Exercise</h2>
+<p>Sketch a chat controller with a current session, conversation revision and pending request ID. First complete a reply after changing only the conversation; then complete one after replacing the session with the same alias and port. Explain which check rejects each reply, which owners must stay alive, and why copying the previous identity into a new binding would conceal the mistake.</p>
+<p><a href="index.html">Return to Framework learning</a></p></main></body></html>

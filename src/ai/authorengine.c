@@ -18,6 +18,8 @@
  */
 
 #include "../base/conditional_archive_internal.h"
+#include "../base/value_construction_internal.h"
+#include "umicom/base/snapshot_validation.h"
 #include "umicom/ai/authorengine.h"
 #include "../base/value_archive_internal.h"
 #include <stddef.h>
@@ -76,11 +78,26 @@ static UmiStatus invocation_begin(
     UmiAiAuthorEngineInvocation *out_invocation)
 {
     int written;
+/* Shared bounded publication-field admission now precedes copying. Provider metadata remains unused for publication; the former first-byte checks remain for review. The former implementation is retained for owner review. */
+#if 0
     /* Publication configuration needs a tool and project directory, but no AI provider. */
     if (config == NULL || out_invocation == NULL ||
         config->executable[0] == '\0' || config->workspace[0] == '\0') {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+#endif
+    /* Publication ignores provider metadata, but executable and workspace
+     * must be complete fixed fields before any unbounded string operation. */
+    static const UmiSnapshotTextField fields[] = {
+        {"executable", offsetof(UmiAiAuthorEngineConfig, executable),
+            sizeof(((UmiAiAuthorEngineConfig *)0)->executable), 1},
+        {"workspace", offsetof(UmiAiAuthorEngineConfig, workspace),
+            sizeof(((UmiAiAuthorEngineConfig *)0)->workspace), 1}
+    };
+    if (out_invocation == NULL ||
+        UmiSnapshotValidateTextFields(config, sizeof(*config), fields,
+            sizeof fields / sizeof fields[0], NULL) != UMI_STATUS_OK)
+        return UMI_STATUS_INVALID_ARGUMENT;
     (void)memset(out_invocation, 0, sizeof(*out_invocation));
     written = snprintf(out_invocation->executable,
                        sizeof(out_invocation->executable), "%s",
@@ -121,6 +138,8 @@ static const char *publication_command_text(UmiAiAuthorEngineCommand command)
 }
 
 /* Plan current book/document publication commands without copying their implementation. */
+/* Build a separate complete argv value before replacing caller output. Existing command spellings, argument order and failure statuses are retained; the former direct writer remains for review. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_ai_authorengine_plan_publication_invocation(
     const UmiAiAuthorEngineConfig *config,
     UmiAiAuthorEngineCommand command,
@@ -150,7 +169,47 @@ UmiStatus umi_ai_authorengine_plan_publication_invocation(
     return status;
 }
 
+#endif
+static UmiStatus publication_invocation_build(
+    const UmiAiAuthorEngineConfig *config,
+    UmiAiAuthorEngineCommand command,
+    const char *site_path,
+    UmiAiAuthorEngineInvocation *out_invocation)
+{
+    const char *command_text = publication_command_text(command);
+    UmiStatus status;
+    /* Reject AI and unknown commands at this publication-specific boundary. */
+    if (command_text == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = invocation_begin(config, command, out_invocation);
+    /* Stop immediately when executable or working-directory copying failed. */
+    if (status != UMI_STATUS_OK) return status;
+    status = invocation_add(out_invocation, command_text);
+    /* A site override is meaningful only to the preview server command. */
+    if (status == UMI_STATUS_OK && site_path != NULL && site_path[0] != '\0') {
+        /* Use the shared build helper when it is available from the parent composition. */
+        if (command != UMI_AI_AUTHOR_ENGINE_SERVE_PREVIEW) {
+            return UMI_STATUS_INVALID_ARGUMENT;
+        }
+        status = invocation_add(out_invocation, "--site");
+        /* Preserve the first capacity error instead of appending another value. */
+        if (status == UMI_STATUS_OK) {
+            status = invocation_add(out_invocation, site_path);
+        }
+    }
+    return status;
+}
+
+/* The shared value constructor keeps every refused plan unchanged and lets
+ * input strings borrow the previous destination until publication. It owns
+ * only temporary inline-value storage, never a process or provider handle. */
+UMI_DEFINE_STAGED_VALUE_INIT(umi_ai_authorengine_plan_publication_invocation, UmiAiAuthorEngineInvocation, out_invocation,
+    (const UmiAiAuthorEngineConfig *config, UmiAiAuthorEngineCommand command,
+     const char *site_path, UmiAiAuthorEngineInvocation *out_invocation),
+    publication_invocation_build(config, command, site_path, candidate))
+
 /* Plan governed AI commands while keeping every argument separate and exact. */
+/* Build a separate complete argv value before replacing caller output. Existing command spellings, argument order and failure statuses are retained; the former direct writer remains for review. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_ai_authorengine_plan_invocation(
     const UmiAiAuthorEngineConfig *config,
     UmiAiAuthorEngineCommand command,
@@ -238,6 +297,104 @@ UmiStatus umi_ai_authorengine_plan_invocation(
     }
     return status;
 }
+
+#endif
+static UmiStatus ai_invocation_build(
+    const UmiAiAuthorEngineConfig *config,
+    UmiAiAuthorEngineCommand command,
+    const char *session_id,
+    const char *model_id,
+    const char *input_path,
+    const char *output_path,
+    UmiAiAuthorEngineInvocation *out_invocation)
+{
+    const char *command_text;
+    UmiStatus status;
+
+    /* This entry point accepts only the three governed AI command kinds. */
+    if (umi_ai_authorengine_validate(config) != UMI_STATUS_OK ||
+        out_invocation == NULL ||
+        command < UMI_AI_AUTHOR_ENGINE_HEALTH ||
+        command > UMI_AI_AUTHOR_ENGINE_GENERATE) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Generation requires complete session, model and file identities. */
+    if (command == UMI_AI_AUTHOR_ENGINE_GENERATE &&
+        (session_id == NULL || session_id[0] == '\0' ||
+         model_id == NULL || model_id[0] == '\0' ||
+         input_path == NULL || input_path[0] == '\0' ||
+         output_path == NULL || output_path[0] == '\0')) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    status = invocation_begin(config, command, out_invocation);
+    /* Do not construct argv when the launch identity could not be copied. */
+    if (status != UMI_STATUS_OK) return status;
+    /* The nested selection retains the established external command spelling. */
+    command_text = command == UMI_AI_AUTHOR_ENGINE_HEALTH
+        ? "health"
+        : (command == UMI_AI_AUTHOR_ENGINE_CATALOGUE
+               ? "providers" : "generate");
+    status = invocation_add(out_invocation, command_text);
+    /* AI commands pass workspace and provider explicitly for future tool versions. */
+    if (status == UMI_STATUS_OK) {
+        status = invocation_add(out_invocation, "--workspace");
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = invocation_add(out_invocation, config->workspace);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = invocation_add(out_invocation, "--provider");
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        status = invocation_add(out_invocation, config->provider);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK && command == UMI_AI_AUTHOR_ENGINE_GENERATE) {
+        status = invocation_add(out_invocation, "--session");
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK && command == UMI_AI_AUTHOR_ENGINE_GENERATE) {
+        status = invocation_add(out_invocation, session_id);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK && command == UMI_AI_AUTHOR_ENGINE_GENERATE) {
+        status = invocation_add(out_invocation, "--model");
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK && command == UMI_AI_AUTHOR_ENGINE_GENERATE) {
+        status = invocation_add(out_invocation, model_id);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK && command == UMI_AI_AUTHOR_ENGINE_GENERATE) {
+        status = invocation_add(out_invocation, "--input");
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK && command == UMI_AI_AUTHOR_ENGINE_GENERATE) {
+        status = invocation_add(out_invocation, input_path);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK && command == UMI_AI_AUTHOR_ENGINE_GENERATE) {
+        status = invocation_add(out_invocation, "--output");
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK && command == UMI_AI_AUTHOR_ENGINE_GENERATE) {
+        status = invocation_add(out_invocation, output_path);
+    }
+    return status;
+}
+
+/* The shared value constructor keeps every refused plan unchanged and lets
+ * input strings borrow the previous destination until publication. It owns
+ * only temporary inline-value storage, never a process or provider handle. */
+UMI_DEFINE_STAGED_VALUE_INIT(umi_ai_authorengine_plan_invocation, UmiAiAuthorEngineInvocation, out_invocation,
+    (const UmiAiAuthorEngineConfig *config, UmiAiAuthorEngineCommand command,
+     const char *session_id, const char *model_id, const char *input_path,
+     const char *output_path, UmiAiAuthorEngineInvocation *out_invocation),
+    ai_invocation_build(config, command, session_id, model_id, input_path, output_path, candidate))
 
 /* State transfer belongs to this Framework value owner. Explicit fields keep
  * padding and unused text out of saved data. Extend both directions and the

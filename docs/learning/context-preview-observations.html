@@ -1,0 +1,63 @@
+<!-- Umicom Framework
+File: docs/learning/context-preview-observations.html
+
+PURPOSE:
+Teach context preview identity, stale checks and safe recovery through the shared native service.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Detect stale AI context previews | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Detect stale AI context previews</h1>
+<p>A preview can become outdated while a person reviews it. A policy may change, a source may be removed, or a runtime entry may point to a different model. The old plan can remain a valid C structure while no longer describing the current decision. This lesson builds on <a href="context-budget-and-privacy.html">context budgeting and privacy</a> and uses the public <a href="../../include/umicom/ai/authorengine_service.h">AuthorEngine service contract</a>.</p>
+<h2>1. Identify each owner</h2>
+<p>An owner is the service responsible for maintaining a particular collection or setting. The coordinating service owns its policy and budget. Its context broker owns source metadata. Its runtime catalogue owns runtime descriptions. Editing a child directly does not necessarily advance the coordinating service revision, so one counter cannot represent all three.</p>
+<table><thead><tr><th>Observed field</th><th>What makes it stale</th></tr></thead><tbody>
+<tr><td>service_revision</td><td>Any accepted service-owned mutation, including a policy update. This deliberately also rejects some previews after unrelated service actions.</td></tr>
+<tr><td>context_revision</td><td>An accepted broker upsert, removal or clear, including direct child access.</td></tr>
+<tr><td>runtime_id and runtime_revision</td><td>A replacement, health update or disappearance of the selected runtime record.</td></tr>
+</tbody></table>
+<p>A direct update to another runtime row does not invalidate the selected row. Rejected updates leave identities unchanged. Revision values belong to one live service and its children; identical numbers from a different service do not establish any relationship.</p>
+<h2>2. Prepare a complete preview</h2>
+<p><code>UmiAiAuthorEnginePlanContextObserved</code> calls the existing policy-aware planner. It returns the same metadata plan plus an observation containing the three relevant identities. Both output objects must exist and must not overlap. On any error both retain their previous contents.</p>
+<pre><code class="language-c">UmiAiContextPlan *plan = malloc(sizeof *plan);
+UmiAiContextPlanObservation observed;
+if (plan == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+UmiStatus status = UmiAiAuthorEnginePlanContextObserved(
+    service, selected_runtime_id, sensitive_approved, plan, &amp;observed);
+if (status != UMI_STATUS_OK) {
+    free(plan);
+    return status;
+}
+/* Retain service lifetime and the initiating request alongside these values. */</code></pre>
+<p>The service does not open source URIs or invoke a model. Planning can succeed for an unavailable model because metadata planning and transport readiness are separate responsibilities. An approval flag is an input to the current planning decision; the returned observation does not preserve or grant approval for later execution.</p>
+<h2>3. Recheck after review</h2>
+<pre><code class="language-c">UmiStatus status = UmiAiAuthorEngineCheckContextObservation(service, &amp;observed);
+if (status == UMI_STATUS_BUSY) {
+    /* Keep the action stopped. Prepare and review a fresh preview. */
+    return status;
+}
+if (status != UMI_STATUS_OK) return status;
+/* Recheck the initiating request, source text, final prompt budget,
+ * current execution policy and selected transport before a separate action. */</code></pre>
+<p><code>BUSY</code> means an observed owner changed or the runtime disappeared. A malformed observation returns <code>INVALID_ARGUMENT</code>. Invalid owner state is a separate error. An <code>OK</code> result only means the recorded identities still match: it does not authenticate an endpoint, prove file freshness, compare a final prompt with the plan, or authorize network access.</p>
+<h2>4. Keep checks and actions on the correct owner</h2>
+<p>These APIs provide no mutex and do not make concurrent access safe. Serialize operations on the service and its child owners. A worker can prepare external data, but its completion should return to the owning thread and check that the same workspace and request still exist. Never retain a service pointer after destruction.</p>
+<p>The existing API that returns only a context plan remains available. Use the observed variant when a preview is retained across user interaction. A caller can pass the previous observation's runtime ID back into the planner because the ID is copied before the output observation is replaced.</p>
+<h2>5. Reproduce a stale preview offline</h2>
+<ol><li>Create a runtime description and register a public source. Prepare an observed plan.</li><li>Replace that source's label through the broker. Check the observation and expect <code>BUSY</code>; the old plan remains unchanged.</li><li>Prepare another observed plan. Change the service budget through <code>umi_ai_authorengine_service_set_policy</code>. Expect <code>BUSY</code> again.</li><li>Refresh the preview. Update only an unrelated runtime through the catalogue. The selected runtime identity should still match.</li><li>Attempt an invalid source update, such as a zero token estimate. Expect refusal and an unchanged valid observation.</li></ol>
+<p>Run the native cases from a configured Framework checkout, stopping on errors:</p>
+<pre><code class="language-powershell">cmake --preset windows-ucrt64-debug
+cmake --build --preset windows-ucrt64-debug --target umicom-ai-context-observation-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework[.]ai[.]context[.]observation[.]' --output-on-failure --no-tests=error</code></pre>
+<p>The <a href="../../tests/test_ai_context_observation.c">regression source</a> covers malformed observations, policy and child edits, unavailable metadata, read-only exhausted service revisions, failure preservation and successful re-preview. The <a href="../../examples/local_models/sdk_consumer/main.c">SDK consumer</a> exercises the exported symbols without a model or network connection. Registered tests still require compiler and runtime qualification; no GUI interaction is established by these API cases.</p>
+<p><a href="index.html">Learning index</a></p></main></body></html>

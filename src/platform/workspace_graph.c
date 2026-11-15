@@ -146,6 +146,8 @@ UmiStatus umi_workspace_graph_open(UmiWorkspaceGraph *graph,
 }
 
 #endif
+/* Reserve workspace identities before mutation so stale background results cannot match a wrapped revision. The previous implementation remains for review. */
+#if 0
 UmiStatus umi_workspace_graph_open(UmiWorkspaceGraph *graph,
                                    const char *root,
                                    int trusted)
@@ -182,11 +184,56 @@ UmiStatus umi_workspace_graph_open(UmiWorkspaceGraph *graph,
     (void)umi_mutex_unlock(graph->mutex);
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_workspace_graph_open(UmiWorkspaceGraph *graph,
+                                   const char *root,
+                                   int trusted)
+{
+    char absolute[UMI_PATH_CAPACITY];
+    char current[UMI_PATH_CAPACITY];
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (graph == NULL || root == NULL || root[0] == '\0') {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Full paths supplied by a chooser do not depend on the launch directory.
+     * Capture cwd only for compatibility callers supplying a relative path. */
+    if (umi_path_is_absolute(root))
+        status = umi_path_normalise(root, absolute, sizeof(absolute));
+    else {
+        status = umi_fs_current_directory(current, sizeof(current));
+        if (status == UMI_STATUS_OK)
+            status = umi_path_absolute(root, current, absolute, sizeof(absolute));
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (!umi_fs_is_directory(absolute)) return UMI_STATUS_NOT_FOUND;
+    (void)umi_mutex_lock(graph->mutex);
+    /* A revision identifies one published state. Reusing zero or an earlier
+     * value would let an old asynchronous request masquerade as current. */
+    if (graph->revision == UINT64_MAX) {
+        (void)umi_mutex_unlock(graph->mutex);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    (void)snprintf(graph->root, sizeof(graph->root), "%s", absolute);
+    graph->project_count = 0U;
+    graph->trusted = trusted != 0;
+    graph->open = 1;
+    graph->revision += 1U;
+    (void)umi_mutex_unlock(graph->mutex);
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the workspace graph close operation used by this module and its client
  * applications.
  */
+/* Reserve workspace identities before mutation so stale background results cannot match a wrapped revision. The previous implementation remains for review. */
+#if 0
 UmiStatus umi_workspace_graph_close(UmiWorkspaceGraph *graph)
 {
     /*
@@ -203,11 +250,36 @@ UmiStatus umi_workspace_graph_close(UmiWorkspaceGraph *graph)
     (void)umi_mutex_unlock(graph->mutex);
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_workspace_graph_close(UmiWorkspaceGraph *graph)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (graph == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)umi_mutex_lock(graph->mutex);
+    /* A revision identifies one published state. Reusing zero or an earlier
+     * value would let an old asynchronous request masquerade as current. */
+    if (graph->revision == UINT64_MAX) {
+        (void)umi_mutex_unlock(graph->mutex);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    graph->root[0] = '\0';
+    graph->project_count = 0U;
+    graph->trusted = 0;
+    graph->open = 0;
+    graph->revision += 1U;
+    (void)umi_mutex_unlock(graph->mutex);
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the workspace graph set trusted operation used by this module and its client
  * applications.
  */
+/* Reserve workspace identities before mutation so stale background results cannot match a wrapped revision. The previous implementation remains for review. */
+#if 0
 UmiStatus umi_workspace_graph_set_trusted(UmiWorkspaceGraph *graph,
                                           int trusted)
 {
@@ -227,11 +299,39 @@ UmiStatus umi_workspace_graph_set_trusted(UmiWorkspaceGraph *graph,
     (void)umi_mutex_unlock(graph->mutex);
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_workspace_graph_set_trusted(UmiWorkspaceGraph *graph,
+                                          int trusted)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (graph == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)umi_mutex_lock(graph->mutex);
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (!graph->open) {
+        (void)umi_mutex_unlock(graph->mutex);
+        return UMI_STATUS_INVALID_STATE;
+    }
+    /* A revision identifies one published state. Reusing zero or an earlier
+     * value would let an old asynchronous request masquerade as current. */
+    if (graph->revision == UINT64_MAX) {
+        (void)umi_mutex_unlock(graph->mutex);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    graph->trusted = trusted != 0;
+    graph->revision += 1U;
+    (void)umi_mutex_unlock(graph->mutex);
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the workspace graph add project operation used by this module and its client
  * applications.
  */
+/* Reserve workspace identities before mutation so stale background results cannot match a wrapped revision. The previous implementation remains for review. */
+#if 0
 UmiStatus umi_workspace_graph_add_project(UmiWorkspaceGraph *graph,
                                           const char *stable_id,
                                           const char *display_name,
@@ -317,11 +417,111 @@ UmiStatus umi_workspace_graph_add_project(UmiWorkspaceGraph *graph,
     (void)umi_mutex_unlock(graph->mutex);
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_workspace_graph_add_project(UmiWorkspaceGraph *graph,
+                                          const char *stable_id,
+                                          const char *display_name,
+                                          const char *root,
+                                          UmiProjectKind kind,
+                                          uint64_t *out_project_id)
+{
+    UmiWorkspaceProjectSnapshot *project;
+    char absolute[UMI_PATH_CAPACITY];
+    size_t index;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (graph == NULL || display_name == NULL || root == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    (void)umi_mutex_lock(graph->mutex);
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (!graph->open) {
+        (void)umi_mutex_unlock(graph->mutex);
+        return UMI_STATUS_INVALID_STATE;
+    }
+    status = umi_path_absolute(root,
+                               graph->root,
+                               absolute,
+                               sizeof(absolute));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK || !umi_path_is_within(graph->root, absolute)) {
+        (void)umi_mutex_unlock(graph->mutex);
+        return status != UMI_STATUS_OK ? status : UMI_STATUS_PERMISSION_DENIED;
+    }
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < graph->project_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (umi_path_equal(graph->projects[index].root, absolute)) {
+            /*
+             * Protect caller-owned memory by checking that required state is available before it is
+             * used.
+             */
+            if (out_project_id != NULL) {
+                *out_project_id = graph->projects[index].project_id;
+            }
+            (void)umi_mutex_unlock(graph->mutex);
+            return UMI_STATUS_ALREADY_EXISTS;
+        }
+    }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (graph->project_count >= UMI_WORKSPACE_PROJECT_MAX) {
+        (void)umi_mutex_unlock(graph->mutex);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    /* A revision identifies one published state. Reusing zero or an earlier
+     * value would let an old asynchronous request masquerade as current. */
+    if (graph->revision == UINT64_MAX) {
+        (void)umi_mutex_unlock(graph->mutex);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    /* Project IDs outlive individual open/close sessions. Reserve the next
+     * counter value before adding a row; zero remains an invalid public ID. */
+    if (graph->next_project_id == 0U || graph->next_project_id == UINT64_MAX) {
+        (void)umi_mutex_unlock(graph->mutex);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    project = &graph->projects[graph->project_count++];
+    (void)memset(project, 0, sizeof(*project));
+    project->project_id = graph->next_project_id++;
+    project->kind = kind;
+    (void)snprintf(project->display_name,
+                   sizeof(project->display_name),
+                   "%s",
+                   display_name);
+    (void)snprintf(project->root, sizeof(project->root), "%s", absolute);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (stable_id != NULL && stable_id[0] != '\0') {
+        (void)snprintf(project->stable_id,
+                       sizeof(project->stable_id),
+                       "%s",
+                       stable_id);
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
+        make_stable_id(display_name,
+                       project->stable_id,
+                       sizeof(project->stable_id));
+    }
+    graph->revision += 1U;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (out_project_id != NULL) *out_project_id = project->project_id;
+    (void)umi_mutex_unlock(graph->mutex);
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the workspace graph remove project operation used by this module and its client
  * applications.
  */
+/* Reserve workspace identities before mutation so stale background results cannot match a wrapped revision. The previous implementation remains for review. */
+#if 0
 UmiStatus umi_workspace_graph_remove_project(UmiWorkspaceGraph *graph,
                                              uint64_t project_id)
 {
@@ -336,6 +536,43 @@ UmiStatus umi_workspace_graph_remove_project(UmiWorkspaceGraph *graph,
     for (index = 0U; index < graph->project_count; ++index) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (graph->projects[index].project_id == project_id) {
+            size_t remaining = graph->project_count - index - 1U;
+            /* Apply this branch only when its contract condition is satisfied. */
+            if (remaining > 0U) {
+                (void)memmove(&graph->projects[index],
+                              &graph->projects[index + 1U],
+                              remaining * sizeof(graph->projects[0]));
+            }
+            graph->project_count -= 1U;
+            graph->revision += 1U;
+            (void)umi_mutex_unlock(graph->mutex);
+            return UMI_STATUS_OK;
+        }
+    }
+    (void)umi_mutex_unlock(graph->mutex);
+    return UMI_STATUS_NOT_FOUND;
+}
+#endif
+UmiStatus umi_workspace_graph_remove_project(UmiWorkspaceGraph *graph,
+                                             uint64_t project_id)
+{
+    size_t index;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (graph == NULL || project_id == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    (void)umi_mutex_lock(graph->mutex);
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0U; index < graph->project_count; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (graph->projects[index].project_id == project_id) {
+            /* A revision identifies one published state. Reusing zero or an earlier
+             * value would let an old asynchronous request masquerade as current. */
+            if (graph->revision == UINT64_MAX) {
+                (void)umi_mutex_unlock(graph->mutex);
+                return UMI_STATUS_CAPACITY_EXCEEDED;
+            }
             size_t remaining = graph->project_count - index - 1U;
             /* Apply this branch only when its contract condition is satisfied. */
             if (remaining > 0U) {
@@ -405,6 +642,8 @@ static UmiStatus discover_visitor(const UmiFileInfo *info, void *user_data)
  * Provide the workspace graph discover operation used by this module and its client
  * applications.
  */
+/* Reserve workspace identities before mutation so stale background results cannot match a wrapped revision. The previous implementation remains for review. */
+#if 0
 UmiStatus umi_workspace_graph_discover(UmiWorkspaceGraph *graph)
 {
     UmiDirectoryWalkOptions options;
@@ -452,6 +691,72 @@ UmiStatus umi_workspace_graph_discover(UmiWorkspaceGraph *graph)
          * trust, or added/removed a project. Never overwrite that newer state. */
         if (!graph->open || graph->revision != sourceRevision) {
             status = UMI_STATUS_INVALID_STATE;
+        } else if (candidate->project_count != graph->project_count) {
+            (void)memcpy(graph->projects, candidate->projects, sizeof(graph->projects));
+            graph->project_count = candidate->project_count;
+            graph->next_project_id = candidate->next_project_id;
+            graph->revision += 1U;
+        }
+        (void)umi_mutex_unlock(graph->mutex);
+    }
+    /* Failed scans release only unpublished rows. They do not consume live
+     * project IDs, remove manual projects or change the visible revision. */
+    umi_workspace_graph_destroy(candidate);
+    return status;
+}
+#endif
+UmiStatus umi_workspace_graph_discover(UmiWorkspaceGraph *graph)
+{
+    UmiDirectoryWalkOptions options;
+    DiscoveryContext context;
+    UmiWorkspaceGraph *candidate = NULL;
+    uint64_t sourceRevision;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (graph == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    status = umi_workspace_graph_create(&candidate);
+    if (status != UMI_STATUS_OK) return status;
+
+    /* Copy identity, trust and projects under one lock. The private graph has
+     * its own mutex: filesystem traversal must not hold the live graph lock.
+     * Existing project IDs and manually added projects remain authoritative. */
+    (void)umi_mutex_lock(graph->mutex);
+    if (!graph->open) {
+        (void)umi_mutex_unlock(graph->mutex);
+        umi_workspace_graph_destroy(candidate);
+        return UMI_STATUS_INVALID_STATE;
+    }
+    (void)memcpy(candidate->root, graph->root, sizeof(candidate->root));
+    (void)memcpy(candidate->projects, graph->projects, sizeof(candidate->projects));
+    candidate->project_count = graph->project_count;
+    candidate->next_project_id = graph->next_project_id;
+    candidate->trusted = graph->trusted;
+    candidate->open = graph->open;
+    /* Candidate edits are private; their counters do not consume the live
+     * publication budget. At most UMI_WORKSPACE_PROJECT_MAX rows are staged. */
+    candidate->revision = 1U;
+    sourceRevision = graph->revision;
+    (void)umi_mutex_unlock(graph->mutex);
+
+    options = umi_directory_walk_options_default();
+    options.recursive = 0;
+    options.include_files = 0;
+    options.include_directories = 1;
+    context.graph = candidate;
+    status = umi_directory_walk(candidate->root, &options,
+                                discover_visitor, &context);
+    if (status == UMI_STATUS_OK) {
+        (void)umi_mutex_lock(graph->mutex);
+        /* Another owner operation may have closed the workspace, changed its
+         * trust, or added/removed a project. Never overwrite that newer state. */
+        if (!graph->open || graph->revision != sourceRevision) {
+            status = UMI_STATUS_INVALID_STATE;
+        } else if (candidate->project_count != graph->project_count &&
+                   graph->revision == UINT64_MAX) {
+            status = UMI_STATUS_CAPACITY_EXCEEDED;
         } else if (candidate->project_count != graph->project_count) {
             (void)memcpy(graph->projects, candidate->projects, sizeof(graph->projects));
             graph->project_count = candidate->project_count;

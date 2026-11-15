@@ -275,9 +275,18 @@ UmiStatus UmiRootedFileCompareRelativePaths(const char *first, const char *secon
     UmiRootedPathRelation relation = UMI_ROOTED_PATH_DISJOINT;
     if (left[index] == '\0' && right[index] == '\0')
         relation = UMI_ROOTED_PATH_EQUAL;
+    /* Native normalization uses backslashes on Windows. Parent admission must
+     * recognise a component boundary on either host, without treating the
+     * common text prefix of src and src2 as a directory relationship. */
+#if 0
     else if (left[index] == '\0' && right[index] == '/')
         relation = UMI_ROOTED_PATH_FIRST_PARENT;
     else if (right[index] == '\0' && left[index] == '/')
+        relation = UMI_ROOTED_PATH_SECOND_PARENT;
+#endif
+    else if (left[index] == '\0' && (right[index] == '/' || right[index] == '\\'))
+        relation = UMI_ROOTED_PATH_FIRST_PARENT;
+    else if (right[index] == '\0' && (left[index] == '/' || left[index] == '\\'))
         relation = UMI_ROOTED_PATH_SECOND_PARENT;
     *outRelation = relation;
     return UMI_STATUS_OK;

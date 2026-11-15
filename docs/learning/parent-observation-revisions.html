@@ -1,0 +1,63 @@
+<!-- Umicom Framework
+File: docs/learning/parent-observation-revisions.html
+
+PURPOSE:
+Teach failure-aware parent observations, bounded revisions and cancellation during synchronous callbacks.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Track parent changes after failed work | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Track parent changes after failed work</h1>
+<p>A coding platform owns several cooperating services: an agent, an assistant, a repository index and queues. A revision number tells a view when to refresh its observation of that owner. It must not be confused with a count of successful tasks.</p>
+<h2>1. Notice changes on failure</h2>
+<p>Suppose the platform removes the next task from its queue and asks the agent to run it. The agent returns an error. The queue is still shorter, and the agent may have recorded a failed state or changed files before that error. Updating the parent revision only on success can leave an interface showing stale work.</p>
+<p>Framework captures the child observations before an admitted platform mutation. Success advances the parent revision once. After failure, it captures them again and compares their semantic fields. A changed child observation, consumed queue item or cancellation request advances the revision. A failed operation with unchanged observations leaves it unchanged. If the later capture fails, the platform conservatively advances the revision because it cannot establish that nothing changed.</p>
+<p>The original operation status remains the return value. A secondary observation failure does not replace the error that caused the operation to fail.</p>
+<h2>2. Compare meaning, not memory padding</h2>
+<p>C structures can contain padding bytes between fields. Fixed text buffers can contain unused bytes after their terminating zero. Neither should invalidate a view when the represented values are unchanged.</p>
+<p>The platform compares each meaningful scalar field and bounded string. Child revisions, task and patch identifiers, patch policy, repository counts and queue counts participate. The parent's own revision is excluded from this child comparison because the outer operation publishes it afterward.</p>
+<p>When extending a snapshot, extend its semantic comparison and regression coverage too. The focused tests change each of the 42 compared fields and check that padding and unused text tails do not create false changes.</p>
+<h2>3. Reserve revision space before work</h2>
+<p>An unsigned counter wraps to zero if incremented beyond its maximum. Reusing an old number can make a changed owner look unchanged. The platform therefore refuses new mutations at <code>UINT64_MAX</code> with <code>CAPACITY_EXCEEDED</code>, before child work begins. Zero is an invalid initialized parent revision.</p>
+<p>The final available revision remains usable. Admission reserves its space for the complete synchronous operation. Existing callback ownership checks prevent another mutation from entering while that operation is active. These checks assume serialized access; they are not a mutex.</p>
+<h2>4. Keep cancellation available</h2>
+<p>Cancellation requests can arrive from callbacks during an operation. If cancellation incremented the parent counter immediately, it could consume the last revision that the outer call had reserved.</p>
+<p>Framework forwards the cancellation request immediately but defers its parent metadata while an operation is active. The outer completion then includes it in its single revision update. An idle cancellation increments when space remains and saturates at the maximum instead of wrapping. Cancellation still reaches the agent at counter exhaustion.</p>
+<p>A cancellation request is not proof that execution stopped. Observe the agent's eventual state. Retire an exhausted owner before starting new work; do not reset its counter and silently reuse old identities.</p>
+<h2>5. Refresh without losing the original error</h2>
+<pre><code>UmiAiCodingRuntimePlatformSnapshot before, after;
+UmiStatus read_before = umi_ai_coding_runtime_platform_snapshot(
+    platform, &amp;before);
+if (read_before != UMI_STATUS_OK) return read_before;
+
+UmiStatus operation = umi_ai_coding_runtime_platform_run_next(platform);
+UmiStatus read_after = umi_ai_coding_runtime_platform_snapshot(
+    platform, &amp;after);
+if (read_after == UMI_STATUS_OK &amp;&amp; after.revision != before.revision) {
+    /* Refresh the task list, live state and available patch recovery outcome. */
+}
+/* Handle operation and read_after separately; neither proves the other passed. */
+return operation;</code></pre>
+<p>A consumed task is attempted work, not necessarily completed execution. Do not automatically put it back into the queue just because the agent returned an error: file or provider side effects may already exist. Inspect the task state and correlated patch outcome, then make an explicit retry decision.</p>
+<p>Parent revisions describe operations performed through this platform. Direct independent child mutations do not automatically change the parent. Child revision values remain independent; a matching number across two owners is not a shared transaction identity.</p>
+<h2>6. Exercise the boundaries</h2>
+<p>The native fixture substitutes child operations and snapshots while compiling the actual parent implementation. It covers all ten public mutation entry points, unchanged and changed failures, failed post-operation capture, callback cancellation, the last revision, exhausted admission and semantic field comparison. It performs no provider or filesystem work.</p>
+<pre><code>$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake -S . -B build/parent-revisions -G Ninja -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe -DBUILD_TESTING=ON
+cmake --build build/parent-revisions --target umicom-ai-coding-parent-revisions-test
+ctest --test-dir build/parent-revisions -R '^framework[.]ai[.]coding-parent-revisions[.]' --output-on-failure</code></pre>
+<p>Run from the Framework repository and stop on the first command failure. The 170 registered scenarios are authored coverage, not evidence of compilation or runtime success. This observation policy does not roll back external side effects or replace application-specific recovery decisions.</p>
+<h2>Exercise</h2>
+<p>A parent starts at <code>UINT64_MAX - 1</code>. Its child requests cancellation from a callback and then returns an I/O error. Explain why the parent should finish at <code>UINT64_MAX</code>, preserve the I/O result and continue allowing cancellation while refusing another mutation.</p>
+<p><a href="coherent-agent-observations.html">Related event, history and audit publication</a> · <a href="coding-patch-transactions.html">Patch recovery outcomes</a> · <a href="index.html">Framework learning</a></p>
+</main></body></html>

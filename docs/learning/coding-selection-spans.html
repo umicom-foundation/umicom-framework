@@ -1,0 +1,66 @@
+<!-- Umicom Framework
+File: docs/learning/coding-selection-spans.html
+
+PURPOSE:
+Teach explicit source spans, line-coordinate semantics and overlap-safe selection publication.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Select bounded source lines | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Select source lines from a bounded byte span</h1>
+<p>A source adapter often knows both the address and the length of its buffer. It should not need to append a temporary zero byte just to select a line range. Framework provides <code>UmiAiCodingExtractSelectionSpan</code> for this case and retains the existing terminated-string interface.</p>
+<h2>1. Supply the extent explicitly</h2>
+<pre><code class="language-c">#include "umicom/ai_coding_runtime/selection.h"
+#include &lt;string.h&gt;
+
+int main(void)
+{
+    const char source[] = {'o', 'n', 'e', '\n', 't', 'w', 'o'};
+    char selected[16];
+    size_t selected_length = 0U;
+    UmiStatus status = UmiAiCodingExtractSelectionSpan(
+        source, sizeof source, 2U, 2U,
+        selected, sizeof selected, &amp;selected_length);
+    return status == UMI_STATUS_OK &amp;&amp; selected_length == 3U &amp;&amp;
+        strcmp(selected, "two") == 0 ? 0 : 1;
+}</code></pre>
+<p>Build the example as C23 against the Framework SDK and its <code>Umicom::developer</code> target. Expected exit status is zero. The input array intentionally has no terminator. The supplied extent must describe actual readable storage; a length value cannot make an invalid pointer safe.</p>
+<p>The span form accepts a null pointer only for an empty span. It rejects embedded zero bytes within a nonempty span. The original <code>umi_ai_coding_extract_selection</code> still requires a non-null terminated C string and delegates to the shared selection implementation after finding its length.</p>
+<h2>2. Understand the line coordinates</h2>
+<ul><li>Line numbers begin at one, and both endpoints are inclusive.</li><li>A line-ending newline belongs to the selected line.</li><li>An end line beyond the available text selects through the end of the input.</li><li>A starting line beyond the available text returns NOT_FOUND.</li><li>An empty input has an empty first line. A trailing newline creates a final empty line.</li><li>LF separates lines. CRLF is preserved byte for byte, and a lone CR remains part of its line.</li></ul>
+<p>The operation uses line coordinates rather than display columns or grapheme counts. It preserves the selected bytes and performs no normalization or transcoding. Prompt construction applies its separate UTF-8 policy before publishing provider text.</p>
+<h2>3. Allow overlap only after inspection is complete</h2>
+<p><code>memcpy</code> requires source and destination regions not to overlap. <code>memmove</code> defines the result even when they overlap. The extractor now finds and validates the complete selected range first, then uses <code>memmove</code> to publish its bytes.</p>
+<pre><code class="language-c">char text[64] = "one\ntwo\nthree\n";
+size_t length = 0U;
+UmiStatus status = umi_ai_coding_extract_selection(
+    text, 2U, 3U, text, sizeof text, &amp;length);
+/* On success, text contains "two\nthree\n". */</code></pre>
+<p>The character buffers may overlap in either direction when the destination has enough real writable space. The length-result object must be separate storage and must not overlap either character buffer. Keep all objects alive and serialize access during the call.</p>
+<h2>4. Preserve both results when refusing a request</h2>
+<p>The destination needs the selected byte count plus one byte for its terminator. If that space is unavailable, the function returns CAPACITY_EXCEEDED without changing either the destination bytes or the reported length. Invalid coordinates, malformed spans and missing lines also preserve both outputs.</p>
+<table><thead><tr><th>Result</th><th>What to correct</th></tr></thead><tbody>
+<tr><td>INVALID_ARGUMENT</td><td>Required pointers, output capacity, line zero or reversed endpoints.</td></tr>
+<tr><td>PARSE_ERROR</td><td>An embedded zero inside the explicit source span.</td></tr>
+<tr><td>NOT_FOUND</td><td>The requested starting line does not occur in the supplied extent.</td></tr>
+<tr><td>CAPACITY_EXCEEDED</td><td>The destination cannot hold content plus terminator, or the span uses the reserved SIZE_MAX extent.</td></tr>
+</tbody></table>
+<p>Do not retry a capacity error with a larger numeric capacity unless the actual destination allocation is larger. Preserve the previous selection until a complete replacement succeeds.</p>
+<h2>5. Qualify the string and span interfaces together</h2>
+<pre><code class="language-powershell"># From the Framework source root after configuration with testing enabled:
+cmake --build build/windows-ucrt64-debug --target umicom-ai-coding-selection-spans-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework\.ai\.coding-selection-span\.' --output-on-failure</code></pre>
+<p>The 32 scenarios cover line ranges, EOF behavior, CRLF, Unicode byte preservation, nonterminated spans, empty spans, malformed arguments, exact capacity and overlap in both directions. Expected result: all selected cases pass. These native scenarios must be executed before a pass is claimed; authored source and CMake registration alone are insufficient.</p>
+<p>Continue with <a href="coding-prompt-admission.html">prompt admission</a> to see how a selected range is included in a complete provider request.</p>
+
+</main></body></html>

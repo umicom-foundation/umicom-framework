@@ -1,0 +1,66 @@
+<!-- Umicom Framework
+File: docs/learning/complete-local-model-streams.html
+
+PURPOSE:
+Teach cross-event identity, terminal ordering and retained partial output in native model clients.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Complete a local model stream honestly</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Complete a local model stream honestly</h1>
+<p>A model may send useful text and then lose its connection. The text still has value, but the answer is incomplete. A native client needs to retain that distinction through parsing, cancellation, background work and the final display.</p>
+<p>This lesson extends <a href="receive-server-sent-events.html">SSE reception</a>, <a href="decode-model-stream-deltas.html">delta admission</a> and <a href="request-owned-ai-streams.html">request-owned text</a>. It uses Framework's private local-chat sequencer as a concrete example. The sequencer is implemented source; it does not itself start HTTP or create an application window.</p>
+<h2>1. Give each layer one responsibility</h2>
+<ol><li>Web's SSE parser reconstructs complete events from fragmented bytes.</li><li>The local provider codec validates each event's bounded JSON fields.</li><li>The sequencer binds events to one provider completion ID and enforces order.</li><li>The shared AI response owner retains accepted text with the caller's local request and model-revision tokens.</li><li>The transport reports whether the HTTP request actually completed successfully.</li></ol>
+<p>The provider's completion ID is an untrusted string, not an authenticated model identity. Local request and revision tokens prevent a different class of mistake: attaching old output to a new application request. Both identities are necessary and neither replaces endpoint verification.</p>
+<h2>2. Follow the state transitions</h2>
+<table><thead><tr><th>Current state</th><th>Accepted observation</th><th>Next state</th></tr></thead><tbody>
+<tr><td>Active</td><td>Supported text or assistant-role chunk with matching completion ID/model</td><td>Active</td></tr>
+<tr><td>Active</td><td>One supported stop or length finish chunk; final text and usage may be included</td><td>Finish reported</td></tr>
+<tr><td>Finish reported</td><td>At most one separate zero-choice usage report, if usage was not already reported</td><td>Finish reported</td></tr>
+<tr><td>Finish reported</td><td>Exact, fully delimited [DONE] event</td><td>Marker received</td></tr>
+<tr><td>Marker received</td><td>Successful HTTP completion and validated headers, reported by the transport caller</td><td>Complete</td></tr>
+<tr><td>Any unfinished state</td><td>Cancellation or parsing/transport failure</td><td>Cancelled or failed; prior text retained</td></tr>
+</tbody></table>
+<p>A marker alone leaves the text owner active. EOF without both a finish chunk and a complete marker fails. After the marker this profile accepts only ASCII spaces, tabs and line endings. Another event, comment or partial event is rejected. A length finish is retained as length, so a UI can explain that generation reached a limit.</p>
+<p>The <a href="https://developers.openai.com/api/reference/resources/chat/subresources/completions/streaming-events">Chat Completions chunk schema</a> distinguishes a choice delta from an empty choices array used for final usage. The codec preserves that shape explicitly. An empty choice containing usage after finish is not silently treated as the zero-choice usage record.</p>
+<h2>3. Preserve text without declaring success</h2>
+<pre><code class="language-text">text: "Hello"        → retained partial text
+finish: "stop"       → finish reported
+data: [DONE]         → marker received, still incomplete
+HTTP read failure    → failed, retained text remains "Hello"</code></pre>
+<p>This is an authored diagnostic example. The failure does not erase accepted text or invent a successful result. Further feed, finish and cancellation attempts return the original failure. A completed stream also refuses subsequent data, failure or cancellation attempts.</p>
+<p>Cancellation is a terminal state, not a thread join. The transport must stop its work and the host must join the worker before destroying the sequencer. All sequencer calls belong to one serialized owner thread. The underlying response text owner has its own synchronization, but that does not make the whole protocol sequencer concurrently callable.</p>
+<h2>4. Integrate the private boundary deliberately</h2>
+<p>Inside Framework, the intended call order is create, feed repeated bounded reads, then finish or fail/cancel. Copy returns an independently allocated text snapshot with matching protocol metadata. Release the copy with <code>UmiAiResponseStreamTextFree</code>; it remains readable after the sequencer is destroyed.</p>
+<pre><code class="language-c">/* Framework-internal outline. Network transport is a separate owner. */
+status = AwLocalChatStreamFeed(stream, received_bytes, received_length);
+if (status != UMI_STATUS_OK) {
+    /* Stop receiving and retain the failure snapshot. */
+}
+/* Only after the transport reports success and headers were admitted: */
+status = AwLocalChatStreamFinish(stream);</code></pre>
+<p>Do not call Finish in a generic cleanup block. Cleanup also runs after timeouts, cancellation, rejected status codes and truncated responses. Use Fail or Cancel for those outcomes. Applications should use a public Framework service rather than including this private header.</p>
+<h2>5. Account for synchronization errors after mutation</h2>
+<p>A mutex unlock error can occur after the text owner has appended data. Retrying the same event blindly could duplicate text or obscure the original failure. The sequencer inspects the owner's committed sequence before publishing an external failure.</p>
+<p>It also records a separate terminal-publication status. If publishing failure itself fails, or a final text event was already committed before an unlock error, the protocol failure remains visible alongside the underlying text state. Consumers must inspect both, rather than interpreting text presence or its terminal state alone as a successful request.</p>
+<h2>6. Qualify without a live model</h2>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-local-chat-stream-test umicom-local-chat-stream-boundary-test umicom-local-chat-stream-offline-test umicom-local-chat-stream-fault-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.ai_workspace\.stream_(sequence|boundary|offline|fault)" --output-on-failure</code></pre>
+<p>The GNU/Clang configuration registers 42 cases: 29 sequence cases, nine boundary cases, one real offline-codec case and three link-interception fault cases. The fragmented success case tries every two-part split and then every byte separately. The fault target is omitted on unsupported linker configurations. When optional native JSON support is absent, dependent cases explicitly skip; the offline branch remains testable.</p>
+<p>These are authored regression checks with expected outcomes, not recorded test passes. Start with the failing fixture name, inspect its input and expected retained text, and determine whether rejection arose from framing, JSON, identity, ordering or capacity. Preserve a failing input before changing acceptance rules.</p>
+<h2>7. Understand the remaining boundary</h2>
+<!-- Earlier integration scope retained for design history; the public request owner is now authored.
+<p>The current public local provider still uses full responses. The private blocking HTTP exchange now composes response admission and this sequencer. Read <a href="admit-event-stream-responses.html">response admission and native exchange</a> for that boundary. Public worker publication, safe application closure and live server compatibility still need implementation and qualification. This source is not evidence that Studio or Media already displays streamed model output.</p>
+-->
+<p>The existing public local provider still uses full responses. A separate <a href="background-local-model-streams.html">public background stream service</a> now composes runtime ownership, the blocking HTTP exchange and this sequencer. Its text-only copy path is synchronized; protocol metadata is read after operation publication. Application adoption, safe UI closure and live server compatibility still need qualification. This source is not evidence that Studio or Media already displays streamed model output.</p>
+</main></body></html>

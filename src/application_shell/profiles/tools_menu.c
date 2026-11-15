@@ -107,6 +107,25 @@ static const UmiApplicationShellContribution CONTRIBUTIONS[] = {
         .badge_count = 0U,
         .revision = 1U
     },
+    /* Use the same command identity in native menus, search and thin clients. */
+    {
+        .structure_size = (uint32_t)sizeof(UmiApplicationShellContribution),
+        .api_version = UMI_APPLICATION_SHELL_API_VERSION,
+        .contribution_id = "umicom.shell.tools-menu.codeguard-cancel",
+        .title = "Cancel CodeGuard",
+        .description = "Cancel the current saved-source review.",
+        .command_id = "codeguard.cancel",
+        .component_id = "",
+        .group_id = "quality",
+        .icon_id = "",
+        .context_key = "",
+        .role = UMI_APPLICATION_SHELL_ROLE_MENU_ITEM,
+        .region = UMI_APPLICATION_SHELL_REGION_MENU_BAR,
+        .order = 310,
+        .flags = UMI_APPLICATION_SHELL_VISIBLE | UMI_APPLICATION_SHELL_ENABLED,
+        .badge_count = 0U,
+        .revision = 1U
+    },
     {
         .structure_size = (uint32_t)sizeof(UmiApplicationShellContribution),
         .api_version = UMI_APPLICATION_SHELL_API_VERSION,

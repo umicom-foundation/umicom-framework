@@ -54,6 +54,13 @@ void umi_ai_request_init(UmiAiRequest *request);
 UmiStatus umi_ai_request_add_message(UmiAiRequest *request,
                                      const UmiAiMessage *message);
 
+/** Validate bounded identifiers, active message text/roles and finite temperature.
+ * Over-capacity count returns CAPACITY_EXCEEDED before traversal; malformed
+ * fields return INVALID_ARGUMENT. Empty drafts and unused slots are allowed.
+ * This does not authorize execution or enforce provider-specific model,
+ * temperature range, token or prompt requirements. No storage is changed. */
+UmiStatus UmiAiRequestValidate(const UmiAiRequest *request);
+
 #ifdef __cplusplus
 }
 #endif

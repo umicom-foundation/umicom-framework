@@ -199,6 +199,14 @@ typedef struct UmiAiCodingAgentSnapshot {
     int rolled_back;
 } UmiAiCodingAgentSnapshot;
 
+/** Check only bounded text termination. Empty text and all scalar values are
+ * retained as observational evidence; this does not validate state transitions,
+ * UTF-8, provider capabilities or permission to execute. Supply complete stable
+ * readable records. No allocation, I/O or record mutation occurs. */
+UmiStatus UmiAiCodingEventValidateText(const UmiAiCodingEvent *event);
+UmiStatus UmiAiCodingAgentSnapshotValidateText(const UmiAiCodingAgentSnapshot *snapshot);
+
+
 /**
  * Provide the ai coding runtime state text operation used by this module and its client
  * applications.

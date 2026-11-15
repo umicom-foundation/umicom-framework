@@ -1,0 +1,104 @@
+<!-- Umicom Framework
+File: docs/learning/request-owned-ai-streams.html
+
+PURPOSE:
+Teach bounded model text ownership, request revisions, cancellation and copied observations.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Keep model text with its request</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Keep model text with its request</h1>
+<p>An AI response can arrive after a user starts another request or changes models. A useful client needs more than an appendable string: it must know which request owns each event, whether the response has ended, how much data it may retain, and which thread can release it. Framework now provides that shared native C owner. Transport and application bindings still need their own integration and qualification.</p>
+<h2>1. Assign local identity before starting a producer</h2>
+<pre><code class="language-c">UmiAiResponseStreamIdentity identity = {
+    .request_id = 42,
+    .model_revision = 7
+};
+UmiAiResponseStream *stream = NULL;
+UmiStatus status = UmiAiResponseStreamCreate(identity, 65536, &amp;stream);</code></pre>
+<p>Both tokens must be nonzero. They are local admission values assigned by your application, not provider request strings and not authenticated evidence of which model a server loaded. Keep the pair associated with the selected runtime session. Do not reuse it while events from an older session can still arrive.</p>
+<p>The stream allocates a fixed payload budget between one byte and 64 MiB, plus its small control state and a trailing terminator. The budget includes incomplete UTF-8 prefixes. It does not include caller-owned snapshots, provider buffers, network headers, model weights or token caches. Bound those owners separately.</p>
+<h2>2. Submit ordered text events</h2>
+<pre><code class="language-c">status = UmiAiResponseStreamPush(stream, identity, 1,
+    (const unsigned char *)"Hello ", 6, 0);
+if (status == UMI_STATUS_OK)
+    status = UmiAiResponseStreamPush(stream, identity, 2,
+        (const unsigned char *)"world", 5, 1);</code></pre>
+<p>Sequence numbers begin at one and advance by exactly one for every accepted event, including an empty event. A wrong request or model revision returns NOT_FOUND. A duplicate, gap, zero sequence or event after termination returns INVALID_STATE. Those refusals leave the stream unchanged. UINT64_MAX is reserved for a terminal event so ordering never wraps.</p>
+<p>The final flag is exactly zero or one. An accepted final event moves the stream to Complete. Another final event cannot replace that terminal observation. Successful Push means the event was accepted; callers inspect the state to distinguish an active partial response from a complete one.</p>
+<h2>3. Validate a whole chunk before publishing it</h2>
+<p>Framework stages its <a href="streaming-utf8-in-c.html">incremental UTF-8 decoder</a> for each incoming chunk. Valid complete scalars become visible; at most three trailing bytes remain pending. Embedded NUL is rejected because this owner exposes C text strings.</p>
+<p>If a chunk contains malformed Unicode, ends finally with an incomplete scalar, or exceeds the remaining budget, the stream becomes Failed. None of that chunk is appended. Earlier accepted text and its pending prefix remain available for inspection. A chunk containing a valid prefix followed by an invalid byte is still rejected as one event.</p>
+<p>The snapshot reports accepted bytes, visible text bytes and pending bytes separately. The last accepted sequence can therefore differ from the terminal sequence which caused a failure. This distinction helps explain why a report retains earlier text while a later attempt failed.</p>
+<h2>4. Copy one coherent observation</h2>
+<pre><code class="language-c">char *text = NULL;
+UmiAiResponseStreamSnapshot snapshot;
+status = UmiAiResponseStreamCopy(stream, &amp;text, &amp;snapshot);
+if (status == UMI_STATUS_OK) {
+    /* text and snapshot describe the same locked observation.
+     * Transfer this owned copy to the UI through its existing event queue. */
+    show_text_copy(text, snapshot.text_bytes); /* application-defined */
+    UmiAiResponseStreamTextFree(text);
+}</code></pre>
+<p>The application-defined call above is illustrative. Do not call a native UI directly from a provider worker. Copy returns independently owned text which stays valid after later pushes or destruction of the stream. Inspect is a cheaper metadata-only observation. An allocation or observation failure leaves caller outputs unchanged.</p>
+<p>The service serializes Push, Cancel, Fail, Inspect and Copy with the shared Framework mutex. It invokes no callback while holding that mutex. A native unlock error can be reported after an event was committed; inspect the stream before deciding whether retry is appropriate. Repeating an already accepted sequence is refused.</p>
+<h2>5. Treat cancellation as a lifecycle step</h2>
+<ol><li>Request <code>UmiAiResponseStreamCancel</code> with the captured identity.</li><li>Ask the external provider or transport worker to stop through its own cancellation mechanism.</li><li>Continue retaining the stream while producers or readers might still access its pointer.</li><li>Join those workers and finish any queued owner-dependent work.</li><li>Destroy the stream. Independently owned text copies can live longer.</li></ol>
+<p>Cancel retains earlier complete text and refuses later events. Repeating Cancel on the same cancelled owner succeeds. A completed or failed stream keeps its earlier terminal state. Cancellation waits for any in-progress Push to release the mutex, so use reasonably sized provider chunks when latency matters. It does not interrupt network I/O or terminate a model process.</p>
+<p>For an external timeout or transport failure, call Fail with the next sequence and a known non-OK, non-CANCELLED Framework status. Fail records a terminal Failed state without altering retained text. Use Cancel for user cancellation.</p>
+<h2>6. Keep transport work explicit</h2>
+<p>This API consumes text bytes. It does not parse HTTP, server-sent events, JSON or provider-specific token messages. A transport adapter must first validate its own framing and extract text events, preserve the captured identity and sequence, and handle its completion/error messages deliberately. Local and remote adapters must continue enforcing their existing access and consent rules.</p>
+<p>The service does not verify model readiness, select a GPU, download weights or develop the Umicom model itself. It is a shared ownership boundary which those workflows can use. The existing nonstreaming clients remain nonstreaming until a real adapter is connected and qualified.</p>
+<h2>7. Build an independent SDK client</h2>
+<p>The <a href="../../examples/sdk_ai_stream/README.md">installed SDK example</a> uses <code>find_package(UmicomFramework COMPONENTS ai)</code>, the package's installation/environment guards and its SVG/ICO branding helper. It feeds a clearly labelled authored text fixture, rejects an old revision and demonstrates a copy surviving its owner. No Framework clone is added to that application.</p>
+<h2>8. Qualify each boundary</h2>
+<p>Forty-two public scenarios cover arguments, Unicode splits, ordering, limits, terminal state, full copies and bounded ranges. Four real-thread cases include incremental range consumption during production. A white-box fixture seeds the sequence counter near exhaustion. Eleven GNU-linker fault cases cover allocation cleanup and mutex failure output semantics.</p>
+<!-- Earlier coverage description retained as history; bounded reads extend it.
+<p>Thirty-two public scenarios cover arguments, Unicode splits, ordering, limits, terminal state and copied text. Three real-thread cases cover a reader observing a producer, cancellation while a producer is paused and two producers competing for one sequence. A white-box fixture seeds the sequence counter near exhaustion without adding a test hook to the installed API. Eight GNU-linker fault cases cover allocation cleanup and mutex failure output semantics.</p>
+-->
+<pre><code>cmake --build build/windows-ucrt64-debug --target umicom-ai-response-stream-test umicom-ai-response-stream-threads-test umicom-ai-response-stream-sequence-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.ai\.response_stream(\.|_threads\.|_sequence$)" --output-on-failure
+
+# GNU-compatible linker fault coverage:
+cmake --build build/windows-ucrt64-debug --target umicom-ai-response-stream-fault-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.ai\.response_stream_fault\." --output-on-failure</code></pre>
+<p>Run commands separately and stop on errors. These 58 cases are authored and require execution. Framework configuration does not compile them or prove a live model/UI workflow. The SDK example also needs independent installed-consumer qualification.</p>
+<!-- Previous qualification count retained; it is not execution evidence.
+<p>Run commands separately and stop on errors. All 44 cases are authored and require execution. Framework configuration does not compile them or prove a live model/UI workflow. The SDK example also needs independent installed-consumer qualification.</p>
+-->
+<h2>9. Read only the next visible range</h2>
+<p>A full copy is useful for a final result. Repeating it for each UI tick also repeats work on the text already displayed. Use <code>UmiAiResponseStreamCopyRange</code> to request a bounded window from the same retained owner:</p>
+<pre><code class="language-c">size_t offset = 0; /* Reset for each new stream owner. */
+/* On a later owner-thread tick: */
+char *part = NULL;
+size_t copied = 0;
+UmiAiResponseStreamSnapshot snapshot;
+UmiStatus status = UmiAiResponseStreamCopyRange(
+    stream, offset, 4096, &amp;part, &amp;copied, &amp;snapshot);
+if (status == UMI_STATUS_OK) {
+    append_draft(part, copied); /* application-defined UI-owner operation */
+    offset += copied;
+    UmiAiResponseStreamTextFree(part);
+}</code></pre>
+<ol>
+<li>Keep the stream alive while reading. The byte offset belongs to this owner and request; never carry it into another stream.</li>
+<li>Choose a positive byte budget, up to the stream API's 64 MiB limit. Four bytes can hold any one UTF-8 scalar; a smaller budget may return <code>CAPACITY_EXCEEDED</code> when the next scalar cannot fit.</li>
+<li>The offset must be a complete-character boundary no later than <code>snapshot.text_bytes</code>. An interior or out-of-range offset is refused. Offsets count encoded bytes, not displayed characters.</li>
+<li>A range stops before a scalar that would cross the budget. Its snapshot describes the entire stream at the same locked observation; <code>copied</code> describes only this returned window.</li>
+<li>At the current visible end, a successful read returns an owned empty string. The producer may still hold an incomplete scalar or may append later. Check state and pending bytes; an empty range is not completion.</li>
+<li>Advance only after success and free each returned copy. Every output remains unchanged after allocation, admission or mutex failure. A copy survives subsequent pushes and owner destruction.</li>
+</ol>
+<p>Read at most a bounded amount per event-loop tick rather than draining an unbounded backlog in one callback. This API bounds copied payload and allocation; it does not guarantee immediate mutex acquisition or replace joining producer threads. Cancelled and failed owners retain readable earlier draft text.</p>
+<p>The local transport and reviewed workspace expose <code>UmiAiLocalStreamCopyTextRange</code> and <code>UmiAiWorkspaceStreamCopyTextRange</code>. Their existing owner-thread and lifetime rules still apply. The GTK panel uses a 4096-byte window, appends only nonempty ranges, and keeps its existing draft label and final result validation. It does not treat incremental display as saved output.</p>
+<h2>Exercise</h2>
+<p>Start request 42/revision 7, accept one event, then attempt an event for revision 6. Verify that the retained text and last sequence are unchanged. Next, accept the first byte of a multibyte scalar and cancel before its completion. Explain why accepted byte count can exceed visible text length, and why a worker must be joined before destruction even though the stream contains a mutex.</p>
+</main></body></html>

@@ -21,6 +21,7 @@
  */
 
 #include "umicom/codeguard/normalizer.h"
+#include "source_reader.h"
 
 #include <ctype.h>
 #include <stdio.h>
@@ -183,6 +184,8 @@ static void umi_codeguard_normalize_byte(unsigned char value,
  * Provide the codeguard hash file operation used by this module and its client
  * applications.
  */
+/* Reject unrepresentable file sizes and publish hashes only after counting, input and close all succeed. The previous implementation remains for review. */
+#if 0
 UmiStatus umi_codeguard_hash_file(const char *path,
                                   uint64_t *out_raw_hash,
                                   uint64_t *out_normalized_hash,
@@ -248,5 +251,118 @@ UmiStatus umi_codeguard_hash_file(const char *path,
     *out_raw_hash = raw_hash;
     *out_normalized_hash = normalized_hash;
     *out_size = total_size;
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_codeguard_hash_file(const char *path,
+                                  uint64_t *out_raw_hash,
+                                  uint64_t *out_normalized_hash,
+                                  size_t *out_size)
+{
+    FILE *file;
+    unsigned char buffer[4096];
+    size_t bytes_read;
+    size_t total_size = 0U;
+    UmiStatus status = UMI_STATUS_OK;
+    uint64_t raw_hash = UMI_CODEGUARD_HASH_OFFSET;
+    uint64_t normalized_hash = UMI_CODEGUARD_HASH_OFFSET;
+    UmiCodeGuardNormalizerState state = UMI_CODEGUARD_NORMALIZER_CODE;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (path == NULL || out_raw_hash == NULL || out_normalized_hash == NULL ||
+        out_size == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    file = fopen(path, "rb");
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (file == NULL) {
+        return UMI_STATUS_IO_ERROR;
+    }
+
+    /*
+     * Continue only while work remains available; the loop body advances the state on each
+     * pass.
+     */
+    while ((bytes_read = fread(buffer, 1U, sizeof(buffer), file)) > 0U) {
+        size_t index;
+
+        if (bytes_read > SIZE_MAX - total_size) {
+            status = UMI_STATUS_CAPACITY_EXCEEDED;
+            break;
+        }
+        total_size += bytes_read;
+        /* Visit each bounded item once so every record receives the same rule. */
+        for (index = 0U; index < bytes_read; ++index) {
+            umi_codeguard_hash_append(&raw_hash, buffer[index]);
+            umi_codeguard_normalize_byte(buffer[index], &state,
+                                          &normalized_hash);
+        }
+    }
+
+    /* Close even after a counting/read failure, preserving the first cause. */
+    if (ferror(file) != 0 && status == UMI_STATUS_OK) status = UMI_STATUS_IO_ERROR;
+    if (fclose(file) != 0 && status == UMI_STATUS_OK) status = UMI_STATUS_IO_ERROR;
+    if (status != UMI_STATUS_OK) return status;
+
+    /* A slash at end-of-file cannot begin a comment, so it is an operator. */
+    if (state == UMI_CODEGUARD_NORMALIZER_PENDING_SLASH) {
+        umi_codeguard_hash_append(&normalized_hash, '/');
+    }
+
+    *out_raw_hash = raw_hash;
+    *out_normalized_hash = normalized_hash;
+    *out_size = total_size;
+    return UMI_STATUS_OK;
+}
+
+typedef struct UmiCodeGuardHashVisit {
+    uint64_t raw;
+    uint64_t normalized;
+    size_t size;
+    UmiCodeGuardNormalizerState state;
+} UmiCodeGuardHashVisit;
+
+/* Keep normalizer state across native chunks. A split comment delimiter,
+ * escape or trailing slash must produce the same historical fingerprint. */
+static UmiStatus umi_codeguard_hash_chunk(const unsigned char *bytes,
+    size_t size, void *context)
+{
+    UmiCodeGuardHashVisit *visit = context;
+    if (size > SIZE_MAX - visit->size) return UMI_STATUS_CAPACITY_EXCEEDED;
+    for (size_t i = 0U; i < size; ++i) {
+        umi_codeguard_hash_append(&visit->raw, bytes[i]);
+        umi_codeguard_normalize_byte(bytes[i], &visit->state, &visit->normalized);
+    }
+    visit->size += size;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_codeguard_hash_file_bounded(const char *path, uint64_t maximum_bytes,
+    uint64_t *out_raw_hash, uint64_t *out_normalized_hash, size_t *out_size,
+    const UmiCancellationToken *cancellation)
+{
+    if (path == NULL || out_raw_hash == NULL || out_normalized_hash == NULL ||
+        out_size == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiCodeGuardHashVisit candidate = {.raw = UMI_CODEGUARD_HASH_OFFSET,
+        .normalized = UMI_CODEGUARD_HASH_OFFSET,
+        .state = UMI_CODEGUARD_NORMALIZER_CODE};
+    /* size_t outputs cannot represent a larger file, even on a platform
+     * whose native input service accepts a wider byte-count budget. */
+    if (maximum_bytes > SIZE_MAX) maximum_bytes = SIZE_MAX;
+    UmiStatus status = umi_codeguard_source_visit_bytes(path, maximum_bytes,
+        umi_codeguard_hash_chunk, &candidate, cancellation);
+    if (status != UMI_STATUS_OK) return status;
+    if (candidate.state == UMI_CODEGUARD_NORMALIZER_PENDING_SLASH)
+        umi_codeguard_hash_append(&candidate.normalized, '/');
+    *out_raw_hash = candidate.raw;
+    *out_normalized_hash = candidate.normalized;
+    *out_size = candidate.size;
     return UMI_STATUS_OK;
 }

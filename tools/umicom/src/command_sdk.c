@@ -1,15 +1,23 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tools/umicom/src/command_sdk.c
- * PURPOSE: Explain a selected installed SDK without launching CMake or compiling code.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Inspect SDK presence and receipt-bound contents through shared native services.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 
 #include "cli.h"
 #include "umicom/sdk/installation_inspection.h"
 #include "umicom/sdk/artifact_inventory.h"
+#include "umicom/sdk/artifact_fingerprint.h"
 #include "umicom/platform/filesystem.h"
 #include <inttypes.h>
 #include <stdio.h>
@@ -61,18 +69,80 @@ static int SdkArtifactCommand(int argc, char **argv)
     return result;
 }
 
+
+/* The expected digest is data, never a command or a downloaded trust claim.
+ * Accept either hex case while requiring exactly one complete SHA-256. */
+static int SdkExpectedFingerprint(const char *text, char out[UMI_SHA256_HEX_CAPACITY])
+{
+    if (text == NULL || strlen(text) != UMI_SHA256_HEX_CAPACITY - 1U) return 0;
+    for (size_t i = 0U; i < UMI_SHA256_HEX_CAPACITY - 1U; ++i) {
+        char c = text[i];
+        if (c >= 'A' && c <= 'F') c = (char)(c - 'A' + 'a');
+        if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'))) return 0;
+        out[i] = c;
+    }
+    out[UMI_SHA256_HEX_CAPACITY - 1U] = '\0';
+    return 1;
+}
+static int SdkFingerprintCommand(int argc, char **argv)
+{
+    char expected[UMI_SHA256_HEX_CAPACITY] = {0};
+    if ((argc != 2 && argc != 4) || argv[1][0] == '\0' ||
+        (argc == 4 && (strcmp(argv[2], "--expect") != 0 ||
+            !SdkExpectedFingerprint(argv[3], expected)))) {
+        (void)fputs("Usage: umicom sdk fingerprint SDK_PREFIX [--expect SHA256]\n", stderr);
+        return 2;
+    }
+    char current[UMI_PATH_CAPACITY], prefix[UMI_PATH_CAPACITY];
+    UmiStatus status;
+    if (umi_path_is_absolute(argv[1])) status = umi_path_normalise(argv[1], prefix, sizeof prefix);
+    else {
+        status = umi_fs_current_directory(current, sizeof current);
+        if (status == UMI_STATUS_OK) status = umi_path_absolute(argv[1], current, prefix, sizeof prefix);
+    }
+    UmiSdkFingerprint observed;
+    if (status == UMI_STATUS_OK)
+        status = UmiSdkArtifactFingerprint(prefix, NULL, NULL, &observed);
+    if (status != UMI_STATUS_OK) {
+        (void)fprintf(stderr, "Cannot fingerprint SDK artifacts: %s. No complete fingerprint was produced.\n",
+            umi_status_text(status));
+        return 2;
+    }
+    int matched = expected[0] == '\0' || strcmp(expected, observed.sha256) == 0;
+    int written = printf("Fingerprint schema: umicom.sdk.fingerprint/1\n"
+        "Declared configuration: %s\nRecords: %zu | Files: %zu | Bytes: %" PRIu64 "\n"
+        "Receipt SHA-256: %s\nFingerprint SHA-256: %s\n"
+        "Expected fingerprint: %s\n"
+        "Content evidence only. Not authentication, an atomic snapshot, ABI or runtime qualification.\n",
+        observed.configuration[0] == '\0' ? "(unspecified)" : observed.configuration,
+        observed.records, observed.files, observed.bytes, observed.receipt_sha256, observed.sha256,
+        expected[0] == '\0' ? "not supplied" : matched ? "match" : "MISMATCH");
+    /* A redirected report that could not be delivered is an I/O failure even
+     * when the file comparison itself completed. Do not report a successful CLI. */
+    if (written < 0 || fflush(stdout) != 0 || ferror(stdout)) return 2;
+    return matched ? 0 : 1;
+}
+
 /* The CLI resolves a typed relative prefix once. The shared worker-facing
  * service receives an absolute path and never consults a later process cwd. */
 int umi_cli_command_sdk(int argc, char **argv)
 {
     if (argc > 0 && strcmp(argv[0], "artifacts") == 0) return SdkArtifactCommand(argc, argv);
+    if (argc > 0 && strcmp(argv[0], "fingerprint") == 0) return SdkFingerprintCommand(argc, argv);
     if (argc == 1 && (strcmp(argv[0], "--help") == 0 || strcmp(argv[0], "help") == 0)) {
 /* Keep the earlier help wording for API review; the artifact reader extends this command. */
 #if 0
         (void)puts("Usage: umicom sdk inspect SDK_PREFIX");
 #else
+/* Preserve the earlier two-operation help while exposing additive content evidence. */
+#if 0
         (void)puts("Usage: umicom sdk inspect SDK_PREFIX\n"
             "       umicom sdk artifacts SDK_PREFIX [--all]");
+#else
+        (void)puts("Usage: umicom sdk inspect SDK_PREFIX\n"
+            "       umicom sdk artifacts SDK_PREFIX [--all]\n"
+            "       umicom sdk fingerprint SDK_PREFIX [--expect SHA256]");
+#endif
 #endif
         return 0;
     }

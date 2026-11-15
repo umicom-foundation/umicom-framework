@@ -1,0 +1,68 @@
+<!-- Umicom Framework
+File: docs/learning/coding-config-domains.html
+
+PURPOSE:
+Teach finite floating-point admission and enum domains across native configuration and archives.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Validate coding configuration domains | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Validate coding configuration domains</h1>
+<p>A C type describes storage and operations. An application's <em>domain</em> describes which values are meaningful. A floating-point setting may contain NaN, and an enum object can arrive with a value outside its named choices. Native configuration needs to check these domains before executing work or accepting restored state.</p>
+<h2>1. Understand why a range comparison is insufficient</h2>
+<p>The coding runtime accepts temperature from zero through two, including both endpoints. The old range expression rejected ordinary numbers outside that interval but did not reject NaN: both comparisons with NaN are false. The validator now requires a finite value as well.</p>
+<pre><code class="language-c">if (!isfinite(config-&gt;temperature) ||
+    config-&gt;temperature &lt; 0.0 || config-&gt;temperature &gt; 2.0) {
+    return UMI_STATUS_INVALID_ARGUMENT;
+}</code></pre>
+<p><code>isfinite</code> comes from <code>&lt;math.h&gt;</code>. It rejects NaN and positive or negative infinity. Negative zero remains valid, as does positive zero. This is the existing Framework configuration interval; accepting it does not establish which values a particular model supports.</p>
+<h2>2. Check the provider kind independently of its ID</h2>
+<p>The provider ID is a string naming a configured adapter. The provider kind is one of the public choices <code>LOCAL</code>, <code>REMOTE</code>, <code>AUTHOR_ENGINE</code> or <code>TEST</code>. A nonempty ID does not prove that the numeric kind is valid. Unknown kinds are now refused before composition or typed archive publication.</p>
+<p>The validator still preserves existing nonzero-is-true flag behavior. It does not silently normalize flags, connect to a provider, grant remote consent or activate tools. Runtime selection, current policy and actual execution remain separate checks. See <a href="coding-task-admission.html">Coding task admission</a> for provider identity and privacy checks.</p>
+<h2>3. Exercise the direct API</h2>
+<pre><code class="language-c">#include &lt;math.h&gt;
+#include &lt;string.h&gt;
+#include "umicom/ai_coding_runtime/config.h"
+
+int main(void)
+{
+    UmiAiCodingRuntimeConfig config;
+    umi_ai_coding_runtime_config_init(&amp;config);
+    strcpy(config.provider_id, "example.local");
+    strcpy(config.model_id, "example-model");
+    if (umi_ai_coding_runtime_config_validate(&amp;config) != UMI_STATUS_OK)
+        return 1;
+    config.temperature = NAN;
+    return umi_ai_coding_runtime_config_validate(&amp;config) ==
+        UMI_STATUS_INVALID_ARGUMENT ? 0 : 1;
+}</code></pre>
+<ol><li>Build the example as C23 against an installed Framework SDK and its <code>Umicom::developer</code> target.</li><li>Run it. Expected exit status is zero: valid defaults with IDs are accepted, then NaN is refused.</li><li>Replace NaN with 2.0 and change the expected result to OK. Repeat with a value above two and expect INVALID_ARGUMENT.</li><li>Set an unknown provider kind and confirm refusal without starting any provider.</li></ol>
+<p>The literal IDs fit their fixed arrays. When accepting user input, copy with explicit capacity checks and a terminator. This example validates data only; it downloads no model and launches no process.</p>
+<h2>4. Keep envelope checks and typed checks distinct</h2>
+<p>A saved archive has a schema, length and checksum. These help identify its representation and detect damage. A correct checksum does not make every field acceptable. The archive's typed decoder must still validate the reconstructed configuration.</p>
+<p>The shared archive reader and writer already reject nonfinite doubles. The direct configuration validator now applies the same requirement, while provider-kind admission also protects all decoders through their existing call to that validator. The regular decoder, caller-workspace decoder and conditional decoder each stage incoming data before publishing a destination.</p>
+<table><thead><tr><th>Operation</th><th>Refused-input behavior</th></tr></thead><tbody>
+<tr><td>Direct config validation</td><td>Returns INVALID_ARGUMENT for an unknown kind or nonfinite/out-of-range temperature; changes no value.</td></tr>
+<tr><td>Encode invalid config</td><td>Returns before replacing the destination buffer or reported byte count.</td></tr>
+<tr><td>Decode a nonfinite wire double</td><td>The shared reader returns PARSE_ERROR; the destination remains unchanged.</td></tr>
+<tr><td>Decode an unknown kind or finite out-of-range temperature</td><td>Typed validation returns INVALID_ARGUMENT; the destination remains unchanged.</td></tr>
+<tr><td>Decode using caller scratch storage</td><td>Scratch may change during parsing. The destination still publishes only after acceptance.</td></tr>
+</tbody></table>
+<h2>5. Qualify the same contract through every entry point</h2>
+<pre><code class="language-powershell"># From the Framework source root after configuration with testing enabled:
+cmake --build build/windows-ucrt64-debug --target umicom-ai-coding-config-domains-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework\.ai\.coding-config-domain\.' --output-on-failure</code></pre>
+<p>The sixteen scenarios cover all named kinds, range endpoints, signed zero, flag compatibility, unknown kinds, NaN, infinities and ordinary out-of-range numbers. The fixture deliberately recomputes the checksum on hostile archived fields so that it tests typed admission rather than accidental checksum failure. Each decoder must preserve the prior destination when it refuses the candidate. Expected result: all selected cases pass; registration alone is not an executed result.</p>
+<p>If a previously accepted configuration is refused, inspect its exact kind and temperature. Correct the draft deliberately rather than coercing an unknown kind into a local provider or silently replacing NaN. Retain the original archive for diagnosis. Never interpret restored configuration as authorization to execute it.</p>
+<p>Continue with <a href="coding-runtime-lifetime.html">execution and callback lifetime</a>, which governs what happens after a valid configuration has been accepted.</p>
+</main></body></html>

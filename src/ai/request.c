@@ -19,6 +19,7 @@
 
 #include "umicom/ai/request.h"
 #include <stddef.h>
+#include <math.h>
 
 #include <string.h>
 
@@ -58,5 +59,27 @@ UmiStatus umi_ai_request_add_message(UmiAiRequest *request,
         return UMI_STATUS_CAPACITY_EXCEEDED;
     }
     request->messages[request->message_count++] = *message;
+    return UMI_STATUS_OK;
+}
+
+/* A value boundary is shared by all providers. Bound the count before
+ * inspecting active slots; unused slots are not part of the conversation.
+ * Provider-specific requirements such as a nonempty model stay with providers. */
+UmiStatus UmiAiRequestValidate(const UmiAiRequest *request)
+{
+    if (request == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (request->message_count > UMI_AI_MAX_MESSAGES)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (memchr(request->request_id, '\0', sizeof(request->request_id)) == NULL ||
+        memchr(request->model_id, '\0', sizeof(request->model_id)) == NULL ||
+        !isfinite(request->temperature))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t i = 0U; i < request->message_count; ++i) {
+        const UmiAiMessage *message = &request->messages[i];
+        if (message->role < UMI_AI_ROLE_SYSTEM || message->role > UMI_AI_ROLE_TOOL ||
+            memchr(message->name, '\0', sizeof(message->name)) == NULL ||
+            memchr(message->text, '\0', sizeof(message->text)) == NULL)
+            return UMI_STATUS_INVALID_ARGUMENT;
+    }
     return UMI_STATUS_OK;
 }

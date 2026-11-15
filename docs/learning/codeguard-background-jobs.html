@@ -1,0 +1,79 @@
+<!-- Umicom Framework
+File: docs/learning/codeguard-background-jobs.html
+
+PURPOSE:
+Teach copied background requests, task cancellation and one-shot ownership transfer.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Run source analysis through an owned background job</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Run source analysis through an owned background job</h1>
+<h2>1. Move the work, preserve its owner</h2>
+<p>Source scanning can spend time traversing directories and reading files. Running that work inside a button callback blocks the event loop. Framework's UmiCodeGuardJob uses the existing task queue so applications can schedule scanning without implementing another thread system or copying scanner rules.</p>
+<p>A job is a one-shot owner. Creation copies the profile and resolves the workspace root to an absolute lexical path. Submission lends the job's copied input to a queue worker. The worker creates private findings. A successful terminal job can transfer that result exactly once to its creating thread.</p>
+<p>The synchronous service remains available and unchanged in purpose. The job does not automatically update a Studio panel, install a menu command or change an application's retained report. Those are host responsibilities after a checked transfer.</p>
+<h2>2. Create and submit on the owner thread</h2>
+<pre><code class="language-c">UmiCodeGuardJob *job = NULL;
+UmiCodeGuardProfile profile = umi_codeguard_profile_security();
+UmiStatus status = UmiCodeGuardJobCreate(workspace, &amp;profile, &amp;job);
+if (status == UMI_STATUS_OK)
+    status = UmiCodeGuardJobSubmit(job, application_queue);</code></pre>
+<p>This fragment assumes workspace and application_queue already belong to the host. NULL profile selects defaults. The job rejects empty or unrepresentable roots, never silently truncates them. It freezes lexical path identity at creation; it does not resolve every link, check that the directory exists, or create a content snapshot.</p>
+<p>A full or stopping queue refuses submission without cancelling a newly created task. The host can retain that created job for another suitable queue or destroy it. Once accepted, keep the job alive while it is queued or running. The queue retains a task reference; it does not separately own the job's payload.</p>
+<h2>3. Poll values rather than borrowing worker storage</h2>
+<pre><code class="language-c">UmiCodeGuardJobSnapshot snapshot;
+UmiStatus status = UmiCodeGuardJobRead(job, &amp;snapshot);
+if (status == UMI_STATUS_OK &amp;&amp; snapshot.status == UMI_STATUS_BUSY) {
+    /* Keep the prior report visible and let the event loop continue. */
+}</code></pre>
+<p>The snapshot contains plain values: task state, effective status, original worker status, whether the operation returned, availability of an owned result and a completed summary. It contains no finding pointer that another thread may still mutate. Reading does not wait for analysis to finish, although mutex acquisition and scheduling are not real-time guarantees.</p>
+<p>Create, submit, take and destroy belong to the creating thread. Another thread may request cancellation or read a snapshot only while it holds a live job borrow and destruction is excluded. The job itself is not a reference-counted lifetime object.</p>
+<h2>4. Distinguish an operation failure from task cancellation</h2>
+<p>The task service classifies a task as cancelled if its token was requested before completion. The scanner can also report a concrete failure at the same time, such as an I/O error. A single cancellation label must not hide that cause.</p>
+<table><thead><tr><th>Observation</th><th>Task state</th><th>Effective job status</th></tr></thead><tbody>
+<tr><td>Cancelled before dispatch</td><td>CANCELLED</td><td>CANCELLED; operation_completed is false</td></tr>
+<tr><td>Worker reports IO_ERROR while cancellation is requested</td><td>CANCELLED</td><td>IO_ERROR; original worker cause is retained</td></tr>
+<tr><td>Private result stored, then cancellation arrives before terminal completion</td><td>CANCELLED</td><td>CANCELLED; result is not transferable</td></tr>
+<tr><td>Successful task already terminal when Cancel is called</td><td>SUCCEEDED</td><td>OK; late cancellation does not rewrite completion</td></tr></tbody></table>
+<p>UmiCodeGuardJobCancel is cooperative and does not wait. It cannot interrupt an operating-system read. Do not free a running job immediately after requesting cancellation: continue observing its terminal state first.</p>
+<h2>5. Transfer and publish a complete result</h2>
+<pre><code class="language-c">UmiCodeGuardResult *candidate = NULL;
+UmiStatus status = UmiCodeGuardJobTake(job, &amp;candidate);
+if (status == UMI_STATUS_OK) {
+    status = umi_codeguard_result_swap(retained_result, candidate);
+    umi_codeguard_result_destroy(candidate);
+}
+/* On failure, retain the previous complete report and show attempt status. */</code></pre>
+<p>The host must own retained_result and serialize access to it. Take leaves its output untouched on failure or BUSY. A successful empty result is valid and replaces old findings with an empty report. After transfer, the result belongs to the host and survives job destruction. A second take returns NOT_FOUND.</p>
+<p>Swapping transfers owned finding arrays without allocation. Finding borrows from the old report now belong to the candidate being destroyed; update the UI's borrows only at this publication boundary. Failure never promotes a partial candidate into the current report.</p>
+<h2>6. Destroy only after work has released its borrow</h2>
+<pre><code class="language-c">UmiStatus status = UmiCodeGuardJobDestroy(&amp;job);
+if (status == UMI_STATUS_BUSY) {
+    /* Keep job alive, request cancellation if appropriate, then poll again. */
+}</code></pre>
+<p>Successful destruction clears the owned pointer. Queued or running work returns BUSY without releasing its payload. Exclude other snapshot readers and cancellers before destroying a terminal job. The operation does not join or shut down the application's shared queue.</p>
+<p>The independent <a href="../../examples/sdk_codeguard/README.md">SDK example</a> includes a console background client. A console can drain and join its private queue before taking the result. An interactive host should use its existing event-loop and queue-shutdown services rather than blocking the GUI thread.</p>
+<h2>7. Qualify ownership and actual analysis separately</h2>
+<ol><li>Change caller input after Create and verify the job still uses the copied profile and original absolute root.</li>
+<li>Hold a real worker behind a condition gate. Verify Take and Destroy report BUSY while the callback is running.</li>
+<li>Fill a queue, refuse a job, then submit the same created job successfully after space becomes available.</li>
+<li>Request cancellation before dispatch, during scanning and after private result storage but before task completion. No cancelled candidate may transfer.</li>
+<li>Combine a worker failure with cancellation and verify the original failure remains visible.</li>
+<li>Transfer once, destroy the job and continue using the independently owned result.</li>
+<li>Run a real directory scan through a queue and compare findings with the synchronous scanner. Check a missing root, an oversized file and successful empty input.</li></ol>
+<pre><code class="language-powershell">cmake --build build --target umicom-codeguard-job-lifecycle-tests umicom-codeguard-job-native-tests
+ctest --test-dir build -R "^framework[.]codeguard_job_(lifecycle|native)[.]" --output-on-failure --no-tests=error</code></pre>
+<p>Replace build with your configured directory. The suite registers 22 controlled lifecycle cases and 8 real-filesystem cases. Controlled tests retain real tasks, queue references, cancellation and result storage while injecting scan or allocation outcomes. Configuration alone does not establish compiler, runtime, installed-SDK or GUI qualification.</p>
+<p><a href="codeguard-bounded-input.html">Bounded native input</a> · <a href="codeguard-cancellation.html">Cooperative cancellation</a> · <a href="codeguard-owned-results.html">Retained results</a> · <a href="index.html">Learning index</a></p>
+<h2>Continue with retained reports</h2>
+<p>Read <a href="codeguard-job-adoption.html">workspace-checked adoption</a> to prepare a job from a retained service, reject another workspace before consumption, and forward the same operation through Studio. Adoption is explicit and does not choose newest-job ordering or automatically update a GUI.</p>
+</main></body></html>

@@ -42,6 +42,8 @@
 #include "umicom/codeguard/external_tool.h"
 #include "umicom/codeguard/dependency_audit.h"
 #include "umicom/codeguard/service.h"
+#include "umicom/codeguard/job.h"
+#include "umicom/codeguard/review.h"
 #include "umicom/codeguard/quality_types.h"
 #include "umicom/codeguard/evidence.h"
 #include "umicom/codeguard/architecture_policy.h"

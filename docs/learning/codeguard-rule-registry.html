@@ -1,0 +1,74 @@
+<!-- Umicom Framework
+File: docs/learning/codeguard-rule-registry.html
+
+PURPOSE:
+Teach checked array growth, descriptor ownership and atomic registry admission.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Keep registry inputs alive during growth</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Keep registry inputs alive during growth</h1>
+<h2>1. Separate a descriptor from the text it references</h2>
+<p>A CodeGuard rule descriptor contains a match mode, severity and pointers to pattern and diagnostic strings. The registry owns its array of descriptors. It borrows the strings. Copying a descriptor copies those pointers; it does not copy the text they address.</p>
+<pre><code class="language-c">UmiCodeGuardRule rule = {
+    .rule_id = "EXAMPLE-PATTERN",
+    .cwe = "",
+    .severity = UMI_CODEGUARD_MEDIUM,
+    .category = UMI_CODEGUARD_CATEGORY_MEMORY,
+    .confidence = 100U,
+    .match_mode = UMI_CODEGUARD_MATCH_CODE,
+    .needle = "review_me(",
+    .message = "Review this call",
+    .remediation = "Check its ownership contract"
+};
+UmiStatus status = umi_codeguard_rule_registry_add(registry, &amp;rule, 1U);</code></pre>
+<p>String literals remain alive for the program's lifetime. A dynamically created pattern must stay alive and unchanged until the registry is destroyed. A short-lived local text buffer is unsafe if the registry outlives it. The caller may discard the descriptor variable after successful insertion because its fields were copied.</p>
+<h2>2. Check element counts before calculating byte counts</h2>
+<p>A size_t value cannot represent every mathematical integer. Addition and multiplication can wrap. First calculate the largest representable number of descriptors, then compare the incoming count with the remaining element capacity. Only after that check is addition safe.</p>
+<pre><code class="language-c">const size_t maximum = SIZE_MAX / sizeof(UmiCodeGuardRule);
+if (count &gt; maximum - registry-&gt;count)
+    return UMI_STATUS_CAPACITY_EXCEEDED;
+const size_t required = registry-&gt;count + count;</code></pre>
+<p>The implementation also checks that current count and capacity are internally consistent before subtracting. Capacity doubling clamps to maximum when another doubling would overflow. A representable byte count can still exceed available memory; allocation failure remains a separate outcome.</p>
+<h2>3. Keep input alive until the copy finishes</h2>
+<p>registry_at returns a borrowed pointer into the descriptor array. A caller can use a valid range of these entries as input to add. Calling realloc first may move and release that same array, leaving the incoming pointer invalid before the copy begins.</p>
+<ol><li>Validate the incoming descriptors and required capacity.</li>
+<li>If the existing allocation has room, copy the descriptors with memmove and update count.</li>
+<li>If growth is needed, allocate a candidate array while the old array remains alive.</li>
+<li>Copy the existing descriptors, then copy the incoming range into the candidate.</li>
+<li>Release the old array and publish the new pointer, capacity and count.</li></ol>
+<p>During growth, both allocations exist briefly. That additional peak storage preserves the input lifetime and makes allocation failure leave the registry unchanged. A failed add keeps old borrows valid. Successful growth invalidates descriptor borrows, so callers must fetch fresh pointers afterward. The borrowed strings remain the caller's responsibility.</p>
+<pre><code class="language-c">const UmiCodeGuardRule *borrow =
+    umi_codeguard_rule_registry_at(registry, 0U);
+UmiStatus status = umi_codeguard_rule_registry_add(registry, borrow, 1U);
+/* On success, fetch a fresh descriptor pointer before using it again. */</code></pre>
+<h2>4. Validate a batch before publishing it</h2>
+<p>The matcher requires a valid pattern pointer. Reject a descriptor whose needle is NULL before appending any entry from that batch. Optional diagnostic strings may remain NULL because the matcher already handles them as empty text. An empty, valid needle retains its existing whole-line match behavior; NULL and an empty string are different inputs.</p>
+<p>Invalid arguments, inconsistent internal state, unrepresentable capacity and allocation failure have distinct status values. A single add either appends its complete batch or leaves the registry unchanged. The builtin loader still appends several groups: if a later group fails, earlier groups remain. A scanner that creates a candidate registry discards that candidate after failure.</p>
+<p>These checks cannot prove that an arbitrary caller pointer addresses readable memory or a terminated string. The public contract still requires a readable array of count descriptors and valid referenced text. Registry mutation and scanning are not synchronized; serialize access.</p>
+<h2>5. Test ownership, not just the final count</h2>
+<ol><li>Fill the initial allocation with 128 valid descriptors, borrow two entries, then append them back to force growth. Check the new entries retain their original identifiers.</li>
+<li>Repeat a self-append when spare capacity exists. Confirm no allocation occurs.</li>
+<li>Refuse the next allocation. Check the original array pointer, count, capacity and borrowed descriptors remain unchanged.</li>
+<li>Place a NULL pattern in the last entry of a batch. Verify that no earlier entry from that batch was appended.</li>
+<li>Exercise arithmetic boundaries by refusing allocation before a simulated large range could be copied. Do not allocate enormous buffers merely to test an overflow guard.</li>
+<li>Run real builtin registration and matching with optional text and an empty pattern to preserve supported behavior.</li></ol>
+<pre><code class="language-powershell">cmake --build build --target umicom-codeguard-registry-ownership-tests umicom-codeguard-pattern-failure-tests
+ctest --test-dir build -R "^framework[.]codeguard_(registry_ownership|pattern_failure)[.]" --output-on-failure --no-tests=error</code></pre>
+<p>Replace build with your configured directory. The registry suite registers twenty-five cases. Its allocator hook controls descriptor-array allocation; rule catalogues, matching and result storage use the real services. A successful configuration is not a runtime pass. Build and execute these tests with the actual Framework toolchain before accepting the implementation.</p>
+<h2>Exercises</h2>
+<ol><li>Draw the lifetimes of the old array, incoming borrowed range, candidate array and pattern strings during a growing self-append.</li>
+<li>Explain why checking required &gt; capacity after an unchecked addition is too late.</li>
+<li>Describe what a caller must do after a failed builtin load, and why that differs from a failed single add.</li>
+<li>Design a separate deep-copy contract for dynamically supplied rule text. State ownership, allocation failure and destruction behavior before implementing it.</li></ol>
+<p><a href="codeguard-scan-profiles.html">Scan settings and failures</a> · <a href="codeguard-owned-results.html">Owned reports</a> · <a href="codeguard-duplicate-evidence.html">Checked duplicate storage</a> · <a href="index.html">Learning index</a></p>
+</main></body></html>

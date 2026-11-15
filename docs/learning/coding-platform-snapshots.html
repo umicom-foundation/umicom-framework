@@ -1,0 +1,54 @@
+<!-- Umicom Framework
+File: docs/learning/coding-platform-snapshots.html
+
+PURPOSE:
+Teach complete composition snapshots and preservation of a previous observation on child-read failure.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Capture complete coding platform snapshots | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Capture a complete coding platform observation</h1>
+<p>A runtime view combines several services: the coding agent, the assistant, the repository index and queue counts. Updating the visible result after each child read can leave a mixture of new and missing information if a later read fails.</p>
+<p>Framework's <code>umi_ai_coding_runtime_platform_snapshot</code> gathers these values into a bounded local candidate. It replaces the caller's destination only after all three child snapshot operations succeed. A refused capture leaves the previous observation intact.</p>
+<h2>1. Keep the last complete result</h2>
+<pre><code class="language-c">UmiAiCodingRuntimePlatformSnapshot last_complete = {0};
+int have_observation = 0;
+
+/* platform is a live owner retained by the application. */
+UmiStatus status = umi_ai_coding_runtime_platform_snapshot(
+    platform, &amp;last_complete);
+if (status == UMI_STATUS_OK) {
+    have_observation = 1;
+    /* Present last_complete as the latest completed capture. */
+} else {
+    /* Report status. Retain the prior value only if have_observation was true. */
+}</code></pre>
+<p>In an application, keep <code>last_complete</code> and <code>have_observation</code> in the view model across refreshes. On failure, display the error and make clear that any retained observation is older. Do not turn an initialized all-zero object into a claimed successful result.</p>
+<h2>2. Publish after the last fallible read</h2>
+<p>The implementation follows this order:</p>
+<ol><li>Check the required owner and output pointers.</li><li>Initialize a local candidate containing values only.</li><li>Read the agent, assistant and repository snapshots into that candidate.</li><li>If any child refuses, return its status immediately.</li><li>Capture queue counts and the platform revision.</li><li>Assign the complete candidate to the caller's output.</li></ol>
+<p>This bounded local value requires no heap allocation. It is not a transaction over external resources, and it does not run a model, scan a directory or consume events. The existing child getters remain responsible for their own validation.</p>
+<h2>3. Respect ownership while observing</h2>
+<p>The caller must keep the platform and its children alive and serialize observation with mutations. A snapshot call does not acquire a lock or make concurrent access safe. Output storage must be separate from the platform and its children.</p>
+<p>Read-only observations remain available during a serialized active operation, including callbacks where the owner contract allows observation. Activity is not itself a reason to overwrite a valid display with an empty object.</p>
+<h2>4. Interpret revisions carefully</h2>
+<p>Each child revision describes that child's own observation. The platform revision is a separate field. They need not be equal, and this snapshot does not make them one transaction token. A completed capture is not proof that every operation succeeded or that no child can change later.</p>
+<p>Retaining complete output on failure also does not repair producer sequence exhaustion or revision accounting. Those are separate state-owner responsibilities. Avoid using a revision from one service as permission to replace another service's data.</p>
+<h2>5. Verify failure at every child boundary</h2>
+<pre><code class="language-powershell"># From the Framework source root after configuring with testing enabled:
+cmake --build build/windows-ucrt64-debug --target umicom-ai-coding-platform-snapshot-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework\.ai\.coding-platform-snapshot\.' --output-on-failure</code></pre>
+<p>The 17 cases substitute child read boundaries and compile the composition implementation unchanged. Each child deliberately writes some candidate fields before returning its selected failure. The test then checks that the caller's prior bytes remain untouched and later reads were not attempted.</p>
+<p>Additional cases cover successful capture from inactive and active owners, copied count metadata and invalid arguments. Expected result: all selected cases pass. These focused fixtures do not exercise live providers or a graphical application; native compilation, execution and integration evidence are still required.</p>
+<p>Continue with <a href="coding-observation-storage.html">event and history storage</a> to understand how observations are retained and consumed.</p>
+</main></body></html>

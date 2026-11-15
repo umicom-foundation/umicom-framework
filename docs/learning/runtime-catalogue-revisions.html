@@ -1,0 +1,195 @@
+<!-- Umicom Framework
+File: docs/learning/runtime-catalogue-revisions.html
+
+PURPOSE:
+Teach bounded runtime metadata, revision checks and health observations in native applications.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Keep AI runtime observations current | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Keep AI runtime observations current</h1>
+<p>A runtime catalogue describes a provider, a model and the place where they are hosted. It lets applications discover configured choices. The catalogue does not load a model, run inference or authenticate a server. This lesson develops a narrower responsibility: store valid descriptions and refuse observations that refer to an older description.</p>
+<p>Prerequisites: <a href="bounded-strings.html">bounded strings</a>, <a href="callbacks.html">callbacks</a> and <a href="provider-admission-and-ownership.html">provider ownership</a>. The examples use the public <a href="../../include/umicom/ai/runtime_catalogue.h">runtime catalogue API</a>.</p>
+<h2>1. Separate a record from an observation</h2>
+<p>A record can say that <code>runtime.local</code> uses <code>model.initial</code>. A health callback starts checking that configuration. Before its result is published, an application replaces the record with <code>model.replaced</code>. Publishing the old result by identifier alone would make the replacement inherit an observation made about something else.</p>
+<p>Each successful catalogue write assigns a larger revision number. Read the record before a probe, retain its revision, and require that same revision when publishing the result. An unrelated record can change without invalidating your observation; the comparison is against the selected record, not the catalogue's most recent global revision.</p>
+<table><thead><tr><th>Step</th><th>Record</th><th>Result</th></tr></thead><tbody>
+<tr><td>Read</td><td>Initial model, revision 2</td><td>Remember revision 2</td></tr>
+<tr><td>Replace configuration</td><td>Replacement model, revision 3</td><td>New metadata accepted</td></tr>
+<tr><td>Publish old health</td><td>Expected revision 2, current 3</td><td><code>BUSY</code>; replacement unchanged</td></tr>
+</tbody></table>
+<h2>2. Admit a complete bounded description</h2>
+<p>Initialize the entire descriptor, then fill required identifiers, display name, model name, provider kind, transport and token limits. The endpoint and health message may be empty. Every character array must have a terminating zero within its capacity. A first character check cannot establish this: an array containing only nonzero bytes has a first character but is not a C string.</p>
+<pre><code class="language-c">UmiAiRuntimeDescriptor descriptor = {0};
+/* Fill these from already validated application settings. */
+strcpy(descriptor.runtime_id, "runtime.local");
+strcpy(descriptor.provider_id, "provider.local");
+strcpy(descriptor.display_name, "Local chat");
+strcpy(descriptor.model_id, "model.initial");
+descriptor.provider_kind = UMI_AI_PROVIDER_LOCAL;
+descriptor.transport = UMI_AI_RUNTIME_HTTP;
+descriptor.capabilities = UMI_AI_RUNTIME_CHAT;
+descriptor.context_tokens = 8192;
+descriptor.max_output_tokens = 1024;
+descriptor.configured = 1;
+descriptor.local = 1;
+
+UmiStatus status = UmiAiRuntimeDescriptorValidate(&amp;descriptor);
+if (status == UMI_STATUS_OK) {
+    status = UmiAiRuntimeCatalogueUpsertIfRevision(catalogue, &amp;descriptor, 0);
+}</code></pre>
+<p>The literal strings above fit their arrays; use checked copies for variable input. Expected revision zero means “insert only if absent.” A conflicting record returns <code>BUSY</code>. The catalogue assigns the stored revision rather than accepting a revision supplied by the caller. Configuration is not health: the zero-initialized record is unavailable until an observation is explicitly recorded.</p>
+<h2>3. Publish a probe against its captured revision</h2>
+<pre><code class="language-c">UmiAiRuntimeDescriptor observed;
+UmiAiHealth health = {0};
+UmiStatus status = umi_ai_runtime_catalogue_find(
+    catalogue, "runtime.local", &amp;observed);
+if (status == UMI_STATUS_OK) {
+    /* Run the application's approved health probe here.
+       Populate health only from its actual observation. */
+    status = UmiAiRuntimeCatalogueSetHealthIfRevision(catalogue,
+        observed.runtime_id, &amp;health, observed.revision);
+}</code></pre>
+<p>This skeleton deliberately records unavailable health until a real probe fills it. A nonempty health provider identifier must match the current record; an empty identifier remains accepted for compatibility. Do not turn an HTTP success into a claim that the intended model, executable or process owns that endpoint. Those identities require separate evidence.</p>
+<p>On <code>BUSY</code>, discard the stale observation and read the current configuration before deciding whether to probe again. Do not repeatedly retry the same result with the new revision: that would erase the protection. A rejected write leaves count, stored records and revisions unchanged. Revision exhaustion returns <code>CAPACITY_EXCEEDED</code>; wrapping a counter would allow an old revision to appear current again.</p>
+<h2>4. Understand callback and threading limits</h2>
+<p>Keep one serialized owner for catalogue access. Revision checks handle delayed work and callback-driven changes on that owner; they are not atomic operations and do not make concurrent reads and writes safe. A worker can return a copied result to the owner thread, which then attempts conditional publication.</p>
+<p>The AuthorEngine service captures the number of records at the start of a refresh. A callback that appends a record does not extend the current traversal. A callback that replaces the record being probed causes stale publication to fail. Earlier successful updates stay applied if a later record fails, and the caller's output count is unchanged on failure. Keep the service, runtime and provider instances alive across every callback.</p>
+<h2>5. Inspect and run the focused regressions</h2>
+<p><a href="../../tests/test_ai_runtime_catalogue_admission.c">Admission tests</a> cover every fixed text field, token bounds and untouched read outputs. <a href="../../tests/test_ai_runtime_catalogue_revision.c">Revision tests</a> cover stale writes, capacity, saturation and corrupted private state. <a href="../../tests/test_ai_authorengine_health_revision.c">Service tests</a> use a deterministic callback to replace or append a record without a model or network.</p>
+<p>From a configured Framework source tree with <code>BUILD_TESTING=ON</code>, substitute your build folder and run these commands in order. Stop after a failed command.</p>
+<pre><code>cmake --build build --target umicom-ai-catalogue-admission-test umicom-ai-catalogue-revision-test umicom-ai-health-revision-test
+ctest --test-dir build -R "^framework[.]ai[.]catalogue[.]" --output-on-failure</code></pre>
+<!-- The original three suites registered 37 cases. Further routing and service tests now have their own focused commands; retained here as historical context. -->
+<p>The three initial suites contain 37 cases; additional suites below extend the registration. A test list proves discovery; only an executed report establishes pass, failure or skip status. If a test is missing, reconfigure from the updated source. If linking fails, verify the source and installed SDK have matching public declarations and implementation libraries. None of these tests qualifies an external model or graphical workflow.</p>
+<h2>6. Extend the exercise</h2>
+<ol><li>Read one record, update a different record, then publish the first record's health. Explain why its revision still matches.</li><li>Publish two results captured from the same revision. The first accepted update advances the revision; the second must be refused.</li><li>Fill a text array without a terminator. Confirm admission fails and the previous record remains unchanged.</li><li>Design a UI message for stale observations: show that configuration changed and offer a new probe, without calling the replacement unhealthy based on the old result.</li></ol>
+<aside>Existing unconditional upsert and health setters remain available for explicit owner actions. Prefer conditional updates whenever work was prepared from a prior snapshot. Catalogue availability remains descriptive metadata; runtime startup, readiness, policy and inference have separate contracts.</aside>
+<p><a href="reviewed-local-streams.html">Next: approved local streaming</a> · <a href="index.html">Learning index</a></p>
+<h2>7. Route health checks by runtime configuration</h2>
+<p>A provider identifier names an adapter. It is not necessarily an endpoint: two local servers can use the same adapter and even the same model alias on different ports. The original provider-wide health callback receives its adapter instance, but no runtime descriptor. Keep it for provider-wide observations. Use <code>UmiAiAuthorEngineRefreshRuntimeHealth</code> when an application must choose a probe from a runtime's endpoint, model and settings.</p>
+<pre><code class="language-c">static UmiStatus observe_runtime(
+    void *context, const UmiAiRuntimeDescriptor *runtime, UmiAiHealth *health)
+{
+    /* Resolve runtime-&gt;endpoint and runtime-&gt;model_id against the
+     * application's approved adapter configuration. This teaching callback
+     * deliberately performs no I/O and reports unavailable. */
+    (void)context;
+    (void)runtime;
+    health-&gt;available = 0;
+    return UMI_STATUS_OK;
+}
+
+size_t healthy;
+UmiStatus status = UmiAiAuthorEngineRefreshRuntimeHealth(
+    service, observation_time_ns, observe_runtime, NULL, &amp;healthy);
+/* Read healthy only after OK. A returned error may follow earlier writes. */</code></pre>
+<p>The callback borrows an immutable descriptor snapshot only for the duration of the call. Copy any data needed later. The service initializes health and its provider identifier, then supplies the timestamp when an observation is accepted. The callback is responsible for consent, routing, timeout and transport checks. This API does not itself perform network requests or grant permission to do so.</p>
+<p>Return OK to publish an observation, including an unavailable result. Return a transport error or cancellation to stop without publishing that runtime. Earlier accepted records remain updated; the output count stays unchanged on failure. Replacing a probed record causes BUSY and discards its stale result. A record appended during a callback waits for the next refresh.</p>
+<p>Refresh owns a guard until it returns. Nested calls through either the legacy or descriptor-aware API return BUSY before callbacks or catalogue writes. This protects synchronous callback reentry; it is not a thread lock. Serialize all service access, keep service/runtime/context alive, and defer destruction until the callback and refresh have returned. The guard is released on failures so a later explicit refresh can gather fresh observations.</p>
+<p>The legacy provider API retains its prior error behavior: a failed provider health callback is converted into an unavailable observation. The new descriptor-aware API propagates the callback error and leaves the current record unchanged. Choose the API deliberately; neither result authenticates a process or proves which weights it loaded.</p>
+<pre><code class="language-powershell">cmake --build build --target umicom-ai-runtime-health-test umicom-ai-health-revision-test
+ctest --test-dir build -R '^framework[.]ai[.]catalogue[.](runtime_health|health)[.]' --output-on-failure --no-tests=error</code></pre>
+<p>Nineteen new <a href="../../tests/test_ai_runtime_health_routing.c">routing cases</a> cover missing arguments, an empty catalogue, endpoint/model distinctions, unavailable/unconfigured reports, errors/cancellation, malformed observations, replacement, append, partial success and cross-API reentry. The retained provider tests check compatibility. All fixtures are inert and do not contact a model. Separately build and run the installed model SDK consumer to check exported linkage; then qualify approved real-endpoint probes in each application.</p>
+
+<h2>8. Observe partial progress without wrapping identities</h2>
+<p>A service snapshot lets a view decide whether it needs to refresh. Its revision is a change counter, not a success counter. Consider two health checks: the first updates one runtime, then the second fails. The overall call returns an error, but the view must still be able to discover the accepted first update. Advancing a counter only at the end would hide that change from a view that compares revisions.</p>
+<table><thead><tr><th>Operation</th><th>Service revision</th><th>What callers may read</th></tr></thead><tbody>
+<tr><td>Read snapshot</td><td>10</td><td>Original health</td></tr>
+<tr><td>Accept first runtime health</td><td>11</td><td>First observation updated</td></tr>
+<tr><td>Second probe fails</td><td>11</td><td>Fresh snapshot includes the partial update; output count was not assigned</td></tr>
+</tbody></table>
+<p>The AuthorEngine service advances its revision immediately after each accepted health row. A successful empty refresh still advances once, preserving its established behavior. Successful policy changes, runtime registration, session creation, message append and session load each advance the counter. Direct writes through the exposed child catalogue, context broker or conversation archive have independent identities: a service snapshot revision cannot detect every edit made outside the service.</p>
+<pre><code class="language-c">UmiAiAuthorEngineServiceSnapshot before, after;
+UmiStatus status = umi_ai_authorengine_service_snapshot(service, &amp;before);
+if (status == UMI_STATUS_OK) {
+    size_t healthy = 0;
+    UmiStatus refresh_status = UmiAiAuthorEngineRefreshRuntimeHealth(
+        service, observation_time_ns, observe_runtime, NULL, &amp;healthy);
+    status = umi_ai_authorengine_service_snapshot(service, &amp;after);
+    if (status == UMI_STATUS_OK &amp;&amp; after.revision != before.revision) {
+        /* Read current records to redraw the application's existing view. */
+    }
+    if (refresh_status == UMI_STATUS_OK) {
+        /* healthy now describes the completed traversal. */
+    } else {
+        /* Report failure while retaining any accepted earlier observations. */
+    }
+}</code></pre>
+<p>A 64-bit counter is large, but wrapping it is still an invalid identity transition. Mutating service operations refuse an exhausted counter with CAPACITY_EXCEEDED before changing owned state. During health refresh the service checks before each callback and again before publishing its observation: a callback may legitimately consume a revision through another service operation. A callback's accepted change remains visible even if this prevents its health result from being published.</p>
+<p>The checks do not roll back earlier accepted rows, reset exhausted objects or add thread synchronization. Keep serialized ownership. A refused message append also leaves its conversation unchanged when the loaded record has an exhausted revision. Snapshots remain readable at exhaustion; use them for diagnosis. Do not work around exhaustion by resetting the counter on a live object, because observers may still hold older identities.</p>
+<ol><li>Build the focused target from the configured Framework tree.</li><li>Run the service-revision selection below and inspect its executed pass/fail report.</li><li>For a partial-refresh failure, read a new snapshot and inspect both runtime records. The first should change and the second should retain its previous observation.</li><li>For saturation, inspect callback counts and before/after data. A refusal should not execute another callback or change the refused record.</li></ol>
+<pre><code class="language-powershell">cmake --build build --target umicom-ai-service-revision-test
+ctest --test-dir build -R '^framework[.]ai[.]catalogue[.]service_revision[.]' --output-on-failure --no-tests=error</code></pre>
+<p>The <a href="../../tests/test_ai_authorengine_service_revision.c">sixteen regression cases</a> inject otherwise impractical counter limits into the service implementation. A narrow archive-read wrapper supplies exhausted record values while the actual archive remains available for independent comparisons. This is controlled fault injection, not a public counter-reset API. The tests cover partial legacy/scoped refresh, full/empty refresh, failures before publication, callback-driven exhaustion, each guarded mutation, invalid zero identities and unchanged caller outputs. Missing tests require reconfiguration; a build or assertion failure requires investigation before relying on the new behavior.</p>
+
+<h2>9. Edit saved conversation state without losing a newer change</h2>
+<p>Conversation archives hold bounded records in memory. Each record contains session identifiers, a title, a workspace, classification and a fixed maximum number of messages. Saving a record to disk is a separate, policy-checked operation. Start with <code>umi_ai_conversation_record_init</code>, then use the public archive functions; do not construct or reset the opaque archive itself.</p>
+<p><code>UmiAiConversationRecordValidate</code> checks that every visible text field terminates inside its array, required fields are nonempty, message count stays within capacity, and message roles and classification are recognized. It reuses Framework's bounded snapshot-field validator. Optional conversation IDs, message names and message text may be empty. Unused message slots and nonzero approval flags retain their existing compatibility behavior. Validation does not sanitize generated content, grant persistence permission or authenticate a provider.</p>
+<p>Suppose one panel reads a title, while another panel changes the same conversation. An unconditional update is still available for deliberate owner replacement, but a delayed edit should name the revision it read. The conditional API returns BUSY if that record changed. Re-read the current conversation and resolve the conflict with the user's intent; merely retrying the old record with a new revision would overwrite the newer work.</p>
+<pre><code class="language-c">UmiAiConversationRecord *draft = malloc(sizeof(*draft));
+if (draft != NULL) {
+    UmiStatus status = umi_ai_conversation_archive_find(
+        archive, "session.local", draft);
+    if (status == UMI_STATUS_OK) {
+        uint64_t expected_revision = draft-&gt;revision;
+        /* This literal fits title; validate variable-length user input. */
+        strcpy(draft-&gt;title, "Research notes");
+        status = UmiAiConversationArchiveUpsertIfRevision(
+            archive, draft, expected_revision);
+        if (status == UMI_STATUS_BUSY) {
+            /* Preserve the draft for review and reload current stored state. */
+        }
+    }
+    free(draft);
+}</code></pre>
+<p>Use expected revision zero to insert only when the identifier is absent. Any accepted write assigns a fresh archive revision to the stored record; the input record's revision is not an instruction to reset it. A different conversation can change without invalidating this record's revision. Conditional removal similarly needs the selected record's nonzero revision, returns NOT_FOUND for an absent ID, and preserves neighbouring records and their identities.</p>
+<pre><code class="language-c">UmiSnapshotCapture capture;
+UmiStatus status = UmiAiConversationArchiveCapture(archive, &amp;capture);
+if (status == UMI_STATUS_OK) {
+    /* capture.count and capture.revision describe this archive.
+     * They are independent of a containing AuthorEngine service revision. */
+}</code></pre>
+<p>Capture and indexed reads preserve their outputs on refusal. The explicit archive validator distinguishes a valid empty archive from invalid stored state; the older count function returns zero for either an invalid owner or an empty archive. An exhausted owner still permits valid reads but refuses writes before records move or change. These are serialized in-memory contracts, not locks or multi-step database transactions. Keep one owner for archive access.</p>
+<ol><li>Construct a valid record, insert it with expected revision zero and read back the assigned revision.</li><li>Accept one title change, then submit another edit using the earlier revision. Expect BUSY and retain the accepted title.</li><li>Edit a different record, then use the original selected record's still-current revision. That edit should remain admissible.</li><li>Exercise malformed text, storage capacity and counter limits using the focused fixtures below. Counter fault injection belongs in tests, not application code.</li></ol>
+<!-- The earlier malformed command example is retained as inert, escaped template content for engineering review. The active example restores the quoted CTest regex and keeps document closing tags outside code. -->
+<template data-preserved="malformed-catalogue-test-command"><pre><code>&lt;pre&gt;&lt;code class="language-powershell"&gt;cmake --build build --target umicom-ai-conversation-admission-test umicom-ai-conversation-revision-test umicom-ai-conversation-archive-tests
+ctest --test-dir build -R '^framework[.]ai[.]conversation[.]|^framework[.]ai_conversation_archive&lt;/body&gt;&lt;/html&gt;
+ --output-on-failure --no-tests=error&lt;/code&gt;&lt;/pre&gt;</code></pre></template>
+<pre><code class="language-powershell">cmake --build build --target umicom-ai-conversation-admission-test umicom-ai-conversation-revision-test umicom-ai-conversation-archive-tests
+ctest --test-dir build -R '^framework[.]ai[.]conversation[.]|^framework[.]ai_conversation_archive$' --output-on-failure --no-tests=error</code></pre>
+<p>The <a href="../../tests/test_ai_conversation_archive_admission.c">26 admission cases</a> and <a href="../../tests/test_ai_conversation_archive_revision.c">18 revision cases</a> complement the existing escaped-file round trip. Read the executed results; registration alone is not qualification. If a test is missing, reconfigure. If a conditional edit returns BUSY, inspect the current record instead of forcing replacement. If the archive validator returns INVALID_STATE, preserve diagnostic evidence and recover through the owning application's explicit workflow; do not reset live revisions.</p>
+<p>The <a href="../../examples/local_models/sdk_consumer/main.c">installed SDK consumer</a> exercises validation, capture, conditional replacement and conditional removal using real in-memory records. It does not write a session file or start inference. Build and run that consumer separately against the installed SDK to qualify exported symbols and dependencies. File parser failure recovery and graphical conflict resolution require their own checks.</p>
+<p><a href="conversation-file-loading.html">Continue with staged conversation file loading</a>: complete format checks, bounded reads and preservation of the current record on failure.</p>
+
+<h2>10. Retain health owners until refresh returns</h2>
+<p>A recursion guard prevents a second refresh from starting, but it does not by itself prevent a callback from destroying the first refresh's service. AuthorEngine now uses the same scoped provider ownership mechanism as generation, while keeping its own health-refresh activity flag.</p>
+<p>Both health entry points validate runtime ownership before entering the refresh. Throughout callback traversal and health publication, checked service destruction, registry release, provider insertion and generation on the same runtime refuse with BUSY. The void destroy wrappers retain their active owners. Another service borrowing the same runtime cannot begin a competing refresh. Catalogue edits still use the existing captured-record revision checks: replacing a record invalidates an old observation, while appended records wait until a later refresh.</p>
+<pre><code class="language-c">#include "umicom/ai/authorengine_service.h"
+
+UmiStatus CloseAuthorEngine(UmiAiAuthorEngineService **owner)
+{
+    if (owner == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = UmiAiAuthorEngineServiceDestroyChecked(*owner);
+    if (status == UMI_STATUS_OK) *owner = NULL;
+    return status;
+}</code></pre>
+<p>Use this wrapper under the application's lifecycle serialization. On BUSY, retain the handle, return normally from the callback and retry after refresh finishes. <code>UmiAiAuthorEngineServiceCheckIdle</code> reports service activity; NULL is idle. The runtime has a separate idle check because it can also be busy generating a response.</p>
+<p>The guard is removed after every normal return, including callback errors, malformed health values and stale-record refusal. Error semantics remain distinct: the legacy provider-health path records a failed callback as unavailable health, while the descriptor-aware probe path returns the probe's error. Partial accepted observations keep their revisions. A new guard does not turn these outcomes into successful inference.</p>
+<p>Health callbacks remain responsible for endpoint-specific consent and transport rules. The ownership mechanism does not authorize network access, authenticate a model or synchronize threads. Raw callback calls, direct mutation or freeing of owners, nonlocal jumps and independent concurrent workers remain outside the contract.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-ai-health-lifetime-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]ai[.]health-lifetime[.]" --output-on-failure</code></pre>
+<p>The 59 cases cover both health APIs, direct and legacy cleanup, runtime retention, provider insertion, generation refusal, a second service sharing the runtime, invalid registry counts, NULL cleanup and a subsequent successful refresh after each tested return path. Controlled callbacks perform no network or model work. Run the existing catalogue revision and health-routing cases as well when qualifying the installed source; configuration alone is not execution evidence.</p>
+
+</main></body></html>

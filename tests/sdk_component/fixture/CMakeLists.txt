@@ -2,7 +2,7 @@
 # Build small real libraries so SDK component tests exercise CMake's generated
 # install/export behavior without compiling the entire Framework again.
 cmake_minimum_required(VERSION 3.24)
-project(UmicomSdkComponentFixture LANGUAGES C)
+project(UmicomSdkComponentFixture VERSION 0.9.0 LANGUAGES C)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 set(CMAKE_C_STANDARD 23)
@@ -10,7 +10,7 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 include("${SDK_HELPER}")
 
-if(TEST_CASE STREQUAL "shared")
+if(TEST_CASE STREQUAL "shared" OR TEST_CASE STREQUAL "archive-shared")
     set(_kind SHARED)
 else()
     set(_kind STATIC)
@@ -118,3 +118,14 @@ endif()
 
 # Run after the optional deferred library registration above.
 cmake_language(DEFER CALL umicom_generate_sdk_artifact_inventory)
+
+# Exercise the production package helper with tiny libraries. The fixture's
+# unrelated product command remains deliberately unbuilt and uninstalled.
+if(TEST_CASE MATCHES "^archive")
+    get_filename_component(_helpers "${SDK_HELPER}" DIRECTORY)
+    include("${_helpers}/UmicomSdkArchive.cmake")
+    if(TEST_CASE STREQUAL "archive-absolute")
+        set(CMAKE_INSTALL_DATADIR "${CMAKE_CURRENT_BINARY_DIR}/absolute-share")
+    endif()
+    umicom_add_sdk_archive()
+endif()

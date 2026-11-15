@@ -1,0 +1,72 @@
+<!-- Umicom Framework
+File: docs/learning/shortcut-reference.html
+
+PURPOSE:
+Teach actual keyboard binding references, bounded C formatting and owned native preview publication.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Expose the shortcuts your application actually uses</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Expose the shortcuts your application actually uses</h1>
+<p>A shortcut reference should describe the keys installed by the running application. A copied table can drift: a command is renamed, its key changes, or an action needs an open document. The reference still looks convincing while teaching a binding that does nothing. Umicom Studio reads its native keyboard profile table when Help &gt; Keyboard Shortcuts opens. The keyboard dispatcher and the reference therefore share their source of binding identities.</p>
+<h2>Try the Studio workflow</h2>
+<ol><li>Open Studio and choose Help &gt; Keyboard Shortcuts. The existing Documentation panel displays the reference. It does not create a source document.</li>
+<li>Read the shortcut, caption and command identity together. The identity is useful when looking up commands in source or reporting a problem.</li>
+<li>Notice available and unavailable states. They are a snapshot taken when the reference opens. Opening a project, changing selection or finishing a task can change admission later.</li>
+<li>Open or edit a source document and reopen the reference. Confirm that the same document, unsaved text and selection remain. Viewing Help does not save or discard work.</li>
+<li>Use the Documentation search field to find a caption or command. The generated reference has no file address; its address field is empty. Existing browser history is retained. Reload can return to the last actual document.</li></ol>
+<p>This view lists the bindings installed in Studio’s native profile catalogue. It does not claim to enumerate every editor-specific key, operating-system shortcut or dynamically supplied third-party binding. It does not edit key assignments. Keep those distinctions visible when extending the application.</p>
+<h2>Separate capture, formatting and publication</h2>
+<p>The host captures three strings and an availability value for each binding. Framework validates the supplied snapshots and formats readable UTF-8. A GTK adapter then publishes that text into an existing read-only preview. Keeping these jobs separate allows another application or a console tool to reuse the same formatter without importing Studio’s widget code.</p>
+<pre><code class="language-c">#include &quot;umicom/developer_workbench/shortcut_reference.h&quot;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int main(void)
+{
+    const UmiShortcutReferenceEntry entry = {
+        &quot;file.save&quot;, &quot;Save&quot;, &quot;Ctrl+S&quot;, 1
+    };
+    size_t bytes = 0;
+    if (UmiShortcutReferenceFormat(&amp;entry, 1, NULL, 0, &amp;bytes) != UMI_STATUS_OK)
+        return 1;
+    char *text = malloc(bytes + 1);
+    if (text == NULL) return 1;
+    UmiStatus status = UmiShortcutReferenceFormat(&amp;entry, 1, text, bytes + 1, &amp;bytes);
+    if (status == UMI_STATUS_OK) puts(text);
+    free(text);
+    return status == UMI_STATUS_OK ? 0 : 1;
+}</code></pre>
+<p>The example deliberately supplies one binding. In an application, copy from the actual binding owner instead of treating this example as a universal shortcut table. Querying the byte count first avoids guessing a destination size. Required bytes exclude the terminating zero, so allocation reserves one additional byte. A short output buffer returns CAPACITY_EXCEEDED without partially replacing text. Other invalid inputs preserve both output values.</p>
+<h2>Validate copied metadata</h2>
+<p>Each command, caption and shortcut must terminate inside its fixed array and contain valid UTF-8. Empty fields are rejected. Availability must be exactly zero or one. The service accepts at most 512 rows and keeps the host’s order, including deliberately repeated command identities with different bindings. It escapes C0 controls, DEL and backslashes so a line break embedded in a caption is visible as an escaped byte. It does not parse or execute the command strings.</p>
+<p>In Studio, GTK produces the native shortcut label from the same key and modifier values used for keyboard matching. Control plus Tab has a specific document-navigation role; a reference must not invent a bare Tab command that would interfere with ordinary focus traversal. Command admission is queried separately and rechecked when a real action executes. The reference itself never executes the actions it lists.</p>
+<h2>Publish safely when observers can close the window</h2>
+<p>GTK notifications run synchronously. Replacing a text buffer or changing a summary label can invoke application code before the publishing function returns. That callback may close the owner, replace the buffer, reparent a widget or request the same command again. A pointer that was valid before publication is not sufficient evidence afterwards.</p>
+<p>UmiGtk4TextPreviewPublish retains the native objects, prepares a complete replacement buffer and checks that both controls still belong to the live owner. It refuses editable views and nested publication. The caller’s strings are copied before notifications, so borrowed label text cannot disappear halfway through publication. A changed owner, buffer or published value returns CANCELLED. The function does not undo an observer’s own changes with a blind rollback. Cancellation can therefore leave partially published controls; the caller must respect the result.</p>
+<p>Studio also holds an independent weak owner request across opening the Documentation surface, reading admission and clearing the address. After each observable operation it resolves the original runtime again. The application guard prevents a nested Help request from replacing the current publication. Retained menu buttons continue to use the established weak command route.</p>
+<h2>Exercise the contracts</h2>
+<ol><li>Format an empty binding list and confirm the report explains that no bindings were supplied.</li>
+<li>Supply invalid UTF-8 or a full array without a terminating zero. Verify that output bytes and the required-size sentinel remain unchanged.</li>
+<li>Allocate exactly the queried byte count without the additional terminator byte. Confirm refusal, then add one byte and retry.</li>
+<li>Retain the old read-only buffer before publishing. Its contents should remain valid for that holder after the view switches buffers.</li>
+<li>Attach a buffer-change observer that closes the window. The native publisher should return CANCELLED without dereferencing the retired application runtime.</li>
+<li>Attach a nested publication observer. It should receive BUSY; a later independent publication should work after the guard is released.</li></ol>
+<h2>Configure and qualify the implementation</h2>
+<p>The following Framework commands prepare and run the focused regression targets. Run them from a Framework checkout with the selected GTK development package available. A successful configure only generates build rules. It does not establish that the compiler, tests or desktop interaction passed.</p>
+<pre><code class="language-powershell">$env:Path = &quot;C:\msys64\ucrt64\bin;$env:Path&quot;
+cmake -S . -B build/shortcut-reference -G Ninja -DBUILD_TESTING=ON -DUMICOM_BUILD_GTK4_ADAPTER=ON
+cmake --build build/shortcut-reference --target umicom-shortcut-reference-test umicom-text-preview-gtk4-test
+ctest --test-dir build/shortcut-reference -R &quot;^framework[.](shortcut_reference|gtk4[.]text_preview)[.]&quot; --output-on-failure --no-tests=error</code></pre>
+<p>Check the project’s GTK option before using a different preset. If GTK cases return skip code 77, no display-backed result was obtained. If the compiler probe fails before configuration, verify the selected toolchain and its runtime search path. Preserve that first log when retrying; a successful retry does not erase the environmental failure.</p>
+<p>For Studio, build umicom-studio-shortcut-reference-test in the Applications build and select ^studio[.]shortcut_reference[.]gtk4[.] in CTest. Review real menu opening, repetition, source preservation and observer cancellation separately from the portable formatter tests. These commands describe qualification steps; the lesson does not claim they have already passed on the reader’s machine.</p>
+</main></body></html>

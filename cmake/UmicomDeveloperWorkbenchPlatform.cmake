@@ -87,6 +87,7 @@ target_sources(umicom_developer PRIVATE
     "src/developer_workbench/search_session.c"
     "src/developer_workbench/search_types.c"
     "src/developer_workbench/start_centre.c"
+    "src/developer_workbench/shortcut_reference.c"
     "src/developer_workbench/types.c"
     "src/developer_workbench/workbench.c"
 )
@@ -364,3 +365,70 @@ endif()
 
 message(STATUS
     "Umicom professional Developer Workbench runtime enabled")
+
+# Start Centre navigation is a value-only owner, independent of GTK.
+if(BUILD_TESTING)
+    add_executable(umicom-start-centre-navigation-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/developer_workbench/test_start_navigation.c")
+    target_link_libraries(umicom-start-centre-navigation-test PRIVATE Umicom::Framework)
+    umicom_apply_warnings(umicom-start-centre-navigation-test)
+    umicom_apply_sanitizers(umicom-start-centre-navigation-test)
+    foreach(case empty document welcome repeat observe switch close return empty-return arguments state bounds alias)
+        add_test(NAME framework.start_centre.navigation.${case}
+            COMMAND umicom-start-centre-navigation-test ${case})
+        set_tests_properties(framework.start_centre.navigation.${case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;workbench;welcome;navigation;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-start-centre-navigation-test)
+    endif()
+endif()
+
+# Reference formatting is toolkit-independent; publication uses the optional GTK adapter.
+if(BUILD_TESTING)
+    add_executable(umicom-shortcut-reference-test tests/developer_workbench/test_shortcut_reference.c)
+    target_link_libraries(umicom-shortcut-reference-test PRIVATE Umicom::Framework)
+    umicom_apply_warnings(umicom-shortcut-reference-test)
+    umicom_apply_sanitizers(umicom-shortcut-reference-test)
+    foreach(case empty row availability unicode escape query short exact invalid-pointer
+            invalid-utf8 unterminated empty-field invalid-state bounds large order late-invalid)
+        add_test(NAME framework.shortcut_reference.${case} COMMAND umicom-shortcut-reference-test ${case})
+        set_tests_properties(framework.shortcut_reference.${case} PROPERTIES TIMEOUT 30 LABELS "developer;shortcuts;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-shortcut-reference-test)
+    endif()
+    if(TARGET umicom_ui_gtk4)
+        add_executable(umicom-text-preview-gtk4-test tests/ui/test_text_preview_gtk4.c)
+        target_link_libraries(umicom-text-preview-gtk4-test PRIVATE Umicom::ui_gtk4)
+        umicom_apply_warnings(umicom-text-preview-gtk4-test)
+        umicom_apply_sanitizers(umicom-text-preview-gtk4-test)
+        foreach(case publish repeat empty invalid editable foreign closed-owner unicode retained-buffer alias
+                buffer-close buffer-reenter buffer-replace buffer-editable buffer-content
+                label-close label-reenter label-content label-detach)
+            add_test(NAME framework.gtk4.text_preview.${case} COMMAND umicom-text-preview-gtk4-test ${case})
+            set_tests_properties(framework.gtk4.text_preview.${case} PROPERTIES TIMEOUT 30
+                SKIP_RETURN_CODE 77 LABELS "gtk4;preview;lifetime;regression")
+        endforeach()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-text-preview-gtk4-test)
+        endif()
+    endif()
+endif()
+
+# Search shares the preview ownership guard; these cases require the native adapter.
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-text-preview-search-gtk4-test tests/ui/test_text_preview_search_gtk4.c)
+    target_link_libraries(umicom-text-preview-search-gtk4-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-text-preview-search-gtk4-test)
+    umicom_apply_sanitizers(umicom-text-preview-search-gtk4-test)
+    foreach(case find case unicode empty no-match preserve-selection invalid editable foreign closed-owner select-close select-reenter select-publish select-replace select-text select-selection retained-buffer bounds)
+        add_test(NAME framework.gtk4.text_preview_search.${case}
+            COMMAND umicom-text-preview-search-gtk4-test ${case})
+        set_tests_properties(framework.gtk4.text_preview_search.${case} PROPERTIES TIMEOUT 30
+            SKIP_RETURN_CODE 77 LABELS "gtk4;preview;search;lifetime;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-text-preview-search-gtk4-test)
+    endif()
+endif()

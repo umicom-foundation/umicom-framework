@@ -1,0 +1,64 @@
+<!-- Umicom Framework
+File: docs/learning/codeguard-bounded-input.html
+
+PURPOSE:
+Teach per-pass source budgets, native paths, streamed text and candidate publication.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bound source input across every analysis pass</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Bound source input across every analysis pass</h1>
+<h2>1. A setting must reach the reader</h2>
+<p>A profile may contain a file-size setting without the implementation using it. A directory listing or an early size check is not enough: another process can change the file before the next read. CodeGuard now passes max_file_bytes to the shared native reader for source rules, architecture measurement, architecture policy checks and duplicate fingerprinting.</p>
+<p>The limit applies separately to each open file. A zero limit permits empty files only. An over-budget file returns UMI_STATUS_CAPACITY_EXCEEDED before its bytes reach analysis callbacks. It does not become a warning finding or a successful skipped file. The retained scan service discards the failed candidate report and keeps its previous complete report.</p>
+<p>This is a per-file input limit. It does not limit the number of files, total findings, traversal time, duplicate comparisons or overall workspace CPU and memory. Configure those concerns separately when hosting analysis in an application.</p>
+<h2>2. Use the native bounded APIs</h2>
+<pre><code class="language-c">#include "umicom/codeguard/source.h"
+#include "umicom/codeguard/normalizer.h"
+
+UmiCodeGuardSourceInfo info = {0};
+UmiStatus status = umi_codeguard_source_measure_bounded(
+    path, UINT64_C(4) * 1024U * 1024U, &amp;info, NULL);
+if (status == UMI_STATUS_OK) {
+    /* info now describes the complete admitted observation. */
+}</code></pre>
+<p>The example assumes path is a valid UTF-8 filename supplied by your program. Link the installed Umicom::codeguard target and use matching headers and libraries. The bounded measurement and hash functions preserve all caller outputs on failure. The older standalone source_measure and hash_file functions remain available with their existing stdio behavior; select the bounded variants when you need these admission guarantees.</p>
+<p>Profile-driven scanning and both architecture entry points use the bounded path. The new duplicate_set_add_bounded function admits a fingerprint only after the complete bounded read succeeds. The original standalone duplicate_set_add remains a compatibility entry point.</p>
+<h2>3. Separate text from binary bytes</h2>
+<p>The native reader lends chunks of at most 64 KiB to a synchronous visitor. The CodeGuard text adapter assembles segments of at most 8191 bytes, includes a newline when present and adds a terminating NUL for existing string-based rules. This retains the historical fgets behavior: a very long physical line is counted as several segments. These metrics and rules are textual heuristics, not a C parser.</p>
+<p>An embedded NUL in source text is refused as UMI_STATUS_INVALID_ARGUMENT. Treating it as an ordinary string terminator would hide later bytes from analysis. Binary hashing accepts NUL and all other byte values. Its normalization state survives chunk boundaries, including a slash at the end of one chunk and a star at the start of the next.</p>
+<p>Raw and normalized fingerprints retain the existing noncryptographic algorithm. Equal fingerprints identify review candidates; they do not prove byte identity or semantic equivalence. The bounded reader does not change that evidence standard.</p>
+<h2>4. Keep path and ownership contracts explicit</h2>
+<p>Relative paths are resolved through Framework's shared path and current-directory services once per visit. Absolute paths are passed to native input. Diagnostic and measurement paths retain the caller's original spelling. Windows native input converts UTF-8 paths for its wide-character file API.</p>
+<p>Native input requires an ordinary regular final file and refuses final symbolic links or reparse points. Parent paths must be trusted and may contain aliases. A missing input maps to CodeGuard's existing IO_ERROR convention. This policy is stricter than the standalone compatibility stdio functions; it is not a security sandbox.</p>
+<p>The reader compares metadata before and after reading through one handle. Detected changes can return BUSY. A successful metadata check is not an immutable snapshot, and separate scan passes may observe different versions. Reapplying the budget on every pass prevents a later oversized observation from bypassing the configured limit.</p>
+<h2>5. Publish only after the complete operation</h2>
+<p>A callback can receive earlier complete segments before a later read, metadata or close failure. The reader cannot undo external effects made by that callback. Measurement and fingerprinting therefore write into private candidate objects and publish outputs only after success. Low-level scan APIs append findings and may leave partial findings on failure; the retained service provides report-level rollback.</p>
+<p>Cancellation is checked around native chunks, text segments and analysis phases. Keep the borrowed token alive until the call returns. It cannot interrupt a blocking operating-system read or a rule already executing. An existing operational error retains its status when cancellation arrives too. See <a href="bounded-input-cleanup.html">native cleanup status</a> for why closing a handle must preserve the first failure.</p>
+<h2>6. Test the boundary, then the real filesystem</h2>
+<ol><li>Admit a file exactly at the limit; refuse one byte more and preserve output sentinels.</li>
+<li>Check empty input under a zero budget, then refuse nonempty input under the same budget.</li>
+<li>Split text across small chunks, 8191-byte segments and a 64 KiB native boundary. Compare hashes with the compatibility algorithm.</li>
+<li>Feed embedded NUL to text and binary consumers. Expect text refusal and a complete binary hash.</li>
+<li>Inject failure after earlier segments. Verify no trailing partial segment or candidate is published as complete.</li>
+<li>Simulate growth before each of five independent read passes. Verify the same budget reaches every pass and no failed fingerprint enters the duplicate collection.</li>
+<li>Use a real UTF-8 filename, a missing file and a directory on every supported operating system. A lexical path test alone cannot establish native filesystem support.</li></ol>
+<pre><code class="language-powershell">cmake --build build --target umicom-codeguard-bounded-reader-tests umicom-codeguard-bounded-source_native-tests umicom-codeguard-scan-budget-tests
+ctest --test-dir build -R "^framework[.]codeguard_(bounded_reader|bounded_native|scan_budget)[.]" --output-on-failure --no-tests=error</code></pre>
+<p>Replace build with your configured directory. The focused suite registers 61 cases: 30 controlled reader cases, 16 actual-file cases and 15 multi-pass policy cases. Also run the existing analysis-failure and cancellation suites after changing these boundaries. Authored tests and successful configuration alone do not establish compilation, runtime, installed-SDK or GUI correctness.</p>
+<h2>Exercises</h2>
+<ol><li>Explain why a single preflight size check cannot enforce a later read's budget.</li>
+<li>Compare the ownership of a borrowed chunk, a measurement candidate and a retained report.</li>
+<li>Identify which limits remain necessary for a workspace containing a million small source files.</li>
+<li>Explain why rejecting a final link does not make an entire parent path trusted.</li></ol>
+<p><a href="codeguard-scan-profiles.html">Scan profiles</a> · <a href="codeguard-duplicate-evidence.html">Fingerprint evidence</a> · <a href="index.html">Learning index</a></p>
+</main></body></html>

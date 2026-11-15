@@ -23,6 +23,7 @@
 #define UMICOM_CODEGUARD_NORMALIZER_H
 #include <stddef.h>
 #include <stdint.h>
+#include "umicom/platform/cancellation.h"
 #include "umicom/base/status.h"
 #ifdef __cplusplus
 extern "C" {
@@ -36,8 +37,22 @@ uint64_t umi_codeguard_hash_bytes(const void *data, size_t size);
  * Provide the codeguard hash file operation used by this module and its client
  * applications.
  */
+/* Preserve all outputs on failure, including read/close and size overflow.
+ * Existing noncryptographic fingerprint values and textual normalization
+ * remain compatible. Hash equality is not proof of file or program identity.
+ * Outputs must refer to distinct writable objects; no file snapshot is taken. */
 UmiStatus umi_codeguard_hash_file(const char *path, uint64_t *out_raw_hash,
                                   uint64_t *out_normalized_hash, size_t *out_size);
+
+/* Native bounded alternative with cooperative cancellation. Relative paths
+ * are resolved once; final leaves must be regular files, without a final
+ * symlink/reparse point. Zero budget admits empty files only. Binary bytes,
+ * including NUL, remain valid. Fingerprints match the legacy algorithm.
+ * Missing input is IO_ERROR; outputs remain unchanged on every failure.
+ * Metadata checks detect observed changes, not an immutable snapshot. */
+UmiStatus umi_codeguard_hash_file_bounded(const char *path, uint64_t maximum_bytes,
+    uint64_t *out_raw_hash, uint64_t *out_normalized_hash, size_t *out_size,
+    const UmiCancellationToken *cancellation);
 #ifdef __cplusplus
 }
 #endif

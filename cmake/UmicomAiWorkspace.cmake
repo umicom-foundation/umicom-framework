@@ -62,6 +62,7 @@ add_library(umicom_ai_workspace STATIC
     "${_umicom_ai_workspace_root}/src/ai_workspace/source_change.c"
     "${_umicom_ai_workspace_root}/src/ai_workspace/retrieval.c"
     "${_umicom_ai_workspace_root}/src/ai_workspace/jobs.c"
+    "${_umicom_ai_workspace_root}/src/ai_workspace/execution.c"
     "${_umicom_ai_workspace_root}/src/ai_workspace/request.c"
     "${_umicom_ai_workspace_root}/src/ai_workspace/extractive_provider.c"
     "${_umicom_ai_workspace_root}/src/ai_workspace/local_chat_codec.c"
@@ -119,6 +120,20 @@ if(TARGET Umicom::ui_gtk4)
 endif()
 
 if(BUILD_TESTING)
+    add_executable(umicom-ai-execution-allocation-test
+        "${_umicom_ai_workspace_root}/tests/ai_workspace/test_execution_allocation.c")
+    target_link_libraries(umicom-ai-execution-allocation-test PRIVATE Umicom::ai_workspace)
+    umicom_ai_workspace_configure_target(umicom-ai-execution-allocation-test)
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-ai-execution-allocation-test FILES
+            "${_umicom_ai_workspace_root}/src/ai_workspace/execution.c")
+    endif()
+    foreach(_execution_case IN ITEMS prepare start complete)
+        add_test(NAME "framework.ai_workspace.execution_allocation.${_execution_case}"
+            COMMAND umicom-ai-execution-allocation-test "${_execution_case}")
+        set_tests_properties("framework.ai_workspace.execution_allocation.${_execution_case}"
+            PROPERTIES TIMEOUT 30 LABELS "framework;ai-workspace;ownership;allocation")
+    endforeach()
     add_executable(umicom-ai-workspace-test "${_umicom_ai_workspace_root}/tests/ai_workspace/test_workspace.c")
     target_link_libraries(umicom-ai-workspace-test PRIVATE Umicom::ai_workspace)
     target_include_directories(umicom-ai-workspace-test PRIVATE "${_umicom_ai_workspace_root}/src/ai_workspace")
@@ -139,6 +154,23 @@ if(BUILD_TESTING)
         add_test(NAME "framework.ai_workspace.codec.${case}" COMMAND umicom-ai-workspace-codec-test "${case}")
         set_tests_properties("framework.ai_workspace.codec.${case}" PROPERTIES TIMEOUT 30 SKIP_RETURN_CODE 77
             LABELS "framework;ai-workspace;protocol;regression")
+    endforeach()
+
+    # Health uses the same optional JSON codec, but its response shape and
+    # publication contract need independent regressions from chat generation.
+    add_executable(umicom-ai-health-codec-test
+        "${_umicom_ai_workspace_root}/tests/ai_workspace/test_local_health_codec.c")
+    target_link_libraries(umicom-ai-health-codec-test PRIVATE Umicom::ai_workspace)
+    target_include_directories(umicom-ai-health-codec-test PRIVATE
+        "${_umicom_ai_workspace_root}/src/ai_workspace")
+    umicom_ai_workspace_configure_target(umicom-ai-health-codec-test)
+    foreach(case IN ITEMS ready loading unicode space trailing comment wrong-status wrong-type
+            embedded-nul error-with-ok array truncated wrong-http redirect generic-busy
+            mismatched-code string-code missing-message contradiction bounds raw-nul invalid-utf8)
+        add_test(NAME "framework.ai_workspace.health_codec.${case}"
+            COMMAND umicom-ai-health-codec-test "${case}")
+        set_tests_properties("framework.ai_workspace.health_codec.${case}" PROPERTIES
+            TIMEOUT 20 SKIP_RETURN_CODE 77 LABELS "framework;ai-workspace;health;protocol")
     endforeach()
     find_package(Threads REQUIRED)
     add_executable(umicom-ai-workspace-http-client "${_umicom_ai_workspace_root}/tests/ai_workspace/test_local_chat_client.c")

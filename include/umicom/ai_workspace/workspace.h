@@ -121,6 +121,12 @@ void UmiAiWorkspaceCancellationDestroy(UmiAiWorkspaceCancellation *cancellation)
 UmiStatus UmiAiWorkspaceCreate(UmiDataServer *data, UmiAiRuntime *runtime,
     const char *bookId, UmiAiWorkspace **outWorkspace);
 void UmiAiWorkspaceDestroy(UmiAiWorkspace *workspace);
+/* Checked release refuses busy or retained execution storage with BUSY and
+ * leaves *workspace unchanged. Successful release clears it. An empty pointer
+ * is harmless. This does not destroy the borrowed runtime or Data Server.
+ * Serialize on the owner thread; it does not synchronize concurrent callers.
+ * The legacy Destroy entry point now also refuses active storage. */
+UmiStatus UmiAiWorkspaceRelease(UmiAiWorkspace **in_out_workspace);
 UmiStatus UmiAiWorkspaceReload(UmiAiWorkspace *workspace);
 UmiStatus UmiAiWorkspaceSnapshotRead(const UmiAiWorkspace *workspace,
     UmiAiWorkspaceSnapshot *outSnapshot);

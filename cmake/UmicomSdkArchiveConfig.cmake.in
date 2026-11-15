@@ -1,0 +1,30 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomSdkArchiveConfig.cmake.in
+#
+# PURPOSE:
+#   Isolate the SDK binary archive from parent project package configuration.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
+set(CPACK_GENERATOR ZIP)
+set(CPACK_PACKAGE_NAME UmicomFrameworkSDK)
+set(CPACK_PACKAGE_VENDOR "Umicom Foundation")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Umicom Framework development SDK")
+set(CPACK_PACKAGE_VERSION [==[@PROJECT_VERSION@]==])
+set(CPACK_PACKAGE_FILE_NAME [==[@_sdk_archive_name@]==])
+set(CPACK_PACKAGE_DIRECTORY [==[@_sdk_archive_output@]==])
+set(CPACK_PACKAGE_CHECKSUM SHA256)
+set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY ON)
+set(CPACK_PACKAGING_INSTALL_PREFIX "/")
+set(CPACK_ERROR_ON_ABSOLUTE_INSTALL_DESTINATION TRUE)
+set(CPACK_ARCHIVE_COMPONENT_INSTALL OFF)
+set(CPACK_CMAKE_GENERATOR [==[@CMAKE_GENERATOR@]==])
+# Select exactly one component, including its EXCLUDE_FROM_ALL install rules.
+# Do not inherit CPACK_INSTALL_CMAKE_PROJECTS from an Applications/OS parent.
+set(CPACK_INSTALL_CMAKE_PROJECTS [==[@_sdk_archive_build@;@PROJECT_NAME@;FrameworkSDK;/]==])

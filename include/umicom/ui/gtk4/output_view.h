@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/ui/gtk4/output_view.h
- * PURPOSE: Present bounded worker output through shared native controls.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Present bounded worker output through shared native controls with scoped callback ownership.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_GTK4_OUTPUT_VIEW_H
@@ -41,7 +48,20 @@ extern "C"
     /* Pause keeps the displayed text while accepting newer evidence. Refresh shows
  * the latest copy once; Copy copies what is actually displayed. NUL and invalid
  * UTF-8 are made visible without changing the host's raw bytes. No I/O occurs. */
+    /* Update retains the panel until synchronous GTK notifications finish.
+     * Nested Update returns BUSY without accepting evidence; the caller may
+     * retry after the outer operation returns. Refresh/Follow/Copy controls
+     * ignore recursive activation during publication. Ordinary host retirement
+     * during a notification is safe, but the caller must not use an owner it
+     * released in that callback after Update returns. GTK owner thread only. */
     UmiStatus UmiOutputViewGtk4Update(GtkWidget *panel, const UmiOutputViewSnapshot *snapshot);
+    /* Discard accepted and displayed evidence, even while Follow is paused.
+     * Preserve the Follow setting and restore the original ready message.
+     * Identity/revision admission restarts at zero; the host must prevent old
+     * producers from submitting evidence after a context change. This performs
+     * no worker cancellation, clipboard clearing or service operation.
+     * Nested calls return BUSY. Ownership follows the same scope as Update. */
+    UmiStatus UmiOutputViewGtk4Reset(GtkWidget *panel);
 #ifdef __cplusplus
 }
 #endif

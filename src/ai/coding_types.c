@@ -54,6 +54,8 @@ static int task_valid(UmiAiCodingTaskKind task)
 }
 
 /* Check that ai coding request satisfies its contract before another service relies on it. */
+/* Classification is part of the request domain. Reject unknown values before planning or serialization can interpret them as a permitted privacy level. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_ai_coding_request_validate(const UmiAiCodingRequest *request)
 {
     /* Fixed-size fields may come from a plug-in or restored state. Check
@@ -76,6 +78,70 @@ UmiStatus umi_ai_coding_request_validate(const UmiAiCodingRequest *request)
         request->structure_size < sizeof(UmiAiCodingRequest) ||
         request->abi_version != UMI_AI_CODING_ABI_VERSION ||
         !task_valid(request->task) || request->request_id[0] == '\0' ||
+        request->session_id[0] == '\0' || request->runtime_id[0] == '\0' ||
+        request->workspace_root[0] == '\0' || request->instruction[0] == '\0' ||
+        request->context_token_budget == 0U ||
+        request->maximum_context_files == 0U ||
+        request->maximum_context_files > UMI_AI_CODING_CONTEXT_PLAN_MAX ||
+        request->selection_end_line < request->selection_start_line) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Apply this operation only while the related capability or state is available. */
+    if (request->active_path[0] != '\0' &&
+        !umi_ai_coding_path_is_safe_relative(request->active_path)) {
+        return UMI_STATUS_PERMISSION_DENIED;
+    }
+    return UMI_STATUS_OK;
+}
+
+#endif
+/* Draft storage checks only bounded text. Execution readiness remains in the
+ * full request validator, so queues and editors can retain unfinished requests
+ * without duplicating the record schema or granting permission to run them. */
+UmiStatus UmiAiCodingRequestValidateText(const UmiAiCodingRequest *request)
+{
+    static const UmiSnapshotTextField fields[] = {
+        {"request_id", offsetof(UmiAiCodingRequest, request_id), sizeof(request->request_id), 0},
+        {"session_id", offsetof(UmiAiCodingRequest, session_id), sizeof(request->session_id), 0},
+        {"runtime_id", offsetof(UmiAiCodingRequest, runtime_id), sizeof(request->runtime_id), 0},
+        {"workspace_root", offsetof(UmiAiCodingRequest, workspace_root), sizeof(request->workspace_root), 0},
+        {"active_path", offsetof(UmiAiCodingRequest, active_path), sizeof(request->active_path), 0},
+        {"language_id", offsetof(UmiAiCodingRequest, language_id), sizeof(request->language_id), 0},
+        {"instruction", offsetof(UmiAiCodingRequest, instruction), sizeof(request->instruction), 0}
+    };
+    return UmiSnapshotValidateTextFields(request, sizeof(*request), fields,
+        sizeof fields / sizeof fields[0], NULL);
+}
+
+UmiStatus umi_ai_coding_request_validate(const UmiAiCodingRequest *request)
+{
+/* Share bounded-text admission with draft storage while retaining execution-specific domain rules here. The former implementation is retained for owner review. */
+#if 0
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (request == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(request->request_id, '\0', sizeof(request->request_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(request->session_id, '\0', sizeof(request->session_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(request->runtime_id, '\0', sizeof(request->runtime_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(request->workspace_root, '\0', sizeof(request->workspace_root)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(request->active_path, '\0', sizeof(request->active_path)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(request->language_id, '\0', sizeof(request->language_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(request->instruction, '\0', sizeof(request->instruction)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+#endif
+    UmiStatus text_status = UmiAiCodingRequestValidateText(request);
+    if (text_status != UMI_STATUS_OK) return text_status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (request == NULL ||
+        request->structure_size < sizeof(UmiAiCodingRequest) ||
+        request->abi_version != UMI_AI_CODING_ABI_VERSION ||
+        !task_valid(request->task) ||
+        request->classification < UMI_AI_DATA_PUBLIC ||
+        request->classification > UMI_AI_DATA_RESTRICTED || request->request_id[0] == '\0' ||
         request->session_id[0] == '\0' || request->runtime_id[0] == '\0' ||
         request->workspace_root[0] == '\0' || request->instruction[0] == '\0' ||
         request->context_token_budget == 0U ||

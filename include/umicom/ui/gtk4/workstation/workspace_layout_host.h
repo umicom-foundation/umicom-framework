@@ -124,6 +124,8 @@ UmiStatus umi_gtk4_workspace_layout_host_create_interactive(
  * GTK owning thread. A retained root is emptied; retained old controls cannot
  * dispatch into this owner. May be called from the canvas geometry callback.
  * The host pointer is invalid as soon as this function returns.
+ * A synchronous focus operation already on the stack defers final allocation
+ * release until it returns CANCELLED; callers must still discard the pointer.
  */
 void umi_gtk4_workspace_layout_host_destroy(
     UmiGtk4WorkspaceLayoutHost *host);
@@ -159,6 +161,11 @@ UmiStatus umi_gtk4_workspace_layout_host_invalidate_content(
  * window. Hidden/missing windows return NOT_FOUND. Canvas front order here is
  * temporary; a later model rebuild restores its recorded z-order. GTK thread
  * only. This may present an existing native window but never creates one.
+ * Retains target identity across GTK observers. Destruction, removal, hiding,
+ * reparenting or a competing selection returns CANCELLED. A nested focus or
+ * rebuild/maximise/restore request during focus returns BUSY. Existing focus
+ * inside the panel is preserved. An unmounted host can select its page, but OK
+ * does not promise that a desktop window manager granted keyboard focus.
  */
 UmiStatus umi_gtk4_workspace_layout_host_focus_window(
     UmiGtk4WorkspaceLayoutHost *host, const char *window_id);

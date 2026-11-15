@@ -26,6 +26,7 @@
 #include "umicom/ai/request.h"
 #include "umicom/ai/response.h"
 #include "umicom/ai/stream.h"
+#include "umicom/ai/response_stream.h"
 #include "umicom/ai/provider.h"
 #include "umicom/ai/provider_registry.h"
 #include "umicom/ai/prompt.h"

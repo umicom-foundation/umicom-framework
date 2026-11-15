@@ -1,0 +1,74 @@
+<!-- Umicom Framework
+File: docs/learning/coding-runtime-lifetime.html
+
+PURPOSE:
+Teach native coding execution ownership across provider, workspace and validation callbacks.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Own a coding runtime through callbacks | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Own a coding runtime through callbacks</h1>
+<p>A native coding agent coordinates several kinds of work: reading selected source, asking a model for a proposed change, applying a reviewed patch, and running configured validation. Each boundary calls code supplied by its host. That code can call Framework again before the first call returns. This lesson extends <a href="coding-service-ownership.html">coding service ownership</a> to the agent and the composition that owns it.</p>
+<h2>1. Separate execution activity from task state</h2>
+<p>A task state such as <code>COMPLETED</code> describes progress. It does not prove that every outer C function has returned. For example, a parent still updates its own revision after the agent returns. Freeing the parent during a callback would invalidate that later access even if the child were otherwise safe.</p>
+<p>The agent therefore records whether an execution call is active. The platform records its own activity and also checks its agent and assistant. These checks cover calls made directly through the platform's borrowed child accessors. They are separate from the visible state machine.</p>
+<table><thead><tr><th>Boundary</th><th>Callback source</th><th>Owner that must remain alive</th></tr></thead><tbody>
+<tr><td>Context and response materialization</td><td>Workspace reads and existence checks</td><td>Agent, assistant, workspace and composition</td></tr>
+<tr><td>Generation</td><td>Registered AI provider</td><td>Agent and borrowed AI runtime</td></tr>
+<tr><td>Apply and rollback</td><td>Workspace writes, reads and removals</td><td>Assistant, agent and composition</td></tr>
+<tr><td>Validation</td><td>Developer executor</td><td>Agent and borrowed executor state</td></tr>
+<tr><td>Validation profile detection</td><td>Workspace marker checks</td><td>Composition, even before agent execution begins</td></tr>
+</tbody></table>
+<h2>2. Keep public reentry distinct from internal orchestration</h2>
+<p>The public run, apply and repair APIs admit one serialized operation. They mark activity, call the existing execution body and clear activity after it returns, whether the result is success or an error. Policy changes, approval, rejection, queue mutations and checked destruction refuse an active owner with <code>UMI_STATUS_BUSY</code>.</p>
+<p>Automatic apply is already part of an admitted run. It uses a private internal function instead of calling the guarded public apply entry point. Otherwise a correct guard would accidentally reject the agent's own next step. Internal calls preserve the existing approval, patch, validation and repair logic; they are not a way for application callbacks to bypass admission.</p>
+<pre><code>Public run
+  check idle
+  mark active
+  prepare → provider callback → review or internal apply → validation
+  clear active
+  return status
+
+Nested public run or destroy from a callback → BUSY</code></pre>
+<h2>3. Release the parent through its checked API</h2>
+<pre><code class="language-c">#include "umicom/ai_coding_runtime/platform.h"
+
+UmiStatus release_coding_platform(UmiAiCodingRuntimePlatform **owner)
+{
+    if (owner == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = UmiAiCodingRuntimePlatformDestroyChecked(*owner);
+    if (status == UMI_STATUS_OK) *owner = NULL;
+    return status;
+}</code></pre>
+<ol><li>Retire UI aliases and independent workers before beginning shutdown.</li><li>Call the checked parent destructor from the lifecycle owner.</li><li>On BUSY, keep the handle. Return normally from the active callback and retry only after the outer operation finishes.</li><li>On OK, clear the handle. Never read the old object again.</li><li>Release borrowed external runtime, AuthorEngine and executor storage only after the platform has stopped using them.</li></ol>
+<p><code>UmiAiCodingAgentDestroyChecked</code> provides the same rule for a separately owned agent. Legacy void destructors remain compatible and retain a busy owner, but cannot report the refusal. <code>UmiAiCodingAgentCheckIdle</code> and <code>UmiAiCodingRuntimePlatformCheckIdle</code> are read-only observations. They acquire no mutex and reserve no future lifetime.</p>
+<h2>4. Preserve cancellation and observation</h2>
+<p>Cancellation requests remain available during execution. They set the existing cooperative cancellation signal; they do not synchronously free the agent or force a provider to return. The normal execution path observes cancellation at its established checkpoints. A caller must still wait for that outer operation to return before destruction.</p>
+<p>Serialized snapshots and event consumption remain available for monitoring. Borrowed history, audit, assistant and agent handles are not ownership transfers. Do not destroy those objects, rewrite their internals, or use them concurrently. A callback guard cannot protect a host that frees the external runtime or executor behind the agent's back. Callbacks must return normally; nonlocal jumps cannot skip the cleanup boundary safely.</p>
+<h2>5. Test real orchestration without real side effects</h2>
+<p>The focused fixture uses an in-memory source file, a deterministic provider response and a developer executor that returns a synthetic validation result. It calls real Framework planning, parsing, approval, apply, rollback and repair code. No model is contacted, no process is launched and no project file is written.</p>
+<ol><li>Configure Framework with testing and its developer/AI capabilities enabled using your supported toolchain.</li><li>Build the focused target.</li><li>Run the lifetime test family and inspect every failure.</li><li>Qualify the real provider, compiler, workspace and application UI separately.</li></ol>
+<pre><code class="language-powershell"># From the Framework source root, after configuration:
+cmake --build build/windows-ucrt64-debug --target umicom-ai-coding-runtime-lifetime-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework\.ai\.coding-runtime-lifetime\.' --output-on-failure</code></pre>
+<p>Expected result: the selected scenarios pass. Automatic, queued, direct-agent, manual-review and repair flows must finish successfully after nested requests are refused. Failure scenarios must clear activity for later controlled recovery. A provider-time cancellation must prevent patch writes. Test registration and successful CMake generation are not evidence that these native cases have run.</p>
+<h2>6. Diagnose ownership and workflow errors separately</h2>
+<table><thead><tr><th>Observation</th><th>Investigation</th></tr></thead><tbody>
+<tr><td>BUSY inside a callback</td><td>This is the intended refusal. Move shutdown or mutation to a later owner-controlled step.</td></tr>
+<tr><td>BUSY after the outer call returns</td><td>Check for another active borrowed-child operation and confirm serialization. Never clear private flags to force progress.</td></tr>
+<tr><td>Automatic apply now reports BUSY</td><td>Inspect whether internal orchestration accidentally calls a guarded public entry point.</td></tr>
+<tr><td>Validation fails</td><td>Inspect its real output and configured rollback/repair policy. A lifetime guard does not make an invalid patch correct.</td></tr>
+</tbody></table>
+<p>These guards do not add thread safety, guarantee rollback after every adapter failure, validate arbitrary pointers, or repair revision exhaustion. Each is a separate contract requiring its own implementation and evidence.</p>
+<p>Exercise: trace an executor callback during manual apply. List the owners it borrows, the operations it may observe, and the operations that must wait. Then explain why a validation-profile callback needs a platform guard even though no model generation is active.</p>
+</main></body></html>

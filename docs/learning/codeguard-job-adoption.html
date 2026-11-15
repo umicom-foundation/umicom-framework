@@ -1,0 +1,73 @@
+<!-- Umicom Framework
+File: docs/learning/codeguard-job-adoption.html
+
+PURPOSE:
+Teach workspace identity checks and transactional adoption of completed background findings.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Attach completed findings to the right workspace</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Attach completed findings to the right workspace</h1>
+<h2>1. Completion and publication are different operations</h2>
+<p>A background job can finish while a user changes projects or closes a quality session. The worker should not hold a widget pointer or directly clear the visible report. Framework keeps completed findings private until the creating thread explicitly transfers or adopts them. A retained service is an owner that keeps the last complete report available between attempts.</p>
+<p>Begin with the [background job lesson](codeguard-background-jobs.html). This lesson adds workspace admission: the result must belong to the service receiving it. The check happens before the one-shot transfer, so a rejected destination does not consume the completed job.</p>
+<h2>2. Prepare independent input</h2>
+<pre><code class="language-c">UmiCodeGuardJob *job = NULL;
+UmiStatus status = umi_codeguard_service_create_job(service, &amp;profile, &amp;job);
+if (status == UMI_STATUS_OK)
+    status = UmiCodeGuardJobSubmit(job, shared_queue);</code></pre>
+<p>This fragment assumes service, profile and shared_queue already belong to your host. Creation copies the service root and selected profile. A NULL Framework profile uses defaults; the Studio facade requires an explicit profile. Creation does not start scanning. Submission failure leaves ownership with the caller. A job does not borrow its service, so closing that service does not invalidate copied worker input. Keep the job alive until it is created-but-unscheduled or terminal before destroying it.</p>
+<h2>3. Adopt on the creating thread</h2>
+<pre><code class="language-c">UmiCodeGuardJobSnapshot snapshot;
+UmiStatus status = UmiCodeGuardJobRead(job, &amp;snapshot);
+if (status == UMI_STATUS_OK &amp;&amp;
+    (snapshot.state == UMI_TASK_SUCCEEDED || snapshot.state == UMI_TASK_FAILED ||
+     snapshot.state == UMI_TASK_CANCELLED)) {
+    status = umi_codeguard_service_adopt_job(service, job);
+    if (status == UMI_STATUS_OK) {
+        const UmiCodeGuardResult *report = umi_codeguard_service_result(service);
+        /* Render or copy findings while this service remains unchanged. */
+    }
+}</code></pre>
+<p>The snippet illustrates an event-loop polling step, not a complete event-loop implementation. The host still handles errors, refreshes widgets and retires terminal jobs. Serialize service access and adopt on the thread that created the job. The worker never calls the retained service.</p>
+<p>Adoption compares the current resolved service root with the immutable job root. A different lexical workspace returns INVALID_STATE before taking findings. The same workspace then follows the job status: BUSY, cancellation and scan failure preserve the previous report. A successful transfer swaps owned finding arrays without allocation. The retained result object keeps its address, but pointers to individual old findings are invalid after success. An empty successful result deliberately replaces the old findings with an empty report.</p>
+<h2>4. Understand identity and ordering limits</h2>
+<p>Job creation normalizes an absolute lexical path. UmiCodeGuardJobCopyRoot copies it into a caller buffer without truncation. UmiCodeGuardJobMatchRoot resolves another input with the same policy and returns a checked comparison. A capacity or resolution failure leaves the caller output unchanged.</p>
+<p>Lexical equality compares normalized path text under Framework platform rules. It does not prove directory object identity, resolve every link, detect a replaced directory, or create a content snapshot. If a service uses a relative root and the process changes its current directory, adoption may correctly refuse the old job. Prefer an absolute service root for stable host behavior.</p>
+<p>Two completed jobs for the same root may represent different moments or profiles. This service does not choose the newest one. The host must track its active request and explicitly choose which job to adopt. A successful job already taken elsewhere returns NOT_FOUND. A second adoption also returns NOT_FOUND and preserves the published report.</p>
+<h2>5. Keep Studio thin</h2>
+<pre><code class="language-c">UmiCodeGuardJob *job = NULL;
+UmiStatus status = umi_studio_codeguard_create_job(guard, &amp;profile, &amp;job);
+/* Submit and poll using Framework job APIs. */
+/* On the owner thread, after completion: */
+status = umi_studio_codeguard_adopt_job(guard, job);</code></pre>
+<p>These facade operations delegate to Framework. They add no scanner, thread system, root parser or result container. The caller owns the job separately from the Studio facade. This source integration does not itself add a menu action, a progress panel or automatic GUI refresh. Those workflows require their own lifecycle wiring and qualification.</p>
+<h2>6. Exercise the installed SDK example</h2>
+<p>Build the [installed-SDK example](../../examples/sdk_codeguard/README.md) against a package containing the new job and service symbols, not headers alone. The existing background executable accepts an optional adoption mode:</p>
+<pre><code class="language-powershell">&amp; &quot;.\build\umicom-sdk-codeguard-background.exe&quot; &quot;C:\Practice\quality-demo&quot; --adopt
+$LASTEXITCODE
+&amp; &quot;.\build\umicom-sdk-codeguard-background.exe&quot; &quot;C:\Practice\quality-demo&quot; --adopt --cancel-before-submit
+$LASTEXITCODE</code></pre>
+<p>A completed report exits 0 when its severity gate passes and 1 when it fails. Setup/usage errors return 2, operational or report failures return 3, and cancellation returns 4. The cancellation example starts no scan. The console drains its own private queue; do not copy that blocking shutdown into a GUI callback.</p>
+<h2>7. Qualify the ownership boundary</h2>
+<pre><code class="language-powershell">cmake --build build --target umicom-codeguard-job-identity-tests umicom-codeguard-job-adoption-tests
+ctest --test-dir build -R &quot;^framework\.codeguard_job_(identity|adoption)\.&quot; --output-on-failure
+# In an Applications build that includes Studio:
+cmake --build build --target umicom-studio-codeguard-jobs-test
+ctest --test-dir build -R &quot;^studio\.codeguard_jobs\.&quot; --output-on-failure</code></pre>
+<p>Run these commands from the relevant configured source/build workspace. Expected success is zero failed cases, with no skipped coverage substituted for a pass. Identity tests cover complete copies, short buffers, normalized paths and relative-context changes. Adoption tests exercise failed and cancelled jobs, an empty replacement, duplicate consumption, wrong threads and a destroyed service. Studio tests retain the explicit-profile policy and prove a job can run after its facade is released.</p>
+<p>If linking fails, check that headers and libraries come from the same SDK build. If a workspace mismatch occurs, inspect both absolute roots before changing the application request policy. If a job remains BUSY, keep its input alive and allow the worker to finish; requesting cancellation is not permission to free a running payload. A successful configure step or authored test file is not evidence that these runtime contracts passed.</p>
+<h2>8. Practice</h2>
+<p>Start two jobs for one absolute workspace using different profiles. Record a host request number beside each job and permit adoption only for the active request. Cancel the older request and continue polling it until terminal so its payload can be released safely. Then repeat after replacing the host session. Explain which decisions belong to host request selection and which guarantees the Framework service supplies. Do not label a stale result current merely because its root matches.</p>
+<p><a href="index.html">Framework learning index</a></p>
+<h2>Use a shared current-request owner</h2><p>The <a href="codeguard-current-request.html">Framework review controller</a> adds one outstanding job, a host context token and stale-publication suppression over this explicit adoption API. It preserves the direct job and service APIs for hosts with another lifetime policy.</p>
+</main></body></html>

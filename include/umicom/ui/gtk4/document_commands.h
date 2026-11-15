@@ -349,6 +349,23 @@ UmiStatus UmiGtk4AdapterReviewParameterHelp(UmiGtk4Adapter *adapter,const char *
 UmiStatus UmiGtk4AdapterReviewParameterHelpWithSettings(UmiGtk4Adapter *adapter,const char *workspace_folder,
     const char *application_directory,const char *base_override);
 
+/** Recognise exactly navigate.symbol, navigate.definition and navigate.references.
+ * The owner-thread Enabled query captures and validates the current draft using
+ * the same admission as review creation, then releases the temporary request.
+ * It performs no settings I/O, source edits, UI publication or process launch.
+ * Read-only sources are supported. Busy, absent and oversized drafts are disabled.
+ * A true result is advisory; execution repeats admission against current state. */
+int UmiGtk4AdapterSourceNavigationCommandKnown(const char *command_id);
+int UmiGtk4AdapterSourceNavigationCommandEnabled(
+    UmiGtk4Adapter *adapter, const char *command_id);
+/** Open an existing source inspection review with per-language preferences.
+ * OK means the form opened, not that symbols or locations were received. Request
+ * remains an explicit action. Unknown IDs or a NULL application directory are
+ * invalid. Borrowed strings need remain valid only during this call. */
+UmiStatus UmiGtk4AdapterSourceNavigationCommand(
+    UmiGtk4Adapter *adapter, const char *command_id, const char *workspace_folder,
+    const char *application_directory, const char *base_override);
+
 int UmiGtk4AdapterCompletionReviewBusy(const UmiGtk4Adapter *adapter);
 UmiStatus UmiGtk4AdapterCancelCompletionReview(UmiGtk4Adapter *adapter);
 

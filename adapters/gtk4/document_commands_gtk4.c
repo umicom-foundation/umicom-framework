@@ -1571,6 +1571,7 @@ UmiStatus UmiGtk4AdapterClearNavigationHistory(UmiGtk4Adapter *adapter)
 
 /* Native completion uses the same document owner and invalidation boundary. */
 #include "document_completion_review.inc"
+#include "document_navigation_commands.inc"
 #include "document_snippet_review.inc"
 
 /* Keep source range discovery and navigation in the shared document owner. */

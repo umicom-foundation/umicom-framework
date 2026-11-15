@@ -1,0 +1,73 @@
+<!-- Umicom Framework
+File: docs/learning/codeguard-current-request.html
+
+PURPOSE:
+Teach context tokens, stale completion suppression and retained review ownership.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Keep background findings attached to the current request</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Keep background findings attached to the current request</h1>
+<h2>1. A successful worker may no longer have permission to publish</h2>
+<p>Imagine starting a scan, changing projects, then receiving the old result. The file analysis can be correct while the report is wrong for the current screen. Execution success answers whether work completed; publication asks whether that work still belongs to the active request. This distinction applies to search, previews and source analysis.</p>
+<p>The <a href="codeguard-background-jobs.html">background job</a> and <a href="codeguard-job-adoption.html">service adoption</a> lessons explain worker ownership and workspace matching. The Framework review controller adds a single current request, a host context token and retained findings. It reuses those services rather than creating another scanner or thread pool.</p>
+<h2>2. Choose a context token deliberately</h2>
+<p>The <a href="workspace-identities.html">workspace identity lesson</a> explains how the shared graph prevents revision reuse and why a private discovery candidate consumes only one publication revision.</p>
+<p>A context token is a nonzero 64-bit value supplied by the host. Change it when the workspace session, trust or relevant inputs change. Do not use a widget pointer, a path hash or a wrapping counter as a substitute for session identity. Never reuse a token for a different session. The controller separately numbers accepted scan requests and refuses request-counter overflow before scheduling.</p>
+<pre><code class="language-c">UmiCodeGuardReview *review = NULL;
+UmiStatus status = UmiCodeGuardReviewCreate(absolute_root, &amp;review);
+uint64_t request = 0;
+if (status == UMI_STATUS_OK)
+    status = UmiCodeGuardReviewBegin(review, shared_queue, &amp;profile,
+        workspace_context, &amp;request);</code></pre>
+<p>The root must be absolute, preventing a later process-directory change from redirecting this reusable owner. Begin copies the profile and context. One job may be outstanding at a time. Poll must retire that job before another Begin, even if the worker already finished. A rejected submission preserves the old report, request counter and caller output.</p>
+<h2>3. Poll and interpret three kinds of state</h2>
+<pre><code class="language-c">UmiCodeGuardReviewSnapshot snapshot;
+UmiStatus status = UmiCodeGuardReviewPoll(review, current_context, &amp;snapshot);
+if (status == UMI_STATUS_OK &amp;&amp; !snapshot.pending) {
+    if (snapshot.status == UMI_STATUS_OK &amp;&amp; snapshot.has_report) {
+        const UmiCodeGuardResult *report =
+            UmiCodeGuardReviewResult(review, current_context);
+        /* Use the borrowed report without changing or destroying its owner. */
+    }
+}</code></pre>
+<p>The function return reports whether the polling operation succeeded. Snapshot state describes the task. Snapshot operation_status preserves the scanner outcome. Snapshot status describes publication. A successful task can therefore have cancelled or stale publication. A failed scan is reported in the snapshot while Poll itself can still return OK. Check these distinctions before displaying a success badge.</p>
+<p>The summary describes a retained report for the supplied context, which may predate the latest attempt. has_report is not evidence that the current attempt passed. A failed attempt leaves prior finding borrows valid. A successful empty scan is a real replacement and clears old findings. Successful publication retains the result object address but invalidates individual old finding pointers.</p>
+<h2>4. Make context loss irreversible for the attempt</h2>
+<p>Poll with the current host context on every event-loop tick. Pass zero when the workspace is closed. A mismatch latches the attempt as stale and requests cancellation. Returning later to the original token does not revive that attempt. Terminal stale work is discarded and has INVALID_STATE publication status, while its scanner status remains visible separately.</p>
+<p>The controller cannot discover a context change that the host never reports. It also does not turn lexical root equality into a content snapshot or filesystem sandbox. Give a newly opened session a new token even when its path is unchanged. UmiCodeGuardReviewResult returns NULL when asked for a different context; the host should still retire owners it no longer needs.</p>
+<h2>5. Cancel before publication and retire safely</h2>
+<pre><code class="language-c">UmiStatus status = UmiCodeGuardReviewCancel(review);
+/* Keep polling with the current context; do not free a running payload. */
+/* Once no job is queued/running, or after the host queue is joined: */
+status = UmiCodeGuardReviewDestroy(&amp;review);</code></pre>
+<p>Cancellation latches the publication decision even when the worker succeeded just before the request. It preserves a preceding concrete scan failure instead of replacing it with cancellation. With no pending job it is a no-op. Destruction does not wait: BUSY leaves the owner alive. A cancelled worker can still be running, so keep the controller and queue alive until safe retirement.</p>
+<p>Every controller operation belongs to the creating thread. A GUI polls and renders on that thread while Framework workers own only their copied job input. If retiring a terminal job reports an error, retry without taking or publishing the result twice. The controller records finalization separately to preserve that boundary.</p>
+<h2>6. Try the installed example</h2>
+<p>Build the [SDK example project](../../examples/sdk_codeguard/README.md) with matching installed headers and libraries. The review executable deliberately waits for its private console queue before changing publication context, making the distinction visible:</p>
+<pre><code class="language-powershell">&amp; &quot;.\build\umicom-sdk-codeguard-review.exe&quot; &quot;C:\Practice\quality-demo&quot;
+$LASTEXITCODE
+&amp; &quot;.\build\umicom-sdk-codeguard-review.exe&quot; &quot;C:\Practice\quality-demo&quot; --cancel-before-publication
+$LASTEXITCODE
+&amp; &quot;.\build\umicom-sdk-codeguard-review.exe&quot; &quot;C:\Practice\quality-demo&quot; --stale-before-publication
+$LASTEXITCODE</code></pre>
+<p>For a readable fixture that completes normally, the cancellation command returns 4 and the stale command returns 5 without printing a new report. Normal publication returns 0 or 1 according to the severity gate. Setup/usage returns 2, other operational failures return 3. An earlier scan failure remains an operational error even if cancellation follows. The printed task, operation and publication values are separate; no successful scan proves the source is safe.</p>
+<p>The example is a console demonstration. Its blocking queue shutdown is unsuitable for a GUI callback. The controller adds no menu binding, progress widget or native event-loop timer; applications must connect their existing interface and qualify its lifecycle.</p>
+<h2>7. Qualify the state transitions</h2>
+<pre><code class="language-powershell">cmake --build build --target umicom-codeguard-review-tests
+ctest --test-dir build -R &quot;^framework\.codeguard_review\.&quot; --output-on-failure</code></pre>
+<p>Use a configured Framework or Applications build containing CodeGuard. The cases exercise real files and queues while injecting failures only at controller boundaries. They cover empty and failed replacement, late cancellation, stale context, wrong-thread access, queue rejection, allocation failures, read failures, retirement retries, request overflow, copied profiles and terminal destruction. Run both Debug and Release; setup uses checks that remain active when assertions are disabled.</p>
+<p>Expected qualification is zero failed cases and no unexpected skips. Authored coverage and successful configuration do not establish that the runtime checks passed. If a result seems stale, record the host context, request ID, task state, operation status and publication status before changing logic. If a queue refuses admission, preserve the current report and retry only after the owner has resolved capacity or shutdown.</p>
+<h2>8. Extend the host without duplicating the controller</h2>
+<p>Connect the existing Tools CodeGuard command to Begin, call Poll from the established UI refresh path, and render retained findings only for the current context. Disable duplicate start while pending and expose cancellation through the existing command system. On workspace close, invalidate the context and retire the owner safely. Keep selection of profiles and presentation in the host, while scheduling and publication policy stay in Framework.</p>
+<p><a href="index.html">Framework learning index</a></p>
+</main></body></html>

@@ -1,0 +1,60 @@
+<!-- Umicom Framework
+File: docs/learning/codeguard-owned-results.html
+
+PURPOSE:
+Teach transactional CodeGuard results, exact scan roots, allocation failures and borrowed finding lifetimes.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Retain complete CodeGuard results</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Retain complete CodeGuard results</h1>
+<h2>1. Separate a completed report from a failed attempt</h2>
+<p>A quality panel may already display a useful report when the next scan fails. Clearing that report before traversal starts makes a disk error look like a new empty result. Scanning directly into the displayed object can leave only the first few findings from an incomplete attempt. Framework now owns a separate candidate result and publishes it only when scanning returns OK.</p>
+<p>Open src/codeguard/service.c. Follow the candidate from result creation through umi_codeguard_scan, result swap and destruction. On failure the candidate is destroyed and the retained report remains unchanged. On success the arrays are swapped; destroying the candidate then releases the former report. A successful scan with zero findings really replaces the previous findings. A failed scan with zero collected findings does not.</p>
+<h2>2. Keep ownership stable without pretending nothing changed</h2>
+<p>The service returns a borrowed result object. Its address stays stable until service destruction. Each finding is borrowed from an owned array. Successful replacement invalidates old finding pointers, while a failed scan preserves them. The allocation-free swap transfers array ownership between the retained and candidate objects; it does not copy a second unbounded report. Peak memory still includes both reports during scanning.</p>
+<pre><code class="language-c">/* service is an existing caller-owned UmiCodeGuardService. */
+UmiStatus status = umi_codeguard_service_scan(service, &amp;profile);
+if (status == UMI_STATUS_OK) {
+    /* Read the newly completed report, then apply the chosen severity gate. */
+    const UmiCodeGuardResult *current = umi_codeguard_service_result(service);
+    /* Render or copy findings while this owner remains stable. */
+    (void)current;
+} else {
+    /* Show the failed attempt separately. Retained findings describe the
+     * previous completed scan, not a passing result for this attempt. */
+}</code></pre>
+<!-- Earlier ordinary-service contract retained: <p>This fragment assumes a configured profile and an existing service. Calls must be serialized. The swap is a logical commit point, not a thread-safety primitive or a filesystem transaction. It does not stop other software from changing files during a scan. The synchronous service does not provide an asynchronous worker or traversal cancellation.</p> -->
+<p>This fragment assumes a configured profile and an existing service. Calls must be serialized. The swap is a logical commit point, not a thread-safety primitive or a filesystem transaction. It does not stop other software from changing files during a scan. The ordinary entry point remains synchronous. The optional <a href="codeguard-cancellation.html">cancellable service</a> observes a shared token during traversal and analysis boundaries; it creates no asynchronous worker.</p>
+<h2>3. Preserve the requested workspace</h2>
+<p>A fixed array can store only a bounded root path. Silently truncating a longer input changes the scan scope. Creation now rejects empty roots and roots longer than 1023 bytes, clears a valid output pointer on refusal and copies an accepted root exactly. Allocation does not prove that the path exists. Relative paths retain their earlier semantics and resolve when scanning occurs; use an absolute path when the workspace identity must not depend on a later current-directory change.</p>
+<h2>4. Own a finding before growing its array</h2>
+<p>A caller can borrow a finding from a result and append that same value. If append first reallocates the array, the borrowed input pointer may refer to retired storage. The corrected append copies the finding value before growth, then publishes it only after allocation succeeds. Count, capacity and the array remain unchanged on allocation failure.</p>
+<p>The maximum representable item count is SIZE_MAX divided by the size of one finding. Initial allocation and growth respect that bound. Growth near the limit caps at the maximum rather than wrapping a multiplication into a small allocation. Tests isolate the arithmetic with temporary internal metadata instead of attempting an enormous allocation.</p>
+<h2>5. Read the deterministic regression boundary</h2>
+<ol><li>Open tests/codeguard/test_transactional_results.c. It includes the production ownership sources once and substitutes only allocator and scanner boundaries.</li>
+<li>Read partial-failure: the scanner writes candidate findings before returning an error. The retained object, findings and summary must still describe the prior successful scan.</li>
+<li>Compare first-failure, replace and empty. They distinguish an incomplete initial attempt, a complete replacement and a complete empty report.</li>
+<li>Read candidate-object and candidate-items. They inject allocation failures before scanning and check that the scanner was not called.</li>
+<li>Read result-alias-growth. Its allocator always moves the array and poisons retired storage, so the test does not depend on whether the system realloc happens to keep an address.</li>
+<li>Compare result-swap, result-swap-empty and result-swap-invalid. Check ownership after exchange and verify that all allocations are released.</li></ol>
+<p>The scanner double controls failure timing; it does not validate source rules or directory traversal. Keep the existing CodeGuard rule and scanner tests as well. The focused fixture compares finding fields rather than unspecified C structure padding. Quarantined storage is released at the end of each test.</p>
+<h2>6. Run the focused qualification</h2>
+<p>Use an already configured Framework build with BUILD_TESTING enabled. Replace the build path consistently with your own configured directory. Run each command separately and stop on an error. These commands are a qualification workflow, not a claim that they have run on your machine.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-codeguard-ownership-tests --parallel 2
+ctest --test-dir build/windows-ucrt64-debug -R &quot;^framework[.]codeguard_ownership[.]&quot; --output-on-failure --no-tests=error</code></pre>
+<p><!-- Earlier fixture count retained for review: Expect 24 focused cases with no failures or skips. -->Expect 30 focused ownership cases with no failures or skips, including cancellation and analysis capacity exhaustion. If an ownership case fails, inspect the failed boundary before widening the expected result. If the test target is absent, configure the current source with BUILD_TESTING enabled. A successful configuration registers checks; it does not compile or execute them. Existing scanner and product suites require their own build and run.</p>
+<h2>7. Build an independent application</h2>
+<p>The complete [installed SDK example](../../examples/sdk_codeguard/README.md) links the exported CodeGuard component without a Framework source checkout. It checks scanning, report writing and the severity gate separately. Read its main.c and follow the README with your installed package. A failed output stream is not a successful report, and an OK scan status does not mean no high-severity findings were found.</p>
+<h2>Exercise</h2>
+<p>Design a panel state with two fields: the last completed report and the latest attempt status. Walk through success, partial failure, allocation failure and successful empty replacement. State when each borrowed finding pointer becomes invalid. Then extend the fixture with a timeout outcome and predict which state should remain visible. Keep source scanning, UI presentation and policy decisions at separate boundaries.</p>
+<p><a href="index.html">Framework learning contents</a></p></main></body></html>

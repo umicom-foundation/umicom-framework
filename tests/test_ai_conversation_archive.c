@@ -100,6 +100,40 @@ construction_cleanup:
     return result;
 }
 
+/* File loading must preserve a previously accepted value on both read refusal
+ * and late parse failure. This helper uses only the fixture file owned by main. */
+static void verify_loading_boundaries(const char *path)
+{
+    unsigned char *bytes = NULL;
+    size_t size = 0U;
+    UmiAiConversationRecord *loaded = malloc(sizeof *loaded);
+    UmiAiConversationRecord *before = malloc(sizeof *before);
+    assert(loaded != NULL && before != NULL);
+    assert(umi_fs_read_bytes(path, &bytes, &size) == UMI_STATUS_OK && size > 1U);
+    assert(UmiAiConversationRecordParse(bytes, size, loaded) == UMI_STATUS_OK);
+    memcpy(before, loaded, sizeof *before);
+    assert(UmiAiConversationArchiveLoadBounded(path, size, loaded) == UMI_STATUS_OK);
+    assert(strcmp(loaded->conversation.messages[0].text, before->conversation.messages[0].text) == 0);
+    memcpy(before, loaded, sizeof *before);
+    assert(UmiAiConversationArchiveLoadBounded(path, size - 1U, loaded) == UMI_STATUS_CAPACITY_EXCEEDED);
+    assert(memcmp(before, loaded, sizeof *before) == 0);
+    assert(UmiAiConversationArchiveLoadBounded(path, 0U, loaded) == UMI_STATUS_INVALID_ARGUMENT);
+    assert(UmiAiConversationArchiveLoadBounded(path, (size_t)UMI_AI_CONVERSATION_FILE_MAX_BYTES + 1U,
+        loaded) == UMI_STATUS_INVALID_ARGUMENT);
+    assert(UmiAiConversationArchiveLoadBounded("relative-session.txt", size, loaded) == UMI_STATUS_INVALID_ARGUMENT);
+    assert(memcmp(before, loaded, sizeof *before) == 0);
+    /* A late missing-field error must not replace the caller's previous record
+     * with the parsed prefix, through either the legacy or bounded interface. */
+    assert(umi_fs_write_text(path, "format=umicom-ai-session-v1\nsession.id=partial\n") == UMI_STATUS_OK);
+    assert(umi_ai_conversation_archive_load_record(path, loaded) == UMI_STATUS_PARSE_ERROR);
+    assert(memcmp(before, loaded, sizeof *before) == 0);
+    assert(UmiAiConversationArchiveLoadBounded(path, UMI_AI_CONVERSATION_FILE_MAX_BYTES,
+        loaded) == UMI_STATUS_PARSE_ERROR);
+    assert(memcmp(before, loaded, sizeof *before) == 0);
+    umi_fs_free_text((char *)bytes);
+    free(loaded); free(before);
+}
+
 int main(void)
 {
     if (UmiAiConversationRecordConstructionCases() != 0) return 1;
@@ -135,6 +169,7 @@ int main(void)
     assert(strcmp(loaded.session.session_id, record.session.session_id) == 0);
     assert(loaded.conversation.message_count == 1U);
     assert(strcmp(loaded.conversation.messages[0].text, message.text) == 0);
+    verify_loading_boundaries(path);
     assert(umi_fs_remove_tree(path) == UMI_STATUS_OK);
     umi_ai_conversation_archive_destroy(archive);
     return 0;

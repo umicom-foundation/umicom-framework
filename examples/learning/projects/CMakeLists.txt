@@ -1,6 +1,16 @@
 #-----------------------------------------------------------------------------
 # Umicom Framework — practical application lessons
-# Author: Sammy Hegab, Umicom Foundation | Licence: MIT
+# File: examples/learning/projects/CMakeLists.txt
+#
+# PURPOSE:
+#   Build practical application lessons against the shared Framework targets.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
 #-----------------------------------------------------------------------------
 # These examples consume the same targets as the applications. Configure them
 # through the Applications superbuild; no copied Framework is embedded here.
@@ -8,7 +18,7 @@ if(NOT TARGET Umicom::developer)
     message(STATUS "Practical Framework projects require the Applications build or installed Framework targets")
     return()
 endif()
-foreach(example IN ITEMS work_log account_totals binary_flags notes_memory project_creator)
+foreach(example IN ITEMS work_log account_totals binary_flags notes_memory project_creator start_navigation)
     string(REPLACE "_" "-" name "${example}")
     add_executable(umicom-learning-${name} ${example}.c)
     target_link_libraries(umicom-learning-${name} PRIVATE Umicom::Framework)
@@ -24,7 +34,7 @@ target_link_libraries(umicom-learning-notes-session PRIVATE umicom_learning_note
 umicom_learning_target(umicom-learning-notes-session)
 install(TARGETS umicom-learning-notes-session RUNTIME DESTINATION bin COMPONENT Learning)
 if(BUILD_TESTING)
-    foreach(example IN ITEMS work-log account-totals binary-flags notes-memory notes-session)
+    foreach(example IN ITEMS work-log account-totals binary-flags notes-memory notes-session start-navigation)
         add_test(NAME framework.learning.projects.${example} COMMAND umicom-learning-${example})
         set_tests_properties(framework.learning.projects.${example} PROPERTIES
             LABELS "learning;ide-workflow;projects" TIMEOUT 30)

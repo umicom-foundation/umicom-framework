@@ -48,6 +48,8 @@ void umi_codeguard_result_clear(UmiCodeGuardResult *result);
 /**
  * Add codeguard result only after its inputs and available capacity have been checked.
  */
+/* finding may be borrowed from result. Successful growth may invalidate prior
+ * finding pointers; allocation failure preserves all existing findings. */
 UmiStatus umi_codeguard_result_add(UmiCodeGuardResult *result, const UmiCodeGuardFinding *finding);
 /**
  * Return the number of records represented by codeguard result without changing their
@@ -69,6 +71,14 @@ size_t umi_codeguard_result_count_severity(const UmiCodeGuardResult *result, Umi
  * applications.
  */
 size_t umi_codeguard_result_count_category(const UmiCodeGuardResult *result, UmiCodeGuardCategory category);
+/* Exchange complete owned finding arrays without allocation. NULL operands
+ * refuse without mutation; swapping an object with itself is a no-op.
+ * Object addresses stay valid. Borrowed finding pointers now belong to the
+ * opposite result and must not be used after that owner changes or dies.
+ * Serialize access externally; this function is not a concurrency primitive. */
+UmiStatus umi_codeguard_result_swap(
+    UmiCodeGuardResult *left, UmiCodeGuardResult *right);
+
 #ifdef __cplusplus
 }
 #endif

@@ -98,9 +98,11 @@ if(TARGET umicom_ui_gtk4)
     # adapter used by other GTK4 applications, keeping product code thin.
     target_link_libraries(umicom_ui_gtk4 PUBLIC
         Umicom::chart
+        Umicom::product
         Umicom::chart_cairo
     )
     target_sources(umicom_ui_gtk4 PRIVATE
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/about_dialog_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/action_group_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/focus_cycle_gtk4.c"
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/asset_browser_gtk4.c"
@@ -130,7 +132,8 @@ if(TARGET umicom_ui_gtk4)
     # Use the stable identifier comparison to choose the matching record or policy.
     if(UMICOM_ENABLE_STRICT_WARNINGS AND CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
         set_source_files_properties(
-            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/action_group_gtk4.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/about_dialog_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/action_group_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/focus_cycle_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/asset_browser_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/workstation/chart_surface_gtk4.c"
@@ -912,4 +915,48 @@ endif()
 if(TARGET umicom_ui_gtk4)
     target_sources(umicom_ui_gtk4 PRIVATE
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/appearance_typography_private.h")
+endif()
+
+# Check ownership through real GTK callbacks, without replacing the shared host.
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-gtk4-workspace-focus-ownership-test
+        "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/test_workspace_focus_ownership_gtk4.c")
+    target_link_libraries(umicom-gtk4-workspace-focus-ownership-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-gtk4-workspace-focus-ownership-test)
+    umicom_apply_sanitizers(umicom-gtk4-workspace-focus-ownership-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-gtk4-workspace-focus-ownership-test)
+    endif()
+    foreach(case select unmounted repeat invalid missing hidden-model hidden-frame disabled-frame
+        page-destroy-host page-close-owner page-remove page-reparent page-hide page-redirect
+        page-reorder page-reenter page-rebuild page-maximise page-restore page-metadata
+        focus-destroy-host focus-close-owner focus-hide focus-redirect focus-reenter
+        floating-present floating-destroy-host floating-close-owner)
+        add_test(NAME framework.ui_workstation.workspace.focus_owner.${case}
+            COMMAND umicom-gtk4-workspace-focus-ownership-test ${case})
+        set_tests_properties(framework.ui_workstation.workspace.focus_owner.${case}
+            PROPERTIES TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;gtk4;workspace;focus;ownership")
+    endforeach()
+endif()
+
+
+# About uses the same native layout and lifetime service in every product.
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-gtk4-about-dialog-test
+        "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/test_about_dialog_gtk4.c")
+    target_link_libraries(umicom-gtk4-about-dialog-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-gtk4-about-dialog-test)
+    umicom_apply_sanitizers(umicom-gtk4-about-dialog-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-gtk4-about-dialog-test)
+    endif()
+    foreach(case metadata copy brand native-close owner-close null-parent invalid-parent closed-parent
+        null-config null-output occupied-output empty-name invalid-utf8 name-limit comment-limit
+        invalid-license empty-comment repeat reopen-retained distinct-owners changed-config
+        observer-owner-close observer-child-close observer-hide observer-reparent observer-reenter
+        construction-owner-close construction-copy construction-reenter)
+        add_test(NAME framework.ui_workstation.about.${case} COMMAND umicom-gtk4-about-dialog-test ${case})
+        set_tests_properties(framework.ui_workstation.about.${case} PROPERTIES TIMEOUT 30
+            SKIP_RETURN_CODE 77 LABELS "framework;gtk4;about;brand;ownership;regression")
+    endforeach()
 endif()

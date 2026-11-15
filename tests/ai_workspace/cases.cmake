@@ -6,6 +6,12 @@
 # LICENCE: MIT
 #-----------------------------------------------------------------------------
 set(UMICOM_AI_WORKSPACE_CASES
+    busy_release_preserves_workspace
+    prepared_execution_abandon
+    execution_retained_completed_storage
+    execution_rechecks_policy_before_start
+    execution_invalid_reply_is_settled
+    execution_owner_count_guard
     empty_open_is_read_only
     invalid_inputs_do_not_write
     source_provenance_round_trip
@@ -55,6 +61,7 @@ set(UMICOM_AI_WORKSPACE_CASES
     source_instructions_remain_data
     policy_revocation_blocks_run
     remote_policy_is_not_bypassed
+    registry_corruption_blocks_run
     tools_require_allowlist_and_review
     tool_permission_change_blocks_run
     maximum_response_round_trip
@@ -76,6 +83,7 @@ set(UMICOM_AI_WORKSPACE_CASES
     job_capacity
 )
 set(UMICOM_AI_WORKSPACE_SQLITE_CASES
+    sqlite_execution_publication_failure
     sqlite_restart
     sqlite_write_rollback
     sqlite_uncertain_result_is_not_repeated

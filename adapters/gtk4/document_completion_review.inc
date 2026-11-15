@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/document_completion_review.inc
- * PURPOSE: Review native language completions through the existing document binding and Undo owner.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Review native language completions through the existing document binding and Undo owner.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/document/source_request.h"
@@ -22234,6 +22241,9 @@ static UmiStatus CompletionReviewCreateWithCallDirection(
     return status;
 }
 #endif
+/* Shared capture is private to this document-owner translation unit. */
+#include "document_review_capture.inc"
+
 static UmiStatus CompletionReviewCreateWithCallDirection(
     UmiGtk4Adapter *adapter, const char *workspace_folder, const char *application_directory,
     const char *base_override, int formatting, int source_information,
@@ -22253,6 +22263,10 @@ static UmiStatus CompletionReviewCreateWithCallDirection(
     int navigation = navigation_kind != NULL || document_symbols || source_diagnostics || call_direction != 0;
     UmiLanguageNavigationKind kind =
         navigation_kind != NULL ? *navigation_kind : UMI_LANGUAGE_NAVIGATION_DEFINITION;
+    /* The capture is shared with menu availability so retained controls cannot
+     * bypass busy, source or message-limit admission. Keep the former capture
+     * here for comparison; the reusable helper preserves all review modes. */
+#if 0
     if (adapter == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     if (adapter->edit_lifetime == NULL || adapter->edit_coordinator == NULL || adapter->window == NULL ||
@@ -22298,6 +22312,14 @@ static UmiStatus CompletionReviewCreateWithCallDirection(
         UmiDocumentSourceRequestDestroy(source);
         return status;
     }
+#else
+    UmiDocumentSourceRequest *source = NULL;
+    UmiDocumentSourceRequestSummary summary;
+    UmiStatus status = CompletionReviewCapture(adapter, source_information || navigation,
+        !code_actions && !formatting && !source_information && !navigation,
+        &source, &summary);
+    if (status != UMI_STATUS_OK) return status;
+#endif
     char settings_path[UMI_PATH_CAPACITY] = {0};
     if (application_directory != NULL)
         status = UmiLanguageServerPreferencesPath(application_directory, base_override, summary.language_id,

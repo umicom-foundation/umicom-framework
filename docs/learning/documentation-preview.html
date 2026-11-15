@@ -1,0 +1,71 @@
+<!-- Umicom Framework
+File: docs/learning/documentation-preview.html
+
+PURPOSE:
+Teach bounded local documentation navigation and native preview search ownership.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Read and search documentation safely in native C</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Read and search documentation safely in native C</h1>
+<p>A documentation viewer looks simple: read a file, show its text, and select a search result. Native interfaces add an important complication. Setting a label, replacing a text buffer or moving a selection can synchronously call application code. That callback can close the window before the original operation returns. This lesson follows the Framework preview service and Studio Documentation panel to explain how a useful viewer can respect that lifetime boundary.</p>
+<h2>1. Try the existing reading workflow</h2>
+<ol><li>Create an HTML file in a folder you control. Give it a title and two paragraphs containing different phrases. Keep an unsaved source document open in Studio so you can observe that reading documentation does not change source state.</li>
+<li>Open Documentation and enter the full HTML path. Click Open, or press Enter in the location field. The preview shows readable document text and a summary. It is a read-only text presentation, not an interactive web page.</li>
+<li>Open another local document. Use Back and Forward to revisit browser history. Edit the first HTML file externally, return to it, and use Reload to read its current contents.</li>
+<li>Type a phrase into Find in documentation. The first case-insensitive match is selected. Clear the query to clear the selection and return to the beginning. A missing phrase leaves the previous selection unchanged.</li>
+<li>Check the source editor. Reading, navigating and searching must preserve its unsaved text, cursor, selection and dirty state.</li></ol>
+<p>Relative file paths require an explicitly opened project. Without a project, enter an absolute path or choose a lesson library through Guided Learning. The process working directory can hold application settings and must not silently become the source project. A file URL is also accepted when it decodes to a valid local filename. Malformed file URLs are rejected before replacing the preview.</p>
+<h2>2. Know what the browser contract provides</h2>
+<p>Studio keeps navigation history in its existing Framework browser service. The GTK panel supplies address controls and a readable local preview. Entering a remote URL records navigation and displays an explanation; this panel does not fetch or execute that remote page. A native interactive renderer is a separate integration. A successful history operation and a successful file read are different outcomes: history can move even when the selected file is missing, too large or unreadable.</p>
+<p>The local reader applies a four-mebibyte source budget through the shared bounded file reader. It rejects embedded zero bytes and repairs invalid UTF-8 for native presentation. Repair can expand the output, so consumers must also respect the preview service’s output limit. Do not report a truncated prefix as a complete document. The summary is allocated to fit its formatted content rather than cutting a repaired character sequence into a fixed array.</p>
+<h2>3. Distinguish memory lifetime from window authority</h2>
+<p>A strong object reference keeps an allocation alive. It does not mean the window remains open, that a widget still belongs to that window, or that its application runtime is still valid. A retained button can outlive the workbench that originally created it. Storing a raw runtime pointer in the button’s signal closure therefore gives an old control a path into retired application state.</p>
+<p>Studio binds each Documentation signal to a weak owner request. On activation, the callback resolves the current live workbench and verifies that the control is rooted in that owner. If resolution fails, the callback does no work. The closure owns its request and releases it when the signal is disconnected. During a longer operation, Studio resolves that request again after each browser or GTK call that can notify observers.</p>
+<h2>4. Search through the shared C interface</h2>
+<pre><code class="language-c">#include &quot;umicom/ui/gtk4/text_preview.h&quot;
+
+/* The caller supplies an existing read-only view rooted in owner.
+ * This helper changes only the documentation selection. */
+UmiStatus SearchDocumentation(GtkWindow *owner,
+    GtkTextView *preview, const char *query)
+{
+    UmiStatus status = UmiGtk4TextPreviewFind(owner, preview, query);
+    if (status == UMI_STATUS_NOT_FOUND) {
+        /* Keep the previous selection. The host may show a search hint. */
+        return status;
+    }
+    if (status == UMI_STATUS_CANCELLED || status == UMI_STATUS_BUSY) {
+        /* A closed owner or nested callback must not trigger a stale retry. */
+        return status;
+    }
+    return status;
+}</code></pre>
+<p>The query must be valid UTF-8 and at most 1024 bytes. Empty text is valid. The owner must be live, the preview must be rooted in that owner, and the view must be read-only. A nested search or publication on the same view returns BUSY. These checks belong in Framework so other applications can use the same ownership behavior without duplicating Studio code. Call this API on the GTK thread.</p>
+<h2>5. Never carry stale text iterators across callbacks</h2>
+<p>A GtkTextIter describes a position in a particular buffer version. Editing the buffer can invalidate it. Search first obtains the match offsets as integers, then changes the selection. A temporary buffer-change observer records any content mutation. After selection callbacks finish, Framework checks the owner, view root, buffer identity, content-change flag and selected offsets. Only then does it construct a fresh iterator for scrolling. It checks again after scrolling.</p>
+<p>If an observer closes the owner, replaces the buffer or changes content or selection, the operation returns CANCELLED. It does not restore stale iterators or roll back the observer’s changes. Cancellation after publication is not a promise that nothing changed. The same distinction applies when UmiGtk4TextPreviewPublish replaces a complete buffer and then updates its summary: an observer can interrupt the second step. Readers retaining the old buffer continue to own that earlier text.</p>
+<h2>6. Verify ordinary use and adversarial callbacks</h2>
+<ol><li>Configure Framework with its GTK adapter and testing enabled, then build the preview-search test target. Run the focused Framework tests shown below in an environment with the required GTK runtime.</li>
+<li>Configure Applications with Studio and its GTK test support enabled. Build the Documentation ownership test target and run its focused tests.</li>
+<li>Check failed and skipped counts separately. Return code 77 means GTK could not initialize; it is skipped coverage, not a successful native workflow.</li>
+<li>Review cases that close a window during address, buffer, label and selection notifications. Also review nested search/publication and controls deliberately retained after owner destruction.</li>
+<li>Perform the manual reading workflow in the first section. Automated selection checks do not prove visual font fallback, icon appearance, scrolling position or accessibility behavior on every display.</li></ol>
+<pre><code class="language-powershell">cmake --build &lt;framework-build&gt; --target umicom-text-preview-search-gtk4-test
+ctest --test-dir &lt;framework-build&gt; -R &quot;^framework\.gtk4\.text_preview_search\.&quot; --output-on-failure
+cmake --build &lt;applications-build&gt; --target umicom-studio-documentation-ownership-test
+ctest --test-dir &lt;applications-build&gt; -R &quot;^studio\.documentation_ownership\.gtk4\.&quot; --output-on-failure</code></pre>
+<p>Replace the angle-bracket paths with your configured build directories. These commands describe qualification work; the presence of source and registered tests does not establish that compilation or native execution has passed. Use your normal compiler and GTK environment. If configuration cannot locate GTK, correct the dependency setup before interpreting missing targets as a product failure.</p>
+<h2>Troubleshooting and extension exercise</h2>
+<p>If a local path will not open, check its spelling, readability, source size and project-relative base. If a remote address shows an explanation, that is the current readable-preview contract. If search leaves an old selection, confirm that the phrase exists and that the query is within the byte limit. If an operation is cancelled, inspect which observer changed ownership or content; do not retry through an old runtime pointer.</p>
+<p>For an extension exercise, design Find Next using an explicit search state containing a copied query, a buffer identity and character offsets. Specify how it responds to a replaced buffer, changed text, empty queries and a closed owner before writing code. Keep the reusable search state in Framework and the controls in the application. Do not implement Find Next by retaining GtkTextIter values between user actions.</p>
+<p><a href="shortcut-reference.html">Keyboard shortcut references</a> · <a href="welcome.html">Learning home</a></p></main></body></html>

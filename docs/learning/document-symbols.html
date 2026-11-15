@@ -43,6 +43,22 @@ symbol selects its identifier range. A flat result opens the starting caret of
 its reveal range. Existing unsaved target drafts are kept. Back and Forward use
 the normal document navigation history; this action neither saves nor edits text.</li>
 </ol>
+<section id="navigation-commands"><h2>Use the Navigate menu and editor controls</h2>
+<p><strong>Navigate &gt; Go to Symbol</strong> opens this same document-symbol review.
+<strong>Go to Definition</strong> and <strong>Find References</strong> open the existing
+location reviews for the captured caret. Opening a form does not start a language server;
+Request remains a separate action. The editor toolbar uses the same Framework command owner.</p>
+<p>The menu is unavailable without a capturable source or while another document operation
+owns the review. Read-only drafts are supported. Finish the active operation, then try again.
+Availability is repeated at dispatch, so an older menu selection cannot open a second review.</p>
+<pre><code>UmiStatus status = UmiGtk4AdapterSourceNavigationCommand(
+    adapter, "navigate.symbol", project_folder, "Studio", NULL);</code></pre>
+<p>Call on the GTK owner thread with a live editing binding. The status describes opening
+the review; it does not establish a successful symbol query. The companion
+<code>UmiGtk4AdapterSourceNavigationCommandEnabled</code> performs source admission without
+opening a form, loading preferences or launching a server. Native tests are registered
+under <code>framework.document.navigation_commands.gtk4</code>; their execution and an
+actual server lookup are separate validation steps.</p></section>
 <h2>Troubleshooting</h2><table>
 <tr><th>What you see</th><th>What to try</th></tr>
 <tr><td>An empty outline</td><td>The server may return no symbols for this document.

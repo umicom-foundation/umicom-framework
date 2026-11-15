@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/document/uri.h"
+#include "umicom/platform/path_uri.h"
 #include "umicom/document/text_encoding.h"
 
 #include <ctype.h>
@@ -116,6 +117,8 @@ UmiStatus umi_document_uri_from_path(const char *path,
     return UMI_STATUS_OK;
 }
 #else
+/* The headless Platform encoder now owns the same absolute-path URI policy so reports and documents share it without a UI dependency. The former implementation is retained for review. The previous implementation remains for review. */
+#if 0
 UmiStatus umi_document_uri_from_path(const char *path, char *out_uri, size_t capacity)
 {
     if (path == NULL || path[0] == '\0' || out_uri == NULL || capacity == 0U)
@@ -158,6 +161,11 @@ UmiStatus umi_document_uri_from_path(const char *path, char *out_uri, size_t cap
     memcpy(out_uri, candidate, used + 1U);
     free(candidate);
     return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_document_uri_from_path(const char *path, char *out_uri, size_t capacity)
+{
+    return UmiFileUriFromPath(path, out_uri, capacity);
 }
 #endif
 /*

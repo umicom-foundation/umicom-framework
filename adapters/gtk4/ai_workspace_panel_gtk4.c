@@ -17,6 +17,7 @@
 #include "umicom/ui/gtk4/ai_workspace.h"
 #include "umicom/ui/gtk4/text_export.h"
 #include "umicom/ai_workspace/evidence.h"
+#include "umicom/platform/threading.h"
 #include <inttypes.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -53,9 +54,20 @@ struct UmiAiWorkspaceGtkPanel {
     GtkWidget *sourceLibrary; /* Owns reviewed source controls independently of borrowed services. */
     GtkWidget *reviewExport; /* Owns displayed draft export, never model execution. */
     GtkWidget *evidenceExport; /* Owns only export controls; writes own immutable captures. */
+    /* The startup transport is borrowed; an active reviewed owner retains it. */
+    UmiAiLocalTransport *transport;
+    UmiAiWorkspaceStream *stream;
+    UmiStatus streamObservationStatus;
+    size_t streamDisplayedBytes; /* Byte cursor belongs only to the current draft owner. */
+    bool streamCallbackActive;
+    uint64_t ownerThread;
     bool closed;
 };
+/* Reviewed streaming retains workspace access on the GTK owner; gate existing callbacks until either execution route releases its owner. The former implementation is retained for owner review. */
+#if 0
 static bool Available(UmiAiWorkspaceGtkPanel *panel) { return panel != NULL && !panel->closed && panel->worker == NULL; }
+#endif
+static bool Available(UmiAiWorkspaceGtkPanel *panel) { return panel != NULL && !panel->closed && panel->worker == NULL && panel->stream == NULL; }
 static const char *Explain(UmiStatus status)
 {
     switch (status) {
@@ -307,10 +319,31 @@ static void Deny(GtkButton *button, gpointer data)
     UmiStatus status = UmiAiWorkspaceReview(panel->workspace, panel->selectedId, Value(panel->reviewer), false);
     Refresh(panel); Message(panel, status);
 }
+/* Forward streaming cancellation through the retained reviewed owner while keeping the existing complete-response worker route. The former implementation is retained for owner review. */
+#if 0
 static void Cancel(GtkButton *button, gpointer data)
 {
     UmiAiWorkspaceGtkPanel *panel = data; (void)button;
     if (panel == NULL || panel->closed) return;
+    if (panel->worker != NULL) {
+        UmiAiWorkspaceCancellationRequest(panel->cancellation);
+        gtk_label_set_text(panel->message, "Cancellation requested. Waiting for the local transport to return; no automatic retry will follow."); return;
+    }
+    UmiStatus status = UmiAiWorkspaceCancel(panel->workspace, panel->selectedId); Refresh(panel); Message(panel, status);
+}
+
+#endif
+static void Cancel(GtkButton *button, gpointer data)
+{
+    UmiAiWorkspaceGtkPanel *panel = data; (void)button;
+    if (panel == NULL || panel->closed) return;
+    if (panel->stream != NULL) {
+        UmiStatus status = UmiAiWorkspaceStreamCancel(panel->stream);
+        if (status == UMI_STATUS_OK)
+            gtk_label_set_text(panel->message, "Cancellation requested. Waiting for the streamed request to settle and release.");
+        else Message(panel, status);
+        return;
+    }
     if (panel->worker != NULL) {
         UmiAiWorkspaceCancellationRequest(panel->cancellation);
         gtk_label_set_text(panel->message, "Cancellation requested. Waiting for the local transport to return; no automatic retry will follow."); return;
@@ -333,6 +366,8 @@ static gboolean PollWorker(gpointer data)
     gtk_widget_set_sensitive(panel->forms, TRUE); gtk_button_set_label(panel->cancel, "Cancel selected job");
     Refresh(panel); Message(panel, status); return G_SOURCE_REMOVE;
 }
+/* Use the shared reviewed controller for supported local jobs and retain the original worker implementation for other providers and tools. The former implementation is retained for owner review. */
+#if 0
 static void Run(GtkButton *button, gpointer data)
 {
     UmiAiWorkspaceGtkPanel *panel = data; (void)button; GError *error = NULL;
@@ -358,6 +393,52 @@ static void Run(GtkButton *button, gpointer data)
     }
     gtk_label_set_text(panel->message, "Running the reviewed request. You can stop it; source edits and other requests are paused until it finishes.");
 }
+
+#endif
+static void RunCompleteResponse(GtkButton *button, gpointer data)
+{
+    UmiAiWorkspaceGtkPanel *panel = data; (void)button; GError *error = NULL;
+    if (!Available(panel) || panel->selectedId[0] == '\0') return;
+    panel->work = g_new0(AiWorkItem, 1U); panel->work->workspace = panel->workspace;
+    panel->work->cancellation = panel->cancellation; g_strlcpy(panel->work->jobId, panel->selectedId, sizeof(panel->work->jobId));
+    UmiAiWorkspaceCancellationReset(panel->cancellation);
+    gtk_widget_set_sensitive(panel->forms, FALSE); gtk_widget_set_sensitive(GTK_WIDGET(panel->cancel), TRUE);
+    gtk_button_set_label(panel->cancel, "Stop current request");
+    panel->worker = g_thread_try_new("umicom-ai-request", RunWorker, panel->work, &error);
+    if (panel->worker == NULL) {
+        g_clear_error(&error); g_free(panel->work); panel->work = NULL;
+        gtk_widget_set_sensitive(panel->forms, TRUE); gtk_button_set_label(panel->cancel, "Cancel selected job");
+        Refresh(panel); Message(panel, UMI_STATUS_UNAVAILABLE); return;
+    }
+    panel->pollSource = g_timeout_add(100U, PollWorker, panel);
+    if (panel->pollSource == 0U) {
+        UmiAiWorkspaceCancellationRequest(panel->cancellation);
+        (void)g_thread_join(panel->worker); panel->worker = NULL;
+        g_free(panel->work); panel->work = NULL;
+        gtk_widget_set_sensitive(panel->forms, TRUE); gtk_button_set_label(panel->cancel, "Cancel selected job");
+        Refresh(panel); Message(panel, UMI_STATUS_UNAVAILABLE); return;
+    }
+    gtk_label_set_text(panel->message, "Running the reviewed request. You can stop it; source edits and other requests are paused until it finishes.");
+}
+
+#include "ai_workspace_reviewed_stream.inc"
+static void Run(GtkButton *button, gpointer data)
+{
+    UmiAiWorkspaceGtkPanel *panel = data;
+/* Retain callback ownership across signal-emitting widget changes in the new run dispatcher. The former implementation is retained for owner review. */
+#if 0
+    if (!Available(panel) || panel->selectedId[0] == '\0') return;
+    if (panel->transport != NULL && AiTryStream(panel)) return;
+    RunCompleteResponse(button, data);
+#endif
+    if (!Available(panel) || panel->selectedId[0] == '\0' || panel->streamCallbackActive) return;
+    /* Widget notifications can reenter close while a run callback still owns
+     * this controller on the stack. Checked release must retain it until return. */
+    panel->streamCallbackActive = true;
+    bool streamed = panel->transport != NULL && AiTryStream(panel);
+    if (!streamed) RunCompleteResponse(button, data);
+    panel->streamCallbackActive = false;
+}
 static void Reload(GtkButton *button, gpointer data)
 {
     UmiAiWorkspaceGtkPanel *panel = data; (void)button; if (!Available(panel)) return;
@@ -382,6 +463,7 @@ UmiStatus UmiAiWorkspaceGtkPanelCreate(UmiAiWorkspace *workspace, UmiAiRuntime *
         return UMI_STATUS_INVALID_ARGUMENT;
     UmiAiWorkspaceGtkPanel *panel = g_new0(UmiAiWorkspaceGtkPanel, 1U);
     panel->workspace = workspace; panel->runtime = runtime; panel->cancellation = cancellation;
+    panel->ownerThread = umi_thread_current_id();
     panel->signalObjects = g_ptr_array_new_with_free_func(g_object_unref);
     panel->root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8); g_object_ref_sink(panel->root); Tag(panel->root, "ai.workspace.root");
     GtkWidget *description = gtk_label_new(storageDescription);
@@ -467,6 +549,8 @@ UmiStatus UmiAiWorkspaceGtkPanelCreate(UmiAiWorkspace *workspace, UmiAiRuntime *
     *outPanel = panel; return UMI_STATUS_OK;
 }
 GtkWidget *UmiAiWorkspaceGtkPanelWidget(UmiAiWorkspaceGtkPanel *panel) { return panel != NULL ? panel->root : NULL; }
+/* Checked retirement now retains the panel and borrowed services when native settlement or release fails, preventing teardown from advancing past an active owner. The former implementation is retained for owner review. */
+#if 0
 void UmiAiWorkspaceGtkPanelDestroy(UmiAiWorkspaceGtkPanel *panel)
 {
     if (panel == NULL) return;
@@ -492,8 +576,53 @@ void UmiAiWorkspaceGtkPanelDestroy(UmiAiWorkspaceGtkPanel *panel)
     g_object_unref(panel->root); g_free(panel);
 }
 
+
+#endif
+UmiStatus UmiAiWorkspaceGtkPanelRelease(UmiAiWorkspaceGtkPanel **in_out_panel)
+{
+    if (in_out_panel == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiAiWorkspaceGtkPanel *panel = *in_out_panel;
+    if (panel == NULL) return UMI_STATUS_OK;
+    if (panel->ownerThread != umi_thread_current_id()) return UMI_STATUS_INVALID_STATE;
+    if (panel->streamCallbackActive) return UMI_STATUS_BUSY;
+    if (!panel->closed) {
+        panel->closed = true;
+        g_object_set_data(G_OBJECT(panel->root), "umicom-ai-workspace-owner", NULL);
+        gtk_widget_set_sensitive(panel->root, FALSE);
+        /* Disconnect before retiring child sections: their teardown may emit
+         * notifications, and retained widgets can outlive this controller. */
+        for (guint i = 0U; i < panel->signalObjects->len; ++i)
+            g_signal_handlers_disconnect_by_data(g_ptr_array_index(panel->signalObjects, i), panel);
+        UmiTextExportGtk4Retire(panel->reviewExport); g_clear_object(&panel->reviewExport);
+        AiEvidenceExportRetire(panel->evidenceExport); g_clear_object(&panel->evidenceExport);
+        AiLibraryRetire(panel->sourceLibrary); g_clear_object(&panel->sourceLibrary);
+        AiImportRetire(panel->importPanel); g_clear_object(&panel->importPanel);
+        if (panel->pollSource != 0U) { g_source_remove(panel->pollSource); panel->pollSource = 0U; }
+    }
+    UmiAiWorkspaceCancellationRequest(panel->cancellation);
+    UmiStatus status = AiStreamStopAndRelease(panel);
+    if (status != UMI_STATUS_OK) return status;
+    /* The complete-response route keeps its established GLib join contract.
+     * The reviewed route above additionally reports native release failures. */
+    if (panel->worker != NULL) { (void)g_thread_join(panel->worker); panel->worker = NULL; }
+    g_free(panel->work);
+    g_ptr_array_unref(panel->signalObjects);
+    g_object_unref(panel->root);
+    g_free(panel);
+    *in_out_panel = NULL;
+    return UMI_STATUS_OK;
+}
+void UmiAiWorkspaceGtkPanelDestroy(UmiAiWorkspaceGtkPanel *panel)
+{
+    /* Compatibility callers cannot receive an error. Streaming hosts use the
+     * checked API and retain the surrounding service owner when it refuses. */
+    (void)UmiAiWorkspaceGtkPanelRelease(&panel);
+}
+
 /* A library switch must not race a model request or a file chooser/read. The
  * import section owns its async work, so inspect its state on the GTK thread. */
+/* Library replacement must also respect a retained stream or a closed controller awaiting native release. The former implementation is retained for owner review. */
+#if 0
 bool UmiAiWorkspaceGtkPanelBusy(const UmiAiWorkspaceGtkPanel *panel)
 {
     if (panel == NULL || panel->closed) return false;
@@ -504,5 +633,20 @@ bool UmiAiWorkspaceGtkPanelBusy(const UmiAiWorkspaceGtkPanel *panel)
     /* A source-library notification can reenter the host on the GTK thread.
      * Keep its borrowed workspace alive until that refresh or review finishes. */
     return panel->worker != NULL || (sources != NULL && (sources->rendering || sources->refreshing)) ||
+        (import != NULL && (import->loading || import->rendering || import->chooser != NULL));
+}
+
+#endif
+bool UmiAiWorkspaceGtkPanelBusy(const UmiAiWorkspaceGtkPanel *panel)
+{
+    if (panel == NULL) return false;
+    if (panel->closed) return true; /* A retained closed owner still blocks replacement. */
+    AiImportPanel *import = panel->importPanel != NULL ?
+        g_object_get_data(G_OBJECT(panel->importPanel), "umicom-ai-import") : NULL;
+    AiSourceLibrary *sources = panel->sourceLibrary != NULL ?
+        g_object_get_data(G_OBJECT(panel->sourceLibrary), "umicom-ai-library") : NULL;
+    /* A source-library notification can reenter the host on the GTK thread.
+     * Keep its borrowed workspace alive until that refresh or review finishes. */
+    return panel->streamCallbackActive || panel->stream != NULL || panel->worker != NULL || (sources != NULL && (sources->rendering || sources->refreshing)) ||
         (import != NULL && (import->loading || import->rendering || import->chooser != NULL));
 }

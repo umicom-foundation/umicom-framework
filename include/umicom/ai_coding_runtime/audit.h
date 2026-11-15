@@ -72,6 +72,45 @@ UmiStatus umi_ai_coding_audit_log_at(
  */
 size_t umi_ai_coding_audit_log_count(const UmiAiCodingAuditLog *log);
 
+/* Validate only fixed text termination. Empty task/summary and historical
+ * scalar values remain representable; this does not authorize an operation. */
+UmiStatus UmiAiCodingAuditRecordValidateText(const UmiAiCodingAuditRecord *record);
+
+/* Admit up to UMI_AI_CODING_AUDIT_CAPACITY records as one group. Refusal
+ * preserves all retained records and sequence state. New identities replace
+ * caller-supplied sequence values and never wrap. A zero count is a no-op.
+ * Input records must be separate from owner storage; serialize all access. */
+UmiStatus UmiAiCodingAuditLogAppendBatch(UmiAiCodingAuditLog *log,
+    const UmiAiCodingAuditRecord *records, size_t count);
+
+typedef struct UmiAiCodingAuditRead {
+    size_t count;
+    uint64_t oldest_sequence;
+    uint64_t newest_sequence;
+    uint64_t next_sequence;
+    uint64_t missed_records;
+    int has_more;
+} UmiAiCodingAuditRead;
+
+/* Copy records strictly after afterSequence, oldest first, without consuming
+ * them. Start at zero. Advance a consumer cursor to next_sequence only after
+ * it has accepted the returned records. missed_records counts evicted records
+ * between the supplied cursor and the oldest retained record; do not hide it.
+ * A cursor newer than this log returns INVALID_STATE. Cursors belong to one
+ * live log instance, not another log or a later process. No reset is provided.
+ * capacity zero permits records NULL and returns metadata without advancing.
+ * Output arrays, report and owner storage must be separate. Every refusal
+ * preserves both outputs. Callers serialize reads, appends and destruction. */
+UmiStatus UmiAiCodingAuditLogReadSince(const UmiAiCodingAuditLog *log,
+    uint64_t afterSequence, UmiAiCodingAuditRecord *records, size_t capacity,
+    UmiAiCodingAuditRead *outRead);
+
+/* Predict the matching batch mutation without changing this owner.
+ * A successful check is valid only while the owner and inputs remain unchanged
+ * on the serialized owner thread. It reserves no capacity and acquires no lock. */
+UmiStatus UmiAiCodingAuditLogCheckAppendBatch(const UmiAiCodingAuditLog *log,
+    const UmiAiCodingAuditRecord *records, size_t count);
+
 #ifdef __cplusplus
 }
 #endif

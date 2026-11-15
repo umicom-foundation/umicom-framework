@@ -233,3 +233,21 @@ unless the user deliberately includes them.
 Each stage is useful on its own. The first release should favour accurate,
 searchable facts and durable issue history. Suggestions become valuable only
 after that foundation is trustworthy.
+
+## Completed-result ownership in the existing scanner service
+
+The current CodeGuard service scans into a separate candidate and replaces its
+retained findings only on success. A failed attempt keeps the previous complete
+report and summary; consumers must present the failure separately rather than
+marking retained evidence as current success. This is an in-memory ownership
+contract, not the durable quality ledger proposed above.
+
+The result object remains borrowed until service destruction. Individual finding
+borrows survive a failed scan but expire on successful replacement. Exact roots
+are limited to 1023 bytes, and longer inputs are rejected without truncation.
+Access remains synchronous and externally serialized.
+
+See [the ownership lesson](learning/codeguard-owned-results.html) and the
+[independent installed-SDK example](../examples/sdk_codeguard/README.md) for
+code, recovery and qualification steps. Scanner completeness, asynchronous UI
+execution and persistent scan identity remain separate concerns.

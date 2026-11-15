@@ -1,0 +1,70 @@
+<!-- Umicom Framework
+File: docs/learning/receive-server-sent-events.html
+
+PURPOSE:
+Teach bounded native SSE receiving, exact byte consumption and independently owned messages.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Receive server-sent events in native C</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Receive server-sent events in native C</h1>
+<p>A network read returns available bytes, not necessarily a whole application message. One read can end inside a Unicode character; another can contain several complete events. Framework's Web receiver separates this transport boundary from event ownership. It opens no sockets and invokes no application callback.</p>
+<h2>1. Allocate one bounded response owner</h2>
+<pre><code class="language-c">UmiWebSseLimits limits = {
+    .line_bytes = 4096,
+    .data_bytes = 65536,
+    .event_bytes = 128,
+    .id_bytes = 128,
+    .input_bytes = 1048576
+};
+UmiWebSseParser *parser = NULL;
+UmiStatus status = UmiWebSseParserCreate(&amp;limits, &amp;parser);</code></pre>
+<p>Include <code>umicom/web/sse_parser.h</code> and link <code>Umicom::web</code>. Each storage budget is between one byte and 1 MiB; the event-name budget must be at least seven bytes for the default name. Budgets exclude terminators. Total input counts framing, comments, BOM and incomplete Unicode bytes too. Choose limits for your actual protocol; a data limit does not replace a network deadline or queue limit.</p>
+<p>The owner allocates fixed storage at creation. Feeding more data cannot grow it. Serialize access externally; this is a single response parser, not a thread-safe network client. Destroy it only after its producer has stopped. Create a separate owner for another response.</p>
+<h2>2. Keep the unconsumed suffix</h2>
+<pre><code class="language-c">size_t offset = 0;
+while (offset &lt; length) {
+    size_t consumed = 0;
+    status = UmiWebSseParserFeed(parser, bytes + offset,
+                               length - offset, &amp;consumed);
+    offset += consumed;
+    if (status == UMI_STATUS_OK) {
+        UmiWebSseMessage *message = NULL;
+        status = UmiWebSseParserTake(parser, &amp;message);
+        if (status != UMI_STATUS_OK) break;
+        /* Validate/use this message, or transfer its ownership to a queue. */
+        UmiWebSseMessageFree(message);
+    } else if (status != UMI_STATUS_BUSY) {
+        break;
+    }
+}</code></pre>
+<p>Feed returns OK at the first complete event. BUSY means it consumed the supplied fragment and needs more bytes. While an event is ready, another Feed returns OK with zero consumed bytes. Take the event before resuming. A callback which discards the remaining suffix loses coalesced events; one which retries the whole original fragment duplicates earlier bytes.</p>
+<p>On a grammar or UTF-8 error, the offending byte is counted as consumed. When the total-input budget ends, the next byte is not consumed. Earlier accepted bytes are never rolled back. An error becomes sticky: abandon the response instead of retrying it as if the parser were empty.</p>
+<h2>3. Understand the supported text profile</h2>
+<p>The receiver follows the SSE field structure: one leading BOM, CR/LF/CRLF endings, comments, case-sensitive field names, multiline data, persistent IDs and reset event names. It uses the <a href="https://html.spec.whatwg.org/multipage/server-sent-events.html#parsing-an-event-stream">WHATWG event-stream grammar</a> as its framing reference.</p>
+<p>This native API intentionally uses a stricter text profile: malformed UTF-8 and embedded NUL fail, including inside comments. Browser EventSource performs replacement decoding and has different NUL handling. Do not claim interchangeable browser behavior. Valid retry fields are retained as unsigned 64-bit milliseconds; empty, nondecimal and overflowing values are ignored. This metadata never starts a timer or reconnects a socket.</p>
+<p>The shared <a href="streaming-utf8-in-c.html">Base UTF-8 decoder</a> retains at most three incomplete bytes. Lines are interpreted only after complete scalars arrive. Snapshot diagnostics distinguish pending line bytes, pending data bytes and pending Unicode bytes.</p>
+<h2>4. Give each delivered message its own lifetime</h2>
+<p>Take copies the name, data and ID into one message allocation and returns the parser to Active. The strings are immutable views into that allocation. A message survives later parser input and even parser destruction. Free the whole message with <code>UmiWebSseMessageFree</code>; never free its individual strings.</p>
+<p>If allocation fails, the ready event and output pointer remain unchanged. A caller can retry Take after relieving memory pressure, or stop the transport and destroy the parser. It must not continue reading unlimited input while a ready event is blocked. Bound downstream queues as well as parser storage.</p>
+<h2>5. Finish without inventing a final message</h2>
+<p>Call Finish after all response bytes have been supplied. It returns BUSY while a ready event still needs taking. An incomplete UTF-8 scalar fails. Otherwise it discards pending text which lacks a complete event boundary and enters Finished. Finish is then idempotent; Feed and Take refuse to reopen the response.</p>
+<p>EOF alone does not prove an AI model response completed successfully. A provider adapter must separately require its expected terminal message and validate JSON semantics. Feed complete text deltas into a <a href="request-owned-ai-streams.html">request-owned AI stream</a> only after that provider validation. Transport cancellation and worker joins remain separate responsibilities.</p>
+<h2>6. Build the regressions in your checkout</h2>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-sse-parser-test umicom-sse-parser-boundary-test umicom-sse-roundtrip-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.web\.sse_(parser|boundary|integration)\." --output-on-failure</code></pre>
+<p>These targets register 48 portable cases. They include every two-chunk split of fixed protocol examples, single-byte fragments, budget boundaries, Unicode errors, EOF, formatter interoperability and a malformed successor. GNU-compatible linker environments add two allocation-fault cases:</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-sse-parser-fault-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.web\.sse_fault\." --output-on-failure</code></pre>
+<p>Expected qualification is 48 portable passes plus two fault-injection passes where supported. These expectations are not executed results. If a failure reports a byte count, first retain the original input and split offset. Changing a fixture to match a wrong parser would hide the defect.</p>
+<p>The <a href="../../examples/sdk_sse_reader/README.md">independent SDK example</a> shows the full consumption loop and checked output. It uses authored events; it does not demonstrate live model inference.</p>
+</main></body></html>

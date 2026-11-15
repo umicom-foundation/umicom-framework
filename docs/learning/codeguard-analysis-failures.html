@@ -1,0 +1,67 @@
+<!-- Umicom Framework
+File: docs/learning/codeguard-analysis-failures.html
+
+PURPOSE:
+Teach checked C error propagation, transactional outputs and deterministic analysis failure testing.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Keep incomplete analysis out of complete reports</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Keep incomplete analysis out of complete reports</h1>
+<h2>1. A warning needs storage</h2>
+<p>A source analyser can recognize a problem and still fail to record it. Allocating another finding may fail; a bounded tracker may fill; reading the source may stop early. Returning success in any of these cases makes an incomplete report look complete. A status value describes whether analysis completed. A finding describes what completed analysis noticed. They answer different questions.</p>
+<h2>2. Follow the status through every layer</h2>
+<p>CodeGuard's checked lifetime API returns UmiStatus. The scanner checks it before continuing to another rule or line. Architecture checks return measurement, finding insertion, read and close failures. The retained service owns a separate candidate result; it replaces the visible report only when the whole operation succeeds.</p>
+<pre><code class="language-c">UmiCodeGuardLifetimeTracker tracker;
+UmiCodeGuardResult *candidate = NULL;
+umi_codeguard_lifetime_init(&amp;tracker);
+UmiStatus status = umi_codeguard_result_create(8U, &amp;candidate);
+if (status == UMI_STATUS_OK)
+    status = umi_codeguard_lifetime_scan_checked(
+        &amp;tracker, "example.c", 1U, "free(owner);", candidate);
+if (status == UMI_STATUS_OK)
+    status = umi_codeguard_lifetime_scan_checked(
+        &amp;tracker, "example.c", 2U, "owner-&gt;state = 1;", candidate);
+/* Inspect findings only as a completed attempt when status is OK. */
+umi_codeguard_result_destroy(candidate);</code></pre>
+<p>Include umicom/codeguard/lifetime.h and link Umicom::codeguard. This fragment uses the real API but is not a standalone program. The historical void function remains callable for compatibility; it cannot tell its caller that analysis failed. New coordinators should use the checked function.</p>
+<h2>3. Understand which state is transactional</h2>
+<p>Transactional means changes become visible together at a defined success boundary. A checked lifetime line stages its tracker changes, then commits them only after its findings were stored. A failed line leaves the tracker unchanged. The caller's result is append-only: earlier findings from the same line can remain after a later insertion fails. Discard that candidate rather than retrying it as though nothing happened.</p>
+<p>The tracker holds at most 64 active freed names. Reassignment or an emitted dereference finding clears a slot, which can be reused. A new freed name with all slots occupied returns UMI_STATUS_CAPACITY_EXCEEDED. This is an analysis capacity failure, not a security finding. Increase neither success claims nor severity counts to hide it.</p>
+<p>At the higher service boundary, a failed candidate is destroyed and the previous successful report remains available. Existing finding borrows survive the failed attempt. Display its failure separately, with the retained report's original identity. A previous empty report does not prove the new source was scanned successfully.</p>
+<h2>4. Preserve measurement outputs on failure</h2>
+<pre><code class="language-c">UmiCodeGuardSourceInfo measurement = {0};
+UmiStatus status = umi_codeguard_source_measure(path, &amp;measurement);
+if (status != UMI_STATUS_OK) {
+    /* measurement still contains its value from before the call. */
+    return status;
+}
+/* Use measurement only after checking status. */</code></pre>
+<p>Include umicom/codeguard/source.h. Measurement stages a local structure, validates its path capacity, checks reads and close, and then publishes the result. Paths of up to 1023 bytes fit; longer paths return UMI_STATUS_CAPACITY_EXCEEDED. A path borrowed from the output structure remains usable because it is copied before publication. Uninitialized output remains uninitialized on failure: preserving bytes does not create a valid result.</p>
+<p>Cleanup still runs after a failure. Preserve the first operation error if close also fails. Similarly, an analysis failure remains the returned error if cancellation arrives at the same boundary. Callers need the original cause to decide whether retrying is useful.</p>
+<h2>5. Test the difficult paths deliberately</h2>
+<ol><li>Build the tests with the same compiler and runtime as the library.</li>
+<li>Inject a failure on the first and second finding insertion; verify the status and partial result count.</li>
+<li>Fill all tracker slots, check refusal, clear a slot and verify it can be reused.</li>
+<li>Make a stream report an error after partial input, then make close fail separately. Verify the caller's prior measurement bytes survive.</li>
+<li>Make analysis fail and request cancellation together. Verify the failure reaches the scanner and the service retains its report.</li></ol>
+<pre><code class="language-powershell">cmake --build build --target umicom-codeguard-lifetime-failure-tests umicom-codeguard-analysis-failure-tests umicom-codeguard-cancellation-tests umicom-codeguard-ownership-tests
+ctest --test-dir build -R "^framework[.]codeguard_(lifetime_failure|analysis_failure|cancellation|ownership)[.]" --output-on-failure --no-tests=error</code></pre>
+<p>Replace build with your configured Framework directory. The focused analysis fixtures register 14 lifetime cases and 26 measurement/architecture cases. They include the actual production analysis sources with narrow storage and stream hooks. Configuration registers these checks; only a successful build and execution establishes a pass. Keep the normal scanner suite and installed SDK checks as separate qualification.</p>
+<h2>6. Respect the remaining limits</h2>
+<p>These repairs make failure reporting explicit; they do not turn textual heuristics into a C parser. Name matching can produce false positives or miss aliasing. <!-- Earlier reader limitation retained for review: Fixed-size line buffers retain their existing long-line and embedded-NUL limits. -->Fixed-size segments retain the historical long-line behavior. Profile-driven native text analysis now refuses embedded NUL rather than hiding later bytes; the standalone legacy measurement API retains its stdio contract. See <a href="codeguard-bounded-input.html">bounded source input</a> for the per-pass limits and candidate-publication rules. Architecture classification still uses path text, and several passes can observe different file contents if another writer changes the source. The scanner does not take a filesystem snapshot or prove absence of vulnerabilities.</p>
+<h2>Practice</h2>
+<ol><li>Draw the success boundaries for one finding, one lifetime line, one file and one retained service scan. Identify which level can contain partial findings.</li>
+<li>Explain why an allocation failure cannot be counted as a clean scan with zero warnings.</li>
+<li>Add a regression that preserves the first error when both analysis and cleanup fail. Keep setup outside assert so it runs in release builds.</li></ol>
+<p><a href="codeguard-owned-results.html">Result ownership</a> · <a href="codeguard-cancellation.html">Cooperative cancellation</a> · <a href="index.html">Learning index</a></p>
+</main></body></html>

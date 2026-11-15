@@ -628,10 +628,19 @@ UmiStatus umi_path_relative(const char *base_directory,
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 #endif
+    /* Normalization uses "." to represent an empty relative location.
+     * It is not a directory name to ascend from or append to the result.
+     * Preserve the previous segmentation for review of this boundary fix. */
+#if 0
     base_count = split_segments(base, base_segments, UMI_PATH_MAX_SEGMENTS);
     target_count = split_segments(target,
                                   target_segments,
                                   UMI_PATH_MAX_SEGMENTS);
+#endif
+    base_count = strcmp(base, ".") == 0 ? 0U
+        : split_segments(base, base_segments, UMI_PATH_MAX_SEGMENTS);
+    target_count = strcmp(target, ".") == 0 ? 0U
+        : split_segments(target, target_segments, UMI_PATH_MAX_SEGMENTS);
     /* Apply this branch only when its contract condition is satisfied. */
     if (base_count == SIZE_MAX || target_count == SIZE_MAX) {
         return UMI_STATUS_CAPACITY_EXCEEDED;

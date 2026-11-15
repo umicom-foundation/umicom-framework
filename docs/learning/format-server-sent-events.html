@@ -1,0 +1,64 @@
+<!-- Umicom Framework
+File: docs/learning/format-server-sent-events.html
+
+PURPOSE:
+Teach complete SSE publication, field framing, bounded inputs and output preservation.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Format complete server-sent events</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Format complete server-sent events</h1>
+<p>A server can send a sequence of text events over one HTTP response. This is called Server-Sent Events, or SSE. A native application must distinguish its text payload from the line-based fields which carry that payload. Framework's Web formatter prepares one complete event; it does not open a connection or send bytes.</p>
+<h2>1. Start with a bounded value</h2>
+<pre><code class="language-c">UmiWebSseEvent event = {
+    .id = 7,
+    .event = "update",
+    .data = "first line\nsecond line"
+};
+char wire[16000];
+size_t written = 0;
+UmiStatus status =
+    umi_web_sse_format(&amp;event, wire, sizeof wire, &amp;written);</code></pre>
+<p>Include <code>umicom/web/sse.h</code> and link <code>Umicom::web</code>. The event name holds at most 63 bytes plus its NUL terminator. Data holds at most 2047 bytes plus NUL. These are byte limits, so a Unicode character can occupy several positions. Do not truncate a UTF-8 character merely to make input fit.</p>
+<h2>2. Keep payload inside data fields</h2>
+<pre><code>id: 7
+event: update
+data: first line
+data: second line
+
+</code></pre>
+<p>The SSE line grammar uses named fields and a blank line to finish a record. Multiple data fields are joined with LF by the receiver. Framework turns CR, LF and CRLF in data into these separate fields, including empty and trailing lines. This follows the <a href="https://html.spec.whatwg.org/multipage/server-sent-events.html#parsing-an-event-stream">WHATWG event-stream grammar</a>.</p>
+<p>For example, data containing <code>hello\nid: forged</code> becomes two data fields. The text <code>id: forged</code> remains payload; it cannot change the event identifier. An event name containing CR or LF is refused instead. Event names are metadata, so inventing multiple names from one input would change the caller's meaning.</p>
+<h2>3. Publish only a complete record</h2>
+<p>The implementation first locates the terminator inside each fixed input array, validates UTF-8 and checks the event name. It then formats into private stack storage. Only after the complete record fits does it copy the bytes into the caller's output.</p>
+<p>A capacity error therefore leaves both the output buffer and the optional length unchanged. Capacity includes the final NUL byte; the reported length excludes it. Check the status before sending anything. Old output may still be present after refusal and must not be mistaken for the requested new event.</p>
+<pre><code class="language-c">if (status == UMI_STATUS_OK) {
+    /* Send exactly written bytes through your checked HTTP transport. */
+} else {
+    /* Do not send wire: it was not replaced by this call. */
+}</code></pre>
+<p>Output may overlap the input event because formatting finishes before publication. The separate length pointer must not overlap either object. This does not authorize supplying an invalid pointer or a capacity larger than its actual allocation.</p>
+<h2>4. Diagnose a refusal</h2>
+<table><thead><tr><th>Status</th><th>Check</th></tr></thead><tbody>
+<tr><td>INVALID_ARGUMENT</td><td>Both objects exist, both fields contain NUL within their arrays, and the name has no line break.</td></tr>
+<tr><td>PARSE_ERROR</td><td>Both fields contain complete valid UTF-8. Keep an incomplete incoming prefix pending rather than formatting it early.</td></tr>
+<tr><td>CAPACITY_EXCEEDED</td><td>Reserve space for field prefixes, line terminators and the final NUL. Payload size alone is insufficient.</td></tr>
+</tbody></table>
+<p>At the fixed input limits, newline expansion is bounded. A 16,000-byte output buffer is sufficient for every accepted event in this API. A smaller buffer is useful when your own data limits are lower; always handle refusal.</p>
+<h2>5. Exercise the boundary cases</h2>
+<p>After configuring and building Framework in your own checkout, run the registered formatter regressions:</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-sse-format-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.web\.sse_format\." --output-on-failure</code></pre>
+<p>The cases cover golden records, all line endings, field injection attempts, maximum fields, every insufficient capacity for a normal record, malformed input and overlapping output. A successful test run should report 26 passing cases. This describes the expected result, not an executed qualification claim. If a case fails, retain its output and compare the bytes against the expected wire record before changing the assertion.</p>
+<h2>6. Connect the next layer deliberately</h2>
+<p>SSE formatting is independent of model inference. An AI client still needs a receiving parser, provider-specific JSON decoding, request identity, bounded retained text, cancellation and transport ownership. Continue with <a href="streaming-utf8-in-c.html">incremental UTF-8</a> and <a href="request-owned-ai-streams.html">request-owned model streams</a>. Neither a formatted event nor a static example proves a live server is compatible.</p>
+</main></body></html>

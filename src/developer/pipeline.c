@@ -160,6 +160,11 @@ static int dependency_exists(
  * Provide the transitively depends on operation used by this module and its client
  * applications.
  */
+/* Retain the former pop-time visitation for review. A dense acyclic graph
+ * could enqueue the same pending node repeatedly and report stack exhaustion
+ * as a cycle. The replacement marks nodes when queued, bounding storage by
+ * distinct operations rather than by dependency paths. */
+#if 0
 static int transitively_depends_on(
     const UmiDeveloperPipeline *pipeline,
     size_t start_index,
@@ -212,6 +217,35 @@ static int transitively_depends_on(
     return 0;
 }
 
+#endif
+
+static int transitively_depends_on(
+    const UmiDeveloperPipeline *pipeline,
+    size_t start_index,
+    size_t target_index)
+{
+    size_t stack[UMI_DEVELOPER_PIPELINE_OPERATION_CAPACITY];
+    unsigned char queued[UMI_DEVELOPER_PIPELINE_OPERATION_CAPACITY] = {0};
+    size_t count = 0U;
+    queued[start_index] = 1U;
+    stack[count++] = start_index;
+    while (count != 0U) {
+        size_t current = stack[--count];
+        if (current == target_index) return 1;
+        for (size_t i = 0U; i < pipeline->dependency_count; ++i) {
+            const UmiDeveloperDependency *edge = &pipeline->dependencies[i];
+            if (edge->operation_index != current || queued[edge->depends_on_index])
+                continue;
+            /* Each admitted index is queued at most once. Keep a defensive
+             * bound so corrupt private state cannot become an unchecked write. */
+            if (count >= UMI_DEVELOPER_PIPELINE_OPERATION_CAPACITY) return 1;
+            queued[edge->depends_on_index] = 1U;
+            stack[count++] = edge->depends_on_index;
+        }
+    }
+    return 0;
+}
+
 /*
  * Provide the dependencies succeeded operation used by this module and its client
  * applications.
@@ -239,6 +273,9 @@ static int dependencies_succeeded(
  * Provide the dependency terminal failure operation used by this module and its client
  * applications.
  */
+/* Retain the direct model lookup for review. Transition projections now read
+ * dependency state from the candidate arrays so cascading refusal is atomic. */
+#if 0
 static int dependency_terminal_failure(
     const UmiDeveloperPipeline *pipeline,
     size_t operation_index)
@@ -264,6 +301,162 @@ static int dependency_terminal_failure(
         }
     }
     return 0;
+}
+#endif
+
+
+
+/* Project only mutable state and revision identities. Command text and argument
+ * arrays remain owned by the pipeline, so ordinary transitions need neither a
+ * large operation copy nor allocation. A failed projection never reaches the
+ * publishing step. All calls retain the existing single-owner contract. */
+typedef struct UmiDeveloperTransitionPlan {
+    UmiDeveloperOperationState states[UMI_DEVELOPER_PIPELINE_OPERATION_CAPACITY];
+    uint64_t revisions[UMI_DEVELOPER_PIPELINE_OPERATION_CAPACITY];
+    uint64_t pipeline_revision;
+    int has_extra_dependency;
+    UmiDeveloperDependency extra_dependency;
+} UmiDeveloperTransitionPlan;
+
+static UmiStatus transition_plan_begin(const UmiDeveloperPipeline *pipeline,
+    UmiDeveloperTransitionPlan *plan)
+{
+    if (pipeline == NULL || plan == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (pipeline->operations == NULL || pipeline->dependencies == NULL ||
+        pipeline->operation_count > UMI_DEVELOPER_PIPELINE_OPERATION_CAPACITY ||
+        pipeline->dependency_count > UMI_DEVELOPER_PIPELINE_DEPENDENCY_CAPACITY)
+        return UMI_STATUS_INVALID_STATE;
+    memset(plan, 0, sizeof(*plan));
+    plan->pipeline_revision = pipeline->revision;
+    for (size_t i = 0U; i < pipeline->operation_count; ++i) {
+        UmiDeveloperOperationState state = pipeline->operations[i].state;
+        /* Enum signedness is implementation-defined; an unsigned range test
+         * also rejects negative representations without a redundant < 0 test. */
+#if 0
+        if (state < UMI_DEVELOPER_OPERATION_QUEUED ||
+            state > UMI_DEVELOPER_OPERATION_BLOCKED) return UMI_STATUS_INVALID_STATE;
+#endif
+        if ((unsigned)state > (unsigned)UMI_DEVELOPER_OPERATION_BLOCKED)
+            return UMI_STATUS_INVALID_STATE;
+        plan->states[i] = state;
+        plan->revisions[i] = pipeline->operations[i].revision;
+    }
+    for (size_t i = 0U; i < pipeline->dependency_count; ++i)
+        if (pipeline->dependencies[i].operation_index >= pipeline->operation_count ||
+            pipeline->dependencies[i].depends_on_index >= pipeline->operation_count)
+            return UMI_STATUS_INVALID_STATE;
+    return UMI_STATUS_OK;
+}
+
+static int transition_dependencies(const UmiDeveloperPipeline *pipeline,
+    const UmiDeveloperTransitionPlan *plan, size_t operation_index,
+    int require_success)
+{
+    size_t count = pipeline->dependency_count +
+        (plan->has_extra_dependency != 0 ? 1U : 0U);
+    for (size_t i = 0U; i < count; ++i) {
+        const UmiDeveloperDependency *edge = i < pipeline->dependency_count ?
+            &pipeline->dependencies[i] : &plan->extra_dependency;
+        if (edge->operation_index != operation_index) continue;
+        UmiDeveloperOperationState state = plan->states[edge->depends_on_index];
+        if (require_success != 0) {
+            if (state != UMI_DEVELOPER_OPERATION_SUCCEEDED) return 0;
+        } else if (state == UMI_DEVELOPER_OPERATION_FAILED ||
+                   state == UMI_DEVELOPER_OPERATION_CANCELLED ||
+                   state == UMI_DEVELOPER_OPERATION_BLOCKED) return 1;
+    }
+    return require_success != 0 ? 1 : 0;
+}
+
+static UmiStatus transition_plan_tick(UmiDeveloperTransitionPlan *plan,
+    size_t index, UmiDeveloperOperationState state)
+{
+    if (plan->revisions[index] == UINT64_MAX ||
+        plan->pipeline_revision == UINT64_MAX) return UMI_STATUS_INVALID_STATE;
+    plan->states[index] = state;
+    ++plan->revisions[index];
+    ++plan->pipeline_revision;
+    return UMI_STATUS_OK;
+}
+
+static UmiStatus transition_plan_refresh(const UmiDeveloperPipeline *pipeline,
+    UmiDeveloperTransitionPlan *plan)
+{
+    int changed = 0;
+    /* A DAG settles within its number of vertices. Preserve the former ordered
+     * cascade and its per-operation revision increments, with a bounded final
+     * no-change pass. Even a late exhausted descendant refuses the whole plan. */
+    for (size_t pass = 0U; pass <= pipeline->operation_count; ++pass) {
+        int pass_changed = 0;
+        for (size_t i = 0U; i < pipeline->operation_count; ++i) {
+            UmiDeveloperOperationState state = plan->states[i];
+            if (state != UMI_DEVELOPER_OPERATION_QUEUED &&
+                state != UMI_DEVELOPER_OPERATION_BLOCKED) continue;
+            UmiDeveloperOperationState next = transition_dependencies(pipeline, plan, i, 0) ?
+                UMI_DEVELOPER_OPERATION_BLOCKED : UMI_DEVELOPER_OPERATION_QUEUED;
+            if (state == next) continue;
+            if (plan->revisions[i] == UINT64_MAX) return UMI_STATUS_INVALID_STATE;
+            plan->states[i] = next;
+            ++plan->revisions[i];
+            pass_changed = 1;
+            changed = 1;
+        }
+        if (pass_changed == 0) {
+            if (changed != 0) {
+                if (plan->pipeline_revision == UINT64_MAX) return UMI_STATUS_INVALID_STATE;
+                ++plan->pipeline_revision;
+            }
+            return UMI_STATUS_OK;
+        }
+    }
+    return UMI_STATUS_INVALID_STATE;
+}
+
+static void transition_plan_publish(UmiDeveloperPipeline *pipeline,
+    const UmiDeveloperTransitionPlan *plan)
+{
+    for (size_t i = 0U; i < pipeline->operation_count; ++i) {
+        pipeline->operations[i].state = plan->states[i];
+        pipeline->operations[i].revision = plan->revisions[i];
+    }
+    pipeline->revision = plan->pipeline_revision;
+}
+
+static UmiStatus transition_plan_start(const UmiDeveloperPipeline *pipeline,
+    UmiDeveloperTransitionPlan *plan, size_t index)
+{
+    const UmiDeveloperOperationSnapshot *operation = &pipeline->operations[index];
+    if (plan->states[index] != UMI_DEVELOPER_OPERATION_QUEUED ||
+        !transition_dependencies(pipeline, plan, index, 1) ||
+        operation->attempt_count >= operation->max_attempts)
+        return UMI_STATUS_INVALID_STATE;
+    return transition_plan_tick(plan, index, UMI_DEVELOPER_OPERATION_RUNNING);
+}
+
+static UmiStatus transition_plan_next(const UmiDeveloperPipeline *pipeline,
+    const UmiDeveloperTransitionPlan *plan, size_t *out_index)
+{
+    uint64_t sequence = UINT64_MAX;
+    int found = 0;
+    for (size_t i = 0U; i < pipeline->operation_count; ++i) {
+        if (plan->states[i] == UMI_DEVELOPER_OPERATION_QUEUED &&
+            transition_dependencies(pipeline, plan, i, 1) &&
+            pipeline->operations[i].sequence < sequence) {
+            sequence = pipeline->operations[i].sequence;
+            *out_index = i;
+            found = 1;
+        }
+    }
+    return found != 0 ? UMI_STATUS_OK : UMI_STATUS_NOT_FOUND;
+}
+
+static void transition_publish_start(UmiDeveloperPipeline *pipeline,
+    const UmiDeveloperTransitionPlan *plan, size_t index)
+{
+    transition_plan_publish(pipeline, plan);
+    ++pipeline->operations[index].attempt_count;
+    pipeline->operations[index].progress_basis_points = 0U;
+    pipeline->operations[index].has_exit_code = 0;
 }
 
 /*
@@ -433,6 +626,8 @@ UmiStatus umi_developer_pipeline_submit(
  * Provide the developer pipeline add dependency operation used by this module and its
  * client applications.
  */
+/* Retain edge insertion before refresh for review. The candidate edge participates in projected dependency resolution; exhausted descendants leave both the graph and state unchanged. */
+#if 0
 UmiStatus umi_developer_pipeline_add_dependency(
     UmiDeveloperPipeline *pipeline,
     const char *operation_id,
@@ -484,6 +679,66 @@ UmiStatus umi_developer_pipeline_add_dependency(
     pipeline->dependency_count += 1U;
     pipeline->revision += 1U;
     return umi_developer_pipeline_refresh(pipeline);
+}
+#endif
+
+UmiStatus umi_developer_pipeline_add_dependency(
+    UmiDeveloperPipeline *pipeline,
+    const char *operation_id,
+    const char *depends_on_operation_id)
+{
+    size_t operation_index;
+    size_t depends_on_index;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (pipeline == NULL || operation_id == NULL ||
+        depends_on_operation_id == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (!find_index(pipeline, operation_id, &operation_index) ||
+        !find_index(pipeline, depends_on_operation_id, &depends_on_index)) {
+        return UMI_STATUS_NOT_FOUND;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (operation_index == depends_on_index) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (dependency_exists(pipeline, operation_index, depends_on_index)) {
+        return UMI_STATUS_ALREADY_EXISTS;
+    }
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (pipeline->dependency_count >=
+        UMI_DEVELOPER_PIPELINE_DEPENDENCY_CAPACITY) {
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+
+    /*
+     * operation -> dependency is a backwards edge.  Adding it is cyclic when
+     * the proposed dependency already (directly or indirectly) depends on the
+     * operation.
+     */
+    if (transitively_depends_on(pipeline, depends_on_index, operation_index)) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+
+    UmiDeveloperTransitionPlan plan;
+    UmiStatus status = transition_plan_begin(pipeline, &plan);
+    if (status != UMI_STATUS_OK) return status;
+    if (plan.pipeline_revision == UINT64_MAX) return UMI_STATUS_INVALID_STATE;
+    ++plan.pipeline_revision;
+    plan.has_extra_dependency = 1;
+    plan.extra_dependency.operation_index = operation_index;
+    plan.extra_dependency.depends_on_index = depends_on_index;
+    status = transition_plan_refresh(pipeline, &plan);
+    if (status != UMI_STATUS_OK) return status;
+    pipeline->dependencies[pipeline->dependency_count++] = plan.extra_dependency;
+    transition_plan_publish(pipeline, &plan);
+    return UMI_STATUS_OK;
 }
 
 
@@ -639,6 +894,8 @@ uint64_t umi_developer_pipeline_revision(const UmiDeveloperPipeline *pipeline)
  * Provide the developer pipeline refresh operation used by this module and its client
  * applications.
  */
+/* Retain the immediate cascade for review. The projected replacement checks all affected identities before any authoritative state changes. */
+#if 0
 UmiStatus umi_developer_pipeline_refresh(UmiDeveloperPipeline *pipeline)
 {
     size_t index;
@@ -690,6 +947,16 @@ UmiStatus umi_developer_pipeline_refresh(UmiDeveloperPipeline *pipeline)
         pipeline->revision += 1U;
     }
     return UMI_STATUS_OK;
+}
+#endif
+
+UmiStatus umi_developer_pipeline_refresh(UmiDeveloperPipeline *pipeline)
+{
+    UmiDeveloperTransitionPlan plan;
+    UmiStatus status = transition_plan_begin(pipeline, &plan);
+    if (status == UMI_STATUS_OK) status = transition_plan_refresh(pipeline, &plan);
+    if (status == UMI_STATUS_OK) transition_plan_publish(pipeline, &plan);
+    return status;
 }
 
 /*
@@ -748,6 +1015,8 @@ UmiStatus umi_developer_pipeline_next_ready(
  * Provide the developer pipeline start operation used by this module and its client
  * applications.
  */
+/* Retain refresh-before-admission for review. Start now publishes dependency refresh and the selected start together, preserving the model on refusal. */
+#if 0
 UmiStatus umi_developer_pipeline_start(
     UmiDeveloperPipeline *pipeline,
     const char *operation_id)
@@ -793,11 +1062,28 @@ UmiStatus umi_developer_pipeline_start(
     pipeline->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_developer_pipeline_start(
+    UmiDeveloperPipeline *pipeline, const char *operation_id)
+{
+    if (pipeline == NULL || operation_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index;
+    if (!find_index(pipeline, operation_id, &index)) return UMI_STATUS_NOT_FOUND;
+    UmiDeveloperTransitionPlan plan;
+    UmiStatus status = transition_plan_begin(pipeline, &plan);
+    if (status == UMI_STATUS_OK) status = transition_plan_refresh(pipeline, &plan);
+    if (status == UMI_STATUS_OK) status = transition_plan_start(pipeline, &plan, index);
+    if (status == UMI_STATUS_OK) transition_publish_start(pipeline, &plan, index);
+    return status;
+}
 
 /*
  * Provide the developer pipeline set progress operation used by this module and its client
  * applications.
  */
+/* Retain unchecked progress publication for review. Identity admission now precedes progress and summary mutation. */
+#if 0
 UmiStatus umi_developer_pipeline_set_progress(
     UmiDeveloperPipeline *pipeline,
     const char *operation_id,
@@ -832,8 +1118,32 @@ UmiStatus umi_developer_pipeline_set_progress(
     pipeline->revision += 1U;
     return UMI_STATUS_OK;
 }
+#endif
+
+UmiStatus umi_developer_pipeline_set_progress(
+    UmiDeveloperPipeline *pipeline, const char *operation_id,
+    uint32_t progress_basis_points, const char *summary)
+{
+    if (pipeline == NULL || operation_id == NULL || progress_basis_points > 10000U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index;
+    if (!find_index(pipeline, operation_id, &index)) return UMI_STATUS_NOT_FOUND;
+    if (pipeline->operations[index].state != UMI_DEVELOPER_OPERATION_RUNNING)
+        return UMI_STATUS_INVALID_STATE;
+    UmiDeveloperTransitionPlan plan;
+    UmiStatus status = transition_plan_begin(pipeline, &plan);
+    if (status == UMI_STATUS_OK)
+        status = transition_plan_tick(&plan, index, UMI_DEVELOPER_OPERATION_RUNNING);
+    if (status != UMI_STATUS_OK) return status;
+    transition_plan_publish(pipeline, &plan);
+    pipeline->operations[index].progress_basis_points = progress_basis_points;
+    (void)copy_summary(&pipeline->operations[index], summary);
+    return UMI_STATUS_OK;
+}
 
 /* Provide the finish operation operation used by this module and its client applications. */
+/* Retain terminal mutation before refresh for review. The replacement projects every dependent state and revision before committing the result. */
+#if 0
 static UmiStatus finish_operation(
     UmiDeveloperPipeline *pipeline,
     const char *operation_id,
@@ -873,6 +1183,31 @@ static UmiStatus finish_operation(
     operation->revision += 1U;
     pipeline->revision += 1U;
     return umi_developer_pipeline_refresh(pipeline);
+}
+#endif
+
+static UmiStatus finish_operation(
+    UmiDeveloperPipeline *pipeline, const char *operation_id,
+    UmiDeveloperOperationState state, int exit_code, const char *summary)
+{
+    if (pipeline == NULL || operation_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index;
+    if (!find_index(pipeline, operation_id, &index)) return UMI_STATUS_NOT_FOUND;
+    if (pipeline->operations[index].state != UMI_DEVELOPER_OPERATION_RUNNING)
+        return UMI_STATUS_INVALID_STATE;
+    UmiDeveloperTransitionPlan plan;
+    UmiStatus status = transition_plan_begin(pipeline, &plan);
+    if (status == UMI_STATUS_OK) status = transition_plan_tick(&plan, index, state);
+    if (status == UMI_STATUS_OK) status = transition_plan_refresh(pipeline, &plan);
+    if (status != UMI_STATUS_OK) return status;
+    transition_plan_publish(pipeline, &plan);
+    UmiDeveloperOperationSnapshot *operation = &pipeline->operations[index];
+    operation->exit_code = exit_code;
+    operation->has_exit_code = 1;
+    if (state == UMI_DEVELOPER_OPERATION_SUCCEEDED)
+        operation->progress_basis_points = 10000U;
+    (void)copy_summary(operation, summary);
+    return UMI_STATUS_OK;
 }
 
 /*
@@ -915,6 +1250,8 @@ UmiStatus umi_developer_pipeline_fail(
  * Provide the developer pipeline cancel operation used by this module and its client
  * applications.
  */
+/* Retain direct cancellation for review. Cancellation and downstream blocking now share one checked model publication. */
+#if 0
 UmiStatus umi_developer_pipeline_cancel(
     UmiDeveloperPipeline *pipeline,
     const char *operation_id,
@@ -950,11 +1287,36 @@ UmiStatus umi_developer_pipeline_cancel(
     pipeline->revision += 1U;
     return umi_developer_pipeline_refresh(pipeline);
 }
+#endif
+
+UmiStatus umi_developer_pipeline_cancel(
+    UmiDeveloperPipeline *pipeline, const char *operation_id, const char *summary)
+{
+    if (pipeline == NULL || operation_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index;
+    if (!find_index(pipeline, operation_id, &index)) return UMI_STATUS_NOT_FOUND;
+    UmiDeveloperOperationState state = pipeline->operations[index].state;
+    if (state != UMI_DEVELOPER_OPERATION_QUEUED &&
+        state != UMI_DEVELOPER_OPERATION_RUNNING &&
+        state != UMI_DEVELOPER_OPERATION_BLOCKED) return UMI_STATUS_INVALID_STATE;
+    UmiDeveloperTransitionPlan plan;
+    UmiStatus status = transition_plan_begin(pipeline, &plan);
+    if (status == UMI_STATUS_OK)
+        status = transition_plan_tick(&plan, index, UMI_DEVELOPER_OPERATION_CANCELLED);
+    if (status == UMI_STATUS_OK) status = transition_plan_refresh(pipeline, &plan);
+    if (status != UMI_STATUS_OK) return status;
+    transition_plan_publish(pipeline, &plan);
+    pipeline->operations[index].has_exit_code = 0;
+    (void)copy_summary(&pipeline->operations[index], summary);
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the developer pipeline retry operation used by this module and its client
  * applications.
  */
+/* Retain retry-before-cascade for review. Requeueing and dependent unblocking are admitted together before clearing the previous result. */
+#if 0
 UmiStatus umi_developer_pipeline_retry(
     UmiDeveloperPipeline *pipeline,
     const char *operation_id)
@@ -993,6 +1355,32 @@ UmiStatus umi_developer_pipeline_retry(
     operation->revision += 1U;
     pipeline->revision += 1U;
     return umi_developer_pipeline_refresh(pipeline);
+}
+#endif
+
+UmiStatus umi_developer_pipeline_retry(
+    UmiDeveloperPipeline *pipeline, const char *operation_id)
+{
+    if (pipeline == NULL || operation_id == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t index;
+    if (!find_index(pipeline, operation_id, &index)) return UMI_STATUS_NOT_FOUND;
+    const UmiDeveloperOperationSnapshot *current = &pipeline->operations[index];
+    if ((current->state != UMI_DEVELOPER_OPERATION_FAILED &&
+         current->state != UMI_DEVELOPER_OPERATION_CANCELLED) ||
+        current->attempt_count >= current->max_attempts) return UMI_STATUS_INVALID_STATE;
+    UmiDeveloperTransitionPlan plan;
+    UmiStatus status = transition_plan_begin(pipeline, &plan);
+    if (status == UMI_STATUS_OK)
+        status = transition_plan_tick(&plan, index, UMI_DEVELOPER_OPERATION_QUEUED);
+    if (status == UMI_STATUS_OK) status = transition_plan_refresh(pipeline, &plan);
+    if (status != UMI_STATUS_OK) return status;
+    transition_plan_publish(pipeline, &plan);
+    UmiDeveloperOperationSnapshot *operation = &pipeline->operations[index];
+    operation->progress_basis_points = 0U;
+    operation->exit_code = 0;
+    operation->has_exit_code = 0;
+    operation->summary[0] = '\0';
+    return UMI_STATUS_OK;
 }
 
 /*
@@ -1059,5 +1447,49 @@ UmiStatus umi_developer_pipeline_snapshot(
         }
     }
 
+    return UMI_STATUS_OK;
+}
+
+
+/* Shared ready-start keeps the scheduler and runtime on one atomic model path.
+ * The output is assigned only after successful publication. */
+UmiStatus umi_developer_pipeline_start_next(UmiDeveloperPipeline *pipeline,
+    UmiDeveloperOperationSnapshot *out_operation)
+{
+    UmiDeveloperTransitionPlan plan;
+    size_t index = 0U;
+    UmiStatus status = transition_plan_begin(pipeline, &plan);
+    if (status == UMI_STATUS_OK) status = transition_plan_refresh(pipeline, &plan);
+    if (status == UMI_STATUS_OK) status = transition_plan_next(pipeline, &plan, &index);
+    if (status == UMI_STATUS_OK) status = transition_plan_start(pipeline, &plan, index);
+    if (status != UMI_STATUS_OK) return status;
+    transition_publish_start(pipeline, &plan, index);
+    if (out_operation != NULL) *out_operation = pipeline->operations[index];
+    return UMI_STATUS_OK;
+}
+
+/* This query does not reserve a lock or mutate identities. Under the required
+ * single-owner, non-reentrant execution contract, the runtime calls it directly
+ * before starting the selected operation and entering its external executor. */
+UmiStatus umi_developer_pipeline_admit_next_execution(
+    const UmiDeveloperPipeline *pipeline)
+{
+    UmiDeveloperTransitionPlan started;
+    size_t index = 0U;
+    UmiStatus status = transition_plan_begin(pipeline, &started);
+    if (status == UMI_STATUS_OK) status = transition_plan_refresh(pipeline, &started);
+    if (status == UMI_STATUS_OK) status = transition_plan_next(pipeline, &started, &index);
+    if (status == UMI_STATUS_OK) status = transition_plan_start(pipeline, &started, index);
+    if (status != UMI_STATUS_OK) return status;
+    const UmiDeveloperOperationState outcomes[] = {
+        UMI_DEVELOPER_OPERATION_SUCCEEDED, UMI_DEVELOPER_OPERATION_FAILED,
+        UMI_DEVELOPER_OPERATION_CANCELLED
+    };
+    for (size_t i = 0U; i < sizeof(outcomes) / sizeof(outcomes[0]); ++i) {
+        UmiDeveloperTransitionPlan finished = started;
+        status = transition_plan_tick(&finished, index, outcomes[i]);
+        if (status == UMI_STATUS_OK) status = transition_plan_refresh(pipeline, &finished);
+        if (status != UMI_STATUS_OK) return status;
+    }
     return UMI_STATUS_OK;
 }

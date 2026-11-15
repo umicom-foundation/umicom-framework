@@ -1,0 +1,69 @@
+<!-- Umicom Framework
+File: docs/learning/decode-model-stream-deltas.html
+
+PURPOSE:
+Teach provider JSON admission, staged delta output and separate completion evidence.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Validate model-stream deltas</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Validate model-stream deltas</h1>
+<p>A complete SSE event is a transport record, not necessarily usable model text. Its payload may describe a role, text fragment, usage report, finish reason, error or unsupported action. Framework's local-chat codec now has a private text-stream decoder so transport code can validate those meanings before publishing text.</p>
+<h2>1. Separate three contracts</h2>
+<ol><li>The <a href="receive-server-sent-events.html">SSE receiver</a> reconstructs one complete event from arbitrary byte fragments.</li><li>The provider codec validates that event's JSON fields and copies a bounded delta value.</li><li>A response owner checks cross-event identity and order, then decides whether text or a terminal state can be published.</li></ol>
+<p>The first two layers do not prove the third. EOF, a finish chunk and an exact <code>[DONE]</code> marker are distinct observations. A transport must also succeed; an error after a partial answer must not be reported as a complete answer.</p>
+<h2>2. Read a narrow provider profile</h2>
+<p>The <a href="https://developers.openai.com/api/reference/resources/chat/subresources/completions/streaming-events">Chat Completions streaming schema</a> describes chunks carrying a completion ID, model and choices with deltas. <a href="https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md">llama.cpp's server documentation</a> describes its compatible chat endpoint. These references guide the wire format; they do not establish compatibility with your installed server revision.</p>
+<pre><code class="language-json">{
+  "id": "local-example",
+  "object": "chat.completion.chunk",
+  "model": "reviewed-model",
+  "choices": [{
+    "index": 0,
+    "delta": {"content": "Hello"},
+    "finish_reason": null
+  }]
+}</code></pre>
+<p>This is an authored fixture, not captured inference output. Framework's current text profile requires a nonempty completion ID, the chunk object type, and a model string matching the requested model. It accepts one choice at index zero. A separate usage-only chunk may have no choices if its usage fields are present and valid.</p>
+<p>Each text fragment must fit the existing AI text capacity, including its terminator. An empty string is a valid delta. Missing or null content produces no text. A role, when present, must be assistant. Only stop and length finish reasons are admitted. Length means the output was limited; it should remain distinguishable from a natural stop.</p>
+<h2>3. Preserve permission boundaries</h2>
+<p>Tool and function-call fields are refused even when the client did not request them. Audio, explicit refusal content and separate reasoning-content payloads are outside this narrow adapter and return UNAVAILABLE. Ordinary text mentioning a command remains inert text. Decoding never executes commands, loads media, writes files or grants tool permission.</p>
+<p>Usage counts must be nonnegative integers within the codec's signed 64-bit range, with total equal to input plus output. These values are server reports, not independently measured billing or execution evidence. A stateful consumer must still decide when a usage report is allowed and whether a second report conflicts with the first.</p>
+<h2>4. Stage output before admitting it</h2>
+<p>The decoder builds a local candidate value, reusing the existing strict JSON parser, UTF-8 handling and bounded-copy helpers. Malformed or unsupported input leaves the caller's output unchanged. The candidate becomes visible only after every required field has passed.</p>
+<pre><code class="language-c">/* Framework-internal regression or provider code only. */
+AwLocalChatDelta delta;
+UmiStatus status =
+    AwLocalChatDeltaDecode(request, event_data, event_bytes, &amp;delta);
+if (status == UMI_STATUS_OK) {
+    /* Validate sequence/identity against the response owner before use. */
+}</code></pre>
+<p>This private header is not an installed application SDK contract. Applications should use Framework's public services instead of including source-tree internals. The new decoder alone does not enable streaming in the existing local provider.</p>
+<h2>5. Keep the old request mode intact</h2>
+<!-- Earlier integration scope retained for design history; the public request owner is now authored.
+<p>The full-response encoder and new streaming encoder share one admission function. Both retain request limits, supported message roles, JSON escaping and denied tool requests. The existing public provider still selects full responses. A future streaming transport must select the new mode explicitly and preserve cancellation, endpoint restrictions and output ownership.</p>
+-->
+<p>The full-response encoder and streaming encoder share one admission function. Both retain request limits, supported roles, JSON escaping and denied tool requests. The existing provider still selects full responses. The separate <a href="background-local-model-streams.html">public stream job</a> selects streaming explicitly and composes shared cancellation, endpoint restrictions and output ownership.</p>
+<p>When optional native HTTP/JSON support is absent, the codec reports UNAVAILABLE. It does not create a synthetic response. A skipped optional codec test is also separate from a passing test.</p>
+<h2>6. Qualify the codec independently of a model</h2>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-local-chat-delta-test umicom-local-chat-delta-boundary-test umicom-local-chat-delta-offline-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.ai_workspace\.delta" --output-on-failure</code></pre>
+<p>There are 57 registered cases: 43 JSON fixtures, 13 boundary/request-mode cases and one build of the real offline branch. With native HTTP/JSON support, the expected result is 57 passes. Without it, 56 optional cases should explicitly skip while the offline contract runs. These are expected results; authored tests and successful configuration are not executed runtime evidence.</p>
+<p>On failure, preserve the input, selected model and status. Check whether rejection came from framing, JSON syntax, identity, capacity or unsupported content. Do not weaken a permission check simply to admit an unexpected server reply. Extend the supported profile and its tests deliberately.</p>
+<p>Continue with <a href="request-owned-ai-streams.html">request-owned text</a> for the publication layer. The <a href="complete-local-model-streams.html">stateful sequencer</a> and <a href="admit-event-stream-responses.html">private HTTP exchange</a> now compose these layers. Public application worker/UI integration and live server compatibility remain separate unqualified work.</p>
+<h2>7. Distinguish bad input from exhausted memory</h2>
+<p>A conversion helper can fail before JSON parsing starts. Returning only a null pointer hides whether input was invalid or allocation failed. The shared codec now carries a separate status through conversion, so chat, health and delta decoders report OUT_OF_MEMORY for either conversion allocation failure while preserving the caller's output.</p>
+<p>The fault regression includes the real codec with allocation interception limited to that source file. It fails the input copy and ASCII conversion allocation separately, checks cleanup, and then repeats the same valid request without failure. This avoids depending on json-c's internal allocation order.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-local-chat-allocation-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.ai_workspace\.json_allocation\." --output-on-failure</code></pre>
+<p>The six cases require optional native HTTP/JSON support at configuration. They are authored regression checks, not a claim of executed success. A memory failure should lead to bounded recovery or a clear failure report; it should not be blamed on a model's JSON syntax.</p>
+</main></body></html>

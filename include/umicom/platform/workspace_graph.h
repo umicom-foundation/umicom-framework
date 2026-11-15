@@ -67,6 +67,16 @@ typedef struct UmiWorkspaceGraphSnapshot {
  */
 typedef struct UmiWorkspaceGraph UmiWorkspaceGraph;
 
+/* Revisions and project IDs never wrap within a graph lifetime. A mutating
+ * operation returns CAPACITY_EXCEEDED before changing state if it cannot
+ * advance its identity. Open, close and set_trusted retain their existing
+ * revision-advancing semantics even for repeated values. Duplicate adds and
+ * missing removes retain their existing statuses and do not need a revision.
+ * Project IDs are not reset by open/close; the next-ID counter reserves zero and
+ * UINT64_MAX rather than wrapping. Destroy remains available after exhaustion.
+ * Discovery stages many additions privately and publishes one live revision;
+ * no-change discovery succeeds even when no publication budget remains. */
+
 /**
  * Initialise workspace graph from caller-provided values so later operations receive a
  * known state.

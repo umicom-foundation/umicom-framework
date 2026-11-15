@@ -14,6 +14,8 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/local_models/manager.h"
+#include "umicom/local_models/runtime.h"
+#include "umicom/local_models/request_binding.h"
 #include "umicom/base/sha256.h"
 #include "umicom/platform/threading.h"
 #include "../build_log/fixture.h"
@@ -41,6 +43,22 @@ int main(int argc, char **argv)
     }
     if (strcmp(argv[1], "lifetime") != 0) return 2;
     CHECK(UmiModelSessionStart(&plan, true, &session) == UMI_STATUS_OK && session != NULL);
+    /* The real submitted owner must keep the original settings even when the
+     * next form/edit buffer is changed. Reading metadata never marks it ready. */
+    UmiModelRunPlan captured, original = plan;
+    strcpy(plan.alias, "changed-after-start");
+    strcpy(plan.port, "19090");
+    CHECK(UmiModelSessionReadPlan(session, &captured) == UMI_STATUS_OK);
+    CHECK(strcmp(captured.alias, "fixture") == 0 && strcmp(captured.port, "18080") == 0);
+    UmiAiRuntimeDescriptor descriptor;
+    CHECK(UmiModelSessionRuntimeDescribe(session, "runtime.fixture", "Fixture", 256U, &descriptor) == UMI_STATUS_OK);
+    CHECK(strcmp(descriptor.model_id, "fixture") == 0 && !descriptor.health.available && descriptor.revision == 0U);
+    plan = original;
+    /* Native submission must receive the identity used by host reply checks.
+     * A later owner of the same plan must reject this captured request. */
+    UmiModelRequestBinding originalBinding;
+    CHECK(UmiModelSessionBindRequest(session, "fixture.request", &originalBinding) == UMI_STATUS_OK);
+    CHECK(UmiModelSessionCheckBinding(session, &originalBinding, "fixture.request") == UMI_STATUS_OK);
     UmiModelSession *retained = session;
     CHECK(UmiModelSessionStart(NULL, true, &session) == UMI_STATUS_BUSY && session == retained);
     UmiModelSession *second = NULL;
@@ -57,6 +75,11 @@ int main(int argc, char **argv)
     CHECK(UmiModelSessionStop(&session) == UMI_STATUS_OK && session == NULL);
     CHECK(UmiModelSessionStop(&session) == UMI_STATUS_OK);
     CHECK(UmiModelSessionStart(&plan, true, &second) == UMI_STATUS_OK);
+    UmiModelRequestBinding replacementBinding;
+    CHECK(UmiModelSessionBindRequest(second, "fixture.request", &replacementBinding) == UMI_STATUS_OK);
+    CHECK(replacementBinding.session_identity != originalBinding.session_identity);
+    CHECK(UmiModelSessionCheckBinding(second, &originalBinding, "fixture.request") == UMI_STATUS_INVALID_STATE);
+    CHECK(UmiModelSessionCheckBinding(second, &replacementBinding, "fixture.request") == UMI_STATUS_OK);
     CHECK(UmiModelSessionStop(&second) == UMI_STATUS_OK && second == NULL);
     return 0;
 }

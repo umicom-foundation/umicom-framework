@@ -54,6 +54,13 @@ typedef struct UmiAiPrivacyPolicy {
  * applications.
  */
 UmiAiPrivacyPolicy umi_ai_privacy_policy_default(void);
+/* Check both classification limits without mutation or I/O. Flags keep their
+ * nonzero-is-true compatibility meaning. Sharing/persistence checks reject a
+ * malformed policy with INVALID_ARGUMENT rather than interpreting its limits.
+ * Sharing also rejects unknown provider-kind values; AuthorEngine and TEST
+ * retain their existing local-policy classification. */
+UmiStatus UmiAiPrivacyPolicyValidate(const UmiAiPrivacyPolicy *policy);
+
 /**
  * Provide the ai privacy policy check share operation used by this module and its client
  * applications.

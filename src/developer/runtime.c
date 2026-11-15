@@ -780,6 +780,8 @@ UmiStatus umi_developer_runtime_start_operation(
  * Provide the developer runtime start next operation used by this module and its client
  * applications.
  */
+/* Retain the separate refresh/select/start sequence for review. The shared pipeline now admits ready selection and start together after event budget admission. */
+#if 0
 UmiStatus umi_developer_runtime_start_next(
     UmiDeveloperRuntime *runtime,
     UmiDeveloperOperationSnapshot *out_operation)
@@ -815,6 +817,24 @@ UmiStatus umi_developer_runtime_start_next(
     if (status == UMI_STATUS_OK && out_operation != NULL) {
         *out_operation = operation;
     }
+    return status;
+}
+#endif
+
+UmiStatus umi_developer_runtime_start_next(
+    UmiDeveloperRuntime *runtime, UmiDeveloperOperationSnapshot *out_operation)
+{
+    if (runtime == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = admit_runtime_events(runtime, 1U);
+    if (status != UMI_STATUS_OK) return status;
+    UmiDeveloperOperationSnapshot operation;
+    status = umi_developer_pipeline_start_next(runtime->pipeline, &operation);
+    if (status != UMI_STATUS_OK) return status;
+    status = record_operation_event(runtime, operation.id,
+        UMI_DEVELOPER_EVENT_STARTED, "Operation started.");
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_developer_pipeline_find(runtime->pipeline, operation.id, &operation);
+    if (status == UMI_STATUS_OK && out_operation != NULL) *out_operation = operation;
     return status;
 }
 
@@ -987,6 +1007,8 @@ UmiStatus umi_developer_runtime_retry_operation(
  * Provide the developer runtime execute next operation used by this module and its client
  * applications.
  */
+/* Retain journal-only execution admission for review. The replacement also admits start and every terminal model cascade before external effects. */
+#if 0
 UmiStatus umi_developer_runtime_execute_next(
     UmiDeveloperRuntime *runtime,
     const UmiDeveloperExecutor *executor,
@@ -1011,6 +1033,86 @@ UmiStatus umi_developer_runtime_execute_next(
      * before the external callback may run. The owner and executor must not
      * re-enter or otherwise mutate this runtime during execution. */
     status = admit_runtime_events(runtime, 2U);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_developer_runtime_start_next(runtime, &operation);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+
+    memset(&result, 0, sizeof(result));
+    result.struct_size = (uint32_t)sizeof(result);
+    result.api_version = UMI_DEVELOPER_EXECUTION_API_VERSION;
+    status = executor->execute(executor->user_data, &operation, &result);
+    summary = result.output[0] != '\0' ? result.output : umi_status_text(status);
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_CANCELLED || result.cancelled != 0) {
+        final_status = umi_developer_runtime_cancel_operation(
+            runtime, operation.id, summary);
+    } else /* Preserve the original failure result so the caller can respond to the correct cause. */ if (status == UMI_STATUS_OK && result.exit_code == 0 &&
+               result.timed_out == 0) {
+        final_status = umi_developer_runtime_complete_operation(
+            runtime, operation.id, result.exit_code, summary);
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
+        final_status = umi_developer_runtime_fail_operation(
+            runtime, operation.id, result.exit_code, summary);
+    }
+
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (final_status != UMI_STATUS_OK) {
+        return final_status;
+    }
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (out_result != NULL) {
+        *out_result = result;
+    }
+
+    final_status = umi_developer_pipeline_find(
+        runtime->pipeline, operation.id, &operation);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (final_status == UMI_STATUS_OK && out_operation != NULL) {
+        *out_operation = operation;
+    }
+    return final_status;
+}
+#endif
+
+UmiStatus umi_developer_runtime_execute_next(
+    UmiDeveloperRuntime *runtime,
+    const UmiDeveloperExecutor *executor,
+    UmiDeveloperOperationSnapshot *out_operation,
+    UmiDeveloperExecutionResult *out_result)
+{
+    UmiDeveloperOperationSnapshot operation;
+    UmiDeveloperExecutionResult result;
+    UmiStatus status;
+    UmiStatus final_status;
+    const char *summary;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (runtime == NULL || executor == NULL || executor->execute == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    /* Synchronous execution needs both started and terminal event identities
+     * before the external callback may run. The owner and executor must not
+     * re-enter or otherwise mutate this runtime during execution. */
+    status = admit_runtime_events(runtime, 2U);
+    if (status != UMI_STATUS_OK) return status;
+    /* Journal identities and model identities are independent. Check both
+     * before the external executor can launch a process or change an artifact. */
+    status = umi_developer_pipeline_admit_next_execution(runtime->pipeline);
     if (status != UMI_STATUS_OK) return status;
     status = umi_developer_runtime_start_next(runtime, &operation);
     /* Preserve the original failure result so the caller can respond to the correct cause. */

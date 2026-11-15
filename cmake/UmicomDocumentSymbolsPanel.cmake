@@ -29,3 +29,6 @@ endif()
 
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/document-symbols.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/doc/umicom/learning" COMPONENT Development)
+
+# Navigation commands use this same native source review, with no server fixture.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomNavigationCommands.cmake")

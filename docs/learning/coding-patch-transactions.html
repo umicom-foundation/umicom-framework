@@ -1,0 +1,85 @@
+<!-- Umicom Framework
+File: docs/learning/coding-patch-transactions.html
+
+PURPOSE:
+Teach explicit patch mutation, compensation and restoration evidence with serialized callback ownership.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Understand failed patch transactions | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Understand failed patch transactions</h1>
+<p>Applying an AI-proposed patch means asking a host to change several files. A write can fail after changing part of its file. Trying to restore earlier content can also fail. A single error code cannot tell a user which writes were attempted and whether restoration was observed.</p>
+<p>Framework exposes <code>UmiAiCodingPatchApplyWithReport</code> and <code>UmiAiCodingPatchRevertWithReport</code>. They retain the primary failure as the return value and publish a separate transaction report. The existing apply and revert interfaces call the same service and keep their primary status behavior.</p>
+<h2>1. Separate admission, verification and mutation</h2>
+<ol><li>Admit the patch metadata, policy, revision and adapter before invoking callbacks. An invalid input leaves the report and patch unchanged.</li><li>Check all current files against the reviewed before-content for apply, or after-content for revert. A conflict stops before the first mutation.</li><li>Apply files in forward order. Revert them in reverse order.</li><li>If a mutation callback fails, compensate that file too: a failure status does not prove it made no change.</li><li>Continue compensating the earlier completed mutations in reverse order, recording every compensation failure.</li><li>Read every affected file through the adapter after compensation. Record these restoration checks separately from callback success.</li></ol>
+<h2>2. Keep the original failure</h2>
+<pre><code>#include &lt;umicom/ai/coding_patch.h&gt;
+
+UmiAiCodingPatchTransactionReport report = {0};
+UmiStatus status = UmiAiCodingPatchApplyWithReport(
+    reviewed_patch, &amp;policy, &amp;workspace_adapter, &amp;report);
+if (!report.admitted) {
+    /* No complete transaction report was published; handle admission status. */
+    return status;
+}
+/* Present report.primary_status and the separate recovery observations. */</code></pre>
+<p>The snippet assumes the host owns a reviewed patch, policy and workspace adapter. It does not create approval or provide filesystem containment. The host adapter remains responsible for workspace paths, permissions, stable access and the lifetime of its callback data.</p>
+<p>Initialize a fresh report to zero before every attempt. An admission refusal leaves it untouched, so <code>admitted</code> remains zero. Once execution reaches file verification, every return supplies a complete report with <code>admitted</code> set to one. Reusing an old report without clearing it would retain its old admitted flag and mislabel a later refusal. Keep all operations on the serialized owner thread.</p>
+<table><tr><th>Field</th><th>Interpretation</th></tr><tr><td>admitted</td><td>One for a complete report. A freshly zeroed report remains zero on admission refusal.</td></tr><tr><td>primary_status</td><td>The verification or mutation error returned by the operation, or OK.</td></tr><tr><td>failed_file_index</td><td>The affected patch file index; SIZE_MAX means no file failed.</td></tr><tr><td>verified_files</td><td>Successful preflight file reads before mutation.</td></tr><tr><td>mutation_attempts / mutations_completed</td><td>Callbacks entered and callbacks returning OK. A failed callback may still have changed a file.</td></tr><tr><td>compensation_attempts / compensation_failures</td><td>Recovery callbacks entered and those returning an error.</td></tr><tr><td>restoration_checks / restoration_failures</td><td>Post-compensation reads and those that failed or did not match the expected original state.</td></tr><tr><td>compensation_status</td><td>The first compensation callback error, or the first restoration-check error if callbacks reported success.</td></tr><tr><td>revision_before / revision_after</td><td>The patch observation revision. Any attempted mutation advances it once, including a failed operation.</td></tr></table>
+<p>A zero compensation error does not mean recovery occurred: also inspect the attempt counts. Readbacks establish observations through the adapter at that moment. They do not establish durable storage, prevent later external writes or make the multi-file operation atomic.</p>
+<h2>3. Do not hide a compensation failure</h2>
+<p>Suppose file one changes successfully, file two changes but returns IO_ERROR, and restoring file two returns PERMISSION_DENIED. The operation returns IO_ERROR. Its report records two mutation attempts, one completed mutation, two compensation attempts and the permission failure. Restoration checks then distinguish which expected file states can actually be observed.</p>
+<p>On failure, the patch keeps its last committed logical state. An APPROVED or APPLIED state is not a claim that the workspace was restored. Show the failure and affected files, stop automatic retries, and inspect the workspace before another operation. A later retry still performs the ordinary conflict checks.</p>
+<h2>4. Refuse callback reentry</h2>
+<p>A host read or write callback may publish notifications. Those notifications can call back into application code. Without a guard, that code could add files to the patch or apply it a second time while the outer loop still uses it.</p>
+<p>While a patch transaction borrows a patch, its init, add, approve, reject, apply and revert mutation APIs return BUSY for that same patch. Read-only integrity checks remain available. A nested transaction on a different patch is permitted, but it still cannot mutate any borrowed outer patch.</p>
+<p>This is synchronous reentry admission, not a mutex. Serialize all threads that use a patch. Callbacks must return normally and must not directly edit or free the borrowed patch, report or callback data. Framework captures admitted callback slots before execution; copying function pointers does not extend the lifetime of their user data.</p>
+<h2>5. Exercise failures without touching real files</h2>
+<p>The in-memory regression adapter supports create, modify and delete operations. It can change bytes and then return an error, fail a compensation callback, fail a restoration read or call a mutation API from a callback. This permits precise recovery expectations without modifying a real project.</p>
+<pre><code>$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake -S . -B build/patch-transactions -G Ninja -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe -DBUILD_TESTING=ON
+cmake --build build/patch-transactions --target umicom-ai-coding-patch-transactions-test umicom-ai-coding-patch-admission-test umicom-ai-coding-patch-tests
+ctest --test-dir build/patch-transactions -R '^framework[.]ai([.]coding-patch([.]|-transactions[.])|_coding_patch$)' --output-on-failure</code></pre>
+<p>Run from the Framework repository, one command at a time, and stop on failure. Sixty transaction cases are authored alongside the existing admission coverage. Their registration does not establish a compiler or runtime pass.</p>
+<h2>6. Carry recovery evidence into an application</h2>
+<p>The assistant owns stored patches. Use <code>UmiAiCodingAssistantApplyPatchWithReport</code> and <code>UmiAiCodingAssistantRevertPatchWithReport</code> with an approved patch identifier rather than copying an owned patch into another mutable controller. These calls retain the service callback guard and publish the core transaction report.</p>
+<pre><code>UmiAiCodingPatchTransactionReport report = {0};
+UmiStatus status = UmiAiCodingAssistantApplyPatchWithReport(
+    assistant, reviewed_patch_id, &amp;workspace_adapter, &amp;report);
+if (report.admitted &amp;&amp; report.mutation_attempts != 0 &amp;&amp; status != UMI_STATUS_OK) {
+    /* Show primary_status, compensation_status and restoration failure counts.
+     * Inspect the affected files before an explicitly requested retry. */
+}
+</code></pre>
+<p>The assistant revision advances when the owned patch revision advances, including a failed mutation attempt. A refused input or a file conflict before mutation leaves that service revision unchanged. A revision is an observation marker, not a success flag.</p>
+<p>Studio exposes matching <code>UmiStudioCodingAssistantApplyPatchWithReport</code> and <code>UmiStudioCodingAssistantRevertPatchWithReport</code> wrappers. Its existing patch command message shows the original error, recovery status and callback/readback failure counts after a failed mutation. The wrappers delegate to Framework; they do not implement a second recovery algorithm or approve a patch automatically.</p>
+<ol><li>Start with a fresh, zeroed report for each request.</li><li>Keep the report separate from the service, adapter and callback data.</li><li>Use the returned status for the original operation. Do not replace it with a successful compensation status.</li><li>If mutation was attempted and the operation failed, show recovery counts and ask the user to inspect the affected files.</li><li>Refresh service-backed views after any changed revision. Do not treat a retained logical patch state as proof of restored files.</li></ol>
+<p>The Framework ownership regression target is <code>umicom-ai-coding-owner-admission-test</code>; its test filter is <code>^framework[.]ai[.]coding-owner[.]</code>. Studio uses <code>umicom-studio-coding-assistant-test</code> and <code>^studio[.]coding_assistant$</code>. The Studio fixture simulates a write or deletion that succeeds on disk and then returns an error, checking the report and restored file before a later successful operation. This coverage is authored; registration alone does not qualify the UI or filesystem workflow.</p>
+<h2>7. Read the automated agent's last patch outcome</h2>
+<p>An automated agent can apply a patch, run validation and attempt a revert. Its final run status alone does not explain which patch call changed files or whether recovery succeeded. <code>UmiAiCodingAgentReadPatchOutcome</code> copies the last completed call into a <code>UmiAiCodingAgentPatchOutcome</code>. Hosts using the composition service can call <code>UmiAiCodingRuntimePlatformReadPatchOutcome</code> instead.</p>
+<pre><code>UmiAiCodingAgentPatchOutcome outcome;
+UmiStatus read_status = UmiAiCodingRuntimePlatformReadPatchOutcome(
+    coding_platform, &amp;outcome);
+if (read_status == UMI_STATUS_OK) {
+    /* Correlate outcome.task_id and outcome.patch_id with the user's task.
+     * outcome.status is the patch call result.
+     * outcome.transaction holds its admitted recovery report. */
+}</code></pre>
+<p><code>NOT_FOUND</code> means no patch call has completed for the current admitted task. Invalid arguments and missing or invalid observations leave the output unchanged, so inspect the return value before reading the output. The returned value is a copy; editing it does not change the agent.</p>
+<p>The outcome records the task ID, patch ID, whether the call was a revert, its primary status and its transaction report. The report's <code>admitted</code> field may be zero when the assistant refused the call before file verification. A failed apply or revert is still a completed call and remains inspectable.</p>
+<p>A successful patch call followed by a failed event notification has two different results: the retained patch outcome reports the successful patch, while the enclosing helper may return the notification error. Likewise, a failed validation can follow a successful apply. Never present the patch outcome as the result of the entire agent run.</p>
+<p>Starting a new admitted task clears the previous task's outcome. A rejected start, such as an empty task ID or busy agent, preserves it. While a synchronous file callback is running, observation sees the previous completed outcome until the active patch call returns. Always compare both IDs: a newly generated patch may not have been attempted yet.</p>
+<p>The focused target is <code>umicom-ai-coding-agent-patch-outcomes-test</code>, with filter <code>^framework[.]ai[.]coding-agent-outcome[.]</code>. It substitutes the already-tested assistant transaction boundary and exercises actual agent/platform forwarding, notification failure, copy isolation and task reset. Its 27 cases are authored and require native qualification. This retained value is memory-only evidence; it does not prove durable storage or add a new Studio presentation workflow.</p>
+<h2>Exercise</h2>
+<p>For a three-file revert, draw the mutation order and the compensation order when the second callback fails. Decide what the controller should show if every compensation callback returns OK but one restoration read disagrees. Explain why the original error and the recovery error must both remain visible.</p>
+<p><a href="index.html">Return to Framework learning</a></p></main></body></html>

@@ -45,6 +45,9 @@ int main(void)
     (void)strcpy(
         plan.repository_context.files[0].language_id, "c");
     plan.repository_context.files[0].estimated_tokens = 4U;
+    /* Use the same metadata contract as a selection from the context planner. */
+    plan.repository_context.files[0].priority = 1U;
+    plan.repository_context.files[0].classification = UMI_AI_DATA_INTERNAL;
     (void)strcpy(plan.request.active_path, "src/main.c");
 
     assert(umi_ai_coding_materialize_context(

@@ -45,6 +45,8 @@ struct UmiAiWorkspace {
     AwEmbedding embeddings[UMI_AI_WORKSPACE_MAX_SOURCES];
     char allowedTools[AW_MAX_ALLOWED_TOOLS][UMI_AI_ID_CAPACITY];
     size_t allowedToolCount;
+    /* Completed controllers still retain storage until explicitly released. */
+    size_t execution_owners;
     bool busy;
     bool recoveryRequired;
 };

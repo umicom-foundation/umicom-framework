@@ -394,6 +394,8 @@ add_library(umicom_platform STATIC
     src/platform/native_arguments.c
     src/platform/native_arguments_capture.c
     src/platform/path.c
+    # Native URI encoding is shared by documents and headless report consumers.
+    src/platform/path_uri.c
     src/platform/directory.c
     src/platform/cancellation.c
     src/platform/settings.c
@@ -926,6 +928,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
         adapters/gtk4/editor_gtk4.c
         adapters/gtk4/text_comparison_gtk4.c
         adapters/gtk4/window_lifecycle.c
+        adapters/gtk4/text_preview.c
         adapters/gtk4/editor_theme_gtk4.c
         adapters/gtk4/action_dispatch_gtk4.c
         adapters/gtk4/menu_gtk4.c
@@ -2385,6 +2388,7 @@ add_library(umicom_sdk STATIC
     src/sdk/installed_metadata.c
     src/sdk/installation_inspection.c
     src/sdk/artifact_inventory.c
+    src/sdk/artifact_fingerprint.c
     src/sdk/locator.c
     src/sdk/probe.c
     src/sdk/compatibility.c
@@ -2753,6 +2757,8 @@ add_library(umicom_codeguard STATIC
     src/codeguard/dependency_audit.c
     src/codeguard/external_tool.c
     src/codeguard/lifetime.c
+    src/codeguard/job.c
+    src/codeguard/review.c
     src/codeguard/normalizer.c
     src/codeguard/source_naming.c
     src/codeguard/pattern_scan.c
@@ -2798,6 +2804,7 @@ add_library(umicom_codeguard STATIC
     src/codeguard/service.c
     src/codeguard/severity.c
     src/codeguard/source.c
+    src/codeguard/source_reader.c
     src/codeguard/summary.c
     src/codeguard/suppression.c
     src/codeguard/quality_types.c
@@ -2823,6 +2830,8 @@ target_link_libraries(umicom_codeguard PUBLIC
     Umicom::base
     Umicom::platform
     Umicom::toolchain
+    # Share JSON string escaping instead of maintaining a report-only encoder.
+    Umicom::protocol
 )
 target_include_directories(umicom_codeguard PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -4077,6 +4086,7 @@ if(BUILD_TESTING)
 
     umicom_add_framework_test(umicom-developer-lifecycle-plan-tests framework.developer.lifecycle_plan tests/test_developer_lifecycle_plan.c)
     include(cmake/UmicomDeveloperLifecycleExecution.cmake)
+    include(cmake/UmicomPipelineTransitionChecks.cmake)
     umicom_add_framework_test(umicom-developer-runtime-tests framework.developer.runtime tests/test_developer_runtime.c)
     umicom_add_framework_test(umicom-language-profile-tests framework.language_profile tests/test_language_profile.c)
     umicom_add_framework_test(umicom-project-language-matrix-tests framework.project_language_matrix tests/test_project_language_matrix.c)
@@ -5095,6 +5105,10 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-ai-retrieval-publication-test framework.ai.retrieval_publication tests/test_ai_retrieval_publication.c)
     umicom_add_framework_test(umicom-ai-tools-policy-tests framework.ai_tools_policy tests/test_ai_tools_policy.c)
     umicom_add_framework_test(umicom-ai-provider-tests framework.ai_provider tests/test_ai_provider.c)
+    # Provider tables and permission checks share one bounded admission service.
+    umicom_add_framework_test(umicom-ai-provider-registry-lifetime-tests framework.ai.provider_registry_lifetime tests/ai/test_provider_registry_lifetime.c)
+    umicom_add_framework_test(umicom-ai-provider-admission-tests framework.ai.provider_admission tests/ai/test_provider_admission.c)
+    umicom_add_framework_test(umicom-ai-provider-kind-policy-tests framework.ai.provider_kind_policy tests/ai/test_provider_kind_policy.c)
     umicom_add_framework_test(umicom-ai-model-ensemble-tests framework.ai_model_ensemble tests/test_ai_model_ensemble.c)
     umicom_add_framework_test(umicom-ai-authorengine-tests framework.ai_authorengine tests/test_ai_authorengine.c)
     # AuthorEngine Integration v2 keeps orchestration outside Studio while
@@ -5230,6 +5244,13 @@ endif()
 
 
 # CodeGuard focused security and architecture tests.
+include(cmake/UmicomCodeGuardOwnership.cmake)
+include(cmake/UmicomCodeGuardCancellation.cmake)
+include(cmake/UmicomCodeGuardAnalysisFailures.cmake)
+include(cmake/UmicomCodeGuardPathPolicy.cmake)
+include(cmake/UmicomCodeGuardDuplicateEvidence.cmake)
+include(cmake/UmicomCodeGuardSourceSelection.cmake)
+include(cmake/UmicomCodeGuardRegistry.cmake)
 if(BUILD_TESTING)
     umicom_add_framework_test(umicom-codeguard-result-tests framework.codeguard_result tests/test_codeguard_result.c)
     umicom_add_framework_test(umicom-codeguard-lifetime-tests framework.codeguard_lifetime tests/test_codeguard_lifetime.c)
@@ -5845,6 +5866,12 @@ install(DIRECTORY examples/application_module/
     COMPONENT Framework)
 install(DIRECTORY examples/sdk_consumer/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/examples/sdk_consumer)
+# The independently buildable sample must travel with the selective SDK too.
+# Preserve its established full-install location for existing documentation.
+install(DIRECTORY examples/sdk_consumer/
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/examples/sdk_consumer
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
+
 # Install the offline learning reference with the Framework so packaged IDEs
 # can expose the same lessons as source-tree builds.
 install(DIRECTORY docs/learning/
@@ -6796,6 +6823,7 @@ include(cmake/UmicomApplicationModuleTests.cmake)
 
 # Passive SDK inspection fixtures do not compile or execute package scripts.
 include(cmake/UmicomSdkInspectionChecks.cmake)
+include(cmake/UmicomSdkFingerprintChecks.cmake)
 
 # The installed SDK includes the public workflow for diagnosing native startup failures.
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/docs/DIAGNOSTIC_FAILURES.html"
@@ -6858,6 +6886,17 @@ install(DIRECTORY cmake/windows/
 install(DIRECTORY docs/learning/
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/docs/learning"
     COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
+
+# Preserve earlier learning destinations for compatibility while offering a
+# source-compatible location beside the canonical resources and SDK examples.
+# Relative SVG/ICO, lesson and example links then retain their source meaning.
+install(DIRECTORY docs/learning/
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/learning"
+    COMPONENT Framework)
+install(DIRECTORY docs/learning/
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/learning"
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
+
 install(FILES docs/SELECTIVE_SDK_INSTALLATION.html
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs" COMPONENT Framework)
 install(FILES docs/SELECTIVE_SDK_INSTALLATION.html
@@ -7101,3 +7140,108 @@ include(cmake/UmicomOrderAdmissionChecks.cmake)
 
 # Model lifetime and transport policy belong to Framework, shared by native clients.
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/UmicomLocalModels.cmake")
+
+# Applications can distribute the same installed development package instead of
+# embedding a Framework checkout. Packaging is explicit and never part of ALL.
+option(UMICOM_BUILD_SDK_ARCHIVE "Expose the selective Framework SDK ZIP target" OFF)
+if(UMICOM_BUILD_SDK_ARCHIVE)
+    include("${CMAKE_CURRENT_LIST_DIR}/cmake/UmicomSdkArchive.cmake")
+    umicom_add_sdk_archive()
+endif()
+
+# Bounded readers retain the first failure while always closing their handles.
+include(cmake/UmicomInputCleanupChecks.cmake)
+
+# Shared native source budgets and text admission.
+include(cmake/UmicomCodeGuardBoundedSource.cmake)
+
+# Shared background quality analysis and owned result transfer.
+include(cmake/UmicomCodeGuardJobs.cmake)
+
+# Keep background findings bound to their originating workspace.
+include(cmake/UmicomCodeGuardJobAdoption.cmake)
+
+# Qualify current-request authority before publishing background findings.
+include(cmake/UmicomCodeGuardReview.cmake)
+include(cmake/UmicomWorkspaceIdentity.cmake)
+
+include(cmake/UmicomCodeGuardReports.cmake)
+
+include(cmake/UmicomOutputViewLifetime.cmake)
+
+include(cmake/UmicomCodeGuardOutput.cmake)
+
+# New-file report export shares native exclusive output ownership.
+include(cmake/UmicomCodeGuardExclusiveExport.cmake)
+
+include(cmake/UmicomUtf8Stream.cmake)
+
+include(cmake/UmicomAiResponseStream.cmake)
+
+include(cmake/UmicomSseFormatChecks.cmake)
+include(cmake/UmicomSseParser.cmake)
+include(cmake/UmicomLocalChatDeltas.cmake)
+include(cmake/UmicomLocalChatAllocationChecks.cmake)
+
+include(cmake/UmicomLocalChatStream.cmake)
+
+include(cmake/UmicomSseResponse.cmake)
+
+include(cmake/UmicomLocalHttpPolicy.cmake)
+
+include(cmake/UmicomLocalStreamExchange.cmake)
+
+include(cmake/UmicomLocalStreamLoopback.cmake)
+
+include(cmake/UmicomLocalStreamJobs.cmake)
+
+# Reviewed transport shares the existing approval and durable execution owner.
+include(cmake/UmicomReviewedLocalStream.cmake)
+include(cmake/UmicomReviewedStreamGtk.cmake)
+include(cmake/UmicomAiRuntimeCatalogueChecks.cmake)
+include(cmake/UmicomAiConversationArchiveChecks.cmake)
+include(cmake/UmicomAiInvocationChecks.cmake)
+include(cmake/UmicomAiContextChecks.cmake)
+include(cmake/UmicomAiContextObservation.cmake)
+include(cmake/UmicomCodingContextAdmission.cmake)
+include(cmake/UmicomCodingPatchAdmission.cmake)
+include(cmake/UmicomCodingTaskAdmission.cmake)
+include(cmake/UmicomCodingServiceOwnership.cmake)
+
+include(cmake/UmicomCodingRuntimeLifetime.cmake)
+
+include(cmake/UmicomCodingConfigDomains.cmake)
+include(cmake/UmicomCodingMaterializerAdmission.cmake)
+include(cmake/UmicomCodingPromptAdmission.cmake)
+include(cmake/UmicomCodingPromptUnicode.cmake)
+include(cmake/UmicomCodingContextSummaryAdmission.cmake)
+include(cmake/UmicomCodingSelectionSpans.cmake)
+include(cmake/UmicomCodingTaskQueueAdmission.cmake)
+include(cmake/UmicomCodingObservationStorage.cmake)
+include(cmake/UmicomCodingPlatformSnapshot.cmake)
+include(cmake/UmicomCodingAuditCursors.cmake)
+include(cmake/UmicomCodingPatchTransactions.cmake)
+
+# Qualify coherent in-memory observation publication through shared stores.
+include(cmake/UmicomCodingObservationPublication.cmake)
+
+# Qualify retained agent patch outcomes through the shared composition boundary.
+include(cmake/UmicomCodingAgentPatchOutcomes.cmake)
+
+# Qualify failed child observations and cancellation revision ownership.
+include(cmake/UmicomCodingParentRevisions.cmake)
+
+# Preserve agent transition identity across tasks and terminal capacity boundaries.
+include(cmake/UmicomCodingAgentRevisions.cmake)
+
+# Shared bounded task construction for queued and immediate execution.
+include(cmake/UmicomCodingTaskInputAdmission.cmake)
+
+# Shared provider value boundaries and checked response publication.
+include(cmake/UmicomAiCheckedGeneration.cmake)
+
+# Retain provider owners through synchronous callback reentry.
+include(cmake/UmicomAiProviderInvocationLifetime.cmake)
+
+# Health probes share provider ownership and checked service teardown.
+include(cmake/UmicomAiHealthCallbackLifetime.cmake)

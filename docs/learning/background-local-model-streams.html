@@ -1,0 +1,69 @@
+<!-- Umicom Framework
+File: docs/learning/background-local-model-streams.html
+
+PURPOSE:
+Teach explicit local HTTP runtime ownership, background requests, copied text and joined release.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Own a background local model request</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Own a background local model request</h1>
+<p>A graphical application should stay responsive while a local model generates text. Moving HTTP to a worker solves only part of that problem. Someone must retain the request, cancel it, copy readable output, wait for native thread teardown and release storage in the right order. Framework now provides a public C service for those responsibilities. Application adoption and runtime qualification remain separate work.</p>
+<h2>1. Establish the runtime before starting threads</h2>
+<p>A runtime is an explicit owner for the HTTP library's global lifetime. Create <code>UmiAiLocalTransport</code> during single-threaded startup, before a GUI toolkit or another subsystem starts workers. Do not call it from a Windows DLL entry point or static initializer. The service initializes HTTP first and then checks its thread-safe global capability; checking library version information before initialization is not a safe substitute.</p>
+<pre><code class="language-c">UmiAiLocalTransport *transport = NULL;
+UmiStatus status = UmiAiLocalTransportCreate(&amp;transport);
+if (status != UMI_STATUS_OK) {
+    /* Display the unavailable capability; do not substitute a fake reply. */
+}</code></pre>
+<p>This service sends no request and loads no model. It retains one global initialization reference. It refuses release while request owners still retain it, including jobs that have finished but have not been destroyed. Other HTTP clients remain responsible for their own lifetime. See the upstream <a href="https://curl.se/libcurl/c/curl_global_init.html">initialization contract</a> and <a href="https://curl.se/libcurl/c/threadsafe.html">threading contract</a>.</p>
+<h2>2. Admit and copy one request</h2>
+<p>Use <code>UmiAiLocalStreamCreate</code> with that runtime, a normal <code>UmiAiRequest</code> and explicit options. Creation checks the request and encodes its JSON before returning. It copies the local request/model revision tokens, transport limits and provider identity needed for decoding. The application may then edit or free its original request and options.</p>
+<pre><code class="language-c">UmiAiLocalStreamOptions options = {
+    .port = 8080,
+    .timeout_millis = 30000,
+    .maximum_text_bytes = 1024 * 1024,
+    .maximum_wire_bytes = 16 * 1024 * 1024,
+    .identity = {42, 7},
+    .allow_network = true
+};
+UmiAiLocalStream *job = NULL;
+status = UmiAiLocalStreamCreate(transport, request, &amp;options, &amp;job);</code></pre>
+<p>The example values are choices, not a discovered server configuration. Set <code>allow_network</code> only after the application has obtained the appropriate user decision. This flag records admission; it does not implement a dialog or authenticate the endpoint. Only an existing trusted 127.0.0.1 server and the fixed chat-completions route are supported. The shared transport refuses redirects, proxies and unsupported response representations.</p>
+<p>Text and wire budgets serve different purposes. Text is decoded output retained for the reader. Wire bytes also include JSON and event framing. A bounded response may fail when either budget is exceeded; previous accepted text remains distinguishable from a complete response.</p>
+<h2>3. Start a producer and read owned copies</h2>
+<p><code>UmiAiLocalStreamStart</code> starts one Framework thread. A native start failure leaves the job created and retryable. A second successful start is refused. The producer owns its HTTP handle, decoder and protocol metadata. It receives no GUI pointer and invokes no application callback.</p>
+<p>Call <code>UmiAiLocalStreamPoll</code> from the creating thread to observe operation progress. Use <code>UmiAiLocalStreamCopyText</code> for an allocated UTF-8 string and matching text snapshot. Release that copy with <code>UmiAiResponseStreamTextFree</code>. The producer can continue while the application reads its copy; only the shared text mutex is involved.</p>
+<p>Protocol metadata such as completion ID, usage and finish reason is different from partial text. The worker publishes one immutable result after the operation. <code>UmiAiLocalStreamReadResult</code> returns BUSY before that point. Afterwards, inspect both <code>operation_status</code> and <code>observation_status</code>: a completed HTTP operation and a successful final metadata observation are separate outcomes.</p>
+<h2>4. Keep completion and joining separate</h2>
+<table><tr><th>State</th><th>Meaning</th><th>Safe next action</th></tr>
+<tr><td>Created</td><td>Inputs and buffers are owned; no worker exists.</td><td>Start, cancel or destroy.</td></tr>
+<tr><td>Running</td><td>A native worker may still access job storage.</td><td>Poll, copy text or request cancellation.</td></tr>
+<tr><td>Finished</td><td>The operation has published its result.</td><td>Join the native worker before destruction.</td></tr>
+<tr><td>Joined</td><td>Native teardown has been confirmed.</td><td>Read retained results and release the job.</td></tr></table>
+<p>A terminal text snapshot can appear before native thread teardown ends. A finished result is also not a join. <code>UmiAiLocalStreamDestroy</code> returns BUSY for an unjoined started worker, even when its result is already available.</p>
+<p><code>TryJoin</code> is nonblocking on supported Framework platforms; others report NOT_IMPLEMENTED. A GUI host must retain its controller and schedule another observation when TryJoin reports BUSY. <code>Join</code> is the explicit blocking alternative for a command-line caller or controlled shutdown path. Never block an interactive event handler for an entire model request.</p>
+<h2>5. Cancel without freeing borrowed storage</h2>
+<ol><li>Request cancellation on the creating thread.</li><li>Continue retaining the job, runtime and any application owner needed by scheduled observations.</li><li>Wait for a confirmed join. Cancellation alone does not establish quiescence.</li><li>Read the result and partial text if needed.</li><li>Destroy the job. A handle-release failure retains the pointer for investigation or retry.</li><li>Destroy the runtime after its retained request count reaches zero.</li></ol>
+<p>Cancelling a created job finishes it without starting a worker. Cancelling an already finished operation does not rewrite its result. During HTTP, cancellation is cooperative and observed by transport callbacks and the publication boundary. There is no promise of instantaneous interruption.</p>
+<p>Only the creating thread controls a runtime or job. The private worker updates protocol state, and text copies use the shared synchronized owner. Application code should not route controller calls from arbitrary threads or store raw widget pointers in request state.</p>
+<h2>6. Use the independent SDK client</h2>
+<p>The <a href="../../examples/sdk_local_chat/README.md">native local chat example</a> consumes an explicitly selected installed SDK. It requires a command-line network flag, copies its request before starting, prints only new complete UTF-8 text, and turns Ctrl+C into an owner-thread cancellation request. It uses the shared SVG/ICO branding helper and does not clone Framework.</p>
+<p>Generated text depends on the selected model. A configured endpoint is not proof of model identity or quality. The example and APIs are authored; installed-package linkage, live inference, cancellation latency and icon appearance need execution evidence.</p>
+<h2>7. Qualify the boundaries independently</h2>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-local-transport-test umicom-local-transport-offline-test umicom-local-stream-job-test umicom-local-stream-job-loopback-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.ai_workspace\.(local_transport|local_stream_job)" --output-on-failure</code></pre>
+<p>There are nine runtime boundary cases, twelve controlled worker cases, four public-job loopback cases and one offline-runtime case. With the relevant native capabilities, the expected total is 26 passes. These expectations are not executed results.</p>
+<p>The runtime suite injects initialization and capability failures. Controlled worker cases retain the actual controller, Framework thread, cancellation and text services while replacing the exchange; they test partial output, input copying, wrong-thread calls, cancellation, and failed start/join/release. The loopback suite uses actual HTTP for successful, timed-out, cancelled and truncated responses. The offline case compiles the actual unavailable branch.</p>
+<p>If a test fails, first identify which boundary supplied the evidence. A fixture error is not a successful negative client test. A configuration pass is not compilation. A loopback peer is not a qualified local-model server. Preserve the observed status and tested source identity before changing the policy.</p>
+<p>Continue with <a href="admit-event-stream-responses.html">HTTP admission</a>, <a href="complete-local-model-streams.html">terminal sequencing</a> and <a href="request-owned-ai-streams.html">text ownership</a>. Existing full-response provider contracts remain available. Studio, Media and LLM still need their application lifecycle wiring and GUI qualification.</p>
+</main></body></html>

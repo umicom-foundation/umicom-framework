@@ -43,6 +43,8 @@ void umi_ai_stream_init(UmiAiStreamCollector *stream,
 }
 
 /* Provide the ai stream push operation used by this module and its client applications. */
+/* Bound compatibility input and snapshot overlapping chunks before appending. The previous unchecked strlen/addition/memcpy implementation remains for review; the public struct and callback convention are preserved. The previous implementation remains for review. */
+#if 0
 UmiStatus umi_ai_stream_push(UmiAiStreamCollector *stream,
                              const char *text,
                              int final_chunk)
@@ -69,5 +71,29 @@ UmiStatus umi_ai_stream_push(UmiAiStreamCollector *stream,
     if (stream->sink != NULL) {
         stream->sink(text, final_chunk, stream->user_data);
     }
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus umi_ai_stream_push(UmiAiStreamCollector *stream,
+    const char *text,int final_chunk)
+{
+    if(stream==NULL || text==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    /* The public compatibility struct is writable. Validate its stored length
+     * before subtraction or indexing, then bound the input by available space. */
+    if(stream->length>=sizeof stream->text || stream->text[stream->length]!='\0' ||
+        memchr(stream->text,'\0',stream->length)!=NULL)return UMI_STATUS_INVALID_STATE;
+    size_t available=sizeof stream->text-stream->length;
+    size_t length=0U;
+    while(length<available && text[length]!='\0')++length;
+    if(length==available)return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* A fixed owned chunk supports self-append and overlapping source slices.
+     * The sink borrows this stable chunk only during the call, including when
+     * it resets or appends to the collector. No owner access follows the sink. */
+    char chunk[sizeof stream->text];
+    memcpy(chunk,text,length+1U);
+    memcpy(stream->text+stream->length,chunk,length+1U);
+    stream->length+=length;
+    UmiAiStreamSink sink=stream->sink;void *user_data=stream->user_data;
+    if(sink!=NULL)sink(chunk,final_chunk,user_data);
     return UMI_STATUS_OK;
 }

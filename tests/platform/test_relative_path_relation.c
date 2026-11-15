@@ -58,6 +58,15 @@ int main(int argc, char **argv)
         CHECK(UmiRootedFileValidateRelativePath(cases[i].first)==UMI_STATUS_OK);
         CHECK(UmiRootedFileCompareRelativePaths(cases[i].first,cases[i].second,&observed)==UMI_STATUS_OK);
         CHECK(observed==cases[i].expected);
+        /* Swapping operands must invert only the parent direction. This
+         * exercises both native separator boundaries for every valid case. */
+        UmiRootedPathRelation reverse=UMI_ROOTED_PATH_DISJOINT;
+        UmiRootedPathRelation wanted=cases[i].expected==UMI_ROOTED_PATH_FIRST_PARENT
+            ? UMI_ROOTED_PATH_SECOND_PARENT
+            : cases[i].expected==UMI_ROOTED_PATH_SECOND_PARENT
+            ? UMI_ROOTED_PATH_FIRST_PARENT : cases[i].expected;
+        CHECK(UmiRootedFileCompareRelativePaths(cases[i].second,cases[i].first,&reverse)==UMI_STATUS_OK);
+        CHECK(reverse==wanted);
         return 0;
     }
     for (size_t i=0U;i<sizeof invalid/sizeof invalid[0];++i) {

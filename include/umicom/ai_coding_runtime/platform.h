@@ -51,6 +51,14 @@ typedef struct UmiAiCodingRuntimePlatformSnapshot {
  */
 typedef struct UmiAiCodingRuntimePlatform UmiAiCodingRuntimePlatform;
 
+/* Platform mutations reserve revision headroom before child work. Successful
+ * calls advance the parent revision once, as do failed calls with observable
+ * child changes or uncertain post-operation capture. Primary operation statuses
+ * are preserved. Child revisions remain independent; direct child mutation is
+ * not automatically observed by this parent. An exhausted parent refuses new
+ * mutations with CAPACITY_EXCEEDED; read-only capture and cancellation remain
+ * available. Serialize the complete owner graph; these checks are not locks. */
+
 /**
  * Provide the ai coding runtime platform create local operation used by this module and
  * its client applications.
@@ -62,6 +70,19 @@ UmiStatus umi_ai_coding_runtime_platform_create_local(
     const char *workspace_root,
     const UmiAiCodingRuntimeConfig *config,
     UmiAiCodingRuntimePlatform **out_platform);
+
+/** Read-only serialized preflight over platform, agent and assistant activity.
+ * NULL is idle; BUSY preserves the complete graph. No lock is acquired. */
+UmiStatus UmiAiCodingRuntimePlatformCheckIdle(const UmiAiCodingRuntimePlatform *platform);
+
+/** Release only after outer execution and borrowed-child callbacks finish.
+ * On OK the caller must clear its handle. On refusal retain it for controlled retry.
+ * The legacy void destructor retains refused owners. Mutation entry points
+ * refuse callback reentry; cancellation and serialized observations remain
+ * available. Child accessors return borrowed handles: callers must not destroy
+ * those children or change their internals. Borrowed external runtime, engine
+ * and executor lifetimes still belong to the hosting application. */
+UmiStatus UmiAiCodingRuntimePlatformDestroyChecked(UmiAiCodingRuntimePlatform *platform);
 
 /**
  * Release or reset state held by ai coding runtime platform so the same storage can be
@@ -159,6 +180,11 @@ UmiStatus umi_ai_coding_runtime_platform_reject(
  * Provide the ai coding runtime platform cancel operation used by this module and its
  * client applications.
  */
+/* Request cancellation even when revision bookkeeping is exhausted. During
+ * an active operation, cancellation is included in its reserved revision. An
+ * idle cancellation saturates at UINT64_MAX instead of wrapping; retire the
+ * exhausted owner before new work. Cancellation is a request, not proof that
+ * execution stopped. */
 void umi_ai_coding_runtime_platform_cancel(
     UmiAiCodingRuntimePlatform *platform);
 
@@ -174,6 +200,11 @@ UmiStatus umi_ai_coding_runtime_platform_next_event(
  * Provide the ai coding runtime platform snapshot operation used by this module and its
  * client applications.
  */
+/** Capture all child observations before replacing out_snapshot. Every refusal
+ * leaves it unchanged. Read-only capture remains available during serialized
+ * activity. Keep platform/children alive, serialize access and use output
+ * storage separate from those owners. This operation allocates nothing, drains
+ * no events and performs no I/O; revisions remain independent owner metadata. */
 UmiStatus umi_ai_coding_runtime_platform_snapshot(
     UmiAiCodingRuntimePlatform *platform,
     UmiAiCodingRuntimePlatformSnapshot *out_snapshot);
@@ -198,6 +229,11 @@ UmiAiCodingAgent *umi_ai_coding_runtime_platform_agent(
  */
 const char *umi_ai_coding_runtime_platform_workspace_root(
     const UmiAiCodingRuntimePlatform *platform);
+
+/* Copy the agent outcome using the same correlation, lifetime and refusal
+ * contract as UmiAiCodingAgentReadPatchOutcome. No events are consumed. */
+UmiStatus UmiAiCodingRuntimePlatformReadPatchOutcome(
+    const UmiAiCodingRuntimePlatform *platform, UmiAiCodingAgentPatchOutcome *outOutcome);
 
 #ifdef __cplusplus
 }

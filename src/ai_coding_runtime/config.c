@@ -17,6 +17,7 @@
 #include "../base/value_archive_internal.h"
 
 #include <string.h>
+#include <math.h>
 
 /*
  * Initialise ai coding runtime config from caller-provided values so later operations
@@ -49,6 +50,8 @@ void umi_ai_coding_runtime_config_init(UmiAiCodingRuntimeConfig *config)
  * Check that ai coding runtime config satisfies its contract before another service relies
  * on it.
  */
+/* Validate the provider domain and finite temperature before execution or typed archive publication. Shared archive numeric checks remain authoritative for wire decoding. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_ai_coding_runtime_config_validate(
     const UmiAiCodingRuntimeConfig *config)
 {
@@ -64,6 +67,41 @@ UmiStatus umi_ai_coding_runtime_config_validate(
      * used.
      */
     if (config == NULL ||
+        config->provider_id[0] == '\0' ||
+        config->model_id[0] == '\0' ||
+        config->context_token_budget == 0U ||
+        config->max_output_tokens == 0U ||
+        config->maximum_iterations == 0U ||
+        config->maximum_iterations > UMI_AI_CODING_RUNTIME_MAX_ITERATIONS ||
+        config->maximum_context_files == 0U ||
+        config->maximum_context_files > UMI_AI_CODING_RUNTIME_CONTEXT_CAPACITY ||
+        config->temperature < 0.0 ||
+        config->temperature > 2.0) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    return UMI_STATUS_OK;
+}
+
+#endif
+UmiStatus umi_ai_coding_runtime_config_validate(
+    const UmiAiCodingRuntimeConfig *config)
+{
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (config == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(config->provider_id, '\0', sizeof(config->provider_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(config->model_id, '\0', sizeof(config->model_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (config == NULL ||
+        config->provider_kind < UMI_AI_PROVIDER_LOCAL ||
+        config->provider_kind > UMI_AI_PROVIDER_TEST ||
+        !isfinite(config->temperature) ||
         config->provider_id[0] == '\0' ||
         config->model_id[0] == '\0' ||
         config->context_token_budget == 0U ||

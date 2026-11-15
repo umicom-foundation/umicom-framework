@@ -1,0 +1,66 @@
+<!-- Umicom Framework
+File: docs/learning/context-budget-and-privacy.html
+
+PURPOSE:
+Teach bounded context provenance, deterministic token planning, complete policy admission and unchanged failed plans.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan AI context within explicit limits | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Plan AI context within explicit limits</h1>
+<p>An AI request can include a project description, selected source, diagnostics or retrieved documents. Each item consumes part of the model's input budget and may carry a different privacy classification. Framework's context broker selects metadata deterministically before an adapter reads or sends the underlying text. The broker itself opens no URI and calls no model.</p>
+<p>This lesson uses <a href="../../include/umicom/ai/context_broker.h">context_broker.h</a> and <a href="../../include/umicom/ai/privacy_policy.h">privacy_policy.h</a>. It assumes basic C structures and status checks. A token estimate is a planning input supplied by the application; this service does not tokenize the final prompt or guarantee that an external model will accept its length.</p>
+<h2>1. Register bounded provenance</h2>
+<p>A context source contains an ID, label, URI, classification, estimated token count, priority and two flags. The URI describes where the source came from. Actual source text remains owned by its adapter. <code>UmiAiContextSourceValidate</code> checks that all fixed text fields terminate within their arrays, required fields are nonempty, enum values are known and the token estimate is positive.</p>
+<pre><code class="language-c">UmiAiContextSource source = {0};
+strcpy(source.source_id, "context.readme");
+strcpy(source.label, "Project overview");
+strcpy(source.uri, "workspace://project/README.md");
+source.kind = UMI_AI_CONTEXT_DOCUMENT;
+source.classification = UMI_AI_DATA_PUBLIC;
+source.estimated_tokens = 600U;
+source.priority = 50U;
+source.mandatory = 1;
+source.enabled = 1;
+UmiStatus status = umi_ai_context_broker_upsert(broker, &amp;source);</code></pre>
+<p>Use bounded copying for values obtained from a form or file. A first-byte check alone cannot make an unterminated array safe for later comparison. The Framework validator performs the bounded scan; applications supply meaningful metadata and must not misclassify private content as public.</p>
+<h2>2. Calculate the usable budget</h2>
+<p>Reserve room for the model's output before selecting context. A context limit of 8,192 tokens with 2,048 reserved leaves 6,144 tokens for selected sources. The caller also supplies a maximum source count. The limit must be positive, the reserve must be smaller than the limit, and the count must fit the fixed plan capacity.</p>
+<p>Enabled sources are considered in this order: mandatory before optional, then higher priority, then source ID in lexical order. Every nonzero mandatory/enabled flag means true, including a negative value. Consistent boolean interpretation prevents a negative true value from accidentally sorting behind optional sources.</p>
+<h2>3. Distinguish a drop from a failed plan</h2>
+<table><thead><tr><th>Source outcome</th><th>Plan result</th></tr></thead><tbody>
+<tr><td>Optional source does not fit or policy refuses it</td><td>Skip it, increment the dropped count and mark the successful plan truncated.</td></tr>
+<tr><td>Mandatory source does not fit</td><td>Return a capacity error and preserve the previous complete output.</td></tr>
+<tr><td>Mandatory source is refused by privacy policy</td><td>Return the policy error and preserve the previous complete output.</td></tr>
+<tr><td>Invalid policy, unknown provider kind or corrupt broker state</td><td>Refuse before selecting any source, even when the broker is empty.</td></tr>
+</tbody></table>
+<p>The planner builds a private candidate through Framework's shared value-construction helper. A failure near the end cannot expose the already selected prefix as a new plan. An older plan remaining in memory does not authorize its use after a failed refresh: inspect the return status and keep the request stopped.</p>
+<h2>4. Validate policy before applying it</h2>
+<p><code>UmiAiPrivacyPolicyValidate</code> requires both local and remote classification limits to be known values, from public through restricted. Sharing checks also require a known provider kind. An unknown numeric kind must not fall through to the local-policy branch. Valid local, AuthorEngine and test providers retain their existing local-policy treatment; a remote provider uses the remote limit.</p>
+<p>The default policy permits public remote context and requires approval for sensitive local material within its local classification limit. Approval cannot override a classification above that limit. Persistence has its separate session/text switches and sensitive-approval rule; it does not inherit the sharing ceiling. A valid policy is still a caller-supplied decision, not a security label inferred from the text or an authentication of the transport.</p>
+<p>Installing a malformed policy through the AuthorEngine service now fails before changing its policy, the runtime policy or the service revision. Boolean switches retain their established nonzero-is-true meaning. Initialize from <code>umi_ai_privacy_policy_default()</code> and alter explicit fields, rather than passing an incomplete zero-initialized policy.</p>
+<h2>5. Track the owner that produced a plan</h2>
+<p><code>UmiAiContextBrokerCapture</code> returns the current count and revision. The plan records the broker revision it observed. Accepted upserts, removals and clears advance that owner; an imported source's historical revision is replaced by the assigned stored revision. A plan owns copies of its metadata and does not change automatically when the broker changes.</p>
+<p>Revisions belong to their particular broker. Comparing two numbers from different owners proves nothing. Serialize broker access and recheck relevant owner, workspace and provider state before executing a request. The plan revision does not describe later edits to underlying files or prove that the final prompt still matches its token estimate.</p>
+<p>Mutation refuses an exhausted revision before changing anything. <code>UmiAiContextBrokerClearChecked</code> reports that refusal. The older void clear remains available, delegates to the checked function and leaves state intact if it cannot complete. A successful clear advances the revision even when already empty. Use the checked form whenever the caller must distinguish completion from refusal.</p>
+<h2>6. Exercise the native implementation</h2>
+<p>From a configured Framework checkout, stop on a failed command:</p>
+<pre><code class="language-powershell">cmake --preset windows-ucrt64-debug
+cmake --build --preset windows-ucrt64-debug --target umicom-ai-context-admission-test umicom-ai-context-planning-test umicom-ai-privacy-admission-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework[.]ai[.](context|privacy)[.]' --output-on-failure --no-tests=error</code></pre>
+<p>The <a href="../../tests/test_ai_context_admission.c">owner cases</a> cover bounded fields, full-registry replacement, corrupt state and exact revision limits. The <a href="../../tests/test_ai_context_planning.c">planning cases</a> distinguish optional drops from mandatory refusal, check deterministic order and preserve old output on failure. The <a href="../../tests/test_ai_privacy_admission.c">policy cases</a> cover the full default sharing matrix and unchanged service state after invalid installation.</p>
+<ol><li>Register two mandatory sources whose combined estimate exceeds the budget. Keep a copy of a previous valid plan.</li><li>Request a plan and expect a capacity error with the previous output unchanged.</li><li>Mark the lower-priority source optional and retry. Expect success with a reported drop.</li><li>Change the provider to remote and classify a mandatory source confidential. Expect policy refusal despite an approval flag.</li><li>Correct the inputs, prepare a new complete plan, and compare its captured broker revision before any separately approved execution.</li></ol>
+<p>The <a href="../../examples/local_models/sdk_consumer/main.c">installed SDK example</a> uses the public context and policy symbols offline. Configuration, registration and source review do not prove these native tests or the installed consumer passed. No model training, retrieval indexing, text loading or remote request is performed by these metadata exercises.</p>
+<p><a href="runtime-catalogue-revisions.html">Runtime identity and observations</a> · <a href="index.html">Learning index</a></p>
+</main></body></html>

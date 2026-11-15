@@ -80,6 +80,9 @@ UmiStatus umi_path_absolute(const char *path,
 /**
  * Provide the path relative operation used by this module and its client applications.
  */
+/* Lexical calculation: "." (and a normalized empty relative location) has
+ * no named segments. Inputs must use a compatible path coordinate system;
+ * this does not resolve symbolic links, query cwd or provide a sandbox. */
 UmiStatus umi_path_relative(const char *base_directory,
                             const char *target_path,
                             char *out_path,

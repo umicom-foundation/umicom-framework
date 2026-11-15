@@ -22,6 +22,12 @@
  * asks for ready work, starts it, then records completion, failure or
  * cancellation.  This separation keeps the state machine deterministic and
  * makes the same pipeline usable by Studio, CI tools, web frontends and tests.
+ *
+ * Lifecycle mutations and dependency refresh project all affected revisions
+ * before publication. Exhaustion returns INVALID_STATE without changing the
+ * graph, operation values or revisions. Unchanged refresh succeeds even when
+ * an identity is at its final value. Revisions never wrap. This is a single-
+ * owner transaction; callers provide synchronization and stable text inputs.
  */
 #ifndef UMICOM_DEVELOPER_PIPELINE_H
 #define UMICOM_DEVELOPER_PIPELINE_H
@@ -152,6 +158,23 @@ UmiStatus umi_developer_pipeline_next_ready(
  * Provide the developer pipeline start operation used by this module and its client
  * applications.
  */
+/* Refresh dependency state and start the oldest ready operation as one model
+ * transaction. NULL output is allowed; any refusal leaves output and pipeline
+ * unchanged, including when a late dependency revision is exhausted. */
+UmiStatus umi_developer_pipeline_start_next(
+    UmiDeveloperPipeline *pipeline,
+    UmiDeveloperOperationSnapshot *out_operation);
+
+/* Read-only admission of the next ready operation's start and each possible
+ * terminal outcome, including dependent blocking/unblocking. No identities are
+ * changed or locked. Use immediately before synchronous execution under one
+ * owner; the executor must not re-enter or mutate this model. This is not a
+ * process capability or assurance that the external operation will succeed.
+ * INVALID_STATE reports exhausted identities or an unavailable start;
+ * NOT_FOUND reports that no operation is ready. */
+UmiStatus umi_developer_pipeline_admit_next_execution(
+    const UmiDeveloperPipeline *pipeline);
+
 UmiStatus umi_developer_pipeline_start(
     UmiDeveloperPipeline *pipeline,
     const char *operation_id);

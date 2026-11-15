@@ -18,6 +18,7 @@
 #include "support/assertions.h"
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "umicom/developer/pipeline.h"
 
@@ -37,6 +38,39 @@ static UmiDeveloperOperationSnapshot operation(
     return result;
 }
 
+/* A bounded dense DAG shares ancestors through many paths. Cycle admission
+ * must count distinct queued operations and leave state unchanged on refusal. */
+static void DenseDependencies(void)
+{
+    UmiDeveloperPipeline *pipeline=NULL;
+    assert(umi_developer_pipeline_create(&pipeline)==UMI_STATUS_OK);
+    for(size_t i=0U;i<48U;++i){
+        char id[32];snprintf(id,sizeof id,"dense.%zu",i);
+        UmiDeveloperOperationSnapshot item=operation(id,UMI_DEVELOPER_OPERATION_CUSTOM,id);
+        assert(umi_developer_pipeline_submit(pipeline,&item)==UMI_STATUS_OK);
+    }
+    size_t edges=0U;
+    for(size_t i=1U;i<48U && edges<UMI_DEVELOPER_PIPELINE_DEPENDENCY_CAPACITY;++i){
+        for(size_t j=0U;j<i && edges<UMI_DEVELOPER_PIPELINE_DEPENDENCY_CAPACITY;++j){
+            char a[32],b[32];snprintf(a,sizeof a,"dense.%zu",i);snprintf(b,sizeof b,"dense.%zu",j);
+            assert(umi_developer_pipeline_add_dependency(pipeline,a,b)==UMI_STATUS_OK);
+            ++edges;
+            UmiDeveloperPipelineSnapshot before,after;
+            assert(umi_developer_pipeline_snapshot(pipeline,&before)==UMI_STATUS_OK);
+            if(edges<UMI_DEVELOPER_PIPELINE_DEPENDENCY_CAPACITY){
+                assert(umi_developer_pipeline_add_dependency(pipeline,b,a)==UMI_STATUS_INVALID_STATE);
+                assert(umi_developer_pipeline_snapshot(pipeline,&after)==UMI_STATUS_OK);
+                assert(after.dependency_count==before.dependency_count && after.revision==before.revision);
+            }
+        }
+    }
+    assert(edges==UMI_DEVELOPER_PIPELINE_DEPENDENCY_CAPACITY);
+    UmiDeveloperPipelineSnapshot snapshot;
+    assert(umi_developer_pipeline_snapshot(pipeline,&snapshot)==UMI_STATUS_OK);
+    assert(snapshot.dependency_count==edges);
+    assert(umi_developer_pipeline_add_dependency(pipeline,"dense.47","dense.0")==UMI_STATUS_CAPACITY_EXCEEDED);
+    umi_developer_pipeline_destroy(pipeline);
+}
 /*
  * Start this command or application, report setup failures, and return a process exit code
  * to the operating system.
@@ -115,5 +149,6 @@ int main(void)
     assert(item.state == UMI_DEVELOPER_OPERATION_CANCELLED);
 
     umi_developer_pipeline_destroy(pipeline);
+    DenseDependencies();
     return 0;
 }

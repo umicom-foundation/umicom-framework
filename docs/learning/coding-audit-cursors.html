@@ -1,0 +1,70 @@
+<!-- Umicom Framework
+File: docs/learning/coding-audit-cursors.html
+
+PURPOSE:
+Teach bounded audit history, atomic admission and explicit missing-evidence reporting with native cursor reads.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Read bounded audit history honestly | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Read bounded audit history honestly</h1>
+<p>A coding agent records approvals, provider work, file changes and validation outcomes. Keeping every record forever in memory is not practical. Framework's coding audit log retains the newest 128 records. When a reader is slow, some earlier evidence may already have been evicted.</p>
+<p>A sequence cursor identifies the last record the reader accepted. Unlike an array offset, it still has meaning after older entries are removed. <code>UmiAiCodingAuditLogReadSince</code> returns records after that sequence and explicitly counts records that were lost before the reader caught up.</p>
+<h2>1. Admit a whole group before evicting anything</h2>
+<p><code>UmiAiCodingAuditLogAppendBatch</code> accepts at most 128 records. It validates all fixed text fields and checks sequence headroom before moving any retained record. A failure in the second input must not cause the first input to replace old evidence.</p>
+<pre><code>#include &lt;umicom/ai_coding_runtime/audit.h&gt;
+#include &lt;string.h&gt;
+
+UmiAiCodingAuditRecord records[2] = {0};
+strcpy(records[0].task_id, "task.7");
+strcpy(records[0].summary, "Approval recorded by the host");
+strcpy(records[1].task_id, "task.7");
+strcpy(records[1].summary, "Validation requested by the host");
+UmiStatus status = UmiAiCodingAuditLogAppendBatch(log, records, 2U);
+if (status != UMI_STATUS_OK) {
+    /* Existing retention and sequence values are unchanged. */
+    return status;
+}</code></pre>
+<p>The snippet assumes the application already owns <code>log</code>. It stores illustrative observations; it does not approve a patch or run validation. Keep summaries short and exclude prompts, source text, credentials and personal data. Empty task IDs and summaries remain representable for compatibility.</p>
+<p>The log assigns sequence numbers. Caller-provided sequence values are replaced. At the maximum 64-bit sequence, further nonempty appends return <code>CAPACITY_EXCEEDED</code>; they do not wrap to zero or evict an existing record. A zero-length batch is a no-op.</p>
+<h2>2. Read a bounded page</h2>
+<pre><code>uint64_t cursor = 0U; /* Belongs to this one live log instance. */
+UmiAiCodingAuditRecord page[16];
+UmiAiCodingAuditRead read;
+UmiStatus status = UmiAiCodingAuditLogReadSince(
+    log, cursor, page, 16U, &amp;read);
+if (status != UMI_STATUS_OK) return status;
+
+/* First show read.missed_records when it is nonzero.
+ * Then accept page[0 .. read.count-1] into the consumer's own view. */
+cursor = read.next_sequence;</code></pre>
+<p>Only advance the cursor after your consumer has accepted the records. If display or export fails, keep the previous cursor and retry. The read is nonconsuming: another reader can maintain its own cursor. The log, page buffer and report must occupy separate storage.</p>
+<table><tr><th>Report field</th><th>Meaning</th></tr><tr><td>count</td><td>Number of copied records, at most the supplied capacity.</td></tr><tr><td>oldest_sequence / newest_sequence</td><td>The retained interval at the time of this serialized call; both are zero for an empty log.</td></tr><tr><td>next_sequence</td><td>The last copied sequence, or the supplied cursor when no record was copied.</td></tr><tr><td>missed_records</td><td>Records after your cursor that were already evicted. It is not a failed-operation count.</td></tr><tr><td>has_more</td><td>More retained records remain after this page. A later append may add further records even after it becomes false.</td></tr></table>
+<h2>3. Work through a retention gap</h2>
+<ol><li>Append records 1 through 128. The retained interval is 1–128.</li><li>Append records 129 through 131. The retained interval becomes 4–131.</li><li>Read after cursor 0 with capacity 2. The page contains 4 and 5, <code>missed_records</code> is 3, and <code>next_sequence</code> is 5.</li><li>Report that records 1–3 are missing. Do not draw a continuous history line through them or invent their outcomes.</li><li>After accepting the page, read after cursor 5. The next page starts at 6, and its missing-record count is zero unless further eviction happened.</li></ol>
+<p>A zero-capacity read permits a null record buffer and reports metadata without advancing the cursor. This can preview a gap, but it does not acknowledge or consume that gap. Repeating the same cursor can therefore report it again.</p>
+<h2>4. Handle invalid cursors and data</h2>
+<p>A cursor newer than this log's newest sequence returns <code>INVALID_STATE</code>. This often means the application mixed cursors from different logs or reused one after recreating a log. Do not silently reset it and imply the combined histories are complete. End the previous view and explicitly begin a new log instance.</p>
+<p>Unterminated input text is refused before eviction. Reads validate the selected retained records before writing the page or report; a refused read leaves both outputs untouched. Historical status, event kind, state, hash and numeric evidence are preserved rather than reinterpreted as permission to perform a new operation.</p>
+<h2>5. Know what retention does not provide</h2>
+<p>This service is a bounded memory log. It does not persist records, authenticate a writer, prove that a reported action happened, or make records tamper-evident. Serialize append, read and destruction. Do not access a destroyed log or share its cursor with another instance. Durable audit export and transaction-level guarantees require additional services and qualification.</p>
+<h2>6. Execute the native regression cases</h2>
+<p>From the Framework repository in PowerShell, run these commands separately and stop on an error. They use a separate UCRT64 build directory.</p>
+<pre><code>$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake -S . -B build/audit-cursors -G Ninja -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe -DBUILD_TESTING=ON
+cmake --build build/audit-cursors --target umicom-ai-coding-audit-cursors-test
+ctest --test-dir build/audit-cursors -R '^framework.ai.coding-audit-cursors.' --output-on-failure</code></pre>
+<p>The 33 authored cases cover cursor gaps, continuation, replacement, unchanged outputs, bounded text, invalid private state and sequence exhaustion. They require no model, network or file mutation. Registration during configuration does not establish that they compile or pass.</p>
+<h2>Exercise</h2>
+<p>A reader has accepted sequence 40. The next retained interval is 51–178. Calculate the missing-record count, then predict the cursor after reading ten records. Explain how an export failure changes when the cursor should advance. Finally, explain why retaining only the newest 128 records cannot support a claim of a complete permanent audit trail.</p>
+<p><a href="index.html">Return to Framework learning</a></p></main></body></html>

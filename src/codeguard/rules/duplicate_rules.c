@@ -22,7 +22,12 @@
 #include "umicom/codeguard/rules/duplicate_rules.h"
 
 static const UmiCodeGuardRule UMI_RULES[] = {
+    /* The explicit marker is not a file comparison. Keep the prior wording
+     * for review while reporting only what this pattern rule observes. */
+#if 0
     {"CODEGUARD-DUP-001", "", UMI_CODEGUARD_MEDIUM, UMI_CODEGUARD_CATEGORY_DUPLICATION, 100U, UMI_CODEGUARD_MATCH_RAW, "__CODEGUARD_DUPLICATE_SENTINEL__", "Duplicate source content detected.", "Keep one authoritative implementation and make consumers depend on it."}
+#endif
+    {"CODEGUARD-DUP-001", "", UMI_CODEGUARD_MEDIUM, UMI_CODEGUARD_CATEGORY_DUPLICATION, 100U, UMI_CODEGUARD_MATCH_RAW, "__CODEGUARD_DUPLICATE_SENTINEL__", "Explicit duplicate-review marker found; no file comparison is implied.", "Run duplicate analysis and compare current candidate files before consolidation."}
 };
 
 /*

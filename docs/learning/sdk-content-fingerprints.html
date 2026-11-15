@@ -1,0 +1,86 @@
+<!-- Umicom Framework
+File: docs/learning/sdk-content-fingerprints.html
+
+PURPOSE:
+Teach receipt-bound SDK content identity and independent installed-consumer qualification.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Compare SDK contents with native C fingerprints</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Compare SDK contents with native C fingerprints</h1>
+<p>An SDK is a set of headers, compiled libraries, tools and package metadata that lets an application use Framework without cloning its source. A useful installation check begins by asking whether the expected files exist. A distribution check also needs to ask whether the declared files contain the same bytes as a reviewed baseline. These questions are related, but they are not interchangeable. This lesson builds that second check from the shared C APIs used by the native Umicom CLI.</p>
+<h2>1. Separate presence, content and compatibility</h2>
+<p>The existing sdk inspect command reads installation metadata and observes the base package layout. The sdk artifacts command reads sdk-artifacts.txt and checks the paths declared by the generated artifact receipt. Neither command loads a DLL, compiles a program or proves that a library implements the ABI expected by your application. The fingerprint command adds a reproducible content identity for the exact receipt and every physical artifact it declares.</p>
+<p>An ABI, or application binary interface, is the agreement between compiled pieces: calling conventions, data layouts and other binary rules. Matching file hashes means matching bytes within this observation. It does not establish that those bytes suit your compiler, processor, runtime or application. Continue with an independent installed-SDK consumer after recording the fingerprint.</p>
+<h2>2. Observe a quiet installation</h2>
+<ol><li>Finish installing the SDK into a dedicated prefix such as C:/SDKs/Umicom. Stop writers that could replace its receipt or libraries while you observe them. Keep the directory under your control.</li>
+<li>Use a qualified Umicom CLI build that includes the fingerprint command. Check sdk --help first. An older executable will not acquire the new command merely because the source folder was updated.</li>
+<li>Run the commands below. Record the full fingerprint and the installation/build identity alongside your distribution records. The command reads files but does not stage, install or launch any artifact.</li>
+<li>Copy the whole SDK through your normal distribution process. Run fingerprint against its new prefix with --expect and the full recorded digest. Prefix relocation alone does not change the fingerprint.</li></ol>
+<pre><code class="language-powershell">&amp; &quot;C:\Tools\Umicom\umicom.exe&quot; sdk --help
+&amp; &quot;C:\Tools\Umicom\umicom.exe&quot; sdk inspect &quot;C:\SDKs\Umicom&quot;
+&amp; &quot;C:\Tools\Umicom\umicom.exe&quot; sdk artifacts &quot;C:\SDKs\Umicom&quot; --all
+&amp; &quot;C:\Tools\Umicom\umicom.exe&quot; sdk fingerprint &quot;C:\SDKs\Umicom&quot;
+&amp; &quot;C:\Tools\Umicom\umicom.exe&quot; sdk fingerprint &quot;D:\SDKs\Umicom&quot; --expect &quot;&lt;64 hexadecimal characters from your reviewed baseline&gt;&quot;</code></pre>
+<p>Replace the executable and prefix paths with your actual installation paths; the angle-bracket digest above is explanatory and will be rejected. Run each command separately and stop on an error. Exit code 0 means a complete observation, and a match when an expected digest was supplied. Exit code 1 means the complete fingerprint differs from the expected value. Exit code 2 means invalid arguments, a failed or incomplete observation, or a report-output error. A failed read does not print a complete fingerprint.</p>
+<h2>3. Understand the coverage boundary</h2>
+<p>The generated version-1 artifact receipt identifies archives, shared libraries, import libraries, tools and interface targets. Interface targets contribute through the receipt bytes but do not name a physical file. A receipt containing only interfaces is refused because it cannot establish the physical SDK observation this command promises. Windows DLL and import-library records are both read. Two different records naming one physical path count twice in the total byte budget.</p>
+<p>Headers, package scripts, documentation and other files absent from the receipt are outside the fingerprint. Adding or editing an unlisted file does not change it. This is deliberately not an archive digest or a complete installation-directory digest. Keep the SDK ZIP checksum, installed header checks, package-origin checks and consumer tests as separate evidence. A malicious party able to replace both files and your expected digest can make an unkeyed hash comparison pass; obtain the expected digest through a trusted channel.</p>
+<h2>4. Call the Framework service from C</h2>
+<pre><code class="language-c">#include &lt;inttypes.h&gt;
+#include &lt;stdio.h&gt;
+#include &quot;umicom/sdk/artifact_fingerprint.h&quot;
+
+static int inspect_sdk(const char *absolute_prefix)
+{
+    UmiSdkFingerprint result;
+    UmiSdkFingerprintLimits limits = {
+        UINT64_C(512) * 1024U * 1024U,
+        UINT64_C(4) * 1024U * 1024U * 1024U
+    };
+    UmiStatus status = UmiSdkArtifactFingerprint(
+        absolute_prefix, &amp;limits, NULL, &amp;result);
+    if (status != UMI_STATUS_OK) {
+        fprintf(stderr, &quot;SDK observation failed: %s\n&quot;, umi_status_text(status));
+        return 1;
+    }
+    printf(&quot;%zu files, %&quot; PRIu64 &quot; bytes\n%s\n&quot;,
+        result.files, result.bytes, result.sha256);
+    return 0;
+}</code></pre>
+<p>Link the consumer to Umicom::sdk through the installed UmicomFramework CMake package. The service requires an absolute UTF-8 prefix and never consults a later working directory. The CLI accepts a relative prefix for convenience and resolves it once before calling the service. Do not pass overlapping input and output storage. The result owns its scalar values and fixed-size strings; there is no borrowed inventory pointer for the application to retain.</p>
+<p>A graphical application should run this blocking observation on a worker and publish the returned value only if its window/request is still current. Pass a live UmiCancellationToken when cancellation is needed. Keep that token alive until the call ends. Cancellation is checked before observation, between records and during streamed chunks; it does not forcibly interrupt an operating-system read already in progress.</p>
+<h2>5. Bound memory and work separately</h2>
+<p>UmiInputFileRead owns the small receipt buffer, capped at one MiB. UmiSdkArtifactInventoryParse checks its existing grammar, declared count and safe relative paths, with at most 4,096 records. UmiInputFileVisit reads each artifact in 64 KiB chunks through the same checked file handle. A multi-gigabyte archive therefore does not require a multi-gigabyte allocation. The inventory and two bounded receipt buffers remain additional memory costs.</p>
+<p>Passing NULL for limits selects an eight-GiB per-file ceiling and a 64-GiB total ceiling. An application can lower either ceiling; values above the hard limits are invalid arguments. An explicit zero is a real zero budget, not a request for defaults. It admits empty files only. Before each artifact, the service uses the smaller of the per-file ceiling and the remaining total budget. These byte limits bound data processed, not elapsed time on slow storage.</p>
+<h2>6. Make the fingerprint reproducible</h2>
+<p>A digest needs an unambiguous preimage: the precise byte sequence it hashes. Version 1 starts with the ASCII bytes umicom.sdk.fingerprint/1 followed by LF, without a terminating NUL. It then appends the receipt byte length as an unsigned 64-bit little-endian integer, the 32 raw SHA-256 receipt bytes, and the physical-record count encoded the same way. For each physical record in receipt order, it appends the file length in that encoding and the 32 raw file-digest bytes. SHA-256 of this complete sequence is the displayed lowercase hexadecimal fingerprint.</p>
+<p>The receipt is hashed exactly as stored. Reordering records, changing a declared relative path or configuration, or converting LF to CRLF changes the fingerprint even when file contents are otherwise equal. Absolute installation paths and timestamps are excluded. This distinction makes relocation possible while binding the declaration that tells the service which files to read. Do not normalize receipt text when comparing an already recorded fingerprint.</p>
+<h2>7. Refuse incomplete evidence</h2>
+<p>The service assembles a candidate result privately. Missing files, directories in place of files, final symlinks/reparse points, malformed receipts, budget exhaustion, cancellation and read failures prevent publication. On failure every output field is cleared, so a caller cannot accidentally reuse a previous successful fingerprint. Parents may still contain aliases: the selected directories must be trusted and stable. This API is not a filesystem confinement mechanism.</p>
+<p>The shared reader checks observable metadata around each individual read. After all artifacts, the service rereads the receipt and compares its exact bytes with the original. An observed receipt change returns BUSY. These checks cannot create an atomic snapshot across several files. A library could change after it was read, and metadata checks cannot detect every adversarial writer. Establish baselines from a quiescent installation or a separately managed immutable snapshot.</p>
+<h2>8. Diagnose a mismatch and qualify the implementation</h2>
+<ol><li>If the receipt is missing or malformed, inspect the installation log and reinstall into a separate prefix. Do not invent a receipt by copying one from a different build.</li>
+<li>If the fingerprint differs, compare receipt hashes first. A changed receipt can reflect configuration, order, paths or line endings. Equal receipt hashes with unequal fingerprints point to changed declared content or lengths.</li>
+<li>Check the SDK origin and installed headers, then build and test an independent consumer against the intended prefix. A matching fingerprint does not replace those checks.</li>
+<li>For Framework contributors, build the new native test target and CLI, then run framework.sdk.fingerprint tests. Keep platform link-fixture skips visible. Configuration and test registration alone are not execution evidence.</li></ol>
+<pre><code class="language-powershell">cmake --build &quot;&lt;Framework build directory&gt;&quot; --target umicom-sdk-fingerprint-tests umicom
+ctest --test-dir &quot;&lt;Framework build directory&gt;&quot; -R &quot;^framework\.sdk\.fingerprint\.&quot; --output-on-failure</code></pre>
+<p>The service tests include a fixed digest calculated independently from the documented binary preimage, a multi-chunk binary fixture, relocation, same-size edits, record and line-ending changes, repeated paths, shared/import pairs, missing or linked leaves, exact and exhausted budgets, cancellation and output reset after failure. CLI fixtures check expected-digest matches and mismatches, Unicode/relative prefixes, help and invalid arguments. These are qualification instructions and authored regression coverage, not a claim that a particular Framework binary has passed them.</p>
+<p>Continue with <a href="../guides/inspecting-an-installed-sdk.html">installed SDK inspection</a> and <a href="../guides/check-sdk-environment.html">an independent C23 consumer</a>. Read the <a href="../../include/umicom/sdk/artifact_fingerprint.h">public fingerprint contract</a> before integrating it into a worker.</p>
+<h2>9. Bind a model application to the selected SDK</h2>
+<p>Artifact hashes answer which listed bytes you observed. CMake package selection answers which installation an application is about to use. A model application needs both questions answered. Framework's independent model example now ships in <code>share/umicom/examples/local_models/sdk_consumer</code> in the ordinary and selective SDK components.</p>
+<ol><li>Finish building and installing the SDK into its own prefix. Keep the compiler and architecture consistent with that producer.</li><li>Configure the installed example with an absolute <code>UMICOM_SDK_ROOT</code> and a fresh consumer build directory. See the <a href="../local-model-manager.html">model manager guide</a> for complete commands. External dependency prefixes remain available through CMAKE_PREFIX_PATH.</li><li>Read the selected-prefix diagnostic. The consumer invokes Framework's existing installed-layout, full public-header and environment guards. Required ABI 2 belongs to the consumer; copying the producer's ABI into the expected value would make the check meaningless.</li><li>Build, link and run the independent consumer. It resolves model planning, ownership, health and catalogue APIs using offline operations. It neither downloads weights nor proves real inference.</li></ol>
+<p>As an exercise, configure successfully against SDK A, then change only UMICOM_SDK_ROOT to SDK B in the same build directory. A cached UmicomFramework_DIR can still select A. The example must refuse that mismatch. Preserve the earlier directory and configure B in a new one. Do not silence the check by adding source headers. With no explicit root, ordinary discovery remains supported and is labelled as discovery; the returned installation still undergoes the same consistency checks.</p>
+<p>Seventeen <code>framework.local_models.sdk_selection</code> fixtures cover this selection boundary. They configure the real example against small synthetic packages and placeholder archives, with no consumer compilation, launch or real branding staging. Negative cases repeat to expose cache residue. These tests complement the independent installed-library exercise; they cannot replace it.</p>
+<p>Reference: CMake <a href="https://cmake.org/cmake/help/v3.24/command/find_package.html">find_package</a> describes cached package locations and explicit search options. An explicit search option alone does not establish the origin of an already cached result.</p>
+</main></body></html>

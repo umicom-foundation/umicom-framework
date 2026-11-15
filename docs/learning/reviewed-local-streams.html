@@ -1,0 +1,74 @@
+<!-- Umicom Framework
+File: docs/learning/reviewed-local-streams.html
+
+PURPOSE:
+Teach approved streaming, durable results and explicit lifetime through the shared native workspace service.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stream an approved local AI request</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Stream an approved local AI request</h1>
+<p>Streaming displays text while a model is still generating it. Review and persistence answer different questions: was this request approved, and was its final outcome saved? Umicom Framework combines these responsibilities through a reviewed stream controller while retaining the existing raw transport and synchronous provider interfaces.</p>
+<h2>1. Establish owners before work begins</h2>
+<p>Create <code>UmiAiLocalTransport</code> at single-threaded process startup, before starting a toolkit or other workers. It owns the shared HTTP library lifetime. Create a Data Server, AI runtime and cancellation token, then register the canonical local provider with its port, deadline and borrowed token. Create a workspace that borrows the runtime and storage connection.</p>
+<p>Keep these owners alive until their dependants are released. All reviewed-controller calls use the transport's creating thread. Workspace, runtime and Data Server operations remain serialized; the cancellation token is the separately thread-safe signal.</p>
+<h2>2. Prepare and review the request</h2>
+<pre><code class="language-c">UmiStatus status = UmiAiWorkspacePrepare(workspace, "draft.one",
+    UMI_AI_WORKSPACE_DRAFT, "umicom.local-chat", "selected-model", NULL,
+    "Explain this function's ownership.", "author", 256);
+if (status == UMI_STATUS_OK) {
+    /* Obtain this decision from the application's review workflow. */
+    status = UmiAiWorkspaceReview(workspace, "draft.one", "reviewer", true);
+}</code></pre>
+<p>A grounded draft includes selected source passages and a corpus revision. Streaming preserves the same final citation validation. The current stream path accepts only draft and grounded-draft jobs backed by Framework's canonical local-chat adapter. Tools and other providers keep their existing interfaces. An adapter name alone does not prove its private instance type.</p>
+<h2>3. Create without contacting the model</h2>
+<pre><code class="language-c">UmiAiWorkspaceStream *stream = NULL;
+UmiAiWorkspaceStreamOptions options = {
+    .maximum_wire_bytes = 16U * 1024U * 1024U,
+    .allow_network = true
+};
+status = UmiAiWorkspaceStreamCreate(workspace, "draft.one",
+    transport, &amp;options, &amp;stream);</code></pre>
+<p>Create requires an approved job and current policy admission. It copies the request and canonical endpoint settings, retains workspace execution storage and prepares the raw transport. It starts no worker, sends no HTTP and writes no RUNNING record. An already successful job returns ALREADY_EXISTS; it is not generated again. Failure leaves the output unchanged.</p>
+<p>The registered adapter and borrowed cancellation token must remain alive. Changing the registered provider instance, port, deadline or token before Start is detected. These checks govern a local ownership contract; they do not authenticate a model server.</p>
+<h2>4. Start only after durable RUNNING</h2>
+<pre><code class="language-c">status = UmiAiWorkspaceStreamStart(stream);</code></pre>
+<p>Start rechecks current policy and the frozen adapter binding. It writes RUNNING before launching the raw worker. A failure before that write leaves a prepared owner; abandoning it preserves the approved job. A failure afterwards settles a failed or cancelled outcome and keeps the controller available for inspection and release. Neither path retries network generation automatically.</p>
+<table><tr><th>Phase</th><th>Meaning</th><th>Release</th></tr>
+<tr><td>PREPARED</td><td>No worker has started through this controller.</td><td>May abandon without changing approval.</td></tr>
+<tr><td>RUNNING</td><td>The durable start succeeded; native work or settlement is outstanding.</td><td>Refused, even when raw transport has finished.</td></tr>
+<tr><td>SETTLED</td><td>Final validation and save were attempted once.</td><td>Checked native release is allowed; a release failure retains ownership.</td></tr></table>
+<h2>5. Observe partial text without lending GUI memory</h2>
+<p>Poll returns a copied phase and transport snapshot. CopyText returns separately owned complete UTF-8 text; release it with <code>UmiAiResponseStreamTextFree</code>. The producer never writes into a widget or console buffer. Text snapshots may be newer than an immediately preceding poll because the worker continues between calls.</p>
+<p>Partial text is a draft. Cancellation, invalid protocol, a missing terminal event, an invalid citation or a transfer failure can reject it. Saved responses currently hold at most 4095 UTF-8 bytes; the raw stream is bounded to that capacity. Wire-byte limits separately bound the encoded response.</p>
+<h2>6. Finish, then read both outcomes</h2>
+<pre><code class="language-c">status = UmiAiWorkspaceStreamTryFinish(stream);
+if (status == UMI_STATUS_OK) {
+    UmiAiWorkspaceStreamResult result;
+    status = UmiAiWorkspaceStreamReadResult(stream, &amp;result);
+    /* Inspect result.operation_status AND result.publication_status. */
+}</code></pre>
+<p>TryFinish returns BUSY while native joining is incomplete, or NOT_IMPLEMENTED where that platform lacks nonblocking join. Finish is the explicitly blocking alternative. Successful joining is followed by final response checks and one save attempt. Persistence itself may take time: TryFinish is not a guarantee that every part of the call is nonblocking.</p>
+<p>An OK finish return means the settled outcome can be read. It does not mean the model succeeded or the result was saved. A successful model result with a failed publication requires recovery, not automatic repetition. Reopening a stored RUNNING record marks it interrupted.</p>
+<p>Before blocking Finish during shutdown, call Cancel. A later change to the provider token is only forwarded on owner-thread Start, Poll or Finish entry; a thread already blocked in Finish cannot forward it until the join returns. Event-loop clients should keep polling and trying completion. Cancellation requests never prove that native storage is safe to free.</p>
+<h2>7. Release in dependency order</h2>
+<ol><li>Join and settle the reviewed stream.</li><li>Read the model and publication outcomes.</li><li>Destroy the stream with its checked pointer-to-pointer API; keep it on failure.</li><li>Release the workspace, then runtime, cancellation token and Data Server.</li><li>Release the transport after all raw and reviewed request owners are gone.</li></ol>
+<p>A native release failure retains the controller. Do not free its borrowed workspace or token underneath it. Independently copied text remains valid after successful controller destruction.</p>
+<h2>8. Run focused qualification</h2>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-reviewed-local-stream-test umicom-local-provider-settings-test umicom-local-provider-settings-offline-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.ai_workspace\.(reviewed_stream\.|local_provider_settings)" --output-on-failure</code></pre>
+<p>With HTTP enabled, this selects 23 reviewed scenarios and two settings tests. Cases cover approval, policy/binding changes, wrong-thread calls, abandoned preparation, real loopback success, grounded citations, overflow, truncated transfer, deadline, cancellation, join/release failures and SQLite publication failure. The peer uses an ephemeral loopback port and synthetic protocol data; no model or hosted service is involved.</p>
+<p>The publication fixture refuses to overwrite an existing failed-run database. Preserve that file for diagnosis, then remove or rename it explicitly before rerunning. Skipped capability checks are missing coverage, not passes. Source and registration checks alone do not establish compilation or runtime correctness.</p>
+<h2>9. Build an application against the installed package</h2>
+<p>The <a href="../../examples/sdk_reviewed_chat/README.md">independent reviewed-chat example</a> shows the complete C23 lifecycle with a SQLite file, a user review prompt and Ctrl+C. It uses exported SDK targets and shared SVG/ICO branding. Compilation, installed-consumer execution and live inference require separate qualification.</p>
+<p>Continue with <a href="reviewed-ai-execution.html">durable execution</a>, <a href="provider-admission-and-ownership.html">provider admission</a> and <a href="background-local-model-streams.html">raw background transport</a>. <!-- Earlier next-step wording retained as source history: Framework's reviewed service is authored; GTK application integration remains a separate step. -->Framework's reviewed service and its <a href="gtk-reviewed-stream-lifetime.html">shared GTK workspace integration</a> are authored. Separate product frontends still require explicit adoption and qualification.</p>
+</main></body></html>

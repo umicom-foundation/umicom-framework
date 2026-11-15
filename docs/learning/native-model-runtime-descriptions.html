@@ -1,0 +1,76 @@
+<!-- Umicom Framework
+File: docs/learning/native-model-runtime-descriptions.html
+
+PURPOSE:
+Teach copied launch settings, runtime catalogue projection and explicit model evidence boundaries.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Describe a native model runtime | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Describe a native model runtime</h1>
+<p>A model manager needs to explain what it plans to run before it starts anything. An application also needs to distinguish those settings from what a process or endpoint later reports. This lesson connects Umicom's native run-plan service to its AI catalogue through a pure conversion. A pure conversion computes a value without opening files, sending requests or starting a process.</p>
+<h2>1. Identify the evidence you have</h2>
+<table><thead><tr><th>Value</th><th>What it describes</th><th>What it does not prove</th></tr></thead><tbody>
+<tr><td>Run plan</td><td>Admitted executable/model paths, expected digest, alias, port and CPU settings</td><td>File existence or compatibility</td></tr>
+<tr><td>Runtime descriptor</td><td>Provider identifier, endpoint, alias, token limits and configuration</td><td>Provider registration or health</td></tr>
+<tr><td>Session plan copy</td><td>Settings captured when this owner submitted a process</td><td>Current process state or loaded weights</td></tr>
+<tr><td>Process snapshot</td><td>Runner state and bounded diagnostics</td><td>Endpoint identity or successful inference</td></tr>
+<tr><td>Health observation</td><td>What the selected endpoint reported</td><td>Authenticated ownership of that endpoint</td></tr>
+</tbody></table>
+<h2>2. Preview the catalogue description</h2>
+<p>With the native manager built, run this command using paths for your reviewed installation. The description itself does not require those files to exist.</p>
+<pre><code class="language-powershell">umicom models describe qwen2.5-0.5b-q4 'C:\Tools\llama.cpp\llama-server.exe' 'C:\Models\Umicom\model.gguf' 8080 2048 4</code></pre>
+<p>Expect a local-chat provider identifier, the model alias, <code>http://127.0.0.1:8080/v1/chat/completions</code>, context 2048, planned output limit 256, unavailable health and an unassigned revision. The command refuses <code>--apply</code>. To start a model, return to the separate reviewed <a href="../local-model-manager.html">run/serve workflow</a>.</p>
+<p>For a custom model, <code>describe-file</code> accepts an absolute engine path, model path, 64-character lowercase expected digest, alias, port, context and thread count. These inputs reuse run-plan validation; there is no second permissive parser for the preview.</p>
+<h2>3. Use the shared C service</h2>
+<p>Link <code>Umicom::local_models</code> and include <code>umicom/local_models/runtime.h</code>. Create a <code>UmiModelRunPlan</code> with the existing factory. Then convert it into a complete descriptor:</p>
+<pre><code class="language-c">UmiAiRuntimeDescriptor descriptor;
+UmiStatus status = UmiModelRuntimeDescriptorCreate(&amp;plan,
+    "runtime.assistant", "Local assistant", 256, &amp;descriptor);
+if (status == UMI_STATUS_OK) {
+    status = UmiAiRuntimeCatalogueUpsertIfRevision(catalogue,
+        &amp;descriptor, 0);
+}</code></pre>
+<p>Use expected revision zero only for a new identifier. If replacing a record, first read its revision and use that value. See <a href="runtime-catalogue-revisions.html">revision checks</a> for stale observations. The descriptor is configured but unavailable: its chat and streaming flags describe the planned adapter interface, not capabilities measured from this particular model.</p>
+<p>The service validates all run-plan fields again, including the expected guard filename and working directory. It refuses malformed text and output limits outside 1..context. On failure it leaves the caller's output unchanged. That lets a form keep its previous valid preview while displaying the new validation error.</p>
+<h2>4. Read the settings captured by an owner</h2>
+<p>A UI can edit a “next model” form while a previous session exists. The session must not read from that mutable form when explaining its own configuration. It stores a full plan copy after admission; metadata reads copy that owned value back to the caller.</p>
+<pre><code class="language-c">UmiModelRunPlan submitted;
+UmiStatus status = UmiModelSessionReadPlan(session, &amp;submitted);
+if (status == UMI_STATUS_OK) {
+    /* Display submitted.alias/port/context as configuration, not health. */
+    status = UmiModelSessionRuntimeDescribe(session,
+        "runtime.assistant", "Local assistant", 256, &amp;descriptor);
+}</code></pre>
+<p>Keep the session alive and serialize these calls with start/read/stop operations. A failed start may retain an owner only because cleanup needs retry. An owner with no submitted job returns <code>INVALID_STATE</code> rather than being presented as an active configuration. A process that later exits can still have a captured plan; read its process snapshot separately.</p>
+<h2>5. Bind applications explicitly</h2>
+<p>The descriptor names <code>umicom.local-chat</code>, the existing canonical provider. Creating a descriptor does not create that provider or change its port. Register the intended provider through the shared factory, retain its session and use the exact alias in the reviewed request. A list containing several descriptions does not by itself route each request to a different endpoint.</p>
+<p>This separation keeps Studio, Media and other clients thin: Framework owns plan admission and descriptor construction. Product-specific controls still decide what is shown and approved. This lesson does not add a new graphical layout, automatic model replacement, GPU admission, embeddings, image or video generation.</p>
+<h2>6. Treat failed review output as a refusal</h2>
+<p>A console review can fail when an output stream is closed or cannot be flushed. The native download, launch and chat paths now check that the review was delivered before acting. An explicit apply flag does not justify silently proceeding after that failure. Errors after a session starts still go through normal checked cleanup; a cleanup error remains a distinct failure.</p>
+<p>The <a href="../../tests/local_models/test_cli_review.c">CLI regression</a> compiles the actual parser with failure hooks around output and side-effect boundaries. It checks both flush failure and an already-failed stream, asserts an error exit, and requires zero download, file-inspection, provider-create and process-start calls.</p>
+<h2>Retain an owner when a command returns</h2>
+<p>A local variable disappears when its function returns, but a failed shutdown can leave the native session alive. Returning only an integer loses the caller's way to retry. <code>UmiModelsCommandWithSession</code> solves this by writing the session into a slot owned by the embedding application. The slot must outlive the call.</p>
+<pre><code class="language-c">int command_result = UmiModelsCommandWithSession(argc, argv, &amp;console_session);
+if (console_session != NULL) {
+    /* Keep this slot in the host. Report incomplete cleanup and offer a
+       deliberate retry using UmiModelSessionStop(&amp;console_session). */
+}</code></pre>
+<p>The exit code describes the command result; the pointer describes the remaining ownership obligation. A failed stop can retain the pointer, while another cleanup error can consume it. Do not infer one from the other. Starting a new command with an occupied slot returns the busy diagnostic before parsing or side effects.</p>
+<p>The legacy entry keeps its own compatibility owner. Its query and checked release functions support explicit retry without changing old command arguments. They never release an explicit caller's session. Serialize these operations; the console streams remain process-wide.</p>
+<p>The <a href="../../tests/local_models/test_console_owner.c">owner regression</a> injects inert start/read/stop and input boundaries. It demonstrates both retained and consumed failures, late output failure and recovery of the compatibility slot. These tests do not prove that an operating system will terminate a real child correctly. Keep <a href="../local-model-manager.html">native process qualification</a> separate.</p>
+<h2>7. Qualify the source and installed SDK separately</h2>
+<p>Build and run the focused targets using the commands in the <a href="../local-model-manager.html">manager guide</a>. Inspect <a href="../../tests/local_models/test_runtime.c">pure projection tests</a>, <a href="../../tests/local_models/test_session_metadata.c">partial-owner tests</a> and <a href="../../tests/local_models/test_session.c">the finite process fixture</a>. The pure cases need no model or network. Executing the fixture tests starts its inert child program and must be reported separately from pure checks.</p>
+<p>The existing <a href="../../examples/local_models/sdk_consumer/main.c">installed SDK consumer</a> now resolves the projection and conditional catalogue symbols as well as earlier model APIs. Configure it against an installed package, not Framework source. Its build and execution establish consumer linkage only; they do not qualify an inference engine. The SDK supplies its approved application branding through the shared resource helper.</p>
+<ol><li>Project a valid plan and confirm healthy-runtime selection refuses it.</li><li>Edit the caller's next-run plan after submission, then confirm the session copy still describes the original settings.</li><li>Replace a catalogue record while an observation is pending and confirm its old revision cannot publish.</li><li>Break console review delivery in the injected test and confirm no side-effect boundary is reached.</li></ol>
+<p><a href="index.html">Learning index</a> · <a href="reviewed-local-streams.html">Approved local streaming</a></p>
+</main></body></html>

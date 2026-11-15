@@ -168,3 +168,62 @@ if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
 endif()
 
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/review-selected-code-replacements.html" DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom/learning COMPONENT Learning)
+
+# Owned presentation has a separate fixture because it presents real windows;
+# the removal-watch tests above intentionally do not present their windows.
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-owned-window-present-gtk4-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ui/test_owned_window_present_gtk4.c")
+    target_link_libraries(umicom-owned-window-present-gtk4-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-owned-window-present-gtk4-test)
+    umicom_apply_sanitizers(umicom-owned-window-present-gtk4-test)
+    foreach(case present repeat invalid self wrong-owner closed-owner closed-child
+            observer-owner observer-child observer-hide observer-reparent observer-reenter)
+        add_test(NAME framework.gtk4.owned_window_present.${case}
+            COMMAND umicom-owned-window-present-gtk4-test ${case})
+        set_tests_properties(framework.gtk4.owned_window_present.${case} PROPERTIES
+            SKIP_RETURN_CODE 77 TIMEOUT 30 LABELS "gtk4;lifetime;presentation;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-owned-window-present-gtk4-test)
+    endif()
+endif()
+
+# Dismissal must finish with the same live owner before callers dispatch.
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-owned-window-hide-gtk4-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ui/test_owned_window_hide_gtk4.c")
+    target_link_libraries(umicom-owned-window-hide-gtk4-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-owned-window-hide-gtk4-test)
+    umicom_apply_sanitizers(umicom-owned-window-hide-gtk4-test)
+    foreach(case hide repeat already-hidden invalid self wrong-owner closed-owner closed-child
+            observer-owner observer-child observer-show observer-reparent observer-reenter observer-present)
+        add_test(NAME framework.gtk4.owned_window_hide.${case}
+            COMMAND umicom-owned-window-hide-gtk4-test ${case})
+        set_tests_properties(framework.gtk4.owned_window_hide.${case} PROPERTIES
+            SKIP_RETURN_CODE 77 TIMEOUT 30 LABELS "gtk4;lifetime;dismissal;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-owned-window-hide-gtk4-test)
+    endif()
+endif()
+
+# Reusable notebook selection is checked against synchronous GTK hierarchy changes.
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-owned-notebook-gtk4-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ui/test_owned_notebook_gtk4.c")
+    target_link_libraries(umicom-owned-notebook-gtk4-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-owned-notebook-gtk4-test)
+    umicom_apply_sanitizers(umicom-owned-notebook-gtk4-test)
+    foreach(case select page-target repeat invalid wrong-owner outside closed-owner hidden
+            observer-close observer-remove observer-reparent observer-hide observer-redirect
+            observer-reenter observer-reorder observer-target)
+        add_test(NAME framework.gtk4.owned_notebook.${case}
+            COMMAND umicom-owned-notebook-gtk4-test ${case})
+        set_tests_properties(framework.gtk4.owned_notebook.${case} PROPERTIES
+            SKIP_RETURN_CODE 77 TIMEOUT 30 LABELS "gtk4;lifetime;notebook;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-owned-notebook-gtk4-test)
+    endif()
+endif()

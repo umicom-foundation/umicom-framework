@@ -1,0 +1,51 @@
+<!-- Umicom Framework
+File: docs/learning/coding-prompt-unicode.html
+
+PURPOSE:
+Teach UTF-8 scalar boundaries, shared validation and exact byte preservation across message chunks.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Preserve Unicode prompt text | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Keep UTF-8 characters intact when splitting AI messages</h1>
+<p>A message capacity is measured in bytes. A visible character may require more than one byte. Splitting a source file every 2,047 bytes can therefore turn valid UTF-8 text into two invalid message strings, even when concatenating the original bytes would have produced valid text.</p>
+<h2>1. Recognize the boundary problem</h2>
+<p>The euro sign uses three UTF-8 bytes: <code>E2 82 AC</code>. If <code>E2</code> becomes the final byte of one message, that message ends in an unfinished scalar. The next message starts with continuation bytes that have no leading byte. Providers receiving separate strings cannot assume that those fragments belong together.</p>
+<p>A <em>Unicode scalar</em> is one valid encoded code point, excluding surrogate values. A user-perceived character can contain several scalars, such as a letter followed by a combining mark. This implementation preserves scalar boundaries; it does not attempt to find grapheme boundaries or normalize text.</p>
+<h2>2. Reuse the shared validator</h2>
+<pre><code class="language-c">#include "umicom/base/utf8.h"
+
+if (!UmiUtf8Validate((const unsigned char *)text, length, NULL))
+    return UMI_STATUS_PARSE_ERROR;</code></pre>
+<p>Framework Base already owns strict UTF-8 validation. It rejects truncated sequences, overlong encodings, surrogate code points, invalid continuation bytes and values above U+10FFFF. Prompt construction calls that service instead of introducing another decoder.</p>
+<p>The full span is validated before it is divided. Message names, message text, the request ID and the selected model ID are also checked before a complete request is published. Invalid encoding returns PARSE_ERROR and leaves the previous request unchanged.</p>
+<h2>3. Move a proposed split to a scalar boundary</h2>
+<p>After validating the whole span, start with the largest byte count that fits one message. If the first byte of the next chunk is a continuation byte, move the split backward until that byte is no longer a continuation byte:</p>
+<pre><code class="language-c">while (count != 0U &amp;&amp; count &lt; remaining &amp;&amp;
+       (((unsigned char)text[offset + count] &amp; 0xc0U) == 0x80U)) {
+    --count;
+}</code></pre>
+<p>The <code>count &lt; remaining</code> condition prevents reading beyond the span when this is the last chunk. The mask recognizes the UTF-8 continuation-byte prefix <code>10</code>. This short boundary rule is safe here because the canonical validator has already admitted the complete sequence.</p>
+<p>Copy the selected bytes, add a C string terminator, append the message, and advance the offset by that exact byte count. Nothing is transcoded or discarded. Some chunks may have a few unused bytes to keep the next scalar intact.</p>
+<h2>4. Preserve failure behavior across the whole request</h2>
+<p>Source text and validation feedback use the same chunking helper. If malformed text is discovered after earlier messages were prepared, the staged request is discarded. The caller keeps its previous complete request. Capacity errors remain explicit: smaller Unicode-aligned chunks can require an additional message slot.</p>
+<p>Do not replace malformed bytes silently. The workspace or feedback adapter should identify the original encoding and convert it deliberately before constructing a UTF-8 request. The byte-span API still rejects embedded zero bytes because provider messages are C strings.</p>
+<h2>5. Test byte preservation and individual message validity</h2>
+<ol><li>Place a two-, three- or four-byte scalar at every relevant position around the chunk limit.</li><li>Build the request once with that text as source and again as validation feedback.</li><li>Validate every resulting message independently.</li><li>Concatenate the messages for that source or feedback and compare their bytes with the original span.</li><li>Supply malformed sequences and confirm PARSE_ERROR with an unchanged destination.</li></ol>
+<pre><code class="language-powershell"># From the Framework source root after configuration with testing enabled:
+cmake --build build/windows-ucrt64-debug --target umicom-ai-coding-prompt-unicode-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework\.ai\.coding-prompt-unicode\.' --output-on-failure</code></pre>
+<p>The 45 scenarios cover scalar boundary positions for source and feedback, malformed sequences, invalid metadata, and valid Unicode request fields. Expected result: every selected case passes. These instructions describe native qualification to perform; authored cases and CMake registration do not establish an executed pass.</p>
+<p>Continue with <a href="coding-prompt-admission.html">provider request admission</a> for selected-file provenance and failure-preserving publication. Unicode validity does not establish privacy consent, rendering safety, normalization or the token count of a particular model.</p>
+
+</main></body></html>

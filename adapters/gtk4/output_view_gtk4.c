@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/output_view_gtk4.c
- * PURPOSE: Share responsive output controls between build, testing and future worker services.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Share output controls while retaining their owner across synchronous GTK notifications.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/output_view.h"
@@ -21,7 +28,28 @@ typedef struct OutputView
     uint64_t displayed_revision;
     gboolean displayed;
     char *ready_message;
+    gboolean updating;
 } OutputView;
+
+/* A text-buffer or property notification can synchronously retire the host.
+ * Hold the panel, which owns this state, until every use after that notification
+ * finishes. Admission also prevents a nested Update from replacing latest while
+ * an outer call is still publishing it. GTK owner thread only. */
+static OutputView *output_enter(GtkWidget *panel)
+{
+    OutputView *view = g_object_get_data(G_OBJECT(panel), "umicom-output-view");
+    if (view == NULL || view->updating) return NULL;
+    g_object_ref(panel);
+    view->updating = TRUE;
+    return view;
+}
+
+static void output_leave(GtkWidget *panel, OutputView *view)
+{
+    view->updating = FALSE;
+    /* No state or widget access follows the final owner release. */
+    g_object_unref(panel);
+}
 
 /* Semantic tags let native tests and accessibility tooling find controls
  * without relying on their visual order or translated button labels. */
@@ -89,6 +117,8 @@ static void display_latest(OutputView *view)
 
 /* Signal connections borrow the panel weakly. A retained button cannot keep
  * the panel alive or reach a freed application after its parent is destroyed. */
+/* Retain the panel and refuse nested publication while GTK emits synchronous callbacks. The former borrowed-state callback remains for review; output controls keep their existing behavior. The previous implementation is retained for engineering review. */
+#if 0
 static void refresh_clicked(GtkButton *button, GtkWidget *panel)
 {
     if (!gtk_widget_is_ancestor(GTK_WIDGET(button), panel))
@@ -97,7 +127,18 @@ static void refresh_clicked(GtkButton *button, GtkWidget *panel)
     if (view != NULL)
         display_latest(view);
 }
+#endif
+static void refresh_clicked(GtkButton *button, GtkWidget *panel)
+{
+    if (!gtk_widget_is_ancestor(GTK_WIDGET(button), panel)) return;
+    OutputView *view = output_enter(panel);
+    if (view == NULL) return;
+    display_latest(view);
+    output_leave(panel, view);
+}
 
+/* Retain the panel and refuse nested publication while GTK emits synchronous callbacks. The former borrowed-state callback remains for review; output controls keep their existing behavior. The previous implementation is retained for engineering review. */
+#if 0
 static void follow_toggled(GtkCheckButton *button, GtkWidget *panel)
 {
     if (!gtk_widget_is_ancestor(GTK_WIDGET(button), panel))
@@ -110,7 +151,19 @@ static void follow_toggled(GtkCheckButton *button, GtkWidget *panel)
     else
         describe(view);
 }
+#endif
+static void follow_toggled(GtkCheckButton *button, GtkWidget *panel)
+{
+    if (!gtk_widget_is_ancestor(GTK_WIDGET(button), panel)) return;
+    OutputView *view = output_enter(panel);
+    if (view == NULL) return;
+    if (gtk_check_button_get_active(button)) display_latest(view);
+    else describe(view);
+    output_leave(panel, view);
+}
 
+/* Retain the panel and refuse nested publication while GTK emits synchronous callbacks. The former borrowed-state callback remains for review; output controls keep their existing behavior. The previous implementation is retained for engineering review. */
+#if 0
 static void copy_clicked(GtkButton *button, GtkWidget *panel)
 {
     if (!gtk_widget_is_ancestor(GTK_WIDGET(button), panel))
@@ -124,6 +177,20 @@ static void copy_clicked(GtkButton *button, GtkWidget *panel)
     char *text = gtk_text_buffer_get_text(buffer, &start, &end, TRUE);
     gdk_clipboard_set_text(gtk_widget_get_clipboard(panel), text);
     g_free(text);
+}
+#endif
+static void copy_clicked(GtkButton *button, GtkWidget *panel)
+{
+    if (!gtk_widget_is_ancestor(GTK_WIDGET(button), panel)) return;
+    OutputView *view = output_enter(panel);
+    if (view == NULL) return;
+    GtkTextBuffer *buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(view->text));
+    GtkTextIter start, end;
+    gtk_text_buffer_get_bounds(buffer, &start, &end);
+    char *text_value = gtk_text_buffer_get_text(buffer, &start, &end, TRUE);
+    gdk_clipboard_set_text(gtk_widget_get_clipboard(panel), text_value);
+    g_free(text_value);
+    output_leave(panel, view);
 }
 
 /* State owns these references so GTK child disposal cannot leave dangling
@@ -189,6 +256,8 @@ GtkWidget *UmiOutputViewGtk4Create(const char *automation_prefix, const char *re
 
 /* Validate the length before any copy or UTF-8 conversion. Reject older
  * evidence so delayed frontend work cannot replace a newer job's display. */
+/* A scoped owner reference keeps the display state alive across text/status notifications, and nested updates return BUSY before mutation. The previous update remains for review. The previous implementation remains for review. */
+#if 0
 UmiStatus UmiOutputViewGtk4Update(GtkWidget *panel, const UmiOutputViewSnapshot *snapshot)
 {
     if (panel == NULL || !GTK_IS_BOX(panel) || snapshot == NULL)
@@ -209,5 +278,49 @@ UmiStatus UmiOutputViewGtk4Update(GtkWidget *panel, const UmiOutputViewSnapshot 
         display_latest(view);
     else
         describe(view);
+    return UMI_STATUS_OK;
+}
+#endif
+UmiStatus UmiOutputViewGtk4Update(GtkWidget *panel, const UmiOutputViewSnapshot *snapshot)
+{
+    if (panel == NULL || !GTK_IS_BOX(panel) || snapshot == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    OutputView *view = g_object_get_data(G_OBJECT(panel), "umicom-output-view");
+    if (view != NULL && view->updating) return UMI_STATUS_BUSY;
+    if (view == NULL || snapshot->length >= sizeof(snapshot->bytes) ||
+        snapshot->bytes[snapshot->length] != '\0' || snapshot->total_bytes < snapshot->length ||
+        memchr(snapshot->context, '\0', sizeof(snapshot->context)) == NULL ||
+        memchr(snapshot->status, '\0', sizeof(snapshot->status)) == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (snapshot->operation_id < view->latest.operation_id ||
+        (snapshot->operation_id == view->latest.operation_id && snapshot->revision < view->latest.revision))
+        return UMI_STATUS_INVALID_STATE;
+    gboolean changed = snapshot->operation_id != view->latest.operation_id ||
+                       snapshot->revision != view->latest.revision || snapshot->counters_saturated;
+    view = output_enter(panel);
+    if (view == NULL) return UMI_STATUS_BUSY;
+    view->latest = *snapshot;
+    if (changed && gtk_check_button_get_active(GTK_CHECK_BUTTON(view->follow)))
+        display_latest(view);
+    else
+        describe(view);
+    output_leave(panel, view);
+    return UMI_STATUS_OK;
+}
+
+
+/* Context owners can retire old output independently of the Follow toggle.
+ * Clear both snapshots so Refresh cannot revive the previous workspace's text. */
+UmiStatus UmiOutputViewGtk4Reset(GtkWidget *panel)
+{
+    if (panel == NULL || !GTK_IS_BOX(panel) ||
+        g_object_get_data(G_OBJECT(panel), "umicom-output-view") == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    OutputView *view = output_enter(panel);
+    if (view == NULL) return UMI_STATUS_BUSY;
+    memset(&view->latest, 0, sizeof view->latest);
+    view->displayed = FALSE;
+    display_latest(view);
+    output_leave(panel, view);
     return UMI_STATUS_OK;
 }

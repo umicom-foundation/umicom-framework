@@ -32,6 +32,9 @@ typedef UmiStatus (*UmiInputChunkVisitor)(const unsigned char *bytes, size_t siz
  * snapshot or a security sandbox. maximumBytes is enforced before callbacks.
  * Uses a 64 KiB stack buffer, even for multi-gigabyte files. outSize is cleared
  * on failure. Blocking I/O belongs on an application's worker thread. */
+/* A close failure changes a successful result to IO_ERROR. An earlier read,
+ * allocation, capacity, callback or metadata-change failure keeps its status;
+ * cleanup still runs. Failed reads never publish a successful output size. */
 UmiStatus UmiInputFileVisit(const char *path, uint64_t maximumBytes,
     UmiInputChunkVisitor visitor, void *context, uint64_t *outSize);
 #ifdef __cplusplus

@@ -112,6 +112,9 @@ UmiStatus umi_gtk4_workspace_layout_host_maximise_window(
     UmiWsMaximizeMode candidate = {0};
     UmiStatus status;
     if (host == NULL || !umi_ws_id_valid(window_id)) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A focus transaction owns the current wrappers until its callback returns. */
+    if (host->destroy_requested || host->destroying) return UMI_STATUS_CANCELLED;
+    if (host->focus_active) return UMI_STATUS_BUSY;
     if (host->active_canvas_entry != NULL || host->pending_geometry_id != 0U ||
         host->pending_action_id != 0U || host->pending_restore_id != 0U)
         return UMI_STATUS_BUSY;
@@ -190,6 +193,8 @@ UmiStatus umi_gtk4_workspace_layout_host_maximise_window(
 UmiStatus umi_gtk4_workspace_layout_host_restore_maximised(UmiGtk4WorkspaceLayoutHost *host)
 {
     if (host == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (host->destroy_requested || host->destroying) return UMI_STATUS_CANCELLED;
+    if (host->focus_active) return UMI_STATUS_BUSY;
     restore_maximised_presentation(host, 1);
     return UMI_STATUS_OK;
 }

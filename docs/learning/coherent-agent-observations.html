@@ -1,0 +1,81 @@
+<!-- Umicom Framework
+File: docs/learning/coherent-agent-observations.html
+
+PURPOSE:
+Teach admission and publication across event, history and audit stores.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Publish coherent agent observations | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Publish coherent agent observations</h1>
+<p>An application can describe one operation in several places: an event queue for its interface, a history of snapshots, and an audit log. Each store can be correct by itself while the combined result is inconsistent. This lesson builds on bounded queues and explains how Framework admits related observations before publishing them.</p>
+<h2>1. Recognize a partial update</h2>
+<p>Imagine a queue already holds 128 events. A producer increments its event number, appends an audit record, and then tries to enqueue the event. The queue refuses because it is full. The audit log now describes an event the interface never received, and the producer consumed a number for an operation that was refused.</p>
+<p>Changing a state snapshot first makes the problem wider: history may retain the new state while the live event feed still shows the old state. Merely returning the queue error cannot undo earlier writes.</p>
+<h2>2. Separate admission from publication</h2>
+<p><em>Admission</em> checks whether an operation can proceed using the current inputs and owner state. <em>Publication</em> performs the admitted changes. The Framework stores expose read-only batch admission using the same checks as their mutation APIs:</p>
+<table><tr><th>Store</th><th>Admission API</th><th>Relevant refusal</th></tr>
+<tr><td>Event queue</td><td><code>UmiAiCodingEventQueueCheckPushBatch</code></td><td>Insufficient queue space or invalid bounded text.</td></tr>
+<tr><td>Snapshot history</td><td><code>UmiAiCodingHistoryCheckRecordBatch</code></td><td>Invalid owner, record text or oversized batch. Valid retention can evict older snapshots.</td></tr>
+<tr><td>Audit log</td><td><code>UmiAiCodingAuditLogCheckAppendBatch</code></td><td>Invalid retention state, record text or exhausted sequence space.</td></tr></table>
+<p>A successful check does not reserve space or lock an owner. Its prediction holds only while those owners and inputs remain unchanged. Keep the check and publication on the same serialized owner thread; do not insert callbacks, asynchronous waits or unrelated mutations between them.</p>
+<h2>3. Use the shared composition service</h2>
+<pre><code>#include &lt;umicom/ai_coding_runtime/observation.h&gt;
+
+UmiStatus status = UmiAiCodingObservationPublish(
+    event_queue, history, audit_log,
+    &amp;event, &amp;candidate_snapshot, &amp;audit_record);
+if (status != UMI_STATUS_OK) {
+    /* All participating stores remain unchanged on admission refusal. */
+    return status;
+}
+/* Publish the producer's own state and counters after admission succeeds. */</code></pre>
+<p>The example assumes the host already created the three owners and prepared valid records. Framework copies the input values, checks every participating store, and then performs bounded memory operations without callbacks, allocation or external work. Pass a null snapshot for an event plus audit record; history is then ignored.</p>
+<p>The event number still belongs to the producer. The audit log assigns its own sequence, which counts accepted audit records. These two numbers have different owners and need not match.</p>
+<h2>4. Stage state and identities</h2>
+<!-- The state lifecycle now reserves terminal capacity; preserve the prior wording for review.
+<p>The agent now prepares a candidate state snapshot and candidate event number. It refuses a state transition at the maximum revision, or an event at the maximum producer sequence. The final available number is valid; the next operation refuses instead of wrapping to zero.</p>
+-->
+<p>The agent prepares a candidate state snapshot and candidate event number. It refuses a state transition at the maximum revision, or an event at the maximum producer sequence. State transitions reserve their last identity for termination: when only one remains, a request to enter an unfinished state records FAILED with a capacity error instead. A requested terminal state can use that last identity. Event identities do not have this state-machine reservation.</p>
+<p>The live snapshot describes execution state and remains authoritative when a notification cannot be retained. After validating text and revision headroom, the state helper updates that snapshot, then tries to publish its related history, audit and event records together. A refused publication leaves those three stores unchanged, but does not roll the live execution state back. Its event helper advances the producer sequence only after the event and audit record have both been admitted.</p>
+<p>This contract covers observation publication. It does not reverse earlier provider calls, file mutations or direct snapshot-field updates elsewhere in a larger operation. The broader controller still has to preserve the original operation error, decide how to report observation failures, and refresh its own revision correctly.</p>
+<p>For example, a task can fail while the event queue is full. It must still expose FAILED in its live snapshot; leaving GENERATING or PREPARING visible could make later work appear permanently busy. The run uses its normal failure transition even if the first state notification is refused. Read the live snapshot after an operation error rather than assuming the event feed contains every execution transition.</p>
+<h2>5. Handle a full queue deliberately</h2>
+<ol><li>Keep the failed operation status and the current owner values.</li><li>Allow the consumer to drain queued events through the normal queue API.</li><li>Retry only the refused observation when the controller knows it is safe. Do not automatically repeat a provider request or file operation to obtain another event.</li><li>Do not reset an exhausted counter and reuse an old identity. Replace or retire the owner according to the application's lifecycle.</li><li>Document whether the UI can lag behind external work and how the user retrieves the available evidence.</li></ol>
+<h2>6. Verify refusal without external work</h2>
+<p>The focused fixture compiles the actual owner implementations so it can inject otherwise unreachable counter boundaries. It checks a full event queue, malformed records, invalid retention state, last available identities, exhaustion, optional history and both event and state publication. It uses memory only.</p>
+<pre><code>$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake -S . -B build/observations -G Ninja -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe -DBUILD_TESTING=ON
+cmake --build build/observations --target umicom-ai-coding-observation-publication-test
+ctest --test-dir build/observations -R '^framework[.]ai[.]coding-observation[.]' --output-on-failure</code></pre>
+<p>Run from the Framework repository, one command at a time, and stop on failure. Fifty-two cases are authored; a registered test name is not evidence that compilation or execution passed. The publication guarantee assumes serialized access and valid readable inputs. It does not provide crash durability, cross-thread synchronization or a transaction over real files.</p>
+<h2>7. Keep task revisions meaningful</h2>
+<p>A revision is useful only when its lifetime is clear. Suppose a controller observes task A at revision 18. If task B resets the same agent to revision 1, a reader that ignores older observations may never display task B. Framework therefore keeps the transition revision increasing for the whole agent lifetime. Task identifiers describe which task owns the data; revisions order state transitions within that owner.</p>
+<p>A new task first requires two free identities: one for PREPARING and one for a possible failure. If that check fails, the previous task snapshot, patch recovery outcome and cancellation token remain intact. This is a minimum admission check, not a promise that enough capacity exists for every future iteration. During execution, the final identity is reserved for a terminal state. Once exhausted, inspect the final result and retire the agent through its normal checked lifecycle.</p>
+<pre><code>UmiAiCodingAgentSnapshot before, after;
+UmiStatus status = umi_ai_coding_agent_snapshot(agent, &amp;before);
+if (status != UMI_STATUS_OK) return status;
+status = umi_ai_coding_agent_run(agent, "review-parser", &amp;request);
+UmiStatus observed = umi_ai_coding_agent_snapshot(agent, &amp;after);
+if (observed != UMI_STATUS_OK) return observed;
+/* Keep status: a failed run can still have a newer terminal snapshot.
+ * Compare task IDs too. Revisions count transitions, not every field write. */</code></pre>
+<p>The example assumes an existing agent, valid request and serialized access. It deliberately keeps the run result separate from the observation result. A capacity error can mean either that a new task was refused before admission, or that an admitted task stopped later. Read the returned task identity and live state to distinguish these situations. A missing event does not prove that the transition did not happen.</p>
+<ol><li>Run two tasks on the same memory-backed fixture and compare every retained transition revision.</li><li>Inject the last two identities, then verify that a failed plan ends with a terminal snapshot at the maximum.</li><li>Try another task and check that its refusal preserves the completed observation and prior recovery data.</li><li>Fill the event queue and repeat a final transition. The live state must still terminate, while retained history, audit and events remain unchanged on publication refusal.</li></ol>
+<pre><code>cmake --build build/observations --target umicom-ai-coding-agent-revisions-test umicom-ai-coding-observation-publication-test
+ctest --test-dir build/observations -R '^framework[.]ai[.]coding-(agent-revisions|observation)[.]' --output-on-failure</code></pre>
+<p>The lifecycle suite has 101 authored cases in addition to the 52 publication cases above. These are expected regression checks, not a claim of execution. If a check fails, retain its exact test name, status and source revision; inspect whether admission, live transition or retained publication disagreed with its contract.</p>
+<h2>Exercise</h2>
+<p>Prepare an event, snapshot and audit record when the event queue has one free slot. Explain why a callback that enqueues another event between checking and publishing would invalidate admission. Then explain how a state publication can fail without proving that the larger operation made no external changes.</p>
+<p><a href="coding-audit-cursors.html">Continue with audit cursors and retained evidence</a> · <a href="index.html">Return to Framework learning</a></p>
+</main></body></html>

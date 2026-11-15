@@ -24,6 +24,8 @@ foreach(_invalid library imported alias bundle)
     set(_sdk_error_tool-${_invalid} "Framework SDK tool must be an owned non-bundle executable")
 endforeach()
 set(_sdk_error_tool-empty "Framework SDK tool registration requires executable targets")
+list(APPEND _sdk_component_cases archive archive-shared archive-release archive-spaces archive-absolute)
+set(_sdk_error_archive-absolute "SDK archive requires relative installation directories")
 foreach(_case IN LISTS _sdk_component_cases)
     add_test(NAME "framework.sdk.component.${_case}"
         COMMAND "${CMAKE_COMMAND}"

@@ -57,3 +57,26 @@ UmiStatus umi_ai_response_set_text(UmiAiResponse *response, const char *text)
     return written >= 0 && (size_t)written < sizeof(response->text)
         ? UMI_STATUS_OK : UMI_STATUS_CAPACITY_EXCEEDED;
 }
+
+/* Validate provider-owned values before clients format or persist their text.
+ * NONE remains valid for adapters which do not report a finish reason.
+ * Token accounting is provider evidence and is not inferred from text length. */
+UmiStatus UmiAiResponseValidate(const UmiAiResponse *response)
+{
+    if (response == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(response->request_id, '\0', sizeof(response->request_id)) == NULL ||
+        memchr(response->provider_id, '\0', sizeof(response->provider_id)) == NULL ||
+        memchr(response->model_id, '\0', sizeof(response->model_id)) == NULL ||
+        memchr(response->text, '\0', sizeof(response->text)) == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    switch (response->finish_reason) {
+    case UMI_AI_FINISH_NONE:
+    case UMI_AI_FINISH_STOP:
+    case UMI_AI_FINISH_LENGTH:
+    case UMI_AI_FINISH_CANCELLED:
+    case UMI_AI_FINISH_ERROR:
+        return UMI_STATUS_OK;
+    default:
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+}

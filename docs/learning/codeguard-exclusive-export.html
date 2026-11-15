@@ -1,0 +1,62 @@
+<!-- Umicom Framework
+File: docs/learning/codeguard-exclusive-export.html
+
+PURPOSE:
+Teach bounded native report streaming, exclusive creation and truthful output status.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Save a report without replacing evidence</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Save a report without replacing evidence</h1>
+<p>A native preview is intentionally bounded. A useful report can be larger than that preview, so export should use the complete findings and an explicit output policy. This lesson extends <a href="codeguard-reports.html">report serialization</a> with a new-file operation. The API, CLI option and regression fixtures are authored; runtime and installed-SDK qualification remain necessary.</p>
+<h2>1. Choose a file contract deliberately</h2>
+<p>The existing <code>umi_codeguard_report_file</code> replaces the contents of an existing destination. That compatibility behavior remains available. The new <code>umi_codeguard_report_file_new</code> requires an absolute destination which does not already exist. It never deletes a previous file or creates parent directories.</p>
+<p>Checking whether a name exists and then opening it for ordinary writing is insufficient: another writer can create the file between those operations. Framework delegates to <code>UmiOutputFileCreate</code>, which reserves the leaf exclusively using the native operating-system API. If two writers choose the same name, only one can create it; the other receives ALREADY_EXISTS.</p>
+<p>Exclusive creation differs from atomic replacement. Once the new file exists, another reader can observe a partial report while writing continues. A write, flush or close failure leaves that newly created file for diagnosis. Parent directories must be trusted and stable; this is not an adversarial filesystem sandbox.</p>
+<h2>2. Validate and measure before creating anything</h2>
+<pre><code class="language-c">UmiStatus status = umi_codeguard_report_file_new(
+    absolute_path, UMI_CODEGUARD_REPORT_SARIF, stable_result,
+    64U * 1024U * 1024U);
+if (status != UMI_STATUS_OK) {
+    /* Explain the failure. Do not delete an existing or partial destination. */
+}</code></pre>
+<p>The writer first validates path syntax and every finding. It then runs the same serializer into a counting sink. A sink is a destination for emitted bytes; this first destination counts instead of writing. The byte budget applies to the serialized payload, including JSON escapes, punctuation and final newline. An oversized or malformed report is refused before file creation.</p>
+<p>The result must remain alive and unchanged throughout both passes. This API does not copy the findings or lock an application service. A synchronous console can keep its service alive for the call. A responsive GUI needs an independently owned stable report and a worker for storage I/O; passing a service borrow to another thread is not sufficient.</p>
+<h2>3. Stream with bounded working memory</h2>
+<p>After exclusive creation, the writer serializes again through an 8 KiB staging buffer. Small punctuation and field tokens accumulate before reaching the native writer. This avoids one operating-system write for every token without allocating a second complete report. The existing findings still occupy memory; the staging bound is not a bound on the scanner's entire memory use.</p>
+<p>All output formats use the same serialization code as the existing stream and memory functions. Text, JSON and SARIF exports therefore share validation, escaping and path rules. A final incomplete buffer is written, the file is flushed and closed, and the first failure remains the result. A later cleanup error must not hide the cause of an earlier write failure.</p>
+<h2>4. Use the native Umicom CLI</h2>
+<p>From a qualified build with the new service and CLI handler, choose an existing parent directory and a fresh absolute filename:</p>
+<pre><code class="language-powershell">umicom quality scan "C:\Practice\quality-demo" --format sarif --output-new "C:\Practice\reports\quality-new.sarif"
+$LASTEXITCODE
+umicom security scan "C:\Practice\quality-demo" --format json --output-new "C:\Practice\reports\security-new.json"
+$LASTEXITCODE</code></pre>
+<p>The same option is available to architecture and memory scan commands. These routes use their established profiles and filtering. The CLI limits a new report to 64 MiB. The C API lets a host choose its own explicit payload budget.</p>
+<ol><li>Verify that the parent folder exists and that the intended filename is new.</li><li>Run one command and inspect its exit status.</li><li>Read the report and review the findings; successful export does not prove the source is safe.</li><li>Use another filename for another run. Do not interpret ALREADY_EXISTS as permission to replace earlier evidence.</li></ol>
+<p><code>--output-new</code> cannot be combined with <code>--output</code> or <code>--summary</code>, and cannot appear twice. Relative destinations and missing values are usage errors. The legacy <code>--output</code> retains overwrite behavior, including its existing interaction with summary mode.</p>
+<p>The existing CLI exit convention remains: 0 for a completed passing gate, 1 for a failing gate or operational/output failure, and 2 for invalid usage. Because 1 covers more than one outcome, read the diagnostic and report status. The independent SDK export example uses 3 for operational/output failures and distinguishes them from a completed failing gate.</p>
+<h2>5. Do not lose failures at standard output</h2>
+<p>Saving a report and printing its completion message are separate outputs. A redirected standard-output stream can fail even after a file was saved. The native scan handler now checks and flushes its summary and saved-file acknowledgement, as it already does for the full report stream. An output failure therefore cannot become a successful command merely because the severity gate passed.</p>
+<p>If the acknowledgement fails, a complete report may already exist. Inspect that destination before retrying; a fresh exclusive export should refuse the existing name. Diagnostics written to standard error are best-effort explanations, while the nonzero exit code carries the failure to the calling shell.</p>
+<h2>6. Qualify boundary and failure behavior</h2>
+<p>The <a href="../../tests/codeguard/test_report_exclusive.c">export fixture</a> compares native file bytes with the shared serializer and covers each format, exact and insufficient budgets, malformed records, Unicode filenames, existing files, directories, missing parents and concurrent creation. Random leaf names retain each run's artifacts for inspection instead of removing earlier evidence.</p>
+<p>Six linker-wrapped cases inject create, write and close failures, retain a seven-byte partial write, check first-error precedence and count bounded write chunks. The <a href="../../tests/codeguard/test_export_cli.c">CLI fixture</a> calls the real scan handlers and uses an operating-system read-only descriptor to exercise standard-output failure.</p>
+<pre><code>cmake --build build/windows-ucrt64-debug --target umicom-codeguard-export-tests umicom-codeguard-export-cli-tests
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.codeguard_export(_cli)?\." --output-on-failure
+
+# GNU-compatible linker wrapping:
+cmake --build build/windows-ucrt64-debug --target umicom-codeguard-export-fault-tests
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.codeguard_export_fault\." --output-on-failure</code></pre>
+<p>There are 29 ordinary export cases, six controlled native-output cases and 20 CLI cases. These commands must use a matching configured Framework build. A successful configuration only registers them; it does not prove compilation or test success. Keep existing report-grammar regression results and qualify the <a href="../../examples/sdk_codeguard/README.md">installed SDK example</a> separately.</p>
+<p>Filesystem capacity, permissions, network-mounted storage and power loss can still affect real writes. No physical-device, GUI-export or crash-durability qualification is implied by these source-level contracts.</p>
+<p><a href="index.html">Framework learning</a> · <a href="../../include/umicom/codeguard/report.h">Public report API</a> · <a href="../../include/umicom/platform/output_file.h">Native output contract</a></p>
+</main></body></html>

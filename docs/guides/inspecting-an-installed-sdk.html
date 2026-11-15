@@ -1,8 +1,10 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
 <title>Choose an installed Framework SDK</title>
-<style>body{max-width:56rem;margin:2rem auto;padding:0 1rem;font:1rem/1.65 system-ui;color:#162130}pre{white-space:pre-wrap;background:#eef2f6;padding:1rem}code{overflow-wrap:anywhere}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:.5rem;text-align:left}</style></head>
-<body><h1>Choose an installed Framework SDK</h1>
+<style>body{max-width:56rem;margin:2rem auto;padding:0 1rem;font:1rem/1.65 system-ui;color:#162130}pre{white-space:pre-wrap;background:#eef2f6;padding:1rem}code{overflow-wrap:anywhere}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:.5rem;text-align:left}</style><link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<!-- Shared typography roles extend the retained original guide styling. -->
+<style>body{font-family:"Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}code,pre{font-family:"Cascadia Code",Consolas,monospace}header img{width:212px;height:auto}</style></head>
+<body><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header><h1>Choose an installed Framework SDK</h1>
 <p>An SDK is the installed set of headers, libraries and package files that another
 project uses to compile and link. Choosing its installation folder should not accidentally
 select a different SDK, or confuse the version of an inspection tool with the version installed there.</p>
@@ -71,6 +73,12 @@ Trusted parent-directory aliases may still be followed; this is not a filesystem
 Presence inspection does not qualify optional SDK components, dependencies or every exported target.</p>
 <p>When adding SDK metadata fields, update the producer, bounded parser, inspection
 consumer and regression fixtures together. Keep executable package logic out of the receipt.</p>
+
+<section id="artifact-contents"><h2>Compare declared artifact contents</h2>
+<p>After presence inspection, use <code>umicom sdk fingerprint SDK_PREFIX</code> to read the exact artifact receipt and every physical file it declares. Record its SHA-256 fingerprint with your installation identity. On a relocated copy, use <code>umicom sdk fingerprint SDK_PREFIX --expect SHA256</code> with the complete reviewed digest. A completed mismatch returns 1; an invalid argument, incomplete read or report-output failure returns 2.</p>
+<p>The native service streams files under per-file and total byte ceilings. Missing or linked final leaves, malformed receipts and an interface-only receipt are refused without publishing a fingerprint. Headers and other files absent from the receipt remain outside its coverage. This is content evidence, not authentication, an atomic snapshot or ABI/runtime qualification.</p>
+<p>Follow <a href="../learning/sdk-content-fingerprints.html">Compare SDK contents with native C fingerprints</a> for exact commands, the public C API, binary framing, cancellation and recovery. Keep the installed-consumer checks below as separate qualification.</p></section>
+
 <h2>Check the complete Framework dependency chain</h2>
 <p>A component can depend on another Framework library. This is called a
 <em>transitive dependency</em>: your program requests the first component, and the

@@ -78,6 +78,46 @@ typedef struct UmiAiRuntimeDescriptor {
 typedef struct UmiAiRuntimeCatalogue UmiAiRuntimeCatalogue;
 
 /**
+ * Check required NUL-terminated identifiers, optional endpoint/health text,
+ * enum values and token bounds. A nonempty health provider must match provider_id.
+ * Capability extension bits and nonzero boolean values are retained.
+ * Descriptor revision is ignored on insertion: the catalogue assigns it.
+ * No provider is contacted and health metadata does not prove model identity.
+ */
+UmiStatus UmiAiRuntimeDescriptorValidate(const UmiAiRuntimeDescriptor *descriptor);
+/**
+ * Validate the bounded opaque owner. INVALID_STATE describes corrupt stored
+ * records/count/revisions. Serialize all access, including reads and destruction;
+ * revisions protect against stale observations, not simultaneous data races.
+ * Count helpers return zero for invalid state; this function distinguishes it
+ * from a valid empty catalogue. Read outputs stay unchanged on failure.
+ */
+UmiStatus UmiAiRuntimeCatalogueValidate(const UmiAiRuntimeCatalogue *catalogue);
+/**
+ * Replace only the observed record revision, or insert only when absent and
+ * expected_revision is zero. A conflicting or disappeared record returns BUSY.
+ * No mutation occurs on failure. Revision saturation returns CAPACITY_EXCEEDED.
+ * This is an in-memory metadata operation, not runtime activation.
+ */
+UmiStatus UmiAiRuntimeCatalogueUpsertIfRevision(
+    UmiAiRuntimeCatalogue *catalogue,
+    const UmiAiRuntimeDescriptor *descriptor,
+    uint64_t expected_revision);
+/**
+ * Publish health for a nonzero observed revision. A stale revision returns BUSY,
+ * a missing record NOT_FOUND. Health text must be terminated; an empty provider
+ * is allowed for compatibility, otherwise it must match the current record.
+ * Failure leaves all catalogue state unchanged. Earlier records in a batch
+ * refreshed by a caller are not rolled back when a later update fails.
+ */
+UmiStatus UmiAiRuntimeCatalogueSetHealthIfRevision(
+    UmiAiRuntimeCatalogue *catalogue,
+    const char *runtime_id,
+    const UmiAiHealth *health,
+    uint64_t expected_revision);
+
+
+/**
  * Initialise ai runtime catalogue from caller-provided values so later operations receive
  * a known state.
  */

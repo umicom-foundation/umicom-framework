@@ -32,6 +32,13 @@ typedef struct UmiWebSseEvent { uint64_t id; char event[64]; char data[2048]; } 
 /**
  * Provide the web sse format operation used by this module and its client applications.
  */
+/* Format a complete NUL-terminated record. Both fixed fields must contain a
+ * NUL; event names must not contain CR/LF. Malformed UTF-8 returns PARSE_ERROR.
+ * Data CR, LF and CRLF boundaries become separate data fields and are decoded
+ * as LF by an SSE receiver. Empty and trailing lines are retained. Failure
+ * preserves output bytes and optional out_length. Capacity includes the NUL;
+ * out_length excludes it. Output may overlap event, but out_length must not
+ * overlap either object. This formats data only; it does not send HTTP. */
 UmiStatus umi_web_sse_format(const UmiWebSseEvent *event,char *out_text,size_t capacity,size_t *out_length);
 #ifdef __cplusplus
 }

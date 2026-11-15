@@ -79,6 +79,34 @@ UmiStatus umi_developer_workbench_start_centre_recent_work_snapshot(
     size_t limit,
     UmiDeveloperWorkbenchRecentWorkSnapshot *out_snapshot);
 
+/* Navigation is independent of document storage. Zero-initialise one state for
+ * each workbench; it contains no pointers, native widgets or persisted state. */
+#define UMI_START_CENTRE_DOCUMENT_CAPACITY 128U
+typedef struct UmiStartCentreNavigation {
+    char active_document[UMI_START_CENTRE_DOCUMENT_CAPACITY];
+    int32_t welcome_requested;
+} UmiStartCentreNavigation;
+
+typedef enum UmiStartCentreNavigationAction {
+    UMI_START_CENTRE_OBSERVE = 0,
+    UMI_START_CENTRE_SHOW_WELCOME = 1,
+    UMI_START_CENTRE_SHOW_EDITOR = 2
+} UmiStartCentreNavigationAction;
+
+/** Observe an opaque document identity or explicitly choose Welcome/Editor.
+ * An empty identity means no ordinary document; map application placeholder
+ * IDs to empty before calling. OBSERVE retains an explicit Welcome request
+ * while the active identity is unchanged; changing that identity returns to
+ * normal document-based presentation. SHOW_EDITOR with no document returns
+ * NOT_FOUND. Every refusal preserves both state and out_show_welcome.
+ * State must be zero-initialised or produced by this function. IDs must end
+ * within UMI_START_CENTRE_DOCUMENT_CAPACITY bytes. Outputs must not overlap;
+ * active_document may refer to state's own array. Serialize access on the
+ * workbench owner. No allocation, I/O, document mutation or callbacks occur. */
+UmiStatus UmiStartCentreNavigationUpdate(UmiStartCentreNavigation *state,
+    const char *active_document, UmiStartCentreNavigationAction action,
+    int *out_show_welcome);
+
 #ifdef __cplusplus
 }
 #endif

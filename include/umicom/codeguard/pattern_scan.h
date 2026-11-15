@@ -31,6 +31,8 @@ extern "C" {
  * Provide the codeguard pattern scan line operation used by this module and its client
  * applications.
  */
+/* Return the first finding insertion failure unchanged. Previously appended
+ * findings remain owned by result; an error does not roll back the line. */
 UmiStatus umi_codeguard_pattern_scan_line(const UmiCodeGuardRuleRegistry *registry,
                                           const char *path,
                                           size_t line_number,

@@ -1,6 +1,6 @@
 # Build a local model lifecycle in C
 
-This four-lesson workshop follows the implementation of Umicom Local Models. You will separate model files from inference engines, prepare reviewable downloads, supervise a model process and connect an application through Framework's existing AI provider. The examples use C23. Read the [operator guide](../local-model-manager.html) for complete commands and recovery steps.
+This six-lesson workshop follows the implementation of Umicom Local Models. You will separate model files from inference engines, prepare reviewable downloads, supervise a model process and connect an application through Framework's existing AI provider. The examples use C23. Read the [operator guide](../local-model-manager.html) for complete commands and recovery steps.
 
 ## Lesson 1 Separate weights engine and client
 
@@ -100,6 +100,23 @@ The cancellation object is borrowed and must outlive the provider. At shutdown, 
 
 **Exercise.** Start the finite server fixture, try to start into the same owner, and confirm that the original pointer remains intact. Try a second owner for the same guard. Stop normally and reacquire the guard. Repeat with a wrong model digest and verify that no session was published. These are process and ownership tests, not inference or HTTP readiness tests.
 
+## Lesson 5 Separate process state from endpoint reports
+
+A process can be running while its model is loading, after it has failed to bind a port, or while another process owns that port. A file digest answers a different question again: which bytes were inspected? Build the client around separate observations rather than collapsing them into one ready flag.
+
+Read UmiModelHealthProbe in src/local_models/session.c. It checks bounds and explicit consent before delegating to UmiAiWorkspaceLocalHealthRead. The shared loopback transport owns both chat POST and health GET restrictions. No application needs a second HTTP client merely to show health.
+
+1. Preview models health 8080 3000 while no server is running. It must describe the request without contacting the port.
+2. Use the explicit --probe flag against a trusted server. Record whether the failure is transport, JSON admission or a reported unavailable state.
+3. Compare that observation with UmiModelSessionRead and a reviewed chat result. Explain why none can replace the other two.
+4. Inspect test_health.c: the native fixture asserts one GET request with no prompt body, credentials or redirect follow-up. The fixture never loads model weights.
+
+The codec admits a bounded complete JSON response and publishes a staged result only after all checks. Its offline cases cover wrong types, embedded NUL, bad UTF-8, contradictory fields, an incorrect HTTP code, trailing data and oversized input. The transport cases cover actual loopback behavior, proxy bypass, timeout and cancellation. A cancellation token remains borrowed until the request has stopped.
+
+Exercise: let a previous successful observation remain in the result object, then cancel the next request before it starts. The API leaves the object unchanged and returns CANCELLED. Explain how a UI that ignores the return value could display stale success. Add a timestamp or freshness label in the application model; do not alter the raw observation to conceal the failed read.
+
+The manager does not bind this health response cryptographically or through a process-owned channel to its child. A later design may add authenticated endpoint identity, but a local port number is insufficient evidence. Keep that limitation visible when reviewing application behavior. Follow the operator guide for source and HTTP-OFF qualification commands.
+
 ## Qualify the complete workflow
 
 The authored tests are registered under **framework.local_models**. The operator guide provides build and test commands. Record compiler results, actual passes and skips separately from source review. Real engine qualification additionally needs a trusted engine identity, matching model digest, completed load, a reviewed chat response and a clean normal stop. Test a busy port and an incompatible model so the UI cannot accidentally show success after a failed child.
@@ -113,5 +130,35 @@ Image and video engines require different model packages and execution adapters.
 - [GGUF specification](https://github.com/ggml-org/ggml/blob/master/docs/gguf.md) explains the format beyond this manager's basic header inspection.
 - [llama.cpp server](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md) describes the selected external engine's arguments and HTTP API.
 - [Hugging Face model downloads](https://huggingface.co/docs/hub/models-downloading) explains publisher files and revision selection.
+
+## Lesson 6 Bound retries and report the current attempt
+
+A retry loop needs a stopping rule that readers and callers can inspect. An unbounded loop can occupy a worker forever when a port never opens. A fixed sleep does not prove that loading completed. The readiness plan instead limits request count, individual request timeout and pauses, while leaving the existing single-probe API unchanged.
+
+Read **src/local_models/readiness.c**. UmiModelReadinessBudget validates every public field and widens arithmetic to uint64_t before multiplying. The formula is attempts × timeout + (attempts − 1) × pause. Subtracting one is valid only after checking that attempts is at least one. The last attempt has no following pause. The result describes configured work; it does not promise exact elapsed time under an operating-system scheduler.
+
+~~~c
+UmiModelReadinessPlan plan;
+uint32_t nominal_millis = 0U;
+UmiStatus status = UmiModelReadinessPlanCreate(
+    8080U, 3U, 50U, 100U, &plan);
+if (status == UMI_STATUS_OK)
+    status = UmiModelReadinessBudget(&plan, &nominal_millis);
+/* With these inputs the nominal budget is 400 ms. No I/O occurred. */
+~~~
+
+The wait copies an admitted plan before executing it and stages its report in local storage. Each completed probe records its status and replaces the health fields. If the probe failed, those fields are zero and has_health is false. This prevents a prior unavailable or ready-looking object from being mistaken for the most recent network result. Unlike the single-probe API, the admitted wait publishes useful progress even when the overall operation fails. The distinction is part of the public contract.
+
+1. Preview models wait 8080 3 50 100. Confirm that the command prints a nominal budget without requiring a server.
+2. Read test_readiness.c and calculate the one-attempt and exact-60000-ms boundary cases by hand. Change a bound in a temporary experiment only if the corresponding rejection expectations change deliberately.
+3. Read the wait-loading-ready fixture: the first response is unavailable, the second is ready. Explain why a third request must not happen.
+4. Read wait-stale: an unavailable reply is followed by malformed JSON. The report must count two completed probes, carry PARSE_ERROR and contain no current health observation.
+5. Compare exhausted unavailable replies with exhausted dropped connections. Both waits return TIMEOUT, but last_probe_status distinguishes a valid unavailable report from I/O failure.
+
+Cancellation is a request to stop work, not permission to destroy another thread’s borrowed memory. The wait checks before each probe and during sliced pauses; the shared transport checks while processing a request. The owner requests cancellation, waits for its worker to finish, then destroys the token. Resetting the token during execution can erase the request before the worker observes it.
+
+The fixture’s cancellation-after-response case permits cancellation during transport cleanup or the following pause. It asserts that no second request occurs, rather than requiring a fragile exact timing window. The malformed and oversized cases stop immediately; temporary connection failures and documented loading replies use the remaining bounded attempts. Unexpected HTTP statuses are retried as I/O errors under the current transport mapping, so do not describe this as an HTTP-status-specific retry policy.
+
+Run the qualification commands in the operator guide with HTTP enabled, then use an independent HTTP-OFF build for the unavailable-transport case. Inspect skips rather than counting them as success. Finally, integrate the blocking API through an application worker: display attempt count and outcome separately from the retained process snapshot, and leave the user’s running session alone if waiting fails.
 
 Sammy Hegab · Umicom Foundation · Source examples: MIT.

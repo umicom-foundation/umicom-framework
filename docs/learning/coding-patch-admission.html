@@ -1,0 +1,67 @@
+<!-- Umicom Framework
+File: docs/learning/coding-patch-admission.html
+
+PURPOSE:
+Teach patch integrity, failure-preserving mutation and file-adapter admission with explicit transaction limits.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Validate reviewed coding patches | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Validate a reviewed patch before editing files</h1>
+<p>A coding assistant can propose a change without being allowed to write it. Framework represents the proposal as a <code>UmiAiCodingPatch</code>: bounded paths, exact before and after text, hashes, line counts, approval metadata and a revision. A host application supplies the file adapter only when it intends to apply the reviewed proposal. This lesson uses <a href="../../include/umicom/ai/coding_patch.h">the native patch API</a>.</p>
+<h2>1. Separate storage limits from policy limits</h2>
+<p>The patch contains sixteen physical file slots. A policy can allow fewer files; setting its limit to a million cannot create more storage. <code>UmiAiCodingPatchPolicyValidate</code> accepts one through sixteen files and a positive changed-line budget. Existing flag fields treat every nonzero value as true.</p>
+<p><code>UmiAiCodingPatchCheckIntegrity</code> checks the physical count independently. It also checks terminated text, required fields, known operations and states, a nonzero revision, content lengths, hashes, line counts and duplicate paths. An initialized empty draft is valid metadata. The policy-aware <code>umi_ai_coding_patch_validate</code> requires at least one file before it accepts a proposal for application.</p>
+<h2>2. Build a proposal with the real C API</h2>
+<p>Allocate large inline records on the heap. The patch owns copies of text, so the source strings need not survive the call. Check every status before using the next result.</p>
+<pre><code class="language-c">#include &lt;stdlib.h&gt;
+#include "umicom/ai/coding_patch.h"
+
+UmiStatus describe_change(void)
+{
+    UmiAiCodingPatch *patch = malloc(sizeof *patch);
+    if (patch == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    UmiAiCodingPatchPolicy policy = umi_ai_coding_patch_policy_default();
+    UmiStatus status = umi_ai_coding_patch_init(
+        patch, "change.1", "request.1", "Correct calculation",
+        "Use the calculation accepted during review");
+    if (status == UMI_STATUS_OK)
+        status = umi_ai_coding_patch_add_file(patch, "src/calculate.c",
+            UMI_AI_CODING_PATCH_MODIFY, "return 1;\n", "return 2;\n");
+    if (status == UMI_STATUS_OK)
+        status = umi_ai_coding_patch_validate(patch, &amp;policy);
+    /* Present the actual before/after proposal to the user here.
+       Approval must follow that review; validation is not user consent. */
+    free(patch);
+    return status;
+}</code></pre>
+<p>This example constructs metadata only. It neither edits a repository nor calls a model. In a real product, keep the accepted proposal alive for the review and application steps. Call <code>umi_ai_coding_patch_approve</code> only after the host has obtained the required approval. An approver string is an audit label, not a verified identity or digital signature.</p>
+<h2>3. Keep refusal separate from publication</h2>
+<p>File addition uses temporary storage and publishes the entire candidate only after admission succeeds. A long path, oversized text or duplicate path leaves all bytes of the previous patch unchanged, including unused slots. Inputs may refer to existing patch fields. Approval checks its complete label before copying it, and permits overlapping borrowed text.</p>
+<p>A revision is an unsigned counter identifying changes to this live value. At <code>UINT64_MAX</code>, inspection remains possible but another mutation is refused with <code>UMI_STATUS_CAPACITY_EXCEEDED</code>. Wrapping to zero would make stale and newer values difficult to distinguish. Do not reset the counter to make a failed edit appear valid; the host needs an explicit new proposal and review lifecycle.</p>
+<h2>4. Validate adapter results as well as inputs</h2>
+<p>A read callback returning <code>UMI_STATUS_OK</code> must initialize exactly the reported bytes, and its length must be smaller than the supplied capacity. A terminator is not required for these bytes because hashing uses the explicit length. Returning success with a length equal to or larger than capacity is refused before any write. Both forward application and reversion apply this rule.</p>
+<p>Framework checks all expected file contents before it starts writes. A changed before-hash refuses application; a changed after-hash refuses reversion. The current hash detects ordinary content conflicts; it is not a cryptographic signature. The host must enforce the approved workspace, handle filesystem links and prevent changes between reads and writes when stronger atomicity is required.</p>
+<h2>5. Understand the remaining transaction boundary</h2>
+<p>Calls require serialized access. Adapter callbacks must not mutate or reenter the same patch, free it, or invalidate the adapter. Admission is not a mutex. If a write fails, the existing implementation attempts to restore affected files. Its returned failure does not certify that every restoration callback succeeded. Inspect the actual files before retrying and preserve evidence of uncertain recovery.</p>
+<p>These limits matter when designing a Studio review dialog or an application-specific file adapter. A correct metadata preview alone does not establish filesystem containment, atomic multi-file writes, authenticated approval or successful recovery after an I/O failure.</p>
+<h2>6. Qualify the boundary deliberately</h2>
+<ol><li>Configure and build Framework with testing enabled using the platform's documented preset.</li>
+<li>Run <code>ctest --test-dir &lt;framework-build&gt; -R "^framework[.]ai[.]coding-patch[.]" --output-on-failure</code>. The admission cases use memory callbacks and do not edit real files.</li>
+<li>Check malformed counts, missing terminators, unknown operations, policy limits, duplicate paths and unchanged rejected mutations.</li>
+<li>Check apply/revert read lengths at capacity and <code>SIZE_MAX</code>, exhausted revisions before callbacks, content conflicts and ordinary valid round trips.</li>
+<li>Run the installed SDK consumer to verify the exported admission symbols. Then qualify the host's real workspace adapter separately, including rollback failures and filesystem races.</li></ol>
+<p>Expected results are an explicit refusal without writes for inadmissible input, and the documented state transition for a valid fixture. If a case fails, preserve its command, source revision and output; compare the reported status and callback counts before changing policy. Authored cases and successful configuration do not establish native test or GUI success.</p>
+<p>Continue with <a href="repository-context-admission.html">repository context admission</a> and the <a href="index.html">Framework learning catalogue</a>.</p>
+
+</main></body></html>

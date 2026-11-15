@@ -1,10 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/base/test_utf8_stream.c
- * PURPOSE: Validate incremental UTF-8, strict scalar ranges and publication
- *          atomicity with the real C23 implementation.
- * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Verify incremental UTF-8 scalar ranges, counters and failure atomicity.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/base/utf8_stream.h"
 
@@ -95,6 +101,37 @@ int main(void)
     CHECK(UmiUtf8StreamReset(&stream) == UMI_STATUS_OK);
     CHECK(UmiUtf8StreamInspect(&stream,&info) == UMI_STATUS_OK);
     CHECK(info.completedScalars == 0U && info.completedBytes == 0U);
+
+    /* Failure outputs and public-state bounds are part of the shared contract. */
+    CHECK(UmiUtf8StreamReset(NULL)==UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(UmiUtf8StreamFinish(NULL)==UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(UmiUtf8StreamInspect(NULL,&info)==UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(UmiUtf8StreamInspect(&stream,NULL)==UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(UmiUtf8StreamAppend(NULL,0U,out,4U,&count)==UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(UmiUtf8StreamAppend(&stream,0U,out,4U,NULL)==UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(UmiUtf8StreamAppend(&stream,0U,NULL,1U,&count)==UMI_STATUS_INVALID_ARGUMENT);
+    before=stream;count=909U;
+    CHECK(UmiUtf8StreamAppend(&stream,'A',NULL,0U,&count)==UMI_STATUS_CAPACITY_EXCEEDED);
+    CHECK(count==909U && memcmp(&before,&stream,sizeof stream)==0);
+    stream.completedScalars=UINT64_MAX;before=stream;
+    CHECK(UmiUtf8StreamAppend(&stream,'A',out,4U,&count)==UMI_STATUS_CAPACITY_EXCEEDED);
+    CHECK(count==909U && memcmp(&before,&stream,sizeof stream)==0);
+    CHECK(UmiUtf8StreamReset(&stream)==UMI_STATUS_OK);
+    stream.completedBytes=UINT64_MAX;before=stream;
+    CHECK(UmiUtf8StreamAppend(&stream,'A',out,4U,&count)==UMI_STATUS_CAPACITY_EXCEEDED);
+    CHECK(memcmp(&before,&stream,sizeof stream)==0);
+    CHECK(UmiUtf8StreamReset(&stream)==UMI_STATUS_OK);
+    stream.pendingCount=SIZE_MAX;before=stream;
+    CHECK(UmiUtf8StreamAppend(&stream,'A',out,4U,&count)==UMI_STATUS_INVALID_STATE);
+    CHECK(UmiUtf8StreamInspect(&stream,&info)==UMI_STATUS_INVALID_STATE);
+    CHECK(UmiUtf8StreamFinish(&stream)==UMI_STATUS_INVALID_STATE);
+    CHECK(memcmp(&before,&stream,sizeof stream)==0);
+    CHECK(UmiUtf8StreamReset(&stream)==UMI_STATUS_OK);
+    CHECK(UmiUtf8StreamAppend(&stream,0xe2U,NULL,0U,&count)==UMI_STATUS_OK && count==0U);
+    CHECK(UmiUtf8StreamInspect(&stream,&info)==UMI_STATUS_OK && info.bytesNeeded==2U);
+    CHECK(UmiUtf8StreamAppend(&stream,0x82U,NULL,0U,&count)==UMI_STATUS_OK && count==0U);
+    CHECK(UmiUtf8StreamAppend(&stream,0xacU,out,3U,&count)==UMI_STATUS_OK && count==3U);
+
     puts("Strict streaming UTF-8 scalar reconstruction and invalid-input atomicity verified");
     return 0;
 }

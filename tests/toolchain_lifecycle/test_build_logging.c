@@ -102,6 +102,13 @@ int main(void)
     artifact_request.run_arguments = NULL;
     artifact_request.run_argument_count = 0U;
     artifact_request.build_directory = directory;
+    /* Missing CTest metadata is refused before file-collision admission.
+     * Supply a synthetic validated slot only after verifying that earlier
+     * refusal; the injected executor never launches this placeholder program. */
+    CHECK(UmiBuildExecuteLogged(&profile, NULL, UMI_BUILD_TEST, &artifact_request, &options, path, &log, report) == UMI_STATUS_NOT_FOUND);
+    CHECK(!log.created && !umi_fs_exists(path) && fixture.calls == 0U);
+    profile.tools[UMI_TOOL_CTEST].state = UMI_TOOL_VALIDATED;
+    strcpy(profile.tools[UMI_TOOL_CTEST].path, "fixture-ctest");
     options.test_output_log = path;
     CHECK(UmiBuildExecuteLogged(&profile, NULL, UMI_BUILD_TEST, &artifact_request, &options, path, &log, report) == UMI_STATUS_INVALID_ARGUMENT);
     CHECK(!log.created && !umi_fs_exists(path) && fixture.calls == 0U);

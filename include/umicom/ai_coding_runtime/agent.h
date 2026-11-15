@@ -17,6 +17,7 @@
 #ifndef UMICOM_AI_CODING_RUNTIME_AGENT_H
 #define UMICOM_AI_CODING_RUNTIME_AGENT_H
 
+#include "umicom/ai/coding_patch.h"
 #include "umicom/ai_coding_runtime/cancellation.h"
 #include "umicom/ai_coding_runtime/audit.h"
 #include "umicom/ai_coding_runtime/change_guard.h"
@@ -46,6 +47,28 @@ typedef struct UmiAiCodingAgentBindings {
  */
 typedef struct UmiAiCodingAgent UmiAiCodingAgent;
 
+/* A completed call into the shared patch service, correlated to its owning task
+ * and patch. transaction.admitted distinguishes a full transaction report from
+ * service admission refusal. status is the patch call's primary result, not the
+ * result of the whole agent run or its later notification/validation steps. */
+typedef struct UmiAiCodingAgentPatchOutcome {
+    char task_id[UMI_AI_CODING_RUNTIME_ID_CAPACITY];
+    char patch_id[UMI_AI_ID_CAPACITY];
+    int reverting;
+    UmiStatus status;
+    UmiAiCodingPatchTransactionReport transaction;
+} UmiAiCodingAgentPatchOutcome;
+
+/* Copy the most recently completed patch call for the current admitted task.
+ * NOT_FOUND means no call completed; every refusal leaves outOutcome unchanged.
+ * A new admitted run clears the previous outcome. During synchronous callbacks,
+ * readers see the previous completed outcome until the active patch call returns.
+ * Correlate both IDs: a newly generated patch may not yet have been attempted.
+ * Use separate output storage and serialize access; no ownership is transferred. */
+UmiStatus UmiAiCodingAgentReadPatchOutcome(const UmiAiCodingAgent *agent,
+    UmiAiCodingAgentPatchOutcome *outOutcome);
+
+
 /**
  * Initialise ai coding agent from caller-provided values so later operations receive a
  * known state.
@@ -54,6 +77,19 @@ UmiStatus umi_ai_coding_agent_create(
     const UmiAiCodingAgentBindings *bindings,
     const UmiAiCodingRuntimeConfig *config,
     UmiAiCodingAgent **out_agent);
+
+/** Read-only serialized lifetime preflight. NULL is idle. BUSY means an
+ * agent operation or a borrowed assistant patch operation is active. This
+ * observation is not a lock and does not reserve lifetime across threads. */
+UmiStatus UmiAiCodingAgentCheckIdle(const UmiAiCodingAgent *agent);
+
+/** Refuse active execution without freeing the agent. On OK the caller must clear its owner
+ * handle. NULL is accepted; the legacy void destroy also retains a busy owner.
+ * Borrowed runtime, assistant, executor and workspace storage must outlive the
+ * complete call. Callback code must not destroy or directly mutate them.
+ * Run/apply/repair and policy mutations refuse reentry. Cancellation and
+ * serialized snapshot/event observation remain available during execution. */
+UmiStatus UmiAiCodingAgentDestroyChecked(UmiAiCodingAgent *agent);
 
 /**
  * Release or reset state held by ai coding agent so the same storage can be reused safely.
@@ -80,6 +116,20 @@ UmiStatus umi_ai_coding_agent_set_change_guard(
  * Perform ai coding agent through the module contract so client applications do not
  * duplicate its policy.
  */
+/* Transition revisions increase throughout this agent lifetime, including across
+ * tasks. Starting work requires two available identities; refusal preserves the
+ * prior task and recovery outcome. Within an admitted operation, the last
+ * available identity records a terminal capacity failure if a requested state
+ * would leave unfinished work. Live state remains authoritative if its event
+ * cannot be retained. The revision does not count every intermediate field
+ * assignment or independent assistant mutation; serialize reads and use task
+ * identifiers and child observations as well. Retire an exhausted owner after
+ * inspecting its final state; never reset its counter to reuse identities. */
+/* Task IDs and fixed request text are admitted through the shared draft
+ * constructor before prior task data is cleared. Overlong IDs are refused,
+ * never truncated. Inputs are copied before reset, so serialized callers may
+ * pass task/request storage borrowed from this owner. Full execution readiness
+ * and privacy policy are still checked by assistant preparation. */
 UmiStatus umi_ai_coding_agent_run(
     UmiAiCodingAgent *agent,
     const char *task_id,

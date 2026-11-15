@@ -1,0 +1,60 @@
+<!-- Umicom Framework
+File: docs/learning/codeguard-cancellation.html
+
+PURPOSE:
+Teach cooperative scan cancellation, retained reports, token lifetime and deterministic checks.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cancel a CodeGuard scan without losing its report</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Cancel a CodeGuard scan without losing its report</h1>
+<h2>1. A request is not a stopped worker</h2>
+<p>A scan can visit many files. A user may change workspaces or cancel while it runs. Framework supplies a thread-safe UmiCancellationToken. Requesting it sets shared state; it does not terminate a thread or close files behind the scanner. CodeGuard observes that state and returns UMI_STATUS_CANCELLED at its next supported boundary.</p>
+<h2>2. Keep ownership in the shared service</h2>
+<pre><code class="language-c">UmiCancellationToken *token = NULL;
+UmiCodeGuardService *service = NULL;
+UmiStatus status = umi_cancellation_token_create(&amp;token);
+if (status == UMI_STATUS_OK)
+    status = umi_codeguard_service_create(workspace_root, &amp;service);
+if (status == UMI_STATUS_OK)
+    status = umi_codeguard_service_scan_cancellable(service, NULL, token);
+/* The synchronous scan has returned; these objects are no longer borrowed. */
+umi_codeguard_service_destroy(service);
+umi_cancellation_token_destroy(token);</code></pre>
+<p>In an asynchronous host, the existing job coordinator owns these objects until the worker finishes. It may request cancellation from another thread with umi_cancellation_token_request(token). It must wait for completion before destroying the token, service or callback data. Reset is only for reuse after the previous operation returns. The example above is synchronous and creates no worker.</p>
+<h2>3. Preserve the complete report</h2>
+<p>The service scans into a separate owned candidate. A successful scan swaps that complete candidate into its stable result object. Cancellation before work, during traversal, or before publication discards the candidate and preserves the previous report, summary and borrowed finding pointers. Display the cancelled attempt separately from the date and identity of the retained report. Do not label the old report as a new clean scan.</p>
+<p>The final token check occurs before publication. A request that races after that check may arrive after a successful result is committed. Treat the returned status as the completed attempt outcome. Cooperative cancellation does not promise that any request always wins a race.</p>
+<h2>4. Know the observation boundaries</h2>
+<ol><li>Directory traversal uses UmiDirectoryWalkCancellable, including name collection and empty-folder traversal.</li>
+<li>Per-file scanning checks before and after each line read and around architecture analysis.</li>
+<li>Workspace scanning checks around duplicate analysis and before returning success.</li>
+<li>The retained service checks before candidate allocation and before replacing its previous report.</li></ol>
+<p>A filesystem call, rule, architecture pass or duplicate pass already in progress cannot be interrupted by this API. There is no cancellation latency guarantee. Scanning observes files over time; it does not create an atomic snapshot of a changing workspace. Existing scanner line and file handling limits are unchanged.</p>
+<h2>5. Distinguish direct scanning from retained service scanning</h2>
+<p>umi_codeguard_scan_cancellable and umi_codeguard_scan_file_cancellable append directly to caller-provided results. Failure or cancellation can leave partial findings there. Use umi_codeguard_service_scan_cancellable when incomplete attempts must not replace complete reports. NULL token preserves ordinary synchronous behavior; existing scan entry points remain available.</p>
+<p>An earlier I/O or analysis error is retained if cancellation also arrives. Do not rewrite a specific failure as cancellation merely because the token is set. Invalid arguments are rejected before work. Studio forwards its guard, explicit profile and token to Framework; it does not duplicate scanner rules or own the token.</p>
+<h2>6. Qualify boundaries without timing guesses</h2>
+<p>The scanner regression includes production scanning with narrow read, traversal and analysis boundary hooks. They request a real token at deterministic points. Rules, directory traversal, result storage and token atomics remain Framework implementations. The ownership regression separately makes a scan return success after a late request and checks that the service retains its old report. These checks require execution with the actual Framework build before claiming a pass.</p>
+<pre><code class="language-powershell">cmake --build build --target umicom-codeguard-cancellation-tests umicom-codeguard-ownership-tests
+ctest --test-dir build -R &quot;^framework[.]codeguard_(cancellation|ownership)[.]&quot; --output-on-failure --no-tests=error</code></pre>
+<p>Use your configured build directory in place of build. <!-- Previous registration counts retained for review: Scanner tests register nineteen boundary cases; ownership tests register twenty-nine cases, including five token-specific checks. --><!-- Previous scanner count retained for review: twenty boundary cases. -->Scanner tests register twenty-two boundary cases; ownership tests register thirty cases, including five token-specific checks and bounded-analysis failure retention. Inspect failures; an empty selection is not a pass. Qualify the Studio facade separately in the application build.</p>
+<h2>7. Try the installed SDK example</h2>
+<p><!-- Previous Markdown link syntax retained for review: The [SDK consumer](../../examples/sdk_codeguard/README.md) -->The <a href="../../examples/sdk_codeguard/README.md">SDK consumer</a> accepts --cancel-before-scan, returning 4 for cancellation. It creates no worker or unsafe signal handler. Build it against the installed SDK and verify its dependencies. Framework configuration alone does not establish SDK or GUI behavior.</p>
+<p>Continue with <a href="codeguard-analysis-failures.html">checked analysis failures</a> to distinguish an incomplete scan from a completed report with findings.</p>
+<h2>Exercises</h2>
+<ol><li>Explain why destroying a token immediately after requesting cancellation can create a use-after-free. Identify the completion event that makes destruction safe.</li>
+<li>Compare low-level append-only findings and retained service findings after two findings are written and a scan cancels.</li>
+<li>Create a deterministic test where analysis fails and requests cancellation together. Verify that the original error remains visible.</li>
+<li>Reset a token only after its prior scan returns. Verify the result object address remains stable while successful replacement ends old finding borrows.</li>
+<li>Explain why putting API setup inside assert makes a release test unreliable. Ensure setup executes when NDEBUG is defined.</li></ol>
+<p><a href="codeguard-owned-results.html">Read the result ownership lesson</a> · <a href="index.html">Learning index</a></p></main></body></html>

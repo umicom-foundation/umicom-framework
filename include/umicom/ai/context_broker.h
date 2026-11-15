@@ -23,6 +23,7 @@
 #define UMICOM_AI_CONTEXT_BROKER_H
 
 #include "umicom/ai/privacy_policy.h"
+#include "umicom/base/snapshot_validation.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -81,6 +82,22 @@ typedef struct UmiAiContextPlan {
  */
 typedef struct UmiAiContextBroker UmiAiContextBroker;
 
+/* Validate fixed source fields, enum domains and nonzero token estimate.
+ * Incoming revision is historical metadata; upsert assigns the stored value.
+ * mandatory/enabled retain nonzero-is-true semantics. No URI is opened. */
+UmiStatus UmiAiContextSourceValidate(const UmiAiContextSource *source);
+/* Validate bounded owner state and stored identities before traversal.
+ * These calls require a live, serialized owner; they do not provide a lock.
+ * Capture leaves output unchanged on refusal. */
+UmiStatus UmiAiContextBrokerValidate(const UmiAiContextBroker *broker);
+UmiStatus UmiAiContextBrokerCapture(const UmiAiContextBroker *broker,
+    UmiSnapshotCapture *out_capture);
+/* Refuse invalid state or exhausted revision before clearing anything.
+ * The void compatibility clear delegates here and preserves state on refusal.
+ * A successful clear, including an empty one, advances the owner revision. */
+UmiStatus UmiAiContextBrokerClearChecked(UmiAiContextBroker *broker);
+
+
 /**
  * Initialise ai context broker from caller-provided values so later operations receive a
  * known state.
@@ -127,6 +144,12 @@ size_t umi_ai_context_broker_count(const UmiAiContextBroker *broker);
  * Provide the ai context broker plan operation used by this module and its client
  * applications.
  */
+/* On any refusal, including mandatory-source policy/budget failure or
+ * allocation failure, preserve the entire previous output. Unknown provider
+ * kinds and malformed policies are invalid even for an empty broker.
+ * Optional rejected sources are counted as drops in a successful plan.
+ * The copied plan contains provenance/estimates, not owned source text or
+ * current permission to execute. Recheck owner/context before later use. */
 UmiStatus umi_ai_context_broker_plan(
     const UmiAiContextBroker *broker,
     uint32_t context_limit,

@@ -14,13 +14,14 @@ set(_cases selective spaced-prefix relocated-prefix shared release
     duplicate-registration deferred-registration full-install missing-library missing-installed-library
     missing-target imported-target alias-target executable-target object-target empty-registration name-collision)
 list(APPEND _cases development-command duplicate-tool relocated-tool missing-installed-tool tool-missing tool-library tool-imported tool-alias tool-empty tool-bundle)
+list(APPEND _cases archive archive-shared archive-release archive-spaces archive-absolute)
 if(NOT TEST_CASE IN_LIST _cases)
     message(FATAL_ERROR "Unknown SDK component fixture: ${TEST_CASE}")
 endif()
 if(NOT DEFINED CONFIG OR CONFIG STREQUAL "")
     set(CONFIG Debug)
 endif()
-if(TEST_CASE STREQUAL "release")
+if(TEST_CASE STREQUAL "release" OR TEST_CASE STREQUAL "archive-release")
     set(CONFIG Release)
 endif()
 string(RANDOM LENGTH 12 ALPHABET 0123456789abcdef _run_id)
@@ -35,6 +36,9 @@ if(TEST_CASE STREQUAL "spaced-prefix")
 endif()
 set(_producer "${_run}/producer")
 set(_consumer "${_run}/consumer")
+if(TEST_CASE STREQUAL "archive-spaces")
+    set(_producer "${_run}/producer with spaces")
+endif()
 
 # Execute one bounded stage at a time. Failure leaves its complete output in a
 # known log rather than continuing to build against an incomplete installation.
@@ -90,14 +94,23 @@ if(TEST_CASE STREQUAL "missing-library")
     return()
 endif()
 
+# Building the archive directly must bring in every required SDK artifact.
+set(_build_target umicom-sdk-libraries)
+if(TEST_CASE MATCHES "^archive")
+    set(_build_target umicom-sdk-package)
+endif()
 sdk_stage(build "${CMAKE_COMMAND}" --build "${_producer}" --config "${CONFIG}"
-    --target umicom-sdk-libraries --parallel 2)
+    --target "${_build_target}" --parallel 2)
 file(READ "${_producer}/tool-path-${CONFIG}.txt" _tool)
 if(EXISTS "${_tool}")
     message(FATAL_ERROR "SDK library target unexpectedly built the product executable")
 endif()
-sdk_stage(install "${CMAKE_COMMAND}" --install "${_producer}"
-    --config "${CONFIG}" --prefix "${_prefix}" --component FrameworkSDK)
+if(TEST_CASE MATCHES "^archive")
+    include("${SOURCE_ROOT}/archive_check.cmake")
+else()
+    sdk_stage(install "${CMAKE_COMMAND}" --install "${_producer}"
+        --config "${CONFIG}" --prefix "${_prefix}" --component FrameworkSDK)
+endif()
 # Inspect generated data as well as the imported CMake targets. A deferred
 # library must appear, while an unrelated product command must stay absent.
 file(READ "${_prefix}/share/umicom/framework/sdk-artifacts.txt" _inventory)

@@ -16,6 +16,7 @@
 
 #include "umicom/developer_project/generator.h"
 #include "umicom/platform/rooted_files.h"
+#include "umicom/platform/path.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -44,7 +45,13 @@ static UmiStatus ObserveParents(const char *root,const char *relative,UmiRootedD
 static UmiStatus ObserveFile(const char *root,const char *relative,const void *bytes,size_t size,UmiRootedFileCreation *report)
 {
     CHECK(root!=NULL&&bytes!=NULL&&roots==1U);++files;
+    /* The native boundary receives host-normalized separators. Compare path
+     * identity while retaining the independent effect-order assertion. */
+#if 0
     CHECK(parents==files&&!strcmp(relative,files==1U?"src/a.c":"include/b.h"));
+#endif
+    CHECK(parents==files);
+    CHECK(umi_path_equal(relative,files==1U?"src/a.c":"include/b.h"));
     CHECK(size==(files==1U?3U:4U));
     *report=(UmiRootedFileCreation){size,1,1,UMI_STATUS_OK};
     int first=files==1U&&!strncmp(mode,"first-file-",11U);

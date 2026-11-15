@@ -50,6 +50,12 @@ void umi_ai_stream_init(UmiAiStreamCollector *stream,
 /**
  * Provide the ai stream push operation used by this module and its client applications.
  */
+/* The legacy collector accepts NUL-terminated bytes, not necessarily UTF-8.
+ * Input must be readable through its NUL or the remaining collector capacity.
+ * Corrupt stored length/text is INVALID_STATE; insufficient room leaves all
+ * state unchanged. Input may alias text. Sink text is borrowed only during the
+ * call and must not be retained. final_chunk is forwarded unchanged; this
+ * compatibility API does not enforce final-once or request identity. */
 UmiStatus umi_ai_stream_push(UmiAiStreamCollector *stream,
                              const char *text,
                              int final_chunk);

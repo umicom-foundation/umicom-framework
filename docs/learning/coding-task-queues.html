@@ -1,0 +1,94 @@
+<!-- Umicom Framework
+File: docs/learning/coding-task-queues.html
+
+PURPOSE:
+Teach bounded draft storage, atomic task batches, FIFO ordering and stable sequence identities.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Queue coding drafts atomically | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Queue coding drafts without partial scheduling</h1>
+<p>A coding assistant can collect several tasks before a worker is ready to run them. Framework owns the queue and copies each request by value. This lets Studio or a headless client release its input buffers after a successful enqueue operation.</p>
+<h2>1. Separate safe storage from readiness to execute</h2>
+<p><code>UmiAiCodingRequestValidateText</code> checks that each fixed text array has a zero terminator within its declared capacity. Empty arrays are allowed. An initialized request can therefore be stored while its session, runtime and instruction are still being selected.</p>
+<p>The full <code>umi_ai_coding_request_validate</code> operation also checks ABI metadata, task and privacy domains, required identifiers, paths and budgets. Queue acceptance does not imply that this later validation will succeed. Neither operation gives permission to contact a provider or modify files.</p>
+<pre><code class="language-c">UmiAiCodingRequest draft;
+umi_ai_coding_request_init(&amp;draft, UMI_AI_CODING_TASK_CHAT);
+/* Text storage succeeds; execution validation refuses missing fields. */
+UmiStatus storage = UmiAiCodingRequestValidateText(&amp;draft);
+UmiStatus readiness = umi_ai_coding_request_validate(&amp;draft);</code></pre>
+<p>The text-only operation does not interpret UTF-8, paths or enumeration values. Call the validator for the operation you actually intend to perform. A valid terminator proves a bounded string, not a valid model request.</p>
+<h2>2. Submit a complete group in one operation</h2>
+<p><code>UmiAiCodingTaskQueuePushBatch</code> checks capacity, remaining sequence values and every task before changing the queue. If one task is refused, none of the group is added. Existing queued tasks remain intact.</p>
+<pre><code class="language-c">#include "umicom/ai_coding_runtime/task_queue.h"
+#include &lt;string.h&gt;
+
+int main(void)
+{
+    UmiAiCodingTaskQueue *queue = NULL;
+    UmiAiCodingQueuedTask tasks[2] = {0}, result;
+    int exit_status = 1;
+    strcpy(tasks[0].task_id, "explain-buffer");
+    strcpy(tasks[1].task_id, "review-lifetime");
+    umi_ai_coding_request_init(&amp;tasks[0].request, UMI_AI_CODING_TASK_EXPLAIN);
+    umi_ai_coding_request_init(&amp;tasks[1].request, UMI_AI_CODING_TASK_CHAT);
+    if (umi_ai_coding_task_queue_create(&amp;queue) != UMI_STATUS_OK) return 1;
+    if (UmiAiCodingTaskQueuePushBatch(queue, tasks, 2U) != UMI_STATUS_OK) goto done;
+    memset(tasks, 0, sizeof tasks); /* The queue owns complete copies. */
+    if (umi_ai_coding_task_queue_pop(queue, &amp;result) != UMI_STATUS_OK) goto done;
+    if (result.sequence != 1U || strcmp(result.task_id, "explain-buffer") != 0) goto done;
+    if (umi_ai_coding_task_queue_pop(queue, &amp;result) != UMI_STATUS_OK) goto done;
+    if (result.sequence != 2U || strcmp(result.task_id, "review-lifetime") != 0) goto done;
+    exit_status = 0;
+done:
+    umi_ai_coding_task_queue_destroy(queue);
+    return exit_status;
+}</code></pre>
+<p>Build this C23 example against the installed Framework SDK and its <code>Umicom::developer</code> target. Expected exit status is zero. It stores and removes drafts only; it does not run a model or start a background worker.</p>
+<h2>3. Understand queue identities and ownership</h2>
+<ul><li>The bounded queue holds up to <code>UMI_AI_CODING_TASK_QUEUE_CAPACITY</code> tasks.</li><li>First in, first out (FIFO) means tasks are removed in their insertion order.</li><li>The queue assigns each accepted task a sequence value. Input sequence values are ignored.</li><li>Duplicate task labels remain allowed. A sequence distinguishes individual entries within this queue's lifetime.</li><li>Clearing drops queued tasks but retains the counter. The next accepted task receives the next identity.</li><li>At the largest representable identity, further nonempty submissions return CAPACITY_EXCEEDED instead of wrapping to zero.</li><li>A zero-length batch is a no-op and may use a null task pointer, including when the queue is full or its counter is exhausted.</li></ul>
+<p>Sequence values are local ordering evidence, not globally unique identifiers or permissions. Destroying a queue ends its identity lifetime. A newly created queue starts a new lifetime.</p>
+<p>Keep each input record complete and stable for the call. Input arrays must be separate from the queue's owned storage. Serialize all operations through the owning thread or an external lock. Atomic batch admission means all-or-none state change under that serialization; it does not make concurrent calls safe.</p>
+<h2>4. Recover from refusal without losing existing work</h2>
+<table><thead><tr><th>Result</th><th>Meaning and recovery</th></tr></thead><tbody>
+<tr><td>INVALID_ARGUMENT</td><td>Check required pointers, empty task labels and missing terminators. Correct the whole batch before retrying.</td></tr>
+<tr><td>CAPACITY_EXCEEDED</td><td>Reduce or postpone the group if queue space is unavailable. An exhausted identity counter needs a deliberately new queue lifetime; clearing cannot reuse old identities.</td></tr>
+<tr><td>INVALID_STATE</td><td>The opaque queue's ring bounds are inconsistent. Stop using that owner and investigate its lifetime or memory ownership; repeatedly retrying is not a repair.</td></tr>
+<tr><td>NOT_FOUND</td><td>A pop or peek found an empty queue. The caller's prior output remains unchanged.</td></tr>
+</tbody></table>
+<p>Capacity and identity checks run before traversing batch records. When these checks refuse an oversized batch, that result does not certify that its records are otherwise valid. Never increase a count unless the input really contains that many readable records.</p>
+<h2>5. Qualify the public contract and rare boundaries</h2>
+<pre><code class="language-powershell"># From the Framework source root after configuring with testing enabled:
+cmake --build build/windows-ucrt64-debug --target umicom-ai-coding-task-queue-admission-test umicom-ai-coding-request-text-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework\.ai\.coding-(task-queue|request-text)\.' --output-on-failure</code></pre>
+<p>The 52 scenarios cover every text field, empty drafts, final-byte terminators, malformed batch refusal, copied input, duplicate labels, queue wraparound, capacity, clearing and unchanged outputs. Public queue cases call the linked SDK. Rare exhaustion and corrupt-bound fixtures compile a renamed copy of the same implementation so the product does not need a state-corruption API.</p>
+<p>Expected result: all selected cases pass. Source review and test registration do not establish a native pass; execute the commands and inspect failures before relying on the new behavior. No scheduler, persistence format or thread-synchronization service is introduced by this queue API.</p>
+<h2>6. Construct input before resetting an owner</h2>
+<p>Fixed arrays need a terminator before a formatter can safely treat them as strings. A destination capacity in <code>snprintf</code> limits output, but its <code>%s</code> conversion still expects a valid input string. Validating the request after formatting it is too late. A second hazard appears when an input points into the owner that the operation is about to reset.</p>
+<p><code>UmiAiCodingQueuedTaskPrepare</code> solves the value-construction part once in Framework. It bounds the task ID, rejects empty or overlong labels without truncating them, invokes the existing request-text validator, and publishes a complete copied draft only after admission. It initializes the draft sequence to zero; insertion still assigns the actual queue sequence.</p>
+<pre><code class="language-c">UmiAiCodingRequest request;
+UmiAiCodingQueuedTask task;
+umi_ai_coding_request_init(&amp;request, UMI_AI_CODING_TASK_EXPLAIN);
+UmiStatus status = UmiAiCodingQueuedTaskPrepare(
+    "explain-buffer", &amp;request, &amp;task);
+if (status != UMI_STATUS_OK) return status;
+/* The incomplete request is a stored draft, not permission to run a model. */
+status = umi_ai_coding_task_queue_push(queue, &amp;task);</code></pre>
+<p>The example assumes the host already created the queue. For a variable task label, provide readable bytes through its terminator or the complete maximum prefix. If no terminator occurs before <code>UMI_AI_CODING_RUNTIME_ID_CAPACITY</code>, construction returns CAPACITY_EXCEEDED. A shorter string is inspected only through its terminator. The request must be a complete readable record, stable for the call.</p>
+<p>Input fields may alias the constructor's output because it stages its complete candidate first. The agent uses the same constructor before clearing the prior task, so borrowed task and request data survive that reset. Platform enqueue delegates to it as well. This does not change the queue's rule that batch inputs remain separate from its internal ring storage, or make concurrent access safe.</p>
+<ol><li>Prepare a draft with an ordinary label and confirm the copied label and request fields.</li><li>Fill one request text array without a terminator and retry. The destination, previous agent task or queue must remain unchanged.</li><li>Try a label at the accepted maximum and then one character longer. The longer label must fail rather than become the same truncated identity.</li><li>Use the destination's own task and request fields as constructor inputs. Confirm that staging preserves the values and resets only the draft sequence.</li></ol>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-ai-coding-task-input-test umicom-ai-coding-task-queue-admission-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework[.]ai[.]coding-(task-input|task-queue)[.]' --output-on-failure</code></pre>
+<p>The input suite adds 55 authored cases covering value construction, immediate agent admission, queue construction, final-byte terminators and aliasing. Its planning boundary stops before provider, filesystem or executor work. Run these checks before treating the implementation as qualified; configuration and source review alone do not prove native execution.</p>
+<p>Continue with <a href="coding-prompt-admission.html">prompt admission</a> to follow a ready request into bounded provider messages.</p>
+</main></body></html>

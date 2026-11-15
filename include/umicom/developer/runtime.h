@@ -233,6 +233,10 @@ UmiStatus umi_developer_runtime_retry_operation(
  * Provide the developer runtime execute next operation used by this module and its client
  * applications.
  */
+/* In addition to journal publication, this call admits model start and all
+ * possible terminal cascades before invoking the executor. A refused budget
+ * invokes no executor and preserves result/output storage. Admission is not a
+ * lock: the existing non-reentrant, single-owner contract remains required. */
 UmiStatus umi_developer_runtime_execute_next(
     UmiDeveloperRuntime *runtime,
     const UmiDeveloperExecutor *executor,

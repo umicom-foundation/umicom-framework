@@ -1,0 +1,67 @@
+<!-- Umicom Framework
+File: docs/learning/codeguard-reports.html
+
+PURPOSE:
+Teach checked report serialization, bounded projections and native URI reuse.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Write reliable CodeGuard reports</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Write reliable CodeGuard reports</h1>
+<h2>1. Separate analysis from its representation</h2>
+<p>A scanner produces findings: rule identifiers, paths, locations and explanations. A report converts those records into bytes for a person or another program. A successful scan does not establish that serialization succeeded. Likewise, valid JSON does not prove that the reported code is safe. Keep scan status, report status and the severity gate separate.</p>
+<p>Begin with <a href="codeguard-current-request.html">current-request review ownership</a>. A retained result belongs to its service. A borrowed finding becomes invalid when a successful replacement changes its storage. Report generation must finish while the result remains alive and unchanged.</p>
+<h2>2. Validate before the first output byte</h2>
+<p>Each finding has fixed-size character arrays. A caller can insert a record whose message fills the array without a terminating NUL. Searching past that array with an ordinary string function can read unrelated memory. The report boundary first locates NUL within each field, then validates only that bounded UTF-8 span.</p>
+<p>All five text fields are checked, including fields not displayed by a selected format. Severity and category must be known enumeration values; confidence must be between 0 and 100. Invalid arguments return INVALID_ARGUMENT before writing to a stream or opening a destination file. Callers should correct the originating record instead of silently truncating its explanation.</p>
+<h2>3. Reuse an encoder and test the complete document</h2>
+<p>JSON strings require more than escaping quotes and line feeds. Tabs, carriage returns and other control bytes need escapes too. CodeGuard delegates this work to the shared Protocol JSON writer. It emits surrounding object and array structure through checked report sinks.</p>
+<p>When testing, parse the complete output with a separate JSON reader. Then inspect the values and nesting. Searching for a rule identifier alone would miss an extra closing brace. Round-trip messages containing control characters, quotes, backslashes and multibyte UTF-8. A valid empty report and a valid report with several findings exercise different separator paths.</p>
+<h2>4. Describe a location honestly</h2>
+<p>SARIF is a structured format for static-analysis findings. Its artifact location uses a URI reference, and source regions use positive line and column numbers. See the <a href="https://docs.oasis-open.org/sarif/sarif/v2.1.0/os/schemas/sarif-schema-2.1.0.json">official SARIF 2.1.0 schema</a>. CodeGuard omits a missing path, omits a region when the line is unknown, and omits an unknown column.</p>
+<p>For example, the relative native path <code>src/a b#c.c</code> becomes <code>src/a%20b%23c.c</code>. The percent signs describe encoded bytes; the hash is part of the filename rather than a URI fragment. Native absolute paths use the shared Platform file-URI encoder. Relative paths stay relative without consulting the current directory, so the consumer still needs the correct project base. This representation does not prove that the file exists.</p>
+<p><code>UmiFileUriFromPath</code> preserves the established Document absolute-path policy. The Document API delegates to it, while CodeGuard can use the Platform layer without depending on editor or GUI libraries. <code>UmiPathUriReference</code> also supports ordinary relative paths. On Windows it refuses drive-relative and root-relative names whose meanings need process context. URI encoding is lexical and does not resolve links or create a filesystem sandbox.</p>
+<h2>5. Choose stream output or an owned projection</h2>
+<pre><code class="language-c">UmiStatus status = umi_codeguard_report_write(stdout,
+    UMI_CODEGUARD_REPORT_JSON, borrowed_result);
+/* Check status before treating the output as complete.
+   Framework flushes this stream but does not close it. */</code></pre>
+<p>A buffered stream can accept bytes and fail only when flushed. The shared writer checks writes and the final flush. An output error can leave a partial report. Success is not a guarantee against power loss, and this API does not close the caller's stream.</p>
+<pre><code class="language-c">char *text = NULL;
+size_t bytes = 0;
+UmiStatus status = umi_codeguard_report_render(
+    UMI_CODEGUARD_REPORT_TEXT, borrowed_result,
+    1024U * 1024U, &amp;text, &amp;bytes);
+if (status == UMI_STATUS_OK) {
+    /* Present these owned bytes using a plain-text UI API. */
+    umi_codeguard_report_free(text);
+}</code></pre>
+<p>The rendering budget excludes the trailing NUL. Framework measures the complete output, checks the budget, allocates once and publishes both outputs only on success. Capacity and allocation errors preserve the caller's previous outputs. The returned allocation survives destruction of the result owner. Plain-text output retains its control characters; do not treat it as trusted HTML or markup.</p>
+<h2>6. Export from an independent SDK consumer</h2>
+<p>Configure the <a href="../../examples/sdk_codeguard/README.md">installed SDK example project</a> as described in its guide, then run:</p>
+<pre><code class="language-powershell">cmake --build build --target umicom-sdk-codeguard-report
+&amp; ".\build\umicom-sdk-codeguard-report.exe" "C:\Practice\quality-demo" sarif ".\quality.sarif"
+$LASTEXITCODE</code></pre>
+<p>The example limits projection size to one MiB. It destroys the scan service before writing the owned bytes. Exit 0 means the completed report passed the chosen severity gate; exit 1 means the report completed but the gate failed. Usage/setup returns 2, and scan, projection or output failures return 3. These meanings are expected behavior to qualify, not a recorded successful run.</p>
+<p>The file API validates and renders before opening a destination, then reuses Platform's UTF-8 Windows path conversion and checked write/close. Existing destinations are overwritten; missing parents are not created. This preserves ordinary report overwrite behavior rather than introducing an atomic-save contract. Storage failures can leave a partial destination. Use a temporary owned output when another tool must not observe partial data, and publish it through an appropriate checked replacement workflow.</p>
+<h2>7. Exercise the failure boundary</h2>
+<pre><code class="language-powershell">cmake --build build --target umicom-path-uri-tests umicom-codeguard-report-contract-tests
+ctest --test-dir build -R "^framework\.(path_uri|codeguard_report)\." --output-on-failure
+ctest --test-dir build -R "^framework\.document\.uri$" --output-on-failure</code></pre>
+<p>On supported GNU/Clang linkers, also build <code>umicom-codeguard-report-fault-tests</code> before running that selection. Other linkers register ordinary cases without pretending the injection cases ran. The coverage includes complete JSON parsing, control-character round trips, multiple SARIF results, unknown locations, malformed records, exact budgets, Unicode file destinations, stream state and injected write/flush/allocation failures. Existing Document URI tests cover compatibility with the moved encoder.</p>
+<p>Run Debug and Release against the same source and SDK environment. Expected qualification is zero failed registered cases, with unsupported coverage recorded separately. Successful configuration only proves that the build description was generated; it does not compile or execute these tests.</p>
+<p>If CMake reports that a namespaced target was not found, inspect the library declaration and the module that owns the required source. An include directory such as language_runtime does not imply a library with that name. These tests use the parser owned by Umicom::developer. Correct the dependency and rerun generation before attempting compilation; an earlier “Configuring done” message alone is not success.</p>
+<h2>8. Recover without concealing the failure</h2>
+<p>If a report is invalid, retain the failing fixture and inspect its full grammar rather than editing braces in the consumer. If validation rejects a finding, correct the producer's field bounds and encoding. If projection exceeds its budget, deliberately choose a larger budget or a streaming export. If storage fails, preserve the old application state and explain that the destination may be partial. Never turn an unwritten report into a successful quality badge.</p>
+<p><a href="index.html">Framework learning index</a></p>
+</main></body></html>

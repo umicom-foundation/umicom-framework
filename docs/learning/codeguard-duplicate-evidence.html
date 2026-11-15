@@ -1,0 +1,64 @@
+<!-- Umicom Framework
+File: docs/learning/codeguard-duplicate-evidence.html
+
+PURPOSE:
+Teach complete duplicate evidence, checked native collection growth and fingerprint limitations.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Review duplicate candidates using complete evidence</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Review duplicate candidates using complete evidence</h1>
+<h2>1. Know what the analyser observed</h2>
+<p>A fingerprint is a compact value calculated from file content. CodeGuard records a raw fingerprint, a fingerprint after its existing whitespace/comment normalization, and the byte count. Matching values identify candidates worth reviewing. They do not prove that files are identical or that programs behave the same.</p>
+<p>Different inputs can share a hash. Normalization can also deliberately erase meaningful distinctions: removing spaces from both "int value" and "intvalue" produces the same byte sequence even though the tokens differ. String and character literal contents are retained, but the normalizer is not a compiler, preprocessor or complete language parser. Compare current files and their behavior before consolidating code.</p>
+<h2>2. Keep the full file identity</h2>
+<p>The duplicate set copies a file path and its fingerprints into one owned entry. Paths up to 1023 bytes fit the stored identity. A longer path returns UMI_STATUS_CAPACITY_EXCEEDED before hashing, rather than publishing a shortened name that could identify another file. Hashing or allocation failure leaves earlier entries unchanged.</p>
+<pre><code class="language-c">UmiCodeGuardDuplicateSet *files = NULL;
+UmiCodeGuardResult *findings = NULL;
+UmiStatus status = umi_codeguard_duplicate_set_create(&amp;files);
+if (status == UMI_STATUS_OK)
+    status = umi_codeguard_result_create(16U, &amp;findings);
+if (status == UMI_STATUS_OK)
+    status = umi_codeguard_duplicate_set_add(files, first_path);
+if (status == UMI_STATUS_OK)
+    status = umi_codeguard_duplicate_set_add(files, second_path);
+if (status == UMI_STATUS_OK)
+    status = umi_codeguard_duplicate_emit(files, findings);
+/* Treat findings as a completed comparison only when status is OK. */
+umi_codeguard_result_destroy(findings);
+umi_codeguard_duplicate_set_destroy(files);</code></pre>
+<p>Include umicom/codeguard/duplicate.h and link Umicom::codeguard. This fragment demonstrates ownership; provide valid paths in a complete program. The API collects observations over time. It does not lock the source tree or guarantee that a file remains unchanged after its fingerprint is collected.</p>
+<h2>3. Check growth before allocating</h2>
+<p>A dynamic array needs both an element count and allocated capacity. Before multiplying capacity by the element size, compare it with SIZE_MAX divided by that size. Doubling must also be bounded. CodeGuard grows toward that maximum without wrapping the calculation, and changes its owned pointer only after allocation succeeds.</p>
+<p>Inputs can borrow storage from the collection. Copy an entry's path before reallocating: successful growth may move and release the previous allocation. The regression deliberately forces a move and adds a path borrowed from an earlier entry. Keeping the original pointer until after realloc would make the read invalid.</p>
+<h2>4. Return incomplete evidence as failure</h2>
+<p>Duplicate findings are emitted in pair order. If the second insertion fails, the first finding can remain in a low-level result. The function now returns the insertion error immediately. The recursive scanner propagates it, and the retained service discards the candidate instead of replacing the last complete report.</p>
+<p>A cancellation request arriving alongside an earlier duplicate-phase error does not erase that error. Storage capacity exhaustion and allocation failure describe an incomplete operation. Neither means that the workspace has no duplicate candidates.</p>
+<p>Streaming hashing already checked read and close errors. It now also checks accumulated byte-count overflow before adding each chunk. Hashes and size publish only after successful input and close; failures preserve the caller's prior outputs. The historical fingerprint values and normalization rules remain unchanged.</p>
+<h2>5. Interpret the report wording</h2>
+<ul><li>CODEGUARD-DUP-001 from pair analysis means raw fingerprint and byte count match.</li>
+<li>CODEGUARD-DUP-002 means normalized fingerprints match when the raw comparison did not select the pair.</li>
+<li>The legacy explicit duplicate-review marker is a separate pattern observation. Its message says no file comparison is implied.</li></ul>
+<p>Empty files remain omitted from pair findings. Confidence describes the recorded match, not proof of byte identity, security or semantic equivalence. No source file is merged, edited or removed by this analysis.</p>
+<h2>6. Qualify the boundaries</h2>
+<pre><code class="language-powershell">cmake --build build --target umicom-codeguard-duplicate-failure-tests umicom-codeguard-hash-failure-tests umicom-codeguard-cancellation-tests
+ctest --test-dir build -R "^framework[.]codeguard_(duplicate_failure|hash_failure|cancellation)[.]" --output-on-failure --no-tests=error</code></pre>
+<p>Use your configured build directory. The suite registers 22 duplicate collection cases and 13 streaming hash cases. Coverage includes first and later insertion failure, bounded growth, relocated input aliases, long paths, preserved outputs, binary bytes, literals and a comment crossing a read-buffer boundary. Scanner cases separately check duplicate errors combined with cancellation. These tests must be compiled and executed; configuration alone is not a pass.</p>
+<p>The size-overflow guard is source-reviewed; these stream fixtures do not create a SIZE_MAX-byte file. Arithmetic boundary injection covers duplicate allocation growth without attempting an enormous allocation. Keep those two forms of evidence distinct.</p>
+<h2>Exercises</h2>
+<ol><li>Explain the difference between an exact fingerprint match and an exact file comparison.</li>
+<li>Compare two token sequences that normalization makes equal. Decide why automatic consolidation would be unsafe.</li>
+<li>Trace ownership when the second finding fails: which collection remains intact, which result is partial, and which report remains visible through the service?</li>
+<li>Extend a fixture with a failed read after one full chunk. Verify all three hash outputs retain their original values.</li></ol>
+<p><a href="codeguard-analysis-failures.html">Checked analysis failures</a> · <a href="codeguard-workspace-paths.html">Workspace selection</a> · <a href="index.html">Learning index</a></p>
+<h2>Use a bounded native fingerprint reader</h2><p>Profile-driven duplicate collection now uses hash_file_bounded through duplicate_set_add_bounded. Each fingerprint pass rechecks the configured file budget through native regular-file input, even after earlier source analysis succeeded. The historical hash algorithm and binary-byte support remain unchanged. Standalone compatibility APIs remain available with their original stdio behavior. Read <a href="codeguard-bounded-input.html">bounded source input</a> for path policy, cancellation, NUL text versus binary handling and exact-byte fixtures.</p>
+</main></body></html>

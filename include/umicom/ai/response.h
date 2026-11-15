@@ -50,6 +50,12 @@ void umi_ai_response_init(UmiAiResponse *response);
  */
 UmiStatus umi_ai_response_set_text(UmiAiResponse *response, const char *text);
 
+/** Check all fixed text terminators and the known finish-reason domain.
+ * Empty text and FINISH_NONE are valid; identity correlation and token usage
+ * are provider evidence, not verified by this structural check. Malformed
+ * values return INVALID_ARGUMENT without changing storage. */
+UmiStatus UmiAiResponseValidate(const UmiAiResponse *response);
+
 #ifdef __cplusplus
 }
 #endif

@@ -1,0 +1,69 @@
+<!-- Umicom Framework
+File: docs/learning/reviewed-ai-execution.html
+
+PURPOSE:
+Teach retained workspace execution, durable state transitions and separate operation/publication outcomes.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Keep reviewed AI execution durable</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Keep reviewed AI execution durable</h1>
+<p>A model can finish answering while the application fails to save the answer. Those are two different outcomes. Framework's reviewed AI workspace records approval before execution, records RUNNING before calling a provider, and stores the final result afterwards. An execution owner now carries that contract through one shared implementation.</p>
+<h2>1. Prepare and review a fixed request</h2>
+<p>A job identifies the provider, model, prompt and reviewer. A grounded job also retains its selected source passages. Preparing a job performs no generation. Review is a separate operation; stale evidence or changed provider bindings must not silently reuse an earlier decision.</p>
+<pre><code class="language-c">UmiStatus status = UmiAiWorkspacePrepare(
+    workspace, "draft.one", UMI_AI_WORKSPACE_DRAFT,
+    "example.local", "selected-model", NULL,
+    "Draft a short introduction.", "author", 256);
+if (status == UMI_STATUS_OK) {
+    status = UmiAiWorkspaceReview(workspace, "draft.one", "reviewer", true);
+}</code></pre>
+<p>The provider must already be registered and allowed by runtime policy. These local author/reviewer labels are records, not authenticated identities. A real application obtains its review decision from the appropriate user workflow.</p>
+<h2>2. Retain storage while execution is active</h2>
+<p>The workspace borrows a Data Server connection and an AI runtime. Both must outlive it. The execution owner retains the workspace until it is released, including the period after a result is settled but its controller still needs to read copied state.</p>
+<p>The private owner has three phases: prepared, running and settled. Prepared owns a busy lease but has not written RUNNING or contacted a provider. Running begins only after that record is durably published. Settled means final publication has been attempted and its outcome retained; it does not necessarily mean the answer was saved.</p>
+<table><tr><th>Phase</th><th>Provider may have run?</th><th>Release behavior</th></tr>
+<tr><td>Prepared</td><td>No</td><td>Abandoning the owner restores availability without changing the approved job.</td></tr>
+<tr><td>Running</td><td>Yes, or dispatch is about to begin</td><td>Refuse owner release until the outcome is settled.</td></tr>
+<tr><td>Settled</td><td>The operation has returned</td><td>Keep copied outcome and workspace storage until explicit release.</td></tr></table>
+<p>This is an ownership contract, not a new thread lock. Workspace operations still belong to one serialized owner. Only the cancellation token may be set from another thread.</p>
+<h2>3. Keep the existing synchronous workflow</h2>
+<pre><code class="language-c">status = UmiAiWorkspaceRun(workspace, "draft.one", cancellation);
+if (status != UMI_STATUS_OK) {
+    /* Inspect the stored job and recovery state before deciding what is safe. */
+}</code></pre>
+<p>The public Run function now delegates preparation, durable start and final settlement to the shared execution owner. Provider dispatch still uses current runtime policy. Tool dispatch still requires the existing tool permission and workspace allowlist. Result identity, finish reason, token usage and grounded citations still pass through the same response validator.</p>
+<p>The request and reviewed job are copied into the execution owner. A provider callback receives the prepared request, not mutable GUI state. A second run of an already successful immutable job returns without invoking the provider again.</p>
+<h2>4. Handle failures at their actual boundary</h2>
+<ol><li><strong>Before preparation completes:</strong> allocation or admission failure leaves the approved job untouched and calls no provider.</li><li><strong>Before RUNNING is published:</strong> allocation, current-policy or storage refusal prevents external work. Release the prepared owner; it has not consumed the approved request.</li><li><strong>After external work:</strong> validate the response and attempt final publication exactly once.</li><li><strong>If final publication fails:</strong> retain the successful or failed operation status separately from the publication error, require recovery, and refuse another run.</li><li><strong>On reload:</strong> treat a persisted RUNNING record as interrupted. Do not automatically repeat the provider call.</li></ol>
+<p>A failure to save a successful answer does not prove that the provider failed or never ran. Retrying automatically could duplicate a tool side effect. The private execution interface exposes both statuses so a future background controller can report this distinction without creating another persistence implementation.</p>
+<p>A cancelled generation has no published successful answer. A cancelled tool operation is marked interrupted because cancellation does not prove that its external effect was undone.</p>
+<h2>5. Use checked workspace release</h2>
+<pre><code class="language-c">status = UmiAiWorkspaceRelease(&amp;workspace);
+if (status == UMI_STATUS_BUSY) {
+    /* Keep the owner alive until its work and retained controllers are released. */
+} else if (status == UMI_STATUS_OK) {
+    /* workspace is NULL; borrowed runtime and Data Server still belong to us. */
+}</code></pre>
+<p>Release refuses busy storage and storage retained by an execution. It leaves the pointer unchanged on refusal. The legacy void Destroy function also refuses active storage, but cannot return the reason. A provider callback that reenters destruction therefore cannot free the workspace beneath the active operation through either supported entry point.</p>
+<p>Checking a flag does not make concurrent destruction safe. Serialize access, confirm native worker joining in background hosts, and retain the borrowed runtime and storage connection until workspace release succeeds.</p>
+<h2>6. Verify state transitions and memory failures</h2>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-ai-workspace-test umicom-ai-execution-allocation-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.ai_workspace\.(busy_release_preserves_workspace|prepared_execution_abandon|execution_|sqlite_execution_publication_failure|review_run_success|tools_require_allowlist_and_review|sqlite_uncertain_result_is_not_repeated)" --output-on-failure</code></pre>
+<p>The selected suite contains ten new lifecycle/allocation cases and three existing workflow checks. The allocation fixture intercepts only allocation inside the actual execution source; it uses the real workspace, runtime and Data Server. The SQLite case rejects final publication after one real controlled provider callback, then verifies interrupted recovery without another callback.</p>
+<p>Thirteen selected registrations are expected with these capabilities. No compiler or runtime pass is implied by this lesson. If a test is skipped because SQLite is unavailable, record that missing coverage separately.</p>
+<h2>7. Connect background transport without bypassing review</h2>
+<!-- The reviewed controller now implements this former next step. Retain the earlier explanation as design history for source review. -->
+<template data-preserved="pre-reviewed-stream"><p>The public raw local-stream job already owns copied requests, partial text, cancellation and joining. It does not implement workspace approval or durable results. Reviewed asynchronous application integration is still pending. That integration must obtain the canonical provider configuration, create the transport owner without sending a request, publish RUNNING, and only then start network work. It must join before releasing producer storage and settle the workspace result through this shared execution contract.</p></template>
+<p>The public raw local-stream job owns copied requests, partial text, cancellation and joining. The <a href="reviewed-local-streams.html">reviewed stream controller</a> now composes that owner with workspace approval and durable settlement. It obtains canonical provider configuration, prepares transport without sending a request, publishes RUNNING and then starts network work. GTK application wiring remains a separate integration step.</p>
+<p>Continue with <a href="provider-admission-and-ownership.html">provider admission</a> and <a href="background-local-model-streams.html">background request ownership</a>.</p>
+</main></body></html>

@@ -24,6 +24,7 @@
 
 #include "umicom/ai/privacy_policy.h"
 #include "umicom/base/value_archive.h"
+#include "umicom/base/snapshot_validation.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -101,6 +102,11 @@ void umi_ai_coding_request_init(UmiAiCodingRequest *request,
  * Check that ai coding request satisfies its contract before another service relies on it.
  */
 UmiStatus umi_ai_coding_request_validate(const UmiAiCodingRequest *request);
+/** Check only that all fixed text arrays contain a terminator. Empty fields
+ * are valid drafts. This does not check ABI, enums, paths, budgets, encoding or
+ * execution readiness and grants no permission to run a request. The caller
+ * supplies a complete readable record and keeps it stable during the call. */
+UmiStatus UmiAiCodingRequestValidateText(const UmiAiCodingRequest *request);
 /**
  * Provide the ai coding path is safe relative operation used by this module and its client
  * applications.

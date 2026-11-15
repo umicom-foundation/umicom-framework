@@ -16,6 +16,7 @@
 #include "cli.h"
 
 #include "umicom/codeguard/codeguard.h"
+#include "umicom/platform/output_file.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -128,6 +129,8 @@ static UmiStatus select_findings(const UmiCodeGuardResult *source,
  * Perform scan through the module contract so client applications do not duplicate its
  * policy.
  */
+/* Add explicit bounded exclusive export while retaining legacy --output overwrite and summary behavior. Preserve the former scan dispatcher for review. The previous implementation is retained for engineering review. */
+#if 0
 static int scan_run(int argc,
                     char **argv,
                     const char *forced_profile,
@@ -250,6 +253,177 @@ static int scan_run(int argc,
         /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status == UMI_STATUS_OK)
             (void)printf("CodeGuard report: %s\n", output_path);
+    } /* Use this fallback path when the earlier condition does not apply. */ else {
+        status = umi_codeguard_report_write(stdout, format, selected_findings);
+    }
+
+    umi_codeguard_result_destroy(selected_findings);
+    umi_codeguard_result_destroy(all_findings);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return 1;
+    return umi_codeguard_summary_failed(&summary, profile.fail_on) ? 1 : 0;
+}
+#endif
+static int scan_run(int argc,
+                    char **argv,
+                    const char *forced_profile,
+                    UmiCliScanSelection selection)
+{
+    const char *root = ".";
+    const char *profile_text = forced_profile;
+    const char *format_text;
+    const char *output_path;
+    const char *new_output_path = NULL;
+    UmiCodeGuardResult *all_findings = NULL;
+    UmiCodeGuardResult *selected_findings = NULL;
+    UmiCodeGuardConfig config;
+    UmiCodeGuardProfile profile;
+    UmiCodeGuardReportFormat format;
+    UmiCodeGuardSummary summary;
+    UmiStatus status;
+    int valid;
+    int index;
+    int positional_seen = 0;
+
+    /* Use the stable identifier comparison to choose the matching record or policy. */
+    if (argc > 0 && (strcmp(argv[0], "scan") == 0 ||
+                     strcmp(argv[0], "check") == 0)) {
+        --argc;
+        ++argv;
+    }
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (index = 0; index < argc; ++index) {
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(argv[index], "--profile") == 0 ||
+            strcmp(argv[index], "--format") == 0 ||
+            strcmp(argv[index], "--output") == 0 ||
+            strcmp(argv[index], "--output-new") == 0) {
+            /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+            if (index + 1 >= argc || argv[index + 1][0] == '\0' ||
+                argv[index + 1][0] == '-') {
+                (void)fprintf(stderr, "%s requires a value.\n", argv[index]);
+                return 2;
+            }
+            if (strcmp(argv[index], "--output-new") == 0) {
+                if (new_output_path != NULL) {
+                    (void)fputs("--output-new may be provided only once.\n", stderr);
+                    return 2;
+                }
+                new_output_path = argv[index + 1];
+            }
+            ++index;
+            continue;
+        }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(argv[index], "--summary") == 0) continue;
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (strcmp(argv[index], "--help") == 0 ||
+            strcmp(argv[index], "-h") == 0) {
+            (void)puts(
+                "Usage: umicom quality scan [PATH] [--profile NAME] "
+                "[--format text|json|sarif] [--output FILE | --output-new ABSOLUTE_FILE] [--summary]\n"
+                "Profiles: default, quality, security, architecture, ci\n"
+                "--output-new refuses existing files and limits serialized reports to 64 MiB.\n"
+                "--summary cannot be combined with --output-new; partial new files remain on I/O failure.");
+            return 0;
+        }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (argv[index][0] == '-') {
+            (void)fprintf(stderr, "Unknown scan option: %s\n", argv[index]);
+            return 2;
+        }
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (positional_seen) {
+            (void)fprintf(stderr, "Only one scan path may be provided.\n");
+            return 2;
+        }
+        root = argv[index];
+        positional_seen = 1;
+    }
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (forced_profile == NULL)
+        profile_text = scan_option_value(argc, argv, "--profile");
+    format_text = scan_option_value(argc, argv, "--format");
+    output_path = scan_option_value(argc, argv, "--output");
+    /* New-file intent must not be ignored by a summary or legacy destination.
+     * Validate path syntax before scanning; exclusive creation itself remains
+     * inside Framework after complete report validation and byte measurement. */
+    if (new_output_path != NULL) {
+        if (output_path != NULL || scan_has_flag(argc, argv, "--summary")) {
+            (void)fputs("--output-new cannot be combined with --output or --summary.\n", stderr);
+            return 2;
+        }
+        status = UmiOutputFileValidatePath(new_output_path);
+        if (status != UMI_STATUS_OK) {
+            (void)fprintf(stderr, "Invalid new report path: %s\n", umi_status_text(status));
+            return 2;
+        }
+    }
+    profile = scan_profile(profile_text, &valid);
+    /* Apply this operation only while the related capability or state is available. */
+    if (!valid) {
+        (void)fprintf(stderr, "Unknown CodeGuard profile: %s\n", profile_text);
+        return 2;
+    }
+    format = scan_report_format(format_text, &valid);
+    /* Apply this operation only while the related capability or state is available. */
+    if (!valid) {
+        (void)fprintf(stderr, "Unknown report format: %s\n", format_text);
+        return 2;
+    }
+
+    status = umi_codeguard_result_create(512U, &all_findings);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK)
+        status = umi_codeguard_result_create(128U, &selected_findings);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK) {
+        config = umi_codeguard_config_default(root);
+        config.profile = profile;
+        status = umi_codeguard_scan(&config, all_findings);
+    }
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status == UMI_STATUS_OK)
+        status = select_findings(all_findings, selection, selected_findings);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) {
+        (void)fprintf(stderr, "CodeGuard scan failed: %s\n",
+                      umi_status_text(status));
+        umi_codeguard_result_destroy(selected_findings);
+        umi_codeguard_result_destroy(all_findings);
+        return 1;
+    }
+
+    summary = umi_codeguard_summary_build(selected_findings);
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (new_output_path != NULL) {
+        status = umi_codeguard_report_file_new(new_output_path, format,
+            selected_findings, 64U * 1024U * 1024U);
+        if (status == UMI_STATUS_OK) {
+            if (printf("CodeGuard report: %s\n", new_output_path) < 0 ||
+                fflush(stdout) != 0 || ferror(stdout)) status = UMI_STATUS_IO_ERROR;
+        } else {
+            (void)fprintf(stderr, "Cannot create the new CodeGuard report: %s. "
+                "An existing file was not replaced; a newly created partial file may remain.\n",
+                umi_status_text(status));
+        }
+    } else if (scan_has_flag(argc, argv, "--summary")) {
+        int written = printf(
+            "Umicom CodeGuard: %zu findings (critical=%zu high=%zu "
+            "medium=%zu low=%zu info=%zu)\n",
+            summary.total, summary.critical, summary.high, summary.medium,
+            summary.low, summary.info);
+        if (written < 0 || fflush(stdout) != 0 || ferror(stdout)) status = UMI_STATUS_IO_ERROR;
+    } else /* Protect caller-owned memory by checking that required state is available before it is used. */ if (output_path != NULL) {
+        status = umi_codeguard_report_file(output_path, format, selected_findings);
+        /* Preserve the original failure result so the caller can respond to the correct cause. */
+        if (status == UMI_STATUS_OK &&
+            (printf("CodeGuard report: %s\n", output_path) < 0 ||
+             fflush(stdout) != 0 || ferror(stdout))) status = UMI_STATUS_IO_ERROR;
     } /* Use this fallback path when the earlier condition does not apply. */ else {
         status = umi_codeguard_report_write(stdout, format, selected_findings);
     }

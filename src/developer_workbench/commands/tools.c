@@ -33,6 +33,15 @@ static const UmiDeveloperWorkbenchCommandDefinition COMMANDS[] = {
         UMI_DEVELOPER_WORKBENCH_ACTION_EXTERNAL,
         UMI_DEVELOPER_WORKBENCH_COMMAND_REQUIRES_WORKSPACE | UMI_DEVELOPER_WORKBENCH_COMMAND_BACKGROUND
     },
+    /* Cancellation belongs to an existing job, even after its workspace closes. */
+    {
+        "codeguard.cancel",
+        "Cancel CodeGuard",
+        "Tools",
+        "Request cooperative cancellation of the current CodeGuard review.",
+        UMI_DEVELOPER_WORKBENCH_ACTION_EXTERNAL,
+        UMI_DEVELOPER_WORKBENCH_COMMAND_BACKGROUND
+    },
     {
         "designer.open",
         "Visual Designer",

@@ -40,7 +40,23 @@ typedef struct UmiAiProviderRegistry {
  * a known state.
  */
 void umi_ai_provider_registry_init(UmiAiProviderRegistry *registry);
-/* Destroy callbacks run once for each successfully registered owned instance. */
+/**
+ * Check the bounded registry before looking up or invoking any provider.
+ * Stored identifiers remain borrowed, readable, NUL-terminated and stable
+ * until release. Structural validation cannot make dangling pointers safe.
+ * Callers must serialize access; validation does not acquire a lifetime lease.
+ */
+UmiStatus UmiAiProviderRegistryValidate(const UmiAiProviderRegistry *registry);
+/**
+ * Release owned instances in reverse registration order. Invalid registry
+ * state returns INVALID_STATE without invoking callbacks or changing storage.
+ * During callbacks registry APIs refuse reentry. Callbacks must not directly
+ * mutate or reinitialize this registry, and must return normally.
+ */
+UmiStatus UmiAiProviderRegistryRelease(UmiAiProviderRegistry *registry);
+/* Destroy callbacks run once for each successfully registered owned instance.
+ * This compatibility wrapper leaves invalid state intact; use Release to
+ * observe the reason. Initialization is only for fresh or released storage. */
 void umi_ai_provider_registry_destroy(UmiAiProviderRegistry *registry);
 /**
  * Add ai provider registry only after its inputs and available capacity have been checked.
@@ -53,6 +69,14 @@ UmiStatus umi_ai_provider_registry_add(UmiAiProviderRegistry *registry,
  */
 UmiAiProvider *umi_ai_provider_registry_find(UmiAiProviderRegistry *registry,
                                                const char *provider_id);
+
+/** Read-only synchronous generation/health activity check. BUSY means this registry
+ * appears in the current thread callback stack. This does not validate table
+ * contents, acquire a lease, or synchronize threads. NULL is INVALID_ARGUMENT.
+ * Registry add/release return BUSY during active callbacks; void initialize
+ * and destroy retain the owner. Reads remain available. Callbacks must return
+ * normally and must not directly mutate, copy or free their live owner. */
+UmiStatus UmiAiProviderRegistryCheckIdle(const UmiAiProviderRegistry *registry);
 
 #ifdef __cplusplus
 }

@@ -39,7 +39,13 @@ UmiStatus umi_ai_policy_check_provider(const UmiAiPolicy *policy,
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
+/* An unknown provider kind has no policy classification. Refuse it explicitly instead of falling through to local access; all supported provider kinds retain their existing rules. The former implementation is retained for owner review. */
+#if 0
     if (policy == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+#endif
+    if (policy == NULL || kind < UMI_AI_PROVIDER_LOCAL || kind > UMI_AI_PROVIDER_TEST) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     /* Apply this branch only when its contract condition is satisfied. */

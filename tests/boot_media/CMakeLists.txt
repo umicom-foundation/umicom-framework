@@ -374,7 +374,16 @@ endforeach()
 if(WIN32)
     # The real hidden controls and native thread are exercised with synthetic
     # media work. Neither image acquisition nor physical-device discovery runs.
-    add_executable(umicom-media-worker-windows-test test_worker_windows.c)
+    # The worker exercises the production Win32 controls, so it must carry
+    # their existing version-6 activation manifest as well. Linking comctl32
+    # alone does not select that side-by-side runtime. Retain the unmanifested
+    # target spelling for review; no physical-device operation is introduced.
+    # add_executable(umicom-media-worker-windows-test test_worker_windows.c)
+    add_executable(umicom-media-worker-windows-test test_worker_windows.c
+        "${CMAKE_CURRENT_LIST_DIR}/../../examples/boot_media/resources/media.rc")
+    target_include_directories(umicom-media-worker-windows-test PRIVATE
+        "${CMAKE_CURRENT_LIST_DIR}/../../examples/boot_media/resources"
+        "${CMAKE_CURRENT_LIST_DIR}/../../examples/setup_centre/resources")
     target_link_libraries(umicom-media-worker-windows-test PRIVATE
         Umicom::boot_media user32 gdi32 comctl32 comdlg32)
     target_compile_definitions(umicom-media-worker-windows-test PRIVATE UNICODE _UNICODE)

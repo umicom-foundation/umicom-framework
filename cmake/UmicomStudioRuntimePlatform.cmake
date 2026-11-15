@@ -123,6 +123,7 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/layout_catalogue.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/layout_preset.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/workspace_canvas.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/workspace_zen.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/layout_presets/ai_development.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/layout_presets/debugging.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/studio_runtime/layout_presets/default.c"
@@ -1551,3 +1552,5 @@ message(STATUS
     "Umicom final Framework-owned Studio runtime composition enabled")
 
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomKanbanDock.cmake")
+
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomStudioZen.cmake")

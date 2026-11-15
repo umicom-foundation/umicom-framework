@@ -1,112 +1,96 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/base/utf8_stream.c
+ *
  * PURPOSE:
- *   Safely assemble length-delimited UTF-8 scalars without converting binary
- *   model output to a guessed text encoding or allocating unbounded buffers.
- * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation
- * LICENCE: MIT
+ *   Reuse the canonical scalar decoder for incremental UTF-8 validation and publication.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
-#include "umicom/base/utf8_stream.h"
 
-#include <stdint.h>
+#include "umicom/base/utf8_stream.h"
+#include "umicom/base/utf8.h"
 #include <string.h>
 
-static int Utf8StateValid(const UmiUtf8Stream *stream)
+/* Only framing is new here; Unicode range, overlong and surrogate rules stay
+ * in UmiUtf8DecodeScalar. A minimal valid completion lets that same decoder
+ * reject an impossible partial prefix immediately. */
+static size_t ScalarWidth(uint8_t lead)
 {
-    if (stream == NULL || stream->bufferedCount > 3U ||
-        stream->expectedCount > 4U) return 0;
-    if (stream->bufferedCount == 0U)
-        return stream->expectedCount == 0U;
-    return stream->expectedCount >= 2U &&
-           stream->bufferedCount < stream->expectedCount;
+    if(lead<0x80U)return 1U;
+    if(lead>=0xc2U && lead<=0xdfU)return 2U;
+    if(lead>=0xe0U && lead<=0xefU)return 3U;
+    if(lead>=0xf0U && lead<=0xf4U)return 4U;
+    return 0U;
 }
-
+static int PrefixValid(const uint8_t *bytes,size_t count,size_t width)
+{
+    uint8_t complete[4]={0U,0x80U,0x80U,0x80U};
+    if(count==0U || count>width || width>sizeof complete)return 0;
+    if(bytes[0]==0xe0U)complete[1]=0xa0U;
+    else if(bytes[0]==0xf0U)complete[1]=0x90U;
+    memcpy(complete,bytes,count);
+    size_t used=0U;uint32_t scalar=0U;
+    return UmiUtf8DecodeScalar(complete,width,&used,&scalar) && used==width;
+}
+static int StreamValid(const UmiUtf8Stream *stream)
+{
+    if(stream->pendingCount==0U)return stream->expectedBytes==0U;
+    if(stream->pendingCount>=4U)return 0;
+    size_t width=ScalarWidth(stream->pending[0]);
+    return width>stream->pendingCount && stream->expectedBytes==width &&
+        PrefixValid(stream->pending,stream->pendingCount,width);
+}
 UmiStatus UmiUtf8StreamReset(UmiUtf8Stream *stream)
 {
-    if (stream == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    *stream = (UmiUtf8Stream){0};
+    if(stream==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    memset(stream,0,sizeof *stream);
     return UMI_STATUS_OK;
 }
-
-UmiStatus UmiUtf8StreamInspect(const UmiUtf8Stream *stream,
-                               UmiUtf8StreamInfo *outInfo)
+UmiStatus UmiUtf8StreamAppend(UmiUtf8Stream *stream,uint8_t byte,
+    uint8_t *output,size_t capacity,size_t *produced)
 {
-    if (!Utf8StateValid(stream) || outInfo == NULL)
+    if(stream==NULL || produced==NULL || (output==NULL && capacity!=0U))
         return UMI_STATUS_INVALID_ARGUMENT;
-    UmiUtf8StreamInfo candidate = {
-        .bufferedBytes = (size_t)stream->bufferedCount,
-        .bytesNeeded = (size_t)(stream->expectedCount - stream->bufferedCount),
-        .completedScalars = stream->completedScalars,
-        .completedBytes = stream->completedBytes
-    };
-    *outInfo = candidate;
-    return UMI_STATUS_OK;
-}
-
-/* Enforce canonical UTF-8 scalar ranges at the SECOND byte. Subsequent
- * continuation bytes must be 80..BF, and all lengths are already bounded. */
-static int Utf8ContinuationValid(uint8_t lead, uint8_t byte, size_t index)
-{
-    if (byte < 0x80U || byte > 0xbfU) return 0;
-    if (index != 1U) return 1;
-    if (lead == 0xe0U && byte < 0xa0U) return 0;
-    if (lead == 0xedU && byte > 0x9fU) return 0;
-    if (lead == 0xf0U && byte < 0x90U) return 0;
-    if (lead == 0xf4U && byte > 0x8fU) return 0;
-    return 1;
-}
-
-UmiStatus UmiUtf8StreamAppend(
-    UmiUtf8Stream *stream, uint8_t nextByte,
-    uint8_t *outUtf8, size_t outputCapacity, size_t *outBytes)
-{
-    UmiUtf8Stream candidate;
-    size_t completed = 0U;
-    if (!Utf8StateValid(stream) || outUtf8 == NULL || outBytes == NULL)
-        return UMI_STATUS_INVALID_ARGUMENT;
-    candidate = *stream;
-    if (candidate.bufferedCount == 0U) {
-        if (nextByte < 0x80U) {
-            candidate.expectedCount = 1U;
-        } else if (nextByte >= 0xc2U && nextByte <= 0xdfU) {
-            candidate.expectedCount = 2U;
-        } else if (nextByte >= 0xe0U && nextByte <= 0xefU) {
-            candidate.expectedCount = 3U;
-        } else if (nextByte >= 0xf0U && nextByte <= 0xf4U) {
-            candidate.expectedCount = 4U;
-        } else {
-            return UMI_STATUS_PARSE_ERROR;
-        }
-    } else if (!Utf8ContinuationValid(candidate.buffered[0],
-                                     nextByte, candidate.bufferedCount)) {
+    if(!StreamValid(stream))return UMI_STATUS_INVALID_STATE;
+    UmiUtf8Stream next=*stream;
+    if(next.pendingCount==0U){
+        next.expectedBytes=ScalarWidth(byte);
+        if(next.expectedBytes==0U)return UMI_STATUS_PARSE_ERROR;
+    }
+    next.pending[next.pendingCount++]=byte;
+    if(!PrefixValid(next.pending,next.pendingCount,next.expectedBytes))
         return UMI_STATUS_PARSE_ERROR;
+    if(next.pendingCount<next.expectedBytes){
+        *stream=next;*produced=0U;return UMI_STATUS_OK;
     }
-    candidate.buffered[candidate.bufferedCount++] = nextByte;
-    if (candidate.bufferedCount == candidate.expectedCount) {
-        completed = candidate.expectedCount;
-        if (completed > outputCapacity) return UMI_STATUS_CAPACITY_EXCEEDED;
-        if (candidate.completedScalars == UINT64_MAX ||
-            candidate.completedBytes > UINT64_MAX - (uint64_t)completed)
-            return UMI_STATUS_CAPACITY_EXCEEDED;
-        ++candidate.completedScalars;
-        candidate.completedBytes += (uint64_t)completed;
-    }
-    /* Commit an accepted byte only after all validity and capacity checks.
-     * For incomplete scalars, the output storage is unchanged. */
-    if (completed != 0U) {
-        memcpy(outUtf8, candidate.buffered, completed);
-        memset(candidate.buffered, 0, sizeof(candidate.buffered));
-        candidate.bufferedCount = 0U;
-        candidate.expectedCount = 0U;
-    }
-    *stream = candidate;
-    *outBytes = completed;
+    size_t count=next.expectedBytes;
+    if(capacity<count)return UMI_STATUS_CAPACITY_EXCEEDED;
+    if(next.completedScalars==UINT64_MAX || next.completedBytes>UINT64_MAX-count)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    ++next.completedScalars;next.completedBytes+=(uint64_t)count;
+    next.pendingCount=0U;next.expectedBytes=0U;
+    memcpy(output,next.pending,count);
+    memset(next.pending,0,sizeof next.pending);
+    *stream=next;*produced=count;
     return UMI_STATUS_OK;
 }
-
 UmiStatus UmiUtf8StreamFinish(const UmiUtf8Stream *stream)
 {
-    if (!Utf8StateValid(stream)) return UMI_STATUS_INVALID_ARGUMENT;
-    return stream->bufferedCount == 0U ? UMI_STATUS_OK : UMI_STATUS_INVALID_STATE;
+    if(stream==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    if(!StreamValid(stream) || stream->pendingCount!=0U)return UMI_STATUS_INVALID_STATE;
+    return UMI_STATUS_OK;
+}
+UmiStatus UmiUtf8StreamInspect(const UmiUtf8Stream *stream,UmiUtf8StreamInfo *out_info)
+{
+    if(stream==NULL || out_info==NULL)return UMI_STATUS_INVALID_ARGUMENT;
+    if(!StreamValid(stream))return UMI_STATUS_INVALID_STATE;
+    UmiUtf8StreamInfo info={stream->completedScalars,stream->completedBytes,
+        stream->expectedBytes-stream->pendingCount};
+    *out_info=info;return UMI_STATUS_OK;
 }

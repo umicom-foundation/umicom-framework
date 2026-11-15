@@ -1,0 +1,73 @@
+<!-- Umicom Framework
+File: docs/learning/coding-context-materialization.html
+
+PURPOSE:
+Teach selected-file materialization, bounded adapter reads and complete owned context publication.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Materialize bounded coding context | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Turn selected repository files into owned AI context</h1>
+<p>A context plan contains paths and estimated costs. A provider prompt needs actual text. <em>Materialization</em> is the step between them: Framework asks a workspace adapter to read each selected file, then keeps a bounded copy. This lesson follows that boundary and explains why a successful callback still needs validation.</p>
+<h2>1. Separate selection from reading</h2>
+<p>The context planner selects files using metadata, budget and policy. Materialization accepts a ready plan and rechecks the data it will use: the number of files, the active path, and every selected file's canonical metadata. The required positive priority is a ranking value; the required positive token estimate is a budget estimate. Neither is proof that a file exists.</p>
+<p>Keep the privacy decision and workspace containment checks in their existing services. A relative path such as <code>src/main.c</code> is a useful lexical contract, but it does not prove that symlinks or a remote adapter cannot escape a workspace. A valid plan is also not fresh consent to send files to a different provider.</p>
+<h2>2. Implement the read callback carefully</h2>
+<p>The callback receives a buffer and its capacity in bytes. It reports the number of content bytes, excluding the final zero byte used by C strings. The following memory adapter illustrates the required accounting:</p>
+<pre><code class="language-c">static UmiStatus read_example(void *user, const char *path,
+    char *out_text, size_t capacity, size_t *out_length)
+{
+    static const char source[] = "int answer = 42;\n";
+    const size_t length = sizeof source - 1U;
+    (void)user;
+    if (path == NULL || out_text == NULL || out_length == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (strcmp(path, "src/main.c") != 0) return UMI_STATUS_NOT_FOUND;
+    if (length &gt;= capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+    memcpy(out_text, source, sizeof source);
+    *out_length = length;
+    return UMI_STATUS_OK;
+}</code></pre>
+<p>Include <code>&lt;string.h&gt;</code> and <code>umicom/ai_coding_runtime/context_materializer.h</code> in the C source containing this callback. Supply the other required workspace callbacks through the existing adapter contract. The example performs no filesystem or network operation.</p>
+<ol><li>Return OK only after the reported bytes have been written.</li><li>Keep the reported length strictly below capacity so a terminator fits.</li><li>Do not include an embedded zero byte in text. Binary content needs a different representation.</li><li>Keep callback state alive until materialization returns. Do not write the caller's output context from inside the callback.</li></ol>
+<h2>3. Validate before using a reported length</h2>
+<p>The materializer checks an OK callback's length before hashing or indexing the text. A length equal to capacity or as large as <code>SIZE_MAX</code> is refused. Embedded zero bytes are refused because they would give byte-oriented hashing and string-oriented prompt construction different views of the same file. Framework then writes the trailing zero byte itself.</p>
+<pre><code class="language-c">if (length &gt;= sizeof target-&gt;text)
+    return UMI_STATUS_CAPACITY_EXCEEDED;
+if (memchr(target-&gt;text, '\0', length) != NULL)
+    return UMI_STATUS_PARSE_ERROR;
+target-&gt;text[length] = '\0';</code></pre>
+<p>This is the admission sequence, shown without the surrounding allocation and cleanup. It cannot repair a callback that has already written outside the supplied buffer. The callback remains responsible for respecting capacity while writing.</p>
+<h2>4. Publish one complete result</h2>
+<p>Framework stores a copy of the admitted plan and callback table, plus a candidate output, on the heap. Heap storage avoids placing these large bounded arrays on a small thread stack. Reads populate the candidate. Only a successful operation copies it to the caller's output. An error on the second file therefore leaves the previous output intact instead of exposing only the first new file.</p>
+<p>The callback table and plan snapshots also keep a synchronous callback from redirecting subsequent reads by changing the original input objects. They do not copy the adapter's user data or keep a freed object alive. Serialize access and retain the borrowed callback state for the whole call.</p>
+<table><thead><tr><th>Read result</th><th>Materializer behavior</th></tr></thead><tbody>
+<tr><td>NOT_FOUND</td><td>Skip this file and increment the skipped count.</td></tr>
+<tr><td>CAPACITY_EXCEEDED</td><td>Skip this file and mark the result truncated.</td></tr>
+<tr><td>PARSE_ERROR</td><td>Skip this unreadable text file.</td></tr>
+<tr><td>Other failure</td><td>Stop and preserve the previous output.</td></tr>
+<tr><td>OK with an impossible length or embedded zero</td><td>Refuse the complete candidate; do not disguise a broken success contract as an ordinary skipped file.</td></tr>
+</tbody></table>
+<p>The output has room for 24 files, while the metadata plan can describe up to 32. Extra selected files are counted as skipped and the output is marked truncated. Adding token estimates is checked before reads so an unsigned sum cannot wrap to a misleading small number.</p>
+<h2>5. Inspect and find owned files</h2>
+<p><code>UmiAiCodingMaterializedContextValidate</code> checks every active record, including paths, lengths, terminators, unique paths, hashes and the total token estimate. <code>umi_ai_coding_materialized_context_find</code> uses that validation before returning a matching file. A valid first record cannot hide corruption later in the context.</p>
+<p>The content hash detects an accidental mismatch between bytes and metadata. It is not a cryptographic signature. The revision is carried from the plan as provenance; it does not grant access or permission to execute changes.</p>
+<h2>6. Run focused regression checks</h2>
+<pre><code class="language-powershell"># From the Framework source root after configuration with testing enabled:
+cmake --build build/windows-ucrt64-debug --target umicom-ai-coding-materializer-admission-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework\.ai\.coding-materializer\.' --output-on-failure</code></pre>
+<p>The fifty cases cover metadata refusal before any read, malformed successful callbacks, failures after one accepted file, zero-length text, maximum text length, adapter and plan changes during a callback, ordinary skips, output capacity, token limits, corrupted owned values, and lookup behavior. Expected result: all selected cases pass. These are qualification instructions, not a report that the native cases have run.</p>
+<p>If setup fails, first check the canonical metadata fields, including priority and classification. If an OK read is rejected, inspect the callback's exact byte count and termination behavior; do not weaken the consumer's bounds check. Retain the prior output for diagnosis and fix the producer before retrying.</p>
+<p>Continue with <a href="coding-task-admission.html">task admission</a> and <a href="coding-runtime-lifetime.html">execution lifetime</a> to connect selection, owned content and safe callback execution.</p>
+
+</main></body></html>

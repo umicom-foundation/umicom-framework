@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/platform/input_file.h
- * PURPOSE: Read an explicitly chosen regular local file under a caller-supplied memory limit.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Read an explicitly chosen regular local file under a caller-supplied memory limit.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_PLATFORM_INPUT_FILE_H
@@ -24,6 +31,9 @@ extern "C"
  * The result owns size+1 bytes with a trailing NUL; embedded NULs remain valid
  * binary data. Empty files succeed. Failure clears both output arguments.
  * I/O may block: call from a worker when used by an interactive application. */
+/* A close failure changes a successful result to IO_ERROR. An earlier read,
+ * allocation, capacity or metadata-change failure keeps its status;
+ * cleanup still runs. Failed reads never publish a successful output size. */
     UmiStatus UmiInputFileRead(const char *path, size_t maximumBytes, unsigned char **outBytes,
                                size_t *outSize);
     void UmiInputFileFree(void *bytes);

@@ -1,0 +1,61 @@
+<!-- Umicom Framework
+File: docs/learning/coding-service-ownership.html
+
+PURPOSE:
+Teach owner revision capacity, callback reentry, checked destruction and honest recovery boundaries.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Keep coding services alive during callbacks | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Keep a coding service alive during file callbacks</h1>
+<p>A native service may call application code while it is still using its own state. For example, Framework asks a host adapter to write an approved patch. That callback can call Framework again. This is <em>reentry</em>: a second call begins before the first call finishes. It can invalidate a patch array, change its policy or free its owner unless the service defines an explicit boundary.</p>
+<h2>1. Admit owner state before traversal</h2>
+<p>The coding assistant checks physical history capacities, its nonzero revision, patch policy, child context metadata, stored task requests and patch integrity before using those records. Patch lookup bounds its query string before comparing it. Failed inspection leaves the supplied destination unchanged.</p>
+<p>These checks describe a live object created by the API. They cannot make a dangling pointer or arbitrary memory address valid. The host must retain the service and its borrowed AuthorEngine dependency for the full operation and serialize access.</p>
+<h2>2. Reserve the next revision before effects</h2>
+<p>Setting policy, preparing a task, recording a patch, approving, rejecting, applying and reverting all need another service revision. At <code>UINT64_MAX</code>, mutation is refused before history changes or file callbacks. Reading the final accepted state remains possible.</p>
+<p>Patch records and the repository context index have their own revision identities. A patch revision is not compared numerically with the service revision as if they were one clock. Each owner enforces its own contract.</p>
+<h2>3. Block mutation while permitting inspection</h2>
+<p>During forward and compensation callbacks for apply/revert, valid same-service mutation requests return <code>UMI_STATUS_BUSY</code>. Read APIs can still show task history, the stored patch and a service snapshot. The guard remains active until the outer patch operation returns normally, then is cleared on both success and failure.</p>
+<pre><code class="language-c">/* Inside an adapter callback: inspect, but do not begin another edit. */
+UmiAiCodingAssistantSnapshot snapshot;
+UmiStatus status = umi_ai_coding_assistant_snapshot(service, &amp;snapshot);
+if (status != UMI_STATUS_OK) return status;
+
+/* A request to mutate the active owner must be scheduled after this
+   callback returns; the service rejects it as BUSY here. */</code></pre>
+<p>The adapter's function slots are copied at entry so changing the original adapter structure does not replace callbacks midway through an operation. Its <code>user_data</code> and everything that callbacks borrow must still remain alive. Callbacks must return normally; escaping with a nonlocal jump bypasses normal guard cleanup.</p>
+<h2>4. Use checked destruction when lifetime matters</h2>
+<pre><code class="language-c">UmiStatus status = UmiAiCodingAssistantDestroyChecked(service);
+if (status == UMI_STATUS_OK) {
+    service = NULL;
+} else if (status == UMI_STATUS_BUSY) {
+    /* Keep this handle and its dependencies alive.
+       Retry after the outer apply/revert call has returned. */
+}</code></pre>
+<p>The existing void destroy API remains available. It also refuses to free a busy owner, but cannot return the reason. New lifetime-sensitive code should use the checked form and clear its handle only after success. Passing <code>NULL</code> to checked destruction is accepted.</p>
+<p>Destruction does not traverse the task or patch arrays, so a damaged metadata count does not prevent releasing an otherwise live service. This does not authorize passing corrupted allocation pointers to destruction.</p>
+<h2>5. Keep the limits explicit</h2>
+<p>This is a callback-reentry guard, not a thread lock. It does not synchronize concurrent threads or independently borrowed child context/catalogue owners. It also does not turn multi-file I/O into an atomic filesystem transaction.</p>
+<p>Existing patch compensation attempts can fail. A guard prevents a callback from mutating the service being used; it does not prove that every file was restored. Preserve the operation's failure, inspect affected files and qualify the host adapter's recovery behavior before retrying.</p>
+<h2>6. Exercise lifetime and identity boundaries</h2>
+<ol><li>Configure and build Framework with tests enabled.</li>
+<li>Run <code>ctest --test-dir &lt;framework-build&gt; -R "^framework[.]ai[.]coding-owner[.]" --output-on-failure</code>.</li>
+<li>Verify every mutator refuses an exhausted service revision without callbacks and can accept the last available revision.</li>
+<li>Verify malformed owner counts, stored text, history identities and patch queries are refused before traversal.</li>
+<li>Exercise nested mutation, checked and legacy destruction, read-only inspection and adapter-slot replacement from read, write and compensation callbacks.</li>
+<li>Check that a later ordinary mutation succeeds after the outer operation returns, including after an injected write failure.</li></ol>
+<p>The fixtures use memory adapters and never modify a real workspace. Expected results are an explicit refusal for nested mutations, valid read-only inspection and a live service until checked destruction succeeds. Authored fixtures and successful configuration are not proof of native execution or GUI qualification.</p>
+<p>Continue with <a href="coding-task-admission.html">task privacy and publication</a>, <a href="coding-patch-admission.html">patch integrity</a> and the <a href="index.html">Framework learning catalogue</a>.</p>
+
+</main></body></html>

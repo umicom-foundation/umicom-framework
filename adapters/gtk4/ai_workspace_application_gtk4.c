@@ -28,6 +28,7 @@ typedef struct AiApplication {
     const char *applicationId; int failed;
     /* The surface owns the replaceable library and all its borrowed services. */
     UmiAiWorkspaceGtkSurface *surface;
+    UmiAiLocalTransport *transport; /* Created before the toolkit starts workers. */
 } AiApplication;
 /* The earlier eager per-user database host is retained for review. The
  * selectable surface below owns the same providers, tools and existing layouts,
@@ -108,12 +109,24 @@ static UmiStatus Build(GtkWindow *window, UmiApplicationProductGtk4Workstation *
     g_free(description); g_free(directory); g_free(path); return UMI_STATUS_OK;
 }
 #endif
+/* Use checked surface retirement so the product host retains its heap context when a native owner cannot be released. The former implementation is retained for owner review. */
+#if 0
 static void Release(void *data)
 {
     AiApplication *application = data;
     UmiAiWorkspaceGtkSurfaceDestroy(application->surface);
     application->surface = NULL;
 }
+
+#endif
+static void Release(void *data)
+{
+    AiApplication *application = data;
+    UmiStatus status = UmiAiWorkspaceGtkSurfaceRelease(&application->surface);
+    if (status != UMI_STATUS_OK) application->failed = 1;
+}
+/* Attach the already initialized transport to the established library surface without creating HTTP lifetime from a GTK callback. The former implementation is retained for owner review. */
+#if 0
 static UmiStatus Build(GtkWindow *window, UmiApplicationProductGtk4Workstation *workstation,
     GtkWidget *original, void *data, GtkWidget **outContent)
 {
@@ -124,6 +137,22 @@ static UmiStatus Build(GtkWindow *window, UmiApplicationProductGtk4Workstation *
     if (status == UMI_STATUS_OK) *outContent = UmiAiWorkspaceGtkSurfaceWidget(application->surface);
     return status;
 }
+
+#endif
+static UmiStatus Build(GtkWindow *window, UmiApplicationProductGtk4Workstation *workstation,
+    GtkWidget *original, void *data, GtkWidget **outContent)
+{
+    (void)window; (void)workstation;
+    AiApplication *application = data;
+    *outContent = NULL;
+    UmiStatus status = UmiAiWorkspaceGtkSurfaceCreate(original, application->applicationId, &application->surface);
+    if (status == UMI_STATUS_OK && application->transport != NULL)
+        status = UmiAiWorkspaceGtkSurfaceEnableLocalStreaming(application->surface, application->transport);
+    if (status == UMI_STATUS_OK) *outContent = UmiAiWorkspaceGtkSurfaceWidget(application->surface);
+    return status;
+}
+/* Establish shared HTTP lifetime at process startup and keep host storage alive across a failed checked shutdown. The former implementation is retained for owner review. */
+#if 0
 int UmiAiWorkspaceGtkRun(const char *applicationId, const char *title, int argc, char **argv)
 {
     AiApplication application = {0}; application.applicationId = applicationId;
@@ -133,4 +162,35 @@ int UmiAiWorkspaceGtkRun(const char *applicationId, const char *title, int argc,
     config.mode_badge = "Reviewed AI workspace";
     int result = umi_application_product_gtk4_run_with_content(&config, &extension, argc, argv);
     Release(&application); return result != 0 ? result : application.failed;
+}
+
+#endif
+int UmiAiWorkspaceGtkRun(const char *applicationId, const char *title, int argc, char **argv)
+{
+    /* HTTP global lifetime must start before a threaded toolkit. An unavailable
+     * streaming capability leaves the established complete-response host usable;
+     * its ordinary provider availability checks still apply. */
+    UmiAiLocalTransport *transport = NULL;
+    UmiStatus transport_status = UmiAiLocalTransportCreate(&transport);
+    if (transport_status != UMI_STATUS_OK && transport_status != UMI_STATUS_UNAVAILABLE)
+        return 1;
+    AiApplication *application = g_new0(AiApplication, 1U);
+    application->applicationId = applicationId;
+    application->transport = transport;
+    UmiApplicationProductGtk4WorkstationConfig config =
+        umi_application_product_gtk4_workstation_config_default(applicationId, title, NULL, NULL);
+    UmiApplicationProductGtk4ContentExtension extension = {Build, Release, application};
+    config.mode_badge = transport != NULL ? "Reviewed AI streaming" : "Reviewed AI workspace";
+    int result = umi_application_product_gtk4_run_with_content(&config, &extension, argc, argv);
+    Release(application);
+    if (application->surface != NULL) {
+        /* Retain context, transport and every borrowed service until process
+         * exit. A failed native join must never become a dangling stack host. */
+        return result != 0 ? result : 1;
+    }
+    UmiStatus released = UmiAiLocalTransportDestroy(&application->transport);
+    if (released != UMI_STATUS_OK) return result != 0 ? result : 1;
+    int failed = application->failed;
+    g_free(application);
+    return result != 0 ? result : failed;
 }

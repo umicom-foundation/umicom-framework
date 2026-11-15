@@ -83,6 +83,10 @@ UmiStatus umi_ai_authorengine_validate(const UmiAiAuthorEngineConfig *config);
 
 /* Build an argv-only plan for AI health, catalogue or generation operations.
  * Returned text is owned by out_invocation and remains valid until overwritten. */
+/* Failure, including allocation failure, preserves the complete destination.
+ * Input strings must be valid NUL-terminated strings; they may borrow bytes from
+ * the previous destination because publication follows all reads. Serialize
+ * access. Planning opens no files, starts no process and performs no network I/O. */
 UmiStatus umi_ai_authorengine_plan_invocation(
     const UmiAiAuthorEngineConfig *config,
     UmiAiAuthorEngineCommand command,
@@ -95,6 +99,11 @@ UmiStatus umi_ai_authorengine_plan_invocation(
 /* Build an argv-only plan for book, course, site and document publication.
  * The optional site_path is used only by the preview server. The process
  * adapter must launch in invocation.working_directory and must not use a shell. */
+/* Executable/workspace are bounded required fields; provider is unused here.
+ * Failure preserves output, including an invalid site override or oversized
+ * argument. A site string may borrow previous output storage. No filesystem
+ * existence check, executable trust decision or launch occurs during planning.
+ * A complete plan is not authorization to execute publication commands. */
 UmiStatus umi_ai_authorengine_plan_publication_invocation(
     const UmiAiAuthorEngineConfig *config,
     UmiAiAuthorEngineCommand command,

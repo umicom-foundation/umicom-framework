@@ -1,0 +1,72 @@
+<!-- Umicom Framework
+File: docs/learning/gtk-reviewed-stream-lifetime.html
+
+PURPOSE:
+Teach existing-control streaming, callback reentry and complete borrowed-library lifetime in GTK applications.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Keep GTK AI streaming owners alive</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Keep GTK AI streaming owners alive</h1>
+<p>A responsive interface needs more than a background HTTP request. The interface must keep the request, approved job, database connection and cancellation token alive until the producer has stopped and native cleanup has succeeded. Framework's existing AI workspace panel now composes the reviewed-stream service into its current controls.</p>
+<h2>1. Follow the existing review workflow</h2>
+<ol><li>Open or create a library in a product that uses the shared AI workspace.</li><li>Choose the configured local provider and enter the actual model ID. Opening a library does not contact a model.</li><li>Prepare a free or grounded draft, inspect its frozen input and approve the selected job.</li><li>Choose Run approved job. The source and job forms become unavailable while that request owns the workspace.</li><li>Read the streamed draft in the existing review pane. Its notice identifies it as incomplete and not yet saved.</li><li>Use Stop current request to request cancellation. The controls remain retained until completion and cleanup.</li><li>Inspect both Generation and Save statuses. A failed save requires inspection and recovery; it never silently repeats generation.</li></ol>
+<p>The extractive preview remains explicitly identified as not being an LLM. Tools and unsupported provider adapters retain their complete-response route. No new layout, provider implementation or model-download mechanism is introduced by this panel integration.</p>
+<h2>2. Initialize shared HTTP lifetime before GTK</h2>
+<p>The shared AI product host creates its transport before starting the GTK workstation. It lends that transport to the library surface, which lends it to each opened panel. Older constructors remain available. A custom host can attach a startup-created transport explicitly:</p>
+<pre><code class="language-c">/* Before GTK and other worker initialization: */
+UmiAiLocalTransport *transport = NULL;
+UmiStatus status = UmiAiLocalTransportCreate(&amp;transport);
+
+/* Later, on the same owner thread, after constructing the surface: */
+if (status == UMI_STATUS_OK) {
+    status = UmiAiWorkspaceGtkSurfaceEnableLocalStreaming(surface, transport);
+}</code></pre>
+<p>Attach before opening a library; an existing session returns BUSY. Panel-only clients may use <code>UmiAiWorkspaceGtkPanelEnableLocalStreaming</code> while idle. These attachment calls borrow the transport and start no request. Keep it alive until every attached owner is released, including periods with no active raw job.</p>
+<p>The existing shared native-product composition selects this host for AI-attached modules such as LLM, RAG and Creator when their frontend is enabled. A separately implemented Studio or Media frontend does not acquire this workflow merely by linking Framework. Its integration and product qualification remain separate work.</p>
+<h2>3. Keep the worker away from widgets</h2>
+<p>The raw producer owns encoded request and response storage. On each GTK timer callback, the panel polls copied state and obtains an owned text copy. Only the GTK owner changes the text buffer. The review/export forms remain disabled during the request; the stop button remains available.</p>
+<p>Normal completion uses TryFinish. On a platform without nonblocking native join, the panel calls the blocking finish alternative only after observing raw producer completion. Native thread teardown and final database publication can still take time; this is not a hard real-time interface.</p>
+<p>A pre-start refusal keeps the approved job and reports that no generated result was saved. A settled request reports separate operation and publication statuses. Failed or cancelled partial text, when available, retains an explicit temporary-draft notice instead of being presented as a saved answer.</p>
+<h2>4. Understand reentrant callbacks</h2>
+<p>A function is reentered when one of its calls causes another callback to call back into the same owner before the first call returns. For example, changing a GtkTextBuffer emits a changed signal. Another handler could try to close the panel from inside that notification.</p>
+<p>The stream/run callback holds a short callback lease. Checked release returns BUSY during that lease, leaving the pointer unchanged. This prevents a close notification from freeing the panel while the timer still has its address on the stack. The guard is not a substitute for thread serialization; it handles nested calls on the owner thread.</p>
+<h2>5. Release the whole dependency chain</h2>
+<pre><code class="language-c">UmiStatus release = UmiAiWorkspaceGtkSurfaceRelease(&amp;surface);
+if (release != UMI_STATUS_OK) {
+    /* Keep surface and its borrowed transport alive. Retry on the owner thread. */
+} else {
+    /* surface is NULL. Release transport only when every other borrower is gone. */
+}</code></pre>
+<p>Panel release retires controls and disconnects signals before cancellation and joining. A native finish or release failure retains the closed panel. Surface release then retains its session, which still owns the workspace, runtime, token and Data Server. Each checked release must succeed before cleanup advances to the next dependency.</p>
+<table><tr><th>Refusal</th><th>Storage retained</th><th>Next action</th></tr>
+<tr><td>Callback lease is active</td><td>The still-active panel and services</td><td>Retry after the callback returns.</td></tr>
+<tr><td>Stream join/release fails</td><td>Closed panel, stream and all borrowed services</td><td>Retry native cleanup; do not restart the request.</td></tr>
+<tr><td>Workspace release refuses</td><td>Workspace and its remaining runtime/storage chain</td><td>Resolve retained ownership before advancing.</td></tr>
+<tr><td>Runtime release refuses</td><td>Runtime, cancellation token and Data Server</td><td>Inspect its checked ownership state; preserve the chain.</td></tr></table>
+<p>Shutdown deliberately permits blocking cancellation and settlement. A failed checked shutdown in the common product host keeps its heap context alive until process exit, avoiding a pointer into an expired stack frame. The legacy void destructors remain for compatibility but cannot report a retained owner; streaming hosts should use checked release.</p>
+<h2>6. Replace libraries without losing either owner</h2>
+<p>The surface opens a candidate library before retiring the old one. A missing or corrupt candidate leaves the current forms intact. A failure while retiring the old native owner is different: the surface keeps both the old chain and candidate chain, and reports failure. It does not release the old runtime underneath an active producer.</p>
+<p>A partially retired closed session requires checked shutdown/recovery; its old controls are not promised to remain editable. An unsuccessful candidate whose own cleanup refuses is also retained. This is why a single pointer-to-pointer release at each layer is useful: success clears the pointer, refusal keeps concrete cleanup responsibility visible.</p>
+<h2>7. Qualify controls and cleanup separately</h2>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-reviewed-stream-panel-gtk-test umicom-reviewed-stream-surface-gtk-test umicom-ai-workspace-gtk-test umicom-ai-library-gtk-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.ai_workspace\.(reviewed_(panel|surface)\.gtk4\.|gtk\.)" --output-on-failure</code></pre>
+<p>With GTK and HTTP enabled, the new suites contain 13 panel and seven surface scenarios. Existing complete-response workflow, close-during-request and library-switch tests remain selected. The new panel fixture uses a real C loopback peer, HTTP adapter and reviewed workspace. Only specified cleanup/observation refusals are injected. The surface fixture uses real panels and SQLite with injected checked-boundary failures.</p>
+<p>Tests cover copied text, cancellation, pre-start refusal, failed saving, wrong-thread calls, reentrant close, retained buttons, candidate replacement and each dependency-release boundary. They initialize GTK without presenting a window and return skip when required capabilities are unavailable. Registration or a headless fixture does not establish actual font, icon, window-close or display behavior; qualify those native workflows separately.</p>
+<p>This integration and its regressions are authored. Compilation, GTK execution, live local-model inference and installed-product behavior require qualification. Read <a href="reviewed-local-streams.html">reviewed local streams</a> and <a href="reviewed-ai-execution.html">durable execution</a> for the service contracts underneath the UI.</p>
+<h2>Read and append bounded draft ranges</h2>
+<p>The existing panel now tracks the number of payload bytes displayed for its current stream. Each poll asks the shared Framework range reader for at most 4096 new bytes and inserts nonempty text at the end of the existing draft buffer. A new request resets that cursor before its initial draft label is shown.</p>
+<p>The shared response owner selects complete UTF-8 scalars and publishes the copied bytes and snapshot together. The panel keeps its callback retirement guard during insertion because GTK text-change signals can reenter the application. An empty range causes no text-buffer mutation. Failed reads still request cancellation and retain owners for the existing settlement path.</p>
+<p>Final settlement continues to validate and save a complete response separately. A completed provider may settle before every intermediate window was drawn; the final refresh presents the recorded result. Earlier failure text remains visibly labelled as a temporary draft. No new layout, provider capability or model-readiness claim is introduced.</p>
+<p>The native range tests cover boundaries, pending scalars, retained copies and allocation/mutex errors. The actual reviewed-controller fixture compares bounded ranges with its joined full copy. The GTK fixture routes copy-failure injection through the new method, retains nested-close coverage, and includes <code>range-append</code>: it joins an inert peer before asserting a correct append and no change signal for a repeated empty read. These tests require owner-run execution; configuration does not establish their results.</p>
+<p>See <a href="request-owned-ai-streams.html">request-owned text ranges</a> for the byte cursor contract. Real application responsiveness, selection behavior, rendering and font fallback still need GUI qualification.</p>
+</main></body></html>

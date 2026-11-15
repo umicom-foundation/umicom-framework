@@ -1,0 +1,94 @@
+<!-- Umicom Framework
+File: docs/learning/admit-event-stream-responses.html
+
+PURPOSE:
+Teach bounded HTTP metadata admission before SSE payload decoding and model completion.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admit an event-stream response before reading text</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Admit an event-stream response before reading text</h1>
+<p>An HTTP error page can arrive on the same connection that normally carries model output. A streaming client must decide whether a response is suitable before handing its bytes to an SSE parser. Framework's Web component provides <code>UmiWebSseResponse</code> for that receiving boundary.</p>
+<p>This service owns response state and counters. It opens no connection and stores no body. It works with complete HTTP header lines supplied by a transport, then admits entity-byte counts before a separate payload decoder receives those bytes.</p>
+<h2>1. Distinguish header callbacks from payload callbacks</h2>
+<p>libcurl supplies complete header lines, including status and blank lines, to its <a href="https://curl.se/libcurl/c/CURLOPT_HEADERFUNCTION.html">header callback</a>. The callback may see informational response blocks and trailers. Its <a href="https://curl.se/libcurl/c/CURLOPT_WRITEFUNCTION.html">write callback</a> receives body fragments whose sizes are not predictable and whose bytes are not null-terminated.</p>
+<p>These are different contracts. Do not feed a status line into the SSE decoder, or assume an HTTP body callback contains one complete JSON event. Let the transport reconstruct HTTP lines and remove transfer framing; let the SSE parser reconstruct payload events.</p>
+<h2>2. Use a deliberately narrow receiving profile</h2>
+<table><thead><tr><th>Observation</th><th>Admission</th></tr></thead><tbody>
+<tr><td>HTTP version</td><td>HTTP/1.0 or HTTP/1.1. A client using this profile must select HTTP/1, rather than silently accepting normalized HTTP/2 or HTTP/3 status lines.</td></tr>
+<tr><td>Final response</td><td>Exactly 200. Informational blocks are bounded; 101 switching protocols is unsupported.</td></tr>
+<tr><td>Content-Type</td><td>Exactly one text/event-stream, optionally followed by one charset=utf-8 parameter. Case and surrounding horizontal whitespace are handled; a quoted UTF-8 charset is accepted.</td></tr>
+<tr><td>Content-Encoding</td><td>Absent or one identity field. Compressed representations are outside this profile.</td></tr>
+<tr><td>Transfer framing</td><td>One Content-Length, one chunked Transfer-Encoding on HTTP/1.1, or neither for a close-delimited body. Length and chunked fields cannot coexist.</td></tr>
+<tr><td>Trailers</td><td>Only after a body begins with admitted chunked framing. They cannot revise media, framing or routing fields used by this profile.</td></tr>
+</tbody></table>
+<p>This is a client admission policy, not a complete HTTP implementation. Duplicate type, length, encoding and transfer fields are refused even if their text appears identical. Unsupported response status or representation returns UNAVAILABLE. Malformed syntax or contradictory framing returns PARSE_ERROR. Limits return CAPACITY_EXCEEDED.</p>
+<p>The server's reported status is retained in the snapshot. For example, 429 and 503 remain visible as their actual HTTP values while this narrow admission service returns UNAVAILABLE. It neither retries nor authorizes contacting a different endpoint.</p>
+<h2>3. Set independent budgets</h2>
+<pre><code class="language-c">UmiWebSseResponseLimits limits = {
+    .line_bytes = 4096,
+    .total_header_bytes = 32768,
+    .header_lines = 128,
+    .informational_responses = 4,
+    .body_bytes = 1048576
+};
+UmiWebSseResponse *response = NULL;
+UmiStatus status = UmiWebSseResponseCreate(&amp;limits, &amp;response);</code></pre>
+<p>The line limit includes CRLF. The total and count limits cover all informational, final and trailer lines, including status and blank lines. A server cannot evade the total by repeatedly sending new informational blocks. A declared body length larger than the body budget is rejected before body decoding starts.</p>
+<p>Body byte counts refer to entity bytes delivered after HTTP transfer framing has been removed. Chunk-length lines and chunk delimiters are not SSE data. The service does not perform decompression, which is why this profile rejects a compressed Content-Encoding.</p>
+<h2>4. Admit before forwarding</h2>
+<ol><li>Create one response owner for the request.</li><li>Pass each complete header line to <code>UmiWebSseResponseHeader</code>. Stop the transport if admission fails.</li><li>For each payload callback, call <code>UmiWebSseResponseBody</code> with its byte count before forwarding any bytes to the SSE parser.</li><li>On successful transport completion, call <code>UmiWebSseResponseFinish</code>. A declared length must exactly match accepted body bytes.</li><li>Separately finish the SSE/model sequencer. Its finish records still need to be present and ordered.</li><li>After the worker is quiescent, destroy the response owner. Calls are serialized by that owner thread.</li></ol>
+<p>If the transport times out or fails, do not call Finish as though normal EOF occurred. Retain the transport failure in the surrounding request owner. This service does not create threads, cancel HTTP or prove endpoint ownership.</p>
+<h2>5. Keep useful partial output distinguishable</h2>
+<p>Consider an authored body containing a valid model finish and [DONE] marker, with a Content-Length one byte larger than the delivered body. The provider sequence has seen its marker, but the HTTP response is incomplete. Response Finish rejects the mismatch; the model request retains partial text and fails instead of publishing success.</p>
+<p>The reverse boundary matters too. An application/json error response must fail header admission before the model parser sees any error-body bytes. Merely attempting to parse whatever arrived as SSE would obscure the actual transport failure.</p>
+<h2>6. Use the installed SDK</h2>
+<p>The <a href="../../examples/sdk_sse_reader/README.md">independent SSE reader example</a> now combines authored response headers with fragmented event data. Its CMake project selects an installed Framework package, links <code>Umicom::web</code> and uses the shared SVG/ICO branding helper. It does not clone Framework, contact a server or claim model inference.</p>
+<!-- Earlier integration scope retained for design history; the public request owner is now authored.
+<p>Read <a href="complete-local-model-streams.html">terminal sequencing</a> next for the distinct provider completion boundary. Framework now composes these helpers in a private blocking streaming exchange. The current public local provider still uses full responses; background ownership and application adoption are separate work.</p>
+-->
+<p>Read <a href="complete-local-model-streams.html">terminal sequencing</a> for the provider completion boundary. Framework composes these helpers in a private blocking exchange, with a separate <a href="background-local-model-streams.html">public background request owner</a>. The existing full-response provider remains available. Application adoption and runtime qualification remain separate work.</p>
+<h2>7. Run the focused regressions</h2>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-sse-response-test umicom-sse-response-boundary-test umicom-local-chat-http-admission-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.(web\.sse_response|ai_workspace\.http_admission)" --output-on-failure</code></pre>
+<p>The suite registers 44 response-profile cases, 25 boundary cases and four compositions with the real model sequencer. Web cases need no local model or optional HTTP library. Composition cases explicitly skip when the native provider JSON capability is unavailable. The expected result with that capability is 73 passes; these expectations are not executed results.</p>
+<p>For a failure, inspect the observed status, phase and counters. Preserve the exact header lines before changing the accepted profile. If the server requires another representation, extend the adapter and corresponding tests deliberately rather than removing the gate.</p>
+<h2>8. Keep request policy in one place</h2>
+<p>Response validation does not decide where a request may go. Framework's full-response and health clients now share a private checked option helper. It constructs only two loopback routes: GET /health or POST /v1/chat/completions at an explicitly selected 127.0.0.1 port. Callers cannot supply an arbitrary URL through this helper.</p>
+<p>The shared options disable proxies and redirects, restrict protocols to HTTP, ignore netrc credentials, apply connection and total deadlines, and retain cancellation through the progress callback. The existing public provider still uses full responses. A separate streaming mode also selects HTTP/1.1, requests identity encoding and disables entity decompression so the receiving profile above sees the representation it expects.</p>
+<p>Each option assignment is checked. If one fails, the caller must clean up the partially configured easy handle without performing a transfer. A successful later option cannot make an earlier policy failure safe. The helper borrows the encoded JSON body, headers and callback contexts; those objects must remain alive until transfer cleanup.</p>
+<p>The regression includes the real policy implementation with only option assignment intercepted. It checks the selected route and values, then makes each assignment fail in turn. This is useful fault coverage, but it does not replace real loopback tests of the transport and cancellation.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-local-http-policy-test umicom-ai-workspace-http-client
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.ai_workspace\.(http_policy|http|health_codec)\." --output-on-failure</code></pre>
+<p>Seven policy cases require the native HTTP capability. Existing full-response HTTP and health-codec regressions remain relevant after the shared-policy extraction. These checks are authored or registered; no runtime pass is implied here.</p>
+<h2>9. Connect admission to the native exchange</h2>
+<p>The private <code>AwLocalChatExchangeStream</code> now combines the checked loopback policy, response admission and model sequencer. The caller supplies an encoded streaming request, a fresh sequencer and a cancellation token. The caller also owns libcurl's global lifetime. These borrowed objects remain alive until the blocking call returns.</p>
+<!-- Earlier transport-only scope retained as design history; the public owner is now authored.
+<p>Header callbacks admit complete response lines. Body callbacks first admit the entity-byte count, then feed bytes to the model sequencer. They never invoke application code or hold a GUI pointer. This implementation creates no worker; a future public background owner must synchronize observations and join its producer before releasing the sequencer.</p>
+-->
+<p>Header callbacks admit complete response lines. Body callbacks first admit the entity-byte count, then feed bytes to the model sequencer. They never invoke application code or hold a GUI pointer. The blocking exchange creates no worker itself. The <a href="background-local-model-streams.html">public background request owner</a> now supplies runtime retention, copied observations, cancellation and joined release; application UI adoption still needs qualification.</p>
+<p>A callback may detect a precise failure such as an unsupported content type or malformed JSON, while libcurl reports a generic write failure. The exchange retains the callback's first status. If no callback failure occurred, it distinguishes a timeout, cancellation and other transport errors. A cancellation observed at the final publication check prevents successful completion; a cancellation arriving after terminal completion cannot rewrite that result.</p>
+<p>Only a successful transfer proceeds through response Finish and then model Finish. A valid [DONE] marker followed by a transport failure remains failed with partial text retained. Response metadata reports the observed HTTP status and counters; it does not authenticate which process or model answered.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-local-http-stream-test umicom-local-chat-stream-offline-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.ai_workspace\.(http_stream\.|stream_offline$)" --output-on-failure</code></pre>
+<p>The 22 callback cases use actual response, cancellation and text owners while intercepting transport configuration and execution. Real libcurl handles and header lists still exercise allocation and cleanup when those tests run. The separate offline case builds the real unavailable branch. Authored cases and configuration are not execution evidence. Real sockets, a pinned local server, public worker ownership and UI closure still need separate qualification.</p>
+<h2>10. Exercise real HTTP on loopback</h2>
+<p>Callback injection can prove how a service classifies a known transport result. A native loopback fixture checks a different boundary: what the HTTP library actually delivers. The new test starts one C peer on an ephemeral 127.0.0.1 port, sends an authored response and captures the client's real request with Framework's request parser. It does not launch or download a model.</p>
+<ol><li>The test encodes a real streaming request using Framework's JSON codec.</li><li>The peer captures the request method, path, headers and body. The test checks POST /v1/chat/completions, JSON content type, SSE Accept header and the stream flag.</li><li>The peer sends a response with a declared length or chunked transfer framing. The actual libcurl exchange feeds shared admission and model-sequence services.</li><li>The caller joins and releases the peer before freeing its borrowed response or cancellation token.</li><li>The test checks the terminal state, retained text and response counters.</li></ol>
+<p>Small socket writes do not guarantee equally small client callbacks: the operating system may combine them. The one-byte send case exercises transport fragmentation without claiming a particular callback shape. The earlier callback test remains the precise byte-by-byte parser check.</p>
+<p>The chunked case includes an ordinary trailer; its chunk markers are transport framing, not model text. An informational 100 response precedes the final 200 response in another case. A deliberately larger Content-Length makes the real transfer fail even though the body contains a model finish and [DONE]. The partial text remains visible with an IO_ERROR terminal state.</p>
+<p>Other cases refuse missing or wrong media type, busy and redirect statuses, malformed JSON, absent and duplicate terminal markers. A delayed peer exercises the transfer timeout. Another peer requests cancellation immediately after receiving the request and closes without a response. Proxy environment variables point at an unavailable port in a separate process: the shared explicit bypass policy must still reach the local peer.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-local-http-stream-loopback-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.ai_workspace\.http_stream_loopback\." --output-on-failure</code></pre>
+<p>With native HTTP and JSON support, the expected result is 15 passes. These are authored expectations, not a qualification claim. The fixture uses Windows or POSIX sockets only for its ephemeral test listener, and Framework threads and parsing for shared behavior. It has bounded waits, reports peer cleanup failure and retains borrowed storage if joining cannot be confirmed.</p>
+<p>On a timeout failure, distinguish the client's expected TIMEOUT from a peer-fixture failure printed separately. A fixture failure means the expected exchange was not established reliably; do not count it as a successful negative test. Run on the intended platforms and retain source identity and test output. This local fixture does not prove compatibility with a particular llama.cpp revision, endpoint ownership, model quality or application UI lifetime.</p>
+</main></body></html>

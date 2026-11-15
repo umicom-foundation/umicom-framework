@@ -1,0 +1,50 @@
+<!-- Umicom Framework
+File: docs/learning/start-centre-navigation.html
+
+PURPOSE:
+Teach Start Centre navigation while retaining document ownership and native lifetime.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Keep Welcome separate from your documents</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Keep Welcome separate from your documents</h1>
+<p>A start screen helps people create projects, open recent work and find lessons. It is a view over an application, not a source document. If opening Welcome closes the editor’s active document, a navigation action can accidentally affect unsaved work. Umicom keeps the document owner and the Start Centre navigation state separate.</p>
+<h2>Use the Studio workflow</h2>
+<ol><li>Open a C source file and make a small unsaved edit. Select a few characters so you can check the selection later.</li>
+<li>Choose Help &gt; Welcome. Studio reveals the existing Welcome content in the retained Editor surface. It keeps the source document open.</li>
+<li>Leave Welcome open while ordinary status refreshes occur. The explicit choice should remain visible; a timer should not immediately send you back to the editor.</li>
+<li>Choose Return to editor from the Welcome tools row. Check the text, dirty indicator, cursor and selection. Returning does not save the file.</li>
+<li>Open or activate a different document. Normal editor presentation resumes for that new document. You can choose Help &gt; Welcome again whenever you need the start screen.</li></ol>
+<p>With no ordinary document, the normal view remains Welcome. There is no source to return to, so Return to editor is unavailable. Opening a start screen does not create a project, run a build, connect a model or grant workspace trust. Those are separate explicit actions.</p>
+<h2>Understand the shared C state</h2>
+<p>UmiStartCentreNavigation is a small value owned by one workbench. Initialise it to zero. It remembers the last observed document identity and whether the person explicitly requested Welcome. The identity is opaque: Framework does not interpret it as a path or open the file. Studio maps its special welcome-document placeholder to an empty identity before calling the shared API.</p>
+<pre><code class="language-c">UmiStartCentreNavigation navigation = {0};
+int show_welcome = 0;
+UmiStatus status = UmiStartCentreNavigationUpdate(
+    &amp;navigation, &quot;draft.c&quot;, UMI_START_CENTRE_SHOW_WELCOME,
+    &amp;show_welcome);
+/* If status is OK, select the existing Welcome view.
+   Keep documents in their current document owner. */</code></pre>
+<p>OBSERVE is for normal refreshes. It preserves an explicit request while the active identity stays the same. SHOW_WELCOME records an explicit navigation choice. SHOW_EDITOR clears that choice when an ordinary document exists. An empty SHOW_EDITOR request returns NOT_FOUND. Invalid state, an unsupported action or an identity that exceeds the bounded capacity leaves the state and output unchanged. Keep mutation on the workbench’s owning thread.</p>
+<h2>Build the complete exercise</h2>
+<p>The complete example is examples/learning/projects/start_navigation.c. It prints a sequence of view choices without opening a native window or writing documents. Use the following commands from the Framework repository with the UCRT64 tools available. This builds the learning target through the same Framework tree; it does not clone another Framework copy. Stop on a failed command.</p>
+<pre><code class="language-powershell">$env:Path = &quot;C:\msys64\ucrt64\bin;$env:Path&quot;
+cmake -S . -B build/start-navigation -G Ninja -DUMICOM_BUILD_LEARNING_EXAMPLES=ON -DBUILD_TESTING=ON
+cmake --build build/start-navigation --target umicom-learning-start-navigation
+ctest --test-dir build/start-navigation -R &quot;^framework[.]learning[.]projects[.]start-navigation$&quot; --output-on-failure --no-tests=error</code></pre>
+<p>Expected output starts with Empty workspace: Welcome and Open draft: Editor. Choosing Help Welcome and refreshing the same document both report Welcome. Returning to the editor and activating another document report Editor. These are expected results to verify in your build, not a claim of an executed native workflow.</p>
+<h2>Qualify the application boundary</h2>
+<p>A correct value transition does not prove that a GUI remained alive. Studio holds an independent runtime token across native panel publication, then checks it after the visible child changes. The return path also guards against a synchronous observer reopening Welcome before editor restoration completes. Retained buttons from a closed workbench must stay inert.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-all-debug --target umicom-studio-welcome-navigation-test
+ctest --test-dir build/windows-ucrt64-all-debug -R &quot;^studio[.]welcome[.]navigation[.]gtk4[.]&quot; --output-on-failure --no-tests=error</code></pre>
+<p>Run those native commands from the Applications repository after configuring Studio’s GTK4 tests. Compare dirty bytes and selection as well as the visible view. A skipped GTK case needs a usable native environment; a headless state test cannot replace it. If Welcome disappears immediately, inspect who changed the active identity. If the window closes during navigation, cancel the pending action and never reuse its retired runtime.</p>
+</main></body></html>

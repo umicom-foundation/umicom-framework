@@ -46,5 +46,116 @@ int main(void)
     CHECK(umi_cvm_preview(NULL, 0U, 4U, &workspace, sizeof workspace,
         &result, sizeof result) == UMI_STATUS_INVALID_ARGUMENT);
     CHECK(!result.completed && result.diagnostic.status == UMC_INVALID_ARGUMENT);
+    /* The adapter reuses the linked compiler; it must not reimplement update
+     * arithmetic or expose the successful result of an earlier preview after
+     * a compound statement fails. These checks require the matching compiler. */
+    const char *compound = "int main(void){int value=6;value*=7;return value;}";
+    CHECK(umi_cvm_preview(compound, strlen(compound), 8U, &workspace, sizeof workspace,
+        &result, sizeof result) == UMI_STATUS_OK);
+    CHECK(result.completed && result.phase == UMI_CVM_COMPLETE &&
+        result.execution.value == 42 && result.execution.instructions_executed == 8U);
+    const char *compound_fault = "int main(void){int value=2147483647;value+=1;return value;}";
+    CHECK(umi_cvm_preview(compound_fault, strlen(compound_fault), 8U, &workspace, sizeof workspace,
+        &result, sizeof result) == UMI_STATUS_INVALID_STATE);
+    CHECK(!result.completed && result.phase == UMI_CVM_EXECUTING &&
+        result.execution.value == 0 && result.diagnostic.status == UMC_ARITHMETIC_ERROR);
+    const char *compound_invalid = "int main(void){int value=6;return value+=1;}";
+    CHECK(umi_cvm_preview(compound_invalid, strlen(compound_invalid), 8U, &workspace, sizeof workspace,
+        &result, sizeof result) == UMI_STATUS_PARSE_ERROR);
+    CHECK(!result.completed && result.phase == UMI_CVM_COMPILING &&
+        result.instruction_count == 0U && result.execution.value == 0);
+    /* The shared adapter must follow selected branch execution and clear
+     * earlier completion on fuel, arithmetic or grammar failure. */
+    const char *conditional = "int main(void){int x=1;if(0){x=7;}else{x=42;}return x;}";
+    CHECK(umi_cvm_preview(conditional, strlen(conditional), 8U, &workspace, sizeof workspace,
+        &result, sizeof result) == UMI_STATUS_OK);
+    CHECK(result.completed && result.execution.value == 42 && result.instruction_count == 11U &&
+        result.execution.instructions_executed == 8U);
+    CHECK(umi_cvm_preview(conditional, strlen(conditional), 7U, &workspace, sizeof workspace,
+        &result, sizeof result) == UMI_STATUS_CAPACITY_EXCEEDED);
+    CHECK(!result.completed && result.phase == UMI_CVM_EXECUTING && result.execution.value == 0 &&
+        result.diagnostic.status == UMC_FUEL_EXHAUSTED);
+    const char *conditional_fault = "int main(void){int x=1;if(1){x/=0;}return x;}";
+    CHECK(umi_cvm_preview(conditional_fault, strlen(conditional_fault), 16U, &workspace, sizeof workspace,
+        &result, sizeof result) == UMI_STATUS_INVALID_STATE);
+    CHECK(!result.completed && result.execution.value == 0 && result.diagnostic.status == UMC_ARITHMETIC_ERROR);
+    const char *conditional_invalid = "int main(void){if(1){int x=42;}return 0;}";
+    CHECK(umi_cvm_preview(conditional_invalid, strlen(conditional_invalid), 16U, &workspace, sizeof workspace,
+        &result, sizeof result) == UMI_STATUS_PARSE_ERROR);
+    CHECK(!result.completed && result.phase == UMI_CVM_COMPILING && result.instruction_count == 0U);
+    /* Chain spelling is owned by the linked compiler, while preview keeps
+     * the same completed-result boundary and instruction-fuel contract. */
+    const char *chain = "int main(void){int x=1;if(0){x=7;}else if(1){x=42;}else{x=9;}return x;}";
+    CHECK(umi_cvm_preview(chain, strlen(chain), 11U, &workspace, sizeof workspace,
+        &result, sizeof result) == UMI_STATUS_OK);
+    CHECK(result.completed && result.execution.value == 42 && result.instruction_count == 16U &&
+        result.execution.instructions_executed == 11U);
+    CHECK(umi_cvm_preview(chain, strlen(chain), 10U, &workspace, sizeof workspace,
+        &result, sizeof result) == UMI_STATUS_CAPACITY_EXCEEDED);
+    CHECK(!result.completed && result.execution.value == 0 && result.diagnostic.status == UMC_FUEL_EXHAUSTED);
+    const char *chain_fault = "int main(void){int x=1;if(0){}else if(1/0){x=42;}return x;}";
+    CHECK(umi_cvm_preview(chain_fault, strlen(chain_fault), 32U, &workspace, sizeof workspace,
+        &result, sizeof result) == UMI_STATUS_INVALID_STATE);
+    CHECK(!result.completed && result.execution.value == 0 && result.diagnostic.status == UMC_ARITHMETIC_ERROR);
+    const char *chain_invalid = "int main(void){int x=1;if(0){}else if(1)x=42;return x;}";
+    CHECK(umi_cvm_preview(chain_invalid, strlen(chain_invalid), 32U, &workspace, sizeof workspace,
+        &result, sizeof result) == UMI_STATUS_PARSE_ERROR);
+    CHECK(!result.completed && result.phase == UMI_CVM_COMPILING && result.instruction_count == 0U);
+    /* Remainder is supplied by the canonical compiler/runtime pair; the
+     * Framework preview must clear previous results after its checked faults. */
+    const char *remainder = "int main(void){int value=137;value%=95;return value;}";
+    CHECK(umi_cvm_preview(remainder, strlen(remainder), 8U, &workspace, sizeof workspace,
+        &result, sizeof result) == UMI_STATUS_OK);
+    CHECK(result.completed && result.execution.value == 42 && result.execution.instructions_executed == 8U);
+    const char *remainder_fault = "int main(void){return (-2147483647-1)%-1;}";
+    CHECK(umi_cvm_preview(remainder_fault, strlen(remainder_fault), 16U, &workspace, sizeof workspace,
+        &result, sizeof result) == UMI_STATUS_INVALID_STATE);
+    CHECK(!result.completed && result.execution.value == 0 && result.diagnostic.status == UMC_ARITHMETIC_ERROR);
+    CHECK(umi_cvm_preview(remainder, strlen(remainder), 7U, &workspace, sizeof workspace,
+        &result, sizeof result) == UMI_STATUS_CAPACITY_EXCEEDED);
+    CHECK(!result.completed && result.execution.value == 0 && result.diagnostic.status == UMC_FUEL_EXHAUSTED);
+
+    /* Complement is compiled by Umicom C. Preview owns its displayed result
+     * and must not retain an earlier success after a budget or operand fault. */
+    const char *complement="int main(void){return ~-43;}";
+    CHECK(umi_cvm_preview(complement,strlen(complement),5U,&workspace,sizeof workspace,
+        &result,sizeof result)==UMI_STATUS_OK);
+    CHECK(result.completed && result.execution.value==42 && result.instruction_count==5U);
+    CHECK(umi_cvm_preview(complement,strlen(complement),4U,&workspace,sizeof workspace,
+        &result,sizeof result)==UMI_STATUS_CAPACITY_EXCEEDED);
+    CHECK(!result.completed && result.execution.value==0 && result.diagnostic.status==UMC_FUEL_EXHAUSTED);
+    const char *complement_minimum="int main(void){return ~(-2147483647-1);}";
+    CHECK(umi_cvm_preview(complement_minimum,strlen(complement_minimum),16U,&workspace,sizeof workspace,
+        &result,sizeof result)==UMI_STATUS_OK);
+    CHECK(result.completed && result.execution.value==INT32_MAX);
+    const char *complement_fault="int main(void){return ~(1/0);}";
+    CHECK(umi_cvm_preview(complement_fault,strlen(complement_fault),16U,&workspace,sizeof workspace,
+        &result,sizeof result)==UMI_STATUS_INVALID_STATE);
+    CHECK(!result.completed && result.execution.value==0 && result.diagnostic.status==UMC_ARITHMETIC_ERROR);
+    const char *complement_invalid="int main(void){return ~=1;}";
+    CHECK(umi_cvm_preview(complement_invalid,strlen(complement_invalid),16U,&workspace,sizeof workspace,
+        &result,sizeof result)==UMI_STATUS_PARSE_ERROR);
+    CHECK(!result.completed && result.phase==UMI_CVM_COMPILING && result.instruction_count==0U);
+    /* Bitwise semantics remain in the canonical compiler/runtime pair. The
+     * shared adapter clears earlier success before any new preview attempt. */
+    const char *bitwise="int main(void){return 63 & 47 ^ 5 | 0;}";
+    CHECK(umi_cvm_preview(bitwise,strlen(bitwise),8U,&workspace,sizeof workspace,
+        &result,sizeof result)==UMI_STATUS_OK);
+    CHECK(result.completed && result.execution.value==42 && result.instruction_count==8U);
+    CHECK(umi_cvm_preview(bitwise,strlen(bitwise),7U,&workspace,sizeof workspace,
+        &result,sizeof result)==UMI_STATUS_CAPACITY_EXCEEDED);
+    CHECK(!result.completed && result.execution.value==0 && result.diagnostic.status==UMC_FUEL_EXHAUSTED);
+    const char *bitwise_update="int main(void){int x=63;x&=47;x^=5;x|=0;return x;}";
+    CHECK(umi_cvm_preview(bitwise_update,strlen(bitwise_update),16U,&workspace,sizeof workspace,
+        &result,sizeof result)==UMI_STATUS_OK);
+    CHECK(result.completed && result.execution.value==42 && result.instruction_count==16U);
+    const char *bitwise_fault="int main(void){return 0 & (1/0);}";
+    CHECK(umi_cvm_preview(bitwise_fault,strlen(bitwise_fault),16U,&workspace,sizeof workspace,
+        &result,sizeof result)==UMI_STATUS_INVALID_STATE);
+    CHECK(!result.completed && result.execution.value==0 && result.diagnostic.status==UMC_ARITHMETIC_ERROR);
+    const char *bitwise_invalid="int main(void){int x=63;return x&=42;}";
+    CHECK(umi_cvm_preview(bitwise_invalid,strlen(bitwise_invalid),16U,&workspace,sizeof workspace,
+        &result,sizeof result)==UMI_STATUS_PARSE_ERROR);
+    CHECK(!result.completed && result.phase==UMI_CVM_COMPILING && result.instruction_count==0U);
     return 0;
 }

@@ -33,7 +33,24 @@ int main(void)
     size_t other;
 
     assert(items != NULL);
+    /* Cancellation extends the catalogue; keep the previous count for review. */
+#if 0
     assert(count == 3U);
+#endif
+    assert(count == 4U);
+    size_t scans = 0U, cancellations = 0U;
+    for (size_t i = 0U; i < count; ++i) {
+        if (strcmp(items[i].command_id, "codeguard.scan") == 0) {
+            ++scans;
+            assert((items[i].flags & UMI_DEVELOPER_WORKBENCH_COMMAND_REQUIRES_WORKSPACE) != 0U);
+        }
+        if (strcmp(items[i].command_id, "codeguard.cancel") == 0) {
+            ++cancellations;
+            assert((items[i].flags & UMI_DEVELOPER_WORKBENCH_COMMAND_REQUIRES_WORKSPACE) == 0U);
+            assert((items[i].flags & UMI_DEVELOPER_WORKBENCH_COMMAND_BACKGROUND) != 0U);
+        }
+    }
+    assert(scans == 1U && cancellations == 1U);
 
     /* Visit each bounded item once so every record receives the same rule. */
     for (index = 0U; index < count; ++index) {

@@ -17,6 +17,7 @@
 
 #include "umicom/ui/gtk4/workstation/workspace_layout_host.h"
 #include "umicom/ui/workbench_canvas.h"
+#include "umicom/ui/gtk4/window_lifecycle.h"
 #include "umicom/ui/workstation/maximize_mode.h"
 
 #include <stdbool.h>
@@ -119,6 +120,10 @@ struct UmiGtk4WorkspaceLayoutHost {
     GtkWidget *maximise_restore_button;
     GtkEventController *maximise_keys;
     guint pending_restore_id;
+    /* A notifying focus call owns a short lease over this allocation. */
+    int focus_active;
+    int destroy_requested;
+    int destroying;
 };
 
 /* Defined with content ownership helpers below; native destruction must
@@ -896,6 +901,10 @@ void umi_gtk4_workspace_layout_host_destroy(
      * used.
      */
     if (host == NULL) return;
+    if (host->destroying) return;
+    if (host->focus_active) { host->destroy_requested = 1; return; }
+    /* Mark retirement before GTK removal can invoke another destroy callback. */
+    host->destroying = 1;
     restore_maximised_presentation(host, 0);
     cancel_canvas_geometry(host);
     clear_tool_windows(host);
@@ -1030,6 +1039,9 @@ UmiStatus umi_gtk4_workspace_layout_host_rebuild(
     UmiStatus status;
 
     if (host == NULL || layout == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Rebuild cannot replace wrappers inside a notifying focus transaction. */
+    if (host->destroy_requested || host->destroying) return UMI_STATUS_CANCELLED;
+    if (host->focus_active) return UMI_STATUS_BUSY;
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
     if (layout->window_count > UMI_UI_WORKSPACE_LAYOUT_MAX_WINDOWS)
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -1253,6 +1265,9 @@ UmiStatus umi_gtk4_workspace_layout_host_set_context_groups(
 
 /* Activate the actual panel view without reopening hidden model instances or
  * changing its saved rectangle. This is also used by keyboard/menu navigation. */
+/* The checked ownership adapter replaces borrowed state across GTK callbacks.
+ * Retain the original selection and idempotence implementation for review. */
+#if 0
 UmiStatus umi_gtk4_workspace_layout_host_focus_window(
     UmiGtk4WorkspaceLayoutHost *host, const char *window_id)
 {
@@ -1313,3 +1328,5 @@ UmiStatus umi_gtk4_workspace_layout_host_focus_window(
     }
     return UMI_STATUS_OK;
 }
+#endif
+#include "workspace_focus_gtk4.inc"

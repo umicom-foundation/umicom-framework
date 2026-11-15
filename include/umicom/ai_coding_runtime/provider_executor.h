@@ -34,8 +34,11 @@ typedef struct UmiAiCodingProviderExecution {
 } UmiAiCodingProviderExecution;
 
 /**
- * Perform ai coding provider through the module contract so client applications do not
- * duplicate its policy.
+ * Validate config/request and execute through checked Framework generation.
+ * Invalid input preserves both outputs. Admitted attempts publish execution
+ * status, with finish/usage only for a validated successful response. A failed
+ * attempt preserves out_response; do not mistake it for the current result.
+ * Inputs and outputs must be separate complete records, serialized for the call.
  */
 UmiStatus umi_ai_coding_provider_execute(
     UmiAiRuntime *runtime,

@@ -1,0 +1,60 @@
+<!-- Umicom Framework
+File: docs/learning/coding-prompt-admission.html
+
+PURPOSE:
+Teach selected context provenance, byte-span feedback and complete provider request publication.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Build complete provider requests | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Build a provider request without publishing a partial prompt</h1>
+<p>A coding task, its selected files, and its owned file contents describe different stages of a workflow. Prompt construction joins them into the provider-neutral <code>UmiAiRequest</code>. Treat this join as a public data boundary: a ready flag alone cannot establish that the records agree.</p>
+<h2>1. Validate each input using its owning service</h2>
+<ol><li>Check selected-file metadata through <code>UmiAiCodingMaterializationPlanValidate</code>.</li><li>Check the complete coding request through <code>umi_ai_coding_request_validate</code>. This covers fields that materialization does not use, such as the instruction and request ID.</li><li>Validate the runtime configuration, including its finite temperature and provider kind.</li><li>Validate the materialized context, including lengths, text hashes and token totals.</li></ol>
+<p>These checks reuse Framework services. Studio and other applications should not create separate versions of the same path, capacity or numeric rules. See <a href="coding-context-materialization.html">owned repository context</a> and <a href="coding-config-domains.html">configuration domains</a> for the underlying contracts.</p>
+<h2>2. Check that the records belong together</h2>
+<p>The context revision must match the plan revision. Every included path must occur in the selected plan, with the same language and token estimate. Its active-file marker must match the request's active path. Included and skipped counts must account for the selected files.</p>
+<p>For example, a valid context containing <code>src/unselected.c</code> is still unsuitable for a plan that selected only <code>src/main.c</code>. Prompt construction returns INVALID_STATE instead of silently sending the unrelated text. A skipped file is allowed when the context records the omission.</p>
+<p>A matching revision and path are provenance checks. They are not signatures, a new privacy decision, proof of a filesystem boundary, or permission to invoke a remote provider. The execution service still applies its own current policy.</p>
+<h2>3. Use a byte span for feedback from another component</h2>
+<p>A byte span is a pointer plus an explicit length. It does not require a trailing zero byte. The new entry point accepts feedback in that form:</p>
+<pre><code class="language-c">const char feedback[] = {'r', 'e', 't', 'r', 'y'};
+UmiStatus status = UmiAiCodingBuildProviderRequestWithFeedback(
+    plan, context, config, feedback, sizeof feedback, request);
+if (status != UMI_STATUS_OK) {
+    /* request still contains its previous complete value. */
+    return status;
+}</code></pre>
+<p>Include <code>umicom/ai_coding_runtime/prompt.h</code>. In this fragment, the plan, context and config point to live records prepared by their Framework services; request points to a writable existing <code>UmiAiRequest</code>. Use the focused regression fixture for a complete memory-only example.</p>
+<p>Zero-length feedback may use a null pointer. Nonempty feedback must provide exactly the declared readable bytes and contain no embedded zero. Framework copies the bytes and supplies its own terminator. A length above the total possible message storage is refused before reading that span.</p>
+<p>The existing <code>umi_ai_coding_build_provider_request</code> remains available for a null pointer or a valid terminated C string. Its scan stops once the feedback cannot possibly fit a request. Use the length-aware form for input buffers whose size is already known.</p>
+<h2>4. Keep construction separate from publication</h2>
+<p>A request owns up to 64 messages, with 2,048 bytes of storage per message text and 128 bytes per message name. These are byte capacities, including terminators, rather than model token limits. A long selected path can fit the context representation but fail the smaller message-name capacity.</p>
+<p>Framework allocates a candidate request on the heap, constructs every message, and copies it to the caller only on success. A late message-capacity failure therefore preserves the previous request. Feedback may even borrow text from that previous request because publication occurs after all input reads.</p>
+<p>The established order remains: coding policy, modification protocol when applicable, instruction, optional active selection, selected file text, then validation feedback. <!-- The earlier byte-only description is retained for review; scalar-safe chunking now replaces that behavior. Source and feedback text are split using the existing byte-chunking behavior. This boundary does not itself provide Unicode normalization or model token accounting; review those separately. -->Source and feedback text now split at complete UTF-8 scalar boundaries. See <a href="coding-prompt-unicode.html">Unicode prompt text</a> for validation and exact byte preservation. Normalization, grapheme segmentation and model token accounting remain separate concerns.</p>
+<h2>5. Inspect a failure before retrying</h2>
+<table><thead><tr><th>Result</th><th>What to inspect</th></tr></thead><tbody>
+<tr><td>INVALID_ARGUMENT</td><td>Required pointers, terminated inline fields, request domain rules, configuration and the supplied feedback span.</td></tr>
+<tr><td>INVALID_STATE</td><td>Materialized content integrity and agreement between context and selected plan.</td></tr>
+<tr><td>CAPACITY_EXCEEDED</td><td>Token-estimate overflow, message count, feedback size or message-name capacity.</td></tr>
+<tr><td>OUT_OF_MEMORY</td><td>The candidate request or owned feedback could not be allocated; retain the prior request and retry according to application policy.</td></tr>
+</tbody></table>
+<p>Do not resolve a provenance failure by changing only a revision number. Rebuild context from the intended selected plan. Do not hide capacity failures by truncating paths or silently discarding source text; let the caller choose a smaller, explicit selection.</p>
+<h2>6. Qualify the contract without invoking a model</h2>
+<pre><code class="language-powershell"># From the Framework source root after configuration with testing enabled:
+cmake --build build/windows-ucrt64-debug --target umicom-ai-coding-prompt-admission-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework\.ai\.coding-prompt-admission\.' --output-on-failure</code></pre>
+<p>The 39 scenarios cover malformed inputs, selection provenance, byte feedback without a terminator, feedback borrowed from the previous output, embedded zero refusal, message and path limits, active selection, empty files, skipped files and existing message order. They allocate only memory and do not execute a provider. Expected result: all selected cases pass. Authored and registered cases still require native execution before a pass can be claimed.</p>
+<p>Continue with <a href="coding-runtime-lifetime.html">coding runtime lifetime</a> for the ownership rules used when the prepared request is actually executed.</p>
+
+</main></body></html>

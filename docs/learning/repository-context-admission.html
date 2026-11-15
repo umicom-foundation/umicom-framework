@@ -1,0 +1,68 @@
+<!-- Umicom Framework
+File: docs/learning/repository-context-admission.html
+
+PURPOSE:
+Teach bounded repository metadata, lexical paths, optional context selection and nonwrapping owner identities.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admit repository context safely | Umicom</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg">
+<link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}a{color:#005ea8}td,th{text-align:left;padding:8px;border-bottom:1px solid #ccd6df}</style>
+</head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Admit repository context safely</h1>
+<p>A coding assistant needs to explain which repository files it may include in a prompt. Framework's coding-context index stores paths, language labels, summaries, privacy classes and token estimates. It owns metadata copies; it does not read files, parse source code or invoke a model. This lesson follows <a href="../../include/umicom/ai/coding_context.h">the public coding-context API</a>.</p>
+<h2>1. Validate bounded values before string operations</h2>
+<p>A fixed C array can contain characters without a terminating zero. Passing that array to a path parser or string comparison can read beyond its intended boundary. <code>UmiAiCodingContextFileValidate</code> first delegates fixed-field checks to the shared snapshot validator, then applies the existing path and numeric rules.</p>
+<table><thead><tr><th>Field</th><th>Admission rule</th></tr></thead><tbody>
+<tr><td>path</td><td>Terminated within its array, nonempty and lexically relative.</td></tr>
+<tr><td>language_id, summary</td><td>Terminated within their arrays; empty text is allowed.</td></tr>
+<tr><td>estimated_tokens, priority</td><td>Positive values.</td></tr>
+<tr><td>classification</td><td>A known value from public through restricted.</td></tr>
+<tr><td>active, enabled</td><td>Existing nonzero-is-true behavior, including negative values.</td></tr>
+</tbody></table>
+<pre><code class="language-c">UmiAiCodingContextFile file = {0};
+strcpy(file.path, "src/calculation.c");
+strcpy(file.language_id, "c23");
+strcpy(file.summary, "Calculation helpers");
+file.classification = UMI_AI_DATA_INTERNAL;
+file.estimated_tokens = 240U;
+file.priority = 50U;
+file.active = 1;
+file.enabled = 1;
+UmiStatus status = umi_ai_coding_context_upsert(index, &amp;file);</code></pre>
+<p>These literals fit their destination arrays. Values from users or external tools need bounded copying and an explicit overflow response. Accepted upserts replace incoming historical revision metadata with the next revision assigned by this index.</p>
+<h2>2. Separate lexical paths from filesystem containment</h2>
+<p>The shared path rule rejects absolute paths, drive prefixes, colons, control bytes, empty components and dot or parent components. For example, <code>src/math.c</code> is accepted while <code>src/../private.c</code> is refused. Both slash styles are understood.</p>
+<p>A lexically valid relative path can still refer through a filesystem link or to a file changed after preview. The adapter that eventually opens it must enforce the approved workspace and live filesystem rules. Index validation neither follows links nor proves that the file exists. An incoming language label is metadata rather than evidence of the file's contents.</p>
+<h2>3. Preserve optional-file selection</h2>
+<p>Enabled active files rank first, then higher priority, then lexical path order. Every file in this coding index is optional. A file rejected by privacy, remaining token capacity or file-count capacity is counted as dropped; the successful plan is marked truncated. This differs from the general context broker, which also supports mandatory sources.</p>
+<p>A zero remaining token budget is valid. It can occur when general workspace context consumes the available budget. In that case enabled coding files are reported as drops and the returned plan is empty. Invalid privacy limits or unknown provider kinds instead refuse the entire operation, even when the index is empty; they are not ordinary file exclusions.</p>
+<pre><code class="language-c">UmiAiPrivacyPolicy privacy = umi_ai_privacy_policy_default();
+UmiAiCodingContextPlan *plan = malloc(sizeof *plan);
+if (plan == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+UmiStatus status = umi_ai_coding_context_plan(index, remaining_tokens, 8U,
+    provider_kind, &amp;privacy, sensitive_approved, plan);
+if (status == UMI_STATUS_OK) {
+    /* Display plan->file_count, dropped_count and remaining_tokens. */
+}
+free(plan);</code></pre>
+<p>The complete plan is built in temporary storage before replacing the caller's value. On refusal the old output remains unchanged. Always branch on the return status: retaining an older plan does not make it appropriate for the failed request.</p>
+<h2>4. Capture and retire owner state deliberately</h2>
+<p><code>UmiAiCodingContextCapture</code> reports the count and revision without copying file contents. <code>UmiAiCodingContextIndexValidate</code> checks owner bounds, stored metadata, unique paths and stored revisions before traversal. The legacy count helper returns zero for invalid state; callers that must distinguish an error from an empty index should use validation or capture.</p>
+<p>Upsert, remove and clear refuse an exhausted revision instead of wrapping back to an earlier identity. <code>UmiAiCodingContextClearChecked</code> reports refusal. The older void clear delegates to it and leaves state unchanged on failure. A successful empty clear still advances the revision. Removal also zeroes the unused trailing record after compaction.</p>
+<p>Serialize access to a live owner. These checks are not locks and cannot repair a dangling pointer. A copied plan is independent metadata and remains unchanged after later index edits; its revision does not track edits made directly to repository files.</p>
+<h2>5. Diagnose and verify a boundary failure</h2>
+<ol><li>Fill the entire path array with nonzero bytes. Expect invalid-argument refusal before the path parser runs; the index must remain unchanged.</li><li>Set an active flag to a negative nonzero value. Expect it to rank ahead of inactive files.</li><li>Prepare a zero-budget plan. Expect success, no selected files and one drop for each enabled file.</li><li>Set a privacy limit to an unknown enum value. Expect refusal with the previous plan unchanged.</li><li>Restore valid metadata and compare capture revisions before and after an accepted edit.</li></ol>
+<pre><code class="language-powershell">cmake --preset windows-ucrt64-debug
+cmake --build --preset windows-ucrt64-debug --target umicom-ai-coding-context-admission-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework[.]ai[.]coding-context[.]' --output-on-failure --no-tests=error</code></pre>
+<p>Stop on a failed command. The <a href="../../tests/test_ai_coding_context_admission.c">native regression cases</a> also inject otherwise impractical invalid counts and exhausted counters. That direct representation access belongs only to the test fixture. The <a href="../../examples/local_models/sdk_consumer/main.c">installed SDK consumer</a> uses public APIs offline. Source inspection and test registration are not evidence that compilation, runtime checks or GUI behavior passed.</p>
+<p><a href="context-budget-and-privacy.html">General context and privacy</a> · <a href="context-preview-observations.html">Retained preview identities</a> · <a href="index.html">Learning index</a></p></main></body></html>

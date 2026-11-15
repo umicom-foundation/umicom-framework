@@ -47,6 +47,19 @@ umicom models run qwen2.5-0.5b-q4 &#39;C:\Tools\llama.cpp\llama-server.exe&#39; 
 <pre><code class="language-text">umicom models serve ABSOLUTE_LLAMA_SERVER ABSOLUTE_GGUF SHA256 ALIAS PORT CONTEXT THREADS [--apply]
 </code></pre>
 <p>Limits are ports 1024–65535, contexts 512–32768 and threads 1–256. The model and engine impose their own tighter limits. Known inherited llama agent, tunnel, routing and alternate-model settings are refused. Ordinary process environment is still inherited; select a reviewed engine environment. The server is not isolated from other local users or processes.</p>
+<section><h2>Describe runtime settings without starting a model</h2>
+<p>The descriptor preview converts the validated CPU run plan into Framework AI catalogue metadata. It performs no file inspection, hash verification, provider registration, catalogue write, endpoint probe or process launch.</p>
+<pre><code class="language-powershell">umicom models describe qwen2.5-0.5b-q4 'C:\Tools\llama.cpp\llama-server.exe' 'C:\Models\Umicom\qwen2.5-0.5b-q4.gguf' 8080 2048 4</code></pre>
+<p>The output names the canonical local-chat provider, alias and loopback endpoint. It reports configured metadata, unavailable health, an unassigned revision and a planned output limit of 256 tokens. The digest is the expected value from the plan, not a new file observation.</p>
+<pre><code>umicom models describe-file ABSOLUTE_LLAMA_SERVER ABSOLUTE_GGUF SHA256 ALIAS PORT CONTEXT THREADS</code></pre>
+<p>Neither command accepts <strong>--apply</strong>. Download, run/serve and chat also refuse side effects when console review output fails. Later output errors are reported after normal owned-session cleanup.</p>
+<p>Applications call <code>UmiModelRuntimeDescriptorCreate</code> from <code>umicom/local_models/runtime.h</code>, choosing their runtime identifier, label and output-token limit. Insert with <code>UmiAiRuntimeCatalogueUpsertIfRevision</code>; zero requests insertion only if absent. Replace using the revision actually read. Configuration alone remains unavailable to healthy-runtime selection.</p>
+<p>A submitted session retains its admitted plan independently of subsequent form edits. <code>UmiModelSessionReadPlan</code> copies it, and <code>UmiModelSessionRuntimeDescribe</code> describes that copy without reading process status or promoting health. Serialize calls and keep the owner alive; a retained failed-submission cleanup owner is refused.</p>
+<p>All records use <code>umicom.local-chat</code>. Describing another endpoint does not register a provider or reconfigure its port. Applications still need explicit request-to-provider/session binding. Model identity, readiness, hardware admission and warm replacement remain separate.</p>
+<p>See <a href="learning/native-model-runtime-descriptions.html">native runtime descriptions</a> and <a href="learning/runtime-catalogue-revisions.html">revision checks</a>. The installed SDK consumer also exercises these symbols without model execution.</p>
+<pre><code class="language-powershell">cmake --build --preset windows-ucrt64-debug --target umicom-model-runtime-test umicom-model-cli-review-test umicom-model-session-metadata-test umicom-model-session-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework[.]local_models[.](runtime|cli_review|session_metadata|session)[.]' --output-on-failure --no-tests=error</code></pre>
+<p>There are 26 new pure cases plus the retained native session fixture. These commands are qualification instructions, not executed evidence.</p></section>
 <h2>Send a reviewed chat request</h2>
 <p>Open a second terminal after the engine has loaded. The first command previews the request. The second sends it to the selected loopback endpoint.</p>
 <pre><code class="language-powershell">umicom models chat 8080 qwen2.5-0.5b-q4 &#39;Explain a C pointer in two sentences.&#39;
@@ -67,6 +80,23 @@ umicom models chat 8080 qwen2.5-0.5b-q4 &#39;Explain a C pointer in two sentence
 <li>Stop and join active requests, destroy their provider/runtime, then call <strong>UmiModelSessionStop</strong>. Keep a non-null owner for retry if stopping fails.</li>
 </ol>
 <p>A library being linkable does not add download buttons to every product. This delivery provides the shared service and console application; dedicated product model-management screens and per-product GUI qualification remain separate work. RAG retrieval can supply reviewed text to this chat provider, but this manager does not claim an embeddings endpoint. Media can use the text response to draft prompts; image/video rendering requires its own provider and watermark workflow.</p>
+<section><h2>Retain console cleanup state in an embedding application</h2>
+<p>A command can return an error while a model session still needs cleanup. Long-lived hosts can call <code>UmiModelsCommandWithSession</code> with a persistent slot initialized to null. Serialize command calls and console stream access.</p>
+<pre><code class="language-c">static UmiModelSession *console_session;
+int RunModelCommand(int argc, char **argv)
+{
+    return UmiModelsCommandWithSession(argc, argv, &amp;console_session);
+}
+UmiStatus RetryModelConsoleShutdown(void)
+{
+    return UmiModelSessionStop(&amp;console_session);
+}</code></pre>
+<p>A non-null slot after return remains an obligation. New commands refuse it before parsing or acting. Retry checked stop deliberately; never free or overwrite the pointer. Some errors consume the owner, so inspect both the error and slot.</p>
+<p>The legacy <code>UmiModelsCommand</code> retains its own compatibility owner. Query it with <code>UmiModelsCommandHasRetainedSession</code> and retry cleanup with <code>UmiModelsCommandRelease</code>. These operations never touch an explicit caller slot. A retained compatibility owner blocks subsequent legacy commands; an error that consumes it still needs reporting even when the query becomes false.</p>
+<p>No retry occurs automatically after return. Process exit does not prove successful tree cleanup, and a new shell invocation cannot recover another process's in-memory owner. A long-lived host keeps the slot and offers an explicit retry.</p>
+<pre><code class="language-powershell">cmake --build --preset windows-ucrt64-debug --target umicom-model-console-owner-test umicom-model-cli-review-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework[.]local_models[.](console_owner|cli_review)[.]' --output-on-failure --no-tests=error</code></pre>
+<p>Fourteen inert owner cases exercise retained/consumed start and stop errors, occupied slots, late output failure, compatibility cleanup and success. These are qualification instructions; native process teardown and model execution require separate evidence.</p></section>
 <h2>Build and qualify from source</h2>
 <p>Use an existing supported Framework toolchain. The following Windows example builds the native manager, unified CLI and regression executables. Stop when a command fails. These are instructions for the operator to execute, not a record of passing results.</p>
 <pre><code class="language-powershell">Set-Location &#39;C:\umicom\Umicom-Applications\framework&#39;
@@ -90,6 +120,38 @@ cmake --build &#39;C:\umicom\_local\build\model-sdk-consumer&#39;
 ctest --test-dir &#39;C:\umicom\_local\build\model-sdk-consumer&#39; --output-on-failure
 </code></pre>
 <p>Do not use a source-tree include directory to conceal a missing installed header or dependency. A successful source build alone does not prove that consumers can import <strong>Umicom::local_models</strong>.</p>
+<h3>Select the installed package explicitly</h3>
+<p>The Framework and FrameworkSDK components now include the complete model consumer under <code>share/umicom/examples/local_models/sdk_consumer</code>. After the build and installation above, configure that installed source in a fresh consumer build directory:</p>
+<pre><code class="language-powershell">cmake -S 'C:/umicom/_local/sdk/local-model-review/share/umicom/examples/local_models/sdk_consumer' -B 'C:/umicom/_local/build/model-sdk-selected' -G Ninja -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe -DUMICOM_SDK_ROOT:PATH='C:/umicom/_local/sdk/local-model-review' -DCMAKE_PREFIX_PATH:PATH=C:/msys64/ucrt64
+cmake --build 'C:/umicom/_local/build/model-sdk-selected'
+ctest --test-dir 'C:/umicom/_local/build/model-sdk-selected' --output-on-failure --no-tests=error</code></pre>
+<p><code>UMICOM_SDK_ROOT</code> selects Framework; <code>CMAKE_PREFIX_PATH</code> can still locate external dependencies. Checks cover the selected prefix, imported Framework targets and their paths, full public-header fingerprint, required ABI 2, system, pointer width and C compiler family. Versions are reported. Metadata agreement does not certify archive contents, binary compatibility, dependent DLL search or runtime behavior.</p>
+<p>The earlier source-example command remains usable. An empty root preserves ordinary discovery and reports the discovered prefix before validating that installation. It does not claim an independently requested root was selected.</p>
+<p>If a different prefix is reported, inspect <code>UmicomFramework_DIR</code> in the consumer's CMakeCache.txt. This cached directory can survive a root change. Use a fresh consumer build directory for another SDK and preserve the old evidence. Missing components, helpers or identity metadata require a complete matching installation; adding source headers or bypassing checks conceals the problem. A fingerprint checks consistency, not a publisher signature.</p>
+<h3>Exercise exported generation and callback ownership</h3>
+<p>The installed example includes <code>provider_ownership.c</code> and its local header. It registers a small C callback that writes a fixed response. This is a test double: no weights, endpoint or inference engine are used. It still links only <strong>Umicom::local_models</strong> and receives its AI dependencies through that installed target.</p>
+<ol>
+<li>Build and install the SDK as above, including the updated example. Configure from the installed <code>share/umicom/examples/local_models/sdk_consumer</code> directory to detect missing example files and public headers.</li>
+<li>Build the consumer. Request/response validation, checked generation, idle checks and checked service destruction must resolve from installed libraries. Configuration alone cannot prove linking.</li>
+<li>Run <code>local_models.sdk_catalogue</code> with the existing CTest command. Earlier catalogue, context, conversation, coding and console exercises remain; ownership checks run within the same test.</li>
+<li>Read <code>SdkExercise</code>. An over-capacity request refuses before dispatch. A valid reply publishes, while provider errors and unterminated successful replies preserve the earlier response.</li>
+<li>Compare the return status and <code>UmiAiGenerationReport</code>. A malformed successful reply returns <code>INTERNAL_ERROR</code>, with <code>response_status</code> equal to <code>INVALID_ARGUMENT</code>. Inspect <code>dispatched</code>, <code>response_checked</code> and <code>response_published</code> before interpreting each stage.</li>
+<li>Follow <code>SdkHealth</code>. Both health APIs retain the service and runtime during callbacks; checked destruction returns <code>BUSY</code>. After normal return the owner remains usable. Health deliberately stays unavailable: lifetime checks are not readiness evidence.</li>
+<li>Inspect cleanup. Release the service before its borrowed runtime; the registered provider's destroy callback must run exactly once. A refused checked cleanup retains storage instead of freeing a still-borrowed pointer.</li>
+</ol>
+<p>Checked generation stages the provider reply in Framework storage before publication:</p>
+<pre><code class="language-c">UmiAiGenerationReport report;
+UmiStatus status = UmiAiRuntimeGenerateChecked(
+    &amp;runtime, provider_id, approved, &amp;request, &amp;response, &amp;report);
+/* On failure response still holds its earlier value. Do not display it as
+ * this attempt's result. Use status and report to describe the failure. */</code></pre>
+<p>Serialize access and let callbacks return normally. An idle check is neither a thread lock nor a lease. This example does not qualify arbitrary tools, real transport, model identity, output quality or graphical behavior.</p>
+<p>An executed passing CTest result establishes these checks only for that installation and environment. Retain the producer revision, selected prefix, compiler and logs. Missing symbols require matching libraries and headers; do not conceal them with source include paths. A diagnostic beginning <strong>Installed SDK ownership check failed</strong> identifies the contract to investigate. These are qualification instructions, not a claim of an executed build or pass.</p>
+<h3>Check package-selection regressions</h3>
+<pre><code class="language-powershell">ctest --test-dir build/windows-ucrt64-debug -R '^framework[.]local_models[.]sdk_selection[.]' --output-on-failure --no-tests=error</code></pre>
+<p>Seventeen owner-run cases configure the real consumer with package doubles: explicit/discovered roots, spaces, stale cache and root switching, invalid paths, missing component/guard/archive, wrong prefix, changed/extra headers, escaping library and ABI/compiler/metadata refusal. Negative configurations repeat in the same build directory; switching first demonstrates successful selection. Each invocation retains its logs. Archives are text placeholders and branding is inert. These cases do not prove linking, runtime behavior or artwork; qualify the real installed consumer separately.</p>
+<p>See CMake's <a href="https://cmake.org/cmake/help/v3.24/command/find_package.html">package discovery</a> and <a href="https://cmake.org/cmake/help/v3.24/command/install.html">installation component</a> documentation.</p>
+
 <h2>Recover from a refusal</h2>
 <table>
 <thead>
@@ -129,4 +191,50 @@ ctest --test-dir &#39;C:\umicom\_local\build\model-sdk-consumer&#39; --output-on
 </tbody></table>
 <p>For the ownership and C implementation concepts, continue with <a href="learning/local-model-lifecycle.html">the local model lifecycle lessons</a>.</p>
 <p>Sammy Hegab · Umicom Foundation · Source examples: MIT.</p>
+<h2>Observe endpoint health separately</h2>
+<p>The native health command makes a single request to the selected loopback port. It previews by default. Start a trusted server through the existing run/serve workflow, keep its owning console open, then use another console:</p>
+<pre><code class="language-powershell">.\build\windows-ucrt64-debug\bin\umicom.exe models health 8080 3000
+.\build\windows-ucrt64-debug\bin\umicom.exe models health 8080 3000 --probe</code></pre>
+<p>The second command performs GET /health with a 3000 ms total timeout and a response body smaller than 4096 bytes. It sends no prompt or credentials and follows no redirects or proxies. It does not retry, poll, start or stop an engine. The standalone umicom-models executable accepts the same health arguments.</p>
+<p>A valid HTTP 200 response with status ok prints endpoint reports ready. The documented HTTP 503 error prints endpoint reports unavailable. These are statements supplied by whichever process answers that port; they do not prove that it is the manager-owned child, that it loaded the selected model, or that a later inference request will succeed. Keep the process snapshot, file digest, health observation and reviewed chat result separate.</p>
+<p>Exit zero means preview succeeded or the endpoint reported ready. Exit one means an unavailable report, transport/parse failure, cancellation or output failure; the diagnostic text distinguishes them. Exit two is invalid command syntax or arguments. Do not use exit zero alone to authorize sending private prompts.</p>
+<pre><code class="language-c">UmiAiLocalHealth observation = {0};
+UmiStatus status = UmiModelHealthProbe(
+    8080U, 3000U, user_approved_probe, cancellation, &amp;observation);
+if (status == UMI_STATUS_OK) {
+    /* Display the endpoint report and its HTTP status separately from
+     * the retained session snapshot. This observation has no identity proof. */
+}</code></pre>
+<p>Call the blocking API on a worker in a GUI. Keep the cancellation token alive until that worker has joined. On any refusal or transport/parse/cancellation failure the previous output object remains unchanged; clients must check the returned status instead of presenting an old observation as new. The request does not mutate session lifecycle state.</p>
+<h2>Qualify the health boundary</h2>
+<p>After the existing Framework configuration with UMICOM_AI_WORKSPACE_LOCAL_HTTP=ON, build the added tests and run both health checks and the retained chat transport checks:</p>
+<pre><code class="language-powershell">cmake --build --preset windows-ucrt64-debug --target umicom umicom-models umicom-model-health-test umicom-ai-health-codec-test umicom-ai-workspace-http-client umicom-ai-workspace-codec-test
+ctest --test-dir build/windows-ucrt64-debug -R &quot;^framework[.](local_models[.]health|ai_workspace[.](health_codec|http|codec))[.]&quot; --output-on-failure --no-tests=error</code></pre>
+<p>The added coverage consists of 22 offline codec groups and 13 native model-health groups. The latter include an inert C loopback fixture plus consent, bounds, pre-cancellation and preview cases that make no request. Keep skipped optional HTTP coverage separate from passes. Configure another independent build with local HTTP OFF and repeat the no-network cases; missing transport must stay unavailable. These commands are qualification instructions, not a record of executed results.</p>
+<p>If an HTML error page or unsupported JSON arrives, investigate the port and engine version. Do not accept an arbitrary HTTP 200 as ready. A 503 response is an observation, not a reason to discard or replace the owned session. Retry only after an explicit caller decision. The <a href="https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md#api-endpoints">llama.cpp server documentation</a> describes the external endpoint.</p>
+<h2>Wait explicitly for an endpoint report</h2>
+<p>A loading engine may answer with HTTP 503 before it becomes ready, or may not accept connections yet. The **wait** command repeats the shared health probe within a reviewed plan. It never launches or stops a process. The values after the port are maximum attempts, pause between attempts in milliseconds, and timeout for each request.</p>
+<pre><code class="language-powershell">umicom models wait 8080 10 250 3000
+umicom models wait 8080 10 250 3000 --probe</code></pre>
+<p>The first command prints the plan without making a request. The second makes at most ten loopback GET requests and stops at the first valid ready report. Its nominal budget is 10 × 3000 + 9 × 250 = 32250 ms. There is no pause after the final attempt. Scheduling and transport cleanup can add elapsed time; this is a bounded amount of requested work, not a hard wall-clock deadline.</p>
+<p>Plans admit 1–64 attempts, 50–5000 ms pauses, 100–60000 ms request timeouts, and a nominal total no greater than 60000 ms. A valid unavailable response, an I/O error or a request timeout can trigger another attempt. Unexpected HTTP statuses currently map to I/O error in the shared transport and therefore also consume this retry allowance. Malformed or oversized responses, unavailable compiled transport and other errors stop immediately. Redirects are never followed.</p>
+<p>An exhausted plan returns TIMEOUT even when the final probe succeeded in reporting unavailable. The CLI prints both completed attempts and the last probe status so these two outcomes are distinguishable. Exit zero means a successful preview or an endpoint-reported ready result; exit one means unsuccessful execution or output, and exit two means invalid arguments. The standalone umicom-models host accepts the same arguments.</p>
+<pre><code class="language-c">UmiModelReadinessPlan plan;
+UmiModelReadinessReport report = {0};
+UmiStatus status = UmiModelReadinessPlanCreate(
+    8080U, 10U, 250U, 3000U, &amp;plan);
+if (status == UMI_STATUS_OK) {
+    /* Run on an application worker after review. */
+    status = UmiModelReadinessWait(
+        &amp;plan, user_approved_probe, cancellation, &amp;report);
+}
+/* Check status first. report.has_health refers only to the last probe.
+ * A ready endpoint report is still not model identity or inference proof. */</code></pre>
+<p>Admission refusals and cancellation already requested at entry preserve the previous output. After admission, every return publishes this call’s report, including failure. If a valid unavailable response is followed by malformed JSON, the second probe clears has_health and the health fields rather than leaving the first observation looking current. Keep attempts_completed, last_probe_status and the overall return status together.</p>
+<p>Applications must keep the cancellation token alive until the worker has joined. Request cancellation from another thread; do not reset or destroy the token while it is borrowed. Pauses check the token in slices of at most 20 requested milliseconds, subject to scheduling delays. A cancelled wait leaves the model session and its owning console intact. The CLI uses a bounded foreground wait; the API provides cooperative cancellation for application workers.</p>
+<h2>Qualify readiness sequences</h2>
+<pre><code class="language-powershell">cmake --build --preset windows-ucrt64-debug --target umicom-model-readiness-test umicom-model-health-test umicom umicom-models
+ctest --test-dir build/windows-ucrt64-debug -R &quot;^framework[.]local_models[.](readiness|readiness_http)[.]&quot; --output-on-failure --no-tests=error</code></pre>
+<p>The added cases cover 19 admission/budget groups and 15 native loopback sequences. One admission group requires a separate HTTP-OFF build; it reports a skip when HTTP support is present. Network sequences report a skip when HTTP support is absent. Retain these reasons separately from passes. The fixture returns scripted health replies and closes selected connections; it does not load weights or claim real inference. These are commands to execute during qualification, not a record of passed tests.</p>
+<p>Exercise the installed SDK consumer as well. It resolves the plan, budget and wait symbols using pure planning and denied approval, so it needs no server. Real-engine acceptance still requires the separate process snapshot, model digest, trusted endpoint, reviewed inference request and normal shutdown described above.</p>
 </main><footer>Umicom Foundation · Native development learning</footer></body></html>

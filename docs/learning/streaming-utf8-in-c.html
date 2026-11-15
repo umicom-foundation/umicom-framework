@@ -1,0 +1,62 @@
+<!-- Umicom Framework
+File: docs/learning/streaming-utf8-in-c.html
+
+PURPOSE:
+Teach incremental Unicode framing and bounded native model-output ownership.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Read UTF-8 across model-output chunks</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Read UTF-8 across model-output chunks</h1>
+<p>A local model or network connection can deliver text in pieces. A piece is a transport boundary, not necessarily a complete character. This lesson implements the small shared boundary which turns incoming bytes into complete UTF-8 scalars. It does not start an inference server or turn an existing HTTP client into a streaming client.</p>
+<h2>1. Separate bytes, scalars and displayed characters</h2>
+<p>UTF-8 encodes a Unicode scalar in one to four bytes. Surrogate code points are excluded. Overlong encodings and values above U+10FFFF are invalid. The authoritative byte ranges are in <a href="https://www.unicode.org/versions/Unicode17.0.0/core-spec/chapter-3/">Unicode chapter 3, Table 3-7</a>.</p>
+<p>A scalar is not always a whole displayed character: combining marks and multi-scalar sequences can be rendered together. This helper handles encoding boundaries. It does not normalize text, measure glyphs, sanitize terminal controls or segment user-perceived characters.</p>
+<h2>2. Reassemble a split scalar</h2>
+<p>The euro sign is encoded as the bytes E2 82 AC. If a provider supplies E2 in one chunk and 82 AC in the next, displaying E2 immediately produces incomplete UTF-8. Keep the partial prefix in Framework state until a complete scalar is available.</p>
+<pre><code class="language-c">#include "umicom/base/utf8_stream.h"
+
+UmiUtf8Stream decoder = {0};
+uint8_t output[4];
+size_t produced = 0;
+
+UmiStatus status = UmiUtf8StreamAppend(&amp;decoder, 0xe2U,
+    output, sizeof output, &amp;produced);
+/* status == OK, produced == 0: nothing is ready to publish. */
+if (status == UMI_STATUS_OK)
+    status = UmiUtf8StreamAppend(&amp;decoder, 0x82U,
+        output, sizeof output, &amp;produced);
+if (status == UMI_STATUS_OK)
+    status = UmiUtf8StreamAppend(&amp;decoder, 0xacU,
+        output, sizeof output, &amp;produced);
+/* On OK, produced == 3 and output holds E2 82 AC. */</code></pre>
+<p>Always use the returned byte count. The output is a byte span, not a C string. U+0000 is a valid scalar and produces one zero byte. A higher-level text protocol may choose to reject embedded NUL separately.</p>
+<h2>3. Handle refusal without losing the prefix</h2>
+<p>If output capacity is too small for a complete scalar, Append returns CAPACITY_EXCEEDED and leaves the stream, output buffer and produced count unchanged. Retry the same input byte with sufficient output space. If the byte would make an impossible Unicode prefix, it returns PARSE_ERROR with the same preservation rule.</p>
+<p>For example, E0 80 cannot become a valid three-byte scalar: its prefix already implies an overlong encoding. The implementation asks the existing <code>UmiUtf8DecodeScalar</code> to validate a minimally completed prefix. Unicode validity therefore has one owner in Base, shared with documents and evidence writers.</p>
+<p>Initialize the stream with zero or Reset. A copy of the struct can stage a larger transaction: append to the copy, then assign it back only after the surrounding operation accepts the whole chunk. Serialize access to a given stream; this small value type contains no mutex.</p>
+<h2>4. Distinguish end-of-input from reset</h2>
+<p>Finish checks whether a scalar remains incomplete. It returns INVALID_STATE for an unfinished prefix without discarding that prefix. It is a completeness check, not a final-once lifecycle operation. A subsequent byte can complete the scalar. Reset deliberately clears pending bytes and counters.</p>
+<p>Inspect copies completed scalar and byte counts plus the number of bytes still required. Counter exhaustion is refused before publication. These counts measure encoded data, not model tokens or rendered character widths.</p>
+<h2>5. Keep compatibility collection bounded</h2>
+<p>The older <code>umi_ai_stream_push</code> collector remains a NUL-terminated byte-string interface. Its struct layout and callback remain unchanged. It now validates its stored length, scans input only through the remaining capacity, and copies an accepted chunk before appending. This supports self-append and source slices without overlapping-copy undefined behavior.</p>
+<p>The callback receives a chunk borrowed only for that call. It must copy text it wants to retain. A callback can reset the collector or append another chunk without changing the outer callback's borrowed text. The legacy final flag is still forwarded unchanged; that interface does not enforce request identity, Unicode validity or a single terminal event.</p>
+<p>Do not use the compatibility collector as proof that a complete AI streaming workflow exists. Request/model identity, terminal state, cancellation, transport framing and application ownership require their own shared services and qualification.</p>
+<h2>6. Qualify the boundary</h2>
+<p>The existing scalar fixture now also checks invalid public state, counter exhaustion and output-preserving retry. A separate fixture reconstructs all 1,112,064 Unicode scalar values byte by byte. The collector fixture covers 14 scenarios, including bounded unterminated input, corrupt state, self-append and callback mutation.</p>
+<pre><code>cmake --build build/windows-ucrt64-debug --target umicom-utf8-stream-test umicom-utf8-stream-scalars-test umicom-ai-stream-collector-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.(base\.utf8_stream|ai\.stream_collector\.)" --output-on-failure</code></pre>
+<p>Run commands separately and stop on errors. These are native runtime tests which still require execution; successful configuration only registers them. The all-scalar test checks encoding and incremental publication, not GUI font rendering or real model output.</p>
+<p>Installed SDK clients include <code>umicom/base/utf8_stream.h</code> and link <code>Umicom::base</code>. The legacy collector is in <code>Umicom::ai</code>. Neither requires cloning Framework into the client source tree. Use the package's installed SDK validation helpers as shown in the existing independent examples.</p>
+<h2>Exercise</h2>
+<p>Feed E2 82, call Finish, then feed AC. Explain why Finish fails first and succeeds second. Next, retry AC with a two-byte output buffer and verify that the state and produced count are unchanged. Finally, decide where your application should reject embedded NUL and where it should reject an event for a retired model request.</p>
+</main></body></html>

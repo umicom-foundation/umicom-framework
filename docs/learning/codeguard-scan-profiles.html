@@ -1,0 +1,73 @@
+<!-- Umicom Framework
+File: docs/learning/codeguard-scan-profiles.html
+
+PURPOSE:
+Teach consistent scan-profile selection, error propagation and observable regression fixtures.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Make scan settings change observable behavior</title>
+<link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1000px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}</style></head><body><main>
+<header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header>
+<h1>Make scan settings change observable behavior</h1>
+<h2>1. Treat configuration as an executable contract</h2>
+<p>A setting is useful only when every relevant operation honors it. A source scanner can appear to respect a language setting while still admitting the same files into its duplicate detector. Keep admission in the shared Framework service so the CLI, editor and SDK consumers receive the same behavior.</p>
+<p>CodeGuard has independent C, C++ and header flags. A nonzero value enables a category. The extension recognizer retains its existing case-sensitive suffix rules: .c; .cc, .cpp and .cxx; .h, .hpp and .hh. Enabling a language does not make this textual scanner a compiler for that language.</p>
+<pre><code class="language-c">UmiCodeGuardConfig config = umi_codeguard_config_default(workspace_root);
+config.profile.scan_c = 0;
+config.profile.scan_cpp = 1;
+config.profile.scan_headers = 1;
+config.profile.scan_generated = 0;</code></pre>
+<p>This configuration omits C source from direct-file analysis, workspace analysis and duplicate collection. It includes supported C++ and header paths. The separate scan_source_names flag controls repository filename checks; those checks can still report a filename whose source language is disabled.</p>
+<h2>2. Separate language selection from directory selection</h2>
+<table><thead><tr><th>Input</th><th>Default workspace scan</th><th>scan_generated enabled</th></tr></thead><tbody>
+<tr><td>src/main.c</td><td>Language flags decide</td><td>Language flags decide</td></tr>
+<tr><td>build/generated.c</td><td>Excluded</td><td>Language flags decide</td></tr>
+<tr><td>_CPack_Packages/generated.c</td><td>Excluded</td><td>Language flags decide</td></tr>
+<tr><td>third_party/vendor.c</td><td>Excluded</td><td>Excluded</td></tr>
+<tr><td>build/third_party/vendor.c</td><td>Excluded</td><td>Excluded</td></tr>
+<tr><td>codeguard/rules/sample.c</td><td>Excluded</td><td>Excluded</td></tr></tbody></table>
+<p>Policy uses directory components beneath the selected root. Enabling generated source does not opt into vendor, node_modules, VCS or CodeGuard rule sources. Traversal still skips hidden entries and does not follow symbolic links. Template/workspace payloads remain excluded from duplicate comparison even when their source is scanned.</p>
+<p>The direct-file API bypasses directory selection because the caller explicitly chose a file. It still honors language flags. An explicitly selected build directory becomes the workspace root; its own name is not an excluded child component. These choices are selection policy, not a filesystem sandbox.</p>
+<h2>3. Use one language gate before every analysis phase</h2>
+<pre><code class="language-c">if (!umi_codeguard_source_supported(path,
+        config-&gt;profile.scan_cpp, config-&gt;profile.scan_headers))
+    return 0;
+return config-&gt;profile.scan_c ||
+    !umi_codeguard_source_supported(path, 0, 0);</code></pre>
+<p>The first check reuses Framework's extension recognizer. The second allows a recognized C source only when C scanning is enabled. The same private gate runs in direct-file scanning and in the workspace visitor before duplicate admission. Keeping extension knowledge in the existing recognizer avoids competing language lists.</p>
+<h2>4. Preserve the reason a report could not be completed</h2>
+<p>A finding is a diagnostic about source. A storage failure is an error in producing the report. Do not turn every insertion error into an allocation error: an exhausted capacity has a different cause. Return the exact status and stop adding further findings.</p>
+<pre><code class="language-c">UmiStatus status = umi_codeguard_result_add(result, &amp;finding);
+if (status != UMI_STATUS_OK)
+    return status;</code></pre>
+<p>The pattern scanner retains earlier findings if a later insertion fails. A caller using this low-level append-only API must treat that result as partial. UmiCodeGuardService publishes only a completed candidate and keeps its previous complete report when an attempt fails.</p>
+<h2>5. Verify behavior with controlled input</h2>
+<ol><li>Create an isolated fixture with one C file, one C++ file and one header, each containing the same short line.</li>
+<li>Add generated C files under build and _CPack_Packages. Add vendor and rule files, including vendor files nested under build.</li>
+<li>Disable architecture, filename and duplicate checks, then set max_line_length to one. Each selected source produces exactly one line-length finding.</li>
+<li>Expect three findings by default and five with generated scanning enabled. Expect one for each individual language category and zero when all three categories are disabled.</li>
+<li>Enable duplicate collection and restore the ordinary line limit. Three identical admitted files produce three pair candidates; disabling C leaves one pair; five admitted files produce ten pairs.</li>
+<li>Test direct-file requests separately. A disabled language returns success without opening even a missing path. Success in that case means the file was outside the selected language policy.</li></ol>
+<p>Pair counts are n × (n − 1) / 2 for this identical-content fixture. They are evidence that the intended files reached comparison, not proof that arbitrary matching fingerprints identify identical files.</p>
+<pre><code class="language-powershell">cmake --build build --target umicom-codeguard-profile-selection-tests umicom-codeguard-pattern-failure-tests umicom-codeguard-path-policy-tests
+ctest --test-dir build -R "^framework[.]codeguard_(profile_selection|pattern_failure|path_policy)[.]" --output-on-failure --no-tests=error</code></pre>
+<p>Replace build with your configured directory. The suites register seventeen real-scanner selection cases, ten pattern cases and twenty-nine lexical policy cases. The pattern fixture uses the real registry and matcher while controlling insertion failures. It checks raw/code/include modes, coordinates, early stop and preservation of the first successful finding. Configuration creates build rules; execute the targets and tests to obtain qualification evidence.</p>
+<h2>6. Recognize the remaining boundaries</h2>
+<!-- Previous unenforced-budget description retained for implementation review: <p>The max_file_bytes profile member is not yet enforced by the current readers. Do not rely on it to bound memory, work or hostile input. A size check before reading cannot by itself constrain a file that grows during the read. Bounded reading needs a separate implementation and tests at the actual byte-consumption boundary.</p> -->
+<p>The max_file_bytes profile member now reaches the native reader on every source, architecture and duplicate pass. Zero admits empty files only; oversized files fail with CAPACITY_EXCEEDED. It is a per-file byte budget, not a total workspace resource limit or a filesystem sandbox. Read <a href="codeguard-bounded-input.html">bounded source analysis</a> for native path policy, NUL text refusal, retained compatibility APIs and multi-pass race limits.</p>
+<p>Existing text matching, long-line chunk behavior and native stream limitations still apply. This change adds no background worker, editor command wiring, content snapshot or graphical workflow. Source availability and successful configuration do not establish a passed runtime or installed-SDK check.</p>
+<h2>Exercises</h2>
+<ol><li>Explain why a successful direct-file request can produce no findings without opening a file.</li>
+<li>Add a generated header and predict the result with only header scanning enabled.</li>
+<li>Inject a failure on the second matching rule and verify that the first finding remains and the original status returns.</li>
+<li>Describe how you would distinguish a configured input budget from a budget enforced while bytes are consumed.</li></ol>
+<p><a href="codeguard-workspace-paths.html">Workspace-relative paths</a> · <a href="codeguard-duplicate-evidence.html">Duplicate evidence</a> · <a href="codeguard-analysis-failures.html">Checked analysis</a> · <a href="index.html">Learning index</a></p>
+</main></body></html>

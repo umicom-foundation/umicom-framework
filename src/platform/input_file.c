@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/platform/input_file.c
- * PURPOSE: Keep bounded regular-file reads and native handle checks in the shared platform layer.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Keep bounded regular-file reads and native handle checks in the shared platform layer.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #if !defined(_WIN32) && !defined(_POSIX_C_SOURCE)
@@ -96,8 +103,13 @@ UmiStatus UmiInputFileRead(const char *path, size_t maximumBytes, unsigned char 
     }
     status = UMI_STATUS_OK;
 done:
+    /* Always close the owned handle, retaining an earlier operation failure.
+     * The unconditional replacement remains for review. */
+#if 0
     if (!CloseHandle(file))
         status = UMI_STATUS_IO_ERROR;
+#endif
+    if (!CloseHandle(file) && status == UMI_STATUS_OK) status = UMI_STATUS_IO_ERROR;
 #else
     /* Nonblocking open makes a selected FIFO rejectable before any read. The
      * checked descriptor is the one read; no second path lookup redirects it. */
@@ -151,8 +163,12 @@ done:
 #endif
     status = UMI_STATUS_OK;
 done:
+    /* Cleanup must not erase callback, capacity or changed-input failures. */
+#if 0
     if (close(file) != 0)
         status = UMI_STATUS_IO_ERROR;
+#endif
+    if (close(file) != 0 && status == UMI_STATUS_OK) status = UMI_STATUS_IO_ERROR;
 #endif
     if (status == UMI_STATUS_OK)
     {

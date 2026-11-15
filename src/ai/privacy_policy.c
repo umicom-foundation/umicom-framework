@@ -41,10 +41,23 @@ static int classification_valid(UmiAiDataClassification classification)
            classification <= UMI_AI_DATA_RESTRICTED;
 }
 
+/* Validate the complete policy before it controls any sharing or persistence
+ * decision. Boolean fields retain the established nonzero-is-true semantics. */
+UmiStatus UmiAiPrivacyPolicyValidate(const UmiAiPrivacyPolicy *policy)
+{
+    if (policy == NULL ||
+        !classification_valid(policy->maximum_local_classification) ||
+        !classification_valid(policy->maximum_remote_classification))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    return UMI_STATUS_OK;
+}
+
 /*
  * Provide the ai privacy policy check share operation used by this module and its client
  * applications.
  */
+/* Validate policy domains before applying limits, and reject unknown provider kinds before selecting local or remote rules. Existing nonzero flag and valid policy behavior are preserved. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_ai_privacy_policy_check_share(
     const UmiAiPrivacyPolicy *policy,
     UmiAiProviderKind provider_kind,
@@ -73,10 +86,42 @@ UmiStatus umi_ai_privacy_policy_check_share(
     return UMI_STATUS_OK;
 }
 
+#endif
+UmiStatus umi_ai_privacy_policy_check_share(
+    const UmiAiPrivacyPolicy *policy,
+    UmiAiProviderKind provider_kind,
+    UmiAiDataClassification classification,
+    int approved)
+{
+    UmiAiDataClassification maximum;
+    int remote;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (UmiAiPrivacyPolicyValidate(policy) != UMI_STATUS_OK || !classification_valid(classification) ||
+        provider_kind < UMI_AI_PROVIDER_LOCAL || provider_kind > UMI_AI_PROVIDER_TEST) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    remote = provider_kind == UMI_AI_PROVIDER_REMOTE;
+    maximum = remote ? policy->maximum_remote_classification
+                     : policy->maximum_local_classification;
+    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    if (classification > maximum) return UMI_STATUS_PERMISSION_DENIED;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (policy->require_sensitive_approval &&
+        classification >= UMI_AI_DATA_CONFIDENTIAL && !approved) {
+        return UMI_STATUS_PERMISSION_DENIED;
+    }
+    return UMI_STATUS_OK;
+}
+
 /*
  * Provide the ai privacy policy check persistence operation used by this module and its
  * client applications.
  */
+/* Validate complete policy domains before applying persistence switches and sensitive approval. Sharing ceilings remain separate from persistence decisions; the former admission implementation is retained for review. */
+#if 0
 UmiStatus umi_ai_privacy_policy_check_persistence(
     const UmiAiPrivacyPolicy *policy,
     UmiAiDataClassification classification,
@@ -87,6 +132,31 @@ UmiStatus umi_ai_privacy_policy_check_persistence(
      * used.
      */
     if (policy == NULL || !classification_valid(classification)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (!policy->persist_sessions || !policy->persist_prompt_text) {
+        return UMI_STATUS_PERMISSION_DENIED;
+    }
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (policy->require_sensitive_approval &&
+        classification >= UMI_AI_DATA_CONFIDENTIAL && !approved) {
+        return UMI_STATUS_PERMISSION_DENIED;
+    }
+    return UMI_STATUS_OK;
+}
+
+#endif
+UmiStatus umi_ai_privacy_policy_check_persistence(
+    const UmiAiPrivacyPolicy *policy,
+    UmiAiDataClassification classification,
+    int approved)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (UmiAiPrivacyPolicyValidate(policy) != UMI_STATUS_OK || !classification_valid(classification)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
     /* Apply this branch only when its contract condition is satisfied. */
