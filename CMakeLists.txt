@@ -7245,3 +7245,6 @@ include(cmake/UmicomAiProviderInvocationLifetime.cmake)
 
 # Health probes share provider ownership and checked service teardown.
 include(cmake/UmicomAiHealthCallbackLifetime.cmake)
+
+# Admit complete tool metadata and catalogue storage before invoking callbacks.
+include(cmake/UmicomAiToolAdmission.cmake)

@@ -133,4 +133,23 @@ ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]ai[.]provider-invoc
 
 <h2>12. Share callback ownership with health refresh</h2>
 <p>AuthorEngine health refresh now uses the same registry ownership scope, retaining the runtime through both provider health callbacks and descriptor-aware probes. Generation, registry mutation and teardown on that runtime return BUSY until refresh returns. Read <a href="runtime-catalogue-revisions.html">runtime catalogue observations</a> for service cleanup, revision publication and the distinct legacy/probe error contracts. This adds ownership protection, not permission to access an endpoint.</p>
+
+<h2>13. Admit a tool catalogue before executing a callback</h2>
+<p>A tool combines a stable identifier, description, permission label, function pointer and borrowed context. The label explains the operation; it does not grant permission. Framework still checks the runtime tool policy and the caller's approval decision before invoking the function.</p>
+<ol>
+<li>Create a descriptor with <code>umi_ai_tool_init</code>. All three text inputs must be readable terminated strings. The identifier must be nonempty. The constructor copies into a temporary descriptor and publishes only after every field fits; a refused input leaves the previous descriptor unchanged. Inputs may refer to the destination's old text.</li>
+<li>Register it with <code>umi_ai_tool_registry_add</code>. Framework checks the candidate, the existing count, every active descriptor and unique identifiers. It copies the descriptor, but does not acquire ownership of <code>user_data</code>. Keep that context alive for every callback.</li>
+<li>Use <code>UmiAiToolRegistryResolve</code> when the reason for lookup failure matters. Malformed catalogue storage returns INVALID_STATE; a missing valid identifier returns NOT_FOUND. A failed lookup preserves the output pointer.</li>
+<li>Invoke through <code>umi_ai_runtime_invoke_tool</code> so lookup and current policy are checked together. Admission failures preserve the output buffer and do not call the tool. Once dispatched, the existing callback output contract applies, including any text written before an error.</li>
+</ol>
+<pre><code class="language-c">UmiAiTool *selected = NULL;
+UmiStatus status = UmiAiToolRegistryResolve(&amp;runtime.tools, "echo", &amp;selected);
+if (status != UMI_STATUS_OK) return status;
+/* The pointer is borrowed; keep the catalogue serialized and alive. */
+return umi_ai_runtime_invoke_tool(&amp;runtime, selected-&gt;tool_id,
+    approved, "{}", output, output_capacity);</code></pre>
+<p>The resolver validates the complete active catalogue before comparing identifiers. Finding a matching first entry must not hide a malformed later entry. Inactive slots are not records. Empty descriptions and permission labels remain compatible metadata, and flags remain opaque. Validation does not inspect JSON, execute the callback, verify what its permission label means, or protect against direct writes by native code.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-ai-tool-admission-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]ai[.]tool-admission[.]" --output-on-failure</code></pre>
+<p>The 37 native cases cover exact text boundaries, oversized construction, self-aliased input, corrupt counts, unterminated active fields, duplicate identifiers, full capacity, unused storage, missing tools, policy refusals and callback errors. Expected refusals leave the documented outputs unchanged. If a catalogue fails validation, stop invocation and inspect the record that populated it; silently shortening the count can conceal the defect. The cases require compilation and execution before a pass can be claimed.</p>
 </main></body></html>

@@ -49,12 +49,20 @@ typedef struct UmiAiTool {
  * Initialise ai tool from caller-provided values so later operations receive a known
  * state.
  */
+/* Inputs are readable terminated strings and may refer to tool's old text.
+ * Every refusal preserves tool. Empty descriptions and permission names remain
+ * valid metadata; tool_id must be nonempty. No user_data ownership is taken. */
 UmiStatus umi_ai_tool_init(UmiAiTool *tool,
                            const char *tool_id,
                            const char *description,
                            const char *permission,
                            UmiAiToolInvoke invoke,
                            void *user_data);
+
+/* Validate complete inline text and the callback without executing it.
+ * Unknown flag bits remain compatible opaque metadata. This is not permission
+ * checking, JSON validation, callback lifetime protection or a native sandbox. */
+UmiStatus UmiAiToolValidate(const UmiAiTool *tool);
 
 #ifdef __cplusplus
 }

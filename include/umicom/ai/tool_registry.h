@@ -52,6 +52,18 @@ UmiStatus umi_ai_tool_registry_add(UmiAiToolRegistry *registry,
 UmiAiTool *umi_ai_tool_registry_find(UmiAiToolRegistry *registry,
                                      const char *tool_id);
 
+/* Validate active tools, the declared count and unique identifiers. NULL is
+ * INVALID_ARGUMENT; malformed catalogue storage is INVALID_STATE. Validation
+ * does not inspect inactive slots or take ownership of callback user_data. */
+UmiStatus UmiAiToolRegistryValidate(const UmiAiToolRegistry *registry);
+
+/* Resolve one borrowed entry only after full catalogue admission. Failure
+ * preserves out_tool; missing identifiers return NOT_FOUND. tool_id is a
+ * readable terminated string shorter than UMI_AI_ID_CAPACITY. Writable output
+ * must not overlap registry storage. Serialize use with every mutation. */
+UmiStatus UmiAiToolRegistryResolve(UmiAiToolRegistry *registry,
+    const char *tool_id, UmiAiTool **out_tool);
+
 #ifdef __cplusplus
 }
 #endif

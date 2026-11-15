@@ -27,6 +27,8 @@
  * Initialise ai tool from caller-provided values so later operations receive a known
  * state.
  */
+/* Stage and validate bounded tool metadata before publication so failed initialization and self-aliased text retain the previous value. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_ai_tool_init(UmiAiTool *tool,
                            const char *tool_id,
                            const char *description,
@@ -58,5 +60,51 @@ UmiStatus umi_ai_tool_init(UmiAiTool *tool,
     }
     tool->invoke = invoke;
     tool->user_data = user_data;
+    return UMI_STATUS_OK;
+}
+
+#endif
+/* Tool descriptors are copied values; user_data remains borrowed. Validate
+ * every inline field before any consumer can compare or display its text.
+ * Flags are opaque metadata, not a grant of execution permission. */
+UmiStatus UmiAiToolValidate(const UmiAiTool *tool)
+{
+    if (tool == NULL || tool->invoke == NULL || tool->tool_id[0] == '\0' ||
+        memchr(tool->tool_id, '\0', sizeof(tool->tool_id)) == NULL ||
+        memchr(tool->description, '\0', sizeof(tool->description)) == NULL ||
+        memchr(tool->permission, '\0', sizeof(tool->permission)) == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    return UMI_STATUS_OK;
+}
+
+/* Stop at the destination capacity. Staging also permits strings borrowed
+ * from the previous destination because publication happens after all reads. */
+static UmiStatus CopyToolText(char *destination, size_t capacity, const char *source)
+{
+    size_t length = 0U;
+    while (length < capacity && source[length] != '\0') ++length;
+    if (length == capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+    memcpy(destination, source, length + 1U);
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_ai_tool_init(UmiAiTool *tool, const char *tool_id,
+    const char *description, const char *permission, UmiAiToolInvoke invoke,
+    void *user_data)
+{
+    if (tool == NULL || tool_id == NULL || description == NULL ||
+        permission == NULL || invoke == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiAiTool candidate = {0};
+    UmiStatus status = CopyToolText(candidate.tool_id, sizeof(candidate.tool_id), tool_id);
+    if (status == UMI_STATUS_OK)
+        status = CopyToolText(candidate.description, sizeof(candidate.description), description);
+    if (status == UMI_STATUS_OK)
+        status = CopyToolText(candidate.permission, sizeof(candidate.permission), permission);
+    if (status != UMI_STATUS_OK) return status;
+    candidate.invoke = invoke;
+    candidate.user_data = user_data;
+    status = UmiAiToolValidate(&candidate);
+    if (status != UMI_STATUS_OK) return status;
+    *tool = candidate;
     return UMI_STATUS_OK;
 }

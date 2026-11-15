@@ -214,6 +214,8 @@ UmiStatus umi_ai_runtime_generate(UmiAiRuntime *runtime,
  * Provide the ai runtime invoke tool operation used by this module and its client
  * applications.
  */
+/* Shared tool admission distinguishes corrupt storage from a missing tool before policy and callback execution. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_ai_runtime_invoke_tool(UmiAiRuntime *runtime,
                                      const char *tool_id,
                                      int approved,
@@ -237,6 +239,36 @@ UmiStatus umi_ai_runtime_invoke_tool(UmiAiRuntime *runtime,
      * used.
      */
     if (tool == NULL) return UMI_STATUS_NOT_FOUND;
+    status = umi_ai_policy_check_tool(&runtime->policy, approved);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    return tool->invoke(arguments_json, output, output_capacity, tool->user_data);
+}
+
+#endif
+UmiStatus umi_ai_runtime_invoke_tool(UmiAiRuntime *runtime,
+                                     const char *tool_id,
+                                     int approved,
+                                     const char *arguments_json,
+                                     char *output,
+                                     size_t output_capacity)
+{
+    UmiAiTool *tool;
+    UmiStatus status;
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (runtime == NULL || tool_id == NULL || arguments_json == NULL ||
+        output == NULL || output_capacity == 0U) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    status = UmiAiToolRegistryResolve(&runtime->tools, tool_id, &tool);
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (status != UMI_STATUS_OK) return status;
     status = umi_ai_policy_check_tool(&runtime->policy, approved);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status != UMI_STATUS_OK) return status;
