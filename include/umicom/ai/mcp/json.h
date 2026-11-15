@@ -53,6 +53,11 @@ int umi_ai_mcp_json_has_key(
  * Provide the ai mcp json escape string operation used by this module and its client
  * applications.
  */
+/* Emit one quoted JSON string through the shared protocol writer. Input must
+ * be terminated UTF-8 within UMI_AI_MCP_TEXT_CAPACITY bytes. Every JSON control
+ * byte is escaped. Capacity includes quotes and termination; values below three
+ * retain the INVALID_ARGUMENT result. Capacity, malformed UTF-8 and allocation
+ * failures preserve output. Input may overlap output because encoding is staged. */
 UmiStatus umi_ai_mcp_json_escape_string(
     const char *value,
     char *out_json_string,

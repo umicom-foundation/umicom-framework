@@ -17,6 +17,7 @@
 
 #include <string.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 /*
  * Initialise ai mcp session from caller-provided values so later operations receive a
@@ -351,6 +352,8 @@ UmiStatus umi_ai_mcp_session_ping(
 }
 
 #endif
+/* Ping completion now uses the same ready-session ownership admission as ordinary requests. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_ai_mcp_session_ping(
     UmiAiMcpSession *session)
 {
@@ -367,6 +370,29 @@ UmiStatus umi_ai_mcp_session_ping(
 
     return UmiAiMcpTransportRequestChecked(
         &session->transport,
+        umi_ai_mcp_method_ping(),
+        "{}",
+        result,
+        sizeof(result));
+}
+
+#endif
+UmiStatus umi_ai_mcp_session_ping(
+    UmiAiMcpSession *session)
+{
+    char result[UMI_AI_MCP_TEXT_CAPACITY];
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (session == NULL ||
+        session->state != UMI_AI_MCP_SESSION_READY) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+
+    return UmiAiMcpSessionRequestChecked(
+        session,
         umi_ai_mcp_method_ping(),
         "{}",
         result,
@@ -412,4 +438,30 @@ UmiStatus UmiAiMcpSessionDisconnectChecked(UmiAiMcpSession *session)
 void umi_ai_mcp_session_disconnect(UmiAiMcpSession *session)
 {
     if (session != NULL) (void)UmiAiMcpSessionDisconnectChecked(session);
+}
+
+/* Complete text admission belongs to transport; ready-session ownership belongs
+ * here. Keep a private result until both contracts have accepted the reply. */
+UmiStatus UmiAiMcpSessionRequestChecked(UmiAiMcpSession *session,
+    const char *method, const char *params_json, char *result_json, size_t result_capacity)
+{
+    if (session == NULL || method == NULL || params_json == NULL || result_json == NULL || result_capacity == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (session->state != UMI_AI_MCP_SESSION_READY) return UMI_STATUS_INVALID_STATE;
+    const uint64_t revision = session->revision;
+    const UmiAiMcpTransport binding = session->transport;
+    if (binding.request == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    char *candidate = malloc(result_capacity);
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    UmiStatus status = UmiAiMcpTransportRequestChecked(&binding, method, params_json, candidate, result_capacity);
+    if (status == UMI_STATUS_OK) {
+        if (session->state != UMI_AI_MCP_SESSION_READY || session->revision != revision ||
+            session->transport.request != binding.request || session->transport.notify != binding.notify ||
+            session->transport.user_data != binding.user_data)
+            status = UMI_STATUS_INVALID_STATE;
+        else memcpy(result_json, candidate, strlen(candidate) + 1U);
+    }
+    /* A callback failure remains primary even when it also changed the session. */
+    free(candidate);
+    return status;
 }

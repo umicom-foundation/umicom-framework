@@ -76,6 +76,14 @@ UmiStatus umi_ai_mcp_decode_prompt(
  * Provide the ai mcp encode initialize params operation used by this module and its client
  * applications.
  */
+/* Parameter encoders preserve caller output on failure and allow input/output
+ * overlap through staging. Text uses validated UTF-8 and complete JSON escaping.
+ * Existing escaped-field capacities remain: client/tool/prompt names use
+ * UMI_AI_SMALL_TEXT_CAPACITY, client version 256 bytes, resource URI
+ * UMI_AI_MCP_TEXT_CAPACITY, all including quotes and the terminating byte.
+ * Tool/prompt arguments must be a complete bounded JSON object; empty text
+ * retains the legacy empty-object shorthand. Original raw spelling is retained.
+ * No tool permission, URI semantics or argument-schema evaluation is implied. */
 UmiStatus umi_ai_mcp_encode_initialize_params(
     const char *client_name,
     const char *client_version,

@@ -330,4 +330,48 @@ publish_candidate(&amp;candidate);</code></pre>
 ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]ai[.](mcp-list[.]|mcp-descriptor[.]|mcp-initialize[.]|mcp-discovery[.]|mcp$)" --output-on-failure</code></pre>
 <p>The 48 visitor cases cover complete grammar, root lookup, byte/key/depth limits, allocation refusal, callback errors, nested visits and source mutation. Another 72 cases exercise the same replies through all three discovery clients. If a check fails, retain the original status and compare the exact reply with its expected root shape before changing the parser. These cases are authored coverage; native execution and installed-consumer checks are separate qualification steps.</p>
 
+
+<h2>22. Treat request encoding as a publication boundary</h2>
+<p>A JSON request combines text values with punctuation. A name containing a quote, a backspace or a line break must remain one string value. Raw arguments need a different check: they must already form one complete object before they are inserted into request syntax.</p>
+<ol>
+<li>Pass terminated UTF-8 text to the MCP encoders. Their shared Framework JSON writer escapes quotes, backslashes and every JSON control byte. Invalid Unicode is refused rather than copied into a request.</li>
+<li>For tool calls and prompt requests, supply a complete arguments object. Empty argument text keeps the existing shorthand for an empty object. Arrays, scalars, incomplete objects and extra trailing JSON are rejected.</li>
+<li>Reserve enough space for the complete encoded output, including escaping, punctuation and the final terminator. The existing escaped-name, client-version and URI capacities still apply. Six bytes may be needed to encode one control byte.</li>
+<li>Check the returned status before sending anything. Encoders build a private candidate and copy it to caller output only on success. A failure leaves the previous output intact, including when the input overlaps that output.</li>
+</ol>
+<pre><code class="language-c">char parameters[UMI_AI_MCP_TEXT_CAPACITY];
+UmiStatus status = umi_ai_mcp_encode_tool_call_params(
+    "read_file", "{\"path\":\"notes.txt\"}", parameters, sizeof(parameters));
+if (status != UMI_STATUS_OK) return status;
+/* The higher-level invocation API also performs this encoding before transport. */</code></pre>
+<p>Use <code>UmiJsonWriterString</code> for new Framework JSON text values instead of adding another escape loop. Its raw-writing operation accepts trusted JSON syntax; it is not a parser. MCP therefore parses arguments first and only then passes their original spelling to the writer. This preserves whitespace and Unicode escape spelling without interpreting an argument schema.</p>
+<p>Malformed text returns an argument error, malformed raw JSON returns a parse error, and capacity or allocation failure retains its own status. Existing empty text values remain compatible. Encoding does not grant permission to call a tool, validate a resource URI or verify a prompt's argument schema; those belong to the relevant higher-level contract.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-mcp-request-encoding-test umicom-mcp-initialization-admission-test umicom-mcp-descriptor-decoding-test umicom-ai-mcp-tests
+ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]ai[.](mcp-encoding[.]|mcp-initialize[.]|mcp-descriptor[.]|mcp$)" --output-on-failure</code></pre>
+<p>The 134 cases cover all nonzero JSON control bytes, valid and malformed UTF-8, field and output boundaries, aliases, version limits, raw object shapes and allocation refusal. Successful requests are parsed again to check their values. Rejected tool, prompt and resource parameters are also checked for zero transport calls. These are authored regression cases; compilation and execution are required before reporting native qualification.</p>
+
+
+<h2>23. A reply belongs to the session that requested it</h2>
+<p>A transport callback can finish after it has changed the surrounding session. For example, it may disconnect while returning a cached reply. A success status alone does not prove that the current session still owns that reply.</p>
+<ol>
+<li>Use ordinary invocation helpers for tools, resources and prompts. They now share <code>UmiAiMcpSessionRequestChecked</code> with ping and discovery.</li>
+<li>The shared request captures a ready session's revision and transport binding. It asks the checked transport for a complete terminated result in temporary storage.</li>
+<li>On successful transport, it checks readiness, revision and the request, notification and context pointers again. A changed owner returns <code>UMI_STATUS_INVALID_STATE</code> without replacing caller output.</li>
+<li>Retain the original status when transport fails or returns incomplete text. Do not turn an I/O failure into a generic stale-session message merely because the callback also disconnected.</li>
+</ol>
+<pre><code class="language-c">char reply[UMI_AI_MCP_TEXT_CAPACITY];
+UmiStatus status = UmiAiMcpSessionRequestChecked(
+    &amp;session, "ping", "{}", reply, sizeof(reply));
+if (status == UMI_STATUS_INVALID_STATE) {
+    /* Reconcile the session before deciding whether a new request is appropriate. */
+    return status;
+}
+if (status != UMI_STATUS_OK) return status;
+/* reply now belongs to the still-current ready session. */</code></pre>
+<p>A request does not advance the session revision. A read can therefore succeed at the maximum revision when the owner remains unchanged; operations that need a new revision keep their own exhaustion checks. Nested synchronous requests use separate result candidates. Discovery still has its separate catalogue candidate, so an invalidated request cannot replace the previously accepted catalogue.</p>
+<p>Keep the session, callback context and output storage alive for the entire call. Serialize access and do not reset the session lifetime while a request is outstanding. The callback must not separately change the caller's result storage. These checks observe completion ownership; they are not a thread lock, a lease that prevents freeing memory, or a sandbox for arbitrary native callbacks.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-mcp-session-request-test umicom-mcp-session-revisions-test umicom-mcp-discovery-publication-test umicom-ai-mcp-tests
+ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]ai[.](mcp-request[.]|mcp-session-revision[.]|mcp-discovery[.]|mcp$)" --output-on-failure</code></pre>
+<p>The 74 cases cover the shared request, three invocation helpers, ping and all three discovery clients. They check successful replies, unchanged outputs on errors, disconnects, revision changes, transport rebinding, nested requests, result termination and allocation refusal. These registered cases need native execution; configuration alone does not establish callback or SDK behavior.</p>
+
 </main></body></html>

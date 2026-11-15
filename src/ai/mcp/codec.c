@@ -15,6 +15,8 @@
 
 #include "umicom/ai/mcp/codec.h"
 #include "json_internal.h"
+#include "umicom/protocol/json_writer.h"
+#include <stdlib.h>
 #include "umicom/language_runtime/json_tree.h"
 
 #include <stdio.h>
@@ -594,6 +596,8 @@ UmiStatus umi_ai_mcp_decode_prompt(const char *object_json, UmiAiMcpPromptDescri
 }
 
 /* Provide the encode named raw operation used by this module and its client applications. */
+/* Raw arguments now require one complete JSON object and parameters are staged before publication; the shared writer supplies bounded syntax emission. The former implementation is retained for owner review. */
+#if 0
 static UmiStatus encode_named_raw(
     const char *name_key,
     const char *name,
@@ -634,10 +638,59 @@ static UmiStatus encode_named_raw(
     return UMI_STATUS_OK;
 }
 
+#endif
+/* Request staging keeps caller output intact until every value and bound has
+ * passed. Maximum storage follows the existing bounded field capacities. */
+static UmiStatus BeginEncodedParams(size_t output_capacity, size_t maximum_capacity,
+    UmiJsonWriter *writer)
+{
+    size_t capacity = output_capacity < maximum_capacity ? output_capacity : maximum_capacity;
+    char *candidate = malloc(capacity);
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    UmiJsonWriterInit(writer, candidate, capacity);
+    return UMI_STATUS_OK;
+}
+static UmiStatus PublishEncodedParams(UmiJsonWriter *writer, char *out_json)
+{
+    UmiStatus status = writer->status;
+    if (status == UMI_STATUS_OK) memmove(out_json, writer->buffer, writer->length + 1U);
+    free(writer->buffer);
+    return status;
+}
+static UmiStatus encode_named_raw(const char *name_key, const char *name,
+    const char *raw_key, const char *raw_value, char *out_json, size_t output_capacity)
+{
+    char escaped_name[UMI_AI_SMALL_TEXT_CAPACITY];
+    UmiStatus status = umi_ai_mcp_json_escape_string(name, escaped_name, sizeof(escaped_name));
+    if (status != UMI_STATUS_OK) return status;
+    const char *arguments = raw_value != NULL && raw_value[0] != '\0' ? raw_value : "{}";
+    UmiJsonTree *tree = NULL;
+    status = umi_ai_mcp_json_object_parse(arguments, &tree);
+    if (status != UMI_STATUS_OK) return status;
+    UmiJsonTreeDestroy(tree);
+    UmiJsonWriter writer;
+    status = BeginEncodedParams(output_capacity, UMI_AI_MCP_TEXT_CAPACITY + UMI_AI_SMALL_TEXT_CAPACITY + 128U, &writer);
+    if (status != UMI_STATUS_OK) return status;
+    /* Keys are internal constants; raw argument text is already a complete
+     * admitted object. Retain its original spacing and Unicode spelling. */
+    UmiJsonWriterRaw(&writer, "{");
+    UmiJsonWriterString(&writer, name_key);
+    UmiJsonWriterRaw(&writer, ":");
+    UmiJsonWriterRaw(&writer, escaped_name);
+    UmiJsonWriterRaw(&writer, ",");
+    UmiJsonWriterString(&writer, raw_key);
+    UmiJsonWriterRaw(&writer, ":");
+    UmiJsonWriterRaw(&writer, arguments);
+    UmiJsonWriterRaw(&writer, "}");
+    return PublishEncodedParams(&writer, out_json);
+}
+
 /*
  * Provide the ai mcp encode initialize params operation used by this module and its client
  * applications.
  */
+/* Initialization parameters retain their field capacities while publishing only a complete encoded candidate. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_ai_mcp_encode_initialize_params(
     const char *client_name,
     const char *client_version,
@@ -691,6 +744,27 @@ UmiStatus umi_ai_mcp_encode_initialize_params(
     return UMI_STATUS_OK;
 }
 
+#endif
+UmiStatus umi_ai_mcp_encode_initialize_params(const char *client_name, const char *client_version,
+    char *out_json, size_t output_capacity)
+{
+    if (client_name == NULL || client_version == NULL || out_json == NULL || output_capacity == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    char escaped_name[UMI_AI_SMALL_TEXT_CAPACITY], escaped_version[256];
+    UmiStatus status = umi_ai_mcp_json_escape_string(client_name, escaped_name, sizeof(escaped_name));
+    if (status == UMI_STATUS_OK) status = umi_ai_mcp_json_escape_string(client_version, escaped_version, sizeof(escaped_version));
+    if (status != UMI_STATUS_OK) return status;
+    UmiJsonWriter writer;
+    status = BeginEncodedParams(output_capacity, sizeof(escaped_name) + sizeof(escaped_version) + 256U, &writer);
+    if (status != UMI_STATUS_OK) return status;
+    UmiJsonWriterRaw(&writer, "{\"protocolVersion\":\"" UMI_AI_MCP_PROTOCOL_VERSION "\",\"capabilities\":{},\"clientInfo\":{\"name\":");
+    UmiJsonWriterRaw(&writer, escaped_name);
+    UmiJsonWriterRaw(&writer, ",\"version\":");
+    UmiJsonWriterRaw(&writer, escaped_version);
+    UmiJsonWriterRaw(&writer, "}}");
+    return PublishEncodedParams(&writer, out_json);
+}
+
 /*
  * Provide the ai mcp encode tool call params operation used by this module and its client
  * applications.
@@ -725,6 +799,8 @@ UmiStatus umi_ai_mcp_encode_tool_call_params(
  * Provide the ai mcp encode resource read params operation used by this module and its
  * client applications.
  */
+/* Resource parameters retain their URI capacity while using the shared writer and staged publication. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_ai_mcp_encode_resource_read_params(
     const char *uri,
     char *out_json,
@@ -760,6 +836,22 @@ UmiStatus umi_ai_mcp_encode_resource_read_params(
     return written < 0 || (size_t)written >= output_capacity
         ? UMI_STATUS_CAPACITY_EXCEEDED
         : UMI_STATUS_OK;
+}
+
+#endif
+UmiStatus umi_ai_mcp_encode_resource_read_params(const char *uri, char *out_json, size_t output_capacity)
+{
+    if (uri == NULL || out_json == NULL || output_capacity == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    char escaped_uri[UMI_AI_MCP_TEXT_CAPACITY];
+    UmiStatus status = umi_ai_mcp_json_escape_string(uri, escaped_uri, sizeof(escaped_uri));
+    if (status != UMI_STATUS_OK) return status;
+    UmiJsonWriter writer;
+    status = BeginEncodedParams(output_capacity, sizeof(escaped_uri) + 32U, &writer);
+    if (status != UMI_STATUS_OK) return status;
+    UmiJsonWriterRaw(&writer, "{\"uri\":");
+    UmiJsonWriterRaw(&writer, escaped_uri);
+    UmiJsonWriterRaw(&writer, "}");
+    return PublishEncodedParams(&writer, out_json);
 }
 
 /*

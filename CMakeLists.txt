@@ -7272,3 +7272,9 @@ include(cmake/UmicomMcpDescriptorDecoding.cmake)
 
 # Complete JSON-list admission is shared by all MCP discovery clients.
 include(cmake/UmicomMcpListEnvelope.cmake)
+
+# Shared-writer request publication keeps invalid parameters away from transport.
+include(cmake/UmicomMcpRequestEncoding.cmake)
+
+# Ordinary MCP replies remain owned by their captured ready session.
+include(cmake/UmicomMcpSessionRequests.cmake)

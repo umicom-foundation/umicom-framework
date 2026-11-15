@@ -188,6 +188,8 @@ static UmiStatus request_list(
 }
 
 #endif
+/* The shared request service now admits revision, readiness and transport binding before discovery receives reply text. The former implementation is retained for owner review. */
+#if 0
 static UmiStatus request_list(
     UmiAiMcpSession *session,
     const char *method,
@@ -226,6 +228,49 @@ static UmiStatus request_list(
     /* A reply belongs to the ready session revision that requested it. */
     if (session->state != UMI_AI_MCP_SESSION_READY || session->revision != session_revision)
         return UMI_STATUS_INVALID_STATE;
+    return umi_ai_mcp_json_array_visit_objects(
+        result,
+        array_key,
+        visitor,
+        visitor_data,
+        &count);
+}
+
+#endif
+static UmiStatus request_list(
+    UmiAiMcpSession *session,
+    const char *method,
+    const char *array_key,
+    UmiAiMcpJsonObjectVisitor visitor,
+    void *visitor_data)
+{
+    char result[UMI_AI_MCP_TEXT_CAPACITY];
+    size_t count = 0U;
+    UmiStatus status;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (session == NULL ||
+        method == NULL ||
+        array_key == NULL ||
+        visitor == NULL ||
+        session->state != UMI_AI_MCP_SESSION_READY) {
+        return UMI_STATUS_INVALID_STATE;
+    }
+
+    status = UmiAiMcpSessionRequestChecked(
+        session,
+        method,
+        "{}",
+        result,
+        sizeof(result));
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+
     return umi_ai_mcp_json_array_visit_objects(
         result,
         array_key,

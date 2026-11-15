@@ -16,6 +16,8 @@
 #include "umicom/ai/mcp/json.h"
 
 #include "json_internal.h"
+#include "umicom/protocol/json_writer.h"
+#include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
 
@@ -290,6 +292,8 @@ UmiStatus umi_ai_mcp_json_raw(
  * Provide the ai mcp json escape string operation used by this module and its client
  * applications.
  */
+/* The protocol JSON writer owns Unicode validation and all control escaping; a private candidate preserves caller output and supports overlapping input. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_ai_mcp_json_escape_string(
     const char *value,
     char *out_json_string,
@@ -360,6 +364,28 @@ UmiStatus umi_ai_mcp_json_escape_string(
     out_json_string[output_length] = '\0';
 
     return UMI_STATUS_OK;
+}
+
+#endif
+UmiStatus umi_ai_mcp_json_escape_string(const char *value, char *out_json_string, size_t output_capacity)
+{
+    if (value == NULL || out_json_string == NULL || output_capacity < 3U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    size_t length = 0U;
+    while (length < UMI_AI_MCP_TEXT_CAPACITY && value[length] != '\0') ++length;
+    if (length == UMI_AI_MCP_TEXT_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Every bounded input byte needs at most six JSON bytes, plus quotes and
+     * termination. Staging supports overlap and preserves output on refusal. */
+    size_t capacity = length * 6U + 3U;
+    if (capacity > output_capacity) capacity = output_capacity;
+    char *candidate = malloc(capacity);
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    UmiJsonWriter writer;
+    UmiJsonWriterInit(&writer, candidate, capacity);
+    UmiStatus status = UmiJsonWriterString(&writer, value);
+    if (status == UMI_STATUS_OK) memmove(out_json_string, candidate, writer.length + 1U);
+    free(candidate);
+    return status;
 }
 
 /* All MCP descriptor paths share complete bounded parsing. The tree owns its

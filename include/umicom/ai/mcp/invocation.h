@@ -25,6 +25,10 @@ extern "C" {
 /**
  * Provide the ai mcp call tool operation used by this module and its client applications.
  */
+/* Ordinary invocation keeps prior result output on encoding, transport or
+ * stale-session failure. A successful reply must still match its READY session
+ * revision and transport binding. Keep session and callback storage alive and
+ * serialized throughout; parameter/result buffers must not alias owner state. */
 UmiStatus umi_ai_mcp_call_tool(
     UmiAiMcpSession *session,
     const char *tool_name,

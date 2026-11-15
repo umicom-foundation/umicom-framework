@@ -72,6 +72,18 @@ void umi_ai_mcp_session_disconnect(
  * Retire all borrowed uses before constructing a fresh session lifetime. */
 UmiStatus UmiAiMcpSessionDisconnectChecked(UmiAiMcpSession *session);
 
+/* Issue an ordinary request through a READY session. Complete result text is
+ * published only while the captured revision and transport binding still match.
+ * A successful callback on a changed session returns INVALID_STATE; callback or
+ * malformed-result errors retain their original status. Failure preserves output.
+ * Requests do not advance the revision. Keep session and callback state alive,
+ * serialize access, and do not reset a session lifetime during an outstanding call.
+ * Result storage must remain live, must not overlap the session and must not be
+ * changed separately by the callback. This is completion admission, not a lifetime
+ * lease, thread lock or callback sandbox. */
+UmiStatus UmiAiMcpSessionRequestChecked(UmiAiMcpSession *session,
+    const char *method, const char *params_json, char *result_json, size_t result_capacity);
+
 #ifdef __cplusplus
 }
 #endif
