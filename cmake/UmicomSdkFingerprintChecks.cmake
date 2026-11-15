@@ -39,3 +39,34 @@ if(TARGET umicom)
             TIMEOUT 30 LABELS "framework;sdk;cli;regression")
     endforeach()
 endif()
+
+
+# Controlled stream faults exercise the production SDK command and real SDK
+# inspection services without closing stdout or depending on /dev/full.
+add_executable(umicom-sdk-report-output-tests
+    "${CMAKE_CURRENT_LIST_DIR}/../tests/sdk_installation/test_report_output.c")
+target_link_libraries(umicom-sdk-report-output-tests PRIVATE Umicom::sdk Umicom::platform)
+set_target_properties(umicom-sdk-report-output-tests PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES)
+umicom_apply_warnings(umicom-sdk-report-output-tests)
+umicom_apply_sanitizers(umicom-sdk-report-output-tests)
+if(COMMAND umicom_target_qualification_inputs)
+    umicom_target_qualification_inputs(umicom-sdk-report-output-tests FILES
+        "${CMAKE_CURRENT_LIST_DIR}/../tools/umicom/src/command_sdk.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/support/report_stream.h")
+endif()
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-sdk-report-output-tests)
+endif()
+foreach(_route IN ITEMS inspect-complete inspect-incomplete artifacts-complete artifacts-missing
+        artifacts-empty fingerprint-match fingerprint-mismatch help help-alias)
+    foreach(_failure IN ITEMS success write-first write-last flush stream flush-and-stream)
+        add_test(NAME framework.sdk.report_output.${_route}.${_failure}
+            COMMAND umicom-sdk-report-output-tests ${_route} ${_failure})
+        set_tests_properties(framework.sdk.report_output.${_route}.${_failure} PROPERTIES
+            TIMEOUT 20 LABELS "framework;sdk;cli;output;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.sdk.report_output.${_route}.${_failure}
+                TARGETS umicom-sdk-report-output-tests)
+        endif()
+    endforeach()
+endforeach()

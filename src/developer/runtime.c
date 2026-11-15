@@ -536,6 +536,8 @@ UmiStatus umi_developer_runtime_submit_chain(
 /* Queue publication must have enough event identities before it commits.
  * The journal is a fixed ring and does not allocate during event publication.
  * Workbench projections retain their existing best-effort policy. */
+/* Admit the additional context event in a maximum-size chain transaction; the prior chain-only upper bound is retained. The former implementation is retained for owner review. */
+#if 0
 static UmiStatus admit_runtime_events(UmiDeveloperRuntime *runtime, uint64_t events)
 {
     if (runtime == NULL || events == 0U ||
@@ -556,6 +558,29 @@ static UmiStatus admit_runtime_events(UmiDeveloperRuntime *runtime, uint64_t eve
     return UMI_STATUS_OK;
 }
 
+#endif
+static UmiStatus admit_runtime_events(UmiDeveloperRuntime *runtime, uint64_t events)
+{
+    if (runtime == NULL || events == 0U ||
+        events > (uint64_t)UMI_DEVELOPER_PIPELINE_OPERATION_CAPACITY * 2U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (runtime->pipeline == NULL || runtime->journal == NULL)
+        return UMI_STATUS_INVALID_STATE;
+    UmiDeveloperJournalSnapshot journal;
+    UmiStatus status = umi_developer_journal_snapshot(runtime->journal, &journal);
+    if (status != UMI_STATUS_OK) return status;
+    uint64_t displaced = journal.entry_count + events > UMI_DEVELOPER_JOURNAL_CAPACITY
+        ? journal.entry_count + events - UMI_DEVELOPER_JOURNAL_CAPACITY : 0U;
+    if (events > UINT64_MAX - runtime->revision ||
+        events > UINT64_MAX - journal.next_sequence ||
+        events > UINT64_MAX - journal.revision ||
+        displaced > UINT64_MAX - journal.dropped_count)
+        return UMI_STATUS_INVALID_STATE;
+    return UMI_STATUS_OK;
+}
+
+/* Centralize chain publication so selecting a project context cannot survive a refused queue submission; ordinary chain callers retain their existing behavior. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_developer_runtime_submit_chain(
     UmiDeveloperRuntime *runtime,
     const UmiDeveloperOperationSnapshot *operations,
@@ -581,6 +606,73 @@ UmiStatus umi_developer_runtime_submit_chain(
     return UMI_STATUS_OK;
 }
 
+#endif
+/* Context and queued work share one admission boundary. After all checks, the
+ * pipeline commits its owned chain; the fixed context and journal writes below
+ * cannot fail for this serialized owner. No executor is called here. */
+static UmiStatus submit_chain_with_context(
+    UmiDeveloperRuntime *runtime,
+    const UmiDeveloperContextSnapshot *context,
+    const UmiDeveloperOperationSnapshot *operations,
+    size_t count)
+{
+    if (runtime == NULL || operations == NULL || count == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (count > UMI_DEVELOPER_PIPELINE_OPERATION_CAPACITY)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiDeveloperContextSnapshot staged_context;
+    if (context != NULL) {
+        UmiDeveloperContextSnapshot current;
+        UmiStatus status = umi_developer_context_snapshot(runtime->context, &current);
+        if (status != UMI_STATUS_OK) return status;
+        if (current.revision == UINT64_MAX) return UMI_STATUS_INVALID_STATE;
+        staged_context = *context;
+    }
+    uint64_t events = (uint64_t)count * 2U - 1U + (context != NULL ? 1U : 0U);
+    UmiStatus status = admit_runtime_events(runtime, events);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_developer_pipeline_submit_chain(runtime->pipeline, operations, count);
+    if (status != UMI_STATUS_OK) return status;
+
+    if (context != NULL) {
+        /* The owned context exists and has one revision available. Journal
+         * space and identity headroom were admitted for the entire transaction.
+         * Keep the historical context event before operation observations. */
+        (void)umi_developer_context_set(runtime->context, &staged_context);
+        (void)umi_developer_journal_append(runtime->journal,
+            UMI_DEVELOPER_EVENT_CONTEXT_CHANGED, "", "Developer context changed.", NULL);
+        runtime->revision += 1U;
+    }
+    for (size_t i = 0U; i < count; ++i) {
+        /* Every ID now exists and the non-allocating journal has been admitted.
+         * No callbacks may mutate this single-owner runtime during submission. */
+        (void)record_operation_event(runtime, operations[i].id,
+            UMI_DEVELOPER_EVENT_SUBMITTED, "Operation queued.");
+        if (i != 0U)
+            (void)record_operation_event(runtime, operations[i].id,
+                UMI_DEVELOPER_EVENT_DEPENDENCY_ADDED, "Operation dependency added.");
+    }
+    return UMI_STATUS_OK;
+}
+
+UmiStatus umi_developer_runtime_submit_chain(
+    UmiDeveloperRuntime *runtime,
+    const UmiDeveloperOperationSnapshot *operations,
+    size_t count)
+{
+    return submit_chain_with_context(runtime, NULL, operations, count);
+}
+
+UmiStatus umi_developer_runtime_submit_context_chain(
+    UmiDeveloperRuntime *runtime,
+    const UmiDeveloperContextSnapshot *context,
+    const UmiDeveloperOperationSnapshot *operations,
+    size_t count)
+{
+    if (context == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return submit_chain_with_context(runtime, context, operations, count);
+}
 /*
  * Provide the developer runtime add dependency operation used by this module and its
  * client applications.
@@ -1168,6 +1260,8 @@ UmiStatus umi_developer_runtime_execute_next(
  * Provide the developer runtime snapshot operation used by this module and its client
  * applications.
  */
+/* Stage the complete developer observation so a late child read failure does not replace a caller snapshot with mixed partial fields; preserve the prior implementation for comparison. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_developer_runtime_snapshot(
     UmiDeveloperRuntime *runtime,
     UmiDeveloperRuntimeSnapshot *out_snapshot)
@@ -1220,6 +1314,54 @@ UmiStatus umi_developer_runtime_snapshot(
     return UMI_STATUS_OK;
 }
 
+#endif
+UmiStatus umi_developer_runtime_snapshot(
+    UmiDeveloperRuntime *runtime,
+    UmiDeveloperRuntimeSnapshot *out_snapshot)
+{
+    if (runtime == NULL || out_snapshot == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* A runtime view is one observation. Its child services can refuse a read,
+     * so keep the growing composite off the caller's stack and publish once. */
+    UmiDeveloperRuntimeSnapshot *staged = calloc(1U, sizeof(*staged));
+    if (staged == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    staged->struct_size = (uint32_t)sizeof(*staged);
+    staged->api_version = UMI_DEVELOPER_RUNTIME_API_VERSION;
+    staged->revision = runtime->revision;
+    staged->owns_services = runtime->owns_services;
+    UmiStatus status;
+
+#define UMI_RUNTIME_STAGED_SNAPSHOT(call_expression) \
+    do { \
+        status = (call_expression); \
+        if (status != UMI_STATUS_OK) goto finished; \
+    } while (0)
+
+    UMI_RUNTIME_STAGED_SNAPSHOT(umi_developer_context_snapshot(
+        runtime->context, &staged->context));
+    UMI_RUNTIME_STAGED_SNAPSHOT(umi_developer_pipeline_snapshot(
+        runtime->pipeline, &staged->pipeline));
+    UMI_RUNTIME_STAGED_SNAPSHOT(umi_developer_journal_snapshot(
+        runtime->journal, &staged->journal));
+    UMI_RUNTIME_STAGED_SNAPSHOT(umi_project_workspace_snapshot(
+        runtime->projects, &staged->projects));
+    UMI_RUNTIME_STAGED_SNAPSHOT(umi_language_service_snapshot(
+        runtime->language, &staged->language));
+    UMI_RUNTIME_STAGED_SNAPSHOT(umi_debug_service_snapshot(
+        runtime->debug, &staged->debug));
+    UMI_RUNTIME_STAGED_SNAPSHOT(umi_source_control_service_snapshot(
+        runtime->source_control, &staged->source_control));
+    UMI_RUNTIME_STAGED_SNAPSHOT(umi_test_platform_service_snapshot(
+        runtime->tests, &staged->tests));
+    UMI_RUNTIME_STAGED_SNAPSHOT(umi_ui_workbench_services_snapshot(
+        runtime->workbench, &staged->workbench));
+
+#undef UMI_RUNTIME_STAGED_SNAPSHOT
+
+    *out_snapshot = *staged;
+finished:
+    free(staged);
+    return status;
+}
 /*
  * Provide the developer runtime context operation used by this module and its client
  * applications.

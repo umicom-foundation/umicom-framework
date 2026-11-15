@@ -35,6 +35,10 @@ typedef struct UmiAiMcpSession {
 } UmiAiMcpSession;
 
 /* Initialise a disconnected session from validated server metadata and transport. */
+/* Use fresh or fully retired storage. Server/transport inputs may borrow the
+ * destination, and refused construction preserves it. Success starts CONNECTED
+ * at revision one with empty negotiated capabilities. Retire outstanding requests
+ * before resetting a lifetime; this constructor does not invalidate external borrows. */
 UmiStatus umi_ai_mcp_session_init(
     UmiAiMcpSession *session,
     const UmiAiMcpServerDescriptor *server,

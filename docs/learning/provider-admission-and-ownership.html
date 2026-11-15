@@ -374,4 +374,42 @@ if (status != UMI_STATUS_OK) return status;
 ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]ai[.](mcp-request[.]|mcp-session-revision[.]|mcp-discovery[.]|mcp$)" --output-on-failure</code></pre>
 <p>The 74 cases cover the shared request, three invocation helpers, ping and all three discovery clients. They check successful replies, unchanged outputs on errors, disconnects, revision changes, transport rebinding, nested requests, result termination and allocation refusal. These registered cases need native execution; configuration alone does not establish callback or SDK behavior.</p>
 
+
+<h2>24. Construct new state before replacing old state</h2>
+<p>Clearing a structure is not always the first safe step in initialization. An input may point into that structure, or a later field may fail validation. Clearing first can erase the input or leave a partial replacement behind.</p>
+<ol>
+<li>For server metadata, copy each text field into a temporary descriptor using its declared bound. Validate the completed descriptor, then publish it. Missing required text, oversized fields or invalid trust values preserve the previous destination.</li>
+<li>For a session, validate and capture the server descriptor and transport before replacing the destination. The new session starts connected at revision one with empty negotiated capabilities.</li>
+<li>For a client, construct the small session first. After that succeeds, initialize its catalogues and bridge in the final caller-owned storage. There is no need to allocate or move a temporary copy of the large client.</li>
+<li>Use these constructors for fresh or fully retired storage. Finish outstanding callbacks and retire external tool-registry bindings before resetting an owner. Initialization does not unregister external references.</li>
+</ol>
+<pre><code class="language-c">UmiAiMcpSession replacement;
+UmiStatus status = umi_ai_mcp_session_init(&amp;replacement, &amp;server, &amp;transport);
+if (status != UMI_STATUS_OK) return status;
+/* Keep replacement at a stable address while callbacks or clients borrow it. */</code></pre>
+<p>Inputs may also borrow fields from a retired destination. The constructor captures them before publishing its replacement. Refused construction preserves all prior destination bytes. A successful reset intentionally creates fresh state; it does not continue the old revision history or guarantee that unrelated borrowed pointers have been retired.</p>
+<p>Text copying stops at the destination field capacity. Callers must still supply readable input storage: a C pointer does not describe the size or lifetime of its allocation. Tests use exact-sized unterminated arrays so sanitizer runs can expose an accidental unbounded scan.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-mcp-construction-test umicom-mcp-session-request-test umicom-ai-mcp-tests
+ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]ai[.](mcp-construction[.]|mcp-request[.]|mcp$)" --output-on-failure</code></pre>
+<p>The 75 cases cover server field bounds, required and optional metadata, trust values, null inputs, transport bindings, self-context pointers and inputs borrowed from destination fields. They also verify fresh catalogue state and that construction performs no transport calls. Native execution remains a separate qualification step.</p>
+
+
+<h2>25. Validate a registry before returning a match</h2>
+<p>A registry stores several records and a count describing which slots are active. Checking only the requested record can hide a corrupted count or malformed later record. Server lookup now checks the complete active registry before returning a borrowed pointer.</p>
+<ol>
+<li>Initialize the registry and add validated server descriptors. The declared count must fit its fixed array, every active descriptor must pass the existing server validator, and active identities must be unique.</li>
+<li>Use <code>UmiAiMcpServerRegistryResolve</code> when the caller needs a status. Invalid query arguments return <code>UMI_STATUS_INVALID_ARGUMENT</code>, malformed registry storage returns <code>UMI_STATUS_INVALID_STATE</code>, and an absent identity returns <code>UMI_STATUS_NOT_FOUND</code>. Failure leaves the output pointer unchanged.</li>
+<li>Keep returned pointers within the registry's lifetime and retire them before mutation. The existing mutable find API remains available for compatibility; direct edits still belong to its caller.</li>
+<li>Check mutation status. Additions and removals preserve the whole registry on refusal and advance its revision once on success. An exhausted revision refuses mutation instead of wrapping to an older-looking value.</li>
+</ol>
+<pre><code class="language-c">const UmiAiMcpServerDescriptor *server = NULL;
+UmiStatus status = UmiAiMcpServerRegistryResolve(&amp;registry, "local-model-tools", &amp;server);
+if (status != UMI_STATUS_OK) return status;
+/* Borrow server only while registry stays alive and unchanged. */</code></pre>
+<p>Read-only lookup still works at the maximum revision when storage is valid. Unused slots are outside the active registry and are not validated as records. Removal keeps the remaining records in their existing order and retains the previous inactive-tail behavior; this is not a secure erasure operation.</p>
+<p>Bounded metadata is not permission to connect to an endpoint or invoke its tools. Registry admission checks storage and identity consistency. Endpoint semantics, transport configuration and tool approval remain separate responsibilities.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-mcp-server-registry-test umicom-mcp-construction-test umicom-ai-mcp-tests
+ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]ai[.](mcp-server-registry[.]|mcp-construction[.]|mcp$)" --output-on-failure</code></pre>
+<p>The 46 cases cover oversized counts, malformed early and late metadata, duplicate identities, field and query limits, full capacity, inactive aliases, mutable compatibility, removal order and revision exhaustion. Native and sanitizer execution are required before these authored checks establish runtime qualification.</p>
+
 </main></body></html>

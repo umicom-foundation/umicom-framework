@@ -38,6 +38,24 @@ typedef struct UmiAiMcpServerRegistry {
 void umi_ai_mcp_server_registry_init(
     UmiAiMcpServerRegistry *registry);
 
+
+/* Validate the count, every active descriptor and unique server identities.
+ * Unused slots and read-only access at an exhausted revision remain supported.
+ * NULL is INVALID_ARGUMENT; malformed registry storage is INVALID_STATE. */
+UmiStatus UmiAiMcpServerRegistryValidate(const UmiAiMcpServerRegistry *registry);
+
+/* Resolve a nonempty terminated identity within UMI_AI_ID_CAPACITY bytes.
+ * Failure leaves out_server unchanged: INVALID_ARGUMENT for invalid arguments,
+ * INVALID_STATE for malformed storage and NOT_FOUND for an absent identity.
+ * Returned pointers borrow the registry and must not outlive or cross mutations.
+ * Legacy mutable find remains available; callers still own any direct edits. */
+UmiStatus UmiAiMcpServerRegistryResolve(const UmiAiMcpServerRegistry *registry,
+    const char *server_id, const UmiAiMcpServerDescriptor **out_server);
+
+/* Add/remove preserve the complete registry on refusal. UINT64_MAX revision
+ * is refused with CAPACITY_EXCEEDED before nested mutation work. Successful
+ * mutations advance the revision once. Serialize access and retire borrows. */
+
 /**
  * Add ai mcp server registry only after its inputs and available capacity have been
  * checked.

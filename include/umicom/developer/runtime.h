@@ -148,6 +148,20 @@ UmiStatus umi_developer_runtime_submit_chain(
     const UmiDeveloperOperationSnapshot *operations,
     size_t count);
 
+/* Publish a context selection and a complete chain together. Failure preserves
+ * context, queue, journal and runtime identities. Success records one context
+ * event, then the normal interleaved chain events; the context setter's bounded
+ * normalization and owner-assigned revision rules are unchanged. This is an
+ * in-memory, single-owner transaction, not a lock or durable process commit.
+ * Inputs stay stable for the call; observers must not re-enter or destroy the
+ * runtime. The context is required; use submit_chain to keep it unchanged. */
+UmiStatus umi_developer_runtime_submit_context_chain(
+    UmiDeveloperRuntime *runtime,
+    const UmiDeveloperContextSnapshot *context,
+    const UmiDeveloperOperationSnapshot *operations,
+    size_t count);
+
+
 /**
  * Provide the developer runtime add dependency operation used by this module and its
  * client applications.
@@ -247,6 +261,11 @@ UmiStatus umi_developer_runtime_execute_next(
  * Provide the developer runtime snapshot operation used by this module and its client
  * applications.
  */
+/* Complete observation publication: every failure preserves caller output.
+ * Allocation refusal returns OUT_OF_MEMORY; child read errors retain their
+ * original status. This reads nine children in order, not a cross-thread atomic
+ * snapshot. Serialize service access; a retained earlier output is historical
+ * evidence after a refresh failure and must not be presented as a fresh view. */
 UmiStatus umi_developer_runtime_snapshot(
     UmiDeveloperRuntime *runtime,
     UmiDeveloperRuntimeSnapshot *out_snapshot);

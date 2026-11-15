@@ -75,4 +75,95 @@ ctest --output-on-failure --no-tests=error -R "^framework[.]developer[.](cmake_t
 ctest --output-on-failure --no-tests=error -R "^framework[.]developer[.](cmake_plan|runtime|pipeline)$"</code></pre>
 <p>These cases are authored coverage and remain unexecuted until qualification. A successful model suite still needs separate owner-run compiler, installation, package and application-launch evidence on identified source revisions. The native CLI and Studio must be checked with their actual toolchain and project settings.</p>
 <p><a href="atomic-workflow-submission.html">Registered task and launch workflows</a> · <a href="index.html">Framework learning index</a></p>
+<h2>7. Keep the selected configuration consistent</h2>
+<p>A configuration names a build variant, such as Debug or Release. A single-configuration generator such as Ninja uses <code>CMAKE_BUILD_TYPE</code> when configuring a build directory. A multi-configuration generator can put several variants in one build directory; its build command needs <code>--config</code> to select the variant. CMake documents that option in its <a href="https://cmake.org/cmake/help/latest/manual/cmake.1.html#build-a-project">build command reference</a>.</p>
+<p>The development planner now sends the same resolved configuration to configure, build and test. For a Release request, the relevant arguments are <code>-DCMAKE_BUILD_TYPE=Release</code>, <code>--config Release</code> and <code>-C Release</code>. The development default remains Debug when the request's configuration is null or empty; the delivery default remains Release. The delivery planner also carries the selection into install and package commands.</p>
+<p>This corrects a specific mismatch: a multi-configuration project could previously build its default variant and then attempt to test a different requested variant. The Studio developer pipeline centre uses the shared runtime submission function, so this correction stays in Framework. The planner does not inspect an existing cache, invent missing configurations or choose a configuration-specific executable for Run. The caller must supply the correct executable path.</p>
+<ol>
+<li>Create a small CMake practice project with a real executable and at least one registered test. Use a new build directory so that a different cached generator cannot interfere.</li>
+<li>Configure it with Ninja Multi-Config, if that generator and its required compiler are installed.</li>
+<li>Build and test the same variant explicitly, checking each exit code before continuing. These are commands to run during qualification, not evidence that the project already passed:</li>
+</ol>
+<pre><code>cmake -S . -B build-multi -G "Ninja Multi-Config"
+cmake --build build-multi --config Release
+ctest --test-dir build-multi -C Release --output-on-failure --no-tests=error</code></pre>
+<p>If CTest cannot find the executable, compare the requested configuration with the build output and the test's executable path. A missing generator, compiler or project test needs its own correction. Changing configuration does not repair unrelated compiler errors.</p>
+<p>The native model regressions compare complete argument arrays, configuration defaults, maximum supported configuration metadata, build-only requests, runtime submission, delivery stage order and refusal followed by a corrected retry. Custom names containing spaces test argument preservation; they do not establish that a particular project supports those names. From an already configured Framework build directory:</p>
+<pre><code>cmake --build . --target umicom-developer-cmake-configuration-tests
+ctest --output-on-failure --no-tests=error -R "^framework[.]developer[.]cmake_configuration[.]"
+ctest --output-on-failure --no-tests=error -R "^framework[.]developer[.](cmake_plan$|cmake_transaction[.])"</code></pre>
+<p>The model cases do not execute CMake, CTest, a compiler, installation or packaging. Qualify those real operations separately using the intended generator, toolchain and application.</p>
+<h2>8. Inspect a plan from an installed SDK</h2>
+<p>The existing development workflow example now offers a <code>preview</code> mode. It creates a Framework pipeline, queues configure/build/test operations and prints their owned arguments as JSON. It does not create the supplied source or build directories, search for tools, compile the project or launch a planned command. The JSON includes <code>"executed": false</code> to make that distinction explicit.</p>
+<p>Install a complete Framework SDK first. The example needs the full exported <code>Umicom::Framework</code> target because its retained Notes workflow also generates projects, builds, tests, packages and runs them. A small application that only plans commands can link the developer component instead. The preview code calls the public C API; it does not clone Framework or compile Framework source into the consumer.</p>
+<ol>
+<li>Choose the installed SDK prefix. In the commands below, replace <code>C:/UmicomSDK</code> with that directory. Its package configuration, archives, public headers and resources must come from a consistent installation.</li>
+<li>Configure the installed example in a separate build directory. The explicit prefix and Framework's shared environment/layout checks reject a cached package outside that prefix and missing imported SDK files.</li>
+<li>Build the example, run its preview checks, then inspect a project plan. Stop on the first failing command; PowerShell does not automatically stop after a failed native executable.</li>
+</ol>
+<pre><code>cmake -S C:/UmicomSDK/share/umicom/framework/examples/development_workflow -B C:/UmicomPractice/workflow-client -G Ninja -DUMICOM_EXPECTED_SDK_PREFIX=C:/UmicomSDK
+cmake --build C:/UmicomPractice/workflow-client
+ctest --test-dir C:/UmicomPractice/workflow-client --output-on-failure --no-tests=error -R "^notes[.]development_workflow[.]preview[.]"
+&amp; "C:\UmicomPractice\workflow-client\umicom-development-workflow-example.exe" preview "C:/Projects/My App" "C:/Projects/My App/build" Release "Ninja Multi-Config"</code></pre>
+<p>Expect three operations named <code>sdk.preview.configure</code>, <code>sdk.preview.build</code> and <code>sdk.preview.test</code>. The build arguments include <code>--config</code> followed by <code>Release</code>; test arguments include <code>-C</code> followed by the same value. Quotes and control characters in text are escaped by the shared JSON writer. A planning or encoding refusal returns a nonzero exit status before writing JSON. An operating-system error while writing standard output can still leave partial output; check the process exit code before consuming it. Configuration names remain project-defined; the preview cannot prove that a requested variant exists.</p>
+<p>The optional final generator argument defaults to Ninja. An empty configuration uses the planner's Debug default. The example's existing <code>complete</code> mode and failure demonstrations still perform real generated-project work. Running CTest without the preview filter also selects the existing complete workflow test. Review that broader activity before running it. These commands are qualification instructions, not a claim that an installed consumer or a real application has passed.</p>
+<p>If the package is missing, install the full SDK and point to its actual prefix. If CMake reports a package outside the prefix, use a new consumer build directory or correct the cached package selection after reviewing it. Do not add source-tree include directories or copied libraries to bypass the installed-layout checks. A missing icon or SVG is likewise a packaging issue: reinstall the shared resources instead of drawing a replacement brand.</p>
+
+<h2>9. Select a project only when its workflow is accepted</h2>
+<p>An active project is shared application state. Changing that selection before planning the final task creates a subtle failure: the build request can be refused while the editor still switches to the requested project. Undoing the selection afterward is also observable because it creates extra context events and revisions.</p>
+<p><code>umi_developer_project_workflow_submit</code> first resolves project metadata and translates every selected task and launch profile. It then publishes the context and complete operation chain through <code>umi_developer_runtime_submit_context_chain</code>. A malformed final command, duplicate operation ID, insufficient queue capacity or exhausted revision leaves the original context, queue, journal and optional result unchanged.</p>
+<ol>
+<li>Register the project, tasks and optional launch profile in the runtime's project workspace.</li>
+<li>Fill <code>UmiDeveloperProjectWorkflowRequest</code> with the project ID and a build, test, run, debug or full preset. Give each accepted workflow a distinct identity.</li>
+<li>Submit the request once. On refusal, show its status and keep the previously displayed context. Correct the cause before retrying the refused identity.</li>
+<li>On success, inspect the returned operation IDs and refresh the context display. Submission queues operations; a worker still has to execute them.</li>
+</ol>
+<pre><code>#include &quot;umicom/developer/project_workflow.h&quot;
+
+UmiStatus queue_project_tests(UmiDeveloperRuntime *runtime,
+                             const char *project_id,
+                             UmiDeveloperProjectWorkflowSnapshot *result)
+{
+    UmiDeveloperProjectWorkflowRequest request = {0};
+    request.struct_size = (uint32_t)sizeof(request);
+    request.api_version = UMI_DEVELOPER_PROJECT_WORKFLOW_API_VERSION;
+    request.project_id = project_id;
+    request.workflow_id = &quot;project.test.request&quot;;
+    request.preset = UMI_DEVELOPER_PROJECT_WORKFLOW_TEST;
+    request.include_configure = 1;
+    return umi_developer_project_workflow_submit(runtime, &amp;request, result);
+}
+</code></pre>
+<p>The runtime reserves one context event plus the chain's submitted and dependency events before publication. For a chain of <em>n</em> operations this requires <em>2n</em> event identities. The context event remains first. Context strings retain the existing bounded normalization rules; revisions belong to the owner, so caller-provided revision numbers do not replace them.</p>
+<p>This is an in-memory transaction for serialized callers. It supplies neither a thread lock nor crash recovery. Notification callbacks must not re-enter or destroy the runtime. Project import and bootstrap can register metadata before attempting a workflow and retain their own boundaries; the workflow guarantee does not roll back an earlier import.</p>
+<p>After configuring the native Framework build, compile and run the focused regression target:</p>
+<pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\framework&quot;
+cmake --build build/windows-ucrt64-debug --target umicom-project-workflow-transaction-tests
+ctest --test-dir build/windows-ucrt64-debug -C Debug --output-on-failure -R &quot;^framework[.]developer[.]project_workflow_transaction[.]&quot;
+</code></pre>
+<p>Stop if either command fails. The 28 cases inspect preserved state, repaired retries, copied inputs, dependency ordering and counter boundaries. Their completions are synthetic; they do not invoke CMake, a debugger or an application. A passing result qualifies those model contracts for the tested source and environment, not an actual project build or Studio screen.</p>
+
+<h2>10. Read one complete runtime observation</h2>
+<p><code>umi_developer_runtime_snapshot</code> combines nine child services: context, pipeline, journal, projects, language, debugger, source control, tests and workbench. A failure in the ninth service must not replace the caller's previous observation with eight new parts and one missing part.</p>
+<p>The runtime stages its observation in private heap storage and publishes the result only after all nine reads succeed. Allocation refusal returns <code>OUT_OF_MEMORY</code>; a child refusal retains that child's status. Every failure leaves the caller's output bytes unchanged. A retained snapshot is historical evidence after a failed refresh, so display the refresh status separately.</p>
+<pre><code>UmiDeveloperRuntimeSnapshot observed;
+UmiStatus status = umi_developer_runtime_snapshot(runtime, &amp;observed);
+if (status == UMI_STATUS_OK) {
+    /* Pass the complete value to the presentation layer. */
+} else {
+    /* Report the status. Do not read this uninitialized local value. */
+}
+</code></pre>
+<p>If an application intentionally retains the previous value, initialize it before the first use and track whether a successful observation exists. The service reads children in sequence; serialized access is still required. Complete publication is not a thread lock, a durable checkpoint or a guarantee that an external process has stopped.</p>
+<p>The regression target reads real owned and borrowed child services, injecting an error after each child has written its local result. It also checks allocation refusal, invalid arguments, observation order and recovery after removing a fault:</p>
+<pre><code>Set-Location &quot;C:\umicom\Umicom-Applications\framework&quot;
+cmake --build build/windows-ucrt64-debug --target umicom-developer-runtime-snapshot-test
+ctest --test-dir build/windows-ucrt64-debug -C Debug --output-on-failure -R &quot;^framework[.]developer[.]runtime_snapshot[.]&quot;
+</code></pre>
+<p>Stop on failure. The 26 cases cover both owned and bound runtimes without launching tools. A bound runtime borrows its project and workbench services; those services must outlive it. Compiler, debugger, installed SDK and GUI qualification remain separate exercises.</p>
+
+<h2>11. Deliver a complete preview report</h2>
+<p>The installed workflow example builds its JSON preview in memory before writing it. It now checks <code>puts</code>, <code>fflush(stdout)</code> and <code>ferror(stdout)</code>. A failed write or flush returns failure even if the plan itself was valid. A partial JSON file must not be treated as a successful preview.</p>
+<p>This affects only report delivery. The preview still does not run its compiler, CTest or application commands. A complete report says what was planned, not what executed. See <a href="../guides/inspecting-an-installed-sdk.html#report-delivery">Check that the report was delivered</a> for exit-code handling, output recovery and the focused native regression commands.</p>
+
 </main></body></html>

@@ -611,8 +611,20 @@ static UmiStatus build_cmake_plan(
         if (status != UMI_STATUS_OK) return status;
 
         /* Preserve the original failure result so the caller can respond to the correct cause. */
+/* Pass the resolved configuration into the build command so multi-configuration builds and tests select the same variant. The former implementation is retained for owner review. */
+#if 0
         if ((status = umi_developer_operation_add_argument(&operation, "--build")) != UMI_STATUS_OK ||
             (status = umi_developer_operation_add_argument(&operation, request->build_directory)) != UMI_STATUS_OK) {
+            return status;
+        }
+#endif
+        /* Multi-configuration generators select the build variant at build
+         * time. Carry the same value used by configure and CTest as a separate
+         * argv entry; Studio and other native clients share this translation. */
+        if ((status = umi_developer_operation_add_argument(&operation, "--build")) != UMI_STATUS_OK ||
+            (status = umi_developer_operation_add_argument(&operation, request->build_directory)) != UMI_STATUS_OK ||
+            (status = umi_developer_operation_add_argument(&operation, "--config")) != UMI_STATUS_OK ||
+            (status = umi_developer_operation_add_argument(&operation, configuration)) != UMI_STATUS_OK) {
             return status;
         }
 

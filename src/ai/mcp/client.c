@@ -22,6 +22,8 @@
  * Initialise ai mcp client from caller-provided values so later operations receive a known
  * state.
  */
+/* Stage the small session before clearing the larger client, preserving prior state on validation failure without allocating or relocating a temporary client. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_ai_mcp_client_init(
     UmiAiMcpClient *client,
     const UmiAiMcpServerDescriptor *server,
@@ -44,6 +46,24 @@ UmiStatus umi_ai_mcp_client_init(
         &client->session,
         server,
         transport);
+}
+
+#endif
+UmiStatus umi_ai_mcp_client_init(UmiAiMcpClient *client,
+    const UmiAiMcpServerDescriptor *server, const UmiAiMcpTransport *transport)
+{
+    if (client == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiAiMcpSession session;
+    UmiStatus status = umi_ai_mcp_session_init(&session, server, transport);
+    if (status != UMI_STATUS_OK) return status;
+    /* All fallible work and borrowed-input reads are complete. Publish the fresh
+     * client in place so embedded owners keep their final, caller-chosen address. */
+    memset(client, 0, sizeof(*client));
+    umi_ai_mcp_tool_catalogue_init(&client->tools);
+    umi_ai_mcp_resource_catalogue_init(&client->resources);
+    umi_ai_mcp_prompt_catalogue_init(&client->prompts);
+    client->session = session;
+    return UMI_STATUS_OK;
 }
 
 /*

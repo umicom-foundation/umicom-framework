@@ -135,6 +135,11 @@ typedef struct UmiDeveloperCMakeDeliveryPlanSnapshot {
  * the call. A nonempty run-argument vector must have a non-NULL array.
  * Inputs and outputs must not overlap. The pipeline has one owner; no process
  * execution, filesystem work or concurrent mutation is part of this operation. */
+/* The development configuration defaults to Debug when NULL or empty. The
+ * resolved value is carried into CMAKE_BUILD_TYPE, cmake --build --config and
+ * ctest -C for selected stages. The generator and existing cache determine
+ * which configurations actually exist; this planner does not inspect them.
+ * Run executable selection remains the caller's responsibility. */
 UmiStatus umi_developer_cmake_plan_submit(
     UmiDeveloperPipeline *pipeline,
     const UmiDeveloperCMakePlanRequest *request,

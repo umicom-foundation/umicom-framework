@@ -37,6 +37,11 @@ typedef struct UmiAiMcpClient {
  * Initialise ai mcp client from caller-provided values so later operations receive a known
  * state.
  */
+/* Validate and capture session inputs before replacing the client. Failure
+ * preserves all prior bytes; successful construction resets catalogues and bridge
+ * for a fresh lifetime. Inputs may borrow the destination session. Retire active
+ * callbacks and external tool-registry bindings before resetting this owner;
+ * initialization does not unregister or repair external borrowed pointers. */
 UmiStatus umi_ai_mcp_client_init(
     UmiAiMcpClient *client,
     const UmiAiMcpServerDescriptor *server,

@@ -18,6 +18,8 @@
 #include <string.h>
 
 /* Provide the copy text operation used by this module and its client applications. */
+/* Metadata copying scans only the destination field bound before deciding whether the supplied text fits. The former implementation is retained for owner review. */
+#if 0
 static UmiStatus copy_text(
     char *destination,
     size_t capacity,
@@ -45,10 +47,23 @@ static UmiStatus copy_text(
     return UMI_STATUS_OK;
 }
 
+#endif
+static UmiStatus copy_text(char *destination, size_t capacity, const char *source)
+{
+    if (destination == NULL || capacity == 0U || source == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t length = 0U;
+    while (length < capacity && source[length] != '\0') ++length;
+    if (length == capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+    memcpy(destination, source, length + 1U);
+    return UMI_STATUS_OK;
+}
+
 /*
  * Initialise ai mcp server from caller-provided values so later operations receive a known
  * state.
  */
+/* Construct and validate metadata privately before replacing a caller value, preserving failures and borrowed field inputs. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_ai_mcp_server_init(
     UmiAiMcpServerDescriptor *server,
     const char *server_id,
@@ -93,6 +108,23 @@ UmiStatus umi_ai_mcp_server_init(
     server->enabled = 1;
 
     return umi_ai_mcp_server_validate(server);
+}
+
+#endif
+UmiStatus umi_ai_mcp_server_init(UmiAiMcpServerDescriptor *server, const char *server_id,
+    const char *display_name, const char *endpoint, UmiAiMcpTrust trust)
+{
+    if (server == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiAiMcpServerDescriptor candidate = {0};
+    UmiStatus status = copy_text(candidate.server_id, sizeof(candidate.server_id), server_id);
+    if (status == UMI_STATUS_OK) status = copy_text(candidate.display_name, sizeof(candidate.display_name), display_name);
+    if (status == UMI_STATUS_OK) status = copy_text(candidate.endpoint, sizeof(candidate.endpoint), endpoint);
+    if (status != UMI_STATUS_OK) return status;
+    candidate.trust = trust; candidate.enabled = 1;
+    status = umi_ai_mcp_server_validate(&candidate);
+    if (status != UMI_STATUS_OK) return status;
+    *server = candidate;
+    return UMI_STATUS_OK;
 }
 
 /* Check that ai mcp server satisfies its contract before another service relies on it. */

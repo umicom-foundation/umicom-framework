@@ -26,6 +26,10 @@ extern "C" {
  * Initialise ai mcp server from caller-provided values so later operations receive a known
  * state.
  */
+/* Construct a complete descriptor before replacing output. Input text may
+ * borrow fields in the destination; invalid text, capacity or trust preserves
+ * the prior descriptor. Each input is scanned only up to its field capacity.
+ * Success resets optional metadata and enables the new descriptor as before. */
 UmiStatus umi_ai_mcp_server_init(
     UmiAiMcpServerDescriptor *server,
     const char *server_id,

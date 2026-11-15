@@ -23,6 +23,8 @@
  * Initialise ai mcp session from caller-provided values so later operations receive a
  * known state.
  */
+/* Capture server and transport inputs before publishing the new session so aliasing its retired destination cannot erase them. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_ai_mcp_session_init(
     UmiAiMcpSession *session,
     const UmiAiMcpServerDescriptor *server,
@@ -53,6 +55,22 @@ UmiStatus umi_ai_mcp_session_init(
     session->state = UMI_AI_MCP_SESSION_CONNECTED;
     session->revision = 1U;
 
+    return UMI_STATUS_OK;
+}
+
+#endif
+UmiStatus umi_ai_mcp_session_init(UmiAiMcpSession *session,
+    const UmiAiMcpServerDescriptor *server, const UmiAiMcpTransport *transport)
+{
+    if (session == NULL || server == NULL || transport == NULL || transport->request == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = umi_ai_mcp_server_validate(server);
+    if (status != UMI_STATUS_OK) return status;
+    /* Capture borrowed inputs before replacing their possible containing owner. */
+    UmiAiMcpSession candidate = {0};
+    candidate.server = *server; candidate.transport = *transport;
+    candidate.state = UMI_AI_MCP_SESSION_CONNECTED; candidate.revision = 1U;
+    *session = candidate;
     return UMI_STATUS_OK;
 }
 

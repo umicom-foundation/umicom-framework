@@ -216,3 +216,58 @@ endforeach()
 if(COMMAND umicom_register_validation_target)
     umicom_register_validation_target(umicom-tool-debugger-test)
 endif()
+
+# Reuse the installed example's JSON preview checks with the producer target.
+# These cases inspect the planned commands and never execute those commands.
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/UmicomApplicationBranding.cmake")
+if(WIN32)
+    enable_language(RC)
+endif()
+umicom_apply_application_branding(TARGET umicom-development-workflow-example
+    PRODUCT_NAME "Umicom Development Workflow Example"
+    INTERNAL_NAME "umicom-development-workflow-example")
+if(COMMAND umicom_target_qualification_inputs)
+    umicom_target_qualification_inputs(umicom-development-workflow-example FILES
+        "${CMAKE_CURRENT_SOURCE_DIR}/../../examples/development_workflow/check_preview.cmake"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../../src/developer/cmake_plan.c")
+endif()
+foreach(_preview_case IN ITEMS release debug relwithdebinfo default-generator empty-configuration escaped usage configuration-overflow)
+    add_test(NAME framework.development_workflow.preview.${_preview_case}
+        COMMAND "${CMAKE_COMMAND}"
+            "-DTEST_PROGRAM=$<TARGET_FILE:umicom-development-workflow-example>"
+            "-DSCENARIO=${_preview_case}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/../../examples/development_workflow/check_preview.cmake")
+    set_tests_properties(framework.development_workflow.preview.${_preview_case}
+        PROPERTIES TIMEOUT 20 LABELS "framework;developer;sdk;preview")
+    if(COMMAND umicom_test_impact_owners)
+        umicom_test_impact_owners(framework.development_workflow.preview.${_preview_case}
+            TARGETS umicom-development-workflow-example)
+    endif()
+endforeach()
+
+
+# Only the example's preview entry point is invoked. Its planned compiler and
+# test commands remain data; stdout failures are controlled inside this fixture.
+add_executable(umicom-workflow-preview-output-test test_preview_output.c)
+target_link_libraries(umicom-workflow-preview-output-test PRIVATE Umicom::Framework)
+set_target_properties(umicom-workflow-preview-output-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES)
+umicom_apply_warnings(umicom-workflow-preview-output-test)
+umicom_apply_sanitizers(umicom-workflow-preview-output-test)
+if(COMMAND umicom_target_qualification_inputs)
+    umicom_target_qualification_inputs(umicom-workflow-preview-output-test FILES
+        "${CMAKE_CURRENT_SOURCE_DIR}/../../examples/development_workflow/main.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/../support/report_stream.h")
+endif()
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-workflow-preview-output-test)
+endif()
+foreach(_failure IN ITEMS success write-first write-last flush stream flush-and-stream)
+    add_test(NAME framework.development_workflow.preview_output.${_failure}
+        COMMAND umicom-workflow-preview-output-test ${_failure})
+    set_tests_properties(framework.development_workflow.preview_output.${_failure} PROPERTIES
+        TIMEOUT 20 LABELS "framework;developer;sdk;preview;output;regression")
+    if(COMMAND umicom_test_impact_owners)
+        umicom_test_impact_owners(framework.development_workflow.preview_output.${_failure}
+            TARGETS umicom-workflow-preview-output-test)
+    endif()
+endforeach()

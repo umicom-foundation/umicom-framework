@@ -3997,6 +3997,40 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-developer-journal-tests framework.developer.journal tests/test_developer_journal.c)
     umicom_add_framework_test(umicom-developer-cmake-plan-tests framework.developer.cmake_plan tests/test_developer_cmake_plan.c)
 
+
+    # The shared translator must select the same configuration for every stage.
+    add_executable(umicom-developer-cmake-configuration-tests tests/test_developer_cmake_configuration.c)
+    target_link_libraries(umicom-developer-cmake-configuration-tests PRIVATE Umicom::developer)
+    set_target_properties(umicom-developer-cmake-configuration-tests PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-developer-cmake-configuration-tests)
+    umicom_apply_sanitizers(umicom-developer-cmake-configuration-tests)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-developer-cmake-configuration-tests)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-developer-cmake-configuration-tests FILES
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/developer/cmake_plan.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/developer/runtime.c")
+    endif()
+    foreach(_route IN ITEMS pipeline runtime delivery)
+        set(_configuration_cases default empty debug release relwithdebinfo minsize custom boundary oversized single-config)
+        if(NOT _route STREQUAL "delivery")
+            list(APPEND _configuration_cases build-only)
+        endif()
+        foreach(_case IN LISTS _configuration_cases)
+            add_test(NAME framework.developer.cmake_configuration.${_route}.${_case}
+                COMMAND umicom-developer-cmake-configuration-tests ${_route} ${_case})
+            set_tests_properties(framework.developer.cmake_configuration.${_route}.${_case}
+                PROPERTIES TIMEOUT 30 LABELS "framework;developer;cmake;configuration;regression")
+            if(COMMAND umicom_test_impact_owners)
+                umicom_test_impact_owners(framework.developer.cmake_configuration.${_route}.${_case}
+                    TARGETS umicom-developer-cmake-configuration-tests)
+            endif()
+        endforeach()
+    endforeach()
+    unset(_configuration_cases)
+
     # Plan translation and queue publication share the real Framework services.
     add_executable(umicom-developer-cmake-transaction-tests tests/test_developer_cmake_transaction.c)
     target_link_libraries(umicom-developer-cmake-transaction-tests PRIVATE Umicom::developer)
@@ -4141,6 +4175,72 @@ if(BUILD_TESTING)
             umicom_test_impact_owners(framework.developer.workflow_transaction.${_case}
                 TARGETS umicom-developer-workflow-transaction-tests)
         endif()
+    endforeach()
+
+
+    # Context selection and queue admission form one in-memory transaction.
+    # The fixture compiles the production owners to reach identity boundaries.
+    add_executable(umicom-project-workflow-transaction-tests
+        tests/test_developer_project_workflow_transaction.c)
+    target_link_libraries(umicom-project-workflow-transaction-tests PRIVATE Umicom::developer)
+    set_target_properties(umicom-project-workflow-transaction-tests PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-project-workflow-transaction-tests)
+    umicom_apply_sanitizers(umicom-project-workflow-transaction-tests)
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-project-workflow-transaction-tests
+            FILES src/developer/runtime.c src/developer/context.c src/developer/workflow.c
+                include/umicom/developer/runtime.h include/umicom/developer/project_workflow.h)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-project-workflow-transaction-tests)
+    endif()
+    foreach(_case IN ITEMS
+        project-build project-test project-run project-debug project-full project-without-configure
+        project-malformed-task project-malformed-launch project-missing-launch project-collision
+        project-capacity project-repair
+        chain-copies chain-maximum chain-duplicate chain-malformed
+        chain-null-context chain-null-operations chain-null-runtime chain-empty chain-oversized
+        chain-runtime chain-context chain-sequence chain-journal chain-dropped
+        chain-runtime-boundary chain-context-boundary)
+        add_test(NAME framework.developer.project_workflow_transaction.${_case}
+            COMMAND umicom-project-workflow-transaction-tests ${_case})
+        set_tests_properties(framework.developer.project_workflow_transaction.${_case}
+            PROPERTIES TIMEOUT 30 LABELS "framework;developer;workflow;context;transaction")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.developer.project_workflow_transaction.${_case}
+                TARGETS umicom-project-workflow-transaction-tests)
+        endif()
+    endforeach()
+
+
+    # Read real child services and refuse each observation boundary in turn.
+    add_executable(umicom-developer-runtime-snapshot-test
+        tests/test_developer_runtime_snapshot_publication.c)
+    target_link_libraries(umicom-developer-runtime-snapshot-test PRIVATE Umicom::developer)
+    set_target_properties(umicom-developer-runtime-snapshot-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-developer-runtime-snapshot-test)
+    umicom_apply_sanitizers(umicom-developer-runtime-snapshot-test)
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-developer-runtime-snapshot-test
+            FILES src/developer/runtime.c include/umicom/developer/runtime.h)
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-developer-runtime-snapshot-test)
+    endif()
+    foreach(_owner IN ITEMS owned bound)
+        foreach(_case IN ITEMS success context pipeline journal projects language debug source-control
+                tests workbench allocation null-runtime null-output)
+            add_test(NAME framework.developer.runtime_snapshot.${_owner}.${_case}
+                COMMAND umicom-developer-runtime-snapshot-test ${_owner} ${_case})
+            set_tests_properties(framework.developer.runtime_snapshot.${_owner}.${_case}
+                PROPERTIES TIMEOUT 30 LABELS "framework;developer;snapshot;ownership")
+            if(COMMAND umicom_test_impact_owners)
+                umicom_test_impact_owners(framework.developer.runtime_snapshot.${_owner}.${_case}
+                    TARGETS umicom-developer-runtime-snapshot-test)
+            endif()
+        endforeach()
     endforeach()
 
     umicom_add_framework_test(umicom-developer-batch-execution-tests framework.developer.batch_execution tests/test_developer_batch_execution.c)
@@ -6530,6 +6630,20 @@ install(FILES docs/CLOSING_DOCUMENTS.html
 install(FILES docs/CLOSING_MULTIPLE_DOCUMENTS.html
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs COMPONENT Framework)
 
+
+# Installed SDK consumers can inspect or execute the existing Notes workflow
+# without a Framework source checkout. Keep the older testing-owned example
+# destination for compatibility; this canonical source/resource layout is also
+# available when producer tests are disabled.
+install(DIRECTORY examples/development_workflow/
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/examples/development_workflow"
+    COMPONENT Framework
+    PATTERN "build" EXCLUDE PATTERN "build-*" EXCLUDE PATTERN ".git" EXCLUDE)
+install(DIRECTORY examples/development_workflow/
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/examples/development_workflow"
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL
+    PATTERN "build" EXCLUDE PATTERN "build-*" EXCLUDE PATTERN ".git" EXCLUDE)
+
 # Real development workflow consumers share the existing Framework targets.
 if(BUILD_TESTING)
     add_subdirectory(tests/development_workflow)
@@ -7278,3 +7392,9 @@ include(cmake/UmicomMcpRequestEncoding.cmake)
 
 # Ordinary MCP replies remain owned by their captured ready session.
 include(cmake/UmicomMcpSessionRequests.cmake)
+
+# Construct complete MCP owners before replacing caller state.
+include(cmake/UmicomMcpConstruction.cmake)
+
+# Server registry consumers admit complete storage and nonwrapping revisions.
+include(cmake/UmicomMcpServerRegistryAdmission.cmake)

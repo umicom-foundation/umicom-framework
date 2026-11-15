@@ -1,12 +1,19 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: examples/development_workflow/main.c
+ *
  * PURPOSE:
- *   Generate a real Notes project, compile and test it, package it, verify its
- *   checksum, run the extracted executable, and install it to a private folder.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *   Preview a native build plan, or generate a real Notes project, compile and test it, package it, verify its checksum, run the extracted executable, and install it to a private folder.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
+#include "umicom/developer/cmake_plan.h"
+#include "umicom/protocol/json_writer.h"
 #include "umicom/developer_project/new_project.h"
 #include "umicom/build/project_session.h"
 #include "umicom/platform/directory.h"
@@ -75,8 +82,89 @@ static UmiStatus Find(const UmiFileInfo *info, void *context)
     return UMI_STATUS_OK;
 }
 
+/* This inspection path composes the public Framework planner. It deliberately
+ * owns no project generator, filesystem service or process executor. */
+static int Preview(int argc, char **argv)
+{
+    if ((argc != 3 && argc != 4) || argv[0][0] == '\0' || argv[1][0] == '\0') {
+        fputs("Usage: umicom-development-workflow-example preview SOURCE BUILD CONFIGURATION [GENERATOR]\n", stderr);
+        return 2;
+    }
+    UmiDeveloperPipeline *pipeline = NULL;
+    UmiDeveloperOperationSnapshot *operation = NULL;
+    char *json = NULL;
+    UmiStatus status = umi_developer_pipeline_create(&pipeline);
+    if (status != UMI_STATUS_OK) goto finished;
+    UmiDeveloperCMakePlanRequest request = {0};
+    request.struct_size = (uint32_t)sizeof(request);
+    request.api_version = UMI_DEVELOPER_CMAKE_PLAN_API_VERSION;
+    request.plan_id = "sdk.preview";
+    request.configuration_id = argv[2];
+    request.source_directory = argv[0];
+    request.build_directory = argv[1];
+    request.generator = argc == 4 ? argv[3] : "Ninja";
+    request.include_configure = 1;
+    request.include_build = 1;
+    request.include_tests = 1;
+    UmiDeveloperCMakePlanSnapshot plan;
+    status = umi_developer_cmake_plan_submit(pipeline, &request, &plan);
+    if (status != UMI_STATUS_OK) goto finished;
+    operation = malloc(sizeof(*operation));
+    /* Every string is owned bounded operation storage. Six bytes per input
+     * byte covers JSON control escaping; punctuation and field names use the
+     * remaining allowance. The shared writer still checks every append. */
+    const size_t per_operation =
+        (UMI_DEVELOPER_ID_CAPACITY + 2U * UMI_DEVELOPER_PATH_CAPACITY +
+         UMI_DEVELOPER_MAX_ARGUMENTS * UMI_DEVELOPER_ARGUMENT_CAPACITY) * 6U + 512U;
+    const size_t capacity = plan.operation_count * per_operation + 128U;
+    json = malloc(capacity);
+    if (operation == NULL || json == NULL) { status = UMI_STATUS_OUT_OF_MEMORY; goto finished; }
+    UmiJsonWriter writer;
+    UmiJsonWriterInit(&writer, json, capacity);
+    (void)UmiJsonWriterRaw(&writer, "{\"mode\":\"preview\",\"executed\":false,\"operations\":[");
+    const char *ids[] = {plan.configure_operation_id, plan.build_operation_id, plan.test_operation_id};
+    for (size_t index = 0U; index < sizeof(ids) / sizeof(ids[0]); ++index) {
+        status = umi_developer_pipeline_find(pipeline, ids[index], operation);
+        if (status != UMI_STATUS_OK) goto finished;
+        if (index != 0U) (void)UmiJsonWriterRaw(&writer, ",");
+        (void)UmiJsonWriterRaw(&writer, "{\"id\":");
+        (void)UmiJsonWriterString(&writer, operation->id);
+        (void)UmiJsonWriterRaw(&writer, ",\"program\":");
+        (void)UmiJsonWriterString(&writer, operation->program);
+        (void)UmiJsonWriterRaw(&writer, ",\"workingDirectory\":");
+        (void)UmiJsonWriterString(&writer, operation->working_directory);
+        (void)UmiJsonWriterRaw(&writer, ",\"arguments\":[");
+        for (size_t argument = 0U; argument < operation->argument_count; ++argument) {
+            if (argument != 0U) (void)UmiJsonWriterRaw(&writer, ",");
+            (void)UmiJsonWriterString(&writer, operation->arguments[argument]);
+        }
+        (void)UmiJsonWriterRaw(&writer, "]}");
+    }
+    (void)UmiJsonWriterRaw(&writer, "]}");
+    status = writer.status;
+/* Check the buffered preview delivery before reporting success; planning remains free of process execution. The former implementation is retained for owner review. */
+#if 0
+    if (status == UMI_STATUS_OK && puts(json) == EOF) status = UMI_STATUS_IO_ERROR;
+#endif
+    if (status == UMI_STATUS_OK) {
+        int written = puts(json);
+        int flushed = fflush(stdout);
+        int stream_failed = ferror(stdout);
+        if (written == EOF || flushed != 0 || stream_failed != 0)
+            status = UMI_STATUS_IO_ERROR;
+    }
+finished:
+    if (status != UMI_STATUS_OK)
+        fprintf(stderr, "Cannot preview development plan: %s\n", umi_status_text(status));
+    free(json);
+    free(operation);
+    umi_developer_pipeline_destroy(pipeline);
+    return status == UMI_STATUS_OK ? EXIT_SUCCESS : EXIT_FAILURE;
+}
+
 int main(int argc, char **argv)
 {
+    if (argc >= 2 && strcmp(argv[1], "preview") == 0) return Preview(argc - 2, argv + 2);
     const char *mode = argc == 2 ? argv[1] : "complete";
     int compileFailure = strcmp(mode,"compile-failure") == 0;
     int testFailure = strcmp(mode,"test-failure") == 0;

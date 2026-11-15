@@ -88,6 +88,12 @@ typedef struct UmiDeveloperProjectWorkflowSnapshot {
  * Provide the developer project workflow submit operation used by this module and its
  * client applications.
  */
+/* Selection and all task/launch translations are prepared before context or
+ * queue publication. A refused submission leaves context, queue, journal,
+ * revisions and optional output unchanged. Success publishes the selected
+ * context before operation events. Access remains serialized by the caller.
+ * This contract applies to an already registered project; bootstrap/import
+ * services have their own registration and persistence boundaries. */
 UmiStatus umi_developer_project_workflow_submit(
     UmiDeveloperRuntime *runtime,
     const UmiDeveloperProjectWorkflowRequest *request,
