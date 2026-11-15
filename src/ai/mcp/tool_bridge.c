@@ -16,6 +16,7 @@
 #include "umicom/ai/mcp/tool_bridge.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /*
@@ -49,6 +50,8 @@ static UmiStatus invoke_remote_tool(
 }
 
 /* Add ai mcp tool bridge only after its inputs and available capacity have been checked. */
+/* Transactional registration preserves existing borrowed bindings and publishes bridge and registry only after every projected tool is admitted. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_ai_mcp_tool_bridge_register(
     UmiAiMcpToolBridge *bridge,
     UmiAiMcpSession *session,
@@ -182,4 +185,81 @@ UmiStatus umi_ai_mcp_tool_bridge_register(
     }
 
     return UMI_STATUS_OK;
+}
+
+#endif
+/* Stage both owners together. Callback user_data refers to final binding
+ * addresses from the start; none is exposed until the complete plan succeeds.
+ * Heap storage keeps the bounded transaction off small application stacks. */
+typedef struct McpToolRegistration {
+    UmiAiMcpToolBridge bridge;
+    UmiAiToolRegistry registry;
+} McpToolRegistration;
+
+UmiStatus umi_ai_mcp_tool_bridge_register(UmiAiMcpToolBridge *bridge,
+    UmiAiMcpSession *session, const UmiAiMcpToolCatalogue *catalogue,
+    UmiAiToolRegistry *tool_registry)
+{
+    if (bridge == NULL || session == NULL || catalogue == NULL || tool_registry == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = UmiAiToolRegistryValidate(tool_registry);
+    if (status != UMI_STATUS_OK) return status;
+    status = UmiAiMcpToolCatalogueValidate(catalogue);
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_ai_mcp_server_validate(&session->server);
+    if (status != UMI_STATUS_OK) return status;
+    /* Do not read an uninitialized destination. Existing borrowed addresses,
+     * rather than its old count, establish whether this bridge is still live. */
+    for (size_t entry = 0U; entry < tool_registry->count; ++entry)
+        for (size_t slot = 0U; slot < UMI_AI_MCP_MAX_TOOL_BINDINGS; ++slot)
+            if (tool_registry->tools[entry].user_data == &bridge->bindings[slot])
+                return UMI_STATUS_BUSY;
+    if (catalogue->count > UMI_AI_MCP_MAX_TOOL_BINDINGS ||
+        catalogue->count > UMI_AI_MAX_TOOLS - tool_registry->count)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    McpToolRegistration *candidate = malloc(sizeof(*candidate));
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    memset(&candidate->bridge, 0, sizeof(candidate->bridge));
+    candidate->registry = *tool_registry;
+    for (size_t index = 0U; index < catalogue->count; ++index) {
+        const UmiAiMcpToolDescriptor *descriptor = &catalogue->items[index];
+        UmiAiMcpToolBinding *binding = &candidate->bridge.bindings[index];
+        UmiAiTool tool;
+        char tool_id[UMI_AI_ID_CAPACITY];
+        char permission[UMI_AI_ID_CAPACITY];
+        int written = snprintf(tool_id, sizeof(tool_id), "mcp.%s.%s",
+            session->server.server_id, descriptor->name);
+        if (written < 0 || (size_t)written >= sizeof(tool_id)) {
+            status = UMI_STATUS_CAPACITY_EXCEEDED;
+            break;
+        }
+        if (descriptor->permission[0] != '\0')
+            memcpy(permission, descriptor->permission, strlen(descriptor->permission) + 1U);
+        else {
+            written = snprintf(permission, sizeof(permission), "%s%s%s",
+                session->server.permission_prefix,
+                session->server.permission_prefix[0] != '\0' ? "." : "", descriptor->name);
+            if (written < 0 || (size_t)written >= sizeof(permission)) {
+                status = UMI_STATUS_CAPACITY_EXCEEDED;
+                break;
+            }
+        }
+        binding->session = session;
+        memcpy(binding->remote_name, descriptor->name, strlen(descriptor->name) + 1U);
+        status = umi_ai_tool_init(&tool, tool_id, descriptor->description, permission,
+            invoke_remote_tool, &bridge->bindings[index]);
+        if (status != UMI_STATUS_OK) break;
+        tool.flags = descriptor->flags;
+        status = umi_ai_tool_registry_add(&candidate->registry, &tool);
+        if (status != UMI_STATUS_OK) break;
+        ++candidate->bridge.binding_count;
+    }
+    if (status == UMI_STATUS_OK) {
+        /* Hosts serialize registration and invocation across both owners.
+         * No external callback runs between these two publication writes. */
+        *bridge = candidate->bridge;
+        *tool_registry = candidate->registry;
+    }
+    free(candidate);
+    return status;
 }

@@ -1,7 +1,25 @@
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# Umicom Framework
+# File: cmake/UmicomJsonTree.cmake
+#
+# PURPOSE:
+# Register owned JSON regression coverage while preserving developer consumers.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+
 # The owned JSON service shares the existing developer parser/text owner.
 include_guard(GLOBAL)
-target_sources(umicom_developer PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/json_tree.c")
+# The former developer ownership is retained for review. The protocol archive
+# now owns the same implementation, and developer consumers retain link access.
+if(FALSE)
+    target_sources(umicom_developer PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/json_tree.c")
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomProtocolJsonOwnership.cmake")
+target_link_libraries(umicom_developer PRIVATE Umicom::protocol)
 if(BUILD_TESTING)
     add_executable(umicom-json-tree-test "${CMAKE_CURRENT_LIST_DIR}/../tests/json_tree/test_tree.c")
     target_link_libraries(umicom-json-tree-test PRIVATE Umicom::developer)

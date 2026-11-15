@@ -186,8 +186,16 @@ function(umicom_release_contracts_prepare)
     _umicom_release_declare_pair(umicom_developer include/umicom/debug/setup_document.h src/debug/setup_document.c)
     # Both JSON interfaces share the developer owner; the owned tree adds bounded
     # heap capacity while the token interface remains available to small readers.
+    # Retained owner declaration; protocol now compiles this shared implementation.
+    if(FALSE)
     _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/json_text.h src/language_runtime/json_text.c)
+    endif()
+    _umicom_release_declare_pair(umicom_protocol include/umicom/language_runtime/json_text.h src/language_runtime/json_text.c)
+    # Retained owner declaration; protocol now compiles this shared implementation.
+    if(FALSE)
     _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/json_tree.h src/language_runtime/json_tree.c)
+    endif()
+    _umicom_release_declare_pair(umicom_protocol include/umicom/language_runtime/json_tree.h src/language_runtime/json_tree.c)
     _umicom_release_declare_pair(umicom_ibkr_rule_report include/umicom/broker_connectivity/rule_report.h src/ibkr_connection/rule_report.c)
     _umicom_release_declare_pair(umicom_ibkr_connection_gtk4 include/umicom/broker_connectivity/rule_report_gtk4.h adapters/gtk4/ibkr_rule_report_gtk4.c)
     _umicom_release_declare_pair(umicom_developer include/umicom/language_runtime/server_probe.h src/language_runtime/server_probe.c)

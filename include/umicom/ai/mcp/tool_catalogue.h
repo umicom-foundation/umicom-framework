@@ -65,6 +65,16 @@ const UmiAiMcpToolDescriptor *umi_ai_mcp_tool_catalogue_at(
     const UmiAiMcpToolCatalogue *catalogue,
     size_t index);
 
+/* Validate complete fixed text, including schema termination, without parsing
+ * JSON or interpreting flags. A nonempty name is required; other text may be
+ * empty. NULL or malformed descriptor fields return INVALID_ARGUMENT. */
+UmiStatus UmiAiMcpToolDescriptorValidate(const UmiAiMcpToolDescriptor *item);
+
+/* Validate count, every active descriptor and unique remote tool names. NULL
+ * is INVALID_ARGUMENT; malformed catalogue storage is INVALID_STATE. Inactive
+ * slots and revision policy are not interpreted by this read-only operation. */
+UmiStatus UmiAiMcpToolCatalogueValidate(const UmiAiMcpToolCatalogue *catalogue);
+
 #ifdef __cplusplus
 }
 #endif

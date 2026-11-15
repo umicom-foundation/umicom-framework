@@ -27,6 +27,14 @@ extern "C" {
  * Provide the ai mcp decode initialize result operation used by this module and its client
  * applications.
  */
+/* Validate a complete result object under the MCP text bound and 128-container
+ * depth limit. Require protocolVersion and serverInfo.name as nonempty strings,
+ * serverInfo.version as a string, and capabilities as an object. Recognized
+ * direct capabilities must be objects. Duplicate interpreted members return
+ * ALREADY_EXISTS; missing/wrong kinds or malformed JSON return PARSE_ERROR.
+ * Decoded string overflow returns CAPACITY_EXCEEDED. Failure preserves output.
+ * Unknown extensions are parsed but not interpreted; unrelated duplicates remain
+ * allowed. The session, not this decoder, checks supported protocol versions. */
 UmiStatus umi_ai_mcp_decode_initialize_result(
     const char *result_json,
     UmiAiMcpServerCapabilities *out_capabilities);
@@ -35,6 +43,15 @@ UmiStatus umi_ai_mcp_decode_initialize_result(
  * Provide the ai mcp decode tool operation used by this module and its client
  * applications.
  */
+/* Descriptor decoders validate a complete bounded JSON object and preserve
+ * output on every failure. Identity must be a nonempty root string. Existing
+ * optional fields may be absent; present text must be a string that fits its
+ * inline storage. inputSchema must be an object and arguments an array when
+ * present. Their validated JSON spelling is retained without schema evaluation.
+ * Duplicate interpreted members return ALREADY_EXISTS; malformed/missing
+ * identity or wrong kinds return PARSE_ERROR; overflow returns CAPACITY_EXCEEDED.
+ * Unknown extensions are parsed but not interpreted. This is bounded metadata
+ * admission, not full MCP schema conformance or permission to invoke a tool. */
 UmiStatus umi_ai_mcp_decode_tool(
     const char *object_json,
     UmiAiMcpToolDescriptor *out_tool);

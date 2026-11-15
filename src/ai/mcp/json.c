@@ -15,6 +15,7 @@
 
 #include "umicom/ai/mcp/json.h"
 
+#include "json_internal.h"
 #include <ctype.h>
 #include <string.h>
 
@@ -358,5 +359,24 @@ UmiStatus umi_ai_mcp_json_escape_string(
     out_json_string[output_length++] = '"';
     out_json_string[output_length] = '\0';
 
+    return UMI_STATUS_OK;
+}
+
+/* All MCP descriptor paths share complete bounded parsing. The tree owns its
+ * source bytes so final output may alias the original caller input safely. */
+UmiStatus umi_ai_mcp_json_object_parse(const char *json, UmiJsonTree **out_tree)
+{
+    if (json == NULL || out_tree == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    size_t length = 0U;
+    while (length < UMI_AI_MCP_TEXT_CAPACITY && json[length] != '\0') ++length;
+    if (length == UMI_AI_MCP_TEXT_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiJsonTree *tree = NULL;
+    const UmiJsonTreeLimits limits = {UMI_AI_MCP_TEXT_CAPACITY - 1U, UMI_AI_MCP_TEXT_CAPACITY, 128U};
+    UmiStatus status = UmiJsonTreeCreate(json, length, &limits, NULL, &tree);
+    if (status != UMI_STATUS_OK) return status;
+    if (UmiJsonTreeKind(tree, 0) != UMI_LANGUAGE_RUNTIME_JSON_OBJECT) {
+        UmiJsonTreeDestroy(tree); return UMI_STATUS_PARSE_ERROR;
+    }
+    *out_tree = tree;
     return UMI_STATUS_OK;
 }

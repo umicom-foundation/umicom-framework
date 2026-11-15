@@ -152,4 +152,182 @@ return umi_ai_runtime_invoke_tool(&amp;runtime, selected-&gt;tool_id,
 <pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-ai-tool-admission-test
 ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]ai[.]tool-admission[.]" --output-on-failure</code></pre>
 <p>The 37 native cases cover exact text boundaries, oversized construction, self-aliased input, corrupt counts, unterminated active fields, duplicate identifiers, full capacity, unused storage, missing tools, policy refusals and callback errors. Expected refusals leave the documented outputs unchanged. If a catalogue fails validation, stop invocation and inspect the record that populated it; silently shortening the count can conceal the defect. The cases require compilation and execution before a pass can be claimed.</p>
+
+<h2>14. Publish an MCP bridge as one registration</h2>
+<p>An MCP bridge connects remote tool descriptions to the same Framework tool registry used by native tools. The bridge stores a session pointer and remote name for each registered callback. These bindings must remain at stable addresses while a registry can invoke them; copying or clearing a live bridge would invalidate that relationship.</p>
+<ol>
+<li>Prepare the session and discovered catalogue through the existing MCP client. Registration itself makes no transport request. It validates bounded server text and the complete catalogue before formatting local identifiers or permissions.</li>
+<li>Pass a fresh bridge and the destination registry to <code>umi_ai_mcp_tool_bridge_register</code>. Framework checks the registry before subtracting its count from capacity. A malformed count is a state error, not available space.</li>
+<li>Framework builds a private candidate containing both the proposed bindings and a copy of the existing registry. Every projected tool goes through the shared descriptor and registry services. A late duplicate, long identifier, long fallback permission or allocation failure leaves both original destinations unchanged.</li>
+<li>After every entry succeeds, Framework publishes the bindings and registry without invoking external callbacks between the writes. Hosts must serialize registration and invocation; this paired publication is not a concurrent transaction.</li>
+<li>Retain the bridge and session until all their tools have been retired. Re-registration returns BUSY if the supplied registry still points to any binding slot. A bridge belongs to one registry; this check does not discover references held by a different registry or arbitrary native code.</li>
+</ol>
+<pre><code class="language-c">UmiStatus status = umi_ai_mcp_tool_bridge_register(
+    &amp;bridge, &amp;session, &amp;catalogue, &amp;runtime.tools);
+if (status != UMI_STATUS_OK) {
+    /* The old registry and bridge are still available for diagnosis. */
+    return status;
+}
+return umi_ai_runtime_invoke_tool(&amp;runtime, "mcp.test.read_file",
+    approved, "{}", output, output_capacity);</code></pre>
+<p>The local name combines <code>mcp.</code>, the server ID and remote tool name. An explicit descriptor permission is retained; otherwise Framework joins the server permission prefix and remote name. Existing tool policy remains the authorization boundary. Permission labels and flags are metadata, and schema termination checks do not prove valid JSON or a verified server capability.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-mcp-tool-registration-test umicom-ai-mcp-tests
+ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]ai[.](mcp-registration[.]|mcp$)" --output-on-failure</code></pre>
+<p>The 39 registration cases cover malformed active metadata, duplicate names, corrupt counts, late failures, allocation refusal, exact registry capacity, the maximum catalogue, stable callback addresses and preserved bindings after refused re-registration. A deterministic fake transport checks that registration sends nothing and invocation still needs approval. The existing MCP suite remains part of qualification. Neither source review nor configuration establishes a native pass or a connection to a real server.</p>
+<p>If registration returns BUSY, do not clear the bridge to force a retry. Finish active calls and retire its registry references through the owning application's lifecycle. If an entry is rejected, correct the original metadata and retry the complete registration. Rebuilding only the bridge while retaining old callback pointers is not a supported recovery.</p>
+
+<h2>15. Complete a transport reply before publishing it</h2>
+<p>A transport callback receives a writable result buffer and its capacity. Returning OK must mean that it wrote a terminated string within that capacity. A decoder that uses ordinary C-string operations cannot safely interpret a successful reply whose terminator is missing.</p>
+<ol>
+<li>Use <code>UmiAiMcpTransportRequestChecked</code> when a failed or unfinished reply must preserve the previous result. It copies the callback tuple, allocates a separate buffer and fills that buffer with nonzero bytes.</li>
+<li>The selected callback writes into that staging buffer. If it returns an error, Framework returns that same status and discards the candidate. Error text is not published through this checked API.</li>
+<li>If the callback returns OK, Framework searches only within the supplied capacity for a terminator. Missing termination returns INTERNAL_ERROR. No output at all is also rejected; an intentional empty reply must write its zero byte.</li>
+<li>Only a completed string, including its terminator, is copied to the caller. Bytes beyond that string remain unchanged. Allocation refusal returns OUT_OF_MEMORY before invoking the callback.</li>
+</ol>
+<pre><code class="language-c">char result[1024] = "previous accepted result";
+UmiStatus status = UmiAiMcpTransportRequestChecked(
+    &amp;transport, "tools/list", "{}", result, sizeof(result));
+if (status != UMI_STATUS_OK) {
+    /* result still contains the previous accepted bytes. */
+    return status;
+}
+/* Now pass the completed text to the appropriate protocol decoder. */</code></pre>
+<p>The existing <code>umi_ai_mcp_transport_request</code> remains the direct forwarding API, including its callback error output. High-level MCP initialization, ping, discovery, tool calls, resource reads and prompt retrieval use the checked boundary. This admits text termination; it does not prove valid JSON, UTF-8, remote identity or successful tool execution. Native callbacks must obey their buffer capacity and borrowed-input lifetime contracts.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-mcp-checked-transport-test umicom-ai-mcp-tests
+ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]ai[.](mcp-transport[.]|mcp$)" --output-on-failure</code></pre>
+<p>The 32 cases exercise empty and exact-boundary replies, missing termination, no output, partial output, callback errors, allocation refusal, aliased input, legacy error output and the six high-level consumers. A fake callback controls every reply. Compile and execute these cases before claiming a pass. If a reply is rejected, fix the adapter to write a terminator; appending a zero after an already overflowing native write cannot repair memory corruption.</p>
+
+<h2>16. Keep accepted catalogues when discovery fails</h2>
+<p>A list refresh can fail after receiving several valid entries. Clearing the current catalogue before the request finishes would discard usable information, while publishing each entry as it arrives would expose a partial replacement. MCP discovery now constructs each replacement privately and publishes it only after the list has been accepted by the existing decoder.</p>
+<ol>
+<li>Keep the current catalogue available while requesting a list. A failed session check, allocation, transport, parse, duplicate check or capacity check leaves its previous bytes unchanged.</li>
+<li>After the transport returns, Framework requires the session to remain ready at the revision that made the request. A changed revision or readiness refuses the reply before list publication. Keep server and transport configuration stable for the whole operation.</li>
+<li>Use <code>umi_ai_mcp_client_discover</code> to refresh negotiated tools, resources and prompts together. Each list is staged; a later failure preserves all three previous catalogues. Unsupported catalogues retain their earlier state and trigger no list request.</li>
+<li>Only a successful complete client refresh publishes its supported catalogues. The session and registered bridge bindings are not relocated. Keep discovery and invocation serialized under the application's ownership rules.</li>
+</ol>
+<pre><code class="language-c">UmiStatus status = umi_ai_mcp_client_discover(&amp;client);
+if (status != UMI_STATUS_OK) {
+    /* Keep displaying the last accepted catalogues and report this failure. */
+    return status;
+}
+/* The negotiated catalogue set has been replaced together. */</code></pre>
+<p>Successful discovery retains the existing fresh-catalogue revision behavior: initialization starts a new catalogue, then accepted entries advance that construction token. It is not a monotonically increasing identity across refreshes. The session check also does not prove that several remote lists came from one server-side snapshot. Native callbacks must keep owners alive and must not mutate the destination catalogues during discovery.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-mcp-discovery-publication-test umicom-ai-mcp-tests
+ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]ai[.](mcp-discovery[.]|mcp$)" --output-on-failure</code></pre>
+<p>The 70 deterministic cases cover all three list types, accepted empty and maximum-capacity snapshots, fresh destinations, malformed late entries, duplicates, missing arrays, truncation, capacity refusal, session changes, selective capability refresh and allocation failure before each staged phase. They verify that unrelated catalogues and bridge storage are retained. These cases must be compiled and executed before claiming qualification; no live server is contacted by the fixture.</p>
+<p>After a refresh failure, report the error and retain the accepted data. Retry after correcting the transport or metadata problem. Do not present retained information as newly discovered, and do not clear registered binding storage merely because discovery failed.</p>
+
+<h2>17. Preserve session identity across callbacks</h2>
+<p>A session revision identifies a lifecycle change. When an external callback returns, the caller must check that the same session operation still owns the next state transition. Otherwise an initialization reply could mark a session ready after a callback disconnected it.</p>
+<ol>
+<li>Initialization requires the connected state and an available revision. An exhausted counter returns <code>UMI_STATUS_CAPACITY_EXCEEDED</code> before encoding or calling the transport.</li>
+<li>Framework captures the revision before the request. After the request returns, that revision and the connected phase must still match before decoding negotiated capabilities.</li>
+<li>The initialized notification sees the negotiated capabilities in the initialized phase, as before. Its completion must still match the captured revision and initialized phase before Framework publishes ready and advances the revision.</li>
+<li>A callback error remains the reported error. Framework writes failed only when it still owns the expected phase. A successful callback that changed the revision or phase instead returns <code>UMI_STATUS_INVALID_STATE</code>, retaining the newer state.</li>
+</ol>
+<pre><code class="language-c">UmiStatus status = UmiAiMcpSessionDisconnectChecked(&amp;session);
+if (status == UMI_STATUS_CAPACITY_EXCEEDED) {
+    /* The complete session is unchanged. Stop scheduling work through this owner.
+     * Retire every borrowed reference before constructing a fresh lifetime. */
+    return status;
+}
+if (status != UMI_STATUS_OK) return status;
+/* Negotiated capabilities are cleared; metadata and transport remain. */</code></pre>
+<p>Disconnect now has a checked entry point. At the largest representable revision it refuses without clearing state or wrapping the counter. The existing void disconnect delegates to it and retains the session on refusal; use the checked API when the application needs to report that outcome. The last available revision may still be used successfully. Reinitializing storage that other objects still borrow is not a safe workaround for exhaustion.</p>
+<p>These comparisons assume callbacks return normally and keep the session alive. They are not a lock, a memory-lifetime lease or protection against arbitrary native writes. Serialize access, keep transport configuration stable during an operation, and require ready before ordinary session use. A transport completion check does not itself validate the negotiated protocol response.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-mcp-session-revisions-test umicom-ai-mcp-tests
+ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]ai[.](mcp-session-revision[.]|mcp$)" --output-on-failure</code></pre>
+<p>The 29 deterministic cases cover the maximum and last available revisions, both disconnect entry points, request and notification callbacks that change lifecycle state, original error propagation, absent and unsupported notifications, and invalid arguments or starting phases. Compile and execute them before claiming native qualification. After refusal, report the status and inspect the current state rather than assuming the session became ready or disconnected.</p>
+
+<h2>18. Admit negotiated metadata before using it</h2>
+<p>Receiving terminated text is only the first boundary. A server's initialization reply must also contain usable metadata. The <a href="https://modelcontextprotocol.io/specification/2025-06-18/basic/lifecycle">MCP lifecycle specification</a> describes the exchange of protocol version, capabilities and implementation information before normal operation. Framework's initialization decoder now uses its existing owned JSON parser to inspect that result.</p>
+<ol>
+<li>Parse the complete bounded result. Invalid JSON, invalid Unicode and invalid text in an otherwise unused extension refuse the response.</li>
+<li>Read <code>protocolVersion</code>, <code>capabilities</code> and <code>serverInfo</code> from the root object. Read the server name and version from <code>serverInfo</code>. Framework requires a nonempty protocol and name; the version must be a string and may be empty.</li>
+<li>Recognize tools, resources, prompts and logging only as direct object members of <code>capabilities</code>. An unrelated nested object named tools does not grant a capability.</li>
+<li>Refuse duplicate interpreted names, including names that become equal after decoding JSON escapes. Unknown extensions remain allowed and do not grant permissions or implemented capabilities.</li>
+<li>Publish the complete capability value only after all checks succeed. A failed decode preserves the caller's previous output. Session initialization separately requires the supported protocol constant before publishing capabilities or notifying the server.</li>
+</ol>
+<pre><code class="language-c">UmiAiMcpServerCapabilities negotiated;
+UmiStatus status = umi_ai_mcp_decode_initialize_result(result_json, &amp;negotiated);
+if (status != UMI_STATUS_OK) return status;
+/* Decoding checks structure and bounds. Session initialization additionally
+ * checks whether this client supports negotiated.protocol_version. */</code></pre>
+<p>The parser accepts at most 32,767 result bytes and 128 nested containers. Required strings must fit their public inline arrays after Unicode decoding. Duplicate interpreted members return <code>UMI_STATUS_ALREADY_EXISTS</code>; missing fields, wrong kinds and malformed text return <code>UMI_STATUS_PARSE_ERROR</code>. Size limits return <code>UMI_STATUS_CAPACITY_EXCEEDED</code>, and allocation refusal remains an error. Unrelated duplicate extension names are retained by the parser; this is not a complete MCP schema validator. Recognized capability objects may contain uninterpreted sub-capabilities.</p>
+<p>An unsupported negotiated protocol returns <code>UMI_STATUS_NOT_IMPLEMENTED</code> from session initialization. The session enters failed, retains its prior capabilities and revision, and sends no initialized notification. The host must close or retire its transport as appropriate and report the incompatibility. Do not label the session ready or silently retry using an unimplemented protocol.</p>
+<p>The generic JSON tree and Unicode text implementations are now compiled into <code>Umicom::protocol</code>. Their existing header paths and C symbols stay available. Developer consumers retain the protocol dependency; AI consumers use that smaller shared owner. The SDK's existing protocol archive carries these symbols, so source and installed consumers use the same implementation.</p>
+<pre><code class="language-cmake">find_package(UmicomFramework CONFIG REQUIRED)
+add_executable(json_reader main.c)
+target_link_libraries(json_reader PRIVATE Umicom::protocol)</code></pre>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-mcp-initialization-admission-test umicom-protocol-json-tree-test umicom-ai-mcp-tests
+ctest --test-dir build/windows-ucrt64-debug -R "^framework[.](ai[.](mcp-initialize[.]|mcp$)|protocol[.]json-tree[.])" --output-on-failure</code></pre>
+<p>The 109 negotiation cases exercise both the decoder and session boundary, including nested names, duplicate escaped keys, Unicode, exact byte and string limits, allocation refusal and input/output aliasing. Twelve existing JSON cases also run through a consumer that links only the protocol library. Configuration checks that each shared source has one protocol owner and no duplicate developer owner. These registrations and checks do not establish native or installed-SDK qualification; compile, run and exercise a separately installed consumer before claiming those results.</p>
+
+<h2>19. Resolve catalogue entries from admitted storage</h2>
+<p>A bounded array is safe to traverse only when its declared count fits the array and its active records contain usable text. Resource and prompt catalogues now validate every active descriptor before returning a match. This prevents an early matching identity from hiding malformed later records.</p>
+<ol>
+<li>Initialize the catalogue before use. A resource needs a nonempty URI; a prompt needs a nonempty name. All inline text must contain a terminator within its declared array, while optional text may be empty.</li>
+<li>Use the descriptor validator before accepting externally constructed records. Use the catalogue validator to check the declared count, every active record and unique identities. Unused slots remain outside the active catalogue.</li>
+<li>Use checked resolution when the caller needs an error status. Invalid arguments return <code>UMI_STATUS_INVALID_ARGUMENT</code>, malformed catalogue storage returns <code>UMI_STATUS_INVALID_STATE</code>, and an absent identity returns <code>UMI_STATUS_NOT_FOUND</code>. Failure leaves the output pointer unchanged.</li>
+<li>Additions validate the candidate and current catalogue before checking duplicates and capacity. Successful addition stages the descriptor, publishes it and advances the revision. A refused addition leaves the catalogue unchanged.</li>
+</ol>
+<pre><code class="language-c">const UmiAiMcpResourceDescriptor *resource = NULL;
+UmiStatus status = UmiAiMcpResourceCatalogueResolve(&amp;resources, uri, &amp;resource);
+if (status == UMI_STATUS_NOT_FOUND) {
+    /* The admitted catalogue does not contain this identity. */
+    return status;
+}
+if (status != UMI_STATUS_OK) return status;
+/* Consume resource while its catalogue stays alive and unchanged. */</code></pre>
+<p><code>UmiAiMcpPromptCatalogueResolve</code> provides the same contract for prompts. Existing pointer-returning find and indexed-access APIs remain available; they return null on invalid storage. These pointers borrow their catalogue. Do not retain them across catalogue mutation or destruction, and serialize access in the owning application.</p>
+<p>The existing revision-exhaustion refusal still takes precedence before nested mutation work. An exhausted catalogue can be read when its storage is valid, but cannot accept another addition. These validators do not parse schemas, validate URI syntax or authorize a remote request. A terminated metadata string is not evidence that its content is safe to execute.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-mcp-catalogue-admission-test umicom-mcp-discovery-publication-test umicom-ai-mcp-tests
+ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]ai[.](mcp-catalogue[.]|mcp-discovery[.]|mcp$)" --output-on-failure</code></pre>
+<p>The 60 cases cover both catalogue types: malformed counts, early and late unterminated fields, exact text boundaries, duplicate identities, empty required identities, full capacity, unused storage, borrowed input aliases, saturated revisions and checked resolution. Run the discovery cases too because list refresh uses these admission functions. Registration and source review are not native execution results.</p>
+
+<h2>20. Optional metadata still needs validation</h2>
+<p>Optional means a field may be absent. It does not mean a present malformed field should silently become empty text. The MCP tool, resource and prompt decoders now parse the complete descriptor and stage its contents before changing caller output.</p>
+<ol>
+<li>Read the required identity from the root object: name for a tool or prompt, and URI for a resource. Empty identities, wrong kinds and nested lookalikes are refused.</li>
+<li>Keep omitted optional fields empty for compatibility. When description, resource name or MIME type is present, require a string that fits its declared storage after Unicode decoding.</li>
+<li>When present, tool inputSchema must be an object and prompt arguments must be an array. Preserve their validated JSON spelling, including internal spacing and escapes, within the existing schema capacity.</li>
+<li>Reject duplicate interpreted fields and malformed text anywhere in the descriptor. Publish the complete copied value only after every interpreted field has passed.</li>
+</ol>
+<pre><code class="language-c">UmiAiMcpToolDescriptor replacement;
+UmiStatus status = umi_ai_mcp_decode_tool(object_json, &amp;replacement);
+if (status != UMI_STATUS_OK) return status;
+/* Registration applies its own bounded catalogue and permission rules. */</code></pre>
+<p>The decoder preserves its destination on parse, duplicate, capacity or allocation failure. This also lets discovery retain its previous accepted catalogue when a later entry has an invalid optional field. Unknown extensions are still parsed for valid JSON but are not interpreted. Omitted optional fields remain supported; these routines are not full MCP schema validators and do not authorize execution. Resource URI syntax and schema behavior require their own consumers.</p>
+<p>Raw schemas and decoded strings have different bounds. A string is measured after decoding escapes into UTF-8. A raw object or array must fit with its original JSON punctuation, spacing and escapes plus the terminating byte. Retaining raw JSON avoids rebuilding or silently changing its meaning.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-mcp-descriptor-decoding-test umicom-mcp-initialization-admission-test umicom-mcp-discovery-publication-test umicom-ai-mcp-tests
+ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]ai[.](mcp-descriptor[.]|mcp-initialize[.]|mcp-discovery[.]|mcp$)" --output-on-failure</code></pre>
+<p>The 103 direct-decoder cases cover identities, optional kinds, duplicate escaped identities, nested lookalikes, Unicode, exact string/schema/text boundaries, null arguments, allocation refusal and aliasing. Another 29 cases exercise a valid first list entry followed by malformed descriptor metadata and verify that discovery retains the prior catalogue. These authored cases require native execution before qualification is claimed. Parsing a descriptor does not validate the surrounding list envelope or transport protocol.</p>
+
+<h2>21. Validate the list before calling its visitors</h2>
+<p>A visitor is a function called once for each accepted object in a list. Calling it may change application state, so finding the first opening bracket is not enough. The shared MCP list reader now parses the complete reply, finds an unambiguous root member and checks that every list element is an object before the first visitor runs.</p>
+<ol>
+<li>Provide one complete JSON object with a direct tools, resources or prompts array. A matching name inside an extension object is not the requested list.</li>
+<li>Handle a missing member as <code>UMI_STATUS_NOT_FOUND</code>, duplicate matching members as <code>UMI_STATUS_ALREADY_EXISTS</code>, and malformed JSON or non-object elements as <code>UMI_STATUS_PARSE_ERROR</code>. Escaped and literal spellings of the same key identify the same member.</li>
+<li>Keep callback data alive throughout the call. Each callback receives a temporary, terminated raw JSON object. Copy it if it must outlive that callback. The reader owns a snapshot of the source, so changes to the original input during a callback do not alter later objects.</li>
+<li>Publish application state only after the complete visit succeeds. The completed count remains zero on failure and the original callback status is returned. Existing discovery functions already build a temporary catalogue and preserve their previous accepted catalogue on failure.</li>
+</ol>
+<pre><code class="language-c">static UmiStatus inspect_object(const char *object_json, void *context)
+{
+    /* Decode into the caller's unpublished candidate, then return its status. */
+    return collect_descriptor(context, object_json);
+}
+size_t completed = 0;
+UmiStatus status = umi_ai_mcp_json_array_visit_objects(
+    reply_json, "tools", inspect_object, &amp;candidate, &amp;completed);
+if (status != UMI_STATUS_OK) {
+    discard_candidate(&amp;candidate);
+    return status;
+}
+publish_candidate(&amp;candidate);</code></pre>
+<p>The collect, discard and publish functions in this sketch belong to the application example; they are not additional Framework APIs. An arbitrary visitor can still perform irreversible work. The reader cannot roll that work back, so defer external effects until the owning operation has accepted the whole result.</p>
+<p>Replies must terminate within <code>UMI_AI_MCP_TEXT_CAPACITY</code> bytes. Complete parsing also limits container nesting to 128 levels; lookup keys are limited to 4096 bytes. Empty arrays need no callback buffer. Malformed trailing fields, misplaced commas, invalid Unicode and later non-object elements are rejected before callbacks. Unknown extensions are checked for valid JSON, but their application meaning is not interpreted.</p>
+<pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-mcp-list-envelope-test umicom-mcp-descriptor-decoding-test umicom-mcp-initialization-admission-test umicom-mcp-discovery-publication-test umicom-ai-mcp-tests
+ctest --test-dir build/windows-ucrt64-debug -R "^framework[.]ai[.](mcp-list[.]|mcp-descriptor[.]|mcp-initialize[.]|mcp-discovery[.]|mcp$)" --output-on-failure</code></pre>
+<p>The 48 visitor cases cover complete grammar, root lookup, byte/key/depth limits, allocation refusal, callback errors, nested visits and source mutation. Another 72 cases exercise the same replies through all three discovery clients. If a check fails, retain the original status and compare the exact reply with its expected root shape before changing the parser. These cases are authored coverage; native execution and installed-consumer checks are separate qualification steps.</p>
+
 </main></body></html>

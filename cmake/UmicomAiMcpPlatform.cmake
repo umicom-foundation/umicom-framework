@@ -21,6 +21,10 @@ if(NOT TARGET umicom_ai)
         "UmicomAiMcpPlatform requires existing umicom_ai")
 endif()
 
+# Initialization uses the shared bounded JSON parser, not the developer runtime.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomProtocolJsonOwnership.cmake")
+target_link_libraries(umicom_ai PRIVATE Umicom::protocol)
+
 # MCP tools are projected into the existing UmiAiToolRegistry. Existing
 # UmiAiPolicy checks therefore remain the execution-authorisation boundary.
 target_sources(umicom_ai PRIVATE

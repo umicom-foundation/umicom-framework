@@ -16,6 +16,7 @@
 #include "umicom/ai/mcp/client.h"
 
 #include <string.h>
+#include <stdlib.h>
 
 /*
  * Initialise ai mcp client from caller-provided values so later operations receive a known
@@ -72,6 +73,8 @@ UmiStatus umi_ai_mcp_client_start(
  * Provide the ai mcp client discover operation used by this module and its client
  * applications.
  */
+/* Publish supported catalogue updates together only after every requested list succeeds, while keeping session and bridge owners at stable addresses. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_ai_mcp_client_discover(
     UmiAiMcpClient *client)
 {
@@ -119,6 +122,46 @@ UmiStatus umi_ai_mcp_client_discover(
     return UMI_STATUS_OK;
 }
 
+#endif
+/* Keep all negotiated catalogue updates private until every requested list
+ * succeeds. The existing session and bridge are never copied or relocated. */
+typedef struct McpDiscoveredCatalogues {
+    UmiAiMcpToolCatalogue tools;
+    UmiAiMcpResourceCatalogue resources;
+    UmiAiMcpPromptCatalogue prompts;
+} McpDiscoveredCatalogues;
+
+UmiStatus umi_ai_mcp_client_discover(UmiAiMcpClient *client)
+{
+    if (client == NULL || client->session.state != UMI_AI_MCP_SESSION_READY)
+        return UMI_STATUS_INVALID_STATE;
+    const uint32_t flags = client->session.capabilities.flags;
+    const uint32_t supported = UMI_AI_MCP_CAPABILITY_TOOLS |
+        UMI_AI_MCP_CAPABILITY_RESOURCES | UMI_AI_MCP_CAPABILITY_PROMPTS;
+    if ((flags & supported) == 0U) return UMI_STATUS_OK;
+    const uint64_t revision = client->session.revision;
+    McpDiscoveredCatalogues *candidate = malloc(sizeof(*candidate));
+    if (candidate == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    UmiStatus status = UMI_STATUS_OK;
+    if ((flags & UMI_AI_MCP_CAPABILITY_TOOLS) != 0U)
+        status = umi_ai_mcp_discover_tools(&client->session, &candidate->tools);
+    if (status == UMI_STATUS_OK && (flags & UMI_AI_MCP_CAPABILITY_RESOURCES) != 0U)
+        status = umi_ai_mcp_discover_resources(&client->session, &candidate->resources);
+    if (status == UMI_STATUS_OK && (flags & UMI_AI_MCP_CAPABILITY_PROMPTS) != 0U)
+        status = umi_ai_mcp_discover_prompts(&client->session, &candidate->prompts);
+    if (status == UMI_STATUS_OK && (client->session.state != UMI_AI_MCP_SESSION_READY ||
+        client->session.revision != revision || client->session.capabilities.flags != flags))
+        status = UMI_STATUS_INVALID_STATE;
+    if (status == UMI_STATUS_OK) {
+        /* Unsupported catalogues retain their earlier bytes. No callback runs
+         * between these publication writes; hosts still serialize ownership. */
+        if ((flags & UMI_AI_MCP_CAPABILITY_TOOLS) != 0U) client->tools = candidate->tools;
+        if ((flags & UMI_AI_MCP_CAPABILITY_RESOURCES) != 0U) client->resources = candidate->resources;
+        if ((flags & UMI_AI_MCP_CAPABILITY_PROMPTS) != 0U) client->prompts = candidate->prompts;
+    }
+    free(candidate);
+    return status;
+}
 /*
  * Provide the ai mcp client register tools operation used by this module and its client
  * applications.

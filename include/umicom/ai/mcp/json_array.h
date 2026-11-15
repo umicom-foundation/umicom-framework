@@ -30,6 +30,17 @@ typedef UmiStatus (*UmiAiMcpJsonObjectVisitor)(
  * Provide the ai mcp json array visit objects operation used by this module and its client
  * applications.
  */
+/* Parse one complete bounded JSON object and select its direct array member.
+ * The input must terminate within UMI_AI_MCP_TEXT_CAPACITY bytes. The shared
+ * parser admits at most 128 container levels and lookup keys of 4096 bytes.
+ * Missing members return NOT_FOUND, duplicates ALREADY_EXISTS, and non-array
+ * members or non-object elements PARSE_ERROR before any visitor runs.
+ * Each object is borrowed, NUL-terminated raw JSON valid only during its call.
+ * The source is snapshotted before callbacks; callbacks may change the original
+ * input. Keep out_count in separate live writable storage for the full call.
+ * On a valid call, out_count is zero unless every visitor succeeds. Callback
+ * failures are returned unchanged; arbitrary callback side effects cannot be
+ * rolled back. Catalogue discovery supplies its own unpublished candidate. */
 UmiStatus umi_ai_mcp_json_array_visit_objects(
     const char *json,
     const char *array_key,

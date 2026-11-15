@@ -44,6 +44,14 @@ UmiStatus umi_ai_mcp_session_init(
  * Send MCP initialize, decode negotiated capabilities and emit the initialized
  * notification when the transport supports notifications.
  */
+/* Initialization refuses an exhausted revision before encoding or transport.
+ * Callback completion must still match the captured revision and expected
+ * phase before Framework publishes FAILED or READY. Callback errors retain
+ * their status even when the callback changed the session. Keep the session
+ * alive and serialized; this observation is not a lock or callback sandbox.
+ * Malformed or unsupported negotiation retains prior capabilities and enters
+ * FAILED without notification. An unsupported protocol returns NOT_IMPLEMENTED;
+ * transport shutdown remains the host's responsibility. */
 UmiStatus umi_ai_mcp_session_initialize(
     UmiAiMcpSession *session,
     const char *client_name,
@@ -56,6 +64,13 @@ UmiStatus umi_ai_mcp_session_ping(
 /* Reset negotiated state while preserving server metadata and transport binding. */
 void umi_ai_mcp_session_disconnect(
     UmiAiMcpSession *session);
+
+/* Reset negotiated state only when a new revision can be represented. NULL is
+ * INVALID_ARGUMENT; UINT64_MAX returns CAPACITY_EXCEEDED without any mutation.
+ * Server metadata and transport binding are retained. The void compatibility
+ * disconnect delegates here and leaves the complete session intact on refusal.
+ * Retire all borrowed uses before constructing a fresh session lifetime. */
+UmiStatus UmiAiMcpSessionDisconnectChecked(UmiAiMcpSession *session);
 
 #ifdef __cplusplus
 }

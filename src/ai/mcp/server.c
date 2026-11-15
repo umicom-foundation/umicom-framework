@@ -96,6 +96,8 @@ UmiStatus umi_ai_mcp_server_init(
 }
 
 /* Check that ai mcp server satisfies its contract before another service relies on it. */
+/* Bounded server metadata admission prevents unterminated public fields from reaching registration and transport formatting. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_ai_mcp_server_validate(
     const UmiAiMcpServerDescriptor *server)
 {
@@ -107,6 +109,30 @@ UmiStatus umi_ai_mcp_server_validate(
         server->server_id[0] == '\0' ||
         server->display_name[0] == '\0' ||
         server->endpoint[0] == '\0' ||
+        server->trust < UMI_AI_MCP_TRUST_UNTRUSTED ||
+        server->trust > UMI_AI_MCP_TRUST_VERIFIED) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+
+    return UMI_STATUS_OK;
+}
+
+#endif
+UmiStatus umi_ai_mcp_server_validate(
+    const UmiAiMcpServerDescriptor *server)
+{
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (server == NULL ||
+        server->server_id[0] == '\0' ||
+        server->display_name[0] == '\0' ||
+        server->endpoint[0] == '\0' ||
+        memchr(server->server_id, '\0', sizeof(server->server_id)) == NULL ||
+        memchr(server->display_name, '\0', sizeof(server->display_name)) == NULL ||
+        memchr(server->endpoint, '\0', sizeof(server->endpoint)) == NULL ||
+        memchr(server->permission_prefix, '\0', sizeof(server->permission_prefix)) == NULL ||
         server->trust < UMI_AI_MCP_TRUST_UNTRUSTED ||
         server->trust > UMI_AI_MCP_TRUST_VERIFIED) {
         return UMI_STATUS_INVALID_ARGUMENT;

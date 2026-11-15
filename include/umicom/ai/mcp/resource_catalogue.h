@@ -66,6 +66,20 @@ const UmiAiMcpResourceDescriptor *umi_ai_mcp_resource_catalogue_at(
     const UmiAiMcpResourceCatalogue *catalogue,
     size_t index);
 
+/* Admit all inline strings and a nonempty identity. Optional text may be empty;
+ * URI and schema contents remain metadata, not authorization or validated JSON. */
+UmiStatus UmiAiMcpResourceDescriptorValidate(const UmiAiMcpResourceDescriptor *item);
+/* Validate count, every active descriptor and unique identities. NULL returns
+ * INVALID_ARGUMENT; malformed declared storage returns INVALID_STATE. Unused
+ * slots and the revision token do not change this read-only admission result. */
+UmiStatus UmiAiMcpResourceCatalogueValidate(const UmiAiMcpResourceCatalogue *catalogue);
+/* Resolve a bounded identity after complete catalogue admission. Failure leaves
+ * out_item unchanged. NOT_FOUND is distinct from malformed inputs/storage.
+ * The returned pointer borrows the catalogue: do not retain it across mutation
+ * or destruction, and serialize ownership. Legacy find/at return NULL on error. */
+UmiStatus UmiAiMcpResourceCatalogueResolve(const UmiAiMcpResourceCatalogue *catalogue,
+    const char *identifier, const UmiAiMcpResourceDescriptor **out_item);
+
 #ifdef __cplusplus
 }
 #endif

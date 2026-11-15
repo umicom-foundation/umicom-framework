@@ -7248,3 +7248,27 @@ include(cmake/UmicomAiHealthCallbackLifetime.cmake)
 
 # Admit complete tool metadata and catalogue storage before invoking callbacks.
 include(cmake/UmicomAiToolAdmission.cmake)
+
+# Publish complete MCP tool registrations while retaining borrowed bindings.
+include(cmake/UmicomMcpToolRegistration.cmake)
+
+# Admit complete transport text before MCP result publication and decoding.
+include(cmake/UmicomMcpTransportPublication.cmake)
+
+# Retain accepted MCP catalogues until complete discovery succeeds.
+include(cmake/UmicomMcpDiscoveryPublication.cmake)
+
+# Lifecycle admission prevents revision wrap and stale callback state publication.
+include(cmake/UmicomMcpSessionRevisions.cmake)
+
+# Verify negotiated metadata admission and the shared protocol JSON owner.
+include(cmake/UmicomMcpInitializationAdmission.cmake)
+
+# Admit resource and prompt storage before exposing catalogue entries.
+include(cmake/UmicomMcpCatalogueAdmission.cmake)
+
+# Preserve descriptor and discovery output on malformed optional metadata.
+include(cmake/UmicomMcpDescriptorDecoding.cmake)
+
+# Complete JSON-list admission is shared by all MCP discovery clients.
+include(cmake/UmicomMcpListEnvelope.cmake)

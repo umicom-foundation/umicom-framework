@@ -15,9 +15,13 @@
 
 #include "umicom/ai/mcp/json_array.h"
 
+#include "json_internal.h"
+#include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
 
+/* The shared JSON tree now checks the complete reply and direct array member before invoking visitors, preventing nested-key confusion and partial visits on malformed list structure. The former implementation is retained for owner review. */
+#if 0
 /* Provide the array begin operation used by this module and its client applications. */
 static const char *array_begin(
     const char *json,
@@ -198,4 +202,58 @@ UmiStatus umi_ai_mcp_json_array_visit_objects(
     }
 
     return UMI_STATUS_PARSE_ERROR;
+}
+
+#endif
+UmiStatus umi_ai_mcp_json_array_visit_objects(const char *json, const char *array_key,
+    UmiAiMcpJsonObjectVisitor visitor, void *user_data, size_t *out_count)
+{
+    if (json == NULL || array_key == NULL || array_key[0] == '\0' || visitor == NULL || out_count == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    *out_count = 0U;
+    UmiJsonTree *tree = NULL;
+    UmiStatus status = umi_ai_mcp_json_object_parse(json, &tree);
+    if (status != UMI_STATUS_OK) return status;
+    int array = -1;
+    status = UmiJsonTreeMember(tree, 0, array_key, &array);
+    if (status == UMI_STATUS_OK && UmiJsonTreeKind(tree, array) != UMI_LANGUAGE_RUNTIME_JSON_ARRAY)
+        status = UMI_STATUS_PARSE_ERROR;
+    size_t capacity = 0U;
+    /* Admit the complete list shape before callbacks can have side effects.
+     * The owned parse also isolates subsequent visits from input mutations. */
+    if (status == UMI_STATUS_OK) {
+        for (int node = UmiJsonTreeFirst(tree, array); node >= 0; node = UmiJsonTreeNext(tree, node)) {
+            const char *source = NULL; size_t length = 0U;
+            if (UmiJsonTreeKind(tree, node) != UMI_LANGUAGE_RUNTIME_JSON_OBJECT) {
+                status = UMI_STATUS_PARSE_ERROR; break;
+            }
+            status = UmiJsonTreeSourceSpan(tree, node, &source, &length);
+            if (status != UMI_STATUS_OK) break;
+            if (length >= UMI_AI_MCP_TEXT_CAPACITY) { status = UMI_STATUS_CAPACITY_EXCEEDED; break; }
+            if (length + 1U > capacity) capacity = length + 1U;
+        }
+    }
+    char *object = NULL;
+    if (status == UMI_STATUS_OK && capacity != 0U) {
+        object = malloc(capacity);
+        if (object == NULL) status = UMI_STATUS_OUT_OF_MEMORY;
+    }
+    size_t count = 0U;
+    if (status == UMI_STATUS_OK) {
+        for (int node = UmiJsonTreeFirst(tree, array); node >= 0; node = UmiJsonTreeNext(tree, node)) {
+            const char *source = NULL; size_t length = 0U;
+            status = UmiJsonTreeSourceSpan(tree, node, &source, &length);
+            if (status != UMI_STATUS_OK) break;
+            memcpy(object, source, length); object[length] = '\0';
+            status = visitor(object, user_data);
+            if (status != UMI_STATUS_OK) break;
+            ++count;
+        }
+    }
+    /* Callback errors remain primary. Catalogue discovery supplies a private
+     * candidate; arbitrary visitor side effects cannot be rolled back here. */
+    *out_count = status == UMI_STATUS_OK ? count : 0U;
+    free(object);
+    UmiJsonTreeDestroy(tree);
+    return status;
 }

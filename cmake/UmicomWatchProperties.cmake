@@ -1,9 +1,29 @@
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# Umicom Framework
+# File: cmake/UmicomWatchProperties.cmake
+#
+# PURPOSE:
+# Share watch reply and JSON text services through their canonical owners.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+
 # Watch properties and strict native evaluation share the canonical model.
 include_guard(GLOBAL)
 target_sources(umicom_debug PRIVATE "${CMAKE_CURRENT_LIST_DIR}/../src/debug/watch_edit.c")
+# Preserve the former source assignment for review. Protocol owns the Unicode
+# decoder once; debugger replies continue using the same public implementation.
+if(FALSE)
 target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/json_text.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug_runtime/watch_reply.c")
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomProtocolJsonOwnership.cmake")
+target_link_libraries(umicom_developer PRIVATE Umicom::protocol)
+target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/debug_runtime/watch_reply.c")
 if(BUILD_TESTING)
     function(umicom_watch_cases group)

@@ -55,6 +55,12 @@ UmiStatus umi_ai_mcp_client_start(
  * Discover only capabilities actually negotiated by the server. Unsupported
  * catalogues remain empty and are not treated as errors.
  */
+/* The empty-unsupported description above applies to a freshly initialized
+ * client. A later refresh leaves unsupported catalogues unchanged. Supported
+ * catalogues publish together after every requested list succeeds; any failure
+ * preserves them all. Session and bridge storage is never copied or relocated.
+ * Readiness, session revision and negotiated flags must still match before
+ * publication. Keep the complete operation serialized and all owners alive. */
 UmiStatus umi_ai_mcp_client_discover(
     UmiAiMcpClient *client);
 

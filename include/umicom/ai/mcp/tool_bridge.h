@@ -44,6 +44,16 @@ typedef struct UmiAiMcpToolBridge {
  * id is mcp.<server-id>.<tool-name>. Invocation still passes through
  * umi_ai_runtime_invoke_tool(), so UmiAiPolicy approval remains in force.
  */
+/* Registration performs no transport operation. Failure preserves both output
+ * owners, including allocation and late field/collision failures. BUSY means
+ * the supplied registry still borrows one of this bridge's binding slots.
+ * A bridge belongs to one registry: never reuse it with another registry while
+ * any old callback can reference it. Keep bridge and session at stable addresses
+ * until all registrations are retired; their lifetime remains caller-owned.
+ * Serialize registration and invocation, and keep destination storage separate
+ * from each other and from session/catalogue inputs. Fresh bridge storage may
+ * be uninitialized; existing bindings are detected by registry pointer identity.
+ * Text admission is not JSON/schema validation or an endpoint capability check. */
 UmiStatus umi_ai_mcp_tool_bridge_register(
     UmiAiMcpToolBridge *bridge,
     UmiAiMcpSession *session,

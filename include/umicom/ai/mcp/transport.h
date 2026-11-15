@@ -57,6 +57,21 @@ UmiStatus umi_ai_mcp_transport_notify(
     const char *method,
     const char *params_json);
 
+/* Snapshot the callback tuple, invoke into allocated staging storage, require
+ * a terminator within result_capacity, then copy only the completed string.
+ * Every failure preserves result_json. Callback errors remain the primary
+ * status even if their unfinished bytes are malformed. An OK callback without
+ * terminated output returns INTERNAL_ERROR; allocation refusal is OUT_OF_MEMORY.
+ * Empty terminated text is allowed; this does not validate JSON or UTF-8.
+ * Method/params are readable C strings and may refer to the old result buffer.
+ * Result storage must not overlap transport. Keep all borrowed inputs and
+ * callback context alive, serialize access, and return normally from callbacks.
+ * Native callbacks remain trusted; this is not a lifetime guard or a sandbox.
+ * The direct umi_ai_mcp_transport_request API retains callback error output. */
+UmiStatus UmiAiMcpTransportRequestChecked(const UmiAiMcpTransport *transport,
+    const char *method, const char *params_json, char *result_json,
+    size_t result_capacity);
+
 #ifdef __cplusplus
 }
 #endif

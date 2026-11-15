@@ -25,6 +25,16 @@
 extern "C" {
 #endif
 
+/* Each discovery operation constructs a fresh catalogue privately. Failure
+ * preserves the supplied catalogue, including admission, allocation, transport,
+ * decode, duplicate and capacity failures. Fresh destination storage need not
+ * be initialized. Success keeps the existing fresh-catalogue revision semantics:
+ * its token is not a monotonic identity across repeated discovery operations.
+ * A changed session revision or readiness during transport refuses publication.
+ * Serialize the complete call; callbacks must keep session/output owners alive
+ * and must not mutate the destination catalogue or session configuration. This
+ * check is not a lifetime lock or proof of remote-server snapshot consistency. */
+
 /**
  * Provide the ai mcp discover tools operation used by this module and its client
  * applications.
