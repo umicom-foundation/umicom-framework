@@ -17,6 +17,12 @@ if(BUILD_TESTING)
     # allocator/scanner boundaries. Do not link a second CodeGuard copy here.
     add_executable(umicom-codeguard-ownership-tests
         "${CMAKE_CURRENT_LIST_DIR}/../tests/codeguard/test_transactional_results.c")
+    # Service now exposes asynchronous jobs. Compile that dependency once and
+    # use real platform tasks; keep the instrumented service/result sources
+    # and scanner boundary in the fixture rather than linking CodeGuard twice.
+    target_sources(umicom-codeguard-ownership-tests PRIVATE
+        "${CMAKE_CURRENT_LIST_DIR}/../src/codeguard/job.c")
+    target_link_libraries(umicom-codeguard-ownership-tests PRIVATE Umicom::platform)
     target_include_directories(umicom-codeguard-ownership-tests PRIVATE
         "${CMAKE_CURRENT_LIST_DIR}/../include")
     target_compile_features(umicom-codeguard-ownership-tests PRIVATE c_std_23)

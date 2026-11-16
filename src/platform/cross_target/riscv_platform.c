@@ -3,12 +3,7 @@
  * File: src/platform/cross_target/riscv_platform.c
  *
  * PURPOSE:
- *   Describe RISC-V board/virtual-machine platform capabilities used by boot and device planning.
- *
- * ARCHITECTURE:
- *   Framework owns reusable cross-target and Umicom OS semantics. Existing
- *   compiler/toolchain discovery, platform services and application runtimes
- *   remain authoritative and are composed rather than duplicated here.
+ *   Describe RISC-V board/virtual-machine platform capabilities used by boot and device planning. * ARCHITECTURE: Framework owns reusable cross-target and Umicom OS semantics. Existing compiler/toolchain discovery, platform services and application runtimes remain authoritative and are composed rather than duplicated here.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -18,6 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+
+#include "../../base/conditional_archive_workspace_internal.h"
 #include "../../base/conditional_archive_internal.h"
 #include "umicom/platform/cross_target/riscv_platform.h"
 #include "../../base/value_archive_internal.h"
@@ -93,3 +90,9 @@ UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_ct_riscv_platform_archive_decode_with_wor
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ct_riscv_platform_archive_decode_if_unchanged, umi_ct_riscv_platform_archive_encode,
     UmiCtRiscvPlatform, UmiCtRiscvPlatformArchiveSchema, UmiCtRiscvPlatformArchiveBound, UmiCtRiscvPlatformArchiveRead, UmiCtRiscvPlatformArchiveValidate)
+
+/* Explicit scratch ownership lets bounded workers restore reviewed data without
+ * an allocator. Existing schemas, field admission and publication stay authoritative. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE_WORKSPACE(umi_ct_riscv_platform_archive_decode_if_unchanged_with_workspace,
+    umi_ct_riscv_platform_archive_encode, umi_ct_riscv_platform_archive_decode_with_workspace,
+    UmiCtRiscvPlatform, UmiCtRiscvPlatformArchiveSchema, UmiCtRiscvPlatformArchiveBound)

@@ -3,12 +3,7 @@
  * File: src/platform/cross_target/target_probe.c
  *
  * PURPOSE:
- *   Record host/target probe evidence without hard-coding OS-specific probing in application repositories.
- *
- * ARCHITECTURE:
- *   Framework owns reusable cross-target and Umicom OS semantics. Existing
- *   compiler/toolchain discovery, platform services and application runtimes
- *   remain authoritative and are composed rather than duplicated here.
+ *   Record host/target probe evidence without hard-coding OS-specific probing in application repositories. * ARCHITECTURE: Framework owns reusable cross-target and Umicom OS semantics. Existing compiler/toolchain discovery, platform services and application runtimes remain authoritative and are composed rather than duplicated here.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -18,6 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+
+#include "../../base/conditional_archive_workspace_internal.h"
 #include "../../base/conditional_archive_internal.h"
 #include "umicom/platform/cross_target/target_probe.h"
 #include "../../base/value_archive_internal.h"
@@ -116,3 +113,9 @@ UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_ct_target_probe_archive_decode_with_works
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ct_target_probe_archive_decode_if_unchanged, umi_ct_target_probe_archive_encode,
     UmiCtTargetProbe, UmiCtTargetProbeArchiveSchema, UmiCtTargetProbeArchiveBound, UmiCtTargetProbeArchiveRead, UmiCtTargetProbeArchiveValidate)
+
+/* Explicit scratch ownership lets bounded workers restore reviewed data without
+ * an allocator. Existing schemas, field admission and publication stay authoritative. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE_WORKSPACE(umi_ct_target_probe_archive_decode_if_unchanged_with_workspace,
+    umi_ct_target_probe_archive_encode, umi_ct_target_probe_archive_decode_with_workspace,
+    UmiCtTargetProbe, UmiCtTargetProbeArchiveSchema, UmiCtTargetProbeArchiveBound)

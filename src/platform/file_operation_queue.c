@@ -13,11 +13,13 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+
 /*
  * Each operation is deliberately small and deterministic. Snapshots are copied
  * into bounded storage, revisions advance on mutation, and callers retain
  * responsibility for higher-level threading and persistence policy.
  */
+#include "../base/conditional_archive_workspace_internal.h"
 #include "../base/conditional_archive_internal.h"
 #include "umicom/platform/file_operation_queue.h"
 #include "../base/value_archive_internal.h"
@@ -391,3 +393,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_CLEAR(umi_platform_file_operation_queue_registry_cl
 #include "../base/value_compare_internal.h"
 UMI_DEFINE_VALUE_COMPARE(umi_platform_file_operation_queue_snapshot_archive_compare_with_workspace,
     UmiFileOperationSnapshot, umi_platform_file_operation_queue_snapshot_archive_encode)
+
+/* Explicit scratch ownership lets bounded workers restore reviewed data without
+ * an allocator. Existing schemas, field admission and publication stay authoritative. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE_WORKSPACE(umi_platform_file_operation_queue_snapshot_archive_decode_if_unchanged_with_workspace,
+    umi_platform_file_operation_queue_snapshot_archive_encode, umi_platform_file_operation_queue_snapshot_archive_decode_with_workspace,
+    UmiFileOperationSnapshot, ArchiveSchema, ArchiveBound)

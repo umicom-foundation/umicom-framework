@@ -1,4 +1,17 @@
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: tests/build_configuration/test_surface_audit.cmake
+#
+# PURPOSE:
+#   Check declared native entry layouts and reject absent or mismatched sources.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.24)
 if(NOT DEFINED ROOT OR NOT DEFINED DEST OR NOT DEFINED CASE)
     message(FATAL_ERROR "Surface audit fixture requires ROOT, DEST and CASE")
@@ -8,15 +21,24 @@ set(_entry src/console/main.c)
 set(_expected 0)
 if(CASE STREQUAL "os")
     set(_entry src/main.c)
+elseif(CASE MATCHES "^root-")
+    set(_entry main.c)
+    if(CASE STREQUAL "root-missing" OR CASE STREQUAL "root-undeclared" OR CASE STREQUAL "root-other-path")
+        set(_expected 1)
+    elseif(NOT CASE STREQUAL "root-declared")
+        message(FATAL_ERROR "Unknown root entry fixture")
+    endif()
 elseif(CASE STREQUAL "missing" OR CASE STREQUAL "undeclared")
     set(_expected 1)
 elseif(NOT CASE STREQUAL "portfolio" AND NOT CASE STREQUAL "alternate-declared")
     message(FATAL_ERROR "Unknown surface audit fixture")
 endif()
-if(NOT CASE STREQUAL "missing")
+if(NOT CASE STREQUAL "missing" AND NOT CASE STREQUAL "root-missing")
     file(WRITE "${DEST}/applications/sample/${_entry}" "int main(void) { return 0; }\n")
 endif()
-if(CASE STREQUAL "undeclared")
+if(CASE STREQUAL "root-other-path")
+    set(_declaration "add_executable(sample tools/main.c)\n")
+elseif(CASE STREQUAL "undeclared" OR CASE STREQUAL "root-undeclared")
     set(_declaration "add_library(sample INTERFACE)\n")
 elseif(CASE STREQUAL "alternate-declared")
     # An unused conventional file must not mask a valid direct entry point.

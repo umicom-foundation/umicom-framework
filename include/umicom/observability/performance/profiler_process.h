@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+
 #ifndef UMICOM_OBSERVABILITY_PERFORMANCE_PROFILER_PROCESS_H
 #define UMICOM_OBSERVABILITY_PERFORMANCE_PROFILER_PROCESS_H
 
@@ -90,6 +91,18 @@ UmiStatus umi_performance_profiler_process_archive_decode_with_workspace(const v
  * See umicom/base/value_archive.h for limits and snapshot ownership. */
 UmiStatus umi_performance_profiler_process_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
     const UmiPerformanceProfilerProcess *expected, UmiPerformanceProfilerProcess *value);
+
+/** Restore only while encoded state matches expected, using caller-owned scratch.
+ * comparison_capacity must cover twice the measured archive_encode size of
+ * expected. workspace is one aligned UmiPerformanceProfilerProcess object. Scratch, archive,
+ * expected and value must be disjoint; expected == value alone is allowed.
+ * Scratch may change on refusal; value is unchanged on every error. No heap
+ * allocation, I/O, lock or live publication. Serialize the entire call.
+ * See umicom/base/value_archive.h for sizing, history and ownership limits. */
+UmiStatus umi_performance_profiler_process_archive_decode_if_unchanged_with_workspace(
+    const void *bytes, size_t byte_count, const UmiPerformanceProfilerProcess *expected,
+    UmiPerformanceProfilerProcess *workspace, void *comparison, size_t comparison_capacity,
+    UmiPerformanceProfilerProcess *value);
 
 
 #ifdef __cplusplus

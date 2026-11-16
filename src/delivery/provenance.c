@@ -13,10 +13,12 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+
 /*
  * Provenance links a package back to the exact source and build environment that created it.
  */
 
+#include "../base/conditional_archive_workspace_internal.h"
 #include "../base/conditional_archive_internal.h"
 #include "umicom/delivery/provenance.h"
 #include "../base/value_construction_internal.h"
@@ -173,3 +175,9 @@ UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_provenance_archive_decode_with_workspace,
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_provenance_archive_decode_if_unchanged, umi_provenance_archive_encode,
     UmiProvenance, UmiProvenanceArchiveSchema, UmiProvenanceArchiveBound, UmiProvenanceArchiveRead, UmiProvenanceArchiveValidate)
+
+/* Explicit scratch ownership lets bounded workers restore reviewed data without
+ * an allocator. Existing schemas, field admission and publication stay authoritative. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE_WORKSPACE(umi_provenance_archive_decode_if_unchanged_with_workspace,
+    umi_provenance_archive_encode, umi_provenance_archive_decode_with_workspace,
+    UmiProvenance, UmiProvenanceArchiveSchema, UmiProvenanceArchiveBound)

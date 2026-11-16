@@ -198,9 +198,18 @@ int main(int argc,char **argv)
         Begin(&f);UmiPixVerseResult result;CHECK(Execute(&f,f.plan,&result)==UMI_STATUS_OK);
         for(unsigned i=0U;i<6U;++i) {
             UmiPixVerseResult bad=result;
+/* Make independent fixture statements explicit without weakening the existing checks. The former implementation is retained for owner review. */
+#if 0
             if(i==0U) bad.creation_confirmed=false;if(i==1U) bad.creation_may_exist=false;
             if(i==2U) bad.video_id=0;if(i==3U) bad.http_status=201U;
             if(i==4U) bad.state=5U;if(i==5U) strcpy(bad.video_url,"private");
+#endif
+            if(i==0U) { bad.creation_confirmed=false; }
+            if(i==1U) { bad.creation_may_exist=false; }
+            if(i==2U) { bad.video_id=0; }
+            if(i==3U) { bad.http_status=201U; }
+            if(i==4U) { bad.state=5U; }
+            if(i==5U) { strcpy(bad.video_url,"private"); }
             ObserveFailure(&f,f.plan,UMI_STATUS_OK,&bad,UMI_STATUS_INVALID_STATE);
         }
     } else if(!strcmp(mode,"store-transaction")) {
@@ -269,7 +278,12 @@ int main(int argc,char **argv)
         } else if(!strcmp(mode,"recovery-binding")) {
             for(unsigned i=0U;i<5U;++i) {
                 UmiProviderConnection connection=f.connection;UmiPixVersePlan *poll=NULL;
+/* Make independent fixture statements explicit without weakening the existing checks. The former implementation is retained for owner review. */
+#if 0
                 if(i==0U) strcpy(connection.label,"Edited");if(i==1U) connection.enabled=false;
+#endif
+                if(i==0U) { strcpy(connection.label,"Edited"); }
+                if(i==1U) { connection.enabled=false; }
                 CHECK(UmiPixVerseTaskStatusPlan(&f.receipt,i==2U?"studio":"media","lesson",
                     &connection,i==3U?8U:7U,i==4U?"invalid":next_trace,&poll)!=UMI_STATUS_OK && poll==NULL);
             }

@@ -28,10 +28,12 @@ if(BUILD_TESTING AND (WIN32 OR UNIX) AND NOT EMSCRIPTEN)
     if(COMMAND umicom_target_qualification_inputs)
         umicom_target_qualification_inputs(umicom-web-preview_cli-test FILES
             "${CMAKE_CURRENT_LIST_DIR}/../tools/umicom/src/command_preview.c"
-            "${CMAKE_CURRENT_LIST_DIR}/../tools/umicom/src/cli.h")
+            "${CMAKE_CURRENT_LIST_DIR}/../tools/umicom/src/cli.h"
+            "${CMAKE_CURRENT_LIST_DIR}/../src/web/preview_command.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/web/preview_command.h")
     endif()
     set(preview_cases null relative-root low-port high-port long-root port-min port-max port-leading-zero port-empty port-sign port-space port-overflow port-text port-null create-invalid create-null-output index missing traversal post head foreign-host foreign-origin same-origin duplicate-host copied-root unicode-root binary stopped-handle serve-before-start)
-    set(preview_cli_cases help missing-root missing-port root-value port-value duplicate-root duplicate-port duplicate-dry-run null-vector null-item empty-item negative-argc unknown late-unknown relative-root overflow-port low-port high-port zero-port empty-argv dry-run order create-failure start-failure signal-int-failure signal-term-failure normal-stop client-timeout client-close bad-request listener-failure restore-failure)
+    set(preview_cli_cases help-output-failure dry-run-output-failure help missing-root missing-port root-value port-value duplicate-root duplicate-port duplicate-dry-run null-vector null-item empty-item negative-argc unknown late-unknown relative-root overflow-port low-port high-port zero-port empty-argv dry-run order create-failure start-failure signal-int-failure signal-term-failure normal-stop client-timeout client-close bad-request listener-failure restore-failure)
 
     foreach(suite preview preview_cli)
         foreach(case IN LISTS ${suite}_cases)

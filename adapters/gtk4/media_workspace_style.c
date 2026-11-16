@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "media_workspace_style.h"
+#include "pixbuf_texture_private.h"
 #include "umicom_media_workspace_resources.h"
 #include <string.h>
 
@@ -72,6 +73,8 @@ static void RefreshBrand(GtkWidget *picture, GParamSpec *property, gpointer unus
         height * scale, TRUE, NULL, &error);
     g_object_unref(input);
     if (pixbuf != NULL) {
+/* Centralize row packing and allocation checks so every branded surface observes the same texture ownership contract. The former implementation is retained for owner review. */
+#if 0
         /* GdkMemoryTexture needs a complete stride * height buffer. Pack
          * each pixbuf row to avoid reading potentially absent last-row padding.
          * Its GBytes ownership keeps the new texture independent of pixbuf. */
@@ -93,6 +96,15 @@ static void RefreshBrand(GtkWidget *picture, GParamSpec *property, gpointer unus
         gtk_picture_set_paintable(GTK_PICTURE(picture), GDK_PAINTABLE(texture));
         g_object_unref(texture);
         g_bytes_unref(pixelBytes);
+
+#endif
+        GdkTexture *texture = UmiGtkTextureFromPixbuf(pixbuf, &error);
+        if (texture != NULL) {
+            gtk_picture_set_paintable(GTK_PICTURE(picture), GDK_PAINTABLE(texture));
+            g_object_unref(texture);
+        } else {
+            gtk_widget_set_tooltip_text(picture, "Umicom SVG texture could not be created.");
+        }
         g_object_unref(pixbuf);
     } else {
         gtk_widget_set_tooltip_text(picture, "Umicom SVG artwork could not be decoded.");

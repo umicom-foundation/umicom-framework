@@ -25,7 +25,12 @@ static void *memory_test_calloc(size_t count,size_t size)
 }
 static void memory_test_free(void *memory)
 {
+/* Make independent fixture statements explicit without weakening the existing checks. The former implementation is retained for owner review. */
+#if 0
     if(memory!=NULL)--live_allocations;free(memory);
+#endif
+    if(memory!=NULL) { --live_allocations; }
+    free(memory);
 }
 static UmiStatus memory_test_preflight(const UmiAiWorkflowDescription *description,
     uint32_t effects,UmiAiWorkflowPlan *plan,UmiAiWorkflowDiagnostic *diagnostic)

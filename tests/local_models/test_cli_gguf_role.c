@@ -23,7 +23,12 @@
 #include <stdio.h>
 #include <string.h>
 static char transcript[8192];static size_t used;static unsigned reads;static bool fail_output;
+/* Fixture-specific state must not shadow locals in included production sources.
+ * The previous declaration is retained for review. */
+#if 0
 static UmiStatus observed=UMI_STATUS_OK;
+#endif
+static UmiStatus fixture_status=UMI_STATUS_OK;
 static UmiGgufRole selected_role=UMI_GGUF_ROLE_AUXILIARY;
 static int role_printf(const char *format,...)
 {
@@ -37,7 +42,7 @@ static UmiStatus role_inspect(const char *path,const UmiGgufFileIdentity *expect
     const UmiCancellationToken *cancel,UmiGgufFileInspection *out)
 {
     assert(strcmp(path,"fixture.gguf")==0 && expected==NULL && cancel==NULL && out!=NULL);++reads;
-    if(observed!=UMI_STATUS_OK)return observed;
+    if(fixture_status!=UMI_STATUS_OK)return fixture_status;
     memset(out,0,sizeof(*out));out->file.bytes=256U;out->metadata.role=selected_role;
     out->metadata.has_architecture=selected_role!=UMI_GGUF_ROLE_UNKNOWN;
     strcpy(out->metadata.architecture,selected_role==UMI_GGUF_ROLE_AUXILIARY?"controlvector":"llama");
@@ -78,10 +83,10 @@ int main(int argc,char **argv)
     else if(strcmp(mode,"null-path")==0){command[1]=NULL;wanted=2;expected_reads=0U;}
     else if(strcmp(mode,"null-owner")==0){assert(UmiModelsCommandWithSession(count,command,NULL)==2 && reads==0U);return 0;}
     else if(strcmp(mode,"occupied-owner")==0){max_align_t storage;session=(UmiModelSession *)&storage;assert(UmiModelsCommandWithSession(count,command,&session)==1 && reads==0U && session==(UmiModelSession *)&storage);return 0;}
-    else if(strcmp(mode,"io-error")==0){observed=UMI_STATUS_IO_ERROR;wanted=1;}
-    else if(strcmp(mode,"bad-format")==0){observed=UMI_STATUS_PARSE_ERROR;wanted=1;}
-    else if(strcmp(mode,"bad-path")==0){observed=UMI_STATUS_INVALID_ARGUMENT;wanted=2;}
-    else if(strcmp(mode,"cancelled")==0){observed=UMI_STATUS_CANCELLED;wanted=1;}
+    else if(strcmp(mode,"io-error")==0){fixture_status=UMI_STATUS_IO_ERROR;wanted=1;}
+    else if(strcmp(mode,"bad-format")==0){fixture_status=UMI_STATUS_PARSE_ERROR;wanted=1;}
+    else if(strcmp(mode,"bad-path")==0){fixture_status=UMI_STATUS_INVALID_ARGUMENT;wanted=2;}
+    else if(strcmp(mode,"cancelled")==0){fixture_status=UMI_STATUS_CANCELLED;wanted=1;}
     else if(strcmp(mode,"output-error")==0){fail_output=true;wanted=1;}
     else if(strcmp(mode,"candidate")==0)selected_role=UMI_GGUF_ROLE_MODEL_CANDIDATE;
     else if(strcmp(mode,"unknown")==0)selected_role=UMI_GGUF_ROLE_UNKNOWN;
@@ -94,7 +99,7 @@ int main(int argc,char **argv)
     if(strcmp(mode,"unknown")==0)assert(strstr(transcript,"Role: unknown\nArchitecture: unknown")!=NULL);
     if(strcmp(mode,"vocabulary")==0)assert(strstr(transcript,"Role: vocabulary-only")!=NULL);
     if(wanted==0 && expected_reads!=0U)assert(strstr(transcript,"remain unverified")!=NULL);
-    if(observed!=UMI_STATUS_OK)assert(strstr(transcript,"SHA256:")==NULL);
+    if(fixture_status!=UMI_STATUS_OK)assert(strstr(transcript,"SHA256:")==NULL);
     if(strcmp(mode,"help")==0)assert(strstr(transcript,"inspect-role ABSOLUTE_GGUF")!=NULL);
     return 0;
 }

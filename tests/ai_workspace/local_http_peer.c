@@ -31,7 +31,17 @@ typedef SOCKET PeerSocket;
 static int CloseSocket(PeerSocket socket){return closesocket(socket);}
 static bool Again(void){int error=WSAGetLastError();return error==WSAEWOULDBLOCK || error==WSAEINTR;}
 static uint64_t Milliseconds(void){return (uint64_t)GetTickCount64();}
+/* Make the Winsock command-mask conversion explicit at its native boundary. The former implementation is retained for owner review. */
+#if 0
 static bool Nonblocking(PeerSocket socket){u_long enabled=1UL;return ioctlsocket(socket,FIONBIO,&enabled)==0;}
+#endif
+static bool Nonblocking(PeerSocket socket)
+{
+    u_long enabled=1UL;
+    /* Winsock declares its 32-bit command mask as signed long. The explicit
+     * conversion preserves the Windows ABI bit pattern of FIONBIO. */
+    return ioctlsocket(socket,(long)FIONBIO,&enabled)==0;
+}
 #else
 #include <sys/socket.h>
 #include <sys/select.h>

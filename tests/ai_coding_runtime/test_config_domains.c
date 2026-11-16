@@ -58,7 +58,11 @@ static int equivalent(const UmiAiCodingRuntimeConfig *a, const UmiAiCodingRuntim
 {
     return strcmp(a->provider_id, b->provider_id) == 0 && strcmp(a->model_id, b->model_id) == 0 &&
         a->provider_kind == b->provider_kind && a->temperature == b->temperature &&
+/* Compare double signs, including negative zero, without a toolchain signbit macro narrowing to float. The former implementation is retained for owner review. */
+#if 0
         !!signbit(a->temperature) == !!signbit(b->temperature) &&
+#endif
+        copysign(1.0, a->temperature) == copysign(1.0, b->temperature) &&
         a->allow_tools == b->allow_tools && a->auto_apply_approved_patch == b->auto_apply_approved_patch &&
         a->auto_approve == b->auto_approve && a->rollback_on_validation_failure == b->rollback_on_validation_failure &&
         a->require_validation == b->require_validation && a->allow_sensitive_context == b->allow_sensitive_context &&

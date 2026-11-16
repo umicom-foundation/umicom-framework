@@ -3,12 +3,7 @@
  * File: src/platform/cross_target/page_policy.c
  *
  * PURPOSE:
- *   Provide target page alignment and page-count calculations for virtual-memory and boot mapping plans.
- *
- * ARCHITECTURE:
- *   Framework owns reusable cross-target and Umicom OS semantics. Existing
- *   compiler/toolchain discovery, platform services and application runtimes
- *   remain authoritative and are composed rather than duplicated here.
+ *   Provide target page alignment and page-count calculations for virtual-memory and boot mapping plans. * ARCHITECTURE: Framework owns reusable cross-target and Umicom OS semantics. Existing compiler/toolchain discovery, platform services and application runtimes remain authoritative and are composed rather than duplicated here.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -18,6 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+
+#include "../../base/conditional_archive_workspace_internal.h"
 #include "../../base/conditional_archive_internal.h"
 #include "umicom/platform/cross_target/page_policy.h"
 #include "../../base/value_archive_internal.h"
@@ -79,3 +76,9 @@ UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_ct_page_policy_archive_decode_with_worksp
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ct_page_policy_archive_decode_if_unchanged, umi_ct_page_policy_archive_encode,
     UmiCtPagePolicy, UmiCtPagePolicyArchiveSchema, UmiCtPagePolicyArchiveBound, UmiCtPagePolicyArchiveRead, UmiCtPagePolicyArchiveValidate)
+
+/* Explicit scratch ownership lets bounded workers restore reviewed data without
+ * an allocator. Existing schemas, field admission and publication stay authoritative. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE_WORKSPACE(umi_ct_page_policy_archive_decode_if_unchanged_with_workspace,
+    umi_ct_page_policy_archive_encode, umi_ct_page_policy_archive_decode_with_workspace,
+    UmiCtPagePolicy, UmiCtPagePolicyArchiveSchema, UmiCtPagePolicyArchiveBound)

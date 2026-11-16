@@ -1,5 +1,7 @@
 # Diagnosing native interface test failures
 
+![Umicom](../../resources/brand/umicom-logo.svg)
+
 This guide assumes a configured Windows UCRT64 Applications build tree with testing enabled. It explains how to investigate a failure without hiding it. Close running copies of the test program before rebuilding.
 
 ## What a native test checks
@@ -152,3 +154,34 @@ Read src/developer/pipeline.c and DenseDependencies in tests/test_developer_pipe
 A logging fixture that tests two writers targeting one file must first supply valid CTest metadata. Otherwise metadata validation correctly returns before the collision check. Keep a separate missing-metadata assertion, then supply a synthetic tool record and retain the no-process/no-file assertions. The injected executor must continue to prevent an actual tool launch.
 
 A Windows worker test that creates production common controls also needs the production activation manifest. Merely linking comctl32 does not select version 6 of that runtime. Compare tests/boot_media/CMakeLists.txt with examples/boot_media/resources/media.manifest. Do not remove InitCommonControlsEx assertions or mark them skipped to hide an initialization failure. Microsoft describes the activation requirement in its [common-controls deployment guide](https://learn.microsoft.com/en-us/windows/win32/controls/cookbook-overview).
+
+
+## Separate build failures from tests that never ran
+
+Configuration writes build instructions. Compilation translates C source into object files. Linking combines those files and libraries into an executable. CTest starts that executable and interprets its exit status. A successful configuration therefore does not prove that the executable exists or that its tests pass.
+
+1. Search the build log for `FAILED:`, `fatal error:`, `undefined reference` and `error:`. Read the complete diagnostic around each failed target. Independent targets can continue building after an error.
+2. Compare the missing executable named by CTest with its target and dependencies. One failed shared library can prevent many test programs from linking. Several test names can also use the same executable with different arguments.
+3. Keep outcomes separate: **Not Run** means CTest could not execute the check; **Failed** means a check ran and reported failure; **Skipped** means the configured prerequisite was unavailable or the test explicitly declined execution. None is a pass.
+4. Repair the build first. Run a focused incremental build and stop on a nonzero exit code before testing. Do not install or launch stale files left by an earlier successful build.
+5. Run the affected regression cases after their targets build. Follow with the complete configured suite. A growing temporary log is a progress snapshot, not the final suite result.
+
+An include path belongs to the target compiling the source. Studio’s About dialog reads its public version header, so the Studio product target needs its own public include directory even when another executable already has it. A test that directly creates GTK objects must include the GTK declarations.
+
+A test can have a link dependency even when a particular case does not call that function. The CodeGuard ownership fixture includes the production service to inject allocation failures. That service also exposes asynchronous jobs. Its target compiles the real job source and links the platform task service, while retaining the instrumented result/service code. Linking a second complete CodeGuard implementation would obscure that ownership boundary.
+
+## Update an API without weakening memory ownership
+
+GTK deprecated `gdk_texture_new_for_pixbuf` in version 4.20. The shared `adapters/gtk4/pixbuf_texture_private.h` converts already-decoded RGB or RGBA pixels to GdkMemoryTexture. It does not change the approved SVG artwork or add another image decoder. See the [deprecated constructor](https://docs.gtk.org/gdk4/ctor.Texture.new_for_pixbuf.html) and [memory texture contract](https://docs.gtk.org/gdk4/ctor.MemoryTexture.new.html).
+
+**Stride** is the number of bytes between the start of one pixel row and the next. A pixbuf can omit padding after its last row; a memory texture needs a complete buffer for its stride and height. The converter checks dimensions, channel count and multiplication limits, then copies only each row’s actual pixels into tightly packed storage. GBytes owns that storage, so releasing the original pixbuf does not leave the texture borrowing invalid memory.
+
+The regression fixture checks RGB, RGBA, transparent pixels, padded rows, null input and release of the source buffer. No window is required by that fixture. About-dialog and Media display tests remain necessary to qualify native appearance and integration.
+
+A compiler warning about a dangling pointer deserves separate investigation. The MCP fixture now keeps its callback action text inside its owning fixture instead of leaving a pointer to a function-local array. Formatting warnings should be corrected by making statement boundaries clear; suppressing the warning does not establish correct ownership or control flow.
+
+## Check layouts without inventing an application failure
+
+A small console tool may put its entry point in `main.c`; larger products may use `src/main.c` or `src/console/main.c`. The application surface audit accepts these layouts when the file exists and its CMake file mentions that source. A root filename must be a separate token: `tools/main.c` must not satisfy `main.c` accidentally. This is a textual layout check, not a compiler, a CMake interpreter or proof that the program works.
+
+Practice: explain why an absent test executable, a test assertion and an unsupported source-layout assumption need different repairs. Inspect `tests/build_configuration/test_surface_audit.cmake` and identify the positive root-entry case and the three refusal cases. Keep the refusal checks when adding another supported layout.

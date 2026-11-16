@@ -136,3 +136,45 @@ install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/compare-native-state.h
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/compare-native-state.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/learning"
     COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
+
+
+# Caller-owned reviewed restores share one codec family and retain old symbols.
+if(BUILD_TESTING)
+    add_executable(umicom-conditional-workspace-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/value_archive/test_conditional_workspace.c")
+    target_link_libraries(umicom-conditional-workspace-test PRIVATE Umicom::base)
+    add_executable(umicom-conditional-workspace-bindings-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/value_archive/test_conditional_workspace_bindings.c")
+    target_link_libraries(umicom-conditional-workspace-bindings-test PRIVATE
+        Umicom::web Umicom::data Umicom::platform Umicom::compiler
+        Umicom::sdk_runtime Umicom::runtime Umicom::delivery Umicom::observability)
+    foreach(_target umicom-conditional-workspace-test umicom-conditional-workspace-bindings-test)
+        umicom_apply_warnings(${_target})
+        umicom_apply_sanitizers(${_target})
+        if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
+            target_compile_options(${_target} PRIVATE -Werror=frame-larger-than=16384)
+        endif()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(${_target})
+        endif()
+    endforeach()
+    foreach(_case success padding self stale size-mismatch capacity invalid-expected
+                  invalid-current checksum schema domain trailing nulls aliases partial-alias large)
+        add_test(NAME framework.value_archive.conditional_workspace.${_case}
+            COMMAND umicom-conditional-workspace-test "${_case}")
+        set_tests_properties(framework.value_archive.conditional_workspace.${_case}
+            PROPERTIES TIMEOUT 60 LABELS "framework;value-archive;workspace;regression")
+    endforeach()
+    add_test(NAME framework.value_archive.conditional_workspace.bindings
+        COMMAND umicom-conditional-workspace-bindings-test)
+    set_tests_properties(framework.value_archive.conditional_workspace.bindings
+        PROPERTIES TIMEOUT 60 LABELS "framework;value-archive;workspace;sdk")
+endif()
+foreach(_component Framework FrameworkSDK)
+    install(DIRECTORY "${CMAKE_CURRENT_LIST_DIR}/../examples/conditional_restore/"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/conditional_restore"
+        COMPONENT ${_component} EXCLUDE_FROM_ALL)
+    install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/reviewed-restore-workspace.html"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/learning"
+        COMPONENT ${_component} EXCLUDE_FROM_ALL)
+endforeach()

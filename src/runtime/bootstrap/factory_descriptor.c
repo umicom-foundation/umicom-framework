@@ -3,8 +3,7 @@
  * File: src/runtime/bootstrap/factory_descriptor.c
  *
  * PURPOSE:
- *   Implement the factory descriptor behavior for
- *   Umicom Framework.
+ *   Implement the factory descriptor behavior for Umicom Framework. * Describe named factories that create services for the canonical service registry.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -13,13 +12,8 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/*-----------------------------------------------------------------------------
- * Umicom Framework
- * File: src/runtime/bootstrap/factory_descriptor.c
- *
- * PURPOSE:
- *   Describe named factories that create services for the canonical service registry.
- *---------------------------------------------------------------------------*/
+
+#include "../../base/conditional_archive_workspace_internal.h"
 #include "../../base/conditional_archive_internal.h"
 #include "umicom/runtime/bootstrap/factory_descriptor.h"
 #include "../../base/value_archive_internal.h"
@@ -127,3 +121,9 @@ UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_bootstrap_factory_descriptor_archive_deco
  * domain decoding and validation stay with this owner. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_bootstrap_factory_descriptor_archive_decode_if_unchanged, umi_bootstrap_factory_descriptor_archive_encode,
     UmiBootstrapFactoryDescriptor, UmiBootstrapFactoryDescriptorArchiveSchema, UmiBootstrapFactoryDescriptorArchiveBound, UmiBootstrapFactoryDescriptorArchiveRead, UmiBootstrapFactoryDescriptorArchiveValidate)
+
+/* Explicit scratch ownership lets bounded workers restore reviewed data without
+ * an allocator. Existing schemas, field admission and publication stay authoritative. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE_WORKSPACE(umi_bootstrap_factory_descriptor_archive_decode_if_unchanged_with_workspace,
+    umi_bootstrap_factory_descriptor_archive_encode, umi_bootstrap_factory_descriptor_archive_decode_with_workspace,
+    UmiBootstrapFactoryDescriptor, UmiBootstrapFactoryDescriptorArchiveSchema, UmiBootstrapFactoryDescriptorArchiveBound)

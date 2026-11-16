@@ -3,12 +3,7 @@
  * File: include/umicom/platform/cross_target/cross_target_snapshot.h
  *
  * PURPOSE:
- *   Aggregate immutable cross-target platform evidence for diagnostics, release gates and remote execution.
- *
- * ARCHITECTURE:
- *   Framework owns reusable cross-target and Umicom OS semantics. Existing
- *   compiler/toolchain discovery, platform services and application runtimes
- *   remain authoritative and are composed rather than duplicated here.
+ *   Aggregate immutable cross-target platform evidence for diagnostics, release gates and remote execution. * ARCHITECTURE: Framework owns reusable cross-target and Umicom OS semantics. Existing compiler/toolchain discovery, platform services and application runtimes remain authoritative and are composed rather than duplicated here.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -17,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+
 #ifndef UMICOM_PLATFORM_CROSS_TARGET_CROSS_TARGET_SNAPSHOT_H
 #define UMICOM_PLATFORM_CROSS_TARGET_CROSS_TARGET_SNAPSHOT_H
 
@@ -72,6 +68,18 @@ UmiStatus umi_ct_cross_target_snapshot_archive_decode_with_workspace(const void 
  * See umicom/base/value_archive.h for limits and snapshot ownership. */
 UmiStatus umi_ct_cross_target_snapshot_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
     const UmiCtCrossTargetSnapshot *expected, UmiCtCrossTargetSnapshot *value);
+
+/** Restore only while encoded state matches expected, using caller-owned scratch.
+ * comparison_capacity must cover twice the measured archive_encode size of
+ * expected. workspace is one aligned UmiCtCrossTargetSnapshot object. Scratch, archive,
+ * expected and value must be disjoint; expected == value alone is allowed.
+ * Scratch may change on refusal; value is unchanged on every error. No heap
+ * allocation, I/O, lock or live publication. Serialize the entire call.
+ * See umicom/base/value_archive.h for sizing, history and ownership limits. */
+UmiStatus umi_ct_cross_target_snapshot_archive_decode_if_unchanged_with_workspace(
+    const void *bytes, size_t byte_count, const UmiCtCrossTargetSnapshot *expected,
+    UmiCtCrossTargetSnapshot *workspace, void *comparison, size_t comparison_capacity,
+    UmiCtCrossTargetSnapshot *value);
 
 
 #ifdef __cplusplus

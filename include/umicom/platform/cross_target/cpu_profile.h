@@ -3,12 +3,7 @@
  * File: include/umicom/platform/cross_target/cpu_profile.h
  *
  * PURPOSE:
- *   Describe deployable CPU profiles and evaluate runtime feature/XLEN compatibility.
- *
- * ARCHITECTURE:
- *   Framework owns reusable cross-target and Umicom OS semantics. Existing
- *   compiler/toolchain discovery, platform services and application runtimes
- *   remain authoritative and are composed rather than duplicated here.
+ *   Describe deployable CPU profiles and evaluate runtime feature/XLEN compatibility. * ARCHITECTURE: Framework owns reusable cross-target and Umicom OS semantics. Existing compiler/toolchain discovery, platform services and application runtimes remain authoritative and are composed rather than duplicated here.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -17,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+
 #ifndef UMICOM_PLATFORM_CROSS_TARGET_CPU_PROFILE_H
 #define UMICOM_PLATFORM_CROSS_TARGET_CPU_PROFILE_H
 
@@ -76,6 +72,18 @@ UmiStatus umi_ct_cpu_profile_archive_decode_with_workspace(const void *bytes, si
  * See umicom/base/value_archive.h for limits and snapshot ownership. */
 UmiStatus umi_ct_cpu_profile_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
     const UmiCtCpuProfile *expected, UmiCtCpuProfile *value);
+
+/** Restore only while encoded state matches expected, using caller-owned scratch.
+ * comparison_capacity must cover twice the measured archive_encode size of
+ * expected. workspace is one aligned UmiCtCpuProfile object. Scratch, archive,
+ * expected and value must be disjoint; expected == value alone is allowed.
+ * Scratch may change on refusal; value is unchanged on every error. No heap
+ * allocation, I/O, lock or live publication. Serialize the entire call.
+ * See umicom/base/value_archive.h for sizing, history and ownership limits. */
+UmiStatus umi_ct_cpu_profile_archive_decode_if_unchanged_with_workspace(
+    const void *bytes, size_t byte_count, const UmiCtCpuProfile *expected,
+    UmiCtCpuProfile *workspace, void *comparison, size_t comparison_capacity,
+    UmiCtCpuProfile *value);
 
 
 #ifdef __cplusplus

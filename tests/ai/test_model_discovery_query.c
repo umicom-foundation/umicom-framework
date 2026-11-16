@@ -30,7 +30,16 @@ static int check_ids(const UmiAiDiscoverySnapshot *snapshot,const char *expected
     char actual[128]={0};
     for(size_t i=0;i<UmiAiDiscoveryCount(snapshot);++i) {
         UmiAiDiscoveredModel model;CHECK(UmiAiDiscoveryAt(snapshot,i,&model)==UMI_STATUS_OK);
+/* Make independent fixture statements explicit without weakening the existing checks. The former implementation is retained for owner review. */
+#if 0
         if(i)strcat(actual,",");CHECK(strlen(actual)+strlen(model.id)<sizeof actual);strcat(actual,model.id);
+#endif
+        if(i) {
+            CHECK(strlen(actual)+1U<sizeof actual);
+            strcat(actual,",");
+        }
+        CHECK(strlen(actual)+strlen(model.id)<sizeof actual);
+        strcat(actual,model.id);
     }
     CHECK(strcmp(actual,expected)==0);return 0;
 }

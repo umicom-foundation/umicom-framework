@@ -1,4 +1,17 @@
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomBuildConfigurationChecks.cmake
+#
+# PURPOSE:
+#   Register composition and source-layout regression checks.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 if(NOT BUILD_TESTING)
     return()
@@ -45,7 +58,8 @@ foreach(_testing IN ITEMS ON OFF)
 endforeach()
 
 # Exercise both real headless source layouts, including negative fixtures.
-foreach(_surface IN ITEMS portfolio os missing undeclared alternate-declared)
+foreach(_surface IN ITEMS portfolio os missing undeclared alternate-declared
+    root-declared root-missing root-undeclared root-other-path)
     add_test(NAME framework.build_configuration.surface.${_surface}
         COMMAND "${CMAKE_COMMAND}"
             "-DROOT=${CMAKE_CURRENT_LIST_DIR}/.."

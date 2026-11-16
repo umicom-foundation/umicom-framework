@@ -960,3 +960,21 @@ if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
             SKIP_RETURN_CODE 77 LABELS "framework;gtk4;about;brand;ownership;regression")
     endforeach()
 endif()
+
+# Pixel ownership is tested independently of window/display availability.
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    add_executable(umicom-gtk4-pixbuf-texture-test
+        "${UMICOM_GTK4_WORKSTATION_ROOT}/tests/ui_workstation/test_pixbuf_texture_gtk4.c")
+    target_link_libraries(umicom-gtk4-pixbuf-texture-test PRIVATE Umicom::ui_gtk4)
+    umicom_apply_warnings(umicom-gtk4-pixbuf-texture-test)
+    umicom_apply_sanitizers(umicom-gtk4-pixbuf-texture-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-gtk4-pixbuf-texture-test)
+    endif()
+    foreach(case rgb rgba transparent padded ownership null)
+        add_test(NAME framework.ui_workstation.pixbuf_texture.${case}
+            COMMAND umicom-gtk4-pixbuf-texture-test ${case})
+        set_tests_properties(framework.ui_workstation.pixbuf_texture.${case} PROPERTIES
+            TIMEOUT 20 LABELS "framework;gtk4;pixels;ownership;regression")
+    endforeach()
+endif()

@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+
 #ifndef UMICOM_SDK_RUNTIME_METRICS
 #define UMICOM_SDK_RUNTIME_METRICS
 #include "umicom/sdk_runtime/types.h"
@@ -130,6 +131,18 @@ UmiStatus umi_sdk_runtime_metrics_archive_decode_with_workspace(const void *byte
  * See umicom/base/value_archive.h for limits and snapshot ownership. */
 UmiStatus umi_sdk_runtime_metrics_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
     const UmiSdkRuntimeMetrics *expected, UmiSdkRuntimeMetrics *value);
+
+/** Restore only while encoded state matches expected, using caller-owned scratch.
+ * comparison_capacity must cover twice the measured archive_encode size of
+ * expected. workspace is one aligned UmiSdkRuntimeMetrics object. Scratch, archive,
+ * expected and value must be disjoint; expected == value alone is allowed.
+ * Scratch may change on refusal; value is unchanged on every error. No heap
+ * allocation, I/O, lock or live publication. Serialize the entire call.
+ * See umicom/base/value_archive.h for sizing, history and ownership limits. */
+UmiStatus umi_sdk_runtime_metrics_archive_decode_if_unchanged_with_workspace(
+    const void *bytes, size_t byte_count, const UmiSdkRuntimeMetrics *expected,
+    UmiSdkRuntimeMetrics *workspace, void *comparison, size_t comparison_capacity,
+    UmiSdkRuntimeMetrics *value);
 
 
 /* Compare this record's canonical saved state using caller-owned byte scratch.

@@ -1919,6 +1919,7 @@ set(UMICOM_WEB_PLATFORM_SOURCE
     src/web/response_body.c
     src/web/static_files.c
     src/web/preview.c
+    src/web/preview_command.c
     src/web/json.c
     src/web/rest.c
     src/web/sse.c

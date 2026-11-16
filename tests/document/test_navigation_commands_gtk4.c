@@ -16,6 +16,7 @@
 #include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/document_commands.h"
 #include "umicom/language_runtime/types.h"
+#include <gtk/gtk.h>
 #include <glib/gstdio.h>
 #include <stdio.h>
 #include <string.h>

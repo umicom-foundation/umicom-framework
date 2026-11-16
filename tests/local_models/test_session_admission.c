@@ -22,7 +22,12 @@
 #include "umicom/platform/file_lease.h"
 #include "umicom/platform/filesystem.h"
 static const char *mode;
+/* Fixture-specific state must not shadow locals in included production sources.
+ * The previous declaration is retained for review. */
+#if 0
 static unsigned acquired,released,created,submitted,closed;
+#endif
+static unsigned acquired,fixture_lease_releases,created,submitted,closed;
 static unsigned char lease_marker,supervisor_marker;
 static char *fake_environment(const char *name) { (void)name;return NULL; }
 static int fake_executable(const char *path) { assert(path!=NULL);return 1; }
@@ -34,7 +39,7 @@ static UmiStatus fake_acquire(const char *path,UmiFileLease **out)
 }
 static UmiStatus fake_release(UmiFileLease **owner)
 {
-    assert(owner!=NULL && *owner==(UmiFileLease *)&lease_marker);++released;*owner=NULL;
+    assert(owner!=NULL && *owner==(UmiFileLease *)&lease_marker);++fixture_lease_releases;*owner=NULL;
     return strcmp(mode,"lease-close-failure")==0?UMI_STATUS_IO_ERROR:UMI_STATUS_OK;
 }
 static UmiStatus fake_create(const UmiProcessSupervisorConfig *config,UmiProcessSupervisor **out)
@@ -106,14 +111,14 @@ int main(int argc,char **argv)
     assert(UmiModelSessionStart(&plan,strcmp(mode,"denied")!=0,&owner)==wanted);
     if(strcmp(mode,"occupied")==0 || strcmp(mode,"denied")==0) {
         assert(owner==(strcmp(mode,"occupied")==0?&retained:NULL));
-        assert(acquired==0U && released==0U && created==0U && submitted==0U);
+        assert(acquired==0U && fixture_lease_releases==0U && created==0U && submitted==0U);
     } else if(wanted==UMI_STATUS_OK) {
-        assert(owner!=NULL && acquired==1U && released==0U && created==1U && submitted==1U);
+        assert(owner!=NULL && acquired==1U && fixture_lease_releases==0U && created==1U && submitted==1U);
         assert(UmiModelSessionStop(&owner)==UMI_STATUS_OK && owner==NULL);
-        assert(released==1U && closed==1U);
+        assert(fixture_lease_releases==1U && closed==1U);
     } else {
         assert(owner==NULL && acquired==1U && submitted==0U && closed==0U);
-        assert(released==(strcmp(mode,"lease-busy")==0?0U:1U));
+        assert(fixture_lease_releases==(strcmp(mode,"lease-busy")==0?0U:1U));
         assert(created==(strcmp(mode,"supervisor-failure")==0?1U:0U));
     }
     return 0;

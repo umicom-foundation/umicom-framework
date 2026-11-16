@@ -3,11 +3,7 @@
  * File: include/umicom/platform/resource_location.h
  *
  * PURPOSE:
- *   Define normalised local and remote resource locations and the per-user
- *   application directories used by Umicom products.  Applications can keep
- *   settings, recovery files, caches and other writable state away from their
- *   installation folder and away from whichever directory happened to launch
- *   the process.
+ *   Define normalised local and remote resource locations and the per-user application directories used by Umicom products. Applications can keep settings, recovery files, caches and other writable state away from their installation folder and away from whichever directory happened to launch the process.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -16,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+
 
 /*
  * This contract stores bounded snapshots by value. The registry owns those
@@ -287,6 +284,18 @@ UmiStatus umi_platform_resource_location_snapshot_archive_decode_with_workspace(
  * See umicom/base/value_archive.h for limits and snapshot ownership. */
 UmiStatus umi_platform_resource_location_snapshot_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
     const UmiResourceLocationSnapshot *expected, UmiResourceLocationSnapshot *value);
+
+/** Restore only while encoded state matches expected, using caller-owned scratch.
+ * comparison_capacity must cover twice the measured archive_encode size of
+ * expected. workspace is one aligned UmiResourceLocationSnapshot object. Scratch, archive,
+ * expected and value must be disjoint; expected == value alone is allowed.
+ * Scratch may change on refusal; value is unchanged on every error. No heap
+ * allocation, I/O, lock or live publication. Serialize the entire call.
+ * See umicom/base/value_archive.h for sizing, history and ownership limits. */
+UmiStatus umi_platform_resource_location_snapshot_archive_decode_if_unchanged_with_workspace(
+    const void *bytes, size_t byte_count, const UmiResourceLocationSnapshot *expected,
+    UmiResourceLocationSnapshot *workspace, void *comparison, size_t comparison_capacity,
+    UmiResourceLocationSnapshot *value);
 
 
 /** Encode the ordered collection only at expected_revision. Use the same

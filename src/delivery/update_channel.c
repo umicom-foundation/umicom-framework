@@ -12,6 +12,8 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+
+#include "../base/conditional_archive_workspace_internal.h"
 #include "../base/conditional_archive_internal.h"
 #include "umicom/delivery/update_channel.h"
 #include "../base/value_construction_internal.h"
@@ -196,3 +198,9 @@ UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_update_channel_archive_decode_with_worksp
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_update_channel_archive_decode_if_unchanged, umi_update_channel_archive_encode,
     UmiUpdateChannel, UmiUpdateChannelArchiveSchema, UmiUpdateChannelArchiveBound, UmiUpdateChannelArchiveRead, UmiUpdateChannelArchiveValidate)
+
+/* Explicit scratch ownership lets bounded workers restore reviewed data without
+ * an allocator. Existing schemas, field admission and publication stay authoritative. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE_WORKSPACE(umi_update_channel_archive_decode_if_unchanged_with_workspace,
+    umi_update_channel_archive_encode, umi_update_channel_archive_decode_with_workspace,
+    UmiUpdateChannel, UmiUpdateChannelArchiveSchema, UmiUpdateChannelArchiveBound)

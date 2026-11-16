@@ -12,6 +12,8 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+
+#include "../../base/conditional_archive_workspace_internal.h"
 #include "../../base/conditional_archive_internal.h"
 #include "umicom/web/workbench/cloud_object.h"
 #include "../../base/value_archive_internal.h"
@@ -312,3 +314,9 @@ UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_web_workbench_cloud_profile_archive_decod
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_web_workbench_cloud_profile_archive_decode_if_unchanged, umi_web_workbench_cloud_profile_archive_encode,
     UmiWebWorkbenchCloudProfile, UmiWebWorkbenchCloudProfileArchiveSchema, UmiWebWorkbenchCloudProfileArchiveBound, UmiWebWorkbenchCloudProfileArchiveRead, UmiWebWorkbenchCloudProfileArchiveValidate)
+
+/* Explicit scratch ownership lets bounded workers restore reviewed data without
+ * an allocator. Existing schemas, field admission and publication stay authoritative. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE_WORKSPACE(umi_web_workbench_cloud_profile_archive_decode_if_unchanged_with_workspace,
+    umi_web_workbench_cloud_profile_archive_encode, umi_web_workbench_cloud_profile_archive_decode_with_workspace,
+    UmiWebWorkbenchCloudProfile, UmiWebWorkbenchCloudProfileArchiveSchema, UmiWebWorkbenchCloudProfileArchiveBound)

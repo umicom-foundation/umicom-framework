@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+
 /*
  * The same Studio release can be packaged as a directory, ZIP, Windows installer or another format through one contract.
  */
@@ -102,6 +103,18 @@ UmiStatus umi_package_spec_archive_decode_with_workspace(const void *bytes, size
  * See umicom/base/value_archive.h for limits and snapshot ownership. */
 UmiStatus umi_package_spec_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
     const UmiPackageSpec *expected, UmiPackageSpec *value);
+
+/** Restore only while encoded state matches expected, using caller-owned scratch.
+ * comparison_capacity must cover twice the measured archive_encode size of
+ * expected. workspace is one aligned UmiPackageSpec object. Scratch, archive,
+ * expected and value must be disjoint; expected == value alone is allowed.
+ * Scratch may change on refusal; value is unchanged on every error. No heap
+ * allocation, I/O, lock or live publication. Serialize the entire call.
+ * See umicom/base/value_archive.h for sizing, history and ownership limits. */
+UmiStatus umi_package_spec_archive_decode_if_unchanged_with_workspace(
+    const void *bytes, size_t byte_count, const UmiPackageSpec *expected,
+    UmiPackageSpec *workspace, void *comparison, size_t comparison_capacity,
+    UmiPackageSpec *value);
 
 
 #ifdef __cplusplus

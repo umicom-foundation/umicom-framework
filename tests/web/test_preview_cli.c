@@ -79,7 +79,15 @@ static SignalHandler FakeSignal(int number, SignalHandler handler)
 #define UmiWebPreviewDestroy FakeDestroy
 #define UmiWebPreviewServeNext FakeServe
 #define signal FakeSignal
+static int FakeFlush(FILE *stream) {
+    return stream == stdout && (Is("help-output-failure") || Is("dry-run-output-failure")) ? EOF : 0;
+}
+#define fflush FakeFlush
+/* Include the shared service under controlled boundaries; the retained CLI
+ * wrapper still proves that callers reach the same implementation. */
+#include "../../src/web/preview_command.c"
 #include "../../tools/umicom/src/command_preview.c"
+#undef fflush
 #undef signal
 #undef UmiWebPreviewServeNext
 #undef UmiWebPreviewDestroy
@@ -89,7 +97,7 @@ int main(int argc, char **argv)
 {
     if (argc != 2) return 2;
     mode = argv[1];
-    const char *cases[] = {"help","missing-root","missing-port","root-value","port-value","duplicate-root","duplicate-port","duplicate-dry-run","null-vector","null-item","empty-item","negative-argc","unknown","late-unknown","relative-root","overflow-port","low-port","high-port","zero-port","empty-argv","dry-run","order","create-failure","start-failure","signal-int-failure","signal-term-failure","normal-stop","client-timeout","client-close","bad-request","listener-failure","restore-failure"};
+    const char *cases[] = {"help-output-failure","dry-run-output-failure","help","missing-root","missing-port","root-value","port-value","duplicate-root","duplicate-port","duplicate-dry-run","null-vector","null-item","empty-item","negative-argc","unknown","late-unknown","relative-root","overflow-port","low-port","high-port","zero-port","empty-argv","dry-run","order","create-failure","start-failure","signal-int-failure","signal-term-failure","normal-stop","client-timeout","client-close","bad-request","listener-failure","restore-failure"};
 
     size_t matched = 0U;
     for (size_t i = 0U; i < sizeof(cases) / sizeof(cases[0]); ++i) matched += (size_t)Is(cases[i]);
@@ -98,7 +106,9 @@ int main(int argc, char **argv)
     char **arguments = options;
     int count = 4, expected = 2;
     unsigned expected_creates = 0U, expected_starts = 0U, expected_destroys = 0U, expected_polls = 0U, expected_signals = 0U;
-    if (Is("help")) { options[0] = "--help"; count = 1; expected = 0; }
+    if (Is("help-output-failure")) { options[0]="--help"; count=1; expected=1; }
+    else if (Is("dry-run-output-failure")) { options[4]="--dry-run"; count=5; expected=1; }
+    else if (Is("help")) { options[0] = "--help"; count = 1; expected = 0; }
     else if (Is("missing-root")) { arguments = options + 2; count = 2; }
     else if (Is("missing-port")) count = 2;
     else if (Is("root-value")) count = 1;

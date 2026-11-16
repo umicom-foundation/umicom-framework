@@ -3,12 +3,7 @@
  * File: src/platform/cross_target/boot_service.c
  *
  * PURPOSE:
- *   Bind OS services to boot phases and validate dependency phase ordering.
- *
- * ARCHITECTURE:
- *   Framework owns reusable cross-target and Umicom OS semantics. Existing
- *   compiler/toolchain discovery, platform services and application runtimes
- *   remain authoritative and are composed rather than duplicated here.
+ *   Bind OS services to boot phases and validate dependency phase ordering. * ARCHITECTURE: Framework owns reusable cross-target and Umicom OS semantics. Existing compiler/toolchain discovery, platform services and application runtimes remain authoritative and are composed rather than duplicated here.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -18,6 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+
+#include "../../base/conditional_archive_workspace_internal.h"
 #include "../../base/conditional_archive_internal.h"
 #include "umicom/platform/cross_target/boot_service.h"
 #include "../../base/value_archive_internal.h"
@@ -87,3 +84,9 @@ UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_ct_boot_service_archive_decode_with_works
  * domain decoding and validation stay with this owner. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ct_boot_service_archive_decode_if_unchanged, umi_ct_boot_service_archive_encode,
     UmiCtBootService, UmiCtBootServiceArchiveSchema, UmiCtBootServiceArchiveBound, UmiCtBootServiceArchiveRead, UmiCtBootServiceArchiveValidate)
+
+/* Explicit scratch ownership lets bounded workers restore reviewed data without
+ * an allocator. Existing schemas, field admission and publication stay authoritative. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE_WORKSPACE(umi_ct_boot_service_archive_decode_if_unchanged_with_workspace,
+    umi_ct_boot_service_archive_encode, umi_ct_boot_service_archive_decode_with_workspace,
+    UmiCtBootService, UmiCtBootServiceArchiveSchema, UmiCtBootServiceArchiveBound)

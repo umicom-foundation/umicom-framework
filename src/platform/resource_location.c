@@ -3,9 +3,7 @@
  * File: src/platform/resource_location.c
  *
  * PURPOSE:
- *   Implement resource-location snapshots and resolve writable per-user
- *   application directories without using an application's installation
- *   folder or the process working directory.
+ *   Implement resource-location snapshots and resolve writable per-user application directories without using an application's installation folder or the process working directory.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -15,11 +13,13 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+
 /*
  * Each operation is deliberately small and deterministic. Snapshots are copied
  * into bounded storage, revisions advance on mutation, and callers retain
  * responsibility for higher-level threading and persistence policy.
  */
+#include "../base/conditional_archive_workspace_internal.h"
 #include "../base/conditional_archive_internal.h"
 #include "umicom/platform/resource_location.h"
 #include "../base/value_archive_internal.h"
@@ -702,3 +702,9 @@ UMI_DEFINE_SNAPSHOT_REGISTRY_CLEAR(umi_platform_resource_location_registry_clear
 #include "../base/value_compare_internal.h"
 UMI_DEFINE_VALUE_COMPARE(umi_platform_resource_location_snapshot_archive_compare_with_workspace,
     UmiResourceLocationSnapshot, umi_platform_resource_location_snapshot_archive_encode)
+
+/* Explicit scratch ownership lets bounded workers restore reviewed data without
+ * an allocator. Existing schemas, field admission and publication stay authoritative. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE_WORKSPACE(umi_platform_resource_location_snapshot_archive_decode_if_unchanged_with_workspace,
+    umi_platform_resource_location_snapshot_archive_encode, umi_platform_resource_location_snapshot_archive_decode_with_workspace,
+    UmiResourceLocationSnapshot, ArchiveSchema, ArchiveBound)

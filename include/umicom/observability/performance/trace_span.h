@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+
 #ifndef UMICOM_OBSERVABILITY_PERFORMANCE_TRACE_SPAN_H
 #define UMICOM_OBSERVABILITY_PERFORMANCE_TRACE_SPAN_H
 
@@ -89,6 +90,18 @@ UmiStatus umi_performance_trace_span_archive_decode_with_workspace(const void *b
  * See umicom/base/value_archive.h for limits and snapshot ownership. */
 UmiStatus umi_performance_trace_span_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
     const UmiPerformanceTraceSpan *expected, UmiPerformanceTraceSpan *value);
+
+/** Restore only while encoded state matches expected, using caller-owned scratch.
+ * comparison_capacity must cover twice the measured archive_encode size of
+ * expected. workspace is one aligned UmiPerformanceTraceSpan object. Scratch, archive,
+ * expected and value must be disjoint; expected == value alone is allowed.
+ * Scratch may change on refusal; value is unchanged on every error. No heap
+ * allocation, I/O, lock or live publication. Serialize the entire call.
+ * See umicom/base/value_archive.h for sizing, history and ownership limits. */
+UmiStatus umi_performance_trace_span_archive_decode_if_unchanged_with_workspace(
+    const void *bytes, size_t byte_count, const UmiPerformanceTraceSpan *expected,
+    UmiPerformanceTraceSpan *workspace, void *comparison, size_t comparison_capacity,
+    UmiPerformanceTraceSpan *value);
 
 
 #ifdef __cplusplus

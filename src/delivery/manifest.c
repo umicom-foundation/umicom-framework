@@ -13,10 +13,12 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+
 /*
  * The manifest is the stable identity card for a release and links source revision, version, channel and generation.
  */
 
+#include "../base/conditional_archive_workspace_internal.h"
 #include "../base/conditional_archive_internal.h"
 #include "umicom/delivery/manifest.h"
 #include "../base/value_construction_internal.h"
@@ -225,3 +227,9 @@ UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_delivery_manifest_archive_decode_with_wor
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_delivery_manifest_archive_decode_if_unchanged, umi_delivery_manifest_archive_encode,
     UmiDeliveryManifest, UmiDeliveryManifestArchiveSchema, UmiDeliveryManifestArchiveBound, UmiDeliveryManifestArchiveRead, UmiDeliveryManifestArchiveValidate)
+
+/* Explicit scratch ownership lets bounded workers restore reviewed data without
+ * an allocator. Existing schemas, field admission and publication stay authoritative. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE_WORKSPACE(umi_delivery_manifest_archive_decode_if_unchanged_with_workspace,
+    umi_delivery_manifest_archive_encode, umi_delivery_manifest_archive_decode_with_workspace,
+    UmiDeliveryManifest, UmiDeliveryManifestArchiveSchema, UmiDeliveryManifestArchiveBound)

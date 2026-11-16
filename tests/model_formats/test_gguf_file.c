@@ -19,7 +19,12 @@
 #define MODE(name) (strcmp(mode,(name))==0)
 int main(int argc,char **argv)
 {
+/* Make independent fixture statements explicit without weakening the existing checks. The former implementation is retained for owner review. */
+#if 0
     if(argc!=2)return 2;const char *mode=argv[1];
+#endif
+    if(argc!=2) { return 2; }
+    const char *mode=argv[1];
     char root[UMI_PATH_CAPACITY],path[UMI_PATH_CAPACITY];
     FixtureDirectory(root);FixturePath(path,root,MODE("unicode")?"model-\xc3\xa9.gguf":"model.gguf");
     GgufFixture *f=malloc(sizeof(*f));GGUF_CHECK(f!=NULL);fixture_model(f);

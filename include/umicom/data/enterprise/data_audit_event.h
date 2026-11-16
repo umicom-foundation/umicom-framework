@@ -12,6 +12,7 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+
 #ifndef UMICOM_DATA_ENTERPRISE_DATA_AUDIT_EVENT_H
 #define UMICOM_DATA_ENTERPRISE_DATA_AUDIT_EVENT_H
 
@@ -77,6 +78,18 @@ UmiStatus umi_data_data_audit_event_archive_decode_with_workspace(const void *by
  * See umicom/base/value_archive.h for limits and snapshot ownership. */
 UmiStatus umi_data_data_audit_event_archive_decode_if_unchanged(const void *bytes, size_t byte_count,
     const UmiDataAuditEvent *expected, UmiDataAuditEvent *value);
+
+/** Restore only while encoded state matches expected, using caller-owned scratch.
+ * comparison_capacity must cover twice the measured archive_encode size of
+ * expected. workspace is one aligned UmiDataAuditEvent object. Scratch, archive,
+ * expected and value must be disjoint; expected == value alone is allowed.
+ * Scratch may change on refusal; value is unchanged on every error. No heap
+ * allocation, I/O, lock or live publication. Serialize the entire call.
+ * See umicom/base/value_archive.h for sizing, history and ownership limits. */
+UmiStatus umi_data_data_audit_event_archive_decode_if_unchanged_with_workspace(
+    const void *bytes, size_t byte_count, const UmiDataAuditEvent *expected,
+    UmiDataAuditEvent *workspace, void *comparison, size_t comparison_capacity,
+    UmiDataAuditEvent *value);
 
 
 #ifdef __cplusplus

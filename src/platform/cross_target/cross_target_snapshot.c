@@ -3,12 +3,7 @@
  * File: src/platform/cross_target/cross_target_snapshot.c
  *
  * PURPOSE:
- *   Aggregate immutable cross-target platform evidence for diagnostics, release gates and remote execution.
- *
- * ARCHITECTURE:
- *   Framework owns reusable cross-target and Umicom OS semantics. Existing
- *   compiler/toolchain discovery, platform services and application runtimes
- *   remain authoritative and are composed rather than duplicated here.
+ *   Aggregate immutable cross-target platform evidence for diagnostics, release gates and remote execution. * ARCHITECTURE: Framework owns reusable cross-target and Umicom OS semantics. Existing compiler/toolchain discovery, platform services and application runtimes remain authoritative and are composed rather than duplicated here.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -18,6 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+
+#include "../../base/conditional_archive_workspace_internal.h"
 #include "../../base/conditional_archive_internal.h"
 #include "umicom/platform/cross_target/cross_target_snapshot.h"
 #include "../../base/value_archive_internal.h"
@@ -134,3 +131,9 @@ UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_ct_cross_target_snapshot_archive_decode_w
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ct_cross_target_snapshot_archive_decode_if_unchanged, umi_ct_cross_target_snapshot_archive_encode,
     UmiCtCrossTargetSnapshot, UmiCtCrossTargetSnapshotArchiveSchema, UmiCtCrossTargetSnapshotArchiveBound, UmiCtCrossTargetSnapshotArchiveRead, UmiCtCrossTargetSnapshotArchiveValidate)
+
+/* Explicit scratch ownership lets bounded workers restore reviewed data without
+ * an allocator. Existing schemas, field admission and publication stay authoritative. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE_WORKSPACE(umi_ct_cross_target_snapshot_archive_decode_if_unchanged_with_workspace,
+    umi_ct_cross_target_snapshot_archive_encode, umi_ct_cross_target_snapshot_archive_decode_with_workspace,
+    UmiCtCrossTargetSnapshot, UmiCtCrossTargetSnapshotArchiveSchema, UmiCtCrossTargetSnapshotArchiveBound)

@@ -3,8 +3,7 @@
  * File: src/runtime/bootstrap/service_descriptor.c
  *
  * PURPOSE:
- *   Implement the service descriptor behavior for
- *   Umicom Framework.
+ *   Implement the service descriptor behavior for Umicom Framework. * Describe Framework services, ownership scope and lifetime without global variables.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -13,13 +12,8 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
-/*-----------------------------------------------------------------------------
- * Umicom Framework
- * File: src/runtime/bootstrap/service_descriptor.c
- *
- * PURPOSE:
- *   Describe Framework services, ownership scope and lifetime without global variables.
- *---------------------------------------------------------------------------*/
+
+#include "../../base/conditional_archive_workspace_internal.h"
 #include "../../base/conditional_archive_internal.h"
 #include "umicom/runtime/bootstrap/service_descriptor.h"
 #include "../../base/value_construction_internal.h"
@@ -204,3 +198,9 @@ UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_bootstrap_service_descriptor_archive_deco
  * domain decoding and validation stay with this owner. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_bootstrap_service_descriptor_archive_decode_if_unchanged, umi_bootstrap_service_descriptor_archive_encode,
     UmiBootstrapServiceDescriptor, UmiBootstrapServiceDescriptorArchiveSchema, UmiBootstrapServiceDescriptorArchiveBound, UmiBootstrapServiceDescriptorArchiveRead, UmiBootstrapServiceDescriptorArchiveValidate)
+
+/* Explicit scratch ownership lets bounded workers restore reviewed data without
+ * an allocator. Existing schemas, field admission and publication stay authoritative. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE_WORKSPACE(umi_bootstrap_service_descriptor_archive_decode_if_unchanged_with_workspace,
+    umi_bootstrap_service_descriptor_archive_encode, umi_bootstrap_service_descriptor_archive_decode_with_workspace,
+    UmiBootstrapServiceDescriptor, UmiBootstrapServiceDescriptorArchiveSchema, UmiBootstrapServiceDescriptorArchiveBound)

@@ -13,6 +13,9 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+/* The former CLI-owned service is retained for review. Framework web now
+ * owns argument admission, signals and the session so OS and CLI share it. */
+#if 0
 #include "cli.h"
 #include "umicom/web/preview.h"
 #include <signal.h>
@@ -99,4 +102,13 @@ int umi_cli_command_preview(int argc, char **argv)
     if (signal(SIGTERM, previous_term) == SIG_ERR) failed = 1;
     if (signal(SIGINT, previous_int) == SIG_ERR) failed = 1;
     return failed ? 1 : 0;
+}
+
+#endif
+
+#include "cli.h"
+#include "umicom/web/preview_command.h"
+int umi_cli_command_preview(int argc, char **argv)
+{
+    return UmiWebPreviewCommand(argc, argv);
 }

@@ -97,7 +97,14 @@ static int Exercise(const char *mode)
         const char *tick="{\"status\":\"pulling\"}\n";size_t count=UMI_OLLAMA_PULL_MAX_EVENTS-(strcmp(mode,"max-events")==0?1U:0U);
         for(size_t i=0U;i<count;++i)CHECK(UmiOllamaPullStreamFeed(owner.stream,tick,strlen(tick),NULL)==UMI_STATUS_OK);
         status=UmiOllamaPullStreamFeed(owner.stream,success,strlen(success),NULL);expected=strcmp(mode,"max-events")==0?UMI_STATUS_OK:UMI_STATUS_CAPACITY_EXCEEDED;
+/* Make independent fixture statements explicit without weakening the existing checks. The former implementation is retained for owner review. */
+#if 0
         if(expected==UMI_STATUS_OK)CHECK(UmiOllamaPullStreamFinish(owner.stream,NULL)==UMI_STATUS_OK);CHECK(owner.count==UMI_OLLAMA_PULL_MAX_EVENTS);
+#endif
+        if(expected==UMI_STATUS_OK) {
+            CHECK(UmiOllamaPullStreamFinish(owner.stream,NULL)==UMI_STATUS_OK);
+        }
+        CHECK(owner.count==UMI_OLLAMA_PULL_MAX_EVENTS);
     }else{CHECK(UmiOllamaPullStreamRelease(&owner.stream)==UMI_STATUS_OK);return 2;}
     CHECK(status==expected);CHECK(!owner.bad);
     CHECK(UmiOllamaPullStreamRead(owner.stream,&view)==UMI_STATUS_OK);

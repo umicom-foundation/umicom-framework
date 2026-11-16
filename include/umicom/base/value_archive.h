@@ -143,6 +143,28 @@ typedef struct UmiValueArchiveComparison {
  *   the existing format, schema, reader and validator, with no migration. The
  *   original decoder and conditional restore interfaces remain unchanged.
  */
+
+/* Conditional *_archive_decode_if_unchanged_with_workspace entries combine
+ * reviewed-state comparison with explicit candidate storage for core SDK,
+ * runtime, web, data, platform, delivery and observability records:
+ * - Measure expected using archive_encode(expected, NULL, 0, &size). Check
+ *   size <= SIZE_MAX/2, then reserve at least 2*size comparison bytes and one
+ *   correctly aligned record object as workspace. Reuse those allocations.
+ * - Expected, destination, archive bytes and both scratch regions are disjoint.
+ *   expected == destination is the only permitted alias; it checks the current
+ *   state but cannot detect changes since an earlier review. Partial aliases
+ *   are refused before scratch writes on supported flat-address platforms.
+ * - The destination stays byte-exact on every failure. Scratch may change.
+ *   CAPACITY_EXCEEDED means comparison storage is short; INVALID_STATE means
+ *   canonical snapshots differ. Invalid archives and domain rules still fail.
+ * - These entries allocate no heap storage and create no automatic whole-record
+ *   candidate. They reuse the existing encoder and workspace decoder. A record
+ *   supplied as scratch must not own external resources or live service state.
+ * - Serialize the entire call; this is not a cross-thread compare/exchange,
+ *   authentication, database transaction or permission to execute imported data.
+ *   Existing allocating conditional and ordinary decode APIs remain available.
+ */
+
 #ifdef __cplusplus
 }
 #endif

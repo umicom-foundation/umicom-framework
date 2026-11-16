@@ -12,6 +12,8 @@
  * LICENCE:
  * MIT
  *---------------------------------------------------------------------------*/
+
+#include "../../base/conditional_archive_workspace_internal.h"
 #include "../../base/conditional_archive_internal.h"
 #include "umicom/data/enterprise/query_order.h"
 #include "../../base/value_construction_internal.h"
@@ -125,3 +127,9 @@ UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_data_query_order_archive_decode_with_work
  * domain decoding and validation stay with this owner. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_data_query_order_archive_decode_if_unchanged, umi_data_query_order_archive_encode,
     UmiDataQueryOrder, UmiDataQueryOrderArchiveSchema, UmiDataQueryOrderArchiveBound, UmiDataQueryOrderArchiveRead, UmiDataQueryOrderArchiveValidate)
+
+/* Explicit scratch ownership lets bounded workers restore reviewed data without
+ * an allocator. Existing schemas, field admission and publication stay authoritative. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE_WORKSPACE(umi_data_query_order_archive_decode_if_unchanged_with_workspace,
+    umi_data_query_order_archive_encode, umi_data_query_order_archive_decode_with_workspace,
+    UmiDataQueryOrder, UmiDataQueryOrderArchiveSchema, UmiDataQueryOrderArchiveBound)

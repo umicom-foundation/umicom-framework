@@ -13,6 +13,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+
+#include "../base/conditional_archive_workspace_internal.h"
 #include "../base/conditional_archive_internal.h"
 #include "umicom/sdk_runtime/package_generation.h"
 #include "../base/value_archive_internal.h"
@@ -317,3 +319,9 @@ UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_sdk_runtime_package_generation_archive_decode
 #include "../base/value_compare_internal.h"
 UMI_DEFINE_VALUE_COMPARE(umi_sdk_runtime_package_generation_archive_compare_with_workspace,
     UmiSdkRuntimePackageGeneration, umi_sdk_runtime_package_generation_archive_encode)
+
+/* Explicit scratch ownership lets bounded workers restore reviewed data without
+ * an allocator. Existing schemas, field admission and publication stay authoritative. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE_WORKSPACE(umi_sdk_runtime_package_generation_archive_decode_if_unchanged_with_workspace,
+    umi_sdk_runtime_package_generation_archive_encode, umi_sdk_runtime_package_generation_archive_decode_with_workspace,
+    UmiSdkRuntimePackageGeneration, ArchiveSchema, ArchiveBound)

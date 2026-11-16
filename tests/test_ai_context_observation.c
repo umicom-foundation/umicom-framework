@@ -151,7 +151,16 @@ int main(int argc, char **argv)
         REQUIRE(status == UMI_STATUS_OK); expected = UMI_STATUS_BUSY;
     }
     if (CASE("runtime-missing")) {
+/* Model disappearance with a fresh valid empty catalogue; no catalogue clear API exists. Allocate before releasing the fixture owner. The former implementation is retained for owner review. */
+#if 0
         umi_ai_runtime_catalogue_clear(service->catalogue); expected = UMI_STATUS_BUSY;
+#endif
+        UmiAiRuntimeCatalogue *empty = NULL;
+        status = umi_ai_runtime_catalogue_create(&empty);
+        REQUIRE(status == UMI_STATUS_OK);
+        umi_ai_runtime_catalogue_destroy(service->catalogue);
+        service->catalogue = empty;
+        expected = UMI_STATUS_BUSY;
     }
     if (CASE("failed-policy-update")) {
         UmiAiPrivacyPolicy privacy = umi_ai_privacy_policy_default();

@@ -3,19 +3,17 @@
  * File: src/platform/cross_target/os_architecture_decision.c
  *
  * PURPOSE:
- *   Provide and validate the accepted Umicom OS architecture decision.
- *
- * ARCHITECTURE:
- *   This source models ownership and release policy. It does not boot a
- *   kernel, call privileged instructions or make Framework a kernel library.
+ *   Provide and validate the accepted Umicom OS architecture decision. * ARCHITECTURE: This source models ownership and release policy. It does not boot a kernel, call privileged instructions or make Framework a kernel library.
  *
  * AUTHOR AND ORGANISATION:
- *   Sammy Hegab
- *   Umicom Foundation
+ * Sammy Hegab
+ * Umicom Foundation
  *
  * LICENCE:
- *   MIT
+ * MIT
  *---------------------------------------------------------------------------*/
+
+#include "../../base/conditional_archive_workspace_internal.h"
 #include "../../base/conditional_archive_internal.h"
 #include "umicom/platform/cross_target/os_architecture_decision.h"
 #include "../../base/value_archive_internal.h"
@@ -180,3 +178,9 @@ UMI_DEFINE_VALUE_ARCHIVE_WORKSPACE(umi_ct_umicom_os_architecture_decision_archiv
  * decoding and validation remain here; the shared helper owns temporary memory. */
 UMI_DEFINE_CONDITIONAL_ARCHIVE(umi_ct_umicom_os_architecture_decision_archive_decode_if_unchanged, umi_ct_umicom_os_architecture_decision_archive_encode,
     UmiCtOsArchitectureDecision, UmiCtOsArchitectureDecisionArchiveSchema, UmiCtOsArchitectureDecisionArchiveBound, UmiCtOsArchitectureDecisionArchiveRead, UmiCtOsArchitectureDecisionArchiveValidate)
+
+/* Explicit scratch ownership lets bounded workers restore reviewed data without
+ * an allocator. Existing schemas, field admission and publication stay authoritative. */
+UMI_DEFINE_CONDITIONAL_ARCHIVE_WORKSPACE(umi_ct_umicom_os_architecture_decision_archive_decode_if_unchanged_with_workspace,
+    umi_ct_umicom_os_architecture_decision_archive_encode, umi_ct_umicom_os_architecture_decision_archive_decode_with_workspace,
+    UmiCtOsArchitectureDecision, UmiCtOsArchitectureDecisionArchiveSchema, UmiCtOsArchitectureDecisionArchiveBound)

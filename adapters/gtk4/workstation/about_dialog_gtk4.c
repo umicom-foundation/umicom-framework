@@ -17,6 +17,7 @@
 #include "umicom/ui/gtk4/workstation/shell_header.h"
 #include "umicom/ui/gtk4/window_lifecycle.h"
 #include "../brand_widget.h"
+#include "../pixbuf_texture_private.h"
 #include <string.h>
 #define ABOUT_CACHE_KEY "umicom-framework-about-window"
 #define ABOUT_BUSY_KEY "umicom-framework-about-active"
@@ -115,9 +116,18 @@ UmiStatus UmiGtk4AboutDialogCreate(GtkWindow *parent,
     GdkPixbuf *pixels = UmiGtkBrandDecode(FALSE, dark, 96, 1, &error);
     if (pixels == NULL) status = UMI_STATUS_IO_ERROR;
     else {
+/* GTK 4.20 deprecated the pixbuf constructor; use shared checked pixel packing while preserving canonical SVG artwork. The former implementation is retained for owner review. */
+#if 0
         GdkTexture *texture = gdk_texture_new_for_pixbuf(pixels);
         gtk_about_dialog_set_logo(dialog, GDK_PAINTABLE(texture));
         g_object_unref(texture);
+#endif
+        GdkTexture *texture = UmiGtkTextureFromPixbuf(pixels, &error);
+        if (texture == NULL) status = UMI_STATUS_IO_ERROR;
+        else {
+            gtk_about_dialog_set_logo(dialog, GDK_PAINTABLE(texture));
+            g_object_unref(texture);
+        }
         g_object_unref(pixels);
         /* Missing platform integration does not discard the embedded SVG.
          * Taskbar, DPI and installed icon appearance need native qualification. */

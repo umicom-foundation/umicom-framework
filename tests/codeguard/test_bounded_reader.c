@@ -22,7 +22,12 @@
 #include <string.h>
 #define CHECK(x) do { if (!(x)) { fprintf(stderr, "%d: %s\n", __LINE__, #x); return 1; } } while (0)
 
+/* Fixture-specific state must not shadow locals in included production sources.
+ * The previous declaration is retained for review. */
+#if 0
 static const unsigned char *input;
+#endif
+static const unsigned char *fixture_input;
 static size_t input_size, chunk_size = 3U;
 static unsigned visits;
 static uint64_t observed_limit;
@@ -40,7 +45,7 @@ static UmiStatus NativeVisit(const char *path, uint64_t maximum,
     for (size_t offset = 0U; offset < input_size;) {
         size_t size = input_size - offset;
         if (size > chunk_size) size = chunk_size;
-        UmiStatus status = visitor(input + offset, size, context);
+        UmiStatus status = visitor(fixture_input + offset, size, context);
         if (status != UMI_STATUS_OK) return status;
         offset += size;
     }
@@ -92,7 +97,7 @@ int main(int argc, char **argv)
     while (selected < sizeof cases / sizeof cases[0] && strcmp(cases[selected], name)) ++selected;
     if (selected == sizeof cases / sizeof cases[0]) return 2;
     CHECK(umi_cancellation_token_create(&token) == UMI_STATUS_OK);
-    input = (const unsigned char *)"ab\ncd\nx";
+    fixture_input = (const unsigned char *)"ab\ncd\nx";
     input_size = 7U;
     unsigned char long_input[16390];
     uint64_t maximum = UINT64_MAX;
@@ -109,8 +114,8 @@ int main(int argc, char **argv)
         CHECK(umi_codeguard_reader_line(&visit) == UMI_STATUS_CAPACITY_EXCEEDED);
         CHECK(lines == 0U);
     } else if (!strncmp(name, "measure", 7U)) {
-        input = (const unsigned char *)"#include <a.h>\nvoid f(void) {}\n";
-        input_size = strlen((const char *)input);
+        fixture_input = (const unsigned char *)"#include <a.h>\nvoid f(void) {}\n";
+        input_size = strlen((const char *)fixture_input);
         UmiCodeGuardSourceInfo result;
         memset(&result, 0xa5, sizeof result);
         unsigned char prior[sizeof result];
@@ -128,15 +133,15 @@ int main(int argc, char **argv)
         }
         CHECK(observed_limit == input_size && native_path_absolute);
     } else if (!strncmp(name, "hash", 4U) || !strcmp(name, "trailing-slash")) {
-        input = (const unsigned char *)" a /* note */ + b // end\n";
-        input_size = strlen((const char *)input);
+        fixture_input = (const unsigned char *)" a /* note */ + b // end\n";
+        input_size = strlen((const char *)fixture_input);
         const char *normalized = "a+b";
         if (!strcmp(name, "hash-binary")) {
-            input = (const unsigned char *)"a\0b";
+            fixture_input = (const unsigned char *)"a\0b";
             input_size = 3U;
         }
         if (!strcmp(name, "trailing-slash")) {
-            input = (const unsigned char *)"a /";
+            fixture_input = (const unsigned char *)"a /";
             input_size = 3U;
             normalized = "a/";
             chunk_size = 1U;
@@ -146,7 +151,7 @@ int main(int argc, char **argv)
         if (!strcmp(name, "hash-failure")) native_result = UMI_STATUS_IO_ERROR;
         if (!strcmp(name, "hash-overflow")) {
             UmiCodeGuardHashVisit candidate = {.raw = 11U, .normalized = 22U, .size = SIZE_MAX};
-            CHECK(umi_codeguard_hash_chunk(input, 1U, &candidate) == UMI_STATUS_CAPACITY_EXCEEDED);
+            CHECK(umi_codeguard_hash_chunk(fixture_input, 1U, &candidate) == UMI_STATUS_CAPACITY_EXCEEDED);
             CHECK(candidate.raw == 11U && candidate.normalized == 22U && candidate.size == SIZE_MAX);
         } else {
             UmiStatus status = umi_codeguard_hash_file_bounded("sample.c", input_size,
@@ -155,7 +160,7 @@ int main(int argc, char **argv)
                 CHECK(status == native_result && raw == 11U && normal == 22U && size == 33U);
             else {
                 CHECK(status == UMI_STATUS_OK && size == input_size);
-                CHECK(raw == umi_codeguard_hash_bytes(input, input_size));
+                CHECK(raw == umi_codeguard_hash_bytes(fixture_input, input_size));
                 CHECK(normal == (!strcmp(name, "hash-binary") ? raw :
                     umi_codeguard_hash_bytes(normalized, strlen(normalized))));
             }
@@ -167,14 +172,14 @@ int main(int argc, char **argv)
         if (!strcmp(name, "zero-over")) maximum = 0U;
         if (!strcmp(name, "long") || !strcmp(name, "newline-boundary")) {
             memset(long_input, 'x', sizeof long_input);
-            input = long_input;
+            fixture_input = long_input;
             input_size = 8194U;
             chunk_size = 7U;
             if (!strcmp(name, "newline-boundary")) long_input[8190] = '\n';
         }
-        if (!strcmp(name, "crlf")) { input = (const unsigned char *)"a\r\nb\r"; input_size = 5U; chunk_size = 1U; }
-        if (!strcmp(name, "nul")) { input = (const unsigned char *)"a\0b"; input_size = 3U; }
-        if (!strcmp(name, "late-nul")) { input = (const unsigned char *)"a\nb\0c"; input_size = 5U; }
+        if (!strcmp(name, "crlf")) { fixture_input = (const unsigned char *)"a\r\nb\r"; input_size = 5U; chunk_size = 1U; }
+        if (!strcmp(name, "nul")) { fixture_input = (const unsigned char *)"a\0b"; input_size = 3U; }
+        if (!strcmp(name, "late-nul")) { fixture_input = (const unsigned char *)"a\nb\0c"; input_size = 5U; }
         if (!strcmp(name, "late-read") || !strcmp(name, "late-close")) native_result = UMI_STATUS_IO_ERROR;
         if (!strcmp(name, "late-change")) native_result = UMI_STATUS_BUSY;
         if (!strcmp(name, "missing")) { native_result = UMI_STATUS_NOT_FOUND; input_size = 0U; }
@@ -195,7 +200,7 @@ int main(int argc, char **argv)
         else if (native_result != UMI_STATUS_OK)
             CHECK(status == native_result && lines == 2U && bytes == 6U);
         else {
-            CHECK(status == UMI_STATUS_OK && bytes == input_size && !memcmp(input, collected, bytes));
+            CHECK(status == UMI_STATUS_OK && bytes == input_size && !memcmp(fixture_input, collected, bytes));
             if (!strcmp(name, "long") || !strcmp(name, "newline-boundary"))
                 CHECK(lines == 2U && first_size == 8191U && last_size == 3U);
             else if (!strcmp(name, "crlf")) CHECK(lines == 2U && first_size == 3U && last_size == 2U);

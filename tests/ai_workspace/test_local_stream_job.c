@@ -143,7 +143,12 @@ static int Arguments(UmiAiLocalTransport *runtime,UmiAiRequest *request,UmiAiLoc
 }
 int main(int argc,char **argv)
 {
+/* Make independent fixture statements explicit without weakening the existing checks. The former implementation is retained for owner review. */
+#if 0
     if(argc!=2)return 2;mode=argv[1];
+#endif
+    if(argc!=2) { return 2; }
+    mode=argv[1];
     const char *modes[]={"arguments","success","input-copy","setup-failure","transport-failure","cancel-before",
         "cancel-running","completed-before-join","thread-start-failure","join-failure","release-failure","wrong-owner"};
     bool known=false;for(size_t i=0U;i<sizeof modes/sizeof modes[0];++i)if(strcmp(mode,modes[i])==0)known=true;

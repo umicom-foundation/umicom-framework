@@ -25,6 +25,9 @@ typedef enum Mode { DIRECT, TOOL, RESOURCE, PROMPT, PING, TOOLS, RESOURCES, PROM
 typedef struct Fixture {
     Mode mode;
     const char *action;
+    /* The callback selector lives as long as its owning fixture, including
+     * early-return diagnostics after Exercise has released its stack. */
+    char action_storage[32];
     UmiAiMcpSession session;
     unsigned calls, depth;
     int error, unterminated, empty, last_byte, no_output, nested, nested_retire;
@@ -125,7 +128,12 @@ static int Exercise(Fixture *f, const char *name)
     f->session.transport = (UmiAiMcpTransport){Request, NULL, f};
     memset(f->output, 0x5a, sizeof(f->output)); memcpy(f->previous, f->output, sizeof(f->output));
     UmiStatus expected = UMI_STATUS_OK; unsigned expected_calls = 1U;
+/* A retained fixture pointer must not borrow function-local action storage. The former implementation is retained for owner review. */
+#if 0
     int allocation = 0; char action[32];
+#endif
+    int allocation = 0;
+    char *action = f->action_storage;
     if (strcmp(name, "success") == 0) { /* Ordinary ready owner. */ }
     else if (strcmp(name, "error") == 0) { f->error = 1; expected = UMI_STATUS_IO_ERROR; }
     else if (strcmp(name, "unterminated") == 0) { f->unterminated = 1; expected = UMI_STATUS_INTERNAL_ERROR; }
@@ -150,7 +158,11 @@ static int Exercise(Fixture *f, const char *name)
         CHECK(f->calls == 0U && memcmp(f->output, f->previous, sizeof(f->output)) == 0); return 0;
     } else {
         const char *separator = strchr(name, '-'); CHECK(separator != NULL);
-        size_t length = (size_t)(separator - name); CHECK(length < sizeof(action));
+        size_t length = (size_t)(separator - name); /* Check the owner buffer capacity rather than the local pointer size. The former implementation is retained for owner review. */
+#if 0
+CHECK(length < sizeof(action));
+#endif
+CHECK(length < sizeof(f->action_storage));
         memcpy(action, name, length); action[length] = '\0'; f->action = action;
         CHECK(strcmp(action, "revision") == 0 || strcmp(action, "state") == 0 || strcmp(action, "disconnect") == 0 ||
             strcmp(action, "request") == 0 || strcmp(action, "notify") == 0 || strcmp(action, "data") == 0);
