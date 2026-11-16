@@ -98,6 +98,9 @@ endif()
 
 # The parent Umicom application may already provide these helper functions.
 # Define them only when they do not already exist.
+# Shared compile policy is also exported for independent consumers.
+# Preserve the former local definition for review.
+if(FALSE)
 if(NOT COMMAND umicom_apply_warnings)
     # Define the apply warnings build helper so parent and application projects apply one
     # consistent rule.
@@ -122,6 +125,9 @@ if(NOT COMMAND umicom_apply_warnings)
         endif()
     endfunction()
 endif()
+
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/cmake/UmicomCompilePolicy.cmake")
 
 # The shared module checks compile/link support and carries sanitizer runtimes
 # through static-library consumers. Retain the former fallback for review.
@@ -7844,3 +7850,53 @@ include(cmake/UmicomAiConversationTranscript.cmake)
 
 # Standalone conversation consumers use the same public API exercised in producer checks.
 include(cmake/UmicomAiConversationExamples.cmake)
+
+# Shared discovery observations are consumed by provider checks and installed AI clients.
+include(cmake/UmicomAiModelDiscovery.cmake)
+# Streamed pull observations reuse the same native AI and JSON owners.
+include(cmake/UmicomOllamaPull.cmake)
+
+# Media protocol observations share provider task state without executing jobs.
+include(cmake/UmicomComfyProtocol.cmake)
+
+# Consumer composition contains no Framework source-target construction.
+# Framework owns creative component construction before any thin product consumes it.
+# Installed consumers receive exported targets and never execute this producer module.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomCreativeWorkspace.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomApplicationComposition.cmake")
+foreach(_composition_component IN ITEMS Unspecified FrameworkSDK)
+    set(_composition_selection)
+    if(_composition_component STREQUAL "FrameworkSDK")
+        set(_composition_selection EXCLUDE_FROM_ALL)
+    endif()
+    install(FILES cmake/UmicomApplicationComposition.cmake cmake/UmicomCompilePolicy.cmake
+        cmake/UmicomSanitizers.cmake cmake/UmicomThinApplicationRuntime.cmake
+        cmake/UmicomApplicationProductisationContribution.cmake cmake/UmicomCreativeApplication.cmake
+        DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework"
+        COMPONENT "${_composition_component}" ${_composition_selection})
+    install(FILES examples/creative_workspace_main.c
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/examples/creative_workspace"
+        COMPONENT "${_composition_component}" ${_composition_selection})
+endforeach()
+
+if(BUILD_TESTING)
+    foreach(_case imported source missing-example unknown-profile duplicate missing-component)
+        add_test(NAME framework.sdk.composition.${_case} COMMAND "${CMAKE_COMMAND}"
+            "-DFRAMEWORK=${CMAKE_CURRENT_SOURCE_DIR}" "-DCASE=${_case}"
+            "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/sdk-composition/${_case}"
+            "-DCOMPILER=${CMAKE_C_COMPILER}" "-DGENERATOR=${CMAKE_GENERATOR}"
+            "-DMAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/sdk_composition/check_composition.cmake")
+        set_tests_properties(framework.sdk.composition.${_case} PROPERTIES
+            TIMEOUT 120 LABELS "framework;sdk;composition;cmake")
+    endforeach()
+endif()
+
+# Isolated form drafts reuse the existing application value and changeset owner.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomFormDraft.cmake")
+
+# Presentation consumes platform and protocol; it must not reverse their dependency.
+include(cmake/UmicomBootReportTools.cmake)
+
+# Multi-model selection and presentation share one bounded report contract.
+include(cmake/UmicomAiEnsembleAdmission.cmake)

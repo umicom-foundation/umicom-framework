@@ -121,6 +121,7 @@ void umi_cli_print_help(void)
 
 void umi_cli_print_help(void)
 {
+    puts("  comfy inspect CONNECTION WORKFLOW OBJECT_INFO [--client-id ID]  Inspect offline workflow requirements");
     (void)puts("Local text models: umicom models --help (review, download, serve and chat).\n");
     (void)puts("Compiler plan preview: umicom compiler plan --help\n"
         "  Shared argument planning as JSON; no compiler discovery or execution.\n");

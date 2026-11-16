@@ -118,3 +118,6 @@ if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
             LABELS "framework;provider-connections;gtk4;privacy;ownership;regression")
     endforeach()
 endif()
+
+# Model-list observations are decoded by the shared AI snapshot service.
+target_link_libraries(umicom_provider_connection_checks PRIVATE Umicom::ai)

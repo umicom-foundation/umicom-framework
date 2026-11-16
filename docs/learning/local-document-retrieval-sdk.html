@@ -1,0 +1,73 @@
+<!-- Umicom Framework
+File: docs/learning/local-document-retrieval-sdk.html
+
+PURPOSE:
+Teach build a source-backed assistant with the umicom sdk through documented behavior and reproducible exercises.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Build a source-backed assistant with the Umicom SDK | Umicom</title><link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico"><style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1040px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}table{border-collapse:collapse;width:100%}td,th{text-align:left;vertical-align:top;padding:9px;border-bottom:1px solid #ccd6df}</style></head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header><nav><a href="native-ai-applications-course.html">Native AI application learning path</a></nav><h1>Build a source-backed assistant with the Umicom SDK</h1>
+<p>This course builds a small C23 application that searches a selected collection, retains the results, chooses evidence, prepares a draft and requires a separate review before execution. You need basic C structures, pointers, error handling and an installed Framework SDK. The example uses memory-only storage and a deterministic extractive preview. It does not train a model, generate embeddings or send a network request.</p>
+<h2>Lesson 1: learn from local document assistants</h2>
+<p>GPT4All LocalDocs connects named collections to folders, shows indexing progress and lets users inspect response sources. Its documentation describes on-device embeddings used to retrieve relevant text snippets. These are useful workflow ideas: show the selected collection, distinguish indexing progress from readiness, and expose the sources used for an answer. See the <a href="https://docs.gpt4all.io/gpt4all_desktop/localdocs.html">official LocalDocs guide</a>.</p>
+<p>The Umicom exercise starts with explicitly supplied text passages. Existing Framework services already own collection storage, lexical/vector ranking, reviewed jobs and frozen source inspection. The new search snapshot retains a result set before a job exists. Folder monitoring, PDF extraction, automatic indexing and GPT4All's embedding implementation are not supplied by this example.</p>
+<h2>Lesson 2: identify the owners before writing code</h2>
+<table><tr><th>Object</th><th>Responsibility and lifetime</th></tr>
+<tr><td>Data Server</td><td>Stores collections and jobs. The example creates a memory-only instance.</td></tr>
+<tr><td>AI Runtime</td><td>Owns provider/tool registries and policy. It outlives the workspace.</td></tr>
+<tr><td>AI Workspace</td><td>Borrows the Data Server and runtime, admits mutations and runs canonical search on one owner thread.</td></tr>
+<tr><td>Search snapshot</td><td>Owns copied query metadata and ranked passages. It survives workspace destruction and stays historical after later edits.</td></tr>
+<tr><td>Evidence selection</td><td>A caller-owned value containing chosen rows in explicit order and the captured corpus revision.</td></tr>
+<tr><td>Prepared job</td><td>Freezes the exact selected sources and request through the existing preparation service; it still requires review.</td></tr></table>
+<p>Destroy each search snapshot when its readers finish. Destroy the workspace before the borrowed Data Server and runtime. Collection IDs and user labels are local identifiers, not authentication credentials.</p>
+<h2>Lesson 3: create an independent SDK project</h2>
+<ol><li>Install a matching Framework SDK that exports <code>Umicom::ai_workspace</code>, including the search-snapshot header and compiled implementation.</li><li>Copy <code>share/umicom/framework/examples/retrieval_sources</code> from the SDK into <code>C:\Projects\retrieval-sources</code>. The project contains complete C and CMake files.</li><li>Use the compiler family and architecture that built the SDK. Configure with an explicit installation prefix:</li></ol>
+<pre><code>cmake -S C:/Projects/retrieval-sources -B C:/Projects/retrieval-sources/build -G Ninja -DUMICOM_SDK_ROOT=C:/SDKs/Umicom -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe -DBUILD_TESTING=ON
+cmake --build C:/Projects/retrieval-sources/build
+ctest --test-dir C:/Projects/retrieval-sources/build --output-on-failure</code></pre>
+<p>Run each command separately and stop on an error. The project verifies installed package origin and the SDK environment, links public libraries and applies the shared Umicom branding helper. It does not compile Framework source files into the application. A successful configuration does not establish that the example links or runs.</p>
+<h2>Lesson 4: search once and inspect the captured rows</h2>
+<pre><code>#include &lt;umicom/ai_workspace/search_snapshot.h&gt;
+
+UmiAiSearchSnapshot *search = NULL;
+UmiStatus status = UmiAiWorkspaceSearchCapture(
+    workspace, "workshop", "workshop", NULL, NULL, NULL, 4, &amp;search);
+if (status == UMI_STATUS_OK) {
+    UmiAiSearchSummary summary;
+    status = UmiAiSearchSnapshotInspect(search, &amp;summary);
+    /* Iterate summary.count using UmiAiSearchSnapshotAt. */
+}</code></pre>
+<p>This fragment assumes a live workspace and admitted passages; the complete example supplies both. A result limit is between one and sixteen. Zero matches produces a successful empty snapshot. An unknown collection is an error. The captured count is the retained result count, not a promise to include every matching passage.</p>
+<p>Search remains collection-scoped. Existing lexical ranking uses bounded query terms; optional vectors require a matching model ID, dimension and source revision. The current reference embedding representation holds at most 64 values, not arbitrary production embedding dimensions. A missing usable vector cache produces an unavailable result when vector search is requested. No vector is fabricated from a document hash.</p>
+<p>Copied rows preserve source IDs, titles, revisions, original line ranges and text. Scores help order candidates; they are not probabilities that a generated answer is correct. The snapshot does not automatically reload an independently changed database or refresh after a source edit.</p>
+<h2>Lesson 5: make selection explicit</h2>
+<pre><code>const size_t indices[] = {1, 0};
+UmiAiSearchSelection selection;
+status = UmiAiSearchSnapshotSelect(search, indices, 2, &amp;selection);
+if (status == UMI_STATUS_OK) {
+    status = UmiAiWorkspacePrepareEvidence(
+        workspace, "draft", "umicom.extractive-preview", "extractive-preview",
+        selection.collection.id, "Summarise the workshop notices.",
+        "learner", 256, selection.corpusRevision,
+        selection.evidence, selection.count);
+}</code></pre>
+<p>Select one to four unique zero-based indices. Selection preserves the supplied order. A duplicate, missing row or invalid count leaves the complete previous output unchanged. It copies the original corpus revision and exact source bytes; it does not prepare a job, review it or contact a provider.</p>
+<p>The existing preparation service then checks the current corpus revision and exact selected records. If the collection changed, expect <code>UMI_STATUS_BUSY</code>. Search again, inspect the new rows and make a new selection. Do not change only the revision number to force an old selection through the check.</p>
+<h2>Lesson 6: preserve the review and execution boundary</h2>
+<p>The example checks that preparation leaves the job in <code>UMI_AI_WORKSPACE_REVIEW</code> and that the first frozen source is the deliberately selected parking notice. It then calls the separate review and run operations. The provider is Framework's extractive preview: it composes supplied evidence deterministically and is not learned-model inference.</p>
+<p>After that run, the example changes the parking notice from the west gate to the east gate. A new preparation using the old selection must be refused. The captured search still contains the west-gate passage, even after its workspace closes. Historical readability and current validity are different properties.</p>
+<p>Expected output includes two ranked source titles and their line ranges, an extractive preview, and a final message reporting stale-selection refusal. These are expected outcomes for your qualification run. Retain actual exit codes and output before reporting a pass.</p>
+<h2>Lesson 7: connect retained results to application state</h2>
+<p>Streamlit stores session-specific values across reruns through Session State. The useful design idea is that a user's inspected result should survive an unrelated interaction. The native equivalent needs explicit ownership: keep the search snapshot in the relevant window/session controller, replace it only after successful capture, and release it after all readers finish. See <a href="https://docs.streamlit.io/develop/concepts/architecture/session-state">Streamlit's Session State explanation</a>.</p>
+<p>Keep editable query text, the captured query and selected row indices separate. Clear or deliberately re-map selection when replacing the result owner. Row zero in a new result need not describe the same source. Do not put all users' private queries into one global snapshot. This design does not emulate Streamlit's Python execution model.</p>
+<h2>Lesson 8: qualify failure recovery</h2>
+<ol><li>Search for an absent term. Inspect a zero-row snapshot; selecting row zero must fail without changing the previous selection.</li><li>Search a different collection. Confirm that passages from the first collection never enter scoring callbacks or returned rows.</li><li>Request more results than the limit, supply malformed UTF-8 or use a query containing only ignored terms. Keep the previous displayed owner on refusal.</li><li>Use a reranker that returns a negative or non-finite score. Creation must fail rather than publish a partial ranked result. Rerankers are trusted synchronous callbacks; their external side effects cannot be undone by the snapshot.</li><li>Change a selected source, then an unrelated source. Both changes advance the corpus and cause stale preparation to be refused.</li><li>Destroy the workspace after capture and read the snapshot. Destroy it only after all readers finish.</li><li>Run the producer's <code>framework.ai_workspace.search_snapshot.*</code> cases and existing workspace/evidence regressions. Keep producer, installed-consumer and real-provider results separate.</li></ol>
+<h2>Troubleshooting and assessment</h2>
+<p>If CMake cannot find the SDK component, check the selected installation and its dependency configuration. If linking cannot find a new symbol, compare the header and library revisions. If preparation returns BUSY, refresh and inspect the corpus; it is not permission to bypass source checks. If a provider fails later, retain the frozen sources and request identity while reporting the actual failure.</p>
+<p>Submit the complete project, SDK/compiler identities and executed test output. Explain why a collection boundary, ranking score, citation label, user review and successful inference are distinct kinds of evidence. No screenshot, declared capability or copied metadata alone proves complete local-document assistant functionality.</p>
+</main></body></html>

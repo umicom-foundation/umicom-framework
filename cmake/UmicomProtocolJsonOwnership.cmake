@@ -20,3 +20,6 @@ endif()
 target_sources(umicom_protocol PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/json_text.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/language_runtime/json_tree.c")
+
+# Shared response ownership reuses the existing non-elidable clearing service.
+target_link_libraries(umicom_protocol PRIVATE Umicom::security)

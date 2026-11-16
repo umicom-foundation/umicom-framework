@@ -41,6 +41,8 @@ extern "C"
  * token alive for this call. Failure clears out; no partial tree is published. */
     UmiStatus UmiJsonTreeCreate(const void *bytes, size_t length, const UmiJsonTreeLimits *limits,
                                 const UmiCancellationToken *cancel, UmiJsonTree **out);
+    /* Clear the owned input copy before release, including parse-failure cleanup.
+     * Caller buffers, decoded copies and external storage are not cleared here. */
     void UmiJsonTreeDestroy(UmiJsonTree *tree);
     /* Root is node 0. Handles are valid only in their owning immutable tree.
  * Invalid handles return UNDEFINED, -1 or zero. First/Next traverse direct
@@ -61,6 +63,17 @@ extern "C"
     /* Wrong value kinds return PARSE_ERROR; invalid handles or NULL outputs
      * return INVALID_ARGUMENT. Integer overflow returns CAPACITY_EXCEEDED. */
     UmiStatus UmiJsonTreeInteger(const UmiJsonTree *tree, int node, int64_t *out);
+    /* Read a finite approximate binary floating-point value from JSON number
+     * spelling. Reuse the base ASCII converter's private C locale and 511-byte
+     * bound; the process locale is neither read for parsing nor changed.
+     * Integer spelling is accepted here, but use Integer or the original span
+     * for exact seeds, counters, identifiers and monetary representations.
+     * Overflow, nonzero underflow rounded to zero and excessive spelling length
+     * return CAPACITY_EXCEEDED. Finite nonzero subnormal values are accepted.
+     * Other wrong kinds give PARSE_ERROR; invalid handles/outputs give
+     * INVALID_ARGUMENT. Output is unchanged on every failure, including
+     * NOT_IMPLEMENTED on platforms without an isolated-locale converter. */
+    UmiStatus UmiJsonTreeDouble(const UmiJsonTree *tree, int node, double *out);
     UmiStatus UmiJsonTreeBoolean(const UmiJsonTree *tree, int node, int *out);
     /* Distinguish a JSON null from a missing member without coercing numbers,
      * booleans or the string "null". Invalid tree/node handles return false. */

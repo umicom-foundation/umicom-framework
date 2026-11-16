@@ -1,13 +1,24 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/language_runtime/json_tree.c
- * PURPOSE: Parse owned JSON with bounded heap growth and direct sibling traversal.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Parse owned JSON with bounded heap growth and direct sibling traversal.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
+
+
 #include "umicom/language_runtime/json_tree.h"
+#include "umicom/base/ascii_number.h"
 #include "umicom/language_runtime/json_text.h"
+#include "umicom/security/secrets.h"
 #include <limits.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -304,10 +315,26 @@ UmiStatus UmiJsonTreeCreate(const void *bytes, size_t length, const UmiJsonTreeL
         UmiJsonTreeDestroy(tree);
     return status;
 }
+/* Owned JSON now clears its response buffer with the canonical security primitive before release, preserving provider-check erasure when that consumer moves to the shared parser. The prior destroy implementation is retained for review. The former implementation is retained for owner review. */
+#if 0
 void UmiJsonTreeDestroy(UmiJsonTree *tree)
 {
     if (tree != NULL)
     {
+        free(tree->nodes);
+        free(tree->text);
+        free(tree);
+    }
+}
+#endif
+void UmiJsonTreeDestroy(UmiJsonTree *tree)
+{
+    if (tree != NULL)
+    {
+        /* The parser owns this copy, including provider response extensions.
+         * Clear it on both normal destruction and failed parsing before release.
+         * Caller input and any copies made by consumers remain caller-owned. */
+        umi_secret_clear(tree->text, tree->length + 1U);
         free(tree->nodes);
         free(tree->text);
         free(tree);
@@ -415,6 +442,21 @@ UmiStatus UmiJsonTreeInteger(const UmiJsonTree *tree, int node, int64_t *out)
                     : (int64_t)magnitude;
     return UMI_STATUS_OK;
 }
+UmiStatus UmiJsonTreeDouble(const UmiJsonTree *tree, int node, double *out)
+{
+    if (!JsonValid(tree, node) || out == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (UmiJsonTreeKind(tree, node) != UMI_LANGUAGE_RUNTIME_JSON_PRIMITIVE)
+        return UMI_STATUS_PARSE_ERROR;
+    const JsonNode *value = &tree->nodes[node];
+    /* Grammar and lifetime already belong to this immutable tree. The shared
+     * base converter owns range, finite-value and isolated-locale policy, so
+     * protocol adapters must not introduce their own strtod or locale mutation.
+     * It assigns the caller's output only after complete successful conversion. */
+    return umi_ascii_double_parse(tree->text + value->begin,
+                                  value->end - value->begin, out);
+}
+
 UmiStatus UmiJsonTreeBoolean(const UmiJsonTree *tree, int node, int *out)
 {
 /* The former guard conflated invalid arguments with a valid JSON value of the wrong type. The separate checks preserve caller diagnostics and protocol parse errors; retain the original guard for review. */

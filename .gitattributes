@@ -26,3 +26,6 @@ CMakeLists.txt text eol=lf
 *.dll -text
 *.lib -text
 *.pdb -text
+
+# Portable provider documents have a strict LF wire representation.
+*.umiconnection text eol=lf

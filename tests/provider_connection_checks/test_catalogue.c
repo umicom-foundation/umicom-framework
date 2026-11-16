@@ -1,10 +1,19 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/provider_connection_checks/test_catalogue.c
- * PURPOSE: Reject malformed catalogues while distinguishing a missing model from parse failure.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Reject malformed catalogues while distinguishing a missing model from parse failure.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
+
+
 
 #include "../../src/provider_connection_checks/internal.h"
 #include <stdio.h>
@@ -22,6 +31,7 @@ int main(int argc, char **argv)
     else if (strcmp(argv[1], "unicode") == 0) { body = "{\"object\":\"list\",\"data\":[{\"id\":\"caf\\u00e9\",\"object\":\"model\"}]}"; model = "caf\xc3\xa9"; }
     else if (strcmp(argv[1], "duplicate-data") == 0) { body = "{\"object\":\"list\",\"data\":[],\"data\":[]}"; expected = UMI_STATUS_PARSE_ERROR; }
     else if (strcmp(argv[1], "duplicate-id") == 0) { body = "{\"object\":\"list\",\"data\":[{\"id\":\"test-model\",\"i\\u0064\":\"other\",\"object\":\"model\"}]}"; expected = UMI_STATUS_PARSE_ERROR; }
+    else if (strcmp(argv[1], "repeated-model") == 0) { body = "{\"object\":\"list\",\"data\":[{\"id\":\"a\",\"object\":\"model\"},{\"id\":\"\\u0061\",\"object\":\"model\"}]}"; expected = UMI_STATUS_PARSE_ERROR; }
     else if (strcmp(argv[1], "trailing") == 0) { body = "{\"object\":\"list\",\"data\":[]} false"; expected = UMI_STATUS_PARSE_ERROR; }
     else if (strcmp(argv[1], "nul") == 0) { body = "{\"object\":\"list\",\"data\":[{\"id\":\"test\\u0000model\",\"object\":\"model\"}]}"; expected = UMI_STATUS_PARSE_ERROR; }
     else if (strcmp(argv[1], "bad-id") == 0) { body = "{\"object\":\"list\",\"data\":[{\"id\":2,\"object\":\"model\"}]}"; expected = UMI_STATUS_PARSE_ERROR; }

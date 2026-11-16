@@ -1,0 +1,93 @@
+<!-- Umicom Framework
+File: docs/learning/comfyui-system-observations-sdk.html
+
+PURPOSE:
+Teach comfyui system reports with the umicom sdk through documented behavior and reproducible exercises.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ComfyUI system reports with the Umicom SDK | Umicom</title><link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico"><style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1040px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}table{border-collapse:collapse;width:100%}td,th{text-align:left;vertical-align:top;padding:9px;border-bottom:1px solid #ccd6df}</style></head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header><nav><a href="native-ai-applications-course.html">Native AI application learning path</a></nav><h1>ComfyUI system reports with the Umicom SDK</h1>
+<p>Build a C23 application that inspects reported system and device metadata without starting a generation job. You need an installed Umicom Framework SDK and familiarity with structures, pointers and error handling. The complete project uses synthetic JSON and makes no network request. It teaches a reusable service that Media or Studio can consume without maintaining another parser.</p>
+<h2>Lesson 1: separate reports from actions</h2>
+<p>ComfyUI documents <code>GET /system_stats</code> as a system and device information route. Its server interface includes version metadata and memory counters. Read the <a href="https://docs.comfy.org/development/comfyui-server/comms_routes">official route guide</a> and <a href="https://github.com/Comfy-Org/ComfyUI/blob/master/server.py">server interface</a> when adapting to your installed version. The Umicom implementation independently decodes supplied response bytes in C; it does not port ComfyUI's Python implementation.</p>
+<p>A memory report is an observation. Loading a model, reserving device memory, changing an execution queue and generating an image are separate operations. This example performs none of them. The caller of a live adapter must establish which reviewed connection produced a successful response before handing bytes to the decoder.</p>
+<h2>Lesson 2: represent unknown information</h2>
+<table><tr><th>Input</th><th>Native meaning</th><th>Display suggestion</th></tr>
+<tr><td>Field absent or JSON null</td><td>The relevant known bit is clear</td><td>Unknown</td></tr>
+<tr><td>Integer zero</td><td>Known value of zero</td><td>0 bytes or index 0</td></tr>
+<tr><td>Boolean false</td><td>Known false</td><td>No</td></tr>
+<tr><td>Empty optional version text</td><td>Known empty string</td><td>Reported empty</td></tr>
+<tr><td>Negative, fractional or string memory count</td><td>Malformed input</td><td>Keep the previous report and expose the failure</td></tr></table>
+<p>A CPU can have an unknown device index. A GPU index of zero is a different value. The copied structures initialize unknown storage to zero for deterministic ownership, so testing only the numeric member loses this distinction. Required device names and types must be nonempty; unfamiliar type names remain usable report text.</p>
+<h2>Lesson 3: keep integers exact</h2>
+<p>Memory fields use byte counts. The service accepts exact integer tokens from zero through <code>INT64_MAX</code>, including values greater than a binary floating-point number can represent exactly. It rejects exponent and fraction notation instead of rounding. Display bytes with <code>PRIu64</code> from <code>&lt;inttypes.h&gt;</code>. Convert only a presentation copy when showing GiB, where one GiB means 1,073,741,824 bytes.</p>
+<pre><code>if ((device.known &amp; UMI_COMFY_DEVICE_VRAM_FREE) != 0U) {
+    printf("Reported free: %" PRIu64 " bytes\n", device.vram_free);
+} else {
+    puts("Reported free: unknown");
+}</code></pre>
+<p>The fragment assumes a copied <code>UmiComfyDeviceObservation</code> named <code>device</code> and the usual standard headers. It does not claim that those bytes remain free at the moment you display them.</p>
+<h2>Lesson 4: create and release an observation</h2>
+<pre><code>#include &lt;umicom/media_generation/comfy_system.h&gt;
+
+UmiComfySystemStats *stats = NULL;
+UmiStatus status = UmiComfySystemStatsCreate(
+    &amp;connection, saved_revision, response_bytes, response_length,
+    cancel, &amp;stats);
+if (status == UMI_STATUS_OK) {
+    UmiComfySystemSummary summary;
+    status = UmiComfySystemStatsInspect(stats, &amp;summary);
+    /* Read summary.device_count rows with UmiComfySystemStatsDeviceAt. */
+}
+UmiComfySystemStatsDestroy(stats);</code></pre>
+<p>The complete example supplies the connection and JSON omitted from this fragment. Initialize the output owner to NULL. Creation publishes it only after the complete report is admitted. A failed refresh leaves your old displayed owner intact when you create into a separate temporary pointer. Replace the old owner only after a successful capture and after its readers finish.</p>
+<p>The service retains copied named fields, the response digest and saved connection identity. It does not retain launch arguments or opaque extension metadata. Those fields still undergo complete JSON and duplicate-key validation. A digest identifies the bytes; it does not authenticate the sender. A matching saved revision does not prove that memory values are current.</p>
+<p>Accessors copy values and preserve outputs on refusal. Copies can outlive the owner; the caller is responsible for their disposal. Coordinate all readers with destruction. Cancellation is cooperative and does not interrupt a remote process.</p>
+<h2>Lesson 5: build a project against the installed SDK</h2>
+<ol><li>Install a matching Framework SDK that exports <code>Umicom::comfy_protocol</code> and contains <code>comfy_system.h</code> plus its compiled implementation.</li><li>Copy <code>share/umicom/framework/examples/comfy_system</code> from that SDK into <code>C:\Projects\comfy-system</code>.</li><li>Use the same architecture and compiler family as the SDK, and run each command separately:</li></ol>
+<pre><code>cmake -S C:/Projects/comfy-system -B C:/Projects/comfy-system/build -G Ninja -DUMICOM_SDK_ROOT=C:/SDKs/Umicom -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe -DBUILD_TESTING=ON
+cmake --build C:/Projects/comfy-system/build
+ctest --test-dir C:/Projects/comfy-system/build --output-on-failure</code></pre>
+<p>Stop on an error. The project checks installed package identity and ABI, links public libraries and applies the shared SVG/ICO branding resources. It does not embed Framework source files. Successful configuration alone does not establish successful linking or execution.</p>
+<p>Expected output describes two synthetic devices, an unknown CPU index and known GPU index zero. It ends by detecting a changed saved connection label. The report remains readable after its input buffer is cleared. Record your actual output and exit status before describing the example as passed.</p>
+<h2>Lesson 6: present observations responsibly</h2>
+<p>Streamlit's <a href="https://docs.streamlit.io/develop/api-reference/data/st.metric">metric element</a> presents a labelled value and optional change indicator. Its useful design lesson here is to keep the label, value and comparison context explicit. A native host can consume copied SDK values in its approved view; this course adds no new GUI layout or Python runtime.</p>
+<p>Use a label such as “Reported device free bytes” with a capture time recorded by the host. Show unknown distinctly from zero. Suppress a computed used-memory figure when <code>vram_inconsistent</code> is true. The flag means known free exceeds known total; it does not diagnose a driver or prove unhealthy hardware. Keep the original counters visible for investigation.</p>
+<p>Do not add host RAM, device VRAM and PyTorch counters. They may describe overlapping memory. Do not calculate a model-fit promise from file size alone. Loading overhead, working buffers, other processes and changing availability require separate execution evidence. Avoid comparing row zero across captures as if it were a permanent hardware identity; report order and device metadata can change.</p>
+<h2>Lesson 7: qualify adverse inputs and recovery</h2>
+<ol><li>Replace a null index with zero. Confirm that the known bit changes and the display does not confuse the values.</li><li>Supply <code>9007199254740993</code> as a synthetic counter. Verify exact copied digits; do not route the integer through floating point.</li><li>Make free greater than total. Verify the inconsistency flag and preserve both observed values.</li><li>Supply a duplicate JSON key, including an escaped spelling of the same key. Expect <code>UMI_STATUS_ALREADY_EXISTS</code>; do not accept an arbitrary first or last value.</li><li>Try 65 devices or more than 1 MiB of response bytes. Expect a capacity refusal without a partial owner.</li><li>Clear the input buffer after successful creation, copy a row, then destroy the owner. Check the copied row remains usable.</li><li>Change saved connection content or revision. Expect BUSY from the connection check, and deliberately obtain a new observation.</li></ol>
+<p>The producer registers <code>framework.media.comfy.system.*</code> cases covering these boundaries, every optional numeric field, Unicode, resource limits and ownership. They must be executed against the built source before reporting runtime success. The installed example has its own test; keep that result separate from producer tests and real-server qualification.</p>
+
+<h2>Lesson 8: inspect a captured report from a file</h2>
+<p>The SDK also composes the decoder with its existing connection-document and regular-file readers. This is useful when reproducing a report privately, building an offline support tool or comparing native application hosts. The input files are separate captures; the reader does not claim an atomic snapshot of both files.</p>
+<ol><li>Use the portable connection document described in <a href="comfyui-workflows-and-native-clients.html">the ComfyUI workflow course</a>. It must describe an enabled ComfyUI connection to a literal loopback HTTP origin. Keep its saved revision with the report.</li><li>Save a reviewed <code>/system_stats</code> capture as a UTF-8 JSON file. For an entirely offline exercise, create a synthetic report as shown below.</li><li>Build the installed-SDK example from Lesson 5. Its no-argument exercise remains available. Its command mode uses the same Framework service as the native CLI and Media console.</li></ol>
+<pre><code>New-Item -ItemType Directory -Force C:\Examples | Out-Null
+@'
+{"system":{"ram_total":17179869184,"ram_free":9007199254740993},"devices":[{"name":"Synthetic CPU","type":"cpu","index":null}]}
+'@ | Set-Content -LiteralPath C:\Examples\system.json -Encoding utf8
+Set-Location C:\Projects\comfy-system
+.\build\bin\umicom-sdk-comfy-system.exe comfy system --help
+.\build\bin\umicom-sdk-comfy-system.exe comfy system C:\Examples\connection.umiconnection C:\Examples\system.json</code></pre>
+<p>The fixture deliberately reports free RAM greater than total. Expect <code>ram_inconsistent: true</code>, exact counter digits and an unknown CPU index. Do not interpret these invented values as information about your computer. The command refuses a missing or disabled connection document; it does not create settings implicitly.</p>
+<p>When using PowerShell, inspect <code>$LASTEXITCODE</code> immediately after each native command. Exit 0 means a complete report was emitted, 2 means the argument form is wrong, and 1 means file admission, parsing or output failed. Stop and investigate an error. Use absolute paths. The reader refuses a final file symlink, device or directory; parent directory aliases remain possible, so the selected paths still need review.</p>
+<p>The equivalent product commands are <code>umicom.exe comfy system CONNECTION SYSTEM_JSON</code> and <code>umicom-media-studio-console.exe comfy system CONNECTION SYSTEM_JSON</code>. They make no provider request and perform no model or generation action. A 1 MiB response limit and 64-device limit bound the report. An empty file is not an empty device list: use a valid JSON object containing <code>system</code> and <code>devices</code>.</p>
+<h2>Lesson 9: consume the report without losing information</h2>
+<p>Standard output contains a JSON object with <code>origin: "offline-files"</code> and a <code>report</code> member. The report contains response and connection digests, the saved connection revision, a known-field mask and copied system/device observations. Device rows retain response order, with a zero-based <code>response_index</code>. That index identifies a row in this capture, not a permanent device identity.</p>
+<table><tr><th>Output field</th><th>JSON representation</th><th>Why</th></tr>
+<tr><td>Memory counters, device index, connection revision</td><td>Decimal string when known</td><td>Preserve every digit in consumers that normally parse numbers as floating point</td></tr>
+<tr><td>Absent or null optional input</td><td>JSON null</td><td>Keep unknown distinct from zero, false and empty text</td></tr>
+<tr><td>Counts, response index, known mask</td><td>Bounded JSON number</td><td>These values are small indices or limits</td></tr>
+<tr><td>Inconsistency flags</td><td>Boolean</td><td>Describe contradictory observed counters without changing them</td></tr></table>
+<p>In C, include <code>umicom/media_generation/comfy_system_file.h</code>, initialize a <code>UmiComfySystemStats *</code> to NULL, and call <code>UmiComfySystemStatsFileRead(document, response, cancel, &amp;stats)</code>. Use <code>UmiComfySystemStatsJson</code> with a buffer of <code>UMI_COMFY_SYSTEM_JSON_CAPACITY</code> bytes, then destroy the owner. Check every status. On failure, the serializer preserves both the caller's buffer and its supplied output length. Successful output includes a terminating NUL; the returned length excludes it.</p>
+<p>Run synchronous file reading on an appropriate worker in a graphical application. A cancellation token is checked at boundaries; it cannot interrupt an already blocking file read. Keep the owner alive while reading it and coordinate its destruction. Metadata text remains untrusted display content even after JSON escaping; this service is not a general secret redactor.</p>
+<p>Extend the previous assessment by trying an output buffer exactly one byte too short, a null index and a known zero index, a Unicode filename, a missing response file and a disabled connection. Check that failed commands emit no partial standard-output report. The installed example registers <code>sdk.comfy-system.files.*</code>; producer registrations include <code>framework.media.comfy.system_file.*</code>, <code>system_json.*</code>, <code>system_sdk.*</code> and <code>system_command.*</code>. Media registers <code>media.comfy.system.*</code>. Record executed results separately for each built host.</p>
+
+<h2>Troubleshooting and assessment</h2>
+<p>If the header exists but the symbol cannot link, compare the SDK headers and libraries and inspect the selected prefix. If parsing rejects a report, preserve it privately and compare its schema with the actual installed server version. Never replace malformed metadata with zero. If counters look contradictory, retain their observed identity and investigate the provider independently; refreshing metadata does not repair a driver.</p>
+<p>Submit the independent C project, selected SDK/compiler identities and executed test evidence. Explain why an unknown index, zero free memory, a matching connection digest and a successful generation are different facts. Continue with <a href="comfyui-workflows-and-native-clients.html">workflow, queue and history observations</a> to learn how task state is represented separately.</p>
+</main></body></html>

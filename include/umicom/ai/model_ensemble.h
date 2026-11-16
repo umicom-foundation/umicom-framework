@@ -114,6 +114,20 @@ UmiStatus umi_ai_model_ensemble_query_sized(
         (runtime), (request), (targets), (target_count), (report), \
         (uint32_t)sizeof(*(report)))
 
+/* Validate complete caller-owned report storage without mutation or provider
+ * work. Checks bounded counts, result/target metadata, binary target flags,
+ * successful responses, exact success_count and successful selected index.
+ * Initialized empty reports and an explicit SIZE_MAX no-selection are valid.
+ * Failed response storage and provider status values remain diagnostic evidence.
+ * Identity correlation, UTF-8 validity, usage claims and model quality are not
+ * established by this structural check. Serialize access to mutable reports. */
+UmiStatus UmiAiModelEnsembleReportValidate(const UmiAiModelEnsembleReport *report);
+
+/* Select requires a valid report and successful in-range result. Exhausted
+ * UINT64_MAX revision returns CAPACITY_EXCEEDED without changing the report.
+ * Query borrows complete stable nonoverlapping request/target/runtime storage;
+ * writable report storage must be separate. The legacy synchronous query still
+ * preserves per-provider failures and calls runtime policy for each dispatch. */
 /**
  * Provide the ai model ensemble select operation used by this module and its client
  * applications.
@@ -122,6 +136,8 @@ UmiStatus umi_ai_model_ensemble_select(
     UmiAiModelEnsembleReport *report,
     size_t result_index);
 
+/* NULL for an invalid report or no successful selected result. The returned
+ * pointer is borrowed until report mutation/destruction; it is not a copy. */
 /**
  * Find ai model ensemble while leaving the underlying catalogue or model owned by this
  * module.

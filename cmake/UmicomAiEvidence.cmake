@@ -1,7 +1,16 @@
-#-----------------------------------------------------------------------------
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# Umicom Framework
+# File: cmake/UmicomAiEvidence.cmake
+#
+# PURPOSE:
+#   Extend canonical AI Workspace source inspection and selected evidence without a competing application runtime.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
 # Extend the canonical AI Workspace; applications acquire no competing runtime.
-#-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 if(NOT TARGET umicom_ai_workspace)
     message(FATAL_ERROR "AI evidence requires the canonical AI workspace target")
@@ -37,3 +46,7 @@ if(COMMAND umicom_register_validation_target)
     endforeach()
 endif()
 unset(_umi_ai_evidence_root)
+
+
+# Retained pre-job search results reuse the same evidence selection boundary.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiSearchSnapshots.cmake")

@@ -13,6 +13,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "internal.h"
+#include "umicom/provider_connections/document.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
@@ -257,4 +258,42 @@ UmiStatus UmiProviderTaskDecode(const char *wire,size_t length,UmiProviderTaskRe
         !TaskDigestRead(&cursor,candidate.output_sha256) || *cursor!='\0' ||
         UmiProviderTaskValidate(&candidate)!=UMI_STATUS_OK) return UMI_STATUS_PARSE_ERROR;
     *out=candidate;return UMI_STATUS_OK;
+}
+
+/* Public exchange reuses the persistence owner's field order. A separate
+ * envelope adds a schema and observed revision without changing stored keys,
+ * fingerprints or the previous private record contract. */
+UmiStatus UmiProviderConnectionDocumentExport(const UmiProviderConnection *connection,
+    uint64_t observed_revision,char *out,size_t capacity,size_t *out_length)
+{
+    if(!out || !out_length || observed_revision==0U)return UMI_STATUS_INVALID_ARGUMENT;
+    char wire[UMI_PROVIDER_CONNECTION_WIRE_CAPACITY];
+    UmiStatus status=UmiProviderConnectionEncode(connection,wire,sizeof wire);
+    if(status!=UMI_STATUS_OK)return status;
+    char document[UMI_PROVIDER_CONNECTION_DOCUMENT_MAX_BYTES];
+    int prefix=snprintf(document,sizeof document,"umicom-provider-connection\n1\n%" PRIu64 "\n",observed_revision);
+    if(prefix<0 || (size_t)prefix>=sizeof document)return UMI_STATUS_CAPACITY_EXCEEDED;
+    size_t wire_length=strlen(wire),length=(size_t)prefix+wire_length;
+    if(length>=sizeof document || length>=capacity)return UMI_STATUS_CAPACITY_EXCEEDED;
+    memcpy(document+(size_t)prefix,wire,wire_length+1U);
+    memcpy(out,document,length+1U);*out_length=length;return UMI_STATUS_OK;
+}
+UmiStatus UmiProviderConnectionDocumentImport(const void *bytes,size_t length,
+    UmiProviderConnection *out_connection,uint64_t *out_observed_revision)
+{
+    if(!bytes || !out_connection || !out_observed_revision)return UMI_STATUS_INVALID_ARGUMENT;
+    if(length>=UMI_PROVIDER_CONNECTION_DOCUMENT_MAX_BYTES)return UMI_STATUS_CAPACITY_EXCEEDED;
+    if(length==0U || memchr(bytes,'\0',length))return UMI_STATUS_PARSE_ERROR;
+    static const char prefix[]="umicom-provider-connection\n";
+    if(length<sizeof prefix-1U || memcmp(bytes,prefix,sizeof prefix-1U)!=0)return UMI_STATUS_PARSE_ERROR;
+    char local[UMI_PROVIDER_CONNECTION_DOCUMENT_MAX_BYTES];
+    memcpy(local,bytes,length);local[length]='\0';
+    const char *cursor=local+sizeof prefix-1U;uint64_t version=0U,revision=0U;
+    if(!NumberRead(&cursor,&version))return UMI_STATUS_PARSE_ERROR;
+    if(version!=1U)return UMI_STATUS_NOT_IMPLEMENTED;
+    if(!NumberRead(&cursor,&revision) || revision==0U)return UMI_STATUS_PARSE_ERROR;
+    UmiProviderConnection candidate;
+    UmiStatus status=UmiProviderConnectionDecode(cursor,&candidate);
+    if(status!=UMI_STATUS_OK)return status;
+    *out_connection=candidate;*out_observed_revision=revision;return UMI_STATUS_OK;
 }

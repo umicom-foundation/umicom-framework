@@ -31,6 +31,10 @@ extern "C" {
  * Initialise ai ui model comparison view from caller-provided values so later operations
  * receive a known state.
  */
+/* Requires a structurally valid ensemble report. Revisions above INT64_MAX
+ * return CAPACITY_EXCEEDED before allocation because the existing revision
+ * view property is signed. Report validation does not authenticate provider
+ * output or establish response quality. Native rendering is separately tested. */
 UmiStatus umi_ai_ui_model_comparison_view_create(
     const char *view_id,
     const UmiAiModelEnsembleReport *report,

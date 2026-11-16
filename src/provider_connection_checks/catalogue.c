@@ -1,11 +1,21 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/provider_connection_checks/catalogue.c
- * PURPOSE: Read bounded model catalogues using Framework complete JSON validation.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Read bounded model catalogues using Framework complete JSON validation.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
+
+/* The shared immutable discovery decoder replaces private JSON traversal so checks and SDK consumers reject the same ambiguous identities. The original implementation is retained for owner review. The former implementation is retained for owner review. */
+#if 0
 #include "internal.h"
 #include "umicom/language_runtime/json_document.h"
 #include "umicom/language_runtime/json_text.h"
@@ -71,4 +81,33 @@ UmiStatus UmiConnectionCheckDecode(const char *body, size_t length, const char *
      * chosen model is distinct from an unreadable or truncated response. */
     if (status == UMI_STATUS_OK) { *out = result; if (!result.model_listed) status = UMI_STATUS_NOT_FOUND; }
     umi_secret_clear(text, length + 1U); free(text); free(doc); return status;
+}
+
+#endif
+#include "internal.h"
+#include "umicom/ai/model_discovery.h"
+
+UmiStatus UmiConnectionCheckDecode(const char *body, size_t length, const char *model,
+    UmiProviderConnectionCheckResult *out)
+{
+    if (body == NULL || model == NULL || out == NULL || model[0] == '\0') return UMI_STATUS_INVALID_ARGUMENT;
+    if (length == 0U || length >= UMI_CONNECTION_CHECK_BODY_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiAiDiscoverySnapshot *snapshot = NULL;
+    UmiStatus status = UmiAiDiscoveryDecode(UMI_AI_DISCOVERY_OPENAI_LIST, body, length, NULL, &snapshot);
+    /* Keep the check API's historical parse-error result for ambiguous lists.
+     * No new endpoint, credential, prompt or transport behavior is introduced. */
+    if (status == UMI_STATUS_ALREADY_EXISTS) status = UMI_STATUS_PARSE_ERROR;
+    if (status != UMI_STATUS_OK) return status;
+    UmiProviderConnectionCheckResult result = {0};
+    UmiAiDiscoveredModel found;
+    result.listed_models = UmiAiDiscoveryCount(snapshot);
+    status = UmiAiDiscoveryFind(snapshot, model, &found);
+    /* An overlong requested ID could not match the bounded old decoder either. */
+    if (status == UMI_STATUS_INVALID_ARGUMENT) status = UMI_STATUS_NOT_FOUND;
+    if (status == UMI_STATUS_OK || status == UMI_STATUS_NOT_FOUND) {
+        result.model_listed = status == UMI_STATUS_OK;
+        *out = result;
+    }
+    UmiAiDiscoveryDestroy(snapshot);
+    return status;
 }

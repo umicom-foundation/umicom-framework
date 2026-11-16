@@ -89,6 +89,36 @@ set(UMICOM_FRAMEWORK_DOCUMENTATION_ROOT
 unset(_umicom_documentation_data_root)
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationBranding.cmake")
 
+# Resolve the optional consumer example through the same installed data root.
+set(_umicom_composition_data_root "@CMAKE_INSTALL_DATADIR@")
+if(NOT IS_ABSOLUTE "${_umicom_composition_data_root}")
+    set(_umicom_composition_data_root "${PACKAGE_PREFIX_DIR}/${_umicom_composition_data_root}")
+endif()
+set(UMICOM_FRAMEWORK_CREATIVE_EXAMPLE_SOURCE
+    "${_umicom_composition_data_root}/umicom/framework/examples/creative_workspace/creative_workspace_main.c")
+unset(_umicom_composition_data_root)
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationComposition.cmake")
+# Installed consoles share the same synthetic offline qualification resources.
+# The data-root temporary has already been retired above. Retain the earlier
+# expansion for review; resolve this exported path independently.
+if(FALSE)
+set(UMICOM_FRAMEWORK_COMFY_TEST_ROOT
+    "${_umicom_composition_data_root}/umicom/framework/tests/media_generation")
+endif()
+set(UMICOM_FRAMEWORK_COMFY_TEST_ROOT "@CMAKE_INSTALL_DATADIR@/umicom/framework/tests/media_generation")
+if(NOT IS_ABSOLUTE "${UMICOM_FRAMEWORK_COMFY_TEST_ROOT}")
+    set(UMICOM_FRAMEWORK_COMFY_TEST_ROOT "${PACKAGE_PREFIX_DIR}/${UMICOM_FRAMEWORK_COMFY_TEST_ROOT}")
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomComfyInspectionTests.cmake")
+# Installed clients reuse the packaged fixtures; no Framework checkout required.
+set(UMICOM_FRAMEWORK_PULL_TEST_ROOT "@CMAKE_INSTALL_DATADIR@/umicom/framework/tests/ai")
+if(NOT IS_ABSOLUTE "${UMICOM_FRAMEWORK_PULL_TEST_ROOT}")
+    set(UMICOM_FRAMEWORK_PULL_TEST_ROOT "${PACKAGE_PREFIX_DIR}/${UMICOM_FRAMEWORK_PULL_TEST_ROOT}")
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomOllamaPullTests.cmake")
+
+
+
 # Components map directly to exported Umicom::<component> targets. This keeps
 # find_package(UmicomFramework COMPONENTS sdk delivery) honest for consumers.
 foreach(_umicom_component IN LISTS UmicomFramework_FIND_COMPONENTS)

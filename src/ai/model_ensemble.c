@@ -49,12 +49,54 @@ static int copy_text(char *destination, size_t capacity, const char *source)
 static int target_is_valid(const UmiAiModelTarget *target)
 {
     /* Self-description prevents an older or incomplete caller record being read. */
+/* Retain the original target predicate for review. Public records now admit only binary enable/approval fields before routing a provider call. The former implementation is retained for owner review. */
+#if 0
     return target != NULL &&
            target->structure_size >= sizeof(*target) &&
            target->api_version == UMI_AI_MODEL_ENSEMBLE_API_VERSION &&
            has_bounded_text(target->provider_id, sizeof(target->provider_id)) &&
            has_bounded_text(target->model_id, sizeof(target->model_id)) &&
            memchr(target->label, '\0', sizeof(target->label)) != NULL;
+#endif
+    return target != NULL &&
+           target->structure_size >= sizeof(*target) &&
+           target->api_version == UMI_AI_MODEL_ENSEMBLE_API_VERSION &&
+           (target->enabled == 0 || target->enabled == 1) &&
+           (target->approved == 0 || target->approved == 1) &&
+           has_bounded_text(target->provider_id, sizeof(target->provider_id)) &&
+           has_bounded_text(target->model_id, sizeof(target->model_id)) &&
+           memchr(target->label, '\0', sizeof(target->label)) != NULL;
+}
+
+
+/* One admission boundary protects selection and every presentation adapter.
+ * Bound the active count before indexing; failed-provider response storage is
+ * deliberately uninterpreted, preserving diagnostic partial-result behavior. */
+UmiStatus UmiAiModelEnsembleReportValidate(const UmiAiModelEnsembleReport *report)
+{
+    if (report == NULL || report->structure_size < sizeof(*report) ||
+        report->api_version != UMI_AI_MODEL_ENSEMBLE_API_VERSION ||
+        report->result_count > UMI_AI_MODEL_ENSEMBLE_MAX_TARGETS ||
+        report->success_count > report->result_count ||
+        memchr(report->request_id, '\0', sizeof(report->request_id)) == NULL ||
+        (report->selected_index != SIZE_MAX && report->selected_index >= report->result_count))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    size_t successes = 0U;
+    for (size_t index = 0U; index < report->result_count; ++index) {
+        const UmiAiModelResult *result = &report->results[index];
+        if (result->structure_size < sizeof(*result) ||
+            result->api_version != UMI_AI_MODEL_ENSEMBLE_API_VERSION ||
+            !target_is_valid(&result->target)) return UMI_STATUS_INVALID_ARGUMENT;
+        if (result->status == UMI_STATUS_OK) {
+            if (UmiAiResponseValidate(&result->response) != UMI_STATUS_OK)
+                return UMI_STATUS_INVALID_ARGUMENT;
+            ++successes;
+        }
+    }
+    if (successes != report->success_count ||
+        (report->selected_index != SIZE_MAX && report->results[report->selected_index].status != UMI_STATUS_OK))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    return UMI_STATUS_OK;
 }
 
 /*
@@ -139,6 +181,11 @@ UmiStatus umi_ai_model_ensemble_query_sized(
         return UMI_STATUS_INVALID_ARGUMENT;
     }
 
+    /* Validate the complete request before publishing a new report or making
+     * any provider call. Runtime still repeats its own admission at dispatch. */
+    status = UmiAiRequestValidate(request);
+    if (status != UMI_STATUS_OK) return status;
+
     /* Validate every target before any provider can observe the request. */
     for (index = 0U; index < target_count; ++index) {
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
@@ -182,6 +229,8 @@ UmiStatus umi_ai_model_ensemble_query_sized(
                 &routed_request, &result->response);
         }
         /* Preserve the original failure result so the caller can respond to the correct cause. */
+/* Retain the former response check for review. Shared value admission also checks the known finish-reason domain while preserving failed-provider diagnostics. The former implementation is retained for owner review. */
+#if 0
         if (result->status == UMI_STATUS_OK &&
             (memchr(result->response.request_id, '\0',
                     sizeof(result->response.request_id)) == NULL ||
@@ -192,6 +241,11 @@ UmiStatus umi_ai_model_ensemble_query_sized(
              memchr(result->response.text, '\0',
                     sizeof(result->response.text)) == NULL)) {
             /* A provider may not publish unterminated data across the ABI. */
+            result->status = UMI_STATUS_INTERNAL_ERROR;
+        }
+#endif
+        if (result->status == UMI_STATUS_OK &&
+            UmiAiResponseValidate(&result->response) != UMI_STATUS_OK) {
             result->status = UMI_STATUS_INTERNAL_ERROR;
         }
         /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -226,12 +280,21 @@ UmiStatus umi_ai_model_ensemble_select(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
+/* Retain the former selection guard for review. Shared report admission bounds every index before access and revision exhaustion refuses without changing selection. The former implementation is retained for owner review. */
+#if 0
     if (report == NULL || report->structure_size < sizeof(*report) ||
         report->api_version != UMI_AI_MODEL_ENSEMBLE_API_VERSION ||
         result_index >= report->result_count ||
         report->results[result_index].status != UMI_STATUS_OK) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+#endif
+    if (UmiAiModelEnsembleReportValidate(report) != UMI_STATUS_OK ||
+        result_index >= report->result_count ||
+        report->results[result_index].status != UMI_STATUS_OK) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (report->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
 
     /* Selection changes presentation only; it never re-runs a provider call. */
     report->selected_index = result_index;
@@ -250,9 +313,16 @@ const UmiAiModelResult *umi_ai_model_ensemble_selected(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
+/* Retain the former borrowed-result guard for review. Validate the complete bounded report and successful selected result before returning its address. The former implementation is retained for owner review. */
+#if 0
     if (report == NULL || report->structure_size < sizeof(*report) ||
         report->api_version != UMI_AI_MODEL_ENSEMBLE_API_VERSION ||
         report->selected_index >= report->result_count) {
+        return NULL;
+    }
+#endif
+    if (UmiAiModelEnsembleReportValidate(report) != UMI_STATUS_OK ||
+        report->selected_index == SIZE_MAX) {
         return NULL;
     }
     return &report->results[report->selected_index];

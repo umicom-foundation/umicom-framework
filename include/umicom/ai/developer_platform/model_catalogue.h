@@ -43,20 +43,43 @@ typedef struct UmiAiDevModelCatalogue { UmiAiDevModelCatalogueEntry entries[UMI_
  * receive a known state.
  */
 void umi_ai_dev_model_catalogue_init(UmiAiDevModelCatalogue *catalogue);
+/*
+ * Validate the bounded public state before reading it. Empty initialized state
+ * is valid. Stored IDs must be nonempty, terminated and unique; revision must
+ * be at least count. Corrupt state returns INVALID_STATE, NULL INVALID_ARGUMENT.
+ * Unknown flag bits, case-sensitive IDs and nonzero enabled values are retained.
+ * Serialize all access. A revision is a stale-result token, not a thread lock.
+ */
+UmiStatus UmiAiDevModelCatalogueValidate(const UmiAiDevModelCatalogue *catalogue);
+/*
+ * Replace or insert only at the reviewed catalogue revision. An ID must contain
+ * 1..UMI_AI_DEV_ID_CAPACITY-1 bytes before its NUL; IDs are never shortened.
+ * BUSY reports a stale revision; exhausted capacity/revision returns
+ * CAPACITY_EXCEEDED. Every refusal leaves the complete catalogue unchanged.
+ * IDs may alias stored IDs: input is captured before mutation. This operation
+ * changes metadata only; it neither resolves credentials nor contacts a model.
+ */
+UmiStatus UmiAiDevModelCatalogueUpsertIfRevision(
+    UmiAiDevModelCatalogue *catalogue, const char *id,
+    uint32_t priority, uint64_t flags, uint64_t expected_revision);
+
 /**
  * Provide the ai dev model catalogue upsert operation used by this module and its client
  * applications.
  */
+/* Compatibility entry uses the current revision after validating state. */
 UmiStatus umi_ai_dev_model_catalogue_upsert(UmiAiDevModelCatalogue *catalogue, const char *id, uint32_t priority, uint64_t flags);
 /**
  * Find ai dev model catalogue while leaving the underlying catalogue or model owned by
  * this module.
  */
+/* NULL on invalid/missing input or corrupt state. Borrow until mutation. */
 const UmiAiDevModelCatalogueEntry *umi_ai_dev_model_catalogue_find(const UmiAiDevModelCatalogue *catalogue, const char *id);
 /**
  * Return the number of records represented by ai dev model catalogue enabled without
  * changing their state.
  */
+/* Zero on invalid state; Validate distinguishes that from an empty catalogue. */
 size_t umi_ai_dev_model_catalogue_enabled_count(const UmiAiDevModelCatalogue *catalogue);
 
 #ifdef __cplusplus

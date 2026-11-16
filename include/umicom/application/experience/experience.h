@@ -24,6 +24,7 @@
 #include "umicom/application/experience/form_changeset.h"
 #include "umicom/application/experience/form_history.h"
 #include "umicom/application/experience/form_model.h"
+#include "umicom/application/experience/form_draft.h"
 #include "umicom/application/experience/form_schema.h"
 #include "umicom/application/experience/form_temporal.h"
 #include "umicom/application/experience/structured_form.h"

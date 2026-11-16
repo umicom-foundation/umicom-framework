@@ -62,6 +62,8 @@ UmiStatus umi_ai_ui_model_comparison_view_create(
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
+/* Retain the earlier partial UI admission for review. Framework ensemble validation now owns the complete report contract used by selection and presentation. The former implementation is retained for owner review. */
+#if 0
     if (view_id == NULL || report == NULL || out_view == NULL ||
         report->structure_size < sizeof(*report) ||
         report->api_version != UMI_AI_MODEL_ENSEMBLE_API_VERSION ||
@@ -72,6 +74,15 @@ UmiStatus umi_ai_ui_model_comparison_view_create(
          report->selected_index >= report->result_count)) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+#endif
+    if (view_id == NULL || out_view == NULL ||
+        UmiAiModelEnsembleReportValidate(report) != UMI_STATUS_OK) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* The existing integer view property cannot represent larger revisions.
+     * Refuse before allocation instead of publishing an implementation-defined
+     * signed conversion. The report itself retains its full uint64 revision. */
+    if (report->revision > INT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     *out_view = NULL;
     status = umi_ui_view_model_create(
         view_id, "umicom.ai-model-comparison", UMI_UI_ROLE_PANE, out_view);
@@ -111,6 +122,8 @@ UmiStatus umi_ai_ui_model_comparison_view_create(
         char row[UMI_UI_VALUE_STRING_CAPACITY];
 
         /* Reject malformed external reports before any bounded array is read. */
+/* Retain the per-row checks for review. One full admission before view creation prevents different adapters from applying inconsistent count and success rules. The former implementation is retained for owner review. */
+#if 0
         if (result->structure_size < sizeof(*result) ||
             result->api_version != UMI_AI_MODEL_ENSEMBLE_API_VERSION ||
             result->target.structure_size < sizeof(result->target) ||
@@ -128,6 +141,8 @@ UmiStatus umi_ai_ui_model_comparison_view_create(
             status = UMI_STATUS_INVALID_ARGUMENT;
             break;
         }
+#endif
+        /* The shared preflight above admitted every row before allocation. */
 
         /* One compact row is readable in panes and remains easy to test. */
         (void)snprintf(key, sizeof(key), "ai-models.row.%zu", index);

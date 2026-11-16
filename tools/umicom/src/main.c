@@ -16,6 +16,7 @@
  *---------------------------------------------------------------------------*/
 #include "cli.h"
 #include "umicom/platform/native_arguments.h"
+#include "umicom/media_generation/comfy_inspection.h"
 #include "umicom/local_models/manager.h"
 
 #include <stdio.h>
@@ -270,6 +271,9 @@ static int RunNativeCommand(int argc, char **argv)
         return 0;
     }
     command = argv[1];
+    /* Offline ComfyUI inspection shares one Framework service with Media. */
+    if (strcmp(command, "comfy") == 0)
+        return UmiComfyInspectionCommand(argc - 2, argv + 2);
     /* Native model commands share Framework policy with the standalone host. */
     if (strcmp(command, "models") == 0)
         return UmiModelsCommand(argc - 2, argv + 2);

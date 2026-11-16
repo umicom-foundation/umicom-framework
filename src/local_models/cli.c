@@ -15,6 +15,7 @@
 
 #include "internal.h"
 #include "umicom/local_models/runtime.h"
+#include "umicom/ai/ollama_pull_file.h"
 #ifdef UMICOM_MODELS_HAS_TENSOR_INSPECTION
 #include "umicom/model_formats/safetensors_file.h"
 #endif
@@ -52,6 +53,7 @@ static void Help(void)
         "  catalogue\n"
         "  inspect ABSOLUTE_GGUF [SHA256]\n"
         "  inspect-safetensors ABSOLUTE_FILE\n"
+        "  inspect-pull ABSOLUTE_NDJSON  (offline provider-progress observation)\n"
         "  download ID NEW_ABSOLUTE_GGUF [--apply]\n"
         "  download-file REPOSITORY COMMIT FILE SHA256 BYTES NEW_ABSOLUTE_GGUF [--apply]\n"
         "  run ID ABSOLUTE_LLAMA_SERVER ABSOLUTE_GGUF PORT CONTEXT THREADS [--apply]\n"
@@ -643,6 +645,8 @@ int UmiModelsCommandWithSession(int argc, char **argv, UmiModelSession **inOutSe
     for (int i = 0; i < argc; ++i)
         if (argv[i] == NULL) return Failure(UMI_STATUS_INVALID_ARGUMENT);
     if (argc == 0 || (argc == 1 && (strcmp(argv[0], "help") == 0 || strcmp(argv[0], "--help") == 0))) { Help(); return ReviewOutputComplete() ? 0 : Failure(UMI_STATUS_IO_ERROR); }
+    /* Reuse the Framework observer after the session ownership and argument gates. */
+    if (strcmp(argv[0], "inspect-pull") == 0) return UmiOllamaPullFileCommand(argc, argv);
     if (strcmp(argv[0], "catalogue") == 0 && argc == 1) {
         for (size_t i = 0U; i < UmiModelCatalogueCount(); ++i) {
             const UmiModelCatalogueEntry *entry = UmiModelCatalogueAt(i);

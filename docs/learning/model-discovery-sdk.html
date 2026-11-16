@@ -1,0 +1,94 @@
+<!-- Umicom Framework
+File: docs/learning/model-discovery-sdk.html
+
+PURPOSE:
+Teach build a model-discovery application with the umicom sdk through documented behavior and reproducible exercises.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Build a model-discovery application with the Umicom SDK | Umicom</title><link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico"><style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1040px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}table{border-collapse:collapse;width:100%}td,th{text-align:left;vertical-align:top;padding:9px;border-bottom:1px solid #ccd6df}</style></head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header><nav><a href="native-ai-applications-course.html">Native AI application learning path</a></nav><h1>Build a model-discovery application with the Umicom SDK</h1><p>Build a C application that reads model-list observations using an installed Umicom Framework SDK. You need basic pointers, structures and error handling, a C23 compiler, CMake and Ninja. The exercise uses synthetic JSON, so no provider account, network connection or model download is needed.</p>
+<h2>Lesson 1: separate a model from its current evidence</h2><p>The same model ID can exist at several endpoints. Keep the reviewed endpoint and connection revision next to each observation. A local HTTP address identifies a destination, not necessarily where inference runs. For example, a local service can relay requests elsewhere.</p>
+<table><tr><th>Protocol input</th><th>Interpretation</th><th>Not established</th></tr><tr><td>Ollama <code>/api/tags</code></td><td>Available model metadata</td><td>Loaded state or inference success</td></tr><tr><td>Ollama <code>/api/ps</code></td><td>Models reported loaded; optional VRAM and context information</td><td>Continued availability after the observation</td></tr><tr><td>OpenAI-compatible <code>/v1/models</code></td><td>Listed IDs at that endpoint</td><td>Capabilities, balance, account permissions or local execution</td></tr></table>
+<p>These mappings follow the <a href="https://docs.ollama.com/api/tags">Ollama inventory</a> and <a href="https://docs.ollama.com/api/ps">loaded-model</a> documentation. GPT4All documents a localhost API server, normally on port 4891, with a <code>/v1/models</code> route. Its LocalDocs collections are selected through its desktop UI; this decoder does not configure retrieval. See the <a href="https://docs.gpt4all.io/gpt4all_api_server/home.html">GPT4All API guide</a>.</p>
+<h2>Lesson 2: create a project from an installed SDK</h2><ol><li>Install a matching Framework SDK using your normal qualified build. Choose a prefix such as <code>C:\SDKs\Umicom</code>; it must contain the CMake package and compiled libraries.</li><li>Copy <code>share/umicom/framework/examples/model_discovery</code> from that prefix into your own project directory. It contains both <code>main.c</code> and <code>CMakeLists.txt</code>. Do not clone Framework into the application.</li><li>Use the compiler family and architecture that built the SDK. The example verifies package origin and the SDK environment contract.</li><li>Configure, build and run the offline test:</li></ol>
+<pre><code>cmake -S C:/Projects/model-discovery -B C:/Projects/model-discovery/build -G Ninja -DUMICOM_SDK_ROOT=C:/SDKs/Umicom -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe -DBUILD_TESTING=ON
+cmake --build C:/Projects/model-discovery/build
+ctest --test-dir C:/Projects/model-discovery/build --output-on-failure</code></pre>
+<p>Stop after any failing command. Expected program output identifies <code>example:small</code> as listed and reported loaded, and <code>example:large</code> as listed but absent from the loaded observation. It explicitly identifies the inputs as synthetic. These commands are a qualification procedure, not evidence that your installed SDK has passed it.</p>
+<h2>Lesson 3: follow ownership through the API</h2><pre><code>UmiAiDiscoverySnapshot *snapshot = NULL;
+UmiStatus status = UmiAiDiscoveryDecode(
+    UMI_AI_DISCOVERY_OLLAMA_AVAILABLE, json, json_length, NULL, &amp;snapshot);
+if (status == UMI_STATUS_OK) {
+    UmiAiDiscoveredModel model;
+    status = UmiAiDiscoveryFind(snapshot, "example:small", &amp;model);
+    if (status == UMI_STATUS_OK) {
+        /* model is a caller-owned copy; inspect known bits before numbers. */
+    }
+}
+UmiAiDiscoveryDestroy(snapshot);</code></pre>
+<p>The decoder copies and validates the response. It publishes one immutable snapshot only after every entry is valid. Each read copies a record. The snapshot may be read concurrently, but its owner must wait for readers before destroying it. Optional numbers have presence bits: a reported zero VRAM value differs from missing VRAM information.</p>
+<p>The current limits are 4 MiB input, 65,536 JSON nodes, nesting depth 32, 1,024 models and 512 UTF-8 bytes per model ID. No ID is shortened. Repeated decoded IDs or object keys are refused. Numeric metadata requires an exact integer from zero through <code>INT64_MAX</code>. Unknown fields are validated and ignored; they do not grant a capability.</p>
+<h2>Lesson 4: test failure recovery</h2><ol><li>Change the second synthetic ID to the first one. Expect <code>UMI_STATUS_ALREADY_EXISTS</code> and a null snapshot, not a partial list.</li><li>Replace a numeric size with <code>1.5</code>. Expect a parse error.</li><li>Remove the optional size. Decoding should succeed; the size presence bit must be clear.</li><li>Keep a prior good snapshot in your application and publish a new one only after successful decoding. Preserve the prior view on failure and display its observation age.</li></ol>
+<p>The Framework producer registers the native regression group <code>framework.ai.model_discovery.*</code>. A graphical picker, HTTP fetch, model download, chat execution and diffusion generation are separate responsibilities. This example implements none of those effects.</p>
+<h2>Troubleshooting and assessment</h2><p>If CMake cannot find the package, point <code>UMICOM_SDK_ROOT</code> at the installation prefix, not its source checkout or a single DLL. If the environment check fails, use the matching toolchain or rebuild the SDK; do not bypass the check. If the program starts but lacks a runtime library, use the SDK's documented deployment process and inspect the exact missing dependency. A successful configure is not a successful link or launch.</p><p>Explain why model identity includes provider scope, why loaded observations can become stale, and why a missing presence bit cannot be replaced with a guessed zero. Submit your source, compiler identity, SDK identity and actual test output.</p><h2>Lesson 5 — Build a model browser from observations</h2><p>A useful browser needs search, filters and repeatable ordering. Keep these operations over the immutable observation you already own. The native <code>UmiAiDiscoverySelect</code> function returns another owned snapshot, so rendering the result does not borrow mutable form fields or a temporary response buffer.</p><pre><code>UmiAiDiscoveryFilter filter = {0};
+strcpy(filter.search, "example:");
+filter.size_limit_enabled = 1;
+filter.maximum_size_bytes = 1048576;
+filter.order = UMI_AI_DISCOVERY_ORDER_SIZE_ASC;
+UmiAiDiscoverySnapshot *matches = NULL;
+UmiStatus status = UmiAiDiscoverySelect(inventory, &amp;filter, NULL, &amp;matches);
+if (status == UMI_STATUS_OK) {
+    /* Use Count/At/Find as with any discovery snapshot. */
+}
+UmiAiDiscoveryDestroy(matches);</code></pre><p>This fragment assumes <code>inventory</code> is a live decoded snapshot and the usual public header and <code>string.h</code> are included. The complete installed model_discovery example now performs this selection and checks its result. Build and run it with the earlier SDK commands, then record the actual results.</p><table><tr><th>Control</th><th>Meaning</th></tr><tr><td>search</td><td>Substring of ID, display name or family; ASCII letters are case-insensitive. Other Unicode bytes are preserved.</td></tr><tr><td>family / format / quantization</td><td>Exact optional metadata facets. Empty means no facet restriction.</td></tr><tr><td>required_known</td><td>Require explicitly reported numeric fields. Unknown values never silently become zero.</td></tr><tr><td>minimum_context_tokens</td><td>A positive threshold requires a reported context value.</td></tr><tr><td>size limit</td><td>An enabled maximum requires reported size. It does not estimate peak RAM or prove device fit.</td></tr><tr><td>order</td><td>Source, complete ID, name, ascending reported size or descending reported context. Unknown numeric values sort last; complete ID resolves ties.</td></tr></table><p>Keep the connection identity and revision alongside both snapshots. Filtering never merges providers, loads a model or refreshes a server observation. An Ollama available-model list remains that kind of observation after filtering; it does not become a loaded-model list.</p><ol><li>Filter the example by its reported size and explain why one model remains.</li><li>Use a loaded observation with a reported size of zero and one with size absent. Apply a zero-byte maximum and explain why only the known zero can match.</li><li>Sort equal-size models and confirm the full ID determines their order.</li><li>Destroy the original snapshot after selection; confirm copied results remain readable. Retain the original until selection returns.</li><li>Try an invalid filter or a requested cancellation. Keep the result NULL and preserve the previous displayed selection until a new query succeeds.</li></ol><p>A zero-initialized filter is the simplest starting point. Initialise the result pointer to NULL; an occupied output is refused rather than leaked. Search does not implement Unicode case folding or locale-specific collation. Numeric metadata is provider-reported evidence, not a capability test.</p>
+<h2 id="model-details">Lesson 6: distinguish a list entry from model details</h2>
+<p>Ollama's <code>/api/show</code> response can describe one model's format, family, quantization, architecture and declared capabilities. These fields complement the inventory and loaded-model observations from earlier lessons. The official <a href="https://github.com/ollama/ollama/blob/main/docs/api.md#show-model-information">API reference</a> and <a href="https://github.com/ollama/ollama/blob/main/docs/openapi.yaml">response schema</a> describe the protocol. A response can omit optional metadata. Do not fill the gaps with assumptions from a familiar model name.</p>
+<p>The Umicom SDK exposes <code>umicom/ai/ollama_model_info.h</code>. Its decoder accepts response bytes and a model label supplied by your application. That label records what you requested; the decoder does not authenticate a server or verify that the server answered for that model. Retain the reviewed connection, connection revision, request identity and observation time in your application.</p>
+<table><tr><th>Observation</th><th>How to interpret it</th></tr>
+<tr><td>Missing <code>capabilities</code></td><td>The provider supplied no capability list. <code>Declares</code> returns <code>UMI_STATUS_NOT_FOUND</code> and preserves the output boolean.</td></tr>
+<tr><td><code>"capabilities":[]</code></td><td>A list was supplied and contains no declarations. <code>Declares</code> returns OK with false.</td></tr>
+<tr><td>An unfamiliar capability name</td><td>Preserved exactly for inspection. It does not enable an action in your application.</td></tr>
+<tr><td>A numeric presence bit is clear</td><td>The associated number is unknown. A known zero is a different observation.</td></tr>
+<tr><td>Context length</td><td>Read from the key matching <code>general.architecture</code>. A family name is not substituted for the architecture.</td></tr></table>
+<h2>Lesson 7: own a copied detail observation</h2>
+<pre><code>#include &lt;umicom/ai/ollama_model_info.h&gt;
+#include &lt;string.h&gt;
+
+static UmiStatus inspect_details(void)
+{
+    const char response[] =
+        "{\"model_info\":{\"general.architecture\":\"example\","
+        "\"example.context_length\":8192},"
+        "\"capabilities\":[\"completion\",\"future-feature\"]}";
+    UmiOllamaModelInfo *info = NULL;
+    UmiStatus status = UmiOllamaModelInfoCreate(
+        "example:small", response, strlen(response), NULL, &amp;info);
+    if (status == UMI_STATUS_OK) {
+        UmiOllamaModelInfoSummary summary;
+        status = UmiOllamaModelInfoInspect(info, &amp;summary);
+        if (status == UMI_STATUS_OK &amp;&amp;
+            (summary.known &amp; UMI_OLLAMA_MODEL_CONTEXT_LENGTH)) {
+            /* summary.context_length is reported metadata, not a fit test. */
+        }
+    }
+    UmiOllamaModelInfoDestroy(info);
+    return status;
+}</code></pre>
+<p>This is a function fragment; the installed example supplies a complete <code>main</code> and assertions. Initialise the owner pointer to NULL. Creation publishes it only after the entire response is admitted. Keep the input stable until creation returns; afterwards the owner contains copied metadata. Summary and capability reads also copy their results. Wait for readers to finish before destroying the owner. No raw template, system prompt, licence text or tensor list is retained in this metadata owner.</p>
+<p>Response identity is a SHA-256 digest of the exact supplied bytes, including whitespace. It helps detect changed observations; it is not a signature or proof of origin. The decoder performs no network request, model download, activation or inference.</p>
+<h2>Lesson 8: build the installed detail example</h2>
+<ol><li>Use a Framework SDK that includes the public model-information header and matching compiled <code>Umicom::ai</code> library.</li><li>Copy <code>share/umicom/framework/examples/ollama_model_info</code> from the installation into <code>C:\Projects\ollama-model-info</code>.</li><li>Configure with the matching compiler and selected SDK prefix, then build and test. Stop on any error:</li></ol>
+<pre><code>cmake -S C:/Projects/ollama-model-info -B C:/Projects/ollama-model-info/build -G Ninja -DUMICOM_SDK_ROOT=C:/SDKs/Umicom -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe -DBUILD_TESTING=ON
+cmake --build C:/Projects/ollama-model-info/build
+ctest --test-dir C:/Projects/ollama-model-info/build --output-on-failure</code></pre>
+<p>The offline example reports synthetic context metadata, checks one declaration, then distinguishes missing and explicitly empty capability lists. It contacts no provider. Configuration alone does not prove that the selected installed library exports the new functions: retain the build and execution results. If linking reports a missing <code>UmiOllamaModelInfo</code> symbol, check that headers and libraries came from the same SDK installation before changing application code.</p>
+<h2>Lesson 9: defend the boundary without hiding uncertainty</h2>
+<p>The detail decoder admits at most 4 MiB, 65,536 JSON nodes, nesting depth 32 and 64 capability names. A model label is at most 512 UTF-8 bytes; a capability is at most 128. Limits count bytes, not displayed characters. Repeated decoded capability names or object keys are refused. Exact nonnegative integer metadata is limited to <code>INT64_MAX</code>; fractional, negative and overflowing values are refused. Unknown fields are validated and ignored. A provider error response is an error, not an empty successful result.</p>
+<ol><li>Remove the capability member, then use an empty list. Explain why a user interface should distinguish these results.</li><li>Add an unfamiliar declaration and query it using its exact spelling. Change the case and observe the distinct result.</li><li>Use <code>9007199254740993</code> for parameter count. Read it through the integer field; do not route it through a floating-point number.</li><li>Change the architecture while retaining the old context key. The context presence bit must be clear.</li><li>Try duplicate decoded keys, an oversized capability and a cancelled operation. Preserve the previously displayed owner if replacement creation fails.</li><li>Run the producer's <code>framework.ai.ollama_model_info.*</code> tests together with existing model-discovery and model-query regressions, because those decoders share field admission.</li></ol>
+<p>Record which cases actually executed. Declared vision, tools or completion support still requires separate provider-specific execution and application permission checks. A context length does not predict peak memory or prove that the model fits a device. This lesson implements metadata interpretation, not Ollama server parity.</p>
+</main></body></html>

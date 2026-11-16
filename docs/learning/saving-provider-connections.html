@@ -165,4 +165,68 @@ ctest --test-dir build/windows-ucrt64-debug -R '^framework\.provider_connections
 <p>The index is authoritative; records outside it are not listed. A new save refuses to overwrite an orphan record with the same ID. External database edits and file rollback bypass the service's revision protocol. Treat the local database as host-controlled storage, not as an authenticated audit log.</p>
 <p>Join all users before destroying the store, registry and Data Server, in that order. Run synchronous database and vault work on the host's owned worker when it could block a graphical interface. The existing integration designer's in-memory connection catalogue remains available; this separate service adds durable, reviewed storage without changing that catalogue's API.</p>
 <p>For a small credential-free example, read <code>examples/provider_connections/saved_connections.c</code>. Its expected output is <code>Saved draft: Local model server (disabled)</code>. The example uses memory and performs no network or vault operations.</p>
+
+<section><h2>Course extension: portable settings documents in the native SDK</h2>
+<h3>Lesson 1: export an observation, not access rights</h3>
+<p>Include <code>umicom/provider_connections/document.h</code> and link <code>Umicom::provider_connections</code>. <code>UmiProviderConnectionDocumentExport</code> accepts a validated connection and its nonzero observed scope revision. It writes a versioned document into caller-owned memory. This operation does not read a store, open a vault or contact a provider.</p>
+<p>The envelope identifies format version 1 and the observed revision. The record inside uses Framework's existing canonical encoding: fields are in a fixed order and text becomes lowercase hexadecimal UTF-8 bytes. Hex encoding is readable data, not encryption. A credential reference such as <code>vault:personal-key</code> may be present, but a credential value must never be placed in any field. Keep sensitive labels and references out of public examples.</p>
+<pre><code>char bytes[UMI_PROVIDER_CONNECTION_DOCUMENT_MAX_BYTES];
+size_t length = 0;
+UmiStatus status = UmiProviderConnectionDocumentExport(
+    &amp;connection, observed_revision, bytes, sizeof bytes, &amp;length);
+/* On success, length excludes the terminating NUL. */</code></pre>
+<h3>Lesson 2: import without changing live settings</h3>
+<p><code>UmiProviderConnectionDocumentImport</code> reads an exact byte span. The span need not have a terminating NUL. Both output values stay unchanged on failure. Unknown numeric versions return <code>UMI_STATUS_NOT_IMPLEMENTED</code>; malformed known records return <code>UMI_STATUS_PARSE_ERROR</code>. Do not retry malformed bytes as a different format or silently normalize their line endings.</p>
+<pre><code>UmiProviderConnection candidate;
+uint64_t historical_revision = 0;
+status = UmiProviderConnectionDocumentImport(bytes, length,
+    &amp;candidate, &amp;historical_revision);
+/* This is still an untrusted observation. Nothing has been saved. */</code></pre>
+<ol><li>Decode into a separate candidate.</li><li>Read the current store in the intended application/profile scope.</li><li>Present differences, including endpoint, model and credential reference.</li><li>If the user chooses to save, use the current store revision and the existing explicit create/replace operation.</li><li>Authenticate and review the current destination before any later credential acquisition or provider request.</li></ol>
+<p>A document carries no application/profile scope. Its revision may come from another store or an edited file. Never pass that historical number straight into a save merely because import succeeded. A vault alias may also refer to a different credential in another profile. Syntax and a matching content fingerprint do not establish trust or model availability.</p>
+<h3>Lesson 3: create an independent SDK project</h3>
+<p>The complete <code>examples/provider_document</code> project exports a synthetic loopback record, imports it, and compares the two canonical fingerprints. With a separately built and installed SDK, use the commands below. Replace the SDK path consistently with your installation.</p>
+<pre><code>cmake -S C:/sdk/umicom/share/umicom/framework/examples/provider_document -B build/provider-document -G Ninja -DUMICOM_SDK_ROOT=C:/sdk/umicom
+cmake --build build/provider-document
+ctest --test-dir build/provider-document --output-on-failure</code></pre>
+<p>The expected message is <code>Settings identity preserved; no store, vault or provider was accessed.</code> It checks the serialization path, not an actual server. The project uses SDK identity, ABI and Umicom branding helpers and does not compile Framework source files into the application.</p>
+<h3>Lesson 4: diagnose rejected records</h3>
+<p>Capacity includes room for a terminating NUL on export. Import accepts fewer than 8192 bytes. An empty document, embedded NUL, missing line, extra data, CRLF, uppercase hex, signed number, leading zero or zero revision is rejected. A maximum 64-bit revision is preserved exactly; do not route it through floating-point JSON numbers. Regenerate a damaged document from a validated source instead of weakening the parser.</p>
+<p>In <code>tests/provider_connections/test_document.c</code>, compare the independent golden bytes, every truncated prefix, actual CRLF fixture and unchanged-output checks. Run these native tests when qualifying your SDK. Authored examples and successful configuration alone do not establish their compiler or runtime results.</p>
+</section>
+
+<section id="document-files"><h2>Read saved settings from an independent native application</h2>
+<h3>Lesson 5: publish a complete observation</h3>
+<p>A file read can fail after some bytes have arrived. Parsing may also reject a file whose read completed. Keep the currently displayed settings until both operations succeed. Framework's <code>UmiProviderConnectionDocumentFileRead</code> composes its regular-file reader and existing document decoder, then publishes the connection and historical revision together.</p>
+<pre><code>#include &lt;umicom/provider_connections/document_file.h&gt;
+UmiProviderConnection candidate;
+uint64_t historical_revision = 0;
+UmiStatus status = UmiProviderConnectionDocumentFileRead(
+    absolute_path, cancel, &amp;candidate, &amp;historical_revision);
+if (status != UMI_STATUS_OK) {
+    /* Retain the existing view; candidate has not been published. */
+    return status;
+}
+/* Present the observation for review. It has not activated any setting. */</code></pre>
+<p>The fragment belongs in a function returning <code>UmiStatus</code>. Its host supplies an absolute UTF-8 filename and an optional borrowed cancellation token. On every refusal, both output objects retain their previous bytes. Do not let the inputs and outputs overlap. The service clears its temporary file bytes and staged connection before returning; the caller owns the successful copied observation and its later disposal.</p>
+<h3>Lesson 6: understand file and cancellation limits</h3>
+<ol><li>Select an ordinary absolute filename in a trusted directory. The shared reader refuses final links, reparse points, devices and directories. Parent aliases can still resolve outside a selected tree; this is not a sandbox.</li>
+<li>Read fewer than 8192 bytes. A larger file returns <code>CAPACITY_EXCEEDED</code>. Empty content returns <code>PARSE_ERROR</code>, because a real zero-byte file is different from a null API argument.</li>
+<li>Keep the cancellation token alive until the call returns. Checks occur before and after I/O and immediately before publication. They cannot interrupt a blocking operating-system read. Use an owned worker for graphical applications.</li>
+<li>Report the first actionable failure. Cancellation during cleanup must not turn an existing parse error into a different diagnosis. A successfully parsed observation is withheld when cancellation arrives before publication.</li>
+<li>Reread the current scoped store before proposing a save. Historical revision, fingerprint and successful decoding are not authorization to acquire a credential or contact a provider.</li></ol>
+<p>The platform checks metadata on the same open handle and requires successful close before returning bytes. These checks detect observable changes; they do not guarantee an immutable filesystem snapshot against a hostile writer. Preserve the selected file when diagnosing <code>BUSY</code>, malformed content or an unsupported format version. Do not repair these conditions by resetting live settings.</p>
+<h3>Lesson 7: inspect a file with the installed SDK example</h3>
+<p>Build the independent project from lesson 3 with a matching installed SDK. Its no-argument round trip remains available. Passing one absolute filename uses the shared file reader; the process argument helper preserves Unicode filenames on Windows. The example prints the historical revision and canonical settings fingerprint, without printing endpoint, labels or credential references.</p>
+<pre><code>.\build\provider-document\bin\umicom-sdk-provider-document.exe --help
+.\build\provider-document\bin\umicom-sdk-provider-document.exe C:\examples\local.umiconnection
+ctest --test-dir build/provider-document -R '^sdk\.provider-document\.' --output-on-failure</code></pre>
+<p>The supplied isolated valid fixture should report revision 7. A real file reports its own revision. Exit 0 means the observation succeeded, exit 1 means observation or output failed, and exit 2 means extra arguments were supplied. These results never establish provider health. A fingerprint is a content identity label; do not publish it when that identity is itself sensitive.</p>
+<h3>Lesson 8: test publication rather than only the happy path</h3>
+<p>The real-file cases cover Unicode paths, missing files, directories, relative paths, exact size limits, malformed bytes, CRLF and cancellation before I/O. The injected cases run the production composition with only its file read and free functions replaced. They retain the real decoder and cancellation service, check every temporary byte is cleared, and inject cancellation after read and during release. They also check an actual embedded NUL inside otherwise canonical bytes. This distinguishes ownership checks from operating-system qualification.</p>
+<pre><code>cmake --build build/windows-ucrt64-debug --target umicom-provider-document-file-test umicom-provider-document-file-faults-test umicom-provider-document-example-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework\.provider_connections\.document_(file|file_faults|sdk-file)\.' --output-on-failure</code></pre>
+<p>Exercise: preserve an earlier connection and revision, attempt to read an empty file, and show that both outputs remain byte-for-byte unchanged. Then cancel during temporary release in the injected fixture and explain why parsed data is withheld. Configuration registers these checks; compile and execute them separately when qualifying the SDK.</p>
+</section>
+
 </body></html>

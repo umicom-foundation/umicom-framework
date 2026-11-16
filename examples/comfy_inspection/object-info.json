@@ -1,0 +1,15 @@
+{
+  "Text": {
+    "input": {
+      "required": {
+        "text": [
+          "STRING"
+        ]
+      }
+    },
+    "output": [
+      "STRING"
+    ],
+    "output_node": false
+  }
+}

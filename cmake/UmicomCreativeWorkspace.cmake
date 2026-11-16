@@ -23,6 +23,9 @@ foreach(dependency IN ITEMS Umicom::data Umicom::media_engine)
         message(FATAL_ERROR "Creative workspace requires canonical ${dependency}")
     endif()
 endforeach()
+# The shared consumer helper owns this policy in both SDK and source builds.
+# Retain the original definition for architectural review.
+if(FALSE)
 function(umicom_creative_configure_target target)
     set_target_properties(${target} PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
     if(COMMAND umicom_apply_warnings)
@@ -32,6 +35,8 @@ function(umicom_creative_configure_target target)
         umicom_apply_sanitizers(${target})
     endif()
 endfunction()
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomCreativeApplication.cmake")
 add_library(umicom_creative_workspace STATIC
     "${_umicom_creative_root}/src/creative_workspace/brand_assets.c"
     "${_umicom_creative_root}/src/creative_workspace/export_file.c"
@@ -152,6 +157,9 @@ if(BUILD_TESTING)
     endif()
 endif()
 # A product selects a profile rather than copying any creative service.
+# Attachment now lives in the installable consumer helper above. This retained
+# implementation documents the former producer-relative example location.
+if(FALSE)
 function(umicom_attach_creative_workspace)
     cmake_parse_arguments(PARSE_ARGV 0 UMI "" "NAME;TARGET" "")
     if(UMI_UNPARSED_ARGUMENTS OR NOT UMI_NAME OR NOT UMI_TARGET OR NOT TARGET "${UMI_TARGET}")
@@ -182,6 +190,7 @@ function(umicom_attach_creative_workspace)
         endif()
     endif()
 endfunction()
+endif()
 install(FILES "${_umicom_creative_root}/docs/learning/CREATIVE_WORKSPACE.html"
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/docs/learning" COMPONENT Framework)
 unset(_umicom_creative_root)

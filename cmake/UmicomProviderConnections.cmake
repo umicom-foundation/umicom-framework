@@ -334,3 +334,103 @@ if(BUILD_TESTING)
         endforeach()
     endforeach()
 endif()
+
+# Versioned exchange shares the canonical settings wire owner, never a second serializer.
+if(BUILD_TESTING)
+    add_executable(umicom-provider-document-test "${_umicom_connections_root}/tests/provider_connections/test_document.c")
+    add_executable(umicom-provider-document-example-test "${_umicom_connections_root}/examples/provider_document/main.c")
+    foreach(_target umicom-provider-document-test umicom-provider-document-example-test)
+        target_link_libraries(${_target} PRIVATE Umicom::provider_connections)
+        set_target_properties(${_target} PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        umicom_apply_warnings(${_target})
+        umicom_apply_sanitizers(${_target})
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(${_target})
+        endif()
+    endforeach()
+    foreach(_case golden maximum-revision unicode disabled remote-reference fingerprint trailing-storage exact-capacity small-capacity zero-capacity zero-export-revision invalid-connection truncated not-terminated embedded-nul trailing-data maximum-bytes raw-wire upper-hex nul-hex odd-hex crlf unknown-version zero-version version-leading-zero revision-leading-zero revision-sign revision-overflow zero-import-revision nulls)
+        add_test(NAME framework.provider_connections.document.${_case} COMMAND umicom-provider-document-test ${_case})
+        set_tests_properties(framework.provider_connections.document.${_case} PROPERTIES TIMEOUT 20 LABELS "framework;provider-connections;sdk;document")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.provider_connections.document.${_case} TARGETS umicom-provider-document-test)
+        endif()
+    endforeach()
+    add_test(NAME framework.provider_connections.document.sdk-example COMMAND umicom-provider-document-example-test)
+    set_tests_properties(framework.provider_connections.document.sdk-example PROPERTIES TIMEOUT 20 LABELS "framework;provider-connections;sdk")
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationBranding.cmake")
+    umicom_apply_application_branding(TARGET umicom-provider-document-example-test
+        PRODUCT_NAME "Umicom Provider Settings Example" INTERNAL_NAME "umicom-provider-document-example-test"
+        APPLICATION_ID "org.umicom.provider-document-example"
+        RESOURCE_ROOT "${_umicom_connections_root}/resources" NO_RUNTIME_DEPLOYMENT)
+endif()
+foreach(_component Framework FrameworkSDK FrameworkDocumentation)
+    set(_selection EXCLUDE_FROM_ALL)
+    if(_component STREQUAL "Framework")
+        set(_selection)
+    endif()
+    install(FILES "${_umicom_connections_root}/examples/provider_document/main.c"
+        "${_umicom_connections_root}/tests/provider_connections/check_document_file.cmake"
+        "${_umicom_connections_root}/examples/provider_document/CMakeLists.txt"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/examples/provider_document"
+        COMPONENT "${_component}" ${_selection})
+endforeach()
+
+
+# Native file observation composes existing platform ownership with the canonical
+# provider decoder. Keep the same boundary in applications and installed consumers.
+target_sources(umicom_provider_connections PRIVATE
+    "${_umicom_connections_root}/src/provider_connections/document_file.c")
+if(BUILD_TESTING)
+    add_executable(umicom-provider-document-file-test
+        "${_umicom_connections_root}/tests/provider_connections/test_document_file.c")
+    add_executable(umicom-provider-document-file-faults-test
+        "${_umicom_connections_root}/tests/provider_connections/test_document_file_faults.c"
+        "${_umicom_connections_root}/src/provider_connections/document_file.c")
+    target_compile_definitions(umicom-provider-document-file-faults-test PRIVATE
+        UmiInputFileRead=FileFixtureRead UmiInputFileFree=FileFixtureFree)
+    foreach(_target umicom-provider-document-file-test umicom-provider-document-file-faults-test)
+        target_link_libraries(${_target} PRIVATE Umicom::provider_connections Umicom::platform)
+        set_target_properties(${_target} PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        umicom_apply_warnings(${_target})
+        umicom_apply_sanitizers(${_target})
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(${_target})
+        endif()
+        if(COMMAND umicom_target_qualification_inputs)
+            umicom_target_qualification_inputs(${_target} FILES
+                "${_umicom_connections_root}/src/provider_connections/document_file.c"
+                "${_umicom_connections_root}/src/provider_connections/wire.c"
+                "${_umicom_connections_root}/src/platform/input_file.c")
+        endif()
+    endforeach()
+    foreach(_case success not-found permission io-failure allocation-failure capacity malformed unknown-version empty cancel-before cancel-after-read cancel-at-release parse-before-cancel null-path null-connection null-revision embedded-nul)
+        set(_test "framework.provider_connections.document_file_faults.${_case}")
+        add_test(NAME "${_test}" COMMAND umicom-provider-document-file-faults-test "${_case}")
+        set_tests_properties("${_test}" PROPERTIES TIMEOUT 20 LABELS "framework;provider-connections;document;faults")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("${_test}" TARGETS umicom-provider-document-file-faults-test)
+        endif()
+    endforeach()
+    foreach(_suite file sdk-file)
+        set(_sdk FALSE)
+        set(_target umicom-provider-document-file-test)
+        set(_cases valid unicode missing directory relative empty malformed unknown-version crlf within-limit over-limit cancel-before)
+        if(_suite STREQUAL "sdk-file")
+            set(_sdk TRUE)
+            set(_target umicom-provider-document-example-test)
+            set(_cases valid unicode missing directory relative empty malformed unknown-version crlf within-limit over-limit help extra)
+        endif()
+        foreach(_case IN LISTS _cases)
+            set(_test "framework.provider_connections.document_${_suite}.${_case}")
+            add_test(NAME "${_test}" COMMAND "${CMAKE_COMMAND}"
+                "-DTEST_EXE=$<TARGET_FILE:${_target}>"
+                "-DTEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}/provider-document-files/${_suite}/${_case}"
+                "-DTEST_CASE=${_case}" "-DTEST_SDK=${_sdk}"
+                -P "${_umicom_connections_root}/tests/provider_connections/check_document_file.cmake")
+            set_tests_properties("${_test}" PROPERTIES TIMEOUT 35 LABELS "framework;provider-connections;document;native-file")
+            if(COMMAND umicom_test_impact_owners)
+                umicom_test_impact_owners("${_test}" TARGETS "${_target}")
+            endif()
+        endforeach()
+    endforeach()
+endif()

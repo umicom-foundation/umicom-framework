@@ -458,3 +458,23 @@ umicom_add_ai_developer_platform_test(
 endif()
 
 message(STATUS "Umicom AI developer model routing, retrieval, memory, review and agent governance enabled")
+
+# One executable keeps boundary cases inexpensive while giving each refusal a
+# separate CTest identity. Native execution remains part of owner qualification.
+if(BUILD_TESTING)
+    add_executable(umicom-ai-model-catalogue-admission-test
+        tests/ai_developer_platform/test_model_catalogue_admission.c)
+    target_link_libraries(umicom-ai-model-catalogue-admission-test PRIVATE Umicom::Framework)
+    set_target_properties(umicom-ai-model-catalogue-admission-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES)
+    umicom_apply_warnings(umicom-ai-model-catalogue-admission-test)
+    umicom_apply_sanitizers(umicom-ai-model-catalogue-admission-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-ai-model-catalogue-admission-test)
+    endif()
+    foreach(_case lifecycle max-id overlong shared-prefix nonterminated empty-id nulls case-sensitive extension-flags alias-existing alias-new-slot capacity full-update revision stale-insert stale-update saturation-insert saturation-update corrupt-count corrupt-id corrupt-empty corrupt-duplicate corrupt-revision enabled)
+        add_test(NAME framework.ai_developer_platform.catalogue.admission.${_case}
+            COMMAND umicom-ai-model-catalogue-admission-test ${_case})
+        set_tests_properties(framework.ai_developer_platform.catalogue.admission.${_case}
+            PROPERTIES TIMEOUT 15 LABELS "framework;ai;catalogue;admission")
+    endforeach()
+endif()

@@ -1,0 +1,43 @@
+<!-- Umicom Framework
+File: docs/learning/captured-boot-json-sdk.html
+
+PURPOSE:
+Teach read captured boot reports with the umicom framework sdk through documented behavior and reproducible exercises.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Read captured boot reports with the Umicom Framework SDK | Umicom</title><link rel="icon" type="image/svg+xml" href="../../resources/brand/umicom-icon.svg"><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico"><style>body{margin:0;background:#f7f9fc;color:#172a3b;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif}main{max-width:1040px;margin:auto;padding:32px}header img{width:212px;height:auto}code,pre{font-family:"Cascadia Code",Consolas,monospace}pre{padding:18px;overflow:auto;background:#e4eef6}aside{border-left:4px solid #2678a3;padding:16px;background:#e4eef6}a{color:#005ea8}table{border-collapse:collapse;width:100%}td,th{text-align:left;vertical-align:top;padding:9px;border-bottom:1px solid #ccd6df}</style></head><body><main><header><img src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header><nav><a href="native-ai-applications-course.html">Native AI application learning path</a></nav><h1>Read captured boot reports with the Umicom Framework SDK</h1>
+<p>This short course builds a C23 client that turns an admitted boot report into JSON. JSON is structured text with named fields; another application can read those fields without scraping console sentences. A capture records an observation. It does not prove that a machine is healthy now or that its publisher is trusted.</p>
+<h2>Lesson 1: choose the right component</h2><p><code>Umicom::platform</code> owns report parsing, file admission, validation and semantic comparison. <code>Umicom::boot_report_tools</code> adds JSON presentation using the existing protocol writer. Protocol already depends on platform, so putting the JSON writer dependency back into platform would create a cycle. This separate SDK component keeps dependency direction clear.</p>
+<p>The SDK needs public headers and compiled libraries from the same build. Select an installed package that exports <code>boot_report_tools</code>; a copied header alone cannot supply the library. Follow the <a href="sdk-product-composition.html">SDK composition course</a> to qualify the package and its compiler environment first.</p>
+<h2>Lesson 2: build the standalone example</h2><ol><li>Install a matching UCRT64 Framework SDK at <code>C:\SDKs\Umicom</code>.</li><li>Copy the installed <code>share/umicom/framework/examples/boot_report_json</code> folder into <code>C:\Projects\BootReportJson</code>.</li><li>Run these commands separately and stop at the first failure.</li></ol>
+<pre><code>$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake -S C:/Projects/BootReportJson -B C:/Projects/BootReportJson/build -G Ninja -DUMICOM_SDK_ROOT=C:/SDKs/Umicom -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTING=ON
+cmake --build C:/Projects/BootReportJson/build
+ctest --test-dir C:/Projects/BootReportJson/build --output-on-failure
+&amp; "C:\Projects\BootReportJson\build\bin\umicom-sdk-boot-report-json.exe"</code></pre>
+<p>The teaching program constructs two synthetic observations. Expected JSON has <code>scope</code> equal to <code>captured-boot-comparison</code>, <code>same_source</code> equal to <code>true</code>, and <code>changed_fields</code> equal to <code>["state","completed"]</code>. These are expected results for your execution, not a claim that your SDK has already passed. The shared branding helper attaches the supplied Umicom icon and stages approved resources.</p>
+<h2>Lesson 3: load a real selected capture</h2><p>Include the file and JSON headers, then keep loading separate from formatting:</p>
+<pre><code>#include "umicom/platform/boot_report_file.h"
+#include "umicom/platform/boot_report_json.h"
+
+UmiBootReport report;
+char json[UMI_BOOT_REPORT_JSON_CAPACITY];
+size_t length = 0;
+UmiStatus status = UmiBootReportLoad(selected_absolute_path, NULL, &amp;report);
+if (status == UMI_STATUS_OK)
+    status = UmiBootReportJson(&amp;report, json, sizeof json, &amp;length);</code></pre>
+<p>Only use <code>json</code> and <code>length</code> after success. They are preserved on refusal. The capacity includes the final NUL byte; the returned length excludes it. The loader accepts a bounded regular file at an absolute path. Parent-directory aliases may be followed, so select a trusted parent directory. File reads can block; interactive programs should use their existing worker service. Neither function writes to the capture.</p>
+<h2>Lesson 4: interpret comparison honestly</h2><table><tr><th>Field</th><th>Meaning</th></tr><tr><td><code>schema_version</code></td><td>Version 1 of this presentation contract, independent of a product version.</td></tr><tr><td><code>same_source</code></td><td>The two report source strings match. It does not prove a shared machine or boot.</td></tr><tr><td><code>changed_fields</code></td><td>Changed semantic fields in mode, state, planned, completed, reason, source order.</td></tr><tr><td><code>before</code> / <code>after</code></td><td>Reports in caller-supplied order, without a claim about timestamps.</td></tr></table><p>Changing a source ID can mean a different boot plan. Do not label a higher completed count as a repair across unrelated plans. Keep both snapshots available for review. An empty change list means equal semantic fields, not identical file bytes.</p>
+<h2>Lesson 5: use the OS console</h2><p>When configuring an OS SDK consumer, add <code>-DUMICOM_OS_REQUIRE_BOOT_REPORT_JSON=ON</code> to require the component. A missing component then fails configuration. Without that requirement, an older Framework keeps the existing text commands and responds to JSON commands with an explicit unavailable error. No startup operation is substituted.</p>
+<pre><code>&amp; "C:\Apps\UmicomOS\bin\umicom-os.exe" --boot-report-json "C:\Captures\boot.report"
+&amp; "C:\Apps\UmicomOS\bin\umicom-os.exe" --compare-boot-reports-json "C:\Captures\earlier.report" "C:\Captures\later.report"</code></pre>
+<p>An optional <code>--source</code> followed by a lowercase 64-character SHA-256 string checks the selected single report against an expected identity. It is an equality check, not authentication. Exit 0 means the selected reports were admitted and JSON was written; exit 1 means a load, capability, formatting or output failure; exit 2 means unsupported command syntax.</p>
+<h2>Lesson 6: diagnose and verify</h2><ol><li>If configuration lacks <code>boot_report_tools</code>, install a Framework package containing this component and select that prefix. Do not combine unrelated headers and archives.</li><li>If a report is rejected, check its documented version, exact LF framing, counts, reason and lowercase source ID. See <a href="../platform/boot-report.md">the report format</a>.</li><li>If output capacity is insufficient, allocate <code>UMI_BOOT_REPORT_JSON_CAPACITY</code> bytes. Failed formatting does not publish a partial document.</li><li>Run the producer tests matching <code>framework.os_foundation.boot_report_json.</code> and the OS tests matching <code>os.boot_report_json_cli.</code> against the actual binaries.</li><li>Record configuration, compilation and runtime results separately. Registered tests and a successful CMake configuration do not establish execution.</li></ol>
+<p>Exercise: compare equal reports, a starting/ready transition and different source IDs. Then pass malformed and undersized inputs. Explain why a copied byte snapshot is used to test nonmutation: C struct assignment need not preserve padding bytes, even when its members are equal.</p>
+</main></body></html>

@@ -73,4 +73,19 @@ if (console_session != NULL) {
 <p>The existing <a href="../../examples/local_models/sdk_consumer/main.c">installed SDK consumer</a> now resolves the projection and conditional catalogue symbols as well as earlier model APIs. Configure it against an installed package, not Framework source. Its build and execution establish consumer linkage only; they do not qualify an inference engine. The SDK supplies its approved application branding through the shared resource helper.</p>
 <ol><li>Project a valid plan and confirm healthy-runtime selection refuses it.</li><li>Edit the caller's next-run plan after submission, then confirm the session copy still describes the original settings.</li><li>Replace a catalogue record while an observation is pending and confirm its old revision cannot publish.</li><li>Break console review delivery in the injected test and confirm no side-effect boundary is reached.</li></ol>
 <p><a href="index.html">Learning index</a> · <a href="reviewed-local-streams.html">Approved local streaming</a></p>
+<section id="complete-identifiers"><h2>8. Keep complete model identities</h2>
+<p>A provider model ID identifies a deployment. Two IDs can share a long prefix and still refer to different models. Shortening either ID can route a request to the wrong deployment. The developer catalogue accepts 1 to 95 bytes followed by a terminating zero; it rejects longer IDs. This is the developer catalogue's bound, not a limit imposed on every runtime or provider.</p>
+<ol><li>Initialise a <code>UmiAiDevModelCatalogue</code> with <code>umi_ai_dev_model_catalogue_init</code>.</li><li>Record its revision before starting discovery. Keep the network response separate from the catalogue.</li><li>Publish with <code>UmiAiDevModelCatalogueUpsertIfRevision</code>. A stale revision returns <code>UMI_STATUS_BUSY</code>; obtain current state before reviewing the response again.</li><li>Handle invalid IDs and capacity limits visibly. Do not shorten identifiers to make them fit.</li></ol>
+<pre><code>UmiAiDevModelCatalogue catalogue;
+umi_ai_dev_model_catalogue_init(&amp;catalogue);
+uint64_t observed_revision = catalogue.revision;
+UmiStatus status = UmiAiDevModelCatalogueUpsertIfRevision(
+    &amp;catalogue, "local/example-model", 10, 0, observed_revision);
+if (status != UMI_STATUS_OK) {
+    /* Keep the current selection; report the admission failure. */
+}</code></pre>
+<p>Revision checks detect stale publication; they are not mutexes. The caller must serialize access. Stored IDs are case sensitive, extension flags are preserved, and every rejected update leaves the catalogue unchanged. <code>UmiAiDevModelCatalogueValidate</code> checks stored bounds, uniqueness and revision consistency before traversal. A catalogue entry alone does not prove that a model is installed, reachable, loaded or qualified for generation.</p>
+<h3>Verify boundary behavior</h3><pre><code>cmake --build build/windows-ucrt64-debug --target umicom-ai-model-catalogue-admission-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework[.]ai_developer_platform[.]catalogue[.]admission[.]' --output-on-failure</code></pre>
+<p>The scenarios cover maximum length, common prefixes, missing terminators, aliased input, full capacity, stale revisions and corrupt stored state. These are native qualification commands, not a claim that the tests have run. If no tests match, configure with <code>BUILD_TESTING=ON</code> and check that the headers and libraries come from the same Framework SDK.</p></section>
 </main></body></html>
