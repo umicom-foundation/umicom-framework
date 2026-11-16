@@ -48,6 +48,7 @@ add_library(umicom_local_models STATIC
     "${_umi_models_root}/src/local_models/bundle_selection.c"
     "${_umi_models_root}/src/local_models/catalogue.c"
     "${_umi_models_root}/src/local_models/inspect.c"
+    "${_umi_models_root}/src/local_models/run_inspection.c"
     "${_umi_models_root}/src/local_models/download.c"
     "${_umi_models_root}/src/local_models/plan.c"
     "${_umi_models_root}/src/local_models/runtime.c"

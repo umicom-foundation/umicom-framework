@@ -75,6 +75,19 @@ typedef struct UmiModelInspection {
  * Files must remain stable until the external engine finishes using them. */
 UmiStatus UmiModelInspect(const char *path, const char *expectedSha256,
     const UmiCancellationToken *cancellation, UmiModelInspection *outInspection);
+/* Pure feature availability; no file, process or network observation. */
+bool UmiModelRunInspectionAvailable(void);
+/* Stronger pre-submission inspection, separate from legacy basic inspection.
+ * Require a reviewed 64-digit lowercase SHA-256; inspect bounded GGUF role
+ * metadata and hash the whole file in the same checked read. Explicitly
+ * auxiliary and unknown roles return NOT_IMPLEMENTED; zero/impossible tensor
+ * counts return PARSE_ERROR. Missing model_formats also returns NOT_IMPLEMENTED.
+ * Failure/cancellation preserves output. expectedSha256 may borrow its digest.
+ * OK means a matching model candidate, not verified tensor layout, architecture
+ * support, available memory or readiness. No file freezing after return, no
+ * engine loading and no process/network operation. Call on a worker thread. */
+UmiStatus UmiModelInspectForRun(const char *path,const char *expectedSha256,
+    const UmiCancellationToken *cancellation,UmiModelInspection *outInspection);
 /* Explicit network/write approval. The destination is created exclusively and
  * is never overwritten. Partial or rejected bytes are retained for review:
  * a file's existence alone NEVER means it is installed/verified. Success
@@ -114,6 +127,8 @@ typedef struct UmiModelSession UmiModelSession;
  * submits an owned process tree. An OK return is submission, NOT readiness.
  * Session owns supervisor/lease; the executable and model must be trusted.
  * Environment is inherited by the platform runner. This is not a sandbox. */
+/* Submission additionally requires UmiModelInspectForRun. A format-disabled
+ * SDK refuses the launch; it never substitutes weaker header-only admission. */
 UmiStatus UmiModelSessionStart(const UmiModelRunPlan *plan, bool approved,
     UmiModelSession **inOutSession);
 UmiStatus UmiModelSessionRead(const UmiModelSession *session, UmiProcessJobSnapshot *outSnapshot);

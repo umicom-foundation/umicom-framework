@@ -18,6 +18,7 @@
 #include "umicom/ai/ollama_pull_file.h"
 #ifdef UMICOM_MODELS_HAS_TENSOR_INSPECTION
 #include "umicom/model_formats/safetensors_file.h"
+#include "umicom/model_formats/gguf.h"
 #endif
 #include <inttypes.h>
 #include <stdio.h>
@@ -53,6 +54,7 @@ static void Help(void)
         "  catalogue\n"
         "  inspect ABSOLUTE_GGUF [SHA256]\n"
         "  inspect-safetensors ABSOLUTE_FILE\n"
+        "  inspect-role ABSOLUTE_GGUF  (offline role metadata and digest)\n"
         "  inspect-pull ABSOLUTE_NDJSON  (offline provider-progress observation)\n"
         "  download ID NEW_ABSOLUTE_GGUF [--apply]\n"
         "  download-file REPOSITORY COMMIT FILE SHA256 BYTES NEW_ABSOLUTE_GGUF [--apply]\n"
@@ -107,6 +109,32 @@ static int InspectSafetensors(const char *path)
 #else
     (void)path;
     return Failure(UMI_STATUS_NOT_IMPLEMENTED);
+#endif
+}
+
+/* Role inspection is additive: retain the legacy header-only inspect command.
+ * Both hosts use the canonical streaming parser, and neither observation can
+ * authorize a runtime load or establish that candidate weights are complete. */
+static int InspectGgufRole(const char *path)
+{
+#ifdef UMICOM_MODELS_HAS_TENSOR_INSPECTION
+    UmiGgufFileInspection inspected;
+    UmiStatus status=UmiGgufFileInspect(path,NULL,NULL,&inspected);
+    if(status!=UMI_STATUS_OK) return Failure(status);
+    char digest[UMI_SHA256_HEX_CAPACITY];UmiSha256Hex(inspected.file.sha256,digest);
+    const UmiGgufMetadata *metadata=&inspected.metadata;
+    const char *role=metadata->role==UMI_GGUF_ROLE_AUXILIARY?"auxiliary":
+        metadata->role==UMI_GGUF_ROLE_VOCABULARY_ONLY?"vocabulary-only":
+        metadata->role==UMI_GGUF_ROLE_MODEL_CANDIDATE?"model-candidate":"unknown";
+    (void)printf("Bytes: %" PRIu64 "\nSHA256: %s\nRole: %s\nArchitecture: %s\nType: %s\nAdapter type: %s\n",
+        inspected.file.bytes,digest,role,metadata->has_architecture?metadata->architecture:"unknown",
+        metadata->has_type?metadata->type:"unspecified",metadata->has_adapter_type?metadata->adapter_type:"unspecified");
+    (void)printf("Metadata bytes: %" PRIu64 "; entries: %" PRIu64 "; declared tensors: %" PRIu64 "\n",
+        metadata->metadata_bytes,metadata->entries,metadata->tensors);
+    (void)puts("Observed role and file identity only. Tensor completeness, engine compatibility and runtime readiness remain unverified.");
+    return ReviewOutputComplete()?0:Failure(UMI_STATUS_IO_ERROR);
+#else
+    (void)path;return Failure(UMI_STATUS_NOT_IMPLEMENTED);
 #endif
 }
 
@@ -661,6 +689,8 @@ int UmiModelsCommandWithSession(int argc, char **argv, UmiModelSession **inOutSe
         if (status != UMI_STATUS_OK) return Failure(status);
         Inspection(&inspected); return ReviewOutputComplete() ? 0 : Failure(UMI_STATUS_IO_ERROR);
     }
+    if (strcmp(argv[0], "inspect-role") == 0 && argc == 2)
+        return InspectGgufRole(argv[1]);
     if (strcmp(argv[0], "inspect-safetensors") == 0 && argc == 2)
         return InspectSafetensors(argv[1]);
     if (strcmp(argv[0], "health") == 0 && (argc == 3 ||

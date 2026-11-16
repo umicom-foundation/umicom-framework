@@ -587,3 +587,6 @@ foreach(_component Framework FrameworkSDK FrameworkDocumentation)
         DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/examples/comfy_nodes"
         COMPONENT "${_component}" ${_selection})
 endforeach()
+
+# Captured node browsing composes the immutable catalogue and selector.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomComfyNodePages.cmake")

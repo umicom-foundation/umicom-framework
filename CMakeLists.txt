@@ -167,6 +167,8 @@ add_library(umicom_base STATIC
     src/base/snapshot_validation.c
     src/base/result.c
     src/base/memory.c
+    # Opt-in bounded ownership reuses the canonical allocator callback ABI.
+    src/base/budget_allocator.c
     src/base/text.c
     # Unicode validation is shared by document conversion and tool evidence.
     src/base/utf8.c
@@ -7900,3 +7902,6 @@ include(cmake/UmicomBootReportTools.cmake)
 
 # Multi-model selection and presentation share one bounded report contract.
 include(cmake/UmicomAiEnsembleAdmission.cmake)
+
+# Shared allocation ownership and installed learning consumer.
+include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomBudgetAllocator.cmake")

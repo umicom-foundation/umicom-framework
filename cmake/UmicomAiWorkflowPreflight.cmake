@@ -42,7 +42,9 @@ function(umicom_add_ai_workflow_preflight)
     get_filename_component(_root "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/.." ABSOLUTE)
     add_library(umicom_ai_workflow_preflight STATIC
         "${_root}/src/ai_workflow/preflight.c"
-        "${_root}/src/ai_workflow/diagnostic.c")
+        "${_root}/src/ai_workflow/diagnostic.c"
+        # Memory analysis shares canonical validation and ordering, never another graph owner.
+        "${_root}/src/ai_workflow/memory_plan.c")
     add_library(Umicom::ai_workflow_preflight ALIAS umicom_ai_workflow_preflight)
     set_target_properties(umicom_ai_workflow_preflight PROPERTIES
         EXPORT_NAME ai_workflow_preflight
@@ -66,6 +68,7 @@ function(umicom_add_ai_workflow_preflight)
             ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Framework)
         umicom_register_sdk_libraries(umicom_ai_workflow_preflight)
         install(FILES "${_root}/include/umicom/ai_workflow/preflight.h"
+            "${_root}/include/umicom/ai_workflow/memory_plan.h"
             DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ai_workflow" COMPONENT Framework)
         foreach(_component Framework FrameworkSDK)
             set(_selection EXCLUDE_FROM_ALL)
@@ -74,6 +77,9 @@ function(umicom_add_ai_workflow_preflight)
             endif()
             install(DIRECTORY "${_root}/examples/ai_workflow/"
                 DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/ai_workflow"
+                COMPONENT "${_component}" ${_selection})
+            install(DIRECTORY "${_root}/examples/ai_workflow_memory/"
+                DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/ai_workflow_memory"
                 COMPONENT "${_component}" ${_selection})
         endforeach()
     endif()

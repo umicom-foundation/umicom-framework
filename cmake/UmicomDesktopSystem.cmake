@@ -1,7 +1,15 @@
-#-----------------------------------------------------------------------------
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
-# Shared host observations and explicit Linux session handoff.
-#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomDesktopSystem.cmake
+#
+# PURPOSE:
+#   Compose shared host observations and explicit Linux session handoff.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
 # This module also supports independent composition; own its SDK registration dependency.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
@@ -144,3 +152,6 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomQueueShutdown.cmake")
 # Core release evidence is evaluated by the existing distribution owner.
 # This does not activate another application campaign or declare Core stable.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomReleaseBaseline.cmake")
+
+# Explicit self-observation reuses the desktop SDK without widening catalogue access.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomSelfMemory.cmake")

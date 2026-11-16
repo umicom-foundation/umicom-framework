@@ -206,7 +206,13 @@ UmiStatus UmiModelSessionStart(const UmiModelRunPlan *plan, bool approved, UmiMo
     status = UmiFileLeaseTryAcquire(plan->guard, &session->lease);
     if (status != UMI_STATUS_OK) { free(session); return status; }
     UmiModelInspection inspected;
+    /* Basic header/hash inspection is retained below for review. Shared role
+     * admission now also rejects auxiliary and unknown GGUF before creating
+     * a supervisor; the original lease and failure cleanup remain unchanged. */
+#if 0
     status = UmiModelInspect(plan->model, plan->sha256, NULL, &inspected);
+#endif
+    status = UmiModelInspectForRun(plan->model, plan->sha256, NULL, &inspected);
     if (status != UMI_STATUS_OK) goto failure;
     UmiProcessSupervisorConfig config = umi_process_supervisor_config_default();
     config.capacity = 1U;

@@ -218,3 +218,6 @@ if(BUILD_TESTING)
         endif()
     endforeach()
 endif()
+
+# GGUF role observation reuses the existing SDK component and checked file service.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomGgufInspection.cmake")

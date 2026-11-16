@@ -47,9 +47,20 @@ endforeach()
 foreach(_case IN ITEMS arguments chunks empty limit cancel fifo symlink)
     umicom_model_case(stream "${_case}" umicom-model-stream-test)
 endforeach()
+# Preserve the former unconditional registration for review. Native launch now
+# requires metadata inspection; disabled builds explicitly verify refusal.
+if(FALSE)
 foreach(_case IN ITEMS lifetime wrong-hash)
     umicom_model_case(session "${_case}" umicom-model-session-test "$<TARGET_FILE:umicom-model-server-fixture>")
 endforeach()
+endif()
+if(TARGET Umicom::model_formats)
+    foreach(_case IN ITEMS lifetime wrong-hash auxiliary adapter unknown-role vocabulary)
+        umicom_model_case(session "${_case}" umicom-model-session-test "$<TARGET_FILE:umicom-model-server-fixture>")
+    endforeach()
+else()
+    umicom_model_case(session inspection-unavailable umicom-model-session-test "$<TARGET_FILE:umicom-model-server-fixture>")
+endif()
 add_test(NAME framework.local_models.standalone_help COMMAND umicom-models --help)
 set_tests_properties(framework.local_models.standalone_help PROPERTIES TIMEOUT 10 LABELS "framework;local-models;cli")
 if(TARGET umicom)
@@ -411,3 +422,109 @@ foreach(_case IN ITEMS fit
         kv-null)
     umicom_model_case(memory_plan "${_case}" umicom-model-memory-plan-test)
 endforeach()
+
+# Keep optional-component failure coverage alongside the working role command.
+add_executable(umicom-model-role-cli-unavailable-test test_cli_gguf_role.c)
+target_link_libraries(umicom-model-role-cli-unavailable-test PRIVATE Umicom::local_models)
+if(TARGET Umicom::model_formats)
+    add_executable(umicom-model-role-cli-test test_cli_gguf_role.c)
+    target_compile_definitions(umicom-model-role-cli-test PRIVATE UMICOM_MODELS_HAS_TENSOR_INSPECTION=1)
+    target_link_libraries(umicom-model-role-cli-test PRIVATE Umicom::local_models Umicom::model_formats)
+endif()
+foreach(_target umicom-model-role-cli-unavailable-test umicom-model-role-cli-test)
+    if(NOT TARGET ${_target})
+        continue()
+    endif()
+    set_target_properties(${_target} PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(${_target})
+    umicom_apply_sanitizers(${_target})
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(${_target})
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(${_target} FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../../src/local_models/cli.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../../src/model_formats/gguf.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../../src/model_formats/gguf_file.c")
+    endif()
+endforeach()
+umicom_model_case(cli_role unavailable umicom-model-role-cli-unavailable-test)
+if(TARGET Umicom::model_formats)
+    foreach(_case auxiliary candidate unknown vocabulary missing-path extra-argument null-path null-owner occupied-owner io-error bad-format bad-path cancelled output-error help)
+        umicom_model_case(cli_role "${_case}" umicom-model-role-cli-test)
+    endforeach()
+endif()
+
+# Apply the production role policy before native process ownership. The
+# unavailable fixture compiles the exact admission source without its optional
+# inspector; the enabled fixture records one delegated read and preserves output.
+add_executable(umicom-model-run-inspection-unavailable-test test_run_inspection.c)
+set(_run_inspection_targets umicom-model-run-inspection-unavailable-test)
+umicom_model_case(run_inspection unavailable umicom-model-run-inspection-unavailable-test)
+if(TARGET Umicom::model_formats)
+    add_executable(umicom-model-run-inspection-test test_run_inspection.c)
+    target_compile_definitions(umicom-model-run-inspection-test PRIVATE UMICOM_TEST_RUN_INSPECTION_ENABLED=1)
+    target_link_libraries(umicom-model-run-inspection-test PRIVATE Umicom::model_formats)
+    add_executable(umicom-model-session-admission-test test_session_admission.c)
+    list(APPEND _run_inspection_targets umicom-model-run-inspection-test umicom-model-session-admission-test)
+    foreach(_case IN ITEMS valid
+            borrowed-digest
+            wrong-digest
+            auxiliary
+            unknown
+            vocabulary
+            zero-tensors
+            tensor-bound
+            entry-bound
+            short-file
+            oversized-file
+            read-error
+            parse-error
+            capacity
+            late-cancel
+            pre-cancel
+            null-path
+            null-output
+            null-digest
+            short-digest
+            uppercase-digest)
+        umicom_model_case(run_inspection "${_case}" umicom-model-run-inspection-test)
+    endforeach()
+    foreach(_case IN ITEMS auxiliary
+            adapter
+            unknown
+            vocabulary
+            hash-mismatch
+            read-error
+            lease-busy
+            lease-close-failure
+            candidate
+            occupied
+            denied
+            supervisor-failure)
+        umicom_model_case(session_admission "${_case}" umicom-model-session-admission-test)
+    endforeach()
+endif()
+foreach(_target IN LISTS _run_inspection_targets)
+    target_link_libraries(${_target} PRIVATE Umicom::local_models)
+    set_target_properties(${_target} PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(${_target})
+    umicom_apply_sanitizers(${_target})
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(${_target})
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(${_target} FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../../src/local_models/run_inspection.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../../src/local_models/session.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../../include/umicom/local_models/manager.h"
+            "${CMAKE_CURRENT_LIST_DIR}/../model_formats/gguf_fixture.h")
+    endif()
+endforeach()
+if(COMMAND umicom_target_qualification_inputs)
+    umicom_target_qualification_inputs(umicom-model-session-test FILES
+        "${CMAKE_CURRENT_LIST_DIR}/../../src/local_models/run_inspection.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../../src/local_models/session.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../model_formats/gguf_fixture.h")
+endif()
+unset(_run_inspection_targets)

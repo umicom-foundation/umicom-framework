@@ -143,4 +143,37 @@ if submitted:
 </tbody></table>
 <p>Continue with the <a href="comfyui-workflows-and-native-clients.html#text-and-boolean-inputs">complete installed SDK project and literal-input exercises</a>. Change the capture between reads, then use the earlier form-draft reconciliation lesson to explain why user edits should not be overwritten by refreshed defaults. Keep observed schema, editable draft, committed settings and generation effects as distinct stages owned by shared Framework services.</p>
 </section>
+<section id="captured-node-table"><h2>Lesson 17: display one captured native report</h2><p>Use the ComfyUI course's installed SDK browser to save a successful node page as <code>node-page.json</code>. Confirm the native command exited successfully before using its output. This original Python exercise teaches Streamlit's table presentation; Framework's reader, filtering and serialization remain C23.</p><p>Continue the earlier lesson's project and approved <code>assets/umicom-logo.svg</code>. Keep its supplied branding resources unchanged. Save the following as <code>node_table.py</code>. Run <code>streamlit run node_table.py</code> in your teaching environment.</p>
+<pre><code class="language-python">import json
+from pathlib import Path
+import streamlit as st
+
+folder = Path(__file__).parent
+st.image(str(folder / "assets/umicom-logo.svg"), width=212)
+st.title("Umicom captured node review")
+try:
+    envelope = json.loads((folder / "node-page.json").read_text(encoding="utf-8-sig"))
+    report = envelope["report"]
+    if envelope["origin"] != "offline-files":
+        raise ValueError("Expected a captured-file report")
+    if report["schema_version"] != 1 or report["scope"] != "node-selection-observations":
+        raise ValueError("Unsupported report schema")
+    if not isinstance(report["connection_revision"], str):
+        raise ValueError("Keep the revision as an exact string")
+    rows = []
+    for node in report["nodes"]:
+        flag = node["deprecated"]
+        rows.append({
+            "Class": node["class_type"],
+            "Display": node["display_name"],
+            "Category": node["category"],
+            "Deprecated": "Unknown" if flag is None else str(flag),
+        })
+    st.dataframe(rows, hide_index=True)
+    st.caption(f"Captured selection: {report['selection_sha256']}")
+    st.caption(f"More rows in this selection: {report['remaining_count']}")
+except (OSError, ValueError, KeyError, TypeError) as error:
+    st.error(f"Cannot display this captured page: {error}")</code></pre>
+<p><a href="https://docs.streamlit.io/develop/api-reference/data/st.dataframe">Streamlit's dataframe reference</a> describes its interactive table. Table sorting changes this displayed page; it does not change the native selection or ask a provider to load anything. The teaching loader performs only basic shape checks and is not a replacement for the native admission contract or a general hostile-file parser. Preserve missing flags as Unknown rather than converting them to false.</p>
+<h2>Lesson 18: extend the table without mixing observations</h2><ol><li>Compare the four identity fields from two pages: connection revision, connection fingerprint, response digest and selection digest. Reject a join when any differs.</li><li>Require the second page's offset to equal the first page's next offset. Display duplicate or missing rows as an error rather than silently deduplicating them.</li><li>Change <code>--order class</code> to <code>--order source</code> on a fixture whose order differs. Explain why the original response digest stays equal while the selection digest changes.</li><li>Filter for an explicitly false deprecated flag. Explain why unknown entries disappear without being labelled deprecated.</li></ol><p>Keep the native SDK browser as the authoritative selector. This lab neither implements Streamlit in C nor provides a live ComfyUI browser. Native UI selection, provider execution, real model availability and the Python exercise all need their own runtime checks.</p></section>
 </main></body></html>

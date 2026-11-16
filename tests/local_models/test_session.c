@@ -19,12 +19,26 @@
 #include "umicom/base/sha256.h"
 #include "umicom/platform/threading.h"
 #include "../build_log/fixture.h"
+#include "../model_formats/gguf_fixture.h"
 int main(int argc, char **argv)
 {
     if (argc != 3) return 2;
     char root[UMI_PATH_CAPACITY], path[UMI_PATH_CAPACITY];
     FixtureDirectory(root); FixturePath(path, root, "fixture.gguf");
+    /* The former header-only fixture is retained for review. Session admission
+     * now requires role metadata, so the replacement declares a candidate but
+     * still supplies no real model weights; the finite child ignores the file. */
+#if 0
     unsigned char bytes[128] = {0}; memcpy(bytes, "GGUF", 4U); bytes[4] = 3U; bytes[8] = 1U;
+#endif
+    GgufFixture metadata;fixture_model(&metadata);
+    if (strcmp(argv[1], "auxiliary") == 0) {
+        fixture_start(&metadata);fixture_text(&metadata,"general.architecture","controlvector");
+    } else if (strcmp(argv[1], "adapter") == 0) fixture_text(&metadata,"general.type","adapter");
+    else if (strcmp(argv[1], "unknown-role") == 0) fixture_start(&metadata);
+    else if (strcmp(argv[1], "vocabulary") == 0) fixture_number_at(metadata.bytes+8U,0U,8U);
+    unsigned char bytes[256] = {0};
+    CHECK(metadata.size<=sizeof(bytes));memcpy(bytes,metadata.bytes,metadata.size);
     char digest[65]; CHECK(UmiSha256Buffer(bytes, sizeof(bytes), digest) == UMI_STATUS_OK);
     UmiOutputFile *file = NULL;
     CHECK(UmiOutputFileCreate(path, &file) == UMI_STATUS_OK);
@@ -33,6 +47,20 @@ int main(int argc, char **argv)
     UmiModelRunPlan plan;
     CHECK(UmiModelRunPlanCreate(argv[2], path, digest, "fixture", 18080U, 512U, 1U, &plan) == UMI_STATUS_OK);
     UmiModelSession *session = NULL;
+    if (strcmp(argv[1], "inspection-unavailable") == 0) {
+        CHECK(!UmiModelRunInspectionAvailable());
+        CHECK(UmiModelSessionStart(&plan,true,&session)==UMI_STATUS_NOT_IMPLEMENTED && session==NULL);
+        CHECK(UmiModelSessionStart(&plan,true,&session)==UMI_STATUS_NOT_IMPLEMENTED && session==NULL);
+        return 0;
+    }
+    if (strcmp(argv[1], "auxiliary") == 0 || strcmp(argv[1], "adapter") == 0 ||
+        strcmp(argv[1], "unknown-role") == 0 || strcmp(argv[1], "vocabulary") == 0) {
+        UmiStatus wanted=strcmp(argv[1],"vocabulary")==0?UMI_STATUS_PARSE_ERROR:UMI_STATUS_NOT_IMPLEMENTED;
+        CHECK(UmiModelSessionStart(&plan,true,&session)==wanted && session==NULL);
+        /* A second refusal, rather than BUSY, verifies lease cleanup. */
+        CHECK(UmiModelSessionStart(&plan,true,&session)==wanted && session==NULL);
+        return 0;
+    }
     if (strcmp(argv[1], "wrong-hash") == 0) {
         plan.sha256[0] = plan.sha256[0] == 'a' ? 'b' : 'a';
         CHECK(UmiModelSessionStart(&plan, true, &session) == UMI_STATUS_INVALID_STATE && session == NULL);

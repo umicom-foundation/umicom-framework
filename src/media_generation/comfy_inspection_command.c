@@ -17,6 +17,7 @@
 #include "umicom/media_generation/comfy_inspection.h"
 #include "umicom/media_generation/comfy_queue_file.h"
 #include "umicom/media_generation/comfy_system_file.h"
+#include "umicom/media_generation/comfy_node_pages.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,6 +29,7 @@ static void InspectionUsage(FILE *stream)
           "comfy references --help: paged reference-candidate observations\n"
           "comfy queue --help: captured queue observations\n"
           "comfy system --help: captured system and device observations\n"
+          "comfy nodes --help: filtered captured node catalogue pages\n"
           "Use absolute paths to a portable connection document, API workflow JSON,\n"
           "and captured /object_info JSON. This command does not contact a provider.\n"
           "Exit 0: required names observed; 3: missing names; 2: usage; 1: failure.\n", stream);
@@ -36,6 +38,9 @@ int UmiComfyInspectionCommand(int argc, char **argv)
 {
     if (argc < 0 || (argc > 0 && argv == NULL)) return 2;
     for (int i = 0; i < argc; ++i) if (argv[i] == NULL) return 2;
+    /* Node browsing shares one file/selection contract across every native host. */
+    if (argc > 0 && strcmp(argv[0], "nodes") == 0)
+        return UmiComfyNodeSelectionFileCommand(argc, argv);
     /* System observations remain Framework-owned across CLI, Media and SDK hosts. */
     if (argc > 0 && strcmp(argv[0], "system") == 0)
         return UmiComfySystemStatsFileCommand(argc, argv);
