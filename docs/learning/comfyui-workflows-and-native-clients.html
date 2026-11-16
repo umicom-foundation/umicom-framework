@@ -323,6 +323,36 @@ ctest --test-dir build -R "^sdk[.]comfy-nodes[.]choice-input$" --output-on-failu
 <ol><li>Add an escaped Unicode choice and a duplicate label. Explain why row identity is more precise than a label alone.</li><li>Use a buffer one byte too small and verify that all its previous bytes remain unchanged.</li><li>Replace a later string with a custom object. Confirm that typed access refuses the entire profile while raw schema access remains available.</li><li>Compare two catalogue response hashes after a model list changes. Explain why a previous user's choice must be reviewed again before preparing a new workflow.</li></ol>
 <p>These are SDK exercises, not evidence that a live server, model download, widget, image generator or video generator has been qualified.</p>
 </section>
+
+<section id="text-and-boolean-inputs">
+<h2>Read text and Boolean declarations without changing user state</h2>
+<p>ComfyUI describes <a href="https://docs.comfy.org/custom-nodes/backend/datatypes">STRING and BOOLEAN input types</a>. Its <a href="https://github.com/Comfy-Org/ComfyUI/blob/master/nodes.py">text encoder declaration</a> also shows multiline and dynamic prompt flags. These declarations describe a captured node interface. They do not prove that a server has loaded a model or can execute your workflow.</p>
+<p>The shared header <code>umicom/media_generation/comfy_literal_input.h</code> adds copied observations to the existing catalogue. <code>default_known</code> distinguishes a missing declaration from an explicit false Boolean or empty string. <code>known_flags</code> and <code>enabled_flags</code> separately record forceInput and, for STRING, multiline and dynamicPrompts. Options outside this profile remain in the raw schema and are counted by <code>uninterpreted_options</code>.</p>
+<ol><li>Capture and admit node information using the catalogue steps above. Retain its connection and response identity.</li><li>Read an input report. Check both the status and the kind before using a value.</li><li>For a known string default, copy its text into a caller-owned buffer. Capacity includes the final NUL byte. An empty string therefore needs one byte.</li><li>Use the copied default only under an explicit host policy. Do not overwrite an edited form or submit a prompt just because a catalogue has refreshed.</li></ol>
+<pre><code class="language-c">#include "umicom/media_generation/comfy_literal_input.h"
+
+/* catalogue, node and input identify an admitted observation. */
+UmiComfyLiteralInput observed;
+char text[4096];
+UmiStatus status = UmiComfyNodeCatalogueLiteralInput(
+    catalogue, node, UMI_COMFY_INPUT_REQUIRED, input, &amp;observed);
+if (status == UMI_STATUS_OK &amp;&amp; observed.kind == UMI_COMFY_LITERAL_STRING
+    &amp;&amp; observed.default_known) {
+    status = UmiComfyNodeCatalogueStringDefault(
+        catalogue, node, UMI_COMFY_INPUT_REQUIRED, input, text, sizeof text);
+    /* Use text only if this second call also succeeds. */
+}</code></pre>
+<p>This is a fragment for an existing catalogue owner. A missing default returns NOT_FOUND from StringDefault; a Boolean input returns NOT_IMPLEMENTED from that string-only API. Too little capacity returns CAPACITY_EXCEEDED without changing the buffer. Incorrect types for interpreted fields return PARSE_ERROR. Even a valid default is not copied when a later interpreted flag is malformed. Unsupported custom descriptors remain available through InputAt.</p>
+<h3>Create the installed SDK project</h3>
+<p>Copy the complete installed <code>share/umicom/framework/examples/comfy_nodes</code> project into a writable folder and select a qualified matching SDK. It links <code>Umicom::comfy_protocol</code> and uses the installed Umicom branding helper.</p>
+<pre><code class="language-powershell">cmake -S C:/Examples/ComfyNodes -B C:/Examples/ComfyNodes/build -G Ninja -DUMICOM_SDK_ROOT=C:/SDK/Umicom
+cmake --build C:/Examples/ComfyNodes/build --target umicom-sdk-comfy-literal-input --parallel 2
+ctest --test-dir C:/Examples/ComfyNodes/build -R "^sdk[.]comfy-nodes[.]literal-input$" --output-on-failure --no-tests=error</code></pre>
+<p>Expected output retains the literal text <code>{red|blue}</code>, prints a two-line prompt and distinguishes explicit false from an unknown Boolean default. The fixture does not contact a server, expand a template or generate an image. These are expected results to qualify, not an executed installed-consumer claim.</p>
+<h3>Exercises and recovery</h3>
+<ol><li>Remove a default and explain why the observer must not invent false or empty text, even if a renderer has its own initial value.</li><li>Change multiline from true to the string "true". Require a parse error and verify that both the prior report and destination text remain intact.</li><li>Try a 5000-byte default. Use a large enough destination or handle the capacity error; never truncate a prompt silently.</li><li>Destroy the catalogue after copying. The copied report and text remain usable; the raw schema span does not.</li><li>Keep dynamicPrompts as a reported flag. Explain why executing template syntax or custom validation requires a separate implementation and permission boundary.</li></ol>
+<p>Contributors can build <code>umicom-comfy-literal-input-test</code> and <code>umicom-comfy-literal-input-example-test</code>, then run <code>ctest --test-dir build -R "^framework[.]media[.]comfy[.]literal_input[.]" --output-on-failure --no-tests=error</code>. Retain the raw, numeric and choice suites when qualifying their shared catalogue. Rendering, live provider behavior and generated-media watermarking require separate evidence.</p>
+</section>
 </main>
 <section id="queue-files"><h2>18. Inspect captured queues from Media and an independent SDK project</h2>
 <p>The queue owner from the previous lesson now has a shared file composition and console route. <code>UmiComfyQueueFileRead</code> reads a saved provider document and captured queue JSON. It reuses Framework's existing file admission, settings decoder and queue parser. Media and the native CLI call the same command; neither application maintains another queue parser.</p>

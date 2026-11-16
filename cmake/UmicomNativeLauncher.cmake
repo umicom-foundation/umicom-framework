@@ -1,8 +1,15 @@
-#-----------------------------------------------------------------------------
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
-# Native C23 launcher-delivery capability. No Python, shell or code-generator
-# process is required to build or execute this target and its primary tests.
-#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomNativeLauncher.cmake
+#
+# PURPOSE:
+#   Compose native launcher delivery and the canonical digest dependency in complete or focused source builds.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
 # This module also supports independent composition; own its SDK registration dependency.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 include_guard(GLOBAL)
@@ -26,7 +33,21 @@ else()
     endif()
 endif()
 # Digest arithmetic is shared by Base; keep the native compatibility symbols here.
-target_link_libraries(umicom_native_launcher PUBLIC Umicom::base)
+# The previous unconditional edge broke standalone source compositions, which
+# deliberately do not create a full Base target. Preserve it for review.
+if(FALSE)
+    target_link_libraries(umicom_native_launcher PUBLIC Umicom::base)
+endif()
+if(TARGET Umicom::base)
+    target_link_libraries(umicom_native_launcher PUBLIC Umicom::base)
+else()
+    # Compile the same canonical implementation, not another SHA algorithm or
+    # a misleading partial Umicom::base alias. Focused packages remain distinct
+    # from the complete Framework SDK and must not be combined as a replacement.
+    target_sources(umicom_native_launcher PRIVATE "${_umi_native_root}/src/base/sha256.c")
+    install(FILES "${_umi_native_root}/include/umicom/base/sha256.h"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/base" COMPONENT Framework)
+endif()
 add_library(Umicom::native_launcher ALIAS umicom_native_launcher)
 set_target_properties(umicom_native_launcher PROPERTIES EXPORT_NAME native_launcher
     C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)

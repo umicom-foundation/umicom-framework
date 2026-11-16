@@ -1,4 +1,15 @@
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+# Umicom Framework
+# File: tests/native_launcher/CMakeLists.txt
+#
+# PURPOSE:
+#   Register native launcher behavior and focused source-composition digest regressions.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
 # Native primary regressions: no interpreter or command-string execution.
 add_executable(umicom-native-launcher-test test_main.c test_sha.c test_manifest.c test_formats.c)
 target_link_libraries(umicom-native-launcher-test PRIVATE Umicom::native_launcher)
@@ -52,4 +63,24 @@ if(COMMAND umicom_register_validation_target)
     if(TARGET umicom-session-stage)
         umicom_register_validation_target(umicom-session-stage)
     endif()
+endif()
+
+
+# A full Framework configure can hide missing owners in standalone entry points.
+# Each regression configures the actual focused project, links the real native
+# target and runs its existing independent SHA vectors. No install/device work.
+if(NOT CMAKE_CROSSCOMPILING)
+    get_filename_component(_launcher_root "${CMAKE_CURRENT_LIST_DIR}/../.." ABSOLUTE)
+    foreach(_composition native_launcher setup_centre boot_media)
+        add_test(NAME framework.native_launcher.composition.${_composition}
+            COMMAND "${CMAKE_COMMAND}"
+                "-DFRAMEWORK_SOURCE=${_launcher_root}"
+                "-DBUILD_ROOT=${CMAKE_CURRENT_BINARY_DIR}/composition-${_composition}"
+                "-DCOMPOSITION=${_composition}" "-DGENERATOR=${CMAKE_GENERATOR}"
+                "-DCOMPILER=${CMAKE_C_COMPILER}" "-DMAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}"
+                "-DCONFIGURATION=$<CONFIG>" "-DCTEST=${CMAKE_CTEST_COMMAND}"
+                -P "${CMAKE_CURRENT_LIST_DIR}/check_composition.cmake")
+        set_tests_properties(framework.native_launcher.composition.${_composition}
+            PROPERTIES TIMEOUT 240 LABELS "framework;native-launcher;composition;build;regression")
+    endforeach()
 endif()

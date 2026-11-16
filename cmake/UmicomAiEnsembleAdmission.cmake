@@ -53,3 +53,54 @@ foreach(_component Framework FrameworkSDK FrameworkDocumentation)
         DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/examples/model_comparison"
         COMPONENT "${_component}" ${_selection})
 endforeach()
+
+
+# Shared receipt formatting stays with the provider-neutral report owner.
+target_sources(umicom_ai PRIVATE "${_umicom_ensemble_root}/src/ai/model_ensemble_json.c")
+target_link_libraries(umicom_ai PRIVATE Umicom::protocol)
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_ai include/umicom/ai/model_ensemble_json.h)
+endif()
+if(BUILD_TESTING)
+    add_executable(umicom-ai-ensemble-json-test "${_umicom_ensemble_root}/tests/ai/test_model_ensemble_json.c")
+    add_executable(umicom-ai-ensemble-json-example-test "${_umicom_ensemble_root}/examples/model_comparison/receipt.c")
+    foreach(_target umicom-ai-ensemble-json-test umicom-ai-ensemble-json-example-test)
+        target_link_libraries(${_target} PRIVATE Umicom::ai Umicom::protocol)
+        set_target_properties(${_target} PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        umicom_apply_warnings(${_target})
+        umicom_apply_sanitizers(${_target})
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(${_target})
+        endif()
+        if(COMMAND umicom_target_qualification_inputs)
+            umicom_target_qualification_inputs(${_target} FILES
+                "${_umicom_ensemble_root}/src/ai/model_ensemble.c"
+                "${_umicom_ensemble_root}/src/ai/model_ensemble_json.c"
+                "${_umicom_ensemble_root}/src/protocol/json_writer.c")
+        endif()
+    endforeach()
+    foreach(mode empty partial all-failed all-success no-selection second-selected revision-max revision-adjacent unknown-status identity-mismatch empty-identity unicode escaping control-label failed-garbage omitted-answer omitted-usage omitted-invalid-utf8 max-fields copy-lifetime exact-capacity small-capacity zero-capacity null-output null-length null-report invalid-count invalid-success-count invalid-selection failed-selection invalid-report-size invalid-target invalid-response utf8-request utf8-provider utf8-label utf8-response)
+        add_test(NAME framework.ai.ensemble_json.${mode} COMMAND umicom-ai-ensemble-json-test "${mode}")
+        set_tests_properties(framework.ai.ensemble_json.${mode} PROPERTIES
+            TIMEOUT 30 LABELS "framework;ai;comparison;receipt;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.ai.ensemble_json.${mode} TARGETS umicom-ai-ensemble-json-test)
+        endif()
+    endforeach()
+    add_test(NAME framework.ai.ensemble_json.sdk-example COMMAND umicom-ai-ensemble-json-example-test)
+    set_tests_properties(framework.ai.ensemble_json.sdk-example PROPERTIES
+        TIMEOUT 20 LABELS "framework;ai;comparison;sdk")
+    umicom_apply_application_branding(TARGET umicom-ai-ensemble-json-example-test
+        PRODUCT_NAME "Umicom Comparison Receipt Example" INTERNAL_NAME "umicom-ai-ensemble-json-example"
+        APPLICATION_ID "org.umicom.comparison-receipt-example"
+        RESOURCE_ROOT "${_umicom_ensemble_root}/resources" NO_RUNTIME_DEPLOYMENT)
+endif()
+foreach(_component Framework FrameworkSDK FrameworkDocumentation)
+    set(_selection EXCLUDE_FROM_ALL)
+    if(_component STREQUAL "Framework")
+        set(_selection)
+    endif()
+    install(FILES "${_umicom_ensemble_root}/examples/model_comparison/receipt.c"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/examples/model_comparison"
+        COMPONENT "${_component}" ${_selection})
+endforeach()

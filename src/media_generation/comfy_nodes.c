@@ -15,6 +15,7 @@
 
 
 #include "umicom/media_generation/comfy_nodes.h"
+#include "umicom/media_generation/comfy_literal_input.h"
 #include "umicom/media_generation/comfy_numeric_input.h"
 #include "umicom/media_generation/comfy_choice_input.h"
 #include "comfy_response_internal.h"
@@ -474,4 +475,101 @@ UmiStatus UmiComfyNodeCatalogueChoiceAt(const UmiComfyNodeCatalogue *catalogue,
         selected = UmiJsonTreeNext(tree, selected);
     /* Shared text decoding preflights capacity before writing any byte. */
     return UmiJsonTreeText(tree, selected, out, capacity);
+}
+
+
+/* Reuse the existing immutable owner and input lookup. Keeping profile
+ * admission together means a bad trailing flag cannot publish an otherwise
+ * usable text default or partial copied report. */
+static UmiStatus LiteralProfile(const UmiComfyNodeCatalogue *catalogue,
+    size_t node_index, UmiComfyInputGroup group, size_t input_index,
+    UmiComfyLiteralInput *out, int *out_default)
+{
+    int key = -1;
+    UmiStatus status = InputKey(catalogue, node_index, group, input_index, &key);
+    if (status != UMI_STATUS_OK) return status;
+    const UmiJsonTree *tree = catalogue->tree;
+    int descriptor = UmiJsonTreeNext(tree, key);
+    if (UmiJsonTreeKind(tree, descriptor) != UMI_LANGUAGE_RUNTIME_JSON_ARRAY)
+        return UMI_STATUS_NOT_IMPLEMENTED;
+    size_t count = UmiJsonTreeCount(tree, descriptor);
+    if (count == 0U) return UMI_STATUS_PARSE_ERROR;
+    if (count > 2U) return UMI_STATUS_NOT_IMPLEMENTED;
+    int type_node = UmiJsonTreeFirst(tree, descriptor);
+    if (UmiJsonTreeKind(tree, type_node) != UMI_LANGUAGE_RUNTIME_JSON_STRING)
+        return UmiJsonTreeKind(tree, type_node) == UMI_LANGUAGE_RUNTIME_JSON_ARRAY ?
+            UMI_STATUS_NOT_IMPLEMENTED : UMI_STATUS_PARSE_ERROR;
+    char type[129];
+    status = UmiJsonTreeText(tree, type_node, type, sizeof type);
+    if (status != UMI_STATUS_OK) return status;
+    UmiComfyLiteralInput staged = {0};
+    if (strcmp(type, "STRING") == 0) staged.kind = UMI_COMFY_LITERAL_STRING;
+    else if (strcmp(type, "BOOLEAN") == 0) staged.kind = UMI_COMFY_LITERAL_BOOLEAN;
+    else return UMI_STATUS_NOT_IMPLEMENTED;
+    status = UmiJsonTreeText(tree, key, staged.name, sizeof staged.name);
+    if (status != UMI_STATUS_OK) return status;
+    int default_node = -1;
+    if (count == 2U) {
+        int options = UmiJsonTreeNext(tree, type_node);
+        if (UmiJsonTreeKind(tree, options) != UMI_LANGUAGE_RUNTIME_JSON_OBJECT)
+            return UMI_STATUS_PARSE_ERROR;
+        size_t interpreted = 0U;
+        status = UmiJsonTreeMember(tree, options, "default", &default_node);
+        if (status == UMI_STATUS_OK) {
+            if (staged.kind == UMI_COMFY_LITERAL_BOOLEAN) {
+                int value = 0;
+                status = UmiJsonTreeBoolean(tree, default_node, &value);
+                if (status != UMI_STATUS_OK) return status;
+                staged.boolean_default = value != 0;
+            } else if (UmiJsonTreeKind(tree, default_node) != UMI_LANGUAGE_RUNTIME_JSON_STRING)
+                return UMI_STATUS_PARSE_ERROR;
+            staged.default_known = true;
+            ++interpreted;
+        } else if (status != UMI_STATUS_NOT_FOUND) return status;
+        static const char *const names[] = {"forceInput", "multiline", "dynamicPrompts"};
+        size_t flag_count = staged.kind == UMI_COMFY_LITERAL_STRING ? 3U : 1U;
+        for (size_t index = 0U; index < flag_count; ++index) {
+            int node = -1, enabled = 0;
+            status = UmiJsonTreeMember(tree, options, names[index], &node);
+            if (status == UMI_STATUS_NOT_FOUND) continue;
+            if (status != UMI_STATUS_OK) return status;
+            status = UmiJsonTreeBoolean(tree, node, &enabled);
+            if (status != UMI_STATUS_OK) return status;
+            staged.known_flags |= 1U << index;
+            if (enabled) staged.enabled_flags |= 1U << index;
+            ++interpreted;
+        }
+        staged.uninterpreted_options = UmiJsonTreeCount(tree, options) - interpreted;
+    }
+    *out = staged;
+    *out_default = default_node;
+    return UMI_STATUS_OK;
+}
+UmiStatus UmiComfyNodeCatalogueLiteralInput(const UmiComfyNodeCatalogue *catalogue,
+    size_t node_index, UmiComfyInputGroup group, size_t input_index,
+    UmiComfyLiteralInput *out)
+{
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiComfyLiteralInput staged;
+    int default_node = -1;
+    UmiStatus status = LiteralProfile(catalogue, node_index, group, input_index,
+        &staged, &default_node);
+    if (status == UMI_STATUS_OK) *out = staged;
+    return status;
+}
+UmiStatus UmiComfyNodeCatalogueStringDefault(const UmiComfyNodeCatalogue *catalogue,
+    size_t node_index, UmiComfyInputGroup group, size_t input_index,
+    char *out, size_t capacity)
+{
+    if (out == NULL || capacity == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiComfyLiteralInput observed;
+    int default_node = -1;
+    UmiStatus status = LiteralProfile(catalogue, node_index, group, input_index,
+        &observed, &default_node);
+    if (status != UMI_STATUS_OK) return status;
+    if (observed.kind != UMI_COMFY_LITERAL_STRING) return UMI_STATUS_NOT_IMPLEMENTED;
+    if (!observed.default_known) return UMI_STATUS_NOT_FOUND;
+    /* Shared decoding preflights the complete UTF-8 destination before writing.
+     * Copying does not interpret dynamic prompts, markup or shell syntax. */
+    return UmiJsonTreeText(catalogue->tree, default_node, out, capacity);
 }

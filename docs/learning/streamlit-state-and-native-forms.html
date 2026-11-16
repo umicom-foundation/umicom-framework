@@ -116,4 +116,31 @@ ctest --test-dir C:/Examples/JsonNumbers/build --output-on-failure --no-tests=er
 <ol><li>Replace guidance with <code>1e9999</code>. JSON grammar is valid, but finite numeric conversion must fail without accepting a partial settings record.</li><li>Use <code>"7.5"</code> instead of <code>7.5</code>. Explain why a string requires an explicit host conversion policy and is not silently accepted.</li><li>Change steps from <code>20</code> to <code>20.0</code>. Explain why approximate guidance and exact step counts use different readers.</li><li>Repeat the parser test under an installed comma-decimal locale. If that locale is unavailable, record the skipped coverage separately from passes.</li><li>Try a guidance value of 31. Numeric conversion succeeds, but this example's host policy refuses values outside 0 through 30. Generic parsing must not pretend to know every model's allowed range.</li></ol>
 <p>Framework contributors can build <code>umicom-json-double-test</code>, <code>umicom-json-tree-test</code> and <code>umicom-json-numbers-example-test</code>, then run <code>ctest --test-dir build -R "^framework[.]json_tree[.]" --output-on-failure --no-tests=error</code>. Keep compiler, test, skipped-locale and installed-consumer evidence separate. A missing header or symbol usually requires checking the selected SDK revision and component set; adding a repository include path can hide mismatched installed binaries. No model request, widget rendering or media generation occurs in this example.</p>
 </section>
+
+<section id="explicit-defaults">
+<h2>Lesson 15: distinguish interface defaults from observed settings</h2>
+<p>Streamlit provides <a href="https://docs.streamlit.io/develop/api-reference/widgets/st.text_area">st.text_area</a> for multiline text and <a href="https://docs.streamlit.io/develop/api-reference/widgets/st.checkbox">st.checkbox</a> for Boolean input. A stable key identifies widget state across reruns. Their initial values belong to the interface; a provider's missing default is a separate fact. A native observer should preserve that distinction even when the interface chooses an empty field or unchecked control.</p>
+<p>Run this small subject-language exercise in a separate Streamlit learning environment using <code>streamlit run app.py</code>. It is an original teaching example, not an Umicom runtime dependency or a native implementation.</p>
+<pre><code class="language-python">import streamlit as st
+
+with st.form("prompt-settings"):
+    prompt = st.text_area("Prompt", key="prompt_text")
+    enabled = st.checkbox("Enable this request", value=False, key="request_enabled")
+    submitted = st.form_submit_button("Review")
+
+if submitted:
+    st.write({"prompt": prompt, "enabled": enabled})
+    st.caption("Reviewed local values only; no model request was sent.")</code></pre>
+<p>Expected behavior: typing edits the form; Review displays the submitted values. Try an empty prompt and an unchecked checkbox. Both are explicit submitted values. They are not proof that a remote schema specified either default. This exercise has not been run here.</p>
+<h2>Lesson 16: carry the distinction into the native SDK</h2>
+<p>Use <code>UmiComfyNodeCatalogueLiteralInput</code> to inspect a captured STRING or BOOLEAN descriptor. Check <code>default_known</code> before reading <code>boolean_default</code>. For text, use <code>UmiComfyNodeCatalogueStringDefault</code>; it distinguishes missing text from a successfully copied empty string and preserves the buffer on failure. Neither function creates a widget or modifies the existing Framework form draft.</p>
+<table><thead><tr><th>Captured declaration</th><th>Observation</th><th>Host decision</th></tr></thead><tbody>
+<tr><td>BOOLEAN with no default</td><td>default_known is false</td><td>Explain that the provider default is unknown</td></tr>
+<tr><td>BOOLEAN default false</td><td>Known false</td><td>May initialize a new untouched draft under host policy</td></tr>
+<tr><td>STRING default empty</td><td>Known empty text</td><td>Keep distinct from a missing property</td></tr>
+<tr><td>multiline true</td><td>Known presentation hint</td><td>Use the approved renderer and layout</td></tr>
+<tr><td>dynamicPrompts true</td><td>Known provider flag</td><td>Do not evaluate template text implicitly</td></tr>
+</tbody></table>
+<p>Continue with the <a href="comfyui-workflows-and-native-clients.html#text-and-boolean-inputs">complete installed SDK project and literal-input exercises</a>. Change the capture between reads, then use the earlier form-draft reconciliation lesson to explain why user edits should not be overwritten by refreshed defaults. Keep observed schema, editable draft, committed settings and generation effects as distinct stages owned by shared Framework services.</p>
+</section>
 </main></body></html>

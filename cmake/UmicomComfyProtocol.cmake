@@ -533,3 +533,57 @@ foreach(_component Framework FrameworkSDK FrameworkDocumentation)
         DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/examples/comfy_nodes"
         COMPONENT "${_component}" ${_selection})
 endforeach()
+
+
+# Text and Boolean metadata share the existing immutable catalogue owner.
+if(COMMAND umicom_release_inventory_own_headers)
+    umicom_release_inventory_own_headers(umicom_comfy_protocol
+        include/umicom/media_generation/comfy_literal_input.h)
+endif()
+if(BUILD_TESTING)
+    add_executable(umicom-comfy-literal-input-test
+        "${_umicom_comfy_root}/tests/media_generation/test_comfy_literal_input.c")
+    add_executable(umicom-comfy-literal-input-example-test
+        "${_umicom_comfy_root}/examples/comfy_nodes/literals.c")
+    foreach(_target umicom-comfy-literal-input-test umicom-comfy-literal-input-example-test)
+        target_link_libraries(${_target} PRIVATE Umicom::comfy_protocol)
+        set_target_properties(${_target} PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        umicom_apply_warnings(${_target})
+        umicom_apply_sanitizers(${_target})
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(${_target})
+        endif()
+        if(COMMAND umicom_target_qualification_inputs)
+            umicom_target_qualification_inputs(${_target} FILES
+                "${_umicom_comfy_root}/src/media_generation/comfy_nodes.c"
+                "${_umicom_comfy_root}/src/language_runtime/json_tree.c"
+                "${_umicom_comfy_root}/src/language_runtime/json_text.c")
+        endif()
+    endforeach()
+    foreach(mode string-minimal boolean-minimal string-empty boolean-false boolean-true string-flags flags-false boolean-force boolean-opaque-string-flags unknown-options missing-default-flags unicode escaped-controls template-text string-null string-number string-bool bool-null bool-number bool-string force-number multiline-string dynamic-null late-invalid-flag options-array options-null empty-descriptor null-type number-type object-type numeric-type image-type choice-type custom-object extra-elements optional-group copy-lifetime exact-capacity small-capacity zero-capacity null-text null-report null-catalogue invalid-group missing-node missing-input missing-group long-default)
+        add_test(NAME framework.media.comfy.literal_input.${mode}
+            COMMAND umicom-comfy-literal-input-test "${mode}")
+        set_tests_properties(framework.media.comfy.literal_input.${mode} PROPERTIES
+            TIMEOUT 30 LABELS "framework;media;comfy;literal;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.media.comfy.literal_input.${mode}
+                TARGETS umicom-comfy-literal-input-test)
+        endif()
+    endforeach()
+    add_test(NAME framework.media.comfy.literal_input.sdk-example COMMAND umicom-comfy-literal-input-example-test)
+    set_tests_properties(framework.media.comfy.literal_input.sdk-example PROPERTIES
+        TIMEOUT 20 LABELS "framework;media;comfy;sdk")
+    umicom_apply_application_branding(TARGET umicom-comfy-literal-input-example-test
+        PRODUCT_NAME "Umicom Literal Node Example" INTERNAL_NAME "umicom-comfy-literal-input-example"
+        APPLICATION_ID "org.umicom.comfy-literal-input-example"
+        RESOURCE_ROOT "${_umicom_comfy_root}/resources" NO_RUNTIME_DEPLOYMENT)
+endif()
+foreach(_component Framework FrameworkSDK FrameworkDocumentation)
+    set(_selection EXCLUDE_FROM_ALL)
+    if(_component STREQUAL "Framework")
+        set(_selection)
+    endif()
+    install(FILES "${_umicom_comfy_root}/examples/comfy_nodes/literals.c"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/examples/comfy_nodes"
+        COMPONENT "${_component}" ${_selection})
+endforeach()

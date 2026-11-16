@@ -74,3 +74,19 @@ if(BUILD_TESTING)
     set_tests_properties(sdk.comfy-nodes.choice-input PROPERTIES
         TIMEOUT 20 LABELS "sdk;comfy;choices;example")
 endif()
+
+
+# Literal observations link only the selected installed shared component.
+add_executable(umicom-sdk-comfy-literal-input literals.c)
+target_link_libraries(umicom-sdk-comfy-literal-input PRIVATE Umicom::comfy_protocol)
+set_target_properties(umicom-sdk-comfy-literal-input PROPERTIES
+    C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin")
+umicom_apply_application_branding(TARGET umicom-sdk-comfy-literal-input
+    PRODUCT_NAME "Umicom Literal Node SDK Example" INTERNAL_NAME "umicom-sdk-comfy-literal-input"
+    APPLICATION_ID "org.umicom.sdk.comfy-literal-input" VERSION_MAJOR 1 VERSION_MINOR 0 VERSION_PATCH 0)
+if(BUILD_TESTING)
+    add_test(NAME sdk.comfy-nodes.literal-input COMMAND "$<TARGET_FILE:umicom-sdk-comfy-literal-input>")
+    set_tests_properties(sdk.comfy-nodes.literal-input PROPERTIES
+        TIMEOUT 20 LABELS "sdk;comfy;literal;example")
+endif()

@@ -48,3 +48,20 @@ if(BUILD_TESTING)
     set_tests_properties(sdk.model-comparison.captured-selection PROPERTIES
         TIMEOUT 20 LABELS "sdk;ai;model-comparison;example")
 endif()
+
+
+# The receipt consumer requires only the installed AI component's public API.
+add_executable(umicom-sdk-model-comparison-receipt receipt.c)
+target_link_libraries(umicom-sdk-model-comparison-receipt PRIVATE Umicom::ai)
+set_target_properties(umicom-sdk-model-comparison-receipt PROPERTIES
+    C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bin")
+umicom_apply_application_branding(TARGET umicom-sdk-model-comparison-receipt
+    PRODUCT_NAME "Umicom Comparison Receipt SDK Example" INTERNAL_NAME "umicom-sdk-model-comparison-receipt"
+    APPLICATION_ID "org.umicom.sdk.model-comparison-receipt" VERSION_MAJOR 1 VERSION_MINOR 0 VERSION_PATCH 0)
+if(BUILD_TESTING)
+    add_test(NAME sdk.model-comparison.metadata-receipt
+        COMMAND "$<TARGET_FILE:umicom-sdk-model-comparison-receipt>")
+    set_tests_properties(sdk.model-comparison.metadata-receipt PROPERTIES
+        TIMEOUT 20 LABELS "sdk;ai;model-comparison;receipt")
+endif()
