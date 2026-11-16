@@ -391,6 +391,58 @@ UmiStatus UmiAiConversationArchiveUpsertIfRevision(UmiAiConversationArchive *arc
     return archive_upsert(archive, record, 1, expected_revision);
 }
 
+/* Branch through the archive's existing admission and publication owner. A
+ * fresh record deliberately discards old approvals and inactive message bytes;
+ * copying a source struct wholesale would inherit both without a new review. */
+UmiStatus UmiAiConversationArchiveBranch(UmiAiConversationArchive *archive,
+    const char *source_session_id,uint64_t expected_source_revision,
+    const char *new_session_id,const char *new_title,size_t message_count,
+    uint64_t created_at_ns,UmiAiConversationBranchReceipt *out_receipt)
+{
+    if(archive==NULL || out_receipt==NULL || !archive_id_valid(source_session_id) ||
+        !archive_id_valid(new_session_id) || expected_source_revision==0U ||
+        new_title==NULL || new_title[0]=='\0') return UMI_STATUS_INVALID_ARGUMENT;
+    size_t title_length=0U;
+    while(title_length<UMI_AI_SMALL_TEXT_CAPACITY && new_title[title_length]!='\0') ++title_length;
+    if(title_length==UMI_AI_SMALL_TEXT_CAPACITY) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status=UmiAiConversationArchiveValidate(archive);
+    if(status!=UMI_STATUS_OK) return status;
+    size_t source_index=find_index(archive,source_session_id);
+    if(source_index==SIZE_MAX) return UMI_STATUS_NOT_FOUND;
+    const UmiAiConversationRecord *source=&archive->records[source_index];
+    if(source->revision!=expected_source_revision) return UMI_STATUS_BUSY;
+    if(message_count>source->conversation.message_count) return UMI_STATUS_INVALID_ARGUMENT;
+    if(find_index(archive,new_session_id)!=SIZE_MAX) return UMI_STATUS_ALREADY_EXISTS;
+    if(archive->count==UMI_AI_CONVERSATION_ARCHIVE_CAPACITY || archive->revision==UINT64_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiAiConversationRecord *candidate=calloc(1U,sizeof(*candidate));
+    if(candidate==NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status=umi_ai_conversation_record_init(candidate,new_session_id,source->session.provider_id,
+        source->session.model_id,source->workspace_id,new_title,created_at_ns);
+    if(status==UMI_STATUS_OK) candidate->classification=source->classification;
+    for(size_t i=0U;status==UMI_STATUS_OK && i<message_count;++i) {
+        UmiAiMessage message;
+        const UmiAiMessage *original=&source->conversation.messages[i];
+        status=umi_ai_message_set(&message,original->role,original->name,original->text);
+        if(status==UMI_STATUS_OK) status=umi_ai_conversation_add(&candidate->conversation,&message);
+    }
+    UmiAiConversationBranchReceipt receipt={0};
+    if(status==UMI_STATUS_OK) {
+        memcpy(receipt.source_session_id,source->session.session_id,strlen(source->session.session_id)+1U);
+        memcpy(receipt.destination_session_id,candidate->session.session_id,strlen(candidate->session.session_id)+1U);
+        receipt.source_revision=source->revision;receipt.message_count=message_count;
+        /* Conditional insertion remains the final authority. No publication or
+         * output update occurs before all source and allocation work succeeds. */
+        status=UmiAiConversationArchiveUpsertIfRevision(archive,candidate,0U);
+    }
+    if(status==UMI_STATUS_OK) {
+        receipt.destination_revision=archive->revision;
+        *out_receipt=receipt;
+    }
+    free(candidate);return status;
+}
+
+
 /*
  * Find ai conversation archive while leaving the underlying catalogue or model owned by
  * this module.

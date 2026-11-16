@@ -147,6 +147,8 @@ UmiStatus umi_sdk_export_plan_add_target(UmiSdkExportPlan *plan,
 }
 
 /* Check that sdk export plan satisfies its contract before another service relies on it. */
+/* Export-plan validation now shares bounded field validation with the nested SDK models, preventing unterminated owned paths from being reported as complete. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_sdk_export_plan_validate(const UmiSdkExportPlan *plan)
 {
     /*
@@ -163,5 +165,21 @@ UmiStatus umi_sdk_export_plan_validate(const UmiSdkExportPlan *plan)
         !umi_sdk_export_catalogue_ready(&plan->catalogue)) {
         return UMI_STATUS_INVALID_STATE;
     }
+    return UMI_STATUS_OK;
+}
+
+#endif
+UmiStatus umi_sdk_export_plan_validate(const UmiSdkExportPlan *plan)
+{
+    if (plan == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Inline paths own fixed storage. A nonempty first byte does not establish
+     * a complete C string; validate every field before approving the model. */
+    if (!umi_sdk_bounded_text(plan->install_prefix, sizeof plan->install_prefix) ||
+        !umi_sdk_bounded_text(plan->include_directory, sizeof plan->include_directory) ||
+        !umi_sdk_bounded_text(plan->library_directory, sizeof plan->library_directory) ||
+        !umi_sdk_bounded_text(plan->examples_directory, sizeof plan->examples_directory) ||
+        umi_sdk_consumer_package_validate(&plan->package) != UMI_STATUS_OK ||
+        !umi_sdk_export_catalogue_ready(&plan->catalogue))
+        return UMI_STATUS_INVALID_STATE;
     return UMI_STATUS_OK;
 }

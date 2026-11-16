@@ -20,6 +20,7 @@
 #include "umicom/sdk/package.h"
 #include "umicom/platform/filesystem.h"
 #include "umicom/base/version.h"
+#include "umicom/base/text.h"
 #include <stdio.h>
 #include "umicom/sdk/probe.h"
 /* Provide the valid operation used by this module and its client applications. */
@@ -33,6 +34,8 @@ UmiStatus umi_sdk_locate(const char *preferred,char *out,size_t cap){const char 
 
 #endif
 
+/* The checked locator delays publication so a borrowed explicit prefix remains authoritative. The compatibility wrapper retains failure clearing after selection completes. The former implementation is retained for owner review. */
+#if 0
 static UmiStatus LocateSelected(const char *prefix, char *out, size_t capacity)
 {
     UmiSdkProbeResult probe;
@@ -60,4 +63,45 @@ UmiStatus umi_sdk_locate(const char *preferred, char *out, size_t capacity)
             status == UMI_STATUS_OUT_OF_MEMORY) return status;
     }
     return UMI_STATUS_NOT_FOUND;
+}
+
+#endif
+static UmiStatus LocateSelected(const char *prefix, char *out, size_t capacity)
+{
+    UmiSdkProbeResult probe;
+    UmiStatus status = umi_sdk_probe_prefix(prefix, &probe);
+    if (status != UMI_STATUS_OK) return status;
+    if (!probe.passed) return UMI_STATUS_NOT_FOUND;
+    /* Selection can borrow the destination. Publish only after probing, using
+     * the shared overlap-safe text contract rather than an unchecked copy. */
+    return umi_text_replace(out, capacity, prefix);
+}
+
+UmiStatus umi_sdk_locate_checked(const char *preferred, char *out, size_t capacity)
+{
+    if (out == NULL || capacity == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    /* An explicit selection is authoritative. Silently substituting another SDK
+     * can build against a different ABI while the UI still shows the user's path. */
+    if (preferred != NULL && preferred[0] != '\0')
+        return LocateSelected(preferred, out, capacity);
+    const char *candidates[] = {
+        "C:/Dev/umicom/sdk/umicom-framework-" UMICOM_FRAMEWORK_VERSION_STRING "-local",
+        "/usr/local", "/usr"
+    };
+    for (size_t i = 0U; i < sizeof candidates / sizeof candidates[0]; ++i) {
+        UmiStatus status = LocateSelected(candidates[i], out, capacity);
+        if (status == UMI_STATUS_OK || status == UMI_STATUS_CAPACITY_EXCEEDED ||
+            status == UMI_STATUS_OUT_OF_MEMORY) return status;
+    }
+    return UMI_STATUS_NOT_FOUND;
+}
+
+UmiStatus umi_sdk_locate(const char *preferred, char *out, size_t capacity)
+{
+    if (out == NULL || capacity == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = umi_sdk_locate_checked(preferred, out, capacity);
+    /* Retain the legacy empty-on-failure contract, but clear only after the
+     * selected prefix has been read. Checked callers retain the prior value. */
+    if (status != UMI_STATUS_OK) out[0] = '\0';
+    return status;
 }

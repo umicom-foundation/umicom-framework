@@ -1,0 +1,111 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Plan model component bundles in C | Umicom Framework</title><link rel="icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#101923;color:#e5edf6;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",sans-serif}main{max-width:1040px;margin:auto;padding:2rem}header{border-bottom:1px solid #34485d;padding-bottom:1rem}header img{width:220px;height:auto}a{color:#77c5ff}h2{margin-top:2.4rem}pre,code{font-family:"Cascadia Code",Consolas,monospace}pre{background:#0b111a;border:1px solid #34485d;padding:1.2rem;overflow:auto;border-radius:8px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #34485d;padding:.7rem;text-align:left;vertical-align:top}.note{background:#172737;border-left:4px solid #6dbaf4;padding:1rem}footer{margin-top:3rem;color:#adbdce}</style>
+</head><body><main><header><img src="../../resources/brand/umicom-logo-on-dark.svg" alt="Umicom"><h1>Plan model component bundles in C</h1><p>Record the exact selected bytes before designing download, installation or inference.</p></header>
+<p>A text model may arrive as one GGUF file. Other models can require weights, tokenizer data and configuration files, sometimes in several directories. A bundle plan groups an explicit selection under one immutable repository revision. It does not decide whether the selection contains every file needed by an engine.</p>
+<p class="note">This API is pure planning. It makes no network request, opens no model file and reports no model as ready. A filename extension and a supplied digest are expectations to verify later, not evidence of valid content or a working model.</p>
+<h2>1. Understand the identity record</h2>
+<table><thead><tr><th>Field</th><th>Meaning</th><th>What it does not establish</th></tr></thead><tbody>
+<tr><td>Repository</td><td>An explicit owner/repository name</td><td>Publisher trust, licence acceptance or authorization</td></tr>
+<tr><td>Revision</td><td>A full lowercase 40-digit commit identifier</td><td>The actual downloaded content identity</td></tr>
+<tr><td>Filename</td><td>The selected relative path within that revision</td><td>A safe resolved destination directory</td></tr>
+<tr><td>SHA-256</td><td>The exact expected file digest</td><td>Successful verification until actual bytes are hashed</td></tr>
+<tr><td>Byte count</td><td>The exact expected size</td><td>Required RAM, VRAM or temporary download space</td></tr>
+<tr><td>Format</td><td>A supported filename classification</td><td>A successful parser, tensor validator or inference backend</td></tr>
+</tbody></table>
+<p><code>UmiModelBundlePlanCreate</code> copies the complete selection into owned inline fields. It accepts one to 128 files and bounds total selected bytes to <code>UMI_MODEL_MAX_BYTES</code>. Every file needs a digest and positive size. GGUF requires at least 24 bytes and Safetensors at least 10 bytes; these minimum sizes are admission boundaries, not content validation.</p>
+<h2>2. Build a synthetic plan without downloading anything</h2>
+<p>The following complete program uses deliberately synthetic metadata. Do not use its hashes to download a real model. Replace every identity field with reviewed publisher metadata when preparing a real selection.</p>
+<pre><code class="language-c">#include &quot;umicom/local_models/bundle.h&quot;
+#include &lt;inttypes.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+int main(void)
+{
+    UmiModelBundleFile files[2] = {0};
+    strcpy(files[0].filename, &quot;weights/model.gguf&quot;);
+    files[0].format = UMI_MODEL_ARTIFACT_GGUF;
+    files[0].bytes = 24U;
+    strcpy(files[1].filename, &quot;config.json&quot;);
+    files[1].format = UMI_MODEL_ARTIFACT_JSON;
+    files[1].bytes = 2U;
+    for (size_t i = 0U; i &lt; 2U; ++i)
+        memset(files[i].sha256, 'a', 64U); /* Synthetic digest, not real model evidence. */
+
+    UmiModelBundlePlan *plan = malloc(sizeof(*plan));
+    if (plan == NULL) return 1;
+    UmiStatus status = UmiModelBundlePlanCreate(
+        &quot;umicom-fixtures/synthetic&quot;,
+        &quot;0123456789abcdef0123456789abcdef01234567&quot;, files, 2U, plan);
+    if (status == UMI_STATUS_OK)
+        printf(&quot;Selected %zu files, %&quot; PRIu64 &quot; bytes. No files downloaded.\n&quot;,
+            plan-&gt;count, plan-&gt;total_bytes);
+    else
+        fprintf(stderr, &quot;Bundle admission refused: %d\n&quot;, (int)status);
+    free(plan);
+    return status == UMI_STATUS_OK ? 0 : 1;
+}</code></pre>
+<p>Expected output after a successful qualified build:</p><pre><code>Selected 2 files, 26 bytes. No files downloaded.</code></pre>
+<p>The plan is large enough to keep off a small worker stack. The constructor also allocates staging storage. If any input is refused or allocation fails, the caller's previous complete plan remains unchanged. Repository, revision and file inputs may borrow fields from that previous plan during replacement.</p>
+<h2>3. Refuse ambiguous selections</h2>
+<p>Framework checks every live file before accepting the selection. It rejects traversal, unsupported characters, duplicate paths, case-insensitive aliases and file/directory prefix conflicts. For example, <code>model.gguf</code> and <code>MODEL.gguf</code> collide. So do <code>config.json</code> and <code>config.json/child.json</code>. Two different files in the same directory are permitted.</p>
+<p>The service reuses the existing model-name grammar and native output-path syntax checks. It does not normalize an unsafe name into a safe-looking replacement. Host-specific restrictions are applied on the current host; revalidate on the destination host. The syntax check uses a synthetic absolute prefix only for validation and never accesses that path.</p>
+<table><thead><tr><th>Format</th><th>Admitted names</th></tr></thead><tbody>
+<tr><td>GGUF</td><td>Lowercase <code>.gguf</code> extension</td></tr>
+<tr><td>Safetensors</td><td>Lowercase <code>.safetensors</code> extension</td></tr>
+<tr><td>Metadata and text</td><td><code>.json</code> and <code>.txt</code></td></tr>
+<tr><td>Tokenizer data</td><td><code>.model</code>, <code>.tiktoken</code>, <code>.vocab</code>, <code>.merges</code></td></tr>
+<tr><td>Documentation</td><td>README.md, LICENSE, LICENCE, LICENSE.md and LICENCE.md; case-insensitive basenames</td></tr>
+</tbody></table>
+<p>No supported format admits Python modules, DLLs or pickle checkpoint extensions. That restriction does not prove that an admitted file contains safe or correctly formatted bytes. Content parsers and execution policy remain separate.</p>
+<h2>4. Query the exact selected record</h2>
+<p><code>UmiModelBundlePlanValidate</code> validates every record and recomputes the total. If a caller edits <code>total_bytes</code> without matching the files, it returns <code>UMI_STATUS_INVALID_STATE</code>. Unused array slots do not affect admission.</p>
+<p><code>UmiModelBundleUrlAt</code> builds a pinned public HTTPS URL from the validated repository, revision and selected filename. It does not accept an arbitrary URL and does not send a request. If the output buffer is too short, every output byte remains unchanged.</p>
+<p><code>UmiModelBundleGgufSourceAt</code> copies a selected GGUF record into the established <code>UmiModelSource</code> contract. For other formats it returns <code>UMI_STATUS_NOT_IMPLEMENTED</code>. This keeps the existing single-GGUF downloader's verified behavior intact. A bundle plan does not silently turn that downloader into a generic file-transfer or pipeline-installation service.</p>
+<h2>4a. Select every explicitly numbered GGUF companion</h2>
+<p>A split GGUF publication can use names such as <code>weights/model-00001-of-00003.gguf</code>. Each suffix states a part number and a declared total using five decimal digits. Selecting part two should not silently omit parts one and three.</p>
+<ol><li>Build a catalogue plan containing the reviewed files from one pinned repository revision. Include exact expected sizes and digests.</li>
+<li>Pass the index of any GGUF part to <code>UmiModelBundleSelectGguf</code>.</li>
+<li>Framework validates the whole catalogue, recognizes the explicit numbered suffix, and requires all exact companion names from part one through the declared total.</li>
+<li>On success, the output contains only those GGUF parts in numeric order. The unrelated configuration and documentation records are not selected.</li>
+<li>If a companion is missing, the result is <code>UMI_STATUS_NOT_FOUND</code> and the previous output plan is unchanged. Keep the reviewed catalogue and investigate the publisher's complete file list before trying again.</li></ol>
+<p>For a catalogue ordered as part three, configuration, part one, part two, selecting index zero produces parts one, two, three. All original digest and size records survive selection; the output total is recalculated. The output can replace the input catalogue in place because the service stages the complete selection before publishing it.</p>
+<pre><code class="language-c">/* catalogue and selected are complete caller-owned plans.
+ * This call performs no download or model execution. */
+UmiStatus status = UmiModelBundleSelectGguf(catalogue, 0U, selected);
+if (status == UMI_STATUS_NOT_FOUND) {
+    /* Keep the previous selection and obtain the missing pinned metadata. */
+}</code></pre>
+<p>The basename prefix must be nonempty. Parts start at one, cannot exceed the total, and the total cannot exceed 128. A malformed recognized suffix is refused. Companion spelling is exact and case-sensitive because it names a repository file. Other filename patterns, including <code>model-1-of-3.gguf</code>, stay single-file selections with completeness unassessed. The selector does not guess alternate publisher conventions.</p>
+<p class="note">A complete declared filename set is still not proof of a valid GGUF model. The file headers may disagree, tensors may be corrupt, and the engine may not support the architecture. This selector does not inspect those bytes or qualify a backend.</p>
+<h2>5. Keep selected, verified and runnable states separate</h2>
+<ol><li><strong>Selected:</strong> admit the exact repository revision and files into a bundle plan.</li>
+<li><strong>Downloaded:</strong> an explicitly approved transfer obtains bytes in a controlled staging location. A future bundle downloader must enforce destination confinement and preserve partial failures.</li>
+<li><strong>Verified:</strong> compare every actual file size and digest, then validate its format. Publish a completion receipt only for the complete selected set.</li>
+<li><strong>Compatible:</strong> a qualified backend recognizes the architecture, tokenizer and configuration. Check all required shards and components.</li>
+<li><strong>Ready:</strong> an owned runtime loads the model and supplies current readiness evidence. Keep that observation bound to model and runtime identity.</li></ol>
+<p>These bundle APIs implement selection only. The general constructor accepts an explicit file set without inferring completeness. The GGUF selector additionally checks every companion declared by its supported numbered filename convention. Neither validates tensor metadata, reserves disk space, assesses memory needs nor proves that image/video generation will work. Keep those as explicit services rather than deriving them from the presence of files.</p>
+<!-- Preserve the earlier general-constructor explanation for review; the explicit companion selector now adds the narrowly defined naming check above. -->
+<template data-preserved="bundle-completeness-explanation"><p>Only the first step is implemented by this bundle API. It cannot infer split-GGUF completeness from a selected filename, validate tensor metadata, reserve disk space, assess memory needs or prove that image/video generation will work. Keep those as explicit services rather than deriving them from the presence of files.</p></template>
+<h2>6. Use and qualify the installed SDK</h2>
+<p>Include <code>umicom/local_models/bundle.h</code> and link the existing <code>Umicom::local_models</code> component. The existing installed model consumer now exercises synthetic bundle admission and the refusal to expose data components through the GGUF-only execution contract. It remains an offline consumer.</p>
+<pre><code>find_package(UmicomFramework CONFIG REQUIRED COMPONENTS local_models)
+add_executable(model-bundle-example main.c)
+target_link_libraries(model-bundle-example PRIVATE Umicom::local_models)</code></pre>
+<p>Run each producer qualification command separately and stop on an error:</p>
+<pre><code>Set-Location C:\umicom\Umicom-Applications\framework
+cmake --preset windows-ucrt64-debug
+cmake --build --preset windows-ucrt64-debug --target umicom-model-bundle-test umicom-model-bundle-allocation-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.local_models\.bundle(_allocation)?\." --output-on-failure</code></pre>
+<p>Also qualify companion selection and its allocation ownership:</p>
+<pre><code>cmake --build --preset windows-ucrt64-debug --target umicom-model-bundle-selection-test umicom-model-bundle-selection-allocation-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.local_models\.bundle_selection(_allocation)?\." --output-on-failure</code></pre>
+<p>These are commands to execute, not a claim that native qualification has passed. Configuration checks target registration; compilation, tests and the independently installed consumer must be verified separately. No real model weights are needed by the synthetic tests.</p>
+<h2>7. Extend the design without overstating it</h2>
+<p>Media can show a selected component set and its byte total before a reviewed download. LLM applications can use the same record for multi-file model libraries. Studio can explain a missing component and attach source identity to a workflow proposal. The actual app wiring, bundle materializer and model-specific compatibility checks are separate work.</p>
+<p>Exercise: change one digest to an invalid character, duplicate a filename using different case, and increase one file so the byte total exceeds its bound. Verify that all three refusals retain the old plan. Then explain why a successfully admitted selection can still be incomplete or impossible to load.</p>
+<p>Continue with <a href="typed-ai-workflows.html">typed AI workflow planning</a> and <a href="local-model-lifecycle.html">local model ownership and lifecycle</a>.</p>
+<footer>Umicom Framework · Sammy Hegab · Umicom Foundation · MIT source examples. Approved Umicom SVG/ICO assets and installed typography fallbacks.</footer>
+</main></body></html>

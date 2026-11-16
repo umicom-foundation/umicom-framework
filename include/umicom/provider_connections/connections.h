@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/provider_connections/connections.h
- * PURPOSE: Persist reviewed connection settings without storing credential values.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Persist reviewed connection settings without storing credential values.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_PROVIDER_CONNECTIONS_CONNECTIONS_H
 #define UMICOM_PROVIDER_CONNECTIONS_CONNECTIONS_H
@@ -11,6 +18,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "umicom/data/data_server.h"
+#include "umicom/base/sha256.h"
 #include "umicom/security/secret_provider.h"
 #ifdef __cplusplus
 extern "C" {
@@ -63,6 +71,21 @@ typedef struct UmiProviderConnections UmiProviderConnections;
  * http://127.0.0.1:<port> with a port from 1024 to 65535, and cannot use secrets.
  * Syntax validation does not establish trust in a host or model. */
 UmiStatus UmiProviderConnectionValidate(const UmiProviderConnection *connection);
+
+
+/* Hash validated non-secret settings using fingerprint format v1: the ASCII
+ * domain "Umicom provider connection fingerprint v1\n", followed by the
+ * canonical connection wire bytes, with neither terminating NUL included.
+ * Every setting participates, including label, enabled flag and credential
+ * reference. Structure padding and unused bytes after terminators do not.
+ *
+ * Preserve the output on failure. This does not read a store, resolve a secret,
+ * verify a host or authorize a request. Secret replacement behind an unchanged
+ * reference does not change this digest. Retained work must also bind to its
+ * application/profile scope, reviewed revision and confirmed provider task ID.
+ * Use this fingerprint to detect changed settings, never as authentication. */
+UmiStatus UmiProviderConnectionFingerprint(const UmiProviderConnection *connection,
+    unsigned char out_digest[UMI_SHA256_BYTES]);
 
 /* The caller supplies an already opened Data Server. Use an absolute SQLite
  * path chosen by the host for durable settings; a memory server is temporary.

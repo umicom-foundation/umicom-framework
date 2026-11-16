@@ -47,8 +47,21 @@ typedef struct UmiSdkExportCatalogue {
  * a known state.
  */
 void umi_sdk_export_catalogue_init(UmiSdkExportCatalogue *catalogue);
+
+/** Validate count and nonempty, bounded NUL-terminated live entry fields.
+ * An empty initialized catalogue is structurally valid. NULL is INVALID_ARGUMENT;
+ * corrupt count or live fields are INVALID_STATE. Unused slots are ignored.
+ * This is not CMake token validation or proof of installed exported targets.
+ */
+UmiStatus umi_sdk_export_catalogue_validate(const UmiSdkExportCatalogue *catalogue);
 /**
  * Add sdk export catalogue only after its inputs and available capacity have been checked.
+ */
+/** Append without changing any catalogue byte on rejection. Inputs are readable
+ * NUL-terminated strings and may borrow fields, including an unused slot.
+ * A corrupt existing catalogue returns INVALID_STATE; a valid full one returns
+ * CAPACITY_EXCEEDED. Duplicate component IDs return ALREADY_EXISTS. required is
+ * normalized to zero or one. Caller serializes mutation and borrowed reads.
  */
 UmiStatus umi_sdk_export_catalogue_add(UmiSdkExportCatalogue *catalogue,
                                            const char *component_id,
@@ -57,6 +70,9 @@ UmiStatus umi_sdk_export_catalogue_add(UmiSdkExportCatalogue *catalogue,
 /**
  * Find sdk export catalogue while leaving the underlying catalogue or model owned by this
  * module.
+ */
+/** Return NULL for absent IDs or any malformed live catalogue storage.
+ * A returned pointer belongs to the catalogue and must not outlive its storage.
  */
 const UmiSdkExportedTarget *umi_sdk_export_catalogue_find(
     const UmiSdkExportCatalogue *catalogue,

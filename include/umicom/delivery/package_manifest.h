@@ -72,6 +72,11 @@ UmiStatus umi_package_manifest_init(UmiPackageManifest *manifest,
 /**
  * Add package manifest only after its inputs and available capacity have been checked.
  */
+/** Append a complete file record without changing any manifest byte on refusal.
+ * Text inputs are readable NUL-terminated strings and may borrow live fields or
+ * a prepared unused slot. Unknown roles return INVALID_ARGUMENT; malformed
+ * existing storage returns INVALID_STATE. Duplicate destinations retain
+ * ALREADY_EXISTS and a valid full manifest returns CAPACITY_EXCEEDED. */
 UmiStatus umi_package_manifest_add(UmiPackageManifest *manifest,
                                        const char *source,
                                        const char *destination,
@@ -81,12 +86,23 @@ UmiStatus umi_package_manifest_add(UmiPackageManifest *manifest,
  * Find package manifest while leaving the underlying catalogue or model owned by this
  * module.
  */
+/** A match borrows manifest storage. Any malformed live storage returns NULL,
+ * including invalid entries after the requested match. Serialize all access. */
 const UmiPackageFile *umi_package_manifest_find(
     const UmiPackageManifest *manifest,
     const char *destination);
 /**
  * Check that package manifest satisfies its contract before another service relies on it.
  */
+/** Validate fixed-array bounds, all text terminators, live file roles and unique
+ * destinations. Empty header strings and an empty catalogue are allowed for
+ * drafting. Unused slots and format readiness are ignored. NULL returns
+ * INVALID_ARGUMENT; malformed owned storage returns INVALID_STATE. No I/O. */
+UmiStatus umi_package_manifest_validate_storage(const UmiPackageManifest *manifest);
+
+/** Additionally require nonempty product/version/entrypoint, a known package
+ * format and a required executable entrypoint. This validates a plan, not file
+ * presence, safe destination paths, copied bytes or an installed application. */
 UmiStatus umi_package_manifest_validate(const UmiPackageManifest *manifest);
 
 #ifdef __cplusplus

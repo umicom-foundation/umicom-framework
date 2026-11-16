@@ -5426,8 +5426,277 @@ if(BUILD_TESTING)
         endif()
     endforeach()
 
+
+    # Reuse the real SDK construction owners and verify rejected updates retain
+    # complete prior values, including unused catalogue storage.
+    add_executable(umicom-sdk-package-construction-test tests/sdk_installation/test_package_construction.c)
+    target_link_libraries(umicom-sdk-package-construction-test PRIVATE Umicom::sdk)
+    set_target_properties(umicom-sdk-package-construction-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES)
+    umicom_apply_warnings(umicom-sdk-package-construction-test)
+    umicom_apply_sanitizers(umicom-sdk-package-construction-test)
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-sdk-package-construction-test FILES
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/sdk/consumer_package.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/sdk/sdk_internal.h")
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-sdk-package-construction-test)
+    endif()
+    foreach(_case IN ITEMS allocation
+            null-output
+            borrow-all
+            borrow-cross
+            validate-null
+            validate-name
+            validate-namespace
+            validate-version
+            validate-directory
+            null-name
+            null-namespace
+            null-version
+            null-directory
+            empty-name
+            empty-namespace
+            empty-version
+            empty-directory
+            overflow-name
+            overflow-namespace
+            overflow-version
+            overflow-directory)
+        add_test(NAME framework.sdk.package_construction.${_case}
+            COMMAND umicom-sdk-package-construction-test ${_case})
+        set_tests_properties(framework.sdk.package_construction.${_case} PROPERTIES
+            TIMEOUT 15 LABELS "framework;sdk;construction;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.sdk.package_construction.${_case}
+                TARGETS umicom-sdk-package-construction-test)
+        endif()
+    endforeach()
+
+    add_executable(umicom-sdk-catalogue-integrity-test tests/sdk_installation/test_catalogue_integrity.c)
+    target_link_libraries(umicom-sdk-catalogue-integrity-test PRIVATE Umicom::sdk)
+    set_target_properties(umicom-sdk-catalogue-integrity-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES)
+    umicom_apply_warnings(umicom-sdk-catalogue-integrity-test)
+    umicom_apply_sanitizers(umicom-sdk-catalogue-integrity-test)
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-sdk-catalogue-integrity-test FILES
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/sdk/export_catalogue.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/sdk/sdk_internal.h")
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-sdk-catalogue-integrity-test)
+    endif()
+    foreach(_case IN ITEMS null-catalogue
+            empty
+            corrupt-count
+            max-count
+            corrupt-id
+            corrupt-target
+            corrupt-empty-id
+            corrupt-empty-target
+            full
+            borrow-unused
+            borrow-live
+            unused-garbage
+            find-boundaries
+            null-id
+            null-target
+            empty-id
+            empty-target
+            overflow-id
+            overflow-target
+            duplicate)
+        add_test(NAME framework.sdk.catalogue_integrity.${_case}
+            COMMAND umicom-sdk-catalogue-integrity-test ${_case})
+        set_tests_properties(framework.sdk.catalogue_integrity.${_case} PROPERTIES
+            TIMEOUT 15 LABELS "framework;sdk;construction;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.sdk.catalogue_integrity.${_case}
+                TARGETS umicom-sdk-catalogue-integrity-test)
+        endif()
+    endforeach()
+
+
+    # Validate native consumer text before any owner-run CMake evaluation.
+    add_executable(umicom-sdk-cmake-render-test tests/sdk_installation/test_cmake_render.c)
+    target_link_libraries(umicom-sdk-cmake-render-test PRIVATE Umicom::sdk)
+    set_target_properties(umicom-sdk-cmake-render-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES)
+    umicom_apply_warnings(umicom-sdk-cmake-render-test)
+    umicom_apply_sanitizers(umicom-sdk-cmake-render-test)
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-sdk-cmake-render-test FILES
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/sdk/consumer_package.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/sdk/export_catalogue.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/tests/sdk_installation/check_cmake_render.cmake")
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-sdk-cmake-render-test)
+    endif()
+    foreach(_case IN ITEMS package-command
+            package-space
+            package-list
+            package-variable
+            package-quote
+            package-path
+            package-escape
+            package-comment
+            package-nonascii
+            version-range
+            version-empty-part
+            version-trailing
+            version-leading
+            version-five
+            version-text
+            version-option
+            version-variable
+            target-command
+            target-list
+            target-generator
+            target-flag
+            target-path
+            target-private
+            target-public
+            target-interface
+            target-link-private
+            target-link-public
+            target-link-interface
+            target-debug
+            target-optimized
+            target-general
+            target-single-colon
+            target-triple-colon
+            target-empty-namespace
+            target-empty-name
+            corrupt-count
+            empty-catalogue
+            unterminated-package
+            unterminated-target
+            null-inputs
+            version-one
+            version-three
+            version-four
+            literal-names
+            full-catalogue
+            baseline
+            short-capacities
+            allocation)
+        add_test(NAME framework.sdk.cmake_render.${_case}
+            COMMAND umicom-sdk-cmake-render-test ${_case})
+        set_tests_properties(framework.sdk.cmake_render.${_case} PROPERTIES
+            TIMEOUT 15 LABELS "framework;sdk;cmake-render;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.sdk.cmake_render.${_case}
+                TARGETS umicom-sdk-cmake-render-test)
+        endif()
+    endforeach()
+    add_test(NAME framework.sdk.cmake_render.parser
+        COMMAND "${CMAKE_COMMAND}"
+            "-DEXECUTABLE=$<TARGET_FILE:umicom-sdk-cmake-render-test>"
+            "-DTEST_BINARY=${CMAKE_CURRENT_BINARY_DIR}/sdk-cmake-render"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/sdk_installation/check_cmake_render.cmake")
+    set_tests_properties(framework.sdk.cmake_render.parser PROPERTIES
+        TIMEOUT 60 LABELS "framework;sdk;cmake-render;regression")
+    if(COMMAND umicom_test_impact_owners)
+        umicom_test_impact_owners(framework.sdk.cmake_render.parser
+            TARGETS umicom-sdk-cmake-render-test)
+    endif()
+
+
+    # Control presence observations while testing the real native SDK selector.
+    add_executable(umicom-sdk-locator-selection-test tests/sdk_installation/test_locator_selection.c)
+    target_link_libraries(umicom-sdk-locator-selection-test PRIVATE Umicom::sdk)
+    set_target_properties(umicom-sdk-locator-selection-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES)
+    umicom_apply_warnings(umicom-sdk-locator-selection-test)
+    umicom_apply_sanitizers(umicom-sdk-locator-selection-test)
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-sdk-locator-selection-test FILES
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/sdk/locator.c"
+            "${CMAKE_CURRENT_SOURCE_DIR}/src/base/text.c")
+    endif()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-sdk-locator-selection-test)
+    endif()
+    foreach(_case IN ITEMS explicit
+            overlap
+            refusal
+            capacity
+            invalid-output
+            default-first
+            default-second
+            default-third
+            default-empty
+            default-none
+            default-capacity
+            default-memory
+            default-skip-errors
+            default-short-output)
+        add_test(NAME framework.sdk.locator_selection.${_case}
+            COMMAND umicom-sdk-locator-selection-test ${_case})
+        set_tests_properties(framework.sdk.locator_selection.${_case} PROPERTIES
+            TIMEOUT 15 LABELS "framework;sdk;selection;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.sdk.locator_selection.${_case}
+                TARGETS umicom-sdk-locator-selection-test)
+        endif()
+    endforeach()
+
     umicom_add_framework_test(umicom-sdk-export-catalogue-test framework.sdk_export_catalogue tests/test_sdk_export_catalogue.c)
     umicom_add_framework_test(umicom-sdk-consumer-package-test framework.sdk_consumer_package tests/test_sdk_consumer_package.c)
+
+    # Delivery models are tested separately from filesystem/install adapters.
+    add_executable(umicom-delivery-model-integrity-test tests/delivery_model/test_integrity.c)
+    add_executable(umicom-delivery-bundle-construction-test tests/delivery_model/test_bundle_construction.c)
+    foreach(_target IN ITEMS umicom-delivery-model-integrity-test umicom-delivery-bundle-construction-test)
+        target_link_libraries(${_target} PRIVATE Umicom::delivery)
+        set_target_properties(${_target} PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES)
+        umicom_apply_warnings(${_target})
+        umicom_apply_sanitizers(${_target})
+        if(COMMAND umicom_target_qualification_inputs)
+            umicom_target_qualification_inputs(${_target} FILES
+                "${CMAKE_CURRENT_SOURCE_DIR}/src/delivery/package_manifest.c"
+                "${CMAKE_CURRENT_SOURCE_DIR}/src/delivery/runtime_dependency.c"
+                "${CMAKE_CURRENT_SOURCE_DIR}/src/delivery/portable_bundle.c"
+                "${CMAKE_CURRENT_SOURCE_DIR}/src/base/snapshot_validation.c")
+        endif()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(${_target})
+        endif()
+    endforeach()
+    foreach(_case IN ITEMS manifest-storage
+            manifest-append
+            manifest-capacity
+            manifest-duplicates
+            dependency-storage
+            dependency-append
+            dependency-capacity
+            dependency-duplicates
+            bundle-count
+            bundle-invalid)
+        add_test(NAME framework.delivery.model_integrity.${_case}
+            COMMAND umicom-delivery-model-integrity-test ${_case})
+        set_tests_properties(framework.delivery.model_integrity.${_case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;delivery;model-integrity;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.delivery.model_integrity.${_case}
+                TARGETS umicom-delivery-model-integrity-test)
+        endif()
+    endforeach()
+    foreach(_case IN ITEMS borrowed
+            allocation
+            null-inputs
+            oversize-text
+            invalid-manifest
+            draft)
+        add_test(NAME framework.delivery.bundle_construction.${_case}
+            COMMAND umicom-delivery-bundle-construction-test ${_case})
+        set_tests_properties(framework.delivery.bundle_construction.${_case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;delivery;construction;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.delivery.bundle_construction.${_case}
+                TARGETS umicom-delivery-bundle-construction-test)
+        endif()
+    endforeach()
+
     umicom_add_framework_test(umicom-delivery-package-manifest-test framework.delivery_package_manifest tests/test_delivery_package_manifest.c)
     umicom_add_framework_test(umicom-delivery-runtime-bundle-test framework.delivery_runtime_bundle tests/test_delivery_runtime_bundle.c)
     umicom_add_framework_test(umicom-delivery-installer-test framework.delivery_installer tests/test_delivery_installer.c)
@@ -7558,3 +7827,20 @@ include(cmake/UmicomMcpConstruction.cmake)
 
 # Server registry consumers admit complete storage and nonwrapping revisions.
 include(cmake/UmicomMcpServerRegistryAdmission.cmake)
+
+# Workflow consumers share bounded graph validation and retained plan construction.
+include(cmake/UmicomWorkflowGraphIntegrity.cmake)
+
+# Typed AI workflows reuse the canonical dependency engine and export one SDK service.
+include(cmake/UmicomAiWorkflowPreflight.cmake)
+umicom_add_ai_workflow_preflight(DEPENDENCY_TARGET Umicom::integration)
+include(cmake/UmicomAiWorkflowPreflightChecks.cmake)
+
+# Inspect model metadata with the shared bounded JSON owner before any runtime use.
+include(cmake/UmicomModelFormats.cmake)
+
+# Literal conversation projections share bounded archive and Unicode admission.
+include(cmake/UmicomAiConversationTranscript.cmake)
+
+# Standalone conversation consumers use the same public API exercised in producer checks.
+include(cmake/UmicomAiConversationExamples.cmake)

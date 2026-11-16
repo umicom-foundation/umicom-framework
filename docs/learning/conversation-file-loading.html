@@ -108,5 +108,85 @@ UmiStatus adopt_loaded_session(
 <pre><code class="language-powershell">cmake --build --preset windows-ucrt64-debug --target umicom-ai-conversation-import-test
 ctest --test-dir build/windows-ucrt64-debug -R '^framework[.]ai[.]conversation[.]import[.]' --output-on-failure --no-tests=error</code></pre>
 <p>The <a href="../../tests/test_ai_conversation_import.c">import regression scenarios</a> exercise insertion, replacement, stale identity, archive capacity, counter exhaustion, policy preservation and actual build-local file reads. The installed SDK consumer also exercises in-memory import without model or network activity. Configuration and registration do not establish that either executable passed.</p>
+
+<h2>Create an independent conversation branch</h2>
+<p>A branch lets someone try a different explanation or question from a chosen point in a saved conversation. It is a new document in the existing native archive, not a replayed provider request or learned model memory. <code>UmiAiConversationArchiveBranch</code> copies an explicitly selected prefix and keeps the original session unchanged.</p>
+<ol><li>Read the source record from the archive and retain its current <code>revision</code>. Present the selected message count, new session identifier and title for review.</li><li>Call the branch operation on the serialized archive owner thread. Zero messages creates an empty branch with the same provider/model/workspace selection; a larger count must fit the source's visible message extent.</li><li>On success, use the returned source/destination IDs and revisions to identify the operation. Read the new record through the existing archive API. The containing application chooses whether to activate it; the branch operation does not switch the current session.</li><li>Review current policy before sending the copied content to any provider or saving it to disk. The new record deliberately has both <code>remote_approved</code> and <code>persistence_approved</code> cleared.</li><li>Persist the branch through the existing approved archive workflow when requested. The version 1 conversation file stores the new record, but not the separate branch receipt. A host that needs lasting parent relationships must store that metadata explicitly in its own reviewed project records.</li></ol>
+<pre><code class="language-c">/* archive is an existing serialized owner; source_revision came from Find. */
+UmiAiConversationBranchReceipt branch;
+UmiStatus status = UmiAiConversationArchiveBranch(
+    archive, "session.source", source_revision,
+    "session.alternative", "A different explanation", 3U,
+    creation_time_ns, &amp;branch);
+if (status == UMI_STATUS_OK) {
+    /* branch.destination_revision identifies the newly accepted record.
+       No provider request, disk write or active-session change occurred. */
+}</code></pre>
+<p>The branch keeps the provider, model, workspace and data classification of its source. It receives a new session and conversation ID, explicit title and supplied creation/update timestamp. A timestamp is caller-provided metadata, not proof of when a remote operation happened. Messages retain their historical roles and visible names/text; unused slots and bytes after string terminators are not copied. A historical tool-role message is not evidence that a tool ran and does not authorize executing it.</p>
+<table><thead><tr><th>Result</th><th>What the host should do</th></tr></thead><tbody>
+<tr><td><code>BUSY</code></td><td>The selected source revision changed. Reread it and review the intended prefix again. An unrelated record edit does not invalidate a still-current source revision.</td></tr>
+<tr><td><code>ALREADY_EXISTS</code></td><td>The proposed destination ID already belongs to a record. Choose a new ID; branching never overwrites the source or an earlier experiment.</td></tr>
+<tr><td><code>NOT_FOUND</code></td><td>The source was removed or the ID is incorrect. Preserve the draft choice and select an existing source.</td></tr>
+<tr><td><code>CAPACITY_EXCEEDED</code></td><td>The archive has no free record slot or its revision counter is exhausted. Do not evict history or wrap revisions automatically.</td></tr>
+<tr><td><code>OUT_OF_MEMORY</code> or invalid input</td><td>The archive and output receipt remain unchanged. Report the refusal; no partially created branch needs to be removed.</td></tr></tbody></table>
+<p>This operation shares the archive's bounded record/message limits. It does not add an unbounded transcript store, clone model state, synchronize multiple processes or grant consent inherited from another session. Keep owner access serialized and preserve any operation receipt your product needs before its own next action.</p>
+<pre><code class="language-powershell">cmake --build --preset windows-ucrt64-debug --target umicom-ai-conversation-branch-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework[.]ai[.]conversation[.]branch[.]' --output-on-failure --no-tests=error</code></pre>
+<p>The <a href="../../tests/test_ai_conversation_archive_branch.c">branch regression source</a> covers empty/partial/full prefixes, historical roles, approval reset, omitted bytes, source changes, independent branches, existing destinations, revision exhaustion and allocation failure. These are authored checks to execute on the selected toolchain; registration alone is not a passing result.</p>
+
+<h2>Export a selected conversation for reading</h2>
+<p>An archive preserves the complete native record. A transcript is a reading view of messages that the user chose to disclose. <code>UmiAiConversationTranscriptMarkdown</code> creates a Markdown content fragment in caller-owned memory. It performs no file write, network request or tool execution.</p>
+<ol><li>Obtain a stable record snapshot through the archive API. Keep it unchanged while measuring and rendering.</li><li>Select a zero-based range and an explicit role mask. <code>UMI_AI_TRANSCRIPT_DIALOGUE</code> selects user and assistant messages. System and tool messages require their own explicit role flags. A range may select zero messages.</li><li>Measure the fragment, then allocate the reported byte count plus one byte for the terminating zero. The same selection must remain valid when rendered.</li><li>Render and review the fragment. Title and classification are included. Session, provider, model and workspace identifiers, timestamps and approvals are omitted. Message names are included only when requested.</li><li>Compose the fragment into the product's approved branded document using Framework's resource catalogue and supplied SVG assets. This formatter does not create a complete document or add a watermark by itself.</li><li>Before saving or sharing, check the current privacy policy and destination. Use the existing persistence check for a file export and the appropriate sharing check for a remote destination. Rendering text does not approve either action.</li></ol>
+<pre><code class="language-c">#include "umicom/ai/conversation_transcript.h"
+#include &lt;stdlib.h&gt;
+
+/* The caller owns a stable record and receives text only after success. */
+UmiStatus make_dialogue_fragment(const UmiAiConversationRecord *record,
+    char **out_text, size_t *out_bytes)
+{
+    if (record == NULL || out_text == NULL || out_bytes == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiAiConversationTranscriptOptions selection = {
+        0U, record-&gt;conversation.message_count, UMI_AI_TRANSCRIPT_DIALOGUE, 0
+    };
+    size_t bytes = 0U;
+    UmiStatus status = UmiAiConversationTranscriptMeasure(record, &amp;selection, &amp;bytes);
+    if (status != UMI_STATUS_OK) return status;
+    char *text = malloc(bytes + 1U);
+    if (text == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    status = UmiAiConversationTranscriptMarkdown(record, &amp;selection, text, bytes + 1U, &amp;bytes);
+    if (status != UMI_STATUS_OK) { free(text); return status; }
+    *out_text = text;
+    *out_bytes = bytes;
+    return UMI_STATUS_OK; /* The caller releases text with free. */
+}</code></pre>
+<p>The output retains original one-based message numbers after filtering, so selecting messages 2 and 3 does not rename them to 1 and 2. A historical role is a label, not proof of tool execution. The classification remains the record's original classification even when some messages are omitted; the formatter never downgrades it.</p>
+<p>Every title, optional name and message body appears in a literal fenced block. The fence is longer than every run of tilde characters in that field, so a message containing a fence, HTML or a heading remains literal text in a CommonMark-compatible viewer. This deliberately preserves code examples instead of treating model output as trusted formatting. The fragment is not HTML and cannot be imported as an archive. A host must not pass its raw bytes to an HTML interpreter.</p>
+<p>The service first validates the complete bounded record, then validates UTF-8 in fields that will actually be emitted. It accepts tabs and line endings, but refuses other ASCII control characters and malformed encoding. It preserves other Unicode characters without checking visual confusables or changing normalization. Invalid UTF-8 in an excluded message is not emitted; an unterminated active record field still fails the complete-record check.</p>
+<table><thead><tr><th>Result</th><th>Recovery</th></tr></thead><tbody>
+<tr><td><code>CAPACITY_EXCEEDED</code></td><td>Measure the current immutable input again and provide that many bytes plus one. A failed render leaves the previous buffer and byte count unchanged.</td></tr>
+<tr><td><code>PARSE_ERROR</code></td><td>Inspect the encoding of the selected title, name or body. Do not silently discard bytes or claim a complete export.</td></tr>
+<tr><td><code>INVALID_ARGUMENT</code></td><td>Check record termination, message extent, role mask, output pointers and control characters. The output objects must not overlap the input record or selection.</td></tr>
+</tbody></table>
+<p>The formatter allocates no memory and has a one-megabyte output limit. The example allocates a destination explicitly; allocation ownership belongs to the caller. Revisions, consent and selected content may change after rendering, so a later save/send workflow must still confirm the intended snapshot and current destination policy.</p>
+<pre><code class="language-powershell">cmake --build --preset windows-ucrt64-debug --target umicom-ai-conversation-transcript-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework[.]ai[.]conversation[.]transcript[.]' --output-on-failure --no-tests=error</code></pre>
+<p>The <a href="../../tests/test_ai_conversation_transcript.c">transcript regression source</a> covers an exact expected fragment, selection, omitted fields, fence-containing content, Unicode, line endings, full records and unchanged output on failure. These commands are qualification steps to run on the intended toolchain; authored tests and successful configuration are not passing execution evidence.</p>
+
 <p><a href="runtime-catalogue-revisions.html">Conversation revisions</a> · <a href="bounded-input-cleanup.html">Bounded native file cleanup</a> · <a href="index.html">Learning index</a></p>
+
+<h2>Use the conversation service from your own application</h2>
+<p>The <a href="../../examples/conversation_archive/main.c">offline C example</a> constructs three synthetic messages, stores them in the native archive, creates an independent branch and prints only the user/assistant transcript. Its <a href="../../examples/conversation_archive/CMakeLists.txt">standalone CMake recipe</a> links the installed <code>Umicom::ai</code> target. It does not need a Framework source checkout, model server, provider account or database file.</p>
+<ol><li>Build and install a matching Framework SDK that includes the current conversation APIs and the <code>ai</code> component. Use the same supported compiler/runtime family as that SDK.</li><li>Copy the complete <code>share/umicom/framework/examples/conversation_archive</code> directory from the installed package into your own project directory. Both <code>CMakeLists.txt</code> and <code>main.c</code> are required. The full Framework, selective FrameworkSDK and documentation packages carry these sources; a documentation-only package does not supply linkable libraries.</li><li>From that copied directory, configure with the absolute path to your installed SDK, then build and run the offline test. Stop on errors.</li></ol>
+<pre><code class="language-powershell">$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DUMICOM_SDK_ROOT="C:\SDKs\UmicomFramework"
+cmake --build build
+ctest --test-dir build -R '^sdk[.]conversation[.]branch_transcript$' --output-on-failure --no-tests=error
+&amp; ".\build\bin\umicom-sdk-conversation.exe"</code></pre>
+<p>Replace the example SDK prefix with your actual installation. Expected output is a literal Markdown fragment titled <em>Alternative explanation</em>, with classification <code>internal</code> and messages numbered 2 and 3. The synthetic system message is excluded. Exit zero requires successful archive construction, permission-reset checks, selected formatting, output and cleanup. These are expected results to verify, not evidence that the consumer has already run.</p>
+<p>The recipe reuses SDK origin and ABI checks and the shared application-branding helper. That helper supplies approved resources and the Windows icon; icon appearance still needs visual qualification. If a symbol is missing, rebuild and reinstall matching libraries and headers together. Do not add Framework implementation files to the consumer to hide a mismatched SDK.</p>
+<p>The producer also registers the same C source as an offline integration exercise. It checks public API composition within the producer build, which is separate from validating an installed package:</p>
+<pre><code class="language-powershell">cmake --build --preset windows-ucrt64-debug --target umicom-ai-conversation-example-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework[.]ai[.]conversation[.]sdk-example$' --output-on-failure --no-tests=error</code></pre>
+<p>The example prints fixture text only. It does not save the branch, persist lineage, export a branded document, grant consent or contact a model. A real application adds those operations through its existing reviewed workflow.</p>
 </main></body></html>

@@ -16,6 +16,7 @@
 #include "../base/value_construction_internal.h"
 #include "delivery_internal.h"
 #include <string.h>
+#include "umicom/base/snapshot_validation.h"
 
 /*
  * Initialise package manifest from caller-provided values so later operations receive a
@@ -98,6 +99,8 @@ UMI_DEFINE_STAGED_VALUE_INIT(umi_package_manifest_init, UmiPackageManifest, mani
  * Find package manifest while leaving the underlying catalogue or model owned by this
  * module.
  */
+/* Manifest operations now validate bounded storage before indexing and publish complete append records. This protects borrowed inputs and rejects malformed restored state. The former implementation is retained for owner review. */
+#if 0
 const UmiPackageFile *umi_package_manifest_find(
     const UmiPackageManifest *manifest,
     const char *destination)
@@ -118,7 +121,56 @@ const UmiPackageFile *umi_package_manifest_find(
     return NULL;
 }
 
+#endif
+
+static int PackageFileRoleValid(UmiPackageFileRole role)
+{
+    return role >= UMI_PACKAGE_FILE_EXECUTABLE && role <= UMI_PACKAGE_FILE_DOCUMENTATION;
+}
+
+UmiStatus umi_package_manifest_validate_storage(const UmiPackageManifest *manifest)
+{
+    if (manifest == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (manifest->count > UMI_DELIVERY_MAX_ARTIFACTS) return UMI_STATUS_INVALID_STATE;
+    static const UmiSnapshotTextField header_fields[] = {
+        {"product_id", offsetof(UmiPackageManifest, product_id), sizeof manifest->product_id, 0},
+        {"version", offsetof(UmiPackageManifest, version), sizeof manifest->version, 0},
+        {"entrypoint", offsetof(UmiPackageManifest, entrypoint), sizeof manifest->entrypoint, 0}
+    };
+    static const UmiSnapshotTextField file_fields[] = {
+        {"source", offsetof(UmiPackageFile, source), sizeof(((UmiPackageFile *)0)->source), 1},
+        {"destination", offsetof(UmiPackageFile, destination), sizeof(((UmiPackageFile *)0)->destination), 1}
+    };
+    if (UmiSnapshotValidateTextFields(manifest, sizeof *manifest, header_fields,
+            sizeof header_fields / sizeof header_fields[0], NULL) != UMI_STATUS_OK)
+        return UMI_STATUS_INVALID_STATE;
+    /* Complete every field check before comparing names, including entries
+     * after a potential match. Restored counts never authorize an array read. */
+    for (size_t i = 0U; i < manifest->count; ++i) {
+        const UmiPackageFile *file = &manifest->files[i];
+        if (UmiSnapshotValidateTextFields(file, sizeof *file, file_fields,
+                sizeof file_fields / sizeof file_fields[0], NULL) != UMI_STATUS_OK ||
+            !PackageFileRoleValid(file->role)) return UMI_STATUS_INVALID_STATE;
+    }
+    for (size_t i = 0U; i < manifest->count; ++i)
+        for (size_t j = 0U; j < i; ++j)
+            if (strcmp(manifest->files[i].destination, manifest->files[j].destination) == 0)
+                return UMI_STATUS_INVALID_STATE;
+    return UMI_STATUS_OK;
+}
+
+const UmiPackageFile *umi_package_manifest_find(
+    const UmiPackageManifest *manifest, const char *destination)
+{
+    if (destination == NULL || umi_package_manifest_validate_storage(manifest) != UMI_STATUS_OK)
+        return NULL;
+    for (size_t i = 0U; i < manifest->count; ++i)
+        if (strcmp(manifest->files[i].destination, destination) == 0) return &manifest->files[i];
+    return NULL;
+}
 /* Add package manifest only after its inputs and available capacity have been checked. */
+/* Manifest operations now validate bounded storage before indexing and publish complete append records. This protects borrowed inputs and rejects malformed restored state. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_package_manifest_add(UmiPackageManifest *manifest,
                                        const char *source,
                                        const char *destination,
@@ -161,7 +213,33 @@ UmiStatus umi_package_manifest_add(UmiPackageManifest *manifest,
     return UMI_STATUS_OK;
 }
 
+#endif
+UmiStatus umi_package_manifest_add(UmiPackageManifest *manifest,
+    const char *source, const char *destination, UmiPackageFileRole role, int required)
+{
+    if (manifest == NULL || source == NULL || source[0] == '\0' ||
+        destination == NULL || destination[0] == '\0' || !PackageFileRoleValid(role))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (umi_package_manifest_validate_storage(manifest) != UMI_STATUS_OK)
+        return UMI_STATUS_INVALID_STATE;
+    if (manifest->count == UMI_DELIVERY_MAX_ARTIFACTS) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (umi_package_manifest_find(manifest, destination) != NULL) return UMI_STATUS_ALREADY_EXISTS;
+    /* Stage a single record so a late path refusal cannot damage a prepared
+     * unused slot. Inputs may borrow that slot or another live manifest field. */
+    UmiPackageFile candidate = {0};
+    UmiStatus status = umi_delivery_copy_text(candidate.source, sizeof candidate.source, source);
+    if (status == UMI_STATUS_OK)
+        status = umi_delivery_copy_text(candidate.destination, sizeof candidate.destination, destination);
+    if (status != UMI_STATUS_OK) return status;
+    candidate.role = role;
+    candidate.required = required != 0;
+    manifest->files[manifest->count] = candidate;
+    ++manifest->count;
+    return UMI_STATUS_OK;
+}
 /* Check that package manifest satisfies its contract before another service relies on it. */
+/* Manifest operations now validate bounded storage before indexing and publish complete append records. This protects borrowed inputs and rejects malformed restored state. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_package_manifest_validate(const UmiPackageManifest *manifest)
 {
     const UmiPackageFile *entrypoint;
@@ -182,6 +260,21 @@ UmiStatus umi_package_manifest_validate(const UmiPackageManifest *manifest)
      */
     if (entrypoint == NULL ||
         entrypoint->role != UMI_PACKAGE_FILE_EXECUTABLE ||
+        !entrypoint->required) return UMI_STATUS_INVALID_STATE;
+    return UMI_STATUS_OK;
+}
+
+#endif
+UmiStatus umi_package_manifest_validate(const UmiPackageManifest *manifest)
+{
+    UmiStatus status = umi_package_manifest_validate_storage(manifest);
+    if (status != UMI_STATUS_OK) return status;
+    if (manifest->product_id[0] == '\0' || manifest->version[0] == '\0' ||
+        manifest->entrypoint[0] == '\0' || manifest->count == 0U ||
+        manifest->format < UMI_PACKAGE_DIRECTORY || manifest->format > UMI_PACKAGE_FLATPAK)
+        return UMI_STATUS_INVALID_STATE;
+    const UmiPackageFile *entrypoint = umi_package_manifest_find(manifest, manifest->entrypoint);
+    if (entrypoint == NULL || entrypoint->role != UMI_PACKAGE_FILE_EXECUTABLE ||
         !entrypoint->required) return UMI_STATUS_INVALID_STATE;
     return UMI_STATUS_OK;
 }

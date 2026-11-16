@@ -51,4 +51,12 @@ static inline int umi_sdk_text(const char *value)
     return value != NULL && value[0] != '\0';
 }
 
+/* Fixed public records can be supplied directly, bypassing constructors. Verify
+ * termination inside their owned field before string comparison or rendering. */
+static inline int umi_sdk_bounded_text(const char *value, size_t capacity)
+{
+    return value != NULL && capacity != 0U && value[0] != '\0' &&
+        memchr(value, '\0', capacity) != NULL;
+}
+
 #endif

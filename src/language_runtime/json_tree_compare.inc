@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/language_runtime/json_tree_compare.inc
- * PURPOSE: Compare immutable JSON values without treating object order or string escaping as identity.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Compare immutable JSON values without treating object order or string escaping as identity.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 typedef struct JsonCompareMember
@@ -163,5 +170,44 @@ UmiStatus UmiJsonTreeValuesEqual(const UmiJsonTree *left, int left_node, const U
         status = UMI_STATUS_CANCELLED;
     if (status == UMI_STATUS_OK)
         *out_equal = equal;
+    return status;
+}
+
+/* Metadata consumers need a complete uniqueness decision even when they do not
+ * interpret every field. Reuse the comparison owner's decoded-key tables and
+ * cleanup, while visiting one immutable subtree rather than comparing values
+ * that could differ before a later ambiguous object is reached. */
+static UmiStatus JsonUniqueKeys(const UmiJsonTree *tree, int node,
+    const UmiCancellationToken *cancel)
+{
+    if (umi_cancellation_token_is_requested(cancel)) return UMI_STATUS_CANCELLED;
+    UmiLanguageRuntimeJsonTokenType kind = tree->nodes[node].kind;
+    if (kind == UMI_LANGUAGE_RUNTIME_JSON_OBJECT) {
+        JsonCompareMember *members = NULL;
+        UmiStatus status = JsonCompareMembers(tree, node, cancel, &members);
+        if (status != UMI_STATUS_OK) return status;
+        size_t count = UmiJsonTreeCount(tree, node);
+        for (size_t i = 0U; status == UMI_STATUS_OK && i < count; ++i)
+            status = JsonUniqueKeys(tree, members[i].value, cancel);
+        JsonCompareMembersFree(members, count);
+        return status;
+    }
+    if (kind == UMI_LANGUAGE_RUNTIME_JSON_ARRAY) {
+        int child = UmiJsonTreeFirst(tree, node);
+        while (child >= 0) {
+            UmiStatus status = JsonUniqueKeys(tree, child, cancel);
+            if (status != UMI_STATUS_OK) return status;
+            child = UmiJsonTreeNext(tree, child);
+        }
+    }
+    return UMI_STATUS_OK;
+}
+UmiStatus UmiJsonTreeValidateUniqueKeys(const UmiJsonTree *tree, int node,
+    const UmiCancellationToken *cancel)
+{
+    if (!JsonValid(tree, node)) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = JsonUniqueKeys(tree, node, cancel);
+    if (status == UMI_STATUS_OK && umi_cancellation_token_is_requested(cancel))
+        return UMI_STATUS_CANCELLED;
     return status;
 }

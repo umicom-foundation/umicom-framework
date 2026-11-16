@@ -1,0 +1,154 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Inspect model layout metadata in C | Umicom Framework</title><link rel="icon" href="../../resources/brand/umicom.ico">
+<style>body{margin:0;background:#101923;color:#e5edf6;font:17px/1.65 "Segoe UI Variable Text","Segoe UI",sans-serif}main{max-width:1040px;margin:auto;padding:2rem}header{border-bottom:1px solid #34485d;padding-bottom:1rem}header img{width:220px;height:auto}a{color:#77c5ff}h2{margin-top:2.4rem}pre,code{font-family:"Cascadia Code",Consolas,monospace}pre{background:#0b111a;border:1px solid #34485d;padding:1.2rem;overflow:auto;border-radius:8px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #34485d;padding:.7rem;text-align:left;vertical-align:top}.note{background:#172737;border-left:4px solid #6dbaf4;padding:1rem}footer{margin-top:3rem;color:#adbdce}</style>
+</head><body><main><header><img src="../../resources/brand/umicom-logo-on-dark.svg" alt="Umicom"><h1>Inspect model layout metadata in C</h1><p>Learn what a model header can establish before any tensor payload is loaded.</p></header>
+<p>A downloaded filename is not sufficient evidence that a model can run. A useful first step is to inspect the declared layout: the element types, dimensions and byte ranges that describe stored tensors. A tensor is an array of numerical values; its shape gives the size of each dimension.</p>
+<h2>1. Separate the header from the payload</h2>
+<p>Safetensors starts with an eight-byte little-endian header length, followed by a UTF-8 JSON object and then tensor data. Tensor records declare a data type, shape and offsets relative to the payload. The format requires unique object keys and a complete payload layout without holes. Its optional metadata object holds string values. See the <a href="https://github.com/safetensors/safetensors#format">official format description</a>.</p>
+<p>Framework's <code>UmiSafetensorsHeaderInspect</code> accepts a memory prefix containing that length and the complete header, plus the independently observed total file size. It uses the existing bounded JSON tree and <a href="json-value-comparison.html">whole-subtree uniqueness service</a>. It does not introduce another JSON parser.</p>
+<p class="note">The prefix and file size in the example below are synthetic. No tensor payload exists. Success means that the supplied metadata describes a consistent layout; it does not mean that actual bytes, a model architecture or an inference engine have been verified.</p>
+<h2>2. Build a complete native example</h2>
+<p>This program describes two F32 elements. F32 uses four bytes per element, so the declared span is eight bytes. The inspector returns a summary only after every header check succeeds.</p>
+<pre><code class="language-c">#include &quot;umicom/model_formats/safetensors.h&quot;
+#include &lt;inttypes.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+int main(void)
+{
+    const char json[]=&quot;{\&quot;example\&quot;:{\&quot;dtype\&quot;:\&quot;F32\&quot;,\&quot;shape\&quot;:[2],\&quot;data_offsets\&quot;:[0,8]}}&quot;;
+    size_t header=strlen(json),size=8U+header;
+    unsigned char *prefix=malloc(size);
+    if(prefix==NULL) return 1;
+    for(size_t i=0U;i&lt;8U;++i) prefix[i]=(unsigned char)((uint64_t)header&gt;&gt;(8U*i));
+    memcpy(prefix+8U,json,header);
+    /* Synthetic declared payload length; no model file or tensor bytes exist.
+     * A real caller must obtain this size from the same owned file it hashes. */
+    UmiSafetensorsHeaderInfo info;
+    UmiStatus status=UmiSafetensorsHeaderInspect(prefix,size,(uint64_t)size+8U,NULL,&amp;info);
+    free(prefix);
+    if(status!=UMI_STATUS_OK) {
+        fprintf(stderr,&quot;Header inspection refused: %d\n&quot;,(int)status);
+        return 1;
+    }
+    printf(&quot;Header describes %zu tensor, %&quot; PRIu64 &quot; elements and %&quot; PRIu64 &quot; payload bytes.\n&quot;,
+        info.tensors,info.elements,info.data_bytes);
+    puts(&quot;Metadata only: no tensor data read and no model executed.&quot;);
+    return fflush(stdout)==0 &amp;&amp; !ferror(stdout)?0:1;
+}
+</code></pre>
+<p>Expected output after a separately qualified build:</p>
+<pre><code>Header describes 1 tensor, 2 elements and 8 payload bytes.
+Metadata only: no tensor data read and no model executed.</code></pre>
+<p>The input prefix can include payload bytes, but this API ignores them. Its size cannot exceed the supplied file size. Keep the input and output storage separate and alive for the call. On any refusal, the previous output summary remains unchanged.</p>
+<h2>3. Understand the supported inspection boundary</h2>
+<table><thead><tr><th>Check</th><th>Framework behavior</th></tr></thead><tbody>
+<tr><td>Envelope</td><td>Require the complete length prefix and header, a leading opening brace, and space-only padding after the JSON object.</td></tr>
+<tr><td>JSON</td><td>Validate the complete document, UTF-8 and all decoded member-name uniqueness, including fields later rejected by the schema.</td></tr>
+<tr><td>Tensor schema</td><td>Require exactly dtype, shape and data_offsets. Additional fields and unsupported types report NOT_IMPLEMENTED.</td></tr>
+<tr><td>Dimensions</td><td>Require unsigned integer spelling, check multiplication before overflow, support scalars and zero-element shapes.</td></tr>
+<tr><td>Layout</td><td>Compare each declared span with its element count and width, sort private ranges, and require complete nonoverlapping coverage.</td></tr>
+<tr><td>Metadata</td><td>Require string values. An empty archive with no payload is admitted but is not identified as a useful model.</td></tr>
+</tbody></table>
+<p>The native profile bounds the header to 16 MiB, declared file size to 1 TiB, tensors to 65,536, rank to 64 and decoded tensor names to 4,096 bytes. The shared JSON reader also limits nodes and depth. A valid file outside these limits can be refused; do not relabel a capacity refusal as proof of a corrupt publisher file.</p>
+<p>The supported byte-aligned types are BOOL, U8/I8, U16/I16, U32/I32, U64/I64, F16/BF16/F32/F64, C64 and the listed F8 variants in the public header. Sub-byte types are not implemented. Names and storage widths are checked against the <a href="https://raw.githubusercontent.com/huggingface/safetensors/main/safetensors/src/tensor.rs">official datatype definitions</a>; the native implementation does not decode their numerical values.</p>
+<h2>4. Investigate refusals without replacing accepted state</h2>
+<ol><li><strong>Duplicate names:</strong> inspect the publisher metadata, including escaped names. Do not choose a first or last value to make the ambiguity disappear.</li>
+<li><strong>Truncated header:</strong> obtain the full declared header from the same owned file. Rechecking a different file path can introduce an identity mismatch.</li>
+<li><strong>Shape or span mismatch:</strong> compare the element count, declared width and offset difference. For example, two F32 elements cannot occupy a four-byte span.</li>
+<li><strong>Gap, overlap or trailing data:</strong> inspect all ranges together. Individually plausible ranges can still describe an inconsistent archive.</li>
+<li><strong>Unsupported format or capacity:</strong> select a qualified backend or add a reviewed extension with regression coverage. Do not change limits merely to suppress an error.</li>
+<li><strong>Allocation failure or cancellation:</strong> retain the previous accepted summary and release the input owner when appropriate. A partial result is not published.</li></ol>
+<p>Cancellation is cooperative. The parser and inspector check it between bounded units of work; allocation, sorting and an individual key decode are not interrupted. This is a metadata admission service, not a real-time execution guarantee.</p>
+<h2>5. Consume an installed SDK without a Framework clone</h2>
+<p>The exported component is <code>Umicom::model_formats</code>, with the canonical protocol dependency. The installed example uses the shared SDK provenance, ABI and approved SVG/ICO branding helpers. With a separately installed and qualified SDK at the example location below, configure into a directory outside that installation:</p>
+<pre><code>cmake -S C:/SDK/Umicom/share/umicom-framework/examples/model_formats -B C:/Projects/model-header-build -G Ninja -DUMICOM_SDK_ROOT=C:/SDK/Umicom
+cmake --build C:/Projects/model-header-build
+&amp; C:/Projects/model-header-build/umicom-model-header.exe</code></pre>
+<p>Replace the example SDK location with the installation you intend to qualify. If the model_formats component is missing, build and install a Framework SDK that includes it. If a cached package points elsewhere, use a fresh build directory and verify the selected installation; adding source include paths does not repair mixed SDK provenance.</p>
+<h2>6. Qualify native behavior</h2>
+<p>Run each producer command separately and stop on an error:</p>
+<pre><code>Set-Location C:\umicom\Umicom-Applications\framework
+cmake --preset windows-ucrt64-debug
+cmake --build --preset windows-ucrt64-debug --target umicom-safetensors-header-test umicom-safetensors-header-allocation-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.model_formats\.safetensors(_allocation)?\." --output-on-failure</code></pre>
+<p>These commands are instructions to execute, not recorded passes. Configuration, compilation, native tests, the installed consumer and actual model loading are distinct qualifications. The synthetic tests need no model download and make no provider request.</p>
+<h2>7. Connect inspection to an application workflow</h2>
+<p>Media and LLM applications can display a metadata summary alongside a <a href="model-component-bundles.html">pinned component selection</a>. Studio can explain why a proposed model asset was refused. Before accepting actual model bytes, a separate file owner must establish size and digest identity from the same file, keep that identity stable during inspection, and record the result. Backend compatibility and readiness still need their own evidence. None of those application integrations is supplied merely by calling this header API.</p>
+<p>Exercise: change the example shape to three elements while keeping the eight-byte span. Predict the refusal, preserve a previously accepted summary, and verify that failure does not replace it. Then create two individually valid tensors with overlapping offsets and explain why checking only one tensor at a time is insufficient.</p>
+<h2>8. Bind the summary to actual file bytes</h2>
+<p>The memory-prefix API cannot establish which file its caller inspected. Use <code>UmiSafetensorsFileInspect</code> when an application needs an observed SHA-256, actual byte count and header summary from one checked file read. This service reuses Framework's regular-file stream reader and incremental SHA-256 implementation.</p>
+<ol><li>Choose an ordinary absolute UTF-8 path under trusted parent directories. The shared reader refuses a final symbolic link or reparse point and requires a regular file.</li>
+<li>Run inspection on a worker when used from an interactive application; file I/O can block.</li>
+<li>The service retains only the bounded header prefix while hashing every streamed byte. It waits for the reader's before/after metadata and cleanup checks before proceeding.</li>
+<li>When you have a reviewed expected identity, supply its exact byte count and 32-byte binary SHA-256. The size also bounds reading. A matching digest establishes byte identity, not publisher trust.</li>
+<li>Publish the returned identity and layout together only on success. All prior output bytes remain unchanged on a refusal, including a late close failure or cancellation.</li></ol>
+<p>The expected identity may borrow <code>inspection.file</code> from a previous result. The service snapshots that identity before starting. This permits reinspection without clearing the digest being compared. An oversized input is refused by the reader's capacity bound; a shorter input or changed digest is refused as an identity mismatch.</p>
+<pre><code class="language-c">UmiSafetensorsFileInspection inspection;
+UmiStatus status = UmiSafetensorsFileInspect(path, NULL, cancel, &amp;inspection);
+if (status == UMI_STATUS_OK) {
+    /* Recheck the same expected bytes; a refusal retains the earlier result. */
+    status = UmiSafetensorsFileInspect(path, &amp;inspection.file, cancel, &amp;inspection);
+}</code></pre>
+<p>The installed example directory also contains <code>umicom-model-inspect</code>. After building it through the SDK instructions above, select a real local file explicitly:</p>
+<pre><code>&amp; C:/Projects/model-header-build/umicom-model-inspect.exe C:/Models/publisher/model.safetensors</code></pre>
+<p>The example prints the observed byte count, SHA-256 and tensor summary. There is no expected digest in this command, so it records identity without confirming a publisher's assertion. It never executes the model. No example digest or output is supplied here as if a real model had been inspected.</p>
+<p class="note">The checked reader is not an immutable snapshot or a filesystem sandbox. It compares metadata before and after the read, but a file path can refer to different bytes later. Keep trusted parent ownership and revalidate identity when a later operation needs the file. Numerical tensor values and backend compatibility remain outside these inspections.</p>
+<p>Qualify the file and capture contracts separately:</p>
+<pre><code>cmake --build --preset windows-ucrt64-debug --target umicom-safetensors-file-test umicom-safetensors-file-ownership-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.model_formats\.safetensors_file(_ownership)?\." --output-on-failure</code></pre>
+<p>The native file cases create exclusive synthetic fixtures in the test working directory and retain them as evidence. The Windows link case reports a skip if the required link-creation capability is unavailable; record that separately from passes. Capture tests inject split chunks and late I/O statuses into the real inspection body. Those injections verify propagation and ownership, while the shared reader's own suite qualifies actual handle and cleanup behavior.</p>
+<p>Exercise: inspect a synthetic file, retain its returned identity, then change one payload byte in a separate copy while keeping its header intact. Reinspect the copy against the retained identity. Explain why a valid layout can coexist with a failed byte-identity check.</p>
+<footer>Umicom Framework · Sammy Hegab · Umicom Foundation · MIT source examples. Approved Umicom SVG/ICO assets and installed typography fallbacks.</footer>
+<section><h2>9. Reuse the service from both model consoles</h2><p>The shared native model command now delegates Safetensors inspection to the checked file service. Neither console contains its own JSON parser or file hashing loop. Run <code>umicom models --help</code> to see whether this optional component was compiled, then inspect an existing file:</p><pre><code class="language-powershell">umicom models inspect-safetensors 'C:\Models\Umicom\weights.safetensors'
+umicom-models inspect-safetensors 'C:\Models\Umicom\weights.safetensors'</code></pre><p>The report contains observed identity and layout. The command does not take an expected digest or an apply flag. Use the SDK expected-identity parameter when your application must compare a reviewed size and digest atomically with inspection. A successful report is still not evidence of model compatibility or inference.</p><p>The console regression suite covers argument refusal, occupied session ownership, unavailable components, original GGUF compatibility, status propagation and failed report delivery. Separate integration cases create tiny synthetic files, including a Unicode name, and call the linked command. They require no real model weights or network access. After building these targets in your own qualification environment, run the registered cases:</p><pre><code class="language-powershell">cmake --build build/windows-ucrt64-debug --target umicom-model-tensor-cli-test umicom-model-tensor-cli-unavailable-test umicom-model-tensor-cli-file-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework\.local_models\.cli_tensor(_file)?\.' --output-on-failure</code></pre><p>These commands assume the ordinary Framework debug build directory and the default enabled model-format component. A deliberately disabled build registers the unavailable-command case only. Source and configuration checks do not replace compiling and executing these cases.</p></section>
+
+<section><h2>10. Separate stored bytes from inference memory</h2>
+<p>A file's byte count describes storage. An inference backend may expand those weights, retain a key/value cache for the conversation, allocate temporary work buffers and keep its own runtime state. A small file is therefore not proof that a model fits in RAM. Framework's <code>UmiModelMemoryAssess</code> keeps these four cost categories separate and compares their declared total, plus a host reserve, with an existing <code>UmiDesktopSystemSnapshot</code>.</p>
+<ol><li>Obtain resident-weight, cache, workspace and runtime costs for the selected backend and configuration. Use its qualified estimator or measured upper bounds. Do not substitute file size without evidence that it represents resident weights.</li><li>Mark a component as known only when its value is established. An unknown component has a zero value and an absent mask bit. Known cache, workspace or runtime costs may be zero; known weights must be positive. An incomplete estimate produces <code>UMI_MODEL_MEMORY_INCOMPLETE</code>, even if the known costs appear small.</li><li>Use Framework's existing desktop capture service and check its <code>memoryStatus</code>. Other capture sections can fail independently. Record elapsed age using one monotonic host clock; do not subtract timestamps from unrelated clock origins.</li><li>Supply a nonzero maximum observation age and a deliberate host reserve. A fixture, unavailable memory or an old observation cannot establish current host capacity.</li><li>Inspect the assessment verdict after an OK status. The status means the calculation was admitted. <code>WITHIN_DECLARED_BUDGET</code> means only that the supplied numbers fit the observed available RAM; it is not a reservation or a launch guarantee.</li></ol>
+<p>For backends that actually retain dense key/value arrays, <code>UmiModelDenseKvCacheBytes</code> checks every multiplication and addition. Its geometry is explicit: token capacity × simultaneous sequences × layers × heads × dimensions × bytes per element, separately for keys and values. It does not infer architecture from a filename. Compressed, paged, sliding-window, recurrent and hybrid caches need their own backend-specific accounting.</p>
+<p>The following function is an illustrative calculation, not a real model profile. It receives an already captured snapshot and age; it performs no capture or launch. The chosen dense cache requires 268,435,456 bytes for keys and the same for values, totaling 512 MiB. One MiB is 1,048,576 bytes.</p>
+<pre><code class="language-c">#include &quot;umicom/local_models/memory_plan.h&quot;
+
+static UmiStatus review_example_budget(const UmiDesktopSystemSnapshot *snapshot,
+    uint64_t age_millis, UmiModelMemoryAssessment *assessment)
+{
+    const UmiModelDenseKvShape shape = {
+        .token_capacity = 2048U, .sequence_capacity = 2U, .layers = 32U,
+        .key_heads = 8U, .value_heads = 8U,
+        .key_dimensions = 128U, .value_dimensions = 128U,
+        .key_element_bytes = 2U, .value_element_bytes = 2U
+    };
+    UmiModelKvFootprint cache;
+    UmiStatus status = UmiModelDenseKvCacheBytes(&amp;shape, &amp;cache);
+    if (status != UMI_STATUS_OK) return status;
+    const UmiModelMemoryRequirements costs = {
+        /* Illustrative supplied costs; replace with evidence for your backend. */
+        .weights_bytes = UINT64_C(8) * 1024U * 1024U * 1024U,
+        .cache_bytes = cache.total_bytes,
+        .workspace_bytes = UINT64_C(1) * 1024U * 1024U * 1024U,
+        .runtime_bytes = UINT64_C(256) * 1024U * 1024U,
+        .known_components = UMI_MODEL_MEMORY_ALL
+    };
+    return UmiModelMemoryAssess(&amp;costs, snapshot, age_millis, 1000U,
+        UINT64_C(1) * 1024U * 1024U * 1024U, assessment);
+}</code></pre>
+<p>Link this pure calculation through <code>Umicom::local_models</code>. A host that also performs a capture must link the existing <code>Umicom::desktop_system</code> component. This planner does not add another platform memory probe. Shared GPU memory is part of system RAM, so do not add it a second time. Dedicated GPU admission, concurrent model reservations and actual peak-memory measurements remain separate responsibilities.</p>
+<table><thead><tr><th>Verdict</th><th>Next step</th></tr></thead><tbody>
+<tr><td>Incomplete</td><td>Resolve every missing cost; zero is not an estimate for an unknown category.</td></tr>
+<tr><td>Unavailable</td><td>Obtain a successful memory observation. Never treat a failed capture's retained numbers as fresh evidence.</td></tr>
+<tr><td>Fixture</td><td>Use the synthetic observation for teaching or tests only; obtain real host evidence for a later launch decision.</td></tr>
+<tr><td>Stale</td><td>Capture again and measure its age in the same monotonic clock domain.</td></tr>
+<tr><td>Insufficient</td><td>Review the reported deficit and change the model/configuration or free resources deliberately, then assess again.</td></tr>
+<tr><td>Within declared budget</td><td>Keep backend compatibility, consent and process ownership checks; recheck transient capacity before any later admission.</td></tr>
+</tbody></table>
+<p>Verdicts use the table's order when several conditions coexist. Remaining and deficit bytes are populated only for complete estimates with a current, nonfixture observation. Invalid fields or arithmetic overflow refuse the call and preserve the previous output bytes. Keep input storage stable and separate from output during each call.</p>
+<p>Qualify the synthetic native cases in the ordinary Framework debug build. They cover absent costs, unreliable observations, exact boundaries, overflow, asymmetric cache layouts and unchanged output on refusal:</p>
+<pre><code class="language-powershell">Set-Location C:\umicom\Umicom-Applications\framework
+cmake --build --preset windows-ucrt64-debug --target umicom-model-memory-plan-test
+ctest --test-dir build/windows-ucrt64-debug -R '^framework\.local_models\.memory_plan\.' --output-on-failure</code></pre>
+<p>These are commands to execute after configuration, not recorded test results. The tests supply synthetic numbers and do not query hardware or load a model. Media, Studio, Trader and LLM hosts can use the same report before preparing work; this API alone does not wire their interfaces or change existing model-run policy.</p>
+<p>Exercise: leave workspace cost unknown while retaining the other three estimates. Explain why the verdict stays incomplete even on a machine with abundant available RAM. Next, double token capacity in a supported dense-cache profile, recompute the cache, and compare its growth with the unchanged weight cost.</p></section>
+</main></body></html>

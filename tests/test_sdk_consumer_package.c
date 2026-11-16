@@ -50,9 +50,57 @@ construction_cleanup:
     return result;
 }
 
+
+/* Extend the existing active-check fixture with fixed-field boundaries. The
+ * shared assertion policy continues to govern the original integration checks. */
+static int UmiSdkExportPlanPathCases(void)
+{
+    UmiSdkExportPlan *value = malloc(sizeof *value);
+    unsigned char *before = malloc(sizeof *value);
+    int result = 1;
+    if (value == NULL || before == NULL) goto construction_cleanup;
+    UMI_CONSTRUCTION_REQUIRE(umi_sdk_export_plan_validate(NULL) == UMI_STATUS_INVALID_ARGUMENT);
+    UMI_CONSTRUCTION_REQUIRE(umi_sdk_export_plan_init(value, "C:/Umicom/Framework", "0.9") == UMI_STATUS_OK);
+    UMI_CONSTRUCTION_REQUIRE(umi_sdk_export_plan_validate(value) == UMI_STATUS_INVALID_STATE);
+    UMI_CONSTRUCTION_REQUIRE(umi_sdk_export_plan_add_target(value, "sdk", "Umicom::sdk", 1) == UMI_STATUS_OK);
+    UMI_CONSTRUCTION_REQUIRE(umi_sdk_export_plan_validate(value) == UMI_STATUS_OK);
+    char *fields[] = {value->install_prefix, value->include_directory,
+        value->library_directory, value->examples_directory};
+    const size_t capacities[] = {sizeof value->install_prefix, sizeof value->include_directory,
+        sizeof value->library_directory, sizeof value->examples_directory};
+    for (size_t field = 0U; field < sizeof fields / sizeof fields[0]; ++field) {
+        for (size_t form = 0U; form < 3U; ++form) {
+            /* Rebuild to isolate each field, preserving the initializer's real
+             * defaults rather than fabricating a second model implementation. */
+            UMI_CONSTRUCTION_REQUIRE(umi_sdk_export_plan_init(value, "C:/Umicom/Framework", "0.9") == UMI_STATUS_OK);
+            UMI_CONSTRUCTION_REQUIRE(umi_sdk_export_plan_add_target(value, "sdk", "Umicom::sdk", 1) == UMI_STATUS_OK);
+            memset(fields[field], 'x', capacities[field]);
+            if (form == 1U) fields[field][0] = '\0';
+            if (form == 2U) fields[field][capacities[field] - 1U] = '\0';
+            memcpy(before, value, sizeof *value);
+            UMI_CONSTRUCTION_REQUIRE(umi_sdk_export_plan_validate(value) ==
+                (form == 2U ? UMI_STATUS_OK : UMI_STATUS_INVALID_STATE));
+            UMI_CONSTRUCTION_REQUIRE(memcmp(before, value, sizeof *value) == 0);
+        }
+    }
+    UMI_CONSTRUCTION_REQUIRE(umi_sdk_export_plan_init(value, "C:/Umicom/Framework", "0.9") == UMI_STATUS_OK);
+    UMI_CONSTRUCTION_REQUIRE(umi_sdk_export_plan_add_target(value, "sdk", "Umicom::sdk", 1) == UMI_STATUS_OK);
+    memset(value->package.package_name, 'x', sizeof value->package.package_name);
+    UMI_CONSTRUCTION_REQUIRE(umi_sdk_export_plan_validate(value) == UMI_STATUS_INVALID_STATE);
+    UMI_CONSTRUCTION_REQUIRE(umi_sdk_export_plan_init(value, "C:/Umicom/Framework", "0.9") == UMI_STATUS_OK);
+    value->catalogue.count = UMI_SDK_EXPORT_CAPACITY + 1U;
+    UMI_CONSTRUCTION_REQUIRE(umi_sdk_export_plan_validate(value) == UMI_STATUS_INVALID_STATE);
+    result = 0;
+construction_cleanup:
+    free(before);
+    free(value);
+    return result;
+}
+
 int main(void)
 {
     if (UmiSdkExportPlanConstructionCases() != 0) return 1;
+    if (UmiSdkExportPlanPathCases() != 0) return 1;
 
     UmiSdkExportPlan plan;
     char cmake[1024];

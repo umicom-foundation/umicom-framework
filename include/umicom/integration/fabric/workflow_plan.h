@@ -34,6 +34,14 @@ typedef struct UmiFabricWorkflowPlan { char step_ids[UMI_FABRIC_MAX_STEPS][UMI_F
  * Provide the fabric workflow plan build operation used by this module and its client
  * applications.
  */
+/* Validate the entire graph before ordering all steps. A dependency always
+ * precedes its dependent; independent ready steps use lexical ID order.
+ * Empty/cyclic input is INVALID_ARGUMENT; malformed storage is INVALID_STATE.
+ * Temporary allocation may fail with OUT_OF_MEMORY. Every error leaves the
+ * previous output unchanged. Callers serialize access and keep input/output
+ * objects separate. Planning performs no model, file, network or tool action.
+ * The retained fingerprint hashes ordered step IDs only, not the full graph,
+ * operation settings or approval state; do not use it as execution authority. */
 UmiStatus umi_fabric_workflow_plan_build(const UmiFabricWorkflowGraph *graph,UmiFabricWorkflowPlan *out_plan);
 
 #ifdef __cplusplus

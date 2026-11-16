@@ -44,6 +44,66 @@ ctest --test-dir C:/umicom/_local/build/delivery-observation --output-on-failure
 &amp; C:/umicom/_local/build/delivery-observation/delivery-observation.exe fail</code></pre>
 <p>Expected final phases are <code>Artifacts</code>, <code>Cancelled</code> and <code>Failed</code>, respectively. These are outcomes to verify when running your build, not a statement that the installed SDK has already passed. If a new API is absent or the selected package comes from outside the requested prefix, install the matching Framework SDK and configure the example in a fresh directory.</p>
 <p>For an existing configured Framework build, rebuild the changed targets first and select <code>ctest --test-dir YOUR_BUILD_DIRECTORY -R "^framework[.]build[.](pipeline_lifecycle|delivery_observation)[.]" --output-on-failure</code>. The checks include stop refusal, draining tasks and steps, revision exhaustion, complete snapshot publication and replacement artifact plans. Add a second independent running task as an exercise and explain why one completion cannot retire the whole operation.</p>
+
+<section id="portable-model-integrity"><h2>Prepare a portable bundle without losing earlier work</h2>
+<p>A portable application plan combines two inventories: the application's manifest and its runtime dependencies. The manifest says which files belong to the product. A dependency record says whether a library belongs to the operating system, should be bundled or should be excluded. These are planning records; they do not copy files or run an installer.</p>
+<h3>Check storage before checking readiness</h3>
+<p>Public C records contain fixed arrays and counts. A count is not proof that storage exists: validate it against the array capacity before indexing. Each live text field must contain a NUL within its own capacity. Framework now uses its shared snapshot text validator for these checks and rejects duplicate destination paths or dependency names. A malformed later entry cannot be hidden by finding an earlier match.</p>
+<p><code>umi_package_manifest_validate_storage</code> permits incomplete header text and an empty inventory while a plan is drafted. It checks readable structure and live file roles. <code>umi_package_manifest_validate</code> additionally requires product identity, version, a known package format and a required executable entrypoint. Dependency validation accepts an empty report; a bundled dependency marked resolved must have a nonempty path. System and excluded dependencies may have empty paths.</p>
+<ol>
+<li>Initialize a manifest and add application files. Append stages one complete record before publishing it and incrementing the count.</li>
+<li>Construct the portable plan. Framework stages the whole value on the heap, allowing its input text and nested manifest to borrow fields from the previous plan.</li>
+<li>Add dependency observations and use checked counts for the display. Rejected appends and rejected construction leave every previous model byte unchanged.</li>
+<li>Validate readiness separately. Then use a real packaging adapter, verify produced files and qualify the installed application before reporting delivery success.</li>
+</ol>
+<p>This complete C example starts with an executable entry and one unresolved bundled library. The paths are illustrative; no file access takes place:</p>
+<pre><code>#include "umicom/delivery/portable_bundle.h"
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int main(void)
+{
+    UmiPortableBundlePlan *plan = calloc(1, sizeof *plan);
+    int result = 2;
+    if (plan == NULL) return 2;
+    if (umi_package_manifest_init(&amp;plan-&gt;manifest, "example", "1.0",
+                                 "bin/app", UMI_PACKAGE_ZIP) != UMI_STATUS_OK)
+        goto done;
+    if (umi_package_manifest_add(&amp;plan-&gt;manifest, "build/app", "bin/app",
+                                UMI_PACKAGE_FILE_EXECUTABLE, 1) != UMI_STATUS_OK)
+        goto done;
+    if (umi_portable_bundle_init(plan, "example-portable", "windows-x64",
+                                "stage", "output.zip", &amp;plan-&gt;manifest) != UMI_STATUS_OK)
+        goto done;
+    if (umi_portable_bundle_add_dependency(plan, "example-runtime", "",
+                                          UMI_DEPENDENCY_BUNDLE, 0) != UMI_STATUS_OK)
+        goto done;
+    size_t planned, unresolved;
+    if (umi_portable_bundle_file_count_checked(plan, &amp;planned) != UMI_STATUS_OK ||
+        umi_runtime_dependency_report_unresolved_count_checked(
+            &amp;plan-&gt;dependencies, &amp;unresolved) != UMI_STATUS_OK)
+        goto done;
+    if (printf("Planned records: %zu; unresolved libraries: %zu\n", planned, unresolved) &lt; 0 ||
+        fflush(stdout) != 0 || ferror(stdout)) goto done;
+    result = umi_portable_bundle_validate(plan) == UMI_STATUS_INVALID_STATE ? 0 : 1;
+done:
+    free(plan);
+    return result;
+}
+</code></pre>
+<p>Link with <code>Umicom::delivery</code>. Expected counts are 2 planned records and 1 unresolved library; the program returns 0 because readiness is correctly refused. Resolving a library is an observation the caller must establish independently. Merely setting a flag does not inspect its bytes, verify its licence or confirm compatibility.</p>
+<h3>Use an error status for counts</h3>
+<p>The checked count APIs preserve the output number on failure, so read it only after <code>UMI_STATUS_OK</code>. A valid empty draft can have a count of zero. For compatibility, the older count functions still return zero for null input; malformed non-null models return <code>SIZE_MAX</code> as a failure sentinel. Do not display that sentinel as a file count.</p>
+<p>A bundle count includes every manifest record plus each dependency marked <code>BUNDLE</code>, including unresolved ones. It does not deduplicate between the two inventories. Structural checks also do not sanitize destination paths for extraction or prove that a path stays within an installation root. The real copying or archive adapter must enforce its own path, overwrite and filesystem policy.</p>
+<h3>Exercise refusal and recovery</h3>
+<pre><code>Set-Location "C:\umicom\Umicom-Applications\framework"
+cmake --build build/windows-ucrt64-debug --target umicom-delivery-model-integrity-test umicom-delivery-bundle-construction-test umicom-delivery-package-manifest-test umicom-delivery-runtime-bundle-test
+ctest --test-dir build/windows-ucrt64-debug -C Debug --output-on-failure -R "^framework[.]delivery([.](model_integrity|bundle_construction)[.]|_(package_manifest|runtime_bundle)$)"
+</code></pre>
+<p>Run commands separately and stop on failure. Ten model cases cover bounds, termination, duplicate records, capacity, borrowed append inputs and checked counts. Six construction cases exercise allocator refusal and recovery, borrowed nested inputs, missing inputs, overlong text and draft manifests. Existing manifest and runtime-bundle checks remain. These tests are authored coverage until compiled and executed; configuration and planning do not qualify a distribution archive.</p>
+<p>As an exercise, add a system dependency with an empty path and explain why it does not increase the bundle count. Then attempt an overlong output path and check that the previous plan remains available. Correct the input and retry through the owning service rather than clearing the live plan to hide the error.</p>
+</section>
+
 <h2>Keep Git steps in the right order</h2><p>Check <code>git status</code> before changing branches. When the repository is on the intended <code>main</code> revision, review the files, use <code>git add -A</code>, inspect the staged changes, commit and push. A commit records a source snapshot; it does not run your tests for you.</p><p>For Umicom Applications, publish changed child repositories first. Framework owns these lessons and shared services. Studio owns its thin integration changes. Update the parent’s native repository lock only after those child commits have been pushed, then commit and push the parent. The separate Git lesson includes every application submodule and the second-machine workflow.</p><p><a href="git-workflow.html">Continue with the complete Git workflow lesson.</a></p><section><h2>Preflight the complete workflow</h2>
 <p>Suppose a delivery requests configure, build, test, install and package. Discovering at the test phase that the CTest slot is missing is late: earlier phases may already have changed generated files. A clean option can make that distinction more significant. The Framework now checks the metadata needed by the whole requested sequence before cleanup, log reservation or command notification.</p>
 <p><code>UmiBuildExecutionPreflight</code> reuses request and option validation, then checks profile compatibility, child-window mode, the complete optional environment and the CMake/CTest slots consumed by the action. Required execution paths must be nonempty, bounded UTF-8 text with the expected tool identity and validated state. A preview can describe missing tools with the established default names; malformed supplied metadata is still refused.</p>

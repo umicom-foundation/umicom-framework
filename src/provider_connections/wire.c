@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/provider_connections/wire.c
- * PURPOSE: Encode portable connection records and reject ambiguous persisted data.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Encode portable connection records and reject ambiguous persisted data.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "internal.h"
 #include <inttypes.h>
@@ -155,4 +162,99 @@ UmiStatus UmiProviderConnectionIndexDecode(const char *wire, UmiProviderConnecti
         cursor = end + 1;
     }
     return *cursor == '\0' ? UMI_STATUS_OK : UMI_STATUS_PARSE_ERROR;
+}
+
+/* Recovery identity reuses the storage owner's canonical field ordering and
+ * validation. Hashing the C structure would include platform padding and stale
+ * trailing bytes; a second serializer would risk disagreeing with persistence. */
+UmiStatus UmiProviderConnectionFingerprint(const UmiProviderConnection *connection,
+    unsigned char out_digest[UMI_SHA256_BYTES])
+{
+    if(out_digest==NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    char wire[UMI_PROVIDER_CONNECTION_WIRE_CAPACITY];
+    UmiStatus status=UmiProviderConnectionEncode(connection,wire,sizeof(wire));
+    if(status!=UMI_STATUS_OK) return status;
+    static const char domain[]="Umicom provider connection fingerprint v1\n";
+    UmiSha256 hash;UmiSha256Init(&hash);
+    unsigned char candidate[UMI_SHA256_BYTES];
+    status=UmiSha256Update(&hash,domain,sizeof(domain)-1U);
+    if(status==UMI_STATUS_OK) status=UmiSha256Update(&hash,wire,strlen(wire));
+    if(status==UMI_STATUS_OK) status=UmiSha256Final(&hash,candidate);
+    if(status==UMI_STATUS_OK) memcpy(out_digest,candidate,sizeof(candidate));
+    return status;
+}
+
+/* Receipt persistence shares the existing provider wire primitives. Digests
+ * are raw lowercase hexadecimal lines; logical strings use HexWrite/HexRead.
+ * Never write a C structure or its padding into durable storage. */
+static bool TaskDigestWrite(char **cursor,size_t *remaining,const unsigned char *digest)
+{
+    char hex[UMI_SHA256_HEX_CAPACITY];UmiSha256Hex(digest,hex);
+    return Append(cursor,remaining,hex) && Append(cursor,remaining,"\n");
+}
+static bool TaskDigestRead(const char **cursor,unsigned char *out)
+{
+    const char *p=*cursor;
+    for(size_t i=0U;i<UMI_SHA256_BYTES;++i) {
+        int high=HexDigit(*p);if(high<0) return false;++p;
+        int low=HexDigit(*p);if(low<0) return false;++p;
+        out[i]=(unsigned char)((unsigned)high*16U+(unsigned)low);
+    }
+    if(*p!='\n') return false;
+    *cursor=p+1;return true;
+}
+UmiStatus UmiProviderTaskEncode(const UmiProviderTaskReceipt *receipt,char *out,
+    size_t capacity,size_t *out_length)
+{
+    if(out==NULL || out_length==NULL || capacity==0U ||
+        UmiProviderTaskValidate(receipt)!=UMI_STATUS_OK) return UMI_STATUS_INVALID_ARGUMENT;
+    char wire[UMI_PROVIDER_TASK_WIRE_CAPACITY],numbers[160];
+    char *cursor=wire;size_t remaining=sizeof(wire);
+    int size=snprintf(numbers,sizeof(numbers),"provider-task\n%u\n%" PRIu64 "\n%" PRIu64 "\n%u\n%" PRIu64 "\n",
+        (unsigned)receipt->schema,receipt->revision,receipt->connection_revision,(unsigned)receipt->phase,receipt->output_bytes);
+    if(size<0 || (size_t)size>=sizeof(numbers) || !Append(&cursor,&remaining,numbers))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    const char *fields[]={receipt->context.application_id,receipt->context.profile_id,
+        receipt->context.local_id,receipt->context.operation_id,receipt->connection_id,
+        receipt->provider_id,receipt->remote_id};
+    for(size_t i=0U;i<sizeof(fields)/sizeof(fields[0]);++i)
+        if(!HexWrite(&cursor,&remaining,fields[i])) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if(!TaskDigestWrite(&cursor,&remaining,receipt->context.request_sha256) ||
+        !TaskDigestWrite(&cursor,&remaining,receipt->connection_fingerprint) ||
+        !TaskDigestWrite(&cursor,&remaining,receipt->output_sha256)) return UMI_STATUS_CAPACITY_EXCEEDED;
+    size_t length=(size_t)(cursor-wire);
+    if(length>=capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+    memcpy(out,wire,length+1U);*out_length=length;return UMI_STATUS_OK;
+}
+UmiStatus UmiProviderTaskDecode(const char *wire,size_t length,UmiProviderTaskReceipt *out)
+{
+    if(wire==NULL || out==NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if(length>=UMI_PROVIDER_TASK_WIRE_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if(length==0U || memchr(wire,'\0',length)!=NULL) return UMI_STATUS_PARSE_ERROR;
+    /* Bound and terminate one private copy before reusing the existing text
+     * readers. No parser may walk past a caller's exact byte extent. */
+    char local[UMI_PROVIDER_TASK_WIRE_CAPACITY];memcpy(local,wire,length);local[length]='\0';
+    static const char prefix[]="provider-task\n";
+    if(length<sizeof(prefix)-1U || strncmp(local,prefix,sizeof(prefix)-1U)!=0) return UMI_STATUS_PARSE_ERROR;
+    const char *cursor=local+sizeof(prefix)-1U;uint64_t schema,phase;
+    UmiProviderTaskReceipt candidate={0};
+    if(!NumberRead(&cursor,&schema)) return UMI_STATUS_PARSE_ERROR;
+    if(schema!=UMI_PROVIDER_TASK_SCHEMA) return UMI_STATUS_NOT_IMPLEMENTED;
+    candidate.schema=UMI_PROVIDER_TASK_SCHEMA;
+    if(!NumberRead(&cursor,&candidate.revision) || !NumberRead(&cursor,&candidate.connection_revision) ||
+        !NumberRead(&cursor,&phase) || phase>UMI_PROVIDER_TASK_OUTPUT_STORED ||
+        !NumberRead(&cursor,&candidate.output_bytes)) return UMI_STATUS_PARSE_ERROR;
+    candidate.phase=(UmiProviderTaskPhase)phase;
+    if(!HexRead(&cursor,candidate.context.application_id,sizeof(candidate.context.application_id)) ||
+        !HexRead(&cursor,candidate.context.profile_id,sizeof(candidate.context.profile_id)) ||
+        !HexRead(&cursor,candidate.context.local_id,sizeof(candidate.context.local_id)) ||
+        !HexRead(&cursor,candidate.context.operation_id,sizeof(candidate.context.operation_id)) ||
+        !HexRead(&cursor,candidate.connection_id,sizeof(candidate.connection_id)) ||
+        !HexRead(&cursor,candidate.provider_id,sizeof(candidate.provider_id)) ||
+        !HexRead(&cursor,candidate.remote_id,sizeof(candidate.remote_id)) ||
+        !TaskDigestRead(&cursor,candidate.context.request_sha256) ||
+        !TaskDigestRead(&cursor,candidate.connection_fingerprint) ||
+        !TaskDigestRead(&cursor,candidate.output_sha256) || *cursor!='\0' ||
+        UmiProviderTaskValidate(&candidate)!=UMI_STATUS_OK) return UMI_STATUS_PARSE_ERROR;
+    *out=candidate;return UMI_STATUS_OK;
 }

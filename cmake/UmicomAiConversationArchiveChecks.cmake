@@ -94,3 +94,31 @@ if(BUILD_TESTING)
         umicom_test_impact_owners("${_name}" TARGETS umicom-ai-conversation-import-test)
     endforeach()
 endif()
+
+# Branches reuse the archive owner and must never inherit execution approval.
+if(BUILD_TESTING)
+    add_executable(umicom-ai-conversation-branch-test tests/test_ai_conversation_archive_branch.c)
+    target_link_libraries(umicom-ai-conversation-branch-test PRIVATE Umicom::ai)
+    set_target_properties(umicom-ai-conversation-branch-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-ai-conversation-branch-test)
+    umicom_apply_sanitizers(umicom-ai-conversation-branch-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-ai-conversation-branch-test)
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom-ai-conversation-branch-test FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../src/ai/conversation_archive.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../tests/ai/conversation_archive_fixture.h"
+            "${CMAKE_CURRENT_LIST_DIR}/../src/base/value_construction_internal.h"
+            "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/ai/conversation_archive.h")
+    endif()
+    foreach(_case IN ITEMS empty prefix full roles approval unused-bytes unrelated-edit stale-source removed-source same-id existing-destination zero-revision range capacity last-revision exhausted-revision allocation-record allocation-constructor invalid-owner bad-source-id bad-destination-id bad-title empty-title null-output null-archive borrowed-inputs max-messages independent-branches)
+        set(_name "framework.ai.conversation.branch.${_case}")
+        add_test(NAME "${_name}" COMMAND umicom-ai-conversation-branch-test "${_case}")
+        set_tests_properties("${_name}" PROPERTIES TIMEOUT 30 LABELS "framework;ai;conversation;branch;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("${_name}" TARGETS umicom-ai-conversation-branch-test)
+        endif()
+    endforeach()
+endif()

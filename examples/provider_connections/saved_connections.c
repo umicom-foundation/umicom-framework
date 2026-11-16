@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: examples/provider_connections/saved_connections.c
- * PURPOSE: Demonstrate reviewed settings without using credentials or contacting a provider.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Demonstrate reviewed settings without using credentials or contacting a provider.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/provider_connections/connections.h"
 #include <stdio.h>
@@ -36,9 +43,19 @@ int main(void)
         status = UmiProviderConnectionsPut(store, &connection, false, snapshot->revision, &revision);
     if (status == UMI_STATUS_OK) status = UmiProviderConnectionsRead(store, snapshot);
     if (status == UMI_STATUS_OK && snapshot->count != 1U) status = UMI_STATUS_INVALID_STATE;
+    /* Bind observations to the reread saved value, not the editable draft. */
+    unsigned char fingerprint[UMI_SHA256_BYTES];
+    if (status == UMI_STATUS_OK)
+        status = UmiProviderConnectionFingerprint(&snapshot->items[0], fingerprint);
     if (status == UMI_STATUS_OK)
         printf("Saved draft: %s (disabled)\n", snapshot->items[0].label);
     else fprintf(stderr, "Settings operation failed: %s\n", umi_status_text(status));
+    if (status == UMI_STATUS_OK) {
+        char digest[UMI_SHA256_HEX_CAPACITY];
+        UmiSha256Hex(fingerprint, digest);
+        printf("Settings fingerprint: %s\n", digest);
+        if (fflush(stdout) != 0 || ferror(stdout)) status = UMI_STATUS_IO_ERROR;
+    }
     UmiProviderConnectionsDestroy(store);
     umi_data_server_destroy(server);
     free(snapshot);

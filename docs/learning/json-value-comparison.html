@@ -17,4 +17,35 @@ pre,code,kbd,samp{font-family:"Cascadia Code",Consolas,monospace}
 <p>Duplicate names in compared objects return an error. Comparison can stop at an earlier difference, so it is not a whole-document duplicate-key validator. Validate any stronger protocol-wide constraints separately.</p>
 <p>Private sorted key tables prevent repeated full-object searches. Temporary memory follows the visited values; recursion follows the parser's bounded container depth. Cancellation is checked between values and key decodes. Sorting and an individual string decode are not interrupted.</p>
 <p>See <a href="action-resolution.html">the deferred action workflow</a> for a consumer that permits one new field while requiring every original field to remain unchanged.</p>
+<h2>Validate all metadata names before interpreting fields</h2>
+<p>External model headers and provider receipts can contain fields an application does not yet understand. A duplicate name in those fields can still make the record ambiguous. Use <code>UmiJsonTreeValidateUniqueKeys</code> when your format requires every object in the selected subtree to have unique decoded member names.</p>
+<ol><li>Parse the complete byte span with the existing bounded tree reader. Parsing checks grammar, UTF-8 and nesting, while retaining duplicate members for consumer policy.</li><li>Validate node zero to cover the whole document, including nested arrays and fields that your application does not interpret.</li><li>Continue field interpretation only after <code>UMI_STATUS_OK</code>. A duplicate returns <code>UMI_STATUS_ALREADY_EXISTS</code>; do not silently keep the first or last value.</li><li>Keep the tree and any cancellation token alive during validation. The tree is immutable and remains usable after any result.</li></ol>
+<pre><code class="language-c">#include "umicom/language_runtime/json_tree.h"
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+
+int main(void)
+{
+    /* The second spelling decodes to the same name as the first. */
+    const char json[] = "{\"name\":\"one\",\"\\u006eame\":\"two\"}";
+    UmiJsonTree *tree = NULL;
+    UmiStatus status = UmiJsonTreeCreate(json, strlen(json), NULL, NULL, &amp;tree);
+    if (status == UMI_STATUS_OK)
+        status = UmiJsonTreeValidateUniqueKeys(tree, 0, NULL);
+    UmiJsonTreeDestroy(tree);
+    if (status != UMI_STATUS_ALREADY_EXISTS) return 1;
+    puts("Ambiguous metadata refused.");
+    return 0;
+}</code></pre>
+<p>Link an independent consumer to the installed <code>Umicom::protocol</code> SDK component. The expected output of this deliberately ambiguous example is <code>Ambiguous metadata refused.</code> This is an expectation to verify after building, not a recorded execution result.</p>
+<p>Decoded names are compared as exact UTF-8 bytes. The names <code>a</code> and <code>\u0061</code> collide; <code>A</code> and <code>a</code> do not. Unicode normalization is not applied. Reusing <code>name</code> in two separate objects is valid. If you deliberately select a child node instead of node zero, objects outside that subtree are not checked.</p>
+<p>The service shares decoded-key sorting and memory cleanup with value comparison. It visits every object in scope and follows the tree's existing depth bounds. Allocation can fail, and cancellation is cooperative between keys and values; sorting and an individual key decode are not interrupted. Uniqueness does not establish that tensor dimensions, provider signatures or application fields are valid.</p>
+<h2>Qualify the boundary</h2>
+<p>Run each command separately and stop on an error:</p>
+<pre><code>Set-Location C:\umicom\Umicom-Applications\framework
+cmake --preset windows-ucrt64-debug
+cmake --build --preset windows-ucrt64-debug --target umicom-json-unique-keys-test umicom-json-unique-keys-allocation-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.language_runtime\.json_unique_keys(_allocation)?\." --output-on-failure</code></pre>
+<p>Configuration registers the cases. Native compilation and execution remain separate checks. The regressions cover escaped names, nested and unrelated objects, long keys, wide and deep trees, cancellation, invalid handles and preservation of the original JSON bytes.</p>
+<p>Exercise: replace the duplicate field with an object containing another duplicate. Explain why a whole-document validation must still refuse it even if the application only reads the first field. Then select a different subtree and describe exactly which metadata remains outside the check.</p>
 </body></html>

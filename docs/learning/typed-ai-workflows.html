@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Typed AI workflows in C | Umicom Framework</title>
+<link rel="icon" href="../../resources/brand/umicom.ico" type="image/x-icon">
+<style>
+:root{color-scheme:dark}body{margin:0;background:#101923;color:#e5edf6;font-family:"Segoe UI Variable Text","Segoe UI",sans-serif;line-height:1.65}
+main{max-width:1060px;margin:auto;padding:2rem}header{border-bottom:1px solid #34485d;margin-bottom:2rem;padding-bottom:1.5rem}
+.logo{width:220px;height:auto}h1,h2{line-height:1.25}h2{margin-top:2.4rem}a{color:#74c1ff}
+pre,code{font-family:"Cascadia Code",Consolas,monospace}pre{overflow:auto;padding:1.2rem;background:#0b111a;border:1px solid #34485d;border-radius:8px}
+table{border-collapse:collapse;width:100%}td,th{padding:.7rem;text-align:left;border:1px solid #34485d;vertical-align:top}
+.note{border-left:4px solid #69b7ef;padding:1rem;background:#172737}footer{margin-top:3rem;color:#adbdce}
+</style></head><body><main><header><img class="logo" src="../../resources/brand/umicom-logo-on-dark.svg" alt="Umicom">
+<h1>Typed AI workflows in C</h1><p>Plan dependencies, check inputs and describe missing providers before accepting an AI job.</p></header>
+<p>This lesson builds on <a href="native-workflow-graphs.html">native dependency graphs</a>. You will use a small C API to describe ports, select a result and receive a deterministic plan. A port is a named input or output, such as a text prompt or an image. Its type describes the kind of value expected at that connection.</p>
+<p class="note">Preflight performs no inference or I/O. A valid plan is not a generated image, a qualified provider, a complete cache key or permission to execute. The native build, tests and installed example require qualification on your chosen toolchain.</p>
+
+<h2>1. Separate schema, availability and permission</h2>
+<table><thead><tr><th>Question</th><th>Where it belongs</th><th>What preflight checks</th></tr></thead><tbody>
+<tr><td>Can this input accept an image?</td><td>Operation schema</td><td>Connected port kinds must match exactly.</td></tr>
+<tr><td>Is a provider usable now?</td><td>Host capability registry</td><td>Reports host-declared unavailable nodes in the selected plan.</td></tr>
+<tr><td>May this job write a file?</td><td>Host policy and execution service</td><td>Selected declared effects must fit the supplied effect mask. Actual paths and approvals are checked later.</td></tr>
+<tr><td>Which steps are needed?</td><td>Selected outputs and dependency graph</td><td>Includes all ancestors, then uses Framework's dependency ordering.</td></tr>
+<tr><td>Has this provider actually worked?</td><td>Qualification evidence</td><td>Not established by the schema or the available flag.</td></tr>
+</tbody></table>
+<p>The service is exported as <code>Umicom::ai_workflow_preflight</code>. Its header is <code>umicom/ai_workflow/preflight.h</code>. Application clients describe their own operations; the reusable admission and ordering logic stays in Framework.</p>
+
+<h2>2. Describe an operation and its ports</h2>
+<pre><code>UmiAiWorkflowNodeType inference = {
+    .operation_id = "image.inference",
+    .inputs = {{"prompt", UMI_AI_WORKFLOW_TEXT, true}},
+    .input_count = 1U,
+    .outputs = {{"image", UMI_AI_WORKFLOW_IMAGE, false}},
+    .output_count = 1U,
+    .available = false
+};</code></pre>
+<p>The input is required. The output's <code>required</code> field has no admission meaning; use false for outputs. An unavailable operation can still have a known schema. That allows an editor to explain a missing engine without replacing it with synthetic success.</p>
+<p>Supported value kinds are text, image, video, audio, document, conditioning, latent, number and Boolean. Conditioning and latent describe values passed between model stages; the preflight library does not interpret their tensors. Identifiers contain ASCII letters, digits, underscores, dots or hyphens. They are labels, not file paths. Identifiers must be nonempty and terminated within their fixed storage.</p>
+
+<h2>3. Connect nodes and select the desired result</h2>
+<p>A node refers to an operation type by index. A link stores source node, source port, target node and target port indices. Each input accepts one binding. An input can instead be marked externally supplied through bit <code>p</code> of <code>supplied_inputs</code>; it cannot be both supplied and linked. The executor must later validate the actual supplied value.</p>
+<pre><code>UmiAiWorkflowNode nodes[] = {
+    {"prompt", 0U, 0U}, {"generate", 1U, 0U},
+    {"watermark", 2U, 0U}, {"export", 3U, 0U}
+};
+UmiAiWorkflowLink links[] = {
+    {0U, 0U, 1U, 0U}, {1U, 0U, 2U, 0U}, {2U, 0U, 3U, 0U}
+};
+size_t selected_outputs[] = {3U};</code></pre>
+<p>Selecting export also selects prompt, generation and watermarking. Two connections between the same pair of nodes are valid when they bind different destination ports. Two links to the same input are refused. Required-input and effect checks apply to selected nodes; malformed schemas, malformed links and cycles are refused anywhere in the description, including an inactive branch.</p>
+<p>The public limits are 32 operation types, eight inputs and eight outputs per type, 64 nodes, 128 links and 64 selected output nodes. Count bounds are checked before array indexing. Unused fixed slots are ignored.</p>
+
+<h2>4. Receive a complete plan or preserve the old one</h2>
+<pre><code>UmiAiWorkflowDiagnostic diagnostic = {0};
+UmiStatus status = umi_ai_workflow_preflight(
+    &amp;description, UMI_AI_WORKFLOW_EFFECT_WRITE_FILE, &amp;plan, &amp;diagnostic);
+
+if (status != UMI_STATUS_OK) {
+    fprintf(stderr, "%s\n", umi_ai_workflow_issue_text(diagnostic.issue));
+    /* plan still contains its previous complete bytes. */
+}</code></pre>
+<p>The function needs temporary allocation. Both allocation failure and invalid input preserve the previous plan. The diagnostic identifies an affected node, link, port or type where applicable; <code>SIZE_MAX</code> means that no such index applies. Keep input arrays, plan and diagnostic storage separate and serialize changes during the call.</p>
+<p>On success, <code>plan.order</code> contains the selected order and <code>node_indices</code> maps that order to original description nodes. Dependencies precede their consumers; ready independent nodes are ordered lexically by identifier. <code>unavailable_indices</code> follows that execution order. <code>execution_ready</code> only means every selected type was declared available.</p>
+<p>Framework retains an order-only fingerprint. It omits parameters, model identities, provider revisions, policy and linked-port details. Never use it as a job approval token or a complete cache identity. A future executor must bind the reviewed graph, model and runtime identity, settings, input content, scoped capabilities and output destinations.</p>
+
+<h2>5. Build a consumer from an installed SDK</h2>
+<ol>
+<li>Build and install a Framework SDK containing the new component using your normal owner-controlled qualification workflow. Preserve existing installed SDKs until the replacement is verified.</li>
+<li>Copy <code>examples/ai_workflow</code> into a separate application directory, or use the installed copy under <code>share/umicom-framework/examples/ai_workflow</code>. Its CMake file does not include Framework source files.</li>
+<li>Configure with the path to that qualified SDK. Replace the two example paths below with your actual SDK and copied example locations.</li>
+</ol>
+<pre><code>cmake -S C:/Projects/typed-workflow -B C:/Projects/typed-workflow/build -G Ninja -DUMICOM_SDK_ROOT=C:/SDK/Umicom
+cmake --build C:/Projects/typed-workflow/build
+&amp; C:/Projects/typed-workflow/build/umicom-typed-workflow.exe</code></pre>
+<p>The example validates the selected installation with Framework's shared SDK helpers. Imported libraries and public headers must belong to that installation, the public contract fingerprint must match, and the environment must satisfy the consumer's C ABI requirement. The existing branding helper stages approved SVG resources and supplies the Windows ICO metadata. These checks reuse the installed Framework services.</p>
+<p>If a previous CMake cache points to another SDK, configuration must refuse the mismatch. Use a new build directory or explicitly correct the cached package selection after reviewing it. Do not mix new headers with older libraries to bypass a missing component. Existing <code>CMAKE_PREFIX_PATH</code> discovery remains supported, but the discovered installation is still validated.</p>
+<!-- The previous discovery-only command is retained as inert design history.
+     The active command now binds an explicit installed SDK selection. -->
+<template data-preserved="sdk-discovery-command"><pre><code>cmake -S C:/Projects/typed-workflow -B C:/Projects/typed-workflow/build -G Ninja -DCMAKE_PREFIX_PATH=C:/SDK/Umicom</code></pre></template>
+<p>The consumer uses this package contract:</p>
+<pre><code>find_package(UmicomFramework CONFIG REQUIRED COMPONENTS ai_workflow_preflight)
+add_executable(umicom-typed-workflow main.c)
+target_link_libraries(umicom-typed-workflow PRIVATE Umicom::ai_workflow_preflight)</code></pre>
+<p>The example is expected to print:</p>
+<pre><code>Umicom Framework: typed workflow plan
+1. prompt
+2. generate
+3. watermark
+4. export
+Host-declared ready: no
+Unavailable: image.inference
+Unavailable: brand.watermark
+Planning only. No provider, model, watermark or export operation ran.</code></pre>
+<p>Configuration of this separate installed consumer, compilation, icon appearance and execution still require owner qualification. These are expected results, not a record of execution. A missing component at configuration time means the selected SDK does not export the service. Check the selected package path and producer revision; do not work around that by mixing arbitrary source headers with older libraries.</p>
+
+<h2>6. Qualify the contract and diagnose failures</h2>
+<p>Run each step separately and stop on an error. These producer commands are for the Framework checkout and its existing UCRT64 debug preset:</p>
+<pre><code>Set-Location C:\umicom\Umicom-Applications\framework
+cmake --preset windows-ucrt64-debug
+cmake --build --preset windows-ucrt64-debug --target umicom-ai-workflow-preflight-test umicom-ai-workflow-allocation-test
+ctest --test-dir build/windows-ucrt64-debug -R "^framework\.ai_workflow\." --output-on-failure</code></pre>
+<table><thead><tr><th>Diagnostic</th><th>Recovery</th></tr></thead><tbody>
+<tr><td>Missing or mismatched port</td><td>Check both operation schemas and all four link indices. Insert a real conversion operation if types differ.</td></tr>
+<tr><td>Conflicting binding</td><td>Keep one source per input. Remove the external-input bit when connecting a link.</td></tr>
+<tr><td>Required input missing</td><td>Connect or supply that input on a selected node. Do not mark it optional unless the operation truly supports omission.</td></tr>
+<tr><td>Effect denied</td><td>Review the requested operation and scope. A broader bit mask is not a substitute for user approval and resource policy.</td></tr>
+<tr><td>Unavailable provider</td><td>Keep the valid plan visible and explain the missing capability. Do not execute until the host has qualified and bound a provider.</td></tr>
+<tr><td>Dependency cycle</td><td>Break the cycle in the whole description, even if that branch is not currently selected.</td></tr>
+<tr><td>Allocation failure</td><td>Keep the earlier plan, report failure and retry only after the host has sufficient resources.</td></tr>
+</tbody></table>
+
+<h2>7. Apply the service in applications</h2>
+<p>Media can describe generation, branding and export dependencies. Studio can inspect a workflow and show diagnostics before requesting a reviewed job. LLM and RAG applications can describe retrieval, context preparation and inference. Trader can use the same model for research pipelines, while order submission remains a separately authorized financial operation. These are integration designs; this library does not wire new product UI or implement those executors.</p>
+<p>Umicom Media output must use the approved logo watermark through its existing native branding/export services. Merely naming a node <code>brand.watermark</code> does not apply a watermark. Bind a qualified implementation and verify the exported pixels before reporting completion.</p>
+<p>Exercise: add a second, independent selected output and predict lexical ordering. Then make one input optional, add an unavailable provider on an unselected branch and introduce a conflicting binding. Explain which cases produce a valid but unavailable plan and which must preserve the old plan with an error.</p>
+<footer>Umicom Framework · Sammy Hegab · Umicom Foundation · MIT source examples. Uses supplied Umicom SVG/ICO assets and installed font fallbacks.</footer>
+</main></body></html>

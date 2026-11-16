@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/provider_connections/store.c
- * PURPOSE: Keep shared provider settings atomic and guard reviewed credential acquisition.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Keep shared provider settings atomic and centralize transaction ownership for durable provider records.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "internal.h"
 #include <stdio.h>
@@ -38,6 +45,8 @@ static UmiStatus Load(UmiProviderConnections *store, UmiProviderConnectionSnapsh
     }
     return status;
 }
+/* Connection and task storage now share one transaction completion policy; the original private implementations remain here for ownership and rollback review. The former implementation is retained for owner review. */
+#if 0
 static UmiStatus Finish(UmiProviderConnections *store, UmiStatus status)
 {
     if (status == UMI_STATUS_OK) status = umi_data_server_commit(store->server);
@@ -57,6 +66,29 @@ static UmiStatus Begin(UmiProviderConnections *store)
      * never be followed by our rollback, which would discard that caller's work. */
     return umi_data_server_begin(store->server);
 }
+
+#endif
+/* Connection settings and remote task receipts share transaction ownership.
+ * Only a successful Begin permits Finish. Failed rollback leaves the caller's
+ * store poisoned until its host has recovered the underlying Data Server. */
+UmiStatus UmiProviderStorageBegin(UmiDataServer *server,bool poisoned)
+{
+    if(server==NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return poisoned?UMI_STATUS_INVALID_STATE:umi_data_server_begin(server);
+}
+UmiStatus UmiProviderStorageFinish(UmiDataServer *server,bool *poisoned,UmiStatus status)
+{
+    if(server==NULL || poisoned==NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if(status==UMI_STATUS_OK) status=umi_data_server_commit(server);
+    if(status!=UMI_STATUS_OK && umi_data_server_rollback(server)!=UMI_STATUS_OK) {
+        *poisoned=true;return UMI_STATUS_INVALID_STATE;
+    }
+    return status;
+}
+static UmiStatus Finish(UmiProviderConnections *store,UmiStatus status)
+{ return UmiProviderStorageFinish(store->server,&store->poisoned,status); }
+static UmiStatus Begin(UmiProviderConnections *store)
+{ return UmiProviderStorageBegin(store->server,store->poisoned); }
 UmiStatus UmiProviderConnectionsOpen(UmiDataServer *server,
     const char *application_id, const char *profile_id, UmiProviderConnections **out_store)
 {

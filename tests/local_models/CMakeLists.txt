@@ -219,3 +219,195 @@ foreach(_case IN ITEMS reserve exhaustion concurrent)
         umicom_test_impact_owners("${_test}" TARGETS umicom-model-request-binding-test)
     endif()
 endforeach()
+
+# Bundle admission uses synthetic identities and performs no model I/O.
+add_executable(umicom-model-bundle-test test_bundle.c)
+add_executable(umicom-model-bundle-allocation-test test_bundle_allocation.c)
+foreach(_target umicom-model-bundle-test umicom-model-bundle-allocation-test)
+    target_link_libraries(${_target} PRIVATE Umicom::local_models)
+    set_target_properties(${_target} PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(${_target})
+    umicom_apply_sanitizers(${_target})
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(${_target})
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(${_target} FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../../src/local_models/bundle.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../../src/local_models/catalogue.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../../src/platform/output_file.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../../src/base/value_construction_internal.h")
+    endif()
+endforeach()
+foreach(_case IN ITEMS valid
+        repository
+        revision
+        count
+        digest
+        filename-text
+        paths
+        formats
+        executables
+        format-mismatch
+        size
+        total
+        duplicate
+        case-collision
+        prefix-collision
+        capacity
+        borrowed
+        edited-total
+        late-invalid
+        source
+        url
+        query-nulls
+        malformed-storage
+        unused-slots)
+    umicom_model_case(bundle "${_case}" umicom-model-bundle-test)
+endforeach()
+foreach(_case allocation invalid)
+    umicom_model_case(bundle_allocation "${_case}" umicom-model-bundle-allocation-test)
+endforeach()
+
+# Selection regressions exercise pinned, synthetic companion names only.
+add_executable(umicom-model-bundle-selection-test test_bundle_selection.c)
+add_executable(umicom-model-bundle-selection-allocation-test test_bundle_selection_allocation.c)
+foreach(_target umicom-model-bundle-selection-test umicom-model-bundle-selection-allocation-test)
+    target_link_libraries(${_target} PRIVATE Umicom::local_models)
+    set_target_properties(${_target} PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(${_target})
+    umicom_apply_sanitizers(${_target})
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(${_target})
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(${_target} FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../../src/local_models/bundle_selection.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../../src/local_models/bundle.c"
+            "${CMAKE_CURRENT_LIST_DIR}/bundle_fixture.h")
+    endif()
+endforeach()
+foreach(_case IN ITEMS part-zero
+        total-zero
+        part-exceeds-total
+        part-nondigit
+        total-nondigit
+        empty-prefix
+        empty-basename-prefix
+        excessive-total
+        missing-companion
+        wrong-total
+        exact-case
+        single
+        nonstandard-width
+        one-part
+        capacity
+        maximum-name
+        first
+        middle
+        last
+        in-place
+        in-place-refusal
+        unsupported
+        index
+        nulls
+        unselected-invalid
+        edited-total
+        unterminated-name
+        edited-duplicate
+        oversized-catalogue)
+    umicom_model_case(bundle_selection "${_case}" umicom-model-bundle-selection-test)
+endforeach()
+foreach(_case IN ITEMS allocation publication missing invalid)
+    umicom_model_case(bundle_selection_allocation "${_case}" umicom-model-bundle-selection-allocation-test)
+endforeach()
+
+
+# Keep a disabled-command fixture in every build; optional component absence
+# must remain an honest refusal instead of an accidental link requirement.
+add_executable(umicom-model-tensor-cli-unavailable-test test_cli_tensor.c)
+target_link_libraries(umicom-model-tensor-cli-unavailable-test PRIVATE Umicom::local_models)
+if(TARGET Umicom::model_formats)
+    add_executable(umicom-model-tensor-cli-test test_cli_tensor.c)
+    target_compile_definitions(umicom-model-tensor-cli-test PRIVATE UMICOM_MODELS_HAS_TENSOR_INSPECTION=1)
+    target_link_libraries(umicom-model-tensor-cli-test PRIVATE Umicom::local_models Umicom::model_formats)
+    add_executable(umicom-model-tensor-cli-file-test test_cli_tensor_file.c)
+    target_link_libraries(umicom-model-tensor-cli-file-test PRIVATE Umicom::local_models)
+endif()
+foreach(_target umicom-model-tensor-cli-unavailable-test umicom-model-tensor-cli-test umicom-model-tensor-cli-file-test)
+    if(NOT TARGET ${_target})
+        continue()
+    endif()
+    set_target_properties(${_target} PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(${_target})
+    umicom_apply_sanitizers(${_target})
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(${_target})
+    endif()
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(${_target} FILES
+            "${CMAKE_CURRENT_LIST_DIR}/../../src/local_models/cli.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../../src/model_formats/safetensors_file.c"
+            "${CMAKE_CURRENT_LIST_DIR}/../model_formats/safetensors_fixture.h")
+    endif()
+endforeach()
+umicom_model_case(cli_tensor unavailable umicom-model-tensor-cli-unavailable-test)
+if(TARGET Umicom::model_formats)
+    foreach(_case IN ITEMS valid missing-path extra-argument null-path null-owner occupied-owner io-error bad-format bad-path cancelled output-error gguf-compatible help)
+        umicom_model_case(cli_tensor "${_case}" umicom-model-tensor-cli-test)
+    endforeach()
+    foreach(_case IN ITEMS valid malformed unicode relative)
+        umicom_model_case(cli_tensor_file "${_case}" umicom-model-tensor-cli-file-test)
+    endforeach()
+endif()
+
+# Memory planning consumes synthetic supplied observations. These cases neither
+# capture host hardware nor allocate model weights or start an inference engine.
+add_executable(umicom-model-memory-plan-test test_memory_plan.c)
+target_link_libraries(umicom-model-memory-plan-test PRIVATE Umicom::local_models)
+set_target_properties(umicom-model-memory-plan-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+umicom_apply_warnings(umicom-model-memory-plan-test)
+umicom_apply_sanitizers(umicom-model-memory-plan-test)
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-model-memory-plan-test)
+endif()
+if(COMMAND umicom_target_qualification_inputs)
+    umicom_target_qualification_inputs(umicom-model-memory-plan-test FILES
+        "${CMAKE_CURRENT_LIST_DIR}/../../src/local_models/memory_plan.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../../include/umicom/local_models/memory_plan.h"
+        "${CMAKE_CURRENT_LIST_DIR}/../../include/umicom/desktop_system/monitor.h")
+endif()
+foreach(_case IN ITEMS fit
+        boundary
+        insufficient
+        reserve
+        unknown-components
+        unknown-cost
+        unknown-mask
+        zero-weights
+        null-snapshot
+        memory-unavailable
+        partial-capture
+        fixture
+        stale
+        age-boundary
+        age-maximum
+        zero-age-policy
+        bad-total
+        bad-available
+        sum-overflow
+        reserve-overflow
+        maximum
+        null-requirements
+        null-assessment
+        kv-golden
+        kv-asymmetric
+        kv-widths
+        kv-zero-geometry
+        kv-invalid-width
+        kv-product-overflow
+        kv-sum-overflow
+        kv-maximum
+        kv-null)
+    umicom_model_case(memory_plan "${_case}" umicom-model-memory-plan-test)
+endforeach()

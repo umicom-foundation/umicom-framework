@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/language_runtime/json_tree.h
- * PURPOSE: Own larger JSON documents under explicit byte, node and depth limits.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Own larger JSON documents under explicit byte, node and depth limits.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_LANGUAGE_RUNTIME_JSON_TREE_H
@@ -78,6 +85,19 @@ extern "C"
  * not interruptible. Failure leaves out_equal unchanged; inputs are immutable. */
     UmiStatus UmiJsonTreeValuesEqual(const UmiJsonTree *left, int left_node, const UmiJsonTree *right,
                                      int right_node, const UmiCancellationToken *cancel, int *out_equal);
+    /* Validate decoded member-name uniqueness throughout one immutable subtree.
+     * Return ALREADY_EXISTS for any duplicate in an object, including differently
+     * escaped spellings of the same UTF-8 text. Names are case-sensitive and are
+     * not Unicode-normalized. Reusing a name in separate objects is permitted.
+     * Objects outside the selected subtree are not inspected. A primitive or
+     * string subtree has no member names and succeeds unless cancelled.
+     *
+     * Reuse tree byte/node/depth bounds and the comparison owner's sorted key
+     * tables. Temporary storage is proportional to visited object names; sorting
+     * and one key decode are not interruptible. Check cancellation between keys
+     * and values. The tree remains unchanged on every outcome; no I/O occurs. */
+    UmiStatus UmiJsonTreeValidateUniqueKeys(const UmiJsonTree *tree, int node,
+        const UmiCancellationToken *cancel);
 #ifdef __cplusplus
 }
 #endif

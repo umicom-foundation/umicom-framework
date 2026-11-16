@@ -59,6 +59,10 @@ void umi_runtime_dependency_report_init(UmiRuntimeDependencyReport *report);
  * Add runtime dependency report only after its inputs and available capacity have been
  * checked.
  */
+/** Stage a complete entry; rejected input leaves every report byte unchanged.
+ * Inputs are readable terminated strings and may borrow report storage. A
+ * resolved bundled dependency requires a nonempty path. Unknown dispositions
+ * return INVALID_ARGUMENT; corrupt existing state returns INVALID_STATE. */
 UmiStatus umi_runtime_dependency_report_add(
     UmiRuntimeDependencyReport *report,
     const char *name,
@@ -69,6 +73,19 @@ UmiStatus umi_runtime_dependency_report_add(
  * Return the number of records represented by runtime dependency report unresolved without
  * changing their state.
  */
+/** Validate bounded count, live strings, dispositions and unique names.
+ * An empty initialized report is valid. A bundled entry marked resolved needs
+ * a nonempty path. This is caller-supplied evidence, not a filesystem probe. */
+UmiStatus umi_runtime_dependency_report_validate(const UmiRuntimeDependencyReport *report);
+
+/** Publish an unresolved bundle count only after full validation. Refusal keeps
+ * *out_count unchanged. Output must be separate from report storage. The caller
+ * serializes access; no file discovery or dependency loading occurs. */
+UmiStatus umi_runtime_dependency_report_unresolved_count_checked(
+    const UmiRuntimeDependencyReport *report, size_t *out_count);
+
+/** Legacy null input remains zero. Malformed non-null input returns SIZE_MAX,
+ * which is a failure sentinel, never a valid unresolved count. */
 size_t umi_runtime_dependency_report_unresolved_count(
     const UmiRuntimeDependencyReport *report);
 /**

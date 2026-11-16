@@ -79,6 +79,41 @@ UmiStatus UmiAiConversationArchiveUpsertIfRevision(UmiAiConversationArchive *arc
 UmiStatus UmiAiConversationArchiveRemoveIfRevision(UmiAiConversationArchive *archive,
     const char *session_id, uint64_t expected_revision);
 
+
+/* A local operation receipt, not an authenticated execution record. The v1
+ * conversation file stores the new session but does not persist this lineage.
+ * Keep this receipt separately if the host needs a lasting parent relationship. */
+typedef struct UmiAiConversationBranchReceipt {
+    char source_session_id[UMI_AI_ID_CAPACITY];
+    char destination_session_id[UMI_AI_ID_CAPACITY];
+    uint64_t source_revision;
+    uint64_t destination_revision;
+    size_t message_count;
+} UmiAiConversationBranchReceipt;
+/* Create a new in-memory session from the first message_count source messages.
+ * Zero selects an empty branch; a count above the source extent is refused.
+ * Match a nonzero source record revision. Destination must be a new nonempty
+ * bounded ID; an existing destination returns ALREADY_EXISTS, even the source
+ * itself. The title is explicit and is never silently truncated.
+ *
+ * Keep provider/model/workspace and classification, assign the supplied creation
+ * time to both new timestamps, and clear remote_approved/persistence_approved.
+ * Copy visible message name/text and roles without unused slots or trailing
+ * bytes beyond terminators. Historical roles do not prove tool execution or
+ * grant permission to submit the copied content. The host reviews later use.
+ *
+ * Serialize on the archive owner thread. Source and all existing records retain
+ * their bytes and revisions. The archive advances once on success. Allocation,
+ * stale-source, capacity, exhausted-revision and invalid-input failures preserve
+ * the complete archive and output receipt. Text inputs may borrow the old output
+ * receipt, but neither output nor text storage may overlap the archive itself.
+ * This performs no disk I/O, provider request, model learning or active-session
+ * switch. Explicit persistence and execution use the existing policy boundary. */
+UmiStatus UmiAiConversationArchiveBranch(UmiAiConversationArchive *archive,
+    const char *source_session_id,uint64_t expected_source_revision,
+    const char *new_session_id,const char *new_title,size_t message_count,
+    uint64_t created_at_ns,UmiAiConversationBranchReceipt *out_receipt);
+
 /* Serialize archive access and retain the owner across reads/edits. Conditional
  * revisions protect delayed publication, not simultaneous cross-thread access.
  * Count returns zero for NULL/invalid owners; Validate/Capture distinguish them

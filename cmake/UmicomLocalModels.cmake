@@ -20,6 +20,9 @@ include("${CMAKE_CURRENT_LIST_DIR}/UmicomSdkComponent.cmake")
 if(NOT TARGET Umicom::ai_workspace)
     include("${CMAKE_CURRENT_LIST_DIR}/UmicomAiWorkspace.cmake")
 endif()
+# Inspectors are an optional SDK component. Resolve them before composing the
+# shared console; disabled components retain an explicit unavailable command.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomModelFormats.cmake")
 set(_umi_models_root "${CMAKE_CURRENT_LIST_DIR}/..")
 set(UMICOM_MODEL_DOWNLOAD_HTTP "AUTO" CACHE STRING "Native model downloads: AUTO, ON or OFF")
 set_property(CACHE UMICOM_MODEL_DOWNLOAD_HTTP PROPERTY STRINGS AUTO ON OFF)
@@ -41,6 +44,8 @@ if(NOT _umi_models_mode STREQUAL "OFF")
 endif()
 message(STATUS "Umicom model downloads: ${UMICOM_MODEL_DOWNLOAD_BUILT}")
 add_library(umicom_local_models STATIC
+    "${_umi_models_root}/src/local_models/bundle.c"
+    "${_umi_models_root}/src/local_models/bundle_selection.c"
     "${_umi_models_root}/src/local_models/catalogue.c"
     "${_umi_models_root}/src/local_models/inspect.c"
     "${_umi_models_root}/src/local_models/download.c"
@@ -48,12 +53,17 @@ add_library(umicom_local_models STATIC
     "${_umi_models_root}/src/local_models/runtime.c"
     "${_umi_models_root}/src/local_models/session.c"
     "${_umi_models_root}/src/local_models/readiness.c"
+    "${_umi_models_root}/src/local_models/memory_plan.c"
     "${_umi_models_root}/src/local_models/cli.c")
 add_library(Umicom::local_models ALIAS umicom_local_models)
 set_target_properties(umicom_local_models PROPERTIES EXPORT_NAME local_models)
 target_include_directories(umicom_local_models PUBLIC
     $<BUILD_INTERFACE:${_umi_models_root}/include> $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(umicom_local_models PUBLIC Umicom::platform Umicom::ai_workspace Umicom::ai)
+if(TARGET Umicom::model_formats)
+    target_link_libraries(umicom_local_models PRIVATE Umicom::model_formats)
+    target_compile_definitions(umicom_local_models PRIVATE UMICOM_MODELS_HAS_TENSOR_INSPECTION=1)
+endif()
 if(UMICOM_MODEL_DOWNLOAD_BUILT)
     target_compile_definitions(umicom_local_models PRIVATE UMICOM_MODELS_HAS_CURL=1)
     target_link_libraries(umicom_local_models PRIVATE PkgConfig::UMICOM_MODELS_CURL)

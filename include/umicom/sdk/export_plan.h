@@ -55,6 +55,10 @@ UmiStatus umi_sdk_export_plan_add_target(UmiSdkExportPlan *plan,
 /**
  * Check that sdk export plan satisfies its contract before another service relies on it.
  */
+/** Validate nonempty, NUL-terminated inline paths, the package and a nonempty
+ * valid target catalogue. NULL returns INVALID_ARGUMENT; malformed owned state
+ * returns INVALID_STATE. Validation does not modify the plan. It checks model
+ * structure, not path existence, installation layout, CMake syntax or ABI. */
 UmiStatus umi_sdk_export_plan_validate(const UmiSdkExportPlan *plan);
 
 #ifdef __cplusplus

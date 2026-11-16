@@ -38,6 +38,10 @@ typedef struct UmiPortableBundlePlan {
  * Initialise portable bundle from caller-provided values so later operations receive a
  * known state.
  */
+/** Build in temporary heap storage and publish only on success. Any failure
+ * preserves the previous bundle, including allocation refusal. Text and manifest
+ * inputs may borrow the destination's existing inline fields. The manifest must
+ * be structurally valid; it need not yet satisfy release readiness. No I/O. */
 UmiStatus umi_portable_bundle_init(UmiPortableBundlePlan *plan,
                                        const char *bundle_id,
                                        const char *platform_id,
@@ -62,6 +66,14 @@ UmiStatus umi_portable_bundle_validate(const UmiPortableBundlePlan *plan);
  * Return the number of records represented by portable bundle file without changing their
  * state.
  */
+/** Count planned manifest entries plus dependencies marked BUNDLE after checking
+ * complete nested storage. Pending unresolved dependencies are included. This
+ * count does not deduplicate across the two inventories or prove files exist.
+ * Refusal preserves *out_count; output must be separate from plan storage. */
+UmiStatus umi_portable_bundle_file_count_checked(const UmiPortableBundlePlan *plan, size_t *out_count);
+
+/** Legacy null input remains zero. Malformed non-null input returns SIZE_MAX,
+ * which is a failure sentinel. Prefer the checked API for status reporting. */
 size_t umi_portable_bundle_file_count(const UmiPortableBundlePlan *plan);
 
 #ifdef __cplusplus

@@ -215,4 +215,175 @@ ctest --test-dir build/windows-ucrt64-debug -C Debug --output-on-failure -R "^fr
 <p>Run commands separately and stop on failure. The 43 authored cases cover null and invalid arrays, terminal entries, representable counts, empty inventories, duplicate targets, exact names, version/ABI differences, output preservation and result lifetime. Configuration registers these cases; it does not execute them. If validation rejects an input, correct the pointer/count pair or incomplete declaration instead of weakening the guard. If a comparison completes with missing targets, confirm the declared inventory and then select or build the required SDK components.</p>
 </section>
 
+
+<section id="package-construction"><h2>Preserve an SDK model when a replacement fails</h2>
+<p>An SDK export plan contains a consumer package and a catalogue of target records. The package owns fixed text fields; the catalogue owns a bounded array. Replacing either model can fail because a string is too long, a required input is absent or temporary storage cannot be allocated. Returning an error is not enough if the operation already erased the previous value.</p>
+<p>The package constructor now uses Framework's shared staged-value helper. It builds a temporary package, keeps the original defaults and publishes only after every copy succeeds. The destination remains byte-for-byte unchanged on rejection. This also permits input strings to refer to fields in the package being replaced: publication waits until those old fields have been read. The temporary allocation is released on success and ordinary construction failure; allocation failure returns <code>UMI_STATUS_OUT_OF_MEMORY</code>.</p>
+<p>Catalogue append stages one small target record before assigning its destination slot and incrementing the count. Rejection preserves the entire catalogue, including unused slots that a caller may have prepared. A valid full catalogue returns <code>UMI_STATUS_CAPACITY_EXCEEDED</code>; an existing duplicate component ID returns <code>UMI_STATUS_ALREADY_EXISTS</code>. A malformed existing catalogue returns <code>UMI_STATUS_INVALID_STATE</code>.</p>
+<ol>
+<li>Initialize the model using its public constructor or initializer.</li>
+<li>Keep input strings readable and NUL-terminated during the call. Borrowed inputs may refer to the existing value; concurrent writes still require external coordination.</li>
+<li>Check the returned status before replacing a displayed result or continuing an export.</li>
+<li>On refusal, retain the previous model and correct the input. Do not clear its state merely to hide a failed update.</li>
+</ol>
+<p>This complete C example requests a version string that does not fit, then checks that the prior version survives:</p>
+<pre><code>#include "umicom/sdk/consumer_package.h"
+#include &lt;string.h&gt;
+
+int main(void)
+{
+    UmiSdkConsumerPackage package;
+    if (umi_sdk_consumer_package_init(&amp;package, "UmicomFramework", "Umicom",
+                                     "0.9", "lib/cmake/UmicomFramework") != UMI_STATUS_OK)
+        return 2;
+    char too_long[sizeof package.minimum_version + 1];
+    memset(too_long, '1', sizeof too_long - 1);
+    too_long[sizeof too_long - 1] = '\0';
+    UmiStatus status = umi_sdk_consumer_package_init(&amp;package,
+        package.package_name, package.namespace_name, too_long, package.config_directory);
+    if (status != UMI_STATUS_CAPACITY_EXCEEDED) return 1;
+    return strcmp(package.minimum_version, "0.9") == 0 ? 0 : 1;
+}
+</code></pre>
+<p>Link with <code>Umicom::sdk</code>. The expected return is 0 because the rejected replacement retains the old version. This exercises an in-memory model; it neither selects nor installs that Framework version.</p>
+<h3>Validate fixed fields before reading them as strings</h3>
+<p><code>umi_sdk_export_catalogue_validate</code> accepts an empty initialized catalogue, rejects a count beyond the fixed capacity and checks termination inside every live component and target field. <code>umi_sdk_export_catalogue_ready</code> additionally requires at least one entry. Search checks the whole live catalogue before returning a borrowed match, so a malformed later entry cannot be hidden by an earlier match. Unused slots are ignored by structural validation.</p>
+<p>Package validation likewise checks termination within all four text fields. A nonzero first byte alone does not make a valid C string. These checks establish readable structure; they do not establish valid CMake argument syntax, prove that a target exists on disk or make generated text safe to execute. Use reviewed names and keep generated-build-file review separate from model construction. Generation policy and complete output publication require their own checks.</p>
+<pre><code>Set-Location "C:\umicom\Umicom-Applications\framework"
+cmake --build build/windows-ucrt64-debug --target umicom-sdk-package-construction-test umicom-sdk-catalogue-integrity-test
+ctest --test-dir build/windows-ucrt64-debug -C Debug --output-on-failure -R "^framework[.]sdk[.](package_construction|catalogue_integrity)[.]"
+</code></pre>
+<p>Stop on failure. The 21 package cases cover allocation failure and recovery, borrowed fields, missing inputs, oversize strings and fixed-field termination. The 20 catalogue cases cover count corruption, late invalid entries, capacity, duplicates, prepared unused slots and byte-preserving refusals. They are authored regression coverage; successful configuration alone does not execute them or qualify an installed SDK.</p>
+</section>
+
+
+<section id="cmake-generation"><h2>Generate complete CMake text from literal model fields</h2>
+<p>Model validation checks memory structure. Build-file generation also needs an argument policy: CMake expands variables and splits lists in unquoted arguments, and link commands recognize special keywords. A valid C string can therefore change a command's meaning. See the <a href="https://cmake.org/cmake/help/latest/manual/cmake-language.7.html#unquoted-argument">CMake argument rules</a> and <a href="https://cmake.org/cmake/help/latest/command/target_link_libraries.html">link-item documentation</a>.</p>
+<p>The native SDK renderer accepts a deliberate literal subset. Package and target segments start with an ASCII letter, digit or underscore; subsequent characters may also include dot, plus and hyphen. Target segments may be joined by <code>::</code>. Empty segments, whitespace, list separators, variable expansion, generator expressions, paths and flags are refused in emitted fields. Link keywords such as <code>PRIVATE</code>, <code>debug</code> and <code>optimized</code> are refused as target arguments. A minimum version contains one to four nonempty decimal components, matching the single-version form described in <a href="https://cmake.org/cmake/help/latest/command/find_package.html">find_package</a>; ranges and expressions are outside this renderer's contract.</p>
+<p>Ordinary accepted output keeps its previous command spelling. Namespace and configuration-directory model fields remain structurally validated but are not emitted by this operation. Refusing unsupported text is preferable to silently changing its intended meaning. The policy does not discover targets or establish trust in a package: executing <code>find_package</code> can still load package-owned CMake code.</p>
+<ol>
+<li>Call <code>umi_sdk_consumer_package_cmake_size</code> to validate the complete model and obtain the required byte count, including the terminating NUL. On error, its size output remains unchanged.</li>
+<li>Allocate that many bytes and call <code>umi_sdk_consumer_package_render_cmake</code>. The renderer formats into temporary storage and publishes only a complete result. Invalid input, insufficient capacity or allocation refusal preserves every caller output byte.</li>
+<li>Check the status, review the generated commands and use an explicitly selected, trusted SDK. Producing text does not configure, build, install or launch anything.</li>
+</ol>
+<pre><code>#include "umicom/sdk/sdk.h"
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int main(void)
+{
+    UmiSdkConsumerPackage package;
+    UmiSdkExportCatalogue *catalogue = malloc(sizeof *catalogue);
+    char *text = NULL;
+    int result = 2;
+    if (catalogue == NULL) return 2;
+    umi_sdk_export_catalogue_init(catalogue);
+    if (umi_sdk_consumer_package_init(&amp;package, "UmicomFramework", "Umicom",
+                                     "0.9", "lib/cmake/UmicomFramework") != UMI_STATUS_OK)
+        goto done;
+    if (umi_sdk_export_catalogue_add(catalogue, "sdk", "Umicom::sdk", 1) != UMI_STATUS_OK)
+        goto done;
+    size_t bytes;
+    if (umi_sdk_consumer_package_cmake_size(&amp;package, catalogue, &amp;bytes) != UMI_STATUS_OK)
+        goto done;
+    text = malloc(bytes);
+    if (text == NULL) goto done;
+    if (umi_sdk_consumer_package_render_cmake(&amp;package, catalogue, text, bytes) != UMI_STATUS_OK)
+        goto done;
+    if (fputs(text, stdout) &lt; 0 || fflush(stdout) != 0 || ferror(stdout)) goto done;
+    result = 0;
+done:
+    free(text);
+    free(catalogue);
+    return result;
+}
+</code></pre>
+<p>Link with <code>Umicom::sdk</code>. This program prints a package request and a link command; it does not run them. Before using that text in a project, create its target with the same name as <code>PROJECT_NAME</code>, select the intended installation and verify its imported targets. Keep the model stable during both calls and provide separate output storage. If the model changes between sizing and rendering, measure again or handle a capacity refusal.</p>
+<pre><code>Set-Location "C:\umicom\Umicom-Applications\framework"
+cmake --build build/windows-ucrt64-debug --target umicom-sdk-cmake-render-test
+ctest --test-dir build/windows-ucrt64-debug -C Debug --output-on-failure -R "^framework[.]sdk[.]cmake_render[.]"
+</code></pre>
+<p>Stop on failure. The 48 native cases cover syntax refusals, keywords, version forms, exact sizes, every smaller capacity for the baseline, a full catalogue and allocation recovery. One parser fixture sends accepted text through the real CMake parser with observer functions replacing package discovery and linking. These are authored checks, not execution evidence. The fixture does not qualify an actual installed package, compiler or executable.</p>
+</section>
+
+
+<section id="sdk-selection-storage"><h2>Keep an explicit SDK selection when buffers overlap</h2>
+<p>A settings form may store its selected SDK path in the same buffer that receives the locator's result. Clearing that buffer at the start erases the input before it is inspected. In a locator with default search paths, that mistake can quietly select a different installation. An explicit nonempty prefix must remain authoritative: a failed inspection must not substitute another SDK.</p>
+<p><code>umi_sdk_locate_checked</code> probes the selected prefix before publishing output. It reuses Framework's overlap-safe text replacement service, so the input may be the same buffer, a suffix within it or an overlapping preceding range. On failure, every output byte stays unchanged. On success, only the selected path and its terminating NUL are written. The existing <code>umi_sdk_locate</code> API still clears a valid output buffer on failure, but now does so after reading the selection.</p>
+<ol>
+<li>Provide a readable, NUL-terminated absolute path and output storage with a known byte capacity. Keep that input stable throughout the call.</li>
+<li>Choose the checked API when a rejected selection should leave the previous setting available for correction.</li>
+<li>Inspect the returned status before displaying a successful selection or starting another operation. Preserved bytes after an error are old state, not a new result.</li>
+<li>Use null or an empty prefix only when you intentionally want the conventional-location search. It keeps the established order and stops on a successful probe, insufficient capacity or allocation failure.</li>
+</ol>
+<p>This complete C example copies an explicit command-line selection into its own storage and then locates it in place:</p>
+<pre><code>#include "umicom/sdk/locator.h"
+#include "umicom/base/text.h"
+#include &lt;stdio.h&gt;
+
+int main(int argc, char **argv)
+{
+    char selected[1024];
+    if (argc != 2 || argv[1][0] == '\0') return 2;
+    if (umi_text_copy(selected, sizeof selected, argv[1]) != UMI_STATUS_OK)
+        return 2;
+    UmiStatus status = umi_sdk_locate_checked(selected, selected, sizeof selected);
+    if (status != UMI_STATUS_OK) {
+        /* selected still contains the requested path for correction. */
+        return 1;
+    }
+    if (printf("Selected SDK: %s\n", selected) &lt; 0 ||
+        fflush(stdout) != 0 || ferror(stdout)) return 2;
+    return 0;
+}
+</code></pre>
+<p>Link with <code>Umicom::sdk</code> and supply the absolute prefix of the installation you intend to inspect. A successful presence probe returns 0 from this example; a refused selection returns 1. No fallback is attempted for a nonempty explicit prefix. This does not configure or build a consumer, verify binary compatibility, load an application or establish trust in the package. Those require separate qualification.</p>
+<h3>Exercise selection without relying on a machine's installed SDKs</h3>
+<pre><code>Set-Location "C:\umicom\Umicom-Applications\framework"
+cmake --build build/windows-ucrt64-debug --target umicom-sdk-locator-selection-test
+ctest --test-dir build/windows-ucrt64-debug -C Debug --output-on-failure -R "^framework[.]sdk[.]locator_selection[.]"
+</code></pre>
+<p>Run each command separately and stop on failure. The 14 authored cases exercise both API contracts, all three overlap directions, capacity boundaries, explicit refusals, missing files, conventional search order and its stopping conditions. A controlled probe supplies deterministic observations while the test uses the actual locator and shared text replacement. It does not inspect your installed SDKs and cannot establish their readiness. The tests remain unqualified until built and executed; registration during configuration is not a passing test.</p>
+<p>If an explicit selection fails, check the requested installation's public headers, package configuration and library files. Do not clear the selection and retry defaults as an error-recovery shortcut: that changes which SDK the user chose. If capacity is insufficient, provide a larger buffer and retry the same path.</p>
+</section>
+
+
+<section id="export-plan-path-validation"><h2>Validate a complete export plan before using its paths</h2>
+<p>A fixed C array has storage for bytes, but it becomes a C string only when a terminating NUL occurs within that storage. Checking that its first byte is nonzero proves only that it is not empty. It does not prove that later string operations can safely find an end.</p>
+<p><code>umi_sdk_export_plan_validate</code> checks all four owned path fields within their individual capacities, then validates the nested package and a nonempty target catalogue. A null plan returns <code>UMI_STATUS_INVALID_ARGUMENT</code>. Empty or unterminated fields and invalid nested state return <code>UMI_STATUS_INVALID_STATE</code>. Validation does not modify the plan. A terminator at the final byte is valid; a nonempty full array without one is refused.</p>
+<ol>
+<li>Construct the plan with <code>umi_sdk_export_plan_init</code>. Its staged construction preserves the previous value if replacement fails.</li>
+<li>Add the required targets with <code>umi_sdk_export_plan_add_target</code>.</li>
+<li>Validate the complete model before using its paths or passing its nested package to another service.</li>
+<li>Handle each later operation's own status. Structural validity does not prove that directories exist, that paths describe an installed layout or that a generated CMake argument is accepted.</li>
+</ol>
+<p>This small fault-injection example deliberately removes a path's terminator to show the difference between nonempty bytes and a valid string. Production callers should use the constructor instead of corrupting fields:</p>
+<pre><code>#include "umicom/sdk/export_plan.h"
+#include &lt;stdlib.h&gt;
+#include &lt;string.h&gt;
+
+int main(void)
+{
+    UmiSdkExportPlan *plan = malloc(sizeof *plan);
+    int result = 2;
+    if (plan == NULL) return 2;
+    if (umi_sdk_export_plan_init(plan, "C:/Example/Framework", "0.9") != UMI_STATUS_OK)
+        goto done;
+    if (umi_sdk_export_plan_add_target(plan, "sdk", "Umicom::sdk", 1) != UMI_STATUS_OK)
+        goto done;
+    memset(plan-&gt;include_directory, 'x', sizeof plan-&gt;include_directory);
+    result = umi_sdk_export_plan_validate(plan) == UMI_STATUS_INVALID_STATE ? 0 : 1;
+done:
+    free(plan);
+    return result;
+}
+</code></pre>
+<p>Link with <code>Umicom::sdk</code>. The expected return is 0 because the malformed path is refused. This example does not inspect the example directory or install anything. If a real model is rejected, rebuild it from validated inputs; appending a terminator to arbitrary damaged bytes does not reconstruct the intended path.</p>
+<pre><code>Set-Location "C:\umicom\Umicom-Applications\framework"
+cmake --build build/windows-ucrt64-debug --target umicom-sdk-consumer-package-test
+ctest --test-dir build/windows-ucrt64-debug -C Debug --output-on-failure -R "^framework[.]sdk_consumer_package$"
+</code></pre>
+<p>Run each command separately and stop on failure. The existing regression now checks all four fields when empty, unterminated and terminated at the last byte, verifies that validation leaves the bytes unchanged, and checks propagation from invalid nested models. Its prior construction and CMake-rendering checks remain. The shared test assertion policy already keeps those older checks active in optimized builds. These authored checks still require native execution.</p>
+</section>
+
 </body></html>

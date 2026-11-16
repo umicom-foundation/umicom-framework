@@ -49,6 +49,25 @@ umicom models inspect 'C:\Models\Umicom\qwen2.5-0.5b-q4.gguf' '74a4da8c9fdbcd15b
 
 Inspection streams through the entire file with a 64 KiB buffer. It checks the digest, magic bytes, a little-endian GGUF version 2 or 3 header, and basic count bounds. It does not parse every tensor, certify the model's behaviour, or prove that a particular engine can load it. The selected final file cannot be a symbolic link, reparse point, directory or device; parent directories must remain trusted and stable.
 
+## Inspect a Safetensors file
+
+Safetensors stores tensor metadata and tensor bytes. It is a file format, not a model runtime. The separate inspection command reads your existing file, computes its SHA-256, and checks the supported tensor layout through the same Framework service used by SDK clients.
+
+1. Run the command help and check that Safetensors inspection is available in this build.
+2. Choose an existing absolute file path under trusted, stable parent directories. Inspection reads the complete file and can take time for large weights.
+3. Run either console form below. These commands observe bytes immediately; there is no apply option.
+
+~~~powershell
+umicom models inspect-safetensors 'C:\Models\Umicom\weights.safetensors'
+umicom-models inspect-safetensors 'C:\Models\Umicom\weights.safetensors'
+~~~
+
+A successful report includes the file size, SHA-256, tensor count, metadata count, total elements, JSON header size, tensor data size and maximum tensor rank. Compare the observed digest with a trusted publisher's digest separately. The CLI does not accept an expected digest; SDK callers can supply an expected binary digest and size to UmiSafetensorsFileInspect.
+
+A nonzero exit means inspection or report delivery failed. A missing file, relative path, final symbolic link, changed file, malformed metadata, unsupported tensor format or failed output stream must not be treated as a successful inspection. Read the reported status and correct the input or build configuration. If inspection is unavailable, build Framework with UMICOM_BUILD_MODEL_FORMATS enabled. Do not rename a different model format to bypass inspection.
+
+This command does not download, install or load weights, evaluate their numerical values, prove publisher trust or enable image/video inference. Its supported byte-aligned types and resource bounds are documented in the [model header inspection lesson](learning/model-header-inspection.html). Existing GGUF inspect, download, run and serve commands retain their own contracts.
+
 ## Start and stop a CPU server
 
 The example engine path below is a placeholder for your reviewed installation. The last three values are port, context capacity and CPU threads. Start with a modest context and thread count for a small model; adjust only after measuring your machine.

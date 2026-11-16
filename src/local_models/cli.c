@@ -15,6 +15,9 @@
 
 #include "internal.h"
 #include "umicom/local_models/runtime.h"
+#ifdef UMICOM_MODELS_HAS_TENSOR_INSPECTION
+#include "umicom/model_formats/safetensors_file.h"
+#endif
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,6 +51,7 @@ static void Help(void)
         "Use: umicom models COMMAND ...  or  umicom-models COMMAND ...\n"
         "  catalogue\n"
         "  inspect ABSOLUTE_GGUF [SHA256]\n"
+        "  inspect-safetensors ABSOLUTE_FILE\n"
         "  download ID NEW_ABSOLUTE_GGUF [--apply]\n"
         "  download-file REPOSITORY COMMIT FILE SHA256 BYTES NEW_ABSOLUTE_GGUF [--apply]\n"
         "  run ID ABSOLUTE_LLAMA_SERVER ABSOLUTE_GGUF PORT CONTEXT THREADS [--apply]\n"
@@ -67,6 +71,11 @@ static void Help(void)
     (void)printf("Compiled downloads: %s; local chat: %s\n",
         UmiModelDownloadAvailable() ? "available" : "unavailable",
         UmiAiWorkspaceLocalProviderAvailable() ? "available" : "unavailable");
+#ifdef UMICOM_MODELS_HAS_TENSOR_INSPECTION
+    (void)puts("Safetensors file inspection: available (metadata and digest only).");
+#else
+    (void)puts("Safetensors file inspection: unavailable in this build.");
+#endif
 }
 static void Inspection(const UmiModelInspection *value)
 {
@@ -74,6 +83,31 @@ static void Inspection(const UmiModelInspection *value)
         value->bytes, value->sha256, (unsigned)value->gguf_version, value->tensors, value->metadata_entries);
     (void)puts("File identity and basic header checked. Engine compatibility is still unverified.");
 }
+
+/* Both console hosts delegate model parsing and file ownership to Framework.
+ * Report observed identity only; successful inspection does not admit a model
+ * to an inference engine or verify the publisher of its bytes. */
+static int InspectSafetensors(const char *path)
+{
+#ifdef UMICOM_MODELS_HAS_TENSOR_INSPECTION
+    UmiSafetensorsFileInspection inspected;
+    UmiStatus status=UmiSafetensorsFileInspect(path,NULL,NULL,&inspected);
+    if(status!=UMI_STATUS_OK) return Failure(status);
+    char digest[UMI_SHA256_HEX_CAPACITY];
+    UmiSha256Hex(inspected.file.sha256,digest);
+    (void)printf("Bytes: %" PRIu64 "\nSHA256: %s\nSafetensors: tensors: %zu; metadata: %zu; elements: %" PRIu64 "\n",
+        inspected.file.bytes,digest,inspected.layout.tensors,
+        inspected.layout.metadata_entries,inspected.layout.elements);
+    (void)printf("Header bytes: %" PRIu64 "; tensor data bytes: %" PRIu64 "; maximum rank: %zu\n",
+        inspected.layout.header_bytes,inspected.layout.data_bytes,inspected.layout.maximum_rank);
+    (void)puts("Observed file identity and layout only. Publisher, numerical values and runtime compatibility remain unverified.");
+    return ReviewOutputComplete()?0:Failure(UMI_STATUS_IO_ERROR);
+#else
+    (void)path;
+    return Failure(UMI_STATUS_NOT_IMPLEMENTED);
+#endif
+}
+
 static bool ApplyArgument(int argc, char **argv, int required, bool *apply)
 {
     *apply = argc == required + 1 && strcmp(argv[required], "--apply") == 0;
@@ -623,6 +657,8 @@ int UmiModelsCommandWithSession(int argc, char **argv, UmiModelSession **inOutSe
         if (status != UMI_STATUS_OK) return Failure(status);
         Inspection(&inspected); return ReviewOutputComplete() ? 0 : Failure(UMI_STATUS_IO_ERROR);
     }
+    if (strcmp(argv[0], "inspect-safetensors") == 0 && argc == 2)
+        return InspectSafetensors(argv[1]);
     if (strcmp(argv[0], "health") == 0 && (argc == 3 ||
         (argc == 4 && strcmp(argv[3], "--probe") == 0)))
         return Health(argv[1], argv[2], argc == 4);

@@ -1,0 +1,108 @@
+# Umicom Framework
+# File: cmake/UmicomAiWorkflowPreflightChecks.cmake
+#
+# PURPOSE:
+# Register real typed workflow and allocation regressions with production source ownership.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+
+
+include_guard(GLOBAL)
+if(BUILD_TESTING AND TARGET Umicom::ai_workflow_preflight)
+    add_executable(umicom-ai-workflow-preflight-test tests/ai_workflow/test_preflight.c)
+    add_executable(umicom-ai-workflow-allocation-test tests/ai_workflow/test_allocation.c)
+    foreach(_target umicom-ai-workflow-preflight-test umicom-ai-workflow-allocation-test)
+        target_link_libraries(${_target} PRIVATE Umicom::ai_workflow_preflight)
+        set_target_properties(${_target} PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        umicom_apply_warnings(${_target})
+        umicom_apply_sanitizers(${_target})
+        if(COMMAND umicom_target_qualification_inputs)
+            umicom_target_qualification_inputs(${_target} FILES
+                "${CMAKE_CURRENT_SOURCE_DIR}/src/ai_workflow/preflight.c"
+                "${CMAKE_CURRENT_SOURCE_DIR}/src/ai_workflow/diagnostic.c"
+                "${CMAKE_CURRENT_SOURCE_DIR}/src/integration/fabric/workflow_graph.c"
+                "${CMAKE_CURRENT_SOURCE_DIR}/src/integration/fabric/workflow_plan.c"
+                "${CMAKE_CURRENT_SOURCE_DIR}/src/integration/fabric/workflow_step.c")
+        endif()
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(${_target})
+        endif()
+    endforeach()
+    foreach(_case IN ITEMS valid_chain
+            dependency_before_alphabetic
+            missing_node
+            missing_source_port
+            missing_target_port
+            type_mismatch
+            duplicate_binding
+            external_link_conflict
+            required_input
+            optional_input
+            external_input
+            self_cycle
+            cycle
+            unselected_cycle
+            too_many_nodes
+            too_many_links
+            too_many_types
+            too_many_ports
+            too_many_outputs
+            empty_graph
+            zero_outputs
+            null_link_storage
+            null_type_storage
+            null_node_storage
+            null_output_storage
+            null_description
+            null_plan
+            null_diagnostic
+            unterminated_identifier
+            unsafe_identifier
+            duplicate_node_id
+            duplicate_operation_id
+            duplicate_port_name
+            unknown_value_kind
+            unknown_type_index
+            invalid_supplied_mask
+            effect_denied
+            effect_allowed
+            unknown_policy_bit
+            unknown_effect_definition
+            unavailable_provider
+            inactive_unavailable
+            inactive_required_input
+            inactive_effect
+            invalid_output_index
+            duplicate_output
+            multiple_outputs
+            parallel_port_links
+            deterministic_order
+            capacity_chain
+            maximum_identifier
+            unused_slots
+            diagnostic_text)
+        add_test(NAME framework.ai_workflow.preflight.${_case}
+            COMMAND umicom-ai-workflow-preflight-test "${_case}")
+        set_tests_properties(framework.ai_workflow.preflight.${_case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;ai-workflow;preflight;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.ai_workflow.preflight.${_case}
+                TARGETS umicom-ai-workflow-preflight-test)
+        endif()
+    endforeach()
+    foreach(_case workspace planner cleanup)
+        add_test(NAME framework.ai_workflow.allocation.${_case}
+            COMMAND umicom-ai-workflow-allocation-test "${_case}")
+        set_tests_properties(framework.ai_workflow.allocation.${_case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;ai-workflow;allocation;ownership")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.ai_workflow.allocation.${_case}
+                TARGETS umicom-ai-workflow-allocation-test)
+        endif()
+    endforeach()
+endif()

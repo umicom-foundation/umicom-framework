@@ -15,6 +15,7 @@
 
 #include "provider_ownership.h"
 #include "umicom/local_models/manager.h"
+#include "umicom/local_models/bundle.h"
 #include "umicom/local_models/runtime.h"
 #include "umicom/ai/authorengine_service.h"
 #include "umicom/ai/coding_context.h"
@@ -401,6 +402,60 @@ static UmiStatus sdk_coding_task(const UmiAiRuntimeDescriptor *descriptor)
 }
 
 
+
+/* Resolve bundle planning from the installed library using synthetic metadata.
+ * A selected component set is not a downloaded or runnable model pipeline. */
+static UmiStatus sdk_model_bundle(void)
+{
+    UmiModelBundlePlan *plan=malloc(sizeof(*plan));
+    if(plan==NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    UmiModelBundleFile files[2]={0};
+    strcpy(files[0].filename,"weights/model.safetensors");
+    strcpy(files[1].filename,"config.json");
+    for(size_t i=0U;i<2U;++i)
+        strcpy(files[i].sha256,"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    files[0].bytes=10U;files[0].format=UMI_MODEL_ARTIFACT_SAFETENSORS;
+    files[1].bytes=2U;files[1].format=UMI_MODEL_ARTIFACT_JSON;
+    UmiStatus status=UmiModelBundlePlanCreate("umicom-fixtures/synthetic",
+        "0123456789abcdef0123456789abcdef01234567",files,2U,plan);
+    if(status==UMI_STATUS_OK) status=UmiModelBundlePlanValidate(plan);
+    if(status==UMI_STATUS_OK && (plan->count!=2U || plan->total_bytes!=12U))
+        status=UMI_STATUS_INVALID_STATE;
+    char url[UMI_MODEL_URL_CAPACITY];
+    if(status==UMI_STATUS_OK) status=UmiModelBundleUrlAt(plan,0U,url,sizeof(url));
+    UmiModelSource source;
+    if(status==UMI_STATUS_OK &&
+        UmiModelBundleGgufSourceAt(plan,0U,&source)!=UMI_STATUS_NOT_IMPLEMENTED)
+        status=UMI_STATUS_INVALID_STATE;
+    free(plan);
+    return status;
+}
+
+/* Resolve companion selection through the installed SDK using only synthetic
+ * metadata. Filename completeness does not assert tensor or backend validity. */
+static UmiStatus sdk_gguf_selection(void)
+{
+    UmiModelBundlePlan *plan=malloc(sizeof(*plan));
+    if(plan==NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    UmiModelBundleFile files[3]={0};
+    strcpy(files[0].filename,"weights/model-00002-of-00002.gguf");
+    strcpy(files[1].filename,"config.json");
+    strcpy(files[2].filename,"weights/model-00001-of-00002.gguf");
+    for(size_t i=0U;i<3U;++i)
+        strcpy(files[i].sha256,"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+    files[0].bytes=24U;files[0].format=UMI_MODEL_ARTIFACT_GGUF;
+    files[1].bytes=2U;files[1].format=UMI_MODEL_ARTIFACT_JSON;
+    files[2].bytes=25U;files[2].format=UMI_MODEL_ARTIFACT_GGUF;
+    UmiStatus status=UmiModelBundlePlanCreate("umicom-fixtures/synthetic",
+        "0123456789abcdef0123456789abcdef01234567",files,3U,plan);
+    if(status==UMI_STATUS_OK) status=UmiModelBundleSelectGguf(plan,0U,plan);
+    if(status==UMI_STATUS_OK && (plan->count!=2U || plan->total_bytes!=49U ||
+        strcmp(plan->files[0].filename,"weights/model-00001-of-00002.gguf")!=0))
+        status=UMI_STATUS_INVALID_STATE;
+    free(plan);
+    return status;
+}
+
 int main(void)
 {
     const UmiModelCatalogueEntry *entry = UmiModelCatalogueAt(0U);
@@ -451,6 +506,8 @@ int main(void)
     /* Resolve the installed checked-generation and callback-lifetime exports
      * before the existing catalogue exercises. The provider is entirely inert. */
     if (UmiModelSdkExerciseOwnership() != UMI_STATUS_OK) return 1;
+    if (sdk_model_bundle() != UMI_STATUS_OK) return 1;
+    if (sdk_gguf_selection() != UMI_STATUS_OK) return 1;
     if (sdk_runtime_health(&description) != UMI_STATUS_OK) return 1;
     if (sdk_context_observation(&description) != UMI_STATUS_OK) return 1;
     if (sdk_conversation_archive() != UMI_STATUS_OK) return 1;
