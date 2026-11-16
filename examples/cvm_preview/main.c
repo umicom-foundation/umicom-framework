@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/cvm_preview.h"
 #include "umicom/toolchain/cvm_trace.h"
+#include "umicom/toolchain/cvm_debug.h"
 #include <stdio.h>
 #include <string.h>
 /* Keep the earlier consumer for engineering comparison. The replacement
@@ -42,9 +43,35 @@ int main(int argc, char **argv)
 }
 #endif
 
+
+/* This thin consumer demonstrates the lifecycle used by an editor or OS tool.
+ * The shared service owns source locations and stale-result invalidation. */
+static int stepped_preview(const char *source)
+{
+    UmiCvmDebugSession session;
+    UmcStatus status=umi_cvm_debug_start(source,strlen(source),UMC_PROGRAM_LIMIT,&session,sizeof session);
+    while(status==UMC_OK && session.phase==UMI_CVM_DEBUG_PAUSED) {
+        const size_t pc=session.machine.frame.pc;
+        status=umi_cvm_debug_step(&session,sizeof session);
+        printf("step=%zu line=%zu column=%zu status=%s\n",pc,
+            session.lines[pc],session.columns[pc],umc_status_text(status));
+    }
+    if(status!=UMC_OK) {
+        fprintf(stderr,"%zu:%zu: %s\n",session.diagnostic.line,
+            session.diagnostic.column,session.diagnostic.message);
+        return 1;
+    }
+    printf("%ld\n",(long)session.result.value);
+    return fflush(stdout)!=0 || ferror(stdout)?2:0;
+}
+
 int main(int argc, char **argv)
 {
     static const char demonstration[] = "int main(void) { return 6 * 7; }";
+    if(argc>=2 && strcmp(argv[1],"--steps")==0) {
+        if(argc>3){fputs("Usage: umicom-cvm-preview --steps [source-program]\n",stderr);return 2;}
+        return stepped_preview(argc==3?argv[2]:demonstration);
+    }
     const bool tracing = argc >= 2 && strcmp(argv[1], "--trace") == 0;
     if (argc > 3 || (argc == 3 && !tracing)) {
         fputs("Usage: umicom-cvm-preview [--trace] [source-expression-program]\n", stderr);
