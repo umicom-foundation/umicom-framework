@@ -68,6 +68,8 @@ string(CONFIGURE "${_project}" _project @ONLY)
 file(WRITE "${_source}/CMakeLists.txt" "${_project}")
 file(WRITE "${_source}/second/CMakeLists.txt" [=[
 add_executable(umicom ../main.c)
+umicom_apply_application_branding(TARGET umicom PRODUCT_NAME "Umicom Framework"
+    INTERNAL_NAME umicom RESOURCE_ROOT "${RESOURCE_ROOT}" NO_RUNTIME_DEPLOYMENT)
 add_executable(other ../main.c)
 umicom_apply_application_branding(TARGET other PRODUCT_NAME "Umicom Other"
     INTERNAL_NAME other RESOURCE_ROOT "${RESOURCE_ROOT}" WINDOWS_GUI)
@@ -86,6 +88,13 @@ endif()
 file(READ "${_build}/build.ninja" _graph)
 if(NOT _graph MATCHES "umicom-windows-installer" OR NOT _graph MATCHES "demo-windows-runtime")
     message(FATAL_ERROR "Deployment build targets are missing")
+endif()
+if(_graph MATCHES "umicom[.]dir/[^\n]*windows_runtime_bootstrap[.]c")
+    message(FATAL_ERROR "Installer helper overrode the explicit native-tool bootstrap opt-out")
+endif()
+if(NOT _graph MATCHES "UMICOM_WINDOWS_RUNTIME_GUI=1" OR
+   NOT _graph MATCHES "umicom-command-windows-runtime")
+    message(FATAL_ERROR "GUI error policy or helper packaging target was lost")
 endif()
 file(READ "${_build}/cmake_install.cmake" _install)
 string(FIND "${_install}" [=[${CMAKE_INSTALL_PREFIX}]=] _prefix_position)

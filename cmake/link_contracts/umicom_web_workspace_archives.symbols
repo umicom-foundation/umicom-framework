@@ -2,4 +2,6 @@ umi_web_server_config_archive_decode
 umi_web_server_config_archive_decode_with_workspace
 umi_web_server_config_archive_encode
 umi_web_server_config_archive_decode_if_unchanged_with_workspace
-umi_web_workbench_cloud_profile_archive_decode_if_unchanged_with_workspace
+# Cloud profiles belong to umicom_developer, whose manifest now verifies this symbol.
+# Retained previous owner assignment for review:
+# umi_web_workbench_cloud_profile_archive_decode_if_unchanged_with_workspace

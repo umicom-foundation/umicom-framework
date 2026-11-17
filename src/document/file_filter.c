@@ -116,6 +116,9 @@ UmiStatus umi_document_file_filters_default(UmiDocumentFileFilterSet *out_filter
         "*.java", "*.cs", "*.kt", "*.kts", "*.swift", "*.rs", "*.go",
         "*.zig", "*.d", "*.di", "*.dart", "*.pas", "*.pp", "*.lpr"
     };
+    /* A separate category preserves existing filter indexes and the per-filter
+     * pattern bound; expanding PROGRAMMING would exceed its public capacity. */
+    static const char *const INTEROPERABILITY[] = {"*.f90", "*.f95", "*.f03", "*.f08", "*.odin", "*.nim", "*.nims"};
     static const char *const HARDWARE[] = {"*.vhd", "*.vhdl", "*.v", "*.vh", "*.sv", "*.svh"};
     static const char *const BUILD[] = {"CMakeLists.txt", "*.cmake", "Makefile", "GNUmakefile", "build.ninja"};
     UmiStatus status;
@@ -146,6 +149,8 @@ UmiStatus umi_document_file_filters_default(UmiDocumentFileFilterSet *out_filter
                         sizeof(HARDWARE) / sizeof(HARDWARE[0]));
     if (status == UMI_STATUS_OK) status = add_filter(out_filters, "Build files", BUILD,
                         sizeof(BUILD) / sizeof(BUILD[0]));
+    if (status == UMI_STATUS_OK) status = add_filter(out_filters, "Native interoperability", INTEROPERABILITY,
+                        sizeof(INTEROPERABILITY) / sizeof(INTEROPERABILITY[0]));
     return status;
 }
 

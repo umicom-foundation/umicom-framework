@@ -1109,6 +1109,13 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
             return status;
         }
     }
+    /* Detached editor notebooks cannot transfer native focus to a new page.
+     * Clear their stale focus-child bookkeeping before page insertion/removal.
+     * This leaves document selection intact and does not change a live root. */
+    if (gtk_widget_get_root(adapter->document_notebook) == NULL)
+        gtk_widget_set_focus_child(adapter->document_notebook, NULL);
+    if (gtk_widget_get_root(adapter->secondary_document_notebook) == NULL)
+        gtk_widget_set_focus_child(adapter->secondary_document_notebook, NULL);
     adapter->applying_document_state = 1;
     prune_notebook(adapter, adapter->document_notebook, documents);
     prune_notebook(adapter, adapter->secondary_document_notebook, documents);
@@ -1252,7 +1259,11 @@ UmiStatus umi_gtk4_refresh_documents(UmiGtk4Adapter *adapter,
                     /* An authoritative external edit supersedes a pending
                      * native action; its old draft must not be replayed. */
                     g_object_set_data(G_OBJECT(text_buffer), "umicom-editor-action", NULL);
+/* Model refresh can run inside an unfinished native user action. Reuse ordinary reversible edits instead of beginning a forbidden irreversible GTK action. The former implementation is retained for owner review. */
+#if 0
                     gtk_text_buffer_set_text(text_buffer, fullTexts[index], (int)fullLengths[index]);
+#endif
+                    EditorReplaceTextReversibly(text_buffer, fullTexts[index], (int)fullLengths[index]);
                     text_changed = true;
                 }
                 g_free(current_text);

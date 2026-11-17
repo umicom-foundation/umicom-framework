@@ -49,6 +49,10 @@ static const UmiDocumentLanguageChoice choices[] = {{"plain", "Plain text", "sou
                                                     {"r", "R", "source.r"},
                                                     {"lua", "Lua", "source.lua"},
                                                     {"zig", "Zig", "source.zig"},
+                                                    /* Shared identities also drive Studio language selection. */
+                                                    {"fortran", "Fortran (free form)", "source.f90"},
+                                                    {"odin", "Odin", "source.odin"},
+                                                    {"nim", "Nim", "source.nim"},
                                                     {"d", "D", "source.d"},
                                                     {"dart", "Dart", "source.dart"},
                                                     {"pascal", "Pascal", "source.pas"},

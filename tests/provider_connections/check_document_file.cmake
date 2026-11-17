@@ -35,7 +35,17 @@ elseif(TEST_CASE STREQUAL "within-limit")
 elseif(TEST_CASE STREQUAL "over-limit")
     string(REPEAT "x" 8192 content)
 endif()
+# Canonical documents require LF bytes on every host. The former statements remain for review.
+if(FALSE)
 file(WRITE "${path}" "${content}")
+endif()
+if(TEST_CASE MATCHES "^(crlf|within-limit|over-limit|empty)$")
+    # These byte-boundary fixtures must not gain the newline added by CONFIGURE.
+    # The CRLF case deliberately remains noncanonical.
+    file(WRITE "${path}" "${content}")
+else()
+    file(CONFIGURE OUTPUT "${path}" CONTENT "${content}" @ONLY NEWLINE_STYLE LF)
+endif()
 file(SHA256 "${path}" before)
 set(input "${path}")
 if(TEST_CASE STREQUAL "missing")

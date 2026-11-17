@@ -136,11 +136,27 @@ set(UMI_DEPLOY_WORK [==[${_directory}]==])
 set(UMI_DEPLOY_BUILD_ROOT [==[${CMAKE_BINARY_DIR}]==])
 set(UMI_DEPLOY_EXTRA_MODULES [==[$<TARGET_PROPERTY:${DEPLOY_TARGET},UMICOM_WINDOWS_RUNTIME_MODULES>]==])
 ")
+    # Previously every installer helper received a GTK resource constructor,
+    # overriding branding NO_RUNTIME_DEPLOYMENT. Keep the old form for review.
+    if(FALSE)
     target_sources("${DEPLOY_TARGET}" PRIVATE
         "${_framework}/src/delivery/windows_runtime_bootstrap.c"
         "${_framework}/src/delivery/windows_runtime_cache.c")
     target_include_directories("${DEPLOY_TARGET}" PRIVATE "${_framework}/include")
     target_link_libraries("${DEPLOY_TARGET}" PRIVATE user32)
+    endif()
+    get_target_property(_no_bootstrap "${DEPLOY_TARGET}"
+        UMICOM_WINDOWS_RUNTIME_BOOTSTRAP_DISABLED)
+    if(NOT _no_bootstrap)
+        target_sources("${DEPLOY_TARGET}" PRIVATE
+            "${_framework}/src/delivery/windows_runtime_bootstrap.c"
+            "${_framework}/src/delivery/windows_runtime_cache.c")
+        target_include_directories("${DEPLOY_TARGET}" PRIVATE "${_framework}/include")
+        target_link_libraries("${DEPLOY_TARGET}" PRIVATE user32)
+        if(DEPLOY_GUI)
+            target_compile_definitions("${DEPLOY_TARGET}" PRIVATE UMICOM_WINDOWS_RUNTIME_GUI=1)
+        endif()
+    endif()
     if(NOT DEPLOY_AUXILIARY)
         add_custom_command(TARGET "${DEPLOY_TARGET}" POST_BUILD
         COMMAND "${CMAKE_COMMAND}" "-DUMI_DEPLOY_CONFIG=${_config}"

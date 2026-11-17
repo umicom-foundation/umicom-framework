@@ -59,7 +59,15 @@ UmiStatus UmiGtk4PresentOwnedWindow(GtkWindow *owner, GtkWindow *child)
     g_object_ref(owner);
     g_object_ref(child);
     g_object_set_data(G_OBJECT(child), guard_key, GINT_TO_POINTER(1));
+/* Visibility observers can close or reparent the native child synchronously. Validate the owner and child after showing, before GTK attempts native focus; retain the previous presentation call for review. The former implementation is retained for owner review. */
+#if 0
     gtk_window_present(child);
+#endif
+    gtk_widget_set_visible(GTK_WIDGET(child), TRUE);
+    if (UmiGtk4WindowIsOpen(owner) && UmiGtk4WindowIsOpen(child) &&
+        gtk_window_get_transient_for(child) == owner &&
+        gtk_widget_get_visible(GTK_WIDGET(child)))
+        gtk_window_present(child);
     UmiStatus status = UmiGtk4WindowIsOpen(owner) &&
         UmiGtk4WindowIsOpen(child) &&
         gtk_window_get_transient_for(child) == owner &&

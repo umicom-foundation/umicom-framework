@@ -201,8 +201,17 @@ int main(int argc,char **argv)
         assert(UmiProviderTaskDecode(oracle,sizeof(oracle)-1U,NULL)==UMI_STATUS_INVALID_ARGUMENT);return 0;
     }
     if(strcmp(mode,"not-authentication")==0) {
+/* The prior changed digest contained 66 hexadecimal digits; retain strict 64-digit decoding and correct the fixture. The former implementation is retained for owner review. */
+#if 0
         strcpy(wire,oracle);replace_line(wire,sizeof(wire),13U,
             "2b0000000000000000000000000000000000000000000000000000000000000000");
+#endif
+        /* Change one byte without changing the independently specified digest
+         * width. The codec must accept a different digest, not malformed hex. */
+        static const char changed_digest[] = "2b"
+            "00000000000000000000000000000000000000000000000000000000000000";
+        _Static_assert(sizeof changed_digest == UMI_SHA256_HEX_CAPACITY, "SHA-256 hex width");
+        strcpy(wire,oracle);replace_line(wire,sizeof(wire),13U,changed_digest);
         /* A consistent changed digest is still parseable. Authentication and
          * trusted storage ownership cannot be inferred from syntax checks. */
         assert(UmiProviderTaskDecode(wire,strlen(wire),&decoded)==UMI_STATUS_OK);

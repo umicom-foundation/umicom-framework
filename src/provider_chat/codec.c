@@ -1,12 +1,20 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/provider_chat/codec.c
- * PURPOSE: Encode the reviewed user message and publish only complete, bounded, non-actionable replies.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Encode one visible user message and publish only complete, bounded, non-actionable replies.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "internal.h"
+#include "umicom/base/utf8.h"
 #include "umicom/ai/mcp/json.h"
 #include "umicom/language_runtime/json_document.h"
 #include "umicom/language_runtime/json_text.h"
@@ -38,6 +46,11 @@ UmiStatus UmiProviderChatEncode(UmiProviderChatPlan *plan, const char *prompt, c
     if (plan == NULL || !TextValid(prompt, UMI_PROVIDER_CHAT_PROMPT_CAPACITY, true) ||
         !TextValid(context, UMI_PROVIDER_CHAT_CONTEXT_CAPACITY, false))
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* TextValid established bounded termination. Preserve the chat contract
+     * for malformed UTF-8 even when the shared writer rejects it earlier. */
+    if (!UmiUtf8Validate((const unsigned char *)prompt, strlen(prompt), NULL) ||
+        !UmiUtf8Validate((const unsigned char *)context, strlen(context), NULL))
+        return UMI_STATUS_PARSE_ERROR;
     int length = snprintf(plan->input, sizeof(plan->input), "%s%s%s", prompt,
                           context[0] != '\0' ? "\n\nContext supplied by the user:\n" : "", context);
     if (length < 0 || (size_t)length >= sizeof(plan->input))

@@ -94,7 +94,11 @@ int main(int argc, char **argv)
     } else if (!strcmp(name, "defaults")) {
         UmiDocumentFileFilterSet set;
         CHECK(umi_document_file_filters_default(&set) == UMI_STATUS_OK);
+/* The appended native interoperability filter preserves all earlier category indexes. Keep the earlier count assertion for review. The former implementation is retained for owner review. */
+#if 0
         CHECK(set.count == 8U && !strcmp(set.filters[4].name, "All files"));
+#endif
+        CHECK(set.count == 9U && !strcmp(set.filters[4].name, "All files"));
         const char *sources[] = {"first.uc", "app.zig", "app.d", "app.dart", "app.pas",
             "app.php", "cpu.vhd", "cpu.sv", "app.java", "app.kt", "CMakeLists.txt"};
         for (size_t n = 0U; n < sizeof sources / sizeof sources[0]; ++n) {

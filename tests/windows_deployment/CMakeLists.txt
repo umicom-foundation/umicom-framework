@@ -93,6 +93,13 @@ if(WIN32)
     add_custom_command(TARGET umicom-windows-startup-test POST_BUILD
         COMMAND "${CMAKE_COMMAND}" "-DROOT=$<TARGET_FILE_DIR:umicom-windows-startup-test>"
             -P "${CMAKE_CURRENT_LIST_DIR}/prepare_startup_test.cmake" VERBATIM)
+    foreach(_failure IN ITEMS missing-marker invalid-media invalid-cache)
+        add_test(NAME windows_deployment.native.console-${_failure}
+            COMMAND "${CMAKE_COMMAND}" "-DEXE=$<TARGET_FILE:umicom-windows-startup-test>"
+                "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/console-refusal" "-DCASE=${_failure}"
+                -P "${CMAKE_CURRENT_LIST_DIR}/check_console_startup_failure.cmake")
+        set_tests_properties(windows_deployment.native.console-${_failure} PROPERTIES TIMEOUT 10)
+    endforeach()
     add_test(NAME windows_deployment.native.startup-environment
         COMMAND umicom-windows-startup-test)
     set_tests_properties(windows_deployment.native.startup-environment PROPERTIES

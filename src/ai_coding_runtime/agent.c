@@ -486,6 +486,8 @@ static UmiStatus apply_patch(UmiAiCodingAgent *agent)
     UmiAiCodingFileAdapter file_adapter;
     UmiStatus status;
 
+/* State admission reserves the final revision for termination before patch setup. The former implementation is retained for owner review. */
+#if 0
     status = umi_ai_coding_workspace_file_adapter(
         &agent->bindings.workspace,
         &file_adapter);
@@ -498,6 +500,15 @@ static UmiStatus apply_patch(UmiAiCodingAgent *agent)
         UMI_STATUS_OK,
         "Applying approved coding patch.");
     /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+#endif
+    /* Admit the operation before resolving a file adapter. An exhausted
+     * revision must terminate deterministically without inspecting mutation
+     * bindings or allowing an earlier adapter error to hide that condition. */
+    status = set_state(agent, UMI_AI_CODING_RUNTIME_APPLYING, UMI_STATUS_OK,
+        "Applying approved coding patch.");
+    if (status != UMI_STATUS_OK) return status;
+    status = umi_ai_coding_workspace_file_adapter(&agent->bindings.workspace, &file_adapter);
     if (status != UMI_STATUS_OK) return status;
 
 /* Retain the complete assistant patch outcome for controller inspection after a failed mutation or notification. The former implementation is retained for owner review. */

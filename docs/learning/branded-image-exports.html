@@ -78,6 +78,7 @@ ctest --test-dir build --output-on-failure
 <h2>5. Follow the Media application workflow</h2>
 <p>On the Seedream page, request review and provider approval are unchanged. The returned provider image stays in memory for preview. <strong>Save new PNG</strong> adds the Umicom logo to a separate copy on its worker. The provider's own watermark setting does not prove that an Umicom logo is present; they are independent operations. Save a result before closing the page or generating a replacement.</p>
 <p>This integration covers that page's PNG export. It does not establish that every historical image, document export or other asset-writing path has been converted to the new service.</p>
+<h2>Small images use the compact identity</h2><p>The minimum supported image is 128 by 64 pixels. When the full wordmark would become too short to read, Framework uses the approved square SVG icon in the same lower-right area. It preserves the source image and places the icon on a separate dark backing. The compact master has neutral colours; the larger wordmark has a red accent. A pixel test must check the selected master’s visible artwork rather than demand a colour that the supplied icon does not contain.</p>
 <h2>6. Diagnose and qualify</h2>
 <table><thead><tr><th>Observation</th><th>Next step</th></tr></thead><tbody>
 <tr><td>INVALID_ARGUMENT</td><td>Check positive dimensions, the minimum branding dimensions, complete overlay containment and an absolute destination path.</td></tr>

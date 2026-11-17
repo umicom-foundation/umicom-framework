@@ -34,8 +34,23 @@ UmiStatus UmiGtk4ImageApplyBrand(const UmiMediaImageSurface *source,
      * not a font-dependent reconstruction or a current-directory bitmap. */
     size_t height = MIN(info.height / 5U, info.width * 261U / (1064U * 5U));
     height = MIN(height, 256U);
+/* Use the supplied compact brand artwork when the full wordmark cannot retain its identity at the supported minimum size. The former implementation is retained for owner review. */
+#if 0
     GError *error = NULL;
     GdkPixbuf *decoded = UmiGtkBrandDecode(TRUE, TRUE, (int)height, 1, &error);
+#endif
+    /* A six-pixel wordmark loses the red brand geometry through filtering.
+     * Small outputs use the approved square SVG icon at a legible size,
+     * keeping the same bottom-right quarter and transparent clear space. */
+    gboolean wordmark = height >= 12U;
+    if (!wordmark) {
+        size_t availableWidth = info.width / 4U - MAX(1U, info.width / 50U) - 4U;
+        size_t availableHeight = info.height / 4U - MAX(1U, info.height / 50U) - 4U;
+        height = MIN(availableWidth, availableHeight);
+        height = MIN(height, 256U);
+    }
+    GError *error = NULL;
+    GdkPixbuf *decoded = UmiGtkBrandDecode(wordmark, TRUE, (int)height, 1, &error);
     if (decoded == NULL) {
         g_clear_error(&error);
         return UMI_STATUS_IO_ERROR;

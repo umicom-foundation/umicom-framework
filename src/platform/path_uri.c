@@ -35,6 +35,13 @@ static UmiStatus path_uri_encode(const char *path, bool require_absolute,
         return UMI_STATUS_INVALID_ARGUMENT;
     if (!UmiUtf8Validate((const unsigned char *)path, strlen(path), NULL))
         return UMI_STATUS_INVALID_ARGUMENT;
+    /* Reject context-dependent Windows paths before lexical normalization can
+     * insert a separator after a drive prefix. URI creation must never invent
+     * an absolute location from a drive-relative caller input. */
+#ifdef _WIN32
+    if (!umi_path_is_absolute(path) && (path[0] == '/' || path[0] == '\\' || path[1] == ':'))
+        return UMI_STATUS_INVALID_ARGUMENT;
+#endif
     char normalised[UMI_PATH_CAPACITY];
     UmiStatus status = umi_path_normalise(path, normalised, sizeof normalised);
     if (status != UMI_STATUS_OK) return status;

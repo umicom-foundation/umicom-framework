@@ -69,7 +69,7 @@ int main(int argc, char **argv)
         UmiMediaImageSurfaceSnapshot branded;
         CHECK(umi_media_image_surface_snapshot(result, &branded) == UMI_STATUS_OK);
         CHECK(branded.width == width && branded.height == height);
-        size_t changed = 0U, red = 0U;
+        size_t changed = 0U, red = 0U, neutral = 0U;
         for (size_t y = 0U; y < height; ++y) {
             for (size_t x = 0U; x < width; ++x) {
                 UmiMediaRgbaPixel pixel, original;
@@ -79,9 +79,17 @@ int main(int argc, char **argv)
                 if (x < width * 3U / 4U || y < height * 3U / 4U) CHECK(EqualPixel(pixel, color));
                 if (!EqualPixel(pixel, color)) ++changed;
                 if (pixel.red > 80U && pixel.red > pixel.green * 2U && pixel.red > pixel.blue * 2U) ++red;
+                if (pixel.red > 80U && pixel.green > 80U && pixel.blue > 80U) ++neutral;
             }
         }
+        /* The approved compact icon uses neutral colours (#a0b4c5 etc.),
+         * while the wordmark has a dark red accent. Require visible artwork
+         * above the dark backing using the palette of the selected master. */
+#if 0
         CHECK(changed > 0U && red > 0U);
+#endif
+        CHECK(changed > 0U);
+        CHECK(strcmp(mode, "minimum") == 0 ? neutral > 0U : red > 0U);
         if (strcmp(mode, "png") == 0 || strcmp(mode, "existing") == 0 ||
             strcmp(mode, "relative-output") == 0 || strcmp(mode, "null-receipt") == 0) {
             if (!UmiMediaPngAvailable() || !UmiMediaPngEncoderAvailable()) {

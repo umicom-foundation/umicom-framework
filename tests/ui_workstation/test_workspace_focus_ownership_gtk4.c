@@ -113,7 +113,7 @@ static void Observe(GObject *object, GParamSpec *property, gpointer data)
 int main(int argc, char **argv)
 {
     static const char *const cases[] = {
-        "select", "unmounted", "repeat", "invalid", "missing", "hidden-model",
+        "select", "unmounted", "unpresented", "hidden-ancestor", "repeat", "invalid", "missing", "hidden-model",
         "hidden-frame", "disabled-frame", "page-destroy-host", "page-close-owner",
         "page-remove", "page-reparent", "page-hide", "page-redirect", "page-reorder",
         "page-reenter", "page-rebuild", "page-maximise", "page-restore", "page-metadata",
@@ -140,6 +140,9 @@ int main(int argc, char **argv)
     gtk_box_append(GTK_BOX(outer), fixture.outside);
     CHECK(fixture.layout != NULL);
     CHECK(umi_ui_workspace_layout_init(fixture.layout, "focus-owner", "Focus ownership") == UMI_STATUS_OK);
+    /* Build the fixture through the explicit editing contract. Production
+     * layouts remain locked by default; focus tests must not bypass that policy. */
+    CHECK(umi_ui_workspace_layout_set_locked(fixture.layout, false) == UMI_STATUS_OK);
     CHECK(umi_gtk4_workspace_layout_host_create(fixture.layout, Body, &fixture, &fixture.host) == UMI_STATUS_OK);
     CHECK(umi_gtk4_workspace_layout_host_set_content_retention(fixture.host, 1) == UMI_STATUS_OK);
     for (unsigned i = 0U; i < 2U; ++i) {
@@ -155,6 +158,7 @@ int main(int argc, char **argv)
         model.floating = i == 1U && strncmp(fixture.mode, "floating-", 9U) == 0;
         CHECK(umi_ui_workspace_layout_add_window(fixture.layout, &model) == UMI_STATUS_OK);
     }
+    CHECK(umi_ui_workspace_layout_set_locked(fixture.layout, true) == UMI_STATUS_OK);
     CHECK(umi_gtk4_workspace_layout_host_rebuild(fixture.host, fixture.layout) == UMI_STATUS_OK);
     root = g_object_ref(umi_gtk4_workspace_layout_host_widget(fixture.host));
     if (strncmp(fixture.mode, "floating-", 9U) == 0) {
@@ -168,7 +172,13 @@ int main(int argc, char **argv)
     if (strcmp(fixture.mode, "unmounted") != 0) {
         gtk_box_append(GTK_BOX(outer), root);
         gtk_window_set_default_size(GTK_WINDOW(fixture.window), 900, 600);
+/* Exercise mounted content before its owner is presented, as Studio does during startup. The former implementation is retained for owner review. */
+#if 0
         gtk_window_present(GTK_WINDOW(fixture.window)); Settle();
+#endif
+        if (strcmp(fixture.mode, "unpresented") != 0) {
+            gtk_window_present(GTK_WINDOW(fixture.window)); Settle();
+        }
     }
     if (fixture.notebook != NULL) gtk_notebook_set_current_page(GTK_NOTEBOOK(fixture.notebook), 0);
     UmiStatus expected = UMI_STATUS_OK;
@@ -188,6 +198,9 @@ int main(int argc, char **argv)
     }
     if (strcmp(fixture.mode, "hidden-frame") == 0) {
         gtk_widget_set_visible(fixture.frame, FALSE); expected = UMI_STATUS_UNAVAILABLE;
+    }
+    if (strcmp(fixture.mode, "hidden-ancestor") == 0) {
+        gtk_widget_set_visible(outer, FALSE); expected = UMI_STATUS_UNAVAILABLE;
     }
     if (strcmp(fixture.mode, "disabled-frame") == 0) {
         gtk_widget_set_sensitive(fixture.frame, FALSE); expected = UMI_STATUS_UNAVAILABLE;
@@ -239,6 +252,8 @@ int main(int argc, char **argv)
     }
     if (strcmp(fixture.mode, "focus-redirect") == 0)
         CHECK(Within(gtk_window_get_focus(GTK_WINDOW(fixture.window)), fixture.outside));
+    if (strcmp(fixture.mode, "unpresented") == 0)
+        CHECK(!gtk_widget_get_visible(fixture.window));
     CHECK(fixture.created == 2U);
     for (unsigned i = 0U; i < 2U; ++i)
         CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(fixture.entries[i])), "Draft before panel selection") == 0);

@@ -61,7 +61,17 @@ static bool text_is_terminated(const char *text, size_t capacity)
  * failure paths without disturbing widgets already owned by a container. */
 static void release_unparented_widget(GtkWidget *widget)
 {
+/* Release unused panel controls through their GTK floating-reference contract. The former implementation is retained for owner review. */
+#if 0
     if (widget != NULL) g_object_unref(widget);
+#endif
+    if (widget != NULL) {
+        /* Unparented GTK widgets still carry a floating construction reference.
+         * Sink only that reference before releasing it; do not add ownership to
+         * an already-sunk object on an allocation-failure path. */
+        if (g_object_is_floating(widget)) g_object_ref_sink(widget);
+        g_object_unref(widget);
+    }
 }
 
 /* Widget data owns the signal's borrowed action record and pending request. */
@@ -514,13 +524,41 @@ GtkWidget *umi_gtk4_ws_panel_frame_create_interactive(
         title == NULL || subtitle == NULL || badge == NULL) {
         /* Constructors normally fail only under memory pressure. Release all
          * still-unparented objects so an error path does not leak widgets. */
+/* Use the same explicit construction-reference release on allocation failure. The former implementation is retained for owner review. */
+#if 0
         if (frame != NULL) g_object_unref(frame);
+#endif
+        release_unparented_widget(frame);
+/* Use the same explicit construction-reference release on allocation failure. The former implementation is retained for owner review. */
+#if 0
         if (root != NULL) g_object_unref(root);
+#endif
+        release_unparented_widget(root);
+/* Use the same explicit construction-reference release on allocation failure. The former implementation is retained for owner review. */
+#if 0
         if (header != NULL) g_object_unref(header);
+#endif
+        release_unparented_widget(header);
+/* Use the same explicit construction-reference release on allocation failure. The former implementation is retained for owner review. */
+#if 0
         if (titles != NULL) g_object_unref(titles);
+#endif
+        release_unparented_widget(titles);
+/* Use the same explicit construction-reference release on allocation failure. The former implementation is retained for owner review. */
+#if 0
         if (title != NULL) g_object_unref(title);
+#endif
+        release_unparented_widget(title);
+/* Use the same explicit construction-reference release on allocation failure. The former implementation is retained for owner review. */
+#if 0
         if (subtitle != NULL) g_object_unref(subtitle);
+#endif
+        release_unparented_widget(subtitle);
+/* Use the same explicit construction-reference release on allocation failure. The former implementation is retained for owner review. */
+#if 0
         if (badge != NULL) g_object_unref(badge);
+#endif
+        release_unparented_widget(badge);
         return NULL;
     }
 

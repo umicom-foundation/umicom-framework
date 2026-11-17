@@ -153,6 +153,15 @@ UmiStatus umi_document_language_detect(const char *path_or_name,UmiDocumentLangu
     /* Editor identity is shared across Open and explicit language selection.
      * It does not claim an installed toolchain or a syntax-description package. */
     {"zig", "zig", "text/plain", "text-x-generic-symbolic"},
+    /* Free-form Fortran has different editing rules from fixed-form source.
+     * Do not infer a fixed-form file as free form solely to enable comments. */
+    {"f90", "fortran", "text/x-fortran", "text-x-generic-symbolic"},
+    {"f95", "fortran", "text/x-fortran", "text-x-generic-symbolic"},
+    {"f03", "fortran", "text/x-fortran", "text-x-generic-symbolic"},
+    {"f08", "fortran", "text/x-fortran", "text-x-generic-symbolic"},
+    {"odin", "odin", "text/plain", "text-x-generic-symbolic"},
+    {"nim", "nim", "text/plain", "text-x-generic-symbolic"},
+    {"nims", "nim", "text/plain", "text-x-generic-symbolic"},
     {"d", "d", "text/plain", "text-x-generic-symbolic"},
     {"di", "d", "text/plain", "text-x-generic-symbolic"},
     {"dart", "dart", "text/plain", "text-x-generic-symbolic"},

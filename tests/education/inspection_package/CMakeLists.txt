@@ -30,6 +30,16 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/UmicomFrameworkConfig.cmake"
     "${FRAMEWORK_ROOT}/cmake/UmicomRequireInstalledSdk.cmake"
     "${FRAMEWORK_ROOT}/cmake/UmicomRequireSdkEnvironment.cmake"
     "${FRAMEWORK_ROOT}/cmake/UmicomPublicContractFingerprint.cmake"
+    # Match the unconditional dependencies of the production package config.
+    "${FRAMEWORK_ROOT}/cmake/UmicomApplicationComposition.cmake"
+    # Include the composition helper's transitive dependencies as well.
+    "${FRAMEWORK_ROOT}/cmake/UmicomCompilePolicy.cmake"
+    "${FRAMEWORK_ROOT}/cmake/UmicomSanitizers.cmake"
+    "${FRAMEWORK_ROOT}/cmake/UmicomThinApplicationRuntime.cmake"
+    "${FRAMEWORK_ROOT}/cmake/UmicomApplicationProductisationContribution.cmake"
+    "${FRAMEWORK_ROOT}/cmake/UmicomCreativeApplication.cmake"
+    "${FRAMEWORK_ROOT}/cmake/UmicomComfyInspectionTests.cmake"
+    "${FRAMEWORK_ROOT}/cmake/UmicomOllamaPullTests.cmake"
     DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/UmicomFramework")
 
 # An independently included module must load SDK registration itself and join

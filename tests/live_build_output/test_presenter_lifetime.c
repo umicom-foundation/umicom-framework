@@ -53,6 +53,10 @@ static void act(Probe *probe)
     if (strstr(probe->name, "-release") != NULL) g_clear_object(&probe->owner);
     else if (strcmp(probe->name, "window-close") == 0) {
         gtk_window_destroy(GTK_WINDOW(probe->window));
+        /* Native removal and object finalization differ when the test retains
+         * the GtkWindow. Release that last external container owner as well,
+         * so the case actually exercises panel finalization during Update. */
+        g_clear_object(&probe->window);
         probe->owner = NULL; /* The window held the transferred panel reference. */
     } else if (strstr(probe->name, "-nested") != NULL)
         probe->nested_status = UmiOutputViewGtk4Update(probe->owner, probe->nested);

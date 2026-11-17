@@ -65,6 +65,16 @@ static gboolean AboutConfigMatches(GtkWindow *window,
         authors[1] == NULL && !g_strcmp0(executable, config->branding.executable_name) &&
         gtk_about_dialog_get_license_type(dialog) == config->license;
 }
+/* A retained GtkWindow may leave the native toplevel model before GTK emits
+ * object destruction. Close the transient child at that native boundary; the
+ * shared weak watch cancels itself when the child has already been released. */
+static void AboutOwnerClosed(GtkWidget *owner, gpointer data)
+{
+    (void)owner;
+    GtkWindow *child = GTK_WINDOW(data);
+    if (UmiGtk4WindowIsOpen(child)) gtk_window_destroy(child);
+}
+
 UmiStatus UmiGtk4AboutDialogCreate(GtkWindow *parent,
     const UmiGtk4AboutDialogConfig *config, GtkWindow **out_window)
 {
@@ -104,6 +114,7 @@ UmiStatus UmiGtk4AboutDialogCreate(GtkWindow *parent,
         gtk_window_set_transient_for(window, parent);
         gtk_window_set_destroy_with_parent(window, TRUE);
         gtk_window_set_modal(window, TRUE);
+        status = UmiGtk4WatchWindowClosed(parent, G_OBJECT(window), AboutOwnerClosed, window);
     }
     GdkRGBA foreground;
 #if GTK_CHECK_VERSION(4, 10, 0)
@@ -174,7 +185,13 @@ UmiStatus UmiGtk4AboutDialogPresent(GtkWindow *parent,
     if (status == UMI_STATUS_OK) {
         if (parent != NULL) status = UmiGtk4PresentOwnedWindow(parent, window);
         else {
+/* An independent About window can also be closed by a visibility observer. Check native lifetime before requesting focus. The former implementation is retained for owner review. */
+#if 0
             gtk_window_present(window);
+#endif
+            gtk_widget_set_visible(GTK_WIDGET(window), TRUE);
+            if (UmiGtk4WindowIsOpen(window) && gtk_widget_get_visible(GTK_WIDGET(window)))
+                gtk_window_present(window);
             if (!UmiGtk4WindowIsOpen(window) || !gtk_widget_get_visible(GTK_WIDGET(window)))
                 status = UMI_STATUS_CANCELLED;
         }

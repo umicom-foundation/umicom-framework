@@ -148,6 +148,9 @@ if(BUILD_TESTING)
     target_link_libraries(umicom-conditional-workspace-bindings-test PRIVATE
         Umicom::web Umicom::data Umicom::platform Umicom::compiler
         Umicom::sdk_runtime Umicom::runtime Umicom::delivery Umicom::observability)
+    # Cloud profile codecs belong to the developer workbench owner. Keep the
+    # existing low-level dependencies and link the actual definition owner.
+    target_link_libraries(umicom-conditional-workspace-bindings-test PRIVATE Umicom::developer)
     foreach(_target umicom-conditional-workspace-test umicom-conditional-workspace-bindings-test)
         umicom_apply_warnings(${_target})
         umicom_apply_sanitizers(${_target})

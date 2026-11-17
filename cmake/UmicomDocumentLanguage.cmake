@@ -106,3 +106,24 @@ foreach(_language_variable IN ITEMS root pair parts header owner directory group
     unset(_language_${_language_variable})
 endforeach()
 unset(_language_variable)
+
+# Shared language metadata must remain usable through every existing editor route.
+if(BUILD_TESTING)
+    # The earlier root variable is deliberately unset above. Keep this target
+    # self-contained so registration does not depend on a cleaned-up local.
+    # Previous declaration retained for review:
+    # add_executable(umicom-native-language-support-test "${_language_root}/tests/document/test_native_language_support.c")
+    add_executable(umicom-native-language-support-test "${CMAKE_CURRENT_LIST_DIR}/../tests/document/test_native_language_support.c")
+    target_link_libraries(umicom-native-language-support-test PRIVATE Umicom::document Umicom::editor)
+    set_target_properties(umicom-native-language-support-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-native-language-support-test)
+    umicom_apply_sanitizers(umicom-native-language-support-test)
+    add_test(NAME framework.document.native_language_support COMMAND umicom-native-language-support-test)
+    set_tests_properties(framework.document.native_language_support PROPERTIES TIMEOUT 30 LABELS "framework;document;language;regression")
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-native-language-support-test)
+    endif()
+    if(COMMAND umicom_test_impact_owners)
+        umicom_test_impact_owners(framework.document.native_language_support TARGETS umicom-native-language-support-test)
+    endif()
+endif()

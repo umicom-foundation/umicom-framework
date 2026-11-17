@@ -264,6 +264,12 @@ function(umicom_apply_application_branding)
     # A native Win32 or console tool can own its runtime separately while still
     # receiving the exact same SVG/ICO and version resources. The default path
     # below remains unchanged for existing GTK application consumers.
+    # Preserve an explicit native-tool opt-out when the installer later adds
+    # the executable as a helper. Packaging its DLLs must not inject GTK startup.
+    if(UMICOM_BRAND_NO_RUNTIME_DEPLOYMENT)
+        set_property(TARGET "${UMICOM_BRAND_TARGET}" PROPERTY
+            UMICOM_WINDOWS_RUNTIME_BOOTSTRAP_DISABLED TRUE)
+    endif()
     if(WIN32 AND NOT UMICOM_BRAND_NO_RUNTIME_DEPLOYMENT)
         include("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/UmicomWindowsDeployment.cmake")
         set(_umicom_deployment_gui_option "")

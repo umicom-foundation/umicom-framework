@@ -42,8 +42,20 @@ static void UmiWindowsRuntimeRemoveCache(void)
 /* Report the real resource failure instead of falling back to MSYS2 paths. */
 _Noreturn static void UmiWindowsRuntimeFail(const wchar_t *detail)
 {
+/* The unconditional dialog blocked console automation. Explicit GUI deployment now selects the dialog; console failures remain fatal and are written to stderr. The former implementation is retained for owner review. */
+#if 0
     (void)MessageBoxW(NULL, detail, L"Umicom runtime could not be prepared",
                      MB_OK | MB_ICONERROR);
+#endif
+    /* Console tools and test runners must receive an error and an exit status,
+     * never wait for an interactive dialog before main(). GUI targets retain
+     * the visible recovery message through their explicit deployment policy. */
+    (void)fwprintf(stderr, L"Umicom runtime could not be prepared: %ls\n", detail);
+    (void)fflush(stderr);
+#if defined(UMICOM_WINDOWS_RUNTIME_GUI) && UMICOM_WINDOWS_RUNTIME_GUI
+    (void)MessageBoxW(NULL, detail, L"Umicom runtime could not be prepared",
+                     MB_OK | MB_ICONERROR);
+#endif
     UmiWindowsRuntimeRemoveCache();
     exit(EXIT_FAILURE);
 }

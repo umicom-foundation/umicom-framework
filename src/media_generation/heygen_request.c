@@ -1,12 +1,20 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/media_generation/heygen_request.c
- * PURPOSE: Encode only reviewed fields and fixed provider routes.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Encode only reviewed fields and fixed provider routes.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "heygen_internal.h"
+#include "umicom/base/utf8.h"
 #include "umicom/ai/mcp/json.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -96,6 +104,13 @@ UmiStatus UmiHeyGenEncode(const UmiHeyGenDraft *d, UmiHeyGenPlan *p)
         return UMI_STATUS_INVALID_ARGUMENT;
     if (avatar && !Text(d->script, 1001U, true))
         return UMI_STATUS_CAPACITY_EXCEEDED;
+    /* Field bounds above establish termination before UTF-8 inspection. Keep
+     * malformed text distinct from a missing or unsupported request field,
+     * independently of which JSON writer performs the later encoding. */
+    if (!UmiUtf8Validate((const unsigned char *)d->script, strlen(d->script), NULL) ||
+        !UmiUtf8Validate((const unsigned char *)d->name, strlen(d->name), NULL) ||
+        !UmiUtf8Validate((const unsigned char *)d->motion, strlen(d->motion), NULL))
+        return UMI_STATUS_PARSE_ERROR;
     p->operation = d->operation;
     p->creates_resource = avatar || video || scene;
     if (get || video)

@@ -38,7 +38,11 @@ int main(void)
 #if 0
     assert(filters.count == 5U);
 #endif
+/* The appended native interoperability filter preserves all earlier category indexes. Keep the earlier count assertion for review. The former implementation is retained for owner review. */
+#if 0
     assert(filters.count == 8U);
+#endif
+    assert(filters.count == 9U);
     assert(strcmp(filters.filters[4].name, "All files") == 0);
     assert(umi_document_file_filter_matches(&filters.filters[0], "example.uc"));
     assert(umi_document_file_filter_matches(&filters.filters[5], "example.zig"));

@@ -42,6 +42,18 @@ static GtkWidget *WorkspaceFocusFrame(UmiGtk4WorkspaceLayoutHost *host,
         ? host->maximise_frame : find_live_window_frame(host->root, id);
 }
 
+/* Panel selection is valid before an application presents its native window.
+ * Check the panel and every content ancestor, but leave root visibility to the
+ * application. A closed native window is rejected separately by identity. */
+static gboolean WorkspaceFocusContentVisible(GtkWidget *widget)
+{
+    for (GtkWidget *current = widget; current != NULL && !GTK_IS_ROOT(current);
+         current = gtk_widget_get_parent(current)) {
+        if (!gtk_widget_get_visible(current)) return FALSE;
+    }
+    return TRUE;
+}
+
 /* Selection is proven by actual frame and native-root identity. A retained
  * widget alone does not prove it still belongs to this workspace. */
 static gboolean WorkspaceFocusTargetCurrent(UmiGtk4WorkspaceLayoutHost *host,
@@ -51,7 +63,11 @@ static gboolean WorkspaceFocusTargetCurrent(UmiGtk4WorkspaceLayoutHost *host,
     if (!WorkspaceFocusOwnerCurrent(host, revision)) return FALSE;
     GtkWindow *floating = NULL;
     if (WorkspaceFocusFrame(host, id, &floating) != frame ||
+/* Root presentation is independent of panel visibility; keep callback ownership checks. The former implementation is retained for owner review. */
+#if 0
         gtk_widget_get_root(frame) != native || !gtk_widget_is_visible(frame) ||
+#endif
+        gtk_widget_get_root(frame) != native || !WorkspaceFocusContentVisible(frame) ||
         !gtk_widget_is_sensitive(frame)) return FALSE;
     if (GTK_IS_WINDOW(native) && !UmiGtk4WindowIsOpen(GTK_WINDOW(native))) return FALSE;
     if (notebook != NULL) {
@@ -98,8 +114,12 @@ UmiStatus umi_gtk4_workspace_layout_host_focus_window(
     frame = WorkspaceFocusFrame(host, id, &floating);
     if (frame == NULL) { status = UMI_STATUS_NOT_FOUND; goto done; }
     g_object_ref(frame);
+/* Select visible content in an unpresented root without presenting or resurrecting the owner. The former implementation is retained for owner review. */
+#if 0
     if (!gtk_widget_get_visible(frame) || (!floating && !gtk_widget_is_visible(frame)) ||
         !gtk_widget_is_sensitive(frame)) {
+#endif
+    if (!WorkspaceFocusContentVisible(frame) || !gtk_widget_is_sensitive(frame)) {
         status = UMI_STATUS_UNAVAILABLE; goto done;
     }
     native = gtk_widget_get_root(frame);
@@ -107,7 +127,16 @@ UmiStatus umi_gtk4_workspace_layout_host_focus_window(
     if (GTK_IS_WINDOW(native) && !UmiGtk4WindowIsOpen(GTK_WINDOW(native))) goto done;
     if (floating != NULL) {
         g_object_ref(floating);
+/* Separate visibility notification from activation so closed native surfaces are not focused. The former implementation is retained for owner review. */
+#if 0
         gtk_window_present(floating);
+#endif
+        /* Showing may synchronously close the window through an observer.
+         * Finish that notification and recheck ownership before GTK starts its
+         * native activation sequence. */
+        gtk_widget_set_visible(GTK_WIDGET(floating), TRUE);
+        if (WorkspaceFocusTargetCurrent(host, revision, id, frame, native, NULL))
+            gtk_window_present(floating);
         g_object_unref(floating);
         if (!WorkspaceFocusTargetCurrent(host, revision, id, frame, native, NULL)) goto done;
     }
@@ -131,6 +160,9 @@ UmiStatus umi_gtk4_workspace_layout_host_focus_window(
         }
     }
     if (!WorkspaceFocusTargetCurrent(host, revision, id, frame, native, notebook)) goto done;
+    /* An unmounted host may select its notebook page, but it has no native
+     * root to receive keyboard focus. Defer traversal until it is mounted. */
+    if (native == NULL) { status = UMI_STATUS_OK; goto done; }
     before_focus = native != NULL ? gtk_root_get_focus(native) : NULL;
     if (before_focus != NULL) g_object_ref(before_focus);
     if (before_focus != NULL &&

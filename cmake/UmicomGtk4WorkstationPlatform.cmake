@@ -927,7 +927,7 @@ if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
     if(COMMAND umicom_register_validation_target)
         umicom_register_validation_target(umicom-gtk4-workspace-focus-ownership-test)
     endif()
-    foreach(case select unmounted repeat invalid missing hidden-model hidden-frame disabled-frame
+    foreach(case select unmounted unpresented hidden-ancestor repeat invalid missing hidden-model hidden-frame disabled-frame
         page-destroy-host page-close-owner page-remove page-reparent page-hide page-redirect
         page-reorder page-reenter page-rebuild page-maximise page-restore page-metadata
         focus-destroy-host focus-close-owner focus-hide focus-redirect focus-reenter
