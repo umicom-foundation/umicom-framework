@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Recover repeated CMake regeneration | Umicom</title><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico"><style>body{font:18px/1.65 system-ui,sans-serif;max-width:960px;margin:3rem auto;padding:0 1.25rem;color:#14283b;background:#fafcfe}h1,h2{line-height:1.2}pre{padding:1rem;background:#eaf0f5;overflow:auto}code{font-size:.9em}aside{border-left:4px solid #26788b;padding:1rem;background:#eef8fa}table{border-collapse:collapse;width:100%}td,th{padding:.7rem;border:1px solid #bbcbd8;text-align:left}a{color:#15567d}
+body{font-family:"Segoe UI Variable Text","Segoe UI",sans-serif}pre,code,kbd{font-family:"Cascadia Code",Consolas,monospace}.brand{display:block;width:215px;height:auto;margin-bottom:1.5rem}a:focus-visible{outline:3px solid #26788b;outline-offset:3px}</style></head><body><header><img class="brand" src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header><main>
+<nav><a href="../learning/cmake.html#regeneration-loop">CMake lesson</a> · <a href="incremental-builds.html">Incremental builds</a> · <a href="../learning/windows-gtk-runtime.md">GTK runtime repair</a></nav>
+<h1>Recover a build that keeps re-running CMake</h1>
+<p>This guide uses Windows PowerShell, MSYS2 UCRT64, CMake and Ninja. <strong>CMake</strong> prepares a build plan. <strong>Ninja</strong> executes it. <strong>CTest</strong> runs registered tests. These commands keep the existing Umicom Applications build directory and its compiled files.</p>
+<h2>1. Recognise the symptom</h2>
+<p>One <code>Re-running CMake</code> after a source or configuration change is normal. A loop shows repeated <code>Configuring done</code>, <code>Generating done</code> and <code>Build files have been written</code>, immediately followed by another configuration. A changing step counter, such as <code>[1/4]</code> becoming <code>[1/6]</code>, does not prove that C files are being compiled.</p>
+<p>Studio's generated wiki manifest was rewritten on every configuration. Framework watches that manifest for genuine updates. Writing identical bytes changed its modification time and could keep Ninja regenerating. The correction compares contents before writing and retains all existing checksum checks.</p>
+<h2>2. Stop the loop and integrate the complete correction</h2>
+<ol><li>Press <kbd>Ctrl+C</kbd> once in the terminal running the loop. Wait for the PowerShell prompt.</li><li>Keep the build folder. Do not delete <code>CMakeCache.txt</code>, edit <code>build.ninja</code> manually or disable regeneration.</li><li>Integrate <code>framework/cmake/UmicomLearningModuleBundle.cmake</code>, <code>applications/studio/cmake/UmicomStudioLearningModules.cmake</code> and the accompanying <code>applications/studio/tests/cmake/learning_regeneration</code> directory. The caller and shared helper must be updated together.</li><li>Finish copying or merging before restarting. Do not run two configure/build operations against the same build directory.</li></ol>
+<h2>3. Configure the existing build directory</h2>
+<p>The first command selects the project. The second places UCRT64 tools on this terminal's search path. Run each block in order and stop on errors.</p>
+<pre><code>Set-Location "C:\umicom\Umicom-Applications"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake --preset windows-ucrt64-all-debug
+if ($LASTEXITCODE -ne 0) { throw "Configuration failed. Read the first CMake error." }</code></pre>
+<p>Expected result: configuration and generation finish once. A large project can take minutes. A successful configuration is not a successful compilation or test run.</p>
+<h2>4. Check whether the build plan is stable</h2>
+<pre><code>&amp; "C:\msys64\ucrt64\bin\ninja.exe" -C ".\build\windows-ucrt64-all-debug" -d explain build.ninja
+if ($LASTEXITCODE -ne 0) { throw "Build-plan check failed." }</code></pre>
+<p><code>-C</code> selects the folder. <code>-d explain</code> prints why a target is considered out of date. This command executes the build-plan check and may rerun CMake to write generated build files. Selecting <code>build.ninja</code> requests the plan rather than compiling applications. Do not add <code>-n</code> for this check: a dry run can report a pending glob check and simulated regeneration without executing the check that would establish whether anything really changed.</p>
+<p>With unchanged inputs, expect a prompt return with no <code>Re-running CMake</code>. Ninja may print <code>ninja: no work to do.</code> or just its normal glob checks. One regeneration can be legitimate if a source changed after configuration. If complete cycles repeat, cancel and preserve the explanation output. Look for a named input newer than an output, a missing file, or a changed glob. A <strong>glob</strong> is a filename pattern such as <code>*.h</code>; checking one is not itself an error.</p>
+<h2>5. Run the focused regression, then resume compilation</h2>
+<pre><code>ctest --test-dir ".\build\windows-ucrt64-all-debug" -R "^studio[.]cmake[.]learning_regeneration$" --output-on-failure --no-tests=error
+if ($LASTEXITCODE -ne 0) { throw "Learning regeneration regression failed." }
+cmake --build --preset windows-ucrt64-all-debug --parallel 2
+if ($LASTEXITCODE -ne 0) { throw "Build failed. Do not install stale artifacts." }</code></pre>
+<p>The regression configures a small fixture, checks stable timestamps, edits a lesson, checks the new manifest and stages its files. It does not compile the full IDE. The final command resumes the incremental application build. Two parallel jobs limit simultaneous compiler processes; they do not guarantee a particular memory requirement.</p>
+<p>After the build succeeds, run normal qualification:</p>
+<pre><code>ctest --preset windows-ucrt64-all-debug --output-on-failure
+if ($LASTEXITCODE -ne 0) { throw "Tests failed. Review the report before installation." }</code></pre>
+<p>Read failures, skips and not-run cases separately. Install or launch only after the checks required for the product have passed.</p>
+<h2>6. Treat the GTK warning separately</h2>
+<p>GTK provides native windows and text controls. An <strong>input method</strong> handles composed text and language switching. The Win32 defect leaves a callback registered after its input context is destroyed; later input can access an object whose lifetime ended.</p>
+<p>The correction is <a href="https://github.com/GNOME/gtk/commit/30727f8a524dbaa69118a60d6bbef4b3447245b1">GTK commit 30727f8a524dbaa69118a60d6bbef4b3447245b1</a>. A package must include that change or a reviewed equivalent. A patch beside a recipe has no effect unless the recipe lists it, verifies its checksum and applies it before compilation. GTK 4.24.1 alone does not establish the repair.</p>
+<p>The advisory does not cause the regeneration loop or stop configuration. Do not suppress it to claim the runtime is repaired. Follow <a href="../learning/windows-gtk-runtime.md">Checking the GTK runtime on Windows</a> for package verification, staging and native lifetime tests. Close applications and finish or stop other builds before replacing GTK.</p>
+<h2>7. Report the right evidence</h2>
+<table><thead><tr><th>Observation</th><th>Evidence and next investigation</th></tr></thead><tbody>
+<tr><td>Repeated CMake cycles</td><td>Full <code>-d explain</code> output, source revisions and the named input's timestamp and content hash.</td></tr>
+<tr><td>GTK advisory</td><td>Package version, reviewed recipe/patch, built package digest, staged DLL identity and native tests.</td></tr>
+<tr><td>LLDB <code>0xc0000135</code></td><td>The debugger probe log. A Windows loader dependency may be missing; investigate separately.</td></tr>
+<tr><td>Compiler/linker error</td><td>The first actual error and target, rather than an earlier optional-tool warning.</td></tr>
+<tr><td>No matching test</td><td>Check that all regression files were integrated and CMake completed. <code>--no-tests=error</code> prevents an empty selection being mistaken for success.</td></tr>
+</tbody></table>
+<p>Include the command, exit code, complete log and source revisions. State whether files were changing during the run. Keep credentials and private project content out of shared reports.</p>
+<footer><p>Umicom Foundation · Sammy Hegab · Source examples: MIT</p></footer>
+</main></body></html>

@@ -10,7 +10,9 @@
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
  * Umicom Foundation
- * LICENCE: MIT
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_EDUCATION_NAV_AUDIT_H
 #define UMICOM_EDUCATION_NAV_AUDIT_H
@@ -34,7 +36,13 @@ typedef struct UmiEducationNavReport {
  * executing scripts, running MkDocs, or modifying the checkout.
  *
  * Return 0 on success, 1 for reported content problems, 2 for invalid input
- * or unreadable configuration. Every local target must be a relative .md path
+ * or unreadable configuration, exhausted index storage or allocation failure.
+ * Storage grows with admitted paths, up to 64 MiB of retained records and path
+ * bytes (excluding allocator overhead), rather than a fixed page-count limit.
+ * On storage failure, counts cover only retained targets and the result is
+ * incomplete; diagnostics explicitly say so. Duplicate messages may follow
+ * other content diagnostics and retain the original source line numbers.
+ * Every local target must be a relative .md path
  * beneath <repositoryRoot>/content. Relative parent segments, backslashes,
  * drive prefixes and duplicate navigation destinations are refused.
  *

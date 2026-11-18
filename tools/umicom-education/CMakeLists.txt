@@ -1,9 +1,16 @@
 #-----------------------------------------------------------------------------
 # Umicom Framework
 # File: tools/umicom-education/CMakeLists.txt
-# PURPOSE: Build the Framework-owned Bits2Banking education tool in isolation.
-# AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
-# LICENCE: MIT
+#
+# PURPOSE:
+#   Build the Framework-owned Bits2Banking education tool in isolation.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
 #-----------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.24)
 project(UmicomEducation LANGUAGES C)
@@ -151,6 +158,36 @@ if(BUILD_TESTING)
     add_test(NAME framework.education.navigation_audit
         COMMAND umicom-education-navigation-test
             "${CMAKE_BINARY_DIR}/education-navigation-test")
+
+    foreach(nav_case IN ITEMS boundary beyond large unique late-failures)
+        add_test(NAME "framework.education.navigation_audit.${nav_case}"
+            COMMAND umicom-education-navigation-test
+                "${CMAKE_BINARY_DIR}/education-navigation-${nav_case}" "${nav_case}")
+        set_tests_properties("framework.education.navigation_audit.${nav_case}"
+            PROPERTIES TIMEOUT 60 LABELS "framework;education;navigation;capacity")
+    endforeach()
+
+    foreach(resource_case IN ITEMS allocation budget)
+        add_executable(umicom-education-navigation-${resource_case}-test
+            "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/tests/education/test_nav_audit_resources.c")
+        target_include_directories(umicom-education-navigation-${resource_case}-test PRIVATE
+            "${UMICOM_EDUCATION_FRAMEWORK_ROOT}/include")
+        if(MSVC)
+            target_compile_options(umicom-education-navigation-${resource_case}-test PRIVATE /W4)
+        else()
+            target_compile_options(umicom-education-navigation-${resource_case}-test PRIVATE
+                -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror)
+        endif()
+        if(resource_case STREQUAL "budget")
+            target_compile_definitions(umicom-education-navigation-${resource_case}-test PRIVATE
+                UMI_NAV_INDEX_BUDGET=2048U UMI_NAV_TEST_SMALL_BUDGET=1)
+        endif()
+        add_test(NAME "framework.education.navigation_audit.${resource_case}"
+            COMMAND umicom-education-navigation-${resource_case}-test
+                "${CMAKE_BINARY_DIR}/education-navigation-${resource_case}")
+        set_tests_properties("framework.education.navigation_audit.${resource_case}"
+            PROPERTIES TIMEOUT 30 LABELS "framework;education;navigation;memory")
+    endforeach()
 
     # The earlier registrations remain intact for engineering review. The shared
     # module below preserves these test names while using the SDK's parser owner

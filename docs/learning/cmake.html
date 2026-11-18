@@ -71,6 +71,37 @@ if ($LASTEXITCODE -ne 0) { throw "Configuration failed." }
 ctest --test-dir build/image-composition --no-tests=error --output-on-failure
 </code></pre>
 <p>Use the UCRT64 tool paths from the Windows example above. The expected result is four passing configuration tests. These establish test registration and dependency selection, not a successful application build or a working debugger. If a case fails, open its <code>fixtures</code> subfolder in the small build directory and read <code>initial.log</code> or <code>repeated.log</code>.</p></section>
+
+<section aria-labelledby="regeneration-loop"><h2 id="regeneration-loop">Why CMake can run again and again</h2>
+<p><strong>Configure</strong> means reading build instructions and finding tools. <strong>Generate</strong> means writing the build plan, such as <code>build.ninja</code>. <strong>Compile</strong> means translating C source into machine-code object files. Seeing <code>Configuring done</code> proves only the first stage completed. Recurring <code>Re-running CMake</code> messages can keep the build from reaching compilation.</p>
+<p>Ninja remembers the files CMake used. A changed input asks CMake to make a fresh plan. A <strong>timestamp</strong> is the recorded time a file was last modified. Even identical text can receive a newer timestamp when written again.</p>
+<figure><table><caption>How a generated manifest can request its own regeneration</caption><thead><tr><th>Step</th><th>Action</th><th>Consequence</th></tr></thead><tbody>
+<tr><td>1. Read</td><td>CMake reads wiki pages and prepares their manifest.</td><td>The manifest lists pages and their SHA-256 checksums.</td></tr>
+<tr><td>2. Write</td><td>The same manifest bytes are written again.</td><td>Its modification time changes.</td></tr>
+<tr><td>3. Watch</td><td>The manifest is a <code>CMAKE_CONFIGURE_DEPENDS</code> input.</td><td>Ninja detects a changed input.</td></tr>
+<tr><td>4. Repeat</td><td>CMake prepares the plan again.</td><td>The unconditional write repeats the cycle.</td></tr>
+<tr><td>5. Correct</td><td>Compare contents before writing.</td><td>Unchanged inputs settle; real edits still update the manifest.</td></tr>
+</tbody></table></figure>
+<p>The original Studio wiki producer used <code>file(WRITE)</code> unconditionally. Its replacement calls Framework's <code>umicom_write_learning_generated_file</code>. The helper reads an existing file, compares literal contents and returns without writing if they match. It retains dependency tracking and checksum validation.</p>
+<pre><code class="language-cmake"># Simplified content-stable writer:
+if(EXISTS "${output}")
+    file(READ "${output}" previous)
+    if(previous STREQUAL content)
+        return()
+    endif()
+endif()
+file(WRITE "${output}" "${content}")</code></pre>
+<p><code>output</code> is an absolute file path; <code>content</code> is text prepared by the caller. Compare literal text so titles and paths do not undergo another round of variable substitution. For templates, <code>configure_file</code> is a standard alternative that preserves identical outputs and deliberately substitutes template variables.</p>
+<h3>Diagnose before changing the build</h3>
+<ol><li>Read the full log. One regeneration after editing a build script is normal. Repeated complete configure/generate cycles without compilation need investigation.</li>
+<li>Separate warnings from dependencies. The GTK input-method warning concerns object disposal at runtime. A failed LLDB probe concerns loading a debugger. Neither message requests CMake regeneration.</li>
+<li>Stop a repeated loop with <kbd>Ctrl+C</kbd>. Keep the build directory. Deleting it loses compiled work and does not correct an unconditional writer.</li>
+<li>Integrate the source correction and configure the existing folder. The <a href="../guides/build-regeneration.html">recovery guide</a> provides exact commands.</li>
+<li>Test both directions: unchanged inputs must settle; a real lesson edit must regenerate its checksum and reach the requested target. Testing only “no regeneration” could hide missing updates.</li></ol>
+<p>The focused <code>studio.cmake.learning_regeneration</code> regression uses the actual Studio producer and Framework staging code with small fixtures. It checks timestamps, a real lesson edit, a subsequent unchanged build and staged manifest bytes. It does not exercise the IDE's GUI.</p>
+<details><summary>Check your understanding</summary><p><strong>Why does suppressing the GTK warning not fix this loop?</strong> The loop comes from a changed dependency, not the message. <strong>Why retain manifest tracking?</strong> Real edits must remain visible. <strong>Why compare hashes and timestamps?</strong> A hash identifies bytes; a timestamp can change while the bytes remain identical.</p></details>
+</section>
+
 <h2>Try it</h2>
 <p>Add a harmless source comment, rebuild and compare the output with a second build that has no changes. The second build should have little or no compilation work.</p>
 <details><summary>Why keep a separate build tree when changing compilers?</summary><p>The cache records compiler and platform decisions. Use a new build directory for a different compiler or target rather than changing them underneath an existing build.</p></details>

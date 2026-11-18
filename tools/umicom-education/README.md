@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../resources/brand/umicom-logo-on-dark.svg">
+  <img src="../../resources/brand/umicom-logo.svg" alt="Umicom" width="215">
+</picture>
+
 # Umicom Education — C23 learning-site and manuscript tools
 
 `umicom-education` is a Framework-owned C23 command used with the existing
@@ -235,6 +240,55 @@ The Framework-owned C23 preflight checks the local Markdown targets in the
 references and unsafe relative paths without running a Python interpreter or
 modifying the repository. It deliberately does not parse full YAML syntax or
 render the website. Run the existing MkDocs strict build for full validation.
+
+
+### Large navigation files and memory limits
+
+The audit grows its index as it discovers local Markdown targets. It no longer
+stops after 2,048 entries. Each retained path has one owner; the audit frees all
+paths and the index before returning, including after an allocation failure.
+Duplicate detection sorts retained paths and reports their original YAML line
+numbers. Diagnostics may therefore appear in path order.
+
+A **capacity** is the number of records a buffer can currently hold. A **count**
+is how many records it contains. When count reaches capacity, the audit requests
+a larger buffer. It checks sizes before arithmetic and uses a temporary result
+for <code>realloc</code>: if allocation fails, the previous pointer still owns
+its existing memory and must be freed. Assigning a failed allocation directly
+to that pointer would lose ownership.
+
+Growth remains bounded by a 64 MiB retained-index payload budget: records plus
+copied paths. Allocator bookkeeping, temporary reallocation overlap and other
+process memory are additional; this is not a total-process memory limit.
+A budget or allocation failure reports **Navigation audit (incomplete)** and
+returns exit code 2. Partial counts must not be presented as a complete audit
+or a YAML defect merely because the tool ran out of resources.
+
+| Exit code | Meaning | Next step |
+| --- | --- | --- |
+| 0 | Supported navigation checks completed without findings | Run the normal MkDocs strict build for full YAML and rendering validation. |
+| 1 | Missing, duplicate, unsafe or structural findings | Review reported paths and line numbers, then audit again. |
+| 2 | Invalid arguments or unavailable resources prevented completion | Read the diagnostic, correct the invocation or resource problem, then repeat. |
+
+Rebuild just the tool and its focused regression coverage from the Applications
+repository after integrating the Framework changes:
+
+~~~powershell
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake -S ".\framework\tools\umicom-education" -B ".\build\umicom-education" -G Ninja -DCMAKE_C_COMPILER=C:/msys64/ucrt64/bin/gcc.exe -DBUILD_TESTING=ON
+if ($LASTEXITCODE -ne 0) { throw "Education configuration failed." }
+cmake --build ".\build\umicom-education" --parallel 2 --target umicom-education umicom-education-navigation-test umicom-education-navigation-allocation-test umicom-education-navigation-budget-test
+if ($LASTEXITCODE -ne 0) { throw "Education build failed." }
+ctest --test-dir ".\build\umicom-education" -R "^framework[.]education[.]navigation_audit" --no-tests=error --output-on-failure
+if ($LASTEXITCODE -ne 0) { throw "Navigation regression failed." }
+& ".\build\umicom-education\bin\umicom-education.exe" audit --repo "C:\umicom\Umicom-Bits2Banking"
+~~~
+
+The focused suite checks the old boundary, larger inputs, distinct paths,
+findings after the old boundary, allocation failures and budget exhaustion.
+The audit does not modify the site or require rebuilding every application.
+The page count describes local entries in the supported <code>nav:</code>
+subset, not every Markdown reference elsewhere in the configuration.
 
 ## Update 13: conservative ELF page-permission review
 

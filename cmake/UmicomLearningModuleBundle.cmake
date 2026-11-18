@@ -16,6 +16,23 @@
 include_guard(GLOBAL)
 include(GNUInstallDirs)
 
+# Learning manifests can also be inputs to CMake's regeneration rule. Preserve
+# their timestamps when the bytes are unchanged so a configure does not dirty
+# its own inputs. Compare literal text: lesson titles and paths must not undergo
+# a second round of CMake variable or @placeholder@ expansion.
+function(umicom_write_learning_generated_file output content)
+    if(NOT IS_ABSOLUTE "${output}")
+        message(FATAL_ERROR "Generated learning output must be an absolute path")
+    endif()
+    if(EXISTS "${output}")
+        file(READ "${output}" _previous)
+        if(_previous STREQUAL content)
+            return()
+        endif()
+    endif()
+    file(WRITE "${output}" "${content}")
+endfunction()
+
 # A module consists of a learning manifest and its declared resources. It does
 # not contain a post-install program. The application owns the offer list;
 # Framework validates and copies the payload without writing source resources.
@@ -46,12 +63,23 @@ function(umicom_bundle_learning_module)
             message(FATAL_ERROR "Unsupported bracket delimiter in module configuration")
         endif()
     endforeach()
+    # Retain the former unconditional writer for review. The shared writer
+    # keeps identical generated configuration files stable between runs.
+    if(FALSE)
     file(WRITE "${_config}"
         "set(UMI_MODULE_SOURCE [====[${M_SOURCE_DIR}]====])\n"
         "set(UMI_MODULE_ID [====[${M_PACK_ID}]====])\n"
         "set(UMI_MODULE_PRODUCT [====[${M_PRODUCT}]====])\n"
         "set(UMI_MODULE_EXTRA_FILES [====[${M_EXTRA_FILES}]====])\n"
         "include([====[${_stage}]====])\n")
+    endif()
+    string(CONCAT _config_content
+        "set(UMI_MODULE_SOURCE [====[${M_SOURCE_DIR}]====])\n"
+        "set(UMI_MODULE_ID [====[${M_PACK_ID}]====])\n"
+        "set(UMI_MODULE_PRODUCT [====[${M_PRODUCT}]====])\n"
+        "set(UMI_MODULE_EXTRA_FILES [====[${M_EXTRA_FILES}]====])\n"
+        "include([====[${_stage}]====])\n")
+    umicom_write_learning_generated_file("${_config}" "${_config_content}")
     add_custom_target("${M_TARGET}-module-${M_NAME}"
         COMMAND "${CMAKE_COMMAND}"
             "-DUMI_MODULE_DESTINATION=$<TARGET_FILE_DIR:${M_TARGET}>/learning-modules/${M_NAME}"

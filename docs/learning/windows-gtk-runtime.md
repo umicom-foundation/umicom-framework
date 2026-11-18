@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../../resources/brand/umicom-logo-on-dark.svg">
+  <img src="../../resources/brand/umicom-logo.svg" alt="Umicom" width="215">
+</picture>
+
 # Checking the GTK runtime on Windows
 
 GTK creates Umicom's native windows and text controls. The runtime is the compiled
@@ -18,6 +23,15 @@ disposal as well as focus loss.
 
 Framework reports this as an advisory during configuration. It does not disable
 tests or stop configuration. A later Ninja error must be investigated separately.
+
+## If CMake keeps repeating
+
+A recurring runtime advisory can appear during every repeated configuration.
+The advisory is not itself a regeneration dependency. If each successful
+configuration immediately starts again, follow the
+[build regeneration recovery guide](../guides/build-regeneration.html).
+Fix the build graph separately and keep the runtime advisory open until the
+package and native behavior have been qualified.
 
 ## Check the package before replacing it
 
