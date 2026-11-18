@@ -145,6 +145,13 @@ UmiStatus umi_application_launcher_create(
  * safely.
  */
 void umi_application_launcher_destroy(UmiApplicationLauncher *launcher);
+/** Set before the first request. Async adapters may reserve a job token before
+ * native creation; enable this mode to keep it STARTING and inactive. The
+ * composition must reconcile native creation to RUNNING, or terminal failure
+ * through reconcile_exit. Existing adapters default to synchronous publication.
+ * A job token is not a PID or a visible-window acknowledgement. */
+UmiStatus UmiApplicationLauncherSetDeferredStart(UmiApplicationLauncher *launcher,
+    bool deferred);
 
 /**
  * Provide the application launcher prepare operation used by this module and its client

@@ -20,6 +20,7 @@
 #include "../startup_brand_panel.h"
 
 #include "umicom/application/portfolio.h"
+#include "umicom/application/native_discovery.h"
 #include "umicom/ui/gtk4/application_processes.h"
 #include "umicom/ui/appearance_catalogue.h"
 #include "umicom/ui/gtk4/automation.h"
@@ -565,10 +566,29 @@ static char *find_application_executable(const char *executable_name)
 static char *resolve_application_executable(
     const UmiApplicationDefinition *application)
 {
+    /* The previous colocated/PATH-only resolution remains the unset-setting
+     * fallback. A separately installed OS can explicitly select the shared
+     * Applications bin directory without changing its process search path. */
+#if 0
     return application != NULL
         ? find_application_executable(umi_application_portfolio_gui_executable(
               application->application_id))
         : NULL;
+#endif
+    if (application == NULL) return NULL;
+    const char *configured = g_getenv("UMICOM_APPLICATIONS_BIN");
+    if (configured != NULL && configured[0] != '\0') {
+        UmiApplicationNativeDiscoveryConfig config = umi_application_native_discovery_config_default();
+        char resolved[UMI_APPLICATION_RUNTIME_PATH_CAPACITY];
+        config.executable_root = configured;
+        /* An explicit location is authoritative. Invalid or absent candidates
+         * must not silently select a different build from PATH. */
+        if (umi_application_native_discovery_resolve(&config, application->application_id,
+                resolved, sizeof(resolved)) != UMI_STATUS_OK) return NULL;
+        return g_strdup(resolved);
+    }
+    return find_application_executable(umi_application_portfolio_gui_executable(
+        application->application_id));
 }
 
 /* Catalogue rows store view references only. Selection and eligibility remain
@@ -692,7 +712,15 @@ static void sync_application_selection(UmiGtk4WorkstationShellHeader *header)
         if (new_instance != NULL)
             gtk_widget_set_sensitive(new_instance,!header->dispatching_applications && choice.eligible);
         if (!record.installed) {
+            /* Keep the former generic guidance for source review. Separate
+             * installations need a location explanation rather than a rebuild. */
+#if 0
             message = "Native GUI not found. Build or install it, then Refresh.";
+#endif
+            const char *configured = g_getenv("UMICOM_APPLICATIONS_BIN");
+            message = configured != NULL && configured[0] != '\0'
+                ? "GUI not found in UMICOM_APPLICATIONS_BIN. Check that absolute folder, then restart or Refresh."
+                : "GUI not found beside this app or on PATH. Set UMICOM_APPLICATIONS_BIN to the Applications bin folder, then restart.";
         } else if (!choice.eligible) {
             message = choice.readiness_reason[0] != '\0'
                 ? choice.readiness_reason : "The shared launch gate blocks this application.";

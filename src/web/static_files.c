@@ -155,6 +155,14 @@ UmiStatus umi_web_static_files_serve(const UmiWebStaticFiles *files, const char 
 }
 #endif
 
+/* RootedFileRead owns the allocator contract. Carry its matching release
+ * operation with an adopted body instead of copying a second full payload. */
+static void StaticReleaseBody(void *context, void *bytes)
+{
+    (void)context;
+    UmiRootedFileFree(bytes);
+}
+
 static UmiStatus StaticServe(const UmiWebStaticFiles *files, const char *request_path,
     UmiWebResponse *response, UmiWebResponseBody **body)
 {
@@ -186,7 +194,11 @@ static UmiStatus StaticServe(const UmiWebStaticFiles *files, const char *request
     }
     umi_web_response_init(response);
     if (body != NULL) {
+/* Transfer rooted-file storage to the response instead of allocating and copying the same complete file a second time. The former implementation is retained for owner review. */
+#if 0
         status = UmiWebResponseBodyCreate(bytes, length, body);
+#endif
+        status = UmiWebResponseBodyTake(&bytes, length, StaticReleaseBody, NULL, body);
     } else {
         memcpy(response->body, bytes, length);
         response->body[length] = '\0';

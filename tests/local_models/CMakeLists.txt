@@ -528,3 +528,71 @@ if(COMMAND umicom_target_qualification_inputs)
         "${CMAKE_CURRENT_LIST_DIR}/../model_formats/gguf_fixture.h")
 endif()
 unset(_run_inspection_targets)
+
+
+# Token planning shares the checked dense-cache geometry service. This test uses
+# supplied byte budgets only and never loads a model or probes host memory.
+add_executable(umicom-model-kv-token-plan-test test_kv_token_plan.c)
+target_link_libraries(umicom-model-kv-token-plan-test PRIVATE Umicom::local_models)
+set_target_properties(umicom-model-kv-token-plan-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+umicom_apply_warnings(umicom-model-kv-token-plan-test)
+umicom_apply_sanitizers(umicom-model-kv-token-plan-test)
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-model-kv-token-plan-test)
+endif()
+if(COMMAND umicom_target_qualification_inputs)
+    umicom_target_qualification_inputs(umicom-model-kv-token-plan-test FILES
+        "${CMAKE_CURRENT_LIST_DIR}/../../src/local_models/memory_plan.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../../include/umicom/local_models/memory_plan.h")
+endif()
+umicom_model_case(memory_plan kv-token-budget umicom-model-kv-token-plan-test)
+
+
+# Exercise parsing and output failure through the same shared command as products.
+add_executable(umicom-model-memory-command-test test_memory_command.c)
+target_link_libraries(umicom-model-memory-command-test PRIVATE Umicom::local_models)
+set_target_properties(umicom-model-memory-command-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+umicom_apply_warnings(umicom-model-memory-command-test)
+umicom_apply_sanitizers(umicom-model-memory-command-test)
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-model-memory-command-test)
+endif()
+if(COMMAND umicom_target_qualification_inputs)
+    umicom_target_qualification_inputs(umicom-model-memory-command-test FILES
+        "${CMAKE_CURRENT_LIST_DIR}/../../src/local_models/memory_command.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../../src/local_models/memory_plan.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../../include/umicom/local_models/memory_command.h"
+        "${CMAKE_CURRENT_LIST_DIR}/../../include/umicom/local_models/memory_plan.h")
+endif()
+umicom_model_case(memory_plan command umicom-model-memory-command-test)
+
+add_executable(umicom-model-cache-command-route-test test_cache_command_route.c)
+target_link_libraries(umicom-model-cache-command-route-test PRIVATE Umicom::local_models)
+target_compile_features(umicom-model-cache-command-route-test PRIVATE c_std_23)
+set_target_properties(umicom-model-cache-command-route-test PROPERTIES C_EXTENSIONS OFF)
+umicom_apply_warnings(umicom-model-cache-command-route-test)
+umicom_apply_sanitizers(umicom-model-cache-command-route-test)
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-model-cache-command-route-test)
+endif()
+umicom_model_case(memory_plan command-route umicom-model-cache-command-route-test)
+
+# Host memory and cache sizing are composed in Framework, with no model operation.
+add_executable(umicom-model-host-kv-plan-test test_host_kv_plan.c)
+target_link_libraries(umicom-model-host-kv-plan-test PRIVATE Umicom::local_models)
+target_compile_features(umicom-model-host-kv-plan-test PRIVATE c_std_23)
+set_target_properties(umicom-model-host-kv-plan-test PROPERTIES C_EXTENSIONS NO)
+umicom_apply_warnings(umicom-model-host-kv-plan-test)
+umicom_apply_sanitizers(umicom-model-host-kv-plan-test)
+if(COMMAND umicom_register_validation_target)
+    umicom_register_validation_target(umicom-model-host-kv-plan-test)
+endif()
+if(COMMAND umicom_target_qualification_inputs)
+    umicom_target_qualification_inputs(umicom-model-host-kv-plan-test FILES
+        "${CMAKE_CURRENT_LIST_DIR}/../../src/local_models/memory_plan.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../../include/umicom/local_models/memory_plan.h"
+        "${CMAKE_CURRENT_LIST_DIR}/../../include/umicom/desktop_system/monitor.h")
+endif()
+foreach(_case IN ITEMS fit boundaries uncertain incomplete refusal overflow maximum grid inputs freshness)
+    umicom_model_case(host_kv_plan "${_case}" umicom-model-host-kv-plan-test)
+endforeach()

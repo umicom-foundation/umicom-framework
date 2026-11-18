@@ -458,7 +458,7 @@ static gboolean dispatch_application_from_idle(gpointer user_data)
     DeskPendingApplication *pending = user_data;
     UmiGtk4Desk *desk = pending->desk;
     UmiStatus status;
-    char message[UMI_APPLICATION_RUNTIME_ID_CAPACITY + 96U];
+    char message[UMI_APPLICATION_RUNTIME_ID_CAPACITY + 192U];
     desk->pending_application_id = 0U;
     desk->in_application_action = true;
     status = umi_desk_runtime_request_application(
@@ -472,8 +472,17 @@ static gboolean dispatch_application_from_idle(gpointer user_data)
         return G_SOURCE_REMOVE;
     }
     (void)umi_gtk4_desk_refresh(desk);
+/* Show actionable activation feedback without retrying through a second process or claiming a window opened. The former implementation is retained for owner review. */
+#if 0
     (void)snprintf(message, sizeof(message), "%s: %s", pending->application_id,
         status == UMI_STATUS_OK ? "Open request accepted." : umi_status_text(status));
+#endif
+    const char *feedback = status == UMI_STATUS_OK ? "Open request accepted; window readiness is unconfirmed."
+        : status == UMI_STATUS_UNAVAILABLE ? "No visible application window is available yet. Check startup diagnostics."
+        : status == UMI_STATUS_NOT_IMPLEMENTED ? "Window activation is unavailable on this platform."
+        : status == UMI_STATUS_PERMISSION_DENIED ? "The platform refused this request. Use the system taskbar if the window is open."
+        : umi_status_text(status);
+    (void)snprintf(message, sizeof(message), "%s: %s", pending->application_id, feedback);
     set_status(desk, message);
     return G_SOURCE_REMOVE;
 }
@@ -1030,8 +1039,13 @@ static void update_home_tile(UmiGtk4Desk *desk, DeskHomeTile *tile,
     } else if (record->state == UMI_APPLICATION_RUNTIME_STOPPING) {
         state = "Stopping"; detail = "Wait for the existing application to stop."; launchable = false;
     } else if (record->running) {
+/* A supervised process token does not acknowledge GUI readiness. Keep the earlier wording for review. The former implementation is retained for owner review. */
+#if 0
         state = record->installed ? "Running" : "Running · executable missing";
         detail = "Request activation of the existing application. Its process is not embedded in Desk.";
+#endif
+        state = record->installed ? "Process running" : "Process running · executable missing";
+        detail = "The native process was created; its window readiness is unconfirmed. Activate requests an existing visible window.";
         launchable = activate;
         if (record->process_token == 0U)
             detail = "The runtime reports a running state without a supervised process token. Refresh before requesting activation.";
@@ -1052,13 +1066,17 @@ static void update_home_tile(UmiGtk4Desk *desk, DeskHomeTile *tile,
     }
     set_label_if_changed(tile->name, choice->display_name);
     set_label_if_changed(tile->state, state);
-    set_label_if_changed(tile->detail, detail);
+    /* Captured native bytes can contain invalid UTF-8 or a clipped multibyte
+     * prefix. Repair only the display copy, retaining the original evidence. */
+    char *display_detail = g_utf8_make_valid(detail, -1);
+    set_label_if_changed(tile->detail, display_detail);
     if (g_strcmp0(gtk_image_get_icon_name(GTK_IMAGE(tile->icon)), icon_name) != 0)
         gtk_image_set_from_icon_name(GTK_IMAGE(tile->icon), icon_name);
     if (g_strcmp0(gtk_button_get_label(GTK_BUTTON(tile->open)), activate ? "Activate" : "Launch") != 0)
         gtk_button_set_label(GTK_BUTTON(tile->open), activate ? "Activate" : "Launch");
     gtk_widget_set_sensitive(tile->open, launchable);
-    gtk_widget_set_tooltip_text(tile->open, detail);
+    gtk_widget_set_tooltip_text(tile->open, display_detail);
+    g_free(display_detail);
     gtk_widget_set_sensitive(tile->select, choice->eligible || choice->selected);
     desk->updating_home = true;
     gtk_check_button_set_active(GTK_CHECK_BUTTON(tile->select), choice->selected);

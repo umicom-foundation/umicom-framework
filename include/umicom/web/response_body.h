@@ -31,6 +31,17 @@ void UmiWebResponseBodyDestroy(UmiWebResponseBody *body);
 /* Borrowed immutable bytes remain valid until Destroy; NULL body gives NULL/0. */
 const void *UmiWebResponseBodyBytes(const UmiWebResponseBody *body);
 size_t UmiWebResponseBodyLength(const UmiWebResponseBody *body);
+/* Transfer an existing immutable allocation without copying payload bytes.
+ * On success, *bytes becomes NULL and Destroy calls release(context, original)
+ * exactly once, including an empty allocation. On failure, *bytes stays owned
+ * by the caller, *out is NULL and release is not called. The callback and its
+ * context must remain valid until Destroy; they must not destroy this body.
+ * A NULL buffer is valid only when length is zero. release is always required.
+ * All pointer slots must be disjoint. After success, do not mutate or free the
+ * transferred storage through aliases. The original Create copy API remains. */
+typedef void (*UmiWebResponseBodyRelease)(void *context, void *bytes);
+UmiStatus UmiWebResponseBodyTake(unsigned char **bytes, size_t length,
+    UmiWebResponseBodyRelease release, void *context, UmiWebResponseBody **out);
 #ifdef __cplusplus
 }
 #endif

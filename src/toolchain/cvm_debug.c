@@ -55,3 +55,30 @@ UmcStatus umi_cvm_debug_cancel(UmiCvmDebugSession *session,size_t size)
     session->phase=UMI_CVM_DEBUG_CANCELLED;
     return UMC_OK;
 }
+
+/* Scheduling policy stays in Framework; arithmetic and lifetime fuel remain
+ * authoritative in Umicom C. One bounded call creates no thread or UI loop. */
+UmcStatus umi_cvm_debug_resume(UmiCvmDebugSession *session, size_t size,
+    size_t instruction_budget)
+{
+    if (session == NULL || size != sizeof *session ||
+        session->phase != UMI_CVM_DEBUG_PAUSED || instruction_budget == 0U ||
+        instruction_budget > UMC_PROGRAM_LIMIT) return UMC_INVALID_ARGUMENT;
+    UmcSliceResult report;
+    UmcStatus status = umc_machine_run_slice(&session->machine, instruction_budget,
+        &report, &session->last_step, &session->diagnostic);
+    if (status != UMC_OK) {
+        session->phase = UMI_CVM_DEBUG_FAILED;
+        const size_t index = session->machine.frame.pc;
+        if (index < UMC_PROGRAM_LIMIT) {
+            session->diagnostic.line = session->lines[index];
+            session->diagnostic.column = session->columns[index];
+        }
+        return status;
+    }
+    if (report.finished) {
+        status = umc_machine_result(&session->machine, &session->result, &session->diagnostic);
+        session->phase = status == UMC_OK ? UMI_CVM_DEBUG_COMPLETE : UMI_CVM_DEBUG_FAILED;
+    }
+    return status;
+}

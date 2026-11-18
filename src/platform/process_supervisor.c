@@ -14,6 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/platform/process_supervisor.h"
+#include "process_native_control.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -49,6 +50,7 @@ typedef struct UmiProcessJob {
     UmiCancellationToken *cancellation;
     UmiThread *thread;
     UmiProcessResult result;
+    void *native_handle; /* Borrowed under owner mutex; runner revokes before close. */
     int joined;
     size_t waiters; /* A waiting caller pins the slot until it has observed completion. */
 } UmiProcessJob;
@@ -198,6 +200,16 @@ static void PublishProcessOutput(const UmiProcessResult *result, void *context)
     (void)umi_mutex_unlock(job->owner->mutex);
 }
 
+/* A worker publishes/revokes the borrowed native handle using the same mutex
+ * as snapshots and activation. A job token is never treated as a native PID. */
+static void PublishNativeProcess(void *handle, void *context)
+{
+    UmiProcessJob *job = context;
+    (void)umi_mutex_lock(job->owner->mutex);
+    job->native_handle = handle;
+    (void)umi_mutex_unlock(job->owner->mutex);
+}
+
 /*
  * Provide the process job thread operation used by this module and its client
  * applications.
@@ -216,8 +228,13 @@ static int process_job_thread(void *user_data)
     /* The executor writes a worker-owned result and publishes coherent live
      * copies through its observer. Publish completion and terminal state under
      * the same mutex, retaining both live output and the final result. */
+/* The shared runner now lends its native handle for bounded activation while retaining the original execution and output ownership. The former implementation is retained for owner review. */
+#if 0
     status = UmiProcessExecuteWithLifetime(&job->owned.request,
         job->lifetime, PublishProcessOutput, NULL, job, &result);
+#endif
+    status = UmiProcessExecuteSupervised(&job->owned.request,
+        job->lifetime, PublishProcessOutput, PublishNativeProcess, job, &result);
 
     (void)umi_mutex_lock(job->owner->mutex);
     job->result = result;
@@ -548,6 +565,41 @@ UmiStatus UmiProcessSupervisorReleaseJob(UmiProcessSupervisor *supervisor,
 }
 #endif
 
+/* Read launch evidence separately from worker state. RUNNING means that the
+ * worker is active, which can precede native process creation. */
+UmiStatus UmiProcessSupervisorLaunchObserved(UmiProcessSupervisor *supervisor,
+    UmiProcessJobId jobId, int *outLaunched)
+{
+    if (supervisor == NULL || jobId == 0U || outLaunched == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = umi_mutex_lock(supervisor->mutex);
+    if (status != UMI_STATUS_OK) return status;
+    UmiProcessJob *job = find_job(supervisor, jobId);
+    if (job == NULL) status = UMI_STATUS_NOT_FOUND;
+    else *outLaunched = job->result.launched != 0;
+    UmiStatus unlocked = umi_mutex_unlock(supervisor->mutex);
+    return status != UMI_STATUS_OK ? status : unlocked;
+}
+
+/* Call only for an explicit user activation request. The worker cannot close
+ * its handle during this bounded native operation. No lookup by external PID,
+ * duplicate launch, forced foreground override or child termination occurs. */
+UmiStatus UmiProcessSupervisorActivate(UmiProcessSupervisor *supervisor,
+    UmiProcessJobId jobId)
+{
+    if (supervisor == NULL || jobId == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = umi_mutex_lock(supervisor->mutex);
+    if (status != UMI_STATUS_OK) return status;
+    UmiProcessJob *job = find_job(supervisor, jobId);
+    if (job == NULL) status = UMI_STATUS_NOT_FOUND;
+    else if (supervisor->shutting_down) status = UMI_STATUS_INVALID_STATE;
+    else if (job->state == UMI_PROCESS_JOB_CREATED) status = UMI_STATUS_BUSY;
+    else if (job->state != UMI_PROCESS_JOB_RUNNING) status = UMI_STATUS_INVALID_STATE;
+    else status = UmiProcessActivateNativeWindow(job->native_handle);
+    UmiStatus unlocked = umi_mutex_unlock(supervisor->mutex);
+    return status != UMI_STATUS_OK ? status : unlocked;
+}
+
 /* Provide the copy snapshot operation used by this module and its client applications. */
 static void copy_snapshot(const UmiProcessJob *job,
                           UmiProcessJobSnapshot *snapshot)
@@ -724,3 +776,6 @@ const char *umi_process_job_state_text(UmiProcessJobState state)
         default: return "unknown";
     }
 }
+
+/* Terminal evidence formatting is independent of a particular desktop. */
+#include "process_completion.inc"

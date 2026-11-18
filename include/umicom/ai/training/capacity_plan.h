@@ -13,8 +13,12 @@
  *   all intermediate activations, temporary workspaces and allocator overhead
  *   are accounted for separately by live tape inspection and host profiling.
  *
- * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation
- * LICENCE: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_TRAINING_CAPACITY_PLAN_H
 #define UMICOM_AI_TRAINING_CAPACITY_PLAN_H
@@ -55,6 +59,35 @@ UmiStatus UmiAiTrainingCapacityPlanCompute(
     const UmiAiTrainingDecoderConfig *config,
     size_t batchSequences,
     UmiAiTrainingCapacityPlan *outPlan);
+
+/* Describe additional reduction payloads without allocating a decoder.
+ * graph is the existing capacity report for min(effective, microbatch)
+ * sequences. maximumGraphs includes groups that an objective mask might skip.
+ * Every size is logical payload; this is not a process peak or RAM reservation.
+ * Optimizer moments/workspace, other graph nodes and allocator overhead are
+ * excluded. Shape limits match the current decoder and accumulated-token cap. */
+typedef struct UmiAiTrainingAccumulationPlan {
+    UmiAiTrainingCapacityPlan graph;
+    size_t effectiveSequences;
+    size_t effectiveTokens;
+    size_t requestedMicrobatchSequences;
+    size_t maximumGraphs;
+    size_t lastGraphSequences;
+    size_t largestParameterElements;
+    size_t accumulatorBytes;
+    size_t reducedGradientBytes;
+    size_t scratchBytes;
+    size_t peakReductionPayloadBytes;
+} UmiAiTrainingAccumulationPlan;
+
+/* Counts must be positive and each requested count times context must fit the
+ * accumulated-token contract, even if the requested microbatch exceeds the
+ * effective batch. All rejected calls preserve outPlan. No inputs are retained.
+ * The existing capacity-plan ABI and function remain unchanged. */
+UmiStatus UmiAiTrainingAccumulationPlanCompute(
+    const UmiAiTrainingDecoderConfig *config,
+    size_t effectiveSequences, size_t microbatchSequences,
+    UmiAiTrainingAccumulationPlan *outPlan);
 
 #ifdef __cplusplus
 }

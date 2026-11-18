@@ -1081,6 +1081,8 @@ UmiStatus UmiDocumentStoreReplaceLoaded(UmiDocumentStore *store,
 
 /* Snapshot copying belongs in the store because separate metadata/text reads
  * can observe different edits. No provider callback runs while its mutex is held. */
+/* Check the requested copy budget within the store lock so a concurrent edit cannot bypass admission. The former implementation is retained for owner review. */
+#if 0
 UmiStatus UmiDocumentStoreCopySnapshot(const UmiDocumentStore *store,
     UmiDocumentId documentId, UmiDocumentSnapshot *outSnapshot, char **outText)
 {
@@ -1111,6 +1113,49 @@ UmiStatus UmiDocumentStoreCopySnapshot(const UmiDocumentStore *store,
     *outSnapshot = snapshot;
     *outText = copy;
     return UMI_STATUS_OK;
+}
+
+
+#endif
+UmiStatus UmiDocumentStoreCopySnapshotBounded(const UmiDocumentStore *store,
+    UmiDocumentId documentId, size_t maxTextBytes,
+    UmiDocumentSnapshot *outSnapshot, char **outText)
+{
+    if (store == NULL || documentId == 0U || outSnapshot == NULL ||
+        outText == NULL || *outText != NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiDocumentStore *mutableStore = (UmiDocumentStore *)store;
+    UmiStatus status = umi_mutex_lock(mutableStore->mutex);
+    if (status != UMI_STATUS_OK) return status;
+    size_t index = umi_document_store_find_index(store, documentId);
+    if (index == SIZE_MAX) {
+        (void)umi_mutex_unlock(mutableStore->mutex);
+        return UMI_STATUS_NOT_FOUND;
+    }
+    const UmiDocumentEntry *entry = &store->entries[index];
+    if (entry->length == SIZE_MAX || entry->length > maxTextBytes) {
+        (void)umi_mutex_unlock(mutableStore->mutex);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    char *copy = malloc(entry->length + 1U);
+    if (copy == NULL) {
+        (void)umi_mutex_unlock(mutableStore->mutex);
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    (void)memcpy(copy, entry->text, entry->length + 1U);
+    UmiDocumentSnapshot snapshot;
+    umi_document_snapshot_copy(entry, &snapshot);
+    (void)umi_mutex_unlock(mutableStore->mutex);
+    *outSnapshot = snapshot;
+    *outText = copy;
+    return UMI_STATUS_OK;
+}
+
+/* Existing consumers keep their former unlimited-copy contract. New bounded
+ * consumers share the same lock, metadata capture and allocation path. */
+UmiStatus UmiDocumentStoreCopySnapshot(const UmiDocumentStore *store,
+    UmiDocumentId documentId, UmiDocumentSnapshot *outSnapshot, char **outText)
+{
+    return UmiDocumentStoreCopySnapshotBounded(store, documentId, SIZE_MAX, outSnapshot, outText);
 }
 
 /* Keep save acknowledgement in the same authority as edits. A provider's

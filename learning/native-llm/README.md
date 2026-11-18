@@ -283,3 +283,61 @@ manifest entries and file contents before invoking this example on other data.
 Batch 06 registers three new tests and retains all previous ones, giving **33
 standalone CTest cases**. Inspect `CHANGE_SUMMARY.md` and `VALIDATION.md` for
 exact evidence and the limitations of the isolated Linux qualification.
+
+
+## Select prediction rows for categorical loss
+
+![Umicom](../../resources/brand/umicom-logo.svg)
+
+`UmiAiTrainingMaskedCrossEntropy` in `training/tape.h` averages the existing
+categorical objective over explicitly selected rows. Supply one target and
+one `unsigned char` selection value per logits row. Selection values are
+exactly zero or one; at least one row must be selected. All targets must be
+valid column indices, including targets for excluded rows. The original
+`UmiAiTrainingCrossEntropy` continues to score every row.
+
+The tape copies selection into its owned target allocation, so the caller
+may reuse its arrays after a successful call. Allocation and auxiliary-memory
+budget refusal leave the output handle and graph unchanged. The selection
+uses no additional per-node mask allocation. The mean and its derivatives
+are divided by the selected-row count. Excluded score rows receive no
+contribution from this objective, but other operations may still contribute
+to their gradients. Shared model parameters can receive gradients through
+selected predictions that depend on prompt context.
+
+Both categorical operators subtract the maximum score before exponentiation.
+Their loss expression is `(maximum - targetScore) + log(expSum)`, keeping the
+small logarithm visible even for equal, very large finite logits. Three equal
+logits should produce a loss of `log(3)`, regardless of their common offset.
+This arithmetic correction does not change the intended probability model.
+
+A loss mask is distinct from an attention mask. A caller implementing
+answer-only next-token learning must construct targets after applying the
+actual tokenizer, chat template and label shift. This operator does not
+choose that policy or integrate masked targets into the existing decoder
+trainer automatically. It is an additive primitive, not a complete fine-tuner.
+
+The focused source checks are available separately:
+
+```powershell
+cmake -S tests/training_loss -B build/training-loss -G Ninja
+cmake --build build/training-loss --parallel 2
+ctest --test-dir build/training-loss --output-on-failure
+```
+
+These commands run from the Framework checkout. The tests compare independent
+values and finite-difference gradients, preserve other graph contributions,
+check target/mask ownership and inject allocation failures. They also reuse
+existing tape regressions. Full product and installed-SDK qualification are
+separate checks. Destroy the owning tape once, and never reuse a loss handle
+after a rewind invalidates its node.
+
+## Score selected decoder positions
+
+`UmiAiTrainingDecoderEvaluateMasked` evaluates a mean over selected target positions. `UmiAiTrainingDecoderTrainMaskedStep` applies one checked SGD update to that same mean and returns its pre-update loss. Both reuse the canonical decoder graph and masked cross-entropy operator. The original all-position entry points remain available.
+
+Pass one 0/1 selection byte per aligned input/target position, with at least one selected position in the whole batch. Every target ID must remain valid, even where its selection is zero. The caller supplies complete context-length sequences, token shifting and task-specific role rules. A zero selection is an objective exclusion, not an attention restriction: earlier prompt inputs may affect a selected answer and receive gradients through it.
+
+Selection is borrowed only during the synchronous call. On refusal, weights, completed steps and the loss output remain unchanged; graph storage is rewound after attempted construction. Graph memory budgets still apply. These APIs support the bounded from-scratch decoder and SGD, not imported model formats, AdamW masking or accumulated masked batches. Checkpoint encoding is unchanged and does not store the mask, dataset or training schedule.
+
+See `tests/training_decoder_mask` for an independent loss reference, all-position parity, causal-context checks, unequal selected counts across sequences, checkpoint continuation and graph-budget rollback. The Bits2Banking `masked-language-loss/decoder.c` example demonstrates forty small updates without downloading a model.

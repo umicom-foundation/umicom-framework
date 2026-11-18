@@ -11,11 +11,16 @@
  *   parameter-shape schema remains authoritative. The same tape limits that
  *   protect activation matrices and causal probabilities are checked here.
  *
- * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation
- * LICENCE: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/capacity_plan.h"
 #include "umicom/ai/training/tape.h"
+#include "umicom/ai/training/gradient_accumulation.h"
 #include "decoder_private.h"
 
 #include <stdint.h>
@@ -93,6 +98,59 @@ UmiStatus UmiAiTrainingCapacityPlanCompute(
         plan.parameterValueBytes + plan.parameterGradientBytes +
         plan.logitsBytes + plan.attentionProbabilityBytes;
     plan.maximumTensorElements = UMI_AI_TRAINING_MAX_ELEMENTS;
+    *outPlan = plan;
+    return UMI_STATUS_OK;
+}
+
+/* Planning uses the same authoritative parameter schema as allocation. Keeping
+ * graph payload and reducer payload separate avoids implying that a tape limit
+ * also bounds optimizer or host reduction memory. */
+UmiStatus UmiAiTrainingAccumulationPlanCompute(
+    const UmiAiTrainingDecoderConfig *config,
+    size_t effectiveSequences, size_t microbatchSequences,
+    UmiAiTrainingAccumulationPlan *outPlan)
+{
+    UmiAiTrainingAccumulationPlan plan = {0};
+    size_t context, maximumSequences, graphSequences;
+    UmiStatus status;
+    if (outPlan == NULL || effectiveSequences == 0U || microbatchSequences == 0U ||
+        UmiAiDecoderValidateConfig(config) != UMI_STATUS_OK)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    context = (size_t)config->contextLength;
+    maximumSequences = UMI_AI_TRAINING_MAX_ACCUMULATED_TOKENS / context;
+    if (effectiveSequences > maximumSequences || microbatchSequences > maximumSequences)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    graphSequences = Smaller(effectiveSequences, microbatchSequences);
+    status = UmiAiTrainingCapacityPlanCompute(config, graphSequences, &plan.graph);
+    if (status != UMI_STATUS_OK) return status;
+    for (size_t id = 0U; id < (size_t)UMI_DECODER_PARAMETER_COUNT; ++id) {
+        size_t rows = 0U, columns = 0U;
+        UmiAiDecoderParameterShape(config, id, &rows, &columns);
+        /* CapacityPlanCompute has already checked these exact dimensions. */
+        size_t elements = rows * columns;
+        if (elements > plan.largestParameterElements)
+            plan.largestParameterElements = elements;
+    }
+    if (plan.graph.parameterElements > SIZE_MAX / sizeof(double) ||
+        plan.graph.parameterElements > SIZE_MAX / sizeof(float) ||
+        plan.largestParameterElements > SIZE_MAX / sizeof(float))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    plan.accumulatorBytes = plan.graph.parameterElements * sizeof(double);
+    plan.reducedGradientBytes = plan.graph.parameterElements * sizeof(float);
+    plan.scratchBytes = plan.largestParameterElements * sizeof(float);
+    if (plan.accumulatorBytes > SIZE_MAX - plan.reducedGradientBytes ||
+        plan.accumulatorBytes + plan.reducedGradientBytes > SIZE_MAX - plan.scratchBytes)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    plan.peakReductionPayloadBytes =
+        plan.accumulatorBytes + plan.reducedGradientBytes + plan.scratchBytes;
+    plan.effectiveSequences = effectiveSequences;
+    plan.effectiveTokens = effectiveSequences * context;
+    plan.requestedMicrobatchSequences = microbatchSequences;
+    /* Quotient and remainder avoid an overflow-prone ceil(n / d) addition. */
+    plan.maximumGraphs = effectiveSequences / microbatchSequences +
+                         (effectiveSequences % microbatchSequences != 0U);
+    plan.lastGraphSequences = effectiveSequences % microbatchSequences;
+    if (plan.lastGraphSequences == 0U) plan.lastGraphSequences = microbatchSequences;
     *outPlan = plan;
     return UMI_STATUS_OK;
 }

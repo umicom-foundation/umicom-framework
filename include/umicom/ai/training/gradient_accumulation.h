@@ -114,6 +114,41 @@ UmiStatus UmiAiTrainingDecoderTrainAdamWAccumulatedClipped(
     float learningRate, float maximumGradientNorm,
     float *outLoss, UmiAiTrainingGradientClipReport *outReport);
 
+
+/* Accumulate selected objectives across complete context-length sequences.
+ * Masks contain exactly tokenCount binary bytes. At least one target in the
+ * effective batch is selected. PaddedAccumulated also requires every selected
+ * row to be attended. All IDs are valid even in excluded or unscored rows.
+ *
+ * Each microbatch mean is weighted by its NUMBER OF SELECTED ROWS, then the
+ * aggregate is divided by the total selected count. A microbatch with no
+ * selected row builds no graph, after all input admission succeeds. Prompt
+ * context inside a scored sequence remains available; sequence boundaries and
+ * position IDs are unchanged. This is not token compaction or sparse attention.
+ *
+ * One successful call commits one AdamW update and one model step. Failure
+ * preserves weights, moments, counters and outLoss; gradients are scratch state.
+ * Graph storage is rewound after each used microbatch. Reduction additionally
+ * owns one double and one float per parameter element, plus one float scratch
+ * array for the largest parameter. These host allocations are NOT included in
+ * the tape's graph memory limit or memory report. Inputs are borrowed only until
+ * return; caller serializes model/optimizer access and retains exact microbatch
+ * and mask policy alongside checkpoints. Floating-point order can differ from
+ * a single large graph. These selected entry points do not apply clipping. */
+UmiStatus UmiAiTrainingDecoderTrainAdamWMaskedAccumulated(
+    UmiAiTrainingDecoder *model, UmiAiTrainingAdamW *optimizer,
+    const size_t *inputIds, const size_t *targetIds,
+    size_t tokenCount, size_t microbatchSequences,
+    const unsigned char *selected, size_t selectedCount,
+    float learningRate, float *outLoss);
+UmiStatus UmiAiTrainingDecoderTrainAdamWPaddedAccumulated(
+    UmiAiTrainingDecoder *model, UmiAiTrainingAdamW *optimizer,
+    const size_t *inputIds, const size_t *targetIds,
+    size_t tokenCount, size_t microbatchSequences,
+    const unsigned char *attention, size_t attentionCount,
+    const unsigned char *selected, size_t selectedCount,
+    float learningRate, float *outLoss);
+
 #ifdef __cplusplus
 }
 #endif

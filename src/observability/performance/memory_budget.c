@@ -20,6 +20,7 @@
 #include "../../base/value_construction_internal.h"
 #include "../../base/value_archive_internal.h"
 #include "umicom/observability/performance/memory_budget.h"
+#include "budget_admission_internal.h"
 
 /* Initialise deterministic record metadata before any measurement is observed. */
 /* Construction formerly wrote into the live destination before all inputs
@@ -80,6 +81,8 @@ UMI_DEFINE_STAGED_VALUE_INIT(umi_performance_memory_budget_init, UmiPerformanceM
 
 
 /* Reject incompatible ABI snapshots and malformed stable identifiers. */
+/* Budget records must retain the finite-value domain required by their existing archive codec. The previous validator is retained for owner review; ABI and serialized fields are unchanged. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_performance_memory_budget_validate(const UmiPerformanceMemoryBudget *record) {
     /* Fixed-size fields may come from a plug-in or restored state. Check
      * every terminator before the domain rules use these strings. Add each
@@ -101,8 +104,32 @@ UmiStatus umi_performance_memory_budget_validate(const UmiPerformanceMemoryBudge
     if ((unsigned)record->state > (unsigned)UMI_PERFORMANCE_STATE_FAILED || (unsigned)record->severity > (unsigned)UMI_PERFORMANCE_SEVERITY_CRITICAL) return UMI_STATUS_INVALID_STATE;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_performance_memory_budget_validate(const UmiPerformanceMemoryBudget *record) {
+    /* Fixed-size fields may come from a plug-in or restored state. Check
+     * every terminator before the domain rules use these strings. Add each
+     * new text field here so malformed input never reaches an unbounded read. */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->id, '\0', sizeof(record->id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (memchr(record->subject_id, '\0', sizeof(record->subject_id)) == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (record == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (record->structure_size != (uint32_t)sizeof(*record) || record->api_version != UMI_PERFORMANCE_API_VERSION) return UMI_STATUS_INVALID_STATE;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (!umi_performance_id_valid(record->id) || !umi_performance_id_valid(record->subject_id)) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if ((unsigned)record->state > (unsigned)UMI_PERFORMANCE_STATE_FAILED || (unsigned)record->severity > (unsigned)UMI_PERFORMANCE_SEVERITY_CRITICAL) return UMI_STATUS_INVALID_STATE;
+    return UmiPerformanceBudgetValuesValidate(record->value, record->auxiliary);
+}
 
 /* Store scalar evidence without silently changing the caller-selected lifecycle state. */
+/* Validate measurement values and reserve the next sequence before changing live state. Failure now preserves the complete record; the former unchecked update remains for owner review. The former implementation is retained for owner review. */
+#if 0
 UmiStatus umi_performance_memory_budget_observe(UmiPerformanceMemoryBudget *record, double value, double auxiliary, uint64_t count, uint64_t timestamp_ns) {
     UmiStatus status = umi_performance_memory_budget_validate(record);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
@@ -114,8 +141,24 @@ UmiStatus umi_performance_memory_budget_observe(UmiPerformanceMemoryBudget *reco
     ++record->sequence;
     return UMI_STATUS_OK;
 }
+#endif
+UmiStatus umi_performance_memory_budget_observe(UmiPerformanceMemoryBudget *record, double value, double auxiliary, uint64_t count, uint64_t timestamp_ns) {
+    UmiStatus status = umi_performance_memory_budget_validate(record);
+    /* Preserve the original failure result so the caller can respond to the correct cause. */
+    if (status != UMI_STATUS_OK) return status;
+    status = UmiPerformanceBudgetObservationAdmit(record->sequence, value, auxiliary);
+    if (status != UMI_STATUS_OK) return status;
+    record->value = value;
+    record->auxiliary = auxiliary;
+    record->count = count;
+    record->timestamp_ns = timestamp_ns;
+    ++record->sequence;
+    return UMI_STATUS_OK;
+}
 
 /* Stable identity is intentionally independent of sequence, severity and measured values. */
+/* Bound both inline identity strings before comparison while continuing to ignore volatile measurements. The prior unbounded comparison is preserved for review. The former implementation is retained for owner review. */
+#if 0
 bool umi_performance_memory_budget_same_identity(const UmiPerformanceMemoryBudget *left, const UmiPerformanceMemoryBudget *right) {
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -124,10 +167,25 @@ bool umi_performance_memory_budget_same_identity(const UmiPerformanceMemoryBudge
     if (left == NULL || right == NULL) return false;
     return strcmp(left->id, right->id) == 0 && strcmp(left->subject_id, right->subject_id) == 0;
 }
+#endif
+bool umi_performance_memory_budget_same_identity(const UmiPerformanceMemoryBudget *left, const UmiPerformanceMemoryBudget *right) {
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (left == NULL || right == NULL) return false;
+    return UmiPerformanceBudgetIdentityMatches(left->id, left->subject_id, right->id, right->subject_id);
+}
 
 /* Evaluate a non-negative observation against an inclusive budget. */
+/* An infinite limit is not evidence of available capacity. Shared finite admission replaces the original comparison, which is retained for owner review. The former implementation is retained for owner review. */
+#if 0
 bool umi_performance_memory_budget_within_budget(double used, double limit) {
     return used >= 0.0 && limit >= 0.0 && used <= limit;
+}
+#endif
+bool umi_performance_memory_budget_within_budget(double used, double limit) {
+    return UmiPerformanceWithinFiniteBudget(used, limit);
 }
 
 /* State transfer belongs to this Framework value owner. Explicit fields keep

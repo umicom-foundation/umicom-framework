@@ -21,6 +21,7 @@
  *   MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/tape.h"
+#include "categorical_loss.h"
 #include "umicom/ai/training/gradient_accumulation.h"
 #include "umicom/ai/training/matrix_kernel.h"
 
@@ -42,7 +43,8 @@ typedef enum UmiAiTrainingOperation {
     UMI_AI_TRAINING_EMBEDDING,
     UMI_AI_TRAINING_MULTI_HEAD_ATTENTION,
     UMI_AI_TRAINING_LAYER_NORM,
-    UMI_AI_TRAINING_CAUSAL_ATTENTION
+    UMI_AI_TRAINING_CAUSAL_ATTENTION,
+    UMI_AI_TRAINING_WEIGHTED_MSE
 } UmiAiTrainingOperation;
 
 struct UmiAiTrainingTensor {
@@ -58,7 +60,14 @@ struct UmiAiTrainingTensor {
     const UmiAiTrainingTensor *right;
     const UmiAiTrainingTensor *third; /* value operand of attention */
     size_t sequenceLength; /* tokens in each independent sequence */
+/* Attention and weighted-error nodes are mutually exclusive operations. Alias their owned float buffer slot to keep metadata size unchanged; the common free/accounting path retains ownership. The former implementation is retained for owner review. */
+#if 0
     float *attentionWeights; /* owned [batch*time, time] cache */
+#endif
+    union {
+        float *attentionWeights; /* owned [batch*time, time] cache */
+        float *lossWeights;      /* owned weighted-error coefficients */
+    };
     size_t headCount; /* multi-head attention cache/offset partition */
     float normEpsilon; /* epsilon for layer normalisation derivative */
     UmiAiTrainingOperation operation;
@@ -66,8 +75,21 @@ struct UmiAiTrainingTensor {
     /* Persistent allocation counts are fixed when this node is published.
      * Operators retain ownership until a tape rewind, rollback or destroy. */
     size_t targetAllocationCount;
+/* Count the same mutually exclusive owned float allocation through its operation-specific name; retain the previous field for layout review. The former implementation is retained for owner review. */
+#if 0
     size_t attentionAllocationCount;
+#endif
+    union {
+        size_t attentionAllocationCount;
+        size_t lossWeightAllocationCount;
+    };
     size_t committedBytes;
+    /* One owned byte per selected-error input element; absent for other nodes. */
+    unsigned char *lossSelection;
+    size_t lossSelectionAllocationCount;
+    /* Optional attention padding selection, owned independently of loss masks. */
+    unsigned char *attentionSelection;
+    size_t attentionSelectionAllocationCount;
 };
 
 struct UmiAiTrainingTape {
@@ -133,6 +155,8 @@ static UmiAiTrainingTensor *AllocateNode(UmiAiTrainingTape *tape,
 static void FreeNode(UmiAiTrainingTensor *node)
 {
     if (node == NULL) return;
+    free(node->attentionSelection);
+    free(node->lossSelection);
     free(node->targets);
     free(node->attentionWeights);
     free(node->gradients);
@@ -161,6 +185,10 @@ static bool NodeCommittedBytes(const UmiAiTrainingTensor *node,
             return false;
         bytes += node->attentionAllocationCount * sizeof(float);
     }
+    if (node->lossSelectionAllocationCount > SIZE_MAX - bytes) return false;
+    bytes += node->lossSelectionAllocationCount;
+    if (node->attentionSelectionAllocationCount > SIZE_MAX - bytes) return false;
+    bytes += node->attentionSelectionAllocationCount;
     *outBytes = bytes;
     return true;
 }
@@ -217,6 +245,8 @@ UmiStatus UmiAiTrainingTapeMemoryInspect(
         const UmiAiTrainingTensor *node = tape->nodes[i];
         candidate.tensorValuesBytes += node->count * sizeof(float);
         candidate.tensorGradientBytes += node->count * sizeof(float);
+        candidate.auxiliaryBytes += node->lossSelectionAllocationCount;
+        candidate.auxiliaryBytes += node->attentionSelectionAllocationCount;
         candidate.auxiliaryBytes += node->targetAllocationCount * sizeof(size_t) +
                                     node->attentionAllocationCount * sizeof(float);
     }
@@ -439,6 +469,8 @@ UmiStatus UmiAiTrainingRelu(UmiAiTrainingTape *tape,
     return PublishNode(tape, node, outTensor);
 }
 
+/* Share squared-error admission and ownership with an optional element mask; retain the original all-element implementation for behavior review. The former implementation is retained for owner review. */
+#if 0
 UmiStatus UmiAiTrainingMeanSquaredError(UmiAiTrainingTape *tape,
                                        const UmiAiTrainingTensor *prediction,
                                        const UmiAiTrainingTensor *target,
@@ -465,6 +497,115 @@ UmiStatus UmiAiTrainingMeanSquaredError(UmiAiTrainingTape *tape,
     return PublishNode(tape, node, outLoss);
 }
 
+
+#endif
+/* Selection is retained by the Framework node, not borrowed from an application
+ * mask. This keeps forward values and backward derivatives tied to one objective.
+ * NULL selects the legacy all-element objective without an auxiliary allocation. */
+static UmiStatus MeanSquaredErrorSelected(UmiAiTrainingTape *tape,
+    const UmiAiTrainingTensor *prediction, const UmiAiTrainingTensor *target,
+    const unsigned char *selected, size_t selectedCount,
+    UmiAiTrainingTensor **outLoss)
+{
+    if (!IsMember(tape, prediction) || !IsMember(tape, target) || outLoss == NULL ||
+        prediction->rows != target->rows || prediction->columns != target->columns ||
+        (selected != NULL && selectedCount != prediction->count))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    size_t included = prediction->count;
+    if (selected != NULL) {
+        included = 0U;
+        for (size_t i = 0U; i < selectedCount; ++i) {
+            if (selected[i] > 1U) return UMI_STATUS_INVALID_ARGUMENT;
+            included += selected[i];
+        }
+        if (included == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if (tape->count >= UMI_AI_TRAINING_MAX_TENSORS) return UMI_STATUS_CAPACITY_EXCEEDED;
+    double mse = 0.0;
+    for (size_t i = 0U; i < prediction->count; ++i) {
+        if (selected != NULL && selected[i] == 0U) continue;
+        double delta = (double)prediction->values[i] - (double)target->values[i];
+        mse += (delta * delta) / (double)included;
+        if (!CanStore(mse)) return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    UmiAiTrainingTensor *node = AllocateNode(tape, 1U, 1U);
+    if (node == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    if (selected != NULL) {
+        node->lossSelection = malloc(selectedCount);
+        if (node->lossSelection == NULL) {
+            FreeNode(node);
+            return UMI_STATUS_OUT_OF_MEMORY;
+        }
+        memcpy(node->lossSelection, selected, selectedCount);
+        node->lossSelectionAllocationCount = selectedCount;
+    }
+    node->values[0] = (float)mse;
+    node->left = prediction;
+    node->right = target;
+    node->operation = UMI_AI_TRAINING_MSE;
+    return PublishNode(tape, node, outLoss);
+}
+
+UmiStatus UmiAiTrainingMeanSquaredError(UmiAiTrainingTape *tape,
+    const UmiAiTrainingTensor *prediction, const UmiAiTrainingTensor *target,
+    UmiAiTrainingTensor **outLoss)
+{
+    return MeanSquaredErrorSelected(tape, prediction, target, NULL, 0U, outLoss);
+}
+
+UmiStatus UmiAiTrainingMaskedMeanSquaredError(UmiAiTrainingTape *tape,
+    const UmiAiTrainingTensor *prediction, const UmiAiTrainingTensor *target,
+    const unsigned char *selected, size_t selectedCount,
+    UmiAiTrainingTensor **outLoss)
+{
+    if (selected == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return MeanSquaredErrorSelected(tape, prediction, target, selected, selectedCount, outLoss);
+}
+
+
+/* Weight storage is immutable after publication, so forward and backward use
+ * the same caller-selected objective even if the original array is released. */
+UmiStatus UmiAiTrainingWeightedMeanSquaredError(UmiAiTrainingTape *tape,
+    const UmiAiTrainingTensor *prediction, const UmiAiTrainingTensor *target,
+    const float *weights, size_t weightCount, UmiAiTrainingTensor **outLoss)
+{
+    if (!IsMember(tape, prediction) || !IsMember(tape, target) ||
+        outLoss == NULL || weights == NULL ||
+        prediction->rows != target->rows || prediction->columns != target->columns ||
+        weightCount != prediction->count)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    double total = 0.0, loss = 0.0;
+    for (size_t i = 0U; i < weightCount; ++i) {
+        if (!isfinite(weights[i]) || weights[i] < 0.0F)
+            return UMI_STATUS_INVALID_ARGUMENT;
+        total += (double)weights[i];
+    }
+    if (!isfinite(total) || total <= 0.0) return UMI_STATUS_INVALID_ARGUMENT;
+    if (tape->count >= UMI_AI_TRAINING_MAX_TENSORS) return UMI_STATUS_CAPACITY_EXCEEDED;
+    for (size_t i = 0U; i < weightCount; ++i) {
+        if (weights[i] == 0.0F) continue;
+        double delta = (double)prediction->values[i] - (double)target->values[i];
+        loss += ((double)weights[i] / total) * (delta * delta);
+        if (!CanStore(loss)) return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    UmiAiTrainingTensor *node = AllocateNode(tape, 1U, 1U);
+    if (node == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    node->lossWeights = malloc(weightCount * sizeof(*node->lossWeights));
+    if (node->lossWeights == NULL) {
+        FreeNode(node);
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    memcpy(node->lossWeights, weights, weightCount * sizeof(*weights));
+    node->lossWeightAllocationCount = weightCount;
+    node->values[0] = (float)loss;
+    node->left = prediction;
+    node->right = target;
+    node->operation = UMI_AI_TRAINING_WEIGHTED_MSE;
+    return PublishNode(tape, node, outLoss);
+}
+
+/* Retain the all-row implementation while sharing selected-row admission and fixing cancellation of the logarithmic term at large score offsets. The former implementation is retained for owner review. */
+#if 0
 UmiStatus UmiAiTrainingCrossEntropy(UmiAiTrainingTape *tape,
                                    const UmiAiTrainingTensor *logits,
                                    const size_t *targets, size_t targetCount,
@@ -501,6 +642,72 @@ UmiStatus UmiAiTrainingCrossEntropy(UmiAiTrainingTape *tape,
     node->left = logits;
     node->operation = UMI_AI_TRAINING_CROSS_ENTROPY;
     return PublishNode(tape, node, outLoss);
+}
+
+#endif
+/* Both public entry points share one stable numeric and ownership path.
+ * An internal SIZE_MAX target denotes an excluded row; no second mask buffer
+ * or new tensor layout is needed, and existing memory accounting stays exact. */
+static UmiStatus CrossEntropySelected(UmiAiTrainingTape *tape,
+    const UmiAiTrainingTensor *logits, const size_t *targets, size_t targetCount,
+    const unsigned char *selected, UmiAiTrainingTensor **outLoss)
+{
+    if (!IsMember(tape, logits) || targets == NULL || outLoss == NULL ||
+        targetCount != logits->rows) return UMI_STATUS_INVALID_ARGUMENT;
+    if (tape->count >= UMI_AI_TRAINING_MAX_TENSORS) return UMI_STATUS_CAPACITY_EXCEEDED;
+    size_t selectedRows = 0U;
+    for (size_t row = 0U; row < targetCount; ++row) {
+        if (targets[row] >= logits->columns || (selected != NULL && selected[row] > 1U))
+            return UMI_STATUS_INVALID_ARGUMENT;
+        if (selected == NULL || selected[row] != 0U) ++selectedRows;
+    }
+    if (selectedRows == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    double average = 0.0;
+    for (size_t row = 0U; row < logits->rows; ++row) {
+        if (selected != NULL && selected[row] == 0U) continue;
+        const float *values = logits->values + row * logits->columns;
+/* Read-only evaluation and graph construction now share the stable row-loss kernel. The original arithmetic and its numerical explanation remain for review. The former implementation is retained for owner review. */
+#if 0
+        double maximum = (double)values[0];
+        for (size_t column = 1U; column < logits->columns; ++column)
+            if ((double)values[column] > maximum) maximum = (double)values[column];
+        double exponentialSum = 0.0;
+        for (size_t column = 0U; column < logits->columns; ++column)
+            exponentialSum += exp((double)values[column] - maximum);
+        /* Subtract before adding log(sum). Adding that small term to a large
+         * maximum first can round it away, giving zero loss for equal logits. */
+        double rowLoss = (maximum - (double)values[targets[row]]) + log(exponentialSum);
+#endif
+        const double rowLoss = TrainingCategoricalRowLoss(values, logits->columns, targets[row]);
+        average += rowLoss / (double)selectedRows;
+        if (!CanStore(average)) return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    UmiAiTrainingTensor *node = AllocateNode(tape, 1U, 1U);
+    if (node == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    node->targets = malloc(targetCount * sizeof(*targets));
+    if (node->targets == NULL) { FreeNode(node); return UMI_STATUS_OUT_OF_MEMORY; }
+    node->targetAllocationCount = targetCount;
+    for (size_t row = 0U; row < targetCount; ++row)
+        node->targets[row] = selected == NULL || selected[row] != 0U ? targets[row] : SIZE_MAX;
+    node->values[0] = (float)average;
+    node->left = logits;
+    node->operation = UMI_AI_TRAINING_CROSS_ENTROPY;
+    return PublishNode(tape, node, outLoss);
+}
+
+UmiStatus UmiAiTrainingCrossEntropy(UmiAiTrainingTape *tape,
+    const UmiAiTrainingTensor *logits, const size_t *targets, size_t targetCount,
+    UmiAiTrainingTensor **outLoss)
+{
+    return CrossEntropySelected(tape, logits, targets, targetCount, NULL, outLoss);
+}
+
+UmiStatus UmiAiTrainingMaskedCrossEntropy(UmiAiTrainingTape *tape,
+    const UmiAiTrainingTensor *logits, const size_t *targets, size_t targetCount,
+    const unsigned char *selected, size_t selectedCount, UmiAiTrainingTensor **outLoss)
+{
+    if (selected == NULL || selectedCount != targetCount) return UMI_STATUS_INVALID_ARGUMENT;
+    return CrossEntropySelected(tape, logits, targets, targetCount, selected, outLoss);
 }
 
 /* Token embeddings use an integer-indexed gather rather than a one-hot
@@ -625,6 +832,8 @@ UmiStatus UmiAiTrainingCausalAttention(UmiAiTrainingTape *tape,
 /* The multi-head operator reuses the canonical tape and backward lifecycle.
  * Each head occupies a contiguous channel range; the cache is indexed
  * [head, row, past] and contains no probability for future positions. */
+/* Reuse the canonical multi-head operator with optional copied row selection. Excluded query rows stay zero, and excluded key/value rows never enter softmax or weighted sums; the original unmasked entry delegates with no selection. The former implementation is retained for owner review. */
+#if 0
 UmiStatus UmiAiTrainingMultiHeadCausalAttention(
     UmiAiTrainingTape *tape,
     const UmiAiTrainingTensor *queries,
@@ -714,6 +923,140 @@ UmiStatus UmiAiTrainingMultiHeadCausalAttention(
     node->headCount = headCount;
     node->operation = UMI_AI_TRAINING_MULTI_HEAD_ATTENTION;
     return PublishNode(tape, node, outTensor);
+}
+
+#endif
+static UmiStatus MultiHeadCausalAttentionSelected(
+    UmiAiTrainingTape *tape,
+    const UmiAiTrainingTensor *queries,
+    const UmiAiTrainingTensor *keys,
+    const UmiAiTrainingTensor *values,
+    size_t sequenceLength,
+    size_t headCount,
+    const unsigned char *selected, size_t selectedCount,
+    UmiAiTrainingTensor **outTensor)
+{
+    UmiAiTrainingTensor *node;
+    double *scores;
+    size_t headWidth;
+    double scale;
+    if (!IsMember(tape, queries) || !IsMember(tape, keys) ||
+        !IsMember(tape, values) || outTensor == NULL ||
+        sequenceLength == 0U || headCount == 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    if (queries->rows != keys->rows || queries->rows != values->rows ||
+        queries->columns != keys->columns || queries->columns != values->columns ||
+        queries->columns % headCount != 0U ||
+        queries->rows % sequenceLength != 0U) return UMI_STATUS_INVALID_ARGUMENT;
+    if (selected != NULL) {
+        if (selectedCount != queries->rows) return UMI_STATUS_INVALID_ARGUMENT;
+        for (size_t row = 0U; row < selectedCount; ++row)
+            if (selected[row] > 1U) return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    /* Bound the cache and check products by division before multiplying. */
+    if (headCount > UMI_AI_TRAINING_MAX_ELEMENTS / queries->rows ||
+        sequenceLength > UMI_AI_TRAINING_MAX_ELEMENTS /
+                         (queries->rows * headCount)) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (tape->count >= UMI_AI_TRAINING_MAX_TENSORS) return UMI_STATUS_CAPACITY_EXCEEDED;
+    headWidth = queries->columns / headCount;
+    scale = sqrt((double)headWidth);
+    node = AllocateNode(tape, queries->rows, queries->columns);
+    if (node == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    node->attentionWeights = calloc(headCount * queries->rows * sequenceLength,
+                                    sizeof(*node->attentionWeights));
+    scores = malloc(sequenceLength * sizeof(*scores));
+    if (node->attentionWeights == NULL || scores == NULL) {
+        free(scores);
+        FreeNode(node);
+        return UMI_STATUS_OUT_OF_MEMORY;
+    }
+    node->attentionAllocationCount = headCount * queries->rows * sequenceLength;
+    if (selected != NULL) {
+        node->attentionSelection = malloc(selectedCount);
+        if (node->attentionSelection == NULL) {
+            free(scores); FreeNode(node); return UMI_STATUS_OUT_OF_MEMORY;
+        }
+        node->attentionSelectionAllocationCount = selectedCount;
+        for (size_t row = 0U; row < selectedCount; ++row)
+            node->attentionSelection[row] = selected[row];
+    }
+    for (size_t head = 0U; head < headCount; ++head) {
+        size_t firstChannel = head * headWidth;
+        for (size_t row = 0U; row < queries->rows; ++row) {
+            /* An excluded query has a zero output and no softmax to compute. */
+            if (node->attentionSelection != NULL && node->attentionSelection[row] == 0U) continue;
+            size_t batchStart = (row / sequenceLength) * sequenceLength;
+            size_t currentTime = row % sequenceLength;
+            size_t cacheStart = (head * queries->rows + row) * sequenceLength;
+            double maximum = -INFINITY;
+            double denominator = 0.0;
+            for (size_t past = 0U; past <= currentTime; ++past) {
+                if (node->attentionSelection != NULL && node->attentionSelection[batchStart + past] == 0U) continue;
+                size_t keyRow = batchStart + past;
+                double dot = 0.0;
+                for (size_t channel = 0U; channel < headWidth; ++channel) {
+                    size_t col = firstChannel + channel;
+                    dot += (double)queries->values[row * queries->columns + col] *
+                           (double)keys->values[keyRow * keys->columns + col];
+                }
+                scores[past] = dot / scale;
+                if (!isfinite(scores[past])) { free(scores); FreeNode(node); return UMI_STATUS_INVALID_ARGUMENT; }
+                if (scores[past] > maximum) maximum = scores[past];
+            }
+            for (size_t past = 0U; past <= currentTime; ++past) {
+                if (node->attentionSelection != NULL && node->attentionSelection[batchStart + past] == 0U) continue;
+                denominator += exp(scores[past] - maximum);
+            }
+            if (!isfinite(denominator) || denominator <= 0.0) {
+                free(scores); FreeNode(node); return UMI_STATUS_INVALID_ARGUMENT;
+            }
+            for (size_t past = 0U; past <= currentTime; ++past) {
+                if (node->attentionSelection != NULL && node->attentionSelection[batchStart + past] == 0U) continue;
+                double probability = exp(scores[past] - maximum) / denominator;
+                node->attentionWeights[cacheStart + past] = (float)probability;
+            }
+            for (size_t channel = 0U; channel < headWidth; ++channel) {
+                size_t col = firstChannel + channel;
+                double result = 0.0;
+                for (size_t past = 0U; past <= currentTime; ++past) {
+                    if (node->attentionSelection != NULL && node->attentionSelection[batchStart + past] == 0U) continue;
+                    size_t valueRow = batchStart + past;
+                    result += (double)node->attentionWeights[cacheStart + past] *
+                              (double)values->values[valueRow * values->columns + col];
+                }
+                if (!CanStore(result)) { free(scores); FreeNode(node); return UMI_STATUS_INVALID_ARGUMENT; }
+                node->values[row * node->columns + col] = (float)result;
+            }
+        }
+    }
+    free(scores);
+    node->left = queries;
+    node->right = keys;
+    node->third = values;
+    node->sequenceLength = sequenceLength;
+    node->headCount = headCount;
+    node->operation = UMI_AI_TRAINING_MULTI_HEAD_ATTENTION;
+    return PublishNode(tape, node, outTensor);
+}
+
+UmiStatus UmiAiTrainingMultiHeadCausalAttention(
+    UmiAiTrainingTape *tape, const UmiAiTrainingTensor *queries,
+    const UmiAiTrainingTensor *keys, const UmiAiTrainingTensor *values,
+    size_t sequenceLength, size_t headCount, UmiAiTrainingTensor **outTensor)
+{
+    return MultiHeadCausalAttentionSelected(tape, queries, keys, values,
+        sequenceLength, headCount, NULL, 0U, outTensor);
+}
+
+UmiStatus UmiAiTrainingMaskedMultiHeadCausalAttention(
+    UmiAiTrainingTape *tape, const UmiAiTrainingTensor *queries,
+    const UmiAiTrainingTensor *keys, const UmiAiTrainingTensor *values,
+    size_t sequenceLength, size_t headCount,
+    const unsigned char *selected, size_t selectedCount,
+    UmiAiTrainingTensor **outTensor)
+{
+    if (selected == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    return MultiHeadCausalAttentionSelected(tape, queries, keys, values,
+        sequenceLength, headCount, selected, selectedCount, outTensor);
 }
 
 /* Learnable row-wise layer normalisation. Each training sample/token is
@@ -818,6 +1161,8 @@ static bool BackwardNode(UmiAiTrainingTensor *node)
                 !Accumulate(&left->gradients[i], (double)node->gradients[i])) return false;
         }
         return true;
+/* Normalize by the retained selected-element count and skip excluded derivatives; preserve the original all-element derivative for comparison. The former implementation is retained for owner review. */
+#if 0
     case UMI_AI_TRAINING_MSE:
         for (size_t i = 0U; i < left->count; ++i) {
             double delta = (double)left->values[i] - (double)right->values[i];
@@ -826,6 +1171,42 @@ static bool BackwardNode(UmiAiTrainingTensor *node)
                 !Accumulate(&right->gradients[i], -gradient)) return false;
         }
         return true;
+
+#endif
+
+    case UMI_AI_TRAINING_WEIGHTED_MSE: {
+        double total = 0.0;
+        for (size_t i = 0U; i < left->count; ++i)
+            total += (double)node->lossWeights[i];
+        if (!isfinite(total) || total <= 0.0) return false;
+        for (size_t i = 0U; i < left->count; ++i) {
+            if (node->lossWeights[i] == 0.0F) continue;
+            double delta = (double)left->values[i] - (double)right->values[i];
+            double gradient = (2.0 * ((double)node->lossWeights[i] / total)) *
+                              delta * (double)node->gradients[0];
+            if (!Accumulate(&left->gradients[i], gradient) ||
+                !Accumulate(&right->gradients[i], -gradient)) return false;
+        }
+        return true;
+    }
+    case UMI_AI_TRAINING_MSE: {
+        size_t included = left->count;
+        if (node->lossSelection != NULL) {
+            included = 0U;
+            for (size_t i = 0U; i < left->count; ++i) included += node->lossSelection[i];
+        }
+        if (included == 0U) return false;
+        for (size_t i = 0U; i < left->count; ++i) {
+            if (node->lossSelection != NULL && node->lossSelection[i] == 0U) continue;
+            double delta = (double)left->values[i] - (double)right->values[i];
+            double gradient = 2.0 * delta * (double)node->gradients[0] / (double)included;
+            if (!Accumulate(&left->gradients[i], gradient) ||
+                !Accumulate(&right->gradients[i], -gradient)) return false;
+        }
+        return true;
+    }
+/* Keep the original derivative for review; normalize by selected rows and contribute zero from excluded rows while retaining shared-gradient accumulation. The former implementation is retained for owner review. */
+#if 0
     case UMI_AI_TRAINING_CROSS_ENTROPY:
         for (size_t r = 0U; r < left->rows; ++r) {
             double maxLogit = (double)left->values[r * left->columns];
@@ -846,6 +1227,34 @@ static bool BackwardNode(UmiAiTrainingTensor *node)
             }
         }
         return true;
+
+#endif
+    case UMI_AI_TRAINING_CROSS_ENTROPY: {
+        size_t selectedRows = 0U;
+        for (size_t row = 0U; row < left->rows; ++row)
+            if (node->targets[row] != SIZE_MAX) ++selectedRows;
+        if (selectedRows == 0U) return false;
+        for (size_t r = 0U; r < left->rows; ++r) {
+            if (node->targets[r] == SIZE_MAX) continue;
+            double maxLogit = (double)left->values[r * left->columns];
+            double expSum = 0.0;
+            for (size_t c = 1U; c < left->columns; ++c) {
+                double value = (double)left->values[r * left->columns + c];
+                if (value > maxLogit) maxLogit = value;
+            }
+            for (size_t c = 0U; c < left->columns; ++c) {
+                expSum += exp((double)left->values[r * left->columns + c] - maxLogit);
+            }
+            for (size_t c = 0U; c < left->columns; ++c) {
+                double probability = exp((double)left->values[r * left->columns + c] - maxLogit) / expSum;
+                double indicator = c == node->targets[r] ? 1.0 : 0.0;
+                double gradient = (probability - indicator) *
+                                  (double)node->gradients[0] / (double)selectedRows;
+                if (!Accumulate(&left->gradients[r * left->columns + c], gradient)) return false;
+            }
+        }
+        return true;
+    }
     case UMI_AI_TRAINING_EMBEDDING:
         /* A discrete token index is not differentiable. Embedding rows share
          * gradients across every occurrence of the same token. */
@@ -900,6 +1309,8 @@ static bool BackwardNode(UmiAiTrainingTensor *node)
         }
         return true;
     }
+/* Apply the same copied row selection in reverse mode, so padding contributes no query/key/value derivative through this operation while other graph paths remain independent. The former implementation is retained for owner review. */
+#if 0
     case UMI_AI_TRAINING_MULTI_HEAD_ATTENTION: {
         UmiAiTrainingTensor *values = (UmiAiTrainingTensor *)node->third;
         size_t headWidth = left->columns / node->headCount;
@@ -921,6 +1332,58 @@ static bool BackwardNode(UmiAiTrainingTensor *node)
                     expected += (double)node->attentionWeights[cache + past] * dot;
                 }
                 for (size_t past = 0U; past <= current; ++past) {
+                    double prob = (double)node->attentionWeights[cache + past];
+                    double dot = 0.0;
+                    size_t keyRow = start + past;
+                    for (size_t ch = 0U; ch < headWidth; ++ch) {
+                        size_t col = firstChannel + ch;
+                        size_t outIndex = row * node->columns + col;
+                        size_t valueIndex = keyRow * values->columns + col;
+                        double upstream = (double)node->gradients[outIndex];
+                        dot += upstream * (double)values->values[valueIndex];
+                        if (!Accumulate(&values->gradients[valueIndex], prob * upstream)) return false;
+                    }
+                    double scoreGrad = prob * (dot - expected) / scale;
+                    for (size_t ch = 0U; ch < headWidth; ++ch) {
+                        size_t col = firstChannel + ch;
+                        size_t qidx = row * left->columns + col;
+                        size_t kidx = keyRow * right->columns + col;
+                        if (!Accumulate(&left->gradients[qidx],
+                                        scoreGrad * (double)right->values[kidx]) ||
+                            !Accumulate(&right->gradients[kidx],
+                                        scoreGrad * (double)left->values[qidx])) return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+#endif
+    case UMI_AI_TRAINING_MULTI_HEAD_ATTENTION: {
+        UmiAiTrainingTensor *values = (UmiAiTrainingTensor *)node->third;
+        size_t headWidth = left->columns / node->headCount;
+        double scale = sqrt((double)headWidth);
+        for (size_t head = 0U; head < node->headCount; ++head) {
+            size_t firstChannel = head * headWidth;
+            for (size_t row = 0U; row < node->rows; ++row) {
+                if (node->attentionSelection != NULL && node->attentionSelection[row] == 0U) continue;
+                size_t start = (row / node->sequenceLength) * node->sequenceLength;
+                size_t current = row % node->sequenceLength;
+                size_t cache = (head * node->rows + row) * node->sequenceLength;
+                double expected = 0.0;
+                for (size_t past = 0U; past <= current; ++past) {
+                    if (node->attentionSelection != NULL && node->attentionSelection[start + past] == 0U) continue;
+                    double dot = 0.0;
+                    for (size_t ch = 0U; ch < headWidth; ++ch) {
+                        size_t col = firstChannel + ch;
+                        dot += (double)node->gradients[row * node->columns + col] *
+                               (double)values->values[(start + past) * values->columns + col];
+                    }
+                    expected += (double)node->attentionWeights[cache + past] * dot;
+                }
+                for (size_t past = 0U; past <= current; ++past) {
+                    if (node->attentionSelection != NULL && node->attentionSelection[start + past] == 0U) continue;
                     double prob = (double)node->attentionWeights[cache + past];
                     double dot = 0.0;
                     size_t keyRow = start + past;

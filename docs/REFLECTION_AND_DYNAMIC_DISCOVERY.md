@@ -1,3 +1,5 @@
+![Umicom](../resources/brand/umicom-logo.svg)
+
 # Reflection and Dynamic Discovery
 
 Umicom Framework reflection is a searchable description of code and resources.
@@ -200,3 +202,32 @@ The current foundation can be extended with:
 
 These extensions should build on the same registry and event topics rather
 than introduce application-specific reflection implementations.
+
+## Copy a snapshot without retaining its old storage
+
+A snapshot is a caller-owned copy of the metadata. Its descriptor contains pointers to the snapshot's own field and attribute arrays. Ordinary C struct assignment copies pointer values as well as the arrays, so a second struct produced with `second = first` can still point into `first`. Clearing or reusing the first object then changes what the second descriptor appears to describe.
+
+Use **umi_reflection_type_snapshot_copy** for an independent copy:
+
+1. Obtain a snapshot with **umi_reflection_registry_get_type**.
+2. Keep that source object stable and at its current address for the copy.
+3. Provide a separate writable **UmiReflectionTypeSnapshot** destination.
+4. Check the copy operation's returned status before reading the destination.
+5. After success, populated descriptor pointers refer into the destination's arrays. The source and registry can then be changed or released without invalidating those copied arrays.
+
+~~~c
+UmiStatus status = umi_reflection_type_snapshot_copy(first, second);
+if (status != UMI_STATUS_OK) {
+    /* second retains its previous contents. Report the refusal. */
+    return status;
+}
+/* second->descriptor.fields now refers to second->fields when populated. */
+~~~
+
+Here **first** and **second** are pointers to valid snapshot objects, not live reflected application records. The operation does not read a bank account, model configuration or editor document through the metadata. It also does not grant permission to inspect sensitive values.
+
+The function checks source pointer relationships before following descriptor spans. Nonempty spans must point into that exact source snapshot, and empty spans must be null. It then applies the existing descriptor validator. Invalid counts, field bounds, strings or duplicate identifiers preserve the entire destination. Valid copies use no allocation and clear unused destination array storage. Source and destination must be disjoint, except that copying an object to itself validates it and otherwise leaves it unchanged.
+
+Registration now also canonicalizes empty spans: a legal zero-count input may have a nonnull source pointer, but the registry retains no such pointer and returns null for the empty snapshot span. Nonempty metadata remains deep-copied. Keep descriptors and input arrays stable during registration.
+
+After configuring a test-enabled Framework checkout, build **umicom-reflection-empty-spans-test** and **umicom-reflection-snapshot-copy-test**. The **framework.reflection.owned_spans.** and **framework.reflection.snapshot_copy.** cases cover empty/populated combinations, source mutation, independent lifetime, refusals, self-copy and maximum metadata counts. These are native ownership checks; application inspector behavior and plug-in unloading workflows need separate integration qualification.

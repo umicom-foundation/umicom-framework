@@ -69,7 +69,11 @@ int main(int argc,char **argv)
             trace.steps[7].status==UMC_FUEL_EXHAUSTED);return 0;
     }
     if(strcmp(argv[1],"syntax-reset")==0){
+/* Binary AND is now supported; retain stale-result refusal coverage using a missing right operand instead of rejecting valid source. The former implementation is retained for owner review. */
+#if 0
         source="int main(void){return 1 & 2;}";
+#endif
+        source="int main(void){return 1 & ;}";
         CHECK(umi_cvm_preview_traced(source,strlen(source),32U,&workspace,sizeof workspace,
             &result,sizeof result,&trace,sizeof trace)==UMI_STATUS_PARSE_ERROR);
         CHECK(!result.completed && result.execution.instructions_executed==0U && result.instruction_count==0U &&

@@ -3,8 +3,8 @@
  * File: tests/ui_workstation/test_workspace_tool_windows_gtk4.c
  *
  * PURPOSE:
- *   Exercise real shared edge tabs and tool drawers without presenting a
- *   window. Temporary reveal state must preserve editor drafts and must not
+ *   Exercise shared edge tabs and tool drawers with model-only checks and
+ *   isolated presented pointer-routing fixtures. Temporary reveal state must preserve editor drafts and must not
  *   mutate the portable workspace or dispatch after its host is released.
  *
  * AUTHOR AND ORGANISATION:
@@ -214,6 +214,82 @@ cleanup:
 
 /* Create only the Framework's real host and test providers. A missing display
  * skips the native case rather than reporting its UI assertions as passed. */
+/* Picking checks use the displayed tree. A signal-only test can activate a
+ * button even when an invisible overlay intercepts every physical click. */
+static void settle_tool_window(void)
+{
+    const gint64 deadline = g_get_monotonic_time() + 150000;
+    do {
+        (void)g_main_context_iteration(NULL, FALSE);
+        g_usleep(1000U);
+    } while (g_get_monotonic_time() < deadline);
+}
+
+static int tool_receives_pointer(GtkWidget *root, GtkWidget *target)
+{
+    graphene_rect_t bounds;
+    if (!gtk_widget_compute_bounds(target, root, &bounds) ||
+        bounds.size.width <= 0.0F || bounds.size.height <= 0.0F) return 0;
+    GtkWidget *picked = gtk_widget_pick(root,
+        (double)(bounds.origin.x + bounds.size.width / 2.0F),
+        (double)(bounds.origin.y + bounds.size.height / 2.0F), GTK_PICK_DEFAULT);
+    return picked != NULL && (picked == target || gtk_widget_is_ancestor(picked, target));
+}
+
+/* Each edge must release input when collapsed, admit its controls when open,
+ * and release input again without losing the editor's retained draft. */
+static int verify_tool_pointer_routing(const char *edge_name)
+{
+    int failed = 0;
+    ToolWindowFixture fixture = {0};
+    UmiUiWorkspaceLayout *layout = calloc(1U, sizeof(*layout));
+    UmiGtk4WorkspaceLayoutHost *host = NULL;
+    GtkWindow *window = NULL;
+    GtkWidget *root = NULL;
+    char placement[64], drawer_id[96], close_id[96];
+    (void)snprintf(placement, sizeof(placement), "auto-hide:%s", edge_name);
+    (void)snprintf(drawer_id, sizeof(drawer_id), "workstation.tool-drawer.%s", edge_name);
+    (void)snprintf(close_id, sizeof(close_id), "workstation.tool-close.%s", edge_name);
+    REQUIRE(layout != NULL);
+    REQUIRE(umi_ui_workspace_layout_init(layout, "test.pointer", "Tool input") == UMI_STATUS_OK);
+    REQUIRE(umi_ui_workspace_layout_set_locked(layout, false) == UMI_STATUS_OK);
+    REQUIRE(add_tool_window(layout, "editor", "Editor", "centre", true) == UMI_STATUS_OK);
+    REQUIRE(add_tool_window(layout, "structure", "Structure", placement, false) == UMI_STATUS_OK);
+    REQUIRE(umi_ui_workspace_layout_set_locked(layout, true) == UMI_STATUS_OK);
+    const uint64_t revision = layout->revision;
+    REQUIRE(umi_gtk4_workspace_layout_host_create(layout, create_tool_body, &fixture, &host) == UMI_STATUS_OK);
+    root = g_object_ref(umi_gtk4_workspace_layout_host_widget(host));
+    window = GTK_WINDOW(g_object_ref_sink(gtk_window_new()));
+    gtk_window_set_default_size(window, 900, 600);
+    gtk_window_set_child(window, root);
+    gtk_window_present(window);
+    settle_tool_window();
+    GtkWidget *drawer = find_tool_control(root, drawer_id);
+    REQUIRE(GTK_IS_REVEALER(drawer));
+    REQUIRE(tool_receives_pointer(GTK_WIDGET(window), fixture.editor));
+    gtk_editable_set_text(GTK_EDITABLE(fixture.editor), "retained pointer draft");
+    for (unsigned iteration = 0U; iteration < 3U; ++iteration) {
+        REQUIRE(umi_gtk4_workspace_layout_host_reveal_tool_window(host, "structure") == UMI_STATUS_OK);
+        settle_tool_window();
+        GtkWidget *close = find_tool_control(root, close_id);
+        REQUIRE(tool_receives_pointer(GTK_WIDGET(window), close));
+        umi_gtk4_workspace_layout_host_collapse_tool_windows(host);
+        settle_tool_window();
+        REQUIRE(!gtk_revealer_get_reveal_child(GTK_REVEALER(drawer)));
+        REQUIRE(tool_receives_pointer(GTK_WIDGET(window), fixture.editor));
+        REQUIRE(strcmp(gtk_editable_get_text(GTK_EDITABLE(fixture.editor)), "retained pointer draft") == 0);
+        REQUIRE(umi_gtk4_workspace_layout_host_snapshot(host).source_layout_revision == revision);
+        REQUIRE(fixture.actions == 0U);
+    }
+cleanup:
+    if (window != NULL) { gtk_window_destroy(window); g_object_unref(window); }
+    umi_gtk4_workspace_layout_host_destroy(host);
+    g_clear_object(&root);
+    if (!failed && fixture.created != fixture.released) failed = 1;
+    free(layout);
+    return failed;
+}
+
 int main(void)
 {
     ToolWindowFixture fixture = {0};
@@ -238,6 +314,9 @@ int main(void)
 
     (void)g_setenv("GTK_A11Y", "test", TRUE);
     if (!gtk_init_check()) return 77;
+    const char *edges[] = {"left", "right", "top", "bottom"};
+    for (size_t edge = 0U; edge < G_N_ELEMENTS(edges); ++edge)
+        REQUIRE(verify_tool_pointer_routing(edges[edge]) == 0);
     layout = calloc(1U, sizeof(*layout));
     blank = calloc(1U, sizeof(*blank));
     original = calloc(1U, sizeof(*original));

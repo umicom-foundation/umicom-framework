@@ -27,6 +27,7 @@ typedef struct HomeFixture {
     size_t starts;
     size_t activations;
     bool destroy_on_start;
+    UmiStatus activation_status;
     char last_application[UMI_APPLICATION_RUNTIME_ID_CAPACITY];
 } HomeFixture;
 
@@ -53,7 +54,12 @@ static UmiStatus fake_activate(void *context, const char *application_id, uint64
     (void)token;
     ++fixture->activations;
     (void)g_strlcpy(fixture->last_application, application_id, sizeof(fixture->last_application));
+    /* The same fixture can model an accepted activation or a live process
+     * that has not created a visible window. No native application is opened. */
+#if 0
     return UMI_STATUS_OK;
+#endif
+    return fixture->activation_status;
 }
 
 /* Find stable automation IDs within actual native descendants. */
@@ -199,6 +205,19 @@ int main(void)
     CHECK(umi_gtk4_desk_refresh(fixture.desk) == UMI_STATUS_OK);
     CHECK(gtk_widget_get_sensitive(launch));
     chooser = find_choice(root, "org.umicom.studio");
+    /* Captured stderr is a byte stream, not necessarily valid UTF-8. Keep
+     * its raw evidence in the catalogue and repair only native label text. */
+    CHECK(umi_application_runtime_catalogue_set_state(umi_desk_runtime_applications(runtime),
+        "org.umicom.studio", UMI_APPLICATION_RUNTIME_FAILED, "startup \xff diagnostic") == UMI_STATUS_OK);
+    CHECK(umi_gtk4_desk_refresh(fixture.desk) == UMI_STATUS_OK);
+    CHECK(g_utf8_validate(gtk_widget_get_tooltip_text(launch), -1, NULL));
+    CHECK(strstr(gtk_widget_get_tooltip_text(launch), "diagnostic") != NULL);
+    CHECK(umi_application_runtime_catalogue_set_state(umi_desk_runtime_applications(runtime),
+        "org.umicom.studio", UMI_APPLICATION_RUNTIME_STOPPED, "fixture reset") == UMI_STATUS_OK);
+    CHECK(umi_gtk4_desk_refresh(fixture.desk) == UMI_STATUS_OK);
+    /* State changes can rebuild chooser rows. Cache the current generation
+     * before asserting that subsequent unchanged refreshes preserve identity. */
+    chooser = find_choice(root, "org.umicom.studio");
     /* Search is case-insensitive and does not invoke application requests. */
     gtk_editable_set_text(GTK_EDITABLE(search), "STUDIO");
     g_signal_emit_by_name(search, "search-changed");
@@ -236,11 +255,16 @@ int main(void)
     CHECK(fixture.starts == 1U && strcmp(fixture.last_application, "org.umicom.studio") == 0);
     CHECK(find_id(root, "desk.home.open.org.umicom.studio") == launch);
     CHECK(strcmp(gtk_button_get_label(GTK_BUTTON(launch)), "Activate") == 0);
+    CHECK(has_label_text(root, "Process running"));
+    CHECK(has_label_text(root, "window readiness is unconfirmed"));
     CHECK(umi_desk_runtime_set_application_presence(runtime, "org.umicom.studio", false, true, true) == UMI_STATUS_OK);
     CHECK(umi_gtk4_desk_refresh(fixture.desk) == UMI_STATUS_OK);
     CHECK(gtk_widget_get_sensitive(launch));
+    fixture.activation_status = UMI_STATUS_UNAVAILABLE;
     g_signal_emit_by_name(launch, "clicked"); drain_ready();
     CHECK(fixture.starts == 1U && fixture.activations == 1U);
+    CHECK(has_label_text(root, "No visible application window is available yet"));
+    fixture.activation_status = UMI_STATUS_OK;
     /* The topmost header must not bypass Desk's missing-file policy or invoke
      * a direct executable/PATH launcher. Existing processes reuse activation. */
     header_report = g_try_new0(UmiApplicationLaunchDispatchReport, 1);

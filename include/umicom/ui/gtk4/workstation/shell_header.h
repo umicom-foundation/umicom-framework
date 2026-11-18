@@ -75,6 +75,11 @@ typedef struct UmiGtk4WorkstationWindowTitlebarSnapshot {
  * an independent top-level application window. The default GTK4 handler starts
  * the canonical native GUI companion recorded by the Framework portfolio;
  * console verification tools are never graphical-launch fallbacks.
+ * UMICOM_APPLICATIONS_BIN, when nonempty, supplies one authoritative absolute
+ * local directory for canonical GUI executables. Invalid or missing candidates
+ * do not fall back to another build. When unset/empty, existing executable-folder
+ * and PATH discovery remains. Set this environment before starting the host;
+ * changing an environment in another process does not update a running host.
  */
 typedef enum UmiGtk4WorkstationApplicationOpenMode {
     UMI_GTK4_WORKSTATION_APPLICATION_OPEN_STANDARD = 1,

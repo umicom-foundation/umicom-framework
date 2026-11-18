@@ -14,7 +14,10 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/cvm_preview.h"
 #include "umicom/toolchain/cvm_trace.h"
+#include "cvm_status.h"
 
+/* Keep the existing adapter entry behavior while sharing status translation with the source-only check service. The former implementation is retained for owner review. */
+#if 0
 static UmiStatus Translate(UmcStatus status)
 {
     switch (status) {
@@ -38,6 +41,12 @@ static UmiStatus Translate(UmcStatus status)
     default: return UMI_STATUS_INTERNAL_ERROR;
     }
 }
+#endif
+static UmiStatus Translate(UmcStatus status)
+{
+    return UmiCvmTranslateStatus(status);
+}
+
 /* Preserve the earlier adapter for engineering review. The shared request
  * lifecycle below keeps ordinary and traced previews aligned and reuses the
  * Umicom C runtime for all execution, including failed attempted steps. */

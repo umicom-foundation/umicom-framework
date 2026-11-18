@@ -198,6 +198,9 @@ void umi_cli_print_help(void)
         , stdout);
     (void)puts(
         "  umicom branding audit --assets BRAND_DIRECTORY --root GUIDES (source bytes only)\n"
+        "  umicom training-data inspect ABSOLUTE_JSONL_FILE (counts only)\n"
+        "  umicom training-data context ABSOLUTE_JSONL_FILE CONTEXT_ROWS (native byte fit)\n"
+        "  umicom training-data review ABSOLUTE_JSONL_FILE EVALUATION_GROUPS SEED STAGING_BYTES (counts only)\n"
         "  umicom test-report CTEST_JUNIT_FILE [--all] (saved results only)\n"
         "  umicom impact --inventory ABSOLUTE.tsv --working-tree (preview only)\n"
         "  umicom qualification-report ABSOLUTE.tsv [--expect-report SHA256] [--all] (saved evidence)\n"

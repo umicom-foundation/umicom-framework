@@ -36,7 +36,11 @@ UmiStatus UmiAiCorpusCreate(const uint8_t *bytes, size_t length,
 
 /* Imports local bytes exactly. Rejects files larger than MAX_BYTES and
  * empty files. No mmap, file mutation, network, text decoding or path search.
- * Caller must select/trust the pathname before using this API. */
+ * Caller must select/trust the pathname before using this API.
+ * The completed private read buffer transfers to the immutable corpus owner:
+ * no second payload copy is allocated. Peak corpus-owned storage is one
+ * payload plus the owner object; stdio/allocator overhead is not included.
+ * Allocation, read, EOF or close failure leaves outCorpus unchanged. */
 UmiStatus UmiAiCorpusLoadFile(const char *path, UmiAiCorpus **outCorpus);
 void UmiAiCorpusDestroy(UmiAiCorpus *corpus);
 UmiStatus UmiAiCorpusLength(const UmiAiCorpus *corpus, size_t *outLength);

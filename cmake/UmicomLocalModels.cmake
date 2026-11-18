@@ -117,3 +117,8 @@ if(BUILD_TESTING)
 endif()
 unset(_umi_models_root)
 unset(_umi_models_mode)
+
+
+# CLI and application consumers share one checked cache-planning command.
+target_sources(umicom_local_models PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/local_models/memory_command.c")

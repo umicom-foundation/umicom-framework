@@ -99,3 +99,62 @@ UmiStatus UmiModelDenseKvCacheBytes(const UmiModelDenseKvShape *shape,
         return UMI_STATUS_CAPACITY_EXCEEDED;
     *out=result;return UMI_STATUS_OK;
 }
+
+UmiStatus UmiModelDenseKvPlanTokens(const UmiModelDenseKvShape *shape,
+    uint64_t cache_budget_bytes, UmiModelKvTokenPlan *out)
+{
+    if (shape == NULL || out == NULL || shape->token_capacity == 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiModelDenseKvShape one = *shape;
+    one.token_capacity = 1U;
+    UmiModelKvFootprint per_token;
+    UmiStatus status = UmiModelDenseKvCacheBytes(&one, &per_token);
+    if (status != UMI_STATUS_OK) return status;
+    /* Dense geometry is linear in token capacity. Divide before multiplying:
+     * selected tokens cannot overflow or exceed the supplied cache budget. */
+    uint64_t affordable = cache_budget_bytes / per_token.total_bytes;
+    if (affordable > shape->token_capacity) affordable = shape->token_capacity;
+    UmiModelKvTokenPlan plan = {0};
+    plan.requested_tokens = shape->token_capacity;
+    plan.affordable_tokens = affordable;
+    plan.bytes_per_token = per_token.total_bytes;
+    plan.cache_bytes = affordable * per_token.total_bytes;
+    plan.unused_budget_bytes = cache_budget_bytes - plan.cache_bytes;
+    plan.request_fits = affordable == shape->token_capacity;
+    *out = plan;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiModelDenseKvPlanHostMemory(const UmiModelMemoryRequirements *non_cache,
+    const UmiModelDenseKvShape *shape, const UmiDesktopSystemSnapshot *snapshot,
+    uint64_t age, uint64_t maximum_age, uint64_t reserve, UmiModelHostKvPlan *out)
+{
+    if (non_cache == NULL || out == NULL || non_cache->cache_bytes != 0U ||
+        (non_cache->known_components & UMI_MODEL_MEMORY_CACHE) != 0U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiModelHostKvPlan result = {0};
+    UmiModelKvTokenPlan geometry;
+    /* Validate geometry through its owning service even if no host observation
+     * is usable. A zero budget avoids multiplying a huge requested token cap. */
+    UmiStatus status = UmiModelDenseKvPlanTokens(shape, 0U, &geometry);
+    if (status != UMI_STATUS_OK) return status;
+    UmiModelMemoryRequirements selected = *non_cache;
+    selected.known_components |= UMI_MODEL_MEMORY_CACHE;
+    status = UmiModelMemoryAssess(&selected, snapshot, age, maximum_age, reserve,
+        &result.fixed_memory);
+    if (status != UMI_STATUS_OK) return status;
+    if (result.fixed_memory.verdict == UMI_MODEL_MEMORY_WITHIN_DECLARED_BUDGET) {
+        status = UmiModelDenseKvPlanTokens(shape, result.fixed_memory.remaining_bytes,
+            &result.cache);
+        if (status != UMI_STATUS_OK) return status;
+        selected.cache_bytes = result.cache.cache_bytes;
+        /* Reuse the assessment contract rather than constructing a second set
+         * of freshness, reserve and overflow rules in application clients. */
+        status = UmiModelMemoryAssess(&selected, snapshot, age, maximum_age, reserve,
+            &result.selected_memory);
+        if (status != UMI_STATUS_OK) return status;
+        result.cache_plan_available = true;
+    }
+    *out = result;
+    return UMI_STATUS_OK;
+}

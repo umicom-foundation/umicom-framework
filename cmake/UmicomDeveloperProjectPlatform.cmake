@@ -581,7 +581,7 @@ function(umicom_attach_developer_dialogs_gtk4)
         if(COMMAND umicom_apply_sanitizers)
             umicom_apply_sanitizers(umicom-developer-settings-sections-test)
         endif()
-        foreach(case IN ITEMS navigation-cycle field-map prepared same-section invalid-section invalid-output null-dialog project-form owner-close parent-close reentrant-selection retained-controls apply-drafts hidden-apply cancel-drafts independent-forms configuration-binding sidebar divider independent-scroll pinned-actions construction-close)
+        foreach(case IN ITEMS navigation-cycle field-map prepared same-section invalid-section invalid-output null-dialog project-form owner-close parent-close reentrant-selection retained-controls apply-drafts hidden-apply cancel-drafts independent-forms configuration-binding sidebar divider independent-scroll pinned-actions construction-close review-prepared review-checked review-owner-close review-parent-close review-reentrant review-visible review-deferred-retired review-deferred-refocus)
             add_test(NAME framework.ide_workflow.settings_sections.gtk4.${case}
                 COMMAND umicom-developer-settings-sections-test ${case})
             set_tests_properties(framework.ide_workflow.settings_sections.gtk4.${case} PROPERTIES

@@ -99,7 +99,9 @@ UmiStatus umi_process_execute(const UmiProcessRequest *request,
 typedef void (*UmiProcessResultObserver)(const UmiProcessResult *result,
     void *context);
 /** Execute through the same platform runner, with an optional observer after
- * each captured output chunk. Final status remains in outResult/the return
+ * successful native creation (possibly with empty output) and after each
+ * captured output chunk. Creation does not confirm application readiness.
+ * Final status remains in outResult/the return
  * value. The existing umi_process_execute is the no-observer entry point.
  * Request layout, argument rules, cancellation and capture limits are unchanged.
  */

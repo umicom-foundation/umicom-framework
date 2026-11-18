@@ -42,6 +42,8 @@ UmiStatus UmiAiCorpusCreate(const uint8_t *bytes, size_t length,
     return UMI_STATUS_OK;
 }
 
+/* Local import now transfers its privately read buffer into the immutable owner after successful file completion, avoiding a second full payload allocation. The earlier copying load remains for review; public Create still copies caller bytes. The former implementation is retained for owner review. */
+#if 0
 UmiStatus UmiAiCorpusLoadFile(const char *path, UmiAiCorpus **outCorpus)
 {
     FILE *file;
@@ -79,6 +81,52 @@ UmiStatus UmiAiCorpusLoadFile(const char *path, UmiAiCorpus **outCorpus)
     status = UmiAiCorpusCreate(buffer, size, outCorpus);
     free(buffer);
     return status;
+}
+
+#endif
+UmiStatus UmiAiCorpusLoadFile(const char *path, UmiAiCorpus **outCorpus)
+{
+    FILE *file;
+    uint8_t *buffer;
+    long measured;
+    size_t size;
+    if (path == NULL || path[0] == '\0' || outCorpus == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    file = fopen(path, "rb");
+    if (file == NULL) return UMI_STATUS_IO_ERROR;
+    /* Guard fseek/ftell failures and do not allocate from untrusted sizes. */
+    if (fseek(file, 0L, SEEK_END) != 0) { fclose(file); return UMI_STATUS_IO_ERROR; }
+    measured = ftell(file);
+    if (measured < 0L) { fclose(file); return UMI_STATUS_IO_ERROR; }
+    if ((unsigned long)measured > UMI_AI_CORPUS_MAX_BYTES) {
+        fclose(file);
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    }
+    if (measured == 0L) { fclose(file); return UMI_STATUS_INVALID_ARGUMENT; }
+    if (fseek(file, 0L, SEEK_SET) != 0) { fclose(file); return UMI_STATUS_IO_ERROR; }
+    size = (size_t)measured;
+    buffer = malloc(size);
+    if (buffer == NULL) { fclose(file); return UMI_STATUS_OUT_OF_MEMORY; }
+    if (fread(buffer, 1U, size, file) != size) {
+        free(buffer); fclose(file); return UMI_STATUS_IO_ERROR;
+    }
+    /* Detect an appended byte, so changing files cannot produce a silently
+     * incomplete training corpus while the file is being imported. */
+    if (fgetc(file) != EOF || ferror(file) != 0) {
+        free(buffer); fclose(file); return UMI_STATUS_IO_ERROR;
+    }
+    if (fclose(file) != 0) { free(buffer); return UMI_STATUS_IO_ERROR; }
+    /* The file read created this buffer privately. Transfer that ownership
+     * after EOF and close checks instead of asking the copying public Create
+     * API to allocate another complete payload. The caller sees no borrowed
+     * storage, and failed owner allocation still frees the entire buffer. */
+    UmiAiCorpus *created = calloc(1U, sizeof(*created));
+    if (created == NULL) { free(buffer); return UMI_STATUS_OUT_OF_MEMORY; }
+    created->bytes = buffer;
+    created->length = size;
+    *outCorpus = created;
+    return UMI_STATUS_OK;
 }
 
 void UmiAiCorpusDestroy(UmiAiCorpus *corpus)

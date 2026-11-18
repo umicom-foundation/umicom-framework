@@ -1,3 +1,5 @@
+![Umicom](../../resources/brand/umicom-logo.svg)
+
 # Preview a small Umicom C program
 
 The optional Framework CVM preview service compiles a borrowed source span and executes its checked arithmetic instructions. It provides one result model for command-line and future editor consumers.
@@ -62,3 +64,7 @@ ctest --test-dir build/cvm-preview -R "cvm_comparison" --output-on-failure --no-
 The first command should print eight trace rows and then 1. The second should print 0 and exit successfully: a false comparison is a valid completed result. Check the status and completed flag; never use the numeric answer itself as a success flag. The comparison checks also cover a subsequent syntax failure clearing previous output, eager operand failure, exhaustion before LESS or RETURN, ordinary/traced parity, signed extremes and a shorter replacement trace.
 
 This adapter still owns no parser or interpreter. Both API entry points call the installed Umicom C implementation, and the optional OS example composes the same Framework project. The comparison test source deliberately refuses SDK headers that lack `UMC_COMPARISON_PROFILE`. Correct the SDK selection and rebuild if that check fails; do not remove it to make an old dependency appear qualified. A matching header alone is insufficient because the linked library can also be stale. These checks describe authored coverage, not executed GUI or guest evidence.
+
+## Inspect source without executing it
+
+The separately composed [source-check adapter](cvm-source-check.md) calls the optional Umicom C warning service and associates the result with a caller-owned document revision. It does not change preview behavior. Use `umicom_add_cvm_source_check` only with the matching newer compiler SDK; old preview-only consumers keep their existing dependency contract.

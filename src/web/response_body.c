@@ -16,6 +16,8 @@
 #include "umicom/web/response_body.h"
 #include <stdlib.h>
 #include <string.h>
+/* Adopt already-owned buffers through their original release contract while preserving the existing copy-based API. The former implementation is retained for owner review. */
+#if 0
 struct UmiWebResponseBody {
     size_t length;
     unsigned char bytes[];
@@ -36,6 +38,59 @@ UmiStatus UmiWebResponseBodyCreate(const void *bytes, size_t length, UmiWebRespo
     return UMI_STATUS_OK;
 }
 void UmiWebResponseBodyDestroy(UmiWebResponseBody *body) { free(body); }
+
+#endif
+/* Opaque bodies can own inline copied bytes or a transferred allocation.
+ * Keep allocator-specific release inside Framework so callers do not have to
+ * guess whether a rooted-file result uses the same CRT allocator as the app. */
+struct UmiWebResponseBody {
+    size_t length;
+    const unsigned char *bytes;
+    UmiWebResponseBodyRelease release;
+    void *context;
+    unsigned char inline_bytes[];
+};
+UmiStatus UmiWebResponseBodyCreate(const void *bytes, size_t length, UmiWebResponseBody **out)
+{
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out = NULL;
+    if (length != 0U && bytes == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (length > UMI_WEB_RESPONSE_BODY_LIMIT) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiWebResponseBody *body = malloc(sizeof(*body) + length);
+    if (body == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    body->length = length;
+    body->bytes = body->inline_bytes;
+    body->release = NULL;
+    body->context = NULL;
+    if (length != 0U) memcpy(body->inline_bytes, bytes, length);
+    *out = body;
+    return UMI_STATUS_OK;
+}
+UmiStatus UmiWebResponseBodyTake(unsigned char **bytes, size_t length,
+    UmiWebResponseBodyRelease release, void *context, UmiWebResponseBody **out)
+{
+    if (out == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out = NULL;
+    if (bytes == NULL || release == NULL || (*bytes == NULL && length != 0U))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (length > UMI_WEB_RESPONSE_BODY_LIMIT) return UMI_STATUS_CAPACITY_EXCEEDED;
+    UmiWebResponseBody *body = malloc(sizeof(*body));
+    if (body == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+    body->length = length;
+    body->bytes = *bytes;
+    body->release = release;
+    body->context = context;
+    /* Publish ownership only after the complete metadata allocation succeeds. */
+    *bytes = NULL;
+    *out = body;
+    return UMI_STATUS_OK;
+}
+void UmiWebResponseBodyDestroy(UmiWebResponseBody *body)
+{
+    if (body == NULL) return;
+    if (body->release != NULL) body->release(body->context, (void *)body->bytes);
+    free(body);
+}
 const void *UmiWebResponseBodyBytes(const UmiWebResponseBody *body)
 {
     return body != NULL ? body->bytes : NULL;

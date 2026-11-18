@@ -1,11 +1,18 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/application/native_discovery.h
- * PURPOSE: Reconcile trusted built-in GUI installation evidence into the
- * existing application runtime catalogue, without loading or launching code.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Reconcile trusted built-in GUI installation evidence and resolve explicit native locations without loading or launching code.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
+
 #ifndef UMICOM_APPLICATION_NATIVE_DISCOVERY_H
 #define UMICOM_APPLICATION_NATIVE_DISCOVERY_H
 #include "umicom/application/runtime_catalogue.h"
@@ -48,6 +55,18 @@ UmiStatus umi_application_native_discovery_config_validate(
 UmiStatus umi_application_native_discovery_probe(
     const UmiApplicationNativeDiscoveryConfig *config,
     const char *application_id, bool *out_present);
+/* Resolve one canonical GUI under the supplied trusted absolute root. The
+ * output is a NUL-terminated path only after a successful presence probe.
+ * Every refusal preserves all output bytes; capacity includes the terminator.
+ * Caller storage must be valid and disjoint from config and borrowed strings.
+ * NOT_FOUND covers an unknown GUI identity or absent/non-runnable candidate.
+ * No PATH lookup, shell expansion, recursive scan or execution occurs. Presence
+ * does not establish startup, signature, dependency or ABI compatibility.
+ */
+UmiStatus umi_application_native_discovery_resolve(
+    const UmiApplicationNativeDiscoveryConfig *config,
+    const char *application_id, char *out_path, size_t capacity);
+
 /* Explicit one-time composition policy for already-registered built-in GUI
  * products. Canonical names and enabled/compatible admission are installed;
  * pinning and actual process state remain untouched. No filesystem work. */

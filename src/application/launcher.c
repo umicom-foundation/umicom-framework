@@ -29,6 +29,7 @@ struct UmiApplicationLauncher {
     uint64_t next_plan_revision;
     UmiApplicationLauncherValidateFn validate;
     void *validation_context;
+    bool deferred_start;
 };
 
 /* Provide the copy text operation used by this module and its client applications. */
@@ -272,6 +273,18 @@ UmiStatus umi_application_launcher_set_validation_handler(
     return UMI_STATUS_OK;
 }
 
+/* Async adapters return a reserved job token before the native loader runs.
+ * Keep STARTING until the composition publishes launch/exit evidence. Existing
+ * synchronous adapters retain their original default behavior. */
+UmiStatus UmiApplicationLauncherSetDeferredStart(UmiApplicationLauncher *launcher,
+    bool deferred)
+{
+    if (launcher == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (launcher->snapshot.request_count != 0U) return UMI_STATUS_INVALID_STATE;
+    launcher->deferred_start = deferred;
+    return UMI_STATUS_OK;
+}
+
 /*
  * Provide the application launcher prepare operation used by this module and its client
  * applications.
@@ -301,6 +314,9 @@ UmiStatus umi_application_launcher_prepare(
     /* Apply this branch only when its contract condition is satisfied. */
     if (action == UMI_APPLICATION_LAUNCH_START && record.running)
         action = UMI_APPLICATION_LAUNCH_ACTIVATE;
+    if (action == UMI_APPLICATION_LAUNCH_ACTIVATE &&
+        (record.state == UMI_APPLICATION_RUNTIME_STARTING ||
+         record.state == UMI_APPLICATION_RUNTIME_STOPPING)) return UMI_STATUS_BUSY;
     if (action != UMI_APPLICATION_LAUNCH_STOP &&
         (!record.compatible || !record.enabled || !record.visible ||
          ((action == UMI_APPLICATION_LAUNCH_START || action == UMI_APPLICATION_LAUNCH_RESTART) &&
@@ -367,6 +383,9 @@ static UmiStatus validate_execution_plan(UmiApplicationLauncher *launcher,
     status = umi_application_runtime_catalogue_find(launcher->catalogue, plan->application_id, &record);
     if (status != UMI_STATUS_OK) return status;
     if (plan->action == UMI_APPLICATION_LAUNCH_STOP || plan->action == UMI_APPLICATION_LAUNCH_ACTIVATE) {
+        if (plan->action == UMI_APPLICATION_LAUNCH_ACTIVATE &&
+            (record.state == UMI_APPLICATION_RUNTIME_STARTING ||
+             record.state == UMI_APPLICATION_RUNTIME_STOPPING)) return UMI_STATUS_BUSY;
         if (!record.running || record.process_token != plan->existing_process_token)
             return UMI_STATUS_INVALID_STATE;
         if (plan->action == UMI_APPLICATION_LAUNCH_ACTIVATE && (!record.enabled || !record.compatible))
@@ -414,7 +433,18 @@ static UmiStatus execute_start(
     status = umi_application_runtime_catalogue_set_process(
         launcher->catalogue, plan->application_id, process_token);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
+/* The old synchronous publication remains the default; asynchronous compositions now retain STARTING until their worker confirms native creation. The former implementation is retained for owner review. */
+#if 0
     if (status == UMI_STATUS_OK) {
+        status = umi_application_runtime_catalogue_activate(
+            launcher->catalogue, plan->application_id);
+    }
+#endif
+    if (status == UMI_STATUS_OK && launcher->deferred_start) {
+        status = umi_application_runtime_catalogue_set_state(launcher->catalogue,
+            plan->application_id, UMI_APPLICATION_RUNTIME_STARTING,
+            "Launch submitted; native process creation is not yet confirmed.");
+    } else if (status == UMI_STATUS_OK) {
         status = umi_application_runtime_catalogue_activate(
             launcher->catalogue, plan->application_id);
     }

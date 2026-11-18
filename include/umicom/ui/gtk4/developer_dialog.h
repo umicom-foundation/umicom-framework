@@ -92,6 +92,15 @@ UmiStatus UmiGtk4BuildSettingsSelectSection(UmiGtk4DeveloperDialog *dialog,
 UmiStatus UmiGtk4BuildSettingsCurrentSection(const UmiGtk4DeveloperDialog *dialog,
     UmiGtk4BuildSettingsSection *outSection);
 
+/** Explain why a command needs execution review in the existing settings form.
+ * Selects Build, publishes a persistent wrapped message and focuses the trust
+ * checkbox, including for a prepared hidden form. It does not select the
+ * checkbox, apply a profile, save source or execute/retry a command. The caller
+ * owns presentation and must reacquire its host after this observable call.
+ * Returns CANCELLED if the form is retired by an observer; reentry during
+ * selection/review or acceptance returns BUSY. New-project forms are invalid. */
+UmiStatus UmiGtk4BuildSettingsReviewExecution(UmiGtk4DeveloperDialog *dialog);
+
 /** Present a live form on the GTK thread. Ownership remains with the caller.
  * Presentation can synchronously notify observers that destroy the owner. The
  * function retains internal lifetime and returns CANCELLED if the form closes.

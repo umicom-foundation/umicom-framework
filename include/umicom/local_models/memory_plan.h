@@ -124,6 +124,54 @@ typedef struct UmiModelKvFootprint {
 UmiStatus UmiModelDenseKvCacheBytes(const UmiModelDenseKvShape *shape,
     UmiModelKvFootprint *out_footprint);
 
+/* Solve the same dense KV geometry for a caller-selected cache budget.
+ * shape.token_capacity is the requested upper bound, not an unbounded search.
+ * Budget covers KV payload only: weights, runtime, allocator alignment and
+ * workspace costs must be budgeted separately through UmiModelMemoryAssess.
+ * Zero tokens is a successful arithmetic answer when one token cannot fit.
+ * No memory is reserved and no model/context configuration is changed. */
+typedef struct UmiModelKvTokenPlan {
+    uint64_t requested_tokens;
+    uint64_t affordable_tokens;
+    uint64_t bytes_per_token;
+    uint64_t cache_bytes;
+    uint64_t unused_budget_bytes;
+    bool request_fits;
+} UmiModelKvTokenPlan;
+/* Invalid geometry or arithmetic overflow preserves output. Inputs/output
+ * must be stable and disjoint. Reuses DenseKvCacheBytes with one token so a
+ * huge requested capacity can be reduced without overflowing its full cost. */
+UmiStatus UmiModelDenseKvPlanTokens(const UmiModelDenseKvShape *shape,
+    uint64_t cache_budget_bytes, UmiModelKvTokenPlan *out_plan);
+
+/* Compose a host observation with dense KV payload geometry. Non-cache costs
+ * must exclude CACHE: cache_bytes must be zero and its known bit absent, so the
+ * same cost cannot be counted twice. Missing other costs remain INCOMPLETE.
+ * The implementation uses a known-zero cache for the fixed-cost assessment,
+ * then spends only its remaining bytes on the existing dense-token planner.
+ *
+ * Read selected_memory and cache only when cache_plan_available is true. False
+ * means fixed_memory explains why no trustworthy arithmetic budget is available
+ * (incomplete, unavailable, fixture, stale or already insufficient). A true
+ * flag can still select zero tokens; it is not a usable-context or launch grant.
+ * No host capture, allocation, reservation, device admission or model operation
+ * occurs. The estimates must include loading peaks and non-KV overhead; a
+ * changing host observation can invalidate them immediately after this call.
+ *
+ * Invalid geometry, duplicate cache accounting and arithmetic overflow preserve
+ * output. Inputs must remain stable and disjoint from the output. Geometry is
+ * checked even when host memory is unavailable. Existing memory-assessment age,
+ * fixture and status rules apply; reserve is accounted for exactly once. */
+typedef struct UmiModelHostKvPlan {
+    UmiModelMemoryAssessment fixed_memory;
+    bool cache_plan_available;
+    UmiModelKvTokenPlan cache;
+    UmiModelMemoryAssessment selected_memory;
+} UmiModelHostKvPlan;
+UmiStatus UmiModelDenseKvPlanHostMemory(const UmiModelMemoryRequirements *non_cache,
+    const UmiModelDenseKvShape *shape, const UmiDesktopSystemSnapshot *snapshot,
+    uint64_t observation_age_millis, uint64_t maximum_age_millis,
+    uint64_t host_reserve_bytes, UmiModelHostKvPlan *out_plan);
 #ifdef __cplusplus
 }
 #endif

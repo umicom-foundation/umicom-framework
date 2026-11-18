@@ -452,3 +452,10 @@ if(BUILD_TESTING)
 endif()
 
 message(STATUS "Umicom profiling, observability and performance engineering platform enabled")
+
+# The three budget owners share finite admission and bounded identity rules.
+# Keep these focused source contracts available in full product qualification.
+if(BUILD_TESTING AND NOT TARGET umicom-budget-memory-admission-test)
+    add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../tests/performance_budget"
+        "${CMAKE_CURRENT_BINARY_DIR}/tests/performance_budget")
+endif()

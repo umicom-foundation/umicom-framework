@@ -42,6 +42,42 @@ static int identifier_valid(const char *identifier, size_t capacity)
     return 1;
 }
 
+/* Resource media labels are not internal registry identifiers. The slash form
+ * follows the concrete ASCII naming grammar of RFC 6838 section 4.2; this is
+ * syntax admission, not IANA registration, content inspection or HTTP parsing.
+ * Preserve existing no-slash Umicom catalogue names through their old policy.
+ * The descriptor's fixed buffer bounds the complete name to 127 bytes. */
+static int media_name_start(unsigned char value)
+{
+    return (value >= (unsigned char)'a' && value <= (unsigned char)'z') ||
+           (value >= (unsigned char)'A' && value <= (unsigned char)'Z') ||
+           (value >= (unsigned char)'0' && value <= (unsigned char)'9');
+}
+
+static int resource_media_type_valid(const char *text, size_t capacity)
+{
+    if (!text_terminated(text, capacity)) return 0;
+    const char *slash = strchr(text, '/');
+    if (slash == NULL) return identifier_valid(text, capacity);
+    if (slash == text || slash[1] == '\0') return 0;
+    int at_start = 1;
+    for (size_t index = 0U; text[index] != '\0'; ++index) {
+        unsigned char value = (unsigned char)text[index];
+        if (text + index == slash) { at_start = 1; continue; }
+        if (media_name_start(value)) { at_start = 0; continue; }
+/* The exact restricted-name punctuation set replaces an authoring substitution that expanded dollar-ampersand into nearby comment text. Keep the diagnosed statement disabled for review; literal-source edits must use replacement callbacks. The former implementation is retained for owner review. */
+#if 0
+        if (at_start || strchr("!#/* Alignment values supplied by C are zero or a power of two. */-^_.+", (int)value) == NULL) return 0;
+#endif
+/* Literal source publication uses a callback; the earlier preservation helper also interpreted replacement metacharacters and produced invalid C. The former implementation is retained for owner review. */
+#if 0
+        if (at_start || strchr("!#        if (at_start || strchr("!#/* Alignment values supplied by C are zero or a power of two. */-^_.+", (int)value) == NULL) return 0;-^_.+", (int)value) == NULL) return 0;
+#endif
+        if (at_start || strchr("!#$&-^_.+", (int)value) == NULL) return 0;
+    }
+    return 1;
+}
+
 /* Alignment values supplied by C are zero or a power of two. */
 static int alignment_valid(size_t alignment)
 {
@@ -187,8 +223,15 @@ UmiStatus umi_reflection_resource_descriptor_validate(
         !text_terminated(descriptor->resource_uri,
                          sizeof(descriptor->resource_uri)) ||
         descriptor->resource_uri[0] == '\0' ||
+        /* Type/subtype admission replaces identifier-only validation so native
+         * catalogues can describe real media. Retain the former condition. */
+#if 0
         !identifier_valid(descriptor->media_type,
                           sizeof(descriptor->media_type)) ||
+#else
+        !resource_media_type_valid(descriptor->media_type,
+                                  sizeof(descriptor->media_type)) ||
+#endif
         descriptor->kind < UMI_REFLECTION_RESOURCE_LAYOUT ||
         descriptor->kind > UMI_REFLECTION_RESOURCE_DOCUMENTATION) {
         return UMI_STATUS_INVALID_ARGUMENT;

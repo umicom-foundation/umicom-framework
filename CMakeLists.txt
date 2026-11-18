@@ -467,7 +467,7 @@ umicom_apply_warnings(umicom_platform)
 umicom_apply_sanitizers(umicom_platform)
 if(WIN32)
     # Original Unicode process arguments use the documented Windows shell parser.
-    target_link_libraries(umicom_platform PRIVATE shell32)
+    target_link_libraries(umicom_platform PRIVATE shell32 user32)
 endif()
 
 # -----------------------------------------------------------------------------
@@ -911,6 +911,7 @@ if(UMICOM_BUILD_GTK4_ADAPTER)
     add_library(umicom_ui_gtk4 STATIC
         adapters/gtk4/gtk4_adapter.c
         adapters/gtk4/automation_gtk4.c
+        adapters/gtk4/automation_pointer_gtk4.c
         adapters/gtk4/widget_lookup_gtk4.c
         adapters/gtk4/interaction_recording_gtk4.c
         adapters/gtk4/drop_down_gtk4.c
@@ -1298,6 +1299,9 @@ add_library(umicom_testing STATIC
     src/testing/registry.c
     src/testing/discovery.c
     src/testing/runner.c
+    src/testing/uat_workflow.c
+    src/testing/uat_report.c
+    src/testing/uat_process.c
     src/testing/report.c
     src/testing/ctest_adapter.c
     src/testing/ctest_report_comparison.c
@@ -1305,6 +1309,7 @@ add_library(umicom_testing STATIC
 include(cmake/UmicomTestingSourceInputs.cmake)
 add_library(Umicom::testing ALIAS umicom_testing)
 set_target_properties(umicom_testing PROPERTIES EXPORT_NAME testing)
+target_link_libraries(umicom_testing PRIVATE Umicom::protocol)
 target_link_libraries(umicom_testing PUBLIC
     Umicom::base
     Umicom::platform
@@ -3716,6 +3721,39 @@ if(BUILD_TESTING)
         umicom-reflection-engine-events-test
         framework.reflection.engine_events
         tests/reflection/test_engine_events.c)
+    # Empty metadata spans must not retain borrowed source addresses.
+    add_executable(umicom-reflection-empty-spans-test tests/reflection/test_empty_spans.c)
+    target_link_libraries(umicom-reflection-empty-spans-test PRIVATE Umicom::Framework)
+    umicom_apply_warnings(umicom-reflection-empty-spans-test)
+    umicom_apply_sanitizers(umicom-reflection-empty-spans-test)
+    foreach(_case IN ITEMS empty fields attributes both lifetime)
+        add_test(NAME framework.reflection.owned_spans.${_case}
+            COMMAND umicom-reflection-empty-spans-test ${_case})
+        set_tests_properties(framework.reflection.owned_spans.${_case} PROPERTIES
+            TIMEOUT 30 LABELS "framework;reflection;ownership")
+        umicom_test_impact_owners("framework.reflection.owned_spans.${_case}"
+            TARGETS umicom-reflection-empty-spans-test)
+    endforeach()
+    # Snapshot copies rebase their internal array references without allocation.
+    add_executable(umicom-reflection-snapshot-copy-test tests/reflection/test_snapshot_copy.c)
+    target_link_libraries(umicom-reflection-snapshot-copy-test PRIVATE Umicom::Framework)
+    umicom_apply_warnings(umicom-reflection-snapshot-copy-test)
+    umicom_apply_sanitizers(umicom-reflection-snapshot-copy-test)
+    foreach(_case IN ITEMS reference empty lifetime refusals self maximum unused)
+        add_test(NAME framework.reflection.snapshot_copy.${_case} COMMAND umicom-reflection-snapshot-copy-test ${_case})
+        set_tests_properties(framework.reflection.snapshot_copy.${_case} PROPERTIES TIMEOUT 30 LABELS "framework;reflection;ownership")
+        umicom_test_impact_owners("framework.reflection.snapshot_copy.${_case}" TARGETS umicom-reflection-snapshot-copy-test)
+    endforeach()
+    # Resource labels admit real type/subtype metadata without loading content.
+    add_executable(umicom-reflection-resource-media-test tests/reflection/test_resource_media_type.c)
+    target_link_libraries(umicom-reflection-resource-media-test PRIVATE Umicom::Framework)
+    umicom_apply_warnings(umicom-reflection-resource-media-test)
+    umicom_apply_sanitizers(umicom-reflection-resource-media-test)
+    foreach(_case IN ITEMS legacy standard suffix invalid capacity bytes registry unchanged)
+        add_test(NAME framework.reflection.resource_media.${_case} COMMAND umicom-reflection-resource-media-test ${_case})
+        set_tests_properties(framework.reflection.resource_media.${_case} PROPERTIES TIMEOUT 30 LABELS "framework;reflection;metadata")
+        umicom_test_impact_owners("framework.reflection.resource_media.${_case}" TARGETS umicom-reflection-resource-media-test)
+    endforeach()
     # Engine tests exercise real ownership, capacity and adapter behaviour.
     umicom_add_framework_test(
         umicom-engine-catalogue-test
@@ -3866,6 +3904,7 @@ if(BUILD_TESTING)
     include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomAppearanceTypographyChecks.cmake")
     umicom_add_framework_test(umicom-ui-automation-tests framework.ui.automation tests/test_ui_automation.c)
     add_subdirectory(tests/gui_recording)
+    add_subdirectory(tests/uat)
     add_subdirectory(tests/gui_control_checks)
     add_subdirectory(tests/gui_check_runs)
     add_subdirectory(tests/action_recovery)
@@ -4620,6 +4659,21 @@ if(BUILD_TESTING)
         framework.process_supervisor
         tests/test_process_supervisor.c
     )
+    # Silent GUI children publish native creation and retain failure output.
+    add_executable(umicom-process-startup-test tests/test_process_startup.c)
+    target_link_libraries(umicom-process-startup-test PRIVATE Umicom::platform)
+    umicom_apply_warnings(umicom-process-startup-test)
+    umicom_apply_sanitizers(umicom-process-startup-test)
+    foreach(_startup_case IN ITEMS silent live failure long missing format)
+        add_test(NAME "framework.process.startup.${_startup_case}"
+            COMMAND umicom-process-startup-test "${_startup_case}"
+                "$<TARGET_FILE:umicom-process-startup-test>")
+        set_tests_properties("framework.process.startup.${_startup_case}" PROPERTIES
+            TIMEOUT 20 LABELS "platform;process;startup;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-process-startup-test)
+    endif()
     add_executable(umicom-process-supervisor-lifecycle-test tests/test_process_supervisor_lifecycle.c)
     target_link_libraries(umicom-process-supervisor-lifecycle-test PRIVATE Umicom::platform)
     umicom_apply_warnings(umicom-process-supervisor-lifecycle-test)
@@ -5157,6 +5211,8 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-frontend-headless-tests framework.frontend_headless tests/test_frontend_headless.c)
     umicom_add_framework_test(umicom-frontend-devices-tests framework.frontend_devices tests/test_frontend_devices.c)
     umicom_add_framework_test(umicom-frontend-documents-reload-tests framework.frontend_documents_reload tests/test_frontend_documents_reload.c)
+    # Exercise asynchronous reload ownership without requiring a graphical session.
+    add_subdirectory(tests/frontend_reload)
     umicom_add_framework_test(umicom-frontend-dom-inspector-tests framework.frontend_dom_inspector tests/test_frontend_dom_inspector.c)
     umicom_add_framework_test(umicom-frontend-devtools-logs-tests framework.frontend_devtools_logs tests/test_frontend_devtools_logs.c)
     umicom_add_framework_test(umicom-frontend-build-profiles-tests framework.frontend_build_profiles tests/test_frontend_build_profiles.c)
@@ -6346,7 +6402,7 @@ install(DIRECTORY templates/application_module/
 install(DIRECTORY docs/guides/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides
     COMPONENT Framework)
-install(FILES docs/WRITING_DOCUMENTATION.md docs/GUI_RECORDING.html docs/GUI_CONTROL_CHECKS.html docs/GUI_CHECK_SESSIONS.html docs/ACTION_RECOVERY.html docs/COMMAND_FEEDBACK.html docs/EDITING_DOCUMENTS.html
+install(FILES docs/WRITING_DOCUMENTATION.md docs/GUI_RECORDING.html docs/AUTOMATED_TESTING.html docs/GUI_CONTROL_CHECKS.html docs/GUI_CHECK_SESSIONS.html docs/ACTION_RECOVERY.html docs/COMMAND_FEEDBACK.html docs/EDITING_DOCUMENTS.html
     docs/TEST_EXPLORER_MODEL.html docs/TEST_EXPLORER_PAGES.html
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/docs
     COMPONENT Framework)
@@ -6356,6 +6412,9 @@ install(DIRECTORY examples/project_files/
 install(DIRECTORY examples/build_diagnostics/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/build_diagnostics
 )
+install(DIRECTORY examples/uat/
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/uat"
+    COMPONENT Framework FILES_MATCHING PATTERN "*.c" PATTERN "CMakeLists.txt")
 install(DIRECTORY examples/gui_recording/
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/gui_recording"
     COMPONENT Framework)
@@ -7856,6 +7915,7 @@ include(cmake/UmicomAiConversationExamples.cmake)
 
 # Shared discovery observations are consumed by provider checks and installed AI clients.
 include(cmake/UmicomAiModelDiscovery.cmake)
+include(cmake/UmicomTrainingData.cmake)
 # Streamed pull observations reuse the same native AI and JSON owners.
 include(cmake/UmicomOllamaPull.cmake)
 
@@ -7906,3 +7966,8 @@ include(cmake/UmicomAiEnsembleAdmission.cmake)
 
 # Shared allocation ownership and installed learning consumer.
 include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomBudgetAllocator.cmake")
+
+# Check the shared UTF-8 boundary in both provider codecs without making requests.
+if(BUILD_TESTING)
+    add_subdirectory(tests/provider_text)
+endif()

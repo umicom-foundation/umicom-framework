@@ -128,7 +128,13 @@ static UmiStatus owned_type_copy(const UmiReflectionTypeDescriptor *source,
                                  UmiOwnedReflectionType *destination)
 {
     (void)memset(destination, 0, sizeof(*destination));
+/* An owned descriptor starts with no borrowed array addresses. Nonempty spans publish their allocated copies below; empty spans remain null. This preserves zero-count input compatibility while making snapshot ownership independent of caller storage. The former implementation is retained for owner review. */
+#if 0
     destination->descriptor = *source;
+#endif
+    destination->descriptor = *source;
+    destination->descriptor.fields = NULL;
+    destination->descriptor.attributes = NULL;
     if (source->field_count > 0U) {
         destination->fields = (UmiReflectionFieldDescriptor *)malloc(
             source->field_count * sizeof(*destination->fields));
@@ -760,4 +766,47 @@ uint64_t umi_reflection_registry_revision(
         (void)umi_mutex_unlock(registry->mutex);
     }
     return revision;
+}
+
+/* A snapshot contains self-relative relationships represented as C pointers.
+ * Ordinary struct assignment would retain pointers into the old object.
+ * Admit canonical spans before descriptor validation dereferences them, then
+ * copy into the caller's destination and rebase the two array relationships.
+ * There is no fallible operation after publication starts and no heap or
+ * large stack scratch allocation. Keep metadata ownership in Framework. */
+UmiStatus umi_reflection_type_snapshot_copy(
+    const UmiReflectionTypeSnapshot *source,
+    UmiReflectionTypeSnapshot *destination)
+{
+    if (source == NULL || destination == NULL) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    if ((source->descriptor.field_count == 0U
+             ? source->descriptor.fields != NULL
+             : source->descriptor.fields != source->fields) ||
+        (source->descriptor.attribute_count == 0U
+             ? source->descriptor.attributes != NULL
+             : source->descriptor.attributes != source->attributes)) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    UmiStatus status = umi_reflection_type_descriptor_validate(&source->descriptor);
+    if (status != UMI_STATUS_OK) {
+        return status;
+    }
+    if (source == destination) {
+        return UMI_STATUS_OK;
+    }
+    (void)memset(destination, 0, sizeof(*destination));
+    destination->descriptor = source->descriptor;
+    if (source->descriptor.field_count > 0U) {
+        (void)memcpy(destination->fields, source->fields,
+            source->descriptor.field_count * sizeof(*source->fields));
+        destination->descriptor.fields = destination->fields;
+    }
+    if (source->descriptor.attribute_count > 0U) {
+        (void)memcpy(destination->attributes, source->attributes,
+            source->descriptor.attribute_count * sizeof(*source->attributes));
+        destination->descriptor.attributes = destination->attributes;
+    }
+    return UMI_STATUS_OK;
 }

@@ -92,6 +92,17 @@ static void SelectionChanged(GObject *object, GParamSpec *property, gpointer con
     else if (strcmp(probe->mode, "parent-close") == 0) gtk_window_destroy(probe->parent);
     else probe->nested = UmiGtk4BuildSettingsSelectSection(probe->dialog, UMI_GTK4_BUILD_SETTINGS_SDK);
 }
+/* Reentering review cannot recursively publish status, and native observers
+ * may retire either the controller or its parent during that publication. */
+static void ReviewChanged(GObject *object, GParamSpec *property, gpointer context)
+{
+    (void)object; (void)property;
+    SettingsProbe *probe = context;
+    if (probe->observed++ != 0U) return;
+    if (strcmp(probe->mode, "review-owner-close") == 0) Dispose(probe);
+    else if (strcmp(probe->mode, "review-parent-close") == 0) gtk_window_destroy(probe->parent);
+    else probe->nested = UmiGtk4BuildSettingsReviewExecution(probe->dialog);
+}
 static void ConstructionChanged(GObject *object, GParamSpec *property, gpointer context)
 {
     (void)property;
@@ -114,7 +125,7 @@ static void WindowAdded(GListModel *model, guint at, guint removed, guint added,
 int main(int argc, char **argv)
 {
     if (argc != 2) return 2;
-    const char *cases[] = { "navigation-cycle", "field-map", "prepared", "same-section", "invalid-section", "invalid-output", "null-dialog", "project-form", "owner-close", "parent-close", "reentrant-selection", "retained-controls", "apply-drafts", "hidden-apply", "cancel-drafts", "independent-forms", "configuration-binding", "sidebar", "divider", "independent-scroll", "pinned-actions", "construction-close" };
+    const char *cases[] = { "navigation-cycle", "field-map", "prepared", "same-section", "invalid-section", "invalid-output", "null-dialog", "project-form", "owner-close", "parent-close", "reentrant-selection", "retained-controls", "apply-drafts", "hidden-apply", "cancel-drafts", "independent-forms", "configuration-binding", "sidebar", "divider", "independent-scroll", "pinned-actions", "construction-close", "review-prepared", "review-checked", "review-owner-close", "review-parent-close", "review-reentrant", "review-visible", "review-deferred-retired", "review-deferred-refocus" };
     int known = 0;
     for (size_t i = 0U; i < sizeof cases / sizeof cases[0]; ++i)
         if (strcmp(argv[1], cases[i]) == 0) known = 1;
@@ -145,6 +156,7 @@ int main(int argc, char **argv)
     CHECK(form != NULL && !gtk_widget_get_visible(GTK_WIDGET(form)));
     UmiGtk4BuildSettingsSection section = UMI_GTK4_BUILD_SETTINGS_RUN;
     if (strcmp(probe.mode, "project-form") == 0) {
+        CHECK(UmiGtk4BuildSettingsReviewExecution(probe.dialog) == UMI_STATUS_INVALID_STATE);
         CHECK(UmiGtk4BuildSettingsSelectSection(probe.dialog, UMI_GTK4_BUILD_SETTINGS_RUN) == UMI_STATUS_INVALID_STATE);
         CHECK(UmiGtk4BuildSettingsCurrentSection(probe.dialog, &section) == UMI_STATUS_INVALID_STATE);
         CHECK(section == UMI_GTK4_BUILD_SETTINGS_RUN); goto cleanup;
@@ -156,13 +168,78 @@ int main(int argc, char **argv)
     GtkWidget *accept = Find(form, "developer.dialog.accept");
     GtkWidget *trust = Find(form, "developer.build.trusted");
     CHECK(GTK_IS_BUTTON(accept) && GTK_IS_CHECK_BUTTON(trust));
-    if (strcmp(probe.mode, "invalid-section") == 0) {
+    if (strncmp(probe.mode, "review-", 7U) == 0) {
+        CHECK(UmiGtk4BuildSettingsSelectSection(probe.dialog, UMI_GTK4_BUILD_SETTINGS_RUN) == UMI_STATUS_OK);
+        GtkWidget *message = Find(form, "developer.dialog.status");
+        CHECK(GTK_IS_LABEL(message) && gtk_label_get_wrap(GTK_LABEL(message)));
+        CHECK(!gtk_widget_is_ancestor(message, stack));
+        int checked = strcmp(probe.mode, "review-checked") == 0;
+        gtk_check_button_set_active(GTK_CHECK_BUTTON(trust), checked);
+        if (strcmp(probe.mode, "review-owner-close") == 0 ||
+            strcmp(probe.mode, "review-parent-close") == 0 ||
+            strcmp(probe.mode, "review-reentrant") == 0) {
+            retained = g_object_ref(message);
+            changed = g_signal_connect(retained, "notify::label", G_CALLBACK(ReviewChanged), &probe);
+        }
+        int deferredRetire = strcmp(probe.mode, "review-deferred-retired") == 0;
+        int deferredRefocus = strcmp(probe.mode, "review-deferred-refocus") == 0;
+        int visibleReview = strcmp(probe.mode, "review-visible") == 0 || deferredRetire || deferredRefocus;
+        if (visibleReview) {
+            gtk_window_set_default_size(form, 780, 600);
+            CHECK(UmiGtk4DeveloperDialogPresent(probe.dialog) == UMI_STATUS_OK);
+        }
+        status = UmiGtk4BuildSettingsReviewExecution(probe.dialog);
+        if (strstr(probe.mode, "close") != NULL) {
+            CHECK(status == UMI_STATUS_CANCELLED && probe.observed == 1U);
+        } else {
+            CHECK(status == UMI_STATUS_OK);
+            CHECK(UmiGtk4BuildSettingsCurrentSection(probe.dialog, &section) == UMI_STATUS_OK && section == UMI_GTK4_BUILD_SETTINGS_BUILD);
+            CHECK(strstr(gtk_label_get_text(GTK_LABEL(message)), "No build or program was started") != NULL);
+            CHECK(strstr(gtk_label_get_text(GTK_LABEL(message)), "Apply Settings") != NULL);
+            CHECK(gtk_check_button_get_active(GTK_CHECK_BUTTON(trust)) == checked);
+            CHECK(gtk_window_get_focus(form) == trust);
+            if (visibleReview) {
+                if (deferredRetire) Dispose(&probe);
+                else if (deferredRefocus) CHECK(gtk_widget_grab_focus(accept));
+                gint64 until = g_get_monotonic_time() + 500000;
+                while (g_get_monotonic_time() < until) {
+                    for (unsigned tick = 0U; tick < 32U && g_main_context_pending(NULL); ++tick)
+                        (void)g_main_context_iteration(NULL, FALSE);
+                    g_usleep(1000U);
+                }
+                if (deferredRetire) {
+                    CHECK(probe.dialog == NULL && gtk_window_get_child(form) == NULL);
+                    CHECK(probe.accepted == 0U && probe.storage == 0U);
+                    goto cleanup;
+                }
+                if (deferredRefocus) {
+                    CHECK(gtk_window_get_focus(form) == accept);
+                    CHECK(!gtk_check_button_get_active(GTK_CHECK_BUTTON(trust)));
+                    CHECK(probe.accepted == 0U && probe.storage == 0U);
+                    goto cleanup;
+                }
+                GtkWidget *viewport = gtk_widget_get_ancestor(trust, GTK_TYPE_VIEWPORT);
+                graphene_rect_t bounds;
+                CHECK(viewport != NULL && gtk_widget_compute_bounds(trust, viewport, &bounds));
+                fprintf(stdout, "Trust bounds y=%g height=%g viewport=%d scroll-to-focus=%d\n",
+                    (double)bounds.origin.y, (double)bounds.size.height, gtk_widget_get_height(viewport),
+                    gtk_viewport_get_scroll_to_focus(GTK_VIEWPORT(viewport)));
+                CHECK(bounds.origin.y >= -1.0F && bounds.size.height > 0.0F);
+                CHECK(bounds.origin.y + bounds.size.height <= (float)gtk_widget_get_height(viewport) + 1.0F);
+                CHECK(gtk_widget_get_visible(GTK_WIDGET(form)));
+            } else CHECK(!gtk_widget_get_visible(GTK_WIDGET(form)));
+            if (strcmp(probe.mode, "review-reentrant") == 0) CHECK(probe.nested == UMI_STATUS_BUSY);
+        }
+        CHECK(probe.accepted == 0U && probe.storage == 0U);
+        if (changed != 0U) { g_signal_handler_disconnect(retained, changed); changed = 0U; }
+    } else if (strcmp(probe.mode, "invalid-section") == 0) {
         CHECK(UmiGtk4BuildSettingsSelectSection(probe.dialog, (UmiGtk4BuildSettingsSection)-1) == UMI_STATUS_INVALID_ARGUMENT);
         CHECK(UmiGtk4BuildSettingsSelectSection(probe.dialog, UMI_GTK4_BUILD_SETTINGS_SECTION_COUNT) == UMI_STATUS_INVALID_ARGUMENT);
         CHECK(UmiGtk4BuildSettingsCurrentSection(probe.dialog, &section) == UMI_STATUS_OK && section == UMI_GTK4_BUILD_SETTINGS_BUILD);
     } else if (strcmp(probe.mode, "invalid-output") == 0) {
         CHECK(UmiGtk4BuildSettingsCurrentSection(probe.dialog, NULL) == UMI_STATUS_INVALID_ARGUMENT);
     } else if (strcmp(probe.mode, "null-dialog") == 0) {
+        CHECK(UmiGtk4BuildSettingsReviewExecution(NULL) == UMI_STATUS_INVALID_ARGUMENT);
         CHECK(UmiGtk4BuildSettingsCurrentSection(NULL, &section) == UMI_STATUS_INVALID_ARGUMENT);
         CHECK(section == UMI_GTK4_BUILD_SETTINGS_BUILD);
         CHECK(UmiGtk4BuildSettingsSelectSection(NULL, UMI_GTK4_BUILD_SETTINGS_RUN) == UMI_STATUS_INVALID_ARGUMENT);
@@ -268,7 +345,13 @@ int main(int argc, char **argv)
     }
 cleanup:
     if (added != 0U) g_signal_handler_disconnect(windows, added);
+    /* Review notifications belong to the retained message, while section
+     * notifications belong to the stack. Disconnect the actual signal owner
+     * even when an assertion jumps directly to cleanup. */
+#if 0
     if (changed != 0U && stack != NULL) g_signal_handler_disconnect(stack, changed);
+#endif
+    if (changed != 0U) g_signal_handler_disconnect(retained != NULL ? G_OBJECT(retained) : G_OBJECT(stack), changed);
     Dispose(&second); Dispose(&probe);
     g_clear_object(&retained); g_clear_object(&stack);
     g_clear_object(&form);

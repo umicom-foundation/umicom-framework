@@ -1315,3 +1315,103 @@ if(BUILD_TESTING AND NOT TARGET umicom-ai-checkpoint-inspect-test)
             PROPERTIES LABELS "framework;ai;native-training" TIMEOUT 60)
     endforeach()
 endif()
+
+# Group membership is shared by document and media dataset consumers.
+target_sources(umicom_ai_training PRIVATE "${_umicom_ai_training_root}/src/ai/training/dataset_group_split.c")
+if(BUILD_TESTING)
+    add_subdirectory("${_umicom_ai_training_root}/tests/training_groups" "${CMAKE_CURRENT_BINARY_DIR}/training-group-checks")
+endif()
+
+# Loss masks and the legacy objective share one tape owner.
+if(BUILD_TESTING)
+    add_subdirectory("${_umicom_ai_training_root}/tests/training_loss" "${CMAKE_CURRENT_BINARY_DIR}/training-loss-checks")
+endif()
+
+# Corpus import transfers one checked private payload into its immutable owner.
+if(BUILD_TESTING)
+    add_subdirectory("${_umicom_ai_training_root}/tests/training_corpus_memory" "${CMAKE_CURRENT_BINARY_DIR}/training-corpus-memory-checks")
+endif()
+
+# Selected objectives reuse the established decoder and tape; no second trainer.
+if(BUILD_TESTING AND NOT TARGET umicom-decoder-mask-test)
+    add_subdirectory("${_umicom_ai_training_root}/tests/training_decoder_mask" "${CMAKE_CURRENT_BINARY_DIR}/training-decoder-mask-checks")
+endif()
+
+# Row order is independent of dataset partitioning and with-replacement windows.
+target_sources(umicom_ai_training PRIVATE "${_umicom_ai_training_root}/src/ai/training/sample_order.c")
+if(BUILD_TESTING AND NOT TARGET umicom-sample_order-test)
+    add_subdirectory("${_umicom_ai_training_root}/tests/training_order" "${CMAKE_CURRENT_BINARY_DIR}/training-order-checks")
+endif()
+
+# Model audits and selected evaluation clients share one token rank counter.
+target_sources(umicom_ai_training PRIVATE "${_umicom_ai_training_root}/src/ai/training/prediction_metrics.c")
+if(BUILD_TESTING AND NOT TARGET umicom-prediction-metrics-test)
+    add_subdirectory("${_umicom_ai_training_root}/tests/training_metrics" "${CMAKE_CURRENT_BINARY_DIR}/training-metrics-checks")
+endif()
+
+# The native learning graph uses the same image conversion owner as the SDK.
+target_sources(umicom_ai_training PRIVATE "${_umicom_ai_training_root}/src/ai/training/image_tensor.c")
+if(BUILD_TESTING)
+    add_subdirectory("${_umicom_ai_training_root}/tests/image_tensor"
+        "${CMAKE_CURRENT_BINARY_DIR}/image-tensor-checks")
+endif()
+
+# The bounded video adapter delegates every pixel conversion to image_tensor.
+target_sources(umicom_ai_training PRIVATE "${_umicom_ai_training_root}/src/ai/training/video_tensor.c")
+if(BUILD_TESTING AND NOT TARGET umicom-video-tensor-test)
+    add_subdirectory("${_umicom_ai_training_root}/tests/video_tensor"
+        "${CMAKE_CURRENT_BINARY_DIR}/video-tensor-checks")
+endif()
+
+# Training clients and the public AI SDK share the same borrowed crop service.
+target_sources(umicom_ai_training PRIVATE "${_umicom_ai_training_root}/src/ai/training/image_view.c")
+if(BUILD_TESTING AND NOT TARGET umicom-image-view-test)
+    add_subdirectory("${_umicom_ai_training_root}/tests/image_view"
+        "${CMAKE_CURRENT_BINARY_DIR}/image-view-checks")
+endif()
+
+# Token shifting, padding and completion selection belong to one native data adapter.
+target_sources(umicom_ai_training PRIVATE "${_umicom_ai_training_root}/src/ai/training/byte_pair_sequence.c")
+if(BUILD_TESTING AND NOT TARGET umicom-byte-pair-test)
+    add_subdirectory("${_umicom_ai_training_root}/tests/training_byte_pair"
+        "${CMAKE_CURRENT_BINARY_DIR}/training-byte-pair-checks")
+endif()
+
+# Training data preparation uses the same explicit orientation implementation.
+target_sources(umicom_ai_training PRIVATE "${_umicom_ai_training_root}/src/ai/training/image_flip.c")
+if(BUILD_TESTING AND NOT TARGET umicom-image-flip-test)
+    add_subdirectory("${_umicom_ai_training_root}/tests/image_flip"
+        "${CMAKE_CURRENT_BINARY_DIR}/image-flip-checks")
+endif()
+
+# Discrete decoded-pixel measurements share the same bounded RGB view admission.
+target_sources(umicom_ai_training PRIVATE "${_umicom_ai_training_root}/src/ai/training/image_histogram.c"
+    "${_umicom_ai_training_root}/src/ai/training/image_moments.c")
+if(BUILD_TESTING AND NOT TARGET umicom-image-histogram-test)
+    add_subdirectory("${_umicom_ai_training_root}/tests/image_histogram"
+        "${CMAKE_CURRENT_BINARY_DIR}/image-histogram-checks")
+endif()
+
+# Explicit pixel-center resampling belongs to the shared bounded training adapter.
+target_sources(umicom_ai_training PRIVATE "${_umicom_ai_training_root}/src/ai/training/image_resize.c")
+if(BUILD_TESTING AND NOT TARGET umicom-image-resize-test)
+    add_subdirectory("${_umicom_ai_training_root}/tests/image_resize"
+        "${CMAKE_CURRENT_BINARY_DIR}/image-resize-checks")
+endif()
+
+# Canvas placement preserves source pixels and makes border values explicit.
+target_sources(umicom_ai_training PRIVATE "${_umicom_ai_training_root}/src/ai/training/image_canvas.c")
+if(BUILD_TESTING AND NOT TARGET umicom-image-canvas-test)
+    add_subdirectory("${_umicom_ai_training_root}/tests/image_canvas"
+        "${CMAKE_CURRENT_BINARY_DIR}/image-canvas-checks")
+endif()
+
+# Sequence construction and dataset audit share the same checked row geometry.
+target_sources(umicom_ai_training PRIVATE "${_umicom_ai_training_root}/src/ai/training/byte_pair_shape.c")
+
+# Timestamp policy is shared by exported AI and native teaching clients.
+target_sources(umicom_ai_training PRIVATE "${_umicom_ai_training_root}/src/ai/training/video_timing.c")
+if(BUILD_TESTING AND NOT TARGET umicom-video-timing-test)
+    add_subdirectory("${_umicom_ai_training_root}/tests/video_timing"
+        "${CMAKE_CURRENT_BINARY_DIR}/video-timing-checks")
+endif()

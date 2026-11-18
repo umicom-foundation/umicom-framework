@@ -79,7 +79,15 @@ int main(void)
     CHECK(umi_cvm_preview(conditional_fault, strlen(conditional_fault), 16U, &workspace, sizeof workspace,
         &result, sizeof result) == UMI_STATUS_INVALID_STATE);
     CHECK(!result.completed && result.execution.value == 0 && result.diagnostic.status == UMC_ARITHMETIC_ERROR);
+/* Branch-local declarations are now supported by the selected compiler. Retain the former refusal source as positive coverage and test actual scope escape as the replacement failure. The former implementation is retained for owner review. */
+#if 0
     const char *conditional_invalid = "int main(void){if(1){int x=42;}return 0;}";
+#endif
+    const char *branch_local = "int main(void){if(1){int x=42;}return 0;}";
+    CHECK(umi_cvm_preview(branch_local, strlen(branch_local), 16U, &workspace, sizeof workspace,
+        &result, sizeof result) == UMI_STATUS_OK);
+    CHECK(result.completed && result.execution.value == 0 && result.instruction_count == 6U);
+    const char *conditional_invalid = "int main(void){if(1){int x=42;}return x;}";
     CHECK(umi_cvm_preview(conditional_invalid, strlen(conditional_invalid), 16U, &workspace, sizeof workspace,
         &result, sizeof result) == UMI_STATUS_PARSE_ERROR);
     CHECK(!result.completed && result.phase == UMI_CVM_COMPILING && result.instruction_count == 0U);
@@ -157,5 +165,19 @@ int main(void)
     CHECK(umi_cvm_preview(bitwise_invalid,strlen(bitwise_invalid),16U,&workspace,sizeof workspace,
         &result,sizeof result)==UMI_STATUS_PARSE_ERROR);
     CHECK(!result.completed && result.phase==UMI_CVM_COMPILING && result.instruction_count==0U);
+    /* Scope lifetime remains compiler-owned; preview must accept the same
+     * source and never make a retired local name visible again. */
+    const char *scoped = "int main(void){int result=0;{const int value=42;result=value;}return result;}";
+    CHECK(umi_cvm_preview(scoped, strlen(scoped), 8U, &workspace, sizeof workspace,
+        &result, sizeof result) == UMI_STATUS_OK);
+    CHECK(result.completed && result.execution.value == 42 && result.instruction_count == 8U);
+    const char *reused = "int main(void){int r=0;{int x=7;r=x;}{int x=6;r*=x;}return r;}";
+    CHECK(umi_cvm_preview(reused, strlen(reused), 16U, &workspace, sizeof workspace,
+        &result, sizeof result) == UMI_STATUS_OK);
+    CHECK(result.completed && result.execution.value == 42);
+    const char *escaped = "int main(void){{int x=42;}return x;}";
+    CHECK(umi_cvm_preview(escaped, strlen(escaped), 16U, &workspace, sizeof workspace,
+        &result, sizeof result) == UMI_STATUS_PARSE_ERROR);
+    CHECK(!result.completed && result.phase == UMI_CVM_COMPILING && result.instruction_count == 0U);
     return 0;
 }

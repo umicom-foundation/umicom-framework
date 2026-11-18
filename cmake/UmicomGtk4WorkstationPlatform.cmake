@@ -243,8 +243,8 @@ if(BUILD_TESTING)
         if(COMMAND umicom_register_validation_target)
             umicom_register_validation_target(umicom-gtk4-product-startup-lifetime-test)
         endif()
-        # Named edge tabs and their real flyouts are inspected without opening
-        # a desktop window, launching tools, or changing a user workspace.
+        # Named edge tabs preserve their cached content. Drawer input checks also
+        # present an isolated test window; they launch no tools and use no user workspace.
         foreach(tool_case IN ITEMS tool_rail workspace_tool_windows)
             string(REPLACE "_" "-" tool_target_suffix "${tool_case}")
             string(REPLACE "_" "." tool_test_suffix "${tool_case}")

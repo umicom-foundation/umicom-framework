@@ -61,17 +61,26 @@ if(BUILD_TESTING)
         if(COMMAND umicom_register_validation_target)
             umicom_register_validation_target(umicom-image-brand-test)
         endif()
+        # Retain the original inventory for review; the shared registration below
+        # keeps full and focused builds on the same cases.
+        if(FALSE)
         foreach(_case apply transparent light portrait minimum png existing cancel small
                       null-source null-output occupied-output relative-output null-receipt)
             add_test(NAME framework.media.image_brand.${_case} COMMAND umicom-image-brand-test "${_case}")
             set_tests_properties(framework.media.image_brand.${_case} PROPERTIES TIMEOUT 30
                 SKIP_RETURN_CODE 77 LABELS "framework;media;svg;png;branding;regression")
         endforeach()
+        endif()
         if(COMMAND umicom_target_qualification_inputs)
             umicom_target_qualification_inputs(umicom-image-brand-test FILES
                 "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/image_brand_gtk4.c"
                 "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/brand_widget.h"
-                "${CMAKE_CURRENT_LIST_DIR}/../resources/brand/umicom-logo-on-dark.svg")
+                "${CMAKE_CURRENT_LIST_DIR}/../resources/brand/umicom-logo-on-dark.svg"
+                "${CMAKE_CURRENT_LIST_DIR}/../resources/brand/umicom-logo.svg"
+                "${CMAKE_CURRENT_LIST_DIR}/../resources/brand/umicom-icon.svg"
+                "${CMAKE_CURRENT_LIST_DIR}/../resources/brand/umicom-icon-on-dark.svg"
+                "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/brand_resources.h.in"
+                "${CMAKE_CURRENT_LIST_DIR}/UmicomGtkBrandResources.cmake")
         endif()
     endif()
 endif()
@@ -126,10 +135,19 @@ if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/image_brand_gtk4.c"
             "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/brand_widget.h")
     endif()
+    # The common registration below replaces this retained original list.
+    if(FALSE)
     foreach(_case decode save-decode width height pixels cancel-after-decode)
         add_test(NAME framework.media.image_brand-failure.${_case}
             COMMAND umicom-image-brand-failure-test "${_case}")
         set_tests_properties(framework.media.image_brand-failure.${_case}
             PROPERTIES TIMEOUT 30 LABELS "framework;media;branding;fault-injection;regression")
     endforeach()
+    endif()
+endif()
+
+# Both native targets now exist. Share their cases with standalone qualification.
+if(BUILD_TESTING AND TARGET umicom_ui_gtk4)
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomImageBrandCases.cmake")
+    umicom_register_image_brand_cases(umicom-image-brand-test umicom-image-brand-failure-test)
 endif()

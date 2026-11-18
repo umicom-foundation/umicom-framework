@@ -1,0 +1,46 @@
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: tests/uat/check_database.cmake
+# PURPOSE: Verify exact example exit status and parsed JSON findings.
+# AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation
+# LICENCE: MIT
+#-----------------------------------------------------------------------------
+set(_args)
+set(_expected_exit 0)
+set(_expected_failed 0)
+set(_expected_cleanup 0)
+if(MODE STREQUAL "assert")
+    set(_args --fail-assertion)
+    set(_expected_exit 1)
+    set(_expected_failed 1)
+elseif(MODE STREQUAL "cleanup")
+    set(_args --fail-cleanup)
+    set(_expected_exit 1)
+    set(_expected_failed 1)
+    set(_expected_cleanup 1)
+elseif(NOT MODE STREQUAL "pass")
+    message(FATAL_ERROR "Unknown fixture mode")
+endif()
+execute_process(COMMAND "${PROGRAM}" ${_args} RESULT_VARIABLE _exit
+    OUTPUT_VARIABLE _output ERROR_VARIABLE _error TIMEOUT 10)
+if(NOT "${_exit}" STREQUAL "${_expected_exit}")
+    message(FATAL_ERROR "Unexpected example exit: ${_exit}: ${_error}")
+endif()
+string(JSON _failed GET "${_output}" failed)
+string(JSON _cleanup GET "${_output}" cleanup_failed)
+string(JSON _accepted GET "${_output}" accepted)
+string(JSON _count LENGTH "${_output}" findings)
+string(JSON _drop_state GET "${_output}" findings 3 state)
+if(NOT _count EQUAL 4 OR NOT _failed EQUAL _expected_failed OR NOT _cleanup EQUAL _expected_cleanup)
+    message(FATAL_ERROR "Incorrect retained workflow findings: ${_output}")
+endif()
+if(MODE STREQUAL "pass")
+    if(NOT _accepted)
+        message(FATAL_ERROR "Passing fixture was not accepted")
+    endif()
+elseif(_accepted)
+    message(FATAL_ERROR "Failed fixture was incorrectly accepted")
+endif()
+if(MODE STREQUAL "assert" AND NOT _drop_state STREQUAL "passed")
+    message(FATAL_ERROR "Assertion failure prevented eligible table cleanup")
+endif()

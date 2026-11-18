@@ -14,11 +14,14 @@
  * AUTHOR AND ORGANISATION:
  *   Sammy Hegab
  *   Umicom Foundation
- * LICENCE: MIT
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/model_audit.h"
 #include "umicom/ai/training/checkpoint.h"
 #include "umicom/ai/training/tape.h"
+#include "umicom/ai/training/prediction_metrics.h"
 
 #include <math.h>
 #include <stdbool.h>
@@ -250,6 +253,8 @@ UmiStatus UmiAiTrainingModelAuditEvaluate(
         status = UmiAiTrainingDecoderLogits(model, inputs, tokens, logits,
                                     tokens * (size_t)config->decoder.vocabularySize);
         if (status != UMI_STATUS_OK) return status;
+/* The shared selected-row metrics service owns the same lower-token-ID tie rule. Audit continues to select every held-out token and clamps top five to the vocabulary, preserving its earlier counts and error contract. The former implementation is retained for owner review. */
+#if 0
         for (size_t row = 0U; row < tokens; ++row) {
             size_t target = targets[row];
             size_t rank = 0U;
@@ -267,6 +272,15 @@ UmiStatus UmiAiTrainingModelAuditEvaluate(
             if (rank < 5U) ++candidate.topFiveCorrect;
             ++candidate.evaluatedTokens;
         }
+#endif
+        UmiAiTrainingPredictionCounts counts;
+        const size_t vocabulary=(size_t)config->decoder.vocabularySize;
+        status=UmiAiTrainingPredictionScore(logits,tokens,vocabulary,targets,
+            NULL,0U,vocabulary < 5U ? vocabulary : 5U,&counts);
+        if (status != UMI_STATUS_OK) return UMI_STATUS_INVALID_STATE;
+        candidate.topOneCorrect+=counts.topOneCorrect;
+        candidate.topFiveCorrect+=counts.topKCorrect;
+        candidate.evaluatedTokens+=counts.selectedRows;
     }
     status = FingerprintIdentities(model, dataset, config, &after);
     if (status != UMI_STATUS_OK) return status;

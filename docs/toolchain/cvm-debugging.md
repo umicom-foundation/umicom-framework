@@ -33,3 +33,20 @@ Run commands separately and stop on errors. The final command prints operation l
 For an installed package, omit UMICOM_C_PREVIEW_SOURCE and set CMAKE_PREFIX_PATH to the SDK prefix. Headers and libraries must both contain the resumable machine API. An older package with the same package version can lack this new API; do not mix old libraries and new headers. The source-mode options are local to the adapter function and do not overwrite the caller's compiler-tools/test cache settings.
 
 The OS tools/cvm-preview project reuses this consumer and service. It adds no parser or executor. Native GUI wiring, breakpoints, live source replacement and application cancellation policies require separate integration.
+
+
+## Resume a bounded slice
+
+Call **umi_cvm_debug_resume(session, sizeof *session, instruction_budget)** to execute at most 1..256 bytecode instructions before returning to the owner. The session's original lifetime fuel remains the overall execution limit. A successful call may leave the session PAUSED; only COMPLETE publishes a result.
+
+The shared Umicom C machine validates the program once per slice. A runtime fault preserves earlier successful instructions in that slice and leaves the failing instruction uncommitted. Framework records FAILED and the corresponding source location. Invalid slice arguments preserve the existing session. CANCELLED, FAILED and COMPLETE sessions must be restarted before another resume.
+
+~~~powershell
+& "./build/cvm-preview-debug/umicom-cvm-preview.exe" --slice 2 "int main(void){return 6*7;}"
+~~~
+
+For this four-instruction program, the final report is **slices=2 instructions=4 value=42**. Budgets zero, above 256, signed values and trailing characters are refused. The console drains slices synchronously; it does not demonstrate a responsive GUI or a background scheduler.
+
+A UI should schedule one resume per bounded work opportunity and return to its event loop between opportunities. The same owner must serialize resume, cancellation and storage release. An instruction count is not a wall-clock latency guarantee.
+
+The optional consumer requires the Umicom C machine slice API as well as the earlier stepping API. Use matching headers and libraries. The Kernel guest uses the same canonical runtime separately; the OS user-space wrapper does not boot that guest.

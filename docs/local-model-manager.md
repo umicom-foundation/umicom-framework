@@ -370,3 +370,7 @@ The added cases cover 19 admission/budget groups and 15 native loopback sequence
 Exercise the installed SDK consumer as well. It resolves the plan, budget and wait symbols using pure planning and denied approval, so it needs no server. Real-engine acceptance still requires the separate process snapshot, model digest, trusted endpoint, reviewed inference request and normal shutdown described above.
 
 Sammy Hegab · Umicom Foundation · Source examples: MIT.
+
+## Plan the dense cache payload
+
+[Native cache-budget planning](native-cache-planning.md) explains the shared C API, `cache-plan` command, geometry, overflow checks and the distinction between a cache budget and real model admission. The command loads no model and changes no run configuration.

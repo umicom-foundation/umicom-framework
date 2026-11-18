@@ -65,9 +65,55 @@ static int stepped_preview(const char *source)
     return fflush(stdout)!=0 || ferror(stdout)?2:0;
 }
 
+/* A command-line demonstration drains slices immediately; an interactive host
+ * would schedule the next slice on a later owner-thread turn. No timeout or
+ * responsiveness claim follows from this synchronous teaching command. */
+static int sliced_preview(const char *source, size_t budget)
+{
+    UmiCvmDebugSession session;
+    UmcStatus status=umi_cvm_debug_start(source,strlen(source),UMC_PROGRAM_LIMIT,&session,sizeof session);
+    size_t slices=0U;
+    while(status==UMC_OK && session.phase==UMI_CVM_DEBUG_PAUSED) {
+        status=umi_cvm_debug_resume(&session,sizeof session,budget);
+        ++slices;
+    }
+    if(status!=UMC_OK) {
+        fprintf(stderr,"%zu:%zu: %s\n",session.diagnostic.line,
+            session.diagnostic.column,session.diagnostic.message);
+        return 1;
+    }
+    printf("slices=%zu instructions=%zu value=%ld\n",slices,
+        session.result.instructions_executed,(long)session.result.value);
+    return fflush(stdout)!=0 || ferror(stdout)?2:0;
+}
+/* Parse only the documented decimal count. Bound before multiplying and never
+ * accept signs, whitespace, empty text or a silently truncated integer. */
+static bool slice_budget(const char *text, size_t *out)
+{
+    size_t value=0U;
+    if(text==NULL || *text=='\0')return false;
+    for(size_t i=0U;text[i]!='\0';++i) {
+        if(text[i]<'0'||text[i]>'9')return false;
+        const size_t digit=(size_t)(text[i]-'0');
+        if(value>(UMC_PROGRAM_LIMIT-digit)/10U)return false;
+        value=value*10U+digit;
+    }
+    if(value==0U)return false;
+    *out=value;
+    return true;
+}
+
 int main(int argc, char **argv)
 {
     static const char demonstration[] = "int main(void) { return 6 * 7; }";
+    if(argc>=2 && strcmp(argv[1],"--slice")==0) {
+        size_t budget=0U;
+        if(argc<3 || argc>4 || !slice_budget(argv[2],&budget)) {
+            fputs("Usage: umicom-cvm-preview --slice 1..256 [source-program]\n",stderr);
+            return 2;
+        }
+        return sliced_preview(argc==4?argv[3]:demonstration,budget);
+    }
     if(argc>=2 && strcmp(argv[1],"--steps")==0) {
         if(argc>3){fputs("Usage: umicom-cvm-preview --steps [source-program]\n",stderr);return 2;}
         return stepped_preview(argc==3?argv[2]:demonstration);

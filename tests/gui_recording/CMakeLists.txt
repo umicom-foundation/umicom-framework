@@ -46,7 +46,8 @@ if(TARGET umicom_ui_gtk4 OR UMICOM_GUI_RECORDING_NATIVE_TESTS)
             "${_framework}/adapters/gtk4/automation_gtk4.c")
         # Logical lookup is a shared translation unit in full and standalone builds.
         target_sources(umicom-recording-native-check-support PRIVATE
-            "${_framework}/adapters/gtk4/widget_lookup_gtk4.c")
+            "${_framework}/adapters/gtk4/widget_lookup_gtk4.c"
+            "${_framework}/adapters/gtk4/automation_pointer_gtk4.c")
         target_link_libraries(umicom-recording-native-check-support PUBLIC ${_recording_library} PkgConfig::RECORDING_GTK)
         set_target_properties(umicom-recording-native-check-support PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED ON)
         set(_native_library umicom-recording-native-check-support)
@@ -56,4 +57,19 @@ if(TARGET umicom_ui_gtk4 OR UMICOM_GUI_RECORDING_NATIVE_TESTS)
     set_target_properties(umicom-ui-recording-gtk4-tests PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED ON)
     add_test(NAME framework.gui_recording.gtk4 COMMAND umicom-ui-recording-gtk4-tests)
     set_tests_properties(framework.gui_recording.gtk4 PROPERTIES TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;gtk4;gui-recording;acceptance")
+endif()
+
+# The same source is qualified standalone and through the shared adapter.
+if(TARGET umicom_ui_gtk4 OR UMICOM_GUI_RECORDING_NATIVE_TESTS)
+    add_executable(umicom-uat-pointer-tests test_pointer_probe_gtk4.c)
+    target_link_libraries(umicom-uat-pointer-tests PRIVATE ${_native_library})
+    set_target_properties(umicom-uat-pointer-tests PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED ON)
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(umicom-uat-pointer-tests PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror)
+    endif()
+    foreach(_case ready obstructed disabled hidden unmapped ambiguous missing private private-cover invalid)
+        add_test(NAME framework.uat.pointer.${_case} COMMAND umicom-uat-pointer-tests ${_case})
+        set_tests_properties(framework.uat.pointer.${_case} PROPERTIES
+            TIMEOUT 15 SKIP_RETURN_CODE 77 LABELS "framework;gtk4;uat;pointer;privacy")
+    endforeach()
 endif()

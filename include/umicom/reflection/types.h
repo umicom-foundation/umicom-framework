@@ -152,6 +152,9 @@ typedef struct UmiReflectionResourceDescriptor {
     char display_name[UMI_REFLECTION_NAME_CAPACITY];
     char description[UMI_REFLECTION_DESCRIPTION_CAPACITY];
     char resource_uri[UMI_REFLECTION_URI_CAPACITY];
+    /* Concrete ASCII type/subtype without parameters or wildcards, up to 127
+     * bytes plus terminator. Legacy no-slash registry identifiers remain valid.
+     * Syntax does not establish registration, decoder support or safe content. */
     char media_type[UMI_REFLECTION_ID_CAPACITY];
     UmiReflectionResourceKind kind;
     uint32_t flags;

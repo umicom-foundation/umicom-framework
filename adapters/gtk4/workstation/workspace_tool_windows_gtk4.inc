@@ -1,10 +1,19 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/workstation/workspace_tool_windows_gtk4.inc
- * PURPOSE: Render named edge tabs and transient, reusable tool-window flyouts.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Render named edge tabs and transient reusable tool-window flyouts.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
+
+
 
 /* Preferred flyout size is not a minimum size. GtkOverlay may allocate this
  * private widget below 300 by 230 logical pixels, keeping its real controls
@@ -355,6 +364,15 @@ static void build_tool_edge(UmiGtk4WorkspaceLayoutHost *host, int index)
     gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(edge->rail), rail_box);
     g_object_set_data(G_OBJECT(edge->rail), "umicom-tool-rail-box", rail_box);
     edge->drawer = gtk_revealer_new();
+    /* Hiding a revealer child does not exclude the revealer itself from
+     * pointer picking. Bind input eligibility to the existing reveal state,
+     * so collapsed drawers cannot intercept clicks on the editor underneath.
+     * The binding has no host callback or retained controller and follows the
+     * drawer's lifetime; opening, switching and collapsing keep one policy. */
+    (void)g_object_bind_property(edge->drawer, "reveal-child",
+        edge->drawer, "can-target", G_BINDING_SYNC_CREATE);
+    /* The earlier comment below describes the intended behaviour. Transition
+     * NONE alone did not enforce it; the input binding above now does. */
     /* Instant reveal keeps hidden overlays out of hit testing and avoids
      * animation timing changing automation or keyboard behaviour. */
     gtk_revealer_set_transition_type(GTK_REVEALER(edge->drawer),

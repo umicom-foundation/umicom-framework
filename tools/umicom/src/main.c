@@ -15,6 +15,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "cli.h"
+#include "command_training_data.h"
 #include "umicom/platform/native_arguments.h"
 #include "umicom/media_generation/comfy_inspection.h"
 #include "umicom/local_models/manager.h"
@@ -271,6 +272,9 @@ static int RunNativeCommand(int argc, char **argv)
         return 0;
     }
     command = argv[1];
+    /* Dataset inspection is read-only and needs no toolchain preparation. */
+    if (strcmp(command, "training-data") == 0)
+        return umi_cli_command_training_data(argc - 2, argv + 2);
     /* Offline ComfyUI inspection shares one Framework service with Media. */
     if (strcmp(command, "comfy") == 0)
         return UmiComfyInspectionCommand(argc - 2, argv + 2);

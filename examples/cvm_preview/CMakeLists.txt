@@ -106,3 +106,31 @@ if(BUILD_TESTING)
         set_tests_properties("framework.toolchain.cvm_debug.${case}" PROPERTIES TIMEOUT 15 LABELS "toolchain;cvm;debugger;sdk")
     endforeach()
 endif()
+
+# The public slice API shares the exact compiler/runtime consumer used above.
+if(BUILD_TESTING)
+    add_executable(umicom-cvm-slice-tests ../../tests/toolchain/test_cvm_slices.c)
+    target_link_libraries(umicom-cvm-slice-tests PRIVATE umicom_cvm_preview)
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(umicom-cvm-slice-tests PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror)
+    endif()
+    add_test(NAME framework.toolchain.cvm_slices.lifecycle COMMAND umicom-cvm-slice-tests)
+    set_tests_properties(framework.toolchain.cvm_slices.lifecycle PROPERTIES TIMEOUT 20 LABELS "toolchain;cvm;slices;sdk")
+    add_test(NAME framework.toolchain.cvm_slices.cli COMMAND "${CMAKE_COMMAND}"
+        "-DTOOL=$<TARGET_FILE:umicom-cvm-preview>"
+        -P "${CMAKE_CURRENT_LIST_DIR}/../../tests/toolchain/check_cvm_slices.cmake")
+    set_tests_properties(framework.toolchain.cvm_slices.cli PROPERTIES TIMEOUT 30 LABELS "toolchain;cvm;slices;cli")
+endif()
+
+# Shift execution stays in Umicom C; Framework owns fresh UI-facing results.
+if(BUILD_TESTING)
+    add_executable(umicom-cvm-shift-tests ../../tests/toolchain/test_cvm_shifts.c)
+    target_link_libraries(umicom-cvm-shift-tests PRIVATE umicom_cvm_preview)
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options(umicom-cvm-shift-tests PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror)
+    endif()
+    foreach(case IN ITEMS left right updates short-circuit fault-reset syntax-reset fuel-reset)
+        add_test(NAME "framework.toolchain.cvm_shifts.${case}" COMMAND umicom-cvm-shift-tests "${case}")
+        set_tests_properties("framework.toolchain.cvm_shifts.${case}" PROPERTIES TIMEOUT 15 LABELS "toolchain;cvm;shifts;sdk")
+    endforeach()
+endif()

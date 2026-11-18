@@ -65,6 +65,14 @@ typedef struct UmiProcessJobSnapshot {
     char output[UMI_PROCESS_JOB_OUTPUT_CAPACITY];
 } UmiProcessJobSnapshot;
 
+/** Format terminal state, signed/hex exit code and diagnostic tail. At most
+ * 512 bytes including NUL; clipped diagnostics are explicitly marked. The
+ * input is a coherent snapshot, not readiness evidence. Short output and
+ * invalid/nonterminal input leave outText unchanged. Returned text retains
+ * native diagnostic bytes; GUI clients must validate/repair UTF-8 for display. */
+UmiStatus UmiProcessJobFormatCompletion(const UmiProcessJobSnapshot *snapshot,
+    char *outText, size_t capacity);
+
 /**
  * Represent the process supervisor stats data shared with callers of this public contract.
  */
@@ -83,6 +91,22 @@ typedef struct UmiProcessSupervisorStats {
  * Represent the process supervisor data shared with callers of this public contract.
  */
 typedef struct UmiProcessSupervisor UmiProcessSupervisor;
+
+/** Query successful native creation, independent of worker state/output.
+ * A true value does not prove a GUI is visible, healthy or still alive; also
+ * inspect the job snapshot. Refusals leave outLaunched unchanged. */
+UmiStatus UmiProcessSupervisorLaunchObserved(UmiProcessSupervisor *supervisor,
+    UmiProcessJobId jobId, int *outLaunched);
+/** Explicitly request activation of a visible window belonging to this live
+ * supervised job. Windows uses the runner's owned process handle, restores a
+ * minimized window asynchronously, and respects foreground restrictions.
+ * BUSY means the worker has no live native handle available yet (creation or
+ * completion publication is pending); UNAVAILABLE means no visible target;
+ * PERMISSION_DENIED means Windows refused foreground activation. Other native
+ * backends return NOT_IMPLEMENTED. No process is launched or terminated.
+ * Serialize owner destruction with all users, as with other supervisor APIs. */
+UmiStatus UmiProcessSupervisorActivate(UmiProcessSupervisor *supervisor,
+    UmiProcessJobId jobId);
 
 /**
  * Provide the process supervisor config default operation used by this module and its

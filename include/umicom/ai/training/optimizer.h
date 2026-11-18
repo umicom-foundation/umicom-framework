@@ -14,8 +14,12 @@
  *   A decoder-only checkpoint does not contain AdamW moments: it CANNOT
  *   provide exact AdamW training continuation without saved optimiser state.
  *
- * AUTHOR AND ORGANISATION: Sammy Hegab | Umicom Foundation
- * LICENCE: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_TRAINING_OPTIMIZER_H
 #define UMICOM_AI_TRAINING_OPTIMIZER_H
@@ -123,6 +127,33 @@ UmiStatus UmiAiTrainingDecoderTrainAdamWStep(
     size_t tokenCount,
     float learningRate,
     float *outLoss);
+
+/* Selected decoder objectives use the mean over scored rows, not padded
+ * length. MaskedStep excludes targets from the loss but retains every input as
+ * causal context. PaddedStep additionally excludes input rows from attention;
+ * its scored rows must be a subset of attended rows. Both masks contain exactly
+ * tokenCount binary bytes and at least one target must be scored. All token and
+ * target IDs remain valid vocabulary entries, including excluded placeholders.
+ *
+ * Calls borrow inputs only until return. The optimizer belongs to this model
+ * and both step counters must agree. One success commits weights, moments and
+ * both counters together and reports the pre-update loss. Refusal preserves
+ * those values and outLoss; temporary graphs are rewound. Retained gradients
+ * are scratch state and are not a rollback guarantee. Masks do not freeze
+ * parameters: AdamW decay and previous moments may update a parameter even
+ * when its current gradient is zero. No microbatch accumulation, clipping or
+ * sparse-memory execution is implied by these two entry points. */
+UmiStatus UmiAiTrainingDecoderTrainAdamWMaskedStep(
+    UmiAiTrainingDecoder *model, UmiAiTrainingAdamW *optimizer,
+    const size_t *inputIds, const size_t *targetIds, size_t tokenCount,
+    const unsigned char *selected, size_t selectedCount,
+    float learningRate, float *outLoss);
+UmiStatus UmiAiTrainingDecoderTrainAdamWPaddedStep(
+    UmiAiTrainingDecoder *model, UmiAiTrainingAdamW *optimizer,
+    const size_t *inputIds, const size_t *targetIds, size_t tokenCount,
+    const unsigned char *attention, size_t attentionCount,
+    const unsigned char *selected, size_t selectedCount,
+    float learningRate, float *outLoss);
 
 #ifdef __cplusplus
 }

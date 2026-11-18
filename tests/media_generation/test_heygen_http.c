@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/media_generation/test_heygen_http.c
- * PURPOSE: Inspect native TLS restrictions, one transfer, cancellation and credential-header retirement.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Inspect native TLS restrictions, allocation failure, chunked replies and credential-header retirement.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include <curl/curl.h>
 #include <stdarg.h>
@@ -33,6 +40,7 @@ typedef struct FakeHttp
     const char *body;
     bool proxy_off, no_proxy, quiet;
     unsigned perform, cleanup, header_frees;
+    unsigned global_inits, global_cleanups, header_attempts;
 } FakeHttp;
 static FakeHttp fake;
 static const char *scenario;
@@ -42,6 +50,8 @@ typedef struct FakeHeader
     struct curl_slist item;
     size_t length;
 } FakeHeader;
+/* Inject initialization failures to verify ownership without relying on real allocation exhaustion. The former implementation is retained for owner review. */
+#if 0
 static CURLcode Init(long flags)
 {
     (void)flags;
@@ -49,6 +59,27 @@ static CURLcode Init(long flags)
 }
 static void GlobalCleanup(void) {}
 static CURL *EasyInit(void) { return (CURL *)(void *)&fake; }
+
+#endif
+/* Curl failures are injected before a network operation could occur. Counts
+ * prove that only resources actually acquired by the adapter are retired. */
+static CURLcode Init(long flags)
+{
+    CHECK(flags == CURL_GLOBAL_DEFAULT);
+    ++fake.global_inits;
+    return strcmp(scenario, "init-failure") == 0 ? CURLE_FAILED_INIT : CURLE_OK;
+}
+static void GlobalCleanup(void) { ++fake.global_cleanups; }
+static CURL *EasyInit(void)
+{
+    return strcmp(scenario, "easy-failure") == 0 ? NULL : (CURL *)(void *)&fake;
+}
+static bool IsPost(void)
+{
+    return strcmp(scenario, "post") == 0 ||
+           strcmp(scenario, "header-content-failure") == 0 ||
+           strcmp(scenario, "header-identity-failure") == 0;
+}
 static void EasyCleanup(CURL *handle)
 {
     CHECK(handle == (CURL *)(void *)&fake);
@@ -56,6 +87,13 @@ static void EasyCleanup(CURL *handle)
 }
 static struct curl_slist *Append(struct curl_slist *list, const char *value)
 {
+    ++fake.header_attempts;
+    unsigned fail_at = strcmp(scenario, "header-accept-failure") == 0 ? 1U
+                     : strcmp(scenario, "header-key-failure") == 0 ? 2U
+                     : strcmp(scenario, "header-content-failure") == 0 ? 3U
+                     : strcmp(scenario, "header-identity-failure") == 0 ? 4U : 0U;
+    if (fake.header_attempts == fail_at)
+        return NULL;
     FakeHeader *header = calloc(1U, sizeof(*header));
     CHECK(header != NULL);
     header->length = strlen(value);
@@ -179,7 +217,11 @@ static CURLcode Perform(CURL *handle)
 {
     (void)handle;
     ++fake.perform;
+/* POST header-allocation cases use the same request body and cleanup contract as the normal POST case. The former implementation is retained for owner review. */
+#if 0
     bool post = strcmp(scenario, "post") == 0;
+#endif
+    bool post = IsPost();
     CHECK((post ? fake.post == 1L : fake.get == 1L) && fake.peer == 1L && fake.host == 2L &&
           fake.follow == 0L && fake.redirects == 0L);
     CHECK(fake.proxy_off && fake.no_proxy && fake.quiet && fake.netrc == CURL_NETRC_IGNORED &&
@@ -207,6 +249,33 @@ static CURLcode Perform(CURL *handle)
         CHECK(fake.write("x", UMI_HEYGEN_BODY_CAPACITY, 1U, fake.write_data) == 0U);
         return CURLE_WRITE_ERROR;
     }
+    if (strcmp(scenario, "transfer-error") == 0)
+        return CURLE_RECV_ERROR;
+    if (strcmp(scenario, "empty") == 0)
+        return CURLE_OK;
+    if (strcmp(scenario, "multiply-overflow") == 0)
+    {
+        CHECK(fake.write("x", 2U, SIZE_MAX, fake.write_data) == 0U);
+        return CURLE_WRITE_ERROR;
+    }
+    if (strcmp(scenario, "cancel-write") == 0)
+    {
+        umi_cancellation_token_request(cancellation);
+        CHECK(fake.write("x", 1U, 1U, fake.write_data) == 0U);
+        return CURLE_WRITE_ERROR;
+    }
+    if (strcmp(scenario, "chunked") == 0 || strcmp(scenario, "chunk-overflow") == 0)
+    {
+        CHECK(fake.write("abcd", 2U, 2U, fake.write_data) == 4U);
+        bool overflow = strcmp(scenario, "chunk-overflow") == 0;
+        CHECK(fake.write("efgh", 1U, overflow ? 4U : 3U, fake.write_data) == (overflow ? 0U : 3U));
+        return overflow ? CURLE_WRITE_ERROR : CURLE_OK;
+    }
+    if (strcmp(scenario, "exact-capacity") == 0)
+    {
+        CHECK(fake.write("abcdefg", 1U, 7U, fake.write_data) == 7U);
+        return CURLE_OK;
+    }
     char body[] = "{\"data\":{\"video_id\":\"video-1\"}}";
     CHECK(fake.write(body, 1U, strlen(body), fake.write_data) == strlen(body));
     return CURLE_OK;
@@ -215,10 +284,16 @@ static CURLcode GetInfo(CURL *handle, CURLINFO field, ...)
 {
     (void)handle;
     CHECK(field == CURLINFO_RESPONSE_CODE);
+    if (strcmp(scenario, "info-failure") == 0)
+        return CURLE_UNKNOWN_OPTION;
     va_list args;
     va_start(args, field);
     long *out = va_arg(args, long *);
-    *out = strcmp(scenario, "redirect") == 0     ? 302L
+    *out = strcmp(scenario, "response-low") == 0 ? 99L
+           : strcmp(scenario, "response-high") == 0 ? 600L
+           : strcmp(scenario, "status-first") == 0 ? 100L
+           : strcmp(scenario, "status-last") == 0 ? 599L
+           : strcmp(scenario, "redirect") == 0     ? 302L
            : strcmp(scenario, "denied") == 0     ? 401L
            : strcmp(scenario, "rate-limit") == 0 ? 429L
                                                  : 200L;
@@ -240,6 +315,8 @@ static CURLcode GetInfo(CURL *handle, CURLINFO field, ...)
 #define curl_easy_getinfo GetInfo
 #include "../../src/media_generation/heygen_http.c"
 
+/* Exercise each resource acquisition and reply boundary while retaining the original nine transport scenarios. The former implementation is retained for owner review. */
+#if 0
 int main(int argc, char **argv)
 {
     CHECK(argc == 2);
@@ -271,6 +348,98 @@ int main(int argc, char **argv)
     }
     CHECK(fake.cleanup == 1U && fake.header_frees == (post ? 4U : 2U));
     CHECK(fake.perform == (strcmp(scenario, "option-failure") == 0 ? 0U : 1U));
+    free(reply);
+    umi_cancellation_token_destroy(cancellation);
+    return 0;
+}
+
+#endif
+int main(int argc, char **argv)
+{
+    CHECK(argc == 2);
+    scenario = argv[1];
+    CHECK(umi_cancellation_token_create(&cancellation) == UMI_STATUS_OK);
+    bool small = strcmp(scenario, "chunked") == 0 || strcmp(scenario, "chunk-overflow") == 0 ||
+                 strcmp(scenario, "exact-capacity") == 0;
+    size_t capacity = small ? 8U : UMI_HEYGEN_BODY_CAPACITY;
+    /* An extra byte remains a canary; it is never part of the advertised reply. */
+    char *reply = malloc(capacity + 1U);
+    CHECK(reply);
+    memset(reply, 0, capacity);
+    reply[capacity] = 'Z';
+    size_t length = 42U;
+    unsigned http = 777U;
+    bool post = IsPost();
+    bool before = strcmp(scenario, "cancel-before") == 0;
+    if (before)
+        umi_cancellation_token_request(cancellation);
+    UmiStatus status = UmiHeyGenHttp(NULL, "https://api.heygen.com/v3/videos",
+        post ? "{\"type\":\"avatar\"}" : NULL, "fixture-request", "fixture-key",
+        cancellation, reply, capacity, &length, &http);
+    unsigned expected_headers = post ? 4U : 2U;
+    bool early = false;
+    if (strcmp(scenario, "init-failure") == 0)
+    {
+        CHECK(status == UMI_STATUS_UNAVAILABLE && fake.cleanup == 0U &&
+              fake.global_cleanups == 0U);
+        expected_headers = 0U;
+        early = true;
+    }
+    else if (strcmp(scenario, "easy-failure") == 0)
+    {
+        CHECK(status == UMI_STATUS_OUT_OF_MEMORY && fake.cleanup == 0U);
+        expected_headers = 0U;
+        early = true;
+    }
+    else if (strncmp(scenario, "header-", 7U) == 0)
+    {
+        CHECK(status == UMI_STATUS_OUT_OF_MEMORY && fake.header_attempts > 0U);
+        expected_headers = fake.header_attempts - 1U;
+        early = true;
+    }
+    else if (strcmp(scenario, "option-failure") == 0)
+    {
+        CHECK(status == UMI_STATUS_UNAVAILABLE);
+        early = true;
+    }
+    else if (strcmp(scenario, "timeout") == 0)
+        CHECK(status == UMI_STATUS_TIMEOUT);
+    else if (strcmp(scenario, "cancel") == 0 || strcmp(scenario, "cancel-write") == 0 || before)
+    {
+        CHECK(status == UMI_STATUS_CANCELLED);
+        early = before;
+    }
+    else if (strcmp(scenario, "overflow") == 0 || strcmp(scenario, "multiply-overflow") == 0 ||
+             strcmp(scenario, "chunk-overflow") == 0)
+        CHECK(status == UMI_STATUS_CAPACITY_EXCEEDED);
+    else if (strcmp(scenario, "info-failure") == 0 || strcmp(scenario, "response-low") == 0 ||
+             strcmp(scenario, "response-high") == 0 || strcmp(scenario, "transfer-error") == 0)
+        CHECK(status == UMI_STATUS_IO_ERROR);
+    else
+    {
+        CHECK(status == UMI_STATUS_OK);
+        CHECK(http == (strcmp(scenario, "redirect") == 0 ? 302U
+                       : strcmp(scenario, "denied") == 0 ? 401U
+                       : strcmp(scenario, "rate-limit") == 0 ? 429U
+                       : strcmp(scenario, "status-first") == 0 ? 100U
+                       : strcmp(scenario, "status-last") == 0 ? 599U : 200U));
+        if (small)
+            CHECK(length == 7U && strcmp(reply, "abcdefg") == 0);
+        else if (strcmp(scenario, "empty") == 0)
+            CHECK(length == 0U && reply[0] == '\0');
+        else
+            CHECK(length > 0U);
+    }
+    if (status != UMI_STATUS_OK)
+        CHECK(length == 42U && http == 777U);
+    CHECK(reply[capacity] == 'Z');
+    if (strcmp(scenario, "init-failure") != 0)
+    {
+        CHECK(fake.global_cleanups == 1U);
+        CHECK(fake.cleanup == (strcmp(scenario, "easy-failure") == 0 ? 0U : 1U));
+    }
+    CHECK(fake.global_inits == 1U && fake.header_frees == expected_headers);
+    CHECK(fake.perform == (early ? 0U : 1U));
     free(reply);
     umi_cancellation_token_destroy(cancellation);
     return 0;

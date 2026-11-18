@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "internal.h"
+#include "umicom/local_models/memory_command.h"
 #include "umicom/local_models/runtime.h"
 #include "umicom/ai/ollama_pull_file.h"
 #ifdef UMICOM_MODELS_HAS_TENSOR_INSPECTION
@@ -49,6 +50,7 @@ static bool ReviewOutputComplete(void)
 
 static void Help(void)
 {
+    (void)puts("  cache-plan BYTES TOKENS SEQUENCES LAYERS KEY_HEADS VALUE_HEADS KEY_DIM VALUE_DIM KEY_BYTES VALUE_BYTES\n  cache-plan --help (offline dense KV payload planning)");
     (void)puts("Umicom Local Models - native CPU text-model manager\n"
         "Use: umicom models COMMAND ...  or  umicom-models COMMAND ...\n"
         "  catalogue\n"
@@ -669,10 +671,17 @@ int UmiModelsCommandWithSession(int argc, char **argv, UmiModelSession **inOutSe
      * Refuse even a different command before parsing or writing the owner. */
     if (inOutSession == NULL) return Failure(UMI_STATUS_INVALID_ARGUMENT);
     if (*inOutSession != NULL) return Failure(UMI_STATUS_BUSY);
+/* The dense cache planner accepts ten numeric values; existing command arity checks and session ownership remain unchanged. The former implementation is retained for owner review. */
+#if 0
     if (argc < 0 || argc > 9 || (argc != 0 && argv == NULL)) return Failure(UMI_STATUS_INVALID_ARGUMENT);
+#endif
+    if (argc < 0 || argc > 11 || (argc != 0 && argv == NULL)) return Failure(UMI_STATUS_INVALID_ARGUMENT);
     for (int i = 0; i < argc; ++i)
         if (argv[i] == NULL) return Failure(UMI_STATUS_INVALID_ARGUMENT);
     if (argc == 0 || (argc == 1 && (strcmp(argv[0], "help") == 0 || strcmp(argv[0], "--help") == 0))) { Help(); return ReviewOutputComplete() ? 0 : Failure(UMI_STATUS_IO_ERROR); }
+    /* The shared planner is offline and cannot replace an occupied session. */
+    if (strcmp(argv[0], "cache-plan") == 0)
+        return UmiModelDenseKvCommand(argc-1, (const char *const *)(argv+1), stdout, stderr);
     /* Reuse the Framework observer after the session ownership and argument gates. */
     if (strcmp(argv[0], "inspect-pull") == 0) return UmiOllamaPullFileCommand(argc, argv);
     if (strcmp(argv[0], "catalogue") == 0 && argc == 1) {

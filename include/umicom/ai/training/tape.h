@@ -43,6 +43,9 @@ extern "C" {
 typedef struct UmiAiTrainingTape UmiAiTrainingTape;
 typedef struct UmiAiTrainingTensor UmiAiTrainingTensor;
 
+/* Tape destruction and memory accounting also own retained squared-error
+ * selection bytes. These bytes follow the same rewind/rollback lifecycle. */
+
 /* Create an empty tape. On failure, the caller's output pointer is unchanged.
  * A successful caller owns the tape and must destroy it exactly once. */
 UmiStatus UmiAiTrainingTapeCreate(UmiAiTrainingTape **outTape);
@@ -133,6 +136,47 @@ UmiStatus UmiAiTrainingMeanSquaredError(UmiAiTrainingTape *tape,
                                        const UmiAiTrainingTensor *target,
                                        UmiAiTrainingTensor **outLoss);
 
+/* Mean squared error over individual values whose selection byte is 1.
+ * Equal prediction/target shapes are required. selectedCount equals rows*columns;
+ * each byte is 0 or 1, and at least one value must be selected. This is NOT a row
+ * mask: callers expand a frame/pixel validity decision to every included channel.
+ * The denominator is the number of selected values, not the full tensor size.
+ * Both prediction and target receive opposite derivatives for selected values;
+ * excluded values receive zero FROM THIS OPERATION. Other graph paths may still
+ * contribute. An attention mask, frame decoder and image/video trainer are not
+ * supplied by this scalar objective. All source tensors obey finite-value rules.
+ *
+ * The tape copies one byte per input value and accounts for it in auxiliaryBytes.
+ * Callers may release their mask after return. Unmasked MeanSquaredError uses no
+ * selection allocation and retains its all-value behavior. Allocation, numeric,
+ * shape, capacity or mask refusal preserves the graph and outLoss. Arrays and
+ * output handle storage remain separate, valid and stable during the call.
+ * No input/target values are rewritten and no I/O occurs.
+ */
+UmiStatus UmiAiTrainingMaskedMeanSquaredError(UmiAiTrainingTape *tape,
+    const UmiAiTrainingTensor *prediction, const UmiAiTrainingTensor *target,
+    const unsigned char *selected, size_t selectedCount,
+    UmiAiTrainingTensor **outLoss);
+
+
+/* Normalized weighted squared error: sum(w[i] * (p[i]-t[i])^2) / sum(w).
+ * Require one finite nonnegative float weight per tensor element and a positive
+ * total weight. A zero weight removes that element's contribution. This is
+ * NOT mean(w * error), row broadcasting, differentiable weights or an automatic
+ * diffusion/SNR policy. Equal positive weights recover the unweighted objective;
+ * binary weights recover the selected-element objective up to FP rounding.
+ *
+ * The tape copies weights into owned auxiliary storage and includes their
+ * bytes in its graph budget and memory report. Callers may release their array
+ * after success. Shapes, finite tensor values and provenance follow MSE rules.
+ * Both operands receive opposite derivatives; shared graph paths still add.
+ * Construction failure preserves the graph and outLoss. Inputs and output
+ * handle storage must be valid, stable and separate during the call.
+ */
+UmiStatus UmiAiTrainingWeightedMeanSquaredError(UmiAiTrainingTape *tape,
+    const UmiAiTrainingTensor *prediction, const UmiAiTrainingTensor *target,
+    const float *weights, size_t weightCount, UmiAiTrainingTensor **outLoss);
+
 /* Average categorical negative log-likelihood over logits (B x V).
  * Targets contain one class index per row, in [0, V). Uses a numerically
  * stable log-sum-exp calculation; no softmax probabilities are materialised.
@@ -141,6 +185,23 @@ UmiStatus UmiAiTrainingCrossEntropy(UmiAiTrainingTape *tape,
                                    const UmiAiTrainingTensor *logits,
                                    const size_t *targets, size_t targetCount,
                                    UmiAiTrainingTensor **outLoss);
+
+/* Average the same categorical objective over rows whose selected byte is 1.
+ * selectedCount and targetCount must equal logits rows; every mask byte is 0/1,
+ * every target remains in [0,columns), and at least one row must be selected.
+ * Excluded rows contribute zero to this operation's logit gradient. Other
+ * graph paths can still contribute gradients to those rows or shared weights.
+ * This is a LOSS mask, not an attention mask or a complete fine-tuning adapter.
+ *
+ * Targets and selection are copied into one tape-owned target allocation and
+ * can be released after return. The existing graph budget includes that whole
+ * allocation. No tensor layout, public handle or legacy all-row API changes.
+ * Refusal preserves the graph and outLoss. Caller arrays and output handle
+ * storage must remain valid, separate and unchanged throughout this call.
+ */
+UmiStatus UmiAiTrainingMaskedCrossEntropy(UmiAiTrainingTape *tape,
+    const UmiAiTrainingTensor *logits, const size_t *targets, size_t targetCount,
+    const unsigned char *selected, size_t selectedCount, UmiAiTrainingTensor **outLoss);
 
 /* Reverse the recorded operations to differentiate a scalar loss. This clears
  * all prior gradients, so repeat Backward only for the currently built graph. */
@@ -210,6 +271,31 @@ UmiStatus UmiAiTrainingMultiHeadCausalAttention(
     const UmiAiTrainingTensor *values,
     size_t sequenceLength,
     size_t headCount,
+    UmiAiTrainingTensor **outTensor);
+
+/* Causal attention with one copied binary selection byte per input row.
+ * Shapes, head partition and cache limits match MultiHeadCausalAttention.
+ * selectedCount must equal batch*time and each byte is 0 or 1. An excluded
+ * query produces an all-zero output; excluded keys and values are absent from
+ * every softmax and weighted sum. Selected queries always retain their own
+ * key, so their softmax is nonempty even with leading padding or interior gaps.
+ * An entirely excluded sequence (or batch) is permitted and produces zeros.
+ * No future or cross-sequence access is introduced by the mask.
+ *
+ * Backward contributes zero to excluded Q/K/V rows through this operation.
+ * Other graph paths can still contribute gradients. This is an ATTENTION mask,
+ * not a loss mask: callers separately select the objective's valid positions.
+ * Input tensors must still contain finite values under the usual tape contract.
+ * The node owns its copied selection until rollback/rewind/destroy; its bytes
+ * count toward the existing persistent graph budget. Temporary score storage
+ * retains the existing bound. Refusal preserves graph and outTensor. No decoder,
+ * tokenizer or model checkpoint format is changed by this primitive.
+ */
+UmiStatus UmiAiTrainingMaskedMultiHeadCausalAttention(
+    UmiAiTrainingTape *tape, const UmiAiTrainingTensor *queries,
+    const UmiAiTrainingTensor *keys, const UmiAiTrainingTensor *values,
+    size_t sequenceLength, size_t headCount,
+    const unsigned char *selected, size_t selectedCount,
     UmiAiTrainingTensor **outTensor);
 
 /* Per-row layer normalisation with learned affine scale and bias:

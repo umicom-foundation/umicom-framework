@@ -40,6 +40,13 @@ typedef struct UmiCvmDebugSession {
 UmcStatus umi_cvm_debug_start(const char *source,size_t length,size_t fuel,UmiCvmDebugSession *session,size_t size);
 UmcStatus umi_cvm_debug_step(UmiCvmDebugSession *session,size_t size);
 UmcStatus umi_cvm_debug_cancel(UmiCvmDebugSession *session,size_t size);
+/* Resume a positive bounded instruction slice through the shared Umicom C
+ * engine. A successful call can leave phase PAUSED: schedule another owner
+ * turn or cancel explicitly. Only COMPLETE publishes result. Bad budget/size
+ * preserves the session. Faults retain their source coordinates and move to
+ * FAILED; no instruction is repeated automatically. Single-owner use only. */
+UmcStatus umi_cvm_debug_resume(UmiCvmDebugSession *session, size_t size,
+    size_t instruction_budget);
 #ifdef __cplusplus
 }
 #endif

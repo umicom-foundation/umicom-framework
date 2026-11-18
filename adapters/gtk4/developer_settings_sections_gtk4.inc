@@ -52,6 +52,12 @@ static void DeveloperSettingsSectionsBegin(UmiGtk4DeveloperDialog *dialog)
         gtk_widget_add_css_class(heading, "title-3");
         gtk_box_append(GTK_BOX(page), heading);
         gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), page);
+        /* Keep keyboard and explicit review focus inside the visible page.
+         * GtkScrolledWindow inserts this viewport for the non-scrollable box.
+         * This changes navigation only; it never changes any field value. */
+        GtkWidget *viewport = gtk_scrolled_window_get_child(GTK_SCROLLED_WINDOW(scroll));
+        if (GTK_IS_VIEWPORT(viewport))
+            gtk_viewport_set_scroll_to_focus(GTK_VIEWPORT(viewport), TRUE);
         gtk_stack_add_titled(GTK_STACK(dialog->settingsStack), scroll,
             DeveloperSettingsNames[i], DeveloperSettingsTitles[i]);
         dialog->settingsSections[i] = page;
@@ -112,6 +118,108 @@ UmiStatus UmiGtk4BuildSettingsSelectSection(UmiGtk4DeveloperDialog *dialog,
     ++dialog->references;
     dialog->settingsSelecting = 1;
     gtk_stack_set_visible_child_name(GTK_STACK(dialog->settingsStack), DeveloperSettingsNames[section]);
+    UmiStatus status = DeveloperAlive(dialog) ? UMI_STATUS_OK : UMI_STATUS_CANCELLED;
+    dialog->settingsSelecting = 0;
+    DeveloperRelease(dialog);
+    return status;
+}
+
+/* Focusing before GTK allocates a newly shown page does not necessarily scroll
+ * it. A bounded frame callback reveals only that explicitly focused control.
+ * Weak window references avoid retaining the form or its application owner. */
+typedef struct DeveloperReviewReveal {
+    GWeakRef window;
+    GWeakRef parent;
+    unsigned frames;
+} DeveloperReviewReveal;
+static void DeveloperReviewRevealFree(gpointer data)
+{
+    DeveloperReviewReveal *request = data;
+    g_weak_ref_clear(&request->window);
+    g_weak_ref_clear(&request->parent);
+    g_free(request);
+}
+static gboolean DeveloperReviewRevealTick(GtkWidget *target, GdkFrameClock *clock, gpointer data)
+{
+    (void)clock;
+    DeveloperReviewReveal *request = data;
+    GtkWindow *window = g_weak_ref_get(&request->window);
+    GtkWindow *parent = g_weak_ref_get(&request->parent);
+    gboolean owned = window != NULL && parent != NULL &&
+        UmiGtk4WindowIsOpen(window) && UmiGtk4WindowIsOpen(parent) &&
+        gtk_widget_get_root(target) == GTK_ROOT(window) && gtk_window_get_focus(window) == target;
+    g_clear_object(&window); g_clear_object(&parent);
+    if (!owned) goto finished;
+    if (++request->frames == 1U) return G_SOURCE_CONTINUE;
+    GtkWidget *viewport = gtk_widget_get_ancestor(target, GTK_TYPE_VIEWPORT);
+    /* Measure in viewport coordinates so its content margins are included. */
+    GtkAdjustment *adjustment = viewport != NULL
+        ? gtk_scrollable_get_vadjustment(GTK_SCROLLABLE(viewport)) : NULL;
+    graphene_rect_t bounds;
+    double page = adjustment != NULL ? gtk_adjustment_get_page_size(adjustment) : 0.0;
+    if (viewport == NULL || page <= 0.0 || gtk_widget_get_height(target) <= 0 ||
+        !gtk_widget_compute_bounds(target, viewport, &bounds)) {
+        if (request->frames < 16U) return G_SOURCE_CONTINUE;
+        goto finished;
+    }
+    double value = gtk_adjustment_get_value(adjustment);
+    /* Retain the earlier content-relative range for review: it omitted the
+     * page margin and could leave the last pixels below the visible edge. */
+#if 0
+    double first = (double)bounds.origin.y, last = first + (double)bounds.size.height;
+#endif
+    double first = value + (double)bounds.origin.y, last = first + (double)bounds.size.height;
+    double next = value;
+    if (first < value || last - first > page) next = first;
+    else if (last > value + page) next = last - page;
+    double lower = gtk_adjustment_get_lower(adjustment);
+    next = CLAMP(next, lower, MAX(lower, gtk_adjustment_get_upper(adjustment) - page));
+    /* Clear ownership before notifying: value-changed can destroy or replace
+     * the form. The retained adjustment is the only object used afterwards. */
+    g_object_set_data(G_OBJECT(target), "umicom-review-reveal", NULL);
+    g_object_ref(adjustment);
+    if (value != next) gtk_adjustment_set_value(adjustment, next);
+    g_object_unref(adjustment);
+    return G_SOURCE_REMOVE;
+finished:
+    g_object_set_data(G_OBJECT(target), "umicom-review-reveal", NULL);
+    return G_SOURCE_REMOVE;
+}
+static void DeveloperReviewRevealSchedule(UmiGtk4DeveloperDialog *dialog)
+{
+    GtkWidget *target = dialog->trust;
+    guint previous = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(target), "umicom-review-reveal"));
+    if (previous != 0U) gtk_widget_remove_tick_callback(target, previous);
+    DeveloperReviewReveal *request = g_new0(DeveloperReviewReveal, 1);
+    GObject *parent = g_weak_ref_get(&dialog->parentWindow);
+    g_weak_ref_init(&request->window, dialog->window);
+    g_weak_ref_init(&request->parent, parent);
+    g_clear_object(&parent);
+    guint tick = gtk_widget_add_tick_callback(target, DeveloperReviewRevealTick, request, DeveloperReviewRevealFree);
+    g_object_set_data(G_OBJECT(target), "umicom-review-reveal", GUINT_TO_POINTER(tick));
+}
+
+/* A refused command needs a readable recovery path. Keep the explanation in
+ * the existing pinned status area and focus the unchecked trust control.
+ * Native observers can retire the form at each GTK call, so one internal lease
+ * covers the sequence and no child is used after ownership has been revoked. */
+UmiStatus UmiGtk4BuildSettingsReviewExecution(UmiGtk4DeveloperDialog *dialog)
+{
+    if (dialog == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (!DeveloperAlive(dialog) || dialog->settingsStack == NULL || dialog->trust == NULL)
+        return UMI_STATUS_INVALID_STATE;
+    if (dialog->settingsSelecting || dialog->accepting) return UMI_STATUS_BUSY;
+    ++dialog->references;
+    dialog->settingsSelecting = 1;
+    gtk_stack_set_visible_child_name(GTK_STACK(dialog->settingsStack), "build");
+    if (DeveloperAlive(dialog))
+        ShowStatus(dialog, UMI_STATUS_PERMISSION_DENIED,
+            "No build or program was started. Review this project's code and build scripts. "
+            "If you trust them, select the trust checkbox, choose Apply Settings, then retry your command. "
+            "Cancel leaves tools disabled.");
+    if (DeveloperAlive(dialog))
+        (void)gtk_widget_grab_focus(dialog->trust);
+    if (DeveloperAlive(dialog)) DeveloperReviewRevealSchedule(dialog);
     UmiStatus status = DeveloperAlive(dialog) ? UMI_STATUS_OK : UMI_STATUS_CANCELLED;
     dialog->settingsSelecting = 0;
     DeveloperRelease(dialog);

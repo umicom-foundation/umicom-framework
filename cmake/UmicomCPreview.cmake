@@ -49,3 +49,24 @@ function(umicom_add_cvm_preview target)
         target_compile_options("${target}" PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow)
     endif()
 endfunction()
+
+# Source warnings are an explicit newer-SDK composition. Existing preview
+# consumers keep their previous dependency contract until they opt in.
+function(umicom_add_cvm_source_check target)
+    umicom_add_cvm_preview("${target}")
+    get_filename_component(_framework "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/.." ABSOLUTE)
+    target_sources("${target}" PRIVATE "${_framework}/src/toolchain/cvm_source_check.c")
+endfunction()
+
+# Document-aware clients explicitly supply their platform owner. Keeping this
+# optional avoids pulling editor and filesystem services into a compiler-only
+# application or changing existing preview consumers' dependency contracts.
+function(umicom_add_cvm_document_check target platform_target)
+    if(NOT TARGET "${platform_target}")
+        message(FATAL_ERROR "Document checks require an existing Framework platform target")
+    endif()
+    umicom_add_cvm_source_check("${target}")
+    get_filename_component(_framework "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/.." ABSOLUTE)
+    target_sources("${target}" PRIVATE "${_framework}/src/toolchain/cvm_document_check.c")
+    target_link_libraries("${target}" PUBLIC "${platform_target}")
+endfunction()

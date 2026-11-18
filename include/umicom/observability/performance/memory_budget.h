@@ -52,13 +52,20 @@ typedef struct UmiPerformanceMemoryBudget {
  * may refer to its existing inline fields. This call allocates temporary storage;
  * it does not acquire external resources or synchronize concurrent callers. */
 UmiStatus umi_performance_memory_budget_init(UmiPerformanceMemoryBudget *record, const char *id, const char *subject_id);
-/* Validate structure/version/identity invariants before a record is consumed. */
+/* Validate structure/version/identity invariants and finite scalar fields
+ * before a record is consumed. This is consistent with the archive codec. */
 UmiStatus umi_performance_memory_budget_validate(const UmiPerformanceMemoryBudget *record);
-/* Update point-in-time measurement evidence and monotonically advance sequence. */
+/* Update point-in-time measurement evidence and monotonically advance sequence.
+ * Values must be finite; signed measurements remain allowed. An exhausted
+ * sequence returns CAPACITY_EXCEEDED before any field changes. All failures
+ * preserve the record. Timestamp is supplied evidence, not a freshness check.
+ * Serialize access; this value owner does not reserve or enforce RAM limits. */
 UmiStatus umi_performance_memory_budget_observe(UmiPerformanceMemoryBudget *record, double value, double auxiliary, uint64_t count, uint64_t timestamp_ns);
-/* Compare stable identities without comparing volatile measurement state. */
+/* Compare bounded nonempty identities without comparing volatile measurement
+ * state. An unterminated identity field returns false. */
 bool umi_performance_memory_budget_same_identity(const UmiPerformanceMemoryBudget *left, const UmiPerformanceMemoryBudget *right);
-/* Domain-specific policy helper for memory budget. */
+/* Compare finite nonnegative used and limit values inclusively. NaN, infinity
+ * and negative values return false. This is arithmetic, not RAM reservation. */
 bool umi_performance_memory_budget_within_budget(double used, double limit);
 
 /** Transfer this value using the portable format described in value_archive.h.

@@ -97,6 +97,27 @@ if(BUILD_TESTING)
         framework.application.launcher
         tests/application/test_launcher.c
     )
+    umicom_add_application_runtime_test(
+        umicom-application-deferred-launch-test
+        framework.application.deferred_launch
+        tests/application/test_deferred_launch.c
+    )
+    set_tests_properties(framework.application.deferred_launch PROPERTIES
+        LABELS "application;framework;launcher;startup;regression")
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-application-deferred-launch-test)
+    endif()
+    # Resolve a separately installed Applications directory without launching it.
+    umicom_add_application_runtime_test(
+        umicom-application-native-location-test
+        framework.application.native_location
+        tests/application/test_native_location.c
+    )
+    set_tests_properties(framework.application.native_location PROPERTIES
+        LABELS "application;framework;launcher;discovery;native;regression")
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-application-native-location-test)
+    endif()
     # Inject installation evidence and fake adapters: no filesystem mutation,
     # subprocess, display or running application is needed by this regression.
     umicom_add_application_runtime_test(

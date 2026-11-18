@@ -1,10 +1,18 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/application/runtime_catalogue_native_discovery.inc
- * PURPOSE: Transactional native presence reconciliation in the existing owner.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Reconcile trusted built-in GUI installation evidence and resolve explicit native paths without loading or launching code.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
+
 #include <errno.h>
 #ifdef _WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -123,6 +131,10 @@ static UmiStatus native_file_probe(const char *path, bool *out_present, void *co
 #endif
 }
 
+/* The former presence-only path construction is retained for comparison.
+ * native_candidate_path now shares naming and validation between presence
+ * scans and explicit launch paths. Catalogue admission remains unchanged. */
+#if 0
 /* Resolve only the established built-in GUI companion under the trusted root. */
 UmiStatus umi_application_native_discovery_probe(
     const UmiApplicationNativeDiscoveryConfig *config,
@@ -143,6 +155,58 @@ UmiStatus umi_application_native_discovery_probe(
     if (count < 0 || (size_t)count >= sizeof(path)) return UMI_STATUS_CAPACITY_EXCEEDED;
     return (config->probe != NULL ? config->probe : native_file_probe)(
         path, out_present, config->probe_context);
+}
+
+#endif
+
+/* Keep canonical names and root validation in the existing native-discovery
+ * owner. Both a presence scan and a launch-path request use this one builder. */
+static UmiStatus native_candidate_path(
+    const UmiApplicationNativeDiscoveryConfig *config,
+    const char *application_id, char *path, size_t capacity)
+{
+    UmiStatus status = umi_application_native_discovery_config_validate(config);
+    if (status != UMI_STATUS_OK) return status;
+    const char *name = umi_application_portfolio_gui_executable(application_id);
+    if (name == NULL) return UMI_STATUS_NOT_FOUND;
+    const int count = snprintf(path, capacity, "%s/%s%s", config->executable_root,
+        name, config->executable_suffix);
+    return count < 0 || (size_t)count >= capacity
+        ? UMI_STATUS_CAPACITY_EXCEEDED : UMI_STATUS_OK;
+}
+
+UmiStatus umi_application_native_discovery_probe(
+    const UmiApplicationNativeDiscoveryConfig *config,
+    const char *application_id, bool *out_present)
+{
+    char path[UMI_APPLICATION_RUNTIME_PATH_CAPACITY];
+    if (out_present == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *out_present = false;
+    const UmiStatus status = native_candidate_path(config, application_id, path, sizeof(path));
+    if (status != UMI_STATUS_OK) return status;
+    return (config->probe != NULL ? config->probe : native_file_probe)(
+        path, out_present, config->probe_context);
+}
+
+/* Stage the path and presence observation before publishing any caller bytes.
+ * A located file is evidence only: process creation must recheck its outcome. */
+UmiStatus umi_application_native_discovery_resolve(
+    const UmiApplicationNativeDiscoveryConfig *config,
+    const char *application_id, char *out_path, size_t capacity)
+{
+    char candidate[UMI_APPLICATION_RUNTIME_PATH_CAPACITY];
+    bool present = false;
+    if (out_path == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiStatus status = native_candidate_path(config, application_id, candidate, sizeof(candidate));
+    if (status != UMI_STATUS_OK) return status;
+    const size_t bytes = strlen(candidate) + 1U;
+    if (capacity < bytes) return UMI_STATUS_CAPACITY_EXCEEDED;
+    status = (config->probe != NULL ? config->probe : native_file_probe)(
+        candidate, &present, config->probe_context);
+    if (status != UMI_STATUS_OK) return status;
+    if (!present) return UMI_STATUS_NOT_FOUND;
+    memcpy(out_path, candidate, bytes);
+    return UMI_STATUS_OK;
 }
 
 /* Prepare explicit initial policy without adding a second product registry. */

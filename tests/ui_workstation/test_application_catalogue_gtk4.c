@@ -17,6 +17,7 @@
 #include "umicom/ui/appearance_catalogue.h"
 
 #include <stdio.h>
+#include <glib/gstdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -262,6 +263,66 @@ cleanup:
 
 /* GTK needs a display connection to construct widgets. Missing displays are
  * explicitly skipped; there is no presented window, real launcher or network. */
+/* Probe a separate Unicode directory through the real catalogue. The files
+ * are inert presence fixtures; this test never dispatches or starts them. */
+static int verify_explicit_application_location(void)
+{
+    int failed = 0;
+    UmiGtk4WorkstationShellHeader *header = NULL;
+    char *saved = g_strdup(g_getenv("UMICOM_APPLICATIONS_BIN"));
+    char *directory = g_dir_make_tmp("umicom-app-location-XXXXXX", NULL);
+    char *unicode_root = NULL;
+    char *bank = NULL;
+    GtkWidget *root = NULL;
+    UmiApplicationLaunchSelectionSnapshot snapshot;
+    REQUIRE(directory != NULL);
+    unicode_root = g_build_filename(directory, "Apps \xc3\xa9", NULL);
+    REQUIRE(g_mkdir_with_parents(unicode_root, 0700) == 0);
+#ifdef G_OS_WIN32
+    bank = g_build_filename(unicode_root, "umicom-bank.exe", NULL);
+#else
+    bank = g_build_filename(unicode_root, "umicom-bank", NULL);
+#endif
+    REQUIRE(g_file_set_contents(bank, "presence fixture; never execute", -1, NULL));
+#ifndef G_OS_WIN32
+    REQUIRE(g_chmod(bank, 0700) == 0);
+#endif
+    REQUIRE(g_setenv("UMICOM_APPLICATIONS_BIN", unicode_root, TRUE));
+    UmiGtk4WorkstationShellHeaderConfig config = umi_gtk4_ws_shell_header_config_default(
+        "org.umicom.os", "Umicom OS location test");
+    REQUIRE(umi_gtk4_ws_shell_header_create_managed(&config, &header) == UMI_STATUS_OK);
+    root = umi_gtk4_ws_shell_header_widget(header);
+    REQUIRE(root != NULL);
+    g_object_ref(root);
+    REQUIRE(umi_gtk4_ws_shell_header_catalogue_refresh(header) == UMI_STATUS_OK);
+    GtkWidget *check = find_control(root, "workstation.application.select.org.umicom.bank");
+    REQUIRE(GTK_IS_CHECK_BUTTON(check) && gtk_widget_get_sensitive(check));
+    REQUIRE(umi_gtk4_ws_shell_header_catalogue_set_selected(header,"org.umicom.bank",true) == UMI_STATUS_OK);
+    REQUIRE(umi_gtk4_ws_shell_header_catalogue_snapshot(header,&snapshot) == UMI_STATUS_OK);
+    REQUIRE(snapshot.selected_count == 1U);
+    REQUIRE(umi_gtk4_ws_shell_header_catalogue_set_selected(header,"org.umicom.bank",false) == UMI_STATUS_OK);
+    REQUIRE(g_remove(bank) == 0);
+    REQUIRE(umi_gtk4_ws_shell_header_catalogue_refresh(header) == UMI_STATUS_OK);
+    REQUIRE(!gtk_widget_get_sensitive(check));
+    REQUIRE(umi_gtk4_ws_shell_header_catalogue_set_selected(header,"org.umicom.bank",true) != UMI_STATUS_OK);
+    /* An explicit invalid root cannot select a different installed build. */
+    REQUIRE(g_setenv("UMICOM_APPLICATIONS_BIN", "relative/apps", TRUE));
+    REQUIRE(umi_gtk4_ws_shell_header_catalogue_refresh(header) == UMI_STATUS_OK);
+    REQUIRE(!gtk_widget_get_sensitive(check));
+cleanup:
+    umi_gtk4_ws_shell_header_destroy(header);
+    if (root != NULL) g_object_unref(root);
+    if (saved != NULL) (void)g_setenv("UMICOM_APPLICATIONS_BIN", saved, TRUE);
+    else g_unsetenv("UMICOM_APPLICATIONS_BIN");
+    /* Only this unique fixture's known leaf files and empty directories are
+     * removed. No recursive deletion or owner installation is involved. */
+    if (bank != NULL) (void)g_remove(bank);
+    if (unicode_root != NULL) (void)g_rmdir(unicode_root);
+    if (directory != NULL) (void)g_rmdir(directory);
+    g_free(bank);g_free(unicode_root);g_free(directory);g_free(saved);
+    return failed;
+}
+
 int main(void)
 {
     UmiGtk4WorkstationShellHeaderConfig config;
@@ -284,6 +345,7 @@ int main(void)
         (void)puts("SKIP: GTK display is unavailable.");
         return 77;
     }
+    REQUIRE(verify_explicit_application_location() == 0);
     REQUIRE(verify_header_identity(true) == 0);
     REQUIRE(verify_header_identity(false) == 0);
     /* Older callers still receive a floating widget which a GTK parent can

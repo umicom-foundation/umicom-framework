@@ -44,7 +44,10 @@ UmiStatus umi_reflection_registry_create(
 /** Release all owned field arrays, records and synchronisation state. */
 void umi_reflection_registry_destroy(UmiReflectionRegistry *registry);
 
-/** Register a validated type and deep-copy its fields and attributes. */
+/** Register a validated type and deep-copy its fields and attributes.
+ * Zero-count spans retain no caller pointer, even when an input pointer is
+ * nonnull. Keep the descriptor and all nonempty source spans stable during
+ * the call; the registry owns independent copies after success. */
 UmiStatus umi_reflection_registry_register_type(
     UmiReflectionRegistry *registry,
     const UmiReflectionTypeDescriptor *descriptor);
@@ -54,11 +57,30 @@ UmiStatus umi_reflection_registry_unregister_type(
     UmiReflectionRegistry *registry,
     const char *type_id);
 
-/** Copy one type and its arrays into caller-owned snapshot storage. */
+/** Copy one type and its arrays into caller-owned snapshot storage.
+ * Empty descriptor spans are null. Nonempty descriptor pointers refer into
+ * this exact snapshot object; copying the struct by value does not rebase
+ * them. Its arrays remain valid after registry mutation or destruction. */
 UmiStatus umi_reflection_registry_get_type(
     const UmiReflectionRegistry *registry,
     const char *type_id,
     UmiReflectionTypeSnapshot *out_snapshot);
+
+
+/** Copy a canonical snapshot into independent caller-owned snapshot storage.
+ * A populated source descriptor must point to the matching arrays INSIDE that
+ * source snapshot; empty spans must be null. Counts, metadata and bounds are
+ * validated before any destination write. Invalid source metadata preserves
+ * the complete destination. Success points populated descriptor spans into
+ * the destination's arrays and zeroes unused array storage.
+ *
+ * Self-copy validates the snapshot and otherwise leaves it unchanged. Other
+ * source and destination objects must be disjoint and stable during the call.
+ * No allocation, retained pointer or registry access occurs. This function
+ * does not copy a live reflected object or authorize access to its fields. */
+UmiStatus umi_reflection_type_snapshot_copy(
+    const UmiReflectionTypeSnapshot *source,
+    UmiReflectionTypeSnapshot *destination);
 
 /** Register an inspectable module without retaining its executable pointers. */
 UmiStatus umi_reflection_registry_register_module(

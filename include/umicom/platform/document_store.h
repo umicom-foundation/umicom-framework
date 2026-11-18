@@ -190,6 +190,16 @@ UmiStatus UmiDocumentStoreReplaceLoaded(UmiDocumentStore *store,
 UmiStatus UmiDocumentStoreCopySnapshot(const UmiDocumentStore *store,
     UmiDocumentId documentId, UmiDocumentSnapshot *outSnapshot, char **outText);
 
+
+/** Copy at most maxTextBytes content bytes, plus one terminating zero, while
+ * holding the same lock used for metadata and edits. The limit is checked
+ * before allocation, even when another thread has grown the document.
+ * Zero permits only an empty document. On refusal neither output changes.
+ * This bounds this copy only, not the store, compiler or process memory. */
+UmiStatus UmiDocumentStoreCopySnapshotBounded(const UmiDocumentStore *store,
+    UmiDocumentId documentId, size_t maxTextBytes,
+    UmiDocumentSnapshot *outSnapshot, char **outText);
+
 /** Acknowledge a successful provider write of one captured snapshot. Pass an
  * unmodified snapshot from the same live store and the path actually written.
  * This does not write bytes. Revision, saved revision, length, previous path

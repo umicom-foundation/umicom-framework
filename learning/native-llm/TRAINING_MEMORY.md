@@ -155,3 +155,41 @@ numerical-gradient and decoder-parity tests when introducing new operators.
 The present system remains a **small CPU teaching model**. Memory budgeting is
 an engineering control and measurement foundation, not a claim that arbitrary
 vocabulary sizes, many decoder layers or long training contexts are supported.
+
+
+## Avoid duplicate corpus payloads during import
+
+`UmiAiCorpusLoadFile` reads at most `UMI_AI_CORPUS_MAX_BYTES` into one private
+buffer. After the exact read, EOF and close checks succeed, that buffer becomes
+the immutable corpus owner’s payload. The loader no longer invokes the public
+copying constructor on its already-private bytes. `UmiAiCorpusCreate` still
+copies caller storage; its borrowing boundary has not changed.
+
+For a payload of N bytes, corpus-owned peak storage during a successful import
+is N plus the corpus object, instead of 2N plus that object. The descriptor
+size depends on the target ABI. This count excludes stdio buffers, allocator
+metadata, stack space, other model objects and the operating system’s file
+cache. It is not a whole-process RAM limit or evidence that an unrelated crash
+was repaired.
+
+Ownership transfers only after file completion. If descriptor allocation fails,
+the private buffer is freed and the caller’s output owner is unchanged. Destroy
+the successful corpus once through `UmiAiCorpusDestroy`; do not free its private
+payload from an application. Removing or editing the original file after a
+successful import does not alter the already-owned snapshot. Concurrent changes
+during import are still subject to the existing pathname trust and read checks;
+this service is not a filesystem snapshot transaction.
+
+Focused regression commands from the Framework checkout:
+
+```powershell
+cmake -S tests/training_corpus_memory -B build/training-corpus-memory -G Ninja
+cmake --build build/training-corpus-memory --parallel 2
+ctest --test-dir build/training-corpus-memory --output-on-failure --verbose
+```
+
+The allocation observer includes the production corpus translation unit. It
+measures explicitly owned allocations, injects each allocation refusal, checks
+empty/oversized input rejection and tests snapshot independence. Existing
+window, overlap and SHA-256 regressions are reused. Separate platform profiling
+is required for total process or child-model memory.

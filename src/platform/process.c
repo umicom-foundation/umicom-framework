@@ -22,6 +22,7 @@
 #endif
 
 #include "umicom/platform/process.h"
+#include "process_native_control.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -196,7 +197,8 @@ static int umi_windows_process_is_hidden(const UmiProcessRequest *request)
 static UmiStatus umi_process_execute_windows(const UmiProcessRequest *request,
                                               UmiProcessResult *result,
                                               UmiProcessResultObserver observer, UmiProcessOutputObserver rawObserver,
-                                              void *context, UmiProcessLifetime lifetime)
+                                              void *context, UmiProcessLifetime lifetime,
+                                              UmiProcessNativeObserver nativeObserver)
 {
     const size_t utf8Capacity = 4U * 32767U + 1U;
     char *command_line = malloc(utf8Capacity);
@@ -285,7 +287,15 @@ static UmiStatus umi_process_execute_windows(const UmiProcessRequest *request,
     }
     created = CreateProcessW(wideProgram, wideCommand, NULL, NULL, write_pipe != NULL,
         creation_flags, environment_block, wideDirectory, &startup.StartupInfo, &process) != 0;
-    if (!created) { status = UMI_STATUS_IO_ERROR; goto cleanup; }
+    if (!created) {
+        /* Preserve the native loader diagnostic even when no child exists to
+         * write stderr. The numeric code remains usable across UI languages. */
+        const DWORD error = GetLastError();
+        (void)snprintf(result->output, sizeof(result->output),
+            "Windows could not create the process (error %lu).", (unsigned long)error);
+        status = UMI_STATUS_IO_ERROR;
+        goto cleanup;
+    }
     if (write_pipe != NULL) { (void)CloseHandle(write_pipe); write_pipe = NULL; }
     if (job != NULL && (!AssignProcessToJobObject(job, process.hProcess) ||
                        ResumeThread(process.hThread) == (DWORD)-1)) {
@@ -295,6 +305,10 @@ static UmiStatus umi_process_execute_windows(const UmiProcessRequest *request,
         goto cleanup;
     }
     result->launched = 1;
+    if (nativeObserver != NULL) nativeObserver(process.hProcess, context);
+    /* Native creation is independent of output: a silent GUI still publishes
+     * its launch observation. A successful creation is not a visible window. */
+    if (observer != NULL) observer(result, context);
     if (poll_interval > 100U) poll_interval = 100U;
     for (;;) {
         drain_windows_pipe(read_pipe, result, observer, rawObserver, context);
@@ -334,8 +348,19 @@ static UmiStatus umi_process_execute_windows(const UmiProcessRequest *request,
     result->duration_ms = monotonic_milliseconds() - started;
     if (status == UMI_STATUS_OK && exit_code != 0U) status = UMI_STATUS_INTERNAL_ERROR;
 cleanup:
+    if (!result->launched && result->output[0] == '\0' && status != UMI_STATUS_OK) {
+        /* Path/UTF-8/environment admission can fail before CreateProcessW.
+         * Never invent a native error code after unrelated cleanup calls. */
+        (void)snprintf(result->output, sizeof(result->output),
+            "Windows process preparation failed: %s. Check the executable path, working directory and environment.",
+            umi_status_text(status));
+    }
     if (job != NULL) (void)CloseHandle(job);
-    if (created) { (void)CloseHandle(process.hThread); (void)CloseHandle(process.hProcess); }
+    if (created) {
+        /* Revoke before closing, including unsuccessful job assignment. */
+        if (nativeObserver != NULL) nativeObserver(NULL, context);
+        (void)CloseHandle(process.hThread); (void)CloseHandle(process.hProcess);
+    }
     if (read_pipe != NULL) (void)CloseHandle(read_pipe);
     if (write_pipe != NULL) (void)CloseHandle(write_pipe);
     for (size_t i = 0U; i < 3U; ++i) if (standardCopies[i] != NULL) (void)CloseHandle(standardCopies[i]);
@@ -488,6 +513,7 @@ static UmiStatus umi_process_execute_posix(const UmiProcessRequest *request,
         (void)kill(child, SIGKILL);
     }
     result->launched = 1;
+    if (observer != NULL) observer(result, context);
     (void)close(errorPipe[1]); errorPipe[1] = -1;
     if (pipe_descriptors[1] >= 0) { (void)close(pipe_descriptors[1]); pipe_descriptors[1] = -1; }
     for (;;) {
@@ -564,7 +590,8 @@ UmiStatus umi_process_execute(const UmiProcessRequest *request,
  * publication boundary; it does not create another child-process runner. */
 static UmiStatus UmiProcessExecuteInternal(const UmiProcessRequest *request,
     UmiProcessResultObserver observer, UmiProcessOutputObserver rawObserver,
-    void *context, UmiProcessResult *out_result, UmiProcessLifetime lifetime)
+    void *context, UmiProcessResult *out_result, UmiProcessLifetime lifetime,
+    UmiProcessNativeObserver nativeObserver)
 {
     UmiProcessResult local_result;
     UmiProcessResult *result = out_result != NULL ? out_result : &local_result;
@@ -609,8 +636,9 @@ static UmiStatus UmiProcessExecuteInternal(const UmiProcessRequest *request,
         return UMI_STATUS_CANCELLED;
     }
 #ifdef _WIN32
-    return umi_process_execute_windows(request, result, observer, rawObserver, context, lifetime);
+    return umi_process_execute_windows(request, result, observer, rawObserver, context, lifetime, nativeObserver);
 #else
+    (void)nativeObserver;
     return umi_process_execute_posix(request, result, observer, rawObserver, context, lifetime);
 #endif
 }
@@ -619,14 +647,14 @@ static UmiStatus UmiProcessExecuteInternal(const UmiProcessRequest *request,
 UmiStatus UmiProcessExecuteObserved(const UmiProcessRequest *request,
     UmiProcessResultObserver observer, void *context, UmiProcessResult *outResult)
 {
-    return UmiProcessExecuteInternal(request, observer, NULL, context, outResult, UMI_PROCESS_LIFETIME_CHILD);
+    return UmiProcessExecuteInternal(request, observer, NULL, context, outResult, UMI_PROCESS_LIFETIME_CHILD, NULL);
 }
 
 /* Raw observers receive bytes before the 64 KiB diagnostic tail can rotate. */
 UmiStatus UmiProcessExecuteStreamed(const UmiProcessRequest *request,
     UmiProcessOutputObserver observer, void *context, UmiProcessResult *outResult)
 {
-    return UmiProcessExecuteInternal(request, NULL, observer, context, outResult, UMI_PROCESS_LIFETIME_CHILD);
+    return UmiProcessExecuteInternal(request, NULL, observer, context, outResult, UMI_PROCESS_LIFETIME_CHILD, NULL);
 }
 
 /* Both observation forms share the same runner and one explicit lifetime. */
@@ -634,8 +662,20 @@ UmiStatus UmiProcessExecuteWithLifetime(const UmiProcessRequest *request,
     UmiProcessLifetime lifetime, UmiProcessResultObserver observer,
     UmiProcessOutputObserver rawObserver, void *context, UmiProcessResult *outResult)
 {
-    return UmiProcessExecuteInternal(request, observer, rawObserver, context, outResult, lifetime);
+    return UmiProcessExecuteInternal(request, observer, rawObserver, context, outResult, lifetime, NULL);
 }
+
+/* Supervisor-only observation keeps raw native handles out of the public ABI.
+ * The established execution, capture and cancellation paths remain shared. */
+UmiStatus UmiProcessExecuteSupervised(const UmiProcessRequest *request,
+    UmiProcessLifetime lifetime, UmiProcessResultObserver observer,
+    UmiProcessNativeObserver nativeObserver, void *context, UmiProcessResult *outResult)
+{
+    return UmiProcessExecuteInternal(request, observer, NULL, context, outResult,
+        lifetime, nativeObserver);
+}
+
+#include "process_window_activation.inc"
 
 /* Provide the process capture operation used by this module and its client applications. */
 UmiStatus umi_process_capture(const char *program,

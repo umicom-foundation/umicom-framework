@@ -87,7 +87,11 @@ int main(int argc, char **argv)
     char *directory = g_dir_make_tmp("umicom-stream-surface-XXXXXX", NULL);
     CHECK(directory != NULL);
     char *first = g_build_filename(directory, "first.sqlite", NULL);
+/* Keep the original fixture for review. A dot segment deliberately distinguishes caller spelling from the canonical absolute path stored by the library surface on every platform. The former implementation is retained for owner review. */
+#if 0
     char *second = g_build_filename(directory, "second.sqlite", NULL);
+#endif
+    char *second = g_build_filename(directory, ".", "second.sqlite", NULL);
     (void)g_setenv("UMICOM_LIBRARY_HISTORY_FILE", "", TRUE);
     (void)g_setenv("UMICOM_AI_WORKSPACE_DB", first, TRUE);
     (void)g_setenv("UMICOM_AI_WORKSPACE_PORT", "8080", TRUE);
@@ -145,7 +149,26 @@ int main(int argc, char **argv)
                 CHECK(UmiAiWorkspaceGtkSurfaceCreate(original, "org.umicom.llm", &surface) == UMI_STATUS_OK);
                 CHECK(UmiAiWorkspaceGtkSurfaceEnableLocalStreaming(surface, transport) == UMI_STATUS_OK);
                 CHECK(UmiAiWorkspaceGtkSurfaceOpenLibrary(surface, second, false) == UMI_STATUS_OK);
+/* Retain the raw-spelling assertion for review. The surface canonicalizes library paths, so compare the same documented representation and keep retained-owner checks separate from spelling equality. The former implementation is retained for owner review. */
+#if 0
                 CHECK(surface->pending == NULL && strcmp(surface->session->path, second) == 0);
+#endif
+                char *expected_path = g_canonicalize_filename(second, NULL);
+                CHECK(expected_path != NULL);
+                CHECK(surface->pending == NULL && surface->session != NULL);
+                CHECK(surface->session->path != NULL);
+                if (strcmp(surface->session->path, expected_path) != 0)
+                    fprintf(stderr, "Stored library path: %s; canonical expected: %s\n",
+                        surface->session->path, expected_path);
+                CHECK(strcmp(surface->session->path, expected_path) == 0);
+                /* Equivalent spellings identify the already-open database,
+                 * rather than a new session or a second create operation. */
+                AiLibrarySession *reopened = surface->session;
+                CHECK(UmiAiWorkspaceGtkSurfaceOpenLibrary(surface, expected_path, false) == UMI_STATUS_OK);
+                CHECK(surface->session == reopened && surface->pending == NULL);
+                CHECK(UmiAiWorkspaceGtkSurfaceOpenLibrary(surface, expected_path, true) == UMI_STATUS_ALREADY_EXISTS);
+                CHECK(surface->session == reopened && surface->pending == NULL);
+                g_free(expected_path);
             } else {
                 fail_panel = strcmp(mode, "release-retain") == 0;
                 fail_workspace = strcmp(mode, "workspace-release") == 0;
