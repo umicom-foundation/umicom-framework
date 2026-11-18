@@ -58,6 +58,19 @@ ctest --test-dir build/learning-practice --no-tests=error --output-on-failure
 </code></pre>
 <p>The same <code>-S</code> and <code>-B</code> arguments work with the Windows <code>cmake.exe</code>; use PowerShell backticks for wrapped lines. Set the compiler to the UCRT64 GCC path on Windows. This small build does not compile the full Framework. It builds the independent C and Assembly exercises. The graphical exercise needs a Framework target and is enabled separately.</p>
 <p><code>-- -k 0</code> passes Ninja a request to keep working on independent build jobs after errors. It does not turn errors into success.</p>
+<section aria-labelledby="shared-targets"><h2 id="shared-targets">When a shared test target already exists</h2>
+<p>A <strong>target</strong> is a named executable or library in the build plan. Its CMake name must be unique across the whole project. Putting the same test directory under two different build folders does not give its executables new names.</p>
+<ol><li>Find the first <code>CMake Error</code> in the configure log. If it says <code>add_executable cannot create target</code> because a target already exists, configuration stopped before that compilation began. A preceding optional debugger warning may be a separate problem.</li>
+<li>Find every <code>add_subdirectory</code> that reaches the reported test directory. For example, the public AI library and a native training module can both depend on the same image conversion tests.</li>
+<li>Keep one owner for the complete shared suite. Framework's image tests use <code>include_guard(GLOBAL)</code> in their <code>CMakeLists.txt</code>. This makes subsequent visits return in the same configure process. It does not persist a success flag in the cache. Use this only when the entire directory is intentionally shared; independent libraries and different test suites need their own target names.</li>
+<li>Verify each consumer alone and both orders together. Check every executable, its linked library, and the complete test list. Configure the same build folder again to make sure the tests return on the next invocation.</li>
+<li>Stop the command sequence if configuration or compilation fails. Tests and installation after a failed build may use old artifacts. An installed executable is not evidence that the latest source built successfully.</li></ol>
+<p>From the <code>Umicom-Applications</code> repository in PowerShell, this small regression configures the consumer graphs without compiling the full suite:</p>
+<pre><code class="language-powershell">cmake -S framework/tests/cmake/image_test_composition -B build/image-composition -G Ninja
+if ($LASTEXITCODE -ne 0) { throw "Configuration failed." }
+ctest --test-dir build/image-composition --no-tests=error --output-on-failure
+</code></pre>
+<p>Use the UCRT64 tool paths from the Windows example above. The expected result is four passing configuration tests. These establish test registration and dependency selection, not a successful application build or a working debugger. If a case fails, open its <code>fixtures</code> subfolder in the small build directory and read <code>initial.log</code> or <code>repeated.log</code>.</p></section>
 <h2>Try it</h2>
 <p>Add a harmless source comment, rebuild and compare the output with a second build that has no changes. The second build should have little or no compilation work.</p>
 <details><summary>Why keep a separate build tree when changing compilers?</summary><p>The cache records compiler and platform decisions. Use a new build directory for a different compiler or target rather than changing them underneath an existing build.</p></details>

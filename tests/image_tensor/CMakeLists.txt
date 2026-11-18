@@ -13,6 +13,12 @@
 # MIT
 #-----------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.25)
+# Both the AI SDK and native trainer compose this complete shared suite.
+# Executable names are global even when binary directories differ. Guard this
+# source directory as one unit so a second consumer cannot register it again;
+# the first visit still creates every target, validation entry and CTest case.
+# The guard resets on every configuration and preserves standalone builds.
+include_guard(GLOBAL)
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
     project(UmicomImageTensorChecks LANGUAGES C)
     include(CTest)
@@ -83,3 +89,7 @@ foreach(_case unit signed chw halfway clipping outside nonfinite padding single-
     add_test(NAME framework.ai.training.image_quantization.${_case} COMMAND umicom-image-quantization-test ${_case})
     set_tests_properties(framework.ai.training.image_quantization.${_case} PROPERTIES TIMEOUT 30 LABELS "framework;training;image;quantization;ownership")
 endforeach()
+
+# Exercise both dependency orders and reconfiguration without a product build.
+add_subdirectory("${CMAKE_CURRENT_LIST_DIR}/../cmake/image_test_composition"
+    "${CMAKE_CURRENT_BINARY_DIR}/composition-checks")
