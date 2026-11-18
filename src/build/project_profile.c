@@ -16,6 +16,7 @@
 #include "umicom/base/text.h"
 #include "umicom/platform/filesystem.h"
 #include "umicom/platform/path.h"
+#include <string.h>
 
 /* Build absolute source identity without changing the process working directory. */
 /* Absolute project identity no longer consults the process directory. The previous unconditional cwd lookup is retained for comparison; relative callers keep their documented resolution behavior. */
@@ -97,7 +98,20 @@ UmiStatus UmiBuildProfileFromProject(const UmiDeveloperProjectModel *model,
     if (status == UMI_STATUS_OK && model->kind == UMI_DEVELOPER_PROJECT_EXECUTABLE)
         status = umi_text_copy(profile.run_program, sizeof(profile.run_program), model->executable);
     if (status != UMI_STATUS_OK) return status;
-    status = umi_build_profile_validate(&profile, NULL, 0U);
+    /* Umicom C executes through its bounded VM, not a guessed native binary.
+     * Reuse the configured CMake target so Run uses the compiler path selected
+     * during configuration and reports output through the existing runner.
+     * Other META recipes retain their previous no-native-launch behaviour. */
+    if (status == UMI_STATUS_OK && model->kind == UMI_DEVELOPER_PROJECT_META &&
+        strcmp(model->primary_language_id, "developer.language.umicom-c") == 0 &&
+        strcmp(model->preset, "preview") == 0 &&
+        strcmp(model->build_directory, "build/preview") == 0) {
+        status = umi_text_copy(profile.run_program, sizeof(profile.run_program), "cmake");
+        if (status == UMI_STATUS_OK)
+            status = umi_text_copy(profile.run_arguments, sizeof(profile.run_arguments),
+                "--build build/preview --target preview");
+    }
+    if (status == UMI_STATUS_OK) status = umi_build_profile_validate(&profile, NULL, 0U);
     if (status == UMI_STATUS_OK) *outProfile = profile;
     return status;
 }

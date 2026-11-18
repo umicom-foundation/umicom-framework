@@ -32,7 +32,11 @@ int main(void)
 #if 0
     assert(umi_developer_project_builtin_language_count() == 18U);
 #endif
+    /* The twenty-entry assertion is retained; the expanded registry now has 31 packs. */
+#if 0
     assert(umi_developer_project_builtin_language_count() == 20U);
+#endif
+    assert(umi_developer_project_builtin_language_count() == 31U);
     assert(umi_developer_project_language_registry_create(&registry) ==
            UMI_STATUS_OK);
     assert(umi_developer_project_builtin_languages_register(registry) ==
@@ -42,7 +46,11 @@ int main(void)
 #if 0
     assert(umi_developer_project_language_registry_count(registry) == 18U);
 #endif
+    /* The twenty-entry assertion is retained; the expanded registry now has 31 packs. */
+#if 0
     assert(umi_developer_project_language_registry_count(registry) == 20U);
+#endif
+    assert(umi_developer_project_language_registry_count(registry) == 31U);
 
     assert(umi_developer_project_language_registry_find(
         registry, "developer.language.c23") != NULL);

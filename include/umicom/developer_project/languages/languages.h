@@ -36,4 +36,16 @@
 #include "umicom/developer_project/languages/yaml.h"
 #include "umicom/developer_project/languages/sql.h"
 
+#include "umicom/developer_project/languages/d.h"
+#include "umicom/developer_project/languages/freebasic.h"
+#include "umicom/developer_project/languages/fortran.h"
+#include "umicom/developer_project/languages/go.h"
+#include "umicom/developer_project/languages/ada.h"
+#include "umicom/developer_project/languages/pascal.h"
+#include "umicom/developer_project/languages/kotlin.h"
+#include "umicom/developer_project/languages/csharp.h"
+#include "umicom/developer_project/languages/swift.h"
+#include "umicom/developer_project/languages/lua.h"
+#include "umicom/developer_project/languages/julia.h"
+
 #endif

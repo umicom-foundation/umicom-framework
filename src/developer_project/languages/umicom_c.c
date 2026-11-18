@@ -29,7 +29,9 @@ const UmiDeveloperProjectLanguagePack *umi_developer_project_language_umicom_c(v
         .extensions = extensions, .extension_count = 1U,
         .build_tools = tools, .build_tool_count = 2U,
         .language_server = "", .formatter = "", .debug_adapter = "",
-        .capabilities = UMI_DEVELOPER_PROJECT_LANGUAGE_BUILD |
+        /* Run uses the configured preview target; native Debug is not advertised. */
+        .capabilities = UMI_DEVELOPER_PROJECT_LANGUAGE_RUN |
+                        UMI_DEVELOPER_PROJECT_LANGUAGE_BUILD |
                         UMI_DEVELOPER_PROJECT_LANGUAGE_TEST,
         .compiled_language = 1, .built_in = 1
     };

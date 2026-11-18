@@ -53,7 +53,15 @@ int main(void)
         CHECK(UmiBuildProfileFromProject(&model, &profile) == UMI_STATUS_OK);
         CHECK(strcmp(profile.preset, cases[index].preset) == 0);
         CHECK(strcmp(profile.build_directory, cases[index].directory) == 0);
+        /* Preserve the former no-launch assertion for review. Umicom C now
+         * delegates Run to CMake's preview target; VHDL still has no native Run. */
+#if 0
         CHECK(profile.run_program[0] == '\0');
+#endif
+        if (strcmp(model.primary_language_id, "developer.language.umicom-c") == 0) {
+            CHECK(strcmp(profile.run_program, "cmake") == 0);
+            CHECK(strcmp(profile.run_arguments, "--build build/preview --target preview") == 0);
+        } else CHECK(profile.run_program[0] == '\0');
     }
     /* A later native project must still receive its existing platform default. */
     strcpy(request.template_id, "developer.template.c23-console");

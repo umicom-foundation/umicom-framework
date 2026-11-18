@@ -17,5 +17,6 @@
 
 #include "umicom/render3d/types.h"
 #include "umicom/render3d/scene.h"
+#include "umicom/render3d/frustum.h"
 
 #endif

@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/platform/process_search_path.h
- * PURPOSE: Prepare an owned child search path without changing the host environment.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Declare bounded child PATH capture and simple native tool filename composition.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_PLATFORM_PROCESS_SEARCH_PATH_H
@@ -47,7 +54,7 @@ extern "C"
     UmiStatus UmiProcessSearchPathCapture(const char *directory, char **out);
     /**
      * Resolve a simple tool name in one explicit directory. Names contain only
-     * ASCII letters, digits, underscores and hyphens; Windows adds .exe. An empty
+     * ASCII letters, digits, underscores, hyphens and plus signs; Windows adds .exe. An empty
      * or NULL directory keeps the bare tool name for normal PATH lookup. No file
      * is opened and no fallback is attempted for an explicit folder. Output is
      * unchanged on failure. Input strings must be terminated and not overlap out.

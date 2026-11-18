@@ -118,7 +118,11 @@ UmiStatus umi_document_file_filters_default(UmiDocumentFileFilterSet *out_filter
     };
     /* A separate category preserves existing filter indexes and the per-filter
      * pattern bound; expanding PROGRAMMING would exceed its public capacity. */
+    /* Preserve the prior list; new languages still fit the existing pattern bound. */
+#if 0
     static const char *const INTEROPERABILITY[] = {"*.f90", "*.f95", "*.f03", "*.f08", "*.odin", "*.nim", "*.nims"};
+#endif
+    static const char *const INTEROPERABILITY[] = {"*.f90", "*.f95", "*.f03", "*.f08", "*.odin", "*.nim", "*.nims", "*.bas", "*.bi", "*.adb", "*.ads", "*.jl"};
     static const char *const HARDWARE[] = {"*.vhd", "*.vhdl", "*.v", "*.vh", "*.sv", "*.svh"};
     static const char *const BUILD[] = {"CMakeLists.txt", "*.cmake", "Makefile", "GNUmakefile", "build.ninja"};
     UmiStatus status;

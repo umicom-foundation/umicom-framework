@@ -1912,6 +1912,7 @@ umicom_apply_sanitizers(umicom_scaffold)
 set(UMICOM_WEB_PLATFORM_SOURCE
     src/web/types.c
     src/web/header.c
+    src/web/entity_tag.c
     src/web/request.c
     src/web/response.c
     src/web/url.c
@@ -3345,6 +3346,7 @@ add_library(umicom_game_engine STATIC
     src/game/types.c
     src/game/world.c
     src/game/session.c
+    src/game/grid_path.c
 )
 add_library(Umicom::game_engine ALIAS umicom_game_engine)
 set_target_properties(umicom_game_engine PROPERTIES EXPORT_NAME game_engine)
@@ -3361,6 +3363,7 @@ umicom_apply_sanitizers(umicom_game_engine)
 add_library(umicom_render3d STATIC
     src/render3d/types.c
     src/render3d/scene.c
+    src/render3d/frustum.c
 )
 add_library(Umicom::render3d ALIAS umicom_render3d)
 set_target_properties(umicom_render3d PROPERTIES EXPORT_NAME render3d)
@@ -3377,6 +3380,8 @@ umicom_apply_sanitizers(umicom_render3d)
 add_library(umicom_media_engine STATIC
     src/media/image_surface.c
     src/media/animation_track.c
+    # Native latent arithmetic belongs to execution, not workflow preflight.
+    src/ai_workflow/euler_step.c
 )
 add_library(Umicom::media_engine ALIAS umicom_media_engine)
 set_target_properties(umicom_media_engine PROPERTIES EXPORT_NAME media_engine)
@@ -3754,6 +3759,10 @@ if(BUILD_TESTING)
         set_tests_properties(framework.reflection.resource_media.${_case} PROPERTIES TIMEOUT 30 LABELS "framework;reflection;metadata")
         umicom_test_impact_owners("framework.reflection.resource_media.${_case}" TARGETS umicom-reflection-resource-media-test)
     endforeach()
+    umicom_add_framework_test(umicom-game-grid-path-test framework.game.grid_path tests/game/test_grid_path.c)
+    umicom_add_framework_test(umicom-render3d-frustum-test framework.render3d.frustum tests/render3d/test_frustum.c)
+    umicom_add_framework_test(umicom-media-euler-test framework.media.euler tests/ai_workflow/test_euler_step.c)
+    umicom_add_framework_test(umicom-web-entity-tag-test framework.web.entity_tag tests/web/test_entity_tag.c)
     # Engine tests exercise real ownership, capacity and adapter behaviour.
     umicom_add_framework_test(
         umicom-engine-catalogue-test

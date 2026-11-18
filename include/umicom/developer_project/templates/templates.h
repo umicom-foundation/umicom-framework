@@ -36,4 +36,7 @@
 #include "umicom/developer_project/templates/python_tool.h"
 #include "umicom/developer_project/templates/umicom_extension.h"
 
+#include "umicom/developer_project/templates/d_console.h"
+#include "umicom/developer_project/templates/freebasic_console.h"
+
 #endif

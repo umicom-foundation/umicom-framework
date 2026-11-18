@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/developer_project/test_tool_catalogue.c
- * PURPOSE: Check immutable tool-file selection without executing tool programs.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Verify immutable host-language tool lookup, missing prerequisites and explicit directory isolation.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "../build_log/fixture.h"
@@ -12,9 +19,16 @@
 #include "umicom/platform/process_search_path.h"
 #include "umicom/toolchain/discovery.h"
 
+/* Inert script fixtures use their declared filename. Native tool composition
+ * deliberately does not infer or execute a script interpreter. */
+static UmiStatus ToolFilename(const char *folder, const char *name, char *out, size_t capacity)
+{
+    return strchr(name, '.') != NULL ? umi_fs_join(out, capacity, folder, name) :
+        UmiProcessToolProgram(folder, name, out, capacity);
+}
 static void ToolFile(const char *folder, const char *name, char *out)
 {
-    CHECK(UmiProcessToolProgram(folder, name, out, UMI_PATH_CAPACITY) == UMI_STATUS_OK);
+    CHECK(ToolFilename(folder, name, out, UMI_PATH_CAPACITY) == UMI_STATUS_OK);
     /* Inert contents deliberately cannot act as a compiler. Inventory only
      * inspects file metadata; compatibility belongs to a later explicit run. */
     CHECK(umi_fs_write_text(out, "Inventory fixture; do not execute.\n") == UMI_STATUS_OK);
@@ -47,7 +61,20 @@ static int ProgramMain(int argc, char **argv)
     CHECK(umi_build_profile_set(&profile, "catalogue", root, "build") == UMI_STATUS_OK);
     strcpy(profile.tool_directory, tools);
     const char *programs[] = {"cmake", "ctest", "cpack",    "ninja",
-                              "cc",    "gdb",   "lldb-dap", "clangd"};
+                              "cc",    "gdb",   "lldb-dap", "clangd",
+        "ldc2", "fbc", "gfortran", "go", "gnatmake", "fpc",
+#ifdef _WIN32
+        "kotlinc.bat",
+#else
+        "kotlinc",
+#endif
+         "dotnet", "swiftc", "lua", "julia", "javac", "java", "python", "node",
+#ifdef _WIN32
+        "tsc.cmd",
+#else
+        "tsc",
+#endif
+         "rustc", "cargo", "zig", "nasm", "umicom-c", "g++"};
     if (strcmp(mode, "missing") != 0)
         for (size_t index = 0U; index < sizeof programs / sizeof programs[0]; ++index)
             ToolFile(tools, programs[index], found);
@@ -90,7 +117,11 @@ static int ProgramMain(int argc, char **argv)
                  strcmp(mode, "snapshot") != 0 && strcmp(mode, "boundaries") != 0)
             return 2;
         CHECK(UmiProjectToolCatalogueRead(&profile, NULL, &catalogue) == UMI_STATUS_OK);
+        /* Retain the former eight-tool boundary; the optional language inventory is larger. */
+#if 0
         CHECK(UmiProjectToolCatalogueCount(catalogue) == 8U);
+#endif
+        CHECK(UmiProjectToolCatalogueCount(catalogue) == UMI_PROJECT_TOOL_COUNT);
         UmiProjectToolFile selected = Row(catalogue, UMI_PROJECT_TOOL_COMPILER);
         if (strcmp(mode, "automatic") == 0)
         {
@@ -135,7 +166,7 @@ static int ProgramMain(int argc, char **argv)
                       (strcmp(mode, "missing") == 0 ? UMI_STATUS_NOT_FOUND : UMI_STATUS_OK));
                 if (file.status == UMI_STATUS_OK)
                 {
-                    CHECK(UmiProcessToolProgram(tools, file.requested, found, sizeof found) ==
+                    CHECK(ToolFilename(tools, file.requested, found, sizeof found) ==
                           UMI_STATUS_OK);
                     CHECK(umi_path_equal(file.resolved, found));
                 }
@@ -163,10 +194,19 @@ static int ProgramMain(int argc, char **argv)
         }
         if (strcmp(mode, "boundaries") == 0)
         {
+            strcpy(found, "unchanged");
+            CHECK(UmiProcessToolProgram(tools, "g++;echo", found, sizeof found) == UMI_STATUS_INVALID_ARGUMENT);
+            CHECK(strcmp(found, "unchanged") == 0);
+            CHECK(UmiProcessToolProgram(tools, "../g++", found, sizeof found) == UMI_STATUS_INVALID_ARGUMENT);
+            CHECK(strcmp(found, "unchanged") == 0);
             UmiProjectToolFile sentinel;
             memset(&sentinel, 0x4b, sizeof sentinel);
             UmiProjectToolFile original = sentinel;
+        /* Retain the former eight-tool boundary; the optional language inventory is larger. */
+#if 0
             CHECK(UmiProjectToolCatalogueAt(catalogue, 8U, &sentinel) == UMI_STATUS_NOT_FOUND);
+#endif
+            CHECK(UmiProjectToolCatalogueAt(catalogue, UMI_PROJECT_TOOL_COUNT, &sentinel) == UMI_STATUS_NOT_FOUND);
             CHECK(memcmp(&original, &sentinel, sizeof sentinel) == 0);
             CHECK(UmiProjectToolCatalogueAt(NULL, 0U, &sentinel) == UMI_STATUS_INVALID_ARGUMENT);
             CHECK(memcmp(&original, &sentinel, sizeof sentinel) == 0);

@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/developer_project/tool_catalogue.c
- * PURPOSE: Capture one immutable, non-executing inventory of project developer tools.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Capture immutable project and hosted-language tool discovery without launching or installing tools.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/developer_project/tool_catalogue.h"
@@ -15,7 +22,8 @@
 struct UmiProjectToolCatalogue
 {
     size_t count;
-    UmiProjectToolFile files[8];
+    /* The opaque catalogue grows without changing caller-owned public records. */
+    UmiProjectToolFile files[UMI_PROJECT_TOOL_COUNT];
 };
 typedef struct ProjectToolDefinition
 {
@@ -33,7 +41,37 @@ static const ProjectToolDefinition PROJECT_TOOLS[] = {
     {UMI_PROJECT_TOOL_COMPILER, "", "C compiler"},
     {UMI_PROJECT_TOOL_GDB, "gdb", "GDB debugger"},
     {UMI_PROJECT_TOOL_LLDB, "lldb-dap", "LLDB debug adapter"},
-    {UMI_PROJECT_TOOL_CLANGD, "clangd", "Clangd language server"}};
+    {UMI_PROJECT_TOOL_CLANGD, "clangd", "Clangd language server"},
+    {UMI_PROJECT_TOOL_LDC, "ldc2", "D compiler (LDC)"},
+    {UMI_PROJECT_TOOL_FREEBASIC, "fbc", "FreeBASIC compiler"},
+    {UMI_PROJECT_TOOL_FORTRAN, "gfortran", "GNU Fortran"},
+    {UMI_PROJECT_TOOL_GO, "go", "Go SDK"},
+    {UMI_PROJECT_TOOL_ADA, "gnatmake", "GNAT Ada"},
+    {UMI_PROJECT_TOOL_PASCAL, "fpc", "Free Pascal"},
+#ifdef _WIN32
+    {UMI_PROJECT_TOOL_KOTLIN, "kotlinc.bat", "Kotlin JVM compiler launcher"},
+#else
+    {UMI_PROJECT_TOOL_KOTLIN, "kotlinc", "Kotlin JVM compiler"},
+#endif
+    {UMI_PROJECT_TOOL_DOTNET, "dotnet", ".NET SDK"},
+    {UMI_PROJECT_TOOL_SWIFT, "swiftc", "Swift compiler"},
+    {UMI_PROJECT_TOOL_LUA, "lua", "Lua interpreter"},
+    {UMI_PROJECT_TOOL_JULIA, "julia", "Julia runtime"},
+    {UMI_PROJECT_TOOL_JAVAC, "javac", "Java compiler (JDK)"},
+    {UMI_PROJECT_TOOL_JAVA, "java", "Java runtime"},
+    {UMI_PROJECT_TOOL_PYTHON, "python", "Python interpreter"},
+    {UMI_PROJECT_TOOL_NODE, "node", "Node.js runtime"},
+#ifdef _WIN32
+    {UMI_PROJECT_TOOL_TYPESCRIPT, "tsc.cmd", "TypeScript compiler launcher"},
+#else
+    {UMI_PROJECT_TOOL_TYPESCRIPT, "tsc", "TypeScript compiler"},
+#endif
+    {UMI_PROJECT_TOOL_RUST, "rustc", "Rust compiler"},
+    {UMI_PROJECT_TOOL_CARGO, "cargo", "Cargo"},
+    {UMI_PROJECT_TOOL_ZIG, "zig", "Zig compiler"},
+    {UMI_PROJECT_TOOL_NASM, "nasm", "NASM assembler"},
+    {UMI_PROJECT_TOOL_UMICOM_C, "umicom-c", "Umicom C compiler and VM"},
+    {UMI_PROJECT_TOOL_CPP, "g++", "GNU C++ compiler"}};
 static_assert(sizeof PROJECT_TOOLS / sizeof PROJECT_TOOLS[0] ==
                   sizeof(((UmiProjectToolCatalogue *)0)->files) / sizeof(UmiProjectToolFile),
               "Every tool definition needs one bounded catalogue row.");

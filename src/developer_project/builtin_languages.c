@@ -38,7 +38,18 @@ static const LanguageFactory FACTORIES[] = {
     umi_developer_project_language_markdown,
     umi_developer_project_language_json,
     umi_developer_project_language_yaml,
-    umi_developer_project_language_sql
+    umi_developer_project_language_sql,
+    umi_developer_project_language_d,
+    umi_developer_project_language_freebasic,
+    umi_developer_project_language_fortran,
+    umi_developer_project_language_go,
+    umi_developer_project_language_ada,
+    umi_developer_project_language_pascal,
+    umi_developer_project_language_kotlin,
+    umi_developer_project_language_csharp,
+    umi_developer_project_language_swift,
+    umi_developer_project_language_lua,
+    umi_developer_project_language_julia
 };
 
 /*

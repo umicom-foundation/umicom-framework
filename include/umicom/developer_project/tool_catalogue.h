@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/developer_project/tool_catalogue.h
- * PURPOSE: Inspect project-selected developer tool files without executing them.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Inspect selected developer tools and optional hosted language toolchains without executing them.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DEVELOPER_PROJECT_TOOL_CATALOGUE_H
@@ -23,7 +30,31 @@ extern "C"
         UMI_PROJECT_TOOL_COMPILER,
         UMI_PROJECT_TOOL_GDB,
         UMI_PROJECT_TOOL_LLDB,
-        UMI_PROJECT_TOOL_CLANGD
+        UMI_PROJECT_TOOL_CLANGD,
+        /* Append identities: existing tool numbers remain stable for SDK clients. */
+        UMI_PROJECT_TOOL_LDC,
+        UMI_PROJECT_TOOL_FREEBASIC,
+        UMI_PROJECT_TOOL_FORTRAN,
+        UMI_PROJECT_TOOL_GO,
+        UMI_PROJECT_TOOL_ADA,
+        UMI_PROJECT_TOOL_PASCAL,
+        UMI_PROJECT_TOOL_KOTLIN,
+        UMI_PROJECT_TOOL_DOTNET,
+        UMI_PROJECT_TOOL_SWIFT,
+        UMI_PROJECT_TOOL_LUA,
+        UMI_PROJECT_TOOL_JULIA,
+        UMI_PROJECT_TOOL_JAVAC,
+        UMI_PROJECT_TOOL_JAVA,
+        UMI_PROJECT_TOOL_PYTHON,
+        UMI_PROJECT_TOOL_NODE,
+        UMI_PROJECT_TOOL_TYPESCRIPT,
+        UMI_PROJECT_TOOL_RUST,
+        UMI_PROJECT_TOOL_CARGO,
+        UMI_PROJECT_TOOL_ZIG,
+        UMI_PROJECT_TOOL_NASM,
+        UMI_PROJECT_TOOL_UMICOM_C,
+        UMI_PROJECT_TOOL_CPP,
+        UMI_PROJECT_TOOL_COUNT
     } UmiProjectToolKind;
     typedef enum UmiProjectToolSelection
     {
@@ -42,7 +73,7 @@ extern "C"
     } UmiProjectToolFile;
     typedef struct UmiProjectToolCatalogue UmiProjectToolCatalogue;
     /**
-     * Inspect the common build, debugger and C language-server tool files for a
+     * Inspect common build/debugger tools and optional language tool files for a
      * validated profile. Capture inherited PATH once; an explicit tools folder never
      * falls back to it. A blank compiler is reported as automatic because CMake may
      * select it from a preset or existing cache. No compiler is guessed.

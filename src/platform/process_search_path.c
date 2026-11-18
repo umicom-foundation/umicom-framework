@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/platform/process_search_path.c
- * PURPOSE: Build bounded child PATH overrides from an explicit tool directory.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Build bounded child PATH overrides and explicit tool filenames without invoking a shell.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/platform/process_search_path.h"
@@ -243,8 +250,16 @@ UmiStatus UmiProcessToolProgram(const char *directory, const char *name, char *o
     while (count < 127U && name[count] != '\0')
     {
         unsigned char ch = (unsigned char)name[count++];
+        /* Compiler names such as g++ and clang++ contain literal plus signs.
+         * Allow them in this argv filename; separators, whitespace and shell
+         * operators remain forbidden. Retain the former restriction for review. */
+#if 0
         if (!((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') ||
               ch == '_' || ch == '-'))
+            return UMI_STATUS_INVALID_ARGUMENT;
+#endif
+        if (!((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || (ch >= '0' && ch <= '9') ||
+              ch == '_' || ch == '-' || ch == '+'))
             return UMI_STATUS_INVALID_ARGUMENT;
     }
     if (count == 127U)

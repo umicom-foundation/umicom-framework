@@ -1,0 +1,90 @@
+<!doctype html>
+<!--
+Umicom Framework
+File: docs/learning/bounded-native-services.html
+
+PURPOSE:
+Explain native tool and SDK workflows with explicit prerequisites and limits.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bounded native services for games, media and the web | Umicom</title><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico"><style>body{font:18px/1.65 "Segoe UI Variable Text","Segoe UI",sans-serif;max-width:1100px;margin:2rem auto;padding:0 1.2rem;color:#14283b;background:#fafcfe}h1,h2,h3{line-height:1.2}pre,code,kbd{font-family:"Cascadia Code",Consolas,monospace}pre{padding:1rem;background:#eaf0f5;overflow:auto}aside{border-left:4px solid #26788b;padding:1rem;background:#eef8fa}table{border-collapse:collapse;width:100%}td,th{padding:.65rem;border:1px solid #bbcbd8;text-align:left;vertical-align:top}a{color:#15567d}a:focus-visible{outline:3px solid #26788b;outline-offset:3px}.brand{width:215px;height:auto}.scroll{overflow-x:auto}.flow{display:flex;gap:.5rem;flex-wrap:wrap;padding:1rem;background:#eaf0f5}.flow span{padding:.6rem;border:1px solid #9fb4c7;border-radius:.4rem}footer{margin-top:3rem;border-top:1px solid #bbcbd8}</style></head><body><header><img class="brand" src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header><main><h1>Bounded native services for games, media and the web</h1>
+<nav aria-label="Related guides"><a href="../guides/language-toolchains.html">Language toolchains and Umicom C</a> · <a href="../guides/check-sdk-environment.html">Installed SDK environment</a> · <a href="../../examples/bounded_native_services/main.c">Complete C example</a></nav>
+<p>This lesson introduces four small native services: finding a route on a game map, excluding objects outside a camera's view, advancing a denoising calculation and comparing an HTTP cache condition. Each service accepts caller-owned memory and reports a status. They are useful foundations for games, media applications and websites, with different responsibilities.</p>
+<aside><strong>What this lesson builds:</strong> one console application with deterministic results. It does not start a network listener, load an AI model, render a 3D scene or boot a Kernel. Those systems need additional services and separate end-to-end tests.</aside>
+<h2>1. Learn the common memory rule</h2>
+<p>A <strong>buffer</strong> is a region containing several values. A <strong>capacity</strong> says how many elements fit. The caller creates buffers and keeps them alive for a function call. These functions do not allocate hidden heap memory. They validate inputs before publishing results; invalid input should not leave a half-written result.</p>
+<p><code>UmiStatus</code> describes the outcome. <code>UMI_STATUS_OK</code> means the requested calculation completed. <code>UMI_STATUS_INVALID_ARGUMENT</code> means a value violates the contract. <code>UMI_STATUS_CAPACITY_EXCEEDED</code> means provided storage is too small or an explicit bound is exceeded. Never use an output as a new result after a failed call: it may still contain your previous value.</p>
+<p>C cannot determine whether an arbitrary pointer really owns accessible memory. The caller must supply valid storage, obey the documented overlap rules and avoid changing inputs from another thread during a call. Bounded APIs make ownership easier to reason about; they do not automatically make every C program memory-safe.</p>
+<h2>2. Find a path for a strategy-game unit</h2>
+<p>Imagine a map with four columns and three rows. A zero is walkable and a one is blocked. Row-major storage puts the first row first, then the second and third. Cell index is <code>row * width + column</code>. The example asks for a route from cell 0 to cell 8.</p>
+<table aria-label="Four by three game map"><tbody>
+<tr><td>0 · start →</td><td>1 →</td><td>2 →</td><td>3 ↓</td></tr>
+<tr><td>4 · blocked</td><td>5 · blocked</td><td>6 · blocked</td><td>7 ↓</td></tr>
+<tr><td>8 · goal</td><td>9 ←</td><td>10 ←</td><td>11 ←</td></tr>
+</tbody></table>
+<p><a href="../../include/umicom/game/grid_path.h"><code>UmiGameGridPath</code></a> uses breadth-first search: it explores nearby cells before more distant ones. With equal movement costs this finds a shortest path. Ties use up, right, down, left, giving repeatable results. It does not use diagonals or account for other moving units.</p>
+<pre><code>uint8_t blocked[12] = {0,0,0,0, 1,1,1,0, 0,0,0,0};
+size_t queue[12], parents[12], path[12], count = 0;
+UmiStatus status = UmiGameGridPath(blocked, 12, 4, 3, 0, 8, 12,
+    queue, parents, 12, path, 12, &amp;count);</code></pre>
+<p>The queue holds discovered cells. The parent array remembers the cell that led to each one. The output contains both start and goal: <code>0, 1, 2, 3, 7, 11, 10, 9, 8</code>, nine cells. Keep all buffers disjoint. The limit of 12 expansions is enough for this map. A limit of 1 returns <code>BUSY</code> with output unchanged; that means the work budget was exhausted, not that the destination is unreachable.</p>
+<p>Initialization still visits every map cell, so the expansion limit alone does not bound that cost. Total cells are capped at 1,048,576. On a 64-bit target, queue and parents together need 16 bytes per cell, plus the map and output. Choose a smaller map or another planning service when that is too much. For weighted terrain, use a separately designed weighted shortest-path algorithm.</p>
+<h2>3. Skip objects outside the camera view</h2>
+<p>A <strong>bounding box</strong> encloses an object's geometry. An axis-aligned box stores minimum and maximum x, y and z coordinates. A camera's visible region is often bounded by six planes. For this API the normal vectors point inward, and a point is inside a plane when <code>normal · point + distance &gt;= 0</code>.</p>
+<p><a href="../../include/umicom/render3d/frustum.h"><code>UmiRender3dBoundsVisible</code></a> chooses the box corner farthest toward each plane's interior. If even that corner is outside one plane, the entire box is outside and can be skipped. A box touching a plane remains possibly visible.</p>
+<pre><code>UmiRender3dBounds bounds = {{-0.5,-0.5,-0.5}, {0.5,0.5,0.5}};
+UmiRender3dPlane planes[6] = {
+    {{ 1,0,0},1}, {{-1,0,0},1},
+    {{0, 1,0},1}, {{0,-1,0},1},
+    {{0,0, 1},1}, {{0,0,-1},1}
+};
+bool visible = false;
+UmiStatus status = UmiRender3dBoundsVisible(&amp;bounds, planes, &amp;visible);</code></pre>
+<p>These planes describe the cube from -1 to 1 on each axis. The box is inside, so the result is true. Move its x interval to [2,3]; the result becomes false. The test is conservative: true means possibly visible, not proof that every polygon appears on screen. It does not construct a camera matrix, perform occlusion, submit GPU commands or rasterize pixels.</p>
+<p>All six planes are validated even after an outside result is found. A later invalid plane must not be hidden by an early return. Nonfinite values, reversed box limits, zero normals and nonfinite intermediate arithmetic are refused.</p>
+<h2>4. Advance a clean-sample denoising prediction</h2>
+<p>An image model may work on a <strong>latent</strong>: a numeric representation that later needs decoding into pixels. A denoiser predicts something about a noisy latent. Different models predict noise, velocity or a clean sample; these are not interchangeable.</p>
+<p><a href="../../include/umicom/ai_workflow/euler_step.h"><code>UmiAiEulerDenoisedStep</code></a> requires a predicted <strong>clean sample</strong>. Given positive noise level sigma and a lower next sigma, it computes one deterministic Euler step:</p>
+<pre><code>ratio  = next_sigma / sigma
+next   = ratio * sample + (1 - ratio) * predicted_clean</code></pre>
+<table><thead><tr><th>Current sample</th><th>Clean prediction</th><th>Sigma → next sigma</th><th>Result</th></tr></thead><tbody><tr><td>4</td><td>2</td><td>2 → 1</td><td>3</td></tr><tr><td>-4</td><td>0</td><td>2 → 1</td><td>-2</td></tr></tbody></table>
+<pre><code>float sample[2] = {4,-4}, clean[2] = {2,0}, next[2];
+UmiStatus status = UmiAiEulerDenoisedStep(
+    sample, clean, 2, 2.0, 1.0, next, 2);</code></pre>
+<p>The function scans all values before writing and then computes the result without a tensor-sized temporary allocation. Output can exactly equal either input for an in-place update; partial overlap is unsupported. A final next sigma of zero returns the clean prediction. NaN (not-a-number), infinity, reversed schedules and short output buffers are errors.</p>
+<p>The limit is 16,777,216 float values. Each float occupies <code>sizeof(float)</code> bytes on the target; on ordinary supported IEEE-754 single-precision hosts one such array is 64 MiB at the limit. Three separate arrays would occupy about 192 MiB before any model memory. Flattening video frames into one buffer does not solve a model's layout, temporal coherence or memory requirements.</p>
+<div class="flow" role="img" aria-label="A generation pipeline needs tokenization, model execution, sampler steps, latent decoding and media output."><span>Prompt/tokenizer</span><span>→ Model prediction</span><span>→ This numerical step</span><span>→ Repeat schedule</span><span>→ Decode latent</span><span>→ Encode image/video</span></div>
+<p>This primitive supplies only the numerical step. Model weights, attention operations, device kernels, tokenization, prediction conversion, schedulers, seeded noise, decoding, codecs and Umicom watermark composition are separate responsibilities. It establishes neither a complete image/video generator nor feature parity with ComfyUI. Keeping the numerical operation in native C gives all applications one implementation to test and extend.</p>
+<h2>5. Interpret a website's conditional request</h2>
+<p>An HTTP <strong>entity tag</strong>, or ETag, identifies a selected representation of a resource. A client can send <code>If-None-Match</code> to ask whether that representation has changed. The server must perform authorization and choose the representation before using the condition.</p>
+<pre><code>bool matches = false;
+const char condition[] = "W/\"asset-1\"";
+const char current[] = "\"asset-1\"";
+UmiStatus status = UmiWebIfNoneMatch(condition, sizeof condition - 1,
+    current, sizeof current - 1, &amp;matches);</code></pre>
+<p><a href="../../include/umicom/web/entity_tag.h"><code>UmiWebIfNoneMatch</code></a> performs weak comparison: the W/ prefix does not prevent these two tags from matching. Case inside the quoted tag matters. Quoted commas are data, whereas commas between tags separate items. A lone star matches any existing representation. NULL/0 for the condition means the header was absent.</p>
+<p>The parser admits up to 8192 bytes and validates the complete input. A valid first match followed by malformed data is an error, not a successful match. Its accepted list form uses nonempty tag items; malformed or empty items are rejected. A caller needing HTTP intermediary normalization should apply its documented header-list policy before this strict parser.</p>
+<p>For an authorized GET or HEAD request, a matching condition permits a 304 response without a representation body. For other methods the caller handles the precondition, normally 412. The service only returns the comparison: it does not send a response, generate ETags, read files or change caching headers. Existing development previews retain their no-store policy.</p>
+<h2>6. Build the complete example with an installed SDK</h2>
+<ol><li>Install a matching C23 compiler, CMake and Ninja. Use a Framework SDK containing the four headers and exported libraries used in this lesson.</li><li>Copy the <code>examples/bounded_native_services</code> folder into a separate practice directory.</li><li>Replace the SDK path below with your actual installed prefix. Run each command separately and stop on errors.</li></ol>
+<pre><code>Set-Location "C:\Dev\bounded_native_services"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PREFIX_PATH="C:/SDK/Umicom"
+cmake --build build --parallel 2
+ctest --test-dir build --output-on-failure --no-tests=error
+&amp; ".\build\bounded-services.exe"</code></pre>
+<p>Expected output:</p><pre><code>Path: 9 cells
+Visible: 1
+Latent: 3.0, -2.0
+Unchanged: 1</code></pre>
+<p>The CMake project imports <code>Umicom::game_engine</code>, <code>Umicom::render3d</code>, <code>Umicom::media_engine</code> and <code>Umicom::web</code>. The denoising operation belongs to execution in media_engine; it is not part of workflow preflight. Installed-SDK linking is a separate check from compiling the individual source files.</p>
+<h2>7. Extend the experiment and keep evidence</h2>
+<ol><li>Block cell 7. Expect <code>NOT_FOUND</code> and unchanged path output. Restore it afterwards.</li><li>Move the bounding box beyond a plane, then make a later plane invalid. Confirm invalid geometry is reported rather than silently publishing the earlier culling result.</li><li>Put NaN in the final clean-prediction element. Fill output with a known value first and verify every element remains unchanged after refusal.</li><li>Append junk to an otherwise matching ETag list. Expect a parse error and an unchanged boolean.</li><li>Record compiler version, SDK revision, commands, exit codes and observed outputs. Keep failed and skipped checks distinct from passes.</li></ol>
+<p>For source contributors, regression cases are in <code>tests/game/test_grid_path.c</code>, <code>tests/render3d/test_frustum.c</code>, <code>tests/ai_workflow/test_euler_step.c</code> and <code>tests/web/test_entity_tag.c</code>. Extend the shared services and their tests first, then connect thin game, media or web clients. Do not duplicate the algorithms in each application.</p>
+</main><footer>Umicom Foundation · Native services and clear ownership</footer></body></html>

@@ -38,7 +38,9 @@ static const TemplateFactory FACTORIES[] = {
     umi_developer_project_template_integration_worker,
     umi_developer_project_template_cmake_meta_project,
     umi_developer_project_template_python_tool,
-    umi_developer_project_template_umicom_extension
+    umi_developer_project_template_umicom_extension,
+    umi_developer_project_template_d_console,
+    umi_developer_project_template_freebasic_console
 };
 
 /*

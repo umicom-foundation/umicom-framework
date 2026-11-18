@@ -17,6 +17,7 @@
 
 #include "umicom/game/types.h"
 #include "umicom/game/world.h"
+#include "umicom/game/grid_path.h"
 #include "umicom/game/session.h"
 
 #endif

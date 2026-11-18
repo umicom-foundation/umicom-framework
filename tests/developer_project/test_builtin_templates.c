@@ -31,7 +31,11 @@ int main(void)
 #if 0
     assert(umi_developer_project_builtin_template_count() == 18U);
 #endif
+    /* Preserve the former count; D and FreeBASIC add two registered recipes. */
+#if 0
     assert(umi_developer_project_builtin_template_count() == 20U);
+#endif
+    assert(umi_developer_project_builtin_template_count() == 22U);
     assert(umi_developer_project_template_registry_create(&registry) ==
            UMI_STATUS_OK);
     assert(umi_developer_project_builtin_templates_register(registry) ==
@@ -42,8 +46,13 @@ int main(void)
     assert(umi_developer_project_template_registry_count(registry) ==
            18U);
 #endif
+    /* Preserve the former count; D and FreeBASIC add two registered recipes. */
+#if 0
     assert(umi_developer_project_template_registry_count(registry) ==
            20U);
+#endif
+    assert(umi_developer_project_template_registry_count(registry) ==
+           22U);
 
     assert(umi_developer_project_template_registry_find(
         registry, "developer.template.c23-console") != NULL);

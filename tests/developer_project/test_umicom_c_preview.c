@@ -48,8 +48,13 @@ int main(void)
     assert(umi_developer_project_template_validate(recipe) == UMI_STATUS_OK);
     assert(umi_developer_project_language_pack_supports_extension(language, ".uc"));
     assert(!umi_developer_project_language_pack_supports_extension(language, ".c"));
+    /* The former build/test-only contract is retained for review. */
+#if 0
     assert(language->capabilities == (UMI_DEVELOPER_PROJECT_LANGUAGE_BUILD |
                                       UMI_DEVELOPER_PROJECT_LANGUAGE_TEST));
+#endif
+    assert(language->capabilities == (UMI_DEVELOPER_PROJECT_LANGUAGE_BUILD |
+        UMI_DEVELOPER_PROJECT_LANGUAGE_TEST | UMI_DEVELOPER_PROJECT_LANGUAGE_RUN));
     assert(language->debug_adapter[0] == '\0');
     assert(!strcmp(recipe->primary_language_id, language->language_id));
     assert(recipe->kind == UMI_DEVELOPER_PROJECT_META && recipe->supports_tests);

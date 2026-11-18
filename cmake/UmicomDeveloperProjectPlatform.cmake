@@ -71,6 +71,17 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/typescript.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/yaml.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/zig.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/d.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/freebasic.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/fortran.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/go.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/ada.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/pascal.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/kotlin.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/csharp.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/swift.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/lua.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/languages/julia.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/model.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/model_registry.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/project_workbench_platform.c"
@@ -105,6 +116,8 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/umicom_extension.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/web_service_c23.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/zig_console.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/d_console.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/freebasic_console.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/tree.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/types.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/variable_set.c"
@@ -140,6 +153,11 @@ if(BUILD_TESTING)
         add_test(NAME "${test_name}" COMMAND "${target}")
     endfunction()
 
+    umicom_add_developer_project_test(
+        umicom-developer-project-language-starters-test
+        framework.developer_project.language-starters
+        tests/developer_project/test_language_starters.c
+    )
     umicom_add_developer_project_test(
         umicom-developer-project-generated-profiles-test
         framework.developer_project.generated-profiles

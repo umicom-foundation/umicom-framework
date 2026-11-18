@@ -56,6 +56,9 @@ static const UmiDocumentLanguageChoice choices[] = {{"plain", "Plain text", "sou
                                                     {"d", "D", "source.d"},
                                                     {"dart", "Dart", "source.dart"},
                                                     {"pascal", "Pascal", "source.pas"},
+                                                    {"freebasic", "FreeBASIC", "source.bas"},
+                                                    {"ada", "Ada", "source.adb"},
+                                                    {"julia", "Julia", "source.jl"},
                                                     {"php", "PHP", "source.php"},
                                                     {"verilog", "Verilog", "source.v"},
                                                     {"systemverilog", "SystemVerilog", "source.sv"}};

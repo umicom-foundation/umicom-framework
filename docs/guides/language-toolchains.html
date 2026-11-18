@@ -1,0 +1,92 @@
+<!doctype html>
+<!--
+Umicom Framework
+File: docs/guides/language-toolchains.html
+
+PURPOSE:
+Explain native tool and SDK workflows with explicit prerequisites and limits.
+
+AUTHOR AND ORGANISATION:
+Sammy Hegab
+Umicom Foundation
+
+LICENCE:
+MIT
+-->
+<html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Choose and qualify language toolchains | Umicom</title><link rel="icon" type="image/x-icon" href="../../resources/brand/umicom.ico"><style>body{font:18px/1.65 "Segoe UI Variable Text","Segoe UI",sans-serif;max-width:1100px;margin:2rem auto;padding:0 1.2rem;color:#14283b;background:#fafcfe}h1,h2,h3{line-height:1.2}pre,code,kbd{font-family:"Cascadia Code",Consolas,monospace}pre{padding:1rem;background:#eaf0f5;overflow:auto}aside{border-left:4px solid #26788b;padding:1rem;background:#eef8fa}table{border-collapse:collapse;width:100%}td,th{padding:.65rem;border:1px solid #bbcbd8;text-align:left;vertical-align:top}a{color:#15567d}a:focus-visible{outline:3px solid #26788b;outline-offset:3px}.brand{width:215px;height:auto}.scroll{overflow-x:auto}.flow{display:flex;gap:.5rem;flex-wrap:wrap;padding:1rem;background:#eaf0f5}.flow span{padding:.6rem;border:1px solid #9fb4c7;border-radius:.4rem}footer{margin-top:3rem;border-top:1px solid #bbcbd8}</style></head><body><header><img class="brand" src="../../resources/brand/umicom-logo.svg" alt="Umicom"></header><main><h1>Choose and qualify language toolchains</h1>
+<nav aria-label="Related lessons"><a href="../learning/bounded-native-services.html">Native game, media and web services</a> · <a href="check-sdk-environment.html">Check an SDK environment</a> · <a href="build-regeneration.html">Repeated CMake configuration</a></nav>
+<p>A <strong>toolchain</strong> is the set of programs that turns source files into a running program: compiler, assembler, linker, libraries and sometimes a virtual machine. Studio coordinates these tools. Installing an editor, or recognising a filename, does not install the compiler or its libraries.</p>
+<aside><strong>Current scope.</strong> Framework provides language records and installed-tool inspection for the selection below. D and FreeBASIC have CMake console starters; Umicom C has a bounded preview starter. The other rows describe prerequisites and the current project route. They are a practical selection of twenty languages, not a performance or popularity ranking. Language-specific debugger sessions and compilers must be qualified on the target machine. Studio does not silently download or install them.</aside>
+<h2>1. Understand the steps</h2>
+<div class="flow" role="img" aria-label="Source flows through configure, build, test and run. Debug is a separate inspection session."><span>Write source</span><span>→ Configure tools</span><span>→ Build artifacts</span><span>→ Test results</span><span>→ Run application</span><span>Debug: inspect a paused program</span></div>
+<p><strong>Configure</strong> checks paths and prepares build rules. <strong>Compile</strong> translates a source language. <strong>Link</strong> combines compiled objects and libraries. <strong>Run</strong> executes a program; <strong>test</strong> compares its behaviour with an expected result. A <strong>debugger</strong> lets you stop at a source line, inspect variables and advance through execution. Successful configuration alone does not prove any of the later steps.</p>
+<h2>2. Choose the language and its complete tools</h2>
+<p>All rows use open-source language implementations. Obtain tools from the named project's official distribution and follow its platform instructions. Record the release, architecture, licence and installation directory. Standard libraries are not interchangeable between compilers merely because the source language is the same.</p>
+<div class="scroll"><table><thead><tr><th>Language</th><th>Compiler/runtime and required library family</th><th>Current Studio project route</th><th>Debugger prerequisite</th></tr></thead><tbody>
+<tr><td>C</td><td>GCC or Clang; matching C runtime, linker and OS headers</td><td>C23 console, libraries and GTK4 recipes</td><td>Matching GDB/LLDB and debug symbols</td></tr>
+<tr><td>C++</td><td>G++; libstdc++ or a separately qualified Clang/libc++ toolchain</td><td>C++ console and GTK4 recipes</td><td>Matching GDB/LLDB</td></tr>
+<tr><td>Assembly</td><td>GNU assembler through GCC, or NASM for an explicitly matching dialect; linker and optional C runtime</td><td>Assembly and C23/Assembly recipes; inspect their actual syntax</td><td>Machine architecture, symbols and debugger must agree</td></tr>
+<tr><td>D</td><td>LDC's ldc2, druntime, Phobos and the distribution's supported linker/host SDK</td><td>D Console Application; CMake/Ninja starter</td><td>Debug symbols enabled; language-aware symbol inspection still needs qualification</td></tr>
+<tr><td>BASIC (FreeBASIC)</td><td>fbc with its matching runtime, headers and linker tools</td><td>FreeBASIC Console Application; CMake/Ninja starter</td><td>Native debugger with compatible symbols; source-line breakpoints may be needed</td></tr>
+<tr><td>Rust</td><td>rustc, Cargo and the standard library for the selected target</td><td>Existing Rust console recipe; review its build commands</td><td>GDB/LLDB with the Rust toolchain's support scripts</td></tr>
+<tr><td>Zig</td><td>Zig distribution, its standard library and required target libraries</td><td>Existing Zig console recipe</td><td>Compatible native debugger</td></tr>
+<tr><td>Fortran</td><td>gfortran, libgfortran and matching native linker/runtime</td><td>Language/tool discovery; supply a project build profile</td><td>Fortran-capable GDB with debug information</td></tr>
+<tr><td>Go</td><td>Go distribution, standard library, modules required by your project</td><td>Language/tool discovery; supply project tasks</td><td>Delve requires a separately configured adapter</td></tr>
+<tr><td>Ada</td><td>GNAT/gnatmake, Ada runtime and matching GCC tools</td><td>Language/tool discovery; supply project tasks</td><td>Ada-capable GDB</td></tr>
+<tr><td>Pascal</td><td>Free Pascal/fpc, RTL and any selected packages</td><td>Language/tool discovery; supply project tasks</td><td>Compatible native debugger</td></tr>
+<tr><td>Java</td><td>OpenJDK JDK: javac, java and Java class libraries</td><td>Language/tool discovery; supply Java build/run/test tasks</td><td>JVM debugger and separately configured adapter</td></tr>
+<tr><td>Kotlin</td><td>Kotlin compiler, OpenJDK and Kotlin standard library</td><td>JVM language record; supply tasks. Windows discovery uses kotlinc.bat</td><td>JVM debugger; native debugging is a different Kotlin target</td></tr>
+<tr><td>C#</td><td>.NET SDK, matching runtime and reference assemblies</td><td>Language/tool discovery; supply dotnet project tasks</td><td>.NET debugger/adapter</td></tr>
+<tr><td>Swift</td><td>Swift compiler, standard library and platform SDK</td><td>Language/tool discovery; supply project tasks</td><td>Matching Swift LLDB distribution</td></tr>
+<tr><td>Python</td><td>CPython and explicitly selected packages; development headers for a C extension</td><td>Existing Python tool and CPython extension recipes</td><td>Python debugger/adapter; a C extension also needs a native debugger</td></tr>
+<tr><td>JavaScript</td><td>Node.js and project packages</td><td>Language/tool discovery; supply Node tasks</td><td>Node inspector adapter</td></tr>
+<tr><td>TypeScript</td><td>Node.js, npm and TypeScript; Windows launchers npm.cmd and tsc.cmd</td><td>Language/tool discovery; supply compile-to-JavaScript and Node tasks</td><td>Node inspector with matching source maps</td></tr>
+<tr><td>Lua</td><td>Lua interpreter and explicitly required modules</td><td>Run-oriented language record; supply tasks</td><td>Separate Lua debugger integration</td></tr>
+<tr><td>Julia</td><td>Julia runtime, standard libraries and project environment</td><td>Run-oriented language record; supply tasks</td><td>Separate Julia debugger integration</td></tr>
+</tbody></table></div>
+<p>Umicom C is an additional Umicom language, covered below. A registered capability describes a language's tool contract; it is not a promise that every operation is currently available through Studio's debugger UI. In particular, do not point GDB at Java, .NET, Python or Umicom bytecode and expect a native session.</p>
+<h2>3. Make one toolchain discoverable</h2>
+<ol><li>Choose the architecture of your development computer and intended executable, for example x86-64 Windows. Choose a complete distribution for that platform.</li><li>Install or unpack it according to its official instructions. Keep dependencies separate from project source. Preserve the licence notices if you redistribute tools.</li><li>Open a new PowerShell window. Use the following pattern, replacing the example compiler folder with the real folder containing your compiler. This changes only this terminal and its future child processes.</li></ol>
+<pre><code>$env:Path = "C:\Tools\ldc\bin;C:\msys64\ucrt64\bin;$env:Path"
+Get-Command cmake, ninja, ldc2
+ldc2 --version
+cmake --version
+ninja --version</code></pre>
+<p>Expected result: each command resolves to the intended installation. If <code>Get-Command</code> fails, stop and correct the folder. If <code>--version</code> fails with a missing DLL, the installation or its runtime search path is incomplete. A file existing on disk is not sufficient. Restart Studio from this terminal so it inherits this environment; a previously running Studio process keeps its earlier environment.</p>
+<p>In Project Settings, use <strong>Inspect tools</strong> to review resolved and missing files. Optional language tools may be missing without preventing a C project. This inspection does not execute or validate every discovered tool. On Windows, Kotlin and TypeScript often provide script launchers; a process API that only launches executable images cannot run those scripts directly. Use a reviewed build recipe or an explicitly configured command interpreter for them, keeping arguments separated and avoiding string-built commands from untrusted input.</p>
+<h2>4. Build the D console starter</h2>
+<ol><li>In Studio choose New Project, then <strong>D Console Application</strong>. Use a new empty project directory and a simple target name such as <code>d_notes</code>.</li><li>Review the generated source, CMake files and README. Apply Project Settings with your chosen paths. Trust the project only after reviewing its build scripts.</li><li>Choose Configure. It must find <code>ldc2</code>; the recipe does not substitute DMD or GDC because their options differ.</li><li>Choose Build, Test and Run in that order. The starter should print <code>Result: 42</code>. The CTest case checks that exact output and a zero exit code.</li><li>If a control produces no feedback, inspect Output and the actual application version. Use the equivalent terminal commands below to separate a compiler problem from a Studio interaction problem.</li></ol>
+<pre><code>Set-Location "C:\Dev\d_notes"
+cmake --preset windows-ucrt64-debug
+cmake --build --preset windows-ucrt64-debug --parallel 2
+ctest --preset windows-ucrt64-debug --output-on-failure --no-tests=error
+&amp; ".\build\windows-ucrt64-debug\bin\d_notes.exe"</code></pre>
+<p>Run commands separately and stop on a failure. The source contains <code>unittest { assert(add(19, 23) == 42); }</code>; <code>-unittest</code> enables that check. Change an operand in the printed expression and observe a failing output test. Restore it and rerun the same checks. This teaches the difference between a test detecting a defect and a process merely finishing.</p>
+<h2>5. Build the FreeBASIC starter</h2>
+<p>Choose <strong>FreeBASIC Console Application</strong>, name the target <code>basic_notes</code> and use another empty directory. Check <code>Get-Command fbc</code> and <code>fbc -version</code>. Use the same three CMake/CTest commands in that directory, then run its <code>bin/basic_notes.exe</code>. The expected output is again <code>Result: 42</code>.</p>
+<p>The generated <code>Function AddNumbers(... As Integer) As Integer</code> declares the inputs and result as integers. <code>Return</code> sends a value back to its caller. <code>Print</code> writes text. <code>End 1</code> signals failure if the internal check fails. The <code>-g -exx</code> flags request debug information and runtime checks supported by FreeBASIC. They do not make all pointer operations safe.</p>
+<p>If the compiler lives outside PATH, configure with <code>-DUMICOM_D_COMPILER="C:/real/path/ldc2.exe"</code> or <code>-DUMICOM_BASIC_COMPILER="C:/real/path/fbc.exe"</code> as appropriate. The complete compiler distribution must still be usable. On Linux use <code>linux-debug</code> instead of <code>windows-ucrt64-debug</code> and run the executable without <code>.exe</code>.</p>
+<h2>6. Use Umicom C in Studio and PowerShell</h2>
+<p>The Umicom C preview is a bounded virtual machine: a program executes using Umicom instructions and explicit limits. Its starter is a small arithmetic example, not a full C23 compiler. Language tags and interoperability plans do not mean arbitrary Java, BASIC or D source can already be mixed and executed in one file.</p>
+<ol><li>Build or obtain the matching Umicom C command-line tool. Confirm <code>Get-Command umicom-c</code> finds the desired executable.</li><li>Create the Umicom C preview project in Studio. Its preset is <code>preview</code>, and its build directory is <code>build/preview</code>.</li><li>Configure, Build and Test. Run routes through the configured CMake <code>preview</code> target, using the selected compiler and Studio's existing output runner.</li><li>For terminal debugging, enter the commands below from the generated project folder. VM debugging is separate from Studio's native debugger.</li></ol>
+<pre><code>cmake --preset preview
+cmake --build build/preview --target preview
+ctest --test-dir build/preview --output-on-failure --no-tests=error
+umicom-c debug src/main.uc --max-steps 256</code></pre>
+<p>The generated example should report a result of 42. Keep the source unchanged for the first run; its README lists the available preview tasks. The step budget bounds execution, not the memory requirements of unrelated native tools. Review each command's help before extending the program.</p>
+<h2>7. Share Umicom Framework through a C interface</h2>
+<p>An <strong>ABI</strong> is the binary agreement between compiled modules: calling convention, symbol names, type sizes and memory ownership. Use an installed Framework SDK of matching architecture and runtime. D uses <code>extern(C)</code> declarations; FreeBASIC can declare functions in an <code>Extern "C"</code> block. A declaration alone does not provide the library implementation.</p>
+<ol><li>Start with a narrow C wrapper around the actual SDK header, using fixed-width values and explicit buffer sizes.</li><li>Compile the C wrapper with the SDK's supported C toolchain. Link its import/static library from the other language.</li><li>Match all argument sizes and calling conventions. Avoid passing C++ classes, garbage-collected references or language strings through an undocumented C boundary.</li><li>Let the allocator that creates an object release it through its documented function. Do not mix <code>free</code>, a D garbage collector and BASIC runtime ownership.</li><li>Test success, invalid input, short buffers and repeated create/destroy cycles before adding UI or network work.</li></ol>
+<p>The D and BASIC console starters intentionally require only their standard runtimes; they do not already link every Framework library. See the SDK environment guide for installed-package discovery and the native service lesson for a complete C consumer.</p>
+<h2>8. Separate hosted OS and bare-metal Kernel targets</h2>
+<table><thead><tr><th>Target</th><th>What is required</th></tr></thead><tbody>
+<tr><td>Windows or Linux terminal</td><td>Compiler/runtime built for that host, matching libraries and executable format.</td></tr>
+<tr><td>Umicom desktop shell running on an existing OS</td><td>The host OS still supplies process, filesystem and runtime services. A desktop shell is not a new machine ABI.</td></tr>
+<tr><td>A future Umicom OS distribution</td><td>Qualify its actual loader, libc/runtime, system calls, libraries, toolchain and debugger. A Linux build is compatible only if those contracts really match.</td></tr>
+<tr><td>Umicom Kernel, bare metal</td><td>Freestanding compiler target, linker script, startup code, supported hardware, memory model and Kernel APIs. Hosted D/BASIC/Java/.NET programs cannot be assumed to work.</td></tr>
+</tbody></table>
+<p>A VM interpreter could be ported into a Kernel service, but it needs explicit allocation, I/O, scheduling and isolation contracts plus execution tests. The hosted Umicom C preview does not establish that port. Likewise, C server-rendered websites can avoid WebAssembly for their server logic; browser-native execution requires a separately implemented and qualified target.</p>
+<h2>9. Diagnose a failed first run</h2>
+<ul><li><strong>Compiler not found:</strong> inspect the first configure error, PATH and explicit compiler setting. Do not keep pressing Run.</li><li><strong>Linker error:</strong> inspect architecture and runtime libraries; installing one executable is insufficient.</li><li><strong>No tests found:</strong> enable testing and configure the intended directory. Do not treat an empty test run as a pass.</li><li><strong>Executable missing:</strong> fix the build first; confirm the configured target and output folder.</li><li><strong>Debugger cannot start:</strong> check the debugger's own dependencies and executable format before examining project source.</li><li><strong>Studio has old templates:</strong> rebuild and integrate the matching Framework and Studio package. New source in a comparison folder does not update an installed application.</li></ul>
+<h2>Further reading</h2><p><a href="https://wiki.dlang.org/LDC">LDC</a> · <a href="https://www.freebasic.net/">FreeBASIC</a> · <a href="https://cmake.org/cmake/help/latest/manual/cmake-presets.7.html">CMake presets</a>. Consult the release-specific installation documentation for each compiler rather than assuming one package command works on every machine.</p>
+</main><footer>Umicom Foundation · Native services and clear ownership</footer></body></html>

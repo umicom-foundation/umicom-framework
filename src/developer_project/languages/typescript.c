@@ -20,8 +20,19 @@ static const char *const EXTENSIONS[] = {
     ".ts", ".tsx"
 };
 
+/* Preserve extensionless metadata for review. Windows distributions expose
+ * npm.cmd and tsc.cmd; discovering these files does not execute a shell. */
+#if 0
 static const char *const BUILD_TOOLS[] = {
     "node", "npm", "tsc"
+};
+#endif
+static const char *const BUILD_TOOLS[] = {
+#ifdef _WIN32
+    "node", "npm.cmd", "tsc.cmd"
+#else
+    "node", "npm", "tsc"
+#endif
 };
 
 /*

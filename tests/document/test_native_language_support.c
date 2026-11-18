@@ -28,7 +28,10 @@ int main(void)
         {"example.f90", "fortran", "!"}, {"example.F95", "fortran", "!"},
         {"example.f03", "fortran", "!"}, {"example.F08", "fortran", "!"},
         {"example.odin", "odin", "//"}, {"example.nim", "nim", "#"},
-        {"example.NIMS", "nim", "#"}
+        {"example.NIMS", "nim", "#"},
+        {"example.BAS", "freebasic", "'"}, {"example.bi", "freebasic", "'"},
+        {"example.adb", "ada", "--"}, {"example.ADS", "ada", "--"},
+        {"example.jl", "julia", "#"}, {"example.pas", "pascal", "//"}
     };
     UmiDocumentFileFilterSet filters;
     CHECK(umi_document_file_filters_default(&filters) == UMI_STATUS_OK);
