@@ -102,6 +102,8 @@ file(WRITE "${output}" "${content}")</code></pre>
 <details><summary>Check your understanding</summary><p><strong>Why does suppressing the GTK warning not fix this loop?</strong> The loop comes from a changed dependency, not the message. <strong>Why retain manifest tracking?</strong> Real edits must remain visible. <strong>Why compare hashes and timestamps?</strong> A hash identifies bytes; a timestamp can change while the bytes remain identical.</p></details>
 </section>
 
+<h3>Separate a changed input from a stale output</h3>
+<p>A build plan is an output of configuration. If CMake reports successful generation but <code>build.ninja</code> stays older than its inputs, record both timestamps and the complete diagnostic log. Do not assume that a previously repaired manifest writer is broken again. A file-access conflict is one possibility to investigate, not a diagnosis established by timestamps alone. The <a href="../guides/build-regeneration.html#stale-plan">preserved-plan recovery</a> keeps the old plan, cache and compiled files, requires a fresh generated plan, and checks convergence before compiling. Its regression rehearses recovery in an isolated fixture and verifies that the cache and staged learning payload survive.</p>
 <h2>Try it</h2>
 <p>Add a harmless source comment, rebuild and compare the output with a second build that has no changes. The second build should have little or no compilation work.</p>
 <details><summary>Why keep a separate build tree when changing compilers?</summary><p>The cache records compiler and platform decisions. Use a new build directory for a different compiler or target rather than changing them underneath an existing build.</p></details>

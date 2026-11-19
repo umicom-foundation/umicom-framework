@@ -25,7 +25,11 @@ get_filename_component(_umicom_ai_training_root "${CMAKE_CURRENT_LIST_DIR}/.." A
 if(NOT TARGET umicom_ai_training)
     add_library(umicom_ai_training STATIC
         "${_umicom_ai_training_root}/src/ai/training/tape.c"
+        # Retain the original trainer-only seed source for review. The dataset
+        # SDK now owns it in integrated builds, with a standalone fallback below.
+        #[=[
         "${_umicom_ai_training_root}/src/ai/training/initialisation.c"
+        ]=]
         "${_umicom_ai_training_root}/src/ai/training/sequence_shape.c"
         "${_umicom_ai_training_root}/src/ai/training/transformer.c"
         "${_umicom_ai_training_root}/src/ai/training/decoder.c"
@@ -1316,8 +1320,20 @@ if(BUILD_TESTING AND NOT TARGET umicom-ai-checkpoint-inspect-test)
     endforeach()
 endif()
 
-# Group membership is shared by document and media dataset consumers.
-target_sources(umicom_ai_training PRIVATE "${_umicom_ai_training_root}/src/ai/training/dataset_group_split.c")
+# Retain the original group owner for review. Compiling it only in the trainer
+# left AI SDK clients with an unresolved symbol when the trainer was absent.
+if(FALSE)
+    target_sources(umicom_ai_training PRIVATE "${_umicom_ai_training_root}/src/ai/training/dataset_group_split.c")
+endif()
+if(TARGET umicom_ai)
+    # The integrated owner also supplies seeded initialization to the trainer.
+    target_link_libraries(umicom_ai_training PRIVATE Umicom::ai)
+else()
+    # A standalone teaching build has no SDK producer. Use the same sources.
+    target_sources(umicom_ai_training PRIVATE
+        "${_umicom_ai_training_root}/src/ai/training/dataset_group_split.c"
+        "${_umicom_ai_training_root}/src/ai/training/initialisation.c")
+endif()
 if(BUILD_TESTING)
     add_subdirectory("${_umicom_ai_training_root}/tests/training_groups" "${CMAKE_CURRENT_BINARY_DIR}/training-group-checks")
 endif()

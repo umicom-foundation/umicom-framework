@@ -21,6 +21,23 @@ if ($LASTEXITCODE -ne 0) { throw "Configuration failed. Read the first CMake err
 if ($LASTEXITCODE -ne 0) { throw "Build-plan check failed." }</code></pre>
 <p><code>-C</code> selects the folder. <code>-d explain</code> prints why a target is considered out of date. This command executes the build-plan check and may rerun CMake to write generated build files. Selecting <code>build.ninja</code> requests the plan rather than compiling applications. Do not add <code>-n</code> for this check: a dry run can report a pending glob check and simulated regeneration without executing the check that would establish whether anything really changed.</p>
 <p>With unchanged inputs, expect a prompt return with no <code>Re-running CMake</code>. Ninja may print <code>ninja: no work to do.</code> or just its normal glob checks. One regeneration can be legitimate if a source changed after configuration. If complete cycles repeat, cancel and preserve the explanation output. Look for a named input newer than an output, a missing file, or a changed glob. A <strong>glob</strong> is a filename pattern such as <code>*.h</code>; checking one is not itself an error.</p>
+<h2 id="stale-plan">If the old build plan survives a successful configuration</h2>
+<p>This is a different observation from a repeatedly rewritten learning manifest. Compare the modification times of <code>build.ninja</code>, <code>CMakeCache.txt</code> and <code>CMakeFiles/rules.ninja</code>. If the cache and rules update but the plan remains older through completed configuration cycles, preserve the evidence. A timestamp difference identifies a stale output; it does not identify which process or generator behavior prevented replacement.</p>
+<p>First stop the build and wait for its terminal prompt. Finish or pause any file synchronisation and ensure only one configure/build process uses this directory. The recovery below moves only the generated plan to a unique backup name, then uses the existing cache to generate a replacement. It retains compiled objects, libraries, Ninja history and the old plan. This is a recovery procedure, not proof that the underlying cause has been repaired.</p>
+<pre><code>Set-Location "C:\umicom\Umicom-Applications"
+$env:Path = "C:\msys64\ucrt64\bin;$env:Path"
+$plan = "C:\umicom\Umicom-Applications\build\windows-ucrt64-all-debug\build.ninja"
+$backup = "$plan.before-recovery-$(Get-Date -Format yyyyMMdd-HHmmss)"
+Move-Item -LiteralPath $plan -Destination $backup -ErrorAction Stop
+$started = [DateTime]::UtcNow
+&amp; "C:\msys64\ucrt64\bin\cmake.exe" --preset windows-ucrt64-all-debug
+if ($LASTEXITCODE -ne 0) { throw "Configuration failed; keep the preserved plan and read the first error." }
+if (!(Test-Path -LiteralPath $plan) -or (Get-Item -LiteralPath $plan).LastWriteTimeUtc -lt $started) { throw "CMake did not create a fresh build.ninja. Do not start the build." }
+&amp; "C:\msys64\ucrt64\bin\ninja.exe" -C ".\build\windows-ucrt64-all-debug" -d explain build.ninja
+if ($LASTEXITCODE -ne 0) { throw "Build-plan verification failed." }
+</code></pre>
+<p>The timestamp check stops before compilation if CMake reports success but fails to create a fresh plan. The final command checks that the plan converges. If complete cycles repeat, press <kbd>Ctrl+C</kbd> and keep the diagnostic output. Do not repeatedly rename plans, disable regeneration or delete the complete build tree. Leave the preserved file available for comparison. If configuration fails, keep that backup while correcting the reported error; do not build against the old plan as though it were current.</p>
+<p>When the check returns successfully without a regeneration loop, continue with the regression and incremental build below. A successful plan check does not establish that compilation, tests, installation or application launch will succeed.</p>
 <h2>5. Run the focused regression, then resume compilation</h2>
 <pre><code>ctest --test-dir ".\build\windows-ucrt64-all-debug" -R "^studio[.]cmake[.]learning_regeneration$" --output-on-failure --no-tests=error
 if ($LASTEXITCODE -ne 0) { throw "Learning regeneration regression failed." }
@@ -35,7 +52,20 @@ if ($LASTEXITCODE -ne 0) { throw "Tests failed. Review the report before install
 <p>GTK provides native windows and text controls. An <strong>input method</strong> handles composed text and language switching. The Win32 defect leaves a callback registered after its input context is destroyed; later input can access an object whose lifetime ended.</p>
 <p>The correction is <a href="https://github.com/GNOME/gtk/commit/30727f8a524dbaa69118a60d6bbef4b3447245b1">GTK commit 30727f8a524dbaa69118a60d6bbef4b3447245b1</a>. A package must include that change or a reviewed equivalent. A patch beside a recipe has no effect unless the recipe lists it, verifies its checksum and applies it before compilation. GTK 4.24.1 alone does not establish the repair.</p>
 <p>The advisory does not cause the regeneration loop or stop configuration. Do not suppress it to claim the runtime is repaired. Follow <a href="../learning/windows-gtk-runtime.md">Checking the GTK runtime on Windows</a> for package verification, staging and native lifetime tests. Close applications and finish or stop other builds before replacing GTK.</p>
-<h2>7. Report the right evidence</h2>
+<h2>7. Check debugger startup separately</h2>
+<p>Framework's native debugger tests use the Debug Adapter Protocol (DAP) to communicate with a debugger. A GDB version banner can appear before GDB checks the selected interpreter. The configuration probe starts GDB with DAP selected and exits before loading a program.</p>
+<ol>
+<li>Open the build directory's <code>framework/tests/development_workflow/native-debugger-gdb-probe.txt</code>. Use the executable path from its <code>Tool</code> line if your setup differs from the example.</li>
+<li>In the same PowerShell environment used to configure, run the startup check. <code>--nx</code> ignores GDB's initialization files. <code>--batch</code> runs without an interactive prompt. Expect exit code <code>0</code> from a working startup.</li>
+</ol>
+<pre><code>&amp; "C:\msys64\ucrt64\bin\gdb.exe" --nx --batch --interpreter=dap -ex quit
+$LASTEXITCODE</code></pre>
+<p>If the interpreter is unrecognized, select a GDB build with DAP support using the <code>UMICOM_TEST_GDB_DAP</code> CMake cache entry. If LLDB reports <code>0xc0000135</code>, open <code>native-debugger-lldb-probe.txt</code> and check the selected LLVM package's runtime dependencies. Use the matching supported runtime, then reconfigure.</p>
+<p>After configuration, run the probe's regression. It substitutes an unknown interpreter in the same startup command and expects GDB to reject it. CMake registers this regression when its GDB startup probe succeeds.</p>
+<pre><code>ctest --test-dir ".\build\windows-ucrt64-all-debug" -R "^framework[.]development_workflow[.]gdb_probe[.]" --output-on-failure --no-tests=error</code></pre>
+<p>After a successful build, run the native debugger tests to verify that an installed adapter can stop at a breakpoint and inspect program state. Record each backend's result, including any skip.</p>
+<pre><code>ctest --test-dir ".\build\windows-ucrt64-all-debug" -R "^framework[.]development_workflow[.]native_debug[.]" --output-on-failure --no-tests=error</code></pre>
+<h2>8. Report the right evidence</h2>
 <table><thead><tr><th>Observation</th><th>Evidence and next investigation</th></tr></thead><tbody>
 <tr><td>Repeated CMake cycles</td><td>Full <code>-d explain</code> output, source revisions and the named input's timestamp and content hash.</td></tr>
 <tr><td>GTK advisory</td><td>Package version, reviewed recipe/patch, built package digest, staged DLL identity and native tests.</td></tr>
@@ -44,5 +74,11 @@ if ($LASTEXITCODE -ne 0) { throw "Tests failed. Review the report before install
 <tr><td>No matching test</td><td>Check that all regression files were integrated and CMake completed. <code>--no-tests=error</code> prevents an empty selection being mistaken for success.</td></tr>
 </tbody></table>
 <p>Include the command, exit code, complete log and source revisions. State whether files were changing during the run. Keep credentials and private project content out of shared reports.</p>
+<h3>Trace an undefined reference to its library</h3>
+<p>The compiler can accept a call after reading its declaration in a header. The linker must then find the implementation in an object file or a library. For example, when a CLI link reports <code>UmiAiTrainingSplitGroups</code>, read the diagnostic for the object that calls it. The JSONL reader belongs to <code>Umicom::ai</code>, so the partitioner, group splitter and seeded random-number code must be available to a program that links that SDK library alone. The optional trainer uses the same SDK owner in an integrated build.</p>
+<p>Inspect the static archive in the failing build directory with the matching toolchain. From Umicom Applications in PowerShell, the following command displays references to the group splitter:</p>
+<pre><code>&amp; "C:\msys64\ucrt64\bin\nm.exe" -A ".\build\windows-ucrt64-all-debug\lib\libumicom_ai.a" |
+    Select-String 'UmiAiTrainingSplitGroups$'</code></pre>
+<p>A line marked <code>U</code> is a reference. A line marked <code>T</code> is a definition in executable code. Expect both lines in the rebuilt archive. Check the sources assigned to the library in CMake if the definition is missing, then rerun the link and verify its exit. Compilation and library membership alone leave the executable link unverified.</p>
 <footer><p>Umicom Foundation · Sammy Hegab · Source examples: MIT</p></footer>
 </main></body></html>

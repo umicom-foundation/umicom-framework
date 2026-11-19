@@ -20,6 +20,11 @@
 
 #include "umicom/platform/process.h"
 
+/* The former splitter could return a valid prefix when the full command did
+ * not fit or a quote was incomplete. The checked splitter below keeps this
+ * runner's text format and admits the whole command before launch. Retain the
+ * former behavior here for review. */
+#if 0
 /* Provide the split arguments operation used by this module and its client applications. */
 static size_t split_arguments(char *text,
                               const char **arguments,
@@ -72,6 +77,35 @@ static size_t split_arguments(char *text,
     }
     return count;
 }
+#endif
+
+/* Keep test argument text compatible with existing records. Quotes at the
+ * start of an argument group its bytes, and backslashes remain literal. The
+ * higher-level developer task parser has a different grammar and capacity. */
+static UmiStatus split_arguments_checked(char *text, const char **arguments,
+                                         size_t capacity, size_t *out_count)
+{
+    size_t count = 0U;
+    char *cursor = text;
+    for (;;) {
+        cursor += strspn(cursor, " \t");
+        if (*cursor == '\0') break;
+        if (count == capacity) return UMI_STATUS_CAPACITY_EXCEEDED;
+
+        char *start = cursor;
+        if (*cursor == '"') {
+            start = cursor + 1;
+            cursor = strchr(start, '"');
+            if (cursor == NULL) return UMI_STATUS_PARSE_ERROR;
+        } else {
+            cursor += strcspn(cursor, " \t");
+        }
+        if (*cursor != '\0') *cursor++ = '\0';
+        arguments[count++] = start;
+    }
+    *out_count = count;
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the test runner run case operation used by this module and its client
@@ -95,12 +129,24 @@ UmiStatus umi_test_runner_run_case(const UmiTestCase *test_case,
     if (test_case == NULL || out_result == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Public case records own fixed-width text. Bound identity reads before
+     * constructing a result, including when a disabled case is skipped. */
+    if (memchr(test_case->test_id, '\0', sizeof(test_case->test_id)) == NULL ||
+        memchr(test_case->name, '\0', sizeof(test_case->name)) == NULL) {
+        umi_test_result_init(out_result, NULL, NULL);
+        umi_test_result_finish(out_result, UMI_STATUS_INVALID_ARGUMENT, -1, 0U);
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
     umi_test_result_init(out_result, test_case->test_id, test_case->name);
     /* Apply this operation only while the related capability or state is available. */
     if (!test_case->enabled) {
         out_result->state = UMI_TEST_STATE_SKIPPED;
         return UMI_STATUS_OK;
     }
+    /* This former formatted copy could hide an unterminated fixed field, and
+     * the old splitter silently discarded trailing arguments. Retain it here
+     * for review. The command below is admitted in full before process entry. */
+#if 0
     (void)snprintf(argument_text,
                    sizeof(argument_text),
                    "%s",
@@ -108,6 +154,23 @@ UmiStatus umi_test_runner_run_case(const UmiTestCase *test_case,
     argument_count = split_arguments(argument_text,
                                      arguments,
                                      UMI_PROCESS_MAX_ARGUMENTS);
+#endif
+    if (memchr(test_case->program, '\0', sizeof(test_case->program)) == NULL ||
+        memchr(test_case->working_directory, '\0', sizeof(test_case->working_directory)) == NULL ||
+        memchr(test_case->argument_text, '\0', sizeof(test_case->argument_text)) == NULL) {
+        umi_test_result_finish(out_result, UMI_STATUS_INVALID_ARGUMENT, -1, 0U);
+        (void)snprintf(out_result->output, sizeof(out_result->output), "Test command field is unterminated");
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    memcpy(argument_text, test_case->argument_text, sizeof(argument_text));
+    status = split_arguments_checked(argument_text, arguments, UMI_PROCESS_MAX_ARGUMENTS, &argument_count);
+    if (status != UMI_STATUS_OK) {
+        umi_test_result_finish(out_result, status, -1, 0U);
+        (void)snprintf(out_result->output, sizeof(out_result->output), "%s",
+            status == UMI_STATUS_PARSE_ERROR ? "Test argument is missing a closing quote" :
+            "Test command exceeds the process argument limit");
+        return status;
+    }
     (void)memset(&request, 0, sizeof(request));
     request.program = test_case->program;
     request.arguments = arguments;

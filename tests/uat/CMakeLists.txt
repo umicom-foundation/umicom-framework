@@ -45,6 +45,25 @@ foreach(_case pass copy setup-fails assert-fails cleanup-fails double-failure ca
     set_tests_properties(framework.uat.workflow.${_case} PROPERTIES TIMEOUT 15 LABELS "framework;uat;workflow;ownership")
 endforeach()
 
+add_executable(umicom-uat-process-arguments-tests test_process_arguments.c)
+target_link_libraries(umicom-uat-process-arguments-tests PRIVATE ${_uat_library})
+set_target_properties(umicom-uat-process-arguments-tests PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES)
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    # The focused build uses the same process adapter and runner as Applications.
+    target_sources(umicom-uat-process-arguments-tests PRIVATE
+        "${_uat_root}/src/testing/uat_process.c"
+        "${_uat_root}/src/testing/runner.c"
+        "${_uat_root}/src/testing/suite.c"
+        "${_uat_root}/src/platform/process.c")
+    if(WIN32)
+        target_link_libraries(umicom-uat-process-arguments-tests PRIVATE user32)
+    endif()
+endif()
+foreach(_case quoted exact overflow open-quote fixed-field workflow)
+    add_test(NAME framework.uat.process_arguments.${_case} COMMAND umicom-uat-process-arguments-tests ${_case})
+    set_tests_properties(framework.uat.process_arguments.${_case} PROPERTIES TIMEOUT 20 LABELS "framework;uat;process;regression")
+endforeach()
+
 option(UMICOM_UAT_SQLITE_EXAMPLE "Qualify the in-memory SQLite UAT example" OFF)
 if(UMICOM_UAT_SQLITE_EXAMPLE)
     find_package(SQLite3 REQUIRED)

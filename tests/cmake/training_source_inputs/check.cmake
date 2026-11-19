@@ -98,8 +98,15 @@ if(DEFINED PROBE_ROOT)
         message(FATAL_ERROR "Unexpected admitted input count: ${_count}")
     endif()
     endif()
+    # Preserve the fixed pre-partition inventory for review. The probe now
+    # compares against the parent fixture's independent inventory size.
+    if(FALSE)
     if(NOT _count EQUAL 49)
         message(FATAL_ERROR "Unexpected admitted input count: ${_count}")
+    endif()
+    endif()
+    if(NOT DEFINED PROBE_EXPECTED_COUNT OR NOT _count EQUAL PROBE_EXPECTED_COUNT)
+        message(FATAL_ERROR "Unexpected admitted input count: ${_count}; expected ${PROBE_EXPECTED_COUNT}")
     endif()
     foreach(_path IN LISTS _admitted)
         if(NOT IS_ABSOLUTE "${_path}")
@@ -119,7 +126,8 @@ if(DEFINED PROBE_ROOT)
     # Prior receipt retained: Admitted 44 training source inputs.
     # Prior receipt retained: Admitted 46 training source inputs.
     # Prior receipt retained: Admitted 48 training source inputs.
-    message(STATUS "Admitted 49 training source inputs")
+    # Prior receipt retained: Admitted 49 training source inputs.
+    message(STATUS "Admitted ${_count} training source inputs")
     return()
 endif()
 if(NOT DEFINED CASE OR NOT DEFINED WORK)
@@ -176,12 +184,17 @@ set(_inputs
     src/ai/training/jsonl_review.c
     include/umicom/ai/training/image_moments.h
     src/ai/training/image_moments.c
-    src/ai/training/categorical_loss.h)
+    src/ai/training/categorical_loss.h
+    include/umicom/ai/training/dataset_split.h
+    include/umicom/ai/training/initialisation.h
+    src/ai/training/dataset_group_split.c
+    src/ai/training/initialisation.c)
 set(_missing_cases missing-pairs-header missing-summary-header missing-file-header
     missing-partition-header missing-selection-header missing-denoising-header
     missing-pairs-source missing-writer-source missing-summary-source missing-file-source
     missing-partition-source missing-selection-source missing-denoising-source
     missing-normal-source missing-schedule-source missing-order-header missing-order-source missing-metrics-header missing-metrics-source missing-image-header missing-image-source missing-video-header missing-video-source missing-view-header missing-view-source missing-byte-pair-header missing-byte-pair-source missing-overlap-header missing-overlap-source missing-flip-header missing-flip-source missing-histogram-header missing-histogram-source missing-resize-header missing-resize-source missing-canvas-header missing-canvas-source missing-shape-source missing-context-header missing-context-source missing-timing-header missing-timing-source missing-stream-header missing-stream-source missing-review-header missing-review-source missing-moments-header missing-moments-source missing-categorical-kernel)
+list(APPEND _missing_cases missing-group-header missing-seed-header missing-group-source missing-seed-source)
 list(FIND _missing_cases "${CASE}" _missing_index)
 set(_allowed valid empty-header directory-header multiple-missing missing-root ${_missing_cases})
 if(NOT CASE IN_LIST _allowed)
@@ -274,7 +287,9 @@ foreach(_path IN LISTS _written)
     file(SHA256 "${_path}" _digest)
     list(APPEND _digests "${_digest}")
 endforeach()
+list(LENGTH _inputs _expected_count)
 execute_process(COMMAND "${CMAKE_COMMAND}" "-DMODULE=${MODULE}" "-DPROBE_ROOT=${_root}"
+    "-DPROBE_EXPECTED_COUNT=${_expected_count}"
     -P "${CMAKE_CURRENT_LIST_FILE}" RESULT_VARIABLE _code OUTPUT_VARIABLE _out ERROR_VARIABLE _err TIMEOUT 10)
 if(CASE STREQUAL "valid")
     # Previous successful receipt expected 23 inputs; the complete crop set has 25.
@@ -336,7 +351,6 @@ ${_out}
 ${_err}")
     endif()
     endif()
-    list(LENGTH _inputs _expected_count)
     if(NOT "${_code}" STREQUAL "0" OR NOT _out MATCHES "Admitted ${_expected_count} training source inputs")
         message(FATAL_ERROR "Complete source set refused: ${_code}\n${_out}\n${_err}")
     endif()

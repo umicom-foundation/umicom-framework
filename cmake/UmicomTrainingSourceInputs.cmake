@@ -26,6 +26,8 @@ function(umicom_require_training_source_inputs root out_paths)
         include/umicom/ai/training/jsonl_summary.h
         include/umicom/ai/training/jsonl_file.h
         include/umicom/ai/training/jsonl_partition.h
+        include/umicom/ai/training/dataset_split.h
+        include/umicom/ai/training/initialisation.h
         include/umicom/ai/training/jsonl_selection.h
         include/umicom/ai/training/denoising.h
         src/ai/training/jsonl_pairs.c
@@ -33,6 +35,8 @@ function(umicom_require_training_source_inputs root out_paths)
         src/ai/training/jsonl_summary.c
         src/ai/training/jsonl_file.c
         src/ai/training/jsonl_partition.c
+        src/ai/training/dataset_group_split.c
+        src/ai/training/initialisation.c
         src/ai/training/jsonl_selection.c
         src/ai/training/denoising.c
         src/ai/training/normal_noise.c

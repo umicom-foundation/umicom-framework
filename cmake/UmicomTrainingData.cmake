@@ -64,8 +64,13 @@ if(TARGET umicom)
     target_link_libraries(umicom PRIVATE Umicom::ai)
 endif()
 
-# Applications reuse exact-source partitioning instead of hashing source names.
-target_sources(umicom_ai PRIVATE "${_umicom_training_data_root}/src/ai/training/jsonl_partition.c")
+# The AI SDK and CLI can partition JSONL without the optional native trainer.
+# Own its group splitter and deterministic RNG in the same archive. Integrated
+# training consumers link this owner and standalone training still builds them.
+target_sources(umicom_ai PRIVATE
+    "${_umicom_training_data_root}/src/ai/training/jsonl_partition.c"
+    "${_umicom_training_data_root}/src/ai/training/dataset_group_split.c"
+    "${_umicom_training_data_root}/src/ai/training/initialisation.c")
 
 # Keep transcendental normal sampling outside the existing integer RNG owner.
 target_sources(umicom_ai PRIVATE "${_umicom_training_data_root}/src/ai/training/normal_noise.c")

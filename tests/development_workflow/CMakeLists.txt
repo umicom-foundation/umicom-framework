@@ -28,7 +28,13 @@ foreach(kind lldb gdb)
         set(_native_probe_args --version)
     else()
         set(_native_tool "${UMICOM_TEST_GDB_DAP}")
-        set(_native_probe_args --interpreter=dap --version)
+        # GDB handles --version before validating the requested interpreter.
+        # Keep the old probe for review and use an isolated startup to check DAP.
+        if(FALSE)
+            set(_native_probe_args --interpreter=dap --version)
+        endif()
+        # Ignore user init files and quit without loading or starting a debuggee.
+        set(_native_probe_args --nx --batch --interpreter=dap -ex quit)
     endif()
     # Keep the selected tool and its startup diagnostic available even when the
     # native test must skip. A missing runtime DLL is different from an absent
@@ -67,6 +73,17 @@ foreach(kind lldb gdb)
         "${CMAKE_CURRENT_SOURCE_DIR}/notes_debuggee.c" "13" "${kind}")
     set_tests_properties(framework.development_workflow.native_debug.${kind} PROPERTIES TIMEOUT 45 RUN_SERIAL TRUE SKIP_RETURN_CODE 77
         LABELS "framework;debug;external-debugger;regression")
+    if(kind STREQUAL "gdb" AND "${_native_probe}" STREQUAL "0")
+        # Keep the production arguments and change only the interpreter. The
+        # regression fails if a future version-only probe bypasses validation.
+        set(_gdb_rejection_args ${_native_probe_args})
+        list(TRANSFORM _gdb_rejection_args REPLACE "^--interpreter=dap$"
+            "--interpreter=umicom-no-such-interpreter")
+        add_test(NAME framework.development_workflow.gdb_probe.reject_unknown_interpreter
+            COMMAND "${_native_tool}" ${_gdb_rejection_args})
+        set_tests_properties(framework.development_workflow.gdb_probe.reject_unknown_interpreter PROPERTIES
+            TIMEOUT 10 WILL_FAIL TRUE LABELS "framework;debug;external-debugger;regression")
+    endif()
 endforeach()
 
 # The deterministic peer exercises a real child process but does not claim to be

@@ -43,6 +43,12 @@ typedef struct UmiTestRunSummary {
 /**
  * Provide the test runner run case operation used by this module and its client
  * applications.
+ *
+ * The program is stored separately from the argument text. Spaces and tabs
+ * separate arguments. Double quotes at the start of an argument group its
+ * contents, including an empty string. Backslashes are passed literally.
+ * An incomplete quoted argument or an over-limit argument count produces a
+ * failed result with exit code -1 before any process starts.
  */
 UmiStatus umi_test_runner_run_case(const UmiTestCase *test_case,
                                    UmiCancellationToken *cancellation,
