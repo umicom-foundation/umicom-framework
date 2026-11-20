@@ -468,6 +468,67 @@ static int FailureLocalPath(const char *path)
     }
     return shaped;
 }
+
+/* Commit only a complete expression and a local source location. The capture
+ * retains the original CRT line, while the link carries the failing check. */
+static UmiStatus FinishNativeAssertion(UmiCompilerDiagnosticFields *fields,
+    const char *expression, const char *end)
+{
+    if (!FailureLocalPath(fields->path)) return UMI_STATUS_NOT_FOUND;
+    if (!CopyField(fields->message, sizeof fields->message, expression, end))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (fields->message[0] == '\0') return UMI_STATUS_NOT_FOUND;
+    fields->severity = UMI_DIAGNOSTIC_ERROR;
+    return UMI_STATUS_OK;
+}
+
+/* The Windows C runtime prints the expression before the file and line.
+ * If an unquoted file delimiter also occurs inside either field, the runtime
+ * spelling is ambiguous. Preserve the line as evidence without guessing. */
+static UmiStatus ParseWindowsAssertion(const char *expression, const char *end,
+    UmiCompilerDiagnosticFields *fields)
+{
+    const char *fileLabel = strstr(expression, ", file ");
+    if (fileLabel == NULL || fileLabel == expression) return UMI_STATUS_NOT_FOUND;
+    const char *path = fileLabel + sizeof(", file ") - 1U;
+    if (strstr(path, ", file ") != NULL) return UMI_STATUS_NOT_FOUND;
+    const char *lineLabel = NULL;
+    /* Use the final line delimiter so a comma or the words 'line number'
+     * inside an actual filename remain part of the source path. */
+    for (const char *match = strstr(path, ", line "); match != NULL;
+         match = strstr(match + sizeof(", line ") - 1U, ", line "))
+        lineLabel = match;
+    if (lineLabel == NULL || !ParsePosition(lineLabel + sizeof(", line ") - 1U, end, &fields->line))
+        return UMI_STATUS_NOT_FOUND;
+    if (!CopyField(fields->path, sizeof fields->path, path, lineLabel))
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+    return FinishNativeAssertion(fields, expression, fileLabel);
+}
+
+/* glibc prints a program name, file and line, optionally a function, and a
+ * delimited expression. Require the complete failure ending before treating
+ * the intervening path and line as navigation evidence. */
+static UmiStatus ParseGlibcAssertion(const char *first, const char *end,
+    UmiCompilerDiagnosticFields *fields)
+{
+    static const char marker[] = ": Assertion `";
+    static const char ending[] = "' failed.";
+    const char *program = strstr(first, ": ");
+    if (program == NULL || program == first) return UMI_STATUS_NOT_FOUND;
+    const char *location = program + 2U;
+    const char *assertion = strstr(location, marker);
+    if (assertion == NULL) return UMI_STATUS_NOT_FOUND;
+    const char *expression = assertion + sizeof marker - 1U;
+    if ((size_t)(end - expression) <= sizeof ending - 1U ||
+        memcmp(end - (sizeof ending - 1U), ending, sizeof ending - 1U) != 0)
+        return UMI_STATUS_NOT_FOUND;
+    const char *locationEnd = strstr(location, ": ");
+    UmiStatus status = ParseLocation(location, locationEnd, fields);
+    if (status != UMI_STATUS_OK) return status;
+    if (fields->column != 0U) return UMI_STATUS_NOT_FOUND;
+    return FinishNativeAssertion(fields, expression, end - (sizeof ending - 1U));
+}
+
 UmiStatus UmiTestFailureParseText(const char *text, UmiCompilerDiagnosticFields *outFields)
 {
     if (text == NULL || outFields == NULL) return UMI_STATUS_INVALID_ARGUMENT;
@@ -483,13 +544,25 @@ UmiStatus UmiTestFailureParseText(const char *text, UmiCompilerDiagnosticFields 
         while (*first == ' ' || *first == '\t') ++first;
     }
     UmiCompilerDiagnosticFields candidate = {0};
+    /* Run native assertion grammar first. An expression may contain strings
+     * like "error:" that would otherwise look like a compiler diagnostic. */
+    const char *end = first + strlen(first);
+    static const char windowsHeader[] = "Assertion failed: ";
+    if (strncmp(first, windowsHeader, sizeof windowsHeader - 1U) == 0) {
+        status = ParseWindowsAssertion(first + sizeof windowsHeader - 1U, end, &candidate);
+        if (status == UMI_STATUS_OK) *outFields = candidate;
+        return status;
+    }
+    status = ParseGlibcAssertion(first, end, &candidate);
+    if (status == UMI_STATUS_OK) { *outFields = candidate; return status; }
+    if (status != UMI_STATUS_NOT_FOUND) return status;
+
     status = UmiCompilerDiagnosticParseText(first, &candidate);
     if (status == UMI_STATUS_OK) {
         if (!FailureLocalPath(candidate.path)) return UMI_STATUS_NOT_FOUND;
         *outFields = candidate; return UMI_STATUS_OK;
     }
     if (status != UMI_STATUS_NOT_FOUND) return status;
-    const char *end = first + strlen(first);
     for (const char *separator = first; separator < end; ++separator) {
         if (*separator != ':' || (separator[1] != ' ' && separator[1] != '\t' && separator[1] != '\0')) continue;
         memset(&candidate, 0, sizeof(candidate));

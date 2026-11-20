@@ -21,6 +21,7 @@
 
 #include "umicom/integration/suite_runtime.h"
 #include "umicom/integration/readiness_gate.h"
+#include "umicom/integration/reply_binding.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -855,5 +856,113 @@ UmiStatus UmiIntegrationReadinessGateSnapshot(
     candidate.pending = member->pending;
     candidate.confirmed = member->confirmed;
     *outSnapshot = candidate;
+    return UMI_STATUS_OK;
+}
+
+/* The reply policy reuses the suite's readiness snapshot. Both admission
+ * and completion use the current member instead of caching job readiness. */
+static UmiStatus CheckReplyPeer(const UmiIntegrationReadinessGate *gate,
+    const char *applicationId, const UmiIntegrationChannelPeer *peer)
+{
+    UmiIntegrationReadinessSnapshot snapshot;
+    UmiStatus status = UmiIntegrationReadinessGateSnapshot(gate, applicationId, &snapshot);
+    if (status != UMI_STATUS_OK) return status;
+    if (!snapshot.confirmed || snapshot.processToken != peer->processToken ||
+        snapshot.processGeneration != peer->processGeneration)
+        return UMI_STATUS_PERMISSION_DENIED;
+    return UMI_STATUS_OK;
+}
+
+/* Validate the caller-owned peer shape without implying any credential check. */
+static bool IsReplyPeer(const UmiIntegrationChannelPeer *peer)
+{
+    return peer != NULL && peer->connectionIdentity != 0U && peer->processToken != 0U &&
+        peer->processGeneration != 0U;
+}
+
+void UmiIntegrationReplyBindingInit(UmiIntegrationReplyBinding *binding)
+{
+    /* Use a size marker to distinguish an initialized empty slot from an
+     * object built for another contract or left all-zero by the caller. */
+    if (binding != NULL)
+        *binding = (UmiIntegrationReplyBinding){.structureSize = (uint32_t)sizeof *binding};
+}
+
+UmiStatus UmiIntegrationReplyBindingBegin(UmiIntegrationReplyBinding *binding,
+    const UmiIntegrationReadinessGate *gate, const UmiIntegrationChannelPeer *peer,
+    const UmiIntegrationEnvelope *request)
+{
+    if (binding == NULL || gate == NULL || !IsReplyPeer(peer) || request == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (binding->structureSize != sizeof *binding || binding->state != UMI_INTEGRATION_REPLY_EMPTY)
+        return UMI_STATUS_INVALID_STATE;
+
+    /* Validate the full fixed-size envelope before inspecting or copying its
+     * strings. A request without a correlation ID cannot own a reply. */
+    UmiStatus status = umi_integration_envelope_validate(request);
+    if (status != UMI_STATUS_OK) return status;
+    if ((request->kind != UMI_INTEGRATION_MESSAGE_COMMAND && request->kind != UMI_INTEGRATION_MESSAGE_QUERY) ||
+        request->correlation_id[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    status = CheckReplyPeer(gate, request->target_application, peer);
+    if (status != UMI_STATUS_OK) return status;
+
+    /* Retain only the routing identities required to recognize a result.
+     * Release the caller's request and transport metadata after this copy. */
+    UmiIntegrationReplyBinding pending = {
+        .structureSize = (uint32_t)sizeof pending,
+        .state = UMI_INTEGRATION_REPLY_PENDING,
+        .peer = *peer,
+    };
+    memcpy(pending.requester, request->source_application, strlen(request->source_application) + 1U);
+    memcpy(pending.responder, request->target_application, strlen(request->target_application) + 1U);
+    memcpy(pending.topic, request->topic, strlen(request->topic) + 1U);
+    memcpy(pending.correlationId, request->correlation_id, strlen(request->correlation_id) + 1U);
+    *binding = pending;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiIntegrationReplyBindingAccept(UmiIntegrationReplyBinding *binding,
+    const UmiIntegrationReadinessGate *gate, const UmiIntegrationChannelPeer *peer,
+    const UmiIntegrationEnvelope *reply)
+{
+    if (binding == NULL || gate == NULL || !IsReplyPeer(peer) || reply == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (binding->structureSize != sizeof *binding) return UMI_STATUS_INVALID_STATE;
+    if (binding->state == UMI_INTEGRATION_REPLY_CANCELLED) return UMI_STATUS_CANCELLED;
+    if (binding->state != UMI_INTEGRATION_REPLY_PENDING) return UMI_STATUS_INVALID_STATE;
+
+    /* A replacement connection can use the same process instance. Check the
+     * separate connection identity as well as both process identifiers. */
+    if (peer->connectionIdentity != binding->peer.connectionIdentity ||
+        peer->processToken != binding->peer.processToken ||
+        peer->processGeneration != binding->peer.processGeneration)
+        return UMI_STATUS_PERMISSION_DENIED;
+    UmiStatus status = CheckReplyPeer(gate, binding->responder, peer);
+    if (status != UMI_STATUS_OK) return status;
+
+    /* All decoded strings are bounded. Only the corresponding response can
+     * consume this slot, so unrelated replies leave the request pending. */
+    status = umi_integration_envelope_validate(reply);
+    if (status != UMI_STATUS_OK) return status;
+    if (reply->kind != UMI_INTEGRATION_MESSAGE_RESPONSE ||
+        strncmp(reply->source_application, binding->responder, sizeof binding->responder) != 0 ||
+        strncmp(reply->target_application, binding->requester, sizeof binding->requester) != 0 ||
+        strncmp(reply->topic, binding->topic, sizeof binding->topic) != 0 ||
+        strncmp(reply->correlation_id, binding->correlationId, sizeof binding->correlationId) != 0)
+        return UMI_STATUS_NOT_FOUND;
+    binding->state = UMI_INTEGRATION_REPLY_COMPLETED;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiIntegrationReplyBindingCancel(UmiIntegrationReplyBinding *binding)
+{
+    if (binding == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (binding->structureSize != sizeof *binding) return UMI_STATUS_INVALID_STATE;
+    if (binding->state == UMI_INTEGRATION_REPLY_CANCELLED) return UMI_STATUS_OK;
+    if (binding->state != UMI_INTEGRATION_REPLY_PENDING) return UMI_STATUS_INVALID_STATE;
+    /* A local terminal state lets the owner refuse a late reply without
+     * assuming that remote work was ever interrupted. */
+    binding->state = UMI_INTEGRATION_REPLY_CANCELLED;
     return UMI_STATUS_OK;
 }

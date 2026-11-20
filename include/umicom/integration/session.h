@@ -44,6 +44,7 @@ typedef struct UmiIntegrationSession {
 /**
  * Initialise integration session from caller-provided values so later operations receive a
  * known state.
+ * The inputs may use existing session text. Failure leaves the session unchanged.
  */
 UmiStatus umi_integration_session_init(
     UmiIntegrationSession *session,
@@ -52,6 +53,11 @@ UmiStatus umi_integration_session_init(
 /**
  * Provide the integration session next correlation operation used by this module and its
  * client applications.
+ * The caller serialises use and provides output storage disjoint from the session.
+ * The counter issues positive decimal values through UINT64_MAX, then returns
+ * CAPACITY_EXCEEDED until a new session is established. Errors do not change
+ * either the output buffer or the session. A session ID can be too long to
+ * fit, together with its suffix, into an envelope's fixed correlation field.
  */
 UmiStatus umi_integration_session_next_correlation(
     UmiIntegrationSession *session,

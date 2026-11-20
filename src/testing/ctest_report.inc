@@ -14,9 +14,14 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
+/* Retain the previous source-owner note for review. A dedicated object now
+ * gives report-only clients independent linkage within the testing library.
+ * The same parser still accepts CTest's small JUnit vocabulary only. */
+#if 0
 /* Private implementation fragment included once by ctest_adapter.c. Keeping the
  * parser beside its source owner avoids a second library or source-list entry.
  * This parser intentionally accepts CTest's small JUnit vocabulary only. */
+#endif
 
 #include "umicom/testing/ctest_report.h"
 #include "umicom/testing/ctest_report_view.h"

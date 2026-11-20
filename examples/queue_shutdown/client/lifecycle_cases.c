@@ -75,8 +75,89 @@ static int WaitForEntry(ConsumerWork *work)
     return 0;
 }
 
+/* Hold a running callback while observing the closed queue. This guarantees
+ * that the exercise sees both running and pending work during the stop. */
+static int DrainRunningAndPending(void)
+{
+    UmiTaskQueue *queue = NULL;
+    UmiTask *running = NULL;
+    UmiTask *pending = NULL;
+    UmiTask *refused = NULL;
+    UmiTaskQueueConfig settings = {1U, 2U};
+    ConsumerWork *work = calloc(1U, sizeof(*work));
+    UmiTaskQueueShutdownSnapshot snapshot;
+    int result = 1;
+    if (work == NULL) return result;
+    atomic_init(&work->started, 0);
+    atomic_init(&work->release, 0);
+    atomic_init(&work->entered, 0);
+    atomic_init(&work->returned, 0);
+    work->result = UMI_STATUS_OK;
+    UmiTaskConfig input = {"Drain accepted work", Work, work, NULL, NULL};
+
+    if (!ExpectStatus(umi_task_queue_create(&settings, &queue), UMI_STATUS_OK, "create drain queue") ||
+        !ExpectStatus(umi_task_create(&input, &running), UMI_STATUS_OK, "create running task") ||
+        !ExpectStatus(umi_task_queue_submit(queue, running), UMI_STATUS_OK, "admit running task") ||
+        !WaitForEntry(work) ||
+        !ExpectStatus(umi_task_create(&input, &pending), UMI_STATUS_OK, "create pending task") ||
+        !ExpectStatus(umi_task_queue_submit(queue, pending), UMI_STATUS_OK, "admit pending task")) goto cleanup;
+
+    /* A drain closes admission without cancelling either accepted task. The
+     * spare queue slot makes refusal independent of capacity exhaustion. */
+    if (!ExpectStatus(UmiTaskQueueRequestShutdown(queue, 0, 0), UMI_STATUS_OK, "close drain admission") ||
+        !ExpectStatus(umi_task_create(&input, &refused), UMI_STATUS_OK, "create late task") ||
+        !ExpectStatus(umi_task_queue_submit(queue, refused), UMI_STATUS_INVALID_STATE, "refuse late task") ||
+        umi_task_state(refused) != UMI_TASK_CREATED ||
+        !ExpectStatus(UmiTaskQueueCaptureShutdown(queue, &snapshot), UMI_STATUS_OK, "observe outstanding work"))
+        goto cleanup;
+    if (snapshot.phase != UMI_TASK_QUEUE_STOP_REQUESTED || snapshot.tasks.running != 1U ||
+        snapshot.tasks.queued != 1U || snapshot.tasks.submitted != 2U || snapshot.tasks.completed != 0U) {
+        fputs("Expected one running and one queued task after admission closed.\n", stderr);
+        goto cleanup;
+    }
+
+    /* The controller can release its wait now and join the actual worker.
+     * Inspect each retained task as well as the joint queue counters. */
+    atomic_store(&work->release, 1);
+    if (!ExpectStatus(umi_task_queue_shutdown(queue, 0), UMI_STATUS_OK, "join drained worker") ||
+        !ExpectStatus(UmiTaskQueueCaptureShutdown(queue, &snapshot), UMI_STATUS_OK, "observe finished drain"))
+        goto cleanup;
+    if (snapshot.phase != UMI_TASK_QUEUE_STOPPED || snapshot.tasks.running != 0U || snapshot.tasks.queued != 0U ||
+        snapshot.tasks.submitted != 2U || snapshot.tasks.completed != 2U || snapshot.tasks.cancelled != 0U ||
+        snapshot.tasks.failed != 0U || atomic_load(&work->entered) != 2 || atomic_load(&work->returned) != 2 ||
+        umi_task_state(running) != UMI_TASK_SUCCEEDED || umi_task_result(running) != UMI_STATUS_OK ||
+        umi_task_state(pending) != UMI_TASK_SUCCEEDED || umi_task_result(pending) != UMI_STATUS_OK) {
+        fputs("Expected both accepted tasks to complete successfully before release.\n", stderr);
+        goto cleanup;
+    }
+    if (!ExpectStatus(UmiTaskQueueReleaseStopped(&queue), UMI_STATUS_OK, "release stopped drain") || queue != NULL)
+        goto cleanup;
+    fputs("Drain closed admission with one running and one queued task. Both completed before release.\n", stdout);
+    result = 0;
+
+cleanup:
+    if (queue != NULL) {
+        /* Failure cleanup may cancel work, but it still preserves borrowed
+         * heap state until native join and owner release have been confirmed. */
+        atomic_store(&work->release, 1);
+        (void)UmiTaskQueueRequestShutdown(queue, 1, 1);
+        if (!ExpectStatus(umi_task_queue_shutdown(queue, 1), UMI_STATUS_OK, "join after drain failure") ||
+            !ExpectStatus(UmiTaskQueueReleaseStopped(&queue), UMI_STATUS_OK, "release after drain failure"))
+            return 1;
+    }
+    umi_task_destroy(refused);
+    umi_task_destroy(pending);
+    umi_task_destroy(running);
+    free(work);
+    return result;
+}
+
 int UmiShutdownConsumerRunCase(const char *name)
 {
+    /* Keep the earlier drain, cancel and worker scenarios as independent
+     * exercises. The busy-drain case has its own controlled admission gate. */
+    if (name != NULL && strcmp(name, "drain-running-and-pending") == 0)
+        return DrainRunningAndPending();
     const int cancel = name != NULL && strcmp(name, "cancel-running-and-pending") == 0;
     const int rejected = name != NULL && strcmp(name, "rejected-reusable") == 0;
     const int callerRelease = name != NULL && strcmp(name, "caller-release") == 0;

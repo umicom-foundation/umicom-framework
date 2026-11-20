@@ -32,6 +32,36 @@ if(BUILD_TESTING AND TARGET Umicom::integration)
         TIMEOUT 30 LABELS "framework;integration;readiness;link;regression")
 endif()
 
+# Qualify the same public protocol over the existing owned process channel.
+# Both test executables use Framework targets and need no application or GUI.
+if(BUILD_TESTING AND TARGET Umicom::integration AND TARGET Umicom::platform AND NOT CMAKE_CROSSCOMPILING
+        AND (WIN32 OR CMAKE_SYSTEM_NAME STREQUAL "Linux"))
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomProcessChannel.cmake")
+    add_executable(umicom-integration-channel-worker
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/integration/native_channel_worker.c")
+    target_link_libraries(umicom-integration-channel-worker PRIVATE Umicom::integration)
+    add_executable(umicom-integration-native-channel-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/integration/test_native_channel.c")
+    target_link_libraries(umicom-integration-native-channel-test PRIVATE
+        Umicom::integration Umicom::platform Umicom::process_channel)
+    add_dependencies(umicom-integration-native-channel-test umicom-integration-channel-worker)
+    foreach(_channel_target IN ITEMS umicom-integration-channel-worker umicom-integration-native-channel-test)
+        set_target_properties(${_channel_target} PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+        umicom_apply_warnings(${_channel_target})
+        umicom_apply_sanitizers(${_channel_target})
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(${_channel_target})
+        endif()
+    endforeach()
+    foreach(_channel_case IN ITEMS ready wire-version cancelled truncated different-topic)
+        add_test(NAME "framework.integration.native_channel.${_channel_case}"
+            COMMAND umicom-integration-native-channel-test "${_channel_case}"
+                "$<TARGET_FILE:umicom-integration-channel-worker>" "$<TARGET_FILE_DIR:umicom-integration-channel-worker>")
+        set_tests_properties("framework.integration.native_channel.${_channel_case}" PROPERTIES
+            TIMEOUT 40 LABELS "framework;integration;readiness;native-channel;regression")
+    endforeach()
+endif()
+
 # The ALL archive check does not run when a developer builds one executable by
 # name. Make these focused builds inspect the owning archive before linking, so
 # a missing definition produces a named archive report instead of many opaque

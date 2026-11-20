@@ -19,6 +19,7 @@
 
 #include "umicom/testing/ctest_adapter.h"
 #include "umicom/testing/ctest_output.h"
+#include "umicom/testing/ctest_report.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -245,7 +246,12 @@ UmiStatus UmiCtestDiscoverConfigured(const char *buildDirectory,
 }
 
 
+/* Retain the earlier compiled-in parser placement for review. The report
+ * object now owns those same definitions so read-only clients need not pull
+ * this process runner, and live execution calls the existing public parser. */
+#if 0
 #include "ctest_report.inc"
+#endif
 #include "ctest_report_files.inc"
 
 /* Retain the most recent diagnostic bytes, where compilers and CTest normally

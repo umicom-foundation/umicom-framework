@@ -185,7 +185,9 @@ function(umicom_add_developer_capability_tests)
     if(COMMAND umicom_register_validation_target)
         umicom_register_validation_target(umicom-test-workspace-filter-failure)
     endif()
-    foreach(case allocation stale revision-overflow retry)
+    # Exercise the last revision through related presentation setters as well.
+    foreach(case allocation stale revision-overflow retry
+            refresh-revision-limit session-revision-limit run-mode-revision-limit last-revision)
         add_test(NAME framework.test.workspace_filter_failure.${case} COMMAND umicom-test-workspace-filter-failure "${case}")
         set_tests_properties(framework.test.workspace_filter_failure.${case} PROPERTIES TIMEOUT 120 LABELS "framework;test-platform;transaction;regression")
         if(case STREQUAL "large")

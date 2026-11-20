@@ -228,6 +228,80 @@ static int TestWireCodecAndSequence(void)
     return 0;
 }
 
+/* Check true EOF independently of empty reads, completion and replay. */
+static int TestWireEndOfStream(void)
+{
+    const UmiIntegrationEnvelope request = {
+        .kind = UMI_INTEGRATION_MESSAGE_QUERY,
+        .source_application = "fixture.controller",
+        .target_application = "fixture.worker",
+        .topic = "service.status",
+        .correlation_id = "request-17",
+        .payload = "status"
+    };
+    uint8_t frame[UMI_INTEGRATION_WIRE_MAX_BYTES];
+    size_t length = 0U;
+    CHECK(UmiIntegrationEnvelopeWireEncode(&request, 9U, frame, sizeof(frame), &length) == UMI_STATUS_OK);
+
+    UmiIntegrationWireDecoder decoder;
+    UmiIntegrationWireDecoderInit(&decoder);
+    CHECK(UmiIntegrationWireDecoderFinish(NULL) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(UmiIntegrationWireDecoderFinish(&decoder) == UMI_STATUS_OK);
+
+    /* Try every possible interrupted header and body. A live transport can
+     * supply an empty chunk and later finish the same frame successfully. */
+    for (size_t prefix = 1U; prefix < length; ++prefix) {
+        UmiIntegrationEnvelope reply = {.kind = UMI_INTEGRATION_MESSAGE_RESPONSE};
+        uint64_t sequence = 17U;
+        size_t consumed = 0U;
+        bool complete = false;
+        CHECK(UmiIntegrationWireDecoderFeed(&decoder, frame, prefix,
+              &consumed, &complete, &reply, &sequence) == UMI_STATUS_OK);
+        CHECK(consumed == prefix && !complete && sequence == 17U);
+        CHECK(UmiIntegrationWireDecoderFeed(&decoder, NULL, 0U,
+              &consumed, &complete, &reply, &sequence) == UMI_STATUS_OK);
+        CHECK(consumed == 0U && !complete && sequence == 17U);
+        UmiIntegrationWireDecoder retained;
+        (void)memcpy(&retained, &decoder, sizeof(retained));
+        CHECK(UmiIntegrationWireDecoderFinish(&decoder) == UMI_STATUS_PARSE_ERROR);
+        CHECK(memcmp(&retained, &decoder, sizeof(decoder)) == 0);
+        CHECK(UmiIntegrationWireDecoderFeed(&decoder, frame + prefix, length - prefix,
+              &consumed, &complete, &reply, &sequence) == UMI_STATUS_OK);
+        CHECK(consumed == length - prefix && complete && sequence == 9U);
+        CHECK(strcmp(reply.correlation_id, request.correlation_id) == 0);
+        CHECK(UmiIntegrationWireDecoderFinish(&decoder) == UMI_STATUS_OK);
+    }
+
+    /* A receiver can keep a previously copied reply, but residual bytes from
+     * the next frame must still be reported when the connection closes. */
+    UmiIntegrationEnvelope reply = {0};
+    uint64_t sequence = 0U;
+    size_t consumed = 0U;
+    bool complete = false;
+    CHECK(UmiIntegrationWireDecoderFeed(&decoder, frame, length,
+          &consumed, &complete, &reply, &sequence) == UMI_STATUS_OK);
+    CHECK(complete && sequence == 9U);
+    CHECK(UmiIntegrationWireDecoderFeed(&decoder, frame, length - 1U,
+          &consumed, &complete, &reply, &sequence) == UMI_STATUS_OK);
+    CHECK(!complete && sequence == 9U && UmiIntegrationWireDecoderFinish(&decoder) == UMI_STATUS_PARSE_ERROR);
+    CHECK(strcmp(reply.correlation_id, request.correlation_id) == 0);
+    UmiIntegrationWireDecoderReset(&decoder);
+    CHECK(UmiIntegrationWireDecoderFinish(&decoder) == UMI_STATUS_OK);
+
+    /* A rejected format remains a protocol failure at EOF. Corrupt caller
+     * metadata is reported separately from correctly tracked partial input. */
+    frame[4] = 0U;
+    CHECK(UmiIntegrationWireDecoderFeed(&decoder, frame, length,
+          &consumed, &complete, &reply, &sequence) == UMI_STATUS_PARSE_ERROR);
+    CHECK(UmiIntegrationWireDecoderFinish(&decoder) == UMI_STATUS_PARSE_ERROR);
+    UmiIntegrationWireDecoderReset(&decoder);
+    decoder.buffered = sizeof(decoder.bytes) + 1U;
+    CHECK(UmiIntegrationWireDecoderFinish(&decoder) == UMI_STATUS_INVALID_STATE);
+    CHECK(umi_integration_envelope_validate(&reply) == UMI_STATUS_OK);
+    printf("Checked clean EOF, %zu incomplete prefixes, a partial second frame and a poisoned decoder.\n", length - 1U);
+    return 0;
+}
+
 /*
  * Start this command or application, report setup failures, and return a process exit code
  * to the operating system.
@@ -242,6 +316,7 @@ int main(void) {
     CHECK(umi_integration_dispatcher_dispatch(&d,&e)==UMI_STATUS_OK);
     CHECK(count==1);
     CHECK(TestWireCodecAndSequence() == 0);
+    CHECK(TestWireEndOfStream() == 0);
     /* The same legacy dispatcher now refuses an unterminated topic before
      * its matching strcmp, without dispatching a single handler. */
     (void)memset(e.topic, 'x', sizeof(e.topic));

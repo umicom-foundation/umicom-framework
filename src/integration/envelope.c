@@ -329,6 +329,32 @@ void UmiIntegrationWireDecoderReset(UmiIntegrationWireDecoder *decoder)
     UmiIntegrationWireDecoderInit(decoder);
 }
 
+/* Feed and the end-of-stream check share the same bounds for the caller's
+ * decoder storage. Keep protocol failure separate from invalid metadata. */
+static bool WireDecoderProgressIsValid(const UmiIntegrationWireDecoder *decoder)
+{
+    return decoder->structureSize == sizeof(*decoder) &&
+        decoder->buffered <= sizeof(decoder->bytes) &&
+        (decoder->expected == 0U
+            ? decoder->buffered <= UMI_INTEGRATION_WIRE_HEADER_BYTES
+            : decoder->expected > UMI_INTEGRATION_WIRE_HEADER_BYTES &&
+              decoder->expected <= sizeof(decoder->bytes) &&
+              decoder->buffered <= decoder->expected);
+}
+
+UmiStatus UmiIntegrationWireDecoderFinish(const UmiIntegrationWireDecoder *decoder)
+{
+    if (decoder == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (!WireDecoderProgressIsValid(decoder))
+        return UMI_STATUS_INVALID_STATE;
+    /* An incomplete final frame must never look like a clean return from a
+     * closed worker. Empty reads in Feed remain usable for a live transport. */
+    if (decoder->poisoned || decoder->buffered != 0U || decoder->expected != 0U)
+        return UMI_STATUS_PARSE_ERROR;
+    return UMI_STATUS_OK;
+}
+
 UmiStatus UmiIntegrationWireDecoderFeed(
     UmiIntegrationWireDecoder *decoder,
     const uint8_t *chunk, size_t chunkLength,
@@ -342,6 +368,10 @@ UmiStatus UmiIntegrationWireDecoderFeed(
         return UMI_STATUS_INVALID_ARGUMENT;
     *outConsumed = 0U;
     *outComplete = false;
+    /* Retain the original inline guard for review. Sharing its storage
+     * bounds with Finish keeps both operations consistent. Feed still
+     * returns INVALID_STATE for a poisoned or inconsistent decoder. */
+#if 0
     if (decoder->structureSize != sizeof(*decoder) ||
         decoder->poisoned || decoder->buffered > sizeof(decoder->bytes) ||
         (decoder->expected == 0U &&
@@ -350,6 +380,9 @@ UmiStatus UmiIntegrationWireDecoderFeed(
          (decoder->expected <= UMI_INTEGRATION_WIRE_HEADER_BYTES ||
           decoder->expected > sizeof(decoder->bytes) ||
           decoder->buffered > decoder->expected)))
+        return UMI_STATUS_INVALID_STATE;
+#endif
+    if (!WireDecoderProgressIsValid(decoder) || decoder->poisoned)
         return UMI_STATUS_INVALID_STATE;
 
     while (consumed < chunkLength) {

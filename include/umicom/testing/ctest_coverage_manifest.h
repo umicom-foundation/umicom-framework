@@ -37,6 +37,9 @@ typedef struct UmiCtestCoverageManifest UmiCtestCoverageManifest;
  * capability must be empty. require rows supply host/configuration/test and
  * optional capability; source_identity and report must be empty.
  * Every record has seven columns. Blank records and unknown kinds are errors.
+ * To bind exact report bytes, append report_sha256 to the header and use
+ * eight columns throughout. In that form each host supplies 64 lowercase
+ * hexadecimal digits and each requirement leaves the last column empty.
  * Report paths are relative children: no absolute, drive, dot or dot-dot
  * components. Either slash is accepted; no control characters are accepted.
  * Duplicate host/configuration pairs and required name/host/configuration
@@ -65,6 +68,9 @@ void UmiCtestCoverageManifestDestroy(UmiCtestCoverageManifest *manifest);
  * Reports must be regular local files. Parent directory aliases can be followed;
  * this is not a filesystem sandbox. Use a trusted evidence directory.
  * A missing or malformed declared report is an input error, not a skipped test.
+ * In the digest form, any SHA-256 mismatch returns INVALID_STATE before a
+ * partial review is published. The hash checks report bytes; source identity
+ * still comes from the caller and the manifest.
  * A requirement without a declared host is a MISSING_HOST review row.
  * No execution, writes, network requests or source identity discovery occurs.
  * Caller-supplied source identity must match each host's recorded identity.

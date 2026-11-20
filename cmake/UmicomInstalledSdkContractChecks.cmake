@@ -27,6 +27,12 @@ set(_sdk_missing-base-headers "base component has no public header directory")
 list(APPEND _sdk_cases layout-only missing-version-header directory-version-header)
 set(_sdk_missing-version-header "Installed base headers were not found")
 set(_sdk_directory-version-header "Installed base version header is a directory")
+# Exercise complete and partial header shadows with real configure-time checks.
+list(APPEND _sdk_cases shadowed-base-header shadowed-component-header layout-shadowed-header
+    duplicate-header-root non-umicom-include-root)
+foreach(_shadow_case shadowed-base-header shadowed-component-header layout-shadowed-header)
+    set(_sdk_${_shadow_case} "multiple Umicom public header roots")
+endforeach()
 foreach(_case IN LISTS _sdk_cases)
     add_test(NAME "framework.sdk.installed_contract.${_case}"
         COMMAND "${CMAKE_COMMAND}" "-DTEST_CASE=${_case}"

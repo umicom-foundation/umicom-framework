@@ -61,6 +61,14 @@ UmiStatus UmiCtestCoverageManifestReviewFiles(const UmiCtestCoverageManifest *ma
         if (status == UMI_STATUS_OK && maximum == 0)
             status = UMI_STATUS_CAPACITY_EXCEEDED;
         if (status == UMI_STATUS_OK) status = UmiInputFileRead(path, maximum, &bytes, &size);
+        /* Hash the same owned bytes that will be parsed, avoiding a second
+         * open that could read another report after comparison. */
+        if (status == UMI_STATUS_OK && size != 0U && manifest->report_digests != NULL) {
+            char actual[UMI_SHA256_HEX_CAPACITY];
+            status = UmiSha256Buffer(bytes, size, actual);
+            if (status == UMI_STATUS_OK && strcmp(actual, manifest->report_digests[i]) != 0)
+                status = UMI_STATUS_INVALID_STATE;
+        }
         if (status == UMI_STATUS_OK)
             status = size ? UmiCtestReportImport((const char *)bytes, size, &reports[i])
                           : UMI_STATUS_PARSE_ERROR;

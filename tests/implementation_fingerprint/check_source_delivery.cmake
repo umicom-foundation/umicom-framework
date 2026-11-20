@@ -21,6 +21,8 @@ if(NOT result STREQUAL "0")
     message(FATAL_ERROR "Could not initialise the isolated Git fixture: ${error}")
 endif()
 set(sources
+    # The saved report owner must travel with its implementation fragment.
+    src/testing/ctest_report.c
     src/testing/ctest_report.inc src/testing/ctest_report_files.inc src/testing/ctest_job.inc
     include/umicom/testing/ctest_job.h examples/testing/queued_ctest.c
     examples/testing/notes_project/CMakeLists.txt examples/testing/notes_project/notes_tests.c

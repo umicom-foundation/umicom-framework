@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/test_workspace_filter_failure.c
- * PURPOSE: Verify failed catalogue capture never commits a query, selection or summary.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Verify failed catalogue capture never commits a query, selection or summary.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 /* Rename this fixture's source unity so the ordinary library remains available.
@@ -53,12 +60,53 @@ static UmiStatus FilterFixtureInspect(const UmiTestPlatformItemRegistry *items,
 int main(int argc, char **argv)
 {
     if (argc != 2) return 2;
-    const char *cases[] = {"allocation", "stale", "revision-overflow", "retry"}; int known = 0, failed = 0;
+    const char *cases[] = {"allocation", "stale", "revision-overflow", "retry",
+        "refresh-revision-limit", "session-revision-limit", "run-mode-revision-limit", "last-revision"};
+    int known = 0, failed = 0;
     for (size_t i = 0U; i < sizeof cases / sizeof cases[0]; ++i) if (strcmp(argv[1], cases[i]) == 0) known = 1;
     if (!known) return 2;
     UmiTestPlatformService *service = NULL; UmiTestWorkspace *workspace = NULL;
     CHECK(umi_test_platform_service_create(&service) == UMI_STATUS_OK);
     CHECK(umi_test_workspace_create(service, &workspace) == UMI_STATUS_OK);
+
+    /* Exercise the common revision boundary through real workspace actions.
+     * Seed a different selectable value so a refusal must preserve both the
+     * revision and the prior presentation state. */
+    const bool refresh_limit = strcmp(argv[1], "refresh-revision-limit") == 0;
+    const bool session_limit = strcmp(argv[1], "session-revision-limit") == 0;
+    const bool mode_limit = strcmp(argv[1], "run-mode-revision-limit") == 0;
+    const bool last_revision = strcmp(argv[1], "last-revision") == 0;
+    if (refresh_limit || session_limit || mode_limit || last_revision) {
+        if (refresh_limit) {
+            const UmiTestPlatformItemSnapshot item = {
+                .id = "new-test", .name = "New test", .kind = "test", .enabled = 1
+            };
+            CHECK(umi_test_platform_item_registry_upsert(umi_test_platform_service_item(service), &item) == UMI_STATUS_OK);
+        }
+        if (session_limit) {
+            const UmiTestPlatformRunSessionSnapshot session = {.id = "new-run"};
+            CHECK(umi_test_platform_run_session_registry_upsert(umi_test_platform_service_run_session(service), &session) == UMI_STATUS_OK);
+        }
+        workspace->revision = last_revision ? UINT64_MAX - 1U : UINT64_MAX;
+        if (last_revision) {
+            /* The last representable revision is available for one valid
+             * change. The next change must leave that complete state intact. */
+            CHECK(umi_test_workspace_set_run_mode(workspace, UMI_TEST_WORKSPACE_DEBUG) == UMI_STATUS_OK);
+            CHECK(workspace->revision == UINT64_MAX && workspace->run_mode == UMI_TEST_WORKSPACE_DEBUG);
+        }
+        UmiTestWorkspace saved_workspace;
+        memcpy(&saved_workspace, workspace, sizeof saved_workspace);
+        UmiStatus action;
+        if (refresh_limit) action = umi_test_workspace_refresh(workspace);
+        else if (session_limit) action = umi_test_workspace_select_session(workspace, "new-run");
+        else action = umi_test_workspace_set_run_mode(workspace, UMI_TEST_WORKSPACE_COVERAGE);
+        if (action != UMI_STATUS_CAPACITY_EXCEEDED)
+            fprintf(stderr, "Presentation action returned %d and revision %llu.\n",
+                (int)action, (unsigned long long)workspace->revision);
+        CHECK(action == UMI_STATUS_CAPACITY_EXCEEDED);
+        CHECK(memcmp(workspace, &saved_workspace, sizeof saved_workspace) == 0);
+        goto done;
+    }
     UmiTestPlatformFilter filter; umi_test_platform_filter_init(&filter); strcpy(filter.text, "new query");
     UmiTestPlatformFilterSummary summary = {0}, saved;
     summary.matched_count = 71U; saved = summary;

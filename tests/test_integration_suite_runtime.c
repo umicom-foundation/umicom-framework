@@ -21,11 +21,117 @@
 
 #include "umicom/integration/suite_runtime.h"
 #include "umicom/integration/readiness_gate.h"
+#include "umicom/integration/reply_binding.h"
+#include "umicom/integration/session.h"
 #include "umicom/integration/health.h"
 
 #include <stdio.h>
 #include <string.h>
 #define CHECK(expr) do { if (!(expr)) { fprintf(stderr, "CHECK failed: %s:%d: %s\n", __FILE__, __LINE__, #expr); return 1; } } while (0)
+
+/* Drive the same acceptance policy with an in-memory response and a response
+ * reconstructed by the portable wire codec. Transport credentials are injected. */
+static int TestConfirmedReplyBinding(UmiIntegrationReadinessGate *gate)
+{
+    const UmiIntegrationChannelPeer peer = {73U, 42U, 1U};
+    UmiIntegrationSession session;
+    CHECK(umi_integration_session_init(&session, "bank-local", "fixture") == UMI_STATUS_OK);
+    UmiIntegrationEnvelope request = {.kind = UMI_INTEGRATION_MESSAGE_QUERY,
+        .source_application = "studio", .target_application = "bank", .topic = "service.status"};
+    CHECK(umi_integration_session_next_correlation(&session, request.correlation_id,
+        sizeof request.correlation_id) == UMI_STATUS_OK);
+    UmiIntegrationEnvelope reply = {.kind = UMI_INTEGRATION_MESSAGE_RESPONSE,
+        .source_application = "bank", .target_application = "studio", .topic = "service.status", .payload = "ok"};
+    memcpy(reply.correlation_id, request.correlation_id, sizeof reply.correlation_id);
+
+    /* Empty or malformed requests and a different peer cannot publish a
+     * binding. The correct request borrows its context only for the call. */
+    UmiIntegrationReplyBinding binding = {0};
+    CHECK(UmiIntegrationReplyBindingBegin(&binding, gate, &peer, &request) == UMI_STATUS_INVALID_STATE);
+    UmiIntegrationReplyBindingInit(&binding);
+    CHECK(UmiIntegrationReplyBindingCancel(&binding) == UMI_STATUS_INVALID_STATE);
+    UmiIntegrationEnvelope altered = request;
+    altered.correlation_id[0] = '\0';
+    CHECK(UmiIntegrationReplyBindingBegin(&binding, gate, &peer, &altered) == UMI_STATUS_INVALID_ARGUMENT);
+    altered = request;
+    altered.kind = UMI_INTEGRATION_MESSAGE_EVENT;
+    CHECK(UmiIntegrationReplyBindingBegin(&binding, gate, &peer, &altered) == UMI_STATUS_INVALID_ARGUMENT);
+    memset(altered.topic, 'x', sizeof altered.topic);
+    CHECK(UmiIntegrationReplyBindingBegin(&binding, gate, &peer, &altered) == UMI_STATUS_PARSE_ERROR);
+    UmiIntegrationChannelPeer different = peer;
+    different.processToken++;
+    CHECK(UmiIntegrationReplyBindingBegin(&binding, gate, &different, &request) == UMI_STATUS_PERMISSION_DENIED);
+    CHECK(binding.state == UMI_INTEGRATION_REPLY_EMPTY);
+    CHECK(UmiIntegrationReplyBindingBegin(&binding, gate, &peer, &request) == UMI_STATUS_OK);
+    CHECK(UmiIntegrationReplyBindingBegin(&binding, gate, &peer, &request) == UMI_STATUS_INVALID_STATE);
+    memset(request.payload, 'p', sizeof request.payload);
+    memset(request.correlation_id, 'x', sizeof request.correlation_id);
+
+    /* The caller can distinguish wrong routing from wrong transport state.
+     * Neither outcome consumes the matching request. */
+    different = peer;
+    different.connectionIdentity++;
+    CHECK(UmiIntegrationReplyBindingAccept(&binding, gate, &different, &reply) == UMI_STATUS_PERMISSION_DENIED);
+    different = peer;
+    different.processGeneration++;
+    CHECK(UmiIntegrationReplyBindingAccept(&binding, gate, &different, &reply) == UMI_STATUS_PERMISSION_DENIED);
+    altered = reply;
+    altered.kind = UMI_INTEGRATION_MESSAGE_EVENT;
+    CHECK(UmiIntegrationReplyBindingAccept(&binding, gate, &peer, &altered) == UMI_STATUS_NOT_FOUND);
+    altered = reply;
+    altered.source_application[0] = 'B';
+    CHECK(UmiIntegrationReplyBindingAccept(&binding, gate, &peer, &altered) == UMI_STATUS_NOT_FOUND);
+    altered = reply;
+    altered.target_application[0] = 'S';
+    CHECK(UmiIntegrationReplyBindingAccept(&binding, gate, &peer, &altered) == UMI_STATUS_NOT_FOUND);
+    altered = reply;
+    altered.topic[0] = 'S';
+    CHECK(UmiIntegrationReplyBindingAccept(&binding, gate, &peer, &altered) == UMI_STATUS_NOT_FOUND);
+    altered = reply;
+    altered.correlation_id[0] = 'B';
+    CHECK(UmiIntegrationReplyBindingAccept(&binding, gate, &peer, &altered) == UMI_STATUS_NOT_FOUND);
+    memset(altered.correlation_id, 'x', sizeof altered.correlation_id);
+    CHECK(UmiIntegrationReplyBindingAccept(&binding, gate, &peer, &altered) == UMI_STATUS_PARSE_ERROR);
+    CHECK(binding.state == UMI_INTEGRATION_REPLY_PENDING);
+
+    /* Run the actual codec and reject an unsupported frame version before
+     * allowing the canonical sequence and real response to complete. */
+    uint8_t frame[UMI_INTEGRATION_WIRE_MAX_BYTES];
+    size_t length;
+    CHECK(UmiIntegrationEnvelopeWireEncode(&reply, 1U, frame, sizeof frame, &length) == UMI_STATUS_OK);
+    uint8_t version = frame[4];
+    frame[4] = 0U;
+    uint64_t sequence;
+    CHECK(UmiIntegrationEnvelopeWireDecode(frame, length, &altered, &sequence) == UMI_STATUS_PARSE_ERROR);
+    frame[4] = version;
+    CHECK(UmiIntegrationEnvelopeWireDecode(frame, length, &altered, &sequence) == UMI_STATUS_OK);
+    UmiIntegrationWireSequenceWindow window;
+    UmiIntegrationWireSequenceWindowInit(&window);
+    CHECK(UmiIntegrationWireSequenceWindowAccept(&window, sequence) == UMI_STATUS_OK);
+    CHECK(UmiIntegrationReplyBindingAccept(&binding, gate, &peer, &altered) == UMI_STATUS_OK);
+    CHECK(UmiIntegrationReplyBindingAccept(&binding, gate, &peer, &reply) == UMI_STATUS_INVALID_STATE);
+    CHECK(UmiIntegrationReplyBindingCancel(&binding) == UMI_STATUS_INVALID_STATE);
+
+    /* A fresh command can complete directly in memory. A different command
+     * already cancelled locally must refuse even its exact response. */
+    request.kind = UMI_INTEGRATION_MESSAGE_COMMAND;
+    request.payload[0] = '\0';
+    for (unsigned index = 0; index < 2U; ++index) {
+        UmiIntegrationReplyBindingInit(&binding);
+        CHECK(umi_integration_session_next_correlation(&session, request.correlation_id,
+            sizeof request.correlation_id) == UMI_STATUS_OK);
+        memcpy(reply.correlation_id, request.correlation_id, sizeof reply.correlation_id);
+        CHECK(UmiIntegrationReplyBindingBegin(&binding, gate, &peer, &request) == UMI_STATUS_OK);
+        if (index == 1U) {
+            CHECK(UmiIntegrationReplyBindingCancel(&binding) == UMI_STATUS_OK);
+            CHECK(UmiIntegrationReplyBindingCancel(&binding) == UMI_STATUS_OK);
+            CHECK(UmiIntegrationReplyBindingAccept(&binding, gate, &peer, &reply) == UMI_STATUS_CANCELLED);
+        } else {
+            CHECK(UmiIntegrationReplyBindingAccept(&binding, gate, &peer, &reply) == UMI_STATUS_OK);
+        }
+    }
+    return 0;
+}
 
 /* A real suite using the existing registration and lifecycle APIs.  The
  * process token, generation, peer verification and nonce are intentionally
@@ -122,11 +228,25 @@ static int TestInstanceBoundReadiness(void)
     CHECK(UmiIntegrationReadinessGateIsReady(gate));
     CHECK(UmiIntegrationReadinessGateConfirm(gate, "studio", 41U, 7U, challengeStudio, 131U, true) == UMI_STATUS_INVALID_STATE);
 
+    /* Keep one real pending binding while its member stops and restarts. */
+    CHECK(TestConfirmedReplyBinding(gate) == 0);
+    const UmiIntegrationChannelPeer previousPeer = {74U, 42U, 1U};
+    const UmiIntegrationEnvelope pendingRequest = {.kind = UMI_INTEGRATION_MESSAGE_QUERY,
+        .source_application = "studio", .target_application = "bank", .topic = "service.status",
+        .correlation_id = "previous-bank-1"};
+    const UmiIntegrationEnvelope pendingReply = {.kind = UMI_INTEGRATION_MESSAGE_RESPONSE,
+        .source_application = "bank", .target_application = "studio", .topic = "service.status",
+        .correlation_id = "previous-bank-1"};
+    UmiIntegrationReplyBinding previous;
+    UmiIntegrationReplyBindingInit(&previous);
+    CHECK(UmiIntegrationReplyBindingBegin(&previous, gate, &previousPeer, &pendingRequest) == UMI_STATUS_OK);
+
     unchanged = runtime;
     CHECK(UmiIntegrationReadinessGateExit(gate, "studio", 41U, 6U, 0) == UMI_STATUS_PERMISSION_DENIED);
     CHECK(UmiIntegrationReadinessGateExit(gate, "studio", 100U, 7U, 0) == UMI_STATUS_PERMISSION_DENIED);
     CHECK(memcmp(&runtime, &unchanged, sizeof(runtime)) == 0);
     CHECK(UmiIntegrationReadinessGateExit(gate, "bank", 42U, 1U, 0) == UMI_STATUS_OK);
+    CHECK(UmiIntegrationReplyBindingAccept(&previous, gate, &previousPeer, &pendingReply) == UMI_STATUS_PERMISSION_DENIED);
     CHECK(runtime.running_required == 1U && !umi_integration_suite_runtime_is_usable(&runtime));
     CHECK(!UmiIntegrationReadinessGateIsReady(gate));
     CHECK(UmiIntegrationReadinessGateExit(gate, "bank", 42U, 1U, 0) == UMI_STATUS_INVALID_STATE);
@@ -138,6 +258,14 @@ static int TestInstanceBoundReadiness(void)
     CHECK(runtime.failed_required == 0U && runtime.state == UMI_INTEGRATION_SUITE_STARTING);
     CHECK(UmiIntegrationReadinessGateArm(gate, "bank", 44U, 2U, challengeBank, 700U, 100U) == UMI_STATUS_OK);
     CHECK(UmiIntegrationReadinessGateConfirm(gate, "bank", 44U, 2U, challengeBank, 701U, true) == UMI_STATUS_OK);
+    /* Neither the expired connection nor the replacement process can
+     * complete an older pending request, even with a matching envelope. */
+    const UmiIntegrationChannelPeer replacementPeer = {75U, 44U, 2U};
+    CHECK(UmiIntegrationReplyBindingAccept(&previous, gate, &previousPeer, &pendingReply) == UMI_STATUS_PERMISSION_DENIED);
+    CHECK(UmiIntegrationReplyBindingAccept(&previous, gate, &replacementPeer, &pendingReply) == UMI_STATUS_PERMISSION_DENIED);
+    CHECK(previous.state == UMI_INTEGRATION_REPLY_PENDING);
+    CHECK(UmiIntegrationReplyBindingCancel(&previous) == UMI_STATUS_OK);
+    puts("Checked matching replies, cancellation and channel replacement against real suite readiness.");
     CHECK(runtime.state == UMI_INTEGRATION_SUITE_DEGRADED && umi_integration_suite_runtime_is_usable(&runtime));
     CHECK(UmiIntegrationReadinessGateIsReady(gate));
 

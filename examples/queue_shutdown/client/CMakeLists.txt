@@ -31,7 +31,8 @@ set_tests_properties(installed.shutdown.client PROPERTIES TIMEOUT 30 SKIP_RETURN
 
 # The portable blocking-join cases complement the original nonblocking example.
 # They use public installed APIs and do not substitute queue implementations.
-foreach(_case IN ITEMS drain cancel-running-and-pending rejected-reusable
+# The busy drain holds both accepted states before checking the stop request.
+foreach(_case IN ITEMS drain drain-running-and-pending cancel-running-and-pending rejected-reusable
         caller-release callback-error worker-self)
     add_test(NAME installed.shutdown.${_case} COMMAND umicom-shutdown-client ${_case})
     set_tests_properties(installed.shutdown.${_case} PROPERTIES TIMEOUT 30)

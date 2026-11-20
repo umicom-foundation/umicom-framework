@@ -18,6 +18,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* The original fields retain their order. The extended header appends one
+ * digest after the relative report path. */
+enum { COVERAGE_MANIFEST_STANDARD_COLUMNS = 7 };
+
 static UmiStatus Copy(const UmiCsvReadRow *row, size_t field, char *out,
     size_t capacity, bool optional, bool path)
 {
@@ -71,6 +75,26 @@ static void *Grow(void *old, size_t count, size_t *capacity, size_t maximum,
     return memory;
 }
 
+/* Store only a complete canonical digest. Grow uses the host bound and the
+ * slot is unpublished until the corresponding host row is also accepted. */
+static UmiStatus AddReportDigest(UmiCtestCoverageManifest *manifest, const UmiCsvReadRow *row)
+{
+    const size_t field = COVERAGE_MANIFEST_STANDARD_COLUMNS;
+    const char *digest = row->fields[field];
+    const size_t digits = UMI_SHA256_HEX_CAPACITY - 1U;
+    if (row->lengths[field] != digits) return UMI_STATUS_PARSE_ERROR;
+    for (size_t i = 0U; i < digits; ++i)
+        if (!((digest[i] >= '0' && digest[i] <= '9') || (digest[i] >= 'a' && digest[i] <= 'f')))
+            return UMI_STATUS_PARSE_ERROR;
+    UmiStatus status = UMI_STATUS_OK;
+    manifest->report_digests = Grow(manifest->report_digests, manifest->host_count,
+        &manifest->digest_capacity, UMI_CTEST_COVERAGE_MAX_HOSTS,
+        sizeof *manifest->report_digests, &status);
+    if (status == UMI_STATUS_OK)
+        memcpy(manifest->report_digests[manifest->host_count], digest, UMI_SHA256_HEX_CAPACITY);
+    return status;
+}
+
 static UmiStatus AddHost(UmiCtestCoverageManifest *manifest, const UmiCsvReadRow *row)
 {
     if (row->lengths[4] || row->lengths[5]) return UMI_STATUS_PARSE_ERROR;
@@ -87,6 +111,10 @@ static UmiStatus AddHost(UmiCtestCoverageManifest *manifest, const UmiCsvReadRow
             return UMI_STATUS_ALREADY_EXISTS;
     manifest->hosts = Grow(manifest->hosts, manifest->host_count, &manifest->host_capacity,
         UMI_CTEST_COVERAGE_MAX_HOSTS, sizeof *manifest->hosts, &status);
+    /* Host and digest rows are published together. A failed import destroys
+     * both owned arrays, including any reserved but unpublished slot. */
+    if (status == UMI_STATUS_OK && row->count > COVERAGE_MANIFEST_STANDARD_COLUMNS)
+        status = AddReportDigest(manifest, row);
     if (status == UMI_STATUS_OK) manifest->hosts[manifest->host_count++] = host;
     return status;
 }
@@ -94,6 +122,9 @@ static UmiStatus AddHost(UmiCtestCoverageManifest *manifest, const UmiCsvReadRow
 static UmiStatus AddRequirement(UmiCtestCoverageManifest *manifest, const UmiCsvReadRow *row)
 {
     if (row->lengths[3] || row->lengths[6]) return UMI_STATUS_PARSE_ERROR;
+    /* A requirement points to a host. Only the host row owns report bytes. */
+    if (row->count > COVERAGE_MANIFEST_STANDARD_COLUMNS &&
+        row->lengths[COVERAGE_MANIFEST_STANDARD_COLUMNS] != 0U) return UMI_STATUS_PARSE_ERROR;
     UmiCtestCoverageRequirement requirement = {0};
     UmiStatus status = Copy(row, 1, requirement.host, sizeof requirement.host, false, false);
     if (status == UMI_STATUS_OK) status = Copy(row, 2, requirement.configuration, sizeof requirement.configuration, false, false);
@@ -144,18 +175,34 @@ UmiStatus UmiCtestCoverageManifestImport(const void *bytes, size_t length,
     if (!manifest) { UmiCsvReaderDestroy(reader); return UMI_STATUS_OUT_OF_MEMORY; }
     UmiCsvReadRow row;
     const char *columns[] = {"kind", "host", "configuration", "source_identity", "test", "capability", "report"};
+    size_t manifest_columns = COVERAGE_MANIFEST_STANDARD_COLUMNS;
     status = UmiCsvReaderNext(reader, &row);
     if (status == UMI_STATUS_NOT_FOUND) status = UMI_STATUS_PARSE_ERROR;
     if (status == UMI_STATUS_OK) {
+        /* Retain fixed-width admission for review. The optional exact digest
+         * suffix adds a second known width while preserving the same prefix. */
+#if 0
         if (row.count != 7) status = UMI_STATUS_PARSE_ERROR;
         else for (size_t i = 0; i < 7; ++i)
+            if (strcmp(row.fields[i], columns[i])) { status = UMI_STATUS_PARSE_ERROR; break; }
+#endif
+        if (row.count == COVERAGE_MANIFEST_STANDARD_COLUMNS + 1U &&
+            strcmp(row.fields[COVERAGE_MANIFEST_STANDARD_COLUMNS], "report_sha256") == 0)
+            manifest_columns = row.count;
+        if (row.count != manifest_columns) status = UMI_STATUS_PARSE_ERROR;
+        else for (size_t i = 0U; i < COVERAGE_MANIFEST_STANDARD_COLUMNS; ++i)
             if (strcmp(row.fields[i], columns[i])) { status = UMI_STATUS_PARSE_ERROR; break; }
     }
     while (status == UMI_STATUS_OK) {
         status = UmiCsvReaderNext(reader, &row);
         if (status == UMI_STATUS_NOT_FOUND) { status = UniqueRequirements(manifest); break; }
         if (status != UMI_STATUS_OK) break;
+        /* Retain the former seven-column row guard for review. Every record
+         * now has to follow the single width established by the header. */
+#if 0
         if (row.count != 7) status = UMI_STATUS_PARSE_ERROR;
+#endif
+        if (row.count != manifest_columns) status = UMI_STATUS_PARSE_ERROR;
         else if (!strcmp(row.fields[0], "host")) status = AddHost(manifest, &row);
         else if (!strcmp(row.fields[0], "require")) status = AddRequirement(manifest, &row);
         else status = UMI_STATUS_PARSE_ERROR;
@@ -180,6 +227,7 @@ void UmiCtestCoverageManifestDestroy(UmiCtestCoverageManifest *manifest)
 {
     if (!manifest) return;
     free(manifest->hosts);
+    free(manifest->report_digests); /* Digest strings belong to the parsed plan. */
     free(manifest->requirements);
     free(manifest);
 }

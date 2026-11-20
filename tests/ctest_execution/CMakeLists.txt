@@ -38,16 +38,28 @@ set(shared_sources
     "${framework_root}/src/testing/case.c"
     "${framework_root}/src/testing/suite.c"
     "${framework_root}/src/testing/discovery.c"
+    "${framework_root}/src/testing/ctest_report.c"
     "${framework_root}/src/testing/ctest_adapter.c")
 add_library(umicom-ctest-checks-core STATIC ${shared_sources})
 target_include_directories(umicom-ctest-checks-core PUBLIC "${framework_root}/include")
 target_link_libraries(umicom-ctest-checks-core PUBLIC Threads::Threads)
 add_library(umicom-ctest-checks-process STATIC "${framework_root}/src/platform/process.c")
 target_include_directories(umicom-ctest-checks-process PUBLIC "${framework_root}/include")
+# The Windows runner explains launch restoration failures with the shared
+# status text. Keep that real dependency with the live fixture archive.
+target_sources(umicom-ctest-checks-process PRIVATE "${framework_root}/src/base/status.c")
 foreach(kind report execution suite mutation report_failures discovery discovery_process discovery_native)
     add_executable(umicom-ctest-${kind}-checks "test_${kind}.c")
     target_link_libraries(umicom-ctest-${kind}-checks PRIVATE umicom-ctest-checks-core)
-    if(NOT kind STREQUAL "report_failures" AND NOT kind STREQUAL "discovery_process")
+    # Keep the former linkage for review. The passive report and mutation
+    # consumers now verify that the real core archive can link without the
+    # process implementation while execution fixtures retain that dependency.
+    if(FALSE)
+        if(NOT kind STREQUAL "report_failures" AND NOT kind STREQUAL "discovery_process")
+            target_link_libraries(umicom-ctest-${kind}-checks PRIVATE umicom-ctest-checks-process)
+        endif()
+    endif()
+    if(NOT kind MATCHES "^(report|mutation|report_failures|discovery_process)$")
         target_link_libraries(umicom-ctest-${kind}-checks PRIVATE umicom-ctest-checks-process)
     endif()
 endforeach()

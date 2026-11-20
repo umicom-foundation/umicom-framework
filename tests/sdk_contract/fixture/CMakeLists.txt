@@ -124,7 +124,31 @@ elseif(TEST_CASE STREQUAL "aggregate-headers")
 elseif(TEST_CASE STREQUAL "missing-base-headers")
     set_property(TARGET Umicom::base PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
 endif()
-if(TEST_CASE STREQUAL "layout-only" OR TEST_CASE STREQUAL "missing-version-header" OR
+if(TEST_CASE STREQUAL "shadowed-base-header" OR TEST_CASE STREQUAL "layout-shadowed-header")
+    # Place a different version header first. The SDK fingerprint was computed
+    # against the second directory, but a compiler would include the first.
+    file(MAKE_DIRECTORY "${_sdk}/legacy-include/umicom/base")
+    file(WRITE "${_sdk}/legacy-include/umicom/base/version.h" "#define FIXTURE_ABI 999\n")
+    set_property(TARGET Umicom::base PROPERTY INTERFACE_INCLUDE_DIRECTORIES
+        "${_sdk}/legacy-include;${_sdk}/include")
+elseif(TEST_CASE STREQUAL "shadowed-component-header")
+    # A transitive owner can publish a partial view with no version marker.
+    file(MAKE_DIRECTORY "${_sdk}/stale-include/umicom/base")
+    file(WRITE "${_sdk}/stale-include/umicom/base/status.h" "#define FIXTURE_STATUS 123\n")
+    add_library(Umicom::dependency INTERFACE IMPORTED)
+    set_property(TARGET Umicom::dependency PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${_sdk}/stale-include")
+    set_property(TARGET Umicom::base APPEND PROPERTY INTERFACE_LINK_LIBRARIES Umicom::dependency)
+elseif(TEST_CASE STREQUAL "duplicate-header-root")
+    # Canonicalizing the directory keeps duplicate references compatible.
+    set_property(TARGET Umicom::base PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${_sdk}/include;${_sdk}/include/.")
+elseif(TEST_CASE STREQUAL "non-umicom-include-root")
+    # A separate include directory can hold unrelated SDK dependencies.
+    file(MAKE_DIRECTORY "${_sdk}/adapter-include")
+    file(WRITE "${_sdk}/adapter-include/adapter_config.h" "#define ADAPTER_MODE 1\n")
+    set_property(TARGET Umicom::base APPEND PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${_sdk}/adapter-include")
+endif()
+if(TEST_CASE STREQUAL "layout-only" OR TEST_CASE STREQUAL "layout-shadowed-header" OR
+   TEST_CASE STREQUAL "missing-version-header" OR
    TEST_CASE STREQUAL "directory-version-header")
     umicom_require_installed_sdk_layout("${_sdk}" _layout_headers Umicom::base)
     file(REAL_PATH "${_sdk}/include" _expected_headers)

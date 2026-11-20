@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/test_source_navigation/test_open.c
- * PURPOSE: Check actual document navigation, missing sources and unsaved-draft preservation.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Check actual document navigation, missing sources and unsaved-draft preservation.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/test_ui/source_navigation.h"
@@ -56,6 +63,25 @@ int main(int argc, char **argv)
         char *text=NULL; size_t bytes=0; OK(UmiUiDocumentViewModelCopyText(views,view,&text,&bytes));
         CHECK(strcmp(text,strcmp(name,"draft")==0?draft:saved)==0); UmiUiDocumentViewModelFreeText(text);
         CHECK(umi_document_coordinator_count(documents)==1);
+    } else if (strcmp(name, "native-assertion") == 0) {
+        /* A copied runtime line opens the selected file at the start of its
+         * reported line. The document owner keeps the foreground draft. */
+        const char *draft = "first\nunsaved count check\nlast\n";
+        before.dirty = 1;
+        OK(UmiUiDocumentViewModelUpsertText(views, &before, draft, strlen(draft)));
+        OK(UmiTestFailureParseText("4: tests: source notes.c:2: main: Assertion `count == 4' failed.",
+            &link.location));
+        CHECK(link.location.column == 0U);
+        expectUnchanged = 0;
+        OK(UmiTestSourceLinkOpen(documents, &link, root, &offset));
+        CHECK(offset == 6U && umi_document_coordinator_count(documents) == 1U);
+        OK(umi_ui_document_view_model_find(views, view, &after));
+        CHECK(after.cursor_offset == offset && after.dirty);
+        char *current = NULL;
+        size_t length = 0;
+        OK(UmiUiDocumentViewModelCopyText(views, view, &current, &length));
+        CHECK(length == strlen(draft) && strcmp(current, draft) == 0);
+        UmiUiDocumentViewModelFreeText(current);
     } else if (strcmp(name,"other-tab")==0 || strcmp(name,"new-tab-missing-line")==0) {
         const char *draft="first\nretain this other draft\n";
         before.dirty=1; OK(UmiUiDocumentViewModelUpsertText(views,&before,draft,strlen(draft)));

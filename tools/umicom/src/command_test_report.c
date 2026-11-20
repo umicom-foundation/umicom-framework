@@ -264,9 +264,16 @@ static int ReportCoverageFiles(const char *identity, const char *manifest_file)
     UmiCtestCoverageSummary summary;
     if (status == UMI_STATUS_OK) status = UmiCtestCoverageReviewRead(review, &summary);
     if (status != UMI_STATUS_OK) {
+        /* The former diagnostic is retained for review. A saved plan can
+         * now declare exact report bytes in its optional digest column. */
+#if 0
         fprintf(stderr, "Cannot review saved host coverage (status %d). Check the seven-column "
             "CSV manifest, unique hosts/requirements, relative report paths and complete JUnit XML.\n",
             (int)status);
+#endif
+        fprintf(stderr, "Cannot review saved host coverage (status %d). Check the CSV header, "
+            "unique hosts and requirements, relative report paths and complete JUnit XML. "
+            "Compare each declared report_sha256 with its exact saved file bytes.\n", (int)status);
         UmiCtestCoverageReviewDestroy(review);
         return 2;
     }
@@ -311,6 +318,7 @@ int umi_cli_command_test_report(int argc, char **argv)
             "Removed, skipped and disabled tests are not repaired tests.");
         (void)puts("Coverage: umicom test-report --coverage SOURCE_ID MANIFEST.csv\n"
             "CSV paths are relative to the manifest directory. No files are written.\n"
+            "Optional report_sha256 verifies the exact bytes of every declared report.\n"
             "Coverage exit 0 requires nonempty listed requirements all passed on the exact host/configuration/source.\n"
             "Exit 1: outstanding or empty requirements; 2: manifest or report input error.");
         return 0;

@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/diagnostics/failure_parser.h
- * PURPOSE: Recognise source locations in compiler messages and test assertion output.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Recognise source locations in compiler messages and test assertion output.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_DIAGNOSTICS_FAILURE_PARSER_H
@@ -15,6 +22,8 @@ extern "C" {
 /* Parse one line without file I/O. Compiler messages reuse the existing parser.
  * Test assertions accept path:line: message, path:line:column: message, and
  * path(line[,column]): message, with optional CTest verbose "number: " prefix.
+ * Complete Windows C runtime and glibc assertion records return the expression
+ * as the message and a source line with no column.
  * ANSI colour/erase sequences use the existing compiler cleaning rules.
  * A path must look like a local file, not an arbitrary URL or prose prefix.
  * Positions are positive and one-based; missing column is zero. No source path

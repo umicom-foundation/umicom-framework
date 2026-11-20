@@ -45,7 +45,8 @@ if(TEST_CASE STREQUAL "layout-only")
 elseif(TEST_CASE STREQUAL "valid" OR TEST_CASE STREQUAL "spaced-prefix" OR
     TEST_CASE STREQUAL "transitive-cycle" OR TEST_CASE STREQUAL "transitive-link-only" OR
     TEST_CASE STREQUAL "external-target" OR TEST_CASE STREQUAL "inherited-headers" OR
-    TEST_CASE STREQUAL "aggregate-headers" OR TEST_CASE STREQUAL "transitive-inherited-headers")
+    TEST_CASE STREQUAL "aggregate-headers" OR TEST_CASE STREQUAL "transitive-inherited-headers" OR
+    TEST_CASE STREQUAL "duplicate-header-root" OR TEST_CASE STREQUAL "non-umicom-include-root")
     if(NOT _result STREQUAL "0" OR NOT _out MATCHES "Installed Framework layout and public-header identity verified")
         message(FATAL_ERROR "Valid SDK fixture was not accepted; see ${OUTPUT_ROOT}/configure.log")
     endif()

@@ -128,6 +128,15 @@ UmiStatus UmiIntegrationWireDecoderFeed(
     size_t *outConsumed, bool *outComplete,
     UmiIntegrationEnvelope *outEnvelope, uint64_t *outSequence);
 
+/* After the transport positively observes end of stream, check that the
+ * decoder is between complete frames. Return PARSE_ERROR for a partial or
+ * poisoned stream, INVALID_STATE for invalid decoder metadata, and
+ * INVALID_ARGUMENT for NULL. An empty Feed remains a legal input chunk.
+ * This check leaves the decoder and copied replies unchanged. The channel
+ * owner must separately settle outstanding requests and reset the decoder
+ * before it is used with a newly verified peer. */
+UmiStatus UmiIntegrationWireDecoderFinish(const UmiIntegrationWireDecoder *decoder);
+
 #ifdef __cplusplus
 }
 #endif

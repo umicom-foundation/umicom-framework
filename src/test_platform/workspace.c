@@ -239,6 +239,9 @@ UmiStatus umi_test_workspace_refresh(UmiTestWorkspace *workspace)
      * used.
      */
     if (workspace == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Reconciliation can replace selected identities. Require a new
+     * revision before publishing any of those presentation changes. */
+    if (workspace->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     status = reconcile_selection(workspace);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) workspace->revision += 1U;
@@ -701,6 +704,8 @@ UmiStatus umi_test_workspace_select_session(UmiTestWorkspace *workspace,
         &session);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
+        /* Keep a resolved run selection tied to a fresh workspace revision. */
+        if (workspace->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
         status = copy_text(workspace->selected_session_id,
                            sizeof(workspace->selected_session_id), session.id);
     }
@@ -724,6 +729,9 @@ UmiStatus umi_test_workspace_set_run_mode(UmiTestWorkspace *workspace,
         mode > UMI_TEST_WORKSPACE_COVERAGE) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Changing how the workspace prepares a run must advance the revision
+     * before a host can distinguish the new mode from a saved observation. */
+    if (workspace->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
     workspace->run_mode = mode;
     workspace->revision += 1U;
     return UMI_STATUS_OK;

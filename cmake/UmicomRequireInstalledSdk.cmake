@@ -27,6 +27,7 @@ function(umicom_require_installed_sdk_layout prefix out_header_root)
     set(_targets Umicom::base ${ARGN})
     list(REMOVE_DUPLICATES _targets)
     set(_header_root "")
+    set(_public_namespaces)
     set(_visited)
     while(_targets)
         list(POP_FRONT _targets _target)
@@ -72,6 +73,14 @@ function(umicom_require_installed_sdk_layout prefix out_header_root)
                 endif()
                 file(REAL_PATH "${_include}" _header_root)
             endif()
+            # An include path can shadow a public header even if it contains no
+            # version.h. Record every advertised namespace across the selected
+            # components. Different spellings of the same directory are safe.
+            if(IS_DIRECTORY "${_include}/umicom")
+                _umicom_require_sdk_file("${_prefix}" "${_include}/umicom" "${_target} public header namespace")
+                file(REAL_PATH "${_include}/umicom" _public_namespace)
+                list(APPEND _public_namespaces "${_public_namespace}")
+            endif()
         endforeach()
         # Validate all advertised configurations, not merely the current one.
         # Interface-only aggregates have no archive of their own.
@@ -109,6 +118,17 @@ function(umicom_require_installed_sdk_layout prefix out_header_root)
     if(NOT _header_root)
         message(FATAL_ERROR "Installed base headers were not found below the selected prefix")
     endif()
+    # Verify that the directory being fingerprinted is the same one every
+    # requested target exposes to the compiler. CMake otherwise uses the first
+    # matching include while an identity check might inspect a later copy.
+    file(REAL_PATH "${_header_root}/umicom" _verified_namespace)
+    list(REMOVE_DUPLICATES _public_namespaces)
+    foreach(_namespace IN LISTS _public_namespaces)
+        if(NOT _namespace STREQUAL _verified_namespace)
+            message(FATAL_ERROR
+                "Installed SDK has multiple Umicom public header roots: '${_verified_namespace}' and '${_namespace}'")
+        endif()
+    endforeach()
     set(${out_header_root} "${_header_root}" PARENT_SCOPE)
 
 endfunction()

@@ -16,11 +16,13 @@ if(BUILD_TESTING)
             umicom_register_validation_target(${target})
         endif()
     endfunction()
+    # Exercise the original runtime records before checking their retained links.
     umicom_test_source_cases(parser test_parser.c
-        assertions windows compiler ctest-prefix colours unknown invalid-positions capacity arguments)
+        assertions windows compiler ctest-prefix colours unknown invalid-positions capacity arguments
+        native-windows native-glibc native-malformed)
     umicom_test_source_cases(links test_links.c
-        selection ownership duplicates sessions fragments capacity retention empty)
+        selection ownership duplicates sessions fragments capacity retention empty native-assertions)
     umicom_test_source_cases(open test_open.c
         absolute relative draft missing-file missing-line explicit-base invalid-location discovered
-        other-tab new-tab-missing-line file-uri)
+        other-tab new-tab-missing-line file-uri native-assertion)
 endif()

@@ -1,5 +1,9 @@
 # Open a source location from test evidence
 
+![Umicom](../resources/brand/umicom-logo.svg)
+
+[![Umicom icon](../resources/brand/umicom-icon.svg)](../resources/brand/umicom.ico)
+
 A test can print a useful file and line when an assertion fails. For example,
 `tests/check.c:29: expected == actual` names line 29 in a source file. Framework
 can recognise that location, keep the test and run that produced it, and open
@@ -42,6 +46,36 @@ ANSI colour and erase sequences are removed before interpretation. Positive
 line and column numbers are required; a missing column is recorded as zero.
 Zero means the start of the line when opening a document. Columns use UTF-8
 byte positions, not screen character widths.
+
+The C runtime can print a failure when the program uses the standard `assert`
+macro. For example, if `assert(count == 4)` fails at line 29, a Windows C
+runtime can print the first line below. On a Linux host using glibc, the same
+check can produce the second line. CTest can add a number ahead of either line.
+
+```text
+Assertion failed: count == 4, file C:\work\tests\check.c, line 29
+checks: tests/check.c:29: main: Assertion `count == 4' failed.
+```
+
+Framework retains the raw test output and records `count == 4` as the link's
+message with source line 29 and no column. A complete native assertion with one
+of these layouts can be linked from result details or from captured output. If
+the runtime omits the filename, the message is incomplete, or separators make
+the path ambiguous, read the raw output and find the source manually.
+
+From a configured Framework checkout, run the focused parser and evidence
+checks in this order. Use your actual build directory in place of `build`.
+
+```powershell
+cmake --build build --target umicom-test-source-parser-test umicom-test-source-links-test umicom-test-source-open-test
+ctest --test-dir build -C Debug -R 'framework\.test_source\.' --output-on-failure --no-tests=error
+```
+
+Expect the parser cases for Windows and glibc assertions to pass, along with a
+case where the same file and line appear in both the result details and output.
+The open test checks that the link lands at the start of the requested line
+and that the existing draft and saved file keep their text.
+If no cases ran, check that Framework was configured with `BUILD_TESTING=ON`.
 
 The parser does not infer a file from `check failed at line 70`, join fragments
 from different output records, or follow web addresses. Drive-relative paths

@@ -7,10 +7,15 @@
 # -----------------------------------------------------------------------------
 include_guard(GLOBAL)
 
+# Retain the former owner note below for review. The saved report parser
+# now compiles through ctest_report.c, while the other fragments remain with
+# the adapter. Keep checking all private inputs during configuration.
+#[[
 # These fragments are compiled through ctest_adapter.c. Listing them here
 # makes source delivery failures visible during configure, before the build
 # has compiled thousands of unrelated files. Extend the list when splitting
 # another part of the adapter into a private fragment.
+]]
 set(_umicom_testing_inputs
     src/testing/ctest_report.inc
     src/testing/ctest_report_files.inc

@@ -1316,6 +1316,8 @@ add_library(umicom_testing STATIC
     src/testing/uat_database_rows.c
     src/testing/report.c
     src/testing/ctest_adapter.c
+    # Passively reviewing CTest evidence does not require live process ownership.
+    src/testing/ctest_report.c
     src/testing/ctest_report_comparison.c
 )
 include(cmake/UmicomTestingSourceInputs.cmake)

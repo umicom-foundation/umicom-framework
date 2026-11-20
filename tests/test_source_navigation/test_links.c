@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/test_source_navigation/test_links.c
- * PURPOSE: Verify provenance, retention, deduplication and ownership of source evidence.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Verify provenance, retention, deduplication and ownership of source evidence.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/test_platform/source_links.h"
 
@@ -47,6 +54,12 @@ int main(int argc, char **argv)
     } else if (strcmp(name, "sessions") == 0) {
         Result(results, 1, "wanted", "run-one", "src/test.c:2: first run", "");
         Result(results, 2, "wanted", "run-two", "src/test.c:2: second run", "");
+    } else if (strcmp(name, "native-assertions") == 0) {
+        /* The same native C location in result details and copied stderr
+         * should retain a single link and the owning result's provenance. */
+        Result(results, 1, "wanted", "run-one", "Assertion failed: count == 4, file src/check.c, line 29", "");
+        Output(outputs, 2, "19: checks: src/check.c:29: main: Assertion `count == 4' failed.\n"
+            "19: checks: src/other.c:12: main: Assertion `item != NULL' failed.");
     } else if (strcmp(name, "fragments") == 0) {
         Output(outputs, 1, "src/test.c:"); Output(outputs, 2, "70: assertion");
         Output(outputs, 3, "line 28: assertion\nunknown output");
@@ -83,6 +96,15 @@ int main(int argc, char **argv)
         CHECK(strcmp(first.record_id, "result-3") == 0 && strcmp(first.location.message, "new") == 0);
     } else if (strcmp(name, "sessions") == 0) {
         CHECK(summary.retained_links == 2 && summary.duplicate_lines == 0 && strcmp(first.session_id, "run-two") == 0);
+    } else if (strcmp(name, "native-assertions") == 0) {
+        CHECK(summary.retained_links == 2U && summary.recognised_lines == 3U && summary.duplicate_lines == 1U);
+        CHECK(strcmp(first.session_id, "run-one") == 0 && strcmp(first.record_id, "result-1") == 0);
+        CHECK(first.origin == UMI_TEST_SOURCE_RESULT_DETAILS && first.location.line == 29U);
+        CHECK(strcmp(first.location.message, "count == 4") == 0);
+        UmiTestSourceLink second;
+        OK(UmiTestSourceLinksAt(links, 1, &second));
+        CHECK(second.origin == UMI_TEST_SOURCE_OUTPUT && second.location.line == 12U);
+        CHECK(strcmp(second.location.path, "src/other.c") == 0);
     } else if (strcmp(name, "fragments") == 0) CHECK(summary.retained_links == 0 && summary.unparsed_lines == 4);
     else if (strcmp(name, "capacity") == 0) CHECK(summary.retained_links == 256 && summary.capacity_dropped == 44 && summary.recognised_lines == 300);
     else if (strcmp(name, "retention") == 0) CHECK(summary.retained_links == 32 && summary.evidence.matching_results == 40 && first.location.line == 40);

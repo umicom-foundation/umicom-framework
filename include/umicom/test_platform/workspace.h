@@ -98,6 +98,8 @@ void umi_test_workspace_destroy(UmiTestWorkspace *workspace);
 /**
  * Provide the test workspace refresh operation used by this module and its client
  * applications.
+ * If the revision is exhausted, return CAPACITY_EXCEEDED before reconciling
+ * either selection.
  */
 UmiStatus umi_test_workspace_refresh(UmiTestWorkspace *workspace);
 /**
@@ -146,6 +148,8 @@ UmiStatus umi_test_workspace_select_item(
 /**
  * Provide the test workspace select session operation used by this module and its client
  * applications.
+ * A resolved session selection returns CAPACITY_EXCEEDED before mutation
+ * when the workspace has no further revision available.
  */
 UmiStatus umi_test_workspace_select_session(
     UmiTestWorkspace *workspace,
@@ -154,6 +158,8 @@ UmiStatus umi_test_workspace_select_session(
 /**
  * Provide the test workspace set run mode operation used by this module and its client
  * applications.
+ * A valid mode change returns CAPACITY_EXCEEDED at the revision limit and
+ * preserves the previous mode.
  */
 UmiStatus umi_test_workspace_set_run_mode(
     UmiTestWorkspace *workspace,
