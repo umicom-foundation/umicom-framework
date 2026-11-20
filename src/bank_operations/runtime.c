@@ -124,6 +124,20 @@ UmiStatus UmiBankOperationsOpenSqlite(const char *absolutePath, UmiBankOperation
     return status == UMI_STATUS_OK ? FinishOpen(server, outOperations) : status;
 }
 
+/* A host that explicitly selected an existing ledger must never initialize a
+ * missing or unrelated store. Replay the persisted history only after the
+ * shared Data Server admits the existing writable schema. */
+UmiStatus UmiBankOperationsOpenExistingSqlite(const char *absolutePath,
+                                            UmiBankOperations **outOperations)
+{
+    if (outOperations == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outOperations = NULL;
+    if (!AbsolutePath(absolutePath)) return UMI_STATUS_INVALID_ARGUMENT;
+    UmiDataServer *server = NULL;
+    UmiStatus status = umi_data_server_open_sqlite_existing(absolutePath, &server);
+    return status == UMI_STATUS_OK ? FinishOpen(server, outOperations) : status;
+}
+
 void UmiBankOperationsDestroy(UmiBankOperations *operations)
 {
     if (operations == NULL) return;
@@ -262,6 +276,53 @@ UmiStatus UmiBankOperationsBalance(const UmiBankOperations *operations,
     if (operations == NULL || accountId == NULL || outBalance == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     if (operations->poisoned || operations->state == NULL) return UMI_STATUS_INVALID_STATE;
     return BankProjectBalance(operations->state, accountId, outBalance);
+}
+
+UmiStatus UmiBankOperationsObserveAccountAtRevision(const UmiBankOperations *operations,
+    const char *accountId, uint64_t revision, UmiBankAccountObservation *outObservation)
+{
+    if (operations == NULL || accountId == NULL || outObservation == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    UmiFinancialId id;
+    UmiStatus status = umi_financial_id_assign(&id, accountId);
+    if (status != UMI_STATUS_OK) return status;
+    if (!BankIdValid(&id, true)) return UMI_STATUS_INVALID_ARGUMENT;
+    if (operations->poisoned || operations->state == NULL) return UMI_STATUS_INVALID_STATE;
+    const BankState *source = operations->state;
+    if (source->counts.events > UMI_BANK_EVENT_CAPACITY ||
+        source->counts.revision != source->counts.events) return UMI_STATUS_INVALID_STATE;
+    if (revision > source->counts.revision) return UMI_STATUS_INVALID_ARGUMENT;
+    if (revision == 0U) return UMI_STATUS_NOT_FOUND;
+
+    /* The latest observation uses the loaded state. Earlier ones rebuild an
+     * owned prefix with the same transition checks as opening a ledger. The
+     * query never reads external storage or changes the live owner. */
+    const BankState *observed = source;
+    BankState *prefix = NULL;
+    if (revision < source->counts.revision) {
+        prefix = calloc(1U, sizeof *prefix);
+        if (prefix == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+        for (size_t index = 0U; index < (size_t)revision; ++index) {
+            const UmiBankAuditEvent *event = &source->events[index];
+            if (event->revision != (uint64_t)index + 1U ||
+                BankApply(prefix, &event->actor, &event->command) != UMI_STATUS_OK) {
+                free(prefix);
+                return UMI_STATUS_INVALID_STATE;
+            }
+        }
+        observed = prefix;
+    }
+    /* Resolve the account at the requested point before publishing a whole
+     * result. Future account metadata never appears in an earlier snapshot. */
+    UmiBankAccountObservation result = {.sourceRevision = source->counts.revision};
+    int index = BankFindAccount(observed, id.value);
+    status = index < 0 ? UMI_STATUS_NOT_FOUND : BankProjectBalance(observed, id.value, &result.balance);
+    if (status == UMI_STATUS_OK) {
+        result.account = observed->accounts[index];
+        *outObservation = result;
+    }
+    free(prefix);
+    return status;
 }
 
 /* Copies rather than borrowed mutable records preserve the Framework authority

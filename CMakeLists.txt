@@ -492,6 +492,11 @@ add_library(umicom_security STATIC
     src/security/local_profile.c
     src/security/local_profile_platform.c
     src/security/local_profile_database.c
+    src/security/local_profile_mfa.c
+    src/security/local_mfa_database.c
+    src/security/totp.c
+    src/security/totp_platform.c
+    src/security/totp_enrollment.c
     src/security/identity.c
     src/security/permission.c
     src/security/role.c
@@ -532,6 +537,9 @@ target_link_libraries(umicom_security PUBLIC
 # for Data Server. Core builds without SQLite retain the native vault adapter.
 if(SQLite3_FOUND)
     target_compile_definitions(umicom_security PRIVATE UMI_LOCAL_PROFILE_HAS_SQLITE=1)
+    if(WIN32)
+        target_link_libraries(umicom_security PRIVATE crypt32)
+    endif()
     if(TARGET SQLite3::SQLite3)
         target_link_libraries(umicom_security PRIVATE SQLite3::SQLite3)
     elseif(TARGET SQLite::SQLite3)
@@ -1300,8 +1308,12 @@ add_library(umicom_testing STATIC
     src/testing/discovery.c
     src/testing/runner.c
     src/testing/uat_workflow.c
+    src/testing/uat_target.c
     src/testing/uat_report.c
     src/testing/uat_process.c
+    src/testing/uat_process_fixture.c
+    # Typed query observations share UAT's portable testing target.
+    src/testing/uat_database_rows.c
     src/testing/report.c
     src/testing/ctest_adapter.c
     src/testing/ctest_report_comparison.c
@@ -3505,6 +3517,7 @@ if(UMICOM_BUILD_NATIVE_TOOL)
         tools/umicom/src/command_project.c
         tools/umicom/src/command_preview.c
         tools/umicom/src/command_build.c
+        tools/umicom/src/command_debug.c
         tools/umicom/src/command_verify.c
         tools/umicom/src/command_branding.c
         tools/umicom/src/command_automation.c
@@ -5232,6 +5245,33 @@ if(BUILD_TESTING)
     umicom_add_framework_test(umicom-security-identity-tests framework.security_identity tests/test_security_identity.c)
     umicom_add_framework_test(umicom-security-roles-tests framework.security_roles tests/test_security_roles.c)
     umicom_add_framework_test(umicom-security-session-tests framework.security_session tests/test_security_session.c)
+    add_executable(umicom-security-totp-tests tests/test_security_totp.c)
+    target_link_libraries(umicom-security-totp-tests PRIVATE Umicom::security)
+    umicom_apply_warnings(umicom-security-totp-tests)
+    umicom_apply_sanitizers(umicom-security-totp-tests)
+    foreach(umicom_totp_case vectors window boundaries)
+        add_test(NAME "framework.security_totp.${umicom_totp_case}"
+            COMMAND umicom-security-totp-tests "${umicom_totp_case}")
+        set_tests_properties("framework.security_totp.${umicom_totp_case}" PROPERTIES
+            TIMEOUT 15 SKIP_RETURN_CODE 77 LABELS "framework;security;authenticator")
+    endforeach()
+    add_executable(umicom-totp-enrollment-test tests/test_totp_enrollment.c)
+    target_link_libraries(umicom-totp-enrollment-test PRIVATE Umicom::security)
+    add_subdirectory(tests/local_mfa)
+    umicom_apply_warnings(umicom-totp-enrollment-test)
+    umicom_apply_sanitizers(umicom-totp-enrollment-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-totp-enrollment-test)
+    endif()
+    foreach(case standard escaped capacity tail-and-maximum text parameters verify-provisioned)
+        set(name "framework.totp_enrollment.${case}")
+        add_test(NAME "${name}" COMMAND umicom-totp-enrollment-test "${case}")
+        set_tests_properties("${name}" PROPERTIES TIMEOUT 15 SKIP_RETURN_CODE 77
+            LABELS "framework;security;authenticator;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("${name}" TARGETS umicom-totp-enrollment-test)
+        endif()
+    endforeach()
     umicom_add_framework_test(umicom-security-authorisation-tests framework.security_authorisation tests/test_security_authorisation.c)
     umicom_add_framework_test(umicom-security-context-tests framework.security_context tests/test_security_context.c)
     umicom_add_framework_test(umicom-secret-provider-mutation-tests framework.secret_provider_mutation tests/test_secret_provider_mutation.c)
@@ -6424,6 +6464,12 @@ install(DIRECTORY examples/build_diagnostics/
 install(DIRECTORY examples/uat/
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/uat"
     COMPONENT Framework FILES_MATCHING PATTERN "*.c" PATTERN "CMakeLists.txt")
+install(DIRECTORY examples/uat_browser/
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/examples/uat_browser"
+    COMPONENT Framework)
+install(DIRECTORY examples/uat_browser/
+    DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/examples/uat_browser"
+    COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
 install(DIRECTORY examples/gui_recording/
     DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/examples/gui_recording"
     COMPONENT Framework)
@@ -6828,7 +6874,8 @@ if(BUILD_TESTING)
     umicom_apply_warnings(umicom-build-diagnostics-test)
     umicom_apply_sanitizers(umicom-build-diagnostics-test)
     foreach(_diagnostic_case IN ITEMS
-        gcc windows-slashes windows-backslashes unc gnu-line-only gnu-parentheses msvc msvc-line-only msvc-parentheses ansi note fatal tool ninja cmake cmake-dev leading-space noise malformed capacity list-bound null-input navigation projection positions)
+        gcc windows-slashes windows-backslashes unc gnu-line-only gnu-parentheses msvc msvc-line-only msvc-parentheses ansi note fatal tool ninja cmake cmake-dev leading-space noise malformed capacity list-bound null-input navigation projection positions
+        located-producers located-refusals abandoned-severity)
         add_test(NAME framework.build_diagnostics.${_diagnostic_case}
             COMMAND umicom-build-diagnostics-test ${_diagnostic_case})
     endforeach()
@@ -7969,6 +8016,8 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/cmake/UmicomFormDraft.cmake")
 
 # Presentation consumes platform and protocol; it must not reverse their dependency.
 include(cmake/UmicomBootReportTools.cmake)
+# Hosted ABI observation stays in Platform, independently of guest assembly.
+include(cmake/UmicomNativeKernelAbiReport.cmake)
 
 # Multi-model selection and presentation share one bounded report contract.
 include(cmake/UmicomAiEnsembleAdmission.cmake)

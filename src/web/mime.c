@@ -36,6 +36,7 @@ const char *umi_web_mime_from_path(const char *path)
     static const struct { const char *extension, *type; } types[] = {
         {".html", "text/html; charset=utf-8"}, {".htm", "text/html; charset=utf-8"},
         {".css", "text/css; charset=utf-8"}, {".js", "text/javascript; charset=utf-8"},
+        {".mjs", "text/javascript; charset=utf-8"},
         {".json", "application/json"}, {".svg", "image/svg+xml"},
         {".ico", "image/vnd.microsoft.icon"}, {".png", "image/png"},
         {".jpg", "image/jpeg"}, {".jpeg", "image/jpeg"}, {".txt", "text/plain; charset=utf-8"}

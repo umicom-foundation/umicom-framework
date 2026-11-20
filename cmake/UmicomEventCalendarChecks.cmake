@@ -14,7 +14,7 @@ if(BUILD_TESTING AND TARGET Umicom::trading_ui AND NOT TARGET umicom-event-calen
     target_link_libraries(umicom-event-calendar-tests PRIVATE Umicom::trading_ui)
     umicom_apply_warnings(umicom-event-calendar-tests)
     umicom_apply_sanitizers(umicom-event-calendar-tests)
-    foreach(case ordering missing-values earnings date-range country-currency search importance
+    foreach(case ordering missing-values earnings date-range country-currency search search-utf8 malformed-search importance
             pages invalid-filter leap-date invalid-time observed-at identity units unknown-enum
             duplicate source-identity schema quoted-title control-text overlong header-only
             byte-bound owned-copy row-bound)
@@ -34,7 +34,7 @@ if(BUILD_TESTING AND TARGET Umicom::ui_gtk4 AND TARGET Umicom::trading_ui AND NO
     umicom_apply_warnings(umicom-event-calendar-native-tests)
     umicom_apply_sanitizers(umicom-event-calendar-native-tests)
     foreach(case filter kind invalid-filter invalid-import quote-refresh details retained detached
-            today clear-filters search-enter)
+            today clear-filters search-enter search-utf8)
         add_test(NAME "framework.event_calendar.native.${case}" COMMAND umicom-event-calendar-native-tests "${case}")
         set_tests_properties("framework.event_calendar.native.${case}" PROPERTIES
             TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;trading;calendar;gtk4;regression")

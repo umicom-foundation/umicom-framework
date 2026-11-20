@@ -38,6 +38,13 @@ UmiStatus umi_cvm_preview_traced(const char *source, size_t length, size_t fuel,
     UmiCvmPreviewResult *result, size_t result_size,
     UmiCvmPreviewTrace *trace, size_t trace_size);
 
+/* Bytecode uses the same result and trace lifecycle. Failed decoding leaves
+ * trace.count zero. All byte input and output storage must be disjoint. */
+UmiStatus umi_cvm_preview_bytecode_traced(const uint8_t *bytes, size_t length, size_t fuel,
+    UmiCvmPreviewWorkspace *workspace, size_t workspace_size,
+    UmiCvmPreviewResult *result, size_t result_size,
+    UmiCvmPreviewTrace *trace, size_t trace_size);
+
 #ifdef __cplusplus
 }
 #endif

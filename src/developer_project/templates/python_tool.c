@@ -16,6 +16,11 @@
  *---------------------------------------------------------------------------*/
 #include "umicom/developer_project/templates/python_tool.h"
 
+/* The former four-file starter is retained for review. It advertised CMake
+ * presets without generating them, and its test could not observe the script.
+ * The active recipe stages the same console entry and uses one resolved
+ * interpreter for syntax checking, testing and running. */
+#if 0
 static const UmiDeveloperProjectTemplateFile FILES[] = {
     {
         "src/{{TARGET_NAME}}.py",
@@ -42,6 +47,180 @@ static const UmiDeveloperProjectTemplateFile FILES[] = {
         0
     }
 };
+#endif
+
+static const UmiDeveloperProjectTemplateFile FILES[] = {
+    {"CMakeLists.txt",
+        "#-----------------------------------------------------------------------------\n"
+        "# {{APPLICATION_NAME}}\n"
+        "# File: CMakeLists.txt\n"
+        "#\n"
+        "# PURPOSE:\n"
+        "#   Verify and stage an interpreted Python console tool.\n"
+        "#\n"
+        "# AUTHOR AND ORGANISATION:\n"
+        "# Sammy Hegab\n"
+        "# Umicom Foundation\n"
+        "#\n"
+        "# LICENCE:\n"
+        "# MIT\n"
+        "#-----------------------------------------------------------------------------\n"
+        "cmake_minimum_required(VERSION 3.26)\n"
+        "project({{TARGET_NAME}} LANGUAGES NONE)\n"
+        "include(CTest)\n"
+        "find_package(Python3 3.9 REQUIRED COMPONENTS Interpreter)\n"
+        "\n"
+        "# Build checks syntax and stages the runtime files without executing the script.\n"
+        "set(source \"${CMAKE_CURRENT_SOURCE_DIR}/src\")\n"
+        "set(staging \"${CMAKE_CURRENT_BINARY_DIR}/bin\")\n"
+        "set(script \"${staging}/{{TARGET_NAME}}.py\")\n"
+        "set(label \"${staging}/application-name.txt\")\n"
+        "add_custom_command(OUTPUT \"${script}\" \"${label}\"\n"
+        "    COMMAND \"${Python3_EXECUTABLE}\" -I -B -X utf8\n"
+        "        \"${CMAKE_CURRENT_SOURCE_DIR}/tests/check_syntax.py\" \"${source}/{{TARGET_NAME}}.py\"\n"
+        "    COMMAND \"${CMAKE_COMMAND}\" -E make_directory \"${staging}\"\n"
+        "    COMMAND \"${CMAKE_COMMAND}\" -E copy \"${source}/{{TARGET_NAME}}.py\" \"${script}\"\n"
+        "    COMMAND \"${CMAKE_COMMAND}\" -E copy \"${source}/application-name.txt\" \"${label}\"\n"
+        "    DEPENDS \"${Python3_EXECUTABLE}\" \"${source}/{{TARGET_NAME}}.py\" \"${source}/application-name.txt\"\n"
+        "        \"${CMAKE_CURRENT_SOURCE_DIR}/tests/check_syntax.py\"\n"
+        "    VERBATIM)\n"
+        "add_custom_target(stage-python-tool ALL DEPENDS \"${script}\" \"${label}\")\n"
+        "add_custom_target(run-program\n"
+        "    COMMAND \"${Python3_EXECUTABLE}\" -I -B -X utf8 \"${script}\"\n"
+        "    DEPENDS stage-python-tool\n"
+        "    USES_TERMINAL VERBATIM)\n"
+        "install(FILES \"${script}\" \"${label}\" DESTINATION bin COMPONENT Runtime)\n"
+        "if(BUILD_TESTING)\n"
+        "    add_test(NAME python.console COMMAND \"${Python3_EXECUTABLE}\" -I -B -X utf8\n"
+        "        \"${CMAKE_CURRENT_SOURCE_DIR}/tests/test_{{TARGET_NAME}}.py\"\n"
+        "        \"${script}\" \"${source}/application-name.txt\")\n"
+        "    set_tests_properties(python.console PROPERTIES TIMEOUT 15)\n"
+        "endif()\n", 0, 0},
+    {"CMakePresets.json",
+        "{\n"
+        "  \"version\": 6,\n"
+        "  \"configurePresets\": [\n"
+        "    {\"name\": \"windows-ucrt64-debug\", \"generator\": \"Ninja\", \"binaryDir\": \"${sourceDir}/build/windows-ucrt64-debug\", \"cacheVariables\": {\"BUILD_TESTING\": \"ON\"}},\n"
+        "    {\"name\": \"linux-debug\", \"generator\": \"Ninja\", \"binaryDir\": \"${sourceDir}/build/linux-debug\", \"cacheVariables\": {\"BUILD_TESTING\": \"ON\"}}\n"
+        "  ],\n"
+        "  \"buildPresets\": [\n"
+        "    {\"name\": \"windows-ucrt64-debug\", \"configurePreset\": \"windows-ucrt64-debug\"},\n"
+        "    {\"name\": \"linux-debug\", \"configurePreset\": \"linux-debug\"}\n"
+        "  ],\n"
+        "  \"testPresets\": [\n"
+        "    {\"name\": \"windows-ucrt64-debug\", \"configurePreset\": \"windows-ucrt64-debug\", \"output\": {\"outputOnFailure\": true}},\n"
+        "    {\"name\": \"linux-debug\", \"configurePreset\": \"linux-debug\", \"output\": {\"outputOnFailure\": true}}\n"
+        "  ]\n"
+        "}\n", 0, 0},
+    {"src/{{TARGET_NAME}}.py",
+        "#-----------------------------------------------------------------------------\n"
+        "# {{APPLICATION_NAME}}\n"
+        "# File: src/{{TARGET_NAME}}.py\n"
+        "#\n"
+        "# PURPOSE:\n"
+        "#   Print the name of a console tool from its adjacent resource file.\n"
+        "#\n"
+        "# AUTHOR AND ORGANISATION:\n"
+        "# Sammy Hegab\n"
+        "# Umicom Foundation\n"
+        "#\n"
+        "# LICENCE:\n"
+        "# MIT\n"
+        "#-----------------------------------------------------------------------------\n"
+        "from pathlib import Path\n"
+        "\n"
+        "\n"
+        "def main() -> int:\n"
+        "    resource = Path(__file__).with_name(\"application-name.txt\")\n"
+        "    print(resource.read_text(encoding=\"utf-8\").rstrip(\"\\r\\n\"))\n"
+        "    return 0\n"
+        "\n"
+        "\n"
+        "if __name__ == \"__main__\":\n"
+        "    raise SystemExit(main())\n", 0, 0},
+    {"src/application-name.txt", "{{APPLICATION_NAME}}\n", 0, 0},
+    {"tests/check_syntax.py",
+        "#-----------------------------------------------------------------------------\n"
+        "# {{APPLICATION_NAME}}\n"
+        "# File: tests/check_syntax.py\n"
+        "#\n"
+        "# PURPOSE:\n"
+        "#   Compile source bytes in memory before staging the runtime files.\n"
+        "#\n"
+        "# AUTHOR AND ORGANISATION:\n"
+        "# Sammy Hegab\n"
+        "# Umicom Foundation\n"
+        "#\n"
+        "# LICENCE:\n"
+        "# MIT\n"
+        "#-----------------------------------------------------------------------------\n"
+        "from pathlib import Path\n"
+        "import sys\n"
+        "\n"
+        "# Keep syntax checking independent of bytecode cache paths and the source directory.\n"
+        "source = Path(sys.argv[1])\n"
+        "compile(source.read_bytes(), str(source), \"exec\")\n", 0, 0},
+    {"tests/test_{{TARGET_NAME}}.py",
+        "#-----------------------------------------------------------------------------\n"
+        "# {{APPLICATION_NAME}}\n"
+        "# File: tests/test_{{TARGET_NAME}}.py\n"
+        "#\n"
+        "# PURPOSE:\n"
+        "#   Check the staged script's complete console output and exit status.\n"
+        "#\n"
+        "# AUTHOR AND ORGANISATION:\n"
+        "# Sammy Hegab\n"
+        "# Umicom Foundation\n"
+        "#\n"
+        "# LICENCE:\n"
+        "# MIT\n"
+        "#-----------------------------------------------------------------------------\n"
+        "from pathlib import Path\n"
+        "import subprocess\n"
+        "import sys\n"
+        "import unittest\n"
+        "\n"
+        "script, resource = (Path(argument).resolve() for argument in sys.argv[1:])\n"
+        "\n"
+        "\n"
+        "class ConsoleTest(unittest.TestCase):\n"
+        "    def test_staged_console(self) -> None:\n"
+        "        result = subprocess.run([sys.executable, \"-I\", \"-B\", \"-X\", \"utf8\", str(script)],\n"
+        "                                capture_output=True, timeout=5, check=False)\n"
+        "        self.assertEqual(result.returncode, 0, result.stderr)\n"
+        "        self.assertEqual(result.stderr, b\"\")\n"
+        "        actual = result.stdout.decode(\"utf-8\").replace(\"\\r\\n\", \"\\n\")\n"
+        "        self.assertEqual(actual, resource.read_text(encoding=\"utf-8\"))\n"
+        "\n"
+        "\n"
+        "if __name__ == \"__main__\":\n"
+        "    unittest.main(argv=[sys.argv[0]])\n", 0, 0},
+    {"README.md",
+        "# {{APPLICATION_NAME}}\n"
+        "\n"
+        "This console tool uses CPython 3.9 or later and the Python standard library.\n"
+        "It keeps its application name in a UTF-8 file beside the script.\n"
+        "\n"
+        "## Build, test and run\n"
+        "\n"
+        "1. Install CPython, CMake 3.26 or later and Ninja. Add them to your command path.\n"
+        "2. From the project directory, run these commands for Windows. On Linux, use the linux-debug preset.\n"
+        "\n"
+        "```powershell\n"
+        "umicom make --source . --preset windows-ucrt64-debug\n"
+        "cmake --build --preset windows-ucrt64-debug --target run-program\n"
+        "```\n"
+        "\n"
+        "The build checks Python syntax and stages the script and name in the build directory.\n"
+        "The test launches the staged copy using the configured interpreter. Expect one passing test\n"
+        "and the application name when you run it. If configuration cannot locate Python, select\n"
+        "an installed interpreter with Python3_EXECUTABLE. Rebuild before running CTest after a source change.\n"
+        "The Runtime install component stages both files together. The target machine needs CPython.\n",
+        0, 0},
+    {".gitignore",
+        "build/\ninstall/\ndist/\n*.o\n*.obj\n*.exe\n*.dll\n*.so\n*.dylib\n\n__pycache__/\n.venv/\n",
+        0, 0}
+};
 
 /*
  * Provide the developer project template python tool operation used by this module and its
@@ -54,9 +233,9 @@ const UmiDeveloperProjectTemplate *umi_developer_project_template_python_tool(vo
         .api_version = UMI_DEVELOPER_PROJECT_API_VERSION,
         .template_id = "developer.template.python-tool",
         .title = "Python Tool",
-        .description = "CPython script application with a conventional src/test layout.",
+        .description = "CPython console script with CMake staging, testing and run targets.",
         .kind = UMI_DEVELOPER_PROJECT_SCRIPT,
-        .build_system = UMI_DEVELOPER_PROJECT_BUILD_SCRIPT,
+        .build_system = UMI_DEVELOPER_PROJECT_BUILD_CMAKE,
         .primary_language_id = "developer.language.cpython",
         .secondary_language_ids = NULL,
         .secondary_language_count = 0U,
@@ -65,7 +244,7 @@ const UmiDeveloperProjectTemplate *umi_developer_project_template_python_tool(vo
         .file_count = sizeof(FILES) / sizeof(FILES[0]),
         .thin_application = 0,
         .supports_tests = 1,
-        .supports_install = 0,
+        .supports_install = 1,
         .supports_package = 0
     };
 

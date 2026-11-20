@@ -18,6 +18,7 @@
 
 typedef const UmiDeveloperProjectTemplate *(*TemplateFactory)(void);
 
+/* Keep one catalogue for Studio and the command-line project service. */
 static const TemplateFactory FACTORIES[] = {
     umi_developer_project_template_c23_console,
     umi_developer_project_template_c23_gtk4,
@@ -40,7 +41,9 @@ static const TemplateFactory FACTORIES[] = {
     umi_developer_project_template_python_tool,
     umi_developer_project_template_umicom_extension,
     umi_developer_project_template_d_console,
-    umi_developer_project_template_freebasic_console
+    umi_developer_project_template_freebasic_console,
+    umi_developer_project_template_pascal_console,
+    umi_developer_project_template_java_console
 };
 
 /*

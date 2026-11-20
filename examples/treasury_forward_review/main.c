@@ -15,19 +15,43 @@
 
 #include "umicom/open_tms/fx_forward_review.h"
 #include "umicom/open_tms/fx_forward_archive.h"
+#include "umicom/open_tms/fx_forward_valuation.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 #define REQUIRE(x) do { if (!(x)) { fprintf(stderr, "%s:%d: %s\n", __FILE__, __LINE__, #x); exit(EXIT_FAILURE); } } while (0)
+static void ShowValuation(const UmiOpenTmsFxForwardBook *book, const UmiOpenTmsFxForward *trade)
+{
+    const UmiOpenTmsFxForwardValuationRequest request = {
+        .trade_id = trade->tradeId, .expected_book_revision = book->revision,
+        .expected_trade_version = trade->version, .as_of = {2026, 11, 19},
+        .forward_quote_id = "training-forward", .forward_quote_revision = 7U, .observed_forward_rate = 1.375,
+        .discount_curve_id = "training-usd-discount", .discount_curve_revision = 11U, .discount_factor = 0.5
+    };
+    UmiOpenTmsFxForwardValuation result;
+    REQUIRE(UmiOpenTmsFxForwardValuationCapture(book, &request, &result) == UMI_STATUS_OK);
+    REQUIRE(result.quote_currency_value == 62.5 && result.convention == UMI_OPEN_TMS_FX_FORWARD_LONG_BASE_DISCOUNTED);
+    REQUIRE(result.forward_quote_revision == 7U && result.discount_curve_revision == 11U);
+    printf("Forward valuation %.2f %s using quote %s and curve %s.\n", result.quote_currency_value,
+        result.trade.quoteCurrency, result.forward_quote_id.value, result.discount_curve_id.value);
+}
+
 int main(int argc, char **argv) {
     /* Retain the original two-scenario entry contract for source review.
      * Archive scenarios now exercise the same installed finance boundary. */
 #if 0
     REQUIRE(argc == 2 && (!strcmp(argv[1], "apply") || !strcmp(argv[1], "stale")));
 #endif
+    /* Keep the original four admissible scenarios for review as the new
+     * local valuation uses the same versioned book and finance SDK. */
+#if 0
     REQUIRE(argc == 2 && (!strcmp(argv[1], "apply") || !strcmp(argv[1], "stale") ||
         !strcmp(argv[1], "archive-roundtrip") || !strcmp(argv[1], "archive-stale")));
+#endif
+    REQUIRE(argc == 2 && (!strcmp(argv[1], "apply") || !strcmp(argv[1], "stale") ||
+        !strcmp(argv[1], "archive-roundtrip") || !strcmp(argv[1], "archive-stale") ||
+        !strcmp(argv[1], "valuation")));
     UmiOpenTmsFxForwardBook *book = malloc(sizeof *book);
     REQUIRE(book != NULL);
     umi_open_tms_fx_forward_book_init(book);
@@ -37,7 +61,15 @@ int main(int argc, char **argv) {
     strcpy(trade.baseCurrency, "GBP"); strcpy(trade.quoteCurrency, "USD");
     trade.baseNotional = 1000.0; trade.forwardRate = 1.25;
     trade.marketForwardRate = 1.25; trade.version = 1U;
+    const bool show_valuation = strcmp(argv[1], "valuation") == 0;
+    if (show_valuation) trade.marketForwardRate = 1.375;
     REQUIRE(umi_open_tms_fx_forward_book_add(book, &trade) == UMI_STATUS_OK);
+    if (show_valuation) {
+        ShowValuation(book, &trade);
+        free(book);
+        puts("PASS: treasury_forward_review");
+        return EXIT_SUCCESS;
+    }
     if (!strcmp(argv[1], "archive-roundtrip") || !strcmp(argv[1], "archive-stale")) {
         size_t length = 0U;
         REQUIRE(umi_open_tms_fx_forward_book_archive_encode(book, NULL, 0U, &length) == UMI_STATUS_OK);

@@ -1,5 +1,7 @@
 # Plan and supervise a dependency-closed task operation
 
+<img src="../../resources/brand/umicom-logo.svg" alt="Umicom" width="180">
+
 The Framework task orchestrator combines an owned task graph with operation identity, selected-target planning, parallel slots, retry counts and cooperative stopping. Process creation remains the responsibility of a supervised provider. A successful operation state means reported outcomes satisfy the model's policy; it is not independent evidence that a compiler ran.
 
 ## Establish ownership
@@ -30,6 +32,12 @@ The orchestrator reserves its revision before any nested graph mutation. Plannin
 
 A stop request cancels waiting tasks through the graph before publishing the owner's stop flag. Running tasks remain active until the host reports their actual terminal outcomes. A refused stop does not imply that a process was interrupted. Finish requires a begun operation with no active tasks; it cannot turn an idle or merely planned object into a successful run.
 
+## Retry after a stop or a failed prerequisite
+
+1. After an accepted stop, let the host report the remaining active tasks. Calling `umi_build_task_orchestrator_retry` during this wait returns `UMI_STATUS_BUSY` and preserves the stop and graph.
+2. Once the active count reaches zero, decide which task to retry. A cancelled task can be admitted again when its dependencies and attempt limit allow it.
+3. Read the operation snapshot after retry. If a failed prerequisite still blocks the task, the operation can remain failed. Retry the failed prerequisite before asking the scheduler for new ready work.
+
 The mutable graph accessor remains for compatibility. Treat the borrowed pointer as an observation surface while using orchestration. Direct graph mutations bypass the owner's active counters and terminal-state bookkeeping; normal callers should use the orchestrator's lifecycle methods.
 
 ## Qualify the implementation and installed SDK
@@ -42,6 +50,6 @@ cmake --build .\build --target umicom-task-orchestrator-transactions-test umicom
 ctest --test-dir .\build -R "^framework\.task_orchestrator\." --output-on-failure --no-tests=error
 ```
 
-The transaction suite declares 25 cases for rejected plans, allocation failure, full IDs, owner/child identity limits and finish admission. The public closure suite declares 12 cases for depth, cycles, deduplication, selected roots, source isolation, parallel slots, retries and stopping. Existing task, graph and orchestrator tests remain relevant integration coverage.
+The transaction suite declares 25 cases for rejected plans, allocation failure, full IDs, owner/child identity limits and finish admission. The public closure suite declares 14 cases for depth, cycles, deduplication, selected roots, source isolation, parallel slots, retries and stopping. Run `ctest --test-dir .\build -R "retry-draining-stop|retry-blocked" --output-on-failure --no-tests=error` to inspect the two retry cases. Existing task, graph and orchestrator tests remain relevant integration coverage.
 
 The [installed orchestration laboratory](https://github.com/umicom-foundation/Bits2Banking/tree/main/labs/native/framework-task-orchestration) exercises five modeled scenarios through installed headers and archives. Identify those artifacts when results differ. Keep selected-test counts and failure output with compiler and source identity. Authored tests, static source checks and modeled process outcomes must remain distinct from actual build and application qualification.

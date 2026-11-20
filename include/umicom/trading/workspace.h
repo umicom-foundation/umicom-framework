@@ -489,6 +489,18 @@ UmiStatus umi_trading_workspace_submit_order(
  * first cancellation, in which case a later selected-order command is NOT_FOUND. */
 UmiStatus umi_trading_workspace_cancel_selected_order(
     UmiTradingWorkspace *workspace);
+
+/** Cancel the unfilled remainder of accepted or partially filled DAY orders
+ * for one exact venue in the current simulation or paper environment.
+ * The caller confirms the session boundary and supplies the workspace revision
+ * it reviewed. A stale request is refused before examining or changing orders.
+ * Any refusal preserves the workspace and the caller's count. A successful
+ * batch advances the workspace once and each affected order once. A successful
+ * no-op writes zero and advances neither. Existing fills, positions, GTC orders
+ * and terminal orders are retained. Access must be serialized and the count
+ * must not overlap workspace storage. No venue clock or broker is consulted. */
+UmiStatus UmiTradingWorkspaceCloseDayOrders(UmiTradingWorkspace *workspace,
+    const char *venue, uint64_t expected_workspace_revision, size_t *out_cancelled);
 /**
  * Provide the trading workspace record execution operation used by this module and its
  * client applications.

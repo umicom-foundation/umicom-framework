@@ -101,6 +101,14 @@ UmiStatus umi_document_coordinator_new(UmiDocumentCoordinator *coordinator,
                                        const char *suggested_name,
                                        char *out_view_id,
                                        size_t capacity);
+/** Publish a new unsaved working copy with complete caller-owned text.
+ * The store receives the text before the view is attached. On failure no
+ * partial tab remains and the prior active document keeps its text. The
+ * caller uses the coordinator's owner thread and the usual view ID buffer.
+ */
+UmiStatus UmiDocumentCoordinatorNewWithText(UmiDocumentCoordinator *coordinator,
+    const char *suggestedName, const char *text, size_t textLength, char *outViewId,
+    size_t capacity);
 /**
  * Provide the document coordinator open operation used by this module and its client
  * applications.

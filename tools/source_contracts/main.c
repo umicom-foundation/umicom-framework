@@ -35,6 +35,7 @@ static int usage(void)
         "  umicom-source-contracts comments --root SOURCE [--root SOURCE ...]\n"
         "  umicom-source-contracts workbench --source-dir APPLICATIONS [--check GROUP]\n"
         "  umicom-source-contracts guides --assets BRAND_DIRECTORY --root GUIDES [--root GUIDES ...]\n"
+        "  Add --layout bundled for published guide trees with linked package assets.\n"
         "Read-only qualification. Exit 0: pass; 1: contract findings; 2: input failure.\n"
         "Source wiring does not prove rendered/native application behaviour.\n");
     return 2;
@@ -51,6 +52,7 @@ int main(int argc, char **argv)
         result = UmiSourceContractWorkbenchGroup(argv[3], argc == 6 ? argv[5] : NULL, &report);
     } else if (strcmp(argv[1], "guides") == 0) {
         const char *assets = NULL;
+        const char *layout = NULL;
         const char **roots = calloc((size_t)argc, sizeof(*roots));
         if (roots == NULL) return 2;
         size_t count = 0U;
@@ -58,10 +60,15 @@ int main(int argc, char **argv)
             if (i + 1 >= argc || argv[i + 1][0] == '\0') { free(roots); return usage(); }
             if (strcmp(argv[i], "--assets") == 0 && assets == NULL) assets = argv[i + 1];
             else if (strcmp(argv[i], "--root") == 0) roots[count++] = argv[i + 1];
+            else if (strcmp(argv[i], "--layout") == 0 && layout == NULL) layout = argv[i + 1];
             else { free(roots); return usage(); }
         }
-        if (assets == NULL || count == 0U) { free(roots); return usage(); }
-        result = UmiSourceContractAuditGuides(roots, count, assets, &report);
+        /* Use the same layout selection as the full native umicom command. */
+        if (assets == NULL || count == 0U || (layout != NULL && strcmp(layout, "bundled") != 0)) {
+            free(roots); return usage();
+        }
+        result = layout == NULL ? UmiSourceContractAuditGuides(roots, count, assets, &report) :
+            UmiSourceContractAuditBundledGuides(roots, count, assets, &report);
         free(roots);
     } else {
         bool headers = strcmp(argv[1], "headers") == 0;

@@ -1,10 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/workflow_tools/test_decimal.c
+ *
  * PURPOSE:
- *   Check exact decimal input, output and overflow with release-active assertions.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *   Check decimal input, output and arithmetic with release-active assertions.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/finance/decimal.h"
 #include <stdio.h>
@@ -86,6 +92,31 @@ static int Run(const char *name)
         CHECK(out.coefficient==77 && out.scale==4);
         CHECK(umi_decimal_rescale(value,10,&out)==UMI_STATUS_INVALID_ARGUMENT);
         CHECK(umi_decimal_rescale(value,1,NULL)==UMI_STATUS_INVALID_ARGUMENT);
+    } else if (strcmp(name, "multiply-exact") == 0) {
+        CHECK(UmiDecimalMultiplyExact((UmiDecimal){100000, 2}, (UmiDecimal){125, 2}, 2, &out) == UMI_STATUS_OK);
+        CHECK(out.coefficient == 125000 && out.scale == 2);
+        CHECK(UmiDecimalMultiplyExact((UmiDecimal){2, 1}, (UmiDecimal){-5, 1}, 1, &out) == UMI_STATUS_OK);
+        CHECK(out.coefficient == -1 && out.scale == 1);
+        CHECK(UmiDecimalMultiplyExact((UmiDecimal){2, 0}, (UmiDecimal){6, 0}, 2, &out) == UMI_STATUS_OK);
+        CHECK(out.coefficient == 1200 && out.scale == 2);
+    } else if (strcmp(name, "multiply-extremes") == 0) {
+        CHECK(UmiDecimalMultiplyExact((UmiDecimal){INT64_MIN, 0}, (UmiDecimal){1, 0}, 0, &out) == UMI_STATUS_OK);
+        CHECK(out.coefficient == INT64_MIN && out.scale == 0);
+        CHECK(UmiDecimalMultiplyExact((UmiDecimal){INT64_MAX, 9}, (UmiDecimal){1000000000, 9}, 9, &out) == UMI_STATUS_OK);
+        CHECK(out.coefficient == INT64_MAX && out.scale == 9);
+        CHECK(UmiDecimalMultiplyExact((UmiDecimal){0, 9}, (UmiDecimal){INT64_MIN, 9}, 0, &out) == UMI_STATUS_OK);
+        CHECK(out.coefficient == 0 && out.scale == 0);
+    } else if (strcmp(name, "multiply-refusals") == 0) {
+        CHECK(UmiDecimalMultiplyExact((UmiDecimal){INT64_MIN, 0}, (UmiDecimal){-1, 0}, 0, &out) ==
+            UMI_STATUS_CAPACITY_EXCEEDED);
+        CHECK(UmiDecimalMultiplyExact((UmiDecimal){INT64_MAX, 0}, (UmiDecimal){1, 0}, 1, &out) ==
+            UMI_STATUS_CAPACITY_EXCEEDED);
+        CHECK(UmiDecimalMultiplyExact((UmiDecimal){1, 1}, (UmiDecimal){1, 1}, 1, &out) ==
+            UMI_STATUS_CAPACITY_EXCEEDED);
+        CHECK(UmiDecimalMultiplyExact(value, (UmiDecimal){1, 10}, 2, &out) == UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(UmiDecimalMultiplyExact(value, value, 10, &out) == UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(UmiDecimalMultiplyExact(value, value, 2, NULL) == UMI_STATUS_INVALID_ARGUMENT);
+        CHECK(out.coefficient == 77 && out.scale == 4);
     } else return 2;
     return 0;
 }

@@ -29,6 +29,9 @@ endif()
 
 # Application creation shares the owned scaffold service with the CLI.
 target_link_libraries(umicom_developer PUBLIC Umicom::scaffold)
+# CLI and Studio share the same bounded JSON report without a frontend dependency.
+target_link_libraries(umicom_developer PRIVATE Umicom::protocol)
+target_compile_definitions(umicom_developer PUBLIC UMICOM_HAS_LANGUAGE_COHORT=1)
 
 target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/build/project_profile.c"
@@ -47,6 +50,7 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/destination.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/entry_point.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/tool_catalogue.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/language_cohort.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/language_health.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/language_pack.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/language_provider.c"
@@ -118,6 +122,8 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/zig_console.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/d_console.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/freebasic_console.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/pascal_console.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/templates/java_console.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/tree.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/types.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/developer_project/variable_set.c"
@@ -193,6 +199,11 @@ if(BUILD_TESTING)
         umicom-developer-project-builtin-languages-test
         framework.developer_project.builtin-languages
         tests/developer_project/test_builtin_languages.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-language-cohort-test
+        framework.developer_project.language-cohort
+        tests/developer_project/test_language_cohort.c
     )
     umicom_add_developer_project_test(
         umicom-developer-project-builtin-providers-test
@@ -433,6 +444,11 @@ if(BUILD_TESTING)
         umicom-developer-project-template-integration-worker-test
         framework.developer_project.template-integration-worker
         tests/developer_project/test_template_integration_worker.c
+    )
+    umicom_add_developer_project_test(
+        umicom-developer-project-template-java-console-test
+        framework.developer_project.template-java-console
+        tests/developer_project/test_template_java_console.c
     )
     umicom_add_developer_project_test(
         umicom-developer-project-template-python-tool-test

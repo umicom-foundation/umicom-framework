@@ -18,6 +18,19 @@
 #include "umicom/platform/native_arguments.h"
 #include "umicom/web/static_files.h"
 #include "umicom/web/loopback_access.h"
+#ifdef UMICOM_LOCAL_WEB_BRANDING
+#include "umicom_web_brand_resources.h"
+#endif
+#ifdef UMICOM_LOCAL_WEB_CVM_BROWSER
+#include "umicom_web_cvm_browser_resources.h"
+#endif
+#ifdef UMICOM_HAS_FASTCGI_LOOPBACK
+#include "umicom/platform/filesystem.h"
+#include "umicom/web/fastcgi_loopback.h"
+#endif
+#ifdef UMICOM_LOCAL_WEB_CVM_PREVIEW
+#include "umicom/web/cvm_preview.h"
+#endif
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -38,7 +51,17 @@ static UmiStatus Home(const UmiWebRequest *request, UmiWebResponse *response, vo
         response, 200, "text/html; charset=utf-8",
         "<!doctype html><html lang=\"en\"><meta charset=\"utf-8\">"
         "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
-        "<title>Umicom local web service</title><body><main>"
+        "<title>Umicom local web service</title>"
+#ifdef UMICOM_LOCAL_WEB_BRANDING
+        /* The demo uses the shared SVG for the wordmark and both favicon formats. */
+        "<link rel=\"icon\" type=\"image/vnd.microsoft.icon\" href=\"/favicon.ico\">"
+        "<link rel=\"icon\" type=\"image/svg+xml\" href=\"/branding/umicom-icon.svg\">"
+        "<link rel=\"stylesheet\" href=\"/branding/local-service.css\">"
+#endif
+        "<body><main>"
+#ifdef UMICOM_LOCAL_WEB_BRANDING
+        "<img src=\"/branding/umicom-logo.svg\" width=\"180\" height=\"44\" alt=\"Umicom\">"
+#endif
         "<h1>Umicom local web service</h1><p>This page is served by C code using Umicom Framework.</p>"
         "<p><a href=\"/api/health\">Read the JSON health endpoint</a></p>"
         "<form method=\"post\" action=\"/api/echo\"><label>Text to send <input name=\"message\" "
@@ -49,11 +72,85 @@ static UmiStatus Home(const UmiWebRequest *request, UmiWebResponse *response, vo
     if (status == UMI_STATUS_OK)
         status = umi_web_response_set_header(
             response, "Content-Security-Policy",
-            "default-src 'none'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'");
+            "default-src 'none'; "
+#ifdef UMICOM_LOCAL_WEB_BRANDING
+            "img-src 'self'; style-src 'self'; "
+#endif
+#ifdef UMICOM_LOCAL_WEB_CVM_BROWSER
+            /* The opted-in browser host can load its same-origin worker. */
+            "worker-src 'self'; "
+#endif
+            "form-action 'self'; base-uri 'none'; frame-ancestors 'none'");
     if (status == UMI_STATUS_OK)
         status = umi_web_response_set_header(response, "X-Content-Type-Options", "nosniff");
     return status;
 }
+
+#ifdef UMICOM_LOCAL_WEB_BRANDING
+/* The assembled demo owns its immutable resources. Larger SVG/ICO
+ * payloads use Framework's bounded response-body contract. Other paths still
+ * follow the normal router, and no URL is interpreted as a file path here. */
+static UmiStatus BrandAsset(const UmiWebRequest *request, UmiWebResponse *response,
+                            UmiWebResponseBody **body, void *context)
+{
+    /* Apply the supplied typography roles to the existing page geometry. */
+    static const unsigned char style[] =
+        "body{font-family:'Segoe UI Variable Text','Segoe UI',system-ui,sans-serif}"
+        "code,pre,kbd,samp{font-family:'Cascadia Code',Consolas,monospace}\n";
+    static const struct {
+        const char *path;
+        const char *media_type;
+        const unsigned char *bytes;
+        size_t length;
+        bool worker_script;
+    } assets[] = {
+        {"/branding/umicom-logo.svg", "image/svg+xml", UmiWebBrandWordmark, sizeof UmiWebBrandWordmark, false},
+        {"/branding/umicom-icon.svg", "image/svg+xml", UmiWebBrandIconSvg, sizeof UmiWebBrandIconSvg, false},
+        {"/favicon.ico", "image/vnd.microsoft.icon", UmiWebBrandIconIco, sizeof UmiWebBrandIconIco, false},
+        {"/branding/local-service.css", "text/css; charset=utf-8", style, sizeof style - 1U, false},
+#ifdef UMICOM_LOCAL_WEB_CVM_BROWSER
+        /* Preserve the SDK modules' relative import in one bounded prefix. */
+        {"/cvm/browser/worker.mjs", "text/javascript; charset=utf-8",
+         UmiWebCvmBrowserWorker, sizeof UmiWebCvmBrowserWorker, true},
+        {"/cvm/browser/arithmetic.mjs", "text/javascript; charset=utf-8",
+         UmiWebCvmBrowserArithmetic, sizeof UmiWebCvmBrowserArithmetic, true},
+#endif
+    };
+
+    if (body == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *body = NULL;
+    if (request == NULL || response == NULL || context == NULL ||
+        memchr(request->path, '\0', sizeof request->path) == NULL)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    for (size_t index = 0U; index < sizeof assets / sizeof assets[0]; ++index) {
+        if (strcmp(request->path, assets[index].path) != 0) continue;
+        /* HEAD shares the resource length and metadata. The server owns the
+         * decision to omit its payload from the outgoing response. */
+        if (request->method != UMI_HTTP_METHOD_GET && request->method != UMI_HTTP_METHOD_HEAD) {
+            UmiStatus status = umi_web_response_set_text(
+                response, 405, "text/plain; charset=utf-8", "Method Not Allowed\n");
+            return status == UMI_STATUS_OK
+                ? umi_web_response_set_header(response, "Allow", "GET, HEAD") : status;
+        }
+        UmiStatus status = umi_web_response_set_text(response, 200, assets[index].media_type, "");
+        if (status == UMI_STATUS_OK)
+            status = umi_web_response_set_header(response, "X-Content-Type-Options", "nosniff");
+        if (status == UMI_STATUS_OK && assets[index].worker_script) {
+            /* The interpreter imports only its local sibling and owns no
+             * network connections. Rebuilding the SDK must replace old bytes. */
+            status = umi_web_response_set_header(response, "Content-Security-Policy",
+                "default-src 'none'; script-src 'self'; connect-src 'none'; worker-src 'none'");
+            if (status == UMI_STATUS_OK)
+                status = umi_web_response_set_header(response, "Cache-Control", "no-store");
+        }
+        if (status == UMI_STATUS_OK)
+            status = UmiWebResponseBodyCreate(assets[index].bytes, assets[index].length, body);
+        return status;
+    }
+    return umi_web_router_dispatch(context, request, response);
+}
+#endif
+
 static UmiStatus Health(const UmiWebRequest *request, UmiWebResponse *response, void *context)
 {
     (void)request;
@@ -115,15 +212,51 @@ static int LocalServiceMain(int argc, char **argv)
              "Add --root <absolute-export-directory> to preview files instead of the demo routes.\n"
              /* The former inline limit is retained for review: "smaller than 16 KiB". */
              "Static files are read-only and must each fit within 1 MiB.");
+#ifdef UMICOM_LOCAL_WEB_CVM_PREVIEW
+        puts("Demo preview: POST " UMI_WEB_CVM_PREVIEW_PATH " with Content-Type "
+             UMI_WEB_CVM_ARTIFACT_MEDIA_TYPE ".");
+        puts("For a required-input artifact use POST " UMI_WEB_CVM_INT_INPUT_PATH "?input=20.");
+#endif
+#ifdef UMICOM_LOCAL_WEB_CVM_BROWSER
+        /* This reports an available worker module, independent of the C API. */
+        puts("Browser worker module: /cvm/browser/worker.mjs");
+#endif
+#ifdef UMICOM_HAS_FASTCGI_LOOPBACK
+        puts("Add --fastcgi <worker-port> <absolute-entry-file> to serve only /app from a running local worker.");
+#endif
         return 0;
     }
     UmiWebServerConfig config = umi_web_server_config_default();
-    if ((argc != 3 && argc != 5) || strcmp(argv[1], "--port") != 0 || !ParsePort(argv[2], &config.port) ||
+    bool fastcgi = false;
+#ifdef UMICOM_HAS_FASTCGI_LOOPBACK
+    fastcgi = argc == 6 && strcmp(argv[3], "--fastcgi") == 0;
+#endif
+    if ((!fastcgi && argc != 3 && argc != 5) || strcmp(argv[1], "--port") != 0 || !ParsePort(argv[2], &config.port) ||
         (argc == 5 && strcmp(argv[3], "--root") != 0))
     {
         fprintf(stderr, "Choose a port explicitly: --port <1024..65535>. Use --help for details.\n");
         return 2;
     }
+#ifdef UMICOM_HAS_FASTCGI_LOOPBACK
+    /* The operator selects one existing entry and a separate worker port.
+     * The route and endpoint live for the whole local listener lifetime. */
+    UmiWebFastCgiLoopbackEndpoint worker = {.timeoutMs = 2000U};
+    UmiWebFastCgiRoute application = {0};
+    if (fastcgi) {
+        if (!ParsePort(argv[4], &worker.port) || worker.port == config.port ||
+            !umi_fs_is_absolute(argv[5]) || !umi_fs_is_file(argv[5])) {
+            fputs("Choose a distinct local worker port and an existing absolute FastCGI entry file.\n", stderr);
+            return 2;
+        }
+        application.application = (UmiWebFastCgiApplication){argv[5], "/app", "localhost", config.port,
+                                                            1U, UMI_WEB_CONNECTION_RESPONSE_LIMIT};
+        UmiStatus prepared = UmiWebFastCgiLoopbackConnectorInit(&worker, &application.connector);
+        if (prepared != UMI_STATUS_OK) {
+            fprintf(stderr, "Cannot configure the local FastCGI connector: %s\n", umi_status_text(prepared));
+            return 1;
+        }
+    }
+#endif
     /* Keep the selected root alive for the complete server lifetime. Preview
      * mode has no demo API routes, so exported paths keep their own meaning. */
     UmiWebStaticFiles files;
@@ -157,10 +290,38 @@ static int LocalServiceMain(int argc, char **argv)
         if (status == UMI_STATUS_OK)
             status = umi_web_router_add(umi_web_service_router(service), &route);
     }
+#ifdef UMICOM_LOCAL_WEB_BRANDING
+    /* Customer previews and external workers retain their own page assets.
+     * Install this fallback only for the local demonstration website. */
+    if (argc == 3 && status == UMI_STATUS_OK)
+        status = UmiWebServiceSetBodyFallback(service, BrandAsset, umi_web_service_router(service));
+#endif
+#ifdef UMICOM_LOCAL_WEB_CVM_PREVIEW
+    /* Enable the bounded VM only in the opted-in demo. The same loopback
+     * request gate runs before every route, including artifact preview. */
+    UmiWebCvmPreviewConfig cvm_preview = {UMI_WEB_CVM_PREVIEW_MAX_FUEL};
+    if (argc == 3 && status == UMI_STATUS_OK)
+    {
+        UmiWebRoute route;
+        status = umi_web_route_init(&route, UMI_HTTP_METHOD_POST, UMI_WEB_CVM_PREVIEW_PATH,
+            UmiWebCvmPreviewHandle, &cvm_preview);
+        if (status == UMI_STATUS_OK)
+            status = umi_web_router_add(umi_web_service_router(service), &route);
+        if (status == UMI_STATUS_OK)
+            status = umi_web_route_init(&route, UMI_HTTP_METHOD_POST, UMI_WEB_CVM_INT_INPUT_PATH,
+                UmiWebCvmPreviewIntInputHandle, &cvm_preview);
+        if (status == UMI_STATUS_OK)
+            status = umi_web_router_add(umi_web_service_router(service), &route);
+    }
+#endif
     if (status == UMI_STATUS_OK && argc == 5)
         status = UmiWebRouterSetFallback(umi_web_service_router(service), UmiWebStaticFilesHandle, &files);
     if (status == UMI_STATUS_OK && argc == 5)
         status = UmiWebServiceSetBodyFallback(service, UmiWebStaticFilesHandleBody, &files);
+#ifdef UMICOM_HAS_FASTCGI_LOOPBACK
+    if (status == UMI_STATUS_OK && fastcgi)
+        status = UmiWebServiceSetBodyFallback(service, UmiWebFastCgiRouteHandle, &application);
+#endif
     if (status == UMI_STATUS_OK)
         status = umi_web_server_create(&config, service, &server);
     if (status == UMI_STATUS_OK)
@@ -176,7 +337,10 @@ static int LocalServiceMain(int argc, char **argv)
      * thread, which wakes at bounded intervals even when no client connects. */
     (void)signal(SIGINT, Stop);
     (void)signal(SIGTERM, Stop);
-    printf("Open http://127.0.0.1:%u/ in a browser. Stop with Ctrl+C.\n", (unsigned)config.port);
+    if (fastcgi)
+        printf("Open http://127.0.0.1:%u/app in a browser. Stop with Ctrl+C.\n", (unsigned)config.port);
+    else
+        printf("Open http://127.0.0.1:%u/ in a browser. Stop with Ctrl+C.\n", (unsigned)config.port);
     fflush(stdout);
     while (!stop_requested)
     {

@@ -15,9 +15,11 @@
  *   remain the only data/import and sampling implementations.
  *
  * AUTHOR AND ORGANISATION:
- *   Sammy Hegab / Umicom Foundation
+ * Sammy Hegab
+ * Umicom Foundation
+ *
  * LICENCE:
- *   MIT
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/dataset_manifest.h"
 #include "umicom/ai/training/corpus.h"
@@ -274,6 +276,20 @@ UmiStatus UmiAiTrainingDatasetDocument(
     return UMI_STATUS_OK;
 }
 
+UmiStatus UmiAiTrainingDatasetDocumentSha256(
+    const UmiAiTrainingDataset *dataset, size_t index,
+    unsigned char outDigest[UMI_AI_DATASET_DOCUMENT_SHA256_BYTES])
+{
+    /* Reuse the immutable corpus owner. An ordinal refers to the loaded
+     * document even if the path now holds different bytes or has disappeared. */
+    if (dataset == NULL || outDigest == NULL || index >= dataset->summary.documentCount ||
+        index >= UMI_AI_DATASET_MAX_FILES)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    if (dataset->corpora[index] == NULL) return UMI_STATUS_INVALID_STATE;
+    static_assert(UMI_AI_DATASET_DOCUMENT_SHA256_BYTES == UMI_AI_CORPUS_SHA256_BYTES);
+    return UmiAiCorpusSha256(dataset->corpora[index], outDigest);
+}
+
 UmiStatus UmiAiTrainingDatasetBatch(
     const UmiAiTrainingDataset *dataset,
     UmiAiTrainingPartition partition,
@@ -412,7 +428,12 @@ UmiStatus UmiAiTrainingDatasetSourceSha256(
             ++evalCount;
             evalBytes += corpusBytes;
         } else return UMI_STATUS_INVALID_STATE;
+        /* Preserve the earlier direct call for review. The per-document view
+         * uses the same immutable digest as the enclosing identity record. */
+#if 0
         status = UmiAiCorpusSha256(dataset->corpora[i], corpusDigest);
+#endif
+        status = UmiAiTrainingDatasetDocumentSha256(dataset, i, corpusDigest);
         if (status != UMI_STATUS_OK) return status;
         status = DigestU32(&state, (uint32_t)document->partition);
         if (status != UMI_STATUS_OK) return status;

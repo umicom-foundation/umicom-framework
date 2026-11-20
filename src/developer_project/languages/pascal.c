@@ -31,7 +31,10 @@ const UmiDeveloperProjectLanguagePack *umi_developer_project_language_pascal(voi
         .extensions = extensions, .extension_count = sizeof extensions / sizeof extensions[0],
         .build_tools = tools, .build_tool_count = sizeof tools / sizeof tools[0],
         .language_server = "", .formatter = "", .debug_adapter = "",
-        .capabilities = UMI_DEVELOPER_PROJECT_LANGUAGE_BUILD | UMI_DEVELOPER_PROJECT_LANGUAGE_RUN,
+        /* The console recipe supplies a CTest task; the language record stays
+         * independent of the user's selected compiler and native debugger. */
+        .capabilities = UMI_DEVELOPER_PROJECT_LANGUAGE_BUILD | UMI_DEVELOPER_PROJECT_LANGUAGE_RUN |
+                        UMI_DEVELOPER_PROJECT_LANGUAGE_TEST,
         .native_language = 1, .compiled_language = 1, .built_in = 1
     };
     return &pack;

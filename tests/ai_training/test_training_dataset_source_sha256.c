@@ -6,10 +6,15 @@
  *   Compare cryptographic identities of immutable, ordered dataset snapshots
  *   and ensure neither existing metadata nor the sampler is mutated.
  *
- * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation
- * LICENCE: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/dataset_manifest.h"
+#include "umicom/base/sha256.h"
 #include <stdio.h>
 #include <string.h>
 #if defined(_WIN32)
@@ -44,6 +49,17 @@ static int WriteText(const char *path, const char *text)
     }
     closed = fclose(file);
     return closed == 0;
+}
+
+static int DocumentMatches(const UmiAiTrainingDataset *dataset, size_t index, const char *expected)
+{
+    /* Independent known vectors include the exact terminal LF written above. */
+    unsigned char digest[UMI_AI_DATASET_DOCUMENT_SHA256_BYTES];
+    char hex[UMI_SHA256_HEX_CAPACITY];
+    CHECK(UmiAiTrainingDatasetDocumentSha256(dataset, index, digest) == UMI_STATUS_OK);
+    UmiSha256Hex(digest, hex);
+    CHECK(strcmp(hex, expected) == 0);
+    return 0;
 }
 
 int main(void)
@@ -120,6 +136,11 @@ int main(void)
     CHECK(WriteText(manifestPath, manifestText));
     CHECK(UmiAiTrainingDatasetLoadManifest(manifestPath,
           &beforeDiskChange) == UMI_STATUS_OK);
+    static const char originalTrain[] = "b1f498a4f6e721dd858c84c5356f83990dc54c5ca95794481b53b8112c6b6b4d";
+    static const char updatedTrain[] = "e7be1726d95b05675eeaa6f2b6b38936e40c52f6c128577966b460ea602de419";
+    static const char unchangedEval[] = "ac103045e51ad0c30a31f54a6d4d40f88354a1edab02cd65680e5e85b0394b63";
+    CHECK(DocumentMatches(beforeDiskChange, 0U, originalTrain) == 0);
+    CHECK(DocumentMatches(beforeDiskChange, 1U, unchangedEval) == 0);
     CHECK(UmiAiTrainingDatasetSourceSha256(beforeDiskChange,
           snapshotBefore) == UMI_STATUS_OK);
     CHECK(WriteText(sourceTrain, "int Account(void){return 999;}\n"));
@@ -129,6 +150,18 @@ int main(void)
                  sizeof(snapshotBefore)) == 0);
     CHECK(UmiAiTrainingDatasetLoadManifest(manifestPath,
           &afterDiskChange) == UMI_STATUS_OK);
+    /* Reusing the old owner reports old bytes. A deliberate new load reports
+     * the edited bytes only for the training document that was changed. */
+    CHECK(DocumentMatches(beforeDiskChange, 0U, originalTrain) == 0);
+    CHECK(DocumentMatches(afterDiskChange, 0U, updatedTrain) == 0);
+    CHECK(DocumentMatches(afterDiskChange, 1U, unchangedEval) == 0);
+    unsigned char rejected[UMI_AI_DATASET_DOCUMENT_SHA256_BYTES];
+    memset(rejected, 0xA5, sizeof rejected);
+    CHECK(UmiAiTrainingDatasetDocumentSha256(afterDiskChange, 2U, rejected) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(UmiAiTrainingDatasetDocumentSha256(afterDiskChange, SIZE_MAX, rejected) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(UmiAiTrainingDatasetDocumentSha256(NULL, 0U, rejected) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(UmiAiTrainingDatasetDocumentSha256(afterDiskChange, 0U, NULL) == UMI_STATUS_INVALID_ARGUMENT);
+    for (size_t i = 0U; i < sizeof rejected; ++i) CHECK(rejected[i] == 0xA5U);
     CHECK(UmiAiTrainingDatasetSourceSha256(afterDiskChange,
           snapshotAfter) == UMI_STATUS_OK);
     CHECK(memcmp(snapshotBefore, snapshotAfter,
@@ -143,5 +176,6 @@ int main(void)
     UmiAiTrainingDatasetDestroy(repeat);
     UmiAiTrainingDatasetDestroy(original);
     puts("dataset source SHA-256: ordered snapshot, sampler, failure atomicity PASS");
+    puts("document SHA-256: two immutable revisions, unchanged evaluation and refusal PASS");
     return 0;
 }

@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/path_picker/test_path_picker.c
- * PURPOSE: Exercise native chooser completion without opening an operating-system file dialog.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Exercise native chooser completion without opening an operating-system file dialog.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/path_picker.h"
@@ -109,6 +116,25 @@ static void Complete(GFile *file)
 static void Drain(void)
 {
     while (g_main_context_iteration(NULL, FALSE)) {}
+}
+
+/* Observe the supported read boundary from an actual entry notification.
+ * An observer can try a host action or replace the user's draft synchronously. */
+typedef struct SelectionObserver {
+    bool edit, observed;
+    GtkWindow *close_window;
+    UmiStatus status;
+    UmiPathPickerMode mode;
+} SelectionObserver;
+
+static void ReadDuringEdit(GtkEditable *editable, gpointer data)
+{
+    SelectionObserver *observer = data;
+    if (observer->observed) return;
+    observer->observed = true;
+    observer->status = UmiPathPickerGtk4ReadSelectedMode(GTK_ENTRY(editable), &observer->mode);
+    if (observer->edit) gtk_editable_set_text(editable, "observer's newer draft");
+    if (observer->close_window != NULL) gtk_window_destroy(observer->close_window);
 }
 /* Inspect configured locations without displaying a native dialog or creating
  * a file. A selected root must not be replaced by the process directory. */
@@ -245,13 +271,24 @@ int main(int argc, char **argv)
     Drain();
     CHECK(gtk_widget_get_mapped(control));
     gtk_editable_set_text(GTK_EDITABLE(entry), "original draft");
+    UmiPathPickerMode observed = (UmiPathPickerMode)9;
+    CHECK(UmiPathPickerGtk4ReadSelectedMode(GTK_ENTRY(entry), &observed) == UMI_STATUS_NOT_FOUND);
+    CHECK(observed == (UmiPathPickerMode)9);
     g_signal_emit_by_name(button, "clicked");
     CHECK(starts == 1U && pendingTask != NULL);
     g_signal_emit_by_name(button, "clicked");
     CHECK(starts == 1U);
     char *path = g_build_filename(g_get_tmp_dir(), "umicom-path-caf\xc3\xa9.csv", NULL);
     gboolean unchanged = FALSE;
+    bool reenter = strncmp(scenario, "mode-reentrant", 14U) == 0;
+    bool type_after_selection = strcmp(scenario, "mode-edit") == 0;
+    SelectionObserver observer = {.edit = strcmp(scenario, "mode-reentrant-edit") == 0,
+        .close_window = strcmp(scenario, "mode-reentrant-close") == 0 ? GTK_WINDOW(window) : NULL,
+        .mode = (UmiPathPickerMode)9};
+    gulong listener = reenter || type_after_selection
+        ? g_signal_connect(entry, "changed", G_CALLBACK(ReadDuringEdit), &observer) : 0U;
     if (strcmp(scenario, "edited") == 0) {
+        unchanged = TRUE;
         gtk_editable_set_text(GTK_EDITABLE(entry), "newer draft");
         Complete(g_file_new_for_path(path));
         CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(entry)), "newer draft") == 0);
@@ -274,8 +311,54 @@ int main(int argc, char **argv)
 #if 0
 CHECK(strcmp(gtk_editable_get_text(GTK_EDITABLE(entry)), unchanged ? "original draft" : path) == 0);
 #endif
-CHECK(unchanged ? strcmp(gtk_editable_get_text(GTK_EDITABLE(entry)), "original draft") == 0 :
+        /* A reentrant edit during publication owns the newer draft. The
+         * original comparison remains for review of the ordinary selection. */
+#if 0
+        CHECK(unchanged ? strcmp(gtk_editable_get_text(GTK_EDITABLE(entry)), "original draft") == 0 :
             UmiTestSameLocalPath(gtk_editable_get_text(GTK_EDITABLE(entry)), path));
+#endif
+        const char *actual = gtk_editable_get_text(GTK_EDITABLE(entry));
+        if (observer.edit) {
+            unchanged = TRUE;
+            if (strcmp(actual, "observer's newer draft") != 0)
+                fprintf(stderr, "The observer's draft was changed to: %s\n", actual);
+            CHECK(strcmp(actual, "observer's newer draft") == 0);
+        } else if (observer.close_window != NULL) {
+            /* Retirement during deletion prevents any subsequent insertion. */
+            unchanged = TRUE;
+            CHECK(actual[0] == '\0' && !gtk_widget_get_mapped(entry));
+        } else {
+            CHECK(unchanged ? strcmp(actual, "original draft") == 0 : UmiTestSameLocalPath(actual, path));
+        }
+    }
+    if (listener != 0U) {
+        CHECK(observer.observed && observer.status == UMI_STATUS_BUSY && observer.mode == (UmiPathPickerMode)9);
+        if (!type_after_selection) g_signal_handler_disconnect(entry, listener);
+    }
+    CHECK(UmiPathPickerGtk4ReadSelectedMode(GTK_ENTRY(entry), &observed) ==
+        (unchanged ? UMI_STATUS_NOT_FOUND : UMI_STATUS_OK));
+    CHECK(observed == (unchanged ? (UmiPathPickerMode)9 : mode));
+    unsigned expected_starts = 1U;
+    if (strcmp(scenario, "mode-cancel") == 0) {
+        /* Cancelling a later chooser preserves the accepted previous path and mode. */
+        g_signal_emit_by_name(button, "clicked");
+        CHECK(starts == 2U && pendingTask != NULL);
+        Complete(NULL);
+        CHECK(UmiPathPickerGtk4ReadSelectedMode(GTK_ENTRY(entry), &observed) == UMI_STATUS_OK && observed == mode);
+        ++expected_starts;
+    } else if (strcmp(scenario, "mode-edit") == 0 || strcmp(scenario, "mode-unmap") == 0) {
+        /* An earlier observer sees the new draft before Framework's changed
+         * handler. That observer must never reuse the old picker mode. */
+        if (type_after_selection) {
+            observer.observed = false;
+            gtk_editable_set_text(GTK_EDITABLE(entry), "manually typed path");
+            g_signal_handler_disconnect(entry, listener);
+            CHECK(observer.observed && observer.status == UMI_STATUS_NOT_FOUND && observer.mode == (UmiPathPickerMode)9);
+            gtk_editable_set_text(GTK_EDITABLE(entry), path);
+        } else gtk_widget_set_visible(entry, FALSE);
+        observed = (UmiPathPickerMode)9;
+        CHECK(UmiPathPickerGtk4ReadSelectedMode(GTK_ENTRY(entry), &observed) == UMI_STATUS_NOT_FOUND);
+        CHECK(observed == (UmiPathPickerMode)9);
     }
     CHECK(Picker(control)->pending == NULL);
     gtk_window_destroy(GTK_WINDOW(window));
@@ -284,7 +367,7 @@ CHECK(unchanged ? strcmp(gtk_editable_get_text(GTK_EDITABLE(entry)), "original d
     /* The retained button can outlive its container. It must have no remaining
      * connection that launches a chooser or dereferences the former entry. */
     g_signal_emit_by_name(button, "clicked");
-    CHECK(starts == 1U);
+    CHECK(starts == expected_starts);
     g_object_unref(button);
     g_object_unref(entry);
     g_free(path);

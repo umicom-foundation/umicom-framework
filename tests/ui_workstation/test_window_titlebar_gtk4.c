@@ -129,6 +129,10 @@ int main(void)
     label = find_tag(bar, "workstation.identity.title");
     CHECK(GTK_IS_LABEL(context) && GTK_IS_PICTURE(icon) && GTK_IS_LABEL(label));
     CHECK(gtk_widget_is_ancestor(icon, bar));
+    /* The default identity must have drawable approved artwork before the
+     * caller passes an explicit resource path or presents the window. */
+    CHECK(gtk_widget_get_visible(icon));
+    CHECK(gtk_picture_get_paintable(GTK_PICTURE(icon)) != NULL);
     CHECK(gtk_header_bar_get_title_widget(GTK_HEADER_BAR(bar)) == context);
     CHECK(strcmp(gtk_label_get_text(GTK_LABEL(label)), "Umicom Studio IDE") == 0);
     catalogue = find_tag(bar, "workstation.application.catalogue");
@@ -170,6 +174,18 @@ int main(void)
     expected_file = g_file_new_for_path(UMICOM_TEST_BRAND_ICON_PATH);
     actual_file = gtk_icon_paintable_get_file(GTK_ICON_PAINTABLE(paintable));
     CHECK(actual_file != NULL && g_file_equal(expected_file, actual_file));
+
+    /* Absent caller artwork remains distinguishable from the known Umicom
+     * resource names, which can use embedded artwork if staging is absent. */
+    CHECK(g_strlcpy(appearance.icon_resource, "missing/custom-workstation-icon.svg",
+        sizeof(appearance.icon_resource)) < sizeof(appearance.icon_resource));
+    CHECK(umi_gtk4_ws_window_titlebar_apply_appearance(titlebar, &appearance) == UMI_STATUS_OK);
+    CHECK(!umi_gtk4_ws_window_titlebar_snapshot(titlebar).icon_visible);
+    CHECK(gtk_picture_get_paintable(GTK_PICTURE(icon)) == NULL);
+    CHECK(umi_ui_appearance_catalogue_find("umicom-dark", &appearance) == UMI_STATUS_OK);
+    CHECK(umi_gtk4_ws_window_titlebar_apply_appearance(titlebar, &appearance) == UMI_STATUS_OK);
+    CHECK(umi_gtk4_ws_window_titlebar_snapshot(titlebar).icon_visible);
+    CHECK(gtk_picture_get_paintable(GTK_PICTURE(icon)) != NULL);
 
     gtk_window_set_title(window, "Umicom Studio IDE — λ.umicom — Project Beta");
     CHECK(strcmp(gtk_label_get_text(GTK_LABEL(context)), "λ.umicom — Project Beta") == 0);

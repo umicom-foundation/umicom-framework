@@ -3,7 +3,7 @@
  * File: tests/test_base64_admission.c
  *
  * PURPOSE:
- *   Exercise canonical decoding, exact spans, alias refusal and unchanged outputs.
+ *   Exercise canonical encoding and decoding, exact spans, alias refusal and unchanged outputs.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -72,10 +72,44 @@ static void CheckVector(const Vector *v)
         assert(count == v->expected_length && measured == count);
         assert(memcmp(output, v->expected, count) == 0);
         assert(memcmp(output + count, original + count, sizeof(output) - count) == 0);
+        /* Reverse the canonical vectors with the exact capacity, using their
+         * explicit byte counts so the input can also contain a NUL. */
+        if (v->flags == 0U) {
+            char encoded[32];
+            size_t written = 321U;
+            memset(encoded, 0x5A, sizeof(encoded));
+            assert(UmiBase64Encode(output, count, encoded, v->input_length + 1U, &written) == UMI_STATUS_OK);
+            assert(written == v->input_length && memcmp(encoded, v->input, written) == 0);
+            assert(encoded[written] == '\0' && encoded[written + 1U] == 0x5A);
+        }
     } else {
         assert(count == 123U && measured == 321U);
         assert(memcmp(output, original, sizeof(output)) == 0);
     }
+}
+
+/* Each refusal must precede any write, even when part of the destination
+ * overlaps the input or the encoded length cannot fit in size_t. */
+static void CheckEncodeRefusals(void)
+{
+    unsigned char bytes[16] = {0U, 255U, 254U};
+    unsigned char original[sizeof(bytes)];
+    char encoded[12] = "unchanged";
+    union { size_t count; char text[16]; } overlap = {.count = 123U};
+    size_t written = 321U;
+    memcpy(original, bytes, sizeof(bytes));
+    assert(UmiBase64Encode(bytes, 3U, encoded, 4U, &written) == UMI_STATUS_CAPACITY_EXCEEDED);
+    assert(UmiBase64Encode(bytes, SIZE_MAX, encoded, sizeof(encoded), &written) == UMI_STATUS_CAPACITY_EXCEEDED);
+    assert(UmiBase64Encode(bytes, 3U, (char *)bytes + 1U, sizeof(bytes) - 1U, &written) == UMI_STATUS_INVALID_ARGUMENT);
+    assert(UmiBase64Encode(bytes, 3U, overlap.text, sizeof(overlap.text), &overlap.count) == UMI_STATUS_INVALID_ARGUMENT);
+    assert(UmiBase64Encode(NULL, 1U, encoded, sizeof(encoded), &written) == UMI_STATUS_INVALID_ARGUMENT);
+    assert(UmiBase64Encode(bytes, 3U, encoded, sizeof(encoded), NULL) == UMI_STATUS_INVALID_ARGUMENT);
+    assert(overlap.count == 123U);
+    assert(memcmp(bytes, original, sizeof(bytes)) == 0 && strcmp(encoded, "unchanged") == 0 && written == 321U);
+    assert(UmiBase64Encode(bytes, 3U, encoded, sizeof(encoded), &written) == UMI_STATUS_OK);
+    assert(written == 4U && strcmp(encoded, "AP/+") == 0);
+    assert(UmiBase64Encode(NULL, 0U, encoded, 1U, &written) == UMI_STATUS_OK);
+    assert(written == 0U && encoded[0] == '\0' && encoded[1] == 'P');
 }
 int main(int argc, char **argv)
 {
@@ -140,6 +174,8 @@ int main(int argc, char **argv)
         assert(count == sizeof(bytes));
         for (size_t i = 0U; i < count; i += 3U)
             assert(bytes[i] == 0U && bytes[i + 1U] == 255U && bytes[i + 2U] == 254U);
+    } else if (strcmp(argv[1], "encode-refusals") == 0) {
+        CheckEncodeRefusals();
     } else return 2;
     return 0;
 }

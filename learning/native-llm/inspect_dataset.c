@@ -14,7 +14,9 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ai/training/dataset_manifest.h"
+#include "umicom/base/sha256.h"
 #include <stdio.h>
+#include <string.h>
 
 /* Keep the learning tool a consumer: parsing, split validation, snapshots,
  * hashing and sampling are all provided by the same Framework service used
@@ -42,11 +44,21 @@ int main(int argc, char **argv)
     UmiAiTrainingDatasetSummary summary;
     unsigned char digest[UMI_AI_DATASET_SOURCE_SHA256_BYTES];
     UmiStatus status;
+    /* The old single-manifest invocation retains its exact report. Opt in
+     * explicitly to the larger per-document view of the same source bytes. */
+#if 0
     if (argc != 2) {
         fputs("usage: umicom-native-llm-dataset <reviewed-local-manifest>\n", stderr);
         return 2;
     }
     status = UmiAiTrainingDatasetLoadManifest(argv[1], &dataset);
+#endif
+    int showDocuments = argc == 3 && strcmp(argv[1], "--document-sha256") == 0;
+    if (argc != 2 && !showDocuments) {
+        fputs("usage: umicom-native-llm-dataset [--document-sha256] <reviewed-local-manifest>\n", stderr);
+        return 2;
+    }
+    status = UmiAiTrainingDatasetLoadManifest(argv[showDocuments ? 2 : 1], &dataset);
     if (status != UMI_STATUS_OK) goto failed;
     status = UmiAiTrainingDatasetInspect(dataset, &summary);
     if (status != UMI_STATUS_OK) goto failed;
@@ -68,6 +80,16 @@ int main(int argc, char **argv)
         printf("%s %s (%zu bytes)\n",
                document.partition == UMI_AI_TRAINING_PARTITION_TRAIN ?
                    "train" : "eval", document.relativePath, document.byteCount);
+        /* Use the selected immutable ordinal, never hash the filename again.
+         * Print only the relative name already present in the original report. */
+        if (showDocuments) {
+            unsigned char sourceDigest[UMI_AI_DATASET_DOCUMENT_SHA256_BYTES];
+            char hex[UMI_SHA256_HEX_CAPACITY];
+            status = UmiAiTrainingDatasetDocumentSha256(dataset, index, sourceDigest);
+            if (status != UMI_STATUS_OK) goto failed;
+            UmiSha256Hex(sourceDigest, hex);
+            printf("Document SHA-256: %s %s\n", hex, document.relativePath);
+        }
     }
     status = ShowWindow(dataset, UMI_AI_TRAINING_PARTITION_TRAIN);
     if (status != UMI_STATUS_OK) goto failed;

@@ -18,6 +18,7 @@
 #include "umicom/ui/gtk4/interaction_recording.h"
 #include "umicom/ui/gtk4/workstation/shell_header.h"
 #include "../startup_brand_panel.h"
+#include "../pixbuf_texture_private.h"
 
 #include "umicom/application/portfolio.h"
 #include "umicom/application/native_discovery.h"
@@ -370,6 +371,23 @@ static char *resolve_header_resource(
         : NULL;
 }
 
+/* Use the same embedded SVG decoder and checked texture conversion as the
+ * shared brand surfaces. GtkPicture owns a reference after the assignment. */
+UmiStatus UmiGtk4BrandPictureUseEmbedded(GtkPicture *picture,
+    bool wordmark, bool on_dark_surface, int height)
+{
+    if (!GTK_IS_PICTURE(picture) || height < 1 || height > 256)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    GdkPixbuf *pixels = UmiGtkBrandDecode(wordmark, on_dark_surface, height, 1, NULL);
+    if (pixels == NULL) return UMI_STATUS_IO_ERROR;
+    GdkTexture *texture = UmiGtkTextureFromPixbuf(pixels, NULL);
+    g_object_unref(pixels);
+    if (texture == NULL) return UMI_STATUS_IO_ERROR;
+    gtk_picture_set_paintable(picture, GDK_PAINTABLE(texture));
+    g_object_unref(texture);
+    return UMI_STATUS_OK;
+}
+
 /* Give GTK a small icon-sized view of the original SVG. A picture's size
  * request is only a minimum: loading the raw 236-pixel artwork directly would
  * still give the header that large natural size. The paintable preserves the
@@ -389,6 +407,9 @@ static void update_header_icon(UmiGtk4WorkstationShellHeader *header)
         g_object_unref(file);
         g_free(resolved);
     }
+    /* Preserve the earlier file-only route for review. The optional fallback
+     * is restricted to known Umicom resources and keeps custom files in use. */
+#if 0
     /* Missing artwork stays empty. Neither angle-bracket text nor a stock
      * toolkit symbol is a replacement for the approved Umicom mark. */
     gtk_picture_set_paintable(GTK_PICTURE(header->icon),
@@ -397,6 +418,26 @@ static void update_header_icon(UmiGtk4WorkstationShellHeader *header)
     gtk_widget_set_visible(header->icon, paintable != NULL);
     gtk_widget_set_tooltip_text(header->icon, header->state.title);
     if (paintable != NULL) g_object_unref(paintable);
+#else
+    GtkPicture *picture = GTK_PICTURE(header->icon);
+    if (paintable != NULL) {
+        gtk_picture_set_paintable(picture, GDK_PAINTABLE(paintable));
+        g_object_unref(paintable);
+    } else {
+        /* Match exact logical names so a missing caller-provided icon is
+         * reported as missing while Umicom startup can use its built-in mark. */
+        const bool dark = strcmp(header->state.icon_resource,
+            "branding/umicom-icon-on-dark.svg") == 0;
+        const bool light = strcmp(header->state.icon_resource,
+            "branding/umicom-icon.svg") == 0;
+        if ((!dark && !light) || UmiGtk4BrandPictureUseEmbedded(
+                picture, false, dark, header->state.compact ? 18 : 24) != UMI_STATUS_OK)
+            gtk_picture_set_paintable(picture, NULL);
+    }
+    header->state.icon_visible = gtk_picture_get_paintable(picture) != NULL;
+    gtk_widget_set_visible(header->icon, header->state.icon_visible);
+    gtk_widget_set_tooltip_text(header->icon, header->state.title);
+#endif
 }
 
 /* A move to another display keeps the same logical icon size but requests

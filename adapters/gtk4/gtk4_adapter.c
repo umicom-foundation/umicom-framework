@@ -106,6 +106,9 @@ void umi_gtk4_adapter_destroy(UmiGtk4Adapter *adapter)
      * used.
      */
     if (adapter == NULL) return;
+    /* Focus and top-level removal callbacks may ask the same owner to close. */
+    if (adapter->destroying) return;
+    adapter->destroying = 1;
 
     /*
      * Disable the borrowed interaction sink before destroying the GTK object
@@ -129,8 +132,18 @@ void umi_gtk4_adapter_destroy(UmiGtk4Adapter *adapter)
 #if 0
         gtk_window_destroy(adapter->window);
 #endif
+        /* Retain the previous registered-only close for review. Clear focus
+         * while text input and the rooted widget tree are still usable. */
+#if 0
         if (UmiGtk4WindowIsOpen(adapter->window)) {
             gtk_window_destroy(adapter->window);
+        }
+#endif
+        if (UmiGtk4WindowIsOpen(adapter->window)) {
+            gtk_window_set_focus(adapter->window, NULL);
+            /* A focus observer may have closed the same window synchronously. */
+            if (UmiGtk4WindowIsOpen(adapter->window))
+                gtk_window_destroy(adapter->window);
         }
         /* Match the reference acquired when the shell creates its window.
          * External closure may already have released GTK's reference; the
@@ -192,6 +205,8 @@ UmiStatus umi_gtk4_adapter_prepare(
     if (adapter == NULL || shell == NULL) {
         return UMI_STATUS_INVALID_ARGUMENT;
     }
+    /* Teardown has already revoked borrowed document and interaction state. */
+    if (adapter->destroying) return UMI_STATUS_INVALID_STATE;
     adapter->shell = shell;
     /*
      * Protect caller-owned memory by checking that required state is available before it is
@@ -301,7 +316,8 @@ UmiStatus umi_gtk4_adapter_refresh(UmiGtk4Adapter *adapter)
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (adapter == NULL || adapter->shell == NULL ||
+    /* A native focus callback can attempt to refresh a retiring adapter. */
+    if (adapter == NULL || adapter->destroying || adapter->shell == NULL ||
         adapter->window == NULL) {
         return UMI_STATUS_INVALID_STATE;
     }

@@ -4,6 +4,7 @@
  *
  * PURPOSE:
  *   Verify standard New Project variables and portable target identifiers.
+ *   Keep human display punctuation scoped to the application label.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -43,5 +44,26 @@ int main(void)
     assert(strcmp(
         umi_developer_project_variable_get(&variables, "TARGET_UPPER"),
         "UMICOM_EXAMPLE") == 0);
+
+    (void)strcpy(request.application_name, "C++ Practice");
+    assert(umi_developer_project_generation_request_variables(&request, &variables) == UMI_STATUS_OK);
+    assert(strcmp(umi_developer_project_variable_get(&variables, "APPLICATION_NAME"), "C++ Practice") == 0);
+    assert(strcmp(umi_developer_project_variable_get(&variables, "PROJECT_NAME"), "C++ Practice") == 0);
+    assert(strcmp(umi_developer_project_variable_get(&variables, "TARGET_NAME"), "umicom_example") == 0);
+
+    char diagnostic[256];
+    (void)strcpy(request.application_id, "org.umicom.example+");
+    assert(umi_developer_project_generation_request_validate(&request, diagnostic, sizeof diagnostic)
+           == UMI_STATUS_INVALID_ARGUMENT);
+    assert(strstr(diagnostic, "Display names also allow spaces and plus signs") != NULL);
+    (void)strcpy(request.application_id, "org.umicom.example");
+    (void)strcpy(request.repository_name, "umicom+example");
+    assert(umi_developer_project_generation_request_validate(&request, NULL, 0U) == UMI_STATUS_INVALID_ARGUMENT);
+    (void)strcpy(request.repository_name, "umicom-example");
+    (void)strcpy(request.target_name, "umicom+example");
+    assert(umi_developer_project_generation_request_validate(&request, NULL, 0U) == UMI_STATUS_INVALID_ARGUMENT);
+    (void)strcpy(request.target_name, "umicom_example");
+    (void)strcpy(request.application_name, "Worksheet; draft");
+    assert(umi_developer_project_generation_request_validate(&request, NULL, 0U) == UMI_STATUS_INVALID_ARGUMENT);
     return 0;
 }

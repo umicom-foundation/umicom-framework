@@ -29,7 +29,10 @@ foreach(_case vector unicode relocated same-size content-change unlisted empty z
         TIMEOUT 30 LABELS "framework;sdk;filesystem;regression" SKIP_RETURN_CODE 77)
 endforeach()
 if(TARGET umicom)
-    foreach(_case complete match mismatch uppercase invalid-digest unknown-option missing malformed unicode relative help extra-argument empty-prefix directory)
+    # Exercise explicit windows on the same CLI entry point as the default receipt checks.
+    foreach(_case complete match mismatch uppercase invalid-digest unknown-option missing malformed unicode relative help extra-argument empty-prefix directory
+            budget-exact budget-file-only budget-total-only budget-file-small budget-total-small budget-empty
+            budget-duplicate budget-duplicate-expect budget-missing budget-suffix budget-sign budget-whitespace budget-overflow budget-file-ceiling budget-total-ceiling)
         add_test(NAME "framework.sdk.fingerprint.cli.${_case}"
             COMMAND "${CMAKE_COMMAND}" "-DCLI_PROGRAM=$<TARGET_FILE:umicom>"
                 "-DTEST_BINARY=${CMAKE_CURRENT_BINARY_DIR}/sdk-fingerprint-cli"

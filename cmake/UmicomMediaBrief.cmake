@@ -15,6 +15,11 @@
 include_guard(GLOBAL)
 target_sources(umicom_creative_workspace PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/media_brief.c")
+# File-based excerpts share the portable brief field limit and the native
+# bounded reader. They do not depend on GTK or a model provider.
+target_sources(umicom_creative_workspace PRIVATE
+    "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/media_source_excerpt.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/media_source_excerpt_command.c")
 if(TARGET umicom_creative_workspace_gtk4)
     target_sources(umicom_creative_workspace_gtk4 PRIVATE
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/media_brief_gtk4.c")
@@ -48,6 +53,37 @@ if(BUILD_TESTING)
                 TIMEOUT 30 SKIP_RETURN_CODE 77 LABELS "framework;creative;gtk4;regression")
         endforeach()
     endif()
+endif()
+if(BUILD_TESTING)
+    # Give each physical file case its own path for parallel CTest runs.
+    add_executable(umicom-media-source-excerpt-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/creative_workspace/test_media_source_excerpt.c")
+    target_link_libraries(umicom-media-source-excerpt-test PRIVATE Umicom::creative_workspace)
+    umicom_creative_configure_target(umicom-media-source-excerpt-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-media-source-excerpt-test)
+    endif()
+    set(_excerpt_fixtures "${CMAKE_CURRENT_BINARY_DIR}/media-source-excerpt-fixtures")
+    file(MAKE_DIRECTORY "${_excerpt_fixtures}")
+    foreach(_case IN ITEMS lf mixed bom blank empty bom-only no-extra-line missing-range malformed-tail
+        embedded-nul control exact-selection large-selection exact-file large-file missing-file relative
+        zero-line reversed cancel null-output inspect-identity inspect-repeat
+        inspect-changed-source inspect-bad-digest inspect-cancelled inspect-outside-lines)
+        add_test(NAME "framework.media_brief.source_excerpt.${_case}"
+            COMMAND umicom-media-source-excerpt-test "${_case}" "${_excerpt_fixtures}/${_case}.txt")
+        set_tests_properties("framework.media_brief.source_excerpt.${_case}" PROPERTIES
+            TIMEOUT 20 LABELS "framework;creative;document;regression")
+    endforeach()
+    # Capture native stdout as bytes, including Windows CRLF, and confirm
+    # that a changed source produces no excerpt even outside the selection.
+    add_test(NAME framework.media_brief.source_excerpt.command-transaction
+        COMMAND "${CMAKE_COMMAND}"
+            "-Dfixture=$<TARGET_FILE:umicom-media-source-excerpt-test>"
+            "-Ddirectory=${_excerpt_fixtures}"
+            -P "${CMAKE_CURRENT_LIST_DIR}/../tests/creative_workspace/media_source_excerpt_command.cmake")
+    set_tests_properties(framework.media_brief.source_excerpt.command-transaction PROPERTIES
+        TIMEOUT 20 LABELS "framework;creative;document;regression")
+    unset(_excerpt_fixtures)
 endif()
 install(FILES "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/media-creation-briefs.html"
     "${CMAKE_CURRENT_LIST_DIR}/../docs/learning/media-creation-briefs.md"

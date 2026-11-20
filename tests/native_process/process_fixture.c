@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/native_process/process_fixture.c
- * PURPOSE: Harmless native descendants, argv and output fixtures for tool runs.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Provide harmless native descendants, argv and output fixtures for tool runs.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef _WIN32
 #define _POSIX_C_SOURCE 200809L
@@ -40,7 +47,7 @@ static unsigned long ProcessId(void)
 #endif
 }
 
-static int SpawnMember(const char *self, unsigned depth)
+static int SpawnMember(const char *self, unsigned depth, unsigned long readyOwner)
 {
 #ifdef _WIN32
     (void)self;
@@ -56,7 +63,9 @@ static int SpawnMember(const char *self, unsigned depth)
     startup.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
     startup.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
     startup.hStdError = GetStdHandle(STD_ERROR_HANDLE);
-    int written = swprintf(command, 32832U, L"\"%ls\" member %u", program, depth);
+    /* Pass only the test PID used to find the root's reserved marker. */
+    int written = readyOwner == 0U ? swprintf(command, 32832U, L"\"%ls\" member %u", program, depth) :
+        swprintf(command, 32832U, L"\"%ls\" member %u %lu", program, depth, readyOwner);
     int created = length > 0U && length < 32768U && written > 0 &&
         CreateProcessW(program, command, NULL, NULL, TRUE, CREATE_NO_WINDOW,
             NULL, NULL, &startup, &process);
@@ -67,9 +76,49 @@ static int SpawnMember(const char *self, unsigned depth)
     char count[24];
     (void)snprintf(count, sizeof(count), "%u", depth);
     pid_t child = fork();
-    if (child == 0) { execl(self, self, "member", count, (char *)NULL); _exit(125); }
+    if (child == 0) {
+        if (readyOwner == 0U) execl(self, self, "member", count, (char *)NULL);
+        else {
+            /* The marker contains only an owned fixture's readiness byte. */
+            char owner[32];
+            (void)snprintf(owner, sizeof owner, "%lu", readyOwner);
+            execl(self, self, "member", count, owner, (char *)NULL);
+        }
+        _exit(125);
+    }
     return child > 0;
 #endif
+}
+
+static int TreeReady(const char *path)
+{
+    /* Merely finding the reserved file is insufficient. The leaf publishes
+     * one byte only after flushing its PID and readiness to the real pipe. */
+    for (unsigned attempt = 0U; attempt < 400U; ++attempt) {
+        FILE *marker = fopen(path, "rb");
+        if (marker != NULL) {
+            int found = fgetc(marker) == 'R';
+            (void)fclose(marker);
+            if (found) return 1;
+        }
+        SleepMilliseconds(10U);
+    }
+    return 0;
+}
+
+static int MarkTreeReady(const char *path)
+{
+    /* A Windows reader can briefly hold the marker while polling. Wait for
+     * access without creating a file that the root did not reserve. */
+    for (unsigned attempt = 0U; attempt < 50U; ++attempt) {
+        FILE *signal = fopen(path, "r+b");
+        if (signal != NULL) {
+            int recorded = fputc('R', signal) == 'R';
+            return fclose(signal) == 0 && recorded;
+        }
+        SleepMilliseconds(10U);
+    }
+    return 0;
 }
 
 static int PrintEnvironment(const char *name)
@@ -134,11 +183,43 @@ static int ProgramMain(int argc, char **argv)
     if (strcmp(mode, "tree") == 0 || strcmp(mode, "orphan") == 0 ||
         strcmp(mode, "orphan-fail") == 0 || strcmp(mode, "member") == 0) {
         unsigned depth = strcmp(mode, "member") == 0 && argc > 2 ? (unsigned)atoi(argv[2]) : 2U;
+        /* Reserve a per-root marker in the test working directory only for
+         * workflows that deliberately return while members remain alive. */
+        const int returns = strncmp(mode, "orphan", 6U) == 0;
+        const unsigned long readyOwner = returns ? ProcessId() :
+            strcmp(mode, "member") == 0 && argc > 3 ? strtoul(argv[3], NULL, 10) : 0UL;
+        char marker[64];
+        if (readyOwner != 0U) {
+            int length = snprintf(marker, sizeof marker, "umicom-fixture-tree-%lu.ready", readyOwner);
+            if (length <= 0 || (size_t)length >= sizeof marker) return 125;
+        }
+        if (returns) {
+            FILE *reserved = fopen(marker, "wbx");
+            if (reserved == NULL) return 125;
+            if (fclose(reserved) != 0) { (void)remove(marker); return 125; }
+        }
         (void)printf("MEMBER=%lu\n", ProcessId()); (void)fflush(stdout);
-        if (depth != 0U && !SpawnMember(argv[0], depth - 1U)) return 125;
-        if (depth == 0U) { puts("TREE_READY"); (void)fflush(stdout); }
+        if (depth != 0U && !SpawnMember(argv[0], depth - 1U, readyOwner)) {
+            if (returns) (void)remove(marker);
+            return 125;
+        }
+        if (depth == 0U) {
+            puts("TREE_READY");
+            if (fflush(stdout) != 0) return 125;
+            if (readyOwner != 0U && !MarkTreeReady(marker)) return 125;
+        }
+        /* The old timed wait assumed the grandchild had run within 700 ms.
+         * Keep it for review. The acknowledged leaf now proves the fixture
+         * actually reached its three-process topology before the root exits. */
+#if 0
         if (strncmp(mode, "orphan", 6U) == 0) {
             SleepMilliseconds(700U);
+            return strcmp(mode, "orphan-fail") == 0 ? 17 : 0;
+        }
+#endif
+        if (returns) {
+            int ready = TreeReady(marker);
+            if (remove(marker) != 0 || !ready) return 125;
             return strcmp(mode, "orphan-fail") == 0 ? 17 : 0;
         }
         SleepMilliseconds(15000U);

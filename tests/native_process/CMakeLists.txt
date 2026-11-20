@@ -20,6 +20,8 @@ add_library(umicom-native-process-check-core STATIC
     "${framework_root}/src/platform/cancellation.c"
     "${framework_root}/src/platform/threading.c"
     "${framework_root}/src/platform/clock.c")
+# Windows process admission reports errors through the canonical status text.
+target_sources(umicom-native-process-check-core PRIVATE "${framework_root}/src/base/status.c")
 target_include_directories(umicom-native-process-check-core PUBLIC "${framework_root}/include")
 target_link_libraries(umicom-native-process-check-core PUBLIC Threads::Threads)
 add_executable(umicom-native-process-fixture process_fixture.c)

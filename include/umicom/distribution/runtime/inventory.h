@@ -1,10 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/distribution/runtime/inventory.h
- * Purpose: Inspect configured release inventories without certifying a release.
- * Author: Sammy Hegab
- * Organisation: Umicom Foundation
- * Licence: MIT
+ *
+ * PURPOSE:
+ *   Inspect configured release inventories without certifying a release.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_DISTRIBUTION_RUNTIME_INVENTORY_H
 #define UMICOM_DISTRIBUTION_RUNTIME_INVENTORY_H
@@ -32,6 +38,9 @@ typedef enum UmiReleaseInventoryKind {
  * characters before displaying them. Header owners are explicit build-target
  * declarations, not inferred API/symbol ownership or proof of ABI correctness.
  * Source details preserve raw CMake expressions when they cannot be resolved.
+ * A large target detail may identify the digest, byte count and relative file
+ * for its full detail. Impact edges that do not fit are marked incomplete.
+ * The parser retains the reference without reading the companion file.
  * CTest details describe registration, never a test execution result. */
 typedef struct UmiReleaseInventoryRecord {
     UmiReleaseInventoryKind kind;

@@ -17,9 +17,11 @@
  *   A dataset is immutable after loading; calls can be serialised externally.
  *
  * AUTHOR AND ORGANISATION:
- *   Sammy Hegab / Umicom Foundation
+ * Sammy Hegab
+ * Umicom Foundation
+ *
  * LICENCE:
- *   MIT
+ * MIT
  *---------------------------------------------------------------------------*/
 #ifndef UMICOM_AI_TRAINING_DATASET_MANIFEST_H
 #define UMICOM_AI_TRAINING_DATASET_MANIFEST_H
@@ -88,6 +90,16 @@ UmiStatus UmiAiTrainingDatasetInspect(
 UmiStatus UmiAiTrainingDatasetDocument(
     const UmiAiTrainingDataset *dataset, size_t index,
     UmiAiTrainingDocumentInfo *outInfo);
+
+/* Hash the original bytes of the document at the same zero-based index as
+ * UmiAiTrainingDatasetDocument. It includes neither the path nor partition.
+ * The 32-byte digest describes the loaded snapshot even if its file changes.
+ * No path is reopened, and a failed call leaves outDigest untouched. Use the
+ * dataset digest below when the order, partitions and paths also matter. */
+#define UMI_AI_DATASET_DOCUMENT_SHA256_BYTES 32U
+UmiStatus UmiAiTrainingDatasetDocumentSha256(
+    const UmiAiTrainingDataset *dataset, size_t index,
+    unsigned char outDigest[UMI_AI_DATASET_DOCUMENT_SHA256_BYTES]);
 
 /* Produce sequenceCount complete next-token windows for the selected split.
  * Each sample is chosen uniformly from ALL eligible windows in that split,

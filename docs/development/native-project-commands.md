@@ -26,7 +26,7 @@ umicom project plan --template developer.template.c23-gtk4 --name "Umicom Exampl
 
 Add --show-files to display the complete rendered file texts. Planning creates no directories or project files and does not check whether the destination already exists. It reports the intended destination, file paths and text-byte counts. It does not configure CMake or run any generated content.
 
-Review the full template ID and destination. Names and application IDs follow the existing generation-request rules; display names allow spaces, while other identity fields use letters, digits, dots, hyphens and underscores. Target names follow the stricter existing target-name rule. These options are not a general-purpose language-escaping interface.
+Review the full template ID and destination. Put a display name such as `C++ Practice` in quotes so the shell passes one argument. The display name allows spaces and plus signs. Application IDs and repository names use letters, digits, dots, hyphens and underscores. Choose a build target such as `cxx_practice`, using letters, digits and underscores with a letter or underscore first. The shared validator gives the same naming explanation to Umicom Command and Studio.
 
 ## Create the reviewed project
 
@@ -58,6 +58,13 @@ cmake --build --preset windows-ucrt64-debug --parallel 2
 ~~~
 
 Stop at the first failure. The SDK path is an example and must identify the installation you actually qualified. The GTK recipes require Umicom::ui_gtk4 and the shared branding helper. See [GTK starters](gtk-project-starters.md) for install/package commands, SVG/ICO checks, inherited-font limits and clean-machine qualification. A console starter has different dependencies.
+
+## Change the output of a C23 console project
+
+1. Open a project generated from `developer.template.c23-console`. The file `tests/expected-output.txt` initially contains the display name followed by a newline.
+2. Change the text printed by `src/main.c`, save the source and build the project with its configured build preset.
+3. Run `ctest --preset windows-ucrt64-debug --output-on-failure` on Windows or `ctest --preset linux-debug --output-on-failure` on Linux. The smoke test starts the built program and compares all of its standard output with the saved expectation. If the output differs, CTest shows both texts. It also reports a nonzero program exit or any standard-error output.
+4. If the new output is intentional, update `tests/expected-output.txt` to match, including the final newline, and run the test again. CTest reads the file for each run, so a change to the expectation alone needs no rebuild.
 
 ## Interpret command results
 

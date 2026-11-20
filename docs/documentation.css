@@ -40,6 +40,16 @@ body {
     padding: 0.7rem 1rem;
 }
 
+/* The supplied wordmark retains its aspect ratio in Doxygen's title area.
+   Limit its width so the project title and navigation still have room. */
+#projectlogo img {
+    display: block;
+    width: clamp(7rem, 22vw, 12.5rem);
+    max-width: 100%;
+    height: auto;
+    background: transparent;
+}
+
 /* A bounded content width prevents source guidance from becoming hard to scan. */
 .contents {
     max-width: 1180px;

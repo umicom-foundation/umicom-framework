@@ -126,7 +126,8 @@ void umi_cli_print_help(void)
     (void)puts("Compiler plan preview: umicom compiler plan --help\n"
         "  Shared argument planning as JSON; no compiler discovery or execution.\n");
     (void)puts("Project recipes: umicom project templates|plan|create (project --help for options)\n"
-        "  plan renders memory only; create requires --apply and a new destination.\n");
+        "  plan renders memory only; create requires --apply and a new destination.\n"
+        "  umicom project language-cohort [--tools ABSOLUTE_DIRECTORY] reports tool files.\n");
     (void)puts("Distribution media: umicom boot-media --help | umicom setup --help\n"
         "  boot-media inspects, reviews and verifies images; copying requires reviewed tokens.\n"
         "  setup media-stage/media-iso reuse native setup and its checked process adapter.\n"
@@ -174,6 +175,7 @@ void umi_cli_print_help(void)
 #endif
         "  umicom deliver [--source PATH] [--preset NAME] --build PATH --prefix PATH\n"
         "  umicom build-test --build PATH --target NAME --tests REGEX [--jobs N] [--log PATH]\n"
+        "  umicom debug --program PATH [--kind gdb|lldb] [--source PATH] [-- ARGUMENTS]\n"
         "  umicom make [--source PATH] [--preset NAME | --build PATH] [--jobs N]\n"
         "  umicom automate plan|run|watch [PATH] [--all] [--no-tests] [--deploy]\n"
         /* Retained old alias example; binaryDir is no longer guessed. */

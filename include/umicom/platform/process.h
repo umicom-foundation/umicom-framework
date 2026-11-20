@@ -156,6 +156,24 @@ UmiStatus UmiProcessExecuteWithLifetime(const UmiProcessRequest *request,
     UmiProcessLifetime lifetime, UmiProcessResultObserver observer,
     UmiProcessOutputObserver rawObserver, void *context, UmiProcessResult *outResult);
 
+typedef enum UmiProcessOutputChannel {
+    UMI_PROCESS_OUTPUT_STDOUT = 1,
+    UMI_PROCESS_OUTPUT_STDERR = 2
+} UmiProcessOutputChannel;
+
+typedef void (*UmiProcessChannelObserver)(UmiProcessOutputChannel channel,
+    const char *bytes, size_t length, void *context);
+
+/** Capture both streams through separate native pipes for one invocation.
+ * This entry point enables both capture flags on its own request copy. A
+ * required observer sees ordered original bytes within each channel. There
+ * is no ordering guarantee between channels. The diagnostic tail remains
+ * display-only. Bytes are borrowed for the callback; keep callbacks bounded.
+ * Lifetime, argument, process scope, and cancellation rules are unchanged. */
+UmiStatus UmiProcessExecuteChannels(const UmiProcessRequest *request,
+    UmiProcessLifetime lifetime, UmiProcessChannelObserver observer,
+    void *context, UmiProcessResult *outResult);
+
 /**
  * Provide the process capture operation used by this module and its client applications.
  */

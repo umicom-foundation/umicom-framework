@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/web/server_connection_native.c
- * PURPOSE: Adapt one bounded local HTTP exchange to nonblocking Windows or POSIX sockets.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Adapt bounded local HTTP and FastCGI exchanges to native nonblocking sockets.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #if !defined(_WIN32) && !defined(_POSIX_C_SOURCE)
@@ -11,8 +18,17 @@
 #endif
 #include "server_connection_internal.h"
 #include "umicom/platform/clock.h"
+#include "umicom/web/fastcgi_loopback.h"
 #include <limits.h>
+#include <stdlib.h>
 #include <string.h>
+
+static bool LoopbackEndpointValid(const UmiWebFastCgiLoopbackEndpoint *endpoint)
+{
+    return endpoint != NULL && endpoint->port != 0U && endpoint->timeoutMs != 0U &&
+        endpoint->timeoutMs <= UMI_WEB_FASTCGI_LOOPBACK_MAX_WAIT_MS;
+}
+
 #if !defined(__EMSCRIPTEN__) && (defined(_WIN32) || defined(__unix__) || defined(__APPLE__))
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
@@ -20,6 +36,7 @@
 #include <ws2tcpip.h>
 #include <windows.h>
 typedef SOCKET WebSocket;
+typedef int SocketOptionLength;
 #define WEB_INVALID_SOCKET INVALID_SOCKET
 static void SocketClose(WebSocket socket) { closesocket(socket); }
 static int RetrySocket(void)
@@ -29,12 +46,14 @@ static int RetrySocket(void)
 }
 static int Interrupted(void) { return WSAGetLastError() == WSAEINTR; }
 #else
+#include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <unistd.h>
 typedef int WebSocket;
+typedef socklen_t SocketOptionLength;
 #define WEB_INVALID_SOCKET (-1)
 static void SocketClose(WebSocket socket) { (void)close(socket); }
 static int RetrySocket(void) { return errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR; }
@@ -46,6 +65,7 @@ typedef struct NativeExchange
     UmiClock clock;
     uint64_t deadline, last_now;
     const UmiCancellationToken *cancel;
+    bool connecting;
 } NativeExchange;
 static UmiStatus SocketPrepare(WebSocket socket, bool sending)
 {
@@ -114,14 +134,31 @@ static UmiStatus WaitSocket(NativeExchange *io, bool writing)
         uint64_t remaining = io->deadline - now;
         long slice = (long)(remaining > 50U ? 50U : remaining);
         struct timeval timeout = {0, slice * 1000L};
-        fd_set ready;
+        fd_set ready, failed;
         FD_ZERO(&ready);
         FD_SET(io->socket, &ready);
+        fd_set *errors = NULL;
+        if (io->connecting) {
+            FD_ZERO(&failed);
+            FD_SET(io->socket, &failed);
+            errors = &failed;
+        }
+        /* Preserve the original readiness-only call for review. Outbound
+         * connect also checks the error set because Winsock can signal a
+         * refused connection there. Accepted HTTP peers keep the old behavior. */
+#if 0
 #ifdef _WIN32
         int selected = select(0, writing ? NULL : &ready, writing ? &ready : NULL, NULL, &timeout);
 #else
         int selected =
             select(io->socket + 1, writing ? NULL : &ready, writing ? &ready : NULL, NULL, &timeout);
+#endif
+#else
+#ifdef _WIN32
+        int selected = select(0, writing ? NULL : &ready, writing ? &ready : NULL, errors, &timeout);
+#else
+        int selected = select(io->socket + 1, writing ? NULL : &ready, writing ? &ready : NULL, errors, &timeout);
+#endif
 #endif
         if (selected > 0)
             return UMI_STATUS_OK;
@@ -187,6 +224,105 @@ static UmiStatus WriteSocket(void *context, const void *bytes, size_t length, si
             return UMI_STATUS_IO_ERROR;
     }
 }
+
+static UmiStatus ConnectedStatus(int error)
+{
+    if (error == 0) return UMI_STATUS_OK;
+#ifdef _WIN32
+    if (error == WSAECONNREFUSED) return UMI_STATUS_UNAVAILABLE;
+    if (error == WSAEACCES) return UMI_STATUS_PERMISSION_DENIED;
+    if (error == WSAETIMEDOUT) return UMI_STATUS_TIMEOUT;
+#else
+    if (error == ECONNREFUSED) return UMI_STATUS_UNAVAILABLE;
+    if (error == EACCES || error == EPERM) return UMI_STATUS_PERMISSION_DENIED;
+    if (error == ETIMEDOUT) return UMI_STATUS_TIMEOUT;
+#endif
+    return UMI_STATUS_IO_ERROR;
+}
+
+static UmiStatus ConnectLoopback(NativeExchange *io, uint16_t port)
+{
+    struct sockaddr_in address = {0};
+    address.sin_family = AF_INET;
+    address.sin_port = htons(port);
+    address.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    if (connect(io->socket, (const struct sockaddr *)&address, sizeof address) == 0)
+        return UMI_STATUS_OK;
+#ifdef _WIN32
+    int error = WSAGetLastError();
+    if (error != WSAEWOULDBLOCK && error != WSAEINPROGRESS && error != WSAEALREADY && error != WSAEINTR)
+        return ConnectedStatus(error);
+#else
+    int error = errno;
+    if (error != EINPROGRESS && error != EALREADY && error != EINTR)
+        return ConnectedStatus(error);
+#endif
+    io->connecting = true;
+    UmiStatus status = WaitSocket(io, true);
+    io->connecting = false;
+    if (status != UMI_STATUS_OK) return status;
+    SocketOptionLength length = (SocketOptionLength)sizeof error;
+    /* Readiness alone cannot distinguish a completed connect from a refusal. */
+    if (getsockopt(io->socket, SOL_SOCKET, SO_ERROR, (char *)&error, &length) != 0 ||
+        length != (SocketOptionLength)sizeof error) return UMI_STATUS_IO_ERROR;
+    return ConnectedStatus(error);
+}
+
+static void LoopbackRelease(NativeExchange *io)
+{
+    if (io->socket != WEB_INVALID_SOCKET) SocketClose(io->socket);
+#ifdef _WIN32
+    (void)WSACleanup();
+#endif
+    free(io);
+}
+
+static UmiStatus LoopbackOpen(void *context, const UmiCancellationToken *cancel, UmiWebConnectionIo *out)
+{
+    const UmiWebFastCgiLoopbackEndpoint *endpoint = context;
+    if (out == NULL || !LoopbackEndpointValid(endpoint)) return UMI_STATUS_INVALID_ARGUMENT;
+    if (umi_cancellation_token_is_requested(cancel)) return UMI_STATUS_CANCELLED;
+    NativeExchange *io = calloc(1U, sizeof *io);
+    if (io == NULL) return UMI_STATUS_OUT_OF_MEMORY;
+#ifdef _WIN32
+    WSADATA winsock;
+    if (WSAStartup(MAKEWORD(2, 2), &winsock) != 0) {
+        free(io);
+        return UMI_STATUS_UNAVAILABLE;
+    }
+#endif
+    io->socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    io->clock = umi_clock_system();
+    io->cancel = cancel;
+    UmiStatus status = io->socket == WEB_INVALID_SOCKET ? UMI_STATUS_IO_ERROR : SocketPrepare(io->socket, true);
+    if (status == UMI_STATUS_OK) status = SetDeadline(io, endpoint->timeoutMs);
+    if (status == UMI_STATUS_OK) status = ConnectLoopback(io, endpoint->port);
+    if (status == UMI_STATUS_OK && umi_cancellation_token_is_requested(cancel)) status = UMI_STATUS_CANCELLED;
+    if (status == UMI_STATUS_OK) *out = (UmiWebConnectionIo){io, ReadSocket, WriteSocket};
+    else LoopbackRelease(io);
+    return status;
+}
+
+static void LoopbackClose(void *context, UmiWebConnectionIo *connection)
+{
+    (void)context;
+    if (connection == NULL || connection->context == NULL ||
+        connection->read != ReadSocket || connection->write != WriteSocket) return;
+    NativeExchange *io = connection->context;
+    *connection = (UmiWebConnectionIo){0};
+    LoopbackRelease(io);
+}
+
+UmiStatus UmiWebFastCgiLoopbackConnectorInit(const UmiWebFastCgiLoopbackEndpoint *endpoint,
+    UmiWebFastCgiConnector *out)
+{
+    if (out == NULL || !LoopbackEndpointValid(endpoint)) return UMI_STATUS_INVALID_ARGUMENT;
+    /* The connector ABI stores a void pointer. Both callbacks borrow the
+     * declared configuration for its lifetime without writing to it. */
+    *out = (UmiWebFastCgiConnector){(void *)endpoint, LoopbackOpen, LoopbackClose};
+    return UMI_STATUS_OK;
+}
+
 UmiStatus WebNativeServeNext(UmiWebListener *listener, UmiWebService *service, size_t maximum,
                              uint32_t wait_ms, uint32_t exchange_ms, const UmiCancellationToken *cancel,
                              UmiWebExchangeResult *out)
@@ -226,6 +362,13 @@ UmiStatus WebNativeServeNext(UmiWebListener *listener, UmiWebService *service, s
     return status;
 }
 #else
+UmiStatus UmiWebFastCgiLoopbackConnectorInit(const UmiWebFastCgiLoopbackEndpoint *endpoint,
+    UmiWebFastCgiConnector *out)
+{
+    if (out == NULL || !LoopbackEndpointValid(endpoint)) return UMI_STATUS_INVALID_ARGUMENT;
+    return UMI_STATUS_NOT_IMPLEMENTED;
+}
+
 UmiStatus WebNativeServeNext(UmiWebListener *listener, UmiWebService *service, size_t maximum,
                              uint32_t wait_ms, uint32_t exchange_ms, const UmiCancellationToken *cancel,
                              UmiWebExchangeResult *out)

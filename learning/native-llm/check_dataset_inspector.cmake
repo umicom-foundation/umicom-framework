@@ -40,6 +40,34 @@ if(NOT repeated_status STREQUAL "0" OR NOT repeated_error STREQUAL "" OR
    NOT repeated_report STREQUAL first_report)
     message(FATAL_ERROR "An unchanged dataset did not produce an identical report")
 endif()
+# The opt-in report adds one identity line per already-reviewed source. Use
+# CMake's independent file hashing to check the complete digest and preserve
+# the default report byte for byte after removing exactly the added lines.
+execute_process(COMMAND "${INSPECTOR}" --document-sha256 "${MANIFEST}"
+    RESULT_VARIABLE document_status OUTPUT_VARIABLE document_report
+    ERROR_VARIABLE document_error TIMEOUT 10)
+if(NOT document_status STREQUAL "0" OR NOT document_error STREQUAL "")
+    message(FATAL_ERROR "Document inspection failed: ${document_status}: ${document_error}")
+endif()
+get_filename_component(dataset_dir "${MANIFEST}" DIRECTORY)
+foreach(source IN ITEMS training/project.txt training/document.txt evaluation/workspace.txt)
+    file(SHA256 "${dataset_dir}/${source}" expected)
+    string(FIND "${document_report}" "Document SHA-256: ${expected} ${source}\n" line)
+    if(line LESS 0)
+        message(FATAL_ERROR "Missing independently computed digest for ${source}")
+    endif()
+endforeach()
+string(REGEX REPLACE "Document SHA-256: [0-9a-f]+ [^\n]+\n" "" without_documents "${document_report}")
+if(NOT without_documents STREQUAL first_report OR first_report MATCHES "Document SHA-256:")
+    message(FATAL_ERROR "Opt-in identities changed the default report")
+endif()
+execute_process(COMMAND "${INSPECTOR}" --unknown "${MANIFEST}"
+    RESULT_VARIABLE unknown_status OUTPUT_VARIABLE unknown_report
+    ERROR_VARIABLE unknown_error TIMEOUT 10)
+if(NOT unknown_status STREQUAL "2" OR NOT unknown_report STREQUAL "" OR
+   NOT unknown_error MATCHES "usage: umicom-native-llm-dataset")
+    message(FATAL_ERROR "Unknown option did not produce the usage result")
+endif()
 execute_process(COMMAND "${INSPECTOR}"
     RESULT_VARIABLE usage_status OUTPUT_VARIABLE usage_report
     ERROR_VARIABLE usage_error TIMEOUT 10)

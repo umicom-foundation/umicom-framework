@@ -14,6 +14,8 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/web/workbench/auth_profile.h"
+#include "umicom/base/base64.h"
+#include "umicom/security/secrets.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -199,6 +201,9 @@ const UmiWebWorkbenchAuthProfile *umi_web_workbench_auth_catalogue_find(
     return index < catalogue->profile_count ? &catalogue->profiles[index] : NULL;
 }
 
+/* Framework base now owns the same padded encoding and checks both buffer
+ * spans before writing. Retain the previous authentication encoder for review. */
+#if 0
 /* Provide the encode base64 operation used by this module and its client applications. */
 static UmiStatus encode_base64(
     const unsigned char *source,
@@ -250,6 +255,16 @@ static UmiStatus encode_base64(
     }
     out_text[output] = '\0';
     return UMI_STATUS_OK;
+}
+#endif
+
+/* Keep the transient credentials in the caller's buffers. The shared encoder
+ * performs no allocation and leaves the destination untouched on refusal. */
+static UmiStatus encode_base64(const unsigned char *source, size_t length,
+    char *out_text, size_t capacity)
+{
+    size_t written;
+    return UmiBase64Encode(source, length, out_text, capacity, &written);
 }
 
 /* Provide the query safe operation used by this module and its client applications. */
@@ -373,17 +388,28 @@ UmiStatus umi_web_workbench_auth_apply(
             profile->public_identity, transient_secret);
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(credentials)) {
+            /* A truncated buffer still contains part of the credentials. */
+            umi_secret_clear(credentials, sizeof(credentials));
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
         status = encode_base64((const unsigned char *)credentials,
             (size_t)written, encoded, sizeof(encoded));
+        /* Clear credential copies as soon as their final reader is finished.
+         * The Framework wipe remains observable in optimized builds. */
+        umi_secret_clear(credentials, sizeof(credentials));
         /* Preserve the original failure result so the caller can respond to the correct cause. */
         if (status != UMI_STATUS_OK) return status;
         written = snprintf(value, sizeof(value), "Basic %s", encoded);
+        /* Retain the former plain writes for review. The secure wipes now
+         * clear each temporary after its last use, including error exits. */
+#if 0
         memset(credentials, 0, sizeof(credentials));
         memset(encoded, 0, sizeof(encoded));
+#endif
+        umi_secret_clear(encoded, sizeof(encoded));
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(value)) {
+            umi_secret_clear(value, sizeof(value));
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
     } else /* Apply this branch only when its contract condition is satisfied. */ if (profile->kind == UMI_WEB_WORKBENCH_AUTH_BEARER ||
@@ -391,6 +417,8 @@ UmiStatus umi_web_workbench_auth_apply(
         int written = snprintf(value, sizeof(value), "Bearer %s", transient_secret);
         /* Keep the operation inside its valid bounds before reading, writing or adding data. */
         if (written < 0 || (size_t)written >= sizeof(value)) {
+            /* Match the Basic path when a header was only partially built. */
+            umi_secret_clear(value, sizeof(value));
             return UMI_STATUS_CAPACITY_EXCEEDED;
         }
     } /* Use this fallback path when the earlier condition does not apply. */ else {
@@ -399,6 +427,11 @@ UmiStatus umi_web_workbench_auth_apply(
         if (status != UMI_STATUS_OK) return status;
     }
     status = umi_web_workbench_request_set_header(request, profile->field_name, value);
+    /* The request owns its copy now. Keep the former erasure for review and
+     * release this stack copy through the common secure clear primitive. */
+#if 0
     memset(value, 0, sizeof(value));
+#endif
+    umi_secret_clear(value, sizeof(value));
     return status;
 }

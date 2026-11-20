@@ -13,7 +13,6 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "internal.h"
-#include "umicom/ai/mcp/json.h"
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -58,6 +57,11 @@ void UmiCreativeWriterNumber(UmiCreativeWriter * w, uint64_t value)
     UmiCreativeWriterText(w, text);
 }
 
+/* The JSON adapter now lives with the full creative workspace so the offline
+ * audio example can link this writer without AI services. Retain its former
+ * definition and encoder include for review. */
+#if 0
+#include "umicom/ai/mcp/json.h"
 /* Reuse the established JSON encoder rather than teaching each document format
  * a second quoting grammar. The writer owns one extra terminator byte; size
  * counts payload bytes only. A quoting failure stays sticky until Finish. */
@@ -69,6 +73,7 @@ void UmiCreativeWriterJson(UmiCreativeWriter *writer, const char *text)
     if (writer->status == UMI_STATUS_OK)
         writer->size += strlen((const char *)writer->bytes + writer->size);
 }
+#endif
 
 void UmiCreativeWriterXml(UmiCreativeWriter * w, const char * text)
 {

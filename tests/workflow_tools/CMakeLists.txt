@@ -10,7 +10,9 @@ umicom_apply_sanitizers(umicom-workflow-decimal-test)
 if(COMMAND umicom_register_validation_target)
     umicom_register_validation_target(umicom-workflow-decimal-test)
 endif()
-foreach(case IN ITEMS parse-basic parse-signs parse-invalid parse-extremes parse-overflow parse-counted format-basic format-capacity roundtrip rescale rescale-overflow rescale-invalid)
+foreach(case IN ITEMS parse-basic parse-signs parse-invalid parse-extremes parse-overflow parse-counted
+        format-basic format-capacity roundtrip rescale rescale-overflow rescale-invalid
+        multiply-exact multiply-extremes multiply-refusals)
     add_test(NAME framework.workflow_tools.decimal.${case} COMMAND umicom-workflow-decimal-test ${case})
     set_tests_properties(framework.workflow_tools.decimal.${case} PROPERTIES TIMEOUT 30 LABELS "framework;workflow;regression")
 endforeach()

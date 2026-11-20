@@ -18,6 +18,11 @@ and build `umicom-website-api` to add the function/type/source browser. Build
 `umicom-website-package` for a distributable offline site ZIP. The generated
 `publishing.html` explains Windows, Linux and publication boundaries.
 
+The generated reference uses the approved dark-surface Umicom wordmark.
+Doxygen 1.14 and later also use the supplied ICO in browser tabs. The public
+site templates include SVG and ICO tab icons independently of Doxygen.
+[Doxygen project branding configuration](https://www.doxygen.nl/manual/config.html#cfg_project_logo)
+
 ## Content ownership
 
 - Framework owns reusable teaching topics, templates and the shared presentation.
@@ -30,8 +35,9 @@ and build `umicom-website-api` to add the function/type/source browser. Build
 
 The initial worked topics cover documents, compiler diagnostics and component
 composition. Four detailed product introductions cover Studio, Trader, Desk and
-Bank. The catalogue links all 24 application repositories; the other application
-user guides remain planned, not automatically complete because a link exists.
+Bank. The catalogue links the application modules registered in the parent
+checkout, including Healthcare. An entry links users to the repository and
+release history while its dedicated guide is being developed.
 
 ## Contribute a topic
 

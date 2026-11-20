@@ -24,8 +24,13 @@ extern "C" {
  * Represent the cashflow data shared with callers of this public contract.
  */
 typedef struct UmiCashflow { UmiFinancialId cashflow_id; UmiTradeId trade_id; UmiMoney amount; UmiFinancialDirection direction; UmiFinancialDate payment_date; } UmiCashflow;
-/* Initialize cashflow. */ UmiStatus umi_cashflow_init(UmiCashflow *c,const char *id,const char *trade,UmiMoney amount,UmiFinancialDirection dir,UmiFinancialDate date);
-/* Validate cashflow. */ bool umi_cashflow_is_valid(const UmiCashflow *c);
+/* Stage a complete dated cashflow with a bounded currency and valid trade
+ * reference. Direction must be PAY or RECEIVE. Money uses scale 0..9.
+ * Invalid input leaves the previous cashflow unchanged. */
+UmiStatus umi_cashflow_init(UmiCashflow *cashflow, const char *id, const char *trade,
+    UmiMoney amount, UmiFinancialDirection direction, UmiFinancialDate date);
+/* Validate a complete owned value before it enters a schedule. */
+bool umi_cashflow_is_valid(const UmiCashflow *cashflow);
 #ifdef __cplusplus
 }
 #endif

@@ -8,7 +8,8 @@ target_link_libraries(umicom_creative_workspace PUBLIC Umicom::platform)
 
 if(TARGET umicom_creative_workspace_gtk4)
     target_sources(umicom_creative_workspace_gtk4 PRIVATE
-        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/creative_assets_gtk4.c")
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/creative_assets_gtk4.c"
+        "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/creative_asset_png_gtk4.c")
     install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/ui/gtk4/creative_assets.h"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4" COMPONENT Framework)
 endif()

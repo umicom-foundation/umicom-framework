@@ -55,11 +55,29 @@ add_library(umicom_creative_workspace STATIC
     "${_umicom_creative_root}/src/creative_workspace/workspace.c"
  )
 add_library(Umicom::creative_workspace ALIAS umicom_creative_workspace)
+# Keep offline documents independent of the runtime and filesystem by
+# compiling the approved artwork into the existing shared export library.
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomEmbeddedBrandResources.cmake")
+umicom_brand_resource_initializer("${_umicom_creative_root}/resources/brand/umicom-logo-on-dark.svg"
+    UMICOM_CREATIVE_BRAND_WORDMARK_BYTES)
+umicom_brand_resource_initializer("${_umicom_creative_root}/resources/brand/umicom.ico"
+    UMICOM_CREATIVE_BRAND_ICON_BYTES)
+set(_umicom_creative_brand_generated "${CMAKE_CURRENT_BINARY_DIR}/generated/creative_brand")
+configure_file("${_umicom_creative_root}/src/creative_workspace/brand_resources.h.in"
+    "${_umicom_creative_brand_generated}/umicom_creative_brand_resources.h" @ONLY)
+target_include_directories(umicom_creative_workspace PRIVATE "${_umicom_creative_brand_generated}")
 set_target_properties(umicom_creative_workspace PROPERTIES EXPORT_NAME creative_workspace)
 target_include_directories(umicom_creative_workspace PUBLIC
     $<BUILD_INTERFACE:${_umicom_creative_root}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(umicom_creative_workspace PUBLIC Umicom::data Umicom::media_engine)
+if(TARGET Umicom::base)
+    target_link_libraries(umicom_creative_workspace PRIVATE Umicom::base)
+else()
+    # The standalone audio SDK composes a small subset without a base target.
+    # Compile the canonical encoder there instead of carrying a second implementation.
+    target_sources(umicom_creative_workspace PRIVATE "${_umicom_creative_root}/src/base/base64.c")
+endif()
 if(NOT WIN32)
     target_link_libraries(umicom_creative_workspace PUBLIC m)
 endif()
@@ -198,19 +216,25 @@ unset(_umicom_creative_root)
 # The native clip tools reuse this service's owned export and file contracts.
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomCreativeAudio.cmake")
 
-include("${CMAKE_CURRENT_LIST_DIR}/UmicomCreativeAssets.cmake")
+# The offline audio tutorial keeps the original core scene and PCM services.
+# Full Framework continues to register every product extension and its tests.
+if(NOT _umicom_creative_audio_tutorial)
+    target_sources(umicom_creative_workspace PRIVATE
+        "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/export_writer_json.c")
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomCreativeAssets.cmake")
 
-# Song planning shares the creative asset writer and has no provider dependency.
-include("${CMAKE_CURRENT_LIST_DIR}/UmicomSongPlan.cmake")
+    # Song planning shares the creative asset writer and has no provider dependency.
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomSongPlan.cmake")
 
-# Timed audio assemblies reuse the library and the existing PCM decoder.
-include("${CMAKE_CURRENT_LIST_DIR}/UmicomAudioArrangement.cmake")
+    # Timed audio assemblies reuse the library and the existing PCM decoder.
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomAudioArrangement.cmake")
 
-# Caption ownership and timing are independent of the selected creative product.
-include("${CMAKE_CURRENT_LIST_DIR}/UmicomCaptions.cmake")
+    # Caption ownership and timing are independent of the selected creative product.
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomCaptions.cmake")
 
-# Local video editing and rendering reuse the creative owner and native process channel.
-include("${CMAKE_CURRENT_LIST_DIR}/UmicomVideoSequence.cmake")
+    # Local video editing and rendering reuse the creative owner and native process channel.
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomVideoSequence.cmake")
 
-# Explicit source excerpts compose the existing generators and provider chat.
-include("${CMAKE_CURRENT_LIST_DIR}/UmicomMediaBrief.cmake")
+    # Explicit source excerpts compose the existing generators and provider chat.
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomMediaBrief.cmake")
+endif()

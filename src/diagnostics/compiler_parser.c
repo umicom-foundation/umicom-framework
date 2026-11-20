@@ -171,6 +171,27 @@ static int LevelAt(const char *p, UmiDiagnosticSeverity *severity,
     return 0;
 }
 
+/* Free Pascal and DMD use title-case severity words followed by a colon.
+ * Require a valid source location for this form so a narrative line such as
+ * a capitalized warning heading stays ordinary build output. */
+static int LocatedLevelAt(const char *p, UmiDiagnosticSeverity *severity, const char **after)
+{
+    static const struct { const char *prefix; UmiDiagnosticSeverity value; } levels[] = {
+        {"Fatal:", UMI_DIAGNOSTIC_FATAL}, {"Error:", UMI_DIAGNOSTIC_ERROR},
+        {"Warning:", UMI_DIAGNOSTIC_WARNING}, {"Deprecation:", UMI_DIAGNOSTIC_WARNING},
+        {"Note:", UMI_DIAGNOSTIC_INFO}, {"Hint:", UMI_DIAGNOSTIC_INFO}
+    };
+    for (size_t index = 0U; index < sizeof levels / sizeof levels[0]; ++index) {
+        size_t length = strlen(levels[index].prefix);
+        if (strncmp(p, levels[index].prefix, length) == 0) {
+            *severity = levels[index].value;
+            *after = p + length - 1U;
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static UmiStatus ParseCMake(const char *text, UmiCompilerDiagnosticFields *fields)
 {
     const char *location, *command, *end;
@@ -240,19 +261,31 @@ UmiStatus UmiCompilerDiagnosticParseText(const char *text,
     for (const char *marker = first; marker < end; ++marker) {
         const char *after, *codeStart, *message;
         if (marker != first && marker[-1] != ':' && marker[-1] != ' ' && marker[-1] != '\t') continue;
+        /* Only the established lowercase spelling may fall back to a
+         * diagnostic without a source position. Preserve that entry point. */
+#if 0
         if (!LevelAt(marker, &fields.severity, &after)) continue;
+#endif
+        int requiresLocation = !LevelAt(marker, &fields.severity, &after);
+        if (requiresLocation && !LocatedLevelAt(marker, &fields.severity, &after)) continue;
         while (*after == ' ' || *after == '\t') ++after;
         codeStart = after;
         /* MSVC inserts its error identifier between severity and colon. */
         while (isalnum((unsigned char)*after) || *after == '_' || *after == '-') ++after;
         if (*after != ':') continue;
+        /* Retain the earlier eager copy for review. A severity-like segment
+         * in a legal path could leak its code or reject a later real marker.
+         * Copy the code only after this marker and location are admitted. */
+#if 0
         if (after != codeStart && !CopyField(fields.code, sizeof fields.code, codeStart, after))
             return UMI_STATUS_CAPACITY_EXCEEDED;
+#endif
         message = after + 1;
         while (*message == ' ' || *message == '\t') ++message;
         if (message == end) return UMI_STATUS_NOT_FOUND;
         status = ParseLocation(first, marker, &fields);
         if (status == UMI_STATUS_CAPACITY_EXCEEDED) return status;
+        if (status != UMI_STATUS_OK && requiresLocation) continue;
         if (status != UMI_STATUS_OK && marker != first) {
             const char *prefixEnd = marker;
             while (prefixEnd > first && (prefixEnd[-1] == ' ' || prefixEnd[-1] == '\t')) --prefixEnd;
@@ -261,6 +294,8 @@ UmiStatus UmiCompilerDiagnosticParseText(const char *text,
             if (prefixEnd == first || prefixEnd[-1] != ':') continue;
             fields.path[0] = '\0'; fields.line = 0U; fields.column = 0U;
         }
+        if (after != codeStart && !CopyField(fields.code, sizeof fields.code, codeStart, after))
+            return UMI_STATUS_CAPACITY_EXCEEDED;
         if (!CopyField(fields.message, sizeof fields.message, message, end))
             return UMI_STATUS_CAPACITY_EXCEEDED;
         if (fields.code[0] == '\0' && end > message && end[-1] == ']') {

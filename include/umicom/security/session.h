@@ -82,6 +82,14 @@ UmiStatus umi_session_registry_validate(UmiSessionRegistry *registry,
  */
 UmiStatus umi_session_registry_revoke(UmiSessionRegistry *registry,
                                       const char *session_id);
+/** Revoke every active session for an exact principal under one registry lock.
+ * The caller authorizes this account operation before invoking it. An empty
+ * match is a successful no-op, including a repeat request. On failure the
+ * output count is left unchanged. This operation retains records for cleanup.
+ */
+UmiStatus umi_session_registry_revoke_principal(UmiSessionRegistry *registry,
+                                                const char *principal_id,
+                                                size_t *out_revoked);
 /**
  * Provide the session registry cleanup operation used by this module and its client
  * applications.

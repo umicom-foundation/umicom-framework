@@ -36,7 +36,8 @@ typedef struct UmiCompilerDiagnosticFields {
 } UmiCompilerDiagnosticFields;
 
 /** Parse one NUL-terminated compiler line. GCC/Clang, MSVC and CMake locations
- * are recognised. ANSI colour/erase sequences are ignored. Positions remain
+ * are recognised. Free Pascal and DMD title-case severities require an
+ * admitted source location. ANSI colour/erase sequences are ignored. Positions remain
  * one-based values reported by the producer; zero means unavailable.
  * Input and output are caller-owned. Output changes only on OK. NOT_FOUND
  * means ordinary output; CAPACITY_EXCEEDED means it cannot fit without loss.

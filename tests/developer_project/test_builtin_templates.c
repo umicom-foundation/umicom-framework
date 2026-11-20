@@ -35,7 +35,16 @@ int main(void)
 #if 0
     assert(umi_developer_project_builtin_template_count() == 20U);
 #endif
+    /* Keep the pre-Pascal total for catalogue history. The current total
+     * includes the Pascal recipe used by both Studio and Umicom Command. */
+#if 0
     assert(umi_developer_project_builtin_template_count() == 22U);
+#endif
+    /* Preserve the previous total for catalogue review. Java adds one recipe. */
+#if 0
+    assert(umi_developer_project_builtin_template_count() == 23U);
+#endif
+    assert(umi_developer_project_builtin_template_count() == 24U);
     assert(umi_developer_project_template_registry_create(&registry) ==
            UMI_STATUS_OK);
     assert(umi_developer_project_builtin_templates_register(registry) ==
@@ -51,8 +60,17 @@ int main(void)
     assert(umi_developer_project_template_registry_count(registry) ==
            20U);
 #endif
+    /* Keep the pre-Pascal registration check for comparison with the expanded
+     * catalogue. The active count must agree with the factory list. */
+#if 0
     assert(umi_developer_project_template_registry_count(registry) ==
            22U);
+#endif
+    /* The registration check now includes the same Java recipe as the list. */
+#if 0
+    assert(umi_developer_project_template_registry_count(registry) == 23U);
+#endif
+    assert(umi_developer_project_template_registry_count(registry) == 24U);
 
     assert(umi_developer_project_template_registry_find(
         registry, "developer.template.c23-console") != NULL);
@@ -70,6 +88,12 @@ int main(void)
 
     assert(umi_developer_project_template_registry_find(
         registry, "developer.template.umicom-c-preview") != NULL);
+    const UmiDeveloperProjectTemplate *pascal = umi_developer_project_template_registry_find(
+        registry, "developer.template.pascal-console");
+    assert(pascal != NULL && pascal->supports_tests && pascal->supports_install);
+    const UmiDeveloperProjectTemplate *java = umi_developer_project_template_registry_find(
+        registry, "developer.template.java-console");
+    assert(java != NULL && java->supports_tests && java->supports_install);
 
     umi_developer_project_template_registry_destroy(registry);
     return 0;

@@ -15,7 +15,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "../support/assertions.h"
-#include "umicom/testing/uat_workflow.h"
+#include "umicom/testing/uat_target.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -134,6 +134,11 @@ int main(int argc, char **argv)
         assert(strstr(json, "\"findings\"") != NULL);
         assert(strstr(json, "\"output\":") == NULL);
         assert(strstr(json, "\"cleanup\"") != NULL);
+        assert(strstr(json, "\"target\":") == NULL && strstr(json, "\"operation\":") == NULL);
+        UmiUatTargetEvidence noTarget = {.target.protocol = 1U};
+        UmiUatOperation noOperation = UMI_UAT_UNIT;
+        assert(UmiUatReportTarget(report, &noTarget) == UMI_STATUS_NOT_FOUND && noTarget.target.protocol == 0U);
+        assert(UmiUatReportOperation(report, 0U, &noOperation) == UMI_STATUS_NOT_FOUND && noOperation == 0);
         assert(UmiUatReportJson(report, 0, tiny, sizeof(tiny)) == UMI_STATUS_CAPACITY_EXCEEDED);
         assert(tiny[0] == '\0');
         assert(UmiUatReportJson(report, 2, json, sizeof(json)) == UMI_STATUS_INVALID_ARGUMENT);

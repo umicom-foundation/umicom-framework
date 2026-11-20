@@ -3,7 +3,10 @@
 # Scope persistence belongs to bank_feed; applications reuse the existing host.
 include_guard(GLOBAL)
 target_sources(umicom_bank_feed PRIVATE
-    "${CMAKE_CURRENT_LIST_DIR}/../src/bank_feed/statement_archive.c")
+    "${CMAKE_CURRENT_LIST_DIR}/../src/bank_feed/statement_archive.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/bank_feed/statement_archive_file.c")
+target_link_libraries(umicom_bank_feed PRIVATE Umicom::platform)
+target_compile_definitions(umicom_bank_feed PUBLIC UMICOM_HAS_BANK_STATEMENT_ARCHIVE_FILES=1)
 if(BUILD_TESTING)
     add_executable(umi-bank-statement-archive-test
         "${CMAKE_CURRENT_LIST_DIR}/../tests/bank_feed/test_statement_archive.c")
@@ -34,6 +37,43 @@ if(BUILD_TESTING)
         endif()
     endforeach()
     unset(test)
+
+    add_executable(umi-bank-statement-archive-file-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/bank_feed/test_statement_archive_file.c")
+    target_link_libraries(umi-bank-statement-archive-file-test PRIVATE Umicom::bank_feed Umicom::platform)
+    set_target_properties(umi-bank-statement-archive-file-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umi-bank-statement-archive-file-test)
+    umicom_apply_sanitizers(umi-bank-statement-archive-file-test)
+    add_test(NAME framework.bank_statement.archive.file COMMAND umi-bank-statement-archive-file-test)
+    set_tests_properties(framework.bank_statement.archive.file PROPERTIES TIMEOUT 30
+        LABELS "framework;banking;reconciliation;persistence;regression")
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umi-bank-statement-archive-file-test)
+    endif()
+    if(COMMAND umicom_test_impact_owners)
+        umicom_test_impact_owners(framework.bank_statement.archive.file
+            TARGETS umi-bank-statement-archive-file-test)
+    endif()
+
+    # Stress the review and export boundary with a controlled encoder refusal.
+    add_executable(umi-bank-statement-review-admission-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/bank_feed/test_statement_review_admission.c")
+    target_link_libraries(umi-bank-statement-review-admission-test PRIVATE Umicom::bank_feed)
+    set_target_properties(umi-bank-statement-review-admission-test PROPERTIES
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umi-bank-statement-review-admission-test)
+    umicom_apply_sanitizers(umi-bank-statement-review-admission-test)
+    add_test(NAME framework.bank_statement.archive.review-admission COMMAND umi-bank-statement-review-admission-test)
+    set_tests_properties(framework.bank_statement.archive.review-admission PROPERTIES
+        TIMEOUT 30 LABELS "framework;banking;reconciliation;persistence;regression")
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umi-bank-statement-review-admission-test)
+    endif()
+    if(COMMAND umicom_test_impact_owners)
+        umicom_test_impact_owners(framework.bank_statement.archive.review-admission
+            TARGETS umi-bank-statement-review-admission-test)
+    endif()
 endif()
 
 if(BUILD_TESTING AND TARGET umicom_ui_gtk4)

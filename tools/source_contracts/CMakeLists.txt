@@ -204,6 +204,19 @@ if(BUILD_TESTING)
             umicom_test_impact_owners("framework.source_contracts.guide_files.${_case}" TARGETS umicom-source-guide-files-test)
         endif()
     endforeach()
+    # Keep linked package authoring independently testable from embedded guides.
+    foreach(_case IN ITEMS valid nested dark mixed mixed-page mixed-page-wrong-ico inert-marker wrong-depth changed-base
+            altered-logo missing-ico missing-alt fonts-in-comment)
+        add_test(NAME "framework.source_contracts.guide_bundle.${_case}"
+            COMMAND umicom-source-guide-files-test "bundle-${_case}"
+                "${CMAKE_CURRENT_BINARY_DIR}/guide-fixtures/bundle-${_case}")
+        set_tests_properties("framework.source_contracts.guide_bundle.${_case}" PROPERTIES
+            TIMEOUT 10 LABELS "framework;source-contracts;branding;filesystem;regression")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("framework.source_contracts.guide_bundle.${_case}"
+                TARGETS umicom-source-guide-files-test)
+        endif()
+    endforeach()
     # Audit the maintained source tree as well as controlled failure fixtures.
     add_test(NAME framework.source_contracts.learning_branding
         COMMAND umicom-source-contracts guides --assets "${_umicom_contract_root}/resources/brand"

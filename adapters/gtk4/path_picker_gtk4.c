@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/path_picker_gtk4.c
- * PURPOSE: Share asynchronous filename selection with weak widget ownership and stale-draft protection.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Share asynchronous filename selection with weak widget ownership and stale-draft protection.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/path_picker.h"
@@ -145,6 +152,96 @@ typedef struct PathPicker {
     PathPickRequest *pending; /* Borrowed until the dialog's completion callback. */
 } PathPicker;
 
+/* Policy belongs to the selected draft, so two pickers sharing an entry
+ * publish to one entry-owned record. Typed edits invalidate that policy. */
+typedef struct PathSelection {
+    UmiPathPickerMode mode;
+    char *path;
+    gboolean has_mode, publishing;
+} PathSelection;
+
+static void FreeSelection(gpointer data)
+{
+    PathSelection *selection = data;
+    g_free(selection->path);
+    g_free(selection);
+}
+
+static void SelectionEdited(GtkEditable *entry, gpointer data)
+{
+    (void)entry;
+    PathSelection *selection = data;
+    if (!selection->publishing) selection->has_mode = FALSE;
+}
+
+static void SelectionUnmapped(GtkWidget *entry, gpointer data)
+{
+    (void)entry;
+    PathSelection *selection = data;
+    selection->has_mode = FALSE;
+}
+
+UmiStatus UmiPathPickerGtk4ReadSelectedMode(GtkEntry *entry, UmiPathPickerMode *out_mode)
+{
+    if (!GTK_IS_ENTRY(entry) || out_mode == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    PathSelection *selection = g_object_get_data(G_OBJECT(entry), "umicom-path-selection");
+    if (selection != NULL && selection->publishing) return UMI_STATUS_BUSY;
+    /* An earlier changed-signal observer may run before invalidation. Compare
+     * the actual draft as well so that observer cannot read the previous mode. */
+    if (selection == NULL || !selection->has_mode ||
+        strcmp(selection->path, gtk_editable_get_text(GTK_EDITABLE(entry))) != 0)
+        return UMI_STATUS_NOT_FOUND;
+    *out_mode = selection->mode;
+    return UMI_STATUS_OK;
+}
+
+/* Both editable steps can deliver user callbacks. Check that the original
+ * entry and controls still share the captured mapped window before continuing. */
+static gboolean SelectionWidgetsCurrent(GtkEntry *entry, GtkWidget *control, GtkWindow *window)
+{
+    return gtk_widget_get_mapped(control) && gtk_widget_get_mapped(GTK_WIDGET(entry)) &&
+        gtk_widget_get_root(control) == GTK_ROOT(window) &&
+        gtk_widget_get_root(GTK_WIDGET(entry)) == GTK_ROOT(window);
+}
+
+/* Publish text and its mode as one owner-thread action. A changed observer
+ * may edit the text or retire either widget. A reentrant open may read BUSY
+ * until both parts have settled, and cannot use an obsolete mode. */
+static gboolean PublishSelection(GtkEntry *entry, GtkWidget *control, GtkWindow *window,
+    const char *path, UmiPathPickerMode mode)
+{
+    PathSelection *selection = g_object_get_data(G_OBJECT(entry), "umicom-path-selection");
+    if (selection != NULL && selection->publishing) return FALSE;
+    if (selection == NULL) {
+        selection = g_new0(PathSelection, 1);
+        g_object_set_data_full(G_OBJECT(entry), "umicom-path-selection", selection, FreeSelection);
+        g_signal_connect(entry, "changed", G_CALLBACK(SelectionEdited), selection);
+        g_signal_connect(entry, "unmap", G_CALLBACK(SelectionUnmapped), selection);
+    }
+    selection->mode = mode;
+    g_free(selection->path);
+    selection->path = g_strdup(path);
+    selection->has_mode = TRUE;
+    selection->publishing = TRUE;
+    /* The previous whole-text setter could insert the selected path after a
+     * deletion observer had already entered a different draft. Keep it for
+     * review and check the now-empty entry before making a separate insertion. */
+#if 0
+    gtk_editable_set_text(GTK_EDITABLE(entry), path);
+#endif
+    GtkEditable *editable = GTK_EDITABLE(entry);
+    gtk_editable_delete_text(editable, 0, -1);
+    if (selection->has_mode && SelectionWidgetsCurrent(entry, control, window) &&
+        gtk_editable_get_text(editable)[0] == '\0') {
+        int position = 0;
+        gtk_editable_insert_text(editable, path, -1, &position);
+    }
+    selection->publishing = FALSE;
+    selection->has_mode = selection->has_mode && SelectionWidgetsCurrent(entry, control, window) &&
+        strcmp(gtk_editable_get_text(editable), path) == 0;
+    return selection->has_mode;
+}
+
 static PathPicker *Picker(GtkWidget *control)
 {
     return g_object_get_data(G_OBJECT(control), "umicom-path-picker");
@@ -231,7 +328,14 @@ static void Selected(GObject *source, GAsyncResult *result, gpointer data)
             /* Retain the label across entry-change callbacks: hosts may rebuild
              * their surface while receiving the new text. No host pointer is used. */
             GtkWidget *label = g_object_ref(picker->message);
+            /* The old text-only publication remains for review. The adapter
+             * now records how the current path was chosen and rechecks owner
+             * and text after GTK notifications before exposing that mode. */
+#if 0
             if (publish) gtk_editable_set_text(GTK_EDITABLE(entry), path);
+#endif
+            if (publish && !PublishSelection(entry, control, window, path, request->mode))
+                message = "Selection interrupted; review the path before choosing an action.";
             gtk_label_set_text(GTK_LABEL(label), message);
             g_object_unref(label);
         }

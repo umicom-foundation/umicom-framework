@@ -13,6 +13,7 @@
 # MIT
 #-----------------------------------------------------------------------------
 include_guard(GLOBAL)
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomEmbeddedBrandResources.cmake")
 function(umicom_embed_gtk_brand target)
     # Normalize before registering configure dependencies: Ninja treats ../ and
     # canonical source paths as one output, while CMake may retain both spellings.
@@ -33,10 +34,15 @@ function(umicom_embed_gtk_brand target)
             set(_file umicom-icon-on-dark.svg)
         endif()
         set(_asset "${_root}/resources/brand/${_file}")
-        set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_asset}")
-        file(READ "${_asset}" _hex HEX)
-        string(REGEX REPLACE "([0-9a-fA-F][0-9a-fA-F])" "0x\\1,"
-            UMICOM_BRAND_${_kind}_BYTES "${_hex}")
+        # Preserve the original encoder for review. Native and HTTP consumers
+        # now share exact byte conversion and configure-input tracking.
+        if(FALSE)
+            set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${_asset}")
+            file(READ "${_asset}" _hex HEX)
+            string(REGEX REPLACE "([0-9a-fA-F][0-9a-fA-F])" "0x\\1,"
+                UMICOM_BRAND_${_kind}_BYTES "${_hex}")
+        endif()
+        umicom_brand_resource_initializer("${_asset}" UMICOM_BRAND_${_kind}_BYTES)
     endforeach()
     set(_generated "${CMAKE_CURRENT_BINARY_DIR}/generated/gtk-brand")
     file(MAKE_DIRECTORY "${_generated}")

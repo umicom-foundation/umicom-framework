@@ -541,6 +541,11 @@ UmiStatus umi_build_task_orchestrator_retry(
 }
 #endif
 
+/* The previous retry reopened admission before an accepted stop had drained
+ * and reported RUNNING even when a failed prerequisite immediately blocked the
+ * task again. Preserve it for review. The checked version keeps the stop in
+ * progress and publishes the accepted graph's actual terminal state. */
+#if 0
 UmiStatus umi_build_task_orchestrator_retry(
     UmiBuildTaskOrchestrator *orchestrator,
     const char *task_id)
@@ -558,6 +563,31 @@ UmiStatus umi_build_task_orchestrator_retry(
         orchestrator->retry_count += 1U;
         orchestrator->stop_requested = 0;
         orchestrator->state = UMI_BUILD_TASK_OPERATION_RUNNING;
+        orchestrator->revision += 1U;
+    }
+    return status;
+}
+#endif
+
+UmiStatus umi_build_task_orchestrator_retry(
+    UmiBuildTaskOrchestrator *orchestrator,
+    const char *task_id)
+{
+    if (orchestrator == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    /* Retrying is a new admission decision. Finish collecting any active
+     * tasks from an accepted stop before the graph or owner can be changed. */
+    if (orchestrator->stop_requested && orchestrator->active_count != 0U) return UMI_STATUS_BUSY;
+    if (orchestrator->revision == UINT64_MAX || orchestrator->retry_count == SIZE_MAX)
+        return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiStatus status = umi_build_task_graph_retry(orchestrator->graph, task_id);
+    if (status == UMI_STATUS_OK) {
+        orchestrator->retry_count += 1U;
+        orchestrator->stop_requested = 0;
+        orchestrator->state = UMI_BUILD_TASK_OPERATION_RUNNING;
+        /* A retried blocked task may still have a failed prerequisite. Publish
+         * what the graph can actually run before returning to the caller. */
+        update_terminal_state(orchestrator);
         orchestrator->revision += 1U;
     }
     return status;

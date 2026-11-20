@@ -84,6 +84,12 @@ if(BUILD_TESTING)
              COMMAND umicom-native-llm-decoder-demo)
     set_tests_properties(framework.ai.training.decoder_demo PROPERTIES
         LABELS "framework;ai;native-training;learning")
+    add_test(NAME framework.ai.training.decoder_demo_checkpoint_file
+        COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:umicom-native-llm-decoder-demo>"
+            "-DWORKSPACE=${CMAKE_CURRENT_BINARY_DIR}/decoder-checkpoints"
+            -P "${CMAKE_CURRENT_LIST_DIR}/check_decoder_checkpoint.cmake")
+    set_tests_properties(framework.ai.training.decoder_demo_checkpoint_file PROPERTIES
+        TIMEOUT 60 LABELS "framework;ai;native-training;learning;checkpoint")
 endif()
 
 # Read-only source-corpus inspector, with native Framework owners.
@@ -428,6 +434,15 @@ endif()
 add_executable(umicom-native-llm-dataset inspect_dataset.c)
 target_link_libraries(umicom-native-llm-dataset PRIVATE Umicom::AiTraining)
 target_compile_features(umicom-native-llm-dataset PRIVATE c_std_23)
+# Use the same approved artwork as installed consumers. The portable console
+# inspector has no GTK startup or Windows runtime deployment requirement.
+if(WIN32)
+    enable_language(RC)
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/UmicomApplicationBranding.cmake")
+umicom_apply_application_branding(TARGET umicom-native-llm-dataset
+    PRODUCT_NAME "Umicom Native LLM Dataset Inspector" INTERNAL_NAME "umicom-native-llm-dataset"
+    NO_RUNTIME_DEPLOYMENT)
 if(MSVC)
     target_compile_options(umicom-native-llm-dataset PRIVATE /W4)
 else()

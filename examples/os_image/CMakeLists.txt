@@ -23,6 +23,9 @@ add_library(umicom_image_platform STATIC
     "${UMICOM_FRAMEWORK_ROOT}/src/platform/process.c"
     "${UMICOM_FRAMEWORK_ROOT}/src/platform/cancellation.c"
     "${UMICOM_FRAMEWORK_ROOT}/src/platform/boot_report.c")
+# The focused Platform library owns its link closure. Windows process diagnostics
+# use the canonical Base status text even when the full Base target is absent.
+target_sources(umicom_image_platform PRIVATE "${UMICOM_FRAMEWORK_ROOT}/src/base/status.c")
 add_library(Umicom::platform ALIAS umicom_image_platform)
 set_target_properties(umicom_image_platform PROPERTIES EXPORT_NAME platform)
 target_include_directories(umicom_image_platform PUBLIC

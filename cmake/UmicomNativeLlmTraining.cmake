@@ -331,6 +331,28 @@ if(BUILD_TESTING)
     endforeach()
     target_compile_definitions(umicom-ai-training-experiment-run-test PRIVATE
         UMI_AI_TEST_EXPERIMENT_PLAN_PATH="${_umicom_ai_training_root}/learning/native-llm/fixtures/experiment.conf")
+
+    # Build independent synthetic corpora with and without overlap in token
+    # frequency. Dataset admission still loads each split through its owner.
+    set(_selection_fixture "${CMAKE_CURRENT_BINARY_DIR}/native-llm-selection")
+    file(MAKE_DIRECTORY "${_selection_fixture}")
+    string(REPEAT "a" 96 _selection_training)
+    string(REPEAT "z" 67 _selection_disjoint)
+    string(REPEAT "a" 67 _selection_related)
+    file(WRITE "${_selection_fixture}/training.txt" "${_selection_training}")
+    file(WRITE "${_selection_fixture}/disjoint.txt" "${_selection_disjoint}")
+    file(WRITE "${_selection_fixture}/related.txt" "${_selection_related}b")
+    file(WRITE "${_selection_fixture}/disjoint.manifest"
+        "UMICOM-AI-DATASET-1\ntrain training.txt\neval disjoint.txt\n")
+    file(WRITE "${_selection_fixture}/related.manifest"
+        "UMICOM-AI-DATASET-1\ntrain training.txt\neval related.txt\n")
+    _umicom_add_native_ai_training_test(
+        umicom-ai-training-experiment-selection-test
+        framework.ai.training.experiment_selection
+        test_training_experiment_selection.c)
+    target_compile_definitions(umicom-ai-training-experiment-selection-test PRIVATE
+        UMI_AI_TEST_DISJOINT_MANIFEST="${_selection_fixture}/disjoint.manifest"
+        UMI_AI_TEST_RELATED_MANIFEST="${_selection_fixture}/related.manifest")
 endif()
 
 # Validate deterministic top-K selection, bounded byte generation and

@@ -16,6 +16,12 @@
 #include "umicom/toolchain/cvm_trace.h"
 #include "cvm_status.h"
 
+#if defined(__has_include)
+#if __has_include("umicom_c/int_input.h")
+#include "umicom_c/int_input.h"
+#endif
+#endif
+
 /* Keep the existing adapter entry behavior while sharing status translation with the source-only check service. The former implementation is retained for owner review. */
 #if 0
 static UmiStatus Translate(UmcStatus status)
@@ -79,6 +85,9 @@ UmiStatus umi_cvm_preview(const char *source, size_t length, size_t fuel,
 }
 #endif
 
+/* The source-only implementation remains here for review. Both source and
+ * bytecode now enter the same request and execution lifecycle. */
+#if 0
 static UmiStatus Preview(const char *source, size_t length, size_t fuel,
     UmiCvmPreviewWorkspace *workspace, size_t workspace_size,
     UmiCvmPreviewResult *result, size_t result_size, UmiCvmPreviewTrace *trace)
@@ -112,12 +121,65 @@ static UmiStatus Preview(const char *source, size_t length, size_t fuel,
     result->completed = true;
     return UMI_STATUS_OK;
 }
+#endif
+
+static UmiStatus Preview(const void *input, size_t length, size_t fuel, bool bytecode, const int32_t *value,
+    UmiCvmPreviewWorkspace *workspace, size_t workspace_size,
+    UmiCvmPreviewResult *result, size_t result_size, UmiCvmPreviewTrace *trace)
+{
+    if (workspace == NULL || result == NULL ||
+        workspace_size != sizeof *workspace || result_size != sizeof *result)
+        return UMI_STATUS_INVALID_ARGUMENT;
+
+    /* The host observes one request at a time. A decode error cannot expose
+     * a previous result or present a partially decoded program as executable. */
+    if (trace != NULL) trace->count = 0U;
+    result->completed = false;
+    result->phase = bytecode ? UMI_CVM_DECODING : UMI_CVM_COMPILING;
+    result->instruction_count = 0U;
+    result->execution.value = 0;
+    result->execution.instructions_executed = 0U;
+    UmcStatus status;
+    if (value != NULL) {
+        /* Bind before executing and keep the original source and bytecode
+         * routes on their existing SDK calls. An older SDK reports its limit. */
+#ifdef UMC_INT_INPUT_BYTECODE_FLAG
+        status = umc_bind_int_input_bytecode(input, length, *value, workspace->instructions,
+            UMC_PROGRAM_LIMIT, &result->instruction_count, &result->diagnostic);
+#else
+        result->diagnostic = (UmcDiagnostic){0};
+        return UMI_STATUS_UNAVAILABLE;
+#endif
+    } else {
+        status = bytecode
+            ? umc_decode(input, length, workspace->instructions,
+                UMC_PROGRAM_LIMIT, &result->instruction_count, &result->diagnostic)
+            : umc_compile(input, length, workspace->instructions,
+                UMC_PROGRAM_LIMIT, &result->instruction_count, &result->diagnostic);
+    }
+    if (status != UMC_OK) return Translate(status);
+
+    result->phase = UMI_CVM_EXECUTING;
+    if (trace != NULL) {
+        status = umc_execute_trace(workspace->instructions, result->instruction_count,
+            fuel, &result->execution, trace->steps, UMC_PROGRAM_LIMIT, &trace->count,
+            &result->diagnostic);
+    } else {
+        status = umc_execute(workspace->instructions, result->instruction_count,
+            fuel, &result->execution, &result->diagnostic);
+    }
+    if (!bytecode) umc_locate_diagnostic(input, length, &result->diagnostic);
+    if (status != UMC_OK) return Translate(status);
+    result->phase = UMI_CVM_COMPLETE;
+    result->completed = true;
+    return UMI_STATUS_OK;
+}
 
 UmiStatus umi_cvm_preview(const char *source, size_t length, size_t fuel,
     UmiCvmPreviewWorkspace *workspace, size_t workspace_size,
     UmiCvmPreviewResult *result, size_t result_size)
 {
-    return Preview(source, length, fuel, workspace, workspace_size, result, result_size, NULL);
+    return Preview(source, length, fuel, false, NULL, workspace, workspace_size, result, result_size, NULL);
 }
 
 UmiStatus umi_cvm_preview_traced(const char *source, size_t length, size_t fuel,
@@ -126,5 +188,27 @@ UmiStatus umi_cvm_preview_traced(const char *source, size_t length, size_t fuel,
     UmiCvmPreviewTrace *trace, size_t trace_size)
 {
     if (trace == NULL || trace_size != sizeof *trace) return UMI_STATUS_INVALID_ARGUMENT;
-    return Preview(source, length, fuel, workspace, workspace_size, result, result_size, trace);
+    return Preview(source, length, fuel, false, NULL, workspace, workspace_size, result, result_size, trace);
+}
+
+UmiStatus umi_cvm_preview_bytecode(const uint8_t *bytes, size_t length, size_t fuel,
+    UmiCvmPreviewWorkspace *workspace, size_t workspace_size,
+    UmiCvmPreviewResult *result, size_t result_size)
+{
+    return Preview(bytes, length, fuel, true, NULL, workspace, workspace_size, result, result_size, NULL);
+}
+
+UmiStatus umi_cvm_preview_int_input_bytecode(const uint8_t *bytes, size_t length,
+    int32_t value, size_t fuel, UmiCvmPreviewWorkspace *workspace, size_t workspace_size,
+    UmiCvmPreviewResult *result, size_t result_size)
+{
+    return Preview(bytes, length, fuel, true, &value, workspace, workspace_size, result, result_size, NULL);
+}
+
+UmiStatus umi_cvm_preview_bytecode_traced(const uint8_t *bytes, size_t length, size_t fuel,
+    UmiCvmPreviewWorkspace *workspace, size_t workspace_size,
+    UmiCvmPreviewResult *result, size_t result_size, UmiCvmPreviewTrace *trace, size_t trace_size)
+{
+    if (trace == NULL || trace_size != sizeof *trace) return UMI_STATUS_INVALID_ARGUMENT;
+    return Preview(bytes, length, fuel, true, NULL, workspace, workspace_size, result, result_size, trace);
 }

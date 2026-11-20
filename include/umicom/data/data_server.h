@@ -76,6 +76,13 @@ UmiStatus umi_data_server_create_sqlite(const char *database_path,
  * this is not a byte-for-byte forensic filesystem access guarantee. */
 UmiStatus umi_data_server_open_sqlite_readonly(const char *database_path,
                                               UmiDataServer **out_server);
+/* Open an existing local SQLite Data Server for writes. Use an explicit
+ * absolute selected path. This requires a writable handle and a compatible
+ * umicom_kv table. It never creates the file or installs its schema. Empty,
+ * special and URI names are refused. Output is cleared on every failure.
+ * A build without SQLite reports UNAVAILABLE. */
+UmiStatus umi_data_server_open_sqlite_existing(const char *database_path,
+                                               UmiDataServer **out_server);
 /* Returns zero for memory/writable handles and NULL. Access mode is immutable. */
 int umi_data_server_is_readonly(const UmiDataServer *server);
 

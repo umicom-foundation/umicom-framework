@@ -120,6 +120,14 @@ static void WorkspacePublishProtectiveChange(UmiTradingWorkspace *workspace)
     if (workspace->revision != UINT64_MAX) ++workspace->revision;
 }
 
+/* A Cancel control should offer a new state change. The canonical order
+ * command still accepts acknowledgement of a retained cancellation. */
+static int OrderOffersCancellation(UmiOrderStatus status)
+{
+    return status != UMI_ORDER_CANCELLED &&
+        umi_order_transition_allowed(status, UMI_ORDER_CANCELLED);
+}
+
 /* Provide the copy text operation used by this module and its client applications. */
 static void copy_text(char *destination, size_t capacity, const char *source)
 {
@@ -2473,6 +2481,64 @@ UmiStatus umi_trading_workspace_cancel_selected_order(UmiTradingWorkspace *works
     return UMI_STATUS_OK;
 }
 
+UmiStatus UmiTradingWorkspaceCloseDayOrders(UmiTradingWorkspace *workspace,
+    const char *venue, uint64_t expected_workspace_revision, size_t *out_cancelled)
+{
+    char venue_key[UMI_TRADING_VENUE_CAPACITY];
+    if (workspace == NULL || out_cancelled == NULL || venue == NULL || venue[0] == '\0')
+        return UMI_STATUS_INVALID_ARGUMENT;
+    const UmiStatus copied = umi_text_replace(venue_key, sizeof venue_key, venue);
+    if (copied != UMI_STATUS_OK) return copied;
+    if (workspace->environment == UMI_TRADING_LIVE) return UMI_STATUS_PERMISSION_DENIED;
+    if (!valid_environment(workspace->environment) || workspace->revision != expected_workspace_revision)
+        return UMI_STATUS_INVALID_STATE;
+    UmiOrderStore *orders = &workspace->oms.orders;
+    const UmiStatus admitted = umi_order_store_validate(orders);
+    if (admitted != UMI_STATUS_OK) return admitted;
+
+    /* The shared transition admits each order revision before any publication.
+     * Stage the fields owned by cancellation so one exhausted order cannot
+     * leave the simulated venue half closed. */
+    struct {
+        size_t index;
+        UmiOrderStatus status;
+        uint64_t version;
+    } cancellations[UMI_TRADING_MAX_ORDERS];
+    size_t count = 0U;
+    for (size_t i = 0U; i < orders->count; ++i) {
+        const UmiOrder *order = &orders->orders[i];
+        if (order->request.environment != workspace->environment || order->request.tif != UMI_TIF_DAY)
+            continue;
+        const char *order_venue = order->request.instrument.venue;
+        if (order_venue[0] == '\0' || memchr(order_venue, '\0', sizeof order->request.instrument.venue) == NULL)
+            return UMI_STATUS_INVALID_STATE;
+        if (strcmp(order_venue, venue_key) != 0) continue;
+        if (!UmiOrderStatusValid(order->status)) return UMI_STATUS_INVALID_STATE;
+        if (order->status != UMI_ORDER_ACCEPTED && order->status != UMI_ORDER_PARTIALLY_FILLED)
+            continue;
+        UmiOrder candidate = *order;
+        const UmiStatus status = UmiOrderCancel(&candidate);
+        if (status != UMI_STATUS_OK) return status;
+        cancellations[count].index = i;
+        cancellations[count].status = candidate.status;
+        cancellations[count].version = candidate.version;
+        ++count;
+    }
+
+    if (count != 0U) {
+        if (workspace->revision == UINT64_MAX) return UMI_STATUS_CAPACITY_EXCEEDED;
+        for (size_t i = 0U; i < count; ++i) {
+            UmiOrder *order = &orders->orders[cancellations[i].index];
+            order->status = cancellations[i].status;
+            order->version = cancellations[i].version;
+        }
+        ++workspace->revision;
+        reconcile_selections(workspace);
+    }
+    *out_cancelled = count;
+    return UMI_STATUS_OK;
+}
+
 /*
  * Provide the trading workspace record execution operation used by this module and its
  * client applications.
@@ -3053,8 +3119,13 @@ UmiStatus umi_trading_workspace_snapshot(
     if (selected_order != SIZE_MAX) {
         UmiOrder *order = &workspace->oms.orders.orders[selected_order];
         out_snapshot->has_selected_order = 1;
+/* Keep the generic transition check for review. A current UI affordance
+ * now excludes the terminal self-transition used for acknowledgements. */
+#if 0
         out_snapshot->can_cancel_order =
             umi_order_transition_allowed(order->status, UMI_ORDER_CANCELLED);
+#endif
+        out_snapshot->can_cancel_order = OrderOffersCancellation(order->status);
     }
 /* Preview capability now reflects the existing owner revision admission rule. The previous implementation is retained for review. */
 #if 0
@@ -3506,9 +3577,16 @@ UmiStatus UmiTradingWorkspaceReviewOrder(const UmiTradingWorkspace *workspace,
     UmiTradingOrderReview value = {0};
     value.order = workspace->oms.orders.orders[index];
     value.workspace_revision = workspace->revision;
+/* Use the same availability logic as the live workspace summary. Keep
+ * the former expression to show the acknowledged self-transition. */
+#if 0
     value.can_cancel = order_visible(workspace, &value.order) &&
         strcmp(client_order_id, workspace->selected_order_id) == 0 &&
         umi_order_transition_allowed(value.order.status, UMI_ORDER_CANCELLED);
+#endif
+    value.can_cancel = order_visible(workspace, &value.order) &&
+        strcmp(client_order_id, workspace->selected_order_id) == 0 &&
+        OrderOffersCancellation(value.order.status);
     for (size_t i = 0U; i < workspace->executions.count; ++i) {
         const UmiExecutionReport *fill = &workspace->executions.reports[i];
         if (strcmp(fill->client_order_id.value, client_order_id) == 0)

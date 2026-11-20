@@ -64,6 +64,8 @@ target_sources(umicom_finance PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/fx_forward/settlement.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/fx_forward/trade_readiness.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/fx_forward_book.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/fx_forward_cashflows.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/fx_forward_valuation.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/fx_forward_review.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/fx_forward_archive.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/liquidity/bucket_coverage.c"
@@ -125,6 +127,14 @@ target_sources(umicom_finance PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/settlement_book.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/open_tms/types.c"
 )
+
+target_compile_definitions(umicom_finance PUBLIC UMICOM_HAS_TMS_FORWARD_CASHFLOWS=1)
+
+if(COMMAND umicom_release_inventory_own_headers)
+    # The reviewed valuation API is exported by the shared finance SDK.
+    umicom_release_inventory_own_headers(umicom_finance include/umicom/open_tms/fx_forward_valuation.h)
+    umicom_release_inventory_own_headers(umicom_finance include/umicom/open_tms/fx_forward_cashflows.h)
+endif()
 
 if(BUILD_TESTING)
     function(umicom_add_open_tms_test target test_name source)
@@ -280,6 +290,30 @@ if(BUILD_TESTING)
         framework.open_tms.fx.forward.book
         test_fx_forward_book.c
     )
+    umicom_add_open_tms_test(
+        umicom-open-tms-fx-forward-valuation-test
+        framework.open_tms.fx.forward.valuation
+        test_fx_forward_valuation.c
+    )
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-open-tms-fx-forward-valuation-test)
+    endif()
+    if(COMMAND umicom_test_impact_owners)
+        umicom_test_impact_owners(framework.open_tms.fx.forward.valuation
+            TARGETS umicom-open-tms-fx-forward-valuation-test)
+    endif()
+    umicom_add_open_tms_test(
+        umicom-open-tms-fx-forward-cashflows-test
+        framework.open_tms.fx.forward.cashflows
+        test_fx_forward_cashflows.c
+    )
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-open-tms-fx-forward-cashflows-test)
+    endif()
+    if(COMMAND umicom_test_impact_owners)
+        umicom_test_impact_owners(framework.open_tms.fx.forward.cashflows
+            TARGETS umicom-open-tms-fx-forward-cashflows-test)
+    endif()
     umicom_add_open_tms_test(
         umicom-open-tms-fx-forward-confirmation-test
         framework.open_tms.fx.forward.confirmation
@@ -684,7 +718,7 @@ if(BUILD_TESTING)
         umicom_register_validation_target(umi-treasury-forward-consumer)
     endif()
     # The earlier apply/stale cases remain; archive cases also exercise SDK closure.
-    foreach(scenario apply stale archive-roundtrip archive-stale)
+    foreach(scenario apply stale archive-roundtrip archive-stale valuation)
         set(test framework.open_tms.forward.consumer.${scenario})
         add_test(NAME ${test} COMMAND umi-treasury-forward-consumer ${scenario})
         set_tests_properties(${test} PROPERTIES TIMEOUT 30

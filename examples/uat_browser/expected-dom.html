@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Umicom browser observation</title>
+  <link rel="icon" href="../../resources/brand/umicom.ico">
+  <style>body{font-family:"Segoe UI Variable Text","Segoe UI",sans-serif}</style>
+</head>
+<body>
+  <img id="brand" src="../../resources/brand/umicom-logo.svg" alt="Umicom" width="128">
+  <main>
+    <h1>Browser observation fixture</h1>
+    <p>Computed total <output id="total">42</output></p>
+  </main>
+  <script>
+    addEventListener("load", () => {
+      const brand = document.getElementById("brand");
+      document.getElementById("total").textContent = brand.naturalWidth > 0 ? String(6 * 7) : "logo unavailable";
+    });
+  </script>
+
+
+</body></html>

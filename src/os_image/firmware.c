@@ -16,6 +16,27 @@
 #include "internal.h"
 #include "umicom/os_image/boot_firmware.h"
 
+UmiStatus UmiOsImageReadFirmwareInfo(const char *absolutePath, UmiOsImageFirmwareInfo *out)
+{
+    if (!out || OiAbsolute(absolutePath, 0) != UMI_STATUS_OK)
+        return UMI_STATUS_INVALID_ARGUMENT;
+
+    /* Use the same bounded, link-aware read and byte hash as pin validation.
+     * Publish both fields together once the complete regular file is accepted. */
+    unsigned char *data = NULL;
+    size_t length = 0U;
+    UmiOsImageFirmwareInfo candidate = {0};
+    UmiStatus status = OiRead(absolutePath, UMI_OS_IMAGE_MAX_FILE, &data, &length);
+    if (status == UMI_STATUS_OK && length == 0U) status = UMI_STATUS_INVALID_STATE;
+    if (status == UMI_STATUS_OK) status = UmiNativeSha256Buffer(data, length, candidate.sha256);
+    free(data);
+    if (status == UMI_STATUS_OK) {
+        candidate.bytes = (uint64_t)length;
+        *out = candidate;
+    }
+    return status;
+}
+
 /* The boot service owns this bounded copy. Reading and hashing the same bytes
  * avoids accepting one file identity and later copying unrelated file content. */
 UmiStatus OiFirmwareRead(const UmiOsImageFirmware *pin,

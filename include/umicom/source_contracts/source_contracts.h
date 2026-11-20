@@ -120,6 +120,17 @@ int UmiSourceContractGuideBranding(const char *html, size_t length,
 int UmiSourceContractAuditGuides(const char *const *roots, size_t count,
     const char *asset_directory, UmiSourceContractReport *report);
 
+/** Audit published guide trees that share an assets child at each root. Check
+ * that active relative SVG, ICO and stylesheet references reach that child and
+ * that artwork bytes agree with the approved asset directory. Check embedded
+ * artwork retained alongside the package links as well. Standalone guides
+ * still use the original embedded-artwork contract. Supply
+ * rendered pages if the tree contains build-time site templates. Return the
+ * same result codes as UmiSourceContractAuditGuides. Read-only source checks
+ * cover declared typography; use a browser to verify the rendered page. */
+int UmiSourceContractAuditBundledGuides(const char *const *roots, size_t count,
+    const char *asset_directory, UmiSourceContractReport *report);
+
 #ifdef __cplusplus
 }
 #endif

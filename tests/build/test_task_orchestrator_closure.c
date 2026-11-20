@@ -152,6 +152,35 @@ int main(int argc, char **argv) {
               Complete(owner, "c") == UMI_STATUS_OK && Complete(owner, "d") == UMI_STATUS_OK);
         CHECK(umi_build_task_orchestrator_snapshot(owner, &snapshot) == UMI_STATUS_OK &&
               snapshot.state == UMI_BUILD_TASK_OPERATION_SUCCEEDED && snapshot.retry_count == 1U);
+      } else if (Is(mode, "retry-draining-stop")) {
+        /* A retry cannot reopen task admission while the host is collecting
+         * an active task after an accepted stop. A later explicit retry can. */
+        CHECK(umi_build_task_orchestrator_start(owner, "a") == UMI_STATUS_OK &&
+              umi_build_task_orchestrator_request_stop(owner) == UMI_STATUS_OK);
+        CHECK(umi_build_task_orchestrator_snapshot(owner, &snapshot) == UMI_STATUS_OK);
+        const UmiBuildTaskOperationSnapshot stopping = snapshot;
+        CHECK(umi_build_task_orchestrator_retry(owner, "b") == UMI_STATUS_BUSY);
+        CHECK(umi_build_task_orchestrator_snapshot(owner, &snapshot) == UMI_STATUS_OK &&
+              snapshot.stop_requested && snapshot.active_count == 1U && snapshot.retry_count == 0U &&
+              snapshot.revision == stopping.revision && snapshot.graph.revision == stopping.graph.revision &&
+              snapshot.graph.cancelled_count == stopping.graph.cancelled_count);
+        CHECK(umi_build_task_orchestrator_complete(owner, "a", 0) == UMI_STATUS_OK &&
+              umi_build_task_orchestrator_finish(owner) == UMI_STATUS_OK);
+        CHECK(umi_build_task_orchestrator_snapshot(owner, &snapshot) == UMI_STATUS_OK &&
+              snapshot.state == UMI_BUILD_TASK_OPERATION_CANCELLED);
+        CHECK(umi_build_task_orchestrator_retry(owner, "b") == UMI_STATUS_OK &&
+              umi_build_task_orchestrator_next_ready(owner, &task) == UMI_STATUS_OK && Is(task.task_id, "b"));
+      } else if (Is(mode, "retry-blocked")) {
+        /* A failed prerequisite can immediately block the same retried task.
+         * The operation must reflect that settled graph without another call. */
+        CHECK(umi_build_task_orchestrator_start(owner, "a") == UMI_STATUS_OK &&
+              umi_build_task_orchestrator_fail(owner, "a", UMI_STATUS_INTERNAL_ERROR, 7) == UMI_STATUS_OK);
+        CHECK(umi_build_task_orchestrator_retry(owner, "b") == UMI_STATUS_OK);
+        CHECK(umi_build_task_orchestrator_snapshot(owner, &snapshot) == UMI_STATUS_OK &&
+              snapshot.state == UMI_BUILD_TASK_OPERATION_FAILED && snapshot.retry_count == 1U &&
+              snapshot.active_count == 0U && snapshot.graph.ready_count == 0U);
+        CHECK(umi_build_task_orchestrator_retry(owner, "a") == UMI_STATUS_OK &&
+              umi_build_task_orchestrator_next_ready(owner, &task) == UMI_STATUS_OK && Is(task.task_id, "a"));
       } else
         return 2;
     }

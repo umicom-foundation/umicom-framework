@@ -49,6 +49,10 @@ umicom_add_trading_execution_checks(quantity test_fill_quantities.c
 umicom_add_trading_execution_checks(cancel test_cancel_ownership.c
     accepted partial cancelled replay-at-max last-revision exhausted new validated filled rejected unknown null broker-simulation broker-paper workspace-accepted workspace-partial workspace-replay order-exhausted workspace-exhausted both-final cancelled-max filled-stability filter-retire missing)
 
+# The local close reproduces admission boundaries without a broker or GUI.
+umicom_add_trading_execution_checks(day-orders test_day_orders.c
+    simulation paper order-exhausted workspace-exhausted live stale corrupt duplicate-id empty-venue no-match)
+
 # Exercise the final owner revision and bounded canonical lookup before publication.
 umicom_add_trading_execution_checks(admission test_execution_admission.c
     new-exhausted existing-exhausted last-new last-existing replay-exhausted conflict-exhausted replay-cancelled replay-filled order-count order-text execution-count execution-text execution-full position-count position-full order-revision missing-order invalid-report)

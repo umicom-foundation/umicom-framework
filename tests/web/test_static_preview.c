@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/web/test_static_preview.c
- * PURPOSE: Check complete static previews, rooted path admission, read-only methods and route priority using isolated native files.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Check rooted static previews, read-only methods and route priority with isolated native files.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef _WIN32
@@ -68,7 +75,7 @@ int main(int argc, char **argv)
         return 2;
     const char *mode = argv[1];
     const char *cases[] = {"index",          "directory-index",
-                           "html",           "css",
+                           "html",           "css", "module",
                            "binary",         "unicode",
                            "space",          "decode-once",
                            "empty",          "exact-limit",
@@ -124,6 +131,14 @@ int main(int argc, char **argv)
         expected = "body{}";
         expected_size = 6U;
         mime = "text/css; charset=utf-8";
+    }
+    else if (strcmp(mode, "module") == 0)
+    {
+        CHECK(UmiRootedFileWrite(root, "assets/worker.mjs", "export {};", 10U) == UMI_STATUS_OK);
+        request_path = "/assets/worker.mjs";
+        expected = "export {};";
+        expected_size = 10U;
+        mime = "text/javascript; charset=utf-8";
     }
     else if (strcmp(mode, "binary") == 0)
     {

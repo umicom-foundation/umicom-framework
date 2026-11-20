@@ -194,8 +194,114 @@ static int GbAsset(GbSpan identity, GbSpan uri, const char *prefix,
 }
 static bool GbAssetValid(UmiSourceBrandAsset asset)
 { return asset.bytes != NULL && asset.length != 0U && asset.length <= 2U * 1024U * 1024U; }
-int UmiSourceContractGuideBranding(const char *html, size_t length,
-    const char *path, const UmiSourceBrandAssets *assets, UmiSourceContractReport *report)
+
+typedef struct GbBundledCounts {
+    size_t logo, svg_icon, ico, stylesheet, embedded_ico, embedded_fonts, markers;
+} GbBundledCounts;
+typedef struct GbGuideMarkers { bool embedded, bundled; } GbGuideMarkers;
+
+/* Match the ordinary URL emitted by the documentation bundle. A nested page
+ * climbs exactly to the selected root before it enters that root's assets. */
+static bool GbBundledUrl(GbSpan uri, size_t depth, const char *leaf)
+{
+    const char prefix[] = "assets/";
+    size_t relative = depth * 3U;
+    size_t leaf_length = strlen(leaf);
+    if (uri.length != relative + sizeof(prefix) - 1U + leaf_length) return false;
+    for (size_t i = 0U; i < relative; i += 3U)
+        if (memcmp(uri.text + i, "../", 3U) != 0) return false;
+    return memcmp(uri.text + relative, prefix, sizeof(prefix) - 1U) == 0 &&
+        memcmp(uri.text + relative + sizeof(prefix) - 1U, leaf, leaf_length) == 0;
+}
+
+/* The shared stylesheet uses ordinary spaces. The standalone source still
+ * keeps its established compact declaration and independent validation. */
+static bool GbBundledFonts(GbSpan css)
+{
+    return (GbFont(css, "font-family: \"Segoe UI Variable Text\", \"Segoe UI\", sans-serif") ||
+            GbFont(css, "font-family:\"Segoe UI Variable Text\",\"Segoe UI\",sans-serif")) &&
+           (GbFont(css, "font-family: \"Cascadia Code\", Consolas, monospace") ||
+            GbFont(css, "font-family:\"Cascadia Code\",Consolas,monospace"));
+}
+
+static int GbCheckBundledTag(const GbTag *tag, const UmiSourceBrandAssets *assets,
+    const ScGuideBundle *bundle, size_t depth,
+    GbBundledCounts *counts, const char *path, UmiSourceContractReport *report)
+{
+    /* Older packaged pages keep approved inline artwork as well as the shared
+     * files. Validate both sources when present so either may display safely. */
+    if (GbName(tag->name, "meta") && GbEqual(GbGet(tag, "name"), "umicom-guide-branding")) {
+        ++counts->markers;
+        if (!GbEqual(GbGet(tag, "content"), "official-assets"))
+            GbFinding(report, path, "guide.marker", "The guide identity marker has an unsupported value");
+    }
+    /* A base element can redirect every relative link despite its text. */
+    if (GbName(tag->name, "base") && GbHas(tag, "href"))
+        GbFinding(report, path, "guide.bundle.base", "The package defines the document's relative asset base");
+    if (GbName(tag->name, "link")) {
+        GbSpan rel = GbGet(tag, "rel");
+        GbSpan type = GbGet(tag, "type");
+        GbSpan href = GbGet(tag, "href");
+        if (GbEqual(rel, "icon")) {
+            ++report->checks;
+            if (GbEqual(type, "image/x-icon")) {
+                if (GbHas(tag, "data-umicom-guide-ico")) {
+                    ++counts->embedded_ico;
+                    return GbAsset(GbGet(tag, "data-umicom-guide-ico"), href,
+                        "data:image/x-icon;base64,", assets->ico, path, report);
+                }
+                ++counts->ico;
+                if (!bundle->ico || !GbBundledUrl(href, depth, "umicom.ico"))
+                    GbFinding(report, path, "guide.bundle.ico", "Link the approved ICO in the package assets");
+            } else if (GbEqual(type, "image/svg+xml")) {
+                ++counts->svg_icon;
+                if (!bundle->symbol || !GbBundledUrl(href, depth, "umicom-icon.svg"))
+                    GbFinding(report, path, "guide.bundle.svg", "Link the approved SVG icon in the package assets");
+            } else {
+                GbFinding(report, path, "guide.bundle.icon", "Use the managed SVG or ICO icon type");
+            }
+        } else if (GbEqual(rel, "stylesheet") && GbBundledUrl(href, depth, "umicom-documentation.css")) {
+            ++counts->stylesheet;
+            ++report->checks;
+            if (!GbBundledFonts((GbSpan){bundle->css, bundle->css_length}))
+                GbFinding(report, path, "guide.bundle.font.roles", "The package stylesheet must declare both approved font roles");
+        }
+    }
+    if (GbName(tag->name, "img")) {
+        GbSpan src = GbGet(tag, "src");
+        bool wordmark = GbHas(tag, "data-umicom-guide-logo");
+        bool linked = GbEqual(GbGet(tag, "class"), "umicom-doc-logo");
+        bool symbol = GbHas(tag, "data-umicom-guide-symbol");
+        if ((wordmark || linked || symbol) && (GbGet(tag, "alt").length == 0U ||
+                GbHas(tag, "srcset") || GbHas(tag, "hidden")))
+            GbFinding(report, path, "guide.bundle.logo.reference", "The managed wordmark needs alternative text and one active image source");
+        if (linked || wordmark) ++counts->logo;
+        if (wordmark) {
+            GbSpan surface = GbGet(tag, "data-umicom-guide-surface");
+            if (surface.length != 0U && !GbEqual(surface, "light") && !GbEqual(surface, "dark"))
+                GbFinding(report, path, "guide.logo.surface", "Choose an explicit light or dark wordmark surface");
+            UmiSourceBrandAsset expected = GbEqual(surface, "light") ? assets->logo_light : assets->logo_dark;
+            return GbAsset(GbGet(tag, "data-umicom-guide-logo"), src,
+                "data:image/svg+xml;base64,", expected, path, report);
+        }
+        if (linked) {
+            ++report->checks;
+            if (!(bundle->logo_light && GbBundledUrl(src, depth, "umicom-logo.svg")) &&
+                !(bundle->logo_dark && GbBundledUrl(src, depth, "umicom-logo-on-dark.svg")))
+                GbFinding(report, path, "guide.bundle.logo", "Link a wordmark with exact approved bytes in the package assets");
+        } else if (symbol) {
+            return GbAsset(GbGet(tag, "data-umicom-guide-symbol"), src,
+                "data:image/svg+xml;base64,", assets->symbol, path, report);
+        }
+    }
+    return 0;
+}
+
+/* One tokenizer owns comments, inert elements and bounded attribute spans for
+ * both layouts. Existing standalone checks remain the default public entry. */
+static int GbAuditGuide(const char *html, size_t length,
+    const char *path, const UmiSourceBrandAssets *assets, const ScGuideBundle *bundle,
+    size_t depth, GbGuideMarkers *select, UmiSourceContractReport *report)
 {
     if (report == NULL || path == NULL || assets == NULL || html == NULL) return 2;
     if (length == 0U || length > SC_MAX_FILE_BYTES || memchr(html, 0, length) != NULL ||
@@ -204,6 +310,7 @@ int UmiSourceContractGuideBranding(const char *html, size_t length,
         ScFinding(report, path, 1U, "guide.input", "Invalid source or canonical asset extent", true); return 2;
     }
     size_t before = report->findings, meta = 0U, logo = 0U, ico = 0U, fonts = 0U, inert = 0U;
+    GbBundledCounts bundled = {0};
     ++report->files_checked;
     for (size_t i = 0U; i < length;) {
         if (html[i] != '<') { ++i; continue; }
@@ -234,8 +341,11 @@ int UmiSourceContractGuideBranding(const char *html, size_t length,
             GbName(tag.name, "xmp") || GbName(tag.name, "noscript")) {
             size_t end, after;
             if (GbRawEnd(html, length, i, tag.name, &end, &after) != 0) goto malformed;
-            if (inert == 0U && GbName(tag.name, "style") && GbEqual(GbGet(&tag, "id"), "umicom-guide-fonts")) {
-                ++fonts; ++report->checks;
+            if (select == NULL && inert == 0U &&
+                GbName(tag.name, "style") && GbEqual(GbGet(&tag, "id"), "umicom-guide-fonts")) {
+                if (bundle == NULL) ++fonts;
+                else ++bundled.embedded_fonts;
+                ++report->checks;
                 GbSpan css = {html + i, end - i};
                 if (!GbFont(css, "font-family:\"Segoe UI Variable Text\",\"Segoe UI\",sans-serif") ||
                     !GbFont(css, "font-family:\"Cascadia Code\",Consolas,monospace"))
@@ -244,6 +354,22 @@ int UmiSourceContractGuideBranding(const char *html, size_t length,
             i = after; continue;
         }
         if (inert != 0U) continue;
+        /* Select by an active authored marker. Quoted examples and comments
+         * cannot change how the real package links are interpreted. */
+        if (select != NULL) {
+            if (GbName(tag.name, "meta") && GbEqual(GbGet(&tag, "name"), "umicom-guide-branding"))
+                select->embedded = true;
+            if (GbName(tag.name, "link") &&
+                    ((GbEqual(GbGet(&tag, "rel"), "icon") && !GbHas(&tag, "data-umicom-guide-ico")) ||
+                     (GbEqual(GbGet(&tag, "rel"), "stylesheet") &&
+                      GbBundledUrl(GbGet(&tag, "href"), depth, "umicom-documentation.css"))))
+                select->bundled = true;
+            continue;
+        }
+        if (bundle != NULL) {
+            if (GbCheckBundledTag(&tag, assets, bundle, depth, &bundled, path, report) == 2) goto failed;
+            continue;
+        }
         if (GbName(tag.name, "meta") && GbEqual(GbGet(&tag, "name"), "umicom-guide-branding")) {
             ++meta;
             if (!GbEqual(GbGet(&tag, "content"), "official-assets"))
@@ -280,9 +406,16 @@ int UmiSourceContractGuideBranding(const char *html, size_t length,
         }
     }
     if (inert != 0U) goto malformed;
+    if (select != NULL) return 0;
     ++report->checks;
-    if (meta != 1U || logo != 1U || ico != 1U || fonts != 1U)
+    if (bundle != NULL) {
+        if (bundled.logo != 1U || bundled.ico != 1U || bundled.svg_icon != 1U || bundled.stylesheet != 1U)
+            GbFinding(report, path, "guide.bundle.count", "Require one managed wordmark, SVG icon, ICO and package stylesheet");
+        if (bundled.embedded_ico > 1U || bundled.embedded_fonts > 1U || bundled.markers > 1U)
+            GbFinding(report, path, "guide.bundle.embedded.count", "Keep at most one embedded fallback for each package asset role");
+    } else if (meta != 1U || logo != 1U || ico != 1U || fonts != 1U) {
         GbFinding(report, path, "guide.marker.count", "Require exactly one active guide marker, wordmark, ICO and font declaration");
+    }
     return report->findings == before ? 0 : 1;
 malformed:
     ScFinding(report, path, 1U, "guide.structure", "Malformed or unsupported controlled HTML structure", true);
@@ -290,4 +423,24 @@ malformed:
 failed:
     ScFinding(report, path, 1U, "guide.asset.read", "Unable to validate the bounded asset payload", true);
     return 2;
+}
+
+int UmiSourceContractGuideBranding(const char *html, size_t length,
+    const char *path, const UmiSourceBrandAssets *assets, UmiSourceContractReport *report)
+{
+    return GbAuditGuide(html, length, path, assets, NULL, 0U, NULL, report);
+}
+
+int ScGuideBundledAudit(const char *html, size_t length, const char *path,
+    const UmiSourceBrandAssets *assets, const ScGuideBundle *bundle, size_t depth,
+    UmiSourceContractReport *report)
+{
+    if (bundle == NULL || depth > SC_MAX_DEPTH) return 2;
+    GbGuideMarkers markers = {0};
+    /* The inexpensive scan chooses the format without reporting twice. Both
+     * paths then verify the complete bounded HTML with real diagnostics. */
+    UmiSourceContractReport probe = {0};
+    (void)GbAuditGuide(html, length, path, assets, NULL, depth, &markers, &probe);
+    return GbAuditGuide(html, length, path, assets, markers.embedded && !markers.bundled ? NULL : bundle,
+        depth, NULL, report);
 }

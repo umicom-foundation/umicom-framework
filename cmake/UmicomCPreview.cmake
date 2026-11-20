@@ -13,10 +13,7 @@
 # MIT
 #---------------------------------------------------------------------------
 include_guard(GLOBAL)
-function(umicom_add_cvm_preview target)
-    if(TARGET "${target}")
-        message(FATAL_ERROR "CVM preview target already exists: ${target}")
-    endif()
+function(umicom_require_cvm_sdk)
     # The former unconditional package lookup is retained for review. The
     # installed SDK remains the default in the else branch below.
     # find_package(UmicomC 0.1 CONFIG REQUIRED)
@@ -36,6 +33,14 @@ function(umicom_add_cvm_preview target)
     else()
         find_package(UmicomC 0.1 CONFIG REQUIRED)
     endif()
+endfunction()
+
+function(umicom_add_cvm_preview target)
+    if(TARGET "${target}")
+        message(FATAL_ERROR "CVM preview target already exists: ${target}")
+    endif()
+    # Preview and translation share the same explicitly selected SDK.
+    umicom_require_cvm_sdk()
     get_filename_component(_framework "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/.." ABSOLUTE)
     # An explicit optional SDK adapter avoids making the compiler bootstrap
     # depend on the complete Framework or its desktop dependencies.
@@ -69,4 +74,23 @@ function(umicom_add_cvm_document_check target platform_target)
     get_filename_component(_framework "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/.." ABSOLUTE)
     target_sources("${target}" PRIVATE "${_framework}/src/toolchain/cvm_document_check.c")
     target_link_libraries("${target}" PUBLIC "${platform_target}")
+endfunction()
+
+function(umicom_add_cvm_file_translation target platform_target)
+    if(NOT TARGET "${platform_target}")
+        message(FATAL_ERROR "File translation requires an existing Framework platform target")
+    endif()
+    umicom_require_cvm_sdk()
+    if(NOT TARGET UmicomC::Translation)
+        message(FATAL_ERROR "Select an Umicom C SDK that exports UmicomC::Translation for file translation")
+    endif()
+    get_filename_component(_framework "${CMAKE_CURRENT_FUNCTION_LIST_DIR}/.." ABSOLUTE)
+    add_library("${target}" STATIC "${_framework}/src/toolchain/cvm_file_translation.c")
+    target_include_directories("${target}" PUBLIC "${_framework}/include")
+    target_compile_features("${target}" PUBLIC c_std_23)
+    target_link_libraries("${target}" PUBLIC "${platform_target}" UmicomC::Translation)
+    set_target_properties("${target}" PROPERTIES C_EXTENSIONS OFF)
+    if(CMAKE_C_COMPILER_ID MATCHES "GNU|Clang")
+        target_compile_options("${target}" PRIVATE -Wall -Wextra -Wpedantic -Wconversion -Wshadow -Werror)
+    endif()
 endfunction()

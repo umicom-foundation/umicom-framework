@@ -60,6 +60,84 @@ static void WriteAt(const char *root, const char *name, const void *bytes, size_
     char *path = ScJoin(root, name); assert(path != NULL);
     Write(path, bytes, length); free(path);
 }
+
+static void CheckBundled(const char *which, const char *docs, const char *masters)
+{
+    /* Generate an owned asset tree independent of the reference assets. An
+     * altered file or link must report a finding even if its name is valid. */
+    char *assets = ScJoin(docs, "assets");
+    assert(assets != NULL); Directory(assets);
+    if (strcmp(which, "missing-ico") != 0) WriteAt(assets, "umicom.ico", GbTestIco, 3U);
+    WriteAt(assets, "umicom-logo.svg", strcmp(which, "altered-logo") == 0 ? GbTestDark : GbTestLight, 3U);
+    WriteAt(assets, "umicom-logo-on-dark.svg", GbTestDark, 3U);
+    WriteAt(assets, "umicom-icon.svg", GbTestSymbol, 3U);
+    const char *stylesheet =
+        "body{font-family: \"Segoe UI Variable Text\", \"Segoe UI\", sans-serif;}"
+        "code{font-family: \"Cascadia Code\", Consolas, monospace;}";
+    if (strcmp(which, "fonts-in-comment") == 0)
+        stylesheet = "/* font-family: \"Segoe UI Variable Text\", \"Segoe UI\", sans-serif;"
+                     "font-family: \"Cascadia Code\", Consolas, monospace; */";
+    WriteAt(assets, "umicom-documentation.css", stylesheet, strlen(stylesheet));
+
+    /* Test depth-relative links, inert examples and coexistence with a
+     * self-contained authored page in the same source distribution. */
+    bool nested = strcmp(which, "nested") == 0;
+    bool mixed = strcmp(which, "mixed") == 0;
+    bool mixed_page = strncmp(which, "mixed-page", 10U) == 0;
+    const char *prefix = nested ? "../" : "";
+    const char *logo_prefix = strcmp(which, "wrong-depth") == 0 ? "../" : prefix;
+    const char *leaf = strcmp(which, "dark") == 0 ? "umicom-logo-on-dark.svg" : "umicom-logo.svg";
+    char html[4096];
+    int length = snprintf(html, sizeof(html),
+        "<!doctype html><html><head>%s<link rel='stylesheet' href='%sassets/umicom-documentation.css'>"
+        "<link rel='icon' type='image/svg+xml' href='%sassets/umicom-icon.svg'>"
+        "<link rel='icon' type='image/x-icon' href='%sassets/umicom.ico'></head><body>%s"
+        "<img class='umicom-doc-logo' src='%sassets/%s' alt='%s'></body></html>",
+        strcmp(which, "changed-base") == 0 ? "<base href='alternate/'>" : "", prefix, prefix, prefix,
+        strcmp(which, "inert-marker") == 0 ?
+            "<template><meta name='umicom-guide-branding' content='official-assets'></template>" : "",
+        logo_prefix, leaf, strcmp(which, "missing-alt") == 0 ? "" : "Umicom");
+    assert(length > 0 && (size_t)length < sizeof(html));
+    if (mixed_page) {
+        /* Existing packaged guides can retain an approved embedded icon and
+         * wordmark. Check those bytes as well as the linked package files. */
+        char embedded[4096];
+        int embedded_length = GbTestDocument(embedded, sizeof(embedded), false);
+        assert(embedded_length > 0 && (size_t)embedded_length < sizeof(embedded));
+        char *end = strstr(embedded, "</head>");
+        assert(end != NULL);
+        const char *links = "<link rel='stylesheet' href='assets/umicom-documentation.css'>"
+            "<link rel='icon' type='image/svg+xml' href='assets/umicom-icon.svg'>"
+            "<link rel='icon' type='image/x-icon' href='assets/umicom.ico'>";
+        if (strcmp(which, "mixed-page-wrong-ico") == 0) {
+            const char *data_prefix = "data:image/x-icon;base64,";
+            char *data = strstr(embedded, data_prefix);
+            assert(data != NULL);
+            data += strlen(data_prefix);
+            *data = *data == 'A' ? 'B' : 'A';
+        }
+        length = snprintf(html, sizeof(html), "%.*s%s%s", (int)(end - embedded), embedded, links, end);
+        assert(length > 0 && (size_t)length < sizeof(html));
+    }
+    char *nested_root = nested ? ScJoin(docs, "more lessons") : NULL;
+    if (nested) { assert(nested_root != NULL); Directory(nested_root); }
+    WriteAt(nested ? nested_root : docs, "linked.html", html, (size_t)length);
+    if (mixed) {
+        length = GbTestDocument(html, sizeof(html), false);
+        assert(length > 0 && (size_t)length < sizeof(html));
+        WriteAt(docs, "embedded.html", html, (size_t)length);
+    }
+    bool qualifies = nested || mixed || strcmp(which, "valid") == 0 ||
+        strcmp(which, "dark") == 0 || strcmp(which, "inert-marker") == 0 || strcmp(which, "mixed-page") == 0;
+    UmiSourceContractReport report = {0};
+    const char *roots[] = {docs};
+    assert(UmiSourceContractAuditBundledGuides(roots, 1U, masters, &report) == (qualifies ? 0 : 1));
+    assert(report.files_checked == (mixed ? 2U : 1U) && report.input_errors == 0U);
+    assert((report.findings == 0U) == qualifies);
+    free(nested_root);
+    free(assets);
+}
+
 int main(int argc, char **argv)
 {
     if (argc != 3) return 2;
@@ -74,6 +152,11 @@ int main(int argc, char **argv)
         if (i == 0U && strcmp(which, "missing-asset") == 0) continue;
         size_t length = i == 0U && strcmp(which, "empty-asset") == 0 ? 0U : 3U;
         WriteAt(assets, names[i], bytes[i], length);
+    }
+    if (strncmp(which, "bundle-", 7U) == 0) {
+        CheckBundled(which + 7U, docs, assets);
+        free(assets); free(docs);
+        return 0;
     }
     char html[4096];
     int written = GbTestDocument(html, sizeof(html), false);

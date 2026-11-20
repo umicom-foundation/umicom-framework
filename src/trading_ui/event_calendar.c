@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "event_calendar_internal.h"
+#include "umicom/base/utf8.h"
 #include <stdlib.h>
 #include <string.h>
 static bool Terminated(const char *text, size_t capacity) {
@@ -128,6 +129,11 @@ UmiStatus UmiEventCalendarFilterValidate(const UmiEventCalendarFilter *f) {
     if (!UmiEventCalendarDateValid(f->from, true) || !UmiEventCalendarDateValid(f->through, true) ||
         (f->from[0] && f->through[0] && strcmp(f->from, f->through) > 0) ||
         !CodeValid(f->country, 2U) || !CodeValid(f->currency, 3U))
+        return UMI_STATUS_INVALID_ARGUMENT;
+    /* Callers outside GTK can provide raw search bytes. Admit complete
+     * scalars before matching so an isolated continuation byte cannot match
+     * part of a valid title or publish a new result page. */
+    if (!UmiUtf8Validate((const unsigned char *)f->search, strlen(f->search), NULL))
         return UMI_STATUS_INVALID_ARGUMENT;
     for (size_t i = 0U; f->search[i]; ++i)
         if ((unsigned char)f->search[i] < 32U || (unsigned char)f->search[i] == 127U)

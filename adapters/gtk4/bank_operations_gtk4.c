@@ -840,6 +840,16 @@ static void OpenWorkspace(GtkButton *button, gpointer data)
     if (!GTK_IS_WINDOW(root)) return;
     GtkEntry *pathEntry = g_weak_ref_get(&launcher->pathEntry);
     if (pathEntry == NULL) return;
+    /* A native changed handler may reenter the launcher during selection.
+     * Wait for the picker to publish a complete draft and its accepted mode. */
+    UmiPathPickerMode selectedMode = UMI_PATH_PICKER_NEW_FILE;
+    UmiStatus selection = UmiPathPickerGtk4ReadSelectedMode(pathEntry, &selectedMode);
+    if (selection != UMI_STATUS_OK && selection != UMI_STATUS_NOT_FOUND) {
+        g_object_unref(pathEntry);
+        LauncherMessage(launcher, "Let the database choice finish before opening banking operations.");
+        return;
+    }
+    bool existingOnly = selection == UMI_STATUS_OK && selectedMode == UMI_PATH_PICKER_EXISTING_FILE;
     selectedPath = g_strdup(gtk_editable_get_text(GTK_EDITABLE(pathEntry)));
     g_object_unref(pathEntry);
     if (selectedPath[0] == '\0' || !g_utf8_validate(selectedPath, -1, NULL) ||
@@ -848,10 +858,20 @@ static void OpenWorkspace(GtkButton *button, gpointer data)
         LauncherMessage(launcher, "Choose an absolute local database filename before opening banking operations.");
         return;
     }
+    /* Retain the former single factory for review. Browse existing now uses
+     * the shared checked writer and cannot fall back to creating a database. */
+#if 0
     status = UmiBankOperationsOpenSqlite(selectedPath, &operations);
+#endif
+    status = existingOnly ? UmiBankOperationsOpenExistingSqlite(selectedPath, &operations)
+                          : UmiBankOperationsOpenSqlite(selectedPath, &operations);
     if (status != UMI_STATUS_OK) {
         g_free(selectedPath);
-        LauncherMessage(launcher, "The selected database could not be opened. Check the filename, its parent folder and access permissions; then retry.");
+        /* The selected mode explains which recovery action can preserve the
+         * intended ledger, especially when the previously chosen file moved. */
+        LauncherMessage(launcher, existingOnly ?
+            "The existing database could not be opened. Check that the selected file is still there and writable, then browse again." :
+            "The selected database could not be opened. Check the filename, its parent folder and access permissions; then retry.");
         return;
     }
     ui = g_new0(BankUi, 1);

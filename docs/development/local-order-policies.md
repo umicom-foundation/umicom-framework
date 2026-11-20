@@ -40,6 +40,26 @@ A complete client still checks request validity, environment, health, risk and t
 
 The submit affordance uses the same capability predicate. Preview remains a way to explain the refusal. Direct API callers must still check the returned status because UI state is not authority.
 
+## Close a venue in the local workspace
+
+When your simulation reaches a confirmed session close, obtain a current
+workspace observation. Pass its revision and the exact venue code to
+`UmiTradingWorkspaceCloseDayOrders`. The workspace cancels accepted DAY orders
+and the unfilled portion of partially filled DAY orders for that venue in the
+current simulation or paper mode. Existing fills and positions stay available.
+GTC orders, terminal orders, other venues and other modes keep their state.
+
+One close publishes one workspace revision. Every order affected by that close
+advances its own revision. If any selected order cannot advance, the whole
+batch is refused. An older workspace revision is also refused, so a delayed
+close cannot cancel a batch that has changed since review. Read the current
+workspace and confirm the session boundary again before retrying. A matching
+revision with no eligible orders returns a count of zero.
+
+The caller supplies the boundary. Passing a venue code does not look up
+exchange hours, contact a broker or trigger a live cancellation. Qualify a
+calendar or a transport-driven acknowledgement in its own workflow.
+
 The workspace admits its revision before publishing preview evidence. Submission also admits the next order sequence before changing the ticket or OMS. At an exhausted counter it returns CAPACITY_EXCEEDED without changing the owner or output decision. Do not reset the counter inside the same session to hide exhaustion.
 
 ## Qualify the behavior
@@ -54,5 +74,14 @@ ctest --test-dir build/windows-ucrt64-debug --output-on-failure -R "^framework[.
 Run each command separately and stop on errors. The regression cases cover enum validity versus capability, both local broker modes, both previews, direct submission, available and exhausted identities, and retained denial evidence. They use synthetic requests and the real owner implementation for counter injection.
 
 These checks are authored and await owner execution. Static review does not establish compiler, linker, native UI or runtime results.
+
+The dedicated close tests exercise both local modes, stale revision refusal,
+the exact venue filter, partial fill retention and atomic exhaustion with
+synthetic orders. Build and test their target in the same Framework checkout.
+
+~~~powershell
+cmake --build --preset windows-ucrt64-debug --target umicom-trading-execution-day-orders-test
+ctest --test-dir build/windows-ucrt64-debug --output-on-failure --no-tests=error -R "^framework[.]trading_execution[.]day-orders[.]"
+~~~
 
 Inspect [time_in_force.c](../../src/trading/time_in_force.c), [simulated_broker.c](../../src/trading/simulated_broker.c) and [workspace.c](../../src/trading/workspace.c). Continue with [execution publication](execution-publication.md) and [cancellation](order-cancellation.md) for the supported local lifecycle. An external adapter must report and implement its own capabilities; this local helper is not a venue capability registry.

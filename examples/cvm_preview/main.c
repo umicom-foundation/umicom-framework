@@ -103,9 +103,46 @@ static bool slice_budget(const char *text, size_t *out)
     return true;
 }
 
+/* The teaching tool admits one bounded binary file. The shared API owns the
+ * byte format and execution; the CLI only reads the requested file. */
+static int artifact_preview(const char *path)
+{
+    enum { maximum = UMC_BYTECODE_HEADER_SIZE + UMC_PROGRAM_LIMIT * UMC_BYTECODE_RECORD_SIZE };
+    uint8_t bytes[maximum + 1U];
+    FILE *file = fopen(path, "rb");
+    if (file == NULL) {
+        fputs("Cannot open bytecode file.\n", stderr);
+        return 1;
+    }
+    const size_t length = fread(bytes, 1U, sizeof bytes, file);
+    const bool read_error = ferror(file) != 0;
+    const int close_status = fclose(file);
+    if (read_error || close_status != 0 || length > maximum) {
+        fputs("Cannot read a complete bytecode file within the format limit.\n", stderr);
+        return 1;
+    }
+    UmiCvmPreviewWorkspace workspace;
+    UmiCvmPreviewResult result;
+    const UmiStatus status = umi_cvm_preview_bytecode(bytes, length, UMC_PROGRAM_LIMIT,
+        &workspace, sizeof workspace, &result, sizeof result);
+    if (status != UMI_STATUS_OK) {
+        fprintf(stderr, "Bytecode preview: %s\n", result.diagnostic.message);
+        return 1;
+    }
+    printf("%ld\n", (long)result.execution.value);
+    return fflush(stdout) != 0 || ferror(stdout) ? 2 : 0;
+}
+
 int main(int argc, char **argv)
 {
     static const char demonstration[] = "int main(void) { return 6 * 7; }";
+    if (argc >= 2 && strcmp(argv[1], "--bytecode") == 0) {
+        if (argc != 3) {
+            fputs("Usage: umicom-cvm-preview --bytecode program.umcb\n", stderr);
+            return 2;
+        }
+        return artifact_preview(argv[2]);
+    }
     if(argc>=2 && strcmp(argv[1],"--slice")==0) {
         size_t budget=0U;
         if(argc<3 || argc>4 || !slice_budget(argv[2],&budget)) {

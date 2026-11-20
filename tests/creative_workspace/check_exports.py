@@ -6,6 +6,7 @@ This is format/content verification, not a GTK, neural-model or media-device tes
 """
 from __future__ import annotations
 import argparse
+import base64
 import math
 import struct
 import subprocess
@@ -18,18 +19,29 @@ from pathlib import Path
 class Page(HTMLParser):
     def __init__(self) -> None:
         super().__init__(); self.figures = 0; self.images: list[str] = []; self.scripts = 0; self.csp = ""
+        self.icons: list[str] = []
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         values = dict(attrs)
         if tag == "figure": self.figures += 1
         if tag == "script": self.scripts += 1
         if tag == "img": self.images.append(values.get("src") or "")
+        if tag == "link" and values.get("rel") == "icon":
+            self.icons.append(values.get("href") or "")
         if tag == "meta" and values.get("http-equiv") == "Content-Security-Policy": self.csp = values.get("content") or ""
 
 def require(condition: bool, message: str) -> None:
     if not condition: raise AssertionError(message)
 
+def require_asset(urls: list[str], prefix: str, expected: bytes) -> None:
+    # An image name or MIME marker alone can't prove the encoded asset is intact.
+    require(len(urls) == 1 and urls[0].startswith(prefix), prefix)
+    require(base64.b64decode(urls[0][len(prefix):], validate=True) == expected, "exact approved " + prefix)
+
 def check(probe: Path, directory: Path) -> int:
     ns = {"s": "http://www.w3.org/2000/svg"}; checks = 0
+    brand = Path(__file__).resolve().parents[2] / "resources" / "brand"
+    wordmark = (brand / "umicom-logo-on-dark.svg").read_bytes()
+    icon = (brand / "umicom.ico").read_bytes()
     for profile in ("kitchen", "media", "music", "web-studio", "mobile-studio"):
         out = directory / profile; out.mkdir()
         subprocess.run([str(probe), profile, str(out)], check=True, timeout=30)
@@ -51,9 +63,14 @@ def check(probe: Path, directory: Path) -> int:
             text = (out / name).read_text(encoding="utf-8"); page = Page(); page.feed(text)
             require(page.figures == expected and page.scripts == 0, "inert frame count")
             require("default-src 'none'" in page.csp, "restrictive CSP")
-            require(len(page.images) == 1 and page.images[0].startswith("data:image/png;base64,"), "embedded original logo")
+            # Preserve the former raster expectation for review. Check the
+            # official vector and ICO bytes as distinct active resources now.
+            if False:
+                require(len(page.images) == 1 and page.images[0].startswith("data:image/png;base64,"), "embedded original logo")
+            require_asset(page.images, "data:image/svg+xml;base64,", wordmark)
+            require_asset(page.icons, "data:image/vnd.microsoft.icon;base64,", icon)
             require("&lt;visual&gt;" in text, "HTML escaping")
-            checks += 4
+            checks += 5
     with wave.open(str(directory / "music" / "notes.wav"), "rb") as audio:
         require(audio.getframerate() == 48000 and audio.getnchannels() == 1 and audio.getsampwidth() == 2, "PCM contract")
         require(audio.getnframes() == 8 * 48000, "duration")

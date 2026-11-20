@@ -1,6 +1,7 @@
 # Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
 # Hex strings preserve field boundaries without evaluating captured build text.
 include_guard(GLOBAL)
+set_property(GLOBAL PROPERTY UMICOM_RELEASE_INVENTORY_FIELD_LIMIT 262144)
 function(_umicom_inventory_row output kind identity owner state detail)
     get_property(_rows GLOBAL PROPERTY UMICOM_INVENTORY_ENCODED_ROWS)
     if(NOT _rows)
@@ -11,10 +12,12 @@ function(_umicom_inventory_row output kind identity owner state detail)
         message(FATAL_ERROR "Release inventory exceeds 200,000 records; capture refused")
     endif()
     set_property(GLOBAL PROPERTY UMICOM_INVENTORY_ENCODED_ROWS "${_rows}")
+    get_property(_field_limit GLOBAL PROPERTY UMICOM_RELEASE_INVENTORY_FIELD_LIMIT)
     foreach(_field IN ITEMS identity owner detail)
         string(LENGTH "${${_field}}" _size)
-        if(_size GREATER 262144)
-            message(FATAL_ERROR "Release inventory field exceeds 256 KiB; capture refused")
+        if(_size GREATER _field_limit)
+            message(FATAL_ERROR
+                "Release inventory ${_field} exceeds 256 KiB on ${kind} '${identity}' (${_size} bytes); capture refused")
         endif()
         string(HEX "${${_field}}" _${_field})
     endforeach()

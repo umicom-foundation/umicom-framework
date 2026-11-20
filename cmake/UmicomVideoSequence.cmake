@@ -23,8 +23,10 @@ target_sources(umicom_creative_workspace PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/video_render_plan.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/video_soundtrack.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/video_captions.c"
-    "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/video_render.c")
+    "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/video_render.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/creative_workspace/media_probe.c")
 target_link_libraries(umicom_creative_workspace PRIVATE Umicom::process_channel Umicom::developer Umicom::ai)
+target_link_libraries(umicom_creative_workspace PRIVATE Umicom::protocol)
 if(TARGET umicom_creative_workspace_gtk4)
     target_sources(umicom_creative_workspace_gtk4 PRIVATE
         "${CMAKE_CURRENT_LIST_DIR}/../adapters/gtk4/video_sequence_gtk4.c"
@@ -63,6 +65,11 @@ if(BUILD_TESTING)
         arguments captured limits)
     umicom_video_cases(umicom-video-soundtrack-test test_soundtrack.c arguments invalid)
     umicom_video_cases(umicom-video-captions-test test_captions.c arguments invalid)
+    umicom_video_cases(umicom-media-probe-test test_media_probe.c
+        streams unknown empty time-range stream-limit byte-limit wrong-root missing-streams
+        wrong-streams wrong-kind missing-index fractional-index repeated-index duplicate-key
+        incomplete-dimensions zero-dimensions negative-duration time-overflow precision
+        duration-type truncated invalid-arguments)
     if(WIN32 OR CMAKE_SYSTEM_NAME STREQUAL "Linux")
         # The fixture is a native process, not a script interpreted by a shell.
         add_executable(umicom-video-tool-fixture

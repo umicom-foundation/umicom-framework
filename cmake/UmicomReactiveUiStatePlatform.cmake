@@ -95,6 +95,117 @@ target_sources(umicom_ui PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/ui/reactive/conformance_profile.c"
 )
 
+# Compose HTTP and the existing state owner in a separate SDK component. UI
+# clients without a web view keep the same dependencies and storage contract.
+if(TARGET Umicom::web AND TARGET Umicom::protocol)
+    add_library(umicom_reactive_web STATIC
+        "${UMICOM_UI_REACTIVE_ROOT}/src/web/reactive_view.c"
+        "${UMICOM_UI_REACTIVE_ROOT}/src/web/reactive_edit.c")
+    add_library(Umicom::reactive_web ALIAS umicom_reactive_web)
+    set_target_properties(umicom_reactive_web PROPERTIES EXPORT_NAME reactive_web
+        C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    target_link_libraries(umicom_reactive_web PUBLIC Umicom::ui Umicom::web PRIVATE Umicom::protocol)
+    umicom_apply_warnings(umicom_reactive_web)
+    umicom_apply_sanitizers(umicom_reactive_web)
+    install(TARGETS umicom_reactive_web EXPORT UmicomFrameworkTargets
+        ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}" COMPONENT Framework)
+    if(COMMAND umicom_register_sdk_libraries)
+        umicom_register_sdk_libraries(umicom_reactive_web)
+    endif()
+    install(FILES "${UMICOM_UI_REACTIVE_ROOT}/resources/web/reactive/view.mjs"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/resources/web/reactive"
+        COMPONENT Framework)
+    install(FILES "${UMICOM_UI_REACTIVE_ROOT}/resources/web/reactive/view.mjs"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom/framework/resources/web/reactive"
+        COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
+    # The offline guide uses the same existing reactive asset and typed route.
+    install(FILES "${UMICOM_UI_REACTIVE_ROOT}/docs/guides/native-reactive-boolean-edits.html"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides" COMPONENT Framework)
+    install(FILES "${UMICOM_UI_REACTIVE_ROOT}/docs/guides/native-reactive-boolean-edits.html"
+        DESTINATION "${CMAKE_INSTALL_DATADIR}/umicom-framework/docs/guides"
+        COMPONENT FrameworkSDK EXCLUDE_FROM_ALL)
+    if(COMMAND umicom_target_qualification_inputs)
+        umicom_target_qualification_inputs(umicom_reactive_web FILES
+            "${UMICOM_UI_REACTIVE_ROOT}/resources/web/reactive/view.mjs")
+    endif()
+    if(BUILD_TESTING)
+        add_executable(umicom-reactive-web-view-test
+            "${UMICOM_UI_REACTIVE_ROOT}/tests/ui_reactive/test_web_reactive_view.c")
+        target_link_libraries(umicom-reactive-web-view-test PRIVATE Umicom::reactive_web)
+        umicom_apply_warnings(umicom-reactive-web-view-test)
+        umicom_apply_sanitizers(umicom-reactive-web-view-test)
+        add_test(NAME framework.ui_reactive.web_view.native COMMAND umicom-reactive-web-view-test)
+        set_tests_properties(framework.ui_reactive.web_view.native PROPERTIES TIMEOUT 30
+            LABELS "framework;ui;reactive;web")
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-reactive-web-view-test)
+        endif()
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners(framework.ui_reactive.web_view.native
+                TARGETS umicom-reactive-web-view-test)
+        endif()
+        add_executable(umicom-reactive-web-edit-test
+            "${UMICOM_UI_REACTIVE_ROOT}/tests/ui_reactive/test_web_reactive_edit.c")
+        target_link_libraries(umicom-reactive-web-edit-test PRIVATE Umicom::reactive_web)
+        umicom_apply_warnings(umicom-reactive-web-edit-test)
+        umicom_apply_sanitizers(umicom-reactive-web-edit-test)
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-reactive-web-edit-test)
+        endif()
+        foreach(_case IN ITEMS success minimum maximum last-revision stale future exhausted range
+                origin duplicate-origin required-origin method path permission reauthenticate gate-failure
+                content-type duplicate-type query large-body embedded-zero unconfigured excess-header-count
+                unknown-key wrong-kind malformed)
+            set(_test "framework.ui_reactive.web_edit.${_case}")
+            add_test(NAME "${_test}" COMMAND umicom-reactive-web-edit-test "${_case}")
+            set_tests_properties("${_test}" PROPERTIES TIMEOUT 30 LABELS "framework;ui;reactive;web")
+            if(COMMAND umicom_test_impact_owners)
+                umicom_test_impact_owners("${_test}" TARGETS umicom-reactive-web-edit-test)
+            endif()
+        endforeach()
+        # Cover the second value type through the same native transaction owner.
+        add_executable(umicom-reactive-web-boolean-edit-test
+            "${UMICOM_UI_REACTIVE_ROOT}/tests/ui_reactive/test_web_reactive_boolean_edit.c")
+        target_link_libraries(umicom-reactive-web-boolean-edit-test PRIVATE Umicom::reactive_web)
+        umicom_apply_warnings(umicom-reactive-web-boolean-edit-test)
+        umicom_apply_sanitizers(umicom-reactive-web-boolean-edit-test)
+        if(COMMAND umicom_register_validation_target)
+            umicom_register_validation_target(umicom-reactive-web-boolean-edit-test)
+        endif()
+        foreach(_case IN ITEMS set clear numeric quoted case extra-value leading-zero stale origin permission wrong-kind missing-key)
+            set(_test "framework.ui_reactive.web_boolean_edit.${_case}")
+            add_test(NAME "${_test}" COMMAND umicom-reactive-web-boolean-edit-test "${_case}")
+            set_tests_properties("${_test}" PROPERTIES TIMEOUT 30 LABELS "framework;ui;reactive;web")
+            if(COMMAND umicom_test_impact_owners)
+                umicom_test_impact_owners("${_test}" TARGETS umicom-reactive-web-boolean-edit-test)
+            endif()
+        endforeach()
+        # A Windows executable found through WSL interop cannot read this
+        # POSIX source path. Keep the former unrestricted discovery for review.
+        if(FALSE)
+            find_program(UMICOM_REACTIVE_NODE_EXECUTABLE NAMES node node.exe)
+        endif()
+        if(WIN32)
+            find_program(UMICOM_REACTIVE_NODE_EXECUTABLE NAMES node node.exe)
+        else()
+            find_program(UMICOM_REACTIVE_NODE_EXECUTABLE NAMES node)
+        endif()
+        # Apply the same host check to a value cached by a previous configure.
+        if(UMICOM_REACTIVE_NODE_EXECUTABLE AND
+           (WIN32 OR NOT UMICOM_REACTIVE_NODE_EXECUTABLE MATCHES "\\.[Ee][Xx][Ee]$"))
+            add_test(NAME framework.ui_reactive.web_view.browser_contract
+                COMMAND "${UMICOM_REACTIVE_NODE_EXECUTABLE}" --test
+                    "${UMICOM_UI_REACTIVE_ROOT}/tests/ui_reactive/test_browser_reactive_view.mjs")
+            set_tests_properties(framework.ui_reactive.web_view.browser_contract PROPERTIES TIMEOUT 30
+                LABELS "framework;ui;reactive;web")
+            if(COMMAND umicom_test_impact_owners)
+                umicom_test_impact_owners(framework.ui_reactive.web_view.browser_contract
+                    TARGETS umicom_reactive_web)
+            endif()
+        endif()
+    endif()
+endif()
+
 # Register verification targets only when the developer has enabled testing.
 if(BUILD_TESTING)
     # Define the add ui reactive test build helper so parent and application projects apply
@@ -135,6 +246,29 @@ if(BUILD_TESTING)
     umicom_add_ui_reactive_test(umicom-ui-reactive-property-path-test framework.ui_reactive.property.path tests/ui_reactive/test_property_path.c)
     umicom_add_ui_reactive_test(umicom-ui-reactive-observable-value-test framework.ui_reactive.observable.value tests/ui_reactive/test_observable_value.c)
     umicom_add_ui_reactive_test(umicom-ui-reactive-observable-store-test framework.ui_reactive.observable.store tests/ui_reactive/test_observable_store.c)
+    add_executable(umicom-ui-reactive-event-commit-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ui_reactive/test_observable_event_commit.c")
+    target_link_libraries(umicom-ui-reactive-event-commit-test PRIVATE Umicom::ui)
+    umicom_apply_warnings(umicom-ui-reactive-event-commit-test)
+    umicom_apply_sanitizers(umicom-ui-reactive-event-commit-test)
+    foreach(case commit alias invalid-id stale previous-value unknown-path duplicate-path invalid-value empty last exhausted)
+        add_test(NAME "framework.ui_reactive.event_commit.${case}"
+            COMMAND umicom-ui-reactive-event-commit-test "${case}")
+        set_tests_properties("framework.ui_reactive.event_commit.${case}" PROPERTIES TIMEOUT 20 LABELS "framework;ui;reactive")
+    endforeach()
+    add_executable(umicom-ui-reactive-view-delta-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/ui_reactive/test_observable_view_delta.c")
+    target_link_libraries(umicom-ui-reactive-view-delta-test PRIVATE Umicom::ui)
+    umicom_apply_warnings(umicom-ui-reactive-view-delta-test)
+    umicom_apply_sanitizers(umicom-ui-reactive-view-delta-test)
+    foreach(case initial committed repeated unchanged unknown duplicate future small corrupt invalid-key ownership empty exhausted)
+        set(_test "framework.ui_reactive.view_delta.${case}")
+        add_test(NAME "${_test}" COMMAND umicom-ui-reactive-view-delta-test "${case}")
+        set_tests_properties("${_test}" PROPERTIES TIMEOUT 20 LABELS "framework;ui;reactive")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("${_test}" TARGETS umicom-ui-reactive-view-delta-test)
+        endif()
+    endforeach()
     umicom_add_ui_reactive_test(umicom-ui-reactive-change-event-test framework.ui_reactive.change.event tests/ui_reactive/test_change_event.c)
     umicom_add_ui_reactive_test(umicom-ui-reactive-change-queue-test framework.ui_reactive.change.queue tests/ui_reactive/test_change_queue.c)
     umicom_add_ui_reactive_test(umicom-ui-reactive-change-transaction-test framework.ui_reactive.change.transaction tests/ui_reactive/test_change_transaction.c)

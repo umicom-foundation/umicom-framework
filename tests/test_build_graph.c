@@ -1,7 +1,10 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/test_build_graph.c
- * PURPOSE: Verify dependency ordering, progress, blocking and bounded retry.
+ *
+ * PURPOSE:
+ *   Verify dependency ordering, progress, blocking and bounded retry.
+ *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
  * Umicom Foundation
@@ -12,6 +15,7 @@
 /* Required fixture setup and checks also execute in optimized builds. */
 #include "support/assertions.h"
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "umicom/build/graph.h"
@@ -29,6 +33,68 @@ static void add(UmiBuildGraph *graph, const char *id, UmiBuildPhase phase,
     node.incremental = phase == UMI_BUILD_PHASE_CONFIGURE ||
                        phase == UMI_BUILD_PHASE_BUILD;
     assert(umi_build_graph_add_node(graph, &node) == UMI_STATUS_OK);
+}
+
+static void verify_shared_dependencies(void)
+{
+    UmiBuildGraph *graph = NULL;
+    UmiBuildGraphSnapshot before, after;
+    UmiBuildGraphNodeSnapshot node;
+    enum { LAYERS = 11, LEAVES = 8 };
+    char layers[LAYERS][UMI_BUILD_ID_CAPACITY];
+    char leaves[LEAVES][UMI_BUILD_ID_CAPACITY];
+    assert(umi_build_graph_create(&graph) == UMI_STATUS_OK);
+    for (size_t index = 0; index < LAYERS; ++index) {
+        assert(snprintf(layers[index], sizeof layers[index], "combine-%zu", index) > 0);
+        add(graph, layers[index], UMI_BUILD_PHASE_BUILD, 1U);
+    }
+    for (size_t index = 0; index < LEAVES; ++index) {
+        assert(snprintf(leaves[index], sizeof leaves[index], "compile-%zu", index) > 0);
+        add(graph, leaves[index], UMI_BUILD_PHASE_BUILD, 1U);
+    }
+    add(graph, "link", UMI_BUILD_PHASE_BUILD, 1U);
+
+    /* Each combine step shares eight compile prerequisites. Put the next
+     * combine edge last so a depth-first walk descends before visiting them. */
+    for (size_t layer = 0; layer < LAYERS; ++layer) {
+        for (size_t leaf = 0; leaf < LEAVES; ++leaf)
+            assert(umi_build_graph_add_dependency(graph, layers[layer], leaves[leaf]) == UMI_STATUS_OK);
+        if (layer + 1U < LAYERS)
+            assert(umi_build_graph_add_dependency(graph, layers[layer], layers[layer + 1U]) == UMI_STATUS_OK);
+    }
+    assert(umi_build_graph_snapshot(graph, &before) == UMI_STATUS_OK);
+    assert(before.node_count == 20U && before.dependency_count == 98U && before.ready_count == 9U);
+    assert(umi_build_graph_add_dependency(graph, "link", layers[0]) == UMI_STATUS_OK);
+    assert(umi_build_graph_find(graph, "link", &node) == UMI_STATUS_OK && node.state == UMI_BUILD_NODE_PENDING);
+    assert(umi_build_graph_snapshot(graph, &before) == UMI_STATUS_OK);
+    assert(before.dependency_count == 99U && before.ready_count == LEAVES);
+
+    /* A true back edge reaches link through the shared prerequisite. Reject
+     * it without consuming an edge or changing the caller's graph revision. */
+    assert(umi_build_graph_add_dependency(graph, leaves[0], "link") == UMI_STATUS_INVALID_STATE);
+    assert(umi_build_graph_snapshot(graph, &after) == UMI_STATUS_OK);
+    assert(memcmp(&before, &after, sizeof before) == 0);
+
+    /* Run the actual graph transitions to check every prerequisite orders the
+     * link stage, including the compile steps that fan into several combines. */
+    for (size_t index = 0; index < LEAVES; ++index) {
+        assert(umi_build_graph_next_ready(graph, &node) == UMI_STATUS_OK);
+        assert(strcmp(node.node_id, leaves[index]) == 0);
+        assert(umi_build_graph_start(graph, node.node_id) == UMI_STATUS_OK);
+        assert(umi_build_graph_complete(graph, node.node_id, 0) == UMI_STATUS_OK);
+    }
+    for (size_t remaining = LAYERS; remaining > 0; --remaining) {
+        assert(umi_build_graph_next_ready(graph, &node) == UMI_STATUS_OK);
+        assert(strcmp(node.node_id, layers[remaining - 1U]) == 0);
+        assert(umi_build_graph_start(graph, node.node_id) == UMI_STATUS_OK);
+        assert(umi_build_graph_complete(graph, node.node_id, 0) == UMI_STATUS_OK);
+    }
+    assert(umi_build_graph_next_ready(graph, &node) == UMI_STATUS_OK && strcmp(node.node_id, "link") == 0);
+    assert(umi_build_graph_start(graph, "link") == UMI_STATUS_OK);
+    assert(umi_build_graph_complete(graph, "link", 0) == UMI_STATUS_OK);
+    assert(umi_build_graph_snapshot(graph, &after) == UMI_STATUS_OK && after.succeeded_count == 20U);
+    assert(after.ready_count == 0U && after.progress_basis_points == 10000U);
+    umi_build_graph_destroy(graph);
 }
 
 /*
@@ -75,5 +141,6 @@ int main(void)
     assert(snapshot.skipped_count == 1U);
     assert(snapshot.ready_count == 1U);
     umi_build_graph_destroy(graph);
+    verify_shared_dependencies();
     return 0;
 }

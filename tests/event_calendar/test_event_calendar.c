@@ -68,6 +68,33 @@ int main(int argc, char **argv) {
         strcpy(f.search, "eXaMpLe CoMpAnY");
         CHECK(UmiEventCalendarSelect(c, &f, 0U, indexes, 4U, &written, &total) == UMI_STATUS_OK &&
               total == 1U);
+    } else if (strcmp(test, "search-utf8") == 0 || strcmp(test, "malformed-search") == 0) {
+        /* A native client can supply raw bytes even though a text widget
+         * normally supplies valid UTF-8. Compare against an actual title. */
+        char *input = CalendarReplace(CALENDAR_CSV, "Example company,Q3", "Caf\xc3\xa9 meeting,Q3");
+        UmiEventCalendar *utf = NULL;
+        CHECK(UmiEventCalendarReadCsv(input, strlen(input), &utf, NULL) == UMI_STATUS_OK);
+        free(input);
+        if (strcmp(test, "search-utf8") == 0) {
+            /* ASCII letters fold while valid non-ASCII scalars remain exact. */
+            strcpy(f.search, "CAF\xc3\xa9");
+            CHECK(UmiEventCalendarSelect(utf, &f, 0U, indexes, 4U, &written, &total) == UMI_STATUS_OK &&
+                written == 1U && total == 1U && indexes[0] == 1U);
+            strcpy(f.search, "CAFE\xcc\x81");
+            CHECK(UmiEventCalendarSelect(utf, &f, 0U, indexes, 4U, &written, &total) == UMI_STATUS_OK &&
+                written == 0U && total == 0U);
+        } else {
+            /* Refuse a title's lone continuation byte and other malformed
+             * sequences before touching any caller-owned result. */
+            const char *const samples[] = {"\xa9", "\xc0\xaf", "\xe2\x82", "\xed\xa0\x80"};
+            for (size_t i = 0U; i < sizeof samples / sizeof samples[0]; ++i) {
+                strcpy(f.search, samples[i]);
+                CHECK(UmiEventCalendarFilterValidate(&f) == UMI_STATUS_INVALID_ARGUMENT);
+                CHECK(UmiEventCalendarSelect(utf, &f, 0U, indexes, 4U, &written, &total) ==
+                    UMI_STATUS_INVALID_ARGUMENT && written == 9U && total == 9U && indexes[0] == 99U);
+            }
+        }
+        UmiEventCalendarDestroy(utf);
     } else if (strcmp(test, "importance") == 0) {
         f.minimum_importance = 3U;
         CHECK(UmiEventCalendarSelect(c, &f, 0U, indexes, 4U, &written, &total) == UMI_STATUS_OK &&

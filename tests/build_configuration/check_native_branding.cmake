@@ -32,7 +32,9 @@ native_brand_step(configure "${CMAKE_COMMAND}"
     -S "${ROOT}/tests/build_configuration/native_branding" -B "${DEST}/build"
     -G Ninja "-DCMAKE_MAKE_PROGRAM=${_ninja}" "-DCMAKE_C_COMPILER=${COMPILER}"
     "-DFRAMEWORK_ROOT=${ROOT}")
-native_brand_step(build "${CMAKE_COMMAND}" --build "${DEST}/build" --target native-branding)
+# Build the original and cross-directory cases using the same staged assets.
+native_brand_step(build "${CMAKE_COMMAND}" --build "${DEST}/build"
+    --target native-branding native-child-branding)
 foreach(_file IN ITEMS umicom-icon.svg umicom-icon-on-dark.svg umicom-logo.svg umicom-logo-on-dark.svg)
     set(_published "${DEST}/build/bin/branding/${_file}")
     if(NOT EXISTS "${_published}")

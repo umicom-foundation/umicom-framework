@@ -15,6 +15,7 @@
 
 #include "umicom/security/local_profile.h"
 #include "umicom/security/secrets.h"
+#include "local_profile_proof_internal.h"
 #include <stdatomic.h>
 #include <stdlib.h>
 #include <string.h>
@@ -131,7 +132,10 @@ UmiStatus UmiLocalProfileRegister(UmiLocalProfileStore *store, const char *name,
         status = store->backend.create(store->backend.context, canonical, &record);
     umi_secret_clear(&record, sizeof(record)); return status;
 }
-static UmiStatus ProfileCheck(UmiLocalProfileStore *store, const char *name, const char *password, int remove)
+/* Recovery needs the identity of the verified registration. Extend the same
+ * password check so there is no separate read of a possibly replaced record. */
+static UmiStatus ProfileCheck(UmiLocalProfileStore *store, const char *name, const char *password,
+                              int remove, unsigned char *binding)
 {
     char canonical[UMI_LOCAL_PROFILE_NAME_CAPACITY]; size_t length;
     UmiStatus status = ProfileInput(store, name, password, canonical, &length);
@@ -151,9 +155,18 @@ static UmiStatus ProfileCheck(UmiLocalProfileStore *store, const char *name, con
     }
     if (status == UMI_STATUS_OK && remove)
         status = store->backend.remove(store->backend.context, canonical, &record);
+    if (status == UMI_STATUS_OK && binding != NULL)
+        memcpy(binding, record.salt, sizeof record.salt);
     umi_secret_clear(actual, sizeof(actual)); umi_secret_clear(&record, sizeof(record)); return status;
 }
 UmiStatus UmiLocalProfileVerify(UmiLocalProfileStore *store, const char *name, const char *password)
-{ return ProfileCheck(store, name, password, 0); }
+{ return ProfileCheck(store, name, password, 0, NULL); }
 UmiStatus UmiLocalProfileRemove(UmiLocalProfileStore *store, const char *name, const char *password)
-{ return ProfileCheck(store, name, password, 1); }
+{ return ProfileCheck(store, name, password, 1, NULL); }
+
+UmiStatus UmiLocalProfileVerifyBound(UmiLocalProfileStore *store, const char *name,
+    const char *password, unsigned char binding[UMI_LOCAL_PROFILE_BINDING_BYTES])
+{
+    static_assert(UMI_LOCAL_PROFILE_BINDING_BYTES == sizeof ((UmiLocalProfileRecord *)0)->salt);
+    return binding == NULL ? UMI_STATUS_INVALID_ARGUMENT : ProfileCheck(store, name, password, 0, binding);
+}

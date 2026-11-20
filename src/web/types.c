@@ -76,6 +76,14 @@ const char *umi_http_status_reason(int status)
         case 200: return "OK";
         case 201: return "Created";
         case 204: return "No Content";
+        /* The worker adapter leaves reason phrases to the shared HTTP formatter. */
+        case 205: return "Reset Content";
+        case 301: return "Moved Permanently";
+        case 302: return "Found";
+        case 303: return "See Other";
+        case 304: return "Not Modified";
+        case 307: return "Temporary Redirect";
+        case 308: return "Permanent Redirect";
         case 400: return "Bad Request";
         case 401: return "Unauthorized";
         case 403: return "Forbidden";
@@ -83,6 +91,7 @@ const char *umi_http_status_reason(int status)
         case 405: return "Method Not Allowed";
         case 409: return "Conflict";
         case 413: return "Payload Too Large";
+        case 415: return "Unsupported Media Type";
         case 500: return "Internal Server Error";
         case 503: return "Service Unavailable";
         default: return "Unknown";

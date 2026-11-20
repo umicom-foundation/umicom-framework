@@ -103,6 +103,10 @@ UmiStatus umi_developer_project_generation_request_validate(
         for (size_t field = 0U; field < sizeof(fields) / sizeof(fields[0]); ++field) {
             for (const unsigned char *value = (const unsigned char *)fields[field];
                  *value != 0U; ++value) {
+                /* Preserve the former display rule for review. A plus sign is
+                 * literal in the reviewed template display slots. Stable IDs,
+                 * repository names and build targets retain their own rules. */
+#if 0
                 if (!((*value >= 'A' && *value <= 'Z') ||
                       (*value >= 'a' && *value <= 'z') ||
                       (*value >= '0' && *value <= '9') || *value == '_' ||
@@ -111,6 +115,17 @@ UmiStatus umi_developer_project_generation_request_validate(
                     message = "Use letters, numbers, dots, hyphens and underscores; spaces are allowed in the display name.";
                     break;
                 }
+#else
+                const int display_punctuation = field == 0U && (*value == ' ' || *value == '+');
+                if (!((*value >= 'A' && *value <= 'Z') ||
+                      (*value >= 'a' && *value <= 'z') ||
+                      (*value >= '0' && *value <= '9') || *value == '_' ||
+                      *value == '-' || *value == '.' || display_punctuation)) {
+                    status = UMI_STATUS_INVALID_ARGUMENT;
+                    message = "Use letters, numbers, dots, hyphens and underscores. Display names also allow spaces and plus signs.";
+                    break;
+                }
+#endif
             }
         }
     }

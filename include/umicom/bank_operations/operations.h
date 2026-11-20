@@ -300,6 +300,12 @@ typedef struct UmiBankBalance {
     uint64_t revision;
 } UmiBankBalance;
 
+typedef struct UmiBankAccountObservation {
+    UmiBankAccount account;
+    UmiBankBalance balance;
+    uint64_t sourceRevision;
+} UmiBankAccountObservation;
+
 typedef struct UmiBankBeneficiary {
     UmiFinancialId id;
     UmiFinancialId customerId;
@@ -472,6 +478,20 @@ const char *UmiBankActionName(UmiBankAction action);
 UmiStatus UmiBankOperationsOpenMemory(UmiBankOperations **outOperations);
 UmiStatus UmiBankOperationsOpenSqlite(const char *absolutePath,
                                     UmiBankOperations **outOperations);
+/** Open a selected existing writable simulation store without creating a
+ * database or initializing a schema. The existing event replay rules apply.
+ * The absolute path requirement and failure-output contract remain the same. */
+UmiStatus UmiBankOperationsOpenExistingSqlite(const char *absolutePath,
+                                             UmiBankOperations **outOperations);
+/* Copy a selected local simulation ledger into a new file under a trusted
+ * existing folder. Supply ordinary absolute paths. Neither the original nor
+ * an existing destination is replaced. SQLite coordinates the snapshot and
+ * Bank replays the resulting events before returning its counts. On failure
+ * the output is unchanged. A failure after exclusive creation can leave a
+ * newly created file for inspection. The caller decides whether to switch
+ * stores after reviewing the copy. Run this operation on a storage worker. */
+UmiStatus UmiBankOperationsCopyExistingSqlite(const char *source_path, const char *destination_path,
+                                             UmiBankCounts *out_copied_counts);
 /** Destroy only after all calls on the serial command queue have completed. */
 void UmiBankOperationsDestroy(UmiBankOperations *operations);
 /** Reload is failure-atomic: malformed persistence never replaces valid state. */
@@ -490,6 +510,15 @@ UmiStatus UmiBankOperationsCounts(const UmiBankOperations *operations,
                                 UmiBankCounts *outCounts);
 UmiStatus UmiBankOperationsBalance(const UmiBankOperations *operations,
     const char *accountId, UmiBankBalance *outBalance);
+/** Copy account status and its booked, reserved and available balances at a
+ * retained ledger revision. The requested revision is balance.revision;
+ * sourceRevision identifies how far the loaded ledger had advanced. Revision
+ * zero is the empty ledger. An account appears only from its opening event.
+ * A revision beyond the loaded history is invalid. The query replays the
+ * canonical event prefix in memory and leaves caller output unchanged on
+ * refusal. Serialize with mutation/reload on this same owner. */
+UmiStatus UmiBankOperationsObserveAccountAtRevision(const UmiBankOperations *operations,
+    const char *accountId, uint64_t revision, UmiBankAccountObservation *outObservation);
 UmiStatus UmiBankOperationsStatement(const UmiBankOperations *operations,
     const char *accountId, uint64_t firstRevision, uint64_t lastRevision,
     UmiBankStatement *outStatement);

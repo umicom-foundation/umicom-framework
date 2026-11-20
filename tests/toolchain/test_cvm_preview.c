@@ -13,9 +13,49 @@
  * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/toolchain/cvm_preview.h"
+#include "umicom/toolchain/cvm_trace.h"
 #include <stdio.h>
 #include <string.h>
 #define CHECK(x) do { if (!(x)) { fprintf(stderr, "%d: %s\n", __LINE__, #x); return 1; } } while (0)
+
+static int check_bytecode(void)
+{
+    const char program[] = "int main(void) { return 6 * 7; }";
+    UmiCvmPreviewWorkspace workspace;
+    UmiCvmPreviewResult result;
+    UmiCvmPreviewTrace trace;
+    uint8_t artifact[UMC_BYTECODE_HEADER_SIZE + UMC_PROGRAM_LIMIT * UMC_BYTECODE_RECORD_SIZE];
+    size_t length = 0U;
+    CHECK(umi_cvm_preview(program, sizeof program - 1U, 4U, &workspace, sizeof workspace,
+        &result, sizeof result) == UMI_STATUS_OK);
+    CHECK(umc_encode(workspace.instructions, result.instruction_count, artifact, sizeof artifact,
+        &length, &result.diagnostic) == UMC_OK);
+    CHECK(umi_cvm_preview_bytecode(artifact, length, 4U, &workspace, sizeof workspace,
+        &result, sizeof result) == UMI_STATUS_OK);
+    CHECK(result.completed && result.phase == UMI_CVM_COMPLETE && result.execution.value == 42);
+    CHECK(umi_cvm_preview_bytecode_traced(artifact, length, 4U, &workspace, sizeof workspace,
+        &result, sizeof result, &trace, sizeof trace) == UMI_STATUS_OK);
+    CHECK(result.completed && result.execution.value == 42 &&
+        result.execution.instructions_executed == 4U && trace.count == 4U);
+
+    CHECK(umi_cvm_preview_bytecode_traced(artifact, length, 4U, &workspace, sizeof workspace,
+        &result, sizeof result, &trace, sizeof trace - 1U) == UMI_STATUS_INVALID_ARGUMENT);
+    CHECK(result.completed && result.execution.value == 42 && trace.count == 4U);
+    CHECK(umi_cvm_preview_bytecode_traced(artifact, length - 1U, 4U, &workspace, sizeof workspace,
+        &result, sizeof result, &trace, sizeof trace) == UMI_STATUS_PARSE_ERROR);
+    CHECK(!result.completed && result.phase == UMI_CVM_DECODING &&
+        result.instruction_count == 0U && result.execution.value == 0 && trace.count == 0U);
+    CHECK(result.diagnostic.status == UMC_BAD_BYTECODE);
+
+    CHECK(umi_cvm_preview_bytecode_traced(artifact, length, 3U, &workspace, sizeof workspace,
+        &result, sizeof result, &trace, sizeof trace) == UMI_STATUS_CAPACITY_EXCEEDED);
+    CHECK(!result.completed && result.phase == UMI_CVM_EXECUTING &&
+        result.execution.value == 0 && result.diagnostic.status == UMC_FUEL_EXHAUSTED);
+    CHECK(result.diagnostic.line == 0U && result.diagnostic.column == 0U);
+    CHECK(trace.count == 4U && trace.steps[3].status == UMC_FUEL_EXHAUSTED);
+    return 0;
+}
+
 int main(void)
 {
     UmiCvmPreviewWorkspace workspace;
@@ -179,5 +219,5 @@ int main(void)
     CHECK(umi_cvm_preview(escaped, strlen(escaped), 16U, &workspace, sizeof workspace,
         &result, sizeof result) == UMI_STATUS_PARSE_ERROR);
     CHECK(!result.completed && result.phase == UMI_CVM_COMPILING && result.instruction_count == 0U);
-    return 0;
+    return check_bytecode();
 }

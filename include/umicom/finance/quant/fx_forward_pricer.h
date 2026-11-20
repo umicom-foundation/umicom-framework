@@ -25,7 +25,11 @@
 extern "C" {
 #endif
 
-/* Return undiscounted FX-forward value for a long base-currency position. */
+/* Return discounted quote-currency value for a long base-currency position.
+ * Use a factor of 1.0 for the undiscounted observation. Rates must be positive,
+ * while the notional and discount factor may be zero. Every input must be
+ * finite. Refusal preserves *out_pv. An overflowing final value returns
+ * CAPACITY_EXCEEDED. This floating-point value is for valuation review. */
 UmiStatus umi_quant_fx_forward_pricer_value(double notional, double contracted_forward, double market_forward, double discount_factor, double *out_pv);
 
 #ifdef __cplusplus

@@ -93,6 +93,10 @@ UmiStatus umi_build_task_orchestrator_fail(
     const char *task_id,
     UmiStatus status,
     int exit_code);
+/* While a stop is draining active tasks, retry returns BUSY and preserves the
+ * owner and graph. An explicit retry after collection can admit work again.
+ * On success the snapshot reflects the refreshed graph, including a terminal
+ * outcome when the requested task remains blocked by a failed prerequisite. */
 UmiStatus umi_build_task_orchestrator_retry(
     UmiBuildTaskOrchestrator *orchestrator,
     const char *task_id);

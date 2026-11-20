@@ -23,6 +23,7 @@ get_filename_component(_root "${CMAKE_CURRENT_LIST_DIR}/../../.." ABSOLUTE)
 # library or stale archive supplies the subject under test.
 add_library(umicom_image_brand_subject STATIC
     "${_root}/adapters/gtk4/image_brand_gtk4.c"
+    "${_root}/adapters/gtk4/creative_asset_png_gtk4.c"
     "${_root}/src/media/image_surface.c"
     "${_root}/src/media/png_image.c"
     "${_root}/src/media/png_encode.c"
@@ -54,3 +55,11 @@ foreach(_target IN ITEMS umicom_image_brand_subject umicom-image-brand-test umic
     endif()
 endforeach()
 umicom_register_image_brand_cases(umicom-image-brand-test umicom-image-brand-failure-test)
+add_executable(umicom-creative-edited-png-test "${_root}/tests/creative_assets/test_edited_png_export.c")
+target_link_libraries(umicom-creative-edited-png-test PRIVATE umicom_image_brand_subject)
+set_target_properties(umicom-creative-edited-png-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+if(NOT MSVC)
+    target_compile_options(umicom-creative-edited-png-test PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
+include("${_root}/cmake/UmicomCreativeEditedPngCases.cmake")
+umicom_register_creative_edited_png_cases(umicom-creative-edited-png-test)

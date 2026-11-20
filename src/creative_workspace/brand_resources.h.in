@@ -1,0 +1,27 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: src/creative_workspace/brand_resources.h.in
+ *
+ * PURPOSE:
+ *   Bind the approved offline document wordmark and favicon to the export library.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+#ifndef UMICOM_CREATIVE_BRAND_RESOURCES_H
+#define UMICOM_CREATIVE_BRAND_RESOURCES_H
+
+/* Configure substitutes exact source bytes so exports preserve the original
+ * artwork, alpha channel and Windows icon sizes. */
+static const unsigned char CreativeBrandWordmark[] = {
+@UMICOM_CREATIVE_BRAND_WORDMARK_BYTES@
+};
+static const unsigned char CreativeBrandIcon[] = {
+@UMICOM_CREATIVE_BRAND_ICON_BYTES@
+};
+
+#endif

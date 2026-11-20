@@ -63,6 +63,18 @@ int main(int argc, char **argv) {
     gtk_editable_set_text(GTK_EDITABLE(search), "company");
     g_signal_emit_by_name(search, "activate");
     CHECK(Rows(panel) == 1U);
+  } else if (strcmp(argv[1], "search-utf8") == 0) {
+    /* Exercise the real editable signal with a valid accented title while
+     * the native calendar keeps the same immutable snapshot across filters. */
+    char *input = CalendarReplace(CALENDAR_CSV, "Example company,Q3", "Caf\xc3\xa9 meeting,Q3");
+    CHECK(UmiGtk4EventCalendarLoadCsv(panel, input, strlen(input)) == UMI_STATUS_OK);
+    free(input);
+    gtk_editable_set_text(GTK_EDITABLE(search), "CAF\xc3\xa9");
+    g_signal_emit_by_name(search, "activate");
+    CHECK(Rows(panel) == 1U);
+    gtk_editable_set_text(GTK_EDITABLE(search), "CAFE\xcc\x81");
+    g_signal_emit_by_name(search, "activate");
+    CHECK(Rows(panel) == 0U);
   } else if (strcmp(argv[1], "clear-filters") == 0) {
     gtk_editable_set_text(GTK_EDITABLE(search), "no matching event");
     gtk_editable_set_text(GTK_EDITABLE(Find(panel, "trading.calendar.from")), "invalid");

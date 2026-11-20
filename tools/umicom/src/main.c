@@ -315,6 +315,8 @@ static int RunNativeCommand(int argc, char **argv)
         return umi_cli_command_learning_pack(argc - 2, argv + 2);
     if (strcmp(command, "verify") == 0)
         return umi_cli_command_verify(argc - 2, argv + 2);
+    if (strcmp(command, "debug") == 0)
+        return umi_cli_command_debug(argc - 2, argv + 2);
     /* Check/doctor retain environment inspection. Build-test is the explicit
      * incremental execution route through the shared Framework service. */
     if (strcmp(command, "build-test") == 0)

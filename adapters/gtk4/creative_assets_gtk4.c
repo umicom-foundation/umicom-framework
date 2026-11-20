@@ -1,15 +1,23 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: adapters/gtk4/creative_assets_gtk4.c
- * PURPOSE: Connect captured asset ownership to reusable native controls without running file reads or writes on the GTK thread.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Connect captured asset ownership to reusable native controls and worker I/O.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/ui/gtk4/creative_assets.h"
 #include "umicom/creative_workspace/asset_archive.h"
 #include "umicom/media/png_image.h"
 #include "umicom/media/image_edit.h"
+#include "creative_asset_png_private.h"
 #include <string.h>
 
 typedef struct AssetPanel
@@ -17,6 +25,7 @@ typedef struct AssetPanel
     UmiCreativeAsset *asset;
     UmiCancellationToken *cancel; /* Borrowed from the active job only. */
     bool busy;
+    bool branded_exports;
     GtkWidget *preview, *picture, *crop_x, *crop_y, *crop_width, *crop_height, *orientation, *image_save,
         *image_reset;
     bool preview_running;
@@ -36,6 +45,7 @@ typedef struct AssetJob
     UmiStatus status;
     bool preview;
     bool save_image;
+    bool branded_export;
     UmiMediaImageEdit edit;
     GBytes *pixels;
     int width, height;
@@ -131,6 +141,9 @@ static UmiStatus PreviewPixels(AssetJob *job)
     size_t size = 0U;
     UmiStatus status = UmiCreativeAssetBytes(job->asset, &bytes, &size);
     UmiMediaImageSurface *image = NULL;
+    /* The shared worker helper applies one captured edit to portable decoded
+     * pixels. The previous inline preparation stays available for review. */
+#if 0
     if (status == UMI_STATUS_OK)
         status = UmiMediaPngDecode(bytes, size, job->cancel, &image);
     if (status != UMI_STATUS_OK)
@@ -161,6 +174,13 @@ static UmiStatus PreviewPixels(AssetJob *job)
             }
         }
     }
+#endif
+    if (status == UMI_STATUS_OK)
+        status = UmiCreativePrepareEditedPng(bytes, size, &job->edit, job->cancel, &image);
+    if (status != UMI_STATUS_OK)
+        return status;
+    UmiMediaImageSurfaceSnapshot info;
+    status = umi_media_image_surface_snapshot(image, &info);
     unsigned char *pixels = NULL;
     UmiMediaRgbaPixel *row = NULL;
     if (status == UMI_STATUS_OK)
@@ -201,7 +221,13 @@ static UmiStatus PreviewPixels(AssetJob *job)
     if (status == UMI_STATUS_OK && job->save_image)
     {
         UmiMediaPngWriteResult result;
+        /* The export helper applies the Media profile after editing and keeps
+         * the established new-file writer for other hosts. Retain the former
+         * unconditional writer here for review. */
+#if 0
         status = UmiMediaPngWriteNew(image, job->path, job->cancel, &result);
+#endif
+        status = UmiCreativeExportPreparedPng(image, job->branded_export, job->path, job->cancel, &result);
         job->written.created = result.created;
         job->written.file = result.file;
     }
@@ -264,7 +290,7 @@ static void Finished(GObject *source, GAsyncResult *result, gpointer unused)
         gtk_picture_set_paintable(GTK_PICTURE(panel->picture), GDK_PAINTABLE(texture));
         g_object_unref(texture);
     }
-    const char *operation = job->save_image ? "PNG export"
+    const char *operation = job->save_image ? (job->branded_export ? "Branded PNG export" : "PNG export")
                             : job->preview  ? "PNG preview"
                             : job->archive  ? (job->writing ? "Save archive" : "Open archive")
                                             : (job->writing ? "Copy" : "Capture");
@@ -295,6 +321,7 @@ static void Launch(GtkWidget *root, bool writing, bool archive, bool preview, bo
     job->writing = writing;
     job->preview = preview;
     job->save_image = save_image;
+    job->branded_export = panel->branded_exports;
     job->edit.x = (size_t)gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(panel->crop_x));
     job->edit.y = (size_t)gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(panel->crop_y));
     job->edit.width = (size_t)gtk_spin_button_get_value_as_int(GTK_SPIN_BUTTON(panel->crop_width));
@@ -543,11 +570,12 @@ static GtkWidget *Button(GtkWidget *root, const char *label, const char *id, GCa
     gtk_box_append(GTK_BOX(root), button);
     return button;
 }
-GtkWidget *UmiCreativeAssetsGtkCreate(void)
+static GtkWidget *CreateAssetsPanel(bool branded)
 {
     GtkWidget *root = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
     Tag(root, "creative.assets");
     AssetPanel *panel = g_new0(AssetPanel, 1);
+    panel->branded_exports = branded;
     g_object_set_data_full(G_OBJECT(root), "umicom-creative-assets", panel, Dispose);
     Text(root, "Capture a local document, image, video, audio file or lyrics. The complete file stays in "
                "memory until replaced or closed. Save an archive to reopen it later. "
@@ -604,8 +632,10 @@ GtkWidget *UmiCreativeAssetsGtkCreate(void)
     panel->destination = Entry(root, "New absolute destination file path", "creative.assets.destination");
     if (!UmiMediaPngEncoderAvailable())
         Text(root, "PNG export is unavailable in this build because the optional encoder is not present.");
-    panel->image_save =
-        Button(root, "Export edited PNG to new file", "creative.assets.image-save", G_CALLBACK(SaveImage));
+    const char *export_label = branded ? "Export edited PNG with Umicom watermark" : "Export edited PNG to new file";
+    panel->image_save = Button(root, export_label, "creative.assets.image-save", G_CALLBACK(SaveImage));
+    if (branded)
+        gtk_widget_set_tooltip_text(panel->image_save, "Edited image must be at least 128 × 64 pixels.");
     panel->write =
         Button(root, "Write captured bytes to new file", "creative.assets.write", G_CALLBACK(Write));
     Text(root, "An asset archive retains its name, declared purpose and complete bytes. It is separate from "
@@ -626,6 +656,16 @@ GtkWidget *UmiCreativeAssetsGtkCreate(void)
     Tag(panel->status, "creative.assets.status");
     Sensitivity(panel);
     return root;
+}
+
+GtkWidget *UmiCreativeAssetsGtkCreate(void)
+{
+    return CreateAssetsPanel(false);
+}
+
+GtkWidget *UmiCreativeAssetsGtkCreateBranded(void)
+{
+    return CreateAssetsPanel(true);
 }
 UmiStatus UmiCreativeAssetsGtkCapture(GtkWidget *root, const char *label, UmiCreativeAssetKind kind,
                                       const void *bytes, size_t size)

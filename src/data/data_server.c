@@ -402,12 +402,10 @@ UmiStatus umi_data_server_create_sqlite(const char *database_path,
 #endif
 }
 
-/* Inspection opens the existing store without installing or migrating its
- * schema. SQLite's READONLY flag enforces the file boundary; the shared API
- * also refuses all mutation and arbitrary SQL before dispatching a statement.
- * Read transactions use BEGIN rather than requesting a writer reservation. */
-UmiStatus umi_data_server_open_sqlite_readonly(const char *database_path,
-                                              UmiDataServer **out_server)
+/* Existing stores share one admission path. Neither access mode may create a
+ * file or install a table when a selected store is missing or unrelated. */
+static UmiStatus DataOpenExistingSqlite(const char *database_path, bool read_only,
+                                        UmiDataServer **out_server)
 {
     if (out_server == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     *out_server = NULL;
@@ -417,15 +415,25 @@ UmiStatus umi_data_server_open_sqlite_readonly(const char *database_path,
     if (strlen(database_path) >= UMI_DATA_PATH_CAPACITY)
         return UMI_STATUS_CAPACITY_EXCEEDED;
 #ifndef UMICOM_HAS_SQLITE
+    (void)read_only;
     return UMI_STATUS_UNAVAILABLE;
 #else
     UmiDataServer *server = NULL;
     UmiStatus status = allocate_server(UMI_DATA_BACKEND_SQLITE, &server);
     if (status != UMI_STATUS_OK) return status;
+    /* The shared opener supports both immutable inspection and deliberate
+     * writes to admitted existing databases. Keep the fixed reader for review. */
+#if 0
     server->read_only = 1;
     memcpy(server->path, database_path, strlen(database_path) + 1U);
     int code = sqlite3_open_v2(database_path, &server->sqlite,
         SQLITE_OPEN_READONLY | SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_PRIVATECACHE, NULL);
+#endif
+    server->read_only = read_only;
+    memcpy(server->path, database_path, strlen(database_path) + 1U);
+    int access = read_only ? SQLITE_OPEN_READONLY : SQLITE_OPEN_READWRITE;
+    int code = sqlite3_open_v2(database_path, &server->sqlite,
+        access | SQLITE_OPEN_FULLMUTEX | SQLITE_OPEN_PRIVATECACHE, NULL);
     if (code != SQLITE_OK) {
         status = server->sqlite != NULL ? DataSqlError(server, code) :
             (code == SQLITE_NOMEM ? UMI_STATUS_OUT_OF_MEMORY : UMI_STATUS_IO_ERROR);
@@ -435,7 +443,13 @@ UmiStatus umi_data_server_open_sqlite_readonly(const char *database_path,
     }
     code = sqlite3_busy_timeout(server->sqlite, 5000);
     if (code != SQLITE_OK) status = DataSqlError(server, code);
+    /* Refuse a writer request that SQLite could satisfy only as read-only.
+     * The reader-only comparison remains for review of the earlier policy. */
+#if 0
     if (status == UMI_STATUS_OK && sqlite3_db_readonly(server->sqlite, "main") != 1)
+        status = UMI_STATUS_PERMISSION_DENIED;
+#endif
+    if (status == UMI_STATUS_OK && sqlite3_db_readonly(server->sqlite, "main") != (read_only ? 1 : 0))
         status = UMI_STATUS_PERMISSION_DENIED;
     /* Reject an unrelated database or a view masquerading as the key/value
      * table. Column preparation checks compatibility without changing data.
@@ -475,6 +489,24 @@ UmiStatus umi_data_server_open_sqlite_readonly(const char *database_path,
     *out_server = server;
     return UMI_STATUS_OK;
 #endif
+}
+
+/* Inspection opens the existing store without installing or migrating its
+ * schema. SQLite's READONLY flag enforces the file boundary; the shared API
+ * also refuses all mutation and arbitrary SQL before dispatching a statement.
+ * Read transactions use BEGIN rather than requesting a writer reservation. */
+UmiStatus umi_data_server_open_sqlite_readonly(const char *database_path,
+                                              UmiDataServer **out_server)
+{
+    return DataOpenExistingSqlite(database_path, true, out_server);
+}
+
+/* An explicit existing-store action may write after successful admission,
+ * but it never uses SQLite's CREATE flag or the legacy schema installer. */
+UmiStatus umi_data_server_open_sqlite_existing(const char *database_path,
+                                               UmiDataServer **out_server)
+{
+    return DataOpenExistingSqlite(database_path, false, out_server);
 }
 
 int umi_data_server_is_readonly(const UmiDataServer *server)

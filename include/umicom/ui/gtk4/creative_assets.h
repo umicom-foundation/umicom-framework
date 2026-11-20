@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/ui/gtk4/creative_assets.h
- * PURPOSE: Present explicit local asset capture and new-file copies with worker-owned I/O and GTK lifetime handling.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Present explicit local asset capture and export with worker-owned I/O.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_GTK4_CREATIVE_ASSETS_H
@@ -19,6 +26,9 @@ extern "C"
  * it is not automatically part of a saved creative project. File actions run
  * on workers, and late completions never access a destroyed root. */
     GtkWidget *UmiCreativeAssetsGtkCreate(void);
+    /** Apply the canonical Umicom mark when publishing edited PNGs. Captures,
+     * previews, raw copies and archives retain their existing bytes and role. */
+    GtkWidget *UmiCreativeAssetsGtkCreateBranded(void);
     /* Explicit in-memory capture for hosts with their own file/drag/drop adapter.
  * This copies synchronously; use the panel's file action for worker I/O.
  * A failed capture leaves the previous asset intact. Busy panels refuse it. */

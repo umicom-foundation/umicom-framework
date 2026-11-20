@@ -3,7 +3,7 @@
  * File: src/base/base64.c
  *
  * PURPOSE:
- *   Share strict, allocation-free base64 admission between binary content consumers.
+ *   Share allocation-free canonical base64 encoding and admission between binary content consumers.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -46,6 +46,47 @@ static bool B64Overlap(const void *a, size_t an, const void *b, size_t bn)
     if (an == 0U || bn == 0U) return false;
     return av <= bv ? bv - av < an : av - bv < bn;
 }
+
+UmiStatus UmiBase64Encode(const unsigned char *bytes, size_t length,
+    char *text, size_t capacity, size_t *out_count)
+{
+    static const char alphabet[] =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    if (text == NULL || capacity == 0U || out_count == NULL ||
+        (bytes == NULL && length != 0U) || !B64Span(out_count, sizeof(*out_count)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+
+    /* Size the complete output, including its terminator, before reading
+     * source bytes. Division first also handles lengths near SIZE_MAX. */
+    const size_t groups = length / 3U + (length % 3U != 0U ? 1U : 0U);
+    if (groups > (SIZE_MAX - 1U) / 4U) return UMI_STATUS_CAPACITY_EXCEEDED;
+    const size_t required = groups * 4U + 1U;
+    if (capacity < required) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (!B64Span(bytes, length) || !B64Span(text, required) ||
+        B64Overlap(bytes, length, text, required) ||
+        B64Overlap(bytes, length, out_count, sizeof(*out_count)) ||
+        B64Overlap(text, required, out_count, sizeof(*out_count)))
+        return UMI_STATUS_INVALID_ARGUMENT;
+
+    /* Each group emits one canonical quartet. Unused tail bits stay zero so
+     * the same strict decoder can verify the written representation. */
+    size_t input = 0U, output = 0U;
+    while (input < length) {
+        uint32_t value = (uint32_t)bytes[input++] << 16U;
+        const bool second = input < length;
+        if (second) value |= (uint32_t)bytes[input++] << 8U;
+        const bool third = input < length;
+        if (third) value |= (uint32_t)bytes[input++];
+        text[output++] = alphabet[(value >> 18U) & 63U];
+        text[output++] = alphabet[(value >> 12U) & 63U];
+        text[output++] = second ? alphabet[(value >> 6U) & 63U] : '=';
+        text[output++] = third ? alphabet[value & 63U] : '=';
+    }
+    text[output] = '\0';
+    *out_count = output;
+    return UMI_STATUS_OK;
+}
+
 /* Admission has no output side effects. Counting each complete quartet also
  * avoids multiplying the caller length, which can overflow at SIZE_MAX. */
 static UmiStatus B64Measure(const char *text, size_t length, unsigned flags,

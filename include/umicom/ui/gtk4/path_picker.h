@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: include/umicom/ui/gtk4/path_picker.h
- * PURPOSE: Collect a local filename without opening, saving or submitting application work.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Collect a local filename without opening, saving or submitting application work.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #ifndef UMICOM_UI_GTK4_PATH_PICKER_H
@@ -56,6 +63,13 @@ UmiStatus UmiPathPickerGtk4SetInitialLocation(GtkFileDialog *dialog,
  */
 GtkWidget *UmiPathPickerGtk4Create(GtkEntry *entry, UmiPathPickerMode mode,
     const char *title, const char *suggestedName);
+
+/* Read the accepted chooser mode for the entry's current draft on the GTK
+ * owner thread. Typing or unmapping clears the mode; cancellation preserves the
+ * existing draft and its mode. NOT_FOUND means the entry has no current picker
+ * result. A reentrant read during text publication returns BUSY. The output
+ * stays unchanged on failure. This records intent and does not inspect files. */
+UmiStatus UmiPathPickerGtk4ReadSelectedMode(GtkEntry *entry, UmiPathPickerMode *out_mode);
 #ifdef __cplusplus
 }
 #endif

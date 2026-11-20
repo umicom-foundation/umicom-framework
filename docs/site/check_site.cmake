@@ -18,6 +18,7 @@ if(CASE STREQUAL "pages")
             GUI_RECORDING.html GUI_CONTROL_CHECKS.html GUI_CHECK_SESSIONS.html wiki/gui-check-sessions.html wiki/gui-control-checks.html wiki/gui-recording.html wiki/reloading-files.html wiki/comparing-saved-files.html wiki/working-copies.html wiki/compiler-diagnostics.html wiki/components.html wiki/project-files.html wiki/file-refresh.html wiki/find-in-files.html
             studio/index.html trader/index.html desktop/index.html bank/index.html
             studio/COMPARING_SAVED_FILES.html studio/EDITING_FILES.html studio/READING_BUILD_ERRORS.html studio/PROJECT_FILES.html studio/FIND_IN_FILES.html build-and-publish.html
+            web-studio/LOCAL_WEB_SERVICE.html
             assets/site.css assets/site.js reference/html/index.html)
         if(NOT EXISTS "${SITE}/${_path}")
             message(FATAL_ERROR "Missing assembled file: ${_path}")
@@ -104,6 +105,21 @@ elseif(CASE STREQUAL "exclusions")
         message(FATAL_ERROR "The public reference must not ingest the entire docs directory.")
     endif()
 elseif(CASE STREQUAL "branding")
+    # Verify the configured reference and both generator capabilities without
+    # presenting an assumed Doxygen installation as a generated page pass.
+    file(READ "${DOXYFILE}" _doxyfile)
+    RequireText("${_doxyfile}" "PROJECT_LOGO           = \"${FRAMEWORK}/resources/brand/umicom-logo-on-dark.svg\"")
+    include("${FRAMEWORK}/cmake/UmicomDoxygenBranding.cmake")
+    umicom_doxygen_branding("${FRAMEWORK}/resources/brand" "1.13.2")
+    if(NOT UMICOM_DOCUMENTATION_PROJECT_ICON_LINE STREQUAL "")
+        message(FATAL_ERROR "The legacy reference emitted an unsupported favicon option.")
+    endif()
+    umicom_doxygen_branding("${FRAMEWORK}/resources/brand" "1.14.0")
+    if(NOT UMICOM_DOCUMENTATION_PROJECT_ICON_LINE STREQUAL
+            "PROJECT_ICON           = \"${FRAMEWORK}/resources/brand/umicom.ico\"")
+        message(FATAL_ERROR "The reference favicon must use the approved ICO.")
+    endif()
+
     # Generated copies must retain the official source bytes. A missing asset
     # or a textual replacement must fail verification, not become a new logo.
     foreach(_asset IN ITEMS umicom-icon.svg umicom-icon-on-dark.svg
@@ -166,9 +182,13 @@ elseif(CASE STREQUAL "branding")
             message(FATAL_ERROR "Unresolved or invented branding remains: ${_page}")
         endif()
     endforeach()
-    file(READ "${DOXYFILE}" _configuration)
-    RequireText("${_configuration}" "PROJECT_LOGO")
-    RequireText("${_configuration}" "${FRAMEWORK}/resources/brand/umicom-icon.svg")
+    # Preserve the old icon-only check for review. The reference branding
+    # cases above now verify the visible wordmark and the separate favicon.
+    if(FALSE)
+        file(READ "${DOXYFILE}" _configuration)
+        RequireText("${_configuration}" "PROJECT_LOGO")
+        RequireText("${_configuration}" "${FRAMEWORK}/resources/brand/umicom-icon.svg")
+    endif()
 else()
     message(FATAL_ERROR "Unknown documentation test case: ${CASE}")
 endif()

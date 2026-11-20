@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/creative_workspace/test_creative_workspace.c
- * PURPOSE: Exercise real creative services, canonical animation and Data Server failure paths.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Exercise real creative services, canonical animation and Data Server failure paths.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/creative_workspace/workspace.h"
@@ -423,7 +430,19 @@ return 0;
 /* export.html_inert_and_branded: exercise the public behaviour named by this regression. */
 static int Case50(void)
 {
+/* Keep the original offline safety assertions. The old raster expectation
+ * is retained for review now that exports embed the approved SVG and ICO. */
+#if 0
 OK(UmiCreativeProjectStarter(f.project,"web-studio"));OK(UmiCreativeExportBuild(f.project,UMI_CREATIVE_EXPORT_HTML,0U,&f.exported));const char *text=(const char *)f.exported.bytes;CHECK(strstr(text,"default-src 'none'")!=NULL);CHECK(strstr(text,"data:image/png;base64,")!=NULL);CHECK(strstr(text,"<script")==NULL&&strstr(text,"<form")==NULL);
+#endif
+    OK(UmiCreativeProjectStarter(f.project, "web-studio"));
+    OK(UmiCreativeExportBuild(f.project, UMI_CREATIVE_EXPORT_HTML, 0U, &f.exported));
+    const char *text = (const char *)f.exported.bytes;
+    CHECK(strstr(text, "default-src 'none'; img-src data:") != NULL);
+    CHECK(strstr(text, "<img alt=\"Umicom\" src=\"data:image/svg+xml;base64,") != NULL);
+    CHECK(strstr(text, "<link rel=\"icon\" href=\"data:image/vnd.microsoft.icon;base64,") != NULL);
+    CHECK(strstr(text, "data:image/png;base64,") == NULL);
+    CHECK(strstr(text, "<script") == NULL && strstr(text, "<form") == NULL);
 return 0;
 }
 
@@ -431,6 +450,10 @@ return 0;
 static int Case51(void)
 {
 OK(UmiCreativeProjectStarter(f.project,"media"));OK(UmiCreativeExportBuild(f.project,UMI_CREATIVE_EXPORT_STORYBOARD,0U,&f.exported));const char *at=(char *)f.exported.bytes;size_t count=0U;while((at=strstr(at,"<figure>"))!=NULL){++count;at+=8;}CHECK(count==3U);CHECK(strstr((char *)f.exported.bytes,"4000 ms")!=NULL);
+    /* Storyboards use the same printable wordmark as prototypes. A change
+     * to the three-frame path must still leave the document self-contained. */
+    CHECK(strstr((const char *)f.exported.bytes, "data:image/svg+xml;base64,") != NULL);
+    CHECK(strstr((const char *)f.exported.bytes, "print-color-adjust:exact") != NULL);
 return 0;
 }
 

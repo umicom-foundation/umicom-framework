@@ -105,6 +105,18 @@ does not roll back newly created directories if it fails.</p>
 Directory traversal and JSON parsing check that request, and no partial target list is published.
 An operating-system read or an in-progress sort can still finish first. Cache inspection and query
 creation may finish their current operation; closing the form discards their displayed result.</p>
+<h2>Verify that an existing query is preserved</h2>
+<p>Use a Framework build configured with testing and GTK4 enabled. In this example its path is
+<code>build/framework</code>. The fixture creates the query in a disposable build folder.</p>
+<pre><code>cmake --build build/framework --target umicom-configured-targets-gtk4-test
+ctest --test-dir build/framework -R '^framework[.]configured_targets[.]gtk4[.]query-(existing|conflict)$' --output-on-failure</code></pre>
+<p>Expect two passes. The first check reuses an existing empty query file. The second supplies
+nonempty content, expects <strong>Invalid state</strong>, and verifies the original bytes after the
+request. A skipped native test means there was no GTK display for the fixture.</p>
+<p>If a check fails before it requests the query, read the last native phase in the test output.
+A setup write can fail in a deep Windows temporary folder when a temporary suffix pushes a name
+past an operating-system limit. Use the Framework fixture writer for the exact path under test.
+Then check the product's refusal and the retained bytes within the original test timeout.</p>
 <h2>Extend the implementation</h2>
 <p>The shared developer service owns the catalogue and copies selected values into a profile. The GTK
 presenter owns controls and asynchronous request lifetimes. Application code keeps its existing

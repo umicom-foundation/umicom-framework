@@ -312,6 +312,31 @@ static int Native(const char *name,const char *root,const char *child,const char
     CHECK(OiJoin(root,"file",path)==UMI_STATUS_OK);
     CHECK(OiJoin(root,"other",other)==UMI_STATUS_OK);
 
+    if(!strncmp(name,"firmware_info_",14)) {
+        /* Compare with the known SHA-256 of "abc" and hold a sentinel result
+         * across refusals so an error cannot publish a partial identity. */
+        const char *input=path;
+        size_t size=!strcmp(name,"firmware_info_empty")?0U:3U;
+        if(strcmp(name,"firmware_info_missing"))CHECK(OiWrite(path,"abc",size)==UMI_STATUS_OK);
+        if(!strcmp(name,"firmware_info_relative"))input="relative.bin";
+        if(!strcmp(name,"firmware_info_symlink")) {
+            CHECK(!symlink(path,other));
+            input=other;
+        }
+        UmiOsImageFirmwareInfo info;
+        unsigned char before[sizeof info];
+        memset(&info,0xa5,sizeof info);
+        memcpy(before,&info,sizeof before);
+        UmiStatus status=UmiOsImageReadFirmwareInfo(input,&info);
+        if(!strcmp(name,"firmware_info_valid")) {
+            CHECK(status==UMI_STATUS_OK&&info.bytes==3U);
+            CHECK(!strcmp(info.sha256,"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"));
+        } else {
+            CHECK(status!=UMI_STATUS_OK&&memcmp(&info,before,sizeof info)==0);
+        }
+        return 0;
+    }
+
     if(!strncmp(name,"firmware_",9)) {
         const char data[]="firmware fixture";
         char hash[65];

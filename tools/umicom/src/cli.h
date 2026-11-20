@@ -95,6 +95,8 @@ int umi_cli_command_build(UmiCliContext *context,
                           UmiBuildAction action,
                           int argc,
                           char **argv);
+/** Launch a local native debug session through Framework and report its stop. */
+int umi_cli_command_debug(int argc, char **argv);
 /**
  * Discover changed files and plan, execute or continuously watch their affected
  * build scopes.

@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/test_compiler_source_workflow.c
- * PURPOSE: Check compiler text, source navigation and bounded problem projection.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Check compiler text, source navigation and bounded problem projection.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/build/parser.h"
 #include "value_archive/construction_cases.h"
@@ -49,6 +56,76 @@ static int ParseCase(const Case *test)
     CHECK(UmiCompilerDiagnosticParseText(test->text, &fields) == UMI_STATUS_OK);
     CHECK(strcmp(fields.path, diagnostic.file) == 0);
     CHECK(strcmp(fields.message, diagnostic.message) == 0);
+    return EXIT_SUCCESS;
+}
+
+static int LocatedProducers(void)
+{
+    /* These samples use the documented producer formats and original teaching
+     * messages. Both the single-line and build-report entry points must agree. */
+    static const struct { Case diagnostic; const char *message; } examples[] = {
+        {{"fpc-error", "C:\\Notes (sample)\\app.pas(8,4) Error: expected expression", "C:\\Notes (sample)\\app.pas", 8U, 4U, UMI_BUILD_DIAGNOSTIC_ERROR, ""}, "expected expression"},
+        {{"fpc-fatal", "/work/app.pas(11,2) Fatal: invalid token", "/work/app.pas", 11U, 2U, UMI_BUILD_DIAGNOSTIC_FATAL, ""}, "invalid token"},
+        {{"fpc-hint", "app.pas(9,1) Hint: unused variable", "app.pas", 9U, 1U, UMI_BUILD_DIAGNOSTIC_NOTE, ""}, "unused variable"},
+        {{"fpc-note", "app.pas(7,2) Note: keep (1234) in the message", "app.pas", 7U, 2U, UMI_BUILD_DIAGNOSTIC_NOTE, ""}, "keep (1234) in the message"},
+        {{"dmd-line", "src/main.d(4): Error: missing name", "src/main.d", 4U, 0U, UMI_BUILD_DIAGNOSTIC_ERROR, ""}, "missing name"},
+        {{"dmd-gnu", "src/main.d:4:7: Warning: unused import", "src/main.d", 4U, 7U, UMI_BUILD_DIAGNOSTIC_WARNING, ""}, "unused import"},
+        {{"dmd-deprecation", "C:/Notes (sample)/main.d(7,5): Deprecation: use a current method", "C:/Notes (sample)/main.d", 7U, 5U, UMI_BUILD_DIAGNOSTIC_WARNING, ""}, "use a current method"},
+    };
+    for (size_t i = 0U; i < sizeof examples / sizeof examples[0]; ++i) {
+        UmiCompilerDiagnosticFields fields;
+        size_t consumed = 0U;
+        const Case *test = &examples[i].diagnostic;
+        CHECK(ParseCase(test) == EXIT_SUCCESS);
+        CHECK(UmiCompilerDiagnosticParseBlock(test->text, &fields, &consumed) == UMI_STATUS_OK);
+        CHECK(consumed == strlen(test->text));
+        CHECK(strcmp(fields.message, examples[i].message) == 0);
+    }
+
+    /* Preserve producer order when Studio or the command runner reads a full
+     * transcript with ordinary progress between diagnostics. */
+    UmiBuildDiagnosticList *list = calloc(1U, sizeof *list);
+    CHECK(list != NULL);
+    CHECK(umi_build_parse_output("app.pas(2,3) Error: missing token\r\n"
+        "Compiling next source\nmain.d(6): Warning: unused import\n", list) == UMI_STATUS_OK);
+    CHECK(list->count == 2U && list->dropped == 0U);
+    CHECK(strcmp(list->items[0].file, "app.pas") == 0 && list->items[0].line == 2U);
+    CHECK(strcmp(list->items[1].file, "main.d") == 0 && list->items[1].line == 6U);
+    free(list);
+    return EXIT_SUCCESS;
+}
+
+static int LocatedRefusals(void)
+{
+    /* Title-cased prose must stay in the transcript. A location must have
+     * positive in-range coordinates and a complete severity/message marker. */
+    static const char *const noise[] = {
+        "Warning: check the build step", "fpc: Fatal: compilation aborted",
+        "app.pas(0,3) Error: zero line", "app.pas(8,+3) Error: signed column",
+        "app.pas(99999999999999999999999999,2) Hint: overflow",
+        "app.pas(8,3) ERROR: unrelated capitalization", "app.pas(8,3) Error:",
+    };
+    UmiCompilerDiagnosticFields fields;
+    UmiCompilerDiagnosticFields original;
+    memset(&fields, 0xA5, sizeof fields);
+    memcpy(&original, &fields, sizeof original);
+    for (size_t i = 0U; i < sizeof noise / sizeof noise[0]; ++i) {
+        CHECK(UmiCompilerDiagnosticParseText(noise[i], &fields) == UMI_STATUS_NOT_FOUND);
+        CHECK(memcmp(&fields, &original, sizeof fields) == 0);
+    }
+    return EXIT_SUCCESS;
+}
+
+static int AbandonedSeverity(void)
+{
+    /* POSIX paths may contain colons. A severity-like directory name must
+     * neither attach its code to a later candidate nor exhaust code capacity. */
+    static const Case examples[] = {
+        {"short-code", "/work/folder warning STALE:part/main.c:8:2: error: missing name", "/work/folder warning STALE:part/main.c", 8U, 2U, UMI_BUILD_DIAGNOSTIC_ERROR, ""},
+        {"long-code", "/work/folder warning ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:part/main.c:8:2: warning: unused value [-Wunused-variable]", "/work/folder warning ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789:part/main.c", 8U, 2U, UMI_BUILD_DIAGNOSTIC_WARNING, "-Wunused-variable"},
+    };
+    for (size_t i = 0U; i < sizeof examples / sizeof examples[0]; ++i)
+        CHECK(ParseCase(&examples[i]) == EXIT_SUCCESS);
     return EXIT_SUCCESS;
 }
 
@@ -275,6 +352,10 @@ int main(int argc,char **argv)
 
     CHECK(argc==2);
     if(strcmp(argv[1],"positions")==0) return Positions();
+    /* Keep each producer and refusal contract independently selectable. */
+    if (strcmp(argv[1], "located-producers") == 0) return LocatedProducers();
+    if (strcmp(argv[1], "located-refusals") == 0) return LocatedRefusals();
+    if (strcmp(argv[1], "abandoned-severity") == 0) return AbandonedSeverity();
     for(size_t i=0U;i<sizeof cases/sizeof cases[0];++i) if(strcmp(argv[1],cases[i].name)==0) return ParseCase(&cases[i]);
     if(strcmp(argv[1],"noise")==0) return Noise();
     if(strcmp(argv[1],"malformed")==0) return Malformed();

@@ -1,4 +1,17 @@
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: cmake/UmicomBuildReviewGtk4.cmake
+#
+# PURPOSE:
+#   Compose the shared GTK build review in Framework and standalone examples.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
 include_guard(GLOBAL)
 include("${CMAKE_CURRENT_LIST_DIR}/UmicomBuildReview.cmake")
 get_filename_component(_umi_review_root "${CMAKE_CURRENT_LIST_DIR}/.." ABSOLUTE)
@@ -12,6 +25,11 @@ else()
     pkg_check_modules(BUILD_REVIEW_GTK4 REQUIRED IMPORTED_TARGET gtk4>=4.10)
     add_library(umicom_build_review_gtk4 STATIC "${_umi_review_root}/adapters/gtk4/build_review_gtk4.c")
     target_link_libraries(umicom_build_review_gtk4 PUBLIC Umicom::build_review PkgConfig::BUILD_REVIEW_GTK4)
+    # The standalone adapter has no Framework GTK host to supply its shared
+    # dropdown ownership or the generated canonical SVG resources.
+    target_sources(umicom_build_review_gtk4 PRIVATE "${_umi_review_root}/adapters/gtk4/drop_down_gtk4.c")
+    include("${CMAKE_CURRENT_LIST_DIR}/UmicomGtkBrandResources.cmake")
+    umicom_embed_gtk_brand(umicom_build_review_gtk4)
     set(_umi_review_gui umicom_build_review_gtk4)
     set_target_properties(umicom_build_review_gtk4 PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
     if(COMMAND umicom_apply_warnings)

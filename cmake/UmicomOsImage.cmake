@@ -47,6 +47,16 @@ set_target_properties(umicom-os-image PROPERTIES C_STANDARD 23 C_STANDARD_REQUIR
 add_executable(umicom-os-image-archive-example "${_umi_os_image_root}/examples/os_image/archive_lesson.c")
 target_link_libraries(umicom-os-image-archive-example PRIVATE Umicom::os_image)
 set_target_properties(umicom-os-image-archive-example PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+# Both native executables use the approved assets without acquiring a GTK
+# deployment dependency, including in the standalone host SDK.
+if(WIN32)
+    enable_language(RC)
+endif()
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomApplicationBranding.cmake")
+umicom_apply_application_branding(TARGET umicom-os-image PRODUCT_NAME "Umicom OS Image Tool"
+    INTERNAL_NAME umicom-os-image RESOURCE_ROOT "${_umi_os_image_root}/resources" BRANDING_ONLY)
+umicom_apply_application_branding(TARGET umicom-os-image-archive-example PRODUCT_NAME "Umicom OS Archive Example"
+    INTERNAL_NAME umicom-os-image-archive-example RESOURCE_ROOT "${_umi_os_image_root}/resources" BRANDING_ONLY)
 if(MINGW)
     target_link_options(umicom-os-image PRIVATE -municode)
 endif()

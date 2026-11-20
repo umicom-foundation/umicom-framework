@@ -3,7 +3,7 @@
  * File: include/umicom/base/base64.h
  *
  * PURPOSE:
- *   Validate and decode canonical base64 without allocation or partial output writes.
+ *   Encode, validate and decode canonical base64 without allocation or partial output writes.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -25,6 +25,13 @@ extern "C" {
  * ASCII space, tab, CR, LF, form feed and vertical tab between symbols. It does
  * not permit ignored punctuation, URL-safe symbols or incomplete quartets. */
 #define UMI_BASE64_IGNORE_ASCII_WHITESPACE 1U
+/** Encode a readable byte span with the padded RFC 4648 alphabet. NULL bytes
+ * is accepted for empty input. The writable text capacity includes a trailing
+ * NUL, while out_count reports only the encoded characters. The input, used
+ * output (including NUL) and out_count must be distinct spans. Refusal leaves
+ * the destination and count unchanged. */
+UmiStatus UmiBase64Encode(const unsigned char *bytes, size_t length,
+    char *text, size_t capacity, size_t *out_count);
 /** Validate exactly length bytes and report decoded size. Empty input is valid;
  * NULL text is accepted only for zero length. Reject embedded NUL, misplaced
  * padding, nonzero pad bits and content after a padded quartet. Unknown flags

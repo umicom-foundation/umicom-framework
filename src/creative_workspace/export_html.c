@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/creative_workspace/export_html.c
- * PURPOSE: Make offline visual prototypes and three-frame storyboards from actual scene samples.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Make offline visual prototypes and three-frame storyboards from actual scene samples.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "internal.h"
 static void List(UmiCreativeWriter * w, const UmiCreativeProject * p)
@@ -36,11 +43,13 @@ UmiStatus UmiCreativeExportHtml(const UmiCreativeProject * p, uint32_t timeMs, b
     UmiCreativeWriterXml( & w, p -> settings.title);
     UmiCreativeWriterText( & w, "</title><link rel=\"icon\" href=\"");
     UmiCreativeWriterBrandIcon( & w);
-    UmiCreativeWriterText( & w, "\"><style>body{margin:0;background:#f2f5f7;color:#193043;font:17px/1.65 system-ui,sans-serif}"
+    /* Keep the existing document layout and the dark surface behind the
+     * transparent wordmark in both screen and print rendering. */
+    UmiCreativeWriterText( & w, "\" type=\"image/vnd.microsoft.icon\"><style>body{margin:0;background:#f2f5f7;color:#193043;font:17px/1.65 'Segoe UI Variable Text','Segoe UI',system-ui,sans-serif}"
     "header{background:#112c3d;padding:18px 5vw}header img{width:170px;height:auto}main{max-width:1080px;margin:auto;padding:28px 5vw}"
     "h1{line-height:1.18}figure{margin:24px 0;background:white;border:1px solid #b8cbd5;padding:14px;border-radius:10px}"
     "figure>svg{display:block;width:100%;height:auto}figcaption{padding:12px 0 2px}li{margin:8px 0}footer{border-top:1px solid #b8cbd5;margin-top:32px;padding-top:16px}"
-    "@media print{body{background:white}figure{break-inside:avoid}}</style></head><body><header><img alt=\"Umicom\" src=\"");
+    "@media print{body{background:white}header{break-after:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}figure{break-inside:avoid}}</style></head><body><header><img alt=\"Umicom\" src=\"");
     UmiCreativeWriterBrandLogo( & w);
     UmiCreativeWriterText( & w, "\"></header><main><h1>");
     UmiCreativeWriterXml( & w, p -> settings.title);

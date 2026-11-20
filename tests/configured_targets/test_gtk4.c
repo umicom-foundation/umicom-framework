@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/configured_targets/test_gtk4.c
- * PURPOSE: Exercise native target discovery, explicit query writes and retained-control lifetime.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Exercise native target discovery, explicit query writes and retained-control lifetime.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ui/gtk4/automation.h"
 #include "umicom/ui/gtk4/developer_dialog.h"
@@ -242,8 +249,15 @@ int main(int argc, char **argv)
         CHECK(g_file_get_contents(query, &contents, &size, NULL));
         g_free(contents);
         CHECK(size == 0U && probe.calls == 0U);
+        /* Use the same native writer as the other private fixture inputs.
+         * GLib's replacement appends a temporary suffix that can exceed
+         * Windows path limits before the refusal under test is reached.
+         * Keep the old seed operation for comparison. */
         if (strcmp(mode, "query-conflict") == 0)
+#if 0
             CHECK(g_file_set_contents(query, "retain this", -1, NULL));
+#endif
+            CHECK(umi_fs_write_text(query, "retain this") == UMI_STATUS_OK);
         if (strcmp(mode, "query-existing") == 0 || strcmp(mode, "query-conflict") == 0)
         {
             g_signal_emit_by_name(request, "clicked");

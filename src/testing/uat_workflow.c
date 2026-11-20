@@ -14,7 +14,7 @@
  * MIT
  *---------------------------------------------------------------------------*/
 
-#include "umicom/testing/uat_workflow.h"
+#include "uat_workflow_internal.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -22,6 +22,8 @@ struct UmiUatReport {
     UmiUatSummary summary;
     UmiUatStep steps[UMI_UAT_MAX_STEPS];
     UmiUatFinding findings[UMI_UAT_MAX_STEPS];
+    UmiUatTargetEvidence scope;
+    UmiUatOperation operations[UMI_UAT_MAX_STEPS];
 };
 
 /* The legacy case validator checks required fields. Establish bounded strings,
@@ -81,6 +83,14 @@ UmiStatus UmiUatRun(const UmiUatStep *steps, size_t count, UmiUatExecuteFn execu
     void *context, UmiCancellationToken *cancellation,
     UmiCancellationToken *cleanupCancellation, UmiUatReport **outReport)
 {
+    return UmiUatRunWithEvidence(steps, count, execute, context, cancellation,
+        cleanupCancellation, NULL, NULL, outReport);
+}
+
+UmiStatus UmiUatRunWithEvidence(const UmiUatStep *steps, size_t count, UmiUatExecuteFn execute,
+    void *context, UmiCancellationToken *cancellation, UmiCancellationToken *cleanupCancellation,
+    const UmiUatTargetEvidence *scope, const UmiUatOperation *operations, UmiUatReport **outReport)
+{
     UmiUatReport *report;
     UmiStatus status;
     int blocked = 0, started = 0;
@@ -94,6 +104,17 @@ UmiStatus UmiUatRun(const UmiUatStep *steps, size_t count, UmiUatExecuteFn execu
     status = ValidatePlan(report->steps, count);
     if (status != UMI_STATUS_OK) { free(report); return status; }
     report->summary.planned = count;
+    if (scope != NULL) {
+        /* Freeze the admitted scope alongside the plan. Fixed-size ID storage
+         * remains zero beyond the validated label, including for C callers. */
+        report->scope.target.protocol = scope->target.protocol;
+        report->scope.target.platform = scope->target.platform;
+        memcpy(report->scope.target.targetId, scope->target.targetId, strlen(scope->target.targetId));
+        memcpy(report->scope.target.sessionId, scope->target.sessionId, strlen(scope->target.sessionId));
+        report->scope.allowedOperations = scope->allowedOperations;
+        report->scope.supportedOperations = scope->supportedOperations;
+        memcpy(report->operations, operations, count * sizeof(*operations));
+    }
     for (size_t i = 0U; i < count; ++i) {
         const UmiUatStep *step = &report->steps[i];
         UmiUatFinding *finding = &report->findings[i];
@@ -157,5 +178,26 @@ UmiStatus UmiUatReportFinding(const UmiUatReport *report, size_t index, UmiUatFi
     if (report == NULL) return UMI_STATUS_INVALID_ARGUMENT;
     if (index >= report->summary.planned) return UMI_STATUS_NOT_FOUND;
     *outFinding = report->findings[index];
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiUatReportTarget(const UmiUatReport *report, UmiUatTargetEvidence *outEvidence)
+{
+    if (outEvidence == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    memset(outEvidence, 0, sizeof(*outEvidence));
+    if (report == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (report->scope.target.protocol == 0U) return UMI_STATUS_NOT_FOUND;
+    *outEvidence = report->scope;
+    return UMI_STATUS_OK;
+}
+
+UmiStatus UmiUatReportOperation(const UmiUatReport *report, size_t index, UmiUatOperation *outOperation)
+{
+    if (outOperation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    *outOperation = (UmiUatOperation)0;
+    if (report == NULL) return UMI_STATUS_INVALID_ARGUMENT;
+    if (report->scope.target.protocol == 0U || index >= report->summary.planned)
+        return UMI_STATUS_NOT_FOUND;
+    *outOperation = report->operations[index];
     return UMI_STATUS_OK;
 }

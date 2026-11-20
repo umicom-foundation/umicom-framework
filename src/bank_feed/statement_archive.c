@@ -25,9 +25,8 @@ struct UmiBankStatementArchive {
     UmiBankFeed *feed;
     UmiBankStatementArchiveSnapshot snapshot;
 };
-/* Admission uses the existing archive decoder as the source of provenance and
- * row validation. The round trip makes the owned snapshot independent of both
- * caller memory and any future importer representation. */
+/* Give the review its own validated observations. Serialization belongs to
+ * export, where the caller can handle its separate output limit and failures. */
 UmiStatus UmiBankStatementArchiveCreate(const UmiBankFeed *feed,
     const UmiBankStatementRequest *request, const UmiBankFeedArchiveInfo *info,
     UmiBankStatementArchive **out) {
@@ -36,6 +35,10 @@ UmiStatus UmiBankStatementArchiveCreate(const UmiBankFeed *feed,
     UmiBankStatementResult result;
     UmiStatus status = UmiBankStatementReview(feed, request, &result);
     if (status != UMI_STATUS_OK) return status;
+    if (info != NULL) {
+        status = UmiBankFeedArchiveInfoValidate(info);
+        if (status != UMI_STATUS_OK) return status;
+    }
     UmiBankStatementArchive *archive = calloc(1U, sizeof *archive);
     if (archive == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     /* A successful scope lookup ensures these strings match a bounded row. */
@@ -46,12 +49,27 @@ UmiStatus UmiBankStatementArchiveCreate(const UmiBankFeed *feed,
     archive->snapshot.openingBalance = request->openingBalance;
     archive->snapshot.closingBalance = request->closingBalance;
     archive->snapshot.result = result;
+    /* The former encode/decode round trip is retained for engineering review.
+     * Direct cloning keeps independent ownership and validates the source
+     * claim separately, so a serializer refusal cannot prevent review. */
+#if 0
+    /* The archive decoder validates the provenance and rows. The round trip
+     * makes the snapshot independent of the caller and importer representation. */
     char *encoded = NULL;
     size_t length = 0U;
     status = UmiBankFeedArchiveEncode(feed, info, &encoded, &length);
     if (status == UMI_STATUS_OK)
         status = UmiBankFeedArchiveDecode(encoded, length, &archive->feed, &archive->snapshot.source);
     UmiBankFeedArchiveFree(encoded);
+#endif
+    if (info != NULL) {
+        archive->snapshot.source.sourceFormat = info->sourceFormat;
+        /* Copy the validated string only. Empty digests leave a zeroed tail,
+         * as they did when reopened from the serialized form. */
+        memcpy(archive->snapshot.source.sourceSha256, info->sourceSha256,
+            strlen(info->sourceSha256) + 1U);
+    }
+    status = UmiBankFeedClone(feed, &archive->feed);
     if (status != UMI_STATUS_OK) {
         UmiBankStatementArchiveDestroy(archive);
         return status;

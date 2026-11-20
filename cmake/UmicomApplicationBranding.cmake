@@ -23,7 +23,8 @@ function(umicom_apply_application_branding)
     # Installation folders are resolved only when a real project invokes the
     # helper, after CMake knows the target platform and architecture.
     include(GNUInstallDirs)
-    set(options WINDOWS_GUI DESKTOP_ENTRY RASTER_FALLBACKS NO_RUNTIME_DEPLOYMENT)
+    set(options WINDOWS_GUI DESKTOP_ENTRY RASTER_FALLBACKS
+        NO_RUNTIME_DEPLOYMENT BRANDING_ONLY)
     set(one_value_args
         TARGET
         PRODUCT_NAME
@@ -156,9 +157,11 @@ function(umicom_apply_application_branding)
         target_sources("${UMICOM_BRAND_TARGET}" PRIVATE
             "${_umicom_brand_binary_dir}/${UMICOM_BRAND_INTERNAL_NAME}.rc")
         # Recompile embedded artwork even when the resource compiler does not
-        # report its input files in generated dependency information.
+        # report its input files in generated dependency information. Set these
+        # dependencies in the executable's directory if a parent registered it.
         set_property(SOURCE
             "${_umicom_brand_binary_dir}/${UMICOM_BRAND_INTERNAL_NAME}.rc"
+            TARGET_DIRECTORY "${UMICOM_BRAND_TARGET}"
             APPEND PROPERTY OBJECT_DEPENDS
             "${_umicom_brand_root}/brand/umicom.ico"
             "${_umicom_brand_root}/brand/umicom-icon-on-dark.svg")
@@ -270,7 +273,10 @@ function(umicom_apply_application_branding)
         set_property(TARGET "${UMICOM_BRAND_TARGET}" PROPERTY
             UMICOM_WINDOWS_RUNTIME_BOOTSTRAP_DISABLED TRUE)
     endif()
-    if(WIN32 AND NOT UMICOM_BRAND_NO_RUNTIME_DEPLOYMENT)
+    # A parent can attach artwork after a product chose its deployment policy.
+    # BRANDING_ONLY leaves the existing bootstrap property and DLL rules intact.
+    if(WIN32 AND NOT UMICOM_BRAND_NO_RUNTIME_DEPLOYMENT AND
+            NOT UMICOM_BRAND_BRANDING_ONLY)
         include("${CMAKE_CURRENT_FUNCTION_LIST_DIR}/UmicomWindowsDeployment.cmake")
         set(_umicom_deployment_gui_option "")
         if(UMICOM_BRAND_WINDOWS_GUI)

@@ -120,6 +120,74 @@ static void Change(Fixture *fixture, UmiBankAction action, const char *id, UmiBa
 {
     UmiBankCommand c = Command(fixture, action, id); c.state = state; OK(Send(fixture, &maker, &c));
 }
+static void Observation(Fixture *fixture, const char *id, uint64_t target, uint64_t source,
+    UmiBankRecordState state, int64_t booked, int64_t reserved)
+{
+    /* Test the two independent revision values and the exact monetary scale. */
+    UmiBankAccountObservation result;
+    OK(UmiBankOperationsObserveAccountAtRevision(fixture->operations, id, target, &result));
+    CHECK(strcmp(result.account.account.account_id.value, id) == 0 && result.account.state == state);
+    CHECK(result.sourceRevision == source && result.balance.revision == target);
+    CHECK(result.account.scale == 2U && result.balance.booked.scale == 2U);
+    CHECK(result.balance.booked.minor_units == booked && result.balance.reserved.minor_units == reserved);
+    CHECK(result.balance.available.minor_units == booked - reserved);
+}
+
+static void ObservationCase(Fixture *fixture, const char *name)
+{
+    Setup(fixture, true);
+    if (strcmp(name, "account-observation-history") == 0) {
+        /* Two opposing postings and their reservation must stay distinct at
+         * older revisions even after the most recent balance recovers. */
+        ExecuteTransfer(fixture, "t1", 15000);
+        TransferAction(fixture, UMI_BANK_TRANSFER_REVERSE, "t1", &maker);
+        Observation(fixture, "a1", 3U, 10U, UMI_BANK_RECORD_ACTIVE, 0, 0);
+        Observation(fixture, "a1", 6U, 10U, UMI_BANK_RECORD_ACTIVE, 100000, 0);
+        Observation(fixture, "a1", 7U, 10U, UMI_BANK_RECORD_ACTIVE, 100000, 15000);
+        Observation(fixture, "a1", 8U, 10U, UMI_BANK_RECORD_ACTIVE, 100000, 15000);
+        Observation(fixture, "a1", 9U, 10U, UMI_BANK_RECORD_ACTIVE, 85000, 0);
+        Observation(fixture, "a2", 9U, 10U, UMI_BANK_RECORD_ACTIVE, 15000, 0);
+        Observation(fixture, "a1", 10U, 10U, UMI_BANK_RECORD_ACTIVE, 100000, 0);
+        Balance(fixture, "a1", 100000, 0);
+    } else if (strcmp(name, "account-observation-state") == 0) {
+        /* The currently closed recipient is still active in earlier views. */
+        Change(fixture, UMI_BANK_ACCOUNT_SET_STATE, "a1", UMI_BANK_RECORD_BLOCKED);
+        Change(fixture, UMI_BANK_ACCOUNT_SET_STATE, "a2", UMI_BANK_RECORD_CLOSED);
+        Observation(fixture, "a1", 6U, 8U, UMI_BANK_RECORD_ACTIVE, 100000, 0);
+        Observation(fixture, "a1", 7U, 8U, UMI_BANK_RECORD_BLOCKED, 100000, 0);
+        Observation(fixture, "a2", 7U, 8U, UMI_BANK_RECORD_ACTIVE, 0, 0);
+        Observation(fixture, "a2", 8U, 8U, UMI_BANK_RECORD_CLOSED, 0, 0);
+    } else {
+        UmiBankAccountObservation result;
+        memset(&result, 0x61, sizeof result);
+        unsigned char saved[sizeof result];
+        memcpy(saved, &result, sizeof saved);
+        if (strcmp(name, "account-observation-damaged-prefix") == 0) {
+            /* A damaged internal event cannot publish a partial observation. */
+            UmiBankAuditEvent *event = &fixture->operations->state->events[2];
+            const uint64_t revision = event->revision;
+            event->revision = revision + 1U;
+            CHECK(UmiBankOperationsObserveAccountAtRevision(fixture->operations, "a1", 4U, &result) ==
+                UMI_STATUS_INVALID_STATE);
+            event->revision = revision;
+        } else {
+            CHECK(strcmp(name, "account-observation-refusal") == 0);
+            CHECK(UmiBankOperationsObserveAccountAtRevision(fixture->operations, "a1", 0U, &result) ==
+                UMI_STATUS_NOT_FOUND);
+            CHECK(UmiBankOperationsObserveAccountAtRevision(fixture->operations, "a1", 2U, &result) ==
+                UMI_STATUS_NOT_FOUND);
+            CHECK(UmiBankOperationsObserveAccountAtRevision(fixture->operations, "missing", 6U, &result) ==
+                UMI_STATUS_NOT_FOUND);
+            CHECK(UmiBankOperationsObserveAccountAtRevision(fixture->operations, "a1", 7U, &result) ==
+                UMI_STATUS_INVALID_ARGUMENT);
+            CHECK(UmiBankOperationsObserveAccountAtRevision(fixture->operations, "bad id", 6U, &result) ==
+                UMI_STATUS_INVALID_ARGUMENT);
+        }
+        CHECK(memcmp(&result, saved, sizeof saved) == 0);
+        Observation(fixture, "a1", 4U, 6U, UMI_BANK_RECORD_ACTIVE, 0, 0);
+    }
+}
+
 static UmiBankCommand HoldCommand(Fixture *fixture, const char *id, int64_t amount)
 {
     UmiBankCommand c = Command(fixture, UMI_BANK_HOLD_PLACE, id);
@@ -388,6 +456,32 @@ static void PersistenceCase(Fixture *f, const char *name, const char *path)
         OK(UmiBankOperationsOpenSqlite(path, &f->operations));
         OK(UmiBankOperationsExecute(f->operations, &maker, &c, &receipt)); CHECK(receipt.idempotent);
         Balance(f, "a1", 100123, 0);
+    } else if (strcmp(name, "sqlite-existing-reopen") == 0) {
+        /* Replay the selected ledger, post through the checked writer, then
+         * verify its record on a separate reference through the legacy API. */
+        Credit(f, 123);
+        UmiBankOperationsDestroy(f->operations); f->operations = NULL;
+        OK(UmiBankOperationsOpenExistingSqlite(path, &f->operations));
+        Balance(f, "a1", 100123, 0);
+        Credit(f, 21);
+        UmiBankOperationsDestroy(f->operations); f->operations = NULL;
+        OK(UmiBankOperationsOpenSqlite(path, &f->operations));
+        OK(UmiBankOperationsCounts(f->operations, &after)); CHECK(after.revision == before.revision + 2U);
+        Balance(f, "a1", 100144, 0);
+    } else if (strcmp(name, "sqlite-account-observation") == 0) {
+        /* Reopen the actual durable ledger before checking its old held
+         * balance, its committed transfer, and the unchanged high-water mark. */
+        ExecuteTransfer(f, "historic", 2500);
+        UmiBankOperationsDestroy(f->operations);
+        f->operations = NULL;
+        OK(UmiBankOperationsOpenExistingSqlite(path, &f->operations));
+        Observation(f, "a1", before.revision + 1U, before.revision + 3U,
+            UMI_BANK_RECORD_ACTIVE, 100000, 2500);
+        Observation(f, "a1", before.revision + 3U, before.revision + 3U,
+            UMI_BANK_RECORD_ACTIVE, 97500, 0);
+        OK(UmiBankOperationsReload(f->operations));
+        OK(UmiBankOperationsCounts(f->operations, &after));
+        CHECK(after.revision == before.revision + 3U && after.events == 9U && after.durable);
     } else if (strcmp(name, "sqlite-stale-writer") == 0) {
         UmiBankOperations *second = NULL; OK(UmiBankOperationsOpenSqlite(path, &second));
         Credit(f, 10); c = CreditCommand(f, 20); c.expectedRevision = before.revision;
@@ -434,6 +528,9 @@ static void PersistenceCase(Fixture *f, const char *name, const char *path)
         Balance(f, "a1", 100000, 0); /* Failed reload never publishes a partial projection. */
         UmiBankOperationsDestroy(f->operations); f->operations = NULL;
         CHECK(UmiBankOperationsOpenSqlite(path, &f->operations) == UMI_STATUS_PARSE_ERROR); CHECK(f->operations == NULL);
+        /* The explicit existing-store route must refuse the same corrupt history. */
+        CHECK(UmiBankOperationsOpenExistingSqlite(path, &f->operations) == UMI_STATUS_PARSE_ERROR);
+        CHECK(f->operations == NULL);
     } else if (strcmp(name, "sqlite-read-error") == 0 || strcmp(name, "sqlite-enumeration-error") == 0) {
         OK(umi_data_server_execute(f->operations->server,
             "ALTER TABLE umicom_kv RENAME TO bank_test_original;"
@@ -462,6 +559,7 @@ int main(int argc, char **argv)
     } else {
         OK(UmiBankOperationsOpenMemory(&fixture.operations));
         if (strcmp(name, "end-to-end") == 0) EndToEnd(&fixture);
+        else if (strncmp(name, "account-observation-", 20U) == 0) ObservationCase(&fixture, name);
         else if (strncmp(name, "card-", 5U) == 0) CardCase(&fixture, name);
         else if (strncmp(name, "invalid-", 8U) == 0 || strcmp(name, "negative-money") == 0 || strcmp(name, "reserved-id") == 0)
             ValidationCase(&fixture, name);
@@ -470,6 +568,10 @@ int main(int argc, char **argv)
         else if (strcmp(name, "absolute-path") == 0) {
             UmiBankOperations *bad = fixture.operations;
             CHECK(UmiBankOperationsOpenSqlite("relative.sqlite", &bad) == UMI_STATUS_INVALID_ARGUMENT); CHECK(bad == NULL);
+            /* Selected existing stores use the same absolute local path boundary. */
+            bad = fixture.operations;
+            CHECK(UmiBankOperationsOpenExistingSqlite("relative.sqlite", &bad) == UMI_STATUS_INVALID_ARGUMENT);
+            CHECK(bad == NULL);
         } else DomainCase(&fixture, name);
     }
     UmiBankOperationsDestroy(fixture.operations);

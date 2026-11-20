@@ -203,6 +203,20 @@ cross-entropy **1.386273 -> 0.590156** over 420 updates, while held-out
 cross-entropy **worsened from 1.415977 to 4.573408**. This is precisely why
 held-out evaluation matters. Neither loss trend proves language comprehension.
 Checkpoints restored byte-for-byte and inference predictions were identical.
+The current demo also requires exact agreement for all 24 held-out logits,
+the held-out loss, the model configuration and the completed step count after
+reloading. This checks every recorded score for those three pairs on the same
+host and does not establish equivalence across different floating-point hosts.
+
+```powershell
+ctest --test-dir ".\build\windows-ucrt64-native-llm-debug" `
+      --no-tests=error --output-on-failure -R "^framework[.]ai[.]training[.]decoder_demo"
+```
+
+Expect two passing checks. The file check uses a fresh build workspace for
+its first checkpoint and confirms that a second save to the same path leaves
+its SHA-256 unchanged. If scores differ, compare the configuration and step
+count first, then inspect the read and write paths for the same file.
 
 ### Boundaries and current limitations
 
@@ -341,3 +355,7 @@ Pass one 0/1 selection byte per aligned input/target position, with at least one
 Selection is borrowed only during the synchronous call. On refusal, weights, completed steps and the loss output remain unchanged; graph storage is rewound after attempted construction. Graph memory budgets still apply. These APIs support the bounded from-scratch decoder and SGD, not imported model formats, AdamW masking or accumulated masked batches. Checkpoint encoding is unchanged and does not store the mask, dataset or training schedule.
 
 See `tests/training_decoder_mask` for an independent loss reference, all-position parity, causal-context checks, unequal selected counts across sequences, checkpoint continuation and graph-budget rollback. The Bits2Banking `masked-language-loss/decoder.c` example demonstrates forty small updates without downloading a model.
+
+See [Keep the checkpoint selected by held-out loss](SELECTED_CHECKPOINTS.md)
+to compare the terminal model with a checkpoint retained by the native
+experiment's evaluation policy.

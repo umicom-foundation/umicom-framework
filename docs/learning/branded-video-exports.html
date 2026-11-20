@@ -69,6 +69,14 @@ ctest --test-dir build --output-on-failure
 <li><strong>Cleanup failed:</strong> the UI reports that the private watermark file remains in the temporary directory. This does not erase or relabel an already completed MP4.</li>
 <li><strong>CAPACITY_EXCEEDED during planning:</strong> no plan mutation occurred. Inspect path length or argument/graph bounds rather than accepting truncated values.</li>
 <li><strong>Existing output:</strong> select a fresh path. A prior partial result is evidence, not permission to replace it automatically.</li></ul>
+<h2>Read the exported stream metadata</h2>
+<ol>
+<li>Open PowerShell in the folder containing a trusted local practice export. Use the FFprobe executable supplied with your FFmpeg build.</li>
+<li>Ask FFprobe for the dimensions, track identities, start times and durations. Keep the output alongside your test notes if you need to compare another export.</li>
+</ol>
+<pre><code>ffprobe -v error -of json -show_entries 'stream=index,codec_type,width,height,start_time,duration:format=duration' './practice.mp4'</code></pre>
+<p>Find the video stream's pixel dimensions. Find any audio and subtitle stream by its type and index. A stream start is a timestamp relative to the container and may be negative. When a time is missing or shows <code>N/A</code>, the report has no value for it. An explicit <code>0.000000</code> records a zero.</p>
+<p>Framework's <code>UmiMediaProbeParse</code> reads this report into a bounded C record with exact integer microseconds. An application can compare those values with its render settings and identify a missing stream before opening a player. Play the export to verify the logo, picture, audible timing and caption text. Those content checks need the decoded media.</p>
 <h2>Exercise and review</h2>
 <p>Run the review mode with a logo path containing spaces and punctuation. Explain why argument separation prevents those bytes from becoming graph syntax. Then compare a soundtrack export with a caption export: which streams are encoded and which remain copied? Finally, cancel a practice render and record the distinction between a partial file, a completed process and a visually verified video.</p>
 <p>This work covers local video exports. It does not establish Umicom watermarks on remote image-provider results, arbitrary document exports or every historical media asset. Those outputs require their own composition and qualification paths.</p>

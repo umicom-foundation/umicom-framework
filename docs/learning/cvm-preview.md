@@ -68,3 +68,28 @@ This adapter still owns no parser or interpreter. Both API entry points call the
 ## Inspect source without executing it
 
 The separately composed [source-check adapter](cvm-source-check.md) calls the optional Umicom C warning service and associates the result with a caller-owned document revision. It does not change preview behavior. Use `umicom_add_cvm_source_check` only with the matching newer compiler SDK; old preview-only consumers keep their existing dependency contract.
+
+## Run a bounded bytecode artifact
+
+The Umicom C compiler can store its instructions in a portable `.umcb` file.
+Build the same compiler revision used by the preview, then compile an existing
+arithmetic example into a new file. Use a new output name for subsequent runs.
+From the Framework source folder, the following example assumes the matching
+`umicom-c` command is on your path and the preview was built above.
+
+```powershell
+umicom-c compile C:/umicom/umicom-c/examples/arithmetic.uc build/cvm-preview/arithmetic.umcb
+& ".\build\cvm-preview\umicom-cvm-preview.exe" --bytecode ".\build\cvm-preview\arithmetic.umcb"
+```
+
+Compare the result with running the same source through `umicom-c run`. A
+host can call `umi_cvm_preview_bytecode` with a chosen instruction budget.
+The adapter checks the complete file and version before executing any
+instruction. A refused decode reports the decoding phase and clears the
+previous result. The traced API keeps attempted instructions on runtime
+failure. The artifact retains source offsets. Viewing a source line
+requires the matching source file.
+
+This command runs on its native host. A web service can call the same native
+adapter for an admitted task. Running the artifact within a browser requires
+a separate browser host and qualification of its bindings and resource limits.

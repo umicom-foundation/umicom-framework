@@ -226,6 +226,10 @@ static int collectDirectory(const char *root, unsigned kind, ScFiles *files, siz
 #endif
     return result;
 }
+/* Retain the original root collector for review. The shared traversal below
+ * can also return the resolved directory so bundled guide links can be checked
+ * against their actual package root without a second path resolution. */
+#if 0
 static int collectRoot(const char *root, unsigned kind, ScFiles *files)
 {
     if (root == NULL || root[0] == '\0' || files == NULL) return 2;
@@ -246,6 +250,35 @@ static int collectRoot(const char *root, unsigned kind, ScFiles *files)
     int result = collectDirectory(absolute, kind, files, 0U);
     free(absolute); return result;
 }
+#endif
+
+/* Preserve the filesystem admission and traversal for existing callers. The
+ * caller of the new guide variant owns the resolved path after success. */
+static int collectRootResolved(const char *root, unsigned kind, ScFiles *files, char **out_root)
+{
+    if (root == NULL || root[0] == '\0' || files == NULL) return 2;
+    char *absolute = NULL;
+#if defined(_WIN32)
+    wchar_t *wide = widePath(root);
+    if (wide == NULL) return 2;
+    DWORD attributes = GetFileAttributesW(wide);
+    if (attributes == INVALID_FILE_ATTRIBUTES || !(attributes & FILE_ATTRIBUTE_DIRECTORY) || (attributes & FILE_ATTRIBUTE_REPARSE_POINT)) { free(wide); return 2; }
+    wchar_t *full = _wfullpath(NULL, wide, 0U); free(wide);
+    if (full != NULL) { absolute = utf8Path(full); free(full); }
+#else
+    struct stat info;
+    if (lstat(root, &info) != 0 || !S_ISDIR(info.st_mode)) return 2;
+    absolute = realpath(root, NULL);
+#endif
+    if (absolute == NULL) return 2;
+    int result = collectDirectory(absolute, kind, files, 0U);
+    if (result == 0 && out_root != NULL) *out_root = absolute;
+    else free(absolute);
+    return result;
+}
+
+static int collectRoot(const char *root, unsigned kind, ScFiles *files)
+{ return collectRootResolved(root, kind, files, NULL); }
 void ScFilesFree(ScFiles *files)
 {
     if (files == NULL) return;
@@ -260,3 +293,28 @@ int ScCollectManifests(const char *root, ScFiles *files)
 
 int ScCollectGuides(const char *root, ScFiles *files)
 { return collectRoot(root, 3U, files); }
+
+int ScCollectBundledGuides(const char *root, ScFiles *files, char **out_root)
+{
+    if (out_root == NULL) return 2;
+    *out_root = NULL;
+    return collectRootResolved(root, 3U, files, out_root);
+}
+
+/* Bundles ship ordinary files and directories. Check the owned assets child
+ * and requested managed leaf before passing them to the bounded byte reader. */
+bool ScGuideOrdinaryPath(const char *path, bool directory)
+{
+#if defined(_WIN32)
+    wchar_t *wide = widePath(path);
+    if (wide == NULL) return false;
+    DWORD attributes = GetFileAttributesW(wide);
+    free(wide);
+    return attributes != INVALID_FILE_ATTRIBUTES && !(attributes & FILE_ATTRIBUTE_REPARSE_POINT) &&
+        directory == ((attributes & FILE_ATTRIBUTE_DIRECTORY) != 0U);
+#else
+    struct stat info;
+    if (lstat(path, &info) != 0) return false;
+    return directory ? S_ISDIR(info.st_mode) : S_ISREG(info.st_mode);
+#endif
+}

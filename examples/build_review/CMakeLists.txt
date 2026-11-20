@@ -1,4 +1,17 @@
-# Umicom Framework | Sammy Hegab, Umicom Foundation | MIT
+#-----------------------------------------------------------------------------
+# Umicom Framework
+# File: examples/build_review/CMakeLists.txt
+#
+# PURPOSE:
+#   Build the standalone native review example with the shared Framework sources.
+#
+# AUTHOR AND ORGANISATION:
+# Sammy Hegab
+# Umicom Foundation
+#
+# LICENCE:
+# MIT
+#-----------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.24)
 project(UmicomBuildReview LANGUAGES C)
 include(CTest)
@@ -32,6 +45,9 @@ add_library(umicom_diagnostics STATIC
     "${_framework}/src/diagnostics/diagnostic.c" "${_framework}/src/diagnostics/compiler_parser.c")
 add_library(umicom_build STATIC "${_framework}/src/build/history.c"
     "${_framework}/src/build/parser.c" "${_framework}/src/build/diagnostic.c")
+# History and review now share checked result storage. Link its real
+# implementation and the build names used by its summary formatter.
+target_sources(umicom_build PRIVATE "${_framework}/src/build/result.c" "${_framework}/src/build/types.c")
 add_library(umicom_compiler STATIC "${_framework}/src/compiler/diagnostic.c")
 foreach(_name IN ITEMS base platform diagnostics build compiler)
     add_library(Umicom::${_name} ALIAS umicom_${_name})

@@ -73,6 +73,16 @@ foreach(kind lldb gdb)
         "${CMAKE_CURRENT_SOURCE_DIR}/notes_debuggee.c" "13" "${kind}")
     set_tests_properties(framework.development_workflow.native_debug.${kind} PROPERTIES TIMEOUT 45 RUN_SERIAL TRUE SKIP_RETURN_CODE 77
         LABELS "framework;debug;external-debugger;regression")
+    if(TARGET umicom AND "${_native_probe}" STREQUAL "0")
+        set(_cli_test "framework.development_workflow.cli_debug.${kind}")
+        add_test(NAME "${_cli_test}" COMMAND "${CMAKE_COMMAND}"
+            "-DTOOL=$<TARGET_FILE:umicom>" "-DDEBUGGER=${_native_tool}" "-DKIND=${kind}"
+            "-DPROGRAM=$<TARGET_FILE:umicom-notes-debug-target>" "-DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/check_cli_debug.cmake")
+        set_tests_properties("${_cli_test}" PROPERTIES TIMEOUT 45 RUN_SERIAL TRUE
+            LABELS "framework;cli;debug;external-debugger;regression")
+        umicom_test_impact_owners("${_cli_test}" TARGETS umicom umicom-notes-debug-target)
+    endif()
     if(kind STREQUAL "gdb" AND "${_native_probe}" STREQUAL "0")
         # Keep the production arguments and change only the interpreter. The
         # regression fails if a future version-only probe bypasses validation.
@@ -85,6 +95,15 @@ foreach(kind lldb gdb)
             TIMEOUT 10 WILL_FAIL TRUE LABELS "framework;debug;external-debugger;regression")
     endif()
 endforeach()
+
+if(TARGET umicom)
+    add_test(NAME framework.development_workflow.cli_debug.admission COMMAND "${CMAKE_COMMAND}"
+        "-DTOOL=$<TARGET_FILE:umicom>" "-DADMISSION=ON" "-DSOURCE=${CMAKE_CURRENT_SOURCE_DIR}"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/check_cli_debug.cmake")
+    set_tests_properties(framework.development_workflow.cli_debug.admission PROPERTIES
+        TIMEOUT 15 LABELS "framework;cli;debug;regression")
+    umicom_test_impact_owners(framework.development_workflow.cli_debug.admission TARGETS umicom)
+endif()
 
 # The deterministic peer exercises a real child process but does not claim to be
 # GDB/LLDB. Its controlled responses make timing/order failures reproducible.

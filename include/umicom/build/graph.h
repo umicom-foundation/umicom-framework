@@ -76,6 +76,8 @@ UmiStatus umi_build_graph_create(UmiBuildGraph **out_graph);
 void umi_build_graph_destroy(UmiBuildGraph *graph);
 UmiStatus umi_build_graph_add_node(UmiBuildGraph *graph,
                                    const UmiBuildGraphNodeSnapshot *node);
+/* Add one dependency between existing nodes. A shared prerequisite is valid.
+ * A cycle returns INVALID_STATE before changing the graph or its revisions. */
 UmiStatus umi_build_graph_add_dependency(UmiBuildGraph *graph,
                                          const char *node_id,
                                          const char *depends_on_node_id);

@@ -264,7 +264,10 @@ UmiStatus UmiCreativeGtkPanelCreate(UmiDataServer * server, const char * profile
 #endif
     /* Keep the same Assets page and capture editor. The library weakly refers
      * to it so an explicit selected-asset copy can reuse PNG preview and edits. */
-    GtkWidget *assetEditor = UmiCreativeAssetsGtkCreate();
+    /* Media requires a watermark on edited image exports. The other creative
+     * profiles still use the original constructor with their existing export. */
+    GtkWidget *assetEditor = strcmp(profile, "media") == 0
+        ? UmiCreativeAssetsGtkCreateBranded() : UmiCreativeAssetsGtkCreate();
     gtk_box_append(GTK_BOX(assetPage), assetEditor);
     /* Media composes the Framework avatar workflow. Construction performs no
      * storage or network access; each request starts from an explicit action. */

@@ -70,4 +70,24 @@ pre,code,kbd,samp{font-family:"Cascadia Code",Consolas,monospace}
 <p>Include <code>umicom/cash_planning/comparison.h</code> and link the existing <code>Umicom::cash_planning</code> target. Call <code>UmiCashPlanCompare(baseline, scenario, report)</code> on the plans' owning thread. Allocate the bounded report on the heap if your host has a small thread stack. A successful result owns copies of both forecasts and checked integer differences. A failed call leaves the report and both plans unchanged.</p>
 <p>For an embedded native planner, call <code>UmiGtk4CashPlanRetire(root)</code> before removing its host. It is safe to call more than once. The standard Cash planning launcher handles this boundary automatically. Trader, Bank and TMS already use that launcher, so they share the same model and review behaviour.</p>
 </section>
+<section>
+<h2>Review several plans for the same dates</h2>
+<p>Keep each source plan in its own existing cash-plan document. For example, select a February USD receipts plan, a February USD payments plan and a February EUR plan. The start and end dates must match exactly, including the leap-day end date if the horizon uses it.</p>
+<ol>
+<li>Load each reviewed document through <code>UmiCashPlanLoad</code> and check the result. Select independent sources so one account or set of assumptions does not contribute twice.</li>
+<li>Include <code>umicom/cash_planning/portfolio.h</code>. Pass the selected owners in the order you want to record with their revisions.</li>
+<li>Present the opening, inflows, outflows and closing values for each reported currency and scale. Show the unit beside every amount. A plan with a shortfall is counted against its own dates and buffer.</li>
+</ol>
+<pre><code class="language-c">const UmiCashPlan *plans[] = {dollar_receipts, dollar_payments, euro_plan};
+UmiCashPlanPortfolio portfolio = {0};
+UmiStatus status = UmiCashPlanProjectPortfolio(plans, 3U, &amp;portfolio);
+if (status == UMI_STATUS_OK) {
+    /* Display the accepted groups and associate revisions with the input order. */
+}</code></pre>
+<p>For two USD plans at scale 2 with opening values of 10,000 and −1,000 minor units, total inflows of 7,000 and total outflows of 2,500, the closing value is 13,500 minor units. A separate EUR group retains its own figures. A USD plan at scale 3 also gets its own row, because the same integer represents a different amount at that scale.</p>
+<p>A copied revision refers to the source plan's current in-memory state. Review it with the exact saved source document if you need a repeatable record. The result holds no file name or FX rate, and existing plan persistence is still one document per source. The portfolio covers totals over the reviewed dates. For per-day minima or a shortfall's first date, inspect the original forecast.</p>
+<p>On <code>UMI_STATUS_INVALID_ARGUMENT</code>, check for duplicate plan owners and differing dates. On <code>UMI_STATUS_CAPACITY_EXCEEDED</code>, confirm the input count and independently check the amounts. The caller retains the prior result whenever a complete projection fails.</p>
+<pre><code class="language-powershell">cmake --build build/framework --target umicom-cash-plan-portfolio-test
+ctest --test-dir build/framework -R '^framework[.]cash_planning[.]portfolio[.]' --output-on-failure</code></pre>
+</section>
 </body></html>

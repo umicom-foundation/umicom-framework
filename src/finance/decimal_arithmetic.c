@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/finance/decimal_arithmetic.c
- * PURPOSE: Compare and combine fixed-point values without rounding or signed overflow.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Compare and combine fixed-point values without rounding or signed overflow.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "umicom/finance/decimal.h"
@@ -134,4 +141,46 @@ UmiStatus UmiDecimalSubtractExact(UmiDecimal left, UmiDecimal right, UmiDecimal 
     difference.scale = scale;
     *out = difference;
     return UMI_STATUS_OK;
+}
+
+static bool RemoveProductFactor(uint64_t *left, uint64_t *right, uint64_t factor)
+{
+    if (*left % factor == 0U) {
+        *left /= factor;
+        return true;
+    }
+    if (*right % factor == 0U) {
+        *right /= factor;
+        return true;
+    }
+    return false;
+}
+
+UmiStatus UmiDecimalMultiplyExact(UmiDecimal left, UmiDecimal right, uint8_t targetScale,
+    UmiDecimal *out)
+{
+    if (out == NULL || left.scale > 9U || right.scale > 9U || targetScale > 9U)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    uint64_t first = DecimalMagnitude(left.coefficient);
+    uint64_t second = DecimalMagnitude(right.coefficient);
+    unsigned scale = (unsigned)left.scale + (unsigned)right.scale;
+    /* A decimal place is a factor of two and a factor of five. Cancel them
+     * across either coefficient before multiplying, so an oversized raw
+     * product can still produce an exact in-range amount. */
+    while (scale > targetScale) {
+        if (!RemoveProductFactor(&first, &second, 2U) ||
+            !RemoveProductFactor(&first, &second, 5U))
+            return UMI_STATUS_CAPACITY_EXCEEDED;
+        --scale;
+    }
+    const bool negative = (left.coefficient < 0) != (right.coefficient < 0);
+    const uint64_t limit = (uint64_t)INT64_MAX + (negative ? UINT64_C(1) : UINT64_C(0));
+    if (first != 0U && second > limit / first) return UMI_STATUS_CAPACITY_EXCEEDED;
+    const uint64_t magnitude = first * second;
+    const int64_t coefficient = negative
+        ? (magnitude == (uint64_t)INT64_MAX + UINT64_C(1) ? INT64_MIN : -(int64_t)magnitude)
+        : (int64_t)magnitude;
+    /* With the unnecessary decimal places already cancelled, rescaling can
+     * only add zeros. Reuse its checked range and publication rules. */
+    return umi_decimal_rescale((UmiDecimal){coefficient, (uint8_t)scale}, targetScale, out);
 }

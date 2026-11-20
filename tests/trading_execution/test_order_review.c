@@ -1,9 +1,16 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: tests/trading_execution/test_order_review.c
- * PURPOSE: Verify atomic browsing and cancellation against the reviewed order version.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Verify atomic browsing and cancellation against the reviewed order version.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 
 #include "order_review_fixture.h"
@@ -41,6 +48,15 @@ int main(int argc, char **argv)
         CHECK(UmiTradingWorkspaceReviewOrder(f.workspace, f.first, review) == UMI_STATUS_OK && review->can_cancel);
         CHECK(UmiTradingUiControllerCancelReviewedOrder(&f.controller, f.first, review->order.version) == UMI_STATUS_OK);
         CHECK(UmiTradingWorkspaceReviewOrder(f.workspace, f.first, review) == UMI_STATUS_OK && review->order.status == UMI_ORDER_CANCELLED);
+        /* A retained cancellation has no second UI action. A caller that
+         * acknowledges the same current result still gets idempotent success. */
+        CHECK(!review->can_cancel);
+        CHECK(umi_trading_workspace_snapshot(f.workspace, &after) == UMI_STATUS_OK && !after.can_cancel_order);
+        const uint64_t cancelled_version = review->order.version;
+        const uint64_t cancelled_revision = after.revision;
+        CHECK(UmiTradingWorkspaceCancelReviewedOrder(f.workspace, f.first, cancelled_version) == UMI_STATUS_OK);
+        CHECK(UmiTradingWorkspaceReviewOrder(f.workspace, f.first, review) == UMI_STATUS_OK);
+        CHECK(review->order.version == cancelled_version && review->workspace_revision == cancelled_revision);
         CHECK(UmiTradingWorkspaceReviewOrder(f.workspace, f.second, review) == UMI_STATUS_OK && review->order.status != UMI_ORDER_CANCELLED);
     } else if (strcmp(argv[1], "stale-fill") == 0) {
         CHECK(UmiTradingWorkspaceReviewOrder(f.workspace, f.second, review) == UMI_STATUS_OK);
@@ -52,6 +68,10 @@ int main(int argc, char **argv)
         CHECK(UmiTradingWorkspaceReviewOrder(f.workspace, f.second, review) == UMI_STATUS_OK && review->execution_count == 1U);
         CHECK(review->order.filled_quantity == 1.0 && strcmp(review->executions[0].execution_id.value, "review-fill") == 0);
         CHECK(UmiTradingWorkspaceCancelReviewedOrder(f.workspace, f.second, review->order.version) == UMI_STATUS_OK);
+        /* Partial fill quantity remains part of the receipt after cancellation. */
+        CHECK(UmiTradingWorkspaceReviewOrder(f.workspace, f.second, review) == UMI_STATUS_OK);
+        CHECK(review->order.status == UMI_ORDER_CANCELLED && !review->can_cancel &&
+            review->order.filled_quantity == 1.0 && review->execution_count == 1U);
     } else if (strcmp(argv[1], "hidden") == 0) {
         CHECK(UmiTradingWorkspaceReviewOrder(f.workspace, f.second, review) == UMI_STATUS_OK);
         uint64_t version = review->order.version;

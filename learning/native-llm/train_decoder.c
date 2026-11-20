@@ -1,5 +1,6 @@
 /*-----------------------------------------------------------------------------
- * Umicom Framework | learning/native-llm/train_decoder.c
+ * Umicom Framework
+ * File: learning/native-llm/train_decoder.c
  *
  * PURPOSE:
  *   Demonstrate a complete native decoder: token + learned position lookup,
@@ -19,18 +20,21 @@
  *   With a filename, save NEW only, refusing an existing checkpoint.
  *
  * AUTHOR AND ORGANISATION:
- *   Sammy Hegab | Umicom Foundation
- * LICENCE: MIT
- *---------------------------------------------------------------------------
- * File: learning/native-llm/train_decoder.c
- */
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/decoder.h"
 #include "umicom/ai/training/dataset_split.h"
 #include "umicom/ai/training/checkpoint.h"
+#include <inttypes.h>
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #define REQUIRE(call) do { \
     UmiStatus result = (call); \
@@ -53,6 +57,8 @@ int main(int argc, char **argv)
     size_t checkpointSize = 0U, written = 0U;
     uint8_t *snapshot = NULL;
     const char *const names[4] = {"Umicom", "C23", "Calypso", "Framework"};
+    float heldOutLogits[(sizeof evalInputs / sizeof evalInputs[0]) * (sizeof names / sizeof names[0])];
+    float restoredLogits[sizeof heldOutLogits / sizeof heldOutLogits[0]], restoredLoss = 0.0F;
     if (argc > 2) { fputs("usage: decoder-demo [new_checkpoint_file]\n", stderr); return 2; }
     REQUIRE(UmiAiTrainingDecoderCreate(&config, &model));
     REQUIRE(UmiAiTrainingSplitSequences(12U, 3U, UINT64_C(321), order, 12U));
@@ -88,6 +94,10 @@ int main(int argc, char **argv)
     REQUIRE(UmiAiTrainingDecoderPredictNext(model, prefix, 2U, &predicted));
     printf("greedy next token after '%s %s': '%s'\n",
            names[prefix[0]], names[prefix[1]], names[predicted]);
+    /* One greedy token can conceal a changed distribution. Capture every
+     * held-out logit through the same Framework decoder used in inference. */
+    REQUIRE(UmiAiTrainingDecoderLogits(model, evalInputs, sizeof evalInputs / sizeof evalInputs[0],
+        heldOutLogits, sizeof heldOutLogits / sizeof heldOutLogits[0]));
 
     if (argc == 2) {
         REQUIRE(UmiAiTrainingDecoderCheckpointSaveNewFile(model, argv[1]));
@@ -118,6 +128,29 @@ int main(int argc, char **argv)
         UmiAiTrainingDecoderDestroy(reloaded);
         return 1;
     }
+    UmiAiTrainingDecoderConfig restoredConfig;
+    uint64_t steps = 0U;
+    REQUIRE(UmiAiTrainingDecoderInspect(reloaded, &restoredConfig, &steps));
+    REQUIRE(UmiAiTrainingDecoderLogits(reloaded, evalInputs, sizeof evalInputs / sizeof evalInputs[0],
+        restoredLogits, sizeof restoredLogits / sizeof restoredLogits[0]));
+    REQUIRE(UmiAiTrainingDecoderEvaluate(reloaded, evalInputs, evalTargets,
+        sizeof evalInputs / sizeof evalInputs[0], &restoredLoss));
+    if (steps != UINT64_C(420) ||
+        config.vocabularySize != restoredConfig.vocabularySize ||
+        config.contextLength != restoredConfig.contextLength ||
+        config.channels != restoredConfig.channels ||
+        config.hiddenChannels != restoredConfig.hiddenChannels ||
+        config.attentionHeads != restoredConfig.attentionHeads ||
+        config.initialSeed != restoredConfig.initialSeed ||
+        memcmp(&lastEval, &restoredLoss, sizeof lastEval) != 0 ||
+        memcmp(heldOutLogits, restoredLogits, sizeof heldOutLogits) != 0) {
+        fputs("checkpoint roundtrip changed model identity or held-out scores\n", stderr);
+        UmiAiTrainingDecoderDestroy(model);
+        UmiAiTrainingDecoderDestroy(reloaded);
+        return 1;
+    }
+    printf("trained_steps=%" PRIu64 " heldout_logits=%zu parity=exact\n",
+        steps, sizeof heldOutLogits / sizeof heldOutLogits[0]);
     UmiAiTrainingDecoderDestroy(model);
     UmiAiTrainingDecoderDestroy(reloaded);
     puts("Checkpoint reloaded; prediction identical. No expert-model claim.");

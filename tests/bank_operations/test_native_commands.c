@@ -14,6 +14,7 @@
  *---------------------------------------------------------------------------*/
 
 #include "umicom/bank_operations/operations.h"
+#include "umicom/ui/gtk4/path_picker.h"
 #include <gtk/gtk.h>
 #include <stdio.h>
 #include <string.h>
@@ -31,7 +32,9 @@ static int IsolatedDirectory(const char *directory, int mode)
 }
 #endif
 static unsigned OpenCalls;
+static unsigned ExistingOpenCalls;
 static bool FailOpen;
+static UmiStatus SimulatedSelection = UMI_STATUS_NOT_FOUND;
 static char *OpenedPath;
 static UmiStatus IsolatedOpen(const char *filename, UmiBankOperations **out)
 {
@@ -41,11 +44,34 @@ static UmiStatus IsolatedOpen(const char *filename, UmiBankOperations **out)
     if (FailOpen) { *out = NULL; return UMI_STATUS_IO_ERROR; }
     return UmiBankOperationsOpenMemory(out);
 }
+/* Keep separate receiver counts so an existing-only refusal can never hide an
+ * accidental call to the legacy create-or-open route. The fixture writes no files. */
+static UmiStatus IsolatedOpenExisting(const char *filename, UmiBankOperations **out)
+{
+    ++ExistingOpenCalls;
+    return IsolatedOpen(filename, out);
+}
+
+/* GTK picker regressions cover native mode publication. Inject its two relevant
+ * outcomes here while the real Bank launcher and command widgets run. */
+static UmiStatus IsolatedReadSelectedMode(GtkEntry *entry, UmiPathPickerMode *out_mode)
+{
+    if (SimulatedSelection == UMI_STATUS_BUSY) return UMI_STATUS_BUSY;
+    if (SimulatedSelection == UMI_STATUS_OK) {
+        *out_mode = UMI_PATH_PICKER_EXISTING_FILE;
+        return UMI_STATUS_OK;
+    }
+    return UmiPathPickerGtk4ReadSelectedMode(entry, out_mode);
+}
 #if 0 /* Retained automatic-directory boundary; no longer used. */
 #define g_mkdir_with_parents IsolatedDirectory
 #endif
 #define UmiBankOperationsOpenSqlite IsolatedOpen
+#define UmiBankOperationsOpenExistingSqlite IsolatedOpenExisting
+#define UmiPathPickerGtk4ReadSelectedMode IsolatedReadSelectedMode
 #include "../../adapters/gtk4/bank_operations_gtk4.c"
+#undef UmiPathPickerGtk4ReadSelectedMode
+#undef UmiBankOperationsOpenExistingSqlite
 #undef UmiBankOperationsOpenSqlite
 #undef g_mkdir_with_parents
 
@@ -92,6 +118,25 @@ int main(int argc, char **argv)
     CHECK(UmiGtk4BankOperationsLauncherSetPath(bar, "https://example.invalid/bank") == UMI_STATUS_INVALID_ARGUMENT);
     const char invalidUtf8[] = {(char)0xff, '\0'};
     CHECK(UmiGtk4BankOperationsLauncherSetPath(bar, invalidUtf8) == UMI_STATUS_INVALID_ARGUMENT);
+    const bool selected_existing = strcmp(argv[1], "existing-selection") == 0 ||
+                                   strcmp(argv[1], "chooser-publishing") == 0;
+    if (selected_existing) {
+        BankLauncher *pending = g_object_get_data(G_OBJECT(button), "umicom-bank-launcher");
+        CHECK(pending != NULL && pending->window == NULL);
+        if (strcmp(argv[1], "chooser-publishing") == 0) {
+            SimulatedSelection = UMI_STATUS_BUSY;
+            g_signal_emit_by_name(button, "clicked");
+            CHECK(OpenCalls == 0U && ExistingOpenCalls == 0U && pending->window == NULL);
+        }
+        /* A vanished or rejected existing file must not start another factory.
+         * The unchanged selection can be opened after its path is restored. */
+        SimulatedSelection = UMI_STATUS_OK;
+        FailOpen = true;
+        g_signal_emit_by_name(button, "clicked");
+        CHECK(OpenCalls == 1U && ExistingOpenCalls == 1U && pending->window == NULL);
+        CHECK(strcmp(OpenedPath, chosen) == 0);
+        FailOpen = false;
+    }
     if (strcmp(argv[1], "open-retry") == 0) {
         FailOpen = true;
         g_signal_emit_by_name(button, "clicked");
@@ -102,6 +147,7 @@ int main(int argc, char **argv)
     unsigned beforeOpen = OpenCalls;
     g_signal_emit_by_name(button, "clicked");
     CHECK(OpenCalls == beforeOpen + 1U && strcmp(OpenedPath, chosen) == 0);
+    CHECK(ExistingOpenCalls == (selected_existing ? 2U : 0U));
     g_free(chosen);
     BankLauncher *launcher = g_object_get_data(G_OBJECT(button), "umicom-bank-launcher");
     CHECK(launcher != NULL && launcher->window != NULL);
@@ -111,7 +157,7 @@ int main(int argc, char **argv)
     UmiBankCounts counts;
     CHECK(UmiBankOperationsCounts(ui->operations, &counts) == UMI_STATUS_OK);
     CHECK(counts.customers == 0U && counts.revision == 0U && !counts.durable);
-    if (strcmp(argv[1], "storage-selection") == 0 || strcmp(argv[1], "open-retry") == 0) {
+    if (selected_existing || strcmp(argv[1], "storage-selection") == 0 || strcmp(argv[1], "open-retry") == 0) {
         unsigned previousCalls = OpenCalls;
         char *original = g_strdup(ui->path);
         CHECK(UmiGtk4BankOperationsLauncherSetPath(bar, "") == UMI_STATUS_OK);

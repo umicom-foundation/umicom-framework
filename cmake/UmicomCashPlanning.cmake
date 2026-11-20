@@ -9,6 +9,7 @@ add_library(umicom_cash_planning STATIC
     "${CMAKE_CURRENT_LIST_DIR}/../src/cash_planning/plan.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/cash_planning/date.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/cash_planning/forecast.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/cash_planning/portfolio.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/cash_planning/comparison.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/cash_planning/document.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/cash_planning/report.c"
@@ -38,6 +39,21 @@ if(TARGET umicom_ui_gtk4)
     install(FILES "${CMAKE_CURRENT_LIST_DIR}/../include/umicom/ui/gtk4/cash_plan.h" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/umicom/ui/gtk4 COMPONENT Framework)
 endif()
 if(BUILD_TESTING)
+    # Portfolio cases exercise multiple existing plan owners without UI or FX.
+    add_executable(umicom-cash-plan-portfolio-test "${CMAKE_CURRENT_LIST_DIR}/../tests/cash_planning/test_portfolio.c")
+    target_link_libraries(umicom-cash-plan-portfolio-test PRIVATE Umicom::cash_planning)
+    set_target_properties(umicom-cash-plan-portfolio-test PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
+    umicom_apply_warnings(umicom-cash-plan-portfolio-test)
+    umicom_apply_sanitizers(umicom-cash-plan-portfolio-test)
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-cash-plan-portfolio-test)
+    endif()
+    foreach(case IN ITEMS groups reordered revisions one disabled negative duplicate different-start different-end
+        projection-overflow group-overflow maximum reopened capacity null)
+        add_test(NAME framework.cash_planning.portfolio.${case} COMMAND umicom-cash-plan-portfolio-test ${case})
+        set_tests_properties(framework.cash_planning.portfolio.${case} PROPERTIES TIMEOUT 30
+            LABELS "framework;cash-planning;finance;regression")
+    endforeach()
     # Portable comparisons use the exported cash owner; native review exercises
     # the existing control path separately without adding product-specific math.
     add_executable(umicom-cash-plan-comparison-test "${CMAKE_CURRENT_LIST_DIR}/../tests/cash_planning/test_comparison.c")

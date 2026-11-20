@@ -1,11 +1,24 @@
 /*-----------------------------------------------------------------------------
  * Umicom Framework
  * File: src/creative_workspace/brand_assets.c
- * PURPOSE: Embed the supplied Umicom logo and icon in self-contained creative exports.
- * AUTHOR AND ORGANISATION: Sammy Hegab, Umicom Foundation
- * LICENCE: MIT
+ *
+ * PURPOSE:
+ *   Embed the supplied Umicom logo and icon in self-contained creative exports.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "internal.h"
+#include "umicom/base/base64.h"
+#include "umicom_creative_brand_resources.h"
+
+/* The original document embeds use raster copies. Keep them for review while
+ * the active writer embeds the approved source SVG wordmark and ICO. */
+#if 0
 static const char * const LogoParts[] = {
     "iVBORw0KGgoAAAANSUhEUgAAAMoAAAA3CAYAAABNadVvAAAMwklEQVR4nO2df0zTZx7H3zsuJZlSKCCmjIIiqGC5rNDRHU3NCSwCyyp4CuocAaLAMsMSlbmMc0acNzfQ5QhmwDxdmFMEThjLECM/FghkOKCXs0MniJNuMj2hQtldIDF3f0BL+/1+2+/TFuSHz+svePr0eT4lffN8fj3tcx4bVP8DhUKxye/m2wAKZTFAhUKhEECFQqEQQIVCoRBAhUKhEECFQqEQ8NSEolaGIz1+o+n3GKUC4dKQp7U9heIUv5/rDdZJxEiP3wgvdzf8qBsyjYvchYhRKhCjVKBHexNN7Z1zbQqF4jBzJhQvdzekx2/EOonYNOYtXG762UPoBmBGMOHSEPzjSiMGBn+eK5MoFIeZE6Gkx29ElHQta9zL3c3qc0TuQuzZsdV0uuhHx+bCNArFIWZVKFHStVBHyWwKgo9waQhWS15Aj/YmerQ3qWAoC4JZEco6iRivKcMt3CwuhkcNROuZu2M0fqEsBJ5ztiny4I5XeQVipLDiG1NAL3IX4s/xsQj09+N9nn50jAqGEzESszOwMyoIPhhBV+N5FJVroJtvs5YgDgtFrQzHa1HhRHM7tLdx7kor52OB/n6IjookFkxTeyd6tDftsnWpknW6DocVy81GJtFXdwSb8uk/lNnGbqHYE4ecu9KKDu1tAICnSARPkQj9AwOcc8OlIYhRKiByF/KuSwUDANlo6EyG1IUxbNDg2KYDKJ0Xm5YuxDGKWhmOqA3BRAJhniBBgYHYl5WJ/oEBFJeWcT6nR3sTd3W/mARjC5G7ENsSXnnGazDL4coUCQC4eSLoqduy9OEVClc9xBo/6obwdXuPKQ7xFImwK3k7ggIDTb/bwvykIBWM8RSqrr/Ga9/Sogk/6BIQLLEcnbjzA2rnxZ6lDa9Q1FEyomzWuSutFpX3",
     "uFdiERcbazGPTyhG7BXMaskLROsuLTTYl3cWwhPJiPadilPG7nfibwcL0T7Pli1FiE4UW3zd0YO69h7T754iEfZlZVoVhadIhBG9nsg4c8HYypCJ3IUQuQufvZpL73mkqs/PtxXPBLxCMW87MadDext1HRpTbcRTJEKkPIJ1ijAhFYk5+tExnKm4bKrecwX8z6RQKE8NuwuOzDgE4HazuLje1W3vdhaES0OsZsXsEUlWSR0Oyxn/AH6qh9+2Qtbcgupm7FxlOTbWVYLQ7MqZgV0n0btfBgvLprNP9fJk5OyJx6t/CIBQMP3Yk0mM6X7AN1WfIvdS/9RYaALeSU9AoiwI/h6CmXmP7qG5vAD7jPN4XgfLNgaSzRl4f7sK8jVirHATzDwwOY7BXg1q677Ax3XsvbjWOZSkgnKdGMLnBTOJhSeTmDAMQ9vbiZqSInzea22Fg2jpSkCwxdg9XJSnIzc0Ae+kb8FOecCMjdN/i/avK5Ff0jRVK5LIkJW6GzuiguHvPZPcmHh8D+3155F3qmnWakq8Qnk0Nm5yv8zTvQA7WLfF9a5uXKiqcsjIQH8/7Nmx1aHnzieSE1/i21gxXJkPuAggXCXDztxiyNcdwbHHb+Dk66FYwcxiuQggXBmMxNxibFjnZH1EEoMPjr+NtFBuDwGC5fB/UYWcF1XYqa7EgT0laHZkHRcBXD3EiIhKRERUAjI7ziMz5zy0hGZ65BRDY+NvEb8nD/IwL7zRsgFl+1XwF7DXcPUIQPSuPNSt8YL6rcpZEQuvUIZHDeiYDtaNkLpZwJSrdaGyymr9xBak1fuBwZ8XntvlJkMa759HgGD1hyjnXUyAYHUuyv+5Dal1DtgiScalM9lQepFNX/FiMopLRrA5m/Ems3MdQAD/qAxUXvDEvl1F3MKzIADxqQT2KbLRYDu/Mz0vA5/tb0PcqSH+yTzwCoVZUSd1s5wR",
@@ -29,5 +42,32 @@ void UmiCreativeWriterBrandIcon(UmiCreativeWriter * writer)
 {
     UmiCreativeWriterText(writer, "data:image/png;base64,");
     for (size_t i = 0U;i < sizeof(IconParts) / sizeof(IconParts[0]); ++ i)UmiCreativeWriterText(writer, IconParts[i]);
+}
+#endif
+
+/* Write into the export's bounded buffer, which owns one extra NUL byte.
+ * Recording a failure here prevents the caller from saving a partial page. */
+static void AppendBrandData(UmiCreativeWriter *writer, const char *mediaPrefix,
+    const unsigned char *asset, size_t length)
+{
+    UmiCreativeWriterText(writer, mediaPrefix);
+    if (writer->status != UMI_STATUS_OK) return;
+    size_t written = 0U;
+    writer->status = UmiBase64Encode(asset, length,
+        (char *)writer->bytes + writer->size, writer->capacity - writer->size + 1U,
+        &written);
+    if (writer->status == UMI_STATUS_OK) writer->size += written;
+}
+
+void UmiCreativeWriterBrandLogo(UmiCreativeWriter *writer)
+{
+    AppendBrandData(writer, "data:image/svg+xml;base64,", CreativeBrandWordmark,
+        sizeof(CreativeBrandWordmark));
+}
+
+void UmiCreativeWriterBrandIcon(UmiCreativeWriter *writer)
+{
+    AppendBrandData(writer, "data:image/vnd.microsoft.icon;base64,", CreativeBrandIcon,
+        sizeof(CreativeBrandIcon));
 }
 

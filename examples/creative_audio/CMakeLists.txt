@@ -52,7 +52,12 @@ foreach(target umicom_audio_support umicom_data umicom_media_engine)
     umicom_apply_sanitizers(${target})
     install(TARGETS ${target} EXPORT UmicomFrameworkTargets ARCHIVE DESTINATION "${CMAKE_INSTALL_LIBDIR}")
 endforeach()
+# The tutorial publishes the small audio/creative subset against its own
+# data and media targets. Full Framework supplies provider and media tools
+# through its normal composition.
+set(_umicom_creative_audio_tutorial TRUE)
 include("${UMICOM_FRAMEWORK_SOURCE}/cmake/UmicomCreativeWorkspace.cmake")
+unset(_umicom_creative_audio_tutorial)
 foreach(path base data media)
     install(DIRECTORY "${UMICOM_FRAMEWORK_SOURCE}/include/umicom/${path}"
         DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}/umicom")

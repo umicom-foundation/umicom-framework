@@ -57,7 +57,8 @@ size_t UmiEventCalendarCount(const UmiEventCalendar *calendar);
 const UmiCalendarEvent *UmiEventCalendarAt(const UmiEventCalendar *calendar, size_t index);
 /* Blank dates/country/currency/search impose no restriction. Search is an
  * ASCII-case-insensitive substring over title, symbol, venue and source;
- * non-ASCII bytes compare exactly. Country/currency are uppercase codes.
+ * valid non-ASCII UTF-8 bytes compare exactly. Malformed UTF-8 is refused
+ * before any results are written. Country/currency are uppercase codes.
  * Checked filters never infer an instrument identity or trading permission. */
 UmiStatus UmiEventCalendarFilterValidate(const UmiEventCalendarFilter *filter);
 /* Page over matching rows without partial publication. total counts all

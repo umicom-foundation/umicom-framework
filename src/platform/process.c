@@ -47,6 +47,29 @@
 #include <unistd.h>
 #endif
 
+#define UMI_PROCESS_PIPE_CHUNK 4096U
+_Static_assert(UMI_PROCESS_PIPE_CHUNK < UMI_PROCESS_OUTPUT_CAPACITY,
+    "A native pipe chunk must fit in the diagnostic tail");
+
+typedef struct UmiProcessChannelCapture {
+    UmiProcessChannelObserver observer;
+    void *context;
+} UmiProcessChannelCapture;
+
+/* Preserve the bytes and their source before the shared diagnostic tail can
+ * rotate. Only the opt-in two-pipe path installs these channel callbacks. */
+static void ObserveStdout(const char *bytes, size_t length, void *context)
+{
+    const UmiProcessChannelCapture *capture = context;
+    capture->observer(UMI_PROCESS_OUTPUT_STDOUT, bytes, length, capture->context);
+}
+
+static void ObserveStderr(const char *bytes, size_t length, void *context)
+{
+    const UmiProcessChannelCapture *capture = context;
+    capture->observer(UMI_PROCESS_OUTPUT_STDERR, bytes, length, capture->context);
+}
+
 /*
  * Initialise process result from caller-provided values so later operations receive a
  * known state.
@@ -75,7 +98,7 @@ static void append_output(UmiProcessResult *result,
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
      */
-    if (result == NULL || bytes == NULL || count == 0U) return;
+    if (result == NULL || bytes == NULL || count == 0U || count > UMI_PROCESS_PIPE_CHUNK) return;
 
     /*
      * Compiler and test failures are normally printed at the end of a child
@@ -84,13 +107,16 @@ static void append_output(UmiProcessResult *result,
      * diagnostic behind the unhelpful text "Internal error".
      */
     capacity = sizeof(result->output) - 1U;
-    /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+    /* Retain the former large-span path for review. Both callers now share
+     * one bounded native pipe chunk, which always fits the diagnostic tail. */
+#if 0
     if (count >= capacity) {
         (void)memcpy(result->output, bytes + (count - capacity), capacity);
         result->output[capacity] = '\0';
         result->output_truncated = 1;
         return;
     }
+#endif
 
     used = strlen(result->output);
     /* Keep the operation inside its valid bounds before reading, writing or adding data. */
@@ -141,11 +167,16 @@ static uint64_t monotonic_milliseconds(void)
  * Provide the drain windows pipe operation used by this module and its client
  * applications.
  */
+/* Retained for review. The former drain treated read failure like the end of
+ * output. The active drain preserves native read errors so a tagged test
+ * cannot accept incomplete output, while legacy callers retain their
+ * best-effort diagnostic-tail behavior. */
+#if 0
 static void drain_windows_pipe(HANDLE read_pipe, UmiProcessResult *result,
     UmiProcessResultObserver observer, UmiProcessOutputObserver rawObserver, void *context)
 {
     DWORD available = 0U;
-    char chunk[4096];
+    char chunk[UMI_PROCESS_PIPE_CHUNK];
     /*
      * Protect caller-owned memory by checking that required state is available before it is
      * used.
@@ -169,11 +200,77 @@ static void drain_windows_pipe(HANDLE read_pipe, UmiProcessResult *result,
                       NULL) || read_count == 0U) {
             break;
         }
+        /* Keep the available storage bound visible at the observer boundary.
+         * ReadFile cannot normally return more bytes than it was given. */
+        if (read_count > (DWORD)sizeof(chunk)) break;
         if (rawObserver != NULL) rawObserver(chunk, (size_t)read_count, context);
         append_output(result, chunk, (size_t)read_count);
         /* Publish only between appends, while this thread owns the result. */
         if (observer != NULL) observer(result, context);
     }
+}
+#endif
+
+static UmiStatus drain_windows_pipe(HANDLE read_pipe, UmiProcessResult *result,
+    UmiProcessResultObserver observer, UmiProcessOutputObserver rawObserver, void *context)
+{
+    DWORD available = 0U;
+    char chunk[UMI_PROCESS_PIPE_CHUNK];
+    /*
+     * Protect caller-owned memory by checking that required state is available before it is
+     * used.
+     */
+    if (read_pipe == NULL) return UMI_STATUS_OK;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (size_t chunks = 0U; chunks < 64U; ++chunks) {
+        DWORD read_count = 0U;
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (!PeekNamedPipe(read_pipe, NULL, 0U, NULL, &available, NULL)) {
+            /* A closed writer is a normal end of stream. Tagged comparisons
+             * need every other native read failure to remain observable. */
+            DWORD error = GetLastError();
+            return (error == ERROR_BROKEN_PIPE || error == ERROR_PIPE_NOT_CONNECTED) ?
+                UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
+        }
+        if (available == 0U) break;
+        /* Apply this branch only when its contract condition is satisfied. */
+        if (!ReadFile(read_pipe,
+                      chunk,
+                      available < (DWORD)sizeof(chunk)
+                          ? available
+                          : (DWORD)sizeof(chunk),
+                      &read_count,
+                      NULL)) {
+            DWORD error = GetLastError();
+            return (error == ERROR_BROKEN_PIPE || error == ERROR_PIPE_NOT_CONNECTED) ?
+                UMI_STATUS_OK : UMI_STATUS_IO_ERROR;
+        }
+        if (read_count == 0U) break;
+        /* Keep the available storage bound visible at the observer boundary.
+         * ReadFile cannot normally return more bytes than it was given. */
+        if (read_count > (DWORD)sizeof(chunk)) return UMI_STATUS_IO_ERROR;
+        if (rawObserver != NULL) rawObserver(chunk, (size_t)read_count, context);
+        append_output(result, chunk, (size_t)read_count);
+        /* Publish only between appends, while this thread owns the result. */
+        if (observer != NULL) observer(result, context);
+    }
+    return UMI_STATUS_OK;
+}
+
+static UmiStatus DrainWindowsCapture(HANDLE outPipe, HANDLE errPipe, UmiProcessResult *result,
+    UmiProcessResultObserver observer, UmiProcessOutputObserver rawObserver, void *context,
+    UmiProcessChannelCapture *channels)
+{
+    /* A bounded drain per pipe gives both streams a chance to make progress,
+     * even when one carries substantially more bytes than the other. */
+    if (channels != NULL) {
+        UmiStatus normal = drain_windows_pipe(outPipe, result, NULL, ObserveStdout, channels);
+        UmiStatus diagnostic = drain_windows_pipe(errPipe, result, NULL, ObserveStderr, channels);
+        return normal != UMI_STATUS_OK ? normal : diagnostic;
+    }
+    /* Keep the legacy tail's best-effort capture and return behavior. */
+    (void)drain_windows_pipe(outPipe, result, observer, rawObserver, context);
+    return UMI_STATUS_OK;
 }
 
 /*
@@ -198,7 +295,8 @@ static UmiStatus umi_process_execute_windows(const UmiProcessRequest *request,
                                               UmiProcessResult *result,
                                               UmiProcessResultObserver observer, UmiProcessOutputObserver rawObserver,
                                               void *context, UmiProcessLifetime lifetime,
-                                              UmiProcessNativeObserver nativeObserver)
+                                              UmiProcessNativeObserver nativeObserver,
+                                              UmiProcessChannelCapture *channels)
 {
     const size_t utf8Capacity = 4U * 32767U + 1U;
     char *command_line = malloc(utf8Capacity);
@@ -208,6 +306,7 @@ static UmiStatus umi_process_execute_windows(const UmiProcessRequest *request,
     PROCESS_INFORMATION process;
     SECURITY_ATTRIBUTES security;
     HANDLE read_pipe = NULL, write_pipe = NULL, job = NULL;
+    HANDLE errRead = NULL, errWrite = NULL;
     HANDLE inherited[3] = {NULL, NULL, NULL};
     HANDLE standardCopies[3] = {NULL, NULL, NULL};
     size_t inheritedCount = 0U;
@@ -241,6 +340,12 @@ static UmiStatus umi_process_execute_windows(const UmiProcessRequest *request,
             !SetHandleInformation(read_pipe, HANDLE_FLAG_INHERIT, 0U)) {
             status = UMI_STATUS_IO_ERROR; goto cleanup;
         }
+        /* Split capture uses the same three-entry allowlist: two write ends
+         * plus the owned stdin copy. The child never inherits either read end. */
+        if (channels != NULL && (!CreatePipe(&errRead, &errWrite, &security, 0U) ||
+            !SetHandleInformation(errRead, HANDLE_FLAG_INHERIT, 0U))) {
+            status = UMI_STATUS_IO_ERROR; goto cleanup;
+        }
         standardCopies[0] = UmiWindowsStandardHandle(STD_INPUT_HANDLE, 1, &security);
         if (!request->capture_stdout)
             standardCopies[1] = UmiWindowsStandardHandle(STD_OUTPUT_HANDLE, 0, &security);
@@ -249,9 +354,11 @@ static UmiStatus umi_process_execute_windows(const UmiProcessRequest *request,
         startup.StartupInfo.hStdInput = standardCopies[0];
         startup.StartupInfo.hStdOutput = request->capture_stdout ? write_pipe : standardCopies[1];
         startup.StartupInfo.hStdError = request->capture_stderr ? write_pipe : standardCopies[2];
+        if (errWrite != NULL) startup.StartupInfo.hStdError = errWrite;
         if (startup.StartupInfo.hStdInput == NULL || startup.StartupInfo.hStdOutput == NULL ||
             startup.StartupInfo.hStdError == NULL) { status = UMI_STATUS_IO_ERROR; goto cleanup; }
         inherited[inheritedCount++] = write_pipe;
+        if (errWrite != NULL) inherited[inheritedCount++] = errWrite;
         for (size_t i = 0U; i < 3U; ++i)
             if (standardCopies[i] != NULL) inherited[inheritedCount++] = standardCopies[i];
         SIZE_T attributeBytes = 0U;
@@ -297,6 +404,7 @@ static UmiStatus umi_process_execute_windows(const UmiProcessRequest *request,
         goto cleanup;
     }
     if (write_pipe != NULL) { (void)CloseHandle(write_pipe); write_pipe = NULL; }
+    if (errWrite != NULL) { (void)CloseHandle(errWrite); errWrite = NULL; }
     if (job != NULL && (!AssignProcessToJobObject(job, process.hProcess) ||
                        ResumeThread(process.hThread) == (DWORD)-1)) {
         (void)TerminateProcess(process.hProcess, 126U);
@@ -311,7 +419,10 @@ static UmiStatus umi_process_execute_windows(const UmiProcessRequest *request,
     if (observer != NULL) observer(result, context);
     if (poll_interval > 100U) poll_interval = 100U;
     for (;;) {
-        drain_windows_pipe(read_pipe, result, observer, rawObserver, context);
+        /* The shared drain retains the former one-pipe behavior for legacy
+         * callers and alternates native pipe reads for tagged captures. */
+        status = DrainWindowsCapture(read_pipe, errRead, result, observer, rawObserver, context, channels);
+        if (status != UMI_STATUS_OK) break;
         DWORD waited = WaitForSingleObject(process.hProcess, (DWORD)poll_interval);
         if (waited == WAIT_OBJECT_0) break;
         if (waited == WAIT_FAILED) { status = UMI_STATUS_IO_ERROR; break; }
@@ -343,7 +454,9 @@ static UmiStatus umi_process_execute_windows(const UmiProcessRequest *request,
         if (!TerminateJobObject(job, 0U)) status = UMI_STATUS_IO_ERROR;
         (void)CloseHandle(job); job = NULL;
     }
-    drain_windows_pipe(read_pipe, result, observer, rawObserver, context);
+    /* Read the last buffered bytes after the owned process and job have ended. */
+    UmiStatus captured = DrainWindowsCapture(read_pipe, errRead, result, observer, rawObserver, context, channels);
+    if (status == UMI_STATUS_OK) status = captured;
     result->exit_code = (int)exit_code;
     result->duration_ms = monotonic_milliseconds() - started;
     if (status == UMI_STATUS_OK && exit_code != 0U) status = UMI_STATUS_INTERNAL_ERROR;
@@ -363,6 +476,9 @@ cleanup:
     }
     if (read_pipe != NULL) (void)CloseHandle(read_pipe);
     if (write_pipe != NULL) (void)CloseHandle(write_pipe);
+    /* Release each independently created channel on both failure and exit. */
+    if (errRead != NULL) (void)CloseHandle(errRead);
+    if (errWrite != NULL) (void)CloseHandle(errWrite);
     for (size_t i = 0U; i < 3U; ++i) if (standardCopies[i] != NULL) (void)CloseHandle(standardCopies[i]);
     if (attributesInitialised) DeleteProcThreadAttributeList(startup.lpAttributeList);
     free(startup.lpAttributeList);
@@ -386,10 +502,15 @@ static uint64_t monotonic_milliseconds(void)
 }
 
 /* Provide the drain posix pipe operation used by this module and its client applications. */
+/* Retained for review. The former drain treated read failure like the end of
+ * output. The active drain preserves native read errors so a tagged test
+ * cannot accept incomplete output, while legacy callers retain their
+ * best-effort diagnostic-tail behavior. */
+#if 0
 static void drain_posix_pipe(int descriptor, UmiProcessResult *result,
     UmiProcessResultObserver observer, UmiProcessOutputObserver rawObserver, void *context)
 {
-    char chunk[4096];
+    char chunk[UMI_PROCESS_PIPE_CHUNK];
     ssize_t count;
     /* Apply this branch only when its contract condition is satisfied. */
     if (descriptor < 0) return;
@@ -412,6 +533,53 @@ static void drain_posix_pipe(int descriptor, UmiProcessResult *result,
         break;
     }
 }
+#endif
+
+static UmiStatus drain_posix_pipe(int descriptor, UmiProcessResult *result,
+    UmiProcessResultObserver observer, UmiProcessOutputObserver rawObserver, void *context)
+{
+    char chunk[UMI_PROCESS_PIPE_CHUNK];
+    ssize_t count;
+    /* Apply this branch only when its contract condition is satisfied. */
+    if (descriptor < 0) return UMI_STATUS_OK;
+    /* Visit each bounded item once so every record receives the same rule. */
+    for (size_t chunks = 0U; chunks < 64U; ++chunks) {
+        count = read(descriptor, chunk, sizeof(chunk));
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (count > 0) {
+            /* Keep the OS byte count within the buffer passed to read().
+             * This also makes the capture bound explicit to optimising compilers. */
+            if ((size_t)count > sizeof(chunk)) return UMI_STATUS_IO_ERROR;
+            if (rawObserver != NULL) rawObserver(chunk, (size_t)count, context);
+            append_output(result, chunk, (size_t)count);
+            /* Copying observers see a complete string, never an active append. */
+            if (observer != NULL) observer(result, context);
+            continue;
+        }
+        /* Keep the operation inside its valid bounds before reading, writing or adding data. */
+        if (count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) break;
+        if (count == 0) break;
+        /* Retry a signal-interrupted read. Tagged comparisons treat other
+         * native errors as capture failures even when both spans were empty. */
+        if (errno != EINTR) return UMI_STATUS_IO_ERROR;
+    }
+    return UMI_STATUS_OK;
+}
+
+static UmiStatus DrainPosixCapture(int outPipe, int errPipe, UmiProcessResult *result,
+    UmiProcessResultObserver observer, UmiProcessOutputObserver rawObserver, void *context,
+    UmiProcessChannelCapture *channels)
+{
+    /* Reuse bounded nonblocking reads and keep raw delivery separate from
+     * the display tail. Parallel pipes have no cross-channel time ordering. */
+    if (channels != NULL) {
+        UmiStatus normal = drain_posix_pipe(outPipe, result, NULL, ObserveStdout, channels);
+        UmiStatus diagnostic = drain_posix_pipe(errPipe, result, NULL, ObserveStderr, channels);
+        return normal != UMI_STATUS_OK ? normal : diagnostic;
+    }
+    (void)drain_posix_pipe(outPipe, result, observer, rawObserver, context);
+    return UMI_STATUS_OK;
+}
 
 /*
  * Provide the process execute posix operation used by this module and its client
@@ -422,10 +590,12 @@ static void drain_posix_pipe(int descriptor, UmiProcessResult *result,
 static UmiStatus umi_process_execute_posix(const UmiProcessRequest *request,
                                             UmiProcessResult *result,
                                             UmiProcessResultObserver observer, UmiProcessOutputObserver rawObserver,
-                                            void *context, UmiProcessLifetime lifetime)
+                                            void *context, UmiProcessLifetime lifetime,
+                                            UmiProcessChannelCapture *channels)
 {
     int pipe_descriptors[2] = {-1, -1};
     int errorPipe[2] = {-1, -1};
+    int stderrPipe[2] = {-1, -1};
     pid_t child;
     char *arguments[UMI_PROCESS_MAX_ARGUMENTS + 2U];
     int status_code = 0;
@@ -446,12 +616,15 @@ static UmiStatus umi_process_execute_posix(const UmiProcessRequest *request,
     terminal_status = UmiPosixLaunchPrepare(request, &launch);
     if (terminal_status != UMI_STATUS_OK) { UmiPosixLaunchClear(&launch); return terminal_status; }
     if (poll_interval > 100U) poll_interval = 100U;
+    /* The exec-status pipe stays separate from stdout and process stderr. */
     if (((request->capture_stdout || request->capture_stderr) && !UmiPosixPipe(pipe_descriptors)) ||
+        (channels != NULL && !UmiPosixPipe(stderrPipe)) ||
         !UmiPosixPipe(errorPipe)) {
         terminal_status = UMI_STATUS_IO_ERROR;
         goto cleanup;
     }
     if ((pipe_descriptors[0] >= 0 && fcntl(pipe_descriptors[0], F_SETFL, O_NONBLOCK) != 0) ||
+        (stderrPipe[0] >= 0 && fcntl(stderrPipe[0], F_SETFL, O_NONBLOCK) != 0) ||
         fcntl(errorPipe[0], F_SETFL, O_NONBLOCK) != 0) {
         terminal_status = UMI_STATUS_IO_ERROR;
         goto cleanup;
@@ -476,7 +649,13 @@ static UmiStatus umi_process_execute_posix(const UmiProcessRequest *request,
             (void)close(pipe_descriptors[0]);
             if (request->capture_stdout && dup2(pipe_descriptors[1], STDOUT_FILENO) < 0)
                 UmiPosixChildFail(errorPipe[1], errno);
-            if (request->capture_stderr && dup2(pipe_descriptors[1], STDERR_FILENO) < 0)
+            /* Redirect stderr independently only for the tagged invocation.
+             * The prior merged redirection remains the default. */
+            if (stderrPipe[1] >= 0) {
+                (void)close(stderrPipe[0]);
+                if (dup2(stderrPipe[1], STDERR_FILENO) < 0) UmiPosixChildFail(errorPipe[1], errno);
+                (void)close(stderrPipe[1]);
+            } else if (request->capture_stderr && dup2(pipe_descriptors[1], STDERR_FILENO) < 0)
                 UmiPosixChildFail(errorPipe[1], errno);
             (void)close(pipe_descriptors[1]);
         }
@@ -516,10 +695,14 @@ static UmiStatus umi_process_execute_posix(const UmiProcessRequest *request,
     if (observer != NULL) observer(result, context);
     (void)close(errorPipe[1]); errorPipe[1] = -1;
     if (pipe_descriptors[1] >= 0) { (void)close(pipe_descriptors[1]); pipe_descriptors[1] = -1; }
+    /* Drop the parent's stderr write end so the child owns channel closure. */
+    if (stderrPipe[1] >= 0) { (void)close(stderrPipe[1]); stderrPipe[1] = -1; }
     for (;;) {
         siginfo_t information;
         memset(&information, 0, sizeof(information));
-        drain_posix_pipe(pipe_descriptors[0], result, observer, rawObserver, context);
+        UmiStatus captured = DrainPosixCapture(pipe_descriptors[0], stderrPipe[0], result,
+            observer, rawObserver, context, channels);
+        if (terminal_status == UMI_STATUS_OK) terminal_status = captured;
         /* WNOWAIT keeps the root PID reserved until its owned process group
          * has been cleaned. Never signal a numeric PID after reaping it. */
         int waited = waitid(P_PID, (id_t)child, &information, WEXITED | WNOHANG | WNOWAIT);
@@ -560,7 +743,9 @@ static UmiStatus umi_process_execute_posix(const UmiProcessRequest *request,
         result->launched = 0;
         terminal_status = UMI_STATUS_IO_ERROR;
     }
-    drain_posix_pipe(pipe_descriptors[0], result, observer, rawObserver, context);
+    UmiStatus captured = DrainPosixCapture(pipe_descriptors[0], stderrPipe[0], result,
+        observer, rawObserver, context, channels);
+    if (terminal_status == UMI_STATUS_OK) terminal_status = captured;
     if (childWaitable && WIFEXITED(status_code)) result->exit_code = WEXITSTATUS(status_code);
     else if (childWaitable && WIFSIGNALED(status_code)) result->exit_code = 128 + WTERMSIG(status_code);
     result->duration_ms = monotonic_milliseconds() - started;
@@ -569,6 +754,7 @@ cleanup:
     for (size_t i = 0U; i < 2U; ++i) {
         if (pipe_descriptors[i] >= 0) (void)close(pipe_descriptors[i]);
         if (errorPipe[i] >= 0) (void)close(errorPipe[i]);
+        if (stderrPipe[i] >= 0) (void)close(stderrPipe[i]);
     }
     UmiPosixLaunchClear(&launch);
     return terminal_status;
@@ -591,7 +777,7 @@ UmiStatus umi_process_execute(const UmiProcessRequest *request,
 static UmiStatus UmiProcessExecuteInternal(const UmiProcessRequest *request,
     UmiProcessResultObserver observer, UmiProcessOutputObserver rawObserver,
     void *context, UmiProcessResult *out_result, UmiProcessLifetime lifetime,
-    UmiProcessNativeObserver nativeObserver)
+    UmiProcessNativeObserver nativeObserver, UmiProcessChannelCapture *channels)
 {
     UmiProcessResult local_result;
     UmiProcessResult *result = out_result != NULL ? out_result : &local_result;
@@ -636,10 +822,10 @@ static UmiStatus UmiProcessExecuteInternal(const UmiProcessRequest *request,
         return UMI_STATUS_CANCELLED;
     }
 #ifdef _WIN32
-    return umi_process_execute_windows(request, result, observer, rawObserver, context, lifetime, nativeObserver);
+    return umi_process_execute_windows(request, result, observer, rawObserver, context, lifetime, nativeObserver, channels);
 #else
     (void)nativeObserver;
-    return umi_process_execute_posix(request, result, observer, rawObserver, context, lifetime);
+    return umi_process_execute_posix(request, result, observer, rawObserver, context, lifetime, channels);
 #endif
 }
 
@@ -647,14 +833,14 @@ static UmiStatus UmiProcessExecuteInternal(const UmiProcessRequest *request,
 UmiStatus UmiProcessExecuteObserved(const UmiProcessRequest *request,
     UmiProcessResultObserver observer, void *context, UmiProcessResult *outResult)
 {
-    return UmiProcessExecuteInternal(request, observer, NULL, context, outResult, UMI_PROCESS_LIFETIME_CHILD, NULL);
+    return UmiProcessExecuteInternal(request, observer, NULL, context, outResult, UMI_PROCESS_LIFETIME_CHILD, NULL, NULL);
 }
 
 /* Raw observers receive bytes before the 64 KiB diagnostic tail can rotate. */
 UmiStatus UmiProcessExecuteStreamed(const UmiProcessRequest *request,
     UmiProcessOutputObserver observer, void *context, UmiProcessResult *outResult)
 {
-    return UmiProcessExecuteInternal(request, NULL, observer, context, outResult, UMI_PROCESS_LIFETIME_CHILD, NULL);
+    return UmiProcessExecuteInternal(request, NULL, observer, context, outResult, UMI_PROCESS_LIFETIME_CHILD, NULL, NULL);
 }
 
 /* Both observation forms share the same runner and one explicit lifetime. */
@@ -662,7 +848,23 @@ UmiStatus UmiProcessExecuteWithLifetime(const UmiProcessRequest *request,
     UmiProcessLifetime lifetime, UmiProcessResultObserver observer,
     UmiProcessOutputObserver rawObserver, void *context, UmiProcessResult *outResult)
 {
-    return UmiProcessExecuteInternal(request, observer, rawObserver, context, outResult, lifetime, NULL);
+    return UmiProcessExecuteInternal(request, observer, rawObserver, context, outResult, lifetime, NULL, NULL);
+}
+
+UmiStatus UmiProcessExecuteChannels(const UmiProcessRequest *request, UmiProcessLifetime lifetime,
+    UmiProcessChannelObserver observer, void *context, UmiProcessResult *outResult)
+{
+    /* Stage the capture flags locally. A failed admission resets the result
+     * through the same initialization path as the compatibility entry points. */
+    if (request == NULL || observer == NULL) {
+        umi_process_result_init(outResult);
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    UmiProcessRequest copied = *request;
+    copied.capture_stdout = 1;
+    copied.capture_stderr = 1;
+    UmiProcessChannelCapture capture = {.observer = observer, .context = context};
+    return UmiProcessExecuteInternal(&copied, NULL, NULL, NULL, outResult, lifetime, NULL, &capture);
 }
 
 /* Supervisor-only observation keeps raw native handles out of the public ABI.
@@ -672,7 +874,7 @@ UmiStatus UmiProcessExecuteSupervised(const UmiProcessRequest *request,
     UmiProcessNativeObserver nativeObserver, void *context, UmiProcessResult *outResult)
 {
     return UmiProcessExecuteInternal(request, observer, NULL, context, outResult,
-        lifetime, nativeObserver);
+        lifetime, nativeObserver, NULL);
 }
 
 #include "process_window_activation.inc"

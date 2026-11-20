@@ -39,7 +39,9 @@ typedef struct UmiBankStatementArchiveSnapshot {
  * Mismatched balances are valid review evidence. Invalid input, absent scope
  * or arithmetic overflow refuses creation and clears *out. info may be NULL.
  * Unknown source extensions, source paths and mapping settings remain absent.
- * Serialise use of the borrowed feed during creation. No I/O or posting occurs. */
+ * Creation validates the source claim and copies the feed directly. Export
+ * can independently refuse a review. Serialise use of the borrowed feed
+ * during creation. No I/O or posting occurs. */
 UmiStatus UmiBankStatementArchiveCreate(const UmiBankFeed *feed,
     const UmiBankStatementRequest *request, const UmiBankFeedArchiveInfo *info,
     UmiBankStatementArchive **out);
@@ -68,6 +70,34 @@ UmiStatus UmiBankStatementArchiveEncode(const UmiBankStatementArchive *archive,
  * Source digests are untrusted claims, not authentication. Failure clears *out. */
 UmiStatus UmiBankStatementArchiveDecode(const void *bytes, size_t length,
     UmiBankStatementArchive **out);
+
+typedef enum UmiBankStatementSourceCheck {
+    UMI_BANK_STATEMENT_SOURCE_DIGEST_UNRECORDED = 0,
+    UMI_BANK_STATEMENT_SOURCE_DIGEST_MATCH,
+    UMI_BANK_STATEMENT_SOURCE_DIGEST_MISMATCH
+} UmiBankStatementSourceCheck;
+
+/* All file operations take absolute local paths with trusted existing parents.
+ * Open applies the archive size limit and the same decoder used by memory
+ * callers. The regular input file is closed before a review is published.
+ * Failure clears *out. Blocking I/O belongs on an interactive app's worker. */
+UmiStatus UmiBankStatementArchiveOpenFile(const char *path,
+    UmiBankStatementArchive **out);
+
+/* Encode the complete review before exclusively creating the destination.
+ * Refuses any existing leaf. A failed write can leave a partial new file for
+ * diagnosis. Success requires flushing and closing. Save privately because
+ * the archive contains all imported accounts. */
+UmiStatus UmiBankStatementArchiveSaveNewFile(const UmiBankStatementArchive *archive,
+    const char *path);
+
+/* Compare exact file bytes with the archived SHA-256 claim. The original import
+ * limit applies. A matching digest establishes agreement with the recorded
+ * claim only. It cannot verify the provider, mapping, observations or balances.
+ * A missing claim returns UNRECORDED without opening the file. Invalid path
+ * syntax or an I/O failure leaves out unchanged. */
+UmiStatus UmiBankStatementArchiveCheckSourceFile(const UmiBankStatementArchive *archive,
+    const char *path, UmiBankStatementSourceCheck *out);
 #ifdef __cplusplus
 }
 #endif

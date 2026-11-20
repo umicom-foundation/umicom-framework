@@ -70,6 +70,14 @@ UmiStatus UmiDecimalAddExact(UmiDecimal left, UmiDecimal right, UmiDecimal *out)
  * Like addition, intermediate rescaling must fit even if values would cancel. */
 UmiStatus UmiDecimalSubtractExact(UmiDecimal left, UmiDecimal right, UmiDecimal *out);
 
+/** Multiply at the requested 0..9 decimal places. Representable results are
+ * exact even when the unreduced integer product would overflow. An excessive
+ * coefficient or nonzero fractional remainder returns CAPACITY_EXCEEDED.
+ * Invalid input or an unrepresentable result preserves out. No rounding or
+ * floating-point conversion is performed. */
+UmiStatus UmiDecimalMultiplyExact(UmiDecimal left, UmiDecimal right, uint8_t targetScale,
+    UmiDecimal *out);
+
 /** Parse a provider's fixed or scientific decimal without floating point.
  * Input has 1..96 bytes, optional sign, digits, an optional fractional part,
  * and an optional signed exponent (magnitude at most 1000). Whitespace,

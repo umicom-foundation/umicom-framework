@@ -221,6 +221,34 @@ UmiStatus umi_session_registry_revoke(UmiSessionRegistry *registry, const char *
     (void)umi_mutex_unlock(registry->mutex);
     return status;
 }
+
+/* Account-level sign-out uses the same state and lock as single-session
+ * revocation. Readers observe either side of the complete update. */
+UmiStatus umi_session_registry_revoke_principal(UmiSessionRegistry *registry,
+                                                const char *principal_id,
+                                                size_t *out_revoked)
+{
+    if (!registry || !principal_id || !out_revoked || !principal_id[0]) {
+        return UMI_STATUS_INVALID_ARGUMENT;
+    }
+    size_t length = 0U;
+    while (length < UMI_IDENTITY_ID_CAPACITY && principal_id[length]) ++length;
+    if (length == UMI_IDENTITY_ID_CAPACITY) return UMI_STATUS_CAPACITY_EXCEEDED;
+
+    UmiStatus status = umi_mutex_lock(registry->mutex);
+    if (status != UMI_STATUS_OK) return status;
+    size_t revoked = 0U;
+    for (size_t i = 0U; i < registry->count; ++i) {
+        UmiSessionRecord *record = &registry->sessions[i];
+        if (record->active && strcmp(record->principal_id, principal_id) == 0) {
+            record->active = 0;
+            ++revoked;
+        }
+    }
+    *out_revoked = revoked;
+    (void)umi_mutex_unlock(registry->mutex);
+    return UMI_STATUS_OK;
+}
 /*
  * Provide the session registry cleanup operation used by this module and its client
  * applications.
@@ -241,6 +269,10 @@ size_t umi_session_registry_cleanup(UmiSessionRegistry *registry, uint64_t now_n
         /* Apply this branch only when its contract condition is satisfied. */
         if (write_index != read_index) registry->sessions[write_index] = *session;
         ++write_index;
+    }
+    /* Compaction may leave extra copies of opaque handles past the new tail. */
+    if (removed != 0U) {
+        umi_secure_zero(&registry->sessions[write_index], removed * sizeof(registry->sessions[0]));
     }
     registry->count = write_index;
     (void)umi_mutex_unlock(registry->mutex); return removed;

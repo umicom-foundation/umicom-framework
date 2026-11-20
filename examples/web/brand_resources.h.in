@@ -1,0 +1,29 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/web/brand_resources.h.in
+ *
+ * PURPOSE:
+ *   Embed the approved offline artwork for the local web service.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+#ifndef UMICOM_LOCAL_WEB_BRAND_RESOURCES_H
+#define UMICOM_LOCAL_WEB_BRAND_RESOURCES_H
+
+static const unsigned char UmiWebBrandWordmark[] = {
+@UMICOM_WEB_BRAND_WORDMARK_BYTES@
+};
+static const unsigned char UmiWebBrandIconSvg[] = {
+@UMICOM_WEB_BRAND_ICON_SVG_BYTES@
+};
+static const unsigned char UmiWebBrandIconIco[] = {
+@UMICOM_WEB_BRAND_ICON_ICO_BYTES@
+};
+
+#endif

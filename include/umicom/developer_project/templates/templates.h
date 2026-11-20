@@ -38,5 +38,7 @@
 
 #include "umicom/developer_project/templates/d_console.h"
 #include "umicom/developer_project/templates/freebasic_console.h"
+#include "umicom/developer_project/templates/pascal_console.h"
+#include "umicom/developer_project/templates/java_console.h"
 
 #endif

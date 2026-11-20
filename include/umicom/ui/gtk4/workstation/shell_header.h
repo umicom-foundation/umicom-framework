@@ -49,6 +49,15 @@ extern "C" {
 UmiStatus umi_gtk4_ws_apply_window_identity(GtkWindow *window);
 
 /**
+ * Set an existing picture from Framework's embedded SVG artwork. Choose the
+ * wordmark for a wide presentation area or the icon for a compact one.
+ * The caller selects contrast for its surface and a height of 1–256 pixels.
+ * Call on the GTK thread. A failed decode leaves the existing picture intact.
+ */
+UmiStatus UmiGtk4BrandPictureUseEmbedded(GtkPicture *picture,
+    bool wordmark, bool on_dark_surface, int height);
+
+/**
  * Represent the gtk4 workstation shell header data shared with callers of this public
  * contract.
  */

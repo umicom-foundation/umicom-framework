@@ -58,6 +58,13 @@ int main(int argc, char **argv)
     if (!strcmp(argv[1], "partial")) {
         CHECK(UmiOsImageMain(12, boot) == 2);
         CHECK(UmiOsImageMain(14, boot) == 2);
+    } else if (!strcmp(argv[1], "info-options")) {
+        /* Observation requires a path and refuses options reserved for pins. */
+        char *information[] = {"umicom-os-image", "firmware-info",
+            "--file", "/unused/firmware", "--sha256", hash};
+        CHECK(UmiOsImageMain(2, information) == 2);
+        CHECK(UmiOsImageMain(6, information) == 2);
+        CHECK(UmiOsImageReadFirmwareInfo("/unused/firmware", NULL) == UMI_STATUS_INVALID_ARGUMENT);
     } else if (!strcmp(argv[1], "zero")) {
         boot[15] = "0";
         CHECK(UmiOsImageMain(16, boot) == 2);

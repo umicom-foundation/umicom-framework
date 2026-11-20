@@ -66,6 +66,10 @@ static int dependency_exists(const UmiBuildGraph *graph,
     return 0;
 }
 
+/* Kept for review. Pop-time visitation let shared prerequisites occupy
+ * multiple pending slots and could report a cycle in an acyclic build graph.
+ * The active traversal marks each prerequisite as soon as it is scheduled. */
+#if 0
 static int transitively_depends_on(const UmiBuildGraph *graph,
                                    size_t start_index,
                                    size_t target_index)
@@ -86,6 +90,32 @@ static int transitively_depends_on(const UmiBuildGraph *graph,
                 if (count >= UMI_BUILD_GRAPH_MAX_NODES) return 1;
                 stack[count++] = graph->dependencies[index].dependency_index;
             }
+        }
+    }
+    return 0;
+}
+#endif
+
+static int transitively_depends_on(const UmiBuildGraph *graph,
+                                   size_t start_index,
+                                   size_t target_index)
+{
+    size_t stack[UMI_BUILD_GRAPH_MAX_NODES];
+    unsigned char queued[UMI_BUILD_GRAPH_MAX_NODES] = {0};
+    /* The graph owns all edge indices. Queue each admitted node once so
+     * even dense sharing needs at most one stack slot per graph node. */
+    size_t count = 0U;
+    queued[start_index] = 1U;
+    stack[count++] = start_index;
+    while (count > 0U) {
+        const size_t current = stack[--count];
+        if (current == target_index) return 1;
+        for (size_t index = 0U; index < graph->dependency_count; ++index) {
+            const UmiBuildGraphDependency *edge = &graph->dependencies[index];
+            if (edge->node_index != current || queued[edge->dependency_index] != 0U)
+                continue;
+            queued[edge->dependency_index] = 1U;
+            stack[count++] = edge->dependency_index;
         }
     }
     return 0;

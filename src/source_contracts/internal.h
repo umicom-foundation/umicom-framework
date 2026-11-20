@@ -3,7 +3,7 @@
  * File: src/source_contracts/internal.h
  *
  * PURPOSE:
- *   * Share private implementation helpers for one native qualification engine.
+ *   Share private implementation helpers for one native qualification engine.
  *
  * AUTHOR AND ORGANISATION:
  * Sammy Hegab
@@ -42,6 +42,9 @@
 #define ScRead UmiSourceContractInternalRead
 #define ScReadBytes UmiSourceContractInternalReadBytes
 #define ScCollectGuides UmiSourceContractInternalCollectGuides
+#define ScCollectBundledGuides UmiSourceContractInternalCollectBundledGuides
+#define ScGuideOrdinaryPath UmiSourceContractInternalGuideOrdinaryPath
+#define ScGuideBundledAudit UmiSourceContractInternalGuideBundledAudit
 #define ScJoin UmiSourceContractInternalJoin
 #define ScCollect UmiSourceContractInternalCollect
 #define ScCollectManifests UmiSourceContractInternalCollectManifests
@@ -86,6 +89,18 @@ char *ScRead(const char *path);
 /* Binary reads retain an extra sentinel byte; length describes original data. */
 unsigned char *ScReadBytes(const char *path, size_t *length);
 int ScCollectGuides(const char *root, ScFiles *files);
+int ScCollectBundledGuides(const char *root, ScFiles *files, char **out_root);
+bool ScGuideOrdinaryPath(const char *path, bool directory);
+/* Borrow the owned CSS and record exact matches for the managed artwork files
+ * once per package. A page supplies only its depth beneath the selected root. */
+typedef struct ScGuideBundle {
+    const char *css;
+    size_t css_length;
+    bool ico, logo_light, logo_dark, symbol;
+} ScGuideBundle;
+int ScGuideBundledAudit(const char *html, size_t length, const char *path,
+    const UmiSourceBrandAssets *assets, const ScGuideBundle *bundle, size_t depth,
+    UmiSourceContractReport *report);
 char *ScJoin(const char *root, const char *path);
 int ScCollect(const char *root, bool headers, ScFiles *files);
 int ScCollectManifests(const char *root, ScFiles *files);

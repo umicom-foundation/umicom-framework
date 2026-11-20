@@ -40,6 +40,35 @@ function(umicom_release_inventory_own_headers target)
     endforeach()
 endfunction()
 
+# Keep complete target detail inline when it fits. Large details are retained
+# in a digest-bound companion file. Keep bounded impact edges
+# inline when possible. If those also exceed the format limit, mark the
+# dependency view incomplete so existing planners choose safe wider coverage.
+function(_umicom_inventory_target_detail target output raw result)
+    _umicom_impact_target_detail("${target}" "${raw}" _detail)
+    get_property(_field_limit GLOBAL PROPERTY UMICOM_RELEASE_INVENTORY_FIELD_LIMIT)
+    string(LENGTH "${_detail}" _size)
+    if(_size GREATER _field_limit)
+        get_filename_component(_parent "${output}" DIRECTORY)
+        # CMake writes text with platform line endings. Derive the digest and
+        # byte count from the exact file a release inspector can reopen.
+        string(SHA256 _logical_sha "${_detail}")
+        set(_pending "${_parent}/target-details/${_logical_sha}.pending")
+        file(WRITE "${_pending}" "${_detail}")
+        file(SHA256 "${_pending}" _sha)
+        file(SIZE "${_pending}" _size)
+        set(_detail_file "target-details/${_sha}.txt")
+        file(RENAME "${_pending}" "${_parent}/${_detail_file}")
+        set(_reference "target-detail-sha256=${_sha}\ntarget-detail-bytes=${_size}\ntarget-detail-path=${_detail_file}\n")
+        _umicom_impact_target_detail("${target}" "${_reference}" _detail)
+        string(LENGTH "${_detail}" _inline_size)
+        if(_inline_size GREATER _field_limit)
+            set(_detail "impact-version=1\ncomplete=0\nimpact-end\n${_reference}")
+        endif()
+    endif()
+    set("${result}" "${_detail}" PARENT_SCOPE)
+endfunction()
+
 function(_umicom_inventory_directory directory output)
     string(SHA256 _directory_key "${directory}")
     get_property(_visited GLOBAL PROPERTY "UMICOM_INVENTORY_DIRECTORY_${_directory_key}")
@@ -58,8 +87,8 @@ function(_umicom_inventory_directory directory output)
             get_property(_value TARGET "${_target}" PROPERTY "${_property}")
             string(APPEND _detail "${_property}=${_value}\n")
         endforeach()
-        # Keep raw properties while adding explicit impact edges ahead of them.
-        _umicom_impact_target_detail("${_target}" "${_detail}" _detail)
+        # Preserve both representations when the raw property lists are large.
+        _umicom_inventory_target_detail("${_target}" "${output}" "${_detail}" _detail)
         _umicom_inventory_row("${output}" target "${_target}" "${_source_dir}" configured "${_detail}")
         get_property(_sources TARGET "${_target}" PROPERTY SOURCES)
         # Explicit non-compiled inputs participate in ownership and byte observation.
@@ -68,7 +97,7 @@ function(_umicom_inventory_directory directory output)
         list(REMOVE_DUPLICATES _sources)
         foreach(_source IN LISTS _sources)
             # Expressions and generated inputs are intentionally unresolved.
-            # The raw SOURCES property above retains the original list as well.
+            # The target's raw property block retains the original list as well.
             set(_state unresolved)
             set(_detail "raw=${_source}\n")
             if(_source MATCHES "\\$<")

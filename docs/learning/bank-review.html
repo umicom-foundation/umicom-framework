@@ -193,4 +193,21 @@ done:
 <p><strong>Exercise 3.</strong> Another handle accepts a hold after your review. Should your old prediction be applied automatically? <strong>Answer:</strong> no. Its history is stale; reload and review again.</p>
 <p><strong>Exercise 4.</strong> Change the memory lesson amount, build and rerun it. Adjust the independent expected values deliberately, rather than weakening the checks. Explain the distinction between a passing assertion and proof that a real bank accepted a payment. <strong>Answer:</strong> assertions test this local model only; there is no bank connection in the lesson.</p>
 <p><strong>Exercise 5.</strong> Why compare canonical event text rather than the bytes of a C structure? <strong>Answer:</strong> structures can contain padding. The established encoding identifies the fields that belong to the event contract.</p>
-<p>Keep the example, its source revision and your test output together. Never put personal customer data, credentials or real account output into a public learning project.</p></section></main></div><footer>Sammy Hegab · Umicom Foundation · Source example licensed MIT · Offline public learning guide</footer></body></html>
+<p>Keep the example, its source revision and your test output together. Never put personal customer data, credentials or real account output into a public learning project.</p></section><section id="account-at-revision">
+<h2>Read an account at an earlier ledger revision</h2>
+<p>A revision counts accepted operations in a practice ledger. An unposted transfer can reserve part of the available balance at one revision, then move booked money at another. Use the earlier revision when you need the account state seen at that point.</p>
+<ol>
+<li>Select an existing, disposable practice database. Run the Umicom Bank console with its absolute path, the exact account ID and one decimal revision. Replace the example values with the values from your practice ledger.</li>
+<li>Read <strong>Observed revision</strong> for the account snapshot and <strong>Loaded revision</strong> for the latest event currently loaded. Compare <strong>Booked</strong>, <strong>Reserved</strong> and <strong>Available</strong> as integer minor units. GBP at scale 2 uses pence, so 85,000 minor units means GBP 850.00.</li>
+<li>Repeat for a revision after the transfer posted. A reservation reduces the amount available before it changes the booked balance. The history read leaves the practice ledger intact.</li>
+</ol>
+<pre><code>.\umicom-bank-console.exe --observe-account 'C:/practice/bank.sqlite' a1 7</code></pre>
+<p>In the regression, account <code>a1</code> holds GBP 1,000.00 at revision 6. Revision 7 reserves GBP 150.00 while the booked balance remains GBP 1,000.00. Revision 9 posts the transfer and reports GBP 850.00 booked and zero reserved. Your values depend on the operations in your practice ledger.</p>
+<p>An account has no observation at revision zero or before its opening event. If the console reports a missing account, check the account ID and opening revision. If the requested revision is greater than the loaded revision, choose a retained revision. The command refuses a missing database and does not create a replacement.</p>
+<p>Framework clients can obtain the same copied values through <code>UmiBankOperationsObserveAccountAtRevision</code>. Configure the practice build from the Framework directory and run the regressions.</p>
+<pre><code>cmake -S examples/bank_review -B build/bank-history -G Ninja -DUMICOM_BANK_REVIEW_SQLITE=ON
+cmake --build build/bank-history
+ctest --test-dir build/bank-history --no-tests=error --output-on-failure -R 'account-observation'</code></pre>
+<p>The tests create synthetic accounts and compare held, posted and reversed balances. The SQLite case closes and reopens the practice ledger before observing an earlier revision. These local records are for practice exercises.</p>
+</section>
+</main></div><footer>Sammy Hegab · Umicom Foundation · Source example licensed MIT · Offline public learning guide</footer></body></html>

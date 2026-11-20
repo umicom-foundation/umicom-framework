@@ -15,7 +15,8 @@
 #include "internal.h"
 #include "umicom/os_image/profile.h"
 static void Help(void) {
-    puts("Umicom native OS image tool\n" "  prepare --os ABS --framework ABS --buildroot ABS --output NEW --arch riscv64|x86_64 --git ABS\n" "  configure --output ABS --make ABS\n" "  build --output ABS --make ABS [--jobs 2]\n" "  legal-info --output ABS --make ABS\n" "  pack --output ABS --bundle NEW\n" "  verify --bundle ABS\n" "  boot --bundle ABS --qemu ABS --mode normal|recovery --result NEW [--timeout 90]\n" "  firmware --file ABS --sha256 SHA256 --bytes NUMBER\n" "  boot accepts --firmware ABS --sha256 SHA256 --bytes NUMBER for RISC-V\n" "  profile --file ABS\n" "  archive --file ABS\n" "  elf --file ABS --arch riscv64|x86_64\n" "  kernel --file ABS --arch riscv64|x86_64\n" "  assess --file ABS --source SHA256 --mode normal|recovery --exit NUMBER\n" "  --self-test\n" "All outputs are new paths. No disk writer, mount, network client or shell feature.\n" "prepare/configure/build run on Linux/WSL. Buildroot itself needs its normal host tools.\n" "archive accepts canonical newc or native stored-gzip; it never extracts.\n" "assess checks supplied text only; it never establishes that QEMU ran.");
+    /* The observation command keeps the existing explicit pin workflow available. */
+    puts("Umicom native OS image tool\n" "  prepare --os ABS --framework ABS --buildroot ABS --output NEW --arch riscv64|x86_64 --git ABS\n" "  configure --output ABS --make ABS\n" "  build --output ABS --make ABS [--jobs 2]\n" "  legal-info --output ABS --make ABS\n" "  pack --output ABS --bundle NEW\n" "  verify --bundle ABS\n" "  boot --bundle ABS --qemu ABS --mode normal|recovery --result NEW [--timeout 90]\n" "  firmware-info --file ABS\n" "  firmware --file ABS --sha256 SHA256 --bytes NUMBER\n" "  boot accepts --firmware ABS --sha256 SHA256 --bytes NUMBER for RISC-V\n" "  profile --file ABS\n" "  archive --file ABS\n" "  elf --file ABS --arch riscv64|x86_64\n" "  kernel --file ABS --arch riscv64|x86_64\n" "  assess --file ABS --source SHA256 --mode normal|recovery --exit NUMBER\n" "  --self-test\n" "All outputs are new paths. No disk writer, mount, network client or shell feature.\n" "prepare/configure/build run on Linux/WSL. Buildroot itself needs its normal host tools.\n" "archive accepts canonical newc or native stored-gzip; it never extracts.\n" "assess checks supplied text only; it never establishes that QEMU ran.");
 }
 int UmiOsImageMainWithCancellation(int argc,char **argv,const UmiCancellationToken *cancel) {
     /* Native hosts call this service directly, so executable startup guarantees
@@ -89,6 +90,8 @@ int UmiOsImageMainWithCancellation(int argc,char **argv,const UmiCancellationTok
         allowed=B(TIMEOUT)|B(FIRMWARE)|B(SHA256)|B(BYTES);
     }
     else if(!strcmp(cmd,"firmware"))required=B(FILE_PATH)|B(SHA256)|B(BYTES);
+    /* Observation accepts only a file path. Pin verification remains explicit. */
+    else if(!strcmp(cmd,"firmware-info"))required=B(FILE_PATH);
     else if(!strcmp(cmd,"profile"))required=B(FILE_PATH);
     else if(!strcmp(cmd,"archive"))required=B(FILE_PATH);
     else if(!strcmp(cmd,"elf")||!strcmp(cmd,"kernel"))required=B(FILE_PATH)|B(ARCH);
@@ -153,6 +156,20 @@ int UmiOsImageMainWithCancellation(int argc,char **argv,const UmiCancellationTok
         OiReport(&report,s,s==UMI_STATUS_OK?
             "Profile syntax and declared pins inspected. Source contents, licensing and build results were not verified.":
             "Profile inspection failed; no source or output was changed.");
+    }
+    else if(!strcmp(cmd,"firmware-info")) {
+        UmiOsImageFirmwareInfo info;
+        s=UmiOsImageReadFirmwareInfo(values[FILE_PATH],&info);
+        if(s==UMI_STATUS_OK) {
+            /* Emit a stable observation so reviewers can record both fields. */
+            printf("UMICOM_OS_FIRMWARE_INFO 1\nsha256=%s\nbytes=%" PRIu64 "\n",info.sha256,info.bytes);
+            report.completed=1;
+            report.bytes=info.bytes;
+            report.files=1;
+        }
+        OiReport(&report,s,s==UMI_STATUS_OK?
+            "Observed the firmware file's byte identity.":
+            "Firmware inspection failed. Choose a nonempty regular file at an absolute path.");
     }
     else if(!strcmp(cmd,"firmware"))s=UmiOsImageCheckFirmware(&firmware,&report);
     else if(!strcmp(cmd,"boot")) {

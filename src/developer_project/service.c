@@ -525,6 +525,35 @@ static UmiStatus generate_owned(
 
 #endif
 
+/* The project service uses the rendered plan to select a conventional main
+ * file for native starters. This keeps non-C entry paths consistent in Studio
+ * and the CLI without guessing a source location outside the generated files.
+ * Use the language pack's first suffix for this convention. Other suffixes
+ * can be header or unit files. The established C fallback still opens main.c. */
+static void set_generated_native_entry(const UmiDeveloperProjectService *service,
+    const UmiDeveloperProjectGenerationPlan *plan, UmiDeveloperProjectModel *model)
+{
+    if (model->build_system != UMI_DEVELOPER_PROJECT_BUILD_CMAKE ||
+        model->kind != UMI_DEVELOPER_PROJECT_EXECUTABLE || model->entry_point[0] != '\0')
+        return;
+
+    const UmiDeveloperProjectLanguagePack *language =
+        umi_developer_project_language_registry_find(service->languages, model->primary_language_id);
+    if (language == NULL || !language->native_language || !language->compiled_language ||
+        language->extension_count == 0U || strcmp(language->extensions[0], ".c") == 0)
+        return;
+
+    for (size_t i = 0U; i < plan->file_count; ++i) {
+        const UmiDeveloperProjectGeneratedFile *file = &plan->files[i];
+        const char *path = file->relative_path;
+        if (file->optional || strncmp(path, "src/main.", sizeof "src/main." - 1U) != 0 ||
+            strcmp(language->extensions[0], path + sizeof "src/main" - 1U) != 0)
+            continue;
+        strcpy(model->entry_point, path);
+        return;
+    }
+}
+
 static UmiStatus generate_owned(
     UmiDeveloperProjectService *service,
     const UmiDeveloperProjectGenerationRequest *request,
@@ -677,9 +706,24 @@ static UmiStatus generate_owned(
     }
 
 
+    /* The configured Python Tool still opens its editable source. Interpreter
+     * discovery and runtime staging belong to its generated CMake recipe. */
+    if (strcmp(project_template->template_id, "developer.template.python-tool") == 0 &&
+        model->entry_point[0] == '\0') {
+        (void)snprintf(model->entry_point, sizeof(model->entry_point),
+            "src/%s.py", request->target_name);
+    }
+    /* The generated JVM application has an editable source entry and a JAR
+     * launch target. A native executable path would point at a nonexistent file. */
+    if (strcmp(project_template->template_id, "developer.template.java-console") == 0 &&
+        model->entry_point[0] == '\0') {
+        (void)snprintf(model->entry_point, sizeof(model->entry_point), "%s", "src/Main.java");
+    }
+
     /* Compose and admit the complete model before creating project files.
      * New-project clients also require a usable build profile before effects.
      * Both modes retain the same language, preset and launch defaults above. */
+    set_generated_native_entry(service, plan, model);
     status = umi_developer_project_model_validate(model, NULL, 0U);
     if (status == UMI_STATUS_OK && exclusive)
         status = UmiBuildProfileFromProject(model, profile);

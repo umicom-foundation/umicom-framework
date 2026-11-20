@@ -749,14 +749,11 @@ static UmiStatus FinishNewDocument(UmiDocumentCoordinator *coordinator,
     return status;
 }
 
-/*
- * Provide the document coordinator new operation used by this module and its client
- * applications.
- */
-UmiStatus umi_document_coordinator_new(UmiDocumentCoordinator *coordinator,
-                                       const char *suggested_name,
-                                       char *out_view_id,
-                                       size_t capacity)
+/* Stage a working copy's initial contents before attaching its view, so
+ * generated drafts and empty files share the same identity and rollback. */
+static UmiStatus NewDocument(UmiDocumentCoordinator *coordinator,
+    const char *suggested_name, const char *text, size_t textLength,
+    char *out_view_id, size_t capacity)
 {
     char name[UMI_DOCUMENT_NAME_CAPACITY];
     UmiDocumentId document_id = 0U;
@@ -769,6 +766,9 @@ UmiStatus umi_document_coordinator_new(UmiDocumentCoordinator *coordinator,
     if (coordinator == NULL || (out_view_id != NULL && capacity == 0U) ||
         (out_view_id == NULL && capacity != 0U)) return UMI_STATUS_INVALID_ARGUMENT;
     if (out_view_id != NULL) out_view_id[0] = '\0';
+    if (textLength > UMI_UI_DOCUMENT_TEXT_MAXIMUM_BYTES) return UMI_STATUS_CAPACITY_EXCEEDED;
+    if (textLength != 0U && (text == NULL || memchr(text, '\0', textLength) != NULL))
+        return UMI_STATUS_INVALID_ARGUMENT;
     if (coordinator->count >= UMI_DOCUMENT_MAX_WORKING_COPIES ||
         umi_ui_document_view_model_count(umi_ui_workbench_documents(coordinator->workbench)) >= UMI_UI_DOCUMENT_VIEW_MAX)
         return UMI_STATUS_CAPACITY_EXCEEDED;
@@ -785,6 +785,8 @@ UmiStatus umi_document_coordinator_new(UmiDocumentCoordinator *coordinator,
                        (unsigned long long)coordinator->next_untitled++);
     }
     status = umi_document_store_new(coordinator->store, name, &document_id);
+    if (status == UMI_STATUS_OK && textLength != 0U)
+        status = umi_document_store_replace_text(coordinator->store, document_id, text, textLength);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK) {
         status = register_entry(coordinator, document_id,
@@ -794,6 +796,19 @@ UmiStatus umi_document_coordinator_new(UmiDocumentCoordinator *coordinator,
     }
     return FinishNewDocument(coordinator, document_id, index, status,
         out_view_id, capacity);
+}
+
+UmiStatus umi_document_coordinator_new(UmiDocumentCoordinator *coordinator,
+    const char *suggested_name, char *out_view_id, size_t capacity)
+{
+    return NewDocument(coordinator, suggested_name, NULL, 0U, out_view_id, capacity);
+}
+
+UmiStatus UmiDocumentCoordinatorNewWithText(UmiDocumentCoordinator *coordinator,
+    const char *suggestedName, const char *text, size_t textLength, char *outViewId,
+    size_t capacity)
+{
+    return NewDocument(coordinator, suggestedName, text, textLength, outViewId, capacity);
 }
 
 /*

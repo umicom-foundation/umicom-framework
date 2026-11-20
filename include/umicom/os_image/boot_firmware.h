@@ -30,6 +30,18 @@ typedef struct UmiOsImageFirmware {
     uint64_t bytes;
 } UmiOsImageFirmware;
 
+/** Byte identity observed from one explicit regular input. Use the separate
+ * pin check to compare it with a recorded, independently selected identity. */
+typedef struct UmiOsImageFirmwareInfo {
+    char sha256[65];
+    uint64_t bytes;
+} UmiOsImageFirmwareInfo;
+
+/** Capture the digest and length from the same bounded read. Empty files,
+ * relative paths and symbolic/reparse links are refused. On refusal, out
+ * remains unchanged. This operation reads a file and reports its identity. */
+UmiStatus UmiOsImageReadFirmwareInfo(const char *absolutePath, UmiOsImageFirmwareInfo *out);
+
 /** Read an explicit regular file without following symbolic/reparse links.
  * No file is written and no process is launched. completed reports a matching
  * digest and byte count only, never a successful guest boot. */

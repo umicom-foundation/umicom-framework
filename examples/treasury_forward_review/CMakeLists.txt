@@ -23,7 +23,7 @@ endif()
 include(CTest)
 if(BUILD_TESTING)
     # The earlier apply/stale cases remain; archive cases also exercise SDK closure.
-    foreach(scenario apply stale archive-roundtrip archive-stale)
+    foreach(scenario apply stale archive-roundtrip archive-stale valuation)
         add_test(NAME installed.treasury_forward_review.${scenario}
             COMMAND treasury-forward-review-consumer ${scenario})
         set_tests_properties(installed.treasury_forward_review.${scenario} PROPERTIES TIMEOUT 30)

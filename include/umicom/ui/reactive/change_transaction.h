@@ -32,6 +32,9 @@ typedef struct UmiUiReactiveChangeTransaction {
  * Provide the ui reactive change transaction begin operation used by this module and its
  * client applications.
  */
+/* The owner supplies a nonempty ID. It must terminate within the transaction
+ * ID capacity and may borrow the existing ID from this same transaction.
+ * Failed admission leaves the caller's transaction intact. */
 UmiStatus umi_ui_reactive_change_transaction_begin(UmiUiReactiveChangeTransaction *item,const char *id,uint64_t base_revision);
 /**
  * Provide the ui reactive change transaction commit operation used by this module and its

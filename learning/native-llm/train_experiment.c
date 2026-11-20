@@ -7,16 +7,24 @@
  *   source-model experiments. No duplicate training or parsing algorithms.
  *   Checkpoints are written only on an explicit request to a new path.
  *
- * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation
- * LICENCE: MIT
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
 #include "umicom/ai/training/experiment.h"
 #include "umicom/ai/training/experiment_accumulation.h"
 #include "umicom/ai/training/experiment_plan.h"
 #include "umicom/ai/training/checkpoint.h"
 
+#include <errno.h>
 #include <inttypes.h>
+#include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define UMI_EXPERIMENT_CLI_MANIFEST_CAPACITY 1024U
 
@@ -34,6 +42,17 @@ static UmiStatus ShowProgress(
     return UMI_STATUS_OK;
 }
 
+static bool ReadPatience(const char *text, uint32_t *out)
+{
+    if (text[0] < '0' || text[0] > '9') return false;
+    char *end = NULL;
+    errno = 0;
+    const unsigned long long value = strtoull(text, &end, 10);
+    if (errno == ERANGE || *end != '\0' || value > UINT32_MAX) return false;
+    *out = (uint32_t)value;
+    return true;
+}
+
 int main(int argc, char **argv)
 {
     UmiAiTrainingDataset *dataset = NULL;
@@ -42,18 +61,38 @@ int main(int argc, char **argv)
     UmiAiTrainingExperimentConfig config;
     UmiAiTrainingExperimentAccumulation accumulation = {0};
     UmiAiTrainingExperimentResult report;
+    UmiAiTrainingExperimentSelection policy = {0};
+    UmiAiTrainingExperimentSelectedResult selected;
     UmiStatus status;
     char manifestPath[UMI_EXPERIMENT_CLI_MANIFEST_CAPACITY];
-    if (argc != 2 && argc != 3 && argc != 4) {
+    const bool selectHeldOut = argc > 1 && strcmp(argv[1], "--select-held-out") == 0;
+    const char *planPath, *newCheckpoint, *resumeCheckpoint = NULL;
+    if (selectHeldOut) {
+        if ((argc != 4 && argc != 5) || !ReadPatience(argv[2], &policy.patience)) {
+            fputs("usage: umicom-native-llm-experiment --select-held-out <patience> <reviewed-plan> [new-checkpoint-path]\n",
+                stderr);
+            return 2;
+        }
+        planPath = argv[3];
+        newCheckpoint = argc == 5 ? argv[4] : NULL;
+    } else if (argc != 2 && argc != 3 && argc != 4) {
         fprintf(stderr, "usage: umicom-native-llm-experiment <reviewed-plan> [new-checkpoint-path] [existing-checkpoint-to-resume]\n");
         return 2;
+    } else {
+        planPath = argv[1];
+        newCheckpoint = argc >= 3 ? argv[2] : NULL;
+        resumeCheckpoint = argc == 4 ? argv[3] : NULL;
     }
     status = UmiAiTrainingExperimentPlanLoadAccumulated(
-        argv[1], &config, &accumulation,
+        planPath, &config, &accumulation,
         manifestPath, sizeof(manifestPath));
     if (status != UMI_STATUS_OK) {
         fprintf(stderr, "experiment plan rejected (status=%d)\n", (int)status);
         return 1;
+    }
+    if (selectHeldOut && accumulation.effectiveSequences > 0U) {
+        fputs("Held-out checkpoint selection requires a single-batch training plan.\n", stderr);
+        return 2;
     }
     status = UmiAiTrainingDatasetLoadManifest(manifestPath, &dataset);
     if (status != UMI_STATUS_OK) {
@@ -89,8 +128,14 @@ int main(int argc, char **argv)
                    "train" : "eval", item.relativePath,
                item.byteCount, item.fingerprint);
     }
-    if (argc == 4) {
-        status = UmiAiTrainingDecoderCheckpointLoadFile(argv[3],
+    if (selectHeldOut) {
+        /* Expose the selected model through the existing explicit save path.
+         * Framework owns all stopping, sampling and snapshot decisions. */
+        status = UmiAiTrainingExperimentRunSelected(dataset, &config, &policy,
+            ShowProgress, NULL, &model, &selected);
+        if (status == UMI_STATUS_OK) report = selected.run;
+    } else if (resumeCheckpoint != NULL) {
+        status = UmiAiTrainingDecoderCheckpointLoadFile(resumeCheckpoint,
                                                        &startingCheckpoint);
         if (status != UMI_STATUS_OK) {
             fprintf(stderr, "resume checkpoint rejected (status=%d)\n", (int)status);
@@ -121,16 +166,21 @@ int main(int argc, char **argv)
            report.completedSteps, report.evaluationCount,
            report.baselineHeldOutLoss, report.finalHeldOutLoss,
            report.bestObservedHeldOutLoss, report.bestObservedStep);
+    if (selectHeldOut) {
+        printf("Selected checkpoint step %" PRIu64 " with held-out CE %.6f\n",
+            selected.selectedStep, selected.selectedHeldOutLoss);
+        if (selected.stoppedEarly) puts("Stopped after the requested patience limit.");
+    }
     puts("These are sampled held-out measurements, not general coding"
          " proficiency. No evaluation document was used for training.");
-    if (argc >= 3) {
-        status = UmiAiTrainingDecoderCheckpointSaveNewFile(model, argv[2]);
+    if (newCheckpoint != NULL) {
+        status = UmiAiTrainingDecoderCheckpointSaveNewFile(model, newCheckpoint);
         if (status != UMI_STATUS_OK) {
             fprintf(stderr, "refused to save checkpoint (status=%d)\n",
                     (int)status);
             goto error;
         }
-        printf("New checkpoint saved: %s\n", argv[2]);
+        printf("New checkpoint saved: %s\n", newCheckpoint);
     }
     UmiAiTrainingDecoderDestroy(model);
     UmiAiTrainingDecoderDestroy(startingCheckpoint);

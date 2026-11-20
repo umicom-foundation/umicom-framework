@@ -15,6 +15,7 @@
 
 
 #include "cli.h"
+#include "umicom/developer_project/language_cohort.h"
 #include "umicom/developer_project/new_project.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,6 +26,7 @@ static int ProjectUsage(void)
     puts("Usage: umicom project templates\n"
          "       umicom project plan OPTIONS [--show-files]\n"
          "       umicom project create OPTIONS --apply\n"
+         "       umicom project language-cohort [--tools ABSOLUTE_DIRECTORY]\n"
          "Options (all required, each once):\n"
          "  --template ID --name DISPLAY_NAME --id APPLICATION_ID\n"
          "  --target TARGET --parent ABSOLUTE_DIRECTORY --folder FOLDER_NAME\n"
@@ -34,6 +36,25 @@ static int ProjectUsage(void)
          "Partial new files may remain if creation fails. Do not share a destination\n"
          "with a concurrent writer. Existing create/new app commands are unchanged.");
     return ferror(stdout) ? 1 : 0;
+}
+
+/* Discovery projects the shared registry without enrolling a project or
+ * executing tools from its directory. Output is published only on success. */
+static int ProjectLanguageCohort(int argc, char **argv)
+{
+    if (argc != 1 && (argc != 3 || argv[1] == NULL || argv[2] == NULL ||
+        strcmp(argv[1], "--tools") != 0 || argv[2][0] == '\0')) {
+        fputs("Usage: umicom project language-cohort [--tools ABSOLUTE_DIRECTORY]\n", stderr);
+        return 2;
+    }
+    char json[UMI_PROJECT_LANGUAGE_COHORT_JSON_CAPACITY];
+    UmiStatus status = UmiProjectLanguageCohortFormatJson(argc == 3 ? argv[2] : NULL,
+                                                         json, sizeof json);
+    if (status != UMI_STATUS_OK) {
+        fprintf(stderr, "Language cohort unavailable: %s\n", umi_status_text(status));
+        return 1;
+    }
+    return puts(json) == EOF || fflush(stdout) != 0;
 }
 
 static UmiStatus ProjectCopy(char *out,size_t capacity,const char *value)
@@ -49,6 +70,8 @@ static UmiStatus ProjectCopy(char *out,size_t capacity,const char *value)
 int umi_cli_command_project(int argc,char **argv)
 {
     if(argc<0 || (argc!=0&&argv==NULL))return 2;
+    if (argc > 0 && argv[0] != NULL && strcmp(argv[0], "language-cohort") == 0)
+        return ProjectLanguageCohort(argc, argv);
     for(int i=0;i<argc;++i)if(argv[i]==NULL||argv[i][0]=='\0')return 2;
     if(argc==0 || (argc==1&&(!strcmp(argv[0],"--help")||!strcmp(argv[0],"-h"))))
         return ProjectUsage();
@@ -85,6 +108,7 @@ int umi_cli_command_project(int argc,char **argv)
 
     UmiStatus status=UMI_STATUS_OK;
     if(!listing) {
+        char validation_message[256] = {0};
         status=ProjectCopy(request.template_id,sizeof request.template_id,values[0]);
         if(status==UMI_STATUS_OK)status=ProjectCopy(request.application_name,sizeof request.application_name,values[1]);
         if(status==UMI_STATUS_OK)status=ProjectCopy(request.application_id,sizeof request.application_id,values[2]);
@@ -92,9 +116,15 @@ int umi_cli_command_project(int argc,char **argv)
         if(status==UMI_STATUS_OK)status=ProjectCopy(request.repository_name,sizeof request.repository_name,values[5]);
         if(status==UMI_STATUS_OK)status=UmiDeveloperProjectChooseDestination(
             values[4],values[5],request.project_root,sizeof request.project_root);
-        if(status==UMI_STATUS_OK)status=umi_developer_project_generation_request_validate(&request,NULL,0U);
+        /* Keep the CLI and Studio explanation with the same shared validation.
+         * Earlier path and storage errors continue to report their status. */
+        if (status == UMI_STATUS_OK)
+            status = umi_developer_project_generation_request_validate(&request, validation_message,
+                                                                        sizeof validation_message);
         if(status!=UMI_STATUS_OK) {
             fprintf(stderr,"Project options refused: %s\n",umi_status_text(status));
+            if (validation_message[0] != '\0')
+                fprintf(stderr, "%s\n", validation_message);
             return 2;
         }
         request.dry_run=planning;

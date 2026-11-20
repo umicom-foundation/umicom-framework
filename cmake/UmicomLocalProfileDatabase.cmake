@@ -19,3 +19,28 @@ if(BUILD_TESTING AND SQLite3_FOUND)
         umicom_register_validation_target(umicom-local-profile-database-test)
     endif()
 endif()
+
+if(BUILD_TESTING AND WIN32 AND SQLite3_FOUND)
+    add_executable(umicom-local-mfa-database-test
+        "${CMAKE_CURRENT_LIST_DIR}/../tests/local_profile/test_mfa_database.c")
+    target_link_libraries(umicom-local-mfa-database-test PRIVATE Umicom::security Umicom::data)
+    umicom_apply_warnings(umicom-local-mfa-database-test)
+    umicom_apply_sanitizers(umicom-local-mfa-database-test)
+    foreach(case lifecycle scope recovery recovery-rollback recovery-race recovery-binding recovery-legacy
+            bound-pending bound-active)
+        set(name "framework.local_profile.mfa_database.${case}")
+        add_test(NAME "${name}" COMMAND "${CMAKE_COMMAND}"
+            "-DTEST_BINARY=$<TARGET_FILE:umicom-local-mfa-database-test>"
+            "-DTEST_ROOT=${CMAKE_CURRENT_BINARY_DIR}" "-DTEST_CASE=${case}"
+            -P "${CMAKE_CURRENT_LIST_DIR}/../tests/local_profile/database_fixture.cmake")
+        set_tests_properties("${name}" PROPERTIES
+            TIMEOUT 90 SKIP_REGULAR_EXPRESSION "UMICOM_PROFILE_DATABASE_UNAVAILABLE"
+            LABELS "framework;security;local-profile;sqlite;native")
+        if(COMMAND umicom_test_impact_owners)
+            umicom_test_impact_owners("${name}" TARGETS umicom-local-mfa-database-test)
+        endif()
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-local-mfa-database-test)
+    endif()
+endif()

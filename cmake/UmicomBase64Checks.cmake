@@ -21,8 +21,10 @@ if(BUILD_TESTING)
     if(COMMAND umicom_register_validation_target)
         umicom_register_validation_target(umicom-base64-admission-test)
     endif()
+    # The same canonical vectors now qualify encoding. Add a case for
+    # capacity and overlap refusals that are specific to the writer.
     foreach(_case IN ITEMS
-        empty one two three four five six zero whitespace whitespace-only space-strict single unpadded-two unpadded-three padding-missing padding-leading padding-second padding-middle padding-only padding-excess after-padding after-padding-space one-pad-bits two-pad-bits punctuation url-dash url-underscore embedded-zero non-ascii unknown-flags capacity exact-capacity exact-span null-empty null-input null-output null-count overlap count-alias long)
+        empty one two three four five six zero whitespace whitespace-only space-strict single unpadded-two unpadded-three padding-missing padding-leading padding-second padding-middle padding-only padding-excess after-padding after-padding-space one-pad-bits two-pad-bits punctuation url-dash url-underscore embedded-zero non-ascii unknown-flags capacity exact-capacity exact-span null-empty null-input null-output null-count overlap count-alias long encode-refusals)
         add_test(NAME "framework.base64.admission.${_case}"
             COMMAND umicom-base64-admission-test "${_case}")
         set_tests_properties("framework.base64.admission.${_case}" PROPERTIES

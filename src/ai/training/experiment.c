@@ -6,15 +6,17 @@
  *   Run repeatable source-code decoder experiments with file-level holdout,
  *   deterministic window selection and sampled cross-entropy evidence.
  *
- * ENGINEERING:
- *   Reuse dataset_manifest.c for immutable source data and reproducible
- *   sampling, and decoder.c for all neural maths and SGD. This file does not
- *   implement its own tokenizer, model, gradient engine or checkpoint codec.
- *   It publishes no model or report if training/evaluation is interrupted.
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
  *
- * AUTHOR AND ORGANISATION: Sammy Hegab / Umicom Foundation
- * LICENCE: MIT
+ * LICENCE:
+ * MIT
  *---------------------------------------------------------------------------*/
+/* Reuse dataset_manifest.c for immutable source data and reproducible
+ * sampling, and decoder.c for all neural maths and SGD. This file does not
+ * implement its own tokenizer, model, gradient engine or checkpoint codec.
+ * It publishes no model or report if training/evaluation is interrupted. */
 #include "umicom/ai/training/experiment.h"
 #include "umicom/ai/training/experiment_accumulation.h"
 #include "umicom/ai/training/gradient_accumulation.h"
@@ -230,12 +232,46 @@ static bool SameArchitecture(const UmiAiTrainingDecoderConfig *left,
            left->initialSeed == right->initialSeed;
 }
 
+typedef struct ExperimentSelectionState {
+    UmiAiTrainingExperimentSelection policy;
+    UmiAiTrainingDecoder *decoder;
+    uint64_t step;
+    double loss;
+    uint32_t staleEvaluations;
+    int stoppedEarly;
+} ExperimentSelectionState;
+
+static UmiStatus TrackSelection(ExperimentSelectionState *state, const UmiAiTrainingDecoder *model,
+    const UmiAiTrainingExperimentProgress *progress)
+{
+    if (state == NULL) return UMI_STATUS_OK;
+    const double loss = progress->heldOutCrossEntropy;
+    if (state->decoder != NULL &&
+        (loss >= state->loss || state->loss - loss < state->policy.minimumImprovement)) {
+        ++state->staleEvaluations;
+        return UMI_STATUS_OK;
+    }
+
+    /* The working decoder advances on the next step. Stage an independent
+     * checkpoint snapshot, then release the previous selection only on success. */
+    UmiAiTrainingDecoder *replacement = NULL;
+    UmiStatus status = CloneDecoder(model, &replacement);
+    if (status != UMI_STATUS_OK) return status;
+    UmiAiTrainingDecoderDestroy(state->decoder);
+    state->decoder = replacement;
+    state->step = progress->completedSteps;
+    state->loss = loss;
+    state->staleEvaluations = 0U;
+    return UMI_STATUS_OK;
+}
+
 static UmiStatus RunInternal(
     const UmiAiTrainingDataset *dataset,
     const UmiAiTrainingExperimentConfig *config,
     const UmiAiTrainingDecoder *checkpointModel,
     const UmiAiTrainingExperimentAccumulation *accumulation,
     const UmiAiTrainingLearningRateSchedule *schedule,
+    ExperimentSelectionState *selection,
     UmiAiTrainingExperimentObserver observer,
     void *userData,
     UmiAiTrainingDecoder **outModel,
@@ -307,6 +343,8 @@ static UmiStatus RunInternal(
         status = observer(&progress, userData);
         if (status != UMI_STATUS_OK) goto fail;
     }
+    status = TrackSelection(selection, created, &progress);
+    if (status != UMI_STATUS_OK) goto fail;
     for (uint32_t step = (uint32_t)startSteps + 1U;
          step <= config->steps; ++step) {
         float stepLearningRate = config->learningRate;
@@ -361,12 +399,21 @@ static UmiStatus RunInternal(
                 status = observer(&progress, userData);
                 if (status != UMI_STATUS_OK) goto fail;
             }
+            status = TrackSelection(selection, created, &progress);
+            if (status != UMI_STATUS_OK) goto fail;
+            if (selection != NULL && selection->policy.patience != 0U &&
+                selection->staleEvaluations >= selection->policy.patience && step < config->steps) {
+                selection->stoppedEarly = 1;
+                break;
+            }
         }
     }
     status = UmiAiTrainingDecoderInspect(created, &verifiedConfig,
                                           &verifiedSteps);
     if (status != UMI_STATUS_OK) goto fail;
-    if (verifiedSteps != (uint64_t)config->steps ||
+    const uint64_t expectedSteps = selection != NULL && selection->stoppedEarly
+        ? progress.completedSteps : (uint64_t)config->steps;
+    if (verifiedSteps != expectedSteps ||
         !SameArchitecture(&verifiedConfig, &config->decoder)) {
         status = UMI_STATUS_INVALID_STATE;
         goto fail;
@@ -374,6 +421,11 @@ static UmiStatus RunInternal(
     report.completedSteps = verifiedSteps;
     report.finalHeldOutLoss = progress.heldOutCrossEntropy;
     report.lastTrainingLoss = progress.lastTrainingLoss;
+    if (selection != NULL) {
+        UmiAiTrainingDecoderDestroy(created);
+        created = selection->decoder;
+        selection->decoder = NULL;
+    }
     *outModel = created;
     *outResult = report;
     free(effectiveInputs);
@@ -383,6 +435,10 @@ fail:
     free(effectiveInputs);
     free(effectiveTargets);
     UmiAiTrainingDecoderDestroy(created);
+    if (selection != NULL) {
+        UmiAiTrainingDecoderDestroy(selection->decoder);
+        selection->decoder = NULL;
+    }
     return status;
 }
 
@@ -394,8 +450,33 @@ UmiStatus UmiAiTrainingExperimentRun(
     UmiAiTrainingDecoder **outModel,
     UmiAiTrainingExperimentResult *outResult)
 {
-    return RunInternal(dataset, config, NULL, NULL, NULL, observer, userData,
+    return RunInternal(dataset, config, NULL, NULL, NULL, NULL, observer, userData,
                        outModel, outResult);
+}
+
+UmiStatus UmiAiTrainingExperimentRunSelected(
+    const UmiAiTrainingDataset *dataset,
+    const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingExperimentSelection *selection,
+    UmiAiTrainingExperimentObserver observer,
+    void *userData,
+    UmiAiTrainingDecoder **outModel,
+    UmiAiTrainingExperimentSelectedResult *outResult)
+{
+    if (selection == NULL || outResult == NULL || !isfinite(selection->minimumImprovement) ||
+        selection->minimumImprovement < 0.0)
+        return UMI_STATUS_INVALID_ARGUMENT;
+    ExperimentSelectionState state = {.policy = *selection};
+    UmiAiTrainingExperimentSelectedResult result = {0};
+    UmiStatus status = RunInternal(dataset, config, NULL, NULL, NULL, &state,
+        observer, userData, outModel, &result.run);
+    if (status == UMI_STATUS_OK) {
+        result.selectedStep = state.step;
+        result.selectedHeldOutLoss = state.loss;
+        result.stoppedEarly = state.stoppedEarly;
+        *outResult = result;
+    }
+    return status;
 }
 
 UmiStatus UmiAiTrainingExperimentResume(
@@ -408,7 +489,7 @@ UmiStatus UmiAiTrainingExperimentResume(
     UmiAiTrainingExperimentResult *outResult)
 {
     if (checkpointModel == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    return RunInternal(dataset, config, checkpointModel, NULL, NULL,
+    return RunInternal(dataset, config, checkpointModel, NULL, NULL, NULL,
                        observer, userData, outModel, outResult);
 }
 
@@ -423,7 +504,7 @@ UmiStatus UmiAiTrainingExperimentRunAccumulated(
     UmiAiTrainingExperimentResult *outResult)
 {
     if (accumulation == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    return RunInternal(dataset, config, NULL, accumulation, NULL,
+    return RunInternal(dataset, config, NULL, accumulation, NULL, NULL,
                        observer, userData, outModel, outResult);
 }
 
@@ -439,7 +520,7 @@ UmiStatus UmiAiTrainingExperimentResumeAccumulated(
 {
     if (accumulation == NULL || checkpointModel == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
-    return RunInternal(dataset, config, checkpointModel, accumulation, NULL,
+    return RunInternal(dataset, config, checkpointModel, accumulation, NULL, NULL,
                        observer, userData, outModel, outResult);
 }
 
@@ -456,7 +537,7 @@ UmiStatus UmiAiTrainingExperimentRunScheduled(
     UmiAiTrainingExperimentResult *outResult)
 {
     if (schedule == NULL) return UMI_STATUS_INVALID_ARGUMENT;
-    return RunInternal(dataset, config, NULL, NULL, schedule, observer,
+    return RunInternal(dataset, config, NULL, NULL, schedule, NULL, observer,
                        userData, outModel, outResult);
 }
 
@@ -472,7 +553,7 @@ UmiStatus UmiAiTrainingExperimentResumeScheduled(
 {
     if (schedule == NULL || checkpointModel == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
-    return RunInternal(dataset, config, checkpointModel, NULL, schedule,
+    return RunInternal(dataset, config, checkpointModel, NULL, schedule, NULL,
                        observer, userData, outModel, outResult);
 }
 
@@ -488,7 +569,7 @@ UmiStatus UmiAiTrainingExperimentRunAccumulatedScheduled(
 {
     if (accumulation == NULL || schedule == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
-    return RunInternal(dataset, config, NULL, accumulation, schedule,
+    return RunInternal(dataset, config, NULL, accumulation, schedule, NULL,
                        observer, userData, outModel, outResult);
 }
 
@@ -506,5 +587,5 @@ UmiStatus UmiAiTrainingExperimentResumeAccumulatedScheduled(
     if (accumulation == NULL || schedule == NULL || checkpointModel == NULL)
         return UMI_STATUS_INVALID_ARGUMENT;
     return RunInternal(dataset, config, checkpointModel, accumulation,
-                       schedule, observer, userData, outModel, outResult);
+                       schedule, NULL, observer, userData, outModel, outResult);
 }

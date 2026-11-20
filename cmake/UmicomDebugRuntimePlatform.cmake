@@ -54,6 +54,7 @@ target_sources(umicom_developer PRIVATE
     "${CMAKE_CURRENT_LIST_DIR}/../src/debug_runtime/message.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/debug_runtime/pending.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/debug_runtime/platform.c"
+    "${CMAKE_CURRENT_LIST_DIR}/../src/debug_runtime/stop_observation.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/debug_runtime/profile_health.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/debug_runtime/profiles/codelldb.c"
     "${CMAKE_CURRENT_LIST_DIR}/../src/debug_runtime/profiles/cppvsdbg.c"

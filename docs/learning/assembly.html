@@ -55,6 +55,18 @@ cmake --build build/learning-practice --parallel 2 &amp;&amp;
 C and Assembly agree on 16448 pairs.
 </code></pre>
 <p>The comparison includes zero, wraparound boundaries and a small grid of values. It is a useful regression, not a mathematical proof for every possible implementation.</p>
+<h2>Run the generated Assembly console test</h2>
+<ol>
+<li>Create an <strong>Assembly Console Project</strong> or a <strong>C23 + Assembly Application</strong> through the Studio project wizard. The generated <code>src/main.c</code> calls the function in <code>src/answer.S</code> and prints its result.</li>
+<li>From the project folder on Windows, configure and build with the supplied presets. Substitute <code>linux-debug</code> for all three preset names on x86-64 Linux.</li>
+</ol>
+<pre><code>cmake --preset windows-ucrt64-debug
+cmake --build --preset windows-ucrt64-debug
+ctest --preset windows-ucrt64-debug --no-tests=error</code></pre>
+<ol start="3">
+<li>Expect one test to pass. The test runs the built console, checks its exit status and verifies the complete line <code>Assembly answer: 42</code>. If the result differs, check the instruction that writes EAX, then rebuild and rerun the test.</li>
+</ol>
+<p>To add the approved Umicom artwork to this build, pass <code>-DUMICOM_FRAMEWORK_SOURCE_ROOT="C:/umicom/Umicom-Applications/framework"</code> when configuring from a Framework checkout at that path. Use <code>-DUmicomFramework_DIR</code> with the absolute package directory when building against an installed SDK. The shared helper stages the SVG wordmark and icon and adds the native icon on Windows.</p>
 <h2>The RISC-V file</h2>
 <p><code>add_riscv64.S</code> uses <code>a0</code>, <code>a1</code> and <code>addw</code> for the RV64 ABI. A native RISC-V64 ELF build can select that file. An x86-64 host cannot directly run a RISC-V executable. Cross-assembling an object demonstrates assembly support; it does not demonstrate that a complete program booted or ran on RISC-V hardware.</p>
 <details><summary>Why not use Assembly everywhere?</summary><p>Assembly can express hardware-specific work precisely, but it binds the implementation to an architecture and ABI. Keep portable C where it is clear and correct. Measure before claiming a hand-written routine is faster.</p></details>

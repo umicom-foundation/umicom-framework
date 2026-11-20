@@ -53,6 +53,13 @@ if(BUILD_TESTING)
         add_test(NAME "framework.os_foundation.boot_report_file.${_case}" COMMAND umicom-boot-report-file-tests "${_case}")
         set_tests_properties("framework.os_foundation.boot_report_file.${_case}" PROPERTIES TIMEOUT 15 LABELS "framework;os-foundation;files")
     endforeach()
+    # Isolate byte identity from semantic report/source validation.
+    foreach(_case IN ITEMS valid matching reordered wrong-content wrong-source malformed large arguments missing)
+        add_test(NAME "framework.os_foundation.boot_report_capture.${_case}"
+            COMMAND umicom-boot-report-file-tests "capture-${_case}")
+        set_tests_properties("framework.os_foundation.boot_report_capture.${_case}" PROPERTIES
+            TIMEOUT 15 LABELS "framework;os-foundation;files;identity")
+    endforeach()
 endif()
 
 if(BUILD_TESTING)

@@ -121,6 +121,8 @@ struct UmiGtk4Adapter {
     gulong context_primary_switch_handler;
     gulong context_secondary_switch_handler;
     uint64_t context_interaction_sequence;
+    /* Window notifications can recursively request adapter destruction. */
+    int destroying;
 };
 
 /**

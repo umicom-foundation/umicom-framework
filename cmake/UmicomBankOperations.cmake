@@ -35,6 +35,12 @@ target_include_directories(umicom_bank_operations PUBLIC
     $<BUILD_INTERFACE:${_umicom_bank_operations_root}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 target_link_libraries(umicom_bank_operations PUBLIC Umicom::finance Umicom::data)
+# Bank migration uses the canonical SQLite backup and ordinary path admission.
+target_sources(umicom_bank_operations PRIVATE "${_umicom_bank_operations_root}/src/bank_operations/store_copy.c")
+target_link_libraries(umicom_bank_operations PRIVATE Umicom::platform)
+target_compile_definitions(umicom_bank_operations INTERFACE UMICOM_HAS_BANK_STORE_COPY=1)
+# A thin console can check whether its selected SDK supplies historical observations.
+target_compile_definitions(umicom_bank_operations INTERFACE UMICOM_HAS_BANK_ACCOUNT_OBSERVATION=1)
 if(COMMAND umicom_apply_warnings)
     umicom_apply_warnings(umicom_bank_operations)
 endif()
@@ -105,6 +111,21 @@ if(BUILD_TESTING)
         set_tests_properties(framework.bank_operations.${case} PROPERTIES
             TIMEOUT 40 SKIP_RETURN_CODE 77 LABELS "framework;bank;bank-operations;regression")
     endforeach()
+    # Use private fixture locations and the real SQLite copy and replay owners.
+    add_executable(umicom-bank-store-copy-test "${_umicom_bank_operations_root}/tests/bank_operations/test_store_copy.c")
+    target_link_libraries(umicom-bank-store-copy-test PRIVATE Umicom::bank_operations Umicom::platform)
+    umicom_apply_warnings(umicom-bank-store-copy-test)
+    umicom_apply_sanitizers(umicom-bank-store-copy-test)
+    file(MAKE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/bank-store-copy-fixtures")
+    foreach(case IN ITEMS roundtrip existing same-source missing-source unrelated corrupt-history relative-path unwritable-parent)
+        add_test(NAME framework.bank.store_copy.${case} COMMAND umicom-bank-store-copy-test ${case}
+            "${CMAKE_CURRENT_BINARY_DIR}/bank-store-copy-fixtures")
+        set_tests_properties(framework.bank.store_copy.${case} PROPERTIES TIMEOUT 40 SKIP_RETURN_CODE 77
+            LABELS "framework;bank;sqlite;regression")
+    endforeach()
+    if(COMMAND umicom_register_validation_target)
+        umicom_register_validation_target(umicom-bank-store-copy-test)
+    endif()
 endif()
 # Install the public acceptance and merge guide beside the Framework capability.
 install(FILES "${_umicom_bank_operations_root}/docs/BANK_OPERATIONS.html"
@@ -208,7 +229,9 @@ if(BUILD_TESTING AND TARGET Umicom::bank_operations_gtk4)
     target_link_libraries(umicom-bank-native-commands-test PRIVATE
         Umicom::bank_operations Umicom::ui_gtk4)
     umicom_bank_review_target(umicom-bank-native-commands-test)
-    foreach(case IN ITEMS review-submit edited-review close-reopen action-catalogue storage-selection open-retry)
+    # Store intent is observed through the same native launcher and test binary.
+    foreach(case IN ITEMS review-submit edited-review close-reopen action-catalogue storage-selection open-retry
+            existing-selection chooser-publishing)
         add_test(NAME framework.bank_operations.native.${case}
             COMMAND umicom-bank-native-commands-test ${case})
         set_tests_properties(framework.bank_operations.native.${case} PROPERTIES

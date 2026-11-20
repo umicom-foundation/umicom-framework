@@ -19,6 +19,7 @@
 #include "umicom/sdk/artifact_inventory.h"
 #include "umicom/sdk/artifact_fingerprint.h"
 #include "umicom/platform/filesystem.h"
+#include <errno.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -140,13 +141,67 @@ static int SdkExpectedFingerprint(const char *text, char out[UMI_SHA256_HEX_CAPA
     out[UMI_SHA256_HEX_CAPACITY - 1U] = '\0';
     return 1;
 }
+
+#define UMI_SDK_FINGERPRINT_ARGUMENTS \
+    "umicom sdk fingerprint SDK_PREFIX [--expect SHA256] [--max-file-bytes N] [--max-total-bytes N]"
+
+/* Accept exact decimal byte counts for reproducible CLI policies. Explicit
+ * zero is a real ceiling. The shared SDK service still owns read enforcement. */
+static bool SdkFingerprintBudget(const char *text, uint64_t ceiling, uint64_t *out_bytes)
+{
+    if (*text == '\0') return false;
+    for (const char *digit = text; *digit != '\0'; ++digit) {
+        if (*digit < '0' || *digit > '9') return false;
+    }
+    errno = 0;
+    uintmax_t bytes = strtoumax(text, NULL, 10);
+    if (errno == ERANGE || bytes > ceiling) return false;
+    *out_bytes = (uint64_t)bytes;
+    return true;
+}
+
+/* Parse each optional pair once. All validation finishes before the command
+ * resolves the prefix or observes any files from the receipt. */
+static bool SdkFingerprintOptions(int argc, char **argv,
+    char expected[UMI_SHA256_HEX_CAPACITY], UmiSdkFingerprintLimits *limits)
+{
+    if (argc < 2 || argc > 8 || argc % 2 != 0 || argv[1][0] == '\0') return false;
+    bool file_set = false, total_set = false;
+    for (int i = 2; i < argc; i += 2) {
+        const char *option = argv[i], *value = argv[i + 1];
+        if (strcmp(option, "--expect") == 0) {
+            if (expected[0] != '\0' || !SdkExpectedFingerprint(value, expected)) return false;
+        } else if (strcmp(option, "--max-file-bytes") == 0) {
+            if (file_set || !SdkFingerprintBudget(value, UMI_SDK_FINGERPRINT_FILE_LIMIT,
+                    &limits->maximum_file_bytes)) return false;
+            file_set = true;
+        } else if (strcmp(option, "--max-total-bytes") == 0) {
+            if (total_set || !SdkFingerprintBudget(value, UMI_SDK_FINGERPRINT_TOTAL_LIMIT,
+                    &limits->maximum_total_bytes)) return false;
+            total_set = true;
+        } else {
+            return false;
+        }
+    }
+    return true;
+}
+
 static int SdkFingerprintCommand(int argc, char **argv)
 {
     char expected[UMI_SHA256_HEX_CAPACITY] = {0};
+    /* Named byte ceilings extend the previous digest-only syntax. Keep the
+     * former argument handling for owner review and preserve its valid calls. */
+#if 0
     if ((argc != 2 && argc != 4) || argv[1][0] == '\0' ||
         (argc == 4 && (strcmp(argv[2], "--expect") != 0 ||
             !SdkExpectedFingerprint(argv[3], expected)))) {
         (void)fputs("Usage: umicom sdk fingerprint SDK_PREFIX [--expect SHA256]\n", stderr);
+        return 2;
+    }
+#endif
+    UmiSdkFingerprintLimits limits = {UMI_SDK_FINGERPRINT_FILE_LIMIT, UMI_SDK_FINGERPRINT_TOTAL_LIMIT};
+    if (!SdkFingerprintOptions(argc, argv, expected, &limits)) {
+        (void)fputs("Usage: " UMI_SDK_FINGERPRINT_ARGUMENTS "\n", stderr);
         return 2;
     }
     char current[UMI_PATH_CAPACITY], prefix[UMI_PATH_CAPACITY];
@@ -157,8 +212,14 @@ static int SdkFingerprintCommand(int argc, char **argv)
         if (status == UMI_STATUS_OK) status = umi_path_absolute(argv[1], current, prefix, sizeof prefix);
     }
     UmiSdkFingerprint observed;
+    /* Pass the caller's policy to the same service Studio can use. Preserve
+     * the former default-only call for review of compatibility at the boundary. */
+#if 0
     if (status == UMI_STATUS_OK)
         status = UmiSdkArtifactFingerprint(prefix, NULL, NULL, &observed);
+#endif
+    if (status == UMI_STATUS_OK)
+        status = UmiSdkArtifactFingerprint(prefix, &limits, NULL, &observed);
     if (status != UMI_STATUS_OK) {
         (void)fprintf(stderr, "Cannot fingerprint SDK artifacts: %s. No complete fingerprint was produced.\n",
             umi_status_text(status));
@@ -267,9 +328,16 @@ int umi_cli_command_sdk(int argc, char **argv)
         (void)puts("Usage: umicom sdk inspect SDK_PREFIX\n"
             "       umicom sdk artifacts SDK_PREFIX [--all]");
 #else
+        /* Expose the optional ceilings in checked SDK help. Preserve the
+         * prior digest-only synopsis for owner review. */
+#if 0
         if (puts("Usage: umicom sdk inspect SDK_PREFIX\n"
             "       umicom sdk artifacts SDK_PREFIX [--all]\n"
             "       umicom sdk fingerprint SDK_PREFIX [--expect SHA256]" ) == EOF) output_failed = 1;
+#endif
+        if (puts("Usage: umicom sdk inspect SDK_PREFIX\n"
+            "       umicom sdk artifacts SDK_PREFIX [--all]\n"
+            "       " UMI_SDK_FINGERPRINT_ARGUMENTS) == EOF) output_failed = 1;
 #endif
 #endif
         return SdkReportResult(0, output_failed);

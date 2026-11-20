@@ -1,6 +1,13 @@
 # Reading an Umicom OS boot report
 
+![Umicom](../../resources/brand/umicom-logo.svg)
+
+[Umicom application icon](../../resources/brand/umicom.ico)
+
 Author: Sammy Hegab, Umicom Foundation. Licence: MIT.
+
+For compiled interface metadata from the independent native Kernel, see
+[Read a native Kernel ABI capture](native-kernel-abi-report.md).
 
 `UmiBootReportParse` belongs to the canonical platform target. It interprets a
 bounded report from `umicom-os` without launching a service, performing I/O,
@@ -81,6 +88,33 @@ paths and observable same-handle change checks. It never writes the selected
 file. Parent aliases may be followed, and a writer that hides metadata changes
 is outside this observation contract. The pure parser remains suitable for
 borrowed memory without file access; guest PID1 still has no Framework link.
+
+## Identify the exact captured file
+
+The report's `source` field identifies the input manifest recorded by the
+boot writer. The file digest identifies every byte of the captured report,
+including its field order and final line break. Two reports can express the
+same state and source while their file digests differ.
+
+1. Select the report in a trusted directory. Save its exact SHA-256 with the
+   reviewed evidence before copying it to another location.
+2. In a client linked to `Umicom::platform`, allocate `UmiBootReportCapture`.
+   Call `UmiBootReportInspectFile(path, expectedSource, expectedCapture, &result)`.
+   Either expected identity may be `NULL`. Supply lowercase hexadecimal
+   SHA-256 strings when a comparison is required.
+3. After `UMI_STATUS_OK`, use `result.report`, `result.byteCount` and
+   `result.captureSha256`. The parser and digest used one owned read.
+4. If the service returns `UMI_STATUS_INVALID_STATE`, independently compare
+   the selected file and the expected source value. Field reordering changes
+   the file digest. Inspect the reviewed capture before replacing a saved value.
+
+Run the capture cases from a configured Framework build. The cases check two
+reports with equal semantic fields and distinct independently computed digests.
+
+```powershell
+cmake --build build/framework --target umicom-boot-report-file-tests
+ctest --test-dir build/framework -R '^framework[.]os_foundation[.]boot_report_capture[.]' --output-on-failure
+```
 
 ## Compare captured reports
 

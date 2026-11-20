@@ -445,6 +445,11 @@ if(FALSE)
         "${UMICOM_SITE_OUTPUT}/studio/EDIT_COMMANDS.html" COPYONLY)
 endif()
 UmiSiteCopyGuide("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/studio/docs/EDIT_COMMANDS.html" "${UMICOM_SITE_OUTPUT}/studio/EDIT_COMMANDS.html")
+
+# Publish Web Studio's real offline guide through the existing brand-aware
+# copy so its logo and ICO use the website's canonical resource routes.
+UmiSiteCopyGuide("${UMICOM_SITE_APPLICATIONS_ROOT}/applications/web-studio/docs/LOCAL_WEB_SERVICE.html"
+    "${UMICOM_SITE_OUTPUT}/web-studio/LOCAL_WEB_SERVICE.html")
 foreach(_workflow_product IN ITEMS studio trader desktop bank tms)
     # The shared guide path admits identity and records coverage for publication checks.
 # Retain the former raw copy for engineering review.
@@ -462,7 +467,14 @@ add_custom_target(umicom-website
 # Reuse the established Doxyfile template, but choose only source and public
 # reference content. Historical reports/private working documents are not inputs.
 set(UMICOM_DOCUMENTATION_OUTPUT_DIRECTORY "${UMICOM_SITE_OUTPUT}/reference")
-set(UMICOM_DOCUMENTATION_PROJECT_LOGO "${_umicom_brand_root}/umicom-icon.svg")
+find_package(Doxygen QUIET)
+include("${UMICOM_SITE_FRAMEWORK_ROOT}/cmake/UmicomDoxygenBranding.cmake")
+# Keep the earlier icon-only setting for review. Both generators now use the
+# same wordmark and independently configure the browser favicon.
+if(FALSE)
+    set(UMICOM_DOCUMENTATION_PROJECT_LOGO "${_umicom_brand_root}/umicom-icon.svg")
+endif()
+umicom_doxygen_branding("${_umicom_brand_root}" "${DOXYGEN_VERSION}")
 set(UMICOM_DOCUMENTATION_MAIN_PAGE "${CMAKE_CURRENT_SOURCE_DIR}/templates/reference.md")
 set(UMICOM_DOCUMENTATION_STYLESHEET "${UMICOM_SITE_FRAMEWORK_ROOT}/docs/documentation.css")
 set(_reference_roots "${UMICOM_SITE_FRAMEWORK_ROOT}/include" "${UMICOM_SITE_FRAMEWORK_ROOT}/src"
@@ -481,7 +493,6 @@ foreach(_input IN LISTS _reference_roots)
 endforeach()
 configure_file("${UMICOM_SITE_FRAMEWORK_ROOT}/docs/Doxyfile.in"
     "${CMAKE_CURRENT_BINARY_DIR}/Doxyfile" @ONLY)
-find_package(Doxygen QUIET)
 if(DOXYGEN_FOUND)
     add_custom_target(umicom-website-api
         COMMAND "${CMAKE_COMMAND}" -E make_directory "${UMICOM_DOCUMENTATION_OUTPUT_DIRECTORY}"

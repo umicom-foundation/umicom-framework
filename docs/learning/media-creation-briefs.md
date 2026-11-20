@@ -1,5 +1,9 @@
 # Create media from a source excerpt
 
+![Umicom](../../resources/brand/umicom-logo.svg)
+
+[Umicom application icon](../../resources/brand/umicom.ico)
+
 A **creation brief** describes what you want to make. It combines a short source excerpt, your creative direction and an output choice. For example, a paragraph about a railway journey can become the starting point for a storyboard, an image or a video. A storyboard is a numbered plan of the shots that make up a film.
 
 Umicom Media prepares the brief on your computer. This step arranges your words; it does not call a model or generate a picture. You can edit the result before passing it to a generation tool or a text model.
@@ -20,6 +24,30 @@ Try this source passage:
 > A passenger train follows the coast at sunset. It slows beside a small station. A traveller steps onto the platform and looks towards the sea.
 
 With **Storyboard** selected, the prepared text asks for numbered shots, visual descriptions and narration. It does not invent those shots itself. A text model can develop the plan in the next step.
+
+## Select a local UTF-8 excerpt in a Framework client
+
+The native Framework API gives custom clients an explicit way to read a range of lines. The Media form above still accepts pasted text.
+
+1. In a text editor, save a separate plain UTF-8 file in a trusted folder such as `C:\work\coastal-journey.txt`. Keep the original document. For a PDF, ebook or Word document, first copy the text you want to review into the plain-text file.
+2. Put a heading on line 1, `The train slows.` on line 2 and `The traveller looks out.` on line 3. Select lines 2 through 3. Both endpoints are included.
+3. Include `umicom/creative_workspace/media_source_excerpt.h`. Link to `Umicom::creative_workspace`. Run the file operation on a worker if your client has an interface.
+
+```c
+UmiMediaSourceExcerpt excerpt = {0};
+UmiStatus status = UmiMediaSourceExcerptReadUtf8(
+    chosen_absolute_path, 2U, 3U, cancel, &excerpt);
+```
+
+4. After `UMI_STATUS_OK`, show `excerpt.text` for review. The two requested lines appear with their original separator. The returned line numbers and zero-based byte offset refer to the original text file. Copy the approved text to the source field or retain it for later editing. The API never modifies the file or submits a model request.
+5. For `UMI_STATUS_NOT_FOUND`, check the path and line range. A final line break does not add another line. On `UMI_STATUS_CAPACITY_EXCEEDED`, choose a file of at most 1 MiB and a selection of at most 2,048 bytes. On `UMI_STATUS_PARSE_ERROR`, check that the entire source is valid UTF-8 and contains plain text. Keep the last reviewed excerpt visible when a new read fails.
+
+In a configured Framework build with creative workspace tests enabled, build and run the focused cases. The suite checks original file bytes after successful reads and after refusals.
+
+```powershell
+cmake --build "build/framework" --target umicom-media-source-excerpt-test
+ctest --test-dir "build/framework" -R '^framework[.]media_brief[.]source_excerpt[.]' --output-on-failure
+```
 
 ## Use a local or remote text model
 

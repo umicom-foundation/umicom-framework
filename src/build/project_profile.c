@@ -16,6 +16,7 @@
 #include "umicom/base/text.h"
 #include "umicom/platform/filesystem.h"
 #include "umicom/platform/path.h"
+#include <stdio.h>
 #include <string.h>
 
 /* Build absolute source identity without changing the process working directory. */
@@ -110,6 +111,29 @@ UmiStatus UmiBuildProfileFromProject(const UmiDeveloperProjectModel *model,
         if (status == UMI_STATUS_OK)
             status = umi_text_copy(profile.run_arguments, sizeof(profile.run_arguments),
                 "--build build/preview --target preview");
+    }
+    /* These generated projects need the runtime chosen by their own CMake
+     * configuration. Script-only models still use their existing policy. */
+    const int configuredPython = model->kind == UMI_DEVELOPER_PROJECT_SCRIPT &&
+        strcmp(model->template_id, "developer.template.python-tool") == 0;
+    const int configuredJava = model->kind == UMI_DEVELOPER_PROJECT_META &&
+        strcmp(model->template_id, "developer.template.java-console") == 0;
+    if (status == UMI_STATUS_OK && (configuredPython || configuredJava) &&
+        model->build_system == UMI_DEVELOPER_PROJECT_BUILD_CMAKE) {
+        const char *preset = NULL;
+        if (strcmp(model->preset, "windows-ucrt64-debug") == 0 &&
+            strcmp(model->build_directory, "build/windows-ucrt64-debug") == 0)
+            preset = "windows-ucrt64-debug";
+        else if (strcmp(model->preset, "linux-debug") == 0 &&
+                 strcmp(model->build_directory, "build/linux-debug") == 0)
+            preset = "linux-debug";
+        if (preset != NULL) {
+            status = umi_text_copy(profile.run_program, sizeof profile.run_program, "cmake");
+            const int written = snprintf(profile.run_arguments, sizeof profile.run_arguments,
+                "--build --preset %s --target run-program", preset);
+            if (written < 0 || (size_t)written >= sizeof profile.run_arguments)
+                status = UMI_STATUS_CAPACITY_EXCEEDED;
+        }
     }
     if (status == UMI_STATUS_OK) status = umi_build_profile_validate(&profile, NULL, 0U);
     if (status == UMI_STATUS_OK) *outProfile = profile;

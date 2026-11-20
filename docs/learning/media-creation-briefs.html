@@ -30,6 +30,21 @@ pre,code,kbd,samp{font-family:"Cascadia Code",Consolas,monospace}
 <p>Try this source passage:</p>
 <blockquote>A passenger train follows the coast at sunset. It slows beside a small station. A traveller steps onto the platform and looks towards the sea.</blockquote>
 <p>With <strong>Storyboard</strong> selected, the prepared text asks for numbered shots, visual descriptions and narration. It does not invent those shots itself. A text model can develop the plan in the next step.</p>
+<h2 id="select-a-local-utf-8-excerpt-in-a-framework-client">Select a local UTF-8 excerpt in a Framework client</h2>
+<p>The native Framework API gives custom clients an explicit way to read a range of lines. The Media form above still accepts pasted text.</p>
+<ol>
+<li>In a text editor, save a separate plain UTF-8 file in a trusted folder such as <code>C:\work\coastal-journey.txt</code>. Keep the original document. For a PDF, ebook or Word document, first copy the text you want to review into the plain-text file.</li>
+<li>Put a heading on line 1, <code>The train slows.</code> on line 2 and <code>The traveller looks out.</code> on line 3. Select lines 2 through 3. Both endpoints are included.</li>
+<li>Include <code>umicom/creative_workspace/media_source_excerpt.h</code>. Link to <code>Umicom::creative_workspace</code>. Run the file operation on a worker if your client has an interface.
+<pre><code class="language-c">UmiMediaSourceExcerpt excerpt = {0};
+UmiStatus status = UmiMediaSourceExcerptReadUtf8(
+    chosen_absolute_path, 2U, 3U, cancel, &amp;excerpt);</code></pre></li>
+<li>After <code>UMI_STATUS_OK</code>, show <code>excerpt.text</code> for review. The two requested lines appear with their original separator. The returned line numbers and zero-based byte offset refer to the original text file. Copy the approved text to the source field or retain it for later editing. The API never modifies the file or submits a model request.</li>
+<li>For <code>UMI_STATUS_NOT_FOUND</code>, check the path and line range. A final line break does not add another line. On <code>UMI_STATUS_CAPACITY_EXCEEDED</code>, choose a file of at most 1 MiB and a selection of at most 2,048 bytes. On <code>UMI_STATUS_PARSE_ERROR</code>, check that the entire source is valid UTF-8 and contains plain text. Keep the last reviewed excerpt visible when a new read fails.</li>
+</ol>
+<p>In a configured Framework build with creative workspace tests enabled, build and run the focused cases. The suite checks original file bytes after successful reads and after refusals.</p>
+<pre><code class="language-powershell">cmake --build "build/framework" --target umicom-media-source-excerpt-test
+ctest --test-dir "build/framework" -R '^framework[.]media_brief[.]source_excerpt[.]' --output-on-failure</code></pre>
 <h2 id="use-a-local-or-remote-text-model">Use a local or remote text model</h2>
 <p>A <strong>model</strong> is the program that produces a response. An <strong>endpoint</strong> is the address where a model service accepts requests. Installing model files alone does not start such a service.</p>
 <ol>

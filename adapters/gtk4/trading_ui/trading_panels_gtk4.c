@@ -1131,16 +1131,32 @@ static UmiStatus apply_order_controls(UmiGtk4TradingPanelState *state)
     return status;
 }
 
+/* Ticket data is owned by the panel body. A button can outlive a refresh
+ * if another GTK object retains it, so only an attached body may act. */
+static UmiGtk4TradingPanelState *AttachedTicket(gpointer body)
+{
+    if (gtk_widget_get_root(GTK_WIDGET(body)) == NULL) return NULL;
+    UmiGtk4TradingPanelState *state =
+        g_object_get_data(G_OBJECT(body), "umicom-trading-panel-state");
+    return state != NULL && state->context != NULL ? state : NULL;
+}
+
 /*
  * Provide the on preview clicked operation used by this module and its client
  * applications.
  */
 static void on_preview_clicked(GtkButton *button, gpointer data)
 {
+/* The signal supplies its owning body so a detached ticket cannot reach the
+ * controller. Retain the former raw state binding for engineering review. */
+#if 0
     UmiGtk4TradingPanelState *state = data;
+#endif
+    UmiGtk4TradingPanelState *state = AttachedTicket(data);
     UmiRiskDecision decision = {0};
     UmiStatus status;
     (void)button;
+    if (state == NULL) return;
     status = apply_order_controls(state);
     /* Preserve the original failure result so the caller can respond to the correct cause. */
     if (status == UMI_STATUS_OK)
@@ -1153,7 +1169,12 @@ static void on_preview_clicked(GtkButton *button, gpointer data)
 /* Provide the on submit clicked operation used by this module and its client applications. */
 static void on_submit_clicked(GtkButton *button, gpointer data)
 {
+/* The body attachment check supersedes the raw state cast. Retain the
+ * previous binding to show how a retained button could still submit. */
+#if 0
     UmiGtk4TradingPanelState *state = data;
+#endif
+    UmiGtk4TradingPanelState *state = AttachedTicket(data);
     UmiTradingWorkspaceSnapshot snapshot;
     UmiRiskDecision decision = {0};
     UmiStatus status;
@@ -1223,7 +1244,12 @@ static size_t tif_index(UmiTimeInForce tif)
 static void OnResetTicket(GtkButton *button, gpointer data)
 {
     (void)button;
+/* Preview, submit and reset now share the same attached-ticket boundary.
+ * The earlier raw state binding remains here for engineering review. */
+#if 0
     UmiGtk4TradingPanelState *state = data;
+#endif
+    UmiGtk4TradingPanelState *state = AttachedTicket(data);
     if (state != NULL && state->context != NULL)
         (void)UmiTradingUiControllerResetDraft(state->context->controller);
 }
@@ -1278,6 +1304,10 @@ static GtkWidget *create_order_entry_panel(UmiGtk4TradingPanelContext *context)
     state->quantity_spin = gtk_spin_button_new_with_range(0.01, 1000000000.0, 1.0);
     state->limit_spin = gtk_spin_button_new_with_range(0.0, 1000000000.0, 0.01);
     state->stop_spin = gtk_spin_button_new_with_range(0.0, 1000000000.0, 0.01);
+    /* Give the existing controls stable identities across GTK rebuilds.
+     * Native qualification can set quantities and prices through the real ticket. */
+    (void)umi_gtk4_automation_tag_widget(state->quantity_spin, "trading.ticket.quantity");
+    (void)umi_gtk4_automation_tag_widget(state->limit_spin, "trading.ticket.limit");
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(state->quantity_spin), 2U);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(state->limit_spin), 6U);
     gtk_spin_button_set_digits(GTK_SPIN_BUTTON(state->stop_spin), 6U);
@@ -1312,17 +1342,31 @@ static GtkWidget *create_order_entry_panel(UmiGtk4TradingPanelContext *context)
     buttons = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 6);
     preview = gtk_button_new_with_label("Preview Risk");
     submit = gtk_button_new_with_label("Submit Order");
+    /* The action identities stay independent of display text and translation. */
+    (void)umi_gtk4_automation_tag_widget(preview, "trading.ticket.preview");
+    (void)umi_gtk4_automation_tag_widget(submit, "trading.ticket.submit");
     gtk_widget_set_sensitive(preview, snapshot.can_preview_order);
     gtk_widget_set_sensitive(submit, snapshot.can_submit_order);
+/* Watch the body so a retained button disconnects automatically when its
+ * owner is finalized. Keep the original raw-data connections for review. */
+#if 0
     g_signal_connect(preview, "clicked", G_CALLBACK(on_preview_clicked), state);
     g_signal_connect(submit, "clicked", G_CALLBACK(on_submit_clicked), state);
+#endif
+    g_signal_connect_object(preview, "clicked", G_CALLBACK(on_preview_clicked), G_OBJECT(root), 0);
+    g_signal_connect_object(submit, "clicked", G_CALLBACK(on_submit_clicked), G_OBJECT(root), 0);
     gtk_box_append(GTK_BOX(buttons), preview);
     gtk_box_append(GTK_BOX(buttons), submit);
     GtkWidget *reset = gtk_button_new_with_label("Reset ticket");
     gtk_widget_set_tooltip_text(reset,
         "Restore ticket defaults. Existing orders, positions and trading safeguards are unchanged.");
     (void)umi_gtk4_automation_tag_widget(reset, "trading.ticket.reset");
+/* The body also owns reset notifications. Retain the raw connection for
+ * review alongside the original preview and submit wiring. */
+#if 0
     g_signal_connect(reset, "clicked", G_CALLBACK(OnResetTicket), state);
+#endif
+    g_signal_connect_object(reset, "clicked", G_CALLBACK(OnResetTicket), G_OBJECT(root), 0);
     gtk_box_append(GTK_BOX(buttons), reset);
     gtk_box_append(GTK_BOX(root), buttons);
     return root;
@@ -2179,6 +2223,16 @@ GtkWidget *umi_gtk4_trading_panel_create(const UmiUiWorkspaceWindow *window,
     return mount;
 }
 
+/* The suite lends the model context. Release the ticket's borrow before
+ * replacing its body or destroying the suite, even if GTK retains the body. */
+static void InvalidateTicketBody(TradingPanelMount *mount)
+{
+    if (strcmp(mount->window.tool_id, "order-entry") != 0) return;
+    UmiGtk4TradingPanelState *ticket =
+        g_object_get_data(G_OBJECT(mount->body), "umicom-trading-panel-state");
+    if (ticket != NULL) ticket->context = NULL;
+}
+
 UmiStatus UmiGtk4TradingPanelRefresh(GtkWidget *panel, int explicit_action)
 {
     if (panel == NULL) return UMI_STATUS_INVALID_ARGUMENT;
@@ -2206,6 +2260,7 @@ UmiStatus UmiGtk4TradingPanelRefresh(GtkWidget *panel, int explicit_action)
     GtkWidget *replacement = CreateTradingPanelBody(&state->window, state->context);
     if (replacement == NULL) return UMI_STATUS_OUT_OF_MEMORY;
     gtk_widget_set_hexpand(replacement, TRUE); gtk_widget_set_vexpand(replacement, TRUE);
+    InvalidateTicketBody(state);
     gtk_box_remove(GTK_BOX(panel), state->body);
     state->body = replacement;
 /* Keep the refreshed legacy evidence body before the independently retained session review, preserving both surfaces and typed review filters. The previous implementation remains for engineering review. */
@@ -2232,6 +2287,8 @@ void UmiGtk4TradingPanelDetachChart(GtkWidget *panel)
     /* Existing suite shutdown calls this compatibility entry point for every
      * panel. Report controls must detach while the borrowed workspace lives. */
     if (state != NULL) {
+        /* The window may still retain the body after its model is released. */
+        InvalidateTicketBody(state);
         GtkWidget *calendar = g_weak_ref_get(&state->calendar_observer);
         if (calendar != NULL) { UmiGtk4EventCalendarDetach(calendar); g_object_unref(calendar); }
         GtkWidget *session = g_weak_ref_get(&state->session_observer);

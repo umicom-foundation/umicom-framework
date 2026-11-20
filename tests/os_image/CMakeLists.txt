@@ -51,11 +51,21 @@ add_test(NAME framework.os_image.archive_lesson COMMAND umicom-os-image-archive-
 add_executable(umicom-os-firmware-cli-tests test_firmware_cli.c)
 target_link_libraries(umicom-os-firmware-cli-tests PRIVATE Umicom::os_image)
 set_target_properties(umicom-os-firmware-cli-tests PROPERTIES C_STANDARD 23 C_STANDARD_REQUIRED YES C_EXTENSIONS NO)
-foreach(_case IN ITEMS partial zero overflow uppercase duplicate null-pin report-status
+foreach(_case IN ITEMS partial zero overflow uppercase duplicate null-pin report-status info-options
     argument-negative argument-zero argument-null-vector argument-null-program argument-null-command argument-null-option argument-null-value argument-counted-tail argument-no-sentinel argument-missing-command)
     add_test(NAME "framework.os_image.firmware_cli.${_case}" COMMAND umicom-os-firmware-cli-tests "${_case}")
     set_tests_properties("framework.os_image.firmware_cli.${_case}" PROPERTIES TIMEOUT 15 LABELS "os_image;buffer;firmware")
 endforeach()
+
+# Exercise the public executable on every supported host with local inert bytes.
+if(WIN32 OR CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    add_test(NAME framework.os_image.firmware_cli.file_identity
+        COMMAND "${CMAKE_COMMAND}" "-DPROGRAM=$<TARGET_FILE:umicom-os-image>"
+            "-DWORK=${CMAKE_CURRENT_BINARY_DIR}/firmware-cli-identity"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/check_firmware.cmake")
+    set_tests_properties(framework.os_image.firmware_cli.file_identity PROPERTIES
+        TIMEOUT 20 LABELS "os_image;firmware;cli")
+endif()
 
 set(_native_targets umicom-os-image-buffer-tests umicom-os-firmware-cli-tests)
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
@@ -88,6 +98,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
         pipeline_inert_normal_transport pipeline_inert_recovery_transport pipeline_riscv
         firmware_valid firmware_zero firmware_large firmware_hash
         firmware_size firmware_digest firmware_relative firmware_symlink firmware_missing
+        firmware_info_valid firmware_info_empty firmware_info_relative firmware_info_symlink firmware_info_missing
         pipeline_firmware_normal pipeline_firmware_recovery pipeline_firmware_wrong_hash
         pipeline_firmware_wrong_size pipeline_firmware_wrong_arch pipeline_firmware_precancel
         pipeline_firmware_existing pipeline_firmware_changed_capture)

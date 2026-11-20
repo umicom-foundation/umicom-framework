@@ -1,0 +1,28 @@
+/*-----------------------------------------------------------------------------
+ * Umicom Framework
+ * File: examples/web/cvm_browser_resources.h.in
+ *
+ * PURPOSE:
+ *   Embed the selected Umicom C SDK's browser worker and interpreter.
+ *
+ * AUTHOR AND ORGANISATION:
+ * Sammy Hegab
+ * Umicom Foundation
+ *
+ * LICENCE:
+ * MIT
+ *---------------------------------------------------------------------------*/
+
+#ifndef UMICOM_LOCAL_WEB_CVM_BROWSER_RESOURCES_H
+#define UMICOM_LOCAL_WEB_CVM_BROWSER_RESOURCES_H
+
+/* Preserve the canonical modules byte-for-byte so their relative import
+ * resolves inside the same WebServer route without a second interpreter. */
+static const unsigned char UmiWebCvmBrowserWorker[] = {
+@UMICOM_WEB_CVM_WORKER_BYTES@
+};
+static const unsigned char UmiWebCvmBrowserArithmetic[] = {
+@UMICOM_WEB_CVM_ARITHMETIC_BYTES@
+};
+
+#endif

@@ -113,6 +113,40 @@ UmiStatus UmiAiTrainingExperimentRun(
     UmiAiTrainingDecoder **outModel,
     UmiAiTrainingExperimentResult *outResult);
 
+typedef struct UmiAiTrainingExperimentSelection {
+    double minimumImprovement;
+    uint32_t patience;
+} UmiAiTrainingExperimentSelection;
+
+typedef struct UmiAiTrainingExperimentSelectedResult {
+    UmiAiTrainingExperimentResult run;
+    uint64_t selectedStep;
+    double selectedHeldOutLoss;
+    int stoppedEarly;
+} UmiAiTrainingExperimentSelectedResult;
+
+/* Run a from-scratch, constant-rate experiment and return the decoder
+ * selected by sampled held-out loss. The initial baseline is eligible.
+ * A candidate must have strictly lower loss and improve on the currently
+ * selected decoder by at least minimumImprovement, which must be finite
+ * and nonnegative. Ties keep the earlier decoder.
+ *
+ * Patience counts consecutive evaluations without an accepted improvement.
+ * Zero patience runs the full plan. Otherwise the limit can stop training
+ * after an evaluation. The selected decoder may precede the terminal step.
+ * run records the terminal loss, best raw observation and actual steps
+ * executed. selectedStep and selectedHeldOutLoss describe the returned model.
+ * Checkpoint file publication remains a separate action. Cancellation and
+ * errors leave both outputs unchanged, including after an earlier selection. */
+UmiStatus UmiAiTrainingExperimentRunSelected(
+    const UmiAiTrainingDataset *dataset,
+    const UmiAiTrainingExperimentConfig *config,
+    const UmiAiTrainingExperimentSelection *selection,
+    UmiAiTrainingExperimentObserver observer,
+    void *userData,
+    UmiAiTrainingDecoder **outModel,
+    UmiAiTrainingExperimentSelectedResult *outResult);
+
 /* Continue an existing model to the plan's TOTAL steps without mutating the
  * input snapshot. The Framework clones it through its existing versioned
  * checkpoint codec before training. The input checkpoint must have exactly

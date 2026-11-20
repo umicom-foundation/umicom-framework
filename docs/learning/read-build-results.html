@@ -147,4 +147,28 @@ size_t errors = umi_build_diagnostic_list_count_severity(
 <p>If history rejects a malformed replacement, it leaves the prior ring records and next operation identity unchanged. Likewise, a refused Problems update does not mark the previous compiler error resolved. This separates two questions: whether evidence is safe to read, and what that evidence says about an actual operation. Storage validation does not prove success, provenance or execution.</p>
 <h3>Exercise the boundary</h3><p>In a disposable result allocated on the heap, set <code>diagnostics.count</code> to 257 and predict the validator, accessor, summary and history responses. Restore the count and remove the terminator from one live message. Then poison an inactive slot instead. Explain why only the last case remains storage-valid.</p>
 <p>The <code>framework.build.storage.*</code> cases cover those boundaries without launching compilers or application processes. Run them after rebuilding Framework, together with the existing build-review, compiler-parser and diagnostic-projection suites. The GTK review fixture still checks presentation of a semantically invalid retained record; a headless storage check is not a GUI qualification result.</p></section>
+<section id="shared-build-prerequisites">
+<h2>Check a build plan with shared prerequisites</h2>
+<p>A prerequisite is a build step that must finish before another step can start. Several build steps can share a prerequisite. For example, two packaging steps can both wait for the same compilation. A cycle is a different relationship: following prerequisites leads back to the starting step, so those steps can never become ready.</p>
+<ol>
+<li>Write down the steps and draw one arrow from each dependent step to its prerequisite. List a shared step once and draw an arrow to it from each dependent step.</li>
+<li>Register the steps, then add each arrow with <code>umi_build_graph_add_dependency</code>. If the function returns <code>UMI_STATUS_INVALID_STATE</code>, trace the proposed prerequisite's existing chain back to the dependent step. The rejected edge leaves the graph and its revision intact.</li>
+<li>With a configured Framework build and tests enabled, build and run the graph regression. It uses a small acyclic plan where eleven combine steps share eight compile prerequisites.</li>
+</ol>
+<pre><code>cmake --build build --target umicom-build-graph-tests
+ctest --test-dir build --no-tests=error --output-on-failure -R '^framework[.]build_graph$'</code></pre>
+<p>Expect the compile steps to become ready first, then each combine step in dependency order, then the final link step. The test also attempts a true back edge and checks that the graph remains unchanged. If the build command reports an unknown target, check that the selected build directory belongs to Framework and has <code>BUILD_TESTING</code> enabled.</p>
+</section>
+<section id="standalone-native-review">
+<h2>Build the standalone review and verify its native identity</h2>
+<p>The standalone review builds the same Framework result validator, diagnostic parser and history presenter used by Studio. Its optional GTK window uses the shared dropdown and draws the supplied Umicom SVG logo and icon. The standalone target generates those assets during configuration.</p>
+<ol>
+<li>In the Framework directory, open a terminal with CMake, Ninja, a C23 compiler and GTK 4.10 or later available. On Windows, use the configured UCRT64 environment so the compiler, GTK and package discovery tools resolve together.</li>
+<li>Configure the example, build it and run the review cases. The GTK cases need an active desktop display.</li>
+</ol>
+<pre><code>cmake -S examples/build_review -B build/build-review -G Ninja -DUMICOM_BUILD_REVIEW_GTK4=ON
+cmake --build build/build-review
+ctest --test-dir build/build-review --no-tests=error --output-on-failure -R '^framework[.]build_review[.]'</code></pre>
+<p>The headless cases check retained diagnostics and the native CLI. The GTK cases open real review windows and check the logo, icon, filters and window ownership. If your host has no desktop display, the GTK tests report skipped. If CMake cannot find GTK, make its package metadata available or configure with <code>UMICOM_BUILD_REVIEW_GTK4=OFF</code> to run the headless review.</p>
+</section>
 </main></div><footer>Sammy Hegab · Umicom Foundation · C23 source and original implementations retained · Offline lesson</footer></body></html>

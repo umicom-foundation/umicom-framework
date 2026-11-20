@@ -16,6 +16,7 @@
 #-----------------------------------------------------------------------------
 
 include_guard(GLOBAL)
+include("${CMAKE_CURRENT_LIST_DIR}/UmicomDoxygenBranding.cmake")
 
 option(UMICOM_BUILD_LIVING_DOCUMENTATION
        "Provide the umicom-documentation HTML reference target"
@@ -60,11 +61,16 @@ if(UMICOM_BUILD_LIVING_DOCUMENTATION)
             "${CMAKE_CURRENT_SOURCE_DIR}/docs/LIVING_CODE_DOCUMENTATION.md")
         set(UMICOM_DOCUMENTATION_STYLESHEET
             "${CMAKE_CURRENT_SOURCE_DIR}/docs/documentation.css")
-        set(UMICOM_DOCUMENTATION_PROJECT_LOGO
-            "${CMAKE_CURRENT_SOURCE_DIR}/resources/brand/umicom-icon.svg")
-        if(NOT EXISTS "${UMICOM_DOCUMENTATION_PROJECT_LOGO}")
-            message(FATAL_ERROR "The official Umicom documentation icon is missing.")
+        # Preserve the icon-only setup for review. Both reference entry points
+        # now share the same wordmark and version-aware favicon configuration.
+        if(FALSE)
+            set(UMICOM_DOCUMENTATION_PROJECT_LOGO
+                "${CMAKE_CURRENT_SOURCE_DIR}/resources/brand/umicom-icon.svg")
+            if(NOT EXISTS "${UMICOM_DOCUMENTATION_PROJECT_LOGO}")
+                message(FATAL_ERROR "The official Umicom documentation icon is missing.")
+            endif()
         endif()
+        umicom_doxygen_branding("${CMAKE_CURRENT_SOURCE_DIR}/resources/brand" "${DOXYGEN_VERSION}")
 
         configure_file(
             "${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in"
@@ -106,6 +112,7 @@ if(UMICOM_BUILD_LIVING_DOCUMENTATION)
                 "${UMICOM_DOCUMENTATION_MAIN_PAGE}"
                 "${UMICOM_DOCUMENTATION_STYLESHEET}"
                 "${UMICOM_DOCUMENTATION_PROJECT_LOGO}"
+                "${UMICOM_DOCUMENTATION_PROJECT_ICON}"
             WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
             COMMENT "Generating the navigable Umicom code reference"
             VERBATIM)
